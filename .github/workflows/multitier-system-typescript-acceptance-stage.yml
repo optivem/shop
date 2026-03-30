@@ -1,4 +1,4 @@
-name: acceptance-stage
+name: multitier-system-typescript-acceptance-stage
 
 on:
   schedule:

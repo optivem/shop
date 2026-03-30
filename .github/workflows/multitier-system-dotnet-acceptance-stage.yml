@@ -1,4 +1,4 @@
-name: acceptance-stage
+name: multitier-system-dotnet-acceptance-stage
 
 on:
   schedule:

@@ -1,4 +1,4 @@
-name: qa-stage
+name: monolith-java-qa-stage
 
 on:
   workflow_dispatch:

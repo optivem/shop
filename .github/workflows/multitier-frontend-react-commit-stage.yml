@@ -1,4 +1,4 @@
-name: frontend-commit-stage
+name: multitier-frontend-react-commit-stage
 
 on:
   push:

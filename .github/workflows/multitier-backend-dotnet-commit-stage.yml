@@ -1,4 +1,4 @@
-name: backend-commit-stage
+name: multitier-backend-dotnet-commit-stage
 
 on:
   push:

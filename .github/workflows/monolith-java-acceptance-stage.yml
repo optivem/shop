@@ -1,4 +1,4 @@
-name: acceptance-stage
+name: monolith-java-acceptance-stage
 
 on:
   schedule:

@@ -1,4 +1,4 @@
-name: acceptance-stage
+name: monolith-dotnet-acceptance-stage
 
 on:
   schedule:

@@ -1,4 +1,4 @@
-name: qa-signoff
+name: multitier-system-java-qa-signoff
 
 on:
   workflow_dispatch:

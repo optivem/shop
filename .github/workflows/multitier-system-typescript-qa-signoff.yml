@@ -1,4 +1,4 @@
-name: qa-signoff
+name: multitier-system-typescript-qa-signoff
 
 on:
   workflow_dispatch:

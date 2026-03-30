@@ -1,4 +1,4 @@
-name: acceptance-stage
+name: monolith-typescript-acceptance-stage
 
 on:
   schedule:

@@ -1,4 +1,4 @@
-name: qa-stage
+name: multitier-system-java-qa-stage
 
 on:
   workflow_dispatch:

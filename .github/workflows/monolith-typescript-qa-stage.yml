@@ -1,4 +1,4 @@
-name: qa-stage
+name: monolith-typescript-qa-stage
 
 on:
   workflow_dispatch:

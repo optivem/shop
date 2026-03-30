@@ -1,4 +1,4 @@
-name: qa-stage
+name: multitier-system-dotnet-qa-stage
 
 on:
   workflow_dispatch:

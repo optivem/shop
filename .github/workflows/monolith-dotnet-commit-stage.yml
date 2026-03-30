@@ -1,4 +1,4 @@
-name: monolith-commit-stage
+name: monolith-dotnet-commit-stage
 
 on:
   push:

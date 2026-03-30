@@ -1,4 +1,4 @@
-name: prod-stage
+name: monolith-dotnet-prod-stage
 
 on:
   workflow_dispatch:

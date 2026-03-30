@@ -1,4 +1,4 @@
-name: qa-stage
+name: monolith-dotnet-qa-stage
 
 on:
   workflow_dispatch:
