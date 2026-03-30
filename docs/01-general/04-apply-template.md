@@ -83,7 +83,58 @@ cp -f "$STARTER_PATH/VERSION" . 2>/dev/null || true
 
 - Also copy the top part of `README.md` (the status badges section) from the template — update the badge URLs to use your languages (e.g. `multitier-backend-java-commit-stage`, `multitier-frontend-react-commit-stage`).
 
-## 2. Replace Repository References
+## 2. Cross-Language Fixup (only when `LANG != TEST_LANG`)
+
+When your system language differs from your test language, the acceptance/QA/prod stage workflows and Docker Compose files are copied from the **test language** template — but they reference the test language's Docker image name and port, not your system language's. You need to fix both.
+
+### Monolith
+
+**Fix Docker image name** — the workflows and docker-compose reference `monolith-${TEST_LANG}-monolith`, but the commit stage builds `monolith-${LANG}-monolith`:
+
+```bash
+# In acceptance, QA, and production stage workflows + docker-compose
+sed -i "s|monolith-${TEST_LANG}-monolith|monolith-${LANG}-monolith|g" \
+  .github/workflows/monolith-${TEST_LANG}-acceptance-stage.yml \
+  .github/workflows/monolith-${TEST_LANG}-qa-stage.yml \
+  .github/workflows/monolith-${TEST_LANG}-prod-stage.yml \
+  system-test/${TEST_LANG}/docker-compose.single.yml
+```
+
+**Fix port mapping** — each language exposes a different internal port (Java/dotnet: `8080`, TypeScript: `3000`). The docker-compose container port must match your **system** language, not the test language:
+
+```bash
+# Map of internal ports per system language
+case "$LANG" in
+  java|dotnet)   SYSTEM_PORT=8080 ;;
+  typescript)    SYSTEM_PORT=3000 ;;
+esac
+
+case "$TEST_LANG" in
+  java|dotnet)   TEMPLATE_PORT=8080 ;;
+  typescript)    TEMPLATE_PORT=3000 ;;
+esac
+
+if [ "$SYSTEM_PORT" != "$TEMPLATE_PORT" ]; then
+  sed -i "s|8080:${TEMPLATE_PORT}|8080:${SYSTEM_PORT}|g" \
+    system-test/${TEST_LANG}/docker-compose.single.yml
+fi
+```
+
+### Multitier
+
+**Fix Docker image name** — the workflows and docker-compose reference `multitier-backend-${TEST_LANG}`, but the commit stage builds `multitier-backend-${BACKEND_LANG}`:
+
+```bash
+sed -i "s|multitier-backend-${TEST_LANG}|multitier-backend-${BACKEND_LANG}|g" \
+  .github/workflows/multitier-system-${TEST_LANG}-acceptance-stage.yml \
+  .github/workflows/multitier-system-${TEST_LANG}-qa-stage.yml \
+  .github/workflows/multitier-system-${TEST_LANG}-prod-stage.yml \
+  system-test/${TEST_LANG}/docker-compose.multi.yml
+```
+
+> **Note:** The frontend image (`multitier-frontend-react`) is the same regardless of test language, so no fix is needed for that.
+
+## 3. Replace Repository References
 
 Replace `optivem/starter` with `<your_repo_owner>/<your_repo_name>` in the whole project (CLI).
 
@@ -107,11 +158,11 @@ This covers `.yml` files (including `docker-compose.yml` and workflow files), `.
 - In `system-test/docker-compose.yml`, to reference your Docker Image (not the template image)
 - In SonarCloud config (`sonar.projectKey` and `sonar.organization`), so analysis runs under your organization
 
-## 3. Docker Compose
+## 4. Docker Compose
 
 In the Docker Compose file, ensure that everything is lowercase in the image url.
 
-## 4. Create SonarCloud Project
+## 5. Create SonarCloud Project
 
 The SonarCloud project key must match the `sonar.projectKey` in your build config file. After the sed replacement in step 2, check your build config to find the actual key:
 - **Java:** `system/monolith/<lang>/build.gradle` or `system/multitier/backend-<lang>/build.gradle` — look for `sonar.projectKey`
@@ -142,7 +193,7 @@ curl -s -u "${SONAR_TOKEN}:" \
 
 **Multitier note:** If your architecture has multiple components with separate SonarCloud projects (e.g. backend and frontend), repeat the project creation for each component.
 
-## 5. Namespace Replacement
+## 6. Namespace Replacement
 
 1. Find template namespace references:
    - Java: `com.optivem.starter`
@@ -156,7 +207,7 @@ curl -s -u "${SONAR_TOKEN}:" \
 2. Replace all references with your corresponding namespace and info.
    - Also update the README title to your system name and language.
 
-## 6. Commit, Push, and Verify
+## 7. Commit, Push, and Verify
 
 1. Commit and push (CLI):
    ```bash
@@ -183,9 +234,10 @@ curl -s -u "${SONAR_TOKEN}:" \
 ## Checklist
 
 1. Template files copied for your chosen architecture and language(s)
-2. All references to `optivem/starter` have been replaced with your own repository
-3. Docker Compose image urls are lowercase
-4. SonarCloud project created with correct project key from build config
-5. Namespace customization is complete
-6. Root README file contains correct links to GitHub Actions
-7. Commit stage and acceptance stage workflows pass
+2. Cross-language fixup applied (if `LANG != TEST_LANG`): Docker image names and port mappings corrected
+3. All references to `optivem/starter` have been replaced with your own repository
+4. Docker Compose image urls are lowercase
+5. SonarCloud project created with correct project key from build config
+6. Namespace customization is complete
+7. Root README file contains correct links to GitHub Actions
+8. Commit stage and acceptance stage workflows pass

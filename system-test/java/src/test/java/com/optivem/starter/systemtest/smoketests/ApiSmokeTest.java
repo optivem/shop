@@ -16,7 +16,7 @@ class ApiSmokeTest {
         // which unfortunately simulates real-life software test projects.
         // This is the starting point for our Starter exercises.
 
-        HttpClient client = HttpClient.newHttpClient();
+        HttpClient client = HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).build();
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(new URI("http://localhost:8080/api/echo"))
                 .GET()
