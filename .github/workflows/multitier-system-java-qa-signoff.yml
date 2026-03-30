@@ -1,4 +1,4 @@
-name: multitier-java-qa-signoff
+name: multitier-system-java-qa-signoff
 
 on:
   workflow_dispatch:
@@ -16,7 +16,7 @@ on:
           - rejected
 
 concurrency:
-  group: multitier-java-qa-signoff
+  group: multitier-system-java-qa-signoff
 
 jobs:
   check:

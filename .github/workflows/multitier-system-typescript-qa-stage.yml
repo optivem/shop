@@ -1,4 +1,4 @@
-name: multitier-java-qa-stage
+name: multitier-system-typescript-qa-stage
 
 on:
   workflow_dispatch:
@@ -9,7 +9,7 @@ on:
         type: string
 
 concurrency:
-  group: multitier-java-qa-stage
+  group: multitier-system-typescript-qa-stage
 
 jobs:
   check:
@@ -46,7 +46,7 @@ jobs:
           tag: ${{ inputs.version }}
           base-image-urls: |
             ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-frontend-react
-            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-backend-java
+            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-backend-typescript
 
   run:
     needs: check
@@ -76,7 +76,7 @@ jobs:
           version: ${{ inputs.version }}
           image-urls: ${{ needs.check.outputs.image-urls }}
           system-url: ${{ vars.SYSTEM_URL }}
-          working-directory: system-test/java
+          working-directory: system-test/typescript
 
       - name: Promote RC (QA Deployed)
         id: promote

@@ -37,9 +37,9 @@ The `.github/workflows/` directory contains runnable pipelines for all 6 matched
 | Single-component Java | `monolith-java-commit-stage` | `monolith-java-acceptance-stage` | `monolith-java-qa-stage` | `monolith-java-prod-stage` |
 | Single-component .NET | `monolith-dotnet-commit-stage` | `monolith-dotnet-acceptance-stage` | `monolith-dotnet-qa-stage` | `monolith-dotnet-prod-stage` |
 | Single-component TypeScript | `monolith-typescript-commit-stage` | `monolith-typescript-acceptance-stage` | `monolith-typescript-qa-stage` | `monolith-typescript-prod-stage` |
-| Multi-component Java | `multitier-backend-java-commit-stage` | `multitier-java-acceptance-stage` | `multitier-java-qa-stage` | `multitier-java-prod-stage` |
-| Multi-component .NET | `multitier-backend-dotnet-commit-stage` | `multitier-dotnet-acceptance-stage` | `multitier-dotnet-qa-stage` | `multitier-dotnet-prod-stage` |
-| Multi-component TypeScript | `multitier-backend-typescript-commit-stage` | `multitier-typescript-acceptance-stage` | `multitier-typescript-qa-stage` | `multitier-typescript-prod-stage` |
+| Multi-component Java | `multitier-backend-java-commit-stage` | `multitier-system-java-acceptance-stage` | `multitier-system-java-qa-stage` | `multitier-system-java-prod-stage` |
+| Multi-component .NET | `multitier-backend-dotnet-commit-stage` | `multitier-system-dotnet-acceptance-stage` | `multitier-system-dotnet-qa-stage` | `multitier-system-dotnet-prod-stage` |
+| Multi-component TypeScript | `multitier-backend-typescript-commit-stage` | `multitier-system-typescript-acceptance-stage` | `multitier-system-typescript-qa-stage` | `multitier-system-typescript-prod-stage` |
 
 Plus `multitier-frontend-react-commit-stage` (shared across all multitier variants).
 

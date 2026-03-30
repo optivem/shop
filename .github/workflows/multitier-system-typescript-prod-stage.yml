@@ -1,4 +1,4 @@
-name: multitier-typescript-prod-stage
+name: multitier-system-typescript-prod-stage
 
 on:
   workflow_dispatch:
@@ -9,7 +9,7 @@ on:
         type: string
 
 concurrency:
-  group: multitier-typescript-prod-stage
+  group: multitier-system-typescript-prod-stage
 
 jobs:
   check:

@@ -1,10 +1,10 @@
-name: multitier-java-acceptance-stage
+name: multitier-system-java-acceptance-stage
 
 on:
   workflow_dispatch:
 
 concurrency:
-  group: multitier-java-acceptance-stage
+  group: multitier-system-java-acceptance-stage
 
 jobs:
   preflight:

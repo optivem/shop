@@ -1,4 +1,4 @@
-name: multitier-dotnet-prod-stage
+name: multitier-system-dotnet-qa-stage
 
 on:
   workflow_dispatch:
@@ -9,7 +9,7 @@ on:
         type: string
 
 concurrency:
-  group: multitier-dotnet-prod-stage
+  group: multitier-system-dotnet-qa-stage
 
 jobs:
   check:
@@ -39,13 +39,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Check QA Approved
-        uses: optivem/actions/check-release-exists@v1
-        with:
-          version: ${{ inputs.version }}-qa-approved
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Resolve Artifacts
         id: resolve-images
         uses: optivem/actions/resolve-docker-images@v1
@@ -59,10 +52,9 @@ jobs:
     needs: check
     if: needs.check.result == 'success'
     runs-on: ubuntu-latest
-    environment: production
+    environment: qa
     permissions:
       contents: write
-      packages: write
     outputs:
       version: ${{ steps.promote.outputs.version }}
       image-urls: ${{ needs.check.outputs.image-urls }}
@@ -76,19 +68,19 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Deploy System (Production Environment)
+      - name: Deploy System (QA Environment)
         id: deploy
         uses: optivem/actions/simulate-deployment@v1
         with:
-          environment: production
+          environment: qa
           version: ${{ inputs.version }}
           image-urls: ${{ needs.check.outputs.image-urls }}
           system-url: ${{ vars.SYSTEM_URL }}
           working-directory: system-test/dotnet
 
-      - name: Promote RC (Production Deployed)
+      - name: Promote RC (QA Deployed)
         id: promote
-        uses: optivem/actions/promote-rc-to-prod@v1
+        uses: optivem/actions/promote-rc-to-qa@v1
         with:
           version: ${{ inputs.version }}
           artifact-urls: ${{ needs.check.outputs.image-urls }}
@@ -112,8 +104,8 @@ jobs:
     - name: Summarize Stage
       uses: optivem/actions/summarize-system-stage@v1
       with:
-        stage-name: 'Production Stage'
-        environment: production
+        stage-name: 'QA Stage'
+        environment: qa
         stage-result: ${{ needs.run.result }}
         success-version: ${{ needs.run.outputs.version }}
         success-artifact-ids: ${{ needs.run.outputs.image-urls }}

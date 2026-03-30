@@ -1,10 +1,10 @@
-name: multitier-typescript-acceptance-stage
+name: multitier-system-dotnet-acceptance-stage
 
 on:
   workflow_dispatch:
 
 concurrency:
-  group: multitier-typescript-acceptance-stage
+  group: multitier-system-dotnet-acceptance-stage
 
 jobs:
   preflight:
@@ -60,7 +60,7 @@ jobs:
         with:
           image-urls: |
             ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-frontend-react:latest
-            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-backend-typescript:latest
+            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-backend-dotnet:latest
 
       - name: Check Run Conditions
         id: should-run
@@ -101,21 +101,25 @@ jobs:
           version: latest
           image-urls: ${{ needs.check.outputs.image-digest-urls }}
           system-url: ${{ vars.SYSTEM_URL }}
-          working-directory: system-test/typescript
+          working-directory: system-test/dotnet
 
       - name: Setup Runtime
-        uses: optivem/actions/setup-node@v1
+        uses: optivem/actions/setup-dotnet@v1
         with:
-          node-version: 20
-          working-directory: system-test/typescript
+          dotnet-version: 8.0.x
+
+      - name: Build Test Project
+        run: dotnet build
+        working-directory: system-test/dotnet
 
       - name: Install Playwright Browsers
-        working-directory: system-test/typescript
-        run: npx playwright install
+        run: |
+          pwsh bin/Debug/net8.0/playwright.ps1 install
+        working-directory: system-test/dotnet
 
       - name: Run Smoke Tests
-        working-directory: system-test/typescript
-        run: npm test -- test/smoke-tests
+        run: dotnet test --filter "FullyQualifiedName~SmokeTests" --verbosity normal
+        working-directory: system-test/dotnet
 
       # TODO: Implement
       - name: Run Acceptance Tests
@@ -126,8 +130,8 @@ jobs:
         run: echo "TODO - not yet implemented"
 
       - name: Run E2E Tests
-        working-directory: system-test/typescript
-        run: npm test -- test/e2e-tests
+        run: dotnet test --filter "FullyQualifiedName~E2eTests" --verbosity normal
+        working-directory: system-test/dotnet
 
       - name: Read Target Version
         id: read-version
