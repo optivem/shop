@@ -29,13 +29,12 @@ Read `.claude/agents/verifier-config.json`. The file has:
 ## Workflow
 
 1. Read the config file.
-2. Determine which batch/scenarios to run. If not specified, list batches and ask:
+2. Determine which batch/scenarios to run. If not specified, list batches (read them dynamically from the config file — do NOT hardcode) and ask:
    ```
    Available batches:
-     monolith-monolang: Monolith — same language for backend and tests (3 scenarios)
-     monolith-multilang: Monolith — mixed languages (6 scenarios)
-     multi-architecture: Multitier and multirepo architectures (2 scenarios)
-     all: Run all batches (11 scenarios)
+     <batch-name>: <description> (<N> scenarios)
+     ...
+     all: Run all batches (<total> scenarios)
    Which batch would you like to run?
    ```
 3. For each batch to run (sequentially if `BATCH=all`):

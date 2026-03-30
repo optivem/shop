@@ -5,6 +5,9 @@ export default function Home() {
     <main>
       <h1>Welcome</h1>
       <p>This page was server-side rendered at {timestamp}.</p>
+      <nav>
+        <a href="/todos">Todo Manager</a>
+      </nav>
     </main>
   );
 }

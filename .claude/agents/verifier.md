@@ -40,7 +40,7 @@ Same as Scaffolder (including: do NOT use anything from memory), plus:
 
 1. Read parameters from the initial prompt.
 2. Set up auth: `export GH_TOKEN="${GITHUB_TOKEN:-$GITHUB_SANDBOX_TESTER_TOKEN}"`
-3. Read `docs/starter/index.md` and follow each step — same as the Scaffolder, but using provided config values instead of asking the user. The repo name must be derived from `SYSTEM_NAME` exactly as the docs describe (kebab-case + random suffix if needed) — do NOT invent your own naming scheme.
+3. Read `docs/index.md` (in the starter repo) and follow each step — same as the Scaffolder, but using provided config values instead of asking the user. The repo name must be derived from `SYSTEM_NAME` exactly as the docs describe (kebab-case + random suffix if needed) — do NOT invent your own naming scheme.
 5. After each step, report ✓/✗ for checklist items and ⚠ for doc issues found.
 6. At the end, produce the final report.
 
@@ -50,18 +50,20 @@ After creating the repository (Step 01), create a GitHub Issue to track setup pr
 
 ### Creating the issue
 
-After Step 01, create the issue with all steps as unchecked items:
+After Step 01, create the issue. Steps 00 and 01 are already complete by this point, so mark them as checked. Build the remaining steps dynamically based on the architecture — read the doc index (`docs/index.md`) to determine which steps apply to this scenario.
+
+Example for a monolith scenario:
 
 ```bash
 gh issue create --repo <owner>/<repo> --title "Setup: <scenario_name>" --body "$(cat <<'EOF'
 ## Setup Progress
 
-- [ ] Step 00: Prerequisites
-- [ ] Step 01: Project Repository
+- [x] Step 00: Prerequisites
+- [x] Step 01: Project Repository
 - [ ] Step 02: Repository Setup
 - [ ] Step 03: Apply Template
 - [ ] Step 04: Namespace Replacement
-- [ ] Step 05: Commit, Push, and Verify
+- [ ] Step 05: Commit, Push, and Verify Commit Stage
 - [ ] Step 06: Acceptance Stage
 
 ## Issues Found
@@ -74,6 +76,8 @@ _None yet_
 EOF
 )"
 ```
+
+Adapt the step list for the architecture (e.g. multitier has additional component-specific commit stages, multirepo has separate repos to set up).
 
 ### Updating the issue
 
