@@ -1,0 +1,155 @@
+name: acceptance-stage
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # Run every hour
+  workflow_dispatch:
+
+concurrency:
+  group: acceptance-stage
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: read
+    outputs:
+      artifacts-exist: ${{ steps.check-artifacts.outputs.exist }}
+    steps:
+      - name: Check Artifacts Exist
+        id: check-artifacts
+        uses: optivem/actions/check-artifacts-exist@v1
+
+  check:
+    needs: preflight
+    if: needs.preflight.outputs.artifacts-exist == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      should-run: ${{ steps.should-run.outputs.should-run }}
+      image-digest-urls: ${{ steps.find-latest.outputs.image-digest-urls }}
+    steps:
+      - name: Validate Config
+        uses: optivem/actions/validate-config@v1
+        with:
+          names: |
+            DOCKERHUB_USERNAME
+            DOCKERHUB_TOKEN
+            SYSTEM_URL
+        env:
+          DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          SYSTEM_URL: ${{ vars.SYSTEM_URL }}
+
+      - name: Checkout Repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Check Target Version Exists
+        uses: optivem/actions/check-target-version-exists@v1
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Find Latest Artifacts
+        id: find-latest
+        uses: optivem/actions/find-latest-docker-images@v1
+        with:
+          image-urls: |
+            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/frontend:latest
+            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/backend:latest
+
+      - name: Check Run Conditions
+        id: should-run
+        uses: optivem/actions/should-run-acceptance-stage@v1
+        with:
+          latest-image-timestamp: ${{ steps.find-latest.outputs.latest-image-timestamp }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  run:
+    needs: check
+    if: needs.check.outputs.should-run == 'true'
+    runs-on: ubuntu-latest
+    environment: acceptance
+    permissions:
+      contents: write
+      packages: write
+    outputs:
+      version: ${{ steps.promote-to-rc.outputs.version }}
+      image-urls: ${{ steps.promote-to-rc.outputs.image-urls }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Deploy System (Acceptance Environment)
+        id: deploy-system
+        uses: optivem/actions/simulate-deployment@v1
+        with:
+          environment: acceptance
+          version: latest
+          image-urls: ${{ needs.check.outputs.image-digest-urls }}
+          system-url: ${{ vars.SYSTEM_URL }}
+          working-directory: system-test
+
+      - name: Setup Runtime
+        uses: optivem/actions/setup-node@v1
+        with:
+          node-version: 22.x
+          working-directory: system-test
+
+      - name: Run Smoke Tests
+        working-directory: system-test
+        run: npm test -- test/smoke-tests
+
+      # TODO: Implement
+      - name: Run Acceptance Tests
+        run: echo "TODO - not yet implemented"
+
+      # TODO: Implement
+      - name: Run External System Contract Tests
+        run: echo "TODO - not yet implemented"
+
+      - name: Run E2E Tests
+        working-directory: system-test
+        run: npm test -- test/e2e-tests
+
+      - name: Read Target Version
+        id: read-version
+        uses: optivem/actions/read-target-version@v1
+
+      - name: Promote to RC
+        id: promote-to-rc
+        uses: optivem/actions/promote-to-rc@v1
+        with:
+          target-version: ${{ steps.read-version.outputs.target-version }}
+          image-urls: ${{ needs.check.outputs.image-digest-urls }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  summary:
+    needs: [check, run]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+    - name: Summarize Stage
+      uses: optivem/actions/summarize-system-stage@v1
+      with:
+        stage-name: 'Acceptance Stage'
+        environment: acceptance
+        stage-result: ${{ needs.run.result }}
+        success-version: ${{ needs.run.outputs.version }}
+        success-artifact-ids: ${{ needs.run.outputs.image-urls }}

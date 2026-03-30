@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: backend
+
+server:
+  port: 8081
+
+todos:
+  api:
+    host: ${TODOS_API_HOST:https://jsonplaceholder.typicode.com}

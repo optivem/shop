@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: monolith
+
+todos:
+  api:
+    host: ${TODOS_API_HOST:https://jsonplaceholder.typicode.com}

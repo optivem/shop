@@ -1,0 +1,89 @@
+name: qa-signoff
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version that was tested in QA (e.g., v1.0.0-rc.1)'
+        required: true
+        type: string
+      result:
+        description: 'QA testing result'
+        required: true
+        type: choice
+        options:
+          - approved
+          - rejected
+
+concurrency:
+  group: qa-signoff
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check RC Exists
+        uses: optivem/actions/check-release-exists@v1
+        with:
+          version: ${{ inputs.version }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  run:
+    needs: check
+    if: needs.check.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      version: ${{ steps.promote-approved.outputs.version || steps.promote-rejected.outputs.version }}
+      stage-result: ${{ steps.determine-result.outputs.stage-result }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v5
+
+      - name: Determine Stage Result
+        id: determine-result
+        run: |
+          if [[ "${{ inputs.result }}" == "approved" ]]; then
+            echo "stage-result=success" >> $GITHUB_OUTPUT
+          else
+            echo "stage-result=failure" >> $GITHUB_OUTPUT
+          fi
+        shell: bash
+
+      - name: Promote RC (QA Approved)
+        id: promote-approved
+        if: inputs.result == 'approved'
+        uses: optivem/actions/approve-rc-in-qa@v1
+        with:
+          version: ${{ inputs.version }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Promote RC (QA Rejected)
+        id: promote-rejected
+        if: inputs.result == 'rejected'
+        uses: optivem/actions/reject-rc-in-qa@v1
+        with:
+          version: ${{ inputs.version }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  summary:
+    needs: [check, run]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v5
+
+    - name: Summarize Stage
+      uses: optivem/actions/summarize-system-stage@v1
+      with:
+        stage-name: 'QA Signoff'
+        environment: qa
+        stage-result: ${{ needs.run.outputs.stage-result }}
+        success-version: ${{ needs.run.outputs.version }}

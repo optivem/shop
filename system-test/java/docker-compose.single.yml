@@ -1,0 +1,6 @@
+services:
+
+  monolith:
+    image: ghcr.io/<owner>/<repo>/monolith:latest
+    ports:
+      - "8080:8080"

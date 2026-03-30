@@ -1,0 +1,145 @@
+name: commit-stage-frontend
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+        - 'frontend/**'
+        - '.github/workflows/commit-stage-frontend.yml'
+  pull_request:
+    branches: [ "main" ]
+    paths:
+        - 'frontend/**'
+        - '.github/workflows/commit-stage-frontend.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: commit-stage-frontend-${{ github.ref }}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Validate Config
+        uses: optivem/actions/validate-config@v1
+        with:
+          names: |
+            DOCKERHUB_USERNAME
+            DOCKERHUB_TOKEN
+        env:
+          DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Checkout Repository
+        uses: actions/checkout@v5
+
+      - name: Check Target Version Exists
+        uses: optivem/actions/check-target-version-exists@v1
+        with:
+          file: frontend/VERSION
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+  run:
+    needs: check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    outputs:
+      component-version: ${{ steps.read-version.outputs.target-version }}
+      image-version-tag: ${{ steps.build.outputs.image-version-tag }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v5
+
+      - name: Read Component Version
+        id: read-version
+        uses: optivem/actions/read-target-version@v1
+        with:
+          file: frontend/VERSION
+
+      - name: Setup Runtime
+        uses: optivem/actions/setup-node@v1
+        with:
+          node-version: 22.x
+          working-directory: frontend
+
+      - name: Compile Code
+        run: npm run build
+        shell: bash
+        working-directory: frontend
+
+      # TODO: Implement
+      - name: Run Unit Tests
+        run: echo "TODO - not yet implemented"
+
+      # TODO: Implement
+      - name: Run Narrow Integration Tests
+        run: echo "TODO - not yet implemented"
+
+      # TODO: Implement
+      - name: Run Component Tests
+        run: echo "TODO - not yet implemented"
+
+      # TODO: Implement
+      - name: Run Contract Tests
+        run: echo "TODO - not yet implemented"
+
+      - name: Run Linter
+        run: npm run lint
+        working-directory: frontend
+
+      - name: Run Code Analysis
+        if: github.ref == 'refs/heads/main' && env.SONAR_TOKEN != ''
+        uses: SonarSource/sonarcloud-github-action@v5
+        with:
+          projectBaseDir: frontend
+          args: >
+            -Dsonar.projectKey=YOUR_SONAR_PROJECT_KEY
+            -Dsonar.organization=YOUR_SONAR_ORG
+            -Dsonar.sources=src
+
+      - name: Build Artifact
+        if: github.ref == 'refs/heads/main'
+        id: build
+        uses: optivem/actions/build-docker-image@v1
+        with:
+          working-directory: frontend
+          image-name: frontend
+          image-namespace: ${{ github.repository }}
+          commit-sha: ${{ github.sha }}
+          component-version: ${{ steps.read-version.outputs.target-version }}
+          build-number: ${{ github.run_number }}
+          dockerfile: Dockerfile
+
+      - name: Push Artifact
+        if: github.ref == 'refs/heads/main'
+        id: push
+        uses: optivem/actions/push-docker-image@v1
+        with:
+          image-sha-tag: ${{ steps.build.outputs.image-sha-tag }}
+          image-latest-url: ${{ steps.build.outputs.image-latest-url }}
+          image-version-tag: ${{ steps.build.outputs.image-version-tag }}
+          registry-username: ${{ github.actor }}
+        env:
+          REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+
+  summary:
+    needs: [check, run]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+    - name: Summarize Stage
+      uses: optivem/actions/summarize-commit-stage@v1
+      with:
+        stage-result: ${{ needs.run.result }}
+        success-artifact-url: ${{ needs.run.outputs.image-version-tag }}
