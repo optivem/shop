@@ -67,8 +67,8 @@ gh issue create --repo <owner>/<repo> --title "Setup: <scenario_name>" --body "$
 - [x] Step 01: Project Repository
 - [ ] Step 02: Repository Setup
 - [ ] Step 03: Apply Template
-- [ ] Step 04: Namespace Replacement
-- [ ] Step 05: Commit, Push, and Verify Commit Stage
+- [ ] Step 04: Customize Template
+- [ ] Step 05: Commit Stage
 - [ ] Step 06: Acceptance Stage
 - [ ] Step 07: QA Stage
 - [ ] Step 08: Production Stage

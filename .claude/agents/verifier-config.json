@@ -5,17 +5,43 @@
     "SYSTEM_NAME": "Page Turner"
   },
   "batches": {
-    "quick": {
+    "monolith-quick": {
       "description": "Default",
       "scenarios": {
         "monolith-java": {
           "ARCHITECTURE": "monolith",
           "REPOSITORY_STRATEGY": "monorepo",
           "SYSTEM_LANGUAGE": "java",
-          "SYSTEM_TEST_LANGUAGE": "java"
+          "SYSTEM_TEST_LANGUAGE": "dotnet"
         }
       }
     },
+    "multitier-quick": {
+      "description": "Multitier quick",
+      "scenarios": {
+        "multitier-java": {
+          "ARCHITECTURE": "multitier",
+          "REPOSITORY_STRATEGY": "monorepo",
+          "BACKEND_LANGUAGE": "java",
+          "FRONTEND_LANGUAGE": "react",
+          "SYSTEM_TEST_LANGUAGE": "dotnet"
+        }
+      }
+    },
+
+    "multirepo-quick": {
+      "description": "Multitier quick",
+      "scenarios": {
+        "multirepo-java": {
+          "ARCHITECTURE": "multitier",
+          "REPOSITORY_STRATEGY": "multirepo",
+          "BACKEND_LANGUAGE": "java",
+          "FRONTEND_LANGUAGE": "react",
+          "SYSTEM_TEST_LANGUAGE": "dotnet"
+        }
+      }
+    },
+
     "monolith-monolang": {
       "description": "Monolith — same language for backend and tests",
       "scenarios": {
