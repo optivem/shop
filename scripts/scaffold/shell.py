@@ -57,7 +57,7 @@ class GitHub:
         run(f"gh repo create {self.repo} --public --add-readme --license mit")
 
     def create_environment(self, name: str) -> None:
-        self.run(f"api repos/{self.repo}/environments/{name} -X PUT")
+        run(f"gh api repos/{self.repo}/environments/{name} -X PUT", dry_run=self.dry_run)
 
     def secret_set(self, name: str, value: str) -> None:
         """Set a secret. Values are always masked in dry-run output."""
@@ -107,7 +107,8 @@ class SonarCloud:
             req.add_header("Content-Type", "application/x-www-form-urlencoded")
         try:
             with urllib.request.urlopen(req) as resp:
-                return json.loads(resp.read().decode())
+                raw = resp.read().decode()
+                return json.loads(raw) if raw.strip() else {}
         except urllib.error.HTTPError as e:
             body_text = e.read().decode() if e.fp else ""
             return {"error": True, "status": e.code, "message": body_text}
