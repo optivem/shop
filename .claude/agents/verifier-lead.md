@@ -13,10 +13,10 @@ Read `.claude/agents/verifier-config.json`. The file has:
 - `batches`: a map of named batches, each containing a `description` and `scenarios` map
 
 **Selecting what to run:**
+- **Always ask the user** which batch to run by listing available batches (see Workflow step 2) — unless the initial prompt explicitly includes one of the overrides below.
 - If the initial prompt includes `BATCH=<name>`, run all scenarios in that batch.
 - If the initial prompt includes `BATCH=all`, run all batches.
 - If the initial prompt includes `SCENARIO=<name>`, run only that single scenario (find it across all batches).
-- If nothing is specified, list available batches with their descriptions and scenario counts, and ask the user which batch to run.
 
 ## Rules
 
