@@ -81,7 +81,15 @@ class GitHub:
         self.run(f"workflow run {workflow}")
 
     def run_watch(self) -> subprocess.CompletedProcess[str]:
-        return run(f"gh run watch --repo {self.repo} --exit-status", check=False, capture=False)
+        # Get the latest run ID (gh run watch requires explicit ID in non-interactive mode)
+        result = run(
+            f"gh run list --repo {self.repo} --limit 1 --json databaseId --jq .[0].databaseId",
+            check=False, capture=True,
+        )
+        run_id = result.stdout.strip()
+        if not run_id:
+            return subprocess.CompletedProcess("gh run list", 1, stdout="", stderr="No runs found")
+        return run(f"gh run watch {run_id} --repo {self.repo} --exit-status", check=False)
 
     def delete(self) -> None:
         run(f"gh repo delete {self.repo} --yes", check=False)
