@@ -41,6 +41,11 @@ Same as Scaffolder (including: do NOT use anything from memory), plus:
 1. Read parameters from the initial prompt.
 2. Set up auth: `export GH_TOKEN="${GITHUB_TOKEN:-$GITHUB_SANDBOX_TESTER_TOKEN}"`
 3. Read `docs/index.md` (in the starter repo) and follow each step — same as the Scaffolder, but using provided config values instead of asking the user. The repo name must be derived from `SYSTEM_NAME` exactly as the docs describe (kebab-case + random suffix if needed) — do NOT invent your own naming scheme.
+4. **Follow ALL stages for the architecture** — not just the General section. After completing the General steps (prerequisites, repo setup, apply template, customize, commit/push), continue through every architecture-specific stage listed in `docs/index.md`:
+   - **Commit Stage** — verify the commit stage workflow passes
+   - **Acceptance Stage** — trigger and verify the acceptance stage, confirm RC release and Docker image tag
+   - **QA Stage** — trigger `qa-stage.yml` with the RC version, verify `-qa-deployed` release, then trigger `qa-signoff.yml` with `result=approved`, verify `-qa-approved` release
+   - **Production Stage** — trigger `prod-stage.yml` with the RC version, verify the final release (no `-rc` suffix) is marked as Latest
 5. After each step, report ✓/✗ for checklist items and ⚠ for doc issues found.
 6. At the end, produce the final report.
 
@@ -65,6 +70,8 @@ gh issue create --repo <owner>/<repo> --title "Setup: <scenario_name>" --body "$
 - [ ] Step 04: Namespace Replacement
 - [ ] Step 05: Commit, Push, and Verify Commit Stage
 - [ ] Step 06: Acceptance Stage
+- [ ] Step 07: QA Stage
+- [ ] Step 08: Production Stage
 
 ## Issues Found
 
@@ -77,7 +84,7 @@ EOF
 )"
 ```
 
-Adapt the step list for the architecture (e.g. multitier has additional component-specific commit stages, multirepo has separate repos to set up).
+Adapt the step list for the architecture (e.g. multitier has additional component-specific commit stages, multirepo has separate repos to set up). Always include QA and Production stages — these apply to all architectures.
 
 ### Updating the issue
 
@@ -115,6 +122,18 @@ Step 00: Prerequisites ✓
 Step 01: Monolith - Setup
   ✓ Template applied
   ✓ Workflows pass
+Step XX: Acceptance Stage
+  ✓ Acceptance stage workflow passed
+  ✓ RC release created (e.g. v1.0.0-rc.1)
+  ✓ Docker image tagged with RC version
+Step XX: QA Stage
+  ✓ QA stage workflow passed
+  ✓ QA deployed release created (e.g. -qa-deployed)
+  ✓ QA signoff workflow passed
+  ✓ QA approved release created (e.g. -qa-approved)
+Step XX: Production Stage
+  ✓ Production stage workflow passed
+  ✓ Final release marked as Latest (e.g. v1.0.0)
 ...
 
 Problems Encountered:
