@@ -46,8 +46,8 @@ jacocoTestReport {
 
 sonar {
 	properties {
-		property 'sonar.projectKey', 'optivem_starter-java'
-		property 'sonar.projectName', 'starter-java'
+		property 'sonar.projectKey', 'optivem_starter-monolith-java'
+		property 'sonar.projectName', 'starter-monolith-java'
 		property 'sonar.organization', 'optivem'
 		property 'sonar.coverage.jacoco.xmlReportPaths', "${buildDir}/reports/jacoco/test/jacocoTestReport.xml"
 	}

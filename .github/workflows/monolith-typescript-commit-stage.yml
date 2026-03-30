@@ -92,13 +92,13 @@ jobs:
         working-directory: system/monolith/typescript
 
       - name: Run Code Analysis
-        if: github.ref == 'refs/heads/main' && env.SONAR_TOKEN != '' && vars.SONAR_PROJECT_KEY != ''
+        if: github.ref == 'refs/heads/main' && env.SONAR_TOKEN != ''
         uses: SonarSource/sonarcloud-github-action@v5
         with:
           projectBaseDir: system/monolith/typescript
           args: >
-            -Dsonar.projectKey=${{ vars.SONAR_PROJECT_KEY }}
-            -Dsonar.organization=${{ vars.SONAR_ORG }}
+            -Dsonar.projectKey=optivem_starter-monolith-typescript
+            -Dsonar.organization=optivem
             -Dsonar.sources=src
 
       - name: Read Target Version

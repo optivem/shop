@@ -98,8 +98,8 @@ jobs:
         working-directory: system/multitier/backend-java
 
       - name: Run Code Analysis
-        if: github.ref == 'refs/heads/main' && env.SONAR_TOKEN != '' && vars.SONAR_PROJECT_KEY != ''
-        run: ./gradlew build sonar --info -Dsonar.projectKey=${{ vars.SONAR_PROJECT_KEY }} -Dsonar.organization=${{ vars.SONAR_ORG }}
+        if: github.ref == 'refs/heads/main' && env.SONAR_TOKEN != ''
+        run: ./gradlew build sonar --info
         working-directory: system/multitier/backend-java
 
       - name: Build Artifact
