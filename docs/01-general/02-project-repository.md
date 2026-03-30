@@ -2,7 +2,7 @@
 
 ## 1. Create System Repository
 
-Create the System Repository you decided on in the [Prerequisites](00-prerequisites.md) step.
+Create the System Repository you decided on in the [Prerequisites](01-prerequisites.md) step.
 
 1. Repository Name: Use the repo name you chose in Prerequisites (e.g. `acme-shop`).
 2. Choose Visibility: Public

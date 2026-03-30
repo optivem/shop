@@ -4,7 +4,7 @@ For a working example, see the [Starter](https://github.com/optivem/starter) tem
 
 ## Verify the Commit Stage
 
-The commit stage should have triggered automatically from the push in the [Setup](01-setup.md) step.
+The commit stage should have triggered automatically from the push in the [Apply Template](../01-general/04-apply-template.md) step.
 
 1. If it hasn't completed yet, wait for it (CLI):
    ```bash
@@ -18,7 +18,7 @@ The commit stage should have triggered automatically from the push in the [Setup
 
 ## Verify SonarCloud Analysis
 
-If you set up SonarCloud during the [Setup](01-setup.md) step, verify the analysis ran:
+If you set up SonarCloud during the [Apply Template](../01-general/04-apply-template.md) step, verify the analysis ran:
 
 ```bash
 SONAR_PROJECT="<project-key-from-build-config>"

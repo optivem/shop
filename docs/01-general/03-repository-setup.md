@@ -25,7 +25,7 @@ gh variable set DOCKERHUB_USERNAME --body "<your-dockerhub-username>" --repo <ow
 gh variable set SYSTEM_URL --body "http://localhost:8080" --repo <owner>/<repo>
 ```
 
-> **Note:** You created these credentials during [Prerequisites](00-prerequisites.md). If you haven't yet, go back and create your Docker Hub token and SonarCloud token first.
+> **Note:** You created these credentials during [Prerequisites](01-prerequisites.md). If you haven't yet, go back and create your Docker Hub token and SonarCloud token first.
 
 ## Checklist
 

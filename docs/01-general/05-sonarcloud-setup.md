@@ -4,7 +4,7 @@ This guide covers setting up SonarCloud static code analysis for public GitHub r
 
 All steps use the command line except where noted as (UI).
 
-> **Note:** SonarCloud project creation is now part of [Monolith - Setup](01-setup.md). This page is a reference for account setup, troubleshooting, and bulk operations.
+> **Note:** SonarCloud project creation is now part of [Apply Template](04-apply-template.md). This page is a reference for account setup, troubleshooting, and bulk operations.
 
 ## Prerequisites
 

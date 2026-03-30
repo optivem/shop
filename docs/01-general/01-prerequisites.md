@@ -27,7 +27,7 @@ Before starting the onboarding, gather the following information and prepare cre
 
 ## Credentials
 
-> **Note:** The credentials below will be set on your GitHub repository. You don't need the repository to exist yet — just have the credentials ready. You'll set them on the repository during [Setup](monolith/01-setup.md) after creating it.
+> **Note:** The credentials below will be set on your GitHub repository. You don't need the repository to exist yet — just have the credentials ready. You'll set them on the repository during [Repository Setup](03-repository-setup.md) after creating it.
 
 ### Docker Hub
 
@@ -37,7 +37,7 @@ Before starting the onboarding, gather the following information and prepare cre
 
 ### SonarCloud
 
-1. Create a SonarCloud token — see [SonarCloud Setup](monolith/02a-sonarcloud-setup.md) (browser).
+1. Create a SonarCloud token — see [SonarCloud Setup](05-sonarcloud-setup.md) (browser).
 2. Note the token — you'll set it on your repository in the SonarCloud Setup step.
 
 ## Onboarding Mode
