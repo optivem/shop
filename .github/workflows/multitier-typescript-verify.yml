@@ -68,3 +68,105 @@ jobs:
 
           echo "Waiting for run $run_id..."
           gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status
+
+      - name: Get RC Version
+        id: get-version
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          version=$(gh release list \
+            --repo "${{ github.repository }}" \
+            --json tagName,isPrerelease \
+            --jq '[.[] | select(.isPrerelease)] | .[0].tagName')
+          echo "version=$version" >> $GITHUB_OUTPUT
+
+  qa-stage:
+    needs: acceptance-stage
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger QA Stage
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh workflow run multitier-system-typescript-qa-stage.yml \
+            --repo "${{ github.repository }}" \
+            --ref main \
+            -f version=${{ needs.acceptance-stage.outputs.version }}
+
+      - name: Wait for QA Stage
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          sleep 5
+
+          run_id=$(gh run list \
+            --repo "${{ github.repository }}" \
+            --workflow "multitier-system-typescript-qa-stage.yml" \
+            --event workflow_dispatch \
+            --limit 1 \
+            --json databaseId \
+            --jq '.[0].databaseId')
+
+          echo "Waiting for run $run_id..."
+          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status
+
+  qa-signoff:
+    needs: [acceptance-stage, qa-stage]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger QA Signoff
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh workflow run multitier-system-typescript-qa-signoff.yml \
+            --repo "${{ github.repository }}" \
+            --ref main \
+            -f version=${{ needs.acceptance-stage.outputs.version }} \
+            -f result=approved
+
+      - name: Wait for QA Signoff
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          sleep 5
+
+          run_id=$(gh run list \
+            --repo "${{ github.repository }}" \
+            --workflow "multitier-system-typescript-qa-signoff.yml" \
+            --event workflow_dispatch \
+            --limit 1 \
+            --json databaseId \
+            --jq '.[0].databaseId')
+
+          echo "Waiting for run $run_id..."
+          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status
+
+  prod-stage:
+    needs: [acceptance-stage, qa-signoff]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Prod Stage
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh workflow run multitier-system-typescript-prod-stage.yml \
+            --repo "${{ github.repository }}" \
+            --ref main \
+            -f version=${{ needs.acceptance-stage.outputs.version }}
+
+      - name: Wait for Prod Stage
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          sleep 5
+
+          run_id=$(gh run list \
+            --repo "${{ github.repository }}" \
+            --workflow "multitier-system-typescript-prod-stage.yml" \
+            --event workflow_dispatch \
+            --limit 1 \
+            --json databaseId \
+            --jq '.[0].databaseId')
+
+          echo "Waiting for run $run_id..."
+          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status

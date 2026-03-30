@@ -1,34 +1,29 @@
 # Monolith - Setup
 
-## Starter Templates
+## Starter Template
 
-- [Greeter - Java](https://github.com/optivem/greeter-java)
-- [Greeter - .NET](https://github.com/optivem/greeter-dotnet)
-- [Greeter - TypeScript](https://github.com/optivem/greeter-typescript)
+This repository (`starter`) is the template. It contains workflows, system code, and system tests for Java, .NET, and TypeScript.
 
 ## Usage
 
-1. Clone the template based on your chosen language (CLI):
+1. Copy the following from the starter template into your repository (CLI):
    ```bash
-   gh repo clone optivem/greeter-{language} /tmp/greeter-template
-   ```
-   - *If your chosen language is not on the list, no worries, just choose any of the templates because the Pipeline Architecture is the same — you can do language replacement afterwards.*
-2. Copy the following from the template into your repository (CLI):
-   ```bash
-   cp -r /tmp/greeter-template/.github .
-   cp -r /tmp/greeter-template/monolith .
-   cp -r /tmp/greeter-template/system-test .
-   cp -f /tmp/greeter-template/VERSION . 2>/dev/null || true
+   STARTER_PATH="<path-to-starter-repo>"
+   cp -r "$STARTER_PATH/.github" .
+   cp -r "$STARTER_PATH/system" .
+   cp -r "$STARTER_PATH/system-test" .
+   cp -f "$STARTER_PATH/VERSION" . 2>/dev/null || true
    ```
    - Also copy the top part of `README.md` (the status badges section) from the template.
-3. Replace `optivem/greeter-{language}` with `<your_repo_owner>/<your_repo_name>` in the whole project (CLI).
+   - *If your chosen language is not on the list, no worries, just choose any of the templates because the Pipeline Architecture is the same — you can do language replacement afterwards.*
+2. Replace `optivem/starter` with `<your_repo_owner>/<your_repo_name>` in the whole project (CLI).
    > **macOS note:** The `sed -i` commands below use Linux syntax. On macOS, use `sed -i ''` instead of `sed -i` (add an empty string argument after `-i`).
    ```bash
-   grep -rl "optivem/greeter-{language}" . --include="*.yml" --include="*.yaml" --include="*.md" --include="*.gradle" --include="*.gradle.kts" --include="*.csproj" --include="*.sln" --include="*.cshtml" --include="*.json" --include="Dockerfile" | xargs sed -i 's|optivem/greeter-{language}|<owner>/<repo>|g'
+   grep -rl "optivem/starter" . --include="*.yml" --include="*.yaml" --include="*.md" --include="*.gradle" --include="*.gradle.kts" --include="*.csproj" --include="*.sln" --include="*.cshtml" --include="*.json" --include="Dockerfile" | xargs sed -i 's|optivem/starter|<owner>/<repo>|g'
    ```
    Also replace the underscore variant (used by SonarCloud config) and standalone `optivem` org reference (CLI):
    ```bash
-   grep -rl "optivem_greeter-{language}" . --include="*.yml" --include="*.yaml" --include="*.gradle" --include="*.gradle.kts" --include="*.csproj" --include="*.sln" | xargs sed -i 's|optivem_greeter-{language}|<owner>_<repo>|g'
+   grep -rl "optivem_starter" . --include="*.yml" --include="*.yaml" --include="*.gradle" --include="*.gradle.kts" --include="*.csproj" --include="*.sln" | xargs sed -i 's|optivem_starter|<owner>_<repo>|g'
    grep -rl "sonar.organization.*optivem\|/o:\"optivem\"\|/o:.*optivem" . --include="*.yml" --include="*.yaml" --include="*.gradle" --include="*.gradle.kts" --include="*.csproj" | xargs sed -i -e "s|sonar.organization=optivem|sonar.organization=<owner>|g" -e "s|'sonar.organization', 'optivem'|'sonar.organization', '<owner>'|g" -e 's|/o:"optivem"|/o:"<owner>"|g' -e "s|/o:optivem|/o:<owner>|g"
    ```
    > **Warning:** After running the SonarCloud org replacement, verify that `optivem/actions` references in `.github/workflows/*.yml` are still intact. If any were changed to `<owner>/actions`, revert them — those must remain as `optivem/actions`.
