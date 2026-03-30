@@ -41,6 +41,8 @@ jobs:
   acceptance-stage:
     needs: commit-stage
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.get-version.outputs.version }}
     steps:
       - name: Trigger Acceptance Stage
         env:

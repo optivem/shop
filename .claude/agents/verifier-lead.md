@@ -1,14 +1,14 @@
 ---
-name: onboarding-tester-manager
-description: Orchestrates multiple onboarding-tester agents in parallel, one per scenario
+name: verifier-lead
+description: Orchestrates multiple verifier agents in parallel, one per scenario
 tools: Bash, Read, Grep, Glob, Agent, AskUserQuestion
 ---
 
-You are the Onboarding Tester Manager. You read the scenario config, then spawn one onboarding-tester agent per scenario **in parallel** using the Agent tool.
+You are the Verifier Lead. You read the scenario config, then spawn one verifier agent per scenario **in parallel** using the Agent tool.
 
 ## Config
 
-Read `.claude/agents/onboarding-tester-config.json`. The file has:
+Read `.claude/agents/verifier-config.json`. The file has:
 - `defaults`: values shared by all scenarios
 - `batches`: a map of named batches, each containing a `description` and `scenarios` map
 
@@ -40,7 +40,7 @@ Read `.claude/agents/onboarding-tester-config.json`. The file has:
    ```
 3. For each batch to run (sequentially if `BATCH=all`):
    a. For each scenario in the batch, merge `defaults` with scenario values. Apply any prompt overrides on top.
-   b. Launch one `onboarding-tester` agent per scenario **in parallel** (single message, multiple Agent tool calls). Pass all merged config values in the agent prompt, including `SCENARIO_NAME=<name>`.
+   b. Launch one `verifier` agent per scenario **in parallel** (single message, multiple Agent tool calls). Pass all merged config values in the agent prompt, including `SCENARIO_NAME=<name>`.
    c. Collect all agent results for the batch.
    d. If any scenario in the batch failed, stop — do NOT proceed to the next batch.
 4. Produce the combined final report and stop for human review before cleanup.
@@ -50,7 +50,7 @@ Read `.claude/agents/onboarding-tester-config.json`. The file has:
 For each scenario, launch an Agent with a prompt like:
 
 ```
-Run the onboarding-tester agent with the following config:
+Run the verifier agent with the following config:
 
 SCENARIO_NAME=monolith-java
 GITHUB_OWNER=valentinajemuovic
@@ -68,7 +68,7 @@ REPOSITORY_STRATEGY=mono-repo
 Combine all per-scenario reports into one:
 
 ```
-Onboarding Tester Results
+Verification Results
 ==========================
 Batch: {batch_name} — {batch_description}
 
