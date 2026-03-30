@@ -81,7 +81,7 @@ class GitHub:
         self.run(f"workflow run {workflow}")
 
     def run_watch(self) -> subprocess.CompletedProcess[str]:
-        return run(f"gh run watch --repo {self.repo} --exit-status", check=False, capture=True)
+        return run(f"gh run watch --repo {self.repo} --exit-status", check=False, capture=False)
 
     def delete(self) -> None:
         run(f"gh repo delete {self.repo} --yes", check=False)
