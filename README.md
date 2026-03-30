@@ -99,3 +99,15 @@ The `.github/workflows/` directory contains runnable pipelines for all 6 matched
 
 - **Commit stages** trigger automatically on push via path filters
 - **Acceptance/QA/Prod stages** are workflow_dispatch (manual trigger)
+
+### Verify
+
+Orchestrator workflows that run commit stage + acceptance stage sequentially, failing fast on any error:
+
+[![verify-all](https://github.com/optivem/starter/actions/workflows/verify-all.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/verify-all.yml)
+[![monolith-java-verify](https://github.com/optivem/starter/actions/workflows/monolith-java-verify.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/monolith-java-verify.yml)
+[![monolith-dotnet-verify](https://github.com/optivem/starter/actions/workflows/monolith-dotnet-verify.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/monolith-dotnet-verify.yml)
+[![monolith-typescript-verify](https://github.com/optivem/starter/actions/workflows/monolith-typescript-verify.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/monolith-typescript-verify.yml)
+[![multitier-java-verify](https://github.com/optivem/starter/actions/workflows/multitier-java-verify.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/multitier-java-verify.yml)
+[![multitier-dotnet-verify](https://github.com/optivem/starter/actions/workflows/multitier-dotnet-verify.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/multitier-dotnet-verify.yml)
+[![multitier-typescript-verify](https://github.com/optivem/starter/actions/workflows/multitier-typescript-verify.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/multitier-typescript-verify.yml)
