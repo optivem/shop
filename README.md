@@ -8,27 +8,27 @@ Pick based on your architecture and language:
 
 ### Monolith
 
-| Language | Directory | Framework | Port |
-|---|---|---|---|
-| Java | `system/monolith/java/` | Spring Boot + Thymeleaf (SSR) | 8080 |
-| .NET | `system/monolith/dotnet/` | ASP.NET Core Razor Pages | 8080 |
-| TypeScript | `system/monolith/typescript/` | Next.js (SSR) | 3000 |
+| Language | Directory | Framework | Port | SonarCloud |
+|---|---|---|---|---|
+| Java | `system/monolith/java/` | Spring Boot + Thymeleaf (SSR) | 8080 | [starter-monolith-java](https://sonarcloud.io/project/overview?id=optivem_starter-monolith-java) |
+| .NET | `system/monolith/dotnet/` | ASP.NET Core Razor Pages | 8080 | [starter-monolith-dotnet](https://sonarcloud.io/project/overview?id=optivem_starter-monolith-dotnet) |
+| TypeScript | `system/monolith/typescript/` | Next.js (SSR) | 3000 | [starter-monolith-typescript](https://sonarcloud.io/project/overview?id=optivem_starter-monolith-typescript) |
 
 ### Multitier
 
 #### Frontend
 
-| Language | Directory | Framework | Port |
-|---|---|---|---|
-| TypeScript | `system/multitier/frontend-react/` | React + Nginx | 8080 |
+| Language | Directory | Framework | Port | SonarCloud |
+|---|---|---|---|---|
+| TypeScript | `system/multitier/frontend-react/` | React + Nginx | 8080 | [starter-multitier-frontend-react](https://sonarcloud.io/project/overview?id=optivem_starter-multitier-frontend-react) |
 
 #### Backend
 
-| Language | Directory | Framework | Port |
-|---|---|---|---|
-| Java | `system/multitier/backend-java/` | Spring Boot API | 8081 |
-| .NET | `system/multitier/backend-dotnet/` | ASP.NET Core API | 8081 |
-| TypeScript | `system/multitier/backend-typescript/` | NestJS API | 8081 |
+| Language | Directory | Framework | Port | SonarCloud |
+|---|---|---|---|---|
+| Java | `system/multitier/backend-java/` | Spring Boot API | 8081 | [starter-multitier-backend-java](https://sonarcloud.io/project/overview?id=optivem_starter-multitier-backend-java) |
+| .NET | `system/multitier/backend-dotnet/` | ASP.NET Core API | 8081 | [starter-multitier-backend-dotnet](https://sonarcloud.io/project/overview?id=optivem_starter-multitier-backend-dotnet) |
+| TypeScript | `system/multitier/backend-typescript/` | NestJS API | 8081 | [starter-multitier-backend-typescript](https://sonarcloud.io/project/overview?id=optivem_starter-multitier-backend-typescript) |
 
 ## System-Test Templates
 
