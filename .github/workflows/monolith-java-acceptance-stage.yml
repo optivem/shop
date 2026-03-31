@@ -101,7 +101,7 @@ jobs:
           environment: acceptance
           version: latest
           image-urls: ${{ needs.check.outputs.image-digest-urls }}
-          compose-file: docker-compose.monolith.yml
+          compose-file: docker-compose.pipeline.monolith.real.yml
           system-url: ${{ vars.SYSTEM_URL }}
           working-directory: system-test/java
 

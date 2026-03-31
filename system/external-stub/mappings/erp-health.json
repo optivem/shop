@@ -1,0 +1,18 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/erp/health"
+  },
+  "response": {
+    "status": 200,
+    "jsonBody": {
+      "status": "UP",
+      "subsystem": "ERP",
+      "timestamp": "{{now}}"
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "transformers": ["response-template"]
+  }
+}

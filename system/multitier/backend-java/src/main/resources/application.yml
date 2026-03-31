@@ -1,9 +1,57 @@
 spring:
   application:
     name: backend
+  jackson:
+    deserialization:
+      ACCEPT_FLOAT_AS_INT: false
+      ADJUST_DATES_TO_CONTEXT_TIME_ZONE: false
+    default-timezone: UTC
+    time-zone: UTC
+  datasource:
+    url: ${POSTGRES_URL}
+    username: ${POSTGRES_USERNAME}
+    password: ${POSTGRES_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
 
 server:
   port: 8081
+
+management:
+  endpoints:
+    web:
+      base-path: /actuator
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+allowed:
+  origins: ${ALLOWED_ORIGINS:http://localhost:8080}
+
+error:
+  types:
+    base-url: https://api.optivem.com/errors
+    validation-error: ${error.types.base-url}/validation-error
+    resource-not-found: ${error.types.base-url}/resource-not-found
+    bad-request: ${error.types.base-url}/bad-request
+    internal-server-error: ${error.types.base-url}/internal-server-error
+
+external:
+  system-mode: ${EXTERNAL_SYSTEM_MODE:real}
+
+erp:
+  url: ${ERP_API_URL:http://localhost:9001/erp}
+clock:
+  url: ${CLOCK_API_URL:http://localhost:9001/clock}
 
 todos:
   api:

@@ -1,0 +1,15 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/clock/api/time"
+  },
+  "response": {
+    "status": 200,
+    "jsonBody": {
+      "time": "2024-01-15T10:30:00.000Z"
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

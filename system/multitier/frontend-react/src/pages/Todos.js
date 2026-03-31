@@ -17,7 +17,7 @@ function Todos() {
     setError(null);
 
     try {
-      const response = await fetch(`http://localhost:8080/api/todos/${todoId}`);
+      const response = await fetch(`/api/todos/${todoId}`);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);

@@ -1,0 +1,12 @@
+test:
+  eshop:
+    ui:
+      baseUrl: http://localhost:3101
+    api:
+      baseUrl: http://localhost:8101
+  erp:
+    api:
+      baseUrl: http://localhost:9101/erp
+  clock:
+    api:
+      baseUrl: none

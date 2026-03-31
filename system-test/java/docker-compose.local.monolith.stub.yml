@@ -1,0 +1,16 @@
+name: starter-monolith-stub
+
+services:
+
+  monolith:
+    build:
+      context: ../../system/monolith/java
+      dockerfile: Dockerfile
+    ports:
+      - "2102:8080"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

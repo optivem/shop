@@ -1,2 +1,15 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# Python
 __pycache__/
 *.pyc
+
+# Claude
+.claude/settings.local.json

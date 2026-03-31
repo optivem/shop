@@ -1,0 +1,14 @@
+name: starter-monolith-stub
+
+services:
+
+  monolith:
+    image: ghcr.io/optivem/starter/monolith-java-monolith:latest
+    ports:
+      - "2102:8080"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

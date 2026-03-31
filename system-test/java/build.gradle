@@ -20,13 +20,24 @@ repositories {
 
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter'
+	implementation 'org.yaml:snakeyaml:2.2'
+
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'com.microsoft.playwright:playwright:1.44.0'
+	testImplementation 'com.microsoft.playwright:playwright:1.44.0'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 tasks.named('test') {
 	useJUnitPlatform()
+
+	// Forward system properties to test JVM
+	systemProperties System.getProperties().findAll { key, _ ->
+		['environment', 'externalSystemMode', 'channel', 'version', 'type', 'mode',
+		 'includeTags', 'excludeTags'].contains(key)
+	}
 
 	testLogging {
 		events "passed", "skipped", "failed"

@@ -1,0 +1,44 @@
+/* Common styles shared across all pages */
+
+/* Bootstrap-compatible notification styles */
+.notification {
+    padding: 12px;
+    margin-top: 10px;
+    margin-bottom: 16px;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+.notification.success {
+    background: #d1e7dd;
+    color: #0f5132;
+    border: 1px solid #badbcc;
+}
+
+.notification.error {
+    background: #f8d7da;
+    color: #842029;
+    border: 1px solid #f5c2c7;
+}
+
+/* Error message structure */
+.notification .error-message {
+    margin-bottom: 8px;
+}
+
+.notification .field-error {
+    margin-left: 12px;
+    margin-top: 4px;
+    font-weight: 400;
+}
+
+/* Additional Bootstrap enhancements */
+body {
+    min-height: 100vh;
+    background-color: #f8f9fa;
+}
+
+/* Order Status Colors */
+.status-PLACED {
+    color: #198754;
+}

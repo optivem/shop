@@ -1,0 +1,16 @@
+name: starter-monolith-real
+
+services:
+
+  monolith:
+    build:
+      context: ../../system/monolith/java
+      dockerfile: Dockerfile
+    ports:
+      - "2101:8080"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

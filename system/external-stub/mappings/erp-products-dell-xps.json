@@ -1,0 +1,16 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/erp/api/products/DELL-XPS"
+  },
+  "response": {
+    "status": 200,
+    "jsonBody": {
+      "id": "DELL-XPS",
+      "price": 1299.99
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

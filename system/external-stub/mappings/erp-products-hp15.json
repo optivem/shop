@@ -1,0 +1,16 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/erp/api/products/HP-15"
+  },
+  "response": {
+    "status": 200,
+    "jsonBody": {
+      "id": "HP-15",
+      "price": 699.99
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

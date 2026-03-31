@@ -1,6 +1,0 @@
-services:
-
-  monolith:
-    image: ghcr.io/optivem/starter/monolith-java-monolith:latest
-    ports:
-      - "8080:8080"

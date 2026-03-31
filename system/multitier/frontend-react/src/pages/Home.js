@@ -1,16 +1,48 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import './Home.css';
+import Navbar from '../components/Navbar';
 
 function Home() {
   return (
-    <div className="container home">
-      <h1>Hello World!</h1>
-      <p>Welcome to the Starter</p>
-      <nav>
-        <Link to="/todos">Todo Manager</Link>
-      </nav>
-    </div>
+    <>
+      <Navbar />
+      <div className="container mt-4">
+        <div className="jumbotron bg-light p-5 rounded">
+          <h1 className="display-4">Welcome to eShop Starter!</h1>
+          <p className="lead">Your modern e-commerce solution</p>
+          <hr className="my-4" />
+          <div className="row mt-4">
+            <div className="col-md-4 mb-3">
+              <div className="card h-100">
+                <div className="card-body">
+                  <h5 className="card-title">New Order</h5>
+                  <p className="card-text">Place a new order with our easy-to-use interface</p>
+                  <Link to="/shop" className="btn btn-primary">Shop Now</Link>
+                </div>
+              </div>
+            </div>
+            <div className="col-md-4 mb-3">
+              <div className="card h-100">
+                <div className="card-body">
+                  <h5 className="card-title">Order History</h5>
+                  <p className="card-text">View and manage your past orders</p>
+                  <Link to="/order-history" className="btn btn-primary">View Orders</Link>
+                </div>
+              </div>
+            </div>
+            <div className="col-md-4 mb-3">
+              <div className="card h-100">
+                <div className="card-body">
+                  <h5 className="card-title">Todo Manager</h5>
+                  <p className="card-text">Fetch and view todos from the API</p>
+                  <Link to="/todos" className="btn btn-primary">View Todos</Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
   );
 }
 

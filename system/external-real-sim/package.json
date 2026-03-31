@@ -1,0 +1,13 @@
+{
+  "name": "mock-apis",
+  "version": "1.0.0",
+  "description": "Mock API server for ERP and Clock services",
+  "private": true,
+  "scripts": {
+    "start": "node mock-server.js",
+    "dev": "nodemon mock-server.js"
+  },
+  "devDependencies": {
+    "json-server": "^0.17.4"
+  }
+}

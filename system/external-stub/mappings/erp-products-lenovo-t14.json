@@ -1,0 +1,16 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/erp/api/products/LENOVO-T14"
+  },
+  "response": {
+    "status": 200,
+    "jsonBody": {
+      "id": "LENOVO-T14",
+      "price": 999.99
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}
