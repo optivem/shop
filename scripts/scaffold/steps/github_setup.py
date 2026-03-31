@@ -9,7 +9,7 @@ from ..log import log, ok
 from ..shell import GitHub
 
 
-def create_repo(cfg: Config, github: GitHub, **_: object) -> None:
+def create_repos(cfg: Config, github: GitHub, **_: object) -> None:
     log(f"Step 1: Creating repository {cfg.full_repo}...")
 
     if cfg.dry_run:

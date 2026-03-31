@@ -14,6 +14,7 @@ from ..files import (
     replace_in_tree,
 )
 from ..log import fatal, log, ok
+from ..templates import fixup_multirepo_docker_compose
 
 # All text file extensions to process
 TEXT_EXTS = [
@@ -40,6 +41,13 @@ def replace_repo_references(cfg: Config, **_: object) -> None:
         _replace_refs_in_repo(cfg.repo_dir, cfg.full_repo, cfg.owner_lower)
         _replace_refs_in_repo(cfg.backend_repo_dir, cfg.backend_full_repo, cfg.owner_lower)
         _replace_refs_in_repo(cfg.frontend_repo_dir, cfg.frontend_full_repo, cfg.owner_lower)
+
+        # Fix docker-compose image URLs: repo -> repo-frontend / repo-backend
+        # Must run after replace_refs because docker-compose originally has
+        # optivem/starter which gets replaced to owner/repo above.
+        fixup_multirepo_docker_compose(
+            cfg.repo_dir, cfg.repo, cfg.frontend_repo, cfg.backend_repo, cfg.backend_lang,
+        )
 
     ok("Repository reference replacement complete")
 

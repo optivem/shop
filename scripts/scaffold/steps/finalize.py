@@ -227,10 +227,94 @@ def verify_acceptance_stage(cfg: Config, github: GitHub, **_: object) -> None:
 
     _verify_workflow(github, "Acceptance stage", trigger_workflow=wf)
 
+    # Extract RC version from the acceptance stage run for downstream stages
+    rc_version = _get_rc_version(github)
+    if rc_version:
+        cfg.rc_version = rc_version  # type: ignore[attr-defined]
+        ok(f"RC version: {rc_version}")
+    else:
+        fatal("Could not determine RC version from acceptance stage run")
 
-def _verify_workflow(github: GitHub, label: str, trigger_workflow: str | None = None) -> None:
+
+# ─── Step 12: Verify QA stage ───────────────────────────────────────────────
+
+
+def verify_qa_stage(cfg: Config, github: GitHub, **_: object) -> None:
+    log("Step 12: Triggering and verifying QA stage...")
+
+    if cfg.dry_run:
+        log("[DRY RUN] Would trigger and wait for QA stage workflow")
+        return
+
+    rc_version = getattr(cfg, "rc_version", None)
+    if not rc_version:
+        fatal("No RC version available — acceptance stage must run first")
+
+    test_lang = cfg.test_lang
+    if cfg.arch == "monolith":
+        wf = f"monolith-{test_lang}-qa-stage.yml"
+    else:
+        wf = f"multitier-system-{test_lang}-qa-stage.yml"
+
+    _verify_workflow(github, "QA stage", trigger_workflow=wf,
+                     fields={"version": rc_version})
+
+
+# ─── Step 13: Verify QA signoff ─────────────────────────────────────────────
+
+
+def verify_qa_signoff(cfg: Config, github: GitHub, **_: object) -> None:
+    log("Step 13: Triggering and verifying QA signoff...")
+
+    if cfg.dry_run:
+        log("[DRY RUN] Would trigger and wait for QA signoff workflow")
+        return
+
+    rc_version = getattr(cfg, "rc_version", None)
+    if not rc_version:
+        fatal("No RC version available — acceptance stage must run first")
+
+    test_lang = cfg.test_lang
+    if cfg.arch == "monolith":
+        wf = f"monolith-{test_lang}-qa-signoff.yml"
+    else:
+        wf = f"multitier-system-{test_lang}-qa-signoff.yml"
+
+    _verify_workflow(github, "QA signoff", trigger_workflow=wf,
+                     fields={"version": rc_version, "result": "approved"})
+
+
+# ─── Step 14: Verify production stage ───────────────────────────────────────
+
+
+def verify_prod_stage(cfg: Config, github: GitHub, **_: object) -> None:
+    log("Step 14: Triggering and verifying production stage...")
+
+    if cfg.dry_run:
+        log("[DRY RUN] Would trigger and wait for production stage workflow")
+        return
+
+    rc_version = getattr(cfg, "rc_version", None)
+    if not rc_version:
+        fatal("No RC version available — acceptance stage must run first")
+
+    test_lang = cfg.test_lang
+    if cfg.arch == "monolith":
+        wf = f"monolith-{test_lang}-prod-stage.yml"
+    else:
+        wf = f"multitier-system-{test_lang}-prod-stage.yml"
+
+    _verify_workflow(github, "Production stage", trigger_workflow=wf,
+                     fields={"version": rc_version})
+
+
+# ─── Workflow helpers ────────────────────────────────────────────────────────
+
+
+def _verify_workflow(github: GitHub, label: str, trigger_workflow: str | None = None,
+                     fields: dict[str, str] | None = None) -> None:
     if trigger_workflow:
-        github.workflow_run(trigger_workflow)
+        github.workflow_run(trigger_workflow, fields=fields)
         time.sleep(5)
 
     result = github.run_watch()
@@ -240,43 +324,31 @@ def _verify_workflow(github: GitHub, label: str, trigger_workflow: str | None = 
     ok(f"{label} passed!")
 
 
-# ─── Step 12: Cleanup ───────────────────────────────────────────────────────
+def _get_rc_version(github: GitHub) -> str | None:
+    """Get the latest RC version from GitHub releases."""
+    import json as _json
 
+    result = run(
+        f"gh api repos/{github.repo}/releases --jq .[0].tag_name",
+        check=False, capture=True,
+    )
+    tag = result.stdout.strip()
+    if tag and "-rc." in tag:
+        return tag
 
-def cleanup(cfg: Config, github: GitHub, sonarcloud: SonarCloud) -> None:
-    if not cfg.test_mode:
-        return
+    # Fallback: list releases as JSON and parse
+    result = run(
+        f"gh api repos/{github.repo}/releases",
+        check=False, capture=True,
+    )
+    try:
+        releases = _json.loads(result.stdout)
+        if releases:
+            tag = releases[0].get("tag_name", "")
+            if "-rc." in tag:
+                return tag
+    except (ValueError, IndexError, KeyError):
+        pass
 
-    should_cleanup = cfg.cleanup
-    if should_cleanup == "ask":
-        answer = input(f"\nDelete test repository {cfg.full_repo}? [y/N] ").strip().lower()
-        should_cleanup = "yes" if answer in ("y", "yes") else "no"
+    return None
 
-    if should_cleanup == "yes":
-        log(f"Cleaning up: deleting {cfg.full_repo}...")
-        github.delete()
-        ok(f"Deleted repository {cfg.full_repo}")
-
-        if cfg.arch == "multitier":
-            gh_frontend = github.for_repo(cfg.frontend_full_repo)
-            gh_backend = github.for_repo(cfg.backend_full_repo)
-            gh_frontend.delete()
-            ok(f"Deleted repository {cfg.frontend_full_repo}")
-            gh_backend.delete()
-            ok(f"Deleted repository {cfg.backend_full_repo}")
-
-        for key in get_sonar_project_keys(cfg):
-            sonarcloud.delete_project(key)
-
-        if cfg.repo_dir and os.path.exists(cfg.repo_dir):
-            shutil.rmtree(cfg.repo_dir, ignore_errors=True)
-        if cfg.frontend_repo_dir and os.path.exists(cfg.frontend_repo_dir):
-            shutil.rmtree(cfg.frontend_repo_dir, ignore_errors=True)
-        if cfg.backend_repo_dir and os.path.exists(cfg.backend_repo_dir):
-            shutil.rmtree(cfg.backend_repo_dir, ignore_errors=True)
-        ok("Cleanup complete")
-    else:
-        log(f"Keeping repository: https://github.com/{cfg.full_repo}")
-        if cfg.arch == "multitier":
-            log(f"Keeping repository: https://github.com/{cfg.frontend_full_repo}")
-            log(f"Keeping repository: https://github.com/{cfg.backend_full_repo}")

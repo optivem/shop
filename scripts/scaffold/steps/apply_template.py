@@ -22,27 +22,48 @@ from ..templates import (
 _INTERNAL_PORTS = {"java": 8080, "dotnet": 8080, "typescript": 3000}
 
 
-def clone_and_apply_template(cfg: Config, github: GitHub, **_: object) -> None:
-    log("Step 4: Cloning repo(s) and applying template files...")
+def clone_repos(cfg: Config, github: GitHub, **_: object) -> None:
+    log("Step 4: Cloning repo(s)...")
 
     if cfg.dry_run:
-        log("[DRY RUN] Would clone repo(s) and copy template files")
+        log("[DRY RUN] Would clone repo(s)")
         return
 
     repo_dir = os.path.join(cfg.workdir, "repo")
-    starter = cfg.starter_path
-
     github.clone(repo_dir)
+    cfg.repo_dir = repo_dir
     ok(f"Cloned {cfg.full_repo}")
+
+    if cfg.arch == "multitier":
+        frontend_dir = os.path.join(cfg.workdir, "repo-frontend")
+        backend_dir = os.path.join(cfg.workdir, "repo-backend")
+
+        github.for_repo(cfg.frontend_full_repo).clone(frontend_dir)
+        cfg.frontend_repo_dir = frontend_dir
+        ok(f"Cloned {cfg.frontend_full_repo}")
+
+        github.for_repo(cfg.backend_full_repo).clone(backend_dir)
+        cfg.backend_repo_dir = backend_dir
+        ok(f"Cloned {cfg.backend_full_repo}")
+
+
+def apply_template(cfg: Config, **_: object) -> None:
+    log("Step 5: Applying template files...")
+
+    if cfg.dry_run:
+        log("[DRY RUN] Would apply template files")
+        return
+
+    repo_dir = cfg.repo_dir
+    starter = cfg.starter_path
 
     os.makedirs(os.path.join(repo_dir, ".github", "workflows"), exist_ok=True)
 
     if cfg.arch == "monolith":
         _apply_monolith(cfg, repo_dir, starter)
     else:
-        _apply_multitier(cfg, repo_dir, starter, github)
+        _apply_multitier(cfg, repo_dir, starter)
 
-    cfg.repo_dir = repo_dir
     ok("Applied template files")
 
 
@@ -76,26 +97,14 @@ def _apply_monolith(cfg: Config, repo_dir: str, starter: str) -> None:
         _fixup_monolith_cross_lang(repo_dir, lang, test_lang)
 
 
-def _apply_multitier(cfg: Config, repo_dir: str, starter: str, github: GitHub) -> None:
+def _apply_multitier(cfg: Config, repo_dir: str, starter: str) -> None:
     backend_lang = cfg.backend_lang
     frontend_lang = cfg.frontend_lang
     test_lang = cfg.test_lang
     assert backend_lang is not None and frontend_lang is not None
 
-    # ── Clone component repos ──────────────────────────────────────────────
-    frontend_dir = os.path.join(cfg.workdir, "repo-frontend")
-    backend_dir = os.path.join(cfg.workdir, "repo-backend")
-
-    gh_frontend = github.for_repo(cfg.frontend_full_repo)
-    gh_backend = github.for_repo(cfg.backend_full_repo)
-
-    gh_frontend.clone(frontend_dir)
-    ok(f"Cloned {cfg.frontend_full_repo}")
-    gh_backend.clone(backend_dir)
-    ok(f"Cloned {cfg.backend_full_repo}")
-
-    cfg.frontend_repo_dir = frontend_dir
-    cfg.backend_repo_dir = backend_dir
+    frontend_dir = cfg.frontend_repo_dir
+    backend_dir = cfg.backend_repo_dir
 
     # ── System repo: workflows, system-test, VERSION ───────────────────────
     system_workflows = [
@@ -113,14 +122,17 @@ def _apply_multitier(cfg: Config, repo_dir: str, starter: str, github: GitHub) -
     select_docker_compose(test_dst, "multi")
     copy_version(starter, repo_dir)
 
+    # Cross-language fixup must run BEFORE image URL fixup, because the
+    # template uses the test_lang in image names (e.g. multitier-backend-dotnet)
+    # and the cross-lang fixup renames them to the actual backend_lang.
+    if backend_lang != test_lang:
+        _fixup_multitier_cross_lang_system(repo_dir, backend_lang, test_lang)
+
     # Fix system workflows for multi-repo: image URLs and token
     fixup_multirepo_image_urls(
         repo_dir, cfg.repo, cfg.frontend_repo, cfg.backend_repo, backend_lang,
     )
     fixup_multirepo_token(repo_dir)
-
-    if backend_lang != test_lang:
-        _fixup_multitier_cross_lang_system(repo_dir, backend_lang, test_lang)
 
     ok("Applied system repo template")
 

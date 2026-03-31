@@ -82,8 +82,17 @@ class GitHub:
     def clone(self, dest: str) -> None:
         run(f'gh repo clone {self.repo} "{dest}"')
 
-    def workflow_run(self, workflow: str) -> None:
-        self.run(f"workflow run {workflow}")
+    def workflow_run(self, workflow: str, fields: dict[str, str] | None = None) -> None:
+        field_args = " ".join(f'-f {k}="{v}"' for k, v in fields.items()) if fields else ""
+        self.run(f"workflow run {workflow} {field_args}".strip())
+
+    def get_latest_run_id(self) -> str:
+        """Get the database ID of the most recent workflow run."""
+        result = run(
+            f"gh run list --repo {self.repo} --limit 1 --json databaseId --jq .[0].databaseId",
+            check=False, capture=True,
+        )
+        return result.stdout.strip()
 
     def run_watch(self) -> subprocess.CompletedProcess[str]:
         # Get the latest run ID (gh run watch requires explicit ID in non-interactive mode)

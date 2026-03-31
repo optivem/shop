@@ -35,8 +35,6 @@ class Config:
     frontend_lang: str | None
     test_lang: str
     dry_run: bool
-    test_mode: bool
-    cleanup: str  # "yes", "no", or "ask"
     workdir: str
     starter_path: str
     dockerhub_username: str
@@ -80,9 +78,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--frontend-lang", choices=["react"], help="Frontend language (multitier)")
     parser.add_argument("--random-suffix", action="store_true", help="Append 4-char hex suffix to repo name")
     parser.add_argument("--dry-run", action="store_true", help="Print actions without executing")
-    parser.add_argument("--test", action="store_true", help="Test mode with optional cleanup")
-    parser.add_argument("--cleanup", action="store_true", help="Auto-cleanup in test mode")
-    parser.add_argument("--no-cleanup", action="store_true", help="Keep repo in test mode")
     parser.add_argument("--workdir", help="Working directory for cloning (default: temp dir)")
     return parser.parse_args()
 
@@ -126,6 +121,13 @@ def validate(args: argparse.Namespace) -> Config:
     if not args.dry_run:
         for name, val in required_vars:
             if not val:
+                if name == "GHCR_TOKEN":
+                    fatal(
+                        f"{name} environment variable is required for multitier setup.\n"
+                        "  Create a Personal Access Token (classic) with write:packages + read:packages scopes:\n"
+                        "  https://github.com/settings/tokens\n"
+                        "  Then: export GHCR_TOKEN=<your-token>"
+                    )
                 fatal(f"{name} environment variable is required")
 
     script_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -160,8 +162,6 @@ def validate(args: argparse.Namespace) -> Config:
         frontend_lang=frontend_lang,
         test_lang=test_lang,
         dry_run=args.dry_run,
-        test_mode=args.test,
-        cleanup="yes" if args.cleanup else ("no" if args.no_cleanup else "ask"),
         workdir=args.workdir or tempfile.mkdtemp(prefix="scaffold-"),
         starter_path=starter_path,
         dockerhub_username=dockerhub_username,
