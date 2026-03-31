@@ -5,7 +5,9 @@ services:
   frontend:
     image: ghcr.io/optivem/starter/multitier-frontend-react:latest
     ports:
-      - "3102:8080"
+      - "3102:3000"
+    environment:
+      - BACKEND_API_URL=http://backend:8081
     depends_on:
       - backend
     networks:
@@ -19,7 +21,7 @@ services:
       - POSTGRES_URL=jdbc:postgresql://postgres:5432/starter
       - POSTGRES_USERNAME=starter_user
       - POSTGRES_PASSWORD=starter_password
-      - ALLOWED_ORIGINS=http://localhost:3102,http://frontend:8080
+      - ALLOWED_ORIGINS=http://localhost:3102,http://frontend:3000
       - ERP_API_URL=http://external-stub:8080/erp
       - CLOCK_API_URL=http://external-stub:8080/clock
       - EXTERNAL_SYSTEM_MODE=stub

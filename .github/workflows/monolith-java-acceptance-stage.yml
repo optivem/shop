@@ -36,9 +36,15 @@ jobs:
           names: |
             DOCKERHUB_USERNAME
             DOCKERHUB_TOKEN
+            SYSTEM_URL
+            ERP_URL
+            CLOCK_URL
         env:
           DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          SYSTEM_URL: ${{ vars.SYSTEM_URL }}
+          ERP_URL: ${{ vars.ERP_URL }}
+          CLOCK_URL: ${{ vars.CLOCK_URL }}
 
       - name: Checkout Repository
         uses: actions/checkout@v5
@@ -102,7 +108,9 @@ jobs:
           compose-file: docker-compose.pipeline.monolith.real.yml
           systems: |
             [
-              { "name": "Shop", "url": "${{ vars.SYSTEM_URL }}/" }
+              { "name": "Shop", "url": "${{ vars.SYSTEM_URL }}/" },
+              { "name": "ERP", "url": "${{ vars.ERP_URL }}/health" },
+              { "name": "Clock", "url": "${{ vars.CLOCK_URL }}/health" }
             ]
           working-directory: system-test/java
 
@@ -111,6 +119,10 @@ jobs:
         with:
           java-version: 21
           working-directory: system-test/java
+
+      - name: Install Playwright Dependencies
+        run: npx playwright install --with-deps chromium
+        working-directory: system-test/java
 
       - name: Smoke (Stub)
         run: ./gradlew test -Dtype=smoke -DexternalSystemMode=stub -Denvironment=acceptance

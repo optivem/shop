@@ -10,7 +10,9 @@ services:
   frontend:
     image: ghcr.io/optivem/starter/multitier-frontend-react:latest
     ports:
-      - "8080:8080"
+      - "8080:3000"
+    environment:
+      - BACKEND_API_URL=http://backend:8081
     depends_on:
       - backend
     networks:

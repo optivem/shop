@@ -25,9 +25,15 @@ jobs:
           names: |
             DOCKERHUB_USERNAME
             DOCKERHUB_TOKEN
+            SYSTEM_URL
+            ERP_URL
+            CLOCK_URL
         env:
           DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          SYSTEM_URL: ${{ vars.SYSTEM_URL }}
+          ERP_URL: ${{ vars.ERP_URL }}
+          CLOCK_URL: ${{ vars.CLOCK_URL }}
 
       - name: Check RC Exists
         id: check-release
@@ -83,7 +89,9 @@ jobs:
           compose-file: docker-compose.monolith.yml
           systems: |
             [
-              { "name": "Shop", "url": "${{ vars.SYSTEM_URL }}/" }
+              { "name": "Shop", "url": "${{ vars.SYSTEM_URL }}/" },
+              { "name": "ERP", "url": "${{ vars.ERP_URL }}/health" },
+              { "name": "Clock", "url": "${{ vars.CLOCK_URL }}/health" }
             ]
           working-directory: system-test/dotnet
 

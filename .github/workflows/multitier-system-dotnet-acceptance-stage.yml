@@ -36,9 +36,17 @@ jobs:
           names: |
             DOCKERHUB_USERNAME
             DOCKERHUB_TOKEN
+            SYSTEM_UI_URL
+            SYSTEM_API_URL
+            ERP_URL
+            CLOCK_URL
         env:
           DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          SYSTEM_UI_URL: ${{ vars.SYSTEM_UI_URL }}
+          SYSTEM_API_URL: ${{ vars.SYSTEM_API_URL }}
+          ERP_URL: ${{ vars.ERP_URL }}
+          CLOCK_URL: ${{ vars.CLOCK_URL }}
 
       - name: Checkout Repository
         uses: actions/checkout@v5
@@ -119,9 +127,9 @@ jobs:
         run: dotnet build
         working-directory: system-test/dotnet
 
-      - name: Install Playwright Browsers
+      - name: Install Playwright Dependencies
         run: |
-          pwsh bin/Debug/net8.0/playwright.ps1 install
+          pwsh bin/Debug/net8.0/playwright.ps1 install --with-deps
         working-directory: system-test/dotnet
 
       - name: Smoke (Stub)

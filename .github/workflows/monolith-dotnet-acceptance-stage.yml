@@ -36,9 +36,15 @@ jobs:
           names: |
             DOCKERHUB_USERNAME
             DOCKERHUB_TOKEN
+            SYSTEM_URL
+            ERP_URL
+            CLOCK_URL
         env:
           DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          SYSTEM_URL: ${{ vars.SYSTEM_URL }}
+          ERP_URL: ${{ vars.ERP_URL }}
+          CLOCK_URL: ${{ vars.CLOCK_URL }}
 
       - name: Checkout Repository
         uses: actions/checkout@v5
@@ -102,7 +108,9 @@ jobs:
           compose-file: docker-compose.monolith.yml
           systems: |
             [
-              { "name": "Shop", "url": "${{ vars.SYSTEM_URL }}/" }
+              { "name": "Shop", "url": "${{ vars.SYSTEM_URL }}/" },
+              { "name": "ERP", "url": "${{ vars.ERP_URL }}/health" },
+              { "name": "Clock", "url": "${{ vars.CLOCK_URL }}/health" }
             ]
           working-directory: system-test/dotnet
 
@@ -115,9 +123,9 @@ jobs:
         run: dotnet build
         working-directory: system-test/dotnet
 
-      - name: Install Playwright Browsers
+      - name: Install Playwright Dependencies
         run: |
-          pwsh bin/Debug/net8.0/playwright.ps1 install
+          pwsh bin/Debug/net8.0/playwright.ps1 install --with-deps
         working-directory: system-test/dotnet
 
       - name: Smoke (Stub)
