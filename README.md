@@ -102,9 +102,13 @@ The `.github/workflows/` directory contains runnable pipelines for all 6 matched
 
 ## Verification
 
-Orchestrator workflows that run the full pipeline (commit stage, acceptance stage, QA stage, QA signoff, prod stage) sequentially, failing fast on any error:
-
+[![verify-scaffold](https://github.com/optivem/starter/actions/workflows/verify-scaffold.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/verify-scaffold.yml)
 [![verify-all](https://github.com/optivem/starter/actions/workflows/verify-all.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/verify-all.yml)
+
+**verify-scaffold** — scaffolds test projects and verifies the full pipeline end-to-end (daily + manual dispatch).
+
+**verify-all** — runs the full pipeline on the starter repo's own templates:
+
 [![monolith-java-verify](https://github.com/optivem/starter/actions/workflows/monolith-java-verify.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/monolith-java-verify.yml)
 [![monolith-dotnet-verify](https://github.com/optivem/starter/actions/workflows/monolith-dotnet-verify.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/monolith-dotnet-verify.yml)
 [![monolith-typescript-verify](https://github.com/optivem/starter/actions/workflows/monolith-typescript-verify.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/monolith-typescript-verify.yml)
