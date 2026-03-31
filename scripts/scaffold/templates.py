@@ -24,7 +24,7 @@ def copy_workflows(workflow_names: list[str], starter: str, repo_dir: str) -> No
 def select_docker_compose(test_dst: str, variant: str) -> None:
     """Keep the chosen docker-compose variant, remove the other.
     variant: 'single' for monolith, 'multi' for multitier.
-    The kept file retains its original name (e.g. docker-compose.single.yml)
+    The kept file retains its original name (e.g. docker-compose.multitier.yml)
     because workflows reference the variant-specific filename.
     """
     remove = "multi" if variant == "single" else "single"

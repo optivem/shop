@@ -195,7 +195,7 @@ def _fixup_monolith_cross_lang(
         os.path.join(repo_dir, ".github", "workflows", f"monolith-{test_lang}-acceptance-stage.yml"),
         os.path.join(repo_dir, ".github", "workflows", f"monolith-{test_lang}-qa-stage.yml"),
         os.path.join(repo_dir, ".github", "workflows", f"monolith-{test_lang}-prod-stage.yml"),
-        os.path.join(repo_dir, "system-test", test_lang, "docker-compose.single.yml"),
+        os.path.join(repo_dir, "system-test", test_lang, "docker-compose.multitier.yml"),
     ]
     for path in targets:
         if os.path.isfile(path):
@@ -205,7 +205,7 @@ def _fixup_monolith_cross_lang(
     system_port = _INTERNAL_PORTS[lang]
     template_port = _INTERNAL_PORTS[test_lang]
     if system_port != template_port:
-        compose = os.path.join(repo_dir, "system-test", test_lang, "docker-compose.single.yml")
+        compose = os.path.join(repo_dir, "system-test", test_lang, "docker-compose.multitier.yml")
         if os.path.isfile(compose):
             replace_in_file(compose, f"8080:{template_port}", f"8080:{system_port}")
 
@@ -223,7 +223,7 @@ def _fixup_multitier_cross_lang_system(
         os.path.join(repo_dir, ".github", "workflows", f"multitier-system-{test_lang}-acceptance-stage.yml"),
         os.path.join(repo_dir, ".github", "workflows", f"multitier-system-{test_lang}-qa-stage.yml"),
         os.path.join(repo_dir, ".github", "workflows", f"multitier-system-{test_lang}-prod-stage.yml"),
-        os.path.join(repo_dir, "system-test", test_lang, "docker-compose.multi.yml"),
+        os.path.join(repo_dir, "system-test", test_lang, "docker-compose.monolith.yml"),
     ]
     for path in targets:
         if os.path.isfile(path):

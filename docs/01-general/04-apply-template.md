@@ -97,7 +97,7 @@ sed -i "s|monolith-${TEST_LANG}-monolith|monolith-${LANG}-monolith|g" \
   .github/workflows/monolith-${TEST_LANG}-acceptance-stage.yml \
   .github/workflows/monolith-${TEST_LANG}-qa-stage.yml \
   .github/workflows/monolith-${TEST_LANG}-prod-stage.yml \
-  system-test/${TEST_LANG}/docker-compose.single.yml
+  system-test/${TEST_LANG}/docker-compose.multitier.yml
 ```
 
 **Fix port mapping** — each language exposes a different internal port (Java/dotnet: `8080`, TypeScript: `3000`). The docker-compose container port must match your **system** language, not the test language:
@@ -116,7 +116,7 @@ esac
 
 if [ "$SYSTEM_PORT" != "$TEMPLATE_PORT" ]; then
   sed -i "s|8080:${TEMPLATE_PORT}|8080:${SYSTEM_PORT}|g" \
-    system-test/${TEST_LANG}/docker-compose.single.yml
+    system-test/${TEST_LANG}/docker-compose.multitier.yml
 fi
 ```
 
@@ -129,7 +129,7 @@ sed -i "s|multitier-backend-${TEST_LANG}|multitier-backend-${BACKEND_LANG}|g" \
   .github/workflows/multitier-system-${TEST_LANG}-acceptance-stage.yml \
   .github/workflows/multitier-system-${TEST_LANG}-qa-stage.yml \
   .github/workflows/multitier-system-${TEST_LANG}-prod-stage.yml \
-  system-test/${TEST_LANG}/docker-compose.multi.yml
+  system-test/${TEST_LANG}/docker-compose.monolith.yml
 ```
 
 > **Note:** The frontend image (`multitier-frontend-react`) is the same regardless of test language, so no fix is needed for that.
