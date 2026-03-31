@@ -4,9 +4,30 @@ on:
   schedule:
     - cron: '0 4 * * *'  # Run daily at 04:00 UTC
   workflow_dispatch:
+    inputs:
+      language:
+        description: 'Language to verify (java, dotnet, typescript). Leave empty to run all.'
+        required: false
+        default: ''
+        type: choice
+        options:
+          - ''
+          - java
+          - dotnet
+          - typescript
+      architecture:
+        description: 'Architecture to verify (monolith, multitier). Leave empty to run all.'
+        required: false
+        default: ''
+        type: choice
+        options:
+          - ''
+          - monolith
+          - multitier
 
 jobs:
   monolith-java:
+    if: (inputs.language == '' || inputs.language == 'java') && (inputs.architecture == '' || inputs.architecture == 'monolith')
     runs-on: ubuntu-latest
     steps:
       - name: Trigger monolith-java-verify
@@ -29,7 +50,7 @@ jobs:
           gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status
 
   monolith-dotnet:
-    needs: monolith-java
+    if: (inputs.language == '' || inputs.language == 'dotnet') && (inputs.architecture == '' || inputs.architecture == 'monolith')
     runs-on: ubuntu-latest
     steps:
       - name: Trigger monolith-dotnet-verify
@@ -52,7 +73,7 @@ jobs:
           gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status
 
   monolith-typescript:
-    needs: monolith-dotnet
+    if: (inputs.language == '' || inputs.language == 'typescript') && (inputs.architecture == '' || inputs.architecture == 'monolith')
     runs-on: ubuntu-latest
     steps:
       - name: Trigger monolith-typescript-verify
@@ -75,7 +96,7 @@ jobs:
           gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status
 
   multitier-java:
-    needs: monolith-typescript
+    if: (inputs.language == '' || inputs.language == 'java') && (inputs.architecture == '' || inputs.architecture == 'multitier')
     runs-on: ubuntu-latest
     steps:
       - name: Trigger multitier-java-verify
@@ -98,7 +119,7 @@ jobs:
           gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status
 
   multitier-dotnet:
-    needs: multitier-java
+    if: (inputs.language == '' || inputs.language == 'dotnet') && (inputs.architecture == '' || inputs.architecture == 'multitier')
     runs-on: ubuntu-latest
     steps:
       - name: Trigger multitier-dotnet-verify
@@ -121,7 +142,7 @@ jobs:
           gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status
 
   multitier-typescript:
-    needs: multitier-dotnet
+    if: (inputs.language == '' || inputs.language == 'typescript') && (inputs.architecture == '' || inputs.architecture == 'multitier')
     runs-on: ubuntu-latest
     steps:
       - name: Trigger multitier-typescript-verify
