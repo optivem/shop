@@ -8,7 +8,7 @@ import time
 
 from ..config import Config
 from ..log import fail, fatal, log, ok
-from ..shell import GitHub, SonarCloud, run
+from ..shell import GitHub, SonarCloud, check_rate_limit, run
 
 
 def get_sonar_project_keys(cfg: Config) -> list[str]:
@@ -313,10 +313,12 @@ def verify_prod_stage(cfg: Config, github: GitHub, **_: object) -> None:
 
 def _verify_workflow(github: GitHub, label: str, trigger_workflow: str | None = None,
                      fields: dict[str, str] | None = None) -> None:
+    check_rate_limit()
     if trigger_workflow:
         github.workflow_run(trigger_workflow, fields=fields)
         time.sleep(5)
 
+    check_rate_limit()
     result = github.run_watch()
     if result.returncode != 0:
         fail(f"{label} failed!")
@@ -328,6 +330,7 @@ def _get_rc_version(github: GitHub) -> str | None:
     """Get the latest RC version from GitHub releases."""
     import json as _json
 
+    check_rate_limit()
     result = run(
         f"gh api repos/{github.repo}/releases --jq .[0].tag_name",
         check=False, capture=True,

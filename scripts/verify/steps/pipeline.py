@@ -6,7 +6,7 @@ import json
 import time
 
 from scaffold.log import fail, fatal, log, ok
-from scaffold.shell import run
+from scaffold.shell import check_rate_limit, run
 
 
 POLL_INTERVAL = 30
@@ -42,6 +42,7 @@ def _trigger_and_wait(
     time.sleep(5)
 
     for attempt in range(1, MAX_POLLS + 1):
+        check_rate_limit()
         result = run(
             f"gh run list --repo {repo} --workflow {workflow} --limit 1 --json status,conclusion,databaseId",
             capture=True,
@@ -76,6 +77,7 @@ def _get_latest_rc_version(repo: str, dry_run: bool = False) -> str:
     if dry_run:
         return "v1.0.0-rc.1"
 
+    check_rate_limit()
     result = run(
         f'gh release list --repo {repo} --limit 10 --json tagName,isPrerelease',
         capture=True,

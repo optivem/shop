@@ -5,11 +5,51 @@ from __future__ import annotations
 import base64
 import json
 import subprocess
+import time
 import urllib.error
 import urllib.request
 
 from .config import Config
 from .log import log, fatal, ok, warn
+
+
+# ─── Rate limit settings ──────────────────────────────────────────────────────
+# GitHub API limits:
+# - Personal access token: 5,000 requests/hour
+# - GITHUB_TOKEN in Actions: 1,000 requests/hour/repo
+# Reference: https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api
+
+RATE_LIMIT_THRESHOLD = 50
+
+
+# ─── Rate limit helper ─────────────────────────────────────────────────────
+
+
+class RateLimitExceeded(Exception):
+    """Raised when a gh command fails due to GitHub API rate limiting."""
+
+
+def check_rate_limit(threshold: int = RATE_LIMIT_THRESHOLD) -> None:
+    """Check GitHub API rate limit and wait if remaining is below threshold."""
+    result = subprocess.run(
+        "gh api rate_limit --jq '.resources.core'",
+        shell=True, check=False, capture_output=True, text=True,
+    )
+    if result.returncode != 0:
+        return
+    try:
+        data = json.loads(result.stdout)
+    except json.JSONDecodeError:
+        return
+    remaining = data.get("remaining", 999)
+    if remaining < threshold:
+        reset_ts = data.get("reset", 0)
+        wait_secs = max(reset_ts - int(time.time()) + 5, 0)
+        if wait_secs > 0:
+            log(f"Rate limit low ({remaining} remaining). Waiting {wait_secs}s for reset...")
+            time.sleep(wait_secs)
+        else:
+            log(f"Rate limit low ({remaining} remaining) but reset is imminent.")
 
 
 # ─── Subprocess runner ──────────────────────────────────────────────────────
@@ -29,9 +69,15 @@ def run(
     result = subprocess.run(
         cmd, shell=True, check=False, capture_output=capture, text=True, cwd=cwd,
     )
-    if check and result.returncode != 0:
-        stderr = result.stderr if capture else ""
-        fatal(f"Command failed (exit {result.returncode}): {cmd}\n{stderr}")
+    if result.returncode != 0:
+        output = (result.stderr or "") + (result.stdout or "")
+        if "rate limit" in output.lower() or "API rate limit exceeded" in output:
+            raise RateLimitExceeded(
+                f"GitHub API rate limit exceeded. Command: {cmd}\n{output.strip()}"
+            )
+        if check:
+            stderr = result.stderr if capture else ""
+            fatal(f"Command failed (exit {result.returncode}): {cmd}\n{stderr}")
     return result
 
 
