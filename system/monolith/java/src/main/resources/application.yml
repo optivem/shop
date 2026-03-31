@@ -5,3 +5,7 @@ spring:
 todos:
   api:
     host: ${TODOS_API_HOST:https://jsonplaceholder.typicode.com}
+
+quotes:
+  api:
+    host: ${QUOTES_API_HOST:https://jsonplaceholder.typicode.com}

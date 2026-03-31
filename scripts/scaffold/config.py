@@ -53,8 +53,16 @@ class Config:
     dotnet_ns_new: str = ""
     ts_pkg_old: str = field(default="@optivem/starter-system-test")
     ts_pkg_new: str = ""
+    # Multi-repo (multitier only)
+    ghcr_token: str = ""
+    frontend_repo: str = ""
+    backend_repo: str = ""
+    frontend_full_repo: str = ""
+    backend_full_repo: str = ""
     # Set after clone
     repo_dir: str = ""
+    frontend_repo_dir: str = ""
+    backend_repo_dir: str = ""
 
 
 def parse_args() -> argparse.Namespace:
@@ -105,11 +113,18 @@ def validate(args: argparse.Namespace) -> Config:
     dockerhub_username = os.environ.get("DOCKERHUB_USERNAME", "")
     dockerhub_token = os.environ.get("DOCKERHUB_TOKEN", "")
     sonar_token = os.environ.get("SONAR_TOKEN", "")
+    ghcr_token = os.environ.get("GHCR_TOKEN", "")
+
+    required_vars = [
+        ("DOCKERHUB_USERNAME", dockerhub_username),
+        ("DOCKERHUB_TOKEN", dockerhub_token),
+        ("SONAR_TOKEN", sonar_token),
+    ]
+    if args.arch == "multitier":
+        required_vars.append(("GHCR_TOKEN", ghcr_token))
 
     if not args.dry_run:
-        for name, val in [("DOCKERHUB_USERNAME", dockerhub_username),
-                          ("DOCKERHUB_TOKEN", dockerhub_token),
-                          ("SONAR_TOKEN", sonar_token)]:
+        for name, val in required_vars:
             if not val:
                 fatal(f"{name} environment variable is required")
 
@@ -131,6 +146,9 @@ def validate(args: argparse.Namespace) -> Config:
     repo_pascal = to_pascal_case(repo)
     repo_nohyphens = to_java_lower(repo)
 
+    frontend_repo = f"{repo}-frontend" if args.arch == "multitier" else ""
+    backend_repo = f"{repo}-backend" if args.arch == "multitier" else ""
+
     return Config(
         owner=owner,
         repo=repo,
@@ -149,6 +167,11 @@ def validate(args: argparse.Namespace) -> Config:
         dockerhub_username=dockerhub_username,
         dockerhub_token=dockerhub_token,
         sonar_token=sonar_token,
+        ghcr_token=ghcr_token,
+        frontend_repo=frontend_repo,
+        backend_repo=backend_repo,
+        frontend_full_repo=f"{owner}/{frontend_repo}" if frontend_repo else "",
+        backend_full_repo=f"{owner}/{backend_repo}" if backend_repo else "",
         owner_pascal=owner_pascal,
         owner_lower=owner_lower,
         repo_pascal=repo_pascal,

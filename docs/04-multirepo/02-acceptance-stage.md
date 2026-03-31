@@ -7,14 +7,14 @@ For a working example, see the [Starter](https://github.com/optivem/starter) tem
 Create a Personal Access Token (classic) with `write:packages` and `read:packages` scopes (browser — token creation cannot be done via CLI):
 
 1. Go to https://github.com/settings/tokens and click **Generate new token** → **Generate new token (classic)**.
-2. In Note, write: `DOCKER_REGISTRY_TOKEN`
+2. In Note, write: `GHCR_TOKEN`
 3. Under Select scopes, tick: `write:packages`, `read:packages`.
 4. Click **Generate token** and copy the token value.
 
 Add the PAT as a secret on your system repository (CLI):
 
 ```bash
-gh secret set DOCKER_REGISTRY_TOKEN --repo <owner>/<system-repo>
+gh secret set GHCR_TOKEN --repo <owner>/<system-repo>
 ```
 
 Paste the token value when prompted.
@@ -35,7 +35,7 @@ image-urls: |
 
 ## 3. Update RC Tagging
 
-In the step `Tag Docker Images for Prerelease`, set the value `GITHUB_TOKEN: ${{ secrets.DOCKER_REGISTRY_TOKEN }}`.
+In the step `Tag Docker Images for Prerelease`, set the value `GITHUB_TOKEN: ${{ secrets.GHCR_TOKEN }}`.
 
 ## 4. Update Docker Compose
 
@@ -60,8 +60,8 @@ Verify that it is successful.
 
 ## Checklist
 
-1. `DOCKER_REGISTRY_TOKEN` secret is set
+1. `GHCR_TOKEN` secret is set
 2. Acceptance Stage finds latest artifacts from each component's repository
 3. Docker Compose references correct cross-repository image URLs
-4. Cross-repository RC tagging works with `DOCKER_REGISTRY_TOKEN`
+4. Cross-repository RC tagging works with `GHCR_TOKEN`
 5. `acceptance-stage` workflow completes successfully

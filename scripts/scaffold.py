@@ -70,6 +70,8 @@ def print_banner(cfg: Config) -> None:
     else:
         log(f"Backend:     {cfg.backend_lang}")
         log(f"Frontend:    {cfg.frontend_lang}")
+        log(f"Backend repo: {cfg.backend_full_repo}")
+        log(f"Frontend repo: {cfg.frontend_full_repo}")
     log(f"Test lang:   {cfg.test_lang}")
     log(f"Dry run:     {cfg.dry_run}")
     log(f"Test mode:   {cfg.test_mode}")
@@ -107,6 +109,9 @@ def main() -> None:
     print()
     print(f"  Repository: https://github.com/{cfg.full_repo}")
     print(f"  Actions:    https://github.com/{cfg.full_repo}/actions")
+    if cfg.arch == "multitier":
+        print(f"  Backend:    https://github.com/{cfg.backend_full_repo}")
+        print(f"  Frontend:   https://github.com/{cfg.frontend_full_repo}")
     print()
 
     cleanup(cfg, github, sonarcloud)

@@ -45,6 +45,6 @@ Verify that QA Signoff passes.
 ## Checklist
 
 1. QA Stage references correct image URLs from component repositories
-2. Cross-repository tagging works with `DOCKER_REGISTRY_TOKEN`
+2. Cross-repository tagging works with `GHCR_TOKEN`
 3. `qa-stage` workflow completes successfully
 4. `qa-signoff` workflow completes successfully

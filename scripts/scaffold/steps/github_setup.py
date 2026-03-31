@@ -14,11 +14,24 @@ def create_repo(cfg: Config, github: GitHub, **_: object) -> None:
 
     if cfg.dry_run:
         log(f"[DRY RUN] gh repo create {cfg.full_repo} --public --add-readme --license mit")
+        if cfg.arch == "multitier":
+            log(f"[DRY RUN] gh repo create {cfg.frontend_full_repo} --public --add-readme --license mit")
+            log(f"[DRY RUN] gh repo create {cfg.backend_full_repo} --public --add-readme --license mit")
         return
 
     github.create_repo()
     time.sleep(3)
     ok(f"Created repository: {cfg.full_repo}")
+
+    if cfg.arch == "multitier":
+        gh_frontend = github.for_repo(cfg.frontend_full_repo)
+        gh_backend = github.for_repo(cfg.backend_full_repo)
+        gh_frontend.create_repo()
+        time.sleep(3)
+        ok(f"Created repository: {cfg.frontend_full_repo}")
+        gh_backend.create_repo()
+        time.sleep(3)
+        ok(f"Created repository: {cfg.backend_full_repo}")
 
 
 def setup_environments(cfg: Config, github: GitHub, **_: object) -> None:
@@ -38,5 +51,15 @@ def setup_secrets_and_variables(cfg: Config, github: GitHub, **_: object) -> Non
 
     for env in ["acceptance", "qa", "production"]:
         github.variable_set("SYSTEM_URL", "http://localhost:8080", env=env)
+
+    if cfg.arch == "multitier":
+        github.secret_set("GHCR_TOKEN", cfg.ghcr_token)
+
+        for full_repo in [cfg.frontend_full_repo, cfg.backend_full_repo]:
+            gh = github.for_repo(full_repo)
+            gh.secret_set("DOCKERHUB_TOKEN", cfg.dockerhub_token)
+            gh.secret_set("SONAR_TOKEN", cfg.sonar_token)
+            gh.variable_set("DOCKERHUB_USERNAME", cfg.dockerhub_username)
+        ok("Set secrets and variables on component repositories")
 
     ok("Set secrets and variables")

@@ -41,9 +41,14 @@ def run(
 class GitHub:
     """Wraps gh CLI calls for a specific repo with dry-run support."""
 
-    def __init__(self, cfg: Config) -> None:
-        self.repo = cfg.full_repo
+    def __init__(self, cfg: Config, repo_override: str | None = None) -> None:
+        self.repo = repo_override or cfg.full_repo
         self.dry_run = cfg.dry_run
+        self._cfg = cfg
+
+    def for_repo(self, full_repo: str) -> "GitHub":
+        """Create a new GitHub instance targeting a different repo."""
+        return GitHub(self._cfg, repo_override=full_repo)
 
     def run(self, cmd: str) -> subprocess.CompletedProcess[str]:
         """Run a gh command with --repo automatically appended."""

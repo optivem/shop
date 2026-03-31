@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Greeting</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        button {
+            padding: 8px 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #greetingResult {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f8f9fa;
+            min-height: 50px;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Greeting</h1>
+
+    <button id="fetchGreeting">Get Greeting</button>
+
+    <div id="greetingResult" class="hidden">
+        <!-- Greeting data will appear here -->
+    </div>
+
+    <script>
+        document.getElementById('fetchGreeting').addEventListener('click', async function() {
+            const resultDiv = document.getElementById('greetingResult');
+
+            try {
+                resultDiv.innerHTML = 'Loading...';
+                resultDiv.classList.remove('hidden');
+
+                const response = await fetch('/api/greeting');
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || `HTTP error! status: ${response.status}`);
+                }
+
+                resultDiv.innerHTML = `
+                    <h3>${data.greeting}!</h3>
+                    <p><strong>Message:</strong> ${data.message}</p>
+                    <p><strong>Time:</strong> ${data.localTime}</p>
+                    <p><strong>Estimated Reading Time:</strong> ${data.estimatedReadingTimeSeconds} seconds</p>
+                `;
+
+            } catch (error) {
+                resultDiv.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        });
+    </script>
+</body>
+</html>
