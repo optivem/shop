@@ -1,0 +1,154 @@
+package com.optivem.eshop.dsl.driver.adapter.shop.ui;
+
+import com.microsoft.playwright.Browser;
+import com.optivem.eshop.dsl.driver.adapter.shop.ui.client.ShopUiClient;
+import com.optivem.eshop.dsl.driver.adapter.shop.ui.client.pages.HomePage;
+import com.optivem.eshop.dsl.driver.adapter.shop.ui.client.pages.NewOrderPage;
+import com.optivem.eshop.dsl.driver.adapter.shop.ui.client.pages.OrderDetailsPage;
+import com.optivem.eshop.dsl.driver.adapter.shop.ui.client.pages.OrderHistoryPage;
+import com.optivem.eshop.dsl.driver.port.shop.dtos.PlaceOrderRequest;
+import com.optivem.eshop.dsl.driver.port.shop.dtos.PlaceOrderResponse;
+import com.optivem.eshop.dsl.driver.port.shop.dtos.ViewOrderResponse;
+import com.optivem.eshop.dsl.driver.port.shop.ShopDriver;
+import com.optivem.eshop.dsl.driver.port.shared.dtos.ErrorResponse;
+import com.optivem.eshop.dsl.common.Result;
+
+import static com.optivem.eshop.dsl.core.usecase.shop.commons.SystemResults.failure;
+import static com.optivem.eshop.dsl.core.usecase.shop.commons.SystemResults.success;
+
+public class ShopUiDriver implements ShopDriver {
+    private final ShopUiClient client;
+
+    private Page currentPage = Page.NONE;
+    private HomePage homePage;
+    private NewOrderPage newOrderPage;
+    private OrderHistoryPage orderHistoryPage;
+    private OrderDetailsPage orderDetailsPage;
+
+    public ShopUiDriver(String baseUrl, Browser browser) {
+        this.client = new ShopUiClient(baseUrl, browser);
+    }
+
+    @Override
+    public void close() {
+        client.close();
+    }
+
+    @Override
+    public Result<Void, ErrorResponse> goToShop() {
+        homePage = client.openHomePage();
+
+        if (!client.isStatusOk() || !client.isPageLoaded()) {
+            return failure("Failed to load home page");
+        }
+
+        currentPage = Page.HOME;
+        return success();
+    }
+
+    @Override
+    public Result<PlaceOrderResponse, ErrorResponse> placeOrder(PlaceOrderRequest request) {
+        var sku = request.getSku();
+        var quantity = request.getQuantity();
+
+        ensureOnNewOrderPage();
+        newOrderPage.inputSku(sku);
+        newOrderPage.inputQuantity(quantity);
+        newOrderPage.clickPlaceOrder();
+
+        var result = newOrderPage.getResult();
+
+        if (result.isFailure()) {
+            return failure(result.getError());
+        }
+
+        var orderNumberValue = NewOrderPage.getOrderNumber(result.getValue());
+
+        var response = PlaceOrderResponse.builder().orderNumber(orderNumberValue).build();
+        return Result.success(response);
+    }
+
+    @Override
+    public Result<ViewOrderResponse, ErrorResponse> viewOrder(String orderNumber) {
+        var result = ensureOnOrderDetailsPage(orderNumber);
+        if (result.isFailure()) {
+            return failure(result.getError());
+        }
+
+        var isSuccess = orderDetailsPage.isLoadedSuccessfully();
+
+        if (!isSuccess) {
+            return Result.failure(result.getError());
+        }
+
+        var displayOrderNumber = orderDetailsPage.getOrderNumber();
+        var orderTimestamp = orderDetailsPage.getOrderTimestamp();
+        var sku = orderDetailsPage.getSku();
+        var quantity = orderDetailsPage.getQuantity();
+        var unitPrice = orderDetailsPage.getUnitPrice();
+        var totalPrice = orderDetailsPage.getTotalPrice();
+        var status = orderDetailsPage.getStatus();
+
+        var response = ViewOrderResponse.builder()
+                .orderNumber(displayOrderNumber)
+                .orderTimestamp(orderTimestamp)
+                .sku(sku)
+                .quantity(quantity)
+                .unitPrice(unitPrice)
+                .totalPrice(totalPrice)
+                .status(status)
+                .build();
+
+        return success(response);
+    }
+
+    // --- page navigation ---
+
+    private HomePage getHomePage() {
+        if (homePage == null || currentPage != Page.HOME) {
+            homePage = client.openHomePage();
+            currentPage = Page.HOME;
+        }
+        return homePage;
+    }
+
+    private void ensureOnNewOrderPage() {
+        if (currentPage != Page.NEW_ORDER) {
+            newOrderPage = getHomePage().clickNewOrder();
+            currentPage = Page.NEW_ORDER;
+        }
+    }
+
+    private void ensureOnOrderHistoryPage() {
+        if (currentPage != Page.ORDER_HISTORY) {
+            orderHistoryPage = getHomePage().clickOrderHistory();
+            currentPage = Page.ORDER_HISTORY;
+        }
+    }
+
+    private Result<Void, ErrorResponse> ensureOnOrderDetailsPage(String orderNumber) {
+        ensureOnOrderHistoryPage();
+        orderHistoryPage.inputOrderNumber(orderNumber);
+        orderHistoryPage.clickSearch();
+
+        var isOrderListed = orderHistoryPage.isOrderListed(orderNumber);
+        if (!isOrderListed) {
+            return failure("Order " + orderNumber + " does not exist.");
+        }
+
+        orderDetailsPage = orderHistoryPage.clickViewOrderDetails(orderNumber);
+        currentPage = Page.ORDER_DETAILS;
+
+        return success();
+    }
+
+    private enum Page {
+        NONE,
+        HOME,
+        NEW_ORDER,
+        ORDER_HISTORY,
+        ORDER_DETAILS
+    }
+}
+
+

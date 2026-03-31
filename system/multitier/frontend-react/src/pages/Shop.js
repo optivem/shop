@@ -7,6 +7,7 @@ function Shop() {
   const [quantityValue, setQuantityValue] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [notification, setNotification] = useState(null);
+  const [notificationId, setNotificationId] = useState(0);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -32,7 +33,8 @@ function Shop() {
     }
 
     if (errors.length > 0) {
-      setNotification({ type: 'error', message: errors.join('. ') });
+      setNotificationId(prev => prev + 1);
+      setNotification({ type: 'error', message: errors.join('. '), fieldErrors: errors });
       return;
     }
 
@@ -40,6 +42,7 @@ function Shop() {
     const result = await placeOrder(sku.trim(), parseInt(trimmedQty));
     setIsSubmitting(false);
 
+    setNotificationId(prev => prev + 1);
     if (result.success) {
       setNotification({
         type: 'success',
@@ -48,11 +51,11 @@ function Shop() {
       setSku('');
       setQuantityValue('');
     } else {
-      let msg = result.error.message;
-      if (result.error.fieldErrors) {
-        msg += ' ' + result.error.fieldErrors.join('. ');
-      }
-      setNotification({ type: 'error', message: msg });
+      setNotification({
+        type: 'error',
+        message: result.error.message,
+        fieldErrors: result.error.fieldErrors || []
+      });
     }
   };
 
@@ -67,8 +70,16 @@ function Shop() {
           </ol>
         </nav>
 
-        {notification && (
-          <div className={`notification ${notification.type}`} role="alert">
+        {notification && notification.type === 'error' && (
+          <div className="notification error" role="alert" data-notification-id={notificationId}>
+            <div className="error-message">{notification.message}</div>
+            {notification.fieldErrors && notification.fieldErrors.map((fieldError, index) => (
+              <div key={index} className="field-error">{fieldError}</div>
+            ))}
+          </div>
+        )}
+        {notification && notification.type === 'success' && (
+          <div className="notification success" role="alert" data-notification-id={notificationId}>
             {notification.message}
           </div>
         )}

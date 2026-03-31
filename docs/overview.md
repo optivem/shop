@@ -12,7 +12,7 @@
 
 ### 03-repository-setup
 - Create Environments (acceptance, qa, production)
-- Set Secrets and Variables (DOCKERHUB_TOKEN, SONAR_TOKEN, DOCKERHUB_USERNAME, SYSTEM_URL per env)
+- Set Secrets and Variables (DOCKERHUB_TOKEN, SONAR_TOKEN, DOCKERHUB_USERNAME, system URLs per environment)
 
 ### 04-apply-template
 - Copy Template Files (Monolith | Multitier)

@@ -21,26 +21,107 @@ repositories {
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter'
 	implementation 'org.yaml:snakeyaml:2.2'
+	implementation 'com.optivem:optivem-testing:1.0.4'
+
+	// JSON serialization
+	implementation 'com.fasterxml.jackson.core:jackson-databind'
+	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+	implementation 'org.springframework:spring-web'
+
+	// Playwright (browser automation for UI tests)
+	implementation 'com.microsoft.playwright:playwright:1.44.0'
+
+	// WireMock (stub server for contract tests)
+	implementation 'org.wiremock:wiremock-standalone:3.10.0'
+
+	// Assertions
+	implementation 'org.assertj:assertj-core'
+
+	// Logging
+	implementation 'org.slf4j:slf4j-api'
+	implementation 'ch.qos.logback:logback-classic'
+
+	// JUnit
+	implementation 'org.junit.jupiter:junit-jupiter-api'
 
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testImplementation 'com.microsoft.playwright:playwright:1.44.0'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+	testCompileOnly 'org.projectlombok:lombok'
+	testAnnotationProcessor 'org.projectlombok:lombok'
+}
+
+tasks.register('installPlaywright', JavaExec) {
+	classpath = sourceSets.test.runtimeClasspath
+	mainClass = 'com.microsoft.playwright.CLI'
+	args = ['install']
 }
 
 tasks.named('test') {
-	useJUnitPlatform()
+	dependsOn 'installPlaywright'
 
-	// Forward system properties to test JVM
-	systemProperties System.getProperties().findAll { key, _ ->
-		['environment', 'externalSystemMode', 'channel', 'version', 'type', 'mode',
-		 'includeTags', 'excludeTags'].contains(key)
+	filter {
+		def type    = System.getProperty('type')    // smoke | acceptance | e2e
+		def mode    = System.getProperty('mode')    // stub | real
+		if (type) {
+			includeTestsMatching "*${type}*"
+		}
+	}
+
+	useJUnitPlatform {
+		if (System.getProperty('includeTags')) {
+			includeTags System.getProperty('includeTags').split(',')
+		}
+		if (System.getProperty('excludeTags')) {
+			excludeTags System.getProperty('excludeTags').split(',')
+		}
+	}
+
+	jvmArgs '-Duser.timezone=UTC'
+
+	systemProperty 'environment',        System.getProperty('environment')
+	systemProperty 'externalSystemMode', System.getProperty('externalSystemMode')
+	systemProperty 'channel',            System.getProperty('channel')
+	systemProperty 'mode',               System.getProperty('mode')
+
+	def includeTags = System.getProperty('includeTags')
+	if (includeTags?.contains('isolated')) {
+		systemProperty 'junit.jupiter.execution.parallel.enabled', 'false'
+		maxParallelForks = 1
+	} else {
+		maxParallelForks = Runtime.runtime.availableProcessors()
 	}
 
 	testLogging {
 		events "passed", "skipped", "failed"
 		showStandardStreams = true
+		exceptionFormat = 'full'
+		showExceptions = true
+		showCauses = true
+		showStackTraces = true
+
+		displayGranularity = 2
+
+		afterSuite { desc, result ->
+			if (!desc.parent) {
+				println "\nTest Summary: ${result.resultType}"
+				println "Total: ${result.testCount}, Passed: ${result.successfulTestCount}, Failed: ${result.failedTestCount}, Skipped: ${result.skippedTestCount}"
+			}
+		}
+
+		beforeTest { descriptor ->
+			logger.lifecycle("Running: ${descriptor.className}.${descriptor.name}")
+		}
 	}
+}
+
+tasks.named('bootJar') {
+	enabled = false
+}
+
+tasks.named('jar') {
+	enabled = true
 }

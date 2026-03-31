@@ -36,11 +36,9 @@ jobs:
           names: |
             DOCKERHUB_USERNAME
             DOCKERHUB_TOKEN
-            SYSTEM_URL
         env:
           DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
-          SYSTEM_URL: ${{ vars.SYSTEM_URL }}
 
       - name: Checkout Repository
         uses: actions/checkout@v5
@@ -76,7 +74,7 @@ jobs:
     needs: check
     if: needs.check.outputs.should-run == 'true'
     runs-on: ubuntu-latest
-    environment: acceptance
+    environment: multitier-java-acceptance
     permissions:
       contents: write
       packages: write
@@ -103,7 +101,13 @@ jobs:
           version: latest
           image-urls: ${{ needs.check.outputs.image-digest-urls }}
           compose-file: docker-compose.pipeline.multitier.real.yml
-          system-url: ${{ vars.SYSTEM_URL }}
+          systems: |
+            [
+              { "name": "Shop UI", "url": "${{ vars.SYSTEM_UI_URL }}/" },
+              { "name": "Shop API", "url": "${{ vars.SYSTEM_API_URL }}/health" },
+              { "name": "ERP", "url": "${{ vars.ERP_URL }}/health" },
+              { "name": "Clock", "url": "${{ vars.CLOCK_URL }}/health" }
+            ]
           working-directory: system-test/java
 
       - name: Setup Runtime

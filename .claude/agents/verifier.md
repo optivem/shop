@@ -95,11 +95,11 @@ When a problem is encountered or a fix is applied, also update the "Issues Found
 ```
 ## Issues Found
 
-1. [Step 02] SYSTEM_URL needs repo-level variable (not just environment-level)
+1. [Step 02] System URL environment variables missing on architecture-specific environment
 
 ## Fixes Applied
 
-1. [Step 02] Set SYSTEM_URL at repo level in addition to environment-level
+1. [Step 02] Set system URL variables (SYSTEM_UI_URL, SYSTEM_API_URL, ERP_URL, CLOCK_URL) on architecture-specific environment
 ```
 
 If a step fails and the run stops early, add a comment to the issue with the error details:

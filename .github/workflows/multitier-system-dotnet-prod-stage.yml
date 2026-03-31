@@ -25,11 +25,9 @@ jobs:
           names: |
             DOCKERHUB_USERNAME
             DOCKERHUB_TOKEN
-            SYSTEM_URL
         env:
           DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
-          SYSTEM_URL: ${{ vars.SYSTEM_URL }}
 
       - name: Check RC Exists
         id: check-release
@@ -59,7 +57,7 @@ jobs:
     needs: check
     if: needs.check.result == 'success'
     runs-on: ubuntu-latest
-    environment: production
+    environment: multitier-dotnet-production
     permissions:
       contents: write
       packages: write
@@ -84,7 +82,13 @@ jobs:
           version: ${{ inputs.version }}
           image-urls: ${{ needs.check.outputs.image-urls }}
           compose-file: docker-compose.multitier.yml
-          system-url: ${{ vars.SYSTEM_URL }}
+          systems: |
+            [
+              { "name": "Shop UI", "url": "${{ vars.SYSTEM_UI_URL }}/" },
+              { "name": "Shop API", "url": "${{ vars.SYSTEM_API_URL }}/health" },
+              { "name": "ERP", "url": "${{ vars.ERP_URL }}/health" },
+              { "name": "Clock", "url": "${{ vars.CLOCK_URL }}/health" }
+            ]
           working-directory: system-test/dotnet
 
       - name: Promote RC (Production Deployed)
