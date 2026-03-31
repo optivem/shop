@@ -17,6 +17,11 @@ jobs:
         with:
           python-version: '3.13'
 
+      - name: Configure Git Identity
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
       - name: Authenticate GitHub CLI
         run: echo "${{ secrets.VERIFY_TOKEN }}" | gh auth login --with-token
 
