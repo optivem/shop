@@ -71,23 +71,6 @@ def fixup_multirepo_image_urls(repo_dir: str, repo_name: str,
         replace_in_file(path, old_frontend, new_frontend)
         replace_in_file(path, old_backend, new_backend)
 
-    # Fix docker-compose files
-    for dirpath, _dirnames, filenames in os.walk(repo_dir):
-        if ".git" in dirpath.split(os.sep):
-            continue
-        for fname in filenames:
-            if "docker-compose" in fname and fname.endswith(".yml"):
-                path = os.path.join(dirpath, fname)
-                replace_in_file(
-                    path,
-                    f"{repo_name}/multitier-frontend-react",
-                    f"{frontend_repo}/multitier-frontend-react",
-                )
-                replace_in_file(
-                    path,
-                    f"{repo_name}/multitier-backend-{backend_lang}",
-                    f"{backend_repo}/multitier-backend-{backend_lang}",
-                )
 
 
 def fixup_multirepo_token(repo_dir: str) -> None:
@@ -136,6 +119,35 @@ def fixup_multirepo_token(repo_dir: str) -> None:
         if new_content != content:
             with open(path, "w", encoding="utf-8", newline="\n") as f:
                 f.write(new_content)
+
+
+def fixup_multirepo_docker_compose(repo_dir: str, repo_name: str,
+                                    frontend_repo: str, backend_repo: str,
+                                    backend_lang: str) -> None:
+    """Replace system repo name with component repo names in docker-compose files.
+
+    Must run AFTER replace_repo_references, because at template-apply time
+    the docker-compose still has 'optivem/starter' which gets replaced to
+    'owner/repo' by replace_repo_references. This function then fixes
+    'owner/repo' -> 'owner/repo-frontend' / 'owner/repo-backend'.
+    """
+    for dirpath, _dirnames, filenames in os.walk(repo_dir):
+        if ".git" in dirpath.split(os.sep):
+            continue
+        for fname in filenames:
+            if "docker-compose" not in fname or not fname.endswith(".yml"):
+                continue
+            path = os.path.join(dirpath, fname)
+            replace_in_file(
+                path,
+                f"{repo_name}/multitier-frontend-react",
+                f"{frontend_repo}/multitier-frontend-react",
+            )
+            replace_in_file(
+                path,
+                f"{repo_name}/multitier-backend-{backend_lang}",
+                f"{backend_repo}/multitier-backend-{backend_lang}",
+            )
 
 
 def fixup_commit_stage_for_standalone(repo_dir: str, component: str, lang: str) -> None:

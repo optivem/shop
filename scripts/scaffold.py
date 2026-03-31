@@ -11,9 +11,6 @@ Usage:
     python scaffold.py --owner acme --system-name "Page Turner" --repo page-turner \
         --arch multitier --backend-lang java --frontend-lang react
 
-  Test mode:
-    python scaffold.py ... --test --cleanup
-
   Dry run:
     python scaffold.py ... --dry-run
 """
@@ -24,10 +21,10 @@ from scaffold.config import Config, parse_args, validate
 from scaffold.log import fail, log, ok
 from scaffold.shell import GitHub, SonarCloud
 from scaffold.steps import (
-    cleanup,
-    clone_and_apply_template,
+    clone_repos,
+    apply_template,
     commit_and_push,
-    create_repo,
+    create_repos,
     create_sonarcloud_projects,
     replace_namespaces,
     replace_repo_references,
@@ -36,15 +33,19 @@ from scaffold.steps import (
     update_readme,
     verify_acceptance_stage,
     verify_commit_stage,
+    verify_prod_stage,
+    verify_qa_signoff,
+    verify_qa_stage,
 )
 
 StepFn = Callable[..., None]
 
 STEPS: list[tuple[str, StepFn]] = [
-    ("Create repository", create_repo),
+    ("Create repositories", create_repos),
     ("Setup environments", setup_environments),
     ("Setup secrets and variables", setup_secrets_and_variables),
-    ("Clone and apply template", clone_and_apply_template),
+    ("Clone repos", clone_repos),
+    ("Apply template", apply_template),
     ("Replace repository references", replace_repo_references),
     ("Replace namespaces", replace_namespaces),
     ("Update README", update_readme),
@@ -52,6 +53,9 @@ STEPS: list[tuple[str, StepFn]] = [
     ("Commit and push", commit_and_push),
     ("Verify commit stage", verify_commit_stage),
     ("Verify acceptance stage", verify_acceptance_stage),
+    ("Verify QA stage", verify_qa_stage),
+    ("Verify QA signoff", verify_qa_signoff),
+    ("Verify production stage", verify_prod_stage),
 ]
 
 
@@ -74,7 +78,6 @@ def print_banner(cfg: Config) -> None:
         log(f"Frontend repo: {cfg.frontend_full_repo}")
     log(f"Test lang:   {cfg.test_lang}")
     log(f"Dry run:     {cfg.dry_run}")
-    log(f"Test mode:   {cfg.test_mode}")
     log(f"Workdir:     {cfg.workdir}")
     print()
 
@@ -114,7 +117,6 @@ def main() -> None:
         print(f"  Frontend:   https://github.com/{cfg.frontend_full_repo}")
     print()
 
-    cleanup(cfg, github, sonarcloud)
     raise SystemExit(errors)
 
 

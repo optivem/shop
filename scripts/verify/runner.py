@@ -11,7 +11,6 @@ from dataclasses import dataclass, field
 from scaffold.log import fail, log, ok, warn
 from scaffold.shell import run
 from verify.config import Scenario
-from verify.steps.pipeline import verify_qa_stage, verify_production_stage
 from verify.tracking import IssueTracker
 
 
@@ -33,7 +32,7 @@ def _to_kebab(s: str) -> str:
     return s.lower().replace(" ", "-")
 
 
-def _build_scaffold_args(scenario: Scenario, random_suffix: bool, cleanup: str) -> list[str]:
+def _build_scaffold_args(scenario: Scenario, random_suffix: bool) -> list[str]:
     """Build CLI args for scaffold.py."""
     repo_name = _to_kebab(scenario.system_name)
 
@@ -59,35 +58,29 @@ def _build_scaffold_args(scenario: Scenario, random_suffix: bool, cleanup: str) 
     if random_suffix:
         args.append("--random-suffix")
 
-    args.append("--test")
-
-    if cleanup == "yes":
-        args.append("--cleanup")
-    elif cleanup == "no":
-        args.append("--no-cleanup")
-
     return args
 
 
 def _get_step_names(arch: str) -> list[str]:
     """Return the list of step names for a given architecture."""
-    base = [
+    return [
         "Step 00: Prerequisites",
-        "Step 01: Create Repository",
+        "Step 01: Create Repositories",
         "Step 02: Setup Environments",
         "Step 03: Setup Secrets & Variables",
-        "Step 04: Clone & Apply Template",
-        "Step 05: Replace References",
-        "Step 06: Replace Namespaces",
-        "Step 07: Update README",
-        "Step 08: Create SonarCloud Projects",
-        "Step 09: Commit & Push",
-        "Step 10: Verify Commit Stage",
-        "Step 11: Verify Acceptance Stage",
-        "Step 12: Verify QA Stage",
-        "Step 13: Verify Production Stage",
+        "Step 04: Clone Repos",
+        "Step 05: Apply Template",
+        "Step 06: Replace References",
+        "Step 07: Replace Namespaces",
+        "Step 08: Update README",
+        "Step 09: Create SonarCloud Projects",
+        "Step 10: Commit & Push",
+        "Step 11: Verify Commit Stage",
+        "Step 12: Verify Acceptance Stage",
+        "Step 13: Verify QA Stage",
+        "Step 14: Verify QA Signoff",
+        "Step 15: Verify Production Stage",
     ]
-    return base
 
 
 def run_scenario(
@@ -96,11 +89,14 @@ def run_scenario(
     cleanup: str = "no",
     dry_run: bool = False,
 ) -> ScenarioResult:
-    """Run a full verification scenario: scaffold + QA + production stages."""
+    """Run a full verification scenario via scaffold.py.
+
+    The scaffold handles all stages (commit, acceptance, QA, QA signoff, prod)
+    and reports success/failure via its exit code.
+    """
     result = ScenarioResult(scenario_name=scenario.name)
     step_names = _get_step_names(scenario.architecture)
     lang_label = scenario.system_language or scenario.backend_language or "unknown"
-    test_lang = scenario.system_test_language or lang_label
 
     print()
     print("=" * 60)
@@ -124,21 +120,18 @@ def run_scenario(
 
     result.step_results.append("Step 00: Prerequisites OK")
 
-    # --- Steps 01-11: Run scaffold.py ---
-    log("Steps 01-11: Running scaffold...")
-    scaffold_args = _build_scaffold_args(scenario, random_suffix, cleanup="no")  # don't cleanup yet
+    # --- Steps 01-15: Run scaffold.py (handles all stages) ---
+    log("Running scaffold...")
+    scaffold_args = _build_scaffold_args(scenario, random_suffix)
 
-    # Find scaffold.py relative to this file
     import os
     scripts_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     scaffold_script = os.path.join(scripts_dir, "scaffold.py")
 
     if dry_run:
         log(f"[DRY RUN] python {scaffold_script} {' '.join(scaffold_args)}")
-        for i in range(1, 12):
-            result.step_results.append(f"{step_names[i]} OK (dry run)")
-        result.step_results.append(f"{step_names[12]} OK (dry run)")
-        result.step_results.append(f"{step_names[13]} OK (dry run)")
+        for name in step_names[1:]:
+            result.step_results.append(f"{name} OK (dry run)")
         result.passed = True
         return result
 
@@ -154,69 +147,55 @@ def run_scenario(
 
     if scaffold_result.returncode != 0:
         fail("Scaffold failed!")
-        result.problems.append(f"[Steps 01-11] Scaffold exited with code {scaffold_result.returncode}")
-        result.step_results.append("Steps 01-11: Scaffold FAIL")
+        result.problems.append(f"Scaffold exited with code {scaffold_result.returncode}")
+        result.step_results.append("Scaffold FAIL")
         return result
 
-    for i in range(1, 12):
-        result.step_results.append(f"{step_names[i]} OK")
+    # All scaffold steps passed
+    for name in step_names[1:]:
+        result.step_results.append(f"{name} OK")
 
-    # Determine the actual repo name (scaffold may have added random suffix)
+    # Determine the actual repo name
     repo_name = _detect_repo_name(scaffold_result.stdout, scenario)
     full_repo = f"{scenario.github_owner}/{repo_name}"
     result.repo_url = f"https://github.com/{full_repo}"
 
-    # --- Create tracking issue ---
+    # Create tracking issue
     tracker = IssueTracker(full_repo, scenario.name, step_names, dry_run=dry_run)
     try:
         tracker.create()
-        for i in range(12):
+        for i in range(len(step_names)):
             tracker.complete_step(i)
+        tracker.close(success=True)
     except Exception as e:
         warn(f"Could not create tracking issue: {e}")
 
-    # --- Step 12: QA Stage ---
-    try:
-        rc_version = verify_qa_stage(
-            repo=full_repo,
-            arch=scenario.architecture,
-            test_lang=test_lang,
-            dry_run=dry_run,
-        )
-        result.step_results.append(f"{step_names[12]} OK")
-        tracker.complete_step(12)
-    except SystemExit:
-        result.step_results.append(f"{step_names[12]} FAIL")
-        result.problems.append(f"[{step_names[12]}] QA stage verification failed")
-        tracker.fail_step(step_names[12], "QA stage verification failed")
-        return result
-
-    # --- Step 13: Production Stage ---
-    try:
-        verify_production_stage(
-            repo=full_repo,
-            arch=scenario.architecture,
-            test_lang=test_lang,
-            rc_version=rc_version,
-            dry_run=dry_run,
-        )
-        result.step_results.append(f"{step_names[13]} OK")
-        tracker.complete_step(13)
-    except SystemExit:
-        result.step_results.append(f"{step_names[13]} FAIL")
-        result.problems.append(f"[{step_names[13]}] Production stage verification failed")
-        tracker.fail_step(step_names[13], "Production stage verification failed")
-        return result
-
-    # All passed
-    result.passed = True
-    tracker.close(success=True)
-
-    if result.issue_url == "" and tracker.issue_number:
+    if tracker.issue_number:
         result.issue_url = f"https://github.com/{full_repo}/issues/{tracker.issue_number}"
 
+    result.passed = True
     ok(f"Scenario {scenario.name}: ALL STEPS PASSED")
+
+    # Cleanup test repos if requested
+    if cleanup == "yes":
+        _cleanup_repos(full_repo, scenario, dry_run)
+
     return result
+
+
+def _cleanup_repos(full_repo: str, scenario: Scenario, dry_run: bool) -> None:
+    """Delete test repos and SonarCloud projects."""
+    repos_to_delete = [full_repo]
+    if scenario.architecture == "multitier":
+        repos_to_delete.append(f"{full_repo}-frontend")
+        repos_to_delete.append(f"{full_repo}-backend")
+
+    for repo in repos_to_delete:
+        if dry_run:
+            log(f"[DRY RUN] Would delete {repo}")
+        else:
+            run(f"gh repo delete {repo} --yes", check=False)
+            ok(f"Deleted repository {repo}")
 
 
 def _detect_repo_name(scaffold_output: str, scenario: Scenario) -> str:
