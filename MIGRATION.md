@@ -47,7 +47,7 @@ Port the eshop ecosystem into the starter repo, covering application code, test 
 
 ### Phase C: TypeScript Multitier
 
-15. TypeScript multitier (backend, frontend, docker-compose, tests, workflows) → **verify:** `Run-SystemTests.ps1` passes, unit tests pass
+15. TypeScript multitier (backend, frontend, docker-compose, tests, workflows). Tests: verbatim copy from eshop-tests, remove tax/coupon/cancel/deliver, then sync to Java starter reference (same process as .NET: match test names/content, add missing DSL methods, remove extra files) → **verify:** `Run-SystemTests.ps1` passes (Latest), `Run-SystemTests.ps1 -Legacy` passes
 16. Trigger `verify-all` with `language=typescript, architecture=multitier` → **verify:** all TypeScript multitier workflows green
 
 ### Phase D: Java Monolith
@@ -638,6 +638,7 @@ Currently has: Echo endpoint + Todo fetcher (SSR with Thymeleaf/Razor/Next.js).
 3. **Database:** PostgreSQL (same as eshop).
 4. **Monolith SSR:** Full SSR (Thymeleaf for Java, Razor for .NET, Next.js for TypeScript). No embedded JS or shared REST API layer.
 5. **Tracer bullet approach for legacy modules:** Each legacy module (e.g. mod03) covers exactly one positive and one negative scenario per feature — not exhaustive validation coverage. The single negative (`shouldRejectOrderWithNonIntegerQuantity`) is intentionally duplicated across API and UI test classes to make the duplication pain visible. Full validation coverage belongs at the acceptance test level (`latest/`) where the DSL handles it concisely.
+6. **Hardcoded deployment URLs in workflows:** System deployment URLs (e.g. `SYSTEM_UI_URL`, `SYSTEM_API_URL`, `ERP_URL`, `CLOCK_URL`, `SYSTEM_URL`) are hardcoded directly in QA/prod stage workflow files instead of using GitHub environment variables (`vars.*`). The acceptance stage already used hardcoded URLs; this makes QA/prod consistent. The scaffold script no longer sets URL variables on environments. Only `DOCKERHUB_USERNAME` (variable) and `DOCKERHUB_TOKEN` (secret) remain as external config.
 
 ---
 

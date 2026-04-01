@@ -23,50 +23,92 @@ param(
 $TestConfigFileName = "Run-SystemTests.Config.ps1"
 $ExternalModes = @("real", "stub")
 
-# Load configuration - keyed by ExternalMode
-$SystemConfig = @{
-    "real" = @{
-        ContainerName = "starter-java-$Architecture-real"
+# Load configuration - keyed by ExternalMode, varies by Architecture
+if ($Architecture -eq "monolith") {
+    $SystemConfig = @{
+        "real" = @{
+            ContainerName = "starter-java-monolith-real"
 
-        SystemComponents = @(
-            @{ Name = "Frontend";
-                Url = "http://localhost:3101";
-                ContainerName = "frontend" }
-            @{ Name = "Backend API";
-                Url = "http://localhost:8101/health";
-                ContainerName = "backend" }
-        )
+            SystemComponents = @(
+                @{ Name = "Monolith";
+                    Url = "http://localhost:2101/health";
+                    ContainerName = "monolith" }
+            )
 
-        ExternalSystems = @(
-            @{ Name = "ERP API (Real)";
-                Url = "http://localhost:9101/erp/health";
-                ContainerName = "external-real" }
-            @{ Name = "Clock API (Real)";
-                Url = "http://localhost:9101/clock/health";
-                ContainerName = "external-real" }
-        )
+            ExternalSystems = @(
+                @{ Name = "ERP API (Real)";
+                    Url = "http://localhost:9103/erp/health";
+                    ContainerName = "external-real" }
+                @{ Name = "Clock API (Real)";
+                    Url = "http://localhost:9103/clock/health";
+                    ContainerName = "external-real" }
+            )
+        }
+
+        "stub" = @{
+            ContainerName = "starter-java-monolith-stub"
+
+            SystemComponents = @(
+                @{ Name = "Monolith";
+                    Url = "http://localhost:2102/health";
+                    ContainerName = "monolith" }
+            )
+
+            ExternalSystems = @(
+                @{ Name = "ERP API (Stub)";
+                    Url = "http://localhost:9104/erp/health";
+                    ContainerName = "external-stub" }
+                @{ Name = "Clock API (Stub)";
+                    Url = "http://localhost:9104/clock/health";
+                    ContainerName = "external-stub" }
+            )
+        }
     }
+} else {
+    $SystemConfig = @{
+        "real" = @{
+            ContainerName = "starter-java-multitier-real"
 
-    "stub" = @{
-        ContainerName = "starter-java-$Architecture-stub"
+            SystemComponents = @(
+                @{ Name = "Frontend";
+                    Url = "http://localhost:3101";
+                    ContainerName = "frontend" }
+                @{ Name = "Backend API";
+                    Url = "http://localhost:8101/health";
+                    ContainerName = "backend" }
+            )
 
-        SystemComponents = @(
-            @{ Name = "Frontend";
-                Url = "http://localhost:3102";
-                ContainerName = "frontend" }
-            @{ Name = "Backend API";
-                Url = "http://localhost:8102/health";
-                ContainerName = "backend" }
-        )
+            ExternalSystems = @(
+                @{ Name = "ERP API (Real)";
+                    Url = "http://localhost:9101/erp/health";
+                    ContainerName = "external-real" }
+                @{ Name = "Clock API (Real)";
+                    Url = "http://localhost:9101/clock/health";
+                    ContainerName = "external-real" }
+            )
+        }
 
-        ExternalSystems = @(
-            @{ Name = "ERP API (Stub)";
-                Url = "http://localhost:9102/erp/health";
-                ContainerName = "external-stub" }
-            @{ Name = "Clock API (Stub)";
-                Url = "http://localhost:9102/clock/health";
-                ContainerName = "external-stub" }
-        )
+        "stub" = @{
+            ContainerName = "starter-java-multitier-stub"
+
+            SystemComponents = @(
+                @{ Name = "Frontend";
+                    Url = "http://localhost:3102";
+                    ContainerName = "frontend" }
+                @{ Name = "Backend API";
+                    Url = "http://localhost:8102/health";
+                    ContainerName = "backend" }
+            )
+
+            ExternalSystems = @(
+                @{ Name = "ERP API (Stub)";
+                    Url = "http://localhost:9102/erp/health";
+                    ContainerName = "external-stub" }
+                @{ Name = "Clock API (Stub)";
+                    Url = "http://localhost:9102/clock/health";
+                    ContainerName = "external-stub" }
+            )
+        }
     }
 }
 

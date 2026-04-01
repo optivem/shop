@@ -1,0 +1,127 @@
+@page
+@model Optivem.Starter.Monolith.Pages.OrderHistoryModel
+@{
+    ViewData["Title"] = "Order History";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-page="/Index">Home</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Order History</li>
+    </ol>
+</nav>
+
+<div id="notification"></div>
+
+<div class="card shadow">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0">Order History</h4>
+    </div>
+    <div class="card-body">
+        <div class="mb-3">
+            <div class="input-group">
+                <input type="text" class="form-control" id="orderNumberFilter" placeholder="Filter by order number..." aria-label="Filter by order number">
+                <button class="btn btn-outline-secondary" type="button" id="searchBtn">Search</button>
+            </div>
+        </div>
+
+        <div id="loading" class="text-center" style="display: none;">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p>Loading orders...</p>
+        </div>
+
+        <div id="ordersTable" style="display: none;">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>Order Number</th>
+                        <th>Timestamp</th>
+                        <th>SKU</th>
+                        <th>Quantity</th>
+                        <th>Total Price</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="ordersBody">
+                </tbody>
+            </table>
+        </div>
+
+        <div id="emptyMessage" class="text-center text-muted" style="display: none;">
+            <p>No orders found</p>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    async function loadOrders() {
+        const filter = document.getElementById('orderNumberFilter').value.trim();
+        const loading = document.getElementById('loading');
+        const ordersTable = document.getElementById('ordersTable');
+        const emptyMessage = document.getElementById('emptyMessage');
+        const notification = document.getElementById('notification');
+
+        loading.style.display = 'block';
+        ordersTable.style.display = 'none';
+        emptyMessage.style.display = 'none';
+        notification.innerHTML = '';
+
+        try {
+            let url = '/api/orders';
+            if (filter) {
+                url += '?orderNumber=' + encodeURIComponent(filter);
+            }
+
+            const response = await fetch(url);
+            const data = await response.json();
+
+            loading.style.display = 'none';
+
+            if (!response.ok) {
+                notification.innerHTML = '<div class="alert alert-danger" role="alert">' + (data.detail || 'Failed to load orders') + '</div>';
+                return;
+            }
+
+            const orders = data.orders || [];
+
+            if (orders.length === 0) {
+                emptyMessage.style.display = 'block';
+                return;
+            }
+
+            const tbody = document.getElementById('ordersBody');
+            tbody.innerHTML = '';
+
+            orders.forEach(function(order) {
+                const row = document.createElement('tr');
+                row.innerHTML =
+                    '<td>' + order.orderNumber + '</td>' +
+                    '<td>' + new Date(order.orderTimestamp).toLocaleString('en-US', { timeZone: 'UTC' }) + '</td>' +
+                    '<td>' + order.sku + '</td>' +
+                    '<td>' + order.quantity + '</td>' +
+                    '<td>$' + order.totalPrice.toFixed(2) + '</td>' +
+                    '<td><span class="badge bg-success">' + order.status + '</span></td>' +
+                    '<td><a href="/OrderDetails?orderNumber=' + encodeURIComponent(order.orderNumber) + '" class="btn btn-sm btn-outline-primary">View</a></td>';
+                tbody.appendChild(row);
+            });
+
+            ordersTable.style.display = 'block';
+        } catch (err) {
+            loading.style.display = 'none';
+            notification.innerHTML = '<div class="alert alert-danger" role="alert">Network error: ' + err.message + '</div>';
+        }
+    }
+
+    document.getElementById('searchBtn').addEventListener('click', loadOrders);
+    document.getElementById('orderNumberFilter').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') loadOrders();
+    });
+
+    // Load orders on page load
+    loadOrders();
+</script>
+}

@@ -1,0 +1,30 @@
+name: starter-typescript-monolith-stub
+
+services:
+
+  monolith:
+    image: ghcr.io/optivem/starter/monolith-typescript-monolith:latest
+    ports:
+      - "2302:3000"
+    environment:
+      - ERP_API_URL=http://external-stub:8080/erp
+      - CLOCK_API_URL=http://external-stub:8080/clock
+    depends_on:
+      external-stub:
+        condition: service_started
+    networks:
+      - app-network
+
+  external-stub:
+    image: wiremock/wiremock:3.10.0
+    ports:
+      - "9304:8080"
+    volumes:
+      - ../../system/external-stub:/home/wiremock
+    command: --verbose --global-response-templating
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

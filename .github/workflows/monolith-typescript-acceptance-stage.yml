@@ -137,6 +137,7 @@ jobs:
         run: npm test -- test/latest/smoke
         env:
           ENVIRONMENT: acceptance
+          ARCHITECTURE: monolith
           EXTERNAL_SYSTEM_MODE: stub
 
       - name: Smoke (Real)
@@ -144,6 +145,7 @@ jobs:
         run: npm test -- test/latest/smoke
         env:
           ENVIRONMENT: acceptance
+          ARCHITECTURE: monolith
           EXTERNAL_SYSTEM_MODE: real
 
       - name: Acceptance - API Channel
@@ -151,6 +153,7 @@ jobs:
         run: npm test -- --passWithNoTests test/latest/acceptance
         env:
           ENVIRONMENT: acceptance
+          ARCHITECTURE: monolith
           EXTERNAL_SYSTEM_MODE: stub
           CHANNEL: API
 
@@ -159,6 +162,7 @@ jobs:
         run: npm test -- --passWithNoTests test/latest/acceptance
         env:
           ENVIRONMENT: acceptance
+          ARCHITECTURE: monolith
           EXTERNAL_SYSTEM_MODE: stub
           CHANNEL: UI
 
@@ -167,6 +171,7 @@ jobs:
         run: npm test -- --passWithNoTests test/latest/acceptance
         env:
           ENVIRONMENT: acceptance
+          ARCHITECTURE: monolith
           EXTERNAL_SYSTEM_MODE: stub
           CHANNEL: API
 
@@ -175,6 +180,7 @@ jobs:
         run: npm test -- --passWithNoTests test/latest/acceptance
         env:
           ENVIRONMENT: acceptance
+          ARCHITECTURE: monolith
           EXTERNAL_SYSTEM_MODE: stub
           CHANNEL: UI
 
@@ -183,6 +189,7 @@ jobs:
         run: npm test -- --passWithNoTests test/latest/contract
         env:
           ENVIRONMENT: acceptance
+          ARCHITECTURE: monolith
           EXTERNAL_SYSTEM_MODE: stub
 
       - name: Contract (Real)
@@ -190,6 +197,7 @@ jobs:
         run: npm test -- --passWithNoTests test/latest/contract
         env:
           ENVIRONMENT: acceptance
+          ARCHITECTURE: monolith
           EXTERNAL_SYSTEM_MODE: real
 
       - name: E2E - API Channel
@@ -197,6 +205,7 @@ jobs:
         run: npm test -- test/latest/e2e
         env:
           ENVIRONMENT: acceptance
+          ARCHITECTURE: monolith
           CHANNEL: API
 
       - name: E2E - UI Channel
@@ -204,6 +213,7 @@ jobs:
         run: npm test -- test/latest/e2e
         env:
           ENVIRONMENT: acceptance
+          ARCHITECTURE: monolith
           CHANNEL: UI
 
       - name: Read Target Version

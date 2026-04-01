@@ -1,0 +1,96 @@
+@page
+@model Optivem.Starter.Monolith.Pages.ShopModel
+@{
+    ViewData["Title"] = "Shop";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-page="/Index">Home</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Shop</li>
+    </ol>
+</nav>
+
+<div id="notification"></div>
+
+<div class="row">
+    <div class="col-lg-6 mx-auto">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Place Your Order</h4>
+            </div>
+            <div class="card-body">
+                <form id="placeOrderForm">
+                    <div class="mb-3">
+                        <label for="sku" class="form-label">SKU</label>
+                        <input type="text" class="form-control" id="sku" placeholder="Enter product SKU" aria-label="SKU">
+                    </div>
+                    <div class="mb-3">
+                        <label for="quantity" class="form-label">Quantity</label>
+                        <input type="text" class="form-control" id="quantity" inputmode="numeric" placeholder="Enter quantity" aria-label="Quantity">
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg" id="submitBtn" aria-label="Place Order">
+                            Place Order
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    document.getElementById('placeOrderForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const submitBtn = document.getElementById('submitBtn');
+        const notification = document.getElementById('notification');
+        const sku = document.getElementById('sku').value;
+        const quantityValue = document.getElementById('quantity').value;
+
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Placing Order...';
+        notification.innerHTML = '';
+
+        try {
+            const body = {};
+            if (sku !== '') body.sku = sku;
+            if (quantityValue !== '') {
+                const parsed = parseInt(quantityValue);
+                body.quantity = isNaN(parsed) ? quantityValue : parsed;
+            }
+
+            const response = await fetch('/api/orders', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                notification.innerHTML = '<div class="alert alert-success" role="alert">Success! Order has been created with Order Number ' + data.orderNumber + '</div>';
+            } else {
+                let errorHtml = '<div class="alert alert-danger" role="alert">';
+                if (data.detail) {
+                    errorHtml += '<div>' + data.detail + '</div>';
+                }
+                if (data.errors && data.errors.length > 0) {
+                    data.errors.forEach(function(err) {
+                        errorHtml += '<div>' + err.message + '</div>';
+                    });
+                }
+                errorHtml += '</div>';
+                notification.innerHTML = errorHtml;
+            }
+        } catch (err) {
+            notification.innerHTML = '<div class="alert alert-danger" role="alert">Network error: ' + err.message + '</div>';
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Place Order';
+        }
+    });
+</script>
+}

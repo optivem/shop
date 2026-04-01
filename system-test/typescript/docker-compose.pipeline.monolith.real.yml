@@ -1,0 +1,31 @@
+name: starter-typescript-monolith-real
+
+services:
+
+  monolith:
+    image: ghcr.io/optivem/starter/monolith-typescript-monolith:latest
+    ports:
+      - "2301:3000"
+    environment:
+      - ERP_API_URL=http://external-real:9000/erp
+      - CLOCK_API_URL=http://external-real:9000/clock
+    depends_on:
+      external-real:
+        condition: service_started
+    networks:
+      - app-network
+
+  external-real:
+    image: node:18-alpine
+    ports:
+      - "9303:9000"
+    volumes:
+      - ../../system/external-real-sim:/app
+    working_dir: /app
+    command: sh -c "npm install && npm start"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

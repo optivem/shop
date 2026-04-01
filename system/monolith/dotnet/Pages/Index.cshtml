@@ -5,6 +5,27 @@
 }
 
 <div class="text-center">
-    <h1>Hello World!</h1>
-    <p>Welcome to the Starter - .NET</p>
+    <h1>Starter - .NET Monolith</h1>
+    <p class="lead">Welcome to the Starter Application</p>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6 mb-3">
+        <div class="card shadow-sm h-100">
+            <div class="card-body text-center">
+                <h5 class="card-title">Shop</h5>
+                <p class="card-text">Place a new order by entering a product SKU and quantity.</p>
+                <a asp-page="/Shop" class="btn btn-primary">Go to Shop</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-3">
+        <div class="card shadow-sm h-100">
+            <div class="card-body text-center">
+                <h5 class="card-title">Order History</h5>
+                <p class="card-text">View and search your past orders.</p>
+                <a asp-page="/OrderHistory" class="btn btn-primary">View Orders</a>
+            </div>
+        </div>
+    </div>
 </div>

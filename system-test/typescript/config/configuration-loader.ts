@@ -18,9 +18,12 @@ export interface TestConfig {
 
 export function loadConfiguration(): TestConfig {
   const environment = (process.env.ENVIRONMENT || 'local').toLowerCase();
+  const architecture = (process.env.ARCHITECTURE || 'multitier').toLowerCase();
   const externalSystemMode = (process.env.EXTERNAL_SYSTEM_MODE || 'real').toLowerCase();
 
-  const configFileName = `test-config-${environment}-${externalSystemMode}.json`;
+  const configFileName = architecture === 'monolith'
+    ? `test-config-${environment}-monolith-${externalSystemMode}.json`
+    : `test-config-${environment}-${externalSystemMode}.json`;
   const configPath = path.join(__dirname, configFileName);
 
   if (!fs.existsSync(configPath)) {
