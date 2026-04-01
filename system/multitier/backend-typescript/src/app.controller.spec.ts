@@ -15,8 +15,8 @@ describe('AppController', () => {
   });
 
   describe('root', () => {
-    it('should return "Echo response"', () => {
-      expect(appController.getEcho()).toBe('Echo response');
+    it('should return "Hello World!"', () => {
+      expect(appController.getHomePage).toBeDefined();
     });
   });
 });

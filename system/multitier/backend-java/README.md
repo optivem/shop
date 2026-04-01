@@ -83,4 +83,3 @@ docker run -d --name backend --network hero-network -p 8081:8081 backend
 Configuration can be modified in `src/main/resources/application.yml`:
 
 - `server.port` - Server port (default: 8081)
-- `todos.api.host` - External todos API host (default: https://jsonplaceholder.typicode.com)

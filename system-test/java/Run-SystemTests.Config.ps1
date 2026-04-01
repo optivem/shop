@@ -61,6 +61,22 @@ $Config = @{
             TestReportPath = "build\reports\tests\test\index.html";
             TestInstallCommands = $null; },
 
+        # === Contract Tests (stub) ===
+        @{  Id = "contract-stub";
+            Name = "Contract (stub)";
+            Command = "& .\gradlew.bat test -Dtype=contract -DexternalSystemMode=stub -Denvironment=local";
+            Path = ".";
+            TestReportPath = "build\reports\tests\test\index.html";
+            TestInstallCommands = $null; },
+
+        # === Contract Tests (real) ===
+        @{  Id = "contract-real";
+            Name = "Contract (real)";
+            Command = "& .\gradlew.bat test -Dtype=contract -DexternalSystemMode=real -Denvironment=local";
+            Path = ".";
+            TestReportPath = "build\reports\tests\test\index.html";
+            TestInstallCommands = $null; },
+
         # === E2E Tests (real) - API ===
         @{  Id = "e2e-api";
             Name = "E2E (real) - API";

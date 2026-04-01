@@ -64,9 +64,18 @@ tasks.named('test') {
 	dependsOn 'installPlaywright'
 
 	filter {
-		def type    = System.getProperty('type')    // smoke | acceptance | e2e
+		def type    = System.getProperty('type')    // smoke | acceptance | e2e | contract
 		def mode    = System.getProperty('mode')    // stub | real
-		if (type) {
+		if (type == 'contract') {
+			def externalSystemMode = System.getProperty('externalSystemMode')
+			if (externalSystemMode == 'stub') {
+				includeTestsMatching "*contract*Stub*"
+			} else if (externalSystemMode == 'real') {
+				includeTestsMatching "*contract*Real*"
+			} else {
+				includeTestsMatching "*contract*"
+			}
+		} else if (type) {
 			includeTestsMatching "*${type}*"
 		}
 	}
