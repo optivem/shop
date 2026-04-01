@@ -16,10 +16,14 @@ export interface TestConfig {
   };
 }
 
-export function loadConfiguration(): TestConfig {
+export interface ConfigOverrides {
+  externalSystemMode?: string;
+}
+
+export function loadConfiguration(overrides?: ConfigOverrides): TestConfig {
   const environment = (process.env.ENVIRONMENT || 'local').toLowerCase();
   const architecture = (process.env.ARCHITECTURE || 'multitier').toLowerCase();
-  const externalSystemMode = (process.env.EXTERNAL_SYSTEM_MODE || 'real').toLowerCase();
+  const externalSystemMode = overrides?.externalSystemMode || (process.env.EXTERNAL_SYSTEM_MODE || 'real').toLowerCase();
 
   const configFileName = architecture === 'monolith'
     ? `test-config-${environment}-monolith-${externalSystemMode}.json`

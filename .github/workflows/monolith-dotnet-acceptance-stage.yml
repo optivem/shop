@@ -133,7 +133,7 @@ jobs:
 
       - name: Install Playwright Dependencies
         run: |
-          pwsh bin/Debug/net8.0/playwright.ps1 install --with-deps
+          pwsh SystemTests/bin/Debug/net8.0/playwright.ps1 install --with-deps
         working-directory: system-test/dotnet
 
       - name: Smoke (Stub)

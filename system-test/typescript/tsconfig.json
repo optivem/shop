@@ -13,6 +13,8 @@
     "types": ["jest", "node"]
   },
   "include": [
+    "src/**/*",
+    "config/**/*",
     "test/**/*",
     "jest.config.js"
   ],
