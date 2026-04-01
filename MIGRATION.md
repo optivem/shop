@@ -43,7 +43,7 @@ Port the eshop ecosystem into the starter repo, covering application code, test 
 ### Phase B: .NET Multitier
 
 13. ✅ .NET multitier (backend, frontend, docker-compose, tests, workflows) → **verify:** `Run-SystemTests.ps1` passes, acceptance stage CI green
-14. Trigger `verify-all` with `language=dotnet, architecture=multitier` → **verify:** acceptance stage green
+14. ✅ Trigger `verify-all` with `language=dotnet, architecture=multitier` → **verify:** acceptance stage green (QA/prod stages require manual signoff by design)
 
 ### Phase C: TypeScript Multitier
 
