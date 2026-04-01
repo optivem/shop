@@ -13,14 +13,6 @@ $Config = @{
 
     Suites = @(
 
-        # === Smoke Tests (real) ===
-        @{  Id = "smoke-real";
-            Name = "Smoke (real)";
-            Command = "& .\gradlew.bat test --tests '*smoke*' -DexternalSystemMode=real -Denvironment=local";
-            Path = ".";
-            TestReportPath = "build\reports\tests\test\index.html";
-            TestInstallCommands = $null; },
-
         # === Smoke Tests (stub) ===
         @{  Id = "smoke-stub";
             Name = "Smoke (stub)";
@@ -29,18 +21,10 @@ $Config = @{
             TestReportPath = "build\reports\tests\test\index.html";
             TestInstallCommands = $null; },
 
-        # === E2E Tests (real) - API ===
-        @{  Id = "e2e-api";
-            Name = "E2E (real) - API";
-            Command = "& .\gradlew.bat test --tests '*e2e*' -DexternalSystemMode=real -Dchannel=API -Denvironment=local";
-            Path = ".";
-            TestReportPath = "build\reports\tests\test\index.html";
-            TestInstallCommands = $null; },
-
-        # === E2E Tests (real) - UI ===
-        @{  Id = "e2e-ui";
-            Name = "E2E (real) - UI";
-            Command = "& .\gradlew.bat test --tests '*e2e*' -DexternalSystemMode=real -Dchannel=UI -Denvironment=local";
+        # === Smoke Tests (real) ===
+        @{  Id = "smoke-real";
+            Name = "Smoke (real)";
+            Command = "& .\gradlew.bat test --tests '*smoke*' -DexternalSystemMode=real -Denvironment=local";
             Path = ".";
             TestReportPath = "build\reports\tests\test\index.html";
             TestInstallCommands = $null; },
@@ -59,24 +43,39 @@ $Config = @{
             Command = "& .\gradlew.bat test --tests '*acceptance*' -DexcludeTags=isolated -Dchannel=UI -Denvironment=local";
             Path = ".";
             TestReportPath = "build\reports\tests\test\index.html";
-            TestInstallCommands = $null; }
+            TestInstallCommands = $null; },
 
         # === Acceptance Tests Isolated (stub) - API ===
-        # NOTE: No isolated-tagged tests exist yet. Uncomment when isolated tests are added.
-        # @{  Id = "acceptance-isolated-api";
-        #     Name = "Acceptance Isolated (stub) - API";
-        #     Command = "& .\gradlew.bat test --tests '*acceptance*' -DincludeTags=isolated -Dchannel=API -Denvironment=local";
-        #     Path = ".";
-        #     TestReportPath = "build\reports\tests\test\index.html";
-        #     TestInstallCommands = $null; },
+        @{  Id = "acceptance-isolated-api";
+            Name = "Acceptance Isolated (stub) - API";
+            Command = "& .\gradlew.bat test --tests '*acceptance*' -DincludeTags=isolated -Dchannel=API -Denvironment=local";
+            Path = ".";
+            TestReportPath = "build\reports\tests\test\index.html";
+            TestInstallCommands = $null; },
 
         # === Acceptance Tests Isolated (stub) - UI ===
-        # @{  Id = "acceptance-isolated-ui";
-        #     Name = "Acceptance Isolated (stub) - UI";
-        #     Command = "& .\gradlew.bat test --tests '*acceptance*' -DincludeTags=isolated -Dchannel=UI -Denvironment=local";
-        #     Path = ".";
-        #     TestReportPath = "build\reports\tests\test\index.html";
-        #     TestInstallCommands = $null; }
+        @{  Id = "acceptance-isolated-ui";
+            Name = "Acceptance Isolated (stub) - UI";
+            Command = "& .\gradlew.bat test --tests '*acceptance*' -DincludeTags=isolated -Dchannel=UI -Denvironment=local";
+            Path = ".";
+            TestReportPath = "build\reports\tests\test\index.html";
+            TestInstallCommands = $null; },
+
+        # === E2E Tests (real) - API ===
+        @{  Id = "e2e-api";
+            Name = "E2E (real) - API";
+            Command = "& .\gradlew.bat test --tests '*e2e*' -DexternalSystemMode=real -Dchannel=API -Denvironment=local";
+            Path = ".";
+            TestReportPath = "build\reports\tests\test\index.html";
+            TestInstallCommands = $null; },
+
+        # === E2E Tests (real) - UI ===
+        @{  Id = "e2e-ui";
+            Name = "E2E (real) - UI";
+            Command = "& .\gradlew.bat test --tests '*e2e*' -DexternalSystemMode=real -Dchannel=UI -Denvironment=local";
+            Path = ".";
+            TestReportPath = "build\reports\tests\test\index.html";
+            TestInstallCommands = $null; }
 
     )
 }
