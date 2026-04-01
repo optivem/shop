@@ -3,6 +3,8 @@ package com.optivem.eshop.systemtest.legacy.mod03.e2e;
 import com.optivem.eshop.systemtest.legacy.mod03.e2e.base.BaseE2eTest;
 import org.junit.jupiter.api.Test;
 
+import java.util.UUID;
+
 import static com.optivem.eshop.systemtest.commons.constants.Defaults.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -17,7 +19,7 @@ class PlaceOrderNegativeUiTest extends BaseE2eTest {
         shopUiPage.navigate(getShopUiBaseUrl());
         shopUiPage.locator("a[href='/shop']").click();
 
-        shopUiPage.locator("[aria-label=\"SKU\"]").fill(createUniqueSku(SKU));
+        shopUiPage.locator("[aria-label=\"SKU\"]").fill(SKU + "-" + UUID.randomUUID().toString().substring(0, 8));
         shopUiPage.locator("[aria-label=\"Quantity\"]").fill("invalid-quantity");
         shopUiPage.locator("[aria-label=\"Place Order\"]").click();
 

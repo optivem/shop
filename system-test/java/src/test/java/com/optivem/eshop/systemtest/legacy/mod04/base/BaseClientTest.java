@@ -10,8 +10,6 @@ import com.optivem.eshop.dsl.common.Closer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 
-import java.util.UUID;
-
 public class BaseClientTest extends BaseConfigurableTest {
     protected Configuration configuration;
 
@@ -44,10 +42,6 @@ public class BaseClientTest extends BaseConfigurableTest {
         Closer.close(erpClient);
     }
 
-    protected String createUniqueSku(String baseSku) {
-        var suffix = UUID.randomUUID().toString().substring(0, 8);
-        return baseSku + "-" + suffix;
-    }
 }
 
 

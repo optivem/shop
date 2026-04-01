@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import java.net.URI;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.UUID;
 
 import static com.optivem.eshop.systemtest.commons.constants.Defaults.*;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -23,7 +24,7 @@ class PlaceOrderNegativeApiTest extends BaseE2eTest {
                     "sku": "%s",
                     "quantity": "invalid-quantity"
                 }
-                """.formatted(createUniqueSku(SKU));
+                """.formatted(SKU + "-" + UUID.randomUUID().toString().substring(0, 8));
 
         var response = shopApiHttpClient.send(
                 HttpRequest.newBuilder()

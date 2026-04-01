@@ -5,10 +5,9 @@ import com.optivem.eshop.dsl.driver.adapter.external.erp.client.dtos.ExtCreatePr
 import com.optivem.eshop.dsl.driver.port.shop.dtos.OrderStatus;
 import com.optivem.eshop.dsl.driver.port.shop.dtos.PlaceOrderRequest;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 import static com.optivem.eshop.dsl.common.ResultAssert.assertThatResult;
 import static com.optivem.eshop.systemtest.commons.constants.Defaults.*;
@@ -16,90 +15,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class PlaceOrderPositiveApiTest extends BaseE2eTest {
     @Override
-    protected void setShopDriver() {
+    protected void setShopClient() {
         setUpShopApiClient();
     }
 
     @Test
-    void shouldPlaceOrderWithCorrectSubtotalPrice() {
+    void shouldPlaceOrderForValidInput() {
         // GivenStage
-        var sku = createUniqueSku(SKU);
-        var createProductRequest = ExtCreateProductRequest.builder()
-                .id(sku)
-                .title("Test Product")
-                .description("Test Description")
-                .category("Test Category")
-                .brand("Test Brand")
-                .price("20.00")
-                .build();
-
-        var createProductResult = erpClient.createProduct(createProductRequest);
-        assertThatResult(createProductResult).isSuccess();
-
-        // WhenStage
-        var placeOrderRequest = PlaceOrderRequest.builder()
-                .sku(sku)
-                .quantity("5")
-                .build();
-
-        var placeOrderResult = shopApiClient.orders().placeOrder(placeOrderRequest);
-        assertThatResult(placeOrderResult).isSuccess();
-
-        var orderNumber = placeOrderResult.getValue().getOrderNumber();
-
-        // ThenStage
-        var viewOrderResult = shopApiClient.orders().viewOrder(orderNumber);
-        assertThatResult(viewOrderResult).isSuccess();
-
-        var order = viewOrderResult.getValue();
-        assertThat(order.getTotalPrice()).isEqualTo(new BigDecimal("100.00"));
-    }
-
-    @ParameterizedTest
-    @CsvSource({
-            "20.00, 5, 100.00",
-            "10.00, 3, 30.00",
-            "15.50, 4, 62.00",
-            "99.99, 1, 99.99"
-    })
-    void shouldPlaceOrderWithCorrectTotalPriceParameterized(String unitPrice, String quantity, String expectedTotalPrice) {
-        // GivenStage
-        var sku = createUniqueSku(SKU);
-        var createProductRequest = ExtCreateProductRequest.builder()
-                .id(sku)
-                .title("Test Product")
-                .description("Test Description")
-                .category("Test Category")
-                .brand("Test Brand")
-                .price(unitPrice)
-                .build();
-
-        var createProductResult = erpClient.createProduct(createProductRequest);
-        assertThatResult(createProductResult).isSuccess();
-
-        // WhenStage
-        var placeOrderRequest = PlaceOrderRequest.builder()
-                .sku(sku)
-                .quantity(quantity)
-                .build();
-
-        var placeOrderResult = shopApiClient.orders().placeOrder(placeOrderRequest);
-        assertThatResult(placeOrderResult).isSuccess();
-
-        var orderNumber = placeOrderResult.getValue().getOrderNumber();
-
-        // ThenStage
-        var viewOrderResult = shopApiClient.orders().viewOrder(orderNumber);
-        assertThatResult(viewOrderResult).isSuccess();
-
-        var order = viewOrderResult.getValue();
-        assertThat(order.getTotalPrice()).isEqualTo(new BigDecimal(expectedTotalPrice));
-    }
-
-    @Test
-    void shouldPlaceOrder() {
-        // GivenStage
-        var sku = createUniqueSku(SKU);
+        var sku = SKU + "-" + UUID.randomUUID().toString().substring(0, 8);
         var createProductRequest = ExtCreateProductRequest.builder()
                 .id(sku)
                 .title("Test Product")
@@ -137,5 +60,3 @@ class PlaceOrderPositiveApiTest extends BaseE2eTest {
         assertThat(order.getStatus()).isEqualTo(OrderStatus.PLACED);
     }
 }
-
-

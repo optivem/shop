@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import java.net.URI;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
 import static com.optivem.eshop.systemtest.commons.constants.Defaults.*;
@@ -21,7 +22,7 @@ class PlaceOrderPositiveUiTest extends BaseE2eTest {
 
     @Test
     void shouldPlaceOrderForValidInput() throws Exception {
-        var sku = createUniqueSku(SKU);
+        var sku = SKU + "-" + UUID.randomUUID().toString().substring(0, 8);
         var createProductJson = """
                 {
                     "id": "%s",
