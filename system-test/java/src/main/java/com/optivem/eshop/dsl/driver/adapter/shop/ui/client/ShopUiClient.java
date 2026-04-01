@@ -6,7 +6,6 @@ import com.optivem.eshop.dsl.common.Closer;
 import com.optivem.eshop.dsl.driver.adapter.shared.client.playwright.PageClient;
 import org.springframework.http.HttpStatus;
 
-
 public class ShopUiClient implements AutoCloseable {
     private static final String CONTENT_TYPE = "content-type";
     private static final String TEXT_HTML = "text/html";
@@ -54,7 +53,7 @@ public class ShopUiClient implements AutoCloseable {
         }
 
         var contentType = response.headers().get(CONTENT_TYPE);
-        if (contentType == null || !contentType.equals(TEXT_HTML)) {
+        if (contentType == null || !contentType.startsWith(TEXT_HTML)) {
             return false;
         }
 
@@ -69,6 +68,3 @@ public class ShopUiClient implements AutoCloseable {
         // Don't close browser - it's shared and managed by test lifecycle infrastructure
     }
 }
-
-
-

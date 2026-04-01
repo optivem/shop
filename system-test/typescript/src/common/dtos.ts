@@ -38,7 +38,7 @@ export interface ProblemDetailResponse {
   detail?: string;
   instance?: string;
   timestamp?: string;
-  fieldErrors?: { field: string; message: string; code?: string; rejectedValue?: string }[];
+  errors?: { field: string; message: string; code?: string; rejectedValue?: string }[];
 }
 
 export interface GetProductResponse {

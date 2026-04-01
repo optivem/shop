@@ -11,9 +11,9 @@ import { ShopDriver } from './types';
 function mapProblemDetail(pd: ProblemDetailResponse): ErrorResponse {
   return {
     message: pd.detail || 'Unknown error',
-    fieldErrors: (pd.fieldErrors || []).map((fe) => ({
-      field: fe.field,
-      message: fe.message,
+    fieldErrors: (pd.errors || []).map((e) => ({
+      field: e.field,
+      message: e.message,
     })),
   };
 }

@@ -14,12 +14,18 @@ public class GivenClock : BaseGiven, IGivenClock
         WithTime(DefaultTime);
     }
 
+    public GivenClock WithTime()
+    {
+        return WithTime(DefaultTime);
+    }
+
     public GivenClock WithTime(string? time)
     {
         _time = time;
         return this;
     }
 
+    IGivenClock IGivenClock.WithTime() => WithTime();
     IGivenClock IGivenClock.WithTime(string? time) => WithTime(time);
 
     public GivenClock WithWeekday()
