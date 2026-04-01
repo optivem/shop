@@ -4,7 +4,7 @@
 
 Port the eshop ecosystem into the starter repo, covering application code, test infrastructure, and CI/CD — organized by execution order.
 
-**Phasing:** Java first (multitier, then monolith). Once Java is complete for both architectures, port .NET and TypeScript (both architectures at once, can be done in parallel).
+**Phasing:** All multitier first (Java, then .NET, then TypeScript — verbatim copy from eshop). Then all monoliths (Java, .NET, TypeScript — requires rewrite since eshop has no monolith).
 
 **Execution rules:**
 - **Verify as you go:** After completing each step, run whatever verification makes sense (compile, docker build, docker-compose up, tests, etc.) before proceeding to the next step. Don't batch file creation and defer verification to the end.
@@ -35,23 +35,33 @@ Port the eshop ecosystem into the starter repo, covering application code, test 
 11. Acceptance stage workflow (GitHub Actions) → **verify:** CI passes *(triggered manually, running...)*
 12. Trigger `verify-all` with `language=java, architecture=multitier` → **verify:** all Java multitier workflows green
 
-### Phase B: Java Monolith
+### Phase B: .NET Multitier
 
-13. Monolith backend Java (full SSR with Thymeleaf — PlaceOrder + ViewOrder pages) → **verify:** `docker compose up -d` with local.monolith.real.yml, app loads, PlaceOrder + ViewOrder work; `./gradlew test` in `system/monolith/java/` passes
-14. Monolith stub → **verify:** local.monolith.stub.yml works
-15. Monolith Run-SystemTests config + tests → **verify:** `Run-SystemTests.ps1` passes for monolith
-16. Monolith acceptance stage workflow → **verify:** CI passes
-17. Trigger `verify-all` with `language=java, architecture=monolith` → **verify:** all Java monolith workflows green
+13. .NET multitier (backend, frontend, docker-compose, tests, workflows) → **verify:** `Run-SystemTests.ps1` passes, unit tests pass
+14. Trigger `verify-all` with `language=dotnet, architecture=multitier` → **verify:** all .NET multitier workflows green
 
-### Phase C: .NET (multitier + monolith)
+### Phase C: TypeScript Multitier
 
-18. .NET multitier + monolith (backend, frontend, docker-compose, tests, workflows) → **verify:** `Run-SystemTests.ps1` passes, unit tests pass
-19. Trigger `verify-all` with `language=dotnet` → **verify:** all .NET workflows green
+15. TypeScript multitier (backend, frontend, docker-compose, tests, workflows) → **verify:** `Run-SystemTests.ps1` passes, unit tests pass
+16. Trigger `verify-all` with `language=typescript, architecture=multitier` → **verify:** all TypeScript multitier workflows green
 
-### Phase D: TypeScript (multitier + monolith)
+### Phase D: Java Monolith
 
-20. TypeScript multitier + monolith (backend, frontend, docker-compose, tests, workflows) → **verify:** `Run-SystemTests.ps1` passes, unit tests pass
-21. Trigger `verify-all` with `language=typescript` → **verify:** all TypeScript workflows green
+17. Monolith backend Java (full SSR with Thymeleaf — PlaceOrder + ViewOrder pages) → **verify:** `docker compose up -d` with local.monolith.real.yml, app loads, PlaceOrder + ViewOrder work; `./gradlew test` in `system/monolith/java/` passes
+18. Monolith stub → **verify:** local.monolith.stub.yml works
+19. Monolith Run-SystemTests config + tests → **verify:** `Run-SystemTests.ps1` passes for monolith
+20. Monolith acceptance stage workflow → **verify:** CI passes
+21. Trigger `verify-all` with `language=java, architecture=monolith` → **verify:** all Java monolith workflows green
+
+### Phase E: .NET Monolith
+
+22. .NET monolith (backend, docker-compose, tests, workflows) → **verify:** `Run-SystemTests.ps1` passes, unit tests pass
+23. Trigger `verify-all` with `language=dotnet, architecture=monolith` → **verify:** all .NET monolith workflows green
+
+### Phase F: TypeScript Monolith
+
+24. TypeScript monolith (backend, docker-compose, tests, workflows) → **verify:** `Run-SystemTests.ps1` passes, unit tests pass
+25. Trigger `verify-all` with `language=typescript, architecture=monolith` → **verify:** all TypeScript monolith workflows green
 
 **Simplifications vs. eshop:**
 - Remove Tax (no TaxGateway, no tax calculations)

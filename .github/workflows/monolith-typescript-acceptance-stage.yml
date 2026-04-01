@@ -134,21 +134,21 @@ jobs:
 
       - name: Smoke (Stub)
         working-directory: system-test/typescript
-        run: npm test -- test/smoke-tests
+        run: npm test -- test/latest/smoke
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
 
       - name: Smoke (Real)
         working-directory: system-test/typescript
-        run: npm test -- test/smoke-tests
+        run: npm test -- test/latest/smoke
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: real
 
       - name: Acceptance - API Channel
         working-directory: system-test/typescript
-        run: npm test -- --passWithNoTests test/acceptance-tests
+        run: npm test -- --passWithNoTests test/latest/acceptance
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
@@ -156,7 +156,7 @@ jobs:
 
       - name: Acceptance - UI Channel
         working-directory: system-test/typescript
-        run: npm test -- --passWithNoTests test/acceptance-tests
+        run: npm test -- --passWithNoTests test/latest/acceptance
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
@@ -164,7 +164,7 @@ jobs:
 
       - name: Acceptance (Isolated) - API Channel
         working-directory: system-test/typescript
-        run: npm test -- --passWithNoTests test/acceptance-tests
+        run: npm test -- --passWithNoTests test/latest/acceptance
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
@@ -172,7 +172,7 @@ jobs:
 
       - name: Acceptance (Isolated) - UI Channel
         working-directory: system-test/typescript
-        run: npm test -- --passWithNoTests test/acceptance-tests
+        run: npm test -- --passWithNoTests test/latest/acceptance
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
@@ -180,28 +180,28 @@ jobs:
 
       - name: Contract (Stub)
         working-directory: system-test/typescript
-        run: npm test -- --passWithNoTests test/contract-tests
+        run: npm test -- --passWithNoTests test/latest/contract
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
 
       - name: Contract (Real)
         working-directory: system-test/typescript
-        run: npm test -- --passWithNoTests test/contract-tests
+        run: npm test -- --passWithNoTests test/latest/contract
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: real
 
       - name: E2E - API Channel
         working-directory: system-test/typescript
-        run: npm test -- test/e2e-tests
+        run: npm test -- test/latest/e2e
         env:
           ENVIRONMENT: acceptance
           CHANNEL: API
 
       - name: E2E - UI Channel
         working-directory: system-test/typescript
-        run: npm test -- test/e2e-tests
+        run: npm test -- test/latest/e2e
         env:
           ENVIRONMENT: acceptance
           CHANNEL: UI
