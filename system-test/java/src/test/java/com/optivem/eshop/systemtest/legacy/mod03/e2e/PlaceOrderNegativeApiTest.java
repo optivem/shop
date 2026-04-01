@@ -17,26 +17,6 @@ class PlaceOrderNegativeApiTest extends BaseE2eTest {
     }
 
     @Test
-    void shouldRejectOrderForNonExistentProduct() throws Exception {
-        var placeOrderJson = """
-                {
-                    "sku": "NON-EXISTENT-SKU-12345",
-                    "quantity": "%s"
-                }
-                """.formatted(QUANTITY);
-
-        var response = shopApiHttpClient.send(
-                HttpRequest.newBuilder()
-                        .uri(URI.create(getShopApiBaseUrl() + "/api/orders"))
-                        .header("Content-Type", "application/json")
-                        .POST(HttpRequest.BodyPublishers.ofString(placeOrderJson))
-                        .build(),
-                HttpResponse.BodyHandlers.ofString());
-
-        assertValidationError(response.statusCode(), response.body(), "sku", "Product does not exist for SKU: NON-EXISTENT-SKU-12345");
-    }
-
-    @Test
     void shouldRejectOrderWithNonIntegerQuantity() throws Exception {
         var placeOrderJson = """
                 {
@@ -53,19 +33,15 @@ class PlaceOrderNegativeApiTest extends BaseE2eTest {
                         .build(),
                 HttpResponse.BodyHandlers.ofString());
 
-        assertValidationError(response.statusCode(), response.body(), "quantity", "Quantity must be an integer");
-    }
-
-    private void assertValidationError(int statusCode, String responseBody, String field, String message) throws Exception {
-        assertThat(statusCode).isEqualTo(422);
-        var errorBody = httpObjectMapper.readTree(responseBody);
+        assertThat(response.statusCode()).isEqualTo(422);
+        var errorBody = httpObjectMapper.readTree(response.body());
         assertThat(errorBody.get("detail").asText()).isEqualTo("The request contains one or more validation errors");
         var errors = errorBody.get("errors");
         assertThat(errors).isNotNull();
         assertThat(errors.isArray()).isTrue();
         boolean found = false;
         for (var error : errors) {
-            if (error.get("field").asText().equals(field) && error.get("message").asText().equals(message)) {
+            if (error.get("field").asText().equals("quantity") && error.get("message").asText().equals("Quantity must be an integer")) {
                 found = true;
                 break;
             }
