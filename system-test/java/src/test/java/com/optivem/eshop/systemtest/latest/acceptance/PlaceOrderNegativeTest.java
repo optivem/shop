@@ -1,18 +1,22 @@
 package com.optivem.eshop.systemtest.latest.acceptance;
 
+import com.optivem.eshop.systemtest.commons.providers.EmptyArgumentsProvider;
 import com.optivem.eshop.systemtest.latest.acceptance.base.BaseAcceptanceTest;
 import com.optivem.eshop.dsl.channel.ChannelType;
 import com.optivem.testing.Channel;
 
 import org.junit.jupiter.api.TestTemplate;
+import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class PlaceOrderNegativeTest extends BaseAcceptanceTest {
     @TestTemplate
     @Channel({ChannelType.UI, ChannelType.API})
-    void shouldRejectOrderWithInvalidQuantity() {
+    @ValueSource(strings = {"3.5", "lala", "invalid-quantity"})
+    void shouldRejectOrderWithNonIntegerQuantity(String nonIntegerQuantity) {
         scenario
                 .when().placeOrder()
-                    .withQuantity("invalid-quantity")
+                    .withQuantity(nonIntegerQuantity)
                 .then().shouldFail()
                     .errorMessage("The request contains one or more validation errors")
                     .fieldErrorMessage("quantity", "Quantity must be an integer");
@@ -32,10 +36,11 @@ class PlaceOrderNegativeTest extends BaseAcceptanceTest {
 
     @TestTemplate
     @Channel({ChannelType.UI, ChannelType.API})
-    void shouldRejectOrderWithEmptySku() {
+    @ArgumentsSource(EmptyArgumentsProvider.class)
+    void shouldRejectOrderWithEmptySku(String sku) {
         scenario
                 .when().placeOrder()
-                    .withSku("")
+                    .withSku(sku)
                     .withQuantity(1)
                 .then().shouldFail()
                     .errorMessage("The request contains one or more validation errors")
