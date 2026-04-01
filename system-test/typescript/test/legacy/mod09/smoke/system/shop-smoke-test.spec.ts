@@ -1,5 +1,7 @@
 import { chromium, Browser } from 'playwright';
-import { createScenario } from '../../../../../src/test-setup';
+import { createScenario, ExternalSystemMode } from '../../../../../src/test-setup';
+
+const externalSystemMode = (process.env.EXTERNAL_SYSTEM_MODE?.toLowerCase() || 'real') as ExternalSystemMode;
 
 describe('Shop Smoke Test', () => {
   let browser: Browser;
@@ -16,7 +18,7 @@ describe('Shop Smoke Test', () => {
 
   channels.forEach((channel) => {
     it(`shouldBeAbleToGoToShop_${channel.toUpperCase()}`, async () => {
-      const scenario = createScenario({ channel, browser });
+      const scenario = createScenario({ channel, externalSystemMode, browser });
       try {
         await scenario.assume().shop().shouldBeRunning();
       } finally {

@@ -1,27 +1,40 @@
 import { chromium, Browser } from 'playwright';
-import { createScenario } from '../../../../src/test-setup';
+import { createScenario, Channel } from '../../../../src/test-setup';
+import { OrderStatus } from '../../../../src/common/dtos';
+
+const channel = (process.env.CHANNEL?.toLowerCase() || 'api') as Channel;
 
 describe('PlaceOrder Positive Test', () => {
   let browser: Browser;
 
   beforeAll(async () => {
-    browser = await chromium.launch();
+    if (channel === 'ui') {
+      browser = await chromium.launch();
+    }
   });
 
   afterAll(async () => {
     await browser?.close();
   });
 
-  const channels = ['api', 'ui'] as const;
-
-  channels.forEach((channel) => {
-    it(`shouldPlaceOrder_${channel.toUpperCase()}`, async () => {
-      const scenario = createScenario({ channel, externalSystemMode: 'real', browser });
-      try {
-        await scenario.when().placeOrder().then().shouldSucceed();
-      } finally {
-        await scenario.close();
-      }
-    });
+  it('shouldPlaceOrderForValidInput', async () => {
+    const scenario = createScenario({ channel, externalSystemMode: 'real', browser });
+    try {
+      await scenario
+        .given()
+        .product()
+        .withUnitPrice(20.0)
+        .when()
+        .placeOrder()
+        .withQuantity(5)
+        .then()
+        .shouldSucceed()
+        .and()
+        .order()
+        .hasOrderNumberPrefix('ORD-')
+        .hasStatus(OrderStatus.PLACED);
+    } finally {
+      await scenario.close();
+    }
   });
 });
