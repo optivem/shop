@@ -4,8 +4,7 @@ import com.optivem.eshop.systemtest.legacy.mod02.base.BaseRawTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class ShopUiSmokeTest extends BaseRawTest {
     @BeforeEach
@@ -17,14 +16,13 @@ class ShopUiSmokeTest extends BaseRawTest {
     void shouldBeAbleToGoToShop() {
         var response = shopUiPage.navigate(getShopUiBaseUrl());
 
-        assertEquals(200, response.status());
+        assertThat(response.status()).isEqualTo(200);
 
         var contentType = response.headers().get("content-type");
-        assertTrue(contentType != null && contentType.contains("text/html"));
+        assertThat(contentType).isNotNull().contains("text/html");
 
         var pageContent = shopUiPage.content();
-        assertTrue(pageContent.contains("<html"));
-        assertTrue(pageContent.contains("</html>"));
+        assertThat(pageContent).contains("<html").contains("</html>");
     }
 }
 

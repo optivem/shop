@@ -19,6 +19,8 @@ public final class ScenarioDefaults {
 
     // Clock defaults
     public static final String DEFAULT_TIME = "2025-12-24T10:00:00Z";
+    public static final String WEEKDAY_TIME = "2026-01-15T10:30:00Z";
+    public static final String WEEKEND_TIME = "2026-01-17T10:30:00Z";
 
     public static final String EMPTY = "";
 

@@ -22,6 +22,14 @@ public class GivenClockImpl extends BaseGivenStep implements GivenClock {
         return this;
     }
 
+    public GivenClockImpl withWeekday() {
+        return withTime(ScenarioDefaults.WEEKDAY_TIME);
+    }
+
+    public GivenClockImpl withWeekend() {
+        return withTime(ScenarioDefaults.WEEKEND_TIME);
+    }
+
     @Override
     public void execute(UseCaseDsl app) {
         app.clock().returnsTime()

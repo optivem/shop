@@ -46,4 +46,39 @@ class PlaceOrderNegativeTest extends BaseAcceptanceTest {
                     .errorMessage("The request contains one or more validation errors")
                     .fieldErrorMessage("sku", "SKU must not be empty");
     }
+
+    @TestTemplate
+    @Channel({ChannelType.UI, ChannelType.API})
+    @ValueSource(strings = {"-10", "-1", "0"})
+    void shouldRejectOrderWithNonPositiveQuantity(String quantity) {
+        scenario
+                .when().placeOrder()
+                    .withQuantity(quantity)
+                .then().shouldFail()
+                    .errorMessage("The request contains one or more validation errors")
+                    .fieldErrorMessage("quantity", "Quantity must be positive");
+    }
+
+    @TestTemplate
+    @Channel({ChannelType.UI, ChannelType.API})
+    @ArgumentsSource(EmptyArgumentsProvider.class)
+    void shouldRejectOrderWithEmptyQuantity(String quantity) {
+        scenario
+                .when().placeOrder()
+                    .withQuantity(quantity)
+                .then().shouldFail()
+                    .errorMessage("The request contains one or more validation errors")
+                    .fieldErrorMessage("quantity", "Quantity must not be empty");
+    }
+
+    @TestTemplate
+    @Channel({ChannelType.API})
+    void shouldRejectOrderWithNullQuantity() {
+        scenario
+                .when().placeOrder()
+                    .withQuantity(null)
+                .then().shouldFail()
+                    .errorMessage("The request contains one or more validation errors")
+                    .fieldErrorMessage("quantity", "Quantity must not be empty");
+    }
 }

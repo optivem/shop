@@ -8,7 +8,7 @@ import java.net.URI;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class ShopApiSmokeTest extends BaseRawTest {
     private static final String HEALTH_ENDPOINT = "/health";
@@ -28,7 +28,7 @@ class ShopApiSmokeTest extends BaseRawTest {
 
         var response = shopApiHttpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
-        assertEquals(200, response.statusCode());
+        assertThat(response.statusCode()).isEqualTo(200);
     }
 }
 

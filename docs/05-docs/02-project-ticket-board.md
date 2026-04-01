@@ -2,7 +2,7 @@
 
 ## Example
 
-As you go through the steps below, please refer to my eShop sandbox project [https://github.com/optivem/atdd-accelerator-eshop](https://github.com/optivem/atdd-accelerator-eshop), see: README.
+As you go through the steps below, please refer to the eShop Starter project [https://github.com/optivem/starter](https://github.com/optivem/starter), see: README.
 
 ## 1. Create Project Board
 

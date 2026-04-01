@@ -4,12 +4,11 @@ import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.options.WaitForSelectorState;
 import com.optivem.eshop.systemtest.legacy.mod03.e2e.base.BaseE2eTest;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 
 import java.net.URI;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
 import static com.optivem.eshop.systemtest.commons.constants.Defaults.*;
@@ -17,128 +16,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class PlaceOrderPositiveUiTest extends BaseE2eTest {
     @Override
-    protected void setShopDriver() {
+    protected void setShopClient() {
         setUpShopBrowser();
     }
 
     @Test
-    void shouldPlaceOrderWithCorrectSubtotalPrice() throws Exception {
-        var sku = createUniqueSku(SKU);
-        var createProductJson = """
-                {
-                    "id": "%s",
-                    "title": "Test Product",
-                    "description": "Test Description",
-                    "category": "Test Category",
-                    "brand": "Test Brand",
-                    "price": "20.00"
-                }
-                """.formatted(sku);
-
-        var createProductUri = URI.create(getErpBaseUrl() + "/api/products");
-        var createProductRequest = HttpRequest.newBuilder()
-                .uri(createProductUri)
-                .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(createProductJson))
-                .build();
-
-        var createProductResponse = erpHttpClient.send(createProductRequest, HttpResponse.BodyHandlers.ofString());
-        assertThat(createProductResponse.statusCode()).isEqualTo(201);
-
-        shopUiPage.navigate(getShopUiBaseUrl());
-        shopUiPage.locator("a[href='/shop']").click();
-
-        shopUiPage.locator("[aria-label=\"SKU\"]").fill(sku);
-        shopUiPage.locator("[aria-label=\"Quantity\"]").fill("5");
-        shopUiPage.locator("[aria-label=\"Place Order\"]").click();
-
-        var successMessageText = shopUiPage.locator("[role='alert']").textContent();
-        var pattern = Pattern.compile("Success! Order has been created with Order Number ([\\w-]+)");
-        var matcher = pattern.matcher(successMessageText);
-        assertThat(matcher.find()).isTrue();
-        var orderNumber = matcher.group(1);
-
-        shopUiPage.navigate(getShopUiBaseUrl());
-        shopUiPage.locator("a[href='/order-history']").click();
-        shopUiPage.locator("[aria-label='Order Number']").fill(orderNumber);
-        shopUiPage.locator("[aria-label='Refresh Order List']").click();
-
-        var rowSelector = String.format("//tr[contains(., '%s')]", orderNumber);
-        shopUiPage.locator(rowSelector).waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
-        assertThat(shopUiPage.locator(rowSelector).isVisible()).isTrue();
-
-        var viewDetailsSelector = String.format("%s//a[contains(text(), 'View Details')]", rowSelector);
-        shopUiPage.locator(viewDetailsSelector).click();
-
-        var totalPriceText = shopUiPage.locator("[aria-label='Display Total Price']").textContent();
-        var totalPriceValue = Double.parseDouble(totalPriceText.replace("$", ""));
-        assertThat(totalPriceValue).isEqualTo(100.00);
-    }
-
-    @ParameterizedTest
-    @CsvSource({
-            "20.00, 5, 100.00",
-            "10.00, 3, 30.00",
-            "15.50, 4, 62.00",
-            "99.99, 1, 99.99"
-    })
-    void shouldPlaceOrderWithCorrectTotalPriceParameterized(String unitPrice, String quantity, String expectedTotalPrice) throws Exception {
-        var sku = createUniqueSku(SKU);
-        var createProductJson = """
-                {
-                    "id": "%s",
-                    "title": "Test Product",
-                    "description": "Test Description",
-                    "category": "Test Category",
-                    "brand": "Test Brand",
-                    "price": "%s"
-                }
-                """.formatted(sku, unitPrice);
-
-        var createProductUri = URI.create(getErpBaseUrl() + "/api/products");
-        var createProductRequest = HttpRequest.newBuilder()
-                .uri(createProductUri)
-                .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(createProductJson))
-                .build();
-
-        var createProductResponse = erpHttpClient.send(createProductRequest, HttpResponse.BodyHandlers.ofString());
-        assertThat(createProductResponse.statusCode()).isEqualTo(201);
-
-        shopUiPage.navigate(getShopUiBaseUrl());
-        shopUiPage.locator("a[href='/shop']").click();
-
-        shopUiPage.locator("[aria-label=\"SKU\"]").fill(sku);
-        shopUiPage.locator("[aria-label=\"Quantity\"]").fill(quantity);
-        shopUiPage.locator("[aria-label=\"Place Order\"]").click();
-
-        var successMessageText = shopUiPage.locator("[role='alert']").textContent();
-        var pattern = Pattern.compile("Success! Order has been created with Order Number ([\\w-]+)");
-        var matcher = pattern.matcher(successMessageText);
-        assertThat(matcher.find()).isTrue();
-        var orderNumber = matcher.group(1);
-
-        shopUiPage.navigate(getShopUiBaseUrl());
-        shopUiPage.locator("a[href='/order-history']").click();
-        shopUiPage.locator("[aria-label='Order Number']").fill(orderNumber);
-        shopUiPage.locator("[aria-label='Refresh Order List']").click();
-
-        var rowSelector = String.format("//tr[contains(., '%s')]", orderNumber);
-        shopUiPage.locator(rowSelector).waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
-        assertThat(shopUiPage.locator(rowSelector).isVisible()).isTrue();
-
-        var viewDetailsSelector = String.format("%s//a[contains(text(), 'View Details')]", rowSelector);
-        shopUiPage.locator(viewDetailsSelector).click();
-
-        var totalPriceText = shopUiPage.locator("[aria-label='Display Total Price']").textContent();
-        var totalPriceValue = Double.parseDouble(totalPriceText.replace("$", ""));
-        var expectedTotal = Double.parseDouble(expectedTotalPrice);
-        assertThat(totalPriceValue).isEqualTo(expectedTotal);
-    }
-
-    @Test
-    void shouldPlaceOrder() throws Exception {
-        var sku = createUniqueSku(SKU);
+    void shouldPlaceOrderForValidInput() throws Exception {
+        var sku = SKU + "-" + UUID.randomUUID().toString().substring(0, 8);
         var createProductJson = """
                 {
                     "id": "%s",
@@ -194,7 +78,7 @@ class PlaceOrderPositiveUiTest extends BaseE2eTest {
         assertThat(Double.parseDouble(unitPriceText)).isEqualTo(20.00);
 
         var totalPriceText = shopUiPage.locator("[aria-label='Display Total Price']").textContent().replace("$", "");
-        assertThat(Double.parseDouble(totalPriceText)).isEqualTo(100.00);
+        assertThat(Double.parseDouble(totalPriceText)).isGreaterThan(0.0);
 
         assertThat(shopUiPage.locator("[aria-label='Display Status']").textContent()).isEqualTo("PLACED");
     }

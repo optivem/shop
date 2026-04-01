@@ -6,7 +6,7 @@ COPY build.gradle .
 COPY settings.gradle .
 COPY src src
 COPY config config
-RUN sed -i 's/\r$//' gradlew && chmod +x gradlew && ./gradlew build -x test
+RUN sed -i 's/\r$//' gradlew && chmod +x gradlew && ./gradlew bootJar
 
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app

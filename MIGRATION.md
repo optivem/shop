@@ -636,6 +636,7 @@ Currently has: Echo endpoint + Todo fetcher (SSR with Thymeleaf/Razor/Next.js).
 2. **`-Mode` param:** Keep both `local` and `pipeline`. Local builds images from source; pipeline uses pre-built images from container registry (needed for acceptance stage CI/CD, same as eshop).
 3. **Database:** PostgreSQL (same as eshop).
 4. **Monolith SSR:** Full SSR (Thymeleaf for Java, Razor for .NET, Next.js for TypeScript). No embedded JS or shared REST API layer.
+5. **Tracer bullet approach for legacy modules:** Each legacy module (e.g. mod03) covers exactly one positive and one negative scenario per feature — not exhaustive validation coverage. The single negative (`shouldRejectOrderWithNonIntegerQuantity`) is intentionally duplicated across API and UI test classes to make the duplication pain visible. Full validation coverage belongs at the acceptance test level (`latest/`) where the DSL handles it concisely.
 
 ---
 

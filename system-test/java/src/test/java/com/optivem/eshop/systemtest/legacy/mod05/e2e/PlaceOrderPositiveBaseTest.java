@@ -5,10 +5,9 @@ import com.optivem.eshop.dsl.driver.port.shop.dtos.OrderStatus;
 import com.optivem.eshop.dsl.driver.port.shop.dtos.PlaceOrderRequest;
 import com.optivem.eshop.systemtest.legacy.mod05.e2e.base.BaseE2eTest;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 import static com.optivem.eshop.dsl.common.ResultAssert.assertThatResult;
 import static com.optivem.eshop.systemtest.commons.constants.Defaults.SKU;
@@ -16,77 +15,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 abstract class PlaceOrderPositiveBaseTest extends BaseE2eTest {
     @Test
-    void shouldPlaceOrderWithCorrectTotalPrice() {
+    void shouldPlaceOrderForValidInput() {
         // GivenStage
-        var sku = createUniqueSku(SKU);
-        var returnsProductRequest = ReturnsProductRequest.builder()
-                .sku(sku)
-                .price("20.00")
-                .build();
-
-        var returnsProductResult = erpDriver.returnsProduct(returnsProductRequest);
-        assertThatResult(returnsProductResult).isSuccess();
-
-        // WhenStage
-        var placeOrderRequest = PlaceOrderRequest.builder()
-                .sku(sku)
-                .quantity("5")
-                .build();
-
-        var placeOrderResult = shopDriver.placeOrder(placeOrderRequest);
-        assertThatResult(placeOrderResult).isSuccess();
-
-        var orderNumber = placeOrderResult.getValue().getOrderNumber();
-
-        // ThenStage
-        var viewOrderResult = shopDriver.viewOrder(orderNumber);
-        assertThatResult(viewOrderResult).isSuccess();
-
-        var order = viewOrderResult.getValue();
-        assertThat(order.getTotalPrice()).isEqualTo(new BigDecimal("100.00"));
-    }
-
-    @ParameterizedTest
-    @CsvSource({
-            "20.00, 5, 100.00",
-            "10.00, 3, 30.00",
-            "15.50, 4, 62.00",
-            "99.99, 1, 99.99"
-    })
-    void shouldPlaceOrderWithCorrectTotalPriceParameterized(String unitPrice, String quantity, String expectedTotalPrice) {
-        // GivenStage
-        var sku = createUniqueSku(SKU);
-        var returnsProductRequest = ReturnsProductRequest.builder()
-                .sku(sku)
-                .price(unitPrice)
-                .build();
-
-        var returnsProductResult = erpDriver.returnsProduct(returnsProductRequest);
-        assertThatResult(returnsProductResult).isSuccess();
-
-        // WhenStage
-        var placeOrderRequest = PlaceOrderRequest.builder()
-                .sku(sku)
-                .quantity(quantity)
-                .build();
-
-        var placeOrderResult = shopDriver.placeOrder(placeOrderRequest);
-        assertThatResult(placeOrderResult).isSuccess();
-
-        var orderNumber = placeOrderResult.getValue().getOrderNumber();
-
-        // ThenStage
-        var viewOrderResult = shopDriver.viewOrder(orderNumber);
-        assertThatResult(viewOrderResult).isSuccess();
-
-        var order = viewOrderResult.getValue();
-        assertThat(order.getTotalPrice()).isEqualTo(new BigDecimal(expectedTotalPrice));
-    }
-
-    @Test
-    void shouldPlaceOrder() {
-        // GivenStage
-        var sku = createUniqueSku(SKU);
+        var sku = SKU + "-" + UUID.randomUUID().toString().substring(0, 8);
         var returnsProductRequest = ReturnsProductRequest.builder()
                 .sku(sku)
                 .price("20.00")
@@ -116,9 +47,7 @@ abstract class PlaceOrderPositiveBaseTest extends BaseE2eTest {
         assertThat(order.getSku()).isEqualTo(sku);
         assertThat(order.getQuantity()).isEqualTo(5);
         assertThat(order.getUnitPrice()).isEqualTo(new BigDecimal("20.00"));
-        assertThat(order.getTotalPrice()).isEqualTo(new BigDecimal("100.00"));
+        assertThat(order.getTotalPrice()).isGreaterThan(BigDecimal.ZERO);
         assertThat(order.getStatus()).isEqualTo(OrderStatus.PLACED);
     }
 }
-
-

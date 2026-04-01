@@ -2,7 +2,7 @@
 
 ## Example
 
-In my eShop sandbox project, see the documentation for System Structure: [https://github.com/optivem/atdd-accelerator-eshop/blob/main/docs/system-structure.md](https://github.com/optivem/atdd-accelerator-eshop/blob/main/docs/system-structure.md)
+See the eShop Starter project for a reference implementation: [https://github.com/optivem/starter](https://github.com/optivem/starter)
 
 ## 1. Choose System Architecture Style
 

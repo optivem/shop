@@ -8,11 +8,11 @@ import org.junit.jupiter.api.BeforeEach;
 public abstract class BaseE2eTest extends BaseRawTest {
     @BeforeEach
     void setUp() {
-        setShopDriver();
+        setShopClient();
         setUpExternalHttpClients();
     }
 
-    protected abstract void setShopDriver();
+    protected abstract void setShopClient();
 
     @Override
     protected ExternalSystemMode getFixedExternalSystemMode() {
