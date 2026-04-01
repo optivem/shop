@@ -1,8 +1,4 @@
-import {
-  Column,
-  Entity,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 import { OrderStatus } from './order-status.enum';
 
 @Entity('orders')
@@ -22,10 +18,22 @@ export class Order {
   @Column({ name: 'quantity', nullable: false })
   quantity: number;
 
-  @Column({ name: 'unit_price', type: 'numeric', precision: 10, scale: 2, nullable: false })
+  @Column({
+    name: 'unit_price',
+    type: 'numeric',
+    precision: 10,
+    scale: 2,
+    nullable: false,
+  })
   unitPrice: number;
 
-  @Column({ name: 'total_price', type: 'numeric', precision: 10, scale: 2, nullable: false })
+  @Column({
+    name: 'total_price',
+    type: 'numeric',
+    precision: 10,
+    scale: 2,
+    nullable: false,
+  })
   totalPrice: number;
 
   @Column({ name: 'status', nullable: false })

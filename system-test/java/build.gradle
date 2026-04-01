@@ -97,6 +97,7 @@ tasks.named('test') {
 	systemProperty 'externalSystemMode', System.getProperty('externalSystemMode')
 	systemProperty 'channel',            System.getProperty('channel')
 	systemProperty 'mode',               System.getProperty('mode')
+	systemProperty 'architecture',       System.getProperty('architecture')
 
 	def includeTags = System.getProperty('includeTags')
 	if (includeTags?.contains('isolated')) {

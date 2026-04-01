@@ -6,7 +6,10 @@ import { Order } from '../entities/order.entity';
 import { OrderStatus } from '../entities/order-status.enum';
 import { PlaceOrderRequest } from '../dtos/place-order-request.dto';
 import { PlaceOrderResponse } from '../dtos/place-order-response.dto';
-import { BrowseOrderHistoryResponse, BrowseOrderHistoryItemResponse } from '../dtos/browse-order-history-response.dto';
+import {
+  BrowseOrderHistoryResponse,
+  BrowseOrderHistoryItemResponse,
+} from '../dtos/browse-order-history-response.dto';
 import { ViewOrderDetailsResponse } from '../dtos/view-order-details-response.dto';
 import { ValidationException } from '../exceptions/validation.exception';
 import { NotExistValidationException } from '../exceptions/not-exist-validation.exception';
@@ -36,13 +39,21 @@ export class OrderService {
     const utcMonth = orderTimestamp.getUTCMonth();
     const utcDay = orderTimestamp.getUTCDate();
 
-    if (utcMonth === OrderService.RESTRICTED_MONTH && utcDay === OrderService.RESTRICTED_DAY) {
+    if (
+      utcMonth === OrderService.RESTRICTED_MONTH &&
+      utcDay === OrderService.RESTRICTED_DAY
+    ) {
       const utcHour = orderTimestamp.getUTCHours();
       const utcMinute = orderTimestamp.getUTCMinutes();
 
-      if (utcHour > OrderService.RESTRICTED_HOUR ||
-          (utcHour === OrderService.RESTRICTED_HOUR && utcMinute >= OrderService.RESTRICTED_MINUTE)) {
-        throw new ValidationException('Orders cannot be placed between 23:59 and 00:00 on December 31st');
+      if (
+        utcHour > OrderService.RESTRICTED_HOUR ||
+        (utcHour === OrderService.RESTRICTED_HOUR &&
+          utcMinute >= OrderService.RESTRICTED_MINUTE)
+      ) {
+        throw new ValidationException(
+          'Orders cannot be placed between 23:59 and 00:00 on December 31st',
+        );
       }
     }
 
@@ -70,13 +81,18 @@ export class OrderService {
   private async getUnitPrice(sku: string): Promise<number> {
     const productDetails = await this.erpGateway.getProductDetails(sku);
     if (productDetails === null) {
-      throw new ValidationException('sku', `Product does not exist for SKU: ${sku}`);
+      throw new ValidationException(
+        'sku',
+        `Product does not exist for SKU: ${sku}`,
+      );
     }
 
     return Number(productDetails.price);
   }
 
-  async browseOrderHistory(orderNumberFilter?: string): Promise<BrowseOrderHistoryResponse> {
+  async browseOrderHistory(
+    orderNumberFilter?: string,
+  ): Promise<BrowseOrderHistoryResponse> {
     let orders: Order[];
 
     if (!orderNumberFilter || orderNumberFilter.trim() === '') {
@@ -114,7 +130,9 @@ export class OrderService {
     });
 
     if (!order) {
-      throw new NotExistValidationException(`Order ${orderNumber} does not exist.`);
+      throw new NotExistValidationException(
+        `Order ${orderNumber} does not exist.`,
+      );
     }
 
     const response = new ViewOrderDetailsResponse();

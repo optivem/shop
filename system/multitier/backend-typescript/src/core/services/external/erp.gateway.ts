@@ -7,7 +7,10 @@ export class ErpGateway {
   private readonly erpUrl: string;
 
   constructor(private readonly configService: ConfigService) {
-    this.erpUrl = this.configService.get<string>('ERP_API_URL', 'http://localhost:9001/erp');
+    this.erpUrl = this.configService.get<string>(
+      'ERP_API_URL',
+      'http://localhost:9001/erp',
+    );
   }
 
   async getProductDetails(sku: string): Promise<ProductDetailsResponse | null> {

@@ -12,7 +12,13 @@ public class ConfigurationLoader {
     }
 
     public static Configuration load(Environment environmentMode, ExternalSystemMode externalSystemMode) {
-        var configFile = getConfigFileName(environmentMode, externalSystemMode);
+        var architecture = PropertyLoader.getArchitecture();
+        return load(environmentMode, externalSystemMode, architecture);
+    }
+
+    public static Configuration load(Environment environmentMode, ExternalSystemMode externalSystemMode,
+                                     Architecture architecture) {
+        var configFile = getConfigFileName(environmentMode, externalSystemMode, architecture);
         var config = loadYamlFile(configFile);
 
         var shopUiBaseUrl = getNestedStringValue(config, "test", "eshop", "ui", BASE_URL);
@@ -23,10 +29,12 @@ public class ConfigurationLoader {
         return new Configuration(shopUiBaseUrl, shopApiBaseUrl, erpBaseUrl, clockBaseUrl, externalSystemMode);
     }
 
-    private static String getConfigFileName(Environment environmentMode, ExternalSystemMode externalSystemMode) {
+    private static String getConfigFileName(Environment environmentMode, ExternalSystemMode externalSystemMode,
+                                            Architecture architecture) {
         var env = environmentMode.name().toLowerCase();
+        var arch = architecture.name().toLowerCase();
         var mode = externalSystemMode.name().toLowerCase();
-        return String.format("test-config-%s-%s.yml", env, mode);
+        return String.format("test-config-%s-%s-%s.yml", env, arch, mode);
     }
 
     private static Map<String, Object> loadYamlFile(String fileName) {

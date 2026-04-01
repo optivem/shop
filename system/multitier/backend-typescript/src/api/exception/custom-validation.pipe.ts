@@ -1,11 +1,22 @@
-import { ArgumentMetadata, BadRequestException, Injectable, PipeTransform } from '@nestjs/common';
+import {
+  ArgumentMetadata,
+  BadRequestException,
+  Injectable,
+  PipeTransform,
+} from '@nestjs/common';
 import { validate } from 'class-validator';
 import { plainToInstance } from 'class-transformer';
 
 // Metadata for fields that need type mismatch detection
-const TYPE_VALIDATION_METADATA: Record<string, Record<string, { expectedType: string; message: string }>> = {
+const TYPE_VALIDATION_METADATA: Record<
+  string,
+  Record<string, { expectedType: string; message: string }>
+> = {
   PlaceOrderRequest: {
-    quantity: { expectedType: 'integer', message: 'Quantity must be an integer' },
+    quantity: {
+      expectedType: 'integer',
+      message: 'Quantity must be an integer',
+    },
   },
 };
 
@@ -16,7 +27,10 @@ export class CustomValidationPipe implements PipeTransform {
       return value;
     }
 
-    const rawBody = typeof value === 'object' && value !== null ? { ...value } as Record<string, unknown> : {};
+    const rawBody =
+      typeof value === 'object' && value !== null
+        ? ({ ...value } as Record<string, unknown>)
+        : {};
     const className = metadata.metatype.name;
 
     const object = plainToInstance(metadata.metatype, value);
@@ -48,7 +62,15 @@ export class CustomValidationPipe implements PipeTransform {
   }
 
   private toValidate(metadata: ArgumentMetadata): boolean {
-    const types: Array<new (...args: unknown[]) => unknown> = [String, Boolean, Number, Array, Object];
-    return !types.includes(metadata.metatype as new (...args: unknown[]) => unknown);
+    const types: Array<new (...args: unknown[]) => unknown> = [
+      String,
+      Boolean,
+      Number,
+      Array,
+      Object,
+    ];
+    return !types.includes(
+      metadata.metatype as new (...args: unknown[]) => unknown,
+    );
   }
 }

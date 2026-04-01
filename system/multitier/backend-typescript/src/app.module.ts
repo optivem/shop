@@ -20,7 +20,10 @@ import { Order } from './core/entities/order.entity';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         type: 'postgres' as const,
-        url: configService.get<string>('POSTGRES_URL', 'postgresql://starter:starter@localhost:5432/starter'),
+        url: configService.get<string>(
+          'POSTGRES_URL',
+          'postgresql://starter:starter@localhost:5432/starter',
+        ),
         entities: [Order],
         synchronize: true,
         logging: configService.get<string>('NODE_ENV') !== 'production',

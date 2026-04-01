@@ -8,8 +8,14 @@ export class ClockGateway {
   private readonly clockUrl: string;
 
   constructor(private readonly configService: ConfigService) {
-    this.externalSystemMode = this.configService.get<string>('EXTERNAL_SYSTEM_MODE', 'real');
-    this.clockUrl = this.configService.get<string>('CLOCK_API_URL', 'http://localhost:9001/clock');
+    this.externalSystemMode = this.configService.get<string>(
+      'EXTERNAL_SYSTEM_MODE',
+      'real',
+    );
+    this.clockUrl = this.configService.get<string>(
+      'CLOCK_API_URL',
+      'http://localhost:9001/clock',
+    );
   }
 
   async getCurrentTime(): Promise<Date> {
@@ -18,7 +24,9 @@ export class ClockGateway {
     } else if (this.externalSystemMode === 'stub') {
       return this.getStubTime();
     } else {
-      throw new Error(`Unknown external system mode: ${this.externalSystemMode}`);
+      throw new Error(
+        `Unknown external system mode: ${this.externalSystemMode}`,
+      );
     }
   }
 

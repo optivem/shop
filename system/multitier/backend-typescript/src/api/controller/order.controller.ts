@@ -15,7 +15,8 @@ export class OrderController {
   @Post()
   async placeOrder(@Body() request: PlaceOrderRequest, @Res() res: Response) {
     const response = await this.orderService.placeOrder(request);
-    res.status(201)
+    res
+      .status(201)
       .header('Location', `/api/orders/${response.orderNumber}`)
       .json(response);
   }

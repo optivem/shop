@@ -10,10 +10,13 @@ import type { Response, Request } from 'express';
 import { ValidationException } from '../../core/exceptions/validation.exception';
 import { NotExistValidationException } from '../../core/exceptions/not-exist-validation.exception';
 
-const VALIDATION_ERROR_TYPE_URI = 'https://api.optivem.com/errors/validation-error';
-const RESOURCE_NOT_FOUND_TYPE_URI = 'https://api.optivem.com/errors/resource-not-found';
+const VALIDATION_ERROR_TYPE_URI =
+  'https://api.optivem.com/errors/validation-error';
+const RESOURCE_NOT_FOUND_TYPE_URI =
+  'https://api.optivem.com/errors/resource-not-found';
 const BAD_REQUEST_TYPE_URI = 'https://api.optivem.com/errors/bad-request';
-const INTERNAL_SERVER_ERROR_TYPE_URI = 'https://api.optivem.com/errors/internal-server-error';
+const INTERNAL_SERVER_ERROR_TYPE_URI =
+  'https://api.optivem.com/errors/internal-server-error';
 
 interface ValidationError {
   field: string;
@@ -44,7 +47,10 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     }
   }
 
-  private handleValidationException(ex: ValidationException, response: Response) {
+  private handleValidationException(
+    ex: ValidationException,
+    response: Response,
+  ) {
     if (ex.fieldName !== null) {
       const body: Record<string, unknown> = {
         type: VALIDATION_ERROR_TYPE_URI,
@@ -52,9 +58,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         status: 422,
         detail: 'The request contains one or more validation errors',
         timestamp: new Date().toISOString(),
-        errors: [
-          { field: ex.fieldName, message: ex.message },
-        ],
+        errors: [{ field: ex.fieldName, message: ex.message }],
       };
       response.status(422).json(body);
     } else {
@@ -69,7 +73,10 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     }
   }
 
-  private handleNotExistValidationException(ex: NotExistValidationException, response: Response) {
+  private handleNotExistValidationException(
+    ex: NotExistValidationException,
+    response: Response,
+  ) {
     const body = {
       type: RESOURCE_NOT_FOUND_TYPE_URI,
       title: 'Resource Not Found',
@@ -80,13 +87,20 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     response.status(404).json(body);
   }
 
-  private handleBadRequestException(ex: BadRequestException, response: Response, _request: Request) {
+  private handleBadRequestException(
+    ex: BadRequestException,
+    response: Response,
+    _request: Request,
+  ) {
     const exResponse = ex.getResponse() as Record<string, unknown>;
 
     // Check if this is a validation pipe error (class-validator)
     if (Array.isArray(exResponse?.validationErrors)) {
       const rawBody = exResponse.rawBody as Record<string, unknown> | undefined;
-      const errors = this.buildValidationErrors(exResponse.validationErrors as ValidationErrorDetail[], rawBody);
+      const errors = this.buildValidationErrors(
+        exResponse.validationErrors as ValidationErrorDetail[],
+        rawBody,
+      );
 
       const body = {
         type: VALIDATION_ERROR_TYPE_URI,
@@ -153,7 +167,11 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       }
 
       // Check if this is a type mismatch scenario
-      const isTypeMismatch = this.isTypeMismatch(field, err.expectedType, rawBody);
+      const isTypeMismatch = this.isTypeMismatch(
+        field,
+        err.expectedType,
+        rawBody,
+      );
 
       if (isTypeMismatch === 'empty') {
         errors.push({
@@ -163,7 +181,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
           rejectedValue: null,
         });
       } else if (isTypeMismatch === 'type_mismatch') {
-        const typeMismatchMessage = err.typeMismatchMessage || constraints[constraintKeys[0]];
+        const typeMismatchMessage =
+          err.typeMismatchMessage || constraints[constraintKeys[0]];
         errors.push({
           field,
           message: typeMismatchMessage,

@@ -129,116 +129,116 @@ jobs:
 
       # === mod02: Smoke ===
       - name: mod02 - Smoke
-        run: ./gradlew test -Dversion=mod02 -Dtype=smoke -DexternalSystemMode=real -Denvironment=acceptance
+        run: ./gradlew test -Dversion=mod02 -Dtype=smoke -DexternalSystemMode=real -Darchitecture=monolith -Denvironment=acceptance
         working-directory: system-test/java
 
       # === mod03: Smoke + E2E ===
       - name: mod03 - Smoke
-        run: ./gradlew test -Dversion=mod03 -Dtype=smoke -DexternalSystemMode=real -Denvironment=acceptance
+        run: ./gradlew test -Dversion=mod03 -Dtype=smoke -DexternalSystemMode=real -Darchitecture=monolith -Denvironment=acceptance
         working-directory: system-test/java
 
       - name: mod03 - E2E
-        run: ./gradlew test -Dversion=mod03 -Dtype=e2e -Denvironment=acceptance
+        run: ./gradlew test -Dversion=mod03 -Dtype=e2e -Darchitecture=monolith -Denvironment=acceptance
         working-directory: system-test/java
 
       # === mod04: Smoke + E2E ===
       - name: mod04 - Smoke
-        run: ./gradlew test -Dversion=mod04 -Dtype=smoke -DexternalSystemMode=real -Denvironment=acceptance
+        run: ./gradlew test -Dversion=mod04 -Dtype=smoke -DexternalSystemMode=real -Darchitecture=monolith -Denvironment=acceptance
         working-directory: system-test/java
 
       - name: mod04 - E2E
-        run: ./gradlew test -Dversion=mod04 -Dtype=e2e -Denvironment=acceptance
+        run: ./gradlew test -Dversion=mod04 -Dtype=e2e -Darchitecture=monolith -Denvironment=acceptance
         working-directory: system-test/java
 
       # === mod05: Smoke + E2E ===
       - name: mod05 - Smoke
-        run: ./gradlew test -Dversion=mod05 -Dtype=smoke -DexternalSystemMode=real -Denvironment=acceptance
+        run: ./gradlew test -Dversion=mod05 -Dtype=smoke -DexternalSystemMode=real -Darchitecture=monolith -Denvironment=acceptance
         working-directory: system-test/java
 
       - name: mod05 - E2E
-        run: ./gradlew test -Dversion=mod05 -Dtype=e2e -Denvironment=acceptance
+        run: ./gradlew test -Dversion=mod05 -Dtype=e2e -Darchitecture=monolith -Denvironment=acceptance
         working-directory: system-test/java
 
       # === mod06: Smoke + E2E ===
       - name: mod06 - Smoke
-        run: ./gradlew test -Dversion=mod06 -Dtype=smoke -DexternalSystemMode=real -Denvironment=acceptance
+        run: ./gradlew test -Dversion=mod06 -Dtype=smoke -DexternalSystemMode=real -Darchitecture=monolith -Denvironment=acceptance
         working-directory: system-test/java
 
       - name: mod06 - E2E - API Channel
-        run: ./gradlew test -Dversion=mod06 -Dtype=e2e -Dchannel=API -Denvironment=acceptance
+        run: ./gradlew test -Dversion=mod06 -Dtype=e2e -Dchannel=API -Darchitecture=monolith -Denvironment=acceptance
         working-directory: system-test/java
 
       - name: mod06 - E2E - UI Channel
-        run: ./gradlew test -Dversion=mod06 -Dtype=e2e -Dchannel=UI -Denvironment=acceptance
+        run: ./gradlew test -Dversion=mod06 -Dtype=e2e -Dchannel=UI -Darchitecture=monolith -Denvironment=acceptance
         working-directory: system-test/java
 
       # === mod07: Smoke + E2E ===
       - name: mod07 - Smoke
-        run: ./gradlew test -Dversion=mod07 -Dtype=smoke -DexternalSystemMode=real -Denvironment=acceptance
+        run: ./gradlew test -Dversion=mod07 -Dtype=smoke -DexternalSystemMode=real -Darchitecture=monolith -Denvironment=acceptance
         working-directory: system-test/java
 
       - name: mod07 - E2E - API Channel
-        run: ./gradlew test -Dversion=mod07 -Dtype=e2e -Dchannel=API -Denvironment=acceptance
+        run: ./gradlew test -Dversion=mod07 -Dtype=e2e -Dchannel=API -Darchitecture=monolith -Denvironment=acceptance
         working-directory: system-test/java
 
       - name: mod07 - E2E - UI Channel
-        run: ./gradlew test -Dversion=mod07 -Dtype=e2e -Dchannel=UI -Denvironment=acceptance
+        run: ./gradlew test -Dversion=mod07 -Dtype=e2e -Dchannel=UI -Darchitecture=monolith -Denvironment=acceptance
         working-directory: system-test/java
 
       # === mod08: Smoke + E2E ===
       - name: mod08 - Smoke
-        run: ./gradlew test -Dversion=mod08 -Dtype=smoke -DexternalSystemMode=real -Denvironment=acceptance
+        run: ./gradlew test -Dversion=mod08 -Dtype=smoke -DexternalSystemMode=real -Darchitecture=monolith -Denvironment=acceptance
         working-directory: system-test/java
 
       - name: mod08 - E2E - API Channel
-        run: ./gradlew test -Dversion=mod08 -Dtype=e2e -Dchannel=API -Denvironment=acceptance
+        run: ./gradlew test -Dversion=mod08 -Dtype=e2e -Dchannel=API -Darchitecture=monolith -Denvironment=acceptance
         working-directory: system-test/java
 
       - name: mod08 - E2E - UI Channel
-        run: ./gradlew test -Dversion=mod08 -Dtype=e2e -Dchannel=UI -Denvironment=acceptance
+        run: ./gradlew test -Dversion=mod08 -Dtype=e2e -Dchannel=UI -Darchitecture=monolith -Denvironment=acceptance
         working-directory: system-test/java
 
       # === mod09: Smoke (stub + real) ===
       - name: mod09 - Smoke (Stub)
-        run: ./gradlew test -Dversion=mod09 -Dtype=smoke -DexternalSystemMode=stub -Denvironment=acceptance
+        run: ./gradlew test -Dversion=mod09 -Dtype=smoke -DexternalSystemMode=stub -Darchitecture=monolith -Denvironment=acceptance
         working-directory: system-test/java
 
       - name: mod09 - Smoke (Real)
-        run: ./gradlew test -Dversion=mod09 -Dtype=smoke -DexternalSystemMode=real -Denvironment=acceptance
+        run: ./gradlew test -Dversion=mod09 -Dtype=smoke -DexternalSystemMode=real -Darchitecture=monolith -Denvironment=acceptance
         working-directory: system-test/java
 
       # === mod10: Acceptance ===
       - name: mod10 - Acceptance - API Channel
-        run: ./gradlew test -Dversion=mod10 -Dtype=acceptance -DexcludeTags=isolated -Dchannel=API -Denvironment=acceptance
+        run: ./gradlew test -Dversion=mod10 -Dtype=acceptance -DexcludeTags=isolated -Dchannel=API -Darchitecture=monolith -Denvironment=acceptance
         working-directory: system-test/java
 
       - name: mod10 - Acceptance - UI Channel
-        run: ./gradlew test -Dversion=mod10 -Dtype=acceptance -DexcludeTags=isolated -Dchannel=UI -Denvironment=acceptance
+        run: ./gradlew test -Dversion=mod10 -Dtype=acceptance -DexcludeTags=isolated -Dchannel=UI -Darchitecture=monolith -Denvironment=acceptance
         working-directory: system-test/java
 
       - name: mod10 - Acceptance (Isolated) - API Channel
-        run: ./gradlew test -Dversion=mod10 -Dtype=acceptance -DincludeTags=isolated -Dchannel=API -Denvironment=acceptance
+        run: ./gradlew test -Dversion=mod10 -Dtype=acceptance -DincludeTags=isolated -Dchannel=API -Darchitecture=monolith -Denvironment=acceptance
         working-directory: system-test/java
 
       - name: mod10 - Acceptance (Isolated) - UI Channel
-        run: ./gradlew test -Dversion=mod10 -Dtype=acceptance -DincludeTags=isolated -Dchannel=UI -Denvironment=acceptance
+        run: ./gradlew test -Dversion=mod10 -Dtype=acceptance -DincludeTags=isolated -Dchannel=UI -Darchitecture=monolith -Denvironment=acceptance
         working-directory: system-test/java
 
       # === mod11: Contract + E2E ===
       - name: mod11 - Contract (Stub)
-        run: ./gradlew test -Dversion=mod11 -Dtype=contract -DexternalSystemMode=stub -Denvironment=acceptance
+        run: ./gradlew test -Dversion=mod11 -Dtype=contract -DexternalSystemMode=stub -Darchitecture=monolith -Denvironment=acceptance
         working-directory: system-test/java
 
       - name: mod11 - Contract (Real)
-        run: ./gradlew test -Dversion=mod11 -Dtype=contract -DexternalSystemMode=real -Denvironment=acceptance
+        run: ./gradlew test -Dversion=mod11 -Dtype=contract -DexternalSystemMode=real -Darchitecture=monolith -Denvironment=acceptance
         working-directory: system-test/java
 
       - name: mod11 - E2E - API Channel
-        run: ./gradlew test -Dversion=mod11 -Dtype=e2e -Dchannel=API -Denvironment=acceptance
+        run: ./gradlew test -Dversion=mod11 -Dtype=e2e -Dchannel=API -Darchitecture=monolith -Denvironment=acceptance
         working-directory: system-test/java
 
       - name: mod11 - E2E - UI Channel
-        run: ./gradlew test -Dversion=mod11 -Dtype=e2e -Dchannel=UI -Denvironment=acceptance
+        run: ./gradlew test -Dversion=mod11 -Dtype=e2e -Dchannel=UI -Darchitecture=monolith -Denvironment=acceptance
         working-directory: system-test/java
 
   summary:

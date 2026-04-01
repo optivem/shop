@@ -47,7 +47,7 @@ Port the eshop ecosystem into the starter repo, covering application code, test 
 
 ### Phase C: TypeScript Multitier
 
-15. TypeScript multitier (backend, frontend, docker-compose, tests, workflows). Tests: verbatim copy from eshop-tests, remove tax/coupon/cancel/deliver, then sync to Java starter reference (same process as .NET: match test names/content, add missing DSL methods, remove extra files) → **verify:** `Run-SystemTests.ps1` passes (Latest), `Run-SystemTests.ps1 -Legacy` passes
+15. ✅ TypeScript multitier (backend, frontend, docker-compose, tests, workflows). Tests: verbatim copy from eshop-tests, remove tax/coupon/cancel/deliver, then sync to Java starter reference (same process as .NET: match test names/content, add missing DSL methods, remove extra files) → **verify:** `Run-SystemTests.ps1` passes (Latest), `Run-SystemTests.ps1 -Legacy` passes
 16. Trigger `verify-all` with `language=typescript, architecture=multitier` → **verify:** all TypeScript multitier workflows green
 
 ### Phase D: Java Monolith

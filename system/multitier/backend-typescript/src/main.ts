@@ -6,7 +6,9 @@ import { CustomValidationPipe } from './api/exception/custom-validation.pipe';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:8080').split(',');
+  const allowedOrigins = (
+    process.env.ALLOWED_ORIGINS || 'http://localhost:8080'
+  ).split(',');
 
   app.enableCors({
     origin: allowedOrigins,
