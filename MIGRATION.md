@@ -6,6 +6,8 @@ Port the eshop ecosystem into the starter repo, covering application code, test 
 
 **Phasing:** All multitier first (Java, then .NET, then TypeScript — verbatim copy from eshop). Then all monoliths (Java, .NET, TypeScript — requires rewrite since eshop has no monolith).
 
+**⚠️ IMPORTANT NOTICE:** Temporarily do NOT call `verify-all` — the user is currently rate-limited. Skip all `verify-all` trigger steps until this notice is removed.
+
 **Execution rules:**
 - **Verify as you go:** After completing each step, run whatever verification makes sense (compile, docker build, docker-compose up, tests, etc.) before proceeding to the next step. Don't batch file creation and defer verification to the end.
 - **Ask user approval to `/commit`** after each verified step.
