@@ -130,6 +130,10 @@ jobs:
         run: npx playwright install --with-deps chromium
         working-directory: system-test/java
 
+      - name: Compile System Tests
+        run: ./gradlew clean compileJava compileTestJava
+        working-directory: system-test/java
+
       # === mod02: Smoke ===
       - name: mod02 - Smoke
         run: ./gradlew test -Dversion=mod02 -Dtype=smoke -DexternalSystemMode=real -Darchitecture=multitier -Denvironment=acceptance
