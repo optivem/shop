@@ -52,10 +52,10 @@ Port the eshop ecosystem into the starter repo, covering application code, test 
 
 ### Phase D: Java Monolith
 
-17. Monolith backend Java (full SSR with Thymeleaf — PlaceOrder + ViewOrder pages) → **verify:** `docker compose up -d` with local.monolith.real.yml, app loads, PlaceOrder + ViewOrder work; `./gradlew test` in `system/monolith/java/` passes
-18. Monolith stub → **verify:** local.monolith.stub.yml works
-19. Monolith Run-SystemTests config + tests → **verify:** `Run-SystemTests.ps1` passes for monolith
-20. Monolith acceptance stage workflow → **verify:** CI passes
+17. ✅ Monolith backend Java (full SSR with Thymeleaf — PlaceOrder + ViewOrder pages) → **verify:** `docker compose up -d` with local.monolith.real.yml, app loads, PlaceOrder + ViewOrder work; `./gradlew test` in `system/monolith/java/` passes
+18. ✅ Monolith stub → **verify:** local.monolith.stub.yml works
+19. ✅ Monolith Run-SystemTests config + tests → **verify:** `Run-SystemTests.ps1` passes for monolith
+20. ✅ Monolith acceptance stage workflow → **verify:** CI passes
 21. Trigger `verify-all` with `language=java, architecture=monolith` → **verify:** all Java monolith workflows green
 
 ### Phase E: .NET Monolith
