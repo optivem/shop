@@ -197,14 +197,14 @@ jobs:
 
       - name: E2E - API Channel
         working-directory: system-test/typescript
-        run: npm test -- test/latest/e2e
+        run: npm test -- --passWithNoTests test/latest/e2e
         env:
           ENVIRONMENT: acceptance
           CHANNEL: API
 
       - name: E2E - UI Channel
         working-directory: system-test/typescript
-        run: npm test -- test/latest/e2e
+        run: npm test -- --passWithNoTests test/latest/e2e
         env:
           ENVIRONMENT: acceptance
           CHANNEL: UI

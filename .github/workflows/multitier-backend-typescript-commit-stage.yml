@@ -78,9 +78,9 @@ jobs:
         shell: bash
         working-directory: system/multitier/backend-typescript
 
-      # TODO: Implement
       - name: Run Unit Tests
-        run: echo "TODO - not yet implemented"
+        run: npm test
+        working-directory: system/multitier/backend-typescript
 
       # TODO: Implement
       - name: Run Narrow Integration Tests
