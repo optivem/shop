@@ -69,7 +69,7 @@ cp "$STARTER_PATH/.github/workflows/multitier-system-${TEST_LANG}-prod-stage.yml
 
 # Verify workflow (only when backend and test languages are the same)
 if [ "$BACKEND_LANG" = "$TEST_LANG" ]; then
-  cp "$STARTER_PATH/.github/workflows/multitier-${BACKEND_LANG}-verify.yml" .github/workflows/
+  cp "$STARTER_PATH/.github/workflows/multitier-system-${BACKEND_LANG}-verify.yml" .github/workflows/
 fi
 
 # System code (backend + frontend)

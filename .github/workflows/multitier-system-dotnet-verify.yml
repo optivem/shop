@@ -1,4 +1,4 @@
-name: multitier-dotnet-verify
+name: multitier-system-dotnet-verify
 
 on:
   workflow_dispatch:

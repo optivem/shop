@@ -1,4 +1,4 @@
-name: multitier-java-verify
+name: multitier-system-java-verify
 
 on:
   workflow_dispatch:

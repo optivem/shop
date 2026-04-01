@@ -36,17 +36,9 @@ jobs:
           names: |
             DOCKERHUB_USERNAME
             DOCKERHUB_TOKEN
-            SYSTEM_UI_URL
-            SYSTEM_API_URL
-            ERP_URL
-            CLOCK_URL
         env:
           DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
-          SYSTEM_UI_URL: ${{ vars.SYSTEM_UI_URL }}
-          SYSTEM_API_URL: ${{ vars.SYSTEM_API_URL }}
-          ERP_URL: ${{ vars.ERP_URL }}
-          CLOCK_URL: ${{ vars.CLOCK_URL }}
 
       - name: Checkout Repository
         uses: actions/checkout@v5
@@ -101,20 +93,35 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Deploy System (Acceptance Environment)
-        id: deploy-system
+      - name: Deploy System (Real External Systems)
         uses: optivem/actions/simulate-deployment@v1
         with:
           environment: acceptance
           version: latest
           image-urls: ${{ needs.check.outputs.image-digest-urls }}
-          compose-file: docker-compose.multitier.yml
+          compose-file: docker-compose.pipeline.multitier.real.yml
           systems: |
             [
-              { "name": "Shop UI", "url": "${{ vars.SYSTEM_UI_URL }}/" },
-              { "name": "Shop API", "url": "${{ vars.SYSTEM_API_URL }}/health" },
-              { "name": "ERP", "url": "${{ vars.ERP_URL }}/health" },
-              { "name": "Clock", "url": "${{ vars.CLOCK_URL }}/health" }
+              { "name": "Shop UI", "url": "http://localhost:3301/" },
+              { "name": "Shop API", "url": "http://localhost:8301/health" },
+              { "name": "ERP", "url": "http://localhost:9301/erp/health" },
+              { "name": "Clock", "url": "http://localhost:9301/clock/health" }
+            ]
+          working-directory: system-test/typescript
+
+      - name: Deploy System (Stub External Systems)
+        uses: optivem/actions/simulate-deployment@v1
+        with:
+          environment: acceptance
+          version: latest
+          image-urls: ${{ needs.check.outputs.image-digest-urls }}
+          compose-file: docker-compose.pipeline.multitier.stub.yml
+          systems: |
+            [
+              { "name": "Shop UI", "url": "http://localhost:3302/" },
+              { "name": "Shop API", "url": "http://localhost:8302/health" },
+              { "name": "ERP", "url": "http://localhost:9302/erp/health" },
+              { "name": "Clock", "url": "http://localhost:9302/clock/health" }
             ]
           working-directory: system-test/typescript
 

@@ -36,15 +36,9 @@ jobs:
           names: |
             DOCKERHUB_USERNAME
             DOCKERHUB_TOKEN
-            SYSTEM_URL
-            ERP_URL
-            CLOCK_URL
         env:
           DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
-          SYSTEM_URL: ${{ vars.SYSTEM_URL }}
-          ERP_URL: ${{ vars.ERP_URL }}
-          CLOCK_URL: ${{ vars.CLOCK_URL }}
 
       - name: Checkout Repository
         uses: actions/checkout@v5
@@ -98,8 +92,7 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Deploy System (Acceptance Environment)
-        id: deploy-system
+      - name: Deploy System (Real External Systems)
         uses: optivem/actions/simulate-deployment@v1
         with:
           environment: acceptance
@@ -108,9 +101,24 @@ jobs:
           compose-file: docker-compose.pipeline.monolith.real.yml
           systems: |
             [
-              { "name": "Shop", "url": "${{ vars.SYSTEM_URL }}/" },
-              { "name": "ERP", "url": "${{ vars.ERP_URL }}/health" },
-              { "name": "Clock", "url": "${{ vars.CLOCK_URL }}/health" }
+              { "name": "Shop", "url": "http://localhost:2101/" },
+              { "name": "ERP", "url": "http://localhost:9103/erp/health" },
+              { "name": "Clock", "url": "http://localhost:9103/clock/health" }
+            ]
+          working-directory: system-test/java
+
+      - name: Deploy System (Stub External Systems)
+        uses: optivem/actions/simulate-deployment@v1
+        with:
+          environment: acceptance
+          version: latest
+          image-urls: ${{ needs.check.outputs.image-digest-urls }}
+          compose-file: docker-compose.pipeline.monolith.stub.yml
+          systems: |
+            [
+              { "name": "Shop", "url": "http://localhost:2102/" },
+              { "name": "ERP", "url": "http://localhost:9104/erp/health" },
+              { "name": "Clock", "url": "http://localhost:9104/clock/health" }
             ]
           working-directory: system-test/java
 

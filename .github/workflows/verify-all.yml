@@ -99,18 +99,18 @@ jobs:
     if: (inputs.language == '' || inputs.language == 'java') && (inputs.architecture == '' || inputs.architecture == 'multitier')
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger multitier-java-verify
+      - name: Trigger multitier-system-java-verify
         id: trigger-verify
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          run_url=$(gh workflow run multitier-java-verify.yml \
+          run_url=$(gh workflow run multitier-system-java-verify.yml \
             --repo "${{ github.repository }}" \
             --ref main 2>&1)
           run_id=$(echo "$run_url" | grep -oP '/runs/\K[0-9]+')
           echo "run_id=$run_id" >> $GITHUB_OUTPUT
 
-      - name: Wait for multitier-java-verify
+      - name: Wait for multitier-system-java-verify
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -122,18 +122,18 @@ jobs:
     if: (inputs.language == '' || inputs.language == 'dotnet') && (inputs.architecture == '' || inputs.architecture == 'multitier')
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger multitier-dotnet-verify
+      - name: Trigger multitier-system-dotnet-verify
         id: trigger-verify
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          run_url=$(gh workflow run multitier-dotnet-verify.yml \
+          run_url=$(gh workflow run multitier-system-dotnet-verify.yml \
             --repo "${{ github.repository }}" \
             --ref main 2>&1)
           run_id=$(echo "$run_url" | grep -oP '/runs/\K[0-9]+')
           echo "run_id=$run_id" >> $GITHUB_OUTPUT
 
-      - name: Wait for multitier-dotnet-verify
+      - name: Wait for multitier-system-dotnet-verify
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -145,18 +145,18 @@ jobs:
     if: (inputs.language == '' || inputs.language == 'typescript') && (inputs.architecture == '' || inputs.architecture == 'multitier')
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger multitier-typescript-verify
+      - name: Trigger multitier-system-typescript-verify
         id: trigger-verify
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          run_url=$(gh workflow run multitier-typescript-verify.yml \
+          run_url=$(gh workflow run multitier-system-typescript-verify.yml \
             --repo "${{ github.repository }}" \
             --ref main 2>&1)
           run_id=$(echo "$run_url" | grep -oP '/runs/\K[0-9]+')
           echo "run_id=$run_id" >> $GITHUB_OUTPUT
 
-      - name: Wait for multitier-typescript-verify
+      - name: Wait for multitier-system-typescript-verify
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |

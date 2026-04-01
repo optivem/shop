@@ -114,7 +114,7 @@ def _apply_multitier(cfg: Config, repo_dir: str, starter: str) -> None:
         f"multitier-system-{test_lang}-prod-stage.yml",
     ]
     if backend_lang == test_lang:
-        system_workflows.append(f"multitier-{backend_lang}-verify.yml")
+        system_workflows.append(f"multitier-system-{backend_lang}-verify.yml")
     copy_workflows(system_workflows, starter, repo_dir)
 
     test_dst = os.path.join(repo_dir, "system-test", test_lang)
