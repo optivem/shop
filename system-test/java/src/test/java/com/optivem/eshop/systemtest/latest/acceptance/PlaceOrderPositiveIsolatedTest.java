@@ -20,4 +20,28 @@ class PlaceOrderPositiveIsolatedTest extends BaseAcceptanceTest {
                 .and().clock()
                     .hasTime("2026-01-15T10:30:00Z");
     }
+
+    @TestTemplate
+    @Channel({ChannelType.UI, ChannelType.API})
+    void shouldApplyFullPriceOnWeekday() {
+        scenario
+                .given().product().withUnitPrice(20.00)
+                .and().clock().withWeekday()
+                .when().placeOrder().withQuantity(5)
+                .then().shouldSucceed()
+                .and().order()
+                    .hasTotalPrice(100.00);
+    }
+
+    @TestTemplate
+    @Channel({ChannelType.UI, ChannelType.API})
+    void shouldApplyWeekendDiscount() {
+        scenario
+                .given().product().withUnitPrice(20.00)
+                .and().clock().withWeekend()
+                .when().placeOrder().withQuantity(5)
+                .then().shouldSucceed()
+                .and().order()
+                    .hasTotalPrice(50.00);
+    }
 }

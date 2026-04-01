@@ -32,4 +32,16 @@ class PlaceOrderPositiveIsolatedTest extends BaseAcceptanceTest {
                 .and().order()
                     .hasTotalPrice(50.00);
     }
+
+    @TestTemplate
+    @Channel({ChannelType.UI, ChannelType.API})
+    void shouldRecordPlacementTimestamp() {
+        scenario
+                .given().clock()
+                    .withTime("2026-01-15T10:30:00Z")
+                .when().placeOrder()
+                .then().shouldSucceed()
+                .and().clock()
+                    .hasTime("2026-01-15T10:30:00Z");
+    }
 }
