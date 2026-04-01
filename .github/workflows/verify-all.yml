@@ -35,10 +35,14 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          run_url=$(gh workflow run monolith-java-verify.yml \
+          gh workflow run monolith-java-verify.yml \
             --repo "${{ github.repository }}" \
-            --ref main 2>&1)
-          run_id=$(echo "$run_url" | grep -oP '/runs/\K[0-9]+')
+            --ref main
+          sleep 10
+          run_id=$(gh run list --workflow=monolith-java-verify.yml \
+            --repo "${{ github.repository }}" \
+            --branch main \
+            --limit 1 --json databaseId --jq '.[0].databaseId')
           echo "run_id=$run_id" >> $GITHUB_OUTPUT
 
       - name: Wait for monolith-java-verify
@@ -47,7 +51,7 @@ jobs:
         run: |
           run_id="${{ steps.trigger-verify.outputs.run_id }}"
           echo "Waiting for run $run_id..."
-          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status
+          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status --interval 30
 
   monolith-dotnet:
     if: (inputs.language == '' || inputs.language == 'dotnet') && (inputs.architecture == '' || inputs.architecture == 'monolith')
@@ -58,10 +62,14 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          run_url=$(gh workflow run monolith-dotnet-verify.yml \
+          gh workflow run monolith-dotnet-verify.yml \
             --repo "${{ github.repository }}" \
-            --ref main 2>&1)
-          run_id=$(echo "$run_url" | grep -oP '/runs/\K[0-9]+')
+            --ref main
+          sleep 10
+          run_id=$(gh run list --workflow=monolith-dotnet-verify.yml \
+            --repo "${{ github.repository }}" \
+            --branch main \
+            --limit 1 --json databaseId --jq '.[0].databaseId')
           echo "run_id=$run_id" >> $GITHUB_OUTPUT
 
       - name: Wait for monolith-dotnet-verify
@@ -70,7 +78,7 @@ jobs:
         run: |
           run_id="${{ steps.trigger-verify.outputs.run_id }}"
           echo "Waiting for run $run_id..."
-          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status
+          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status --interval 30
 
   monolith-typescript:
     if: (inputs.language == '' || inputs.language == 'typescript') && (inputs.architecture == '' || inputs.architecture == 'monolith')
@@ -81,10 +89,14 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          run_url=$(gh workflow run monolith-typescript-verify.yml \
+          gh workflow run monolith-typescript-verify.yml \
             --repo "${{ github.repository }}" \
-            --ref main 2>&1)
-          run_id=$(echo "$run_url" | grep -oP '/runs/\K[0-9]+')
+            --ref main
+          sleep 10
+          run_id=$(gh run list --workflow=monolith-typescript-verify.yml \
+            --repo "${{ github.repository }}" \
+            --branch main \
+            --limit 1 --json databaseId --jq '.[0].databaseId')
           echo "run_id=$run_id" >> $GITHUB_OUTPUT
 
       - name: Wait for monolith-typescript-verify
@@ -93,7 +105,7 @@ jobs:
         run: |
           run_id="${{ steps.trigger-verify.outputs.run_id }}"
           echo "Waiting for run $run_id..."
-          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status
+          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status --interval 30
 
   multitier-java:
     if: (inputs.language == '' || inputs.language == 'java') && (inputs.architecture == '' || inputs.architecture == 'multitier')
@@ -104,10 +116,14 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          run_url=$(gh workflow run multitier-system-java-verify.yml \
+          gh workflow run multitier-system-java-verify.yml \
             --repo "${{ github.repository }}" \
-            --ref main 2>&1)
-          run_id=$(echo "$run_url" | grep -oP '/runs/\K[0-9]+')
+            --ref main
+          sleep 10
+          run_id=$(gh run list --workflow=multitier-system-java-verify.yml \
+            --repo "${{ github.repository }}" \
+            --branch main \
+            --limit 1 --json databaseId --jq '.[0].databaseId')
           echo "run_id=$run_id" >> $GITHUB_OUTPUT
 
       - name: Wait for multitier-system-java-verify
@@ -116,7 +132,7 @@ jobs:
         run: |
           run_id="${{ steps.trigger-verify.outputs.run_id }}"
           echo "Waiting for run $run_id..."
-          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status
+          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status --interval 30
 
   multitier-dotnet:
     if: (inputs.language == '' || inputs.language == 'dotnet') && (inputs.architecture == '' || inputs.architecture == 'multitier')
@@ -127,10 +143,14 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          run_url=$(gh workflow run multitier-system-dotnet-verify.yml \
+          gh workflow run multitier-system-dotnet-verify.yml \
             --repo "${{ github.repository }}" \
-            --ref main 2>&1)
-          run_id=$(echo "$run_url" | grep -oP '/runs/\K[0-9]+')
+            --ref main
+          sleep 10
+          run_id=$(gh run list --workflow=multitier-system-dotnet-verify.yml \
+            --repo "${{ github.repository }}" \
+            --branch main \
+            --limit 1 --json databaseId --jq '.[0].databaseId')
           echo "run_id=$run_id" >> $GITHUB_OUTPUT
 
       - name: Wait for multitier-system-dotnet-verify
@@ -139,7 +159,7 @@ jobs:
         run: |
           run_id="${{ steps.trigger-verify.outputs.run_id }}"
           echo "Waiting for run $run_id..."
-          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status
+          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status --interval 30
 
   multitier-typescript:
     if: (inputs.language == '' || inputs.language == 'typescript') && (inputs.architecture == '' || inputs.architecture == 'multitier')
@@ -150,10 +170,14 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          run_url=$(gh workflow run multitier-system-typescript-verify.yml \
+          gh workflow run multitier-system-typescript-verify.yml \
             --repo "${{ github.repository }}" \
-            --ref main 2>&1)
-          run_id=$(echo "$run_url" | grep -oP '/runs/\K[0-9]+')
+            --ref main
+          sleep 10
+          run_id=$(gh run list --workflow=multitier-system-typescript-verify.yml \
+            --repo "${{ github.repository }}" \
+            --branch main \
+            --limit 1 --json databaseId --jq '.[0].databaseId')
           echo "run_id=$run_id" >> $GITHUB_OUTPUT
 
       - name: Wait for multitier-system-typescript-verify
@@ -162,4 +186,4 @@ jobs:
         run: |
           run_id="${{ steps.trigger-verify.outputs.run_id }}"
           echo "Waiting for run $run_id..."
-          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status
+          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status --interval 30

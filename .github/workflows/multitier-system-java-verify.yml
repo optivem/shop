@@ -18,10 +18,14 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          run_url=$(gh workflow run "${{ matrix.workflow }}" \
+          gh workflow run "${{ matrix.workflow }}" \
             --repo "${{ github.repository }}" \
-            --ref main 2>&1)
-          run_id=$(echo "$run_url" | grep -oP '/runs/\K[0-9]+')
+            --ref main
+          sleep 10
+          run_id=$(gh run list --workflow="${{ matrix.workflow }}" \
+            --repo "${{ github.repository }}" \
+            --branch main \
+            --limit 1 --json databaseId --jq '.[0].databaseId')
           echo "run_id=$run_id" >> $GITHUB_OUTPUT
 
       - name: Wait for ${{ matrix.workflow }}
@@ -30,7 +34,7 @@ jobs:
         run: |
           run_id="${{ steps.trigger-commit-stage.outputs.run_id }}"
           echo "Waiting for run $run_id..."
-          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status
+          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status --interval 30
 
   acceptance-stage:
     needs: commit-stage
@@ -43,10 +47,14 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          run_url=$(gh workflow run multitier-system-java-acceptance-stage.yml \
+          gh workflow run multitier-system-java-acceptance-stage.yml \
             --repo "${{ github.repository }}" \
-            --ref main 2>&1)
-          run_id=$(echo "$run_url" | grep -oP '/runs/\K[0-9]+')
+            --ref main
+          sleep 10
+          run_id=$(gh run list --workflow=multitier-system-java-acceptance-stage.yml \
+            --repo "${{ github.repository }}" \
+            --branch main \
+            --limit 1 --json databaseId --jq '.[0].databaseId')
           echo "run_id=$run_id" >> $GITHUB_OUTPUT
 
       - name: Wait for Acceptance Stage
@@ -55,7 +63,7 @@ jobs:
         run: |
           run_id="${{ steps.trigger-acceptance-stage.outputs.run_id }}"
           echo "Waiting for run $run_id..."
-          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status
+          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status --interval 30
 
       - name: Get RC Version
         id: get-version
@@ -77,11 +85,15 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          run_url=$(gh workflow run multitier-system-java-qa-stage.yml \
+          gh workflow run multitier-system-java-qa-stage.yml \
             --repo "${{ github.repository }}" \
             --ref main \
-            -f version=${{ needs.acceptance-stage.outputs.version }} 2>&1)
-          run_id=$(echo "$run_url" | grep -oP '/runs/\K[0-9]+')
+            -f version=${{ needs.acceptance-stage.outputs.version }}
+          sleep 10
+          run_id=$(gh run list --workflow=multitier-system-java-qa-stage.yml \
+            --repo "${{ github.repository }}" \
+            --branch main \
+            --limit 1 --json databaseId --jq '.[0].databaseId')
           echo "run_id=$run_id" >> $GITHUB_OUTPUT
 
       - name: Wait for QA Stage
@@ -90,7 +102,7 @@ jobs:
         run: |
           run_id="${{ steps.trigger-qa-stage.outputs.run_id }}"
           echo "Waiting for run $run_id..."
-          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status
+          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status --interval 30
 
   qa-signoff:
     needs: [acceptance-stage, qa-stage]
@@ -101,12 +113,16 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          run_url=$(gh workflow run multitier-system-java-qa-signoff.yml \
+          gh workflow run multitier-system-java-qa-signoff.yml \
             --repo "${{ github.repository }}" \
             --ref main \
             -f version=${{ needs.acceptance-stage.outputs.version }} \
-            -f result=approved 2>&1)
-          run_id=$(echo "$run_url" | grep -oP '/runs/\K[0-9]+')
+            -f result=approved
+          sleep 10
+          run_id=$(gh run list --workflow=multitier-system-java-qa-signoff.yml \
+            --repo "${{ github.repository }}" \
+            --branch main \
+            --limit 1 --json databaseId --jq '.[0].databaseId')
           echo "run_id=$run_id" >> $GITHUB_OUTPUT
 
       - name: Wait for QA Signoff
@@ -115,7 +131,7 @@ jobs:
         run: |
           run_id="${{ steps.trigger-qa-signoff.outputs.run_id }}"
           echo "Waiting for run $run_id..."
-          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status
+          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status --interval 30
 
   prod-stage:
     needs: [acceptance-stage, qa-signoff]
@@ -126,11 +142,15 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          run_url=$(gh workflow run multitier-system-java-prod-stage.yml \
+          gh workflow run multitier-system-java-prod-stage.yml \
             --repo "${{ github.repository }}" \
             --ref main \
-            -f version=${{ needs.acceptance-stage.outputs.version }} 2>&1)
-          run_id=$(echo "$run_url" | grep -oP '/runs/\K[0-9]+')
+            -f version=${{ needs.acceptance-stage.outputs.version }}
+          sleep 10
+          run_id=$(gh run list --workflow=multitier-system-java-prod-stage.yml \
+            --repo "${{ github.repository }}" \
+            --branch main \
+            --limit 1 --json databaseId --jq '.[0].databaseId')
           echo "run_id=$run_id" >> $GITHUB_OUTPUT
 
       - name: Wait for Prod Stage
@@ -139,4 +159,4 @@ jobs:
         run: |
           run_id="${{ steps.trigger-prod-stage.outputs.run_id }}"
           echo "Waiting for run $run_id..."
-          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status
+          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status --interval 30

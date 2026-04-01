@@ -27,7 +27,7 @@ public class GetProductVerification extends ResponseVerification<GetProductRespo
         var actualPrice = getResponse().getPrice();
         assertThat(actualPrice)
                 .withFailMessage("Expected price to be %s, but was %s", expectedPrice, actualPrice)
-                .isEqualTo(expectedPrice);
+                .isEqualByComparingTo(expectedPrice);
         return this;
     }
 
