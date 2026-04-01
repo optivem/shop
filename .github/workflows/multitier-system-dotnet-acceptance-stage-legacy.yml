@@ -131,8 +131,9 @@ jobs:
 
       - name: Install Playwright Dependencies
         run: |
+          dotnet build
           pwsh bin/Debug/net8.0/playwright.ps1 install --with-deps
-        working-directory: system-test/dotnet
+        working-directory: system-test/dotnet/SystemTests
 
       # === mod02: Smoke ===
       - name: mod02 - Smoke

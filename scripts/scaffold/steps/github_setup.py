@@ -43,37 +43,12 @@ def setup_environments(cfg: Config, github: GitHub, **_: object) -> None:
     ok(f"Created environments: {prefix}-acceptance, {prefix}-qa, {prefix}-production")
 
 
-def _get_system_urls(cfg: Config) -> dict[str, str]:
-    """Return system URL variables based on architecture and language."""
-    lang_code = {"java": "1", "dotnet": "2", "typescript": "3"}
-    lang_digit = lang_code.get(cfg.lang or cfg.backend_lang or "", "1")
-
-    if cfg.arch == "multitier":
-        return {
-            "SYSTEM_UI_URL": f"http://localhost:3{lang_digit}01",
-            "SYSTEM_API_URL": f"http://localhost:8{lang_digit}01",
-            "ERP_URL": f"http://localhost:9{lang_digit}01/erp",
-            "CLOCK_URL": f"http://localhost:9{lang_digit}01/clock",
-        }
-    else:
-        return {
-            "SYSTEM_URL": f"http://localhost:2{lang_digit}01",
-        }
-
-
 def setup_secrets_and_variables(cfg: Config, github: GitHub, **_: object) -> None:
     log("Step 3: Setting secrets and variables...")
 
     github.secret_set("DOCKERHUB_TOKEN", cfg.dockerhub_token)
     github.secret_set("SONAR_TOKEN", cfg.sonar_token)
     github.variable_set("DOCKERHUB_USERNAME", cfg.dockerhub_username)
-
-    prefix = f"{cfg.arch}-{cfg.lang or cfg.backend_lang}"
-    system_urls = _get_system_urls(cfg)
-    for stage in ["acceptance", "qa", "production"]:
-        env_name = f"{prefix}-{stage}"
-        for var_name, var_value in system_urls.items():
-            github.variable_set(var_name, var_value, env=env_name)
 
     if cfg.arch == "multitier":
         github.secret_set("GHCR_TOKEN", cfg.ghcr_token)
