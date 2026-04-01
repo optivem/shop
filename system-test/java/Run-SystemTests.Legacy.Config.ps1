@@ -14,12 +14,6 @@ $Config = @{
             TestInstallCommands = $null; },
 
         # === mod03: E2E ===
-        @{  Id = "mod03-smoke";
-            Name = "mod03 (e2e) - Smoke (real)";
-            Command = "& .\gradlew.bat test -Dversion=mod03 -Dtype=smoke -DexternalSystemMode=real -Darchitecture=$Architecture -Denvironment=local";
-            Path = ".";
-            TestReportPath = "build\reports\tests\test\index.html";
-            TestInstallCommands = $null; },
         @{  Id = "mod03-e2e";
             Name = "mod03 (e2e) - E2E (real)";
             Command = "& .\gradlew.bat test -Dversion=mod03 -Dtype=e2e -DexternalSystemMode=real -Darchitecture=$Architecture -Denvironment=local";

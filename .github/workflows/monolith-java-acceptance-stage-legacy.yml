@@ -136,11 +136,7 @@ jobs:
         run: ./gradlew test -Dversion=mod02 -Dtype=smoke -DexternalSystemMode=real -Darchitecture=monolith -Denvironment=acceptance
         working-directory: system-test/java
 
-      # === mod03: Smoke + E2E ===
-      - name: mod03 - Smoke
-        run: ./gradlew test -Dversion=mod03 -Dtype=smoke -DexternalSystemMode=real -Darchitecture=monolith -Denvironment=acceptance
-        working-directory: system-test/java
-
+      # === mod03: E2E ===
       - name: mod03 - E2E
         run: ./gradlew test -Dversion=mod03 -Dtype=e2e -Darchitecture=monolith -Denvironment=acceptance
         working-directory: system-test/java

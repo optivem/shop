@@ -135,14 +135,7 @@ jobs:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: real
 
-      # === mod03: Smoke + E2E ===
-      - name: mod03 - Smoke
-        working-directory: system-test/typescript
-        run: npm test -- test/legacy/mod03/smoke
-        env:
-          ENVIRONMENT: acceptance
-          EXTERNAL_SYSTEM_MODE: real
-
+      # === mod03: E2E ===
       - name: mod03 - E2E
         working-directory: system-test/typescript
         run: npm test -- test/legacy/mod03/e2e
