@@ -6,7 +6,7 @@ import {
   HttpException,
   Logger,
 } from '@nestjs/common';
-import type { Response, Request } from 'express';
+import type { Response } from 'express';
 import { ValidationException } from '../../core/exceptions/validation.exception';
 import { NotExistValidationException } from '../../core/exceptions/not-exist-validation.exception';
 
@@ -32,14 +32,13 @@ export class GlobalExceptionFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
-    const request = ctx.getRequest<Request>();
 
     if (exception instanceof NotExistValidationException) {
       this.handleNotExistValidationException(exception, response);
     } else if (exception instanceof ValidationException) {
       this.handleValidationException(exception, response);
     } else if (exception instanceof BadRequestException) {
-      this.handleBadRequestException(exception, response, request);
+      this.handleBadRequestException(exception, response);
     } else if (exception instanceof HttpException) {
       this.handleHttpException(exception, response);
     } else {
@@ -90,7 +89,6 @@ export class GlobalExceptionFilter implements ExceptionFilter {
   private handleBadRequestException(
     ex: BadRequestException,
     response: Response,
-    _request: Request,
   ) {
     const exResponse = ex.getResponse() as Record<string, unknown>;
 
