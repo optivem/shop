@@ -18,6 +18,3 @@ public abstract class BaseE2eTest extends BaseDriverTest {
         return ExternalSystemMode.REAL;
     }
 }
-
-
-
