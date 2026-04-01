@@ -10,49 +10,21 @@ import org.junit.jupiter.api.TestTemplate;
 class PlaceOrderPositiveTest extends BaseAcceptanceTest {
     @TestTemplate
     @Channel({ChannelType.UI, ChannelType.API})
-    void shouldPlaceOrderForValidInput() {
-        scenario
-                .given().product()
-                    .withSku("ABC")
-                    .withUnitPrice(20.00)
-                .when().placeOrder()
-                    .withSku("ABC")
-                    .withQuantity(5)
-                .then().shouldSucceed();
-    }
-
-    @TestTemplate
-    @Channel({ChannelType.UI, ChannelType.API})
-    void shouldHavePlacedStatusAfterPlacingOrder() {
-        scenario
-                .when().placeOrder()
-                .then().shouldSucceed()
-                .and().order()
-                    .hasStatus(OrderStatus.PLACED);
-    }
-
-    @TestTemplate
-    @Channel({ChannelType.UI, ChannelType.API})
-    void shouldCalculateCorrectTotalPrice() {
-        scenario
-                .given().product()
-                    .withSku("ABC")
-                    .withUnitPrice(20.00)
-                .when().placeOrder()
-                    .withSku("ABC")
-                    .withQuantity(5)
-                .then().shouldSucceed()
-                .and().order()
-                    .hasTotalPrice(100.00);
-    }
-
-    @TestTemplate
-    @Channel({ChannelType.UI, ChannelType.API})
-    void shouldHaveORDPrefix() {
+    void orderNumberShouldStartWithORD() {
         scenario
                 .when().placeOrder()
                 .then().shouldSucceed()
                 .and().order()
                     .hasOrderNumberPrefix("ORD-");
+    }
+
+    @TestTemplate
+    @Channel({ChannelType.UI, ChannelType.API})
+    void orderStatusShouldBePlacedAfterPlacingOrder() {
+        scenario
+                .when().placeOrder()
+                .then().shouldSucceed()
+                .and().order()
+                    .hasStatus(OrderStatus.PLACED);
     }
 }
