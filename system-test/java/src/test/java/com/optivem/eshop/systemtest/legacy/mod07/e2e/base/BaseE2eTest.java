@@ -1,7 +1,7 @@
 package com.optivem.eshop.systemtest.legacy.mod07.e2e.base;
 
 import com.optivem.eshop.systemtest.legacy.mod07.base.BaseUseCaseDslTest;
-import com.optivem.eshop.dsl.port.ExternalSystemMode;
+import com.optivem.eshop.systemtest.configuration.ExternalSystemMode;
 
 public abstract class BaseE2eTest extends BaseUseCaseDslTest {
     @Override

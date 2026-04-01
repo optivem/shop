@@ -50,7 +50,6 @@ class PlaceOrderPositiveUiTest extends BaseE2eTest {
 
         shopUiPage.locator("[aria-label=\"SKU\"]").fill(sku);
         shopUiPage.locator("[aria-label=\"Quantity\"]").fill("5");
-        shopUiPage.locator("[aria-label=\"Country\"]").fill(COUNTRY);
         shopUiPage.locator("[aria-label=\"Place Order\"]").click();
 
         var successMessageText = shopUiPage.locator("[role='alert']").textContent();
@@ -71,9 +70,9 @@ class PlaceOrderPositiveUiTest extends BaseE2eTest {
         var viewDetailsSelector = String.format("%s//a[contains(text(), 'View Details')]", rowSelector);
         shopUiPage.locator(viewDetailsSelector).click();
 
-        var subtotalText = shopUiPage.locator("[aria-label='Display Subtotal Price']").textContent();
-        var subtotalValue = Double.parseDouble(subtotalText.replace("$", ""));
-        assertThat(subtotalValue).isEqualTo(100.00);
+        var totalPriceText = shopUiPage.locator("[aria-label='Display Total Price']").textContent();
+        var totalPriceValue = Double.parseDouble(totalPriceText.replace("$", ""));
+        assertThat(totalPriceValue).isEqualTo(100.00);
     }
 
     @ParameterizedTest
@@ -83,7 +82,7 @@ class PlaceOrderPositiveUiTest extends BaseE2eTest {
             "15.50, 4, 62.00",
             "99.99, 1, 99.99"
     })
-    void shouldPlaceOrderWithCorrectSubtotalPriceParameterized(String unitPrice, String quantity, String expectedSubtotalPrice) throws Exception {
+    void shouldPlaceOrderWithCorrectTotalPriceParameterized(String unitPrice, String quantity, String expectedTotalPrice) throws Exception {
         var sku = createUniqueSku(SKU);
         var createProductJson = """
                 {
@@ -111,7 +110,6 @@ class PlaceOrderPositiveUiTest extends BaseE2eTest {
 
         shopUiPage.locator("[aria-label=\"SKU\"]").fill(sku);
         shopUiPage.locator("[aria-label=\"Quantity\"]").fill(quantity);
-        shopUiPage.locator("[aria-label=\"Country\"]").fill(COUNTRY);
         shopUiPage.locator("[aria-label=\"Place Order\"]").click();
 
         var successMessageText = shopUiPage.locator("[role='alert']").textContent();
@@ -132,10 +130,10 @@ class PlaceOrderPositiveUiTest extends BaseE2eTest {
         var viewDetailsSelector = String.format("%s//a[contains(text(), 'View Details')]", rowSelector);
         shopUiPage.locator(viewDetailsSelector).click();
 
-        var subtotalText = shopUiPage.locator("[aria-label='Display Subtotal Price']").textContent();
-        var subtotalValue = Double.parseDouble(subtotalText.replace("$", ""));
-        var expectedSubtotal = Double.parseDouble(expectedSubtotalPrice);
-        assertThat(subtotalValue).isEqualTo(expectedSubtotal);
+        var totalPriceText = shopUiPage.locator("[aria-label='Display Total Price']").textContent();
+        var totalPriceValue = Double.parseDouble(totalPriceText.replace("$", ""));
+        var expectedTotal = Double.parseDouble(expectedTotalPrice);
+        assertThat(totalPriceValue).isEqualTo(expectedTotal);
     }
 
     @Test
@@ -167,7 +165,6 @@ class PlaceOrderPositiveUiTest extends BaseE2eTest {
 
         shopUiPage.locator("[aria-label=\"SKU\"]").fill(sku);
         shopUiPage.locator("[aria-label=\"Quantity\"]").fill("5");
-        shopUiPage.locator("[aria-label=\"Country\"]").fill(COUNTRY);
         shopUiPage.locator("[aria-label=\"Place Order\"]").click();
 
         var successMessageText = shopUiPage.locator("[role='alert']").textContent();
@@ -191,31 +188,15 @@ class PlaceOrderPositiveUiTest extends BaseE2eTest {
 
         assertThat(shopUiPage.locator("[aria-label='Display Order Number']").textContent()).isEqualTo(orderNumber);
         assertThat(shopUiPage.locator("[aria-label='Display SKU']").textContent()).isEqualTo(sku);
-        assertThat(shopUiPage.locator("[aria-label='Display Country']").textContent()).isEqualTo(COUNTRY);
         assertThat(Integer.parseInt(shopUiPage.locator("[aria-label='Display Quantity']").textContent())).isEqualTo(5);
 
         var unitPriceText = shopUiPage.locator("[aria-label='Display Unit Price']").textContent().replace("$", "");
         assertThat(Double.parseDouble(unitPriceText)).isEqualTo(20.00);
 
-        var subtotalText = shopUiPage.locator("[aria-label='Display Subtotal Price']").textContent().replace("$", "");
-        assertThat(Double.parseDouble(subtotalText)).isEqualTo(100.00);
+        var totalPriceText = shopUiPage.locator("[aria-label='Display Total Price']").textContent().replace("$", "");
+        assertThat(Double.parseDouble(totalPriceText)).isEqualTo(100.00);
 
         assertThat(shopUiPage.locator("[aria-label='Display Status']").textContent()).isEqualTo("PLACED");
-
-        var discountRateText = shopUiPage.locator("[aria-label='Display Discount Rate']").textContent().replace("%", "");
-        assertThat(Double.parseDouble(discountRateText)).isGreaterThanOrEqualTo(0.0);
-
-        var discountAmountText = shopUiPage.locator("[aria-label='Display Discount Amount']").textContent().replace("$", "");
-        assertThat(Double.parseDouble(discountAmountText)).isGreaterThanOrEqualTo(0.0);
-
-        var taxRateText = shopUiPage.locator("[aria-label='Display Tax Rate']").textContent().replace("%", "");
-        assertThat(Double.parseDouble(taxRateText)).isGreaterThanOrEqualTo(0.0);
-
-        var taxAmountText = shopUiPage.locator("[aria-label='Display Tax Amount']").textContent().replace("$", "");
-        assertThat(Double.parseDouble(taxAmountText)).isGreaterThanOrEqualTo(0.0);
-
-        var totalPriceText = shopUiPage.locator("[aria-label='Display Total Price']").textContent().replace("$", "");
-        assertThat(Double.parseDouble(totalPriceText)).isGreaterThan(0.0);
     }
 }
 

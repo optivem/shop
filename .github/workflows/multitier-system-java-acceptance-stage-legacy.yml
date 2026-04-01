@@ -1,0 +1,258 @@
+name: multitier-system-java-acceptance-stage-legacy
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Run daily
+  workflow_dispatch:
+
+concurrency:
+  group: multitier-system-java-acceptance-stage-legacy
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: read
+    outputs:
+      artifacts-exist: ${{ steps.check-artifacts.outputs.exist }}
+    steps:
+      - name: Check Artifacts Exist
+        id: check-artifacts
+        uses: optivem/actions/check-artifacts-exist@v1
+
+  check:
+    needs: preflight
+    if: needs.preflight.outputs.artifacts-exist == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      should-run: ${{ steps.should-run.outputs.should-run }}
+      image-digest-urls: ${{ steps.find-latest.outputs.image-digest-urls }}
+    steps:
+      - name: Validate Config
+        uses: optivem/actions/validate-config@v1
+        with:
+          names: |
+            DOCKERHUB_USERNAME
+            DOCKERHUB_TOKEN
+        env:
+          DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Checkout Repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Check Target Version Exists
+        uses: optivem/actions/check-target-version-exists@v1
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Find Latest Artifacts
+        id: find-latest
+        uses: optivem/actions/find-latest-docker-images@v1
+        with:
+          image-urls: |
+            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-frontend-react:latest
+            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-backend-java:latest
+
+      - name: Check Run Conditions
+        id: should-run
+        uses: optivem/actions/should-run-acceptance-stage@v1
+        with:
+          latest-image-timestamp: ${{ steps.find-latest.outputs.latest-image-timestamp }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  run:
+    needs: check
+    if: needs.check.outputs.should-run == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Deploy System (Real External Systems)
+        uses: optivem/actions/simulate-deployment@v1
+        with:
+          environment: acceptance
+          version: latest
+          image-urls: ${{ needs.check.outputs.image-digest-urls }}
+          compose-file: docker-compose.pipeline.multitier.real.yml
+          systems: |
+            [
+              { "name": "Shop UI", "url": "http://localhost:3101/" },
+              { "name": "Shop API", "url": "http://localhost:8101/health" },
+              { "name": "ERP", "url": "http://localhost:9101/erp/health" },
+              { "name": "Clock", "url": "http://localhost:9101/clock/health" }
+            ]
+          working-directory: system-test/java
+
+      - name: Deploy System (Stub External Systems)
+        uses: optivem/actions/simulate-deployment@v1
+        with:
+          environment: acceptance
+          version: latest
+          image-urls: ${{ needs.check.outputs.image-digest-urls }}
+          compose-file: docker-compose.pipeline.multitier.stub.yml
+          systems: |
+            [
+              { "name": "Shop UI", "url": "http://localhost:3102/" },
+              { "name": "Shop API", "url": "http://localhost:8102/health" },
+              { "name": "ERP", "url": "http://localhost:9102/erp/health" },
+              { "name": "Clock", "url": "http://localhost:9102/clock/health" }
+            ]
+          working-directory: system-test/java
+
+      - name: Setup Runtime
+        uses: optivem/actions/setup-java-gradle@v1
+        with:
+          java-version: 21
+          working-directory: system-test/java
+
+      - name: Install Playwright Dependencies
+        run: npx playwright install --with-deps chromium
+        working-directory: system-test/java
+
+      # === mod02: Smoke ===
+      - name: mod02 - Smoke
+        run: ./gradlew test -Dversion=mod02 -Dtype=smoke -DexternalSystemMode=real -Denvironment=acceptance
+        working-directory: system-test/java
+
+      # === mod03: Smoke + E2E ===
+      - name: mod03 - Smoke
+        run: ./gradlew test -Dversion=mod03 -Dtype=smoke -DexternalSystemMode=real -Denvironment=acceptance
+        working-directory: system-test/java
+
+      - name: mod03 - E2E
+        run: ./gradlew test -Dversion=mod03 -Dtype=e2e -Denvironment=acceptance
+        working-directory: system-test/java
+
+      # === mod04: Smoke + E2E ===
+      - name: mod04 - Smoke
+        run: ./gradlew test -Dversion=mod04 -Dtype=smoke -DexternalSystemMode=real -Denvironment=acceptance
+        working-directory: system-test/java
+
+      - name: mod04 - E2E
+        run: ./gradlew test -Dversion=mod04 -Dtype=e2e -Denvironment=acceptance
+        working-directory: system-test/java
+
+      # === mod05: Smoke + E2E ===
+      - name: mod05 - Smoke
+        run: ./gradlew test -Dversion=mod05 -Dtype=smoke -DexternalSystemMode=real -Denvironment=acceptance
+        working-directory: system-test/java
+
+      - name: mod05 - E2E
+        run: ./gradlew test -Dversion=mod05 -Dtype=e2e -Denvironment=acceptance
+        working-directory: system-test/java
+
+      # === mod06: Smoke + E2E ===
+      - name: mod06 - Smoke
+        run: ./gradlew test -Dversion=mod06 -Dtype=smoke -DexternalSystemMode=real -Denvironment=acceptance
+        working-directory: system-test/java
+
+      - name: mod06 - E2E - API Channel
+        run: ./gradlew test -Dversion=mod06 -Dtype=e2e -Dchannel=API -Denvironment=acceptance
+        working-directory: system-test/java
+
+      - name: mod06 - E2E - UI Channel
+        run: ./gradlew test -Dversion=mod06 -Dtype=e2e -Dchannel=UI -Denvironment=acceptance
+        working-directory: system-test/java
+
+      # === mod07: Smoke + E2E ===
+      - name: mod07 - Smoke
+        run: ./gradlew test -Dversion=mod07 -Dtype=smoke -DexternalSystemMode=real -Denvironment=acceptance
+        working-directory: system-test/java
+
+      - name: mod07 - E2E - API Channel
+        run: ./gradlew test -Dversion=mod07 -Dtype=e2e -Dchannel=API -Denvironment=acceptance
+        working-directory: system-test/java
+
+      - name: mod07 - E2E - UI Channel
+        run: ./gradlew test -Dversion=mod07 -Dtype=e2e -Dchannel=UI -Denvironment=acceptance
+        working-directory: system-test/java
+
+      # === mod08: Smoke + E2E ===
+      - name: mod08 - Smoke
+        run: ./gradlew test -Dversion=mod08 -Dtype=smoke -DexternalSystemMode=real -Denvironment=acceptance
+        working-directory: system-test/java
+
+      - name: mod08 - E2E - API Channel
+        run: ./gradlew test -Dversion=mod08 -Dtype=e2e -Dchannel=API -Denvironment=acceptance
+        working-directory: system-test/java
+
+      - name: mod08 - E2E - UI Channel
+        run: ./gradlew test -Dversion=mod08 -Dtype=e2e -Dchannel=UI -Denvironment=acceptance
+        working-directory: system-test/java
+
+      # === mod09: Smoke (stub + real) ===
+      - name: mod09 - Smoke (Stub)
+        run: ./gradlew test -Dversion=mod09 -Dtype=smoke -DexternalSystemMode=stub -Denvironment=acceptance
+        working-directory: system-test/java
+
+      - name: mod09 - Smoke (Real)
+        run: ./gradlew test -Dversion=mod09 -Dtype=smoke -DexternalSystemMode=real -Denvironment=acceptance
+        working-directory: system-test/java
+
+      # === mod10: Acceptance ===
+      - name: mod10 - Acceptance - API Channel
+        run: ./gradlew test -Dversion=mod10 -Dtype=acceptance -DexcludeTags=isolated -Dchannel=API -Denvironment=acceptance
+        working-directory: system-test/java
+
+      - name: mod10 - Acceptance - UI Channel
+        run: ./gradlew test -Dversion=mod10 -Dtype=acceptance -DexcludeTags=isolated -Dchannel=UI -Denvironment=acceptance
+        working-directory: system-test/java
+
+      - name: mod10 - Acceptance (Isolated) - API Channel
+        run: ./gradlew test -Dversion=mod10 -Dtype=acceptance -DincludeTags=isolated -Dchannel=API -Denvironment=acceptance
+        working-directory: system-test/java
+
+      - name: mod10 - Acceptance (Isolated) - UI Channel
+        run: ./gradlew test -Dversion=mod10 -Dtype=acceptance -DincludeTags=isolated -Dchannel=UI -Denvironment=acceptance
+        working-directory: system-test/java
+
+      # === mod11: Contract + E2E ===
+      - name: mod11 - Contract (Stub)
+        run: ./gradlew test -Dversion=mod11 -Dtype=contract -DexternalSystemMode=stub -Denvironment=acceptance
+        working-directory: system-test/java
+
+      - name: mod11 - Contract (Real)
+        run: ./gradlew test -Dversion=mod11 -Dtype=contract -DexternalSystemMode=real -Denvironment=acceptance
+        working-directory: system-test/java
+
+      - name: mod11 - E2E - API Channel
+        run: ./gradlew test -Dversion=mod11 -Dtype=e2e -Dchannel=API -Denvironment=acceptance
+        working-directory: system-test/java
+
+      - name: mod11 - E2E - UI Channel
+        run: ./gradlew test -Dversion=mod11 -Dtype=e2e -Dchannel=UI -Denvironment=acceptance
+        working-directory: system-test/java
+
+  summary:
+    needs: [check, run]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+    - name: Summarize Stage
+      uses: optivem/actions/summarize-system-stage@v1
+      with:
+        stage-name: 'Acceptance Stage'
+        environment: acceptance
+        stage-result: ${{ needs.run.result }}
+        success-version: latest

@@ -1,6 +1,6 @@
 package com.optivem.eshop.systemtest.legacy.mod04.e2e.base;
 
-import com.optivem.eshop.dsl.port.ExternalSystemMode;
+import com.optivem.eshop.systemtest.configuration.ExternalSystemMode;
 import com.optivem.eshop.systemtest.legacy.mod04.base.BaseClientTest;
 
 import org.junit.jupiter.api.BeforeEach;

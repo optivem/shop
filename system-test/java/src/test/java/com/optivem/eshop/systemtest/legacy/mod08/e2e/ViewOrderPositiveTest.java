@@ -14,21 +14,15 @@ class ViewOrderPositiveTest extends BaseE2eTest {
     void shouldViewPlacedOrder() {
         scenario
                 .given().product().withSku(SKU).withUnitPrice(25.00)
-                .and().order().withOrderNumber(ORDER_NUMBER).withSku(SKU).withCountry(COUNTRY).withQuantity(4)
+                .and().order().withOrderNumber(ORDER_NUMBER).withSku(SKU).withQuantity(4)
                 .when().viewOrder().withOrderNumber(ORDER_NUMBER)
                 .then().shouldSucceed()
                 .and().order(ORDER_NUMBER)
                 .hasSku(SKU)
                 .hasQuantity(4)
-                .hasCountry(COUNTRY)
                 .hasUnitPrice(25.00)
-                .hasSubtotalPrice(100.00)
+                .hasTotalPrice(100.00)
                 .hasStatus(OrderStatus.PLACED)
-                .hasDiscountRateGreaterThanOrEqualToZero()
-                .hasDiscountAmountGreaterThanOrEqualToZero()
-                .hasSubtotalPriceGreaterThanZero()
-                .hasTaxRateGreaterThanOrEqualToZero()
-                .hasTaxAmountGreaterThanOrEqualToZero()
                 .hasTotalPriceGreaterThanZero();
     }
 }

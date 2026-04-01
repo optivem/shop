@@ -84,28 +84,6 @@ class PlaceOrderNegativeTest extends BaseE2eTest {
     }
 
     @TestTemplate
-    @Channel({ChannelType.UI, ChannelType.API})
-    @ArgumentsSource(EmptyArgumentsProvider.class)
-    void shouldRejectOrderWithEmptyCountry(String emptyCountry) {
-        scenario
-                .when().placeOrder().withCountry(emptyCountry)
-                .then().shouldFail()
-                .errorMessage("The request contains one or more validation errors")
-                .fieldErrorMessage("country", "Country must not be empty");
-    }
-
-    @TestTemplate
-    @Channel({ChannelType.UI, ChannelType.API})
-    void shouldRejectOrderWithInvalidCountry() {
-        scenario
-                .given().product()
-                .when().placeOrder().withCountry("XX")
-                .then().shouldFail()
-                .errorMessage("The request contains one or more validation errors")
-                .fieldErrorMessage("country", "Country does not exist: XX");
-    }
-
-    @TestTemplate
     @Channel({ChannelType.API})
     void shouldRejectOrderWithNullQuantity() {
         scenario
@@ -125,15 +103,6 @@ class PlaceOrderNegativeTest extends BaseE2eTest {
                 .fieldErrorMessage("sku", "SKU must not be empty");
     }
 
-    @TestTemplate
-    @Channel({ChannelType.API})
-    void shouldRejectOrderWithNullCountry() {
-        scenario
-                .when().placeOrder().withCountry(null)
-                .then().shouldFail()
-                .errorMessage("The request contains one or more validation errors")
-                .fieldErrorMessage("country", "Country must not be empty");
-    }
 }
 
 

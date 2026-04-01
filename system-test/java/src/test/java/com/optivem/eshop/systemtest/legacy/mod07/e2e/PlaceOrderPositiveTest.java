@@ -12,16 +12,16 @@ import static com.optivem.eshop.systemtest.commons.constants.Defaults.*;
 class PlaceOrderPositiveTest extends BaseE2eTest {
     @TestTemplate
     @Channel({ChannelType.UI, ChannelType.API})
-    void shouldPlaceOrderWithCorrectSubtotalPrice() {
+    void shouldPlaceOrderWithCorrectTotalPrice() {
         app.erp().returnsProduct().sku(SKU).unitPrice(20.00).execute()
                 .shouldSucceed();
 
-        app.shop().placeOrder().orderNumber(ORDER_NUMBER).sku(SKU).country(COUNTRY).quantity(5).execute()
+        app.shop().placeOrder().orderNumber(ORDER_NUMBER).sku(SKU).quantity(5).execute()
                 .shouldSucceed();
 
         app.shop().viewOrder().orderNumber(ORDER_NUMBER).execute()
                 .shouldSucceed()
-                .subtotalPrice(100.00);
+                .totalPrice(100.00);
     }
 
     @TestTemplate
@@ -30,16 +30,16 @@ class PlaceOrderPositiveTest extends BaseE2eTest {
     @DataSource({"10.00", "3", "30.00"})
     @DataSource({"15.50", "4", "62.00"})
     @DataSource({"99.99", "1", "99.99"})
-    void shouldPlaceOrderWithCorrectSubtotalPriceParameterized(String unitPrice, String quantity, String subtotalPrice) {
+    void shouldPlaceOrderWithCorrectTotalPriceParameterized(String unitPrice, String quantity, String totalPrice) {
         app.erp().returnsProduct().sku(SKU).unitPrice(unitPrice).execute()
                 .shouldSucceed();
 
-        app.shop().placeOrder().orderNumber(ORDER_NUMBER).sku(SKU).country(COUNTRY).quantity(quantity).execute()
+        app.shop().placeOrder().orderNumber(ORDER_NUMBER).sku(SKU).quantity(quantity).execute()
                 .shouldSucceed();
 
         app.shop().viewOrder().orderNumber(ORDER_NUMBER).execute()
                 .shouldSucceed()
-                .subtotalPrice(subtotalPrice);
+                .totalPrice(totalPrice);
     }
 
     @TestTemplate
@@ -48,7 +48,7 @@ class PlaceOrderPositiveTest extends BaseE2eTest {
         app.erp().returnsProduct().sku(SKU).unitPrice(20.00).execute()
                 .shouldSucceed();
 
-        app.shop().placeOrder().orderNumber(ORDER_NUMBER).sku(SKU).country(COUNTRY).quantity(5).execute()
+        app.shop().placeOrder().orderNumber(ORDER_NUMBER).sku(SKU).quantity(5).execute()
                 .shouldSucceed()
                 .orderNumber(ORDER_NUMBER)
                 .orderNumberStartsWith("ORD-");
@@ -57,16 +57,10 @@ class PlaceOrderPositiveTest extends BaseE2eTest {
                 .shouldSucceed()
                 .orderNumber(ORDER_NUMBER)
                 .sku(SKU)
-                .country(COUNTRY)
                 .quantity(5)
                 .unitPrice(20.00)
-                .subtotalPrice(100.00)
+                .totalPrice(100.00)
                 .status(OrderStatus.PLACED)
-                .discountRateGreaterThanOrEqualToZero()
-                .discountAmountGreaterThanOrEqualToZero()
-                .subtotalPriceGreaterThanZero()
-                .taxRateGreaterThanOrEqualToZero()
-                .taxAmountGreaterThanOrEqualToZero()
                 .totalPriceGreaterThanZero();
     }
 }

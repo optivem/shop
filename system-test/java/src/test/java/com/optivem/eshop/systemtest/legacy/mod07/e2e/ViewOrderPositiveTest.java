@@ -15,23 +15,17 @@ class ViewOrderPositiveTest extends BaseE2eTest {
         app.erp().returnsProduct().sku(SKU).unitPrice(25.00).execute()
                 .shouldSucceed();
 
-        app.shop().placeOrder().orderNumber(ORDER_NUMBER).sku(SKU).country(COUNTRY).quantity(4).execute()
+        app.shop().placeOrder().orderNumber(ORDER_NUMBER).sku(SKU).quantity(4).execute()
                 .shouldSucceed();
 
         app.shop().viewOrder().orderNumber(ORDER_NUMBER).execute()
                 .shouldSucceed()
                 .orderNumber(ORDER_NUMBER)
                 .sku(SKU)
-                .country(COUNTRY)
                 .quantity(4)
                 .unitPrice(25.00)
-                .subtotalPrice(100.00)
+                .totalPrice(100.00)
                 .status(OrderStatus.PLACED)
-                .discountRateGreaterThanOrEqualToZero()
-                .discountAmountGreaterThanOrEqualToZero()
-                .subtotalPriceGreaterThanZero()
-                .taxRateGreaterThanOrEqualToZero()
-                .taxAmountGreaterThanOrEqualToZero()
                 .totalPriceGreaterThanZero();
     }
 }

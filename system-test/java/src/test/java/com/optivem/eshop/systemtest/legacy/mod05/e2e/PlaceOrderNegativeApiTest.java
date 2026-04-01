@@ -17,7 +17,6 @@ class PlaceOrderNegativeApiTest extends PlaceOrderNegativeBaseTest {
     void shouldRejectOrderWithNullQuantity() {
         var request = PlaceOrderRequest.builder()
                 .sku(createUniqueSku(SKU))
-                .country(COUNTRY)
                 .quantity(null)
                 .build();
 
@@ -37,7 +36,6 @@ class PlaceOrderNegativeApiTest extends PlaceOrderNegativeBaseTest {
         var request = PlaceOrderRequest.builder()
                 .sku(null)
                 .quantity(QUANTITY)
-                .country(COUNTRY)
                 .build();
 
         var result = shopDriver.placeOrder(request);
@@ -51,23 +49,5 @@ class PlaceOrderNegativeApiTest extends PlaceOrderNegativeBaseTest {
         });
     }
 
-    @Test
-    void shouldRejectOrderWithNullCountry() {
-        var request = PlaceOrderRequest.builder()
-                .sku(createUniqueSku(SKU))
-                .quantity(QUANTITY)
-                .country(null)
-                .build();
-
-        var result = shopDriver.placeOrder(request);
-
-        assertThatResult(result).isFailure();
-        var error = result.getError();
-        assertThat(error.getMessage()).isEqualTo("The request contains one or more validation errors");
-        assertThat(error.getFields()).anySatisfy(field -> {
-            assertThat(field.getField()).isEqualTo("country");
-            assertThat(field.getMessage()).isEqualTo("Country must not be empty");
-        });
-    }
 }
 

@@ -1,7 +1,7 @@
 package com.optivem.eshop.systemtest.legacy.mod11.contract.base;
 
 import com.optivem.eshop.systemtest.legacy.mod11.base.BaseScenarioDslTest;
-import com.optivem.eshop.dsl.port.ExternalSystemMode;
+import com.optivem.eshop.systemtest.configuration.ExternalSystemMode;
 import com.optivem.eshop.dsl.core.ScenarioDslImpl;
 import org.junit.jupiter.api.BeforeEach;
 

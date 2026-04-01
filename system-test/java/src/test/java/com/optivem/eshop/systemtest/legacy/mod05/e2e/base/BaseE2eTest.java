@@ -1,7 +1,7 @@
 package com.optivem.eshop.systemtest.legacy.mod05.e2e.base;
 
 import com.optivem.eshop.systemtest.legacy.mod05.base.BaseDriverTest;
-import com.optivem.eshop.dsl.port.ExternalSystemMode;
+import com.optivem.eshop.systemtest.configuration.ExternalSystemMode;
 import org.junit.jupiter.api.BeforeEach;
 
 import java.util.UUID;

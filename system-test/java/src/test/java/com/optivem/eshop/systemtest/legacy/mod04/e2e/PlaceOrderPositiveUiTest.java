@@ -41,7 +41,7 @@ class PlaceOrderPositiveUiTest extends BaseE2eTest {
         var newOrderPage = homePage.clickNewOrder();
         newOrderPage.inputSku(sku);
         newOrderPage.inputQuantity("5");
-        newOrderPage.inputCountry(COUNTRY);
+
         newOrderPage.clickPlaceOrder();
 
         var placeOrderResult = newOrderPage.getResult();
@@ -56,7 +56,7 @@ class PlaceOrderPositiveUiTest extends BaseE2eTest {
         assertThat(orderHistoryPage.isOrderListed(orderNumber)).isTrue();
 
         var orderDetailsPage = orderHistoryPage.clickViewOrderDetails(orderNumber);
-        assertThat(orderDetailsPage.getSubtotalPrice()).isEqualTo(new BigDecimal("100.00"));
+        assertThat(orderDetailsPage.getTotalPrice()).isEqualTo(new BigDecimal("100.00"));
     }
 
     @ParameterizedTest
@@ -66,7 +66,7 @@ class PlaceOrderPositiveUiTest extends BaseE2eTest {
             "15.50, 4, 62.00",
             "99.99, 1, 99.99"
     })
-    void shouldPlaceOrderWithCorrectSubtotalPriceParameterized(String unitPrice, String quantity, String expectedSubtotalPrice) {
+    void shouldPlaceOrderWithCorrectTotalPriceParameterized(String unitPrice, String quantity, String expectedTotalPrice) {
         // GivenStage
         var sku = createUniqueSku(SKU);
         var createProductRequest = ExtCreateProductRequest.builder()
@@ -86,7 +86,7 @@ class PlaceOrderPositiveUiTest extends BaseE2eTest {
         var newOrderPage = homePage.clickNewOrder();
         newOrderPage.inputSku(sku);
         newOrderPage.inputQuantity(quantity);
-        newOrderPage.inputCountry(COUNTRY);
+
         newOrderPage.clickPlaceOrder();
 
         var placeOrderResult = newOrderPage.getResult();
@@ -101,7 +101,7 @@ class PlaceOrderPositiveUiTest extends BaseE2eTest {
         assertThat(orderHistoryPage.isOrderListed(orderNumber)).isTrue();
 
         var orderDetailsPage = orderHistoryPage.clickViewOrderDetails(orderNumber);
-        assertThat(orderDetailsPage.getSubtotalPrice()).isEqualTo(new BigDecimal(expectedSubtotalPrice));
+        assertThat(orderDetailsPage.getTotalPrice()).isEqualTo(new BigDecimal(expectedTotalPrice));
     }
 
     @Test
@@ -125,7 +125,7 @@ class PlaceOrderPositiveUiTest extends BaseE2eTest {
         var newOrderPage = homePage.clickNewOrder();
         newOrderPage.inputSku(sku);
         newOrderPage.inputQuantity("5");
-        newOrderPage.inputCountry(COUNTRY);
+
         newOrderPage.clickPlaceOrder();
 
         var placeOrderResult = newOrderPage.getResult();
@@ -143,17 +143,10 @@ class PlaceOrderPositiveUiTest extends BaseE2eTest {
         var orderDetailsPage = orderHistoryPage.clickViewOrderDetails(orderNumber);
         assertThat(orderDetailsPage.getOrderNumber()).isEqualTo(orderNumber);
         assertThat(orderDetailsPage.getSku()).isEqualTo(sku);
-        assertThat(orderDetailsPage.getCountry()).isEqualTo(COUNTRY);
         assertThat(orderDetailsPage.getQuantity()).isEqualTo(5);
         assertThat(orderDetailsPage.getUnitPrice()).isEqualTo(new BigDecimal("20.00"));
-        assertThat(orderDetailsPage.getSubtotalPrice()).isEqualTo(new BigDecimal("100.00"));
+        assertThat(orderDetailsPage.getTotalPrice()).isEqualTo(new BigDecimal("100.00"));
         assertThat(orderDetailsPage.getStatus()).isEqualTo(OrderStatus.PLACED);
-        assertThat(orderDetailsPage.getDiscountRate()).isGreaterThanOrEqualTo(BigDecimal.ZERO);
-        assertThat(orderDetailsPage.getDiscountAmount()).isGreaterThanOrEqualTo(BigDecimal.ZERO);
-        assertThat(orderDetailsPage.getSubtotalPrice()).isGreaterThan(BigDecimal.ZERO);
-        assertThat(orderDetailsPage.getTaxRate()).isGreaterThanOrEqualTo(BigDecimal.ZERO);
-        assertThat(orderDetailsPage.getTaxAmount()).isGreaterThanOrEqualTo(BigDecimal.ZERO);
-        assertThat(orderDetailsPage.getTotalPrice()).isGreaterThan(BigDecimal.ZERO);
     }
 }
 

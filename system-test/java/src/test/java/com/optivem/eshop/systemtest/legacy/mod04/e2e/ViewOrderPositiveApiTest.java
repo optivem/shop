@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 
 import static com.optivem.eshop.dsl.common.ResultAssert.assertThatResult;
-import static com.optivem.eshop.systemtest.commons.constants.Defaults.COUNTRY;
 import static com.optivem.eshop.systemtest.commons.constants.Defaults.SKU;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -38,7 +37,6 @@ class ViewOrderPositiveApiTest extends BaseE2eTest {
         var placeOrderRequest = PlaceOrderRequest.builder()
                 .sku(sku)
                 .quantity("5")
-                .country(COUNTRY)
                 .build();
 
         var placeOrderResult = shopApiClient.orders().placeOrder(placeOrderRequest);
@@ -55,16 +53,10 @@ class ViewOrderPositiveApiTest extends BaseE2eTest {
         var order = viewOrderResult.getValue();
         assertThat(order.getOrderNumber()).isEqualTo(orderNumber);
         assertThat(order.getSku()).isEqualTo(sku);
-        assertThat(order.getCountry()).isEqualTo(COUNTRY);
         assertThat(order.getQuantity()).isEqualTo(5);
         assertThat(order.getUnitPrice()).isEqualTo(new BigDecimal("20.00"));
-        assertThat(order.getSubtotalPrice()).isEqualTo(new BigDecimal("100.00"));
+        assertThat(order.getTotalPrice()).isEqualTo(new BigDecimal("100.00"));
         assertThat(order.getStatus()).isEqualTo(OrderStatus.PLACED);
-        assertThat(order.getDiscountRate()).isGreaterThanOrEqualTo(BigDecimal.ZERO);
-        assertThat(order.getDiscountAmount()).isGreaterThanOrEqualTo(BigDecimal.ZERO);
-        assertThat(order.getTaxRate()).isGreaterThanOrEqualTo(BigDecimal.ZERO);
-        assertThat(order.getTaxAmount()).isGreaterThanOrEqualTo(BigDecimal.ZERO);
-        assertThat(order.getTotalPrice()).isGreaterThan(BigDecimal.ZERO);
     }
 }
 

@@ -43,10 +43,9 @@ class ViewOrderPositiveApiTest extends BaseE2eTest {
         var placeOrderJson = """
                 {
                     "sku": "%s",
-                    "quantity": "5",
-                    "country": "%s"
+                    "quantity": "5"
                 }
-                """.formatted(sku, COUNTRY);
+                """.formatted(sku);
 
         var placeOrderUri = URI.create(getShopApiBaseUrl() + "/api/orders");
         var placeOrderRequest = HttpRequest.newBuilder()
@@ -75,16 +74,10 @@ class ViewOrderPositiveApiTest extends BaseE2eTest {
         var order = httpObjectMapper.readTree(viewOrderResponse.body());
         assertThat(order.get("orderNumber").asText()).isEqualTo(orderNumber);
         assertThat(order.get("sku").asText()).isEqualTo(sku);
-        assertThat(order.get("country").asText()).isEqualTo(COUNTRY);
         assertThat(order.get("quantity").asInt()).isEqualTo(5);
         assertThat(order.get("unitPrice").asDouble()).isEqualTo(20.00);
-        assertThat(order.get("subtotalPrice").asDouble()).isEqualTo(100.00);
+        assertThat(order.get("totalPrice").asDouble()).isEqualTo(100.00);
         assertThat(order.get("status").asText()).isEqualTo("PLACED");
-        assertThat(order.get("discountRate").asDouble()).isGreaterThanOrEqualTo(0.0);
-        assertThat(order.get("discountAmount").asDouble()).isGreaterThanOrEqualTo(0.0);
-        assertThat(order.get("taxRate").asDouble()).isGreaterThanOrEqualTo(0.0);
-        assertThat(order.get("taxAmount").asDouble()).isGreaterThanOrEqualTo(0.0);
-        assertThat(order.get("totalPrice").asDouble()).isGreaterThan(0.0);
     }
 }
 

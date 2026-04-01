@@ -1,6 +1,6 @@
 package com.optivem.eshop.systemtest.legacy.mod11.contract.erp;
 
-import com.optivem.eshop.dsl.port.ExternalSystemMode;
+import com.optivem.eshop.systemtest.configuration.ExternalSystemMode;
 
 public class ErpStubContractTest extends BaseErpContractTest {
     @Override

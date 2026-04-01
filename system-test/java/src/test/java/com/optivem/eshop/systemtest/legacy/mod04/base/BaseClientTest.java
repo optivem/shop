@@ -1,11 +1,10 @@
 package com.optivem.eshop.systemtest.legacy.mod04.base;
 
 import com.optivem.eshop.systemtest.configuration.BaseConfigurableTest;
-import com.optivem.eshop.dsl.core.usecase.Configuration;
+import com.optivem.eshop.systemtest.configuration.Configuration;
 import com.optivem.eshop.dsl.driver.adapter.external.erp.client.ErpRealClient;
 import com.optivem.eshop.dsl.driver.adapter.shop.api.client.ShopApiClient;
 import com.optivem.eshop.dsl.driver.adapter.shop.ui.client.ShopUiClient;
-import com.optivem.eshop.dsl.driver.adapter.external.tax.client.TaxRealClient;
 import com.optivem.eshop.systemtest.infrastructure.playwright.BrowserLifecycleExtension;
 import com.optivem.eshop.dsl.common.Closer;
 import org.junit.jupiter.api.AfterEach;
@@ -19,7 +18,6 @@ public class BaseClientTest extends BaseConfigurableTest {
     protected ShopUiClient shopUiClient;
     protected ShopApiClient shopApiClient;
     protected ErpRealClient erpClient;
-    protected TaxRealClient taxClient;
 
 
     @BeforeEach
@@ -37,7 +35,6 @@ public class BaseClientTest extends BaseConfigurableTest {
 
     protected void setUpExternalClients() {
         erpClient = new ErpRealClient(configuration.getErpBaseUrl());
-        taxClient = new TaxRealClient(configuration.getTaxBaseUrl());
     }
 
     @AfterEach
@@ -45,7 +42,6 @@ public class BaseClientTest extends BaseConfigurableTest {
         Closer.close(shopUiClient);
         Closer.close(shopApiClient);
         Closer.close(erpClient);
-        Closer.close(taxClient);
     }
 
     protected String createUniqueSku(String baseSku) {

@@ -90,29 +90,6 @@ class PlaceOrderNegativeTest extends BaseAcceptanceTest {
     }
 
     @TestTemplate
-    @Channel({ChannelType.UI, ChannelType.API})
-    @ArgumentsSource(EmptyArgumentsProvider.class)
-    void shouldRejectOrderWithEmptyCountry(String emptyCountry) {
-        scenario
-                .when().placeOrder()
-                    .withCountry(emptyCountry)
-                .then().shouldFail()
-                    .errorMessage("The request contains one or more validation errors")
-                    .fieldErrorMessage("country", "Country must not be empty");
-    }
-
-    @TestTemplate
-    @Channel({ChannelType.UI, ChannelType.API})
-    void shouldRejectOrderWithInvalidCountry() {
-        scenario
-                .when().placeOrder()
-                    .withCountry("XX")
-                .then().shouldFail()
-                    .errorMessage("The request contains one or more validation errors")
-                    .fieldErrorMessage("country", "Country does not exist: XX");
-    }
-
-    @TestTemplate
     @Channel({ChannelType.API})
     void shouldRejectOrderWithNullQuantity() {
         scenario
@@ -134,48 +111,6 @@ class PlaceOrderNegativeTest extends BaseAcceptanceTest {
                     .fieldErrorMessage("sku", "SKU must not be empty");
     }
 
-    @TestTemplate
-    @Channel({ChannelType.API})
-    void shouldRejectOrderWithNullCountry() {
-        scenario
-                .when().placeOrder()
-                    .withCountry(null)
-                .then().shouldFail()
-                    .errorMessage("The request contains one or more validation errors")
-                    .fieldErrorMessage("country", "Country must not be empty");
-    }
-
-    @TestTemplate
-    @Channel({ChannelType.UI, ChannelType.API})
-    void cannotPlaceOrderWithNonExistentCoupon() {
-        scenario
-                .when().placeOrder()
-                    .withCouponCode("INVALIDCOUPON")
-                .then().shouldFail()
-                    .errorMessage("The request contains one or more validation errors")
-                    .fieldErrorMessage("couponCode", "Coupon code INVALIDCOUPON does not exist");
-    }
-
-    @TestTemplate
-    @Channel({ChannelType.UI, ChannelType.API})
-    void cannotPlaceOrderWithCouponThatHasExceededUsageLimit() {
-        scenario
-                .given().coupon()
-                    .withCouponCode("LIMITED2024")
-                    .withUsageLimit(2)
-                .and().order()
-                    .withOrderNumber("ORD-1")
-                    .withCouponCode("LIMITED2024")
-                .and().order()
-                    .withOrderNumber("ORD-2")
-                    .withCouponCode("LIMITED2024")
-                .when().placeOrder()
-                    .withOrderNumber("ORD-3")
-                    .withCouponCode("LIMITED2024")
-                .then().shouldFail()
-                    .errorMessage("The request contains one or more validation errors")
-                    .fieldErrorMessage("couponCode", "Coupon code LIMITED2024 has exceeded its usage limit");
-    }
 }
 
 

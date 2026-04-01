@@ -1,0 +1,336 @@
+name: monolith-dotnet-acceptance-stage-legacy
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Run daily
+  workflow_dispatch:
+
+concurrency:
+  group: monolith-dotnet-acceptance-stage-legacy
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: read
+    outputs:
+      artifacts-exist: ${{ steps.check-artifacts.outputs.exist }}
+    steps:
+      - name: Check Artifacts Exist
+        id: check-artifacts
+        uses: optivem/actions/check-artifacts-exist@v1
+
+  check:
+    needs: preflight
+    if: needs.preflight.outputs.artifacts-exist == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      should-run: ${{ steps.should-run.outputs.should-run }}
+      image-digest-urls: ${{ steps.find-latest.outputs.image-digest-urls }}
+    steps:
+      - name: Validate Config
+        uses: optivem/actions/validate-config@v1
+        with:
+          names: |
+            DOCKERHUB_USERNAME
+            DOCKERHUB_TOKEN
+        env:
+          DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Checkout Repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Check Target Version Exists
+        uses: optivem/actions/check-target-version-exists@v1
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Find Latest Artifacts
+        id: find-latest
+        uses: optivem/actions/find-latest-docker-images@v1
+        with:
+          image-urls: |
+            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/monolith-dotnet-monolith:latest
+
+      - name: Check Run Conditions
+        id: should-run
+        uses: optivem/actions/should-run-acceptance-stage@v1
+        with:
+          latest-image-timestamp: ${{ steps.find-latest.outputs.latest-image-timestamp }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  run:
+    needs: check
+    if: needs.check.outputs.should-run == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Deploy System (Real External Systems)
+        uses: optivem/actions/simulate-deployment@v1
+        with:
+          environment: acceptance
+          version: latest
+          image-urls: ${{ needs.check.outputs.image-digest-urls }}
+          compose-file: docker-compose.pipeline.monolith.real.yml
+          systems: |
+            [
+              { "name": "Shop", "url": "http://localhost:2201/" },
+              { "name": "ERP", "url": "http://localhost:9203/erp/health" },
+              { "name": "Clock", "url": "http://localhost:9203/clock/health" }
+            ]
+          working-directory: system-test/dotnet
+
+      - name: Deploy System (Stub External Systems)
+        uses: optivem/actions/simulate-deployment@v1
+        with:
+          environment: acceptance
+          version: latest
+          image-urls: ${{ needs.check.outputs.image-digest-urls }}
+          compose-file: docker-compose.pipeline.monolith.stub.yml
+          systems: |
+            [
+              { "name": "Shop", "url": "http://localhost:2202/" },
+              { "name": "ERP", "url": "http://localhost:9204/erp/health" },
+              { "name": "Clock", "url": "http://localhost:9204/clock/health" }
+            ]
+          working-directory: system-test/dotnet
+
+      - name: Setup Runtime
+        uses: optivem/actions/setup-dotnet@v1
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Build Test Project
+        run: dotnet build
+        working-directory: system-test/dotnet
+
+      - name: Install Playwright Dependencies
+        run: |
+          pwsh bin/Debug/net8.0/playwright.ps1 install --with-deps
+        working-directory: system-test/dotnet
+
+      # === mod02: Smoke ===
+      - name: mod02 - Smoke
+        run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod02.SmokeTests" --verbosity normal
+        working-directory: system-test/dotnet
+        env:
+          ENVIRONMENT: acceptance
+          EXTERNAL_SYSTEM_MODE: real
+
+      # === mod03: Smoke + E2E ===
+      - name: mod03 - Smoke
+        run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod03.SmokeTests" --verbosity normal
+        working-directory: system-test/dotnet
+        env:
+          ENVIRONMENT: acceptance
+          EXTERNAL_SYSTEM_MODE: real
+
+      - name: mod03 - E2E
+        run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod03.E2eTests" --verbosity normal
+        working-directory: system-test/dotnet
+        env:
+          ENVIRONMENT: acceptance
+
+      # === mod04: Smoke + E2E ===
+      - name: mod04 - Smoke
+        run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod04.SmokeTests" --verbosity normal
+        working-directory: system-test/dotnet
+        env:
+          ENVIRONMENT: acceptance
+          EXTERNAL_SYSTEM_MODE: real
+
+      - name: mod04 - E2E
+        run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod04.E2eTests" --verbosity normal
+        working-directory: system-test/dotnet
+        env:
+          ENVIRONMENT: acceptance
+
+      # === mod05: Smoke + E2E ===
+      - name: mod05 - Smoke
+        run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod05.SmokeTests" --verbosity normal
+        working-directory: system-test/dotnet
+        env:
+          ENVIRONMENT: acceptance
+          EXTERNAL_SYSTEM_MODE: real
+
+      - name: mod05 - E2E
+        run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod05.E2eTests" --verbosity normal
+        working-directory: system-test/dotnet
+        env:
+          ENVIRONMENT: acceptance
+
+      # === mod06: Smoke + E2E ===
+      - name: mod06 - Smoke
+        run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod06.SmokeTests" --verbosity normal
+        working-directory: system-test/dotnet
+        env:
+          ENVIRONMENT: acceptance
+          EXTERNAL_SYSTEM_MODE: real
+
+      - name: mod06 - E2E - API Channel
+        run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod06.E2eTests" --verbosity normal
+        working-directory: system-test/dotnet
+        env:
+          ENVIRONMENT: acceptance
+          CHANNEL: API
+
+      - name: mod06 - E2E - UI Channel
+        run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod06.E2eTests" --verbosity normal
+        working-directory: system-test/dotnet
+        env:
+          ENVIRONMENT: acceptance
+          CHANNEL: UI
+
+      # === mod07: Smoke + E2E ===
+      - name: mod07 - Smoke
+        run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod07.SmokeTests" --verbosity normal
+        working-directory: system-test/dotnet
+        env:
+          ENVIRONMENT: acceptance
+          EXTERNAL_SYSTEM_MODE: real
+
+      - name: mod07 - E2E - API Channel
+        run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod07.E2eTests" --verbosity normal
+        working-directory: system-test/dotnet
+        env:
+          ENVIRONMENT: acceptance
+          CHANNEL: API
+
+      - name: mod07 - E2E - UI Channel
+        run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod07.E2eTests" --verbosity normal
+        working-directory: system-test/dotnet
+        env:
+          ENVIRONMENT: acceptance
+          CHANNEL: UI
+
+      # === mod08: Smoke + E2E ===
+      - name: mod08 - Smoke
+        run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod08.SmokeTests" --verbosity normal
+        working-directory: system-test/dotnet
+        env:
+          ENVIRONMENT: acceptance
+          EXTERNAL_SYSTEM_MODE: real
+
+      - name: mod08 - E2E - API Channel
+        run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod08.E2eTests" --verbosity normal
+        working-directory: system-test/dotnet
+        env:
+          ENVIRONMENT: acceptance
+          CHANNEL: API
+
+      - name: mod08 - E2E - UI Channel
+        run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod08.E2eTests" --verbosity normal
+        working-directory: system-test/dotnet
+        env:
+          ENVIRONMENT: acceptance
+          CHANNEL: UI
+
+      # === mod09: Smoke (stub + real) ===
+      - name: mod09 - Smoke (Stub)
+        run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod09.SmokeTests" --verbosity normal
+        working-directory: system-test/dotnet
+        env:
+          ENVIRONMENT: acceptance
+          EXTERNAL_SYSTEM_MODE: stub
+
+      - name: mod09 - Smoke (Real)
+        run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod09.SmokeTests" --verbosity normal
+        working-directory: system-test/dotnet
+        env:
+          ENVIRONMENT: acceptance
+          EXTERNAL_SYSTEM_MODE: real
+
+      # === mod10: Acceptance ===
+      - name: mod10 - Acceptance - API Channel
+        run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod10.AcceptanceTests&Category!=isolated" --verbosity normal
+        working-directory: system-test/dotnet
+        env:
+          ENVIRONMENT: acceptance
+          EXTERNAL_SYSTEM_MODE: stub
+          CHANNEL: API
+
+      - name: mod10 - Acceptance - UI Channel
+        run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod10.AcceptanceTests&Category!=isolated" --verbosity normal
+        working-directory: system-test/dotnet
+        env:
+          ENVIRONMENT: acceptance
+          EXTERNAL_SYSTEM_MODE: stub
+          CHANNEL: UI
+
+      - name: mod10 - Acceptance (Isolated) - API Channel
+        run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod10.AcceptanceTests&Category=isolated" --verbosity normal
+        working-directory: system-test/dotnet
+        env:
+          ENVIRONMENT: acceptance
+          EXTERNAL_SYSTEM_MODE: stub
+          CHANNEL: API
+
+      - name: mod10 - Acceptance (Isolated) - UI Channel
+        run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod10.AcceptanceTests&Category=isolated" --verbosity normal
+        working-directory: system-test/dotnet
+        env:
+          ENVIRONMENT: acceptance
+          EXTERNAL_SYSTEM_MODE: stub
+          CHANNEL: UI
+
+      # === mod11: Contract + E2E ===
+      - name: mod11 - Contract (Stub)
+        run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod11.ExternalSystemContractTests&FullyQualifiedName~Stub" --verbosity normal
+        working-directory: system-test/dotnet
+        env:
+          ENVIRONMENT: acceptance
+
+      - name: mod11 - Contract (Real)
+        run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod11.ExternalSystemContractTests&FullyQualifiedName~Real" --verbosity normal
+        working-directory: system-test/dotnet
+        env:
+          ENVIRONMENT: acceptance
+
+      - name: mod11 - E2E - API Channel
+        run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod11.E2eTests" --verbosity normal
+        working-directory: system-test/dotnet
+        env:
+          ENVIRONMENT: acceptance
+          CHANNEL: API
+
+      - name: mod11 - E2E - UI Channel
+        run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod11.E2eTests" --verbosity normal
+        working-directory: system-test/dotnet
+        env:
+          ENVIRONMENT: acceptance
+          CHANNEL: UI
+
+  summary:
+    needs: [check, run]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+    - name: Summarize Stage
+      uses: optivem/actions/summarize-system-stage@v1
+      with:
+        stage-name: 'Acceptance Stage'
+        environment: acceptance
+        stage-result: ${{ needs.run.result }}
+        success-version: latest

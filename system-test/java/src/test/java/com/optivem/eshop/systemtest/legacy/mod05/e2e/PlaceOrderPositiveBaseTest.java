@@ -11,12 +11,12 @@ import org.junit.jupiter.params.provider.CsvSource;
 import java.math.BigDecimal;
 
 import static com.optivem.eshop.dsl.common.ResultAssert.assertThatResult;
-import static com.optivem.eshop.systemtest.commons.constants.Defaults.*;
+import static com.optivem.eshop.systemtest.commons.constants.Defaults.SKU;
 import static org.assertj.core.api.Assertions.assertThat;
 
 abstract class PlaceOrderPositiveBaseTest extends BaseE2eTest {
     @Test
-    void shouldPlaceOrderWithCorrectSubtotalPrice() {
+    void shouldPlaceOrderWithCorrectTotalPrice() {
         // GivenStage
         var sku = createUniqueSku(SKU);
         var returnsProductRequest = ReturnsProductRequest.builder()
@@ -31,7 +31,6 @@ abstract class PlaceOrderPositiveBaseTest extends BaseE2eTest {
         var placeOrderRequest = PlaceOrderRequest.builder()
                 .sku(sku)
                 .quantity("5")
-                .country(COUNTRY)
                 .build();
 
         var placeOrderResult = shopDriver.placeOrder(placeOrderRequest);
@@ -44,7 +43,7 @@ abstract class PlaceOrderPositiveBaseTest extends BaseE2eTest {
         assertThatResult(viewOrderResult).isSuccess();
 
         var order = viewOrderResult.getValue();
-        assertThat(order.getSubtotalPrice()).isEqualTo(new BigDecimal("100.00"));
+        assertThat(order.getTotalPrice()).isEqualTo(new BigDecimal("100.00"));
     }
 
     @ParameterizedTest
@@ -54,7 +53,7 @@ abstract class PlaceOrderPositiveBaseTest extends BaseE2eTest {
             "15.50, 4, 62.00",
             "99.99, 1, 99.99"
     })
-    void shouldPlaceOrderWithCorrectSubtotalPriceParameterized(String unitPrice, String quantity, String expectedSubtotalPrice) {
+    void shouldPlaceOrderWithCorrectTotalPriceParameterized(String unitPrice, String quantity, String expectedTotalPrice) {
         // GivenStage
         var sku = createUniqueSku(SKU);
         var returnsProductRequest = ReturnsProductRequest.builder()
@@ -69,7 +68,6 @@ abstract class PlaceOrderPositiveBaseTest extends BaseE2eTest {
         var placeOrderRequest = PlaceOrderRequest.builder()
                 .sku(sku)
                 .quantity(quantity)
-                .country(COUNTRY)
                 .build();
 
         var placeOrderResult = shopDriver.placeOrder(placeOrderRequest);
@@ -82,7 +80,7 @@ abstract class PlaceOrderPositiveBaseTest extends BaseE2eTest {
         assertThatResult(viewOrderResult).isSuccess();
 
         var order = viewOrderResult.getValue();
-        assertThat(order.getSubtotalPrice()).isEqualTo(new BigDecimal(expectedSubtotalPrice));
+        assertThat(order.getTotalPrice()).isEqualTo(new BigDecimal(expectedTotalPrice));
     }
 
     @Test
@@ -101,7 +99,6 @@ abstract class PlaceOrderPositiveBaseTest extends BaseE2eTest {
         var placeOrderRequest = PlaceOrderRequest.builder()
                 .sku(sku)
                 .quantity("5")
-                .country(COUNTRY)
                 .build();
 
         var placeOrderResult = shopDriver.placeOrder(placeOrderRequest);
@@ -117,17 +114,10 @@ abstract class PlaceOrderPositiveBaseTest extends BaseE2eTest {
         var order = viewOrderResult.getValue();
         assertThat(order.getOrderNumber()).isEqualTo(orderNumber);
         assertThat(order.getSku()).isEqualTo(sku);
-        assertThat(order.getCountry()).isEqualTo(COUNTRY);
         assertThat(order.getQuantity()).isEqualTo(5);
         assertThat(order.getUnitPrice()).isEqualTo(new BigDecimal("20.00"));
-        assertThat(order.getSubtotalPrice()).isEqualTo(new BigDecimal("100.00"));
+        assertThat(order.getTotalPrice()).isEqualTo(new BigDecimal("100.00"));
         assertThat(order.getStatus()).isEqualTo(OrderStatus.PLACED);
-        assertThat(order.getDiscountRate()).isGreaterThanOrEqualTo(BigDecimal.ZERO);
-        assertThat(order.getDiscountAmount()).isGreaterThanOrEqualTo(BigDecimal.ZERO);
-        assertThat(order.getSubtotalPrice()).isGreaterThan(BigDecimal.ZERO);
-        assertThat(order.getTaxRate()).isGreaterThanOrEqualTo(BigDecimal.ZERO);
-        assertThat(order.getTaxAmount()).isGreaterThanOrEqualTo(BigDecimal.ZERO);
-        assertThat(order.getTotalPrice()).isGreaterThan(BigDecimal.ZERO);
     }
 }
 

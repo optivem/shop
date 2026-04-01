@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.microsoft.playwright.*;
 import com.optivem.eshop.systemtest.configuration.BaseConfigurableTest;
-import com.optivem.eshop.dsl.core.usecase.Configuration;
+import com.optivem.eshop.systemtest.configuration.Configuration;
 import com.optivem.eshop.dsl.common.Closer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,7 +22,6 @@ public class BaseRawTest extends BaseConfigurableTest {
 
     protected HttpClient shopApiHttpClient;
     protected HttpClient erpHttpClient;
-    protected HttpClient taxHttpClient;
 
     protected ObjectMapper httpObjectMapper;
 
@@ -57,7 +56,6 @@ public class BaseRawTest extends BaseConfigurableTest {
 
     protected void setUpExternalHttpClients() {
         erpHttpClient = HttpClient.newHttpClient();
-        taxHttpClient = HttpClient.newHttpClient();
         httpObjectMapper = createObjectMapper();
     }
 
@@ -71,10 +69,6 @@ public class BaseRawTest extends BaseConfigurableTest {
 
     protected String getErpBaseUrl() {
         return configuration.getErpBaseUrl();
-    }
-
-    protected String getTaxBaseUrl() {
-        return configuration.getTaxBaseUrl();
     }
 
     private ObjectMapper createObjectMapper() {
@@ -95,7 +89,6 @@ public class BaseRawTest extends BaseConfigurableTest {
         Closer.close(shopUiBrowser);
         Closer.close(shopUiPlaywright);
         Closer.close(erpHttpClient);
-        Closer.close(taxHttpClient);
         Closer.close(shopApiHttpClient);
     }
 }

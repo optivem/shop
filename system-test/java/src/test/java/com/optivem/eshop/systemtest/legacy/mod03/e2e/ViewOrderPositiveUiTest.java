@@ -48,7 +48,6 @@ class ViewOrderPositiveUiTest extends BaseE2eTest {
 
         shopUiPage.locator("[aria-label=\"SKU\"]").fill(sku);
         shopUiPage.locator("[aria-label=\"Quantity\"]").fill("5");
-        shopUiPage.locator("[aria-label=\"Country\"]").fill(COUNTRY);
         shopUiPage.locator("[aria-label=\"Place Order\"]").click();
 
         var successMessageText = shopUiPage.locator("[role='alert']").textContent();
@@ -71,31 +70,15 @@ class ViewOrderPositiveUiTest extends BaseE2eTest {
 
         assertThat(shopUiPage.locator("[aria-label='Display Order Number']").textContent()).isEqualTo(orderNumber);
         assertThat(shopUiPage.locator("[aria-label='Display SKU']").textContent()).isEqualTo(sku);
-        assertThat(shopUiPage.locator("[aria-label='Display Country']").textContent()).isEqualTo(COUNTRY);
         assertThat(Integer.parseInt(shopUiPage.locator("[aria-label='Display Quantity']").textContent())).isEqualTo(5);
 
         var unitPriceText = shopUiPage.locator("[aria-label='Display Unit Price']").textContent().replace("$", "");
         assertThat(Double.parseDouble(unitPriceText)).isEqualTo(20.00);
 
-        var subtotalText = shopUiPage.locator("[aria-label='Display Subtotal Price']").textContent().replace("$", "");
-        assertThat(Double.parseDouble(subtotalText)).isEqualTo(100.00);
+        var totalPriceText = shopUiPage.locator("[aria-label='Display Total Price']").textContent().replace("$", "");
+        assertThat(Double.parseDouble(totalPriceText)).isEqualTo(100.00);
 
         assertThat(shopUiPage.locator("[aria-label='Display Status']").textContent()).isEqualTo("PLACED");
-
-        var discountRateText = shopUiPage.locator("[aria-label='Display Discount Rate']").textContent().replace("%", "");
-        assertThat(Double.parseDouble(discountRateText)).isGreaterThanOrEqualTo(0.0);
-
-        var discountAmountText = shopUiPage.locator("[aria-label='Display Discount Amount']").textContent().replace("$", "");
-        assertThat(Double.parseDouble(discountAmountText)).isGreaterThanOrEqualTo(0.0);
-
-        var taxRateText = shopUiPage.locator("[aria-label='Display Tax Rate']").textContent().replace("%", "");
-        assertThat(Double.parseDouble(taxRateText)).isGreaterThanOrEqualTo(0.0);
-
-        var taxAmountText = shopUiPage.locator("[aria-label='Display Tax Amount']").textContent().replace("$", "");
-        assertThat(Double.parseDouble(taxAmountText)).isGreaterThanOrEqualTo(0.0);
-
-        var totalPriceText = shopUiPage.locator("[aria-label='Display Total Price']").textContent().replace("$", "");
-        assertThat(Double.parseDouble(totalPriceText)).isGreaterThan(0.0);
     }
 }
 

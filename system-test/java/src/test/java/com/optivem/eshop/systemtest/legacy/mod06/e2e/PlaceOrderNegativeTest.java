@@ -1,6 +1,5 @@
 package com.optivem.eshop.systemtest.legacy.mod06.e2e;
 
-import com.optivem.eshop.dsl.driver.port.external.erp.dtos.ReturnsProductRequest;
 import com.optivem.eshop.dsl.channel.ChannelType;
 import com.optivem.eshop.dsl.driver.port.shop.dtos.PlaceOrderRequest;
 import com.optivem.eshop.systemtest.commons.providers.EmptyArgumentsProvider;
@@ -21,7 +20,6 @@ class PlaceOrderNegativeTest extends BaseE2eTest {
         var request = PlaceOrderRequest.builder()
                 .sku(createUniqueSku(SKU))
                 .quantity("invalid-quantity")
-                .country(COUNTRY)
                 .build();
 
         var result = shopDriver.placeOrder(request);
@@ -41,7 +39,6 @@ class PlaceOrderNegativeTest extends BaseE2eTest {
         var request = PlaceOrderRequest.builder()
                 .sku("NON-EXISTENT-SKU-12345")
                 .quantity(QUANTITY)
-                .country(COUNTRY)
                 .build();
 
         var result = shopDriver.placeOrder(request);
@@ -61,7 +58,6 @@ class PlaceOrderNegativeTest extends BaseE2eTest {
         var request = PlaceOrderRequest.builder()
                 .sku(createUniqueSku(SKU))
                 .quantity("-10")
-                .country(COUNTRY)
                 .build();
 
         var result = shopDriver.placeOrder(request);
@@ -81,7 +77,6 @@ class PlaceOrderNegativeTest extends BaseE2eTest {
         var request = PlaceOrderRequest.builder()
                 .sku("ANOTHER-SKU-67890")
                 .quantity("0")
-                .country(COUNTRY)
                 .build();
 
         var result = shopDriver.placeOrder(request);
@@ -102,7 +97,6 @@ class PlaceOrderNegativeTest extends BaseE2eTest {
         var request = PlaceOrderRequest.builder()
                 .sku(sku)
                 .quantity(QUANTITY)
-                .country(COUNTRY)
                 .build();
 
         var result = shopDriver.placeOrder(request);
@@ -123,7 +117,6 @@ class PlaceOrderNegativeTest extends BaseE2eTest {
         var request = PlaceOrderRequest.builder()
                 .sku(createUniqueSku(SKU))
                 .quantity(emptyQuantity)
-                .country(COUNTRY)
                 .build();
 
         var result = shopDriver.placeOrder(request);
@@ -144,7 +137,6 @@ class PlaceOrderNegativeTest extends BaseE2eTest {
         var request = PlaceOrderRequest.builder()
                 .sku(createUniqueSku(SKU))
                 .quantity(nonIntegerQuantity)
-                .country(COUNTRY)
                 .build();
 
         var result = shopDriver.placeOrder(request);
@@ -159,63 +151,10 @@ class PlaceOrderNegativeTest extends BaseE2eTest {
     }
 
     @TestTemplate
-    @Channel({ChannelType.UI, ChannelType.API})
-    @ArgumentsSource(EmptyArgumentsProvider.class)
-    void shouldRejectOrderWithEmptyCountry(String emptyCountry) {
-        var request = PlaceOrderRequest.builder()
-                .sku(createUniqueSku(SKU))
-                .quantity(QUANTITY)
-                .country(emptyCountry)
-                .build();
-
-        var result = shopDriver.placeOrder(request);
-
-        assertThatResult(result).isFailure();
-        var error = result.getError();
-        assertThat(error.getMessage()).isEqualTo("The request contains one or more validation errors");
-        assertThat(error.getFields()).anySatisfy(field -> {
-            assertThat(field.getField()).isEqualTo("country");
-            assertThat(field.getMessage()).isEqualTo("Country must not be empty");
-        });
-    }
-
-    @TestTemplate
-    @Channel({ChannelType.UI, ChannelType.API})
-    @ValueSource(strings = {"XX", "InvalidCountry"})
-    void shouldRejectOrderWithInvalidCountry(String invalidCountry) {
-
-        var sku = createUniqueSku(SKU);
-        var returnsProductRequest = ReturnsProductRequest.builder()
-                .sku(sku)
-                .price("20.00")
-                .build();
-
-        var returnsProductResult = erpDriver.returnsProduct(returnsProductRequest);
-        assertThatResult(returnsProductResult).isSuccess();
-
-        var request = PlaceOrderRequest.builder()
-                .sku(sku)
-                .quantity(QUANTITY)
-                .country(invalidCountry)
-                .build();
-
-        var result = shopDriver.placeOrder(request);
-
-        assertThatResult(result).isFailure();
-        var error = result.getError();
-        assertThat(error.getMessage()).isEqualTo("The request contains one or more validation errors");
-        assertThat(error.getFields()).anySatisfy(field -> {
-            assertThat(field.getField()).isEqualTo("country");
-            assertThat(field.getMessage()).isEqualTo("Country does not exist: " + invalidCountry);
-        });
-    }
-
-    @TestTemplate
     @Channel({ChannelType.API})
     void shouldRejectOrderWithNullQuantity() {
         var request = PlaceOrderRequest.builder()
                 .sku(createUniqueSku(SKU))
-                .country(COUNTRY)
                 .quantity(null)
                 .build();
 
@@ -236,7 +175,6 @@ class PlaceOrderNegativeTest extends BaseE2eTest {
         var request = PlaceOrderRequest.builder()
                 .sku(null)
                 .quantity(QUANTITY)
-                .country(COUNTRY)
                 .build();
 
         var result = shopDriver.placeOrder(request);
@@ -250,24 +188,5 @@ class PlaceOrderNegativeTest extends BaseE2eTest {
         });
     }
 
-    @TestTemplate
-    @Channel({ChannelType.API})
-    void shouldRejectOrderWithNullCountry() {
-        var request = PlaceOrderRequest.builder()
-                .sku(createUniqueSku(SKU))
-                .quantity(QUANTITY)
-                .country(null)
-                .build();
-
-        var result = shopDriver.placeOrder(request);
-
-        assertThatResult(result).isFailure();
-        var error = result.getError();
-        assertThat(error.getMessage()).isEqualTo("The request contains one or more validation errors");
-        assertThat(error.getFields()).anySatisfy(field -> {
-            assertThat(field.getField()).isEqualTo("country");
-            assertThat(field.getMessage()).isEqualTo("Country must not be empty");
-        });
-    }
 }
 

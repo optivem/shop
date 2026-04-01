@@ -10,12 +10,12 @@ import org.junit.jupiter.api.TestTemplate;
 class PlaceOrderPositiveTest extends BaseE2eTest {
     @TestTemplate
     @Channel({ChannelType.UI, ChannelType.API})
-    void shouldPlaceOrderWithCorrectSubtotalPrice() {
+    void shouldPlaceOrderWithCorrectTotalPrice() {
         scenario
                 .given().product().withUnitPrice(20.00)
                 .when().placeOrder().withQuantity(5)
                 .then().shouldSucceed()
-                .and().order().hasSubtotalPrice(100.00);
+                .and().order().hasTotalPrice(100.00);
     }
 
     @TestTemplate
@@ -24,12 +24,12 @@ class PlaceOrderPositiveTest extends BaseE2eTest {
     @DataSource({"10.00", "3", "30.00"})
     @DataSource({"15.50", "4", "62.00"})
     @DataSource({"99.99", "1", "99.99"})
-    void shouldPlaceOrderWithCorrectSubtotalPriceParameterized(String unitPrice, String quantity, String subtotalPrice) {
+    void shouldPlaceOrderWithCorrectTotalPriceParameterized(String unitPrice, String quantity, String totalPrice) {
         scenario
                 .given().product().withUnitPrice(unitPrice)
                 .when().placeOrder().withQuantity(quantity)
                 .then().shouldSucceed()
-                .and().order().hasSubtotalPrice(subtotalPrice);
+                .and().order().hasTotalPrice(totalPrice);
     }
 
     @TestTemplate
@@ -43,13 +43,8 @@ class PlaceOrderPositiveTest extends BaseE2eTest {
                 .hasOrderNumberPrefix("ORD-")
                 .hasQuantity(5)
                 .hasUnitPrice(20.00)
-                .hasSubtotalPrice(100.00)
+                .hasTotalPrice(100.00)
                 .hasStatus(OrderStatus.PLACED)
-                .hasDiscountRateGreaterThanOrEqualToZero()
-                .hasDiscountAmountGreaterThanOrEqualToZero()
-                .hasSubtotalPriceGreaterThanZero()
-                .hasTaxRateGreaterThanOrEqualToZero()
-                .hasTaxAmountGreaterThanOrEqualToZero()
                 .hasTotalPriceGreaterThanZero();
     }
 }
