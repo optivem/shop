@@ -287,12 +287,12 @@ class ThenResultStage implements PromiseLike<void> {
       await this.app.clockDriver.returnsTime({ time: this.ctx.clockConfig.time });
     }
 
-    // 2. Setup given: products (explicit or default)
+    // 2. Setup given: products (explicit or default for success tests only)
     if (this.ctx.hasExplicitProduct) {
       for (const pc of this.ctx.productConfigs) {
         await this.app.erpDriver.returnsProduct({ sku: pc.sku, price: pc.price });
       }
-    } else {
+    } else if (this._expectSuccess) {
       await this.app.erpDriver.returnsProduct({ sku: this.sku, price: DEFAULTS.UNIT_PRICE });
     }
 

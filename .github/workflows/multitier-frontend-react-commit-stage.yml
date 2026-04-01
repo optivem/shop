@@ -75,7 +75,6 @@ jobs:
 
       - name: Compile Code
         run: npm run build
-        shell: bash
         working-directory: system/multitier/frontend-react
 
       # TODO: Implement

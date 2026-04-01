@@ -128,7 +128,7 @@ jobs:
       - name: Setup Runtime
         uses: optivem/actions/setup-node@v1
         with:
-          node-version: 20
+          node-version: 22.x
           working-directory: system-test/typescript
 
       - name: Install Playwright Dependencies

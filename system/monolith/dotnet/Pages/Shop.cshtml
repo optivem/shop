@@ -50,6 +50,10 @@
         const sku = document.getElementById('sku').value;
         const quantityValue = document.getElementById('quantity').value;
 
+        if (!window._notificationCounter) window._notificationCounter = 0;
+        window._notificationCounter++;
+        var nid = window._notificationCounter;
+
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Placing Order...';
         notification.innerHTML = '';
@@ -71,22 +75,21 @@
             const data = await response.json();
 
             if (response.ok) {
-                notification.innerHTML = '<div class="alert alert-success" role="alert">Success! Order has been created with Order Number ' + data.orderNumber + '</div>';
+                notification.innerHTML = '<div class="notification success" role="alert" data-notification-id="' + nid + '">Success! Order has been created with Order Number ' + data.orderNumber + '</div>';
             } else {
-                let errorHtml = '<div class="alert alert-danger" role="alert">';
-                if (data.detail) {
-                    errorHtml += '<div>' + data.detail + '</div>';
-                }
+                let errorHtml = '<div class="notification error" role="alert" data-notification-id="' + nid + '">';
+                errorHtml += '<span class="error-message">' + (data.detail || 'An error occurred') + '</span>';
                 if (data.errors && data.errors.length > 0) {
                     data.errors.forEach(function(err) {
-                        errorHtml += '<div>' + err.message + '</div>';
+                        var fieldPart = err.field ? err.field + ': ' : '';
+                        errorHtml += '<span class="field-error">' + fieldPart + err.message + '</span>';
                     });
                 }
                 errorHtml += '</div>';
                 notification.innerHTML = errorHtml;
             }
         } catch (err) {
-            notification.innerHTML = '<div class="alert alert-danger" role="alert">Network error: ' + err.message + '</div>';
+            notification.innerHTML = '<div class="notification error" role="alert" data-notification-id="' + nid + '"><span class="error-message">Network error: ' + err.message + '</span></div>';
         } finally {
             submitBtn.disabled = false;
             submitBtn.textContent = 'Place Order';

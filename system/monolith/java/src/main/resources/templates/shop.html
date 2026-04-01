@@ -22,8 +22,10 @@
                     <h4 class="mb-0">Place Your Order</h4>
                 </div>
                 <div class="card-body">
-                    <div th:if="${success}" class="alert alert-success" role="alert" th:text="${success}"></div>
-                    <div th:if="${error}" class="alert alert-danger" role="alert" th:text="${error}"></div>
+                    <div th:if="${success}" class="notification success" role="alert" data-notification-id="1" th:text="${success}"></div>
+                    <div th:if="${error}" class="notification error" role="alert" data-notification-id="1">
+                        <span class="error-message" th:text="${error}"></span>
+                    </div>
 
                     <form method="post" action="/shop">
                         <div class="mb-3">

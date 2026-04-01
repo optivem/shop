@@ -1,7 +1,8 @@
-import { IsInt, IsNotEmpty, IsPositive, IsString } from 'class-validator';
+import { IsInt, IsNotEmpty, IsPositive, IsString, Matches } from 'class-validator';
 
 export class PlaceOrderRequest {
   @IsNotEmpty({ message: 'SKU must not be empty' })
+  @Matches(/\S/, { message: 'SKU must not be empty' })
   @IsString({ message: 'SKU must not be empty' })
   sku: string;
 
