@@ -19,6 +19,8 @@ public static class GherkinDefaults
 
     // Clock defaults
     public const string DefaultTime = "2025-12-24T10:00:00Z";
+    public const string WeekdayTime = "2026-01-15T10:30:00Z";
+    public const string WeekendTime = "2026-01-17T10:30:00Z";
 
     public const string Empty = "";
 }

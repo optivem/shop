@@ -95,11 +95,11 @@ When a problem is encountered or a fix is applied, also update the "Issues Found
 ```
 ## Issues Found
 
-1. [Step 02] System URL environment variables missing on architecture-specific environment
+1. [Step 02] DOCKERHUB_USERNAME variable missing on repository
 
 ## Fixes Applied
 
-1. [Step 02] Set system URL variables (SYSTEM_UI_URL, SYSTEM_API_URL, ERP_URL, CLOCK_URL) on architecture-specific environment
+1. [Step 02] Set DOCKERHUB_USERNAME variable on repository
 ```
 
 If a step fails and the run stops early, add a comment to the issue with the error details:

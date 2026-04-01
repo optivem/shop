@@ -22,6 +22,20 @@ public class GivenClock : BaseGiven, IGivenClock
 
     IGivenClock IGivenClock.WithTime(string? time) => WithTime(time);
 
+    public GivenClock WithWeekday()
+    {
+        return WithTime(WeekdayTime);
+    }
+
+    IGivenClock IGivenClock.WithWeekday() => WithWeekday();
+
+    public GivenClock WithWeekend()
+    {
+        return WithTime(WeekendTime);
+    }
+
+    IGivenClock IGivenClock.WithWeekend() => WithWeekend();
+
     internal override async Task Execute(UseCaseDsl app)
     {
         (await app.Clock().ReturnsTime()
