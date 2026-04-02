@@ -78,19 +78,19 @@ $AllSystemConfig = @{
 
             SystemComponents = @(
                 @{ Name = "Monolith";
-                    Url = "http://localhost:3201";
+                    Url = "http://localhost:3211";
                     ContainerName = "monolith" }
                 @{ Name = "Monolith API";
-                    Url = "http://localhost:8201/health";
+                    Url = "http://localhost:8211/health";
                     ContainerName = "monolith" }
             )
 
             ExternalSystems = @(
                 @{ Name = "ERP API (Real)";
-                    Url = "http://localhost:9201/erp/health";
+                    Url = "http://localhost:9211/erp/health";
                     ContainerName = "external-real" }
                 @{ Name = "Clock API (Real)";
-                    Url = "http://localhost:9201/clock/health";
+                    Url = "http://localhost:9211/clock/health";
                     ContainerName = "external-real" }
             )
         }
@@ -100,19 +100,19 @@ $AllSystemConfig = @{
 
             SystemComponents = @(
                 @{ Name = "Monolith";
-                    Url = "http://localhost:3202";
+                    Url = "http://localhost:3212";
                     ContainerName = "monolith" }
                 @{ Name = "Monolith API";
-                    Url = "http://localhost:8202/health";
+                    Url = "http://localhost:8212/health";
                     ContainerName = "monolith" }
             )
 
             ExternalSystems = @(
                 @{ Name = "ERP API (Stub)";
-                    Url = "http://localhost:9202/erp/health";
+                    Url = "http://localhost:9212/erp/health";
                     ContainerName = "external-stub" }
                 @{ Name = "Clock API (Stub)";
-                    Url = "http://localhost:9202/clock/health";
+                    Url = "http://localhost:9212/clock/health";
                     ContainerName = "external-stub" }
             )
         }

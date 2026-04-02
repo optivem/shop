@@ -75,9 +75,9 @@ jobs:
           compose-file: docker-compose.pipeline.monolith.real.yml
           systems: |
             [
-              { "name": "Shop", "url": "http://localhost:3201/" },
-              { "name": "ERP", "url": "http://localhost:9201/erp/health" },
-              { "name": "Clock", "url": "http://localhost:9201/clock/health" }
+              { "name": "Shop", "url": "http://localhost:3211/" },
+              { "name": "ERP", "url": "http://localhost:9211/erp/health" },
+              { "name": "Clock", "url": "http://localhost:9211/clock/health" }
             ]
           working-directory: system-test/dotnet
 

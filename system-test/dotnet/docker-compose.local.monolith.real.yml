@@ -7,8 +7,8 @@ services:
       context: ../../system/monolith/dotnet
       dockerfile: Dockerfile
     ports:
-      - "3201:8080"
-      - "8201:8080"
+      - "3211:8080"
+      - "8211:8080"
     environment:
       - POSTGRES_DB_HOST=postgres
       - POSTGRES_DB_PORT=5432
@@ -45,7 +45,7 @@ services:
   external-real:
     image: node:18-alpine
     ports:
-      - "9201:9000"
+      - "9211:9000"
     volumes:
       - ../../system/external-real-sim:/app
     working_dir: /app

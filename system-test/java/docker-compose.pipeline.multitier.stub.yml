@@ -23,7 +23,7 @@ services:
       - POSTGRES_DB_NAME=starter
       - POSTGRES_DB_USER=starter_user
       - POSTGRES_DB_PASSWORD=starter_password
-      - ALLOWED_ORIGINS=http://localhost:3102,http://frontend:3000
+      - ALLOWED_ORIGINS=http://localhost:3112,http://frontend:3000
       - ERP_API_URL=http://external-stub:8080/erp
       - CLOCK_API_URL=http://external-stub:8080/clock
       - EXTERNAL_SYSTEM_MODE=stub

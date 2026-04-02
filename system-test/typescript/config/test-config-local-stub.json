@@ -1,14 +1,14 @@
 {
   "shop": {
-    "frontendUrl": "http://localhost:3302",
-    "backendApiUrl": "http://localhost:8302"
+    "frontendUrl": "http://localhost:3312",
+    "backendApiUrl": "http://localhost:8312"
   },
   "externalSystems": {
     "erp": {
-      "url": "http://localhost:9302/erp"
+      "url": "http://localhost:9312/erp"
     },
     "clock": {
-      "url": "http://localhost:9302/clock"
+      "url": "http://localhost:9312/clock"
     }
   }
 }

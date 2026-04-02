@@ -96,9 +96,9 @@ jobs:
           compose-file: docker-compose.pipeline.monolith.real.yml
           systems: |
             [
-              { "name": "Shop", "url": "http://localhost:3101/" },
-              { "name": "ERP", "url": "http://localhost:9101/erp/health" },
-              { "name": "Clock", "url": "http://localhost:9101/clock/health" }
+              { "name": "Shop", "url": "http://localhost:3111/" },
+              { "name": "ERP", "url": "http://localhost:9111/erp/health" },
+              { "name": "Clock", "url": "http://localhost:9111/clock/health" }
             ]
           working-directory: system-test/java
 
@@ -111,9 +111,9 @@ jobs:
           compose-file: docker-compose.pipeline.monolith.stub.yml
           systems: |
             [
-              { "name": "Shop", "url": "http://localhost:3102/" },
-              { "name": "ERP", "url": "http://localhost:9102/erp/health" },
-              { "name": "Clock", "url": "http://localhost:9102/clock/health" }
+              { "name": "Shop", "url": "http://localhost:3112/" },
+              { "name": "ERP", "url": "http://localhost:9112/erp/health" },
+              { "name": "Clock", "url": "http://localhost:9112/clock/health" }
             ]
           working-directory: system-test/java
 
