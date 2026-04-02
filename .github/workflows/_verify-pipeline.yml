@@ -54,9 +54,19 @@ jobs:
             --jq '[.[] | select(.isPrerelease) | select(.tagName | test("-qa-|-prod-") | not)] | .[0].tagName')
           echo "version=$version" >> $GITHUB_OUTPUT
 
-  qa-stage:
+  acceptance-stage-legacy:
     needs: acceptance-stage
     if: ${{ always() && needs.acceptance-stage.result == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: optivem/actions/trigger-and-wait@main
+        with:
+          workflow: ${{ inputs.prefix }}-acceptance-stage-legacy.yml
+          poll-interval: '300'
+
+  qa-stage:
+    needs: [acceptance-stage, acceptance-stage-legacy]
+    if: ${{ always() && needs.acceptance-stage-legacy.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - uses: optivem/actions/trigger-and-wait@main
