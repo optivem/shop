@@ -30,220 +30,46 @@ jobs:
     if: (inputs.language == '' || inputs.language == 'java') && (inputs.architecture == '' || inputs.architecture == 'monolith')
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger monolith-java-verify
-        id: trigger-verify
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # Check GitHub API rate limit before triggering
-          remaining=$(gh api rate_limit --jq ".resources.core.remaining" 2>/dev/null || echo "999")
-          if [ "$remaining" -lt 50 ]; then
-            reset=$(gh api rate_limit --jq ".resources.core.reset" 2>/dev/null || echo "0")
-            wait=$(( reset - $(date +%s) + 5 ))
-            if [ "$wait" -gt 0 ]; then
-              echo "::warning::Rate limit low ($remaining remaining). Waiting ${wait}s for reset..."
-              sleep "$wait"
-            fi
-          fi
-          gh workflow run monolith-java-verify.yml \
-            --repo "${{ github.repository }}" \
-            --ref main
-          sleep 10
-          run_id=$(gh run list --workflow=monolith-java-verify.yml \
-            --repo "${{ github.repository }}" \
-            --branch main \
-            --limit 1 --json databaseId --jq '.[0].databaseId')
-          echo "run_id=$run_id" >> $GITHUB_OUTPUT
-
-      - name: Wait for monolith-java-verify
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          run_id="${{ steps.trigger-verify.outputs.run_id }}"
-          echo "Waiting for run $run_id..."
-          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status --interval 120
+      - uses: optivem/actions/trigger-and-wait@main
+        with:
+          workflow: monolith-java-verify.yml
 
   monolith-dotnet:
     if: (inputs.language == '' || inputs.language == 'dotnet') && (inputs.architecture == '' || inputs.architecture == 'monolith')
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger monolith-dotnet-verify
-        id: trigger-verify
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # Check GitHub API rate limit before triggering
-          remaining=$(gh api rate_limit --jq ".resources.core.remaining" 2>/dev/null || echo "999")
-          if [ "$remaining" -lt 50 ]; then
-            reset=$(gh api rate_limit --jq ".resources.core.reset" 2>/dev/null || echo "0")
-            wait=$(( reset - $(date +%s) + 5 ))
-            if [ "$wait" -gt 0 ]; then
-              echo "::warning::Rate limit low ($remaining remaining). Waiting ${wait}s for reset..."
-              sleep "$wait"
-            fi
-          fi
-          gh workflow run monolith-dotnet-verify.yml \
-            --repo "${{ github.repository }}" \
-            --ref main
-          sleep 10
-          run_id=$(gh run list --workflow=monolith-dotnet-verify.yml \
-            --repo "${{ github.repository }}" \
-            --branch main \
-            --limit 1 --json databaseId --jq '.[0].databaseId')
-          echo "run_id=$run_id" >> $GITHUB_OUTPUT
-
-      - name: Wait for monolith-dotnet-verify
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          run_id="${{ steps.trigger-verify.outputs.run_id }}"
-          echo "Waiting for run $run_id..."
-          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status --interval 120
+      - uses: optivem/actions/trigger-and-wait@main
+        with:
+          workflow: monolith-dotnet-verify.yml
 
   monolith-typescript:
     if: (inputs.language == '' || inputs.language == 'typescript') && (inputs.architecture == '' || inputs.architecture == 'monolith')
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger monolith-typescript-verify
-        id: trigger-verify
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # Check GitHub API rate limit before triggering
-          remaining=$(gh api rate_limit --jq ".resources.core.remaining" 2>/dev/null || echo "999")
-          if [ "$remaining" -lt 50 ]; then
-            reset=$(gh api rate_limit --jq ".resources.core.reset" 2>/dev/null || echo "0")
-            wait=$(( reset - $(date +%s) + 5 ))
-            if [ "$wait" -gt 0 ]; then
-              echo "::warning::Rate limit low ($remaining remaining). Waiting ${wait}s for reset..."
-              sleep "$wait"
-            fi
-          fi
-          gh workflow run monolith-typescript-verify.yml \
-            --repo "${{ github.repository }}" \
-            --ref main
-          sleep 10
-          run_id=$(gh run list --workflow=monolith-typescript-verify.yml \
-            --repo "${{ github.repository }}" \
-            --branch main \
-            --limit 1 --json databaseId --jq '.[0].databaseId')
-          echo "run_id=$run_id" >> $GITHUB_OUTPUT
-
-      - name: Wait for monolith-typescript-verify
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          run_id="${{ steps.trigger-verify.outputs.run_id }}"
-          echo "Waiting for run $run_id..."
-          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status --interval 120
+      - uses: optivem/actions/trigger-and-wait@main
+        with:
+          workflow: monolith-typescript-verify.yml
 
   multitier-java:
     if: (inputs.language == '' || inputs.language == 'java') && (inputs.architecture == '' || inputs.architecture == 'multitier')
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger multitier-system-java-verify
-        id: trigger-verify
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # Check GitHub API rate limit before triggering
-          remaining=$(gh api rate_limit --jq ".resources.core.remaining" 2>/dev/null || echo "999")
-          if [ "$remaining" -lt 50 ]; then
-            reset=$(gh api rate_limit --jq ".resources.core.reset" 2>/dev/null || echo "0")
-            wait=$(( reset - $(date +%s) + 5 ))
-            if [ "$wait" -gt 0 ]; then
-              echo "::warning::Rate limit low ($remaining remaining). Waiting ${wait}s for reset..."
-              sleep "$wait"
-            fi
-          fi
-          gh workflow run multitier-system-java-verify.yml \
-            --repo "${{ github.repository }}" \
-            --ref main
-          sleep 10
-          run_id=$(gh run list --workflow=multitier-system-java-verify.yml \
-            --repo "${{ github.repository }}" \
-            --branch main \
-            --limit 1 --json databaseId --jq '.[0].databaseId')
-          echo "run_id=$run_id" >> $GITHUB_OUTPUT
-
-      - name: Wait for multitier-system-java-verify
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          run_id="${{ steps.trigger-verify.outputs.run_id }}"
-          echo "Waiting for run $run_id..."
-          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status --interval 120
+      - uses: optivem/actions/trigger-and-wait@main
+        with:
+          workflow: multitier-system-java-verify.yml
 
   multitier-dotnet:
     if: (inputs.language == '' || inputs.language == 'dotnet') && (inputs.architecture == '' || inputs.architecture == 'multitier')
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger multitier-system-dotnet-verify
-        id: trigger-verify
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # Check GitHub API rate limit before triggering
-          remaining=$(gh api rate_limit --jq ".resources.core.remaining" 2>/dev/null || echo "999")
-          if [ "$remaining" -lt 50 ]; then
-            reset=$(gh api rate_limit --jq ".resources.core.reset" 2>/dev/null || echo "0")
-            wait=$(( reset - $(date +%s) + 5 ))
-            if [ "$wait" -gt 0 ]; then
-              echo "::warning::Rate limit low ($remaining remaining). Waiting ${wait}s for reset..."
-              sleep "$wait"
-            fi
-          fi
-          gh workflow run multitier-system-dotnet-verify.yml \
-            --repo "${{ github.repository }}" \
-            --ref main
-          sleep 10
-          run_id=$(gh run list --workflow=multitier-system-dotnet-verify.yml \
-            --repo "${{ github.repository }}" \
-            --branch main \
-            --limit 1 --json databaseId --jq '.[0].databaseId')
-          echo "run_id=$run_id" >> $GITHUB_OUTPUT
-
-      - name: Wait for multitier-system-dotnet-verify
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          run_id="${{ steps.trigger-verify.outputs.run_id }}"
-          echo "Waiting for run $run_id..."
-          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status --interval 120
+      - uses: optivem/actions/trigger-and-wait@main
+        with:
+          workflow: multitier-system-dotnet-verify.yml
 
   multitier-typescript:
     if: (inputs.language == '' || inputs.language == 'typescript') && (inputs.architecture == '' || inputs.architecture == 'multitier')
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger multitier-system-typescript-verify
-        id: trigger-verify
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # Check GitHub API rate limit before triggering
-          remaining=$(gh api rate_limit --jq ".resources.core.remaining" 2>/dev/null || echo "999")
-          if [ "$remaining" -lt 50 ]; then
-            reset=$(gh api rate_limit --jq ".resources.core.reset" 2>/dev/null || echo "0")
-            wait=$(( reset - $(date +%s) + 5 ))
-            if [ "$wait" -gt 0 ]; then
-              echo "::warning::Rate limit low ($remaining remaining). Waiting ${wait}s for reset..."
-              sleep "$wait"
-            fi
-          fi
-          gh workflow run multitier-system-typescript-verify.yml \
-            --repo "${{ github.repository }}" \
-            --ref main
-          sleep 10
-          run_id=$(gh run list --workflow=multitier-system-typescript-verify.yml \
-            --repo "${{ github.repository }}" \
-            --branch main \
-            --limit 1 --json databaseId --jq '.[0].databaseId')
-          echo "run_id=$run_id" >> $GITHUB_OUTPUT
-
-      - name: Wait for multitier-system-typescript-verify
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          run_id="${{ steps.trigger-verify.outputs.run_id }}"
-          echo "Waiting for run $run_id..."
-          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status --interval 120
+      - uses: optivem/actions/trigger-and-wait@main
+        with:
+          workflow: multitier-system-typescript-verify.yml

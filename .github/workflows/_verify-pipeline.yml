@@ -20,38 +20,9 @@ jobs:
       matrix:
         workflow: ${{ fromJSON(inputs.commit-workflows) }}
     steps:
-      - name: Trigger ${{ matrix.workflow }}
-        id: trigger-commit-stage
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # Check GitHub API rate limit before triggering
-          remaining=$(gh api rate_limit --jq ".resources.core.remaining" 2>/dev/null || echo "999")
-          if [ "$remaining" -lt 50 ]; then
-            reset=$(gh api rate_limit --jq ".resources.core.reset" 2>/dev/null || echo "0")
-            wait=$(( reset - $(date +%s) + 5 ))
-            if [ "$wait" -gt 0 ]; then
-              echo "::warning::Rate limit low ($remaining remaining). Waiting ${wait}s for reset..."
-              sleep "$wait"
-            fi
-          fi
-          gh workflow run "${{ matrix.workflow }}" \
-            --repo "${{ github.repository }}" \
-            --ref main
-          sleep 10
-          run_id=$(gh run list --workflow="${{ matrix.workflow }}" \
-            --repo "${{ github.repository }}" \
-            --branch main \
-            --limit 1 --json databaseId --jq '.[0].databaseId')
-          echo "run_id=$run_id" >> $GITHUB_OUTPUT
-
-      - name: Wait for ${{ matrix.workflow }}
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          run_id="${{ steps.trigger-commit-stage.outputs.run_id }}"
-          echo "Waiting for run $run_id..."
-          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status --interval 120
+      - uses: optivem/actions/trigger-and-wait@main
+        with:
+          workflow: ${{ matrix.workflow }}
 
   acceptance-stage:
     needs: commit-stage
@@ -59,38 +30,10 @@ jobs:
     outputs:
       version: ${{ steps.get-version.outputs.version }}
     steps:
-      - name: Trigger Acceptance Stage
-        id: trigger-acceptance-stage
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # Check GitHub API rate limit before triggering
-          remaining=$(gh api rate_limit --jq ".resources.core.remaining" 2>/dev/null || echo "999")
-          if [ "$remaining" -lt 50 ]; then
-            reset=$(gh api rate_limit --jq ".resources.core.reset" 2>/dev/null || echo "0")
-            wait=$(( reset - $(date +%s) + 5 ))
-            if [ "$wait" -gt 0 ]; then
-              echo "::warning::Rate limit low ($remaining remaining). Waiting ${wait}s for reset..."
-              sleep "$wait"
-            fi
-          fi
-          gh workflow run ${{ inputs.prefix }}-acceptance-stage.yml \
-            --repo "${{ github.repository }}" \
-            --ref main
-          sleep 10
-          run_id=$(gh run list --workflow=${{ inputs.prefix }}-acceptance-stage.yml \
-            --repo "${{ github.repository }}" \
-            --branch main \
-            --limit 1 --json databaseId --jq '.[0].databaseId')
-          echo "run_id=$run_id" >> $GITHUB_OUTPUT
-
-      - name: Wait for Acceptance Stage
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          run_id="${{ steps.trigger-acceptance-stage.outputs.run_id }}"
-          echo "Waiting for run $run_id..."
-          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status --interval 300
+      - uses: optivem/actions/trigger-and-wait@main
+        with:
+          workflow: ${{ inputs.prefix }}-acceptance-stage.yml
+          poll-interval: '300'
 
       - name: Get RC Version
         id: get-version
@@ -107,113 +50,25 @@ jobs:
     needs: acceptance-stage
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger QA Stage
-        id: trigger-qa-stage
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # Check GitHub API rate limit before triggering
-          remaining=$(gh api rate_limit --jq ".resources.core.remaining" 2>/dev/null || echo "999")
-          if [ "$remaining" -lt 50 ]; then
-            reset=$(gh api rate_limit --jq ".resources.core.reset" 2>/dev/null || echo "0")
-            wait=$(( reset - $(date +%s) + 5 ))
-            if [ "$wait" -gt 0 ]; then
-              echo "::warning::Rate limit low ($remaining remaining). Waiting ${wait}s for reset..."
-              sleep "$wait"
-            fi
-          fi
-          gh workflow run ${{ inputs.prefix }}-qa-stage.yml \
-            --repo "${{ github.repository }}" \
-            --ref main \
-            -f version=${{ needs.acceptance-stage.outputs.version }}
-          sleep 10
-          run_id=$(gh run list --workflow=${{ inputs.prefix }}-qa-stage.yml \
-            --repo "${{ github.repository }}" \
-            --branch main \
-            --limit 1 --json databaseId --jq '.[0].databaseId')
-          echo "run_id=$run_id" >> $GITHUB_OUTPUT
-
-      - name: Wait for QA Stage
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          run_id="${{ steps.trigger-qa-stage.outputs.run_id }}"
-          echo "Waiting for run $run_id..."
-          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status --interval 120
+      - uses: optivem/actions/trigger-and-wait@main
+        with:
+          workflow: ${{ inputs.prefix }}-qa-stage.yml
+          inputs: '{"version": "${{ needs.acceptance-stage.outputs.version }}"}'
 
   qa-signoff:
     needs: [acceptance-stage, qa-stage]
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger QA Signoff
-        id: trigger-qa-signoff
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # Check GitHub API rate limit before triggering
-          remaining=$(gh api rate_limit --jq ".resources.core.remaining" 2>/dev/null || echo "999")
-          if [ "$remaining" -lt 50 ]; then
-            reset=$(gh api rate_limit --jq ".resources.core.reset" 2>/dev/null || echo "0")
-            wait=$(( reset - $(date +%s) + 5 ))
-            if [ "$wait" -gt 0 ]; then
-              echo "::warning::Rate limit low ($remaining remaining). Waiting ${wait}s for reset..."
-              sleep "$wait"
-            fi
-          fi
-          gh workflow run ${{ inputs.prefix }}-qa-signoff.yml \
-            --repo "${{ github.repository }}" \
-            --ref main \
-            -f version=${{ needs.acceptance-stage.outputs.version }} \
-            -f result=approved
-          sleep 10
-          run_id=$(gh run list --workflow=${{ inputs.prefix }}-qa-signoff.yml \
-            --repo "${{ github.repository }}" \
-            --branch main \
-            --limit 1 --json databaseId --jq '.[0].databaseId')
-          echo "run_id=$run_id" >> $GITHUB_OUTPUT
-
-      - name: Wait for QA Signoff
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          run_id="${{ steps.trigger-qa-signoff.outputs.run_id }}"
-          echo "Waiting for run $run_id..."
-          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status --interval 120
+      - uses: optivem/actions/trigger-and-wait@main
+        with:
+          workflow: ${{ inputs.prefix }}-qa-signoff.yml
+          inputs: '{"version": "${{ needs.acceptance-stage.outputs.version }}", "result": "approved"}'
 
   prod-stage:
     needs: [acceptance-stage, qa-signoff]
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger Prod Stage
-        id: trigger-prod-stage
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # Check GitHub API rate limit before triggering
-          remaining=$(gh api rate_limit --jq ".resources.core.remaining" 2>/dev/null || echo "999")
-          if [ "$remaining" -lt 50 ]; then
-            reset=$(gh api rate_limit --jq ".resources.core.reset" 2>/dev/null || echo "0")
-            wait=$(( reset - $(date +%s) + 5 ))
-            if [ "$wait" -gt 0 ]; then
-              echo "::warning::Rate limit low ($remaining remaining). Waiting ${wait}s for reset..."
-              sleep "$wait"
-            fi
-          fi
-          gh workflow run ${{ inputs.prefix }}-prod-stage.yml \
-            --repo "${{ github.repository }}" \
-            --ref main \
-            -f version=${{ needs.acceptance-stage.outputs.version }}
-          sleep 10
-          run_id=$(gh run list --workflow=${{ inputs.prefix }}-prod-stage.yml \
-            --repo "${{ github.repository }}" \
-            --branch main \
-            --limit 1 --json databaseId --jq '.[0].databaseId')
-          echo "run_id=$run_id" >> $GITHUB_OUTPUT
-
-      - name: Wait for Prod Stage
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          run_id="${{ steps.trigger-prod-stage.outputs.run_id }}"
-          echo "Waiting for run $run_id..."
-          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status --interval 120
+      - uses: optivem/actions/trigger-and-wait@main
+        with:
+          workflow: ${{ inputs.prefix }}-prod-stage.yml
+          inputs: '{"version": "${{ needs.acceptance-stage.outputs.version }}"}'
