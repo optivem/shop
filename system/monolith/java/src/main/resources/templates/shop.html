@@ -69,8 +69,8 @@
                 var body = {};
                 if (sku !== '') body.sku = sku;
                 if (quantityValue !== '') {
-                    var parsed = parseInt(quantityValue);
-                    body.quantity = isNaN(parsed) ? quantityValue : parsed;
+                    var num = Number(quantityValue);
+                    body.quantity = isNaN(num) ? quantityValue : num;
                 }
 
                 var response = await fetch('/api/orders', {

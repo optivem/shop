@@ -8,7 +8,7 @@ $Config = @{
         # === Legacy Smoke Test ===
         @{  Id = "smoke";
             Name = "legacy - Smoke";
-            Command = "npx jest test/smoke-tests--forceExit";
+            Command = "npx jest test/smoke-tests --forceExit";
             Path = ".";
             TestReportPath = "test-results\jest-results.html";
             TestInstallCommands = @("npx playwright install chromium") }

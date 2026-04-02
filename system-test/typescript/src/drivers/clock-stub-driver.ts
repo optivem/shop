@@ -30,5 +30,7 @@ export class ClockStubDriver implements ClockDriver {
     return success(undefined);
   }
 
-  async close(): Promise<void> {}
+  async close(): Promise<void> {
+    await this.wireMock.removeStubs();
+  }
 }

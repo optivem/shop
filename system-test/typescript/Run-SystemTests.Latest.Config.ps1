@@ -24,7 +24,7 @@ $Config = @{
         # === Acceptance Tests (stub) - API ===
         @{  Id = "acceptance-api";
             Name = "latest - Acceptance (stub) - API";
-            Command = "npx jest test/latest/acceptance --forceExit";
+            Command = "npx jest test/latest/acceptance --testPathIgnorePatterns=isolated --forceExit";
             Path = ".";
             TestReportPath = "test-results\jest-results.html";
             TestInstallCommands = $null },
@@ -32,7 +32,7 @@ $Config = @{
         # === Acceptance Tests (stub) - UI ===
         @{  Id = "acceptance-ui";
             Name = "latest - Acceptance (stub) - UI";
-            Command = "npx jest test/latest/acceptance --forceExit";
+            Command = "npx jest test/latest/acceptance --testPathIgnorePatterns=isolated --forceExit";
             Path = ".";
             TestReportPath = "test-results\jest-results.html";
             TestInstallCommands = @("npx playwright install chromium") },
@@ -40,7 +40,7 @@ $Config = @{
         # === Acceptance Tests Isolated (stub) - API ===
         @{  Id = "acceptance-isolated-api";
             Name = "latest - Acceptance Isolated (stub) - API";
-            Command = "npx jest test/latest/acceptance --forceExit";
+            Command = "npx jest `"test/latest/acceptance/.*isolated`" --runInBand --forceExit";
             Path = ".";
             TestReportPath = "test-results\jest-results.html";
             TestInstallCommands = $null },
@@ -48,7 +48,7 @@ $Config = @{
         # === Acceptance Tests Isolated (stub) - UI ===
         @{  Id = "acceptance-isolated-ui";
             Name = "latest - Acceptance Isolated (stub) - UI";
-            Command = "npx jest test/latest/acceptance --forceExit";
+            Command = "npx jest `"test/latest/acceptance/.*isolated`" --runInBand --forceExit";
             Path = ".";
             TestReportPath = "test-results\jest-results.html";
             TestInstallCommands = @("npx playwright install chromium") },

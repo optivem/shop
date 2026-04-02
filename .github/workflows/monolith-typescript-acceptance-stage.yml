@@ -148,7 +148,7 @@ jobs:
 
       - name: Acceptance - API Channel
         working-directory: system-test/typescript
-        run: npm test --test/latest/acceptance
+        run: npm test -- test/latest/acceptance --testPathIgnorePatterns=isolated
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
@@ -156,7 +156,7 @@ jobs:
 
       - name: Acceptance - UI Channel
         working-directory: system-test/typescript
-        run: npm test --test/latest/acceptance
+        run: npm test -- test/latest/acceptance --testPathIgnorePatterns=isolated
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
@@ -164,7 +164,7 @@ jobs:
 
       - name: Acceptance (Isolated) - API Channel
         working-directory: system-test/typescript
-        run: npm test --test/latest/acceptance
+        run: npm test -- "test/latest/acceptance/.*isolated" --runInBand
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
@@ -172,7 +172,7 @@ jobs:
 
       - name: Acceptance (Isolated) - UI Channel
         working-directory: system-test/typescript
-        run: npm test --test/latest/acceptance
+        run: npm test -- "test/latest/acceptance/.*isolated" --runInBand
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
@@ -180,28 +180,28 @@ jobs:
 
       - name: Contract (Stub)
         working-directory: system-test/typescript
-        run: npm test --test/latest/contract
+        run: npm test -- test/latest/contract
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
 
       - name: Contract (Real)
         working-directory: system-test/typescript
-        run: npm test --test/latest/contract
+        run: npm test -- test/latest/contract
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: real
 
       - name: E2E - API Channel
         working-directory: system-test/typescript
-        run: npm test --test/latest/e2e
+        run: npm test -- test/latest/e2e
         env:
           ENVIRONMENT: acceptance
           CHANNEL: API
 
       - name: E2E - UI Channel
         working-directory: system-test/typescript
-        run: npm test --test/latest/e2e
+        run: npm test -- test/latest/e2e
         env:
           ENVIRONMENT: acceptance
           CHANNEL: UI

@@ -261,7 +261,7 @@ jobs:
       # === mod10: Acceptance ===
       - name: mod10 - Acceptance - API Channel
         working-directory: system-test/typescript
-        run: npm test --test/legacy/mod10/acceptance
+        run: npm test -- test/legacy/mod10/acceptance
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
@@ -269,7 +269,7 @@ jobs:
 
       - name: mod10 - Acceptance - UI Channel
         working-directory: system-test/typescript
-        run: npm test --test/legacy/mod10/acceptance
+        run: npm test -- test/legacy/mod10/acceptance
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
@@ -277,7 +277,7 @@ jobs:
 
       - name: mod10 - Acceptance (Isolated) - API Channel
         working-directory: system-test/typescript
-        run: npm test --test/legacy/mod10/acceptance
+        run: npm test -- test/legacy/mod10/acceptance
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
@@ -285,7 +285,7 @@ jobs:
 
       - name: mod10 - Acceptance (Isolated) - UI Channel
         working-directory: system-test/typescript
-        run: npm test --test/legacy/mod10/acceptance
+        run: npm test -- test/legacy/mod10/acceptance
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
@@ -294,14 +294,14 @@ jobs:
       # === mod11: Contract + E2E ===
       - name: mod11 - Contract (Stub)
         working-directory: system-test/typescript
-        run: npm test --test/legacy/mod11/contract
+        run: npm test -- test/legacy/mod11/contract
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
 
       - name: mod11 - Contract (Real)
         working-directory: system-test/typescript
-        run: npm test --test/legacy/mod11/contract
+        run: npm test -- test/legacy/mod11/contract
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: real
