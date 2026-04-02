@@ -7,7 +7,8 @@ services:
       context: ../../system/monolith/typescript
       dockerfile: Dockerfile
     ports:
-      - "2301:3000"
+      - "3301:3000"
+      - "8301:3000"
     environment:
       - POSTGRES_HOST=postgres
       - POSTGRES_PORT=5432
@@ -43,7 +44,7 @@ services:
   external-real:
     image: node:18-alpine
     ports:
-      - "9303:9000"
+      - "9301:9000"
     volumes:
       - ../../system/external-real-sim:/app
     working_dir: /app

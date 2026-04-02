@@ -1,4 +1,4 @@
-@page
+@page "/order-details"
 @model Optivem.Starter.Monolith.Pages.OrderDetailsModel
 @{
     ViewData["Title"] = "Order Details";
@@ -6,64 +6,64 @@
 
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a asp-page="/Index">Home</a></li>
-        <li class="breadcrumb-item"><a asp-page="/OrderHistory">Order History</a></li>
+        <li class="breadcrumb-item"><a href="/">Home</a></li>
+        <li class="breadcrumb-item"><a href="/order-history">Order History</a></li>
         <li class="breadcrumb-item active" aria-current="page">Order Details</li>
     </ol>
 </nav>
-
-<div id="notification"></div>
 
 <div class="card shadow">
     <div class="card-header bg-primary text-white">
         <h4 class="mb-0">Order Details</h4>
     </div>
     <div class="card-body">
-        <div id="loading" class="text-center">
-            <div class="spinner-border" role="status">
+        <div id="loading" class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
                 <span class="visually-hidden">Loading...</span>
             </div>
-            <p>Loading order details...</p>
+            <p class="mt-3">Loading order details...</p>
         </div>
 
         <div id="orderDetails" style="display: none;">
             <div class="row">
                 <div class="col-md-6 mb-3">
-                    <label class="form-label fw-bold">Order Number</label>
+                    <strong>Order Number:</strong>
                     <p id="detailOrderNumber" aria-label="Display Order Number"></p>
                 </div>
                 <div class="col-md-6 mb-3">
-                    <label class="form-label fw-bold">Order Timestamp</label>
+                    <strong>Order Timestamp:</strong>
                     <p id="detailOrderTimestamp" aria-label="Display Order Timestamp"></p>
                 </div>
                 <div class="col-md-6 mb-3">
-                    <label class="form-label fw-bold">Status</label>
+                    <strong>Status:</strong>
                     <p id="detailStatus" aria-label="Display Status"></p>
                 </div>
                 <div class="col-md-6 mb-3">
-                    <label class="form-label fw-bold">SKU</label>
+                    <strong>SKU:</strong>
                     <p id="detailSku" aria-label="Display SKU"></p>
                 </div>
                 <div class="col-md-6 mb-3">
-                    <label class="form-label fw-bold">Quantity</label>
+                    <strong>Quantity:</strong>
                     <p id="detailQuantity" aria-label="Display Quantity"></p>
                 </div>
                 <div class="col-md-6 mb-3">
-                    <label class="form-label fw-bold">Unit Price</label>
+                    <strong>Unit Price:</strong>
                     <p id="detailUnitPrice" aria-label="Display Unit Price"></p>
                 </div>
                 <div class="col-md-6 mb-3">
-                    <label class="form-label fw-bold">Total Price</label>
+                    <strong>Total Price:</strong>
                     <p id="detailTotalPrice" class="fs-5 fw-bold" aria-label="Display Total Price"></p>
                 </div>
             </div>
 
             <div class="mt-4">
-                <a asp-page="/OrderHistory" class="btn btn-secondary">Back to Order History</a>
+                <a href="/order-history" class="btn btn-secondary">Back to Order History</a>
             </div>
         </div>
 
-        <div id="notFound" style="display: none;" class="text-center text-muted">
+        <div id="errorMessage" style="display: none;"></div>
+
+        <div id="notFound" style="display: none;" class="text-center py-5 text-muted">
             <p>Order not found</p>
         </div>
     </div>
@@ -72,12 +72,12 @@
 @section Scripts {
 <script>
     async function loadOrderDetails() {
-        const params = new URLSearchParams(window.location.search);
-        const orderNumber = params.get('orderNumber');
-        const loading = document.getElementById('loading');
-        const orderDetails = document.getElementById('orderDetails');
-        const notFound = document.getElementById('notFound');
-        const notification = document.getElementById('notification');
+        var params = new URLSearchParams(window.location.search);
+        var orderNumber = params.get('orderNumber');
+        var loading = document.getElementById('loading');
+        var orderDetails = document.getElementById('orderDetails');
+        var notFound = document.getElementById('notFound');
+        var errorMessage = document.getElementById('errorMessage');
 
         if (!orderNumber) {
             loading.style.display = 'none';
@@ -86,7 +86,7 @@
         }
 
         try {
-            const response = await fetch('/api/orders/' + encodeURIComponent(orderNumber));
+            var response = await fetch('/api/orders/' + encodeURIComponent(orderNumber));
 
             loading.style.display = 'none';
 
@@ -96,16 +96,21 @@
             }
 
             if (!response.ok) {
-                const data = await response.json();
-                notification.innerHTML = '<div class="alert alert-danger" role="alert">' + (data.detail || 'Failed to load order') + '</div>';
+                var data = await response.json();
+                errorMessage.innerHTML = '<div class="alert alert-danger d-flex justify-content-between align-items-center" role="alert"><div><strong>Error:</strong> ' + (data.detail || 'Failed to load order') + '</div></div>';
+                errorMessage.style.display = 'block';
                 return;
             }
 
-            const order = await response.json();
+            var order = await response.json();
 
             document.getElementById('detailOrderNumber').textContent = order.orderNumber;
             document.getElementById('detailOrderTimestamp').textContent = new Date(order.orderTimestamp).toLocaleString('en-US', { timeZone: 'UTC' });
-            document.getElementById('detailStatus').innerHTML = '<span class="badge bg-success">' + order.status + '</span>';
+
+            var statusEl = document.getElementById('detailStatus');
+            statusEl.className = 'status-' + order.status;
+            statusEl.textContent = order.status;
+
             document.getElementById('detailSku').textContent = order.sku;
             document.getElementById('detailQuantity').textContent = order.quantity;
             document.getElementById('detailUnitPrice').textContent = '$' + order.unitPrice.toFixed(2);
@@ -114,7 +119,8 @@
             orderDetails.style.display = 'block';
         } catch (err) {
             loading.style.display = 'none';
-            notification.innerHTML = '<div class="alert alert-danger" role="alert">Network error: ' + err.message + '</div>';
+            errorMessage.innerHTML = '<div class="alert alert-danger d-flex justify-content-between align-items-center" role="alert"><div><strong>Error:</strong> Network error: ' + err.message + '</div></div>';
+            errorMessage.style.display = 'block';
         }
     }
 

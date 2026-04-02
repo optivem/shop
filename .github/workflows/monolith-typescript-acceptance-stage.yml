@@ -101,9 +101,9 @@ jobs:
           compose-file: docker-compose.pipeline.monolith.real.yml
           systems: |
             [
-              { "name": "Shop", "url": "http://localhost:2301/" },
-              { "name": "ERP", "url": "http://localhost:9303/erp/health" },
-              { "name": "Clock", "url": "http://localhost:9303/clock/health" }
+              { "name": "Shop", "url": "http://localhost:3301/" },
+              { "name": "ERP", "url": "http://localhost:9301/erp/health" },
+              { "name": "Clock", "url": "http://localhost:9301/clock/health" }
             ]
           working-directory: system-test/typescript
 
@@ -116,16 +116,16 @@ jobs:
           compose-file: docker-compose.pipeline.monolith.stub.yml
           systems: |
             [
-              { "name": "Shop", "url": "http://localhost:2302/" },
-              { "name": "ERP", "url": "http://localhost:9304/erp/health" },
-              { "name": "Clock", "url": "http://localhost:9304/clock/health" }
+              { "name": "Shop", "url": "http://localhost:3302/" },
+              { "name": "ERP", "url": "http://localhost:9302/erp/health" },
+              { "name": "Clock", "url": "http://localhost:9302/clock/health" }
             ]
           working-directory: system-test/typescript
 
       - name: Setup Runtime
         uses: optivem/actions/setup-node@v1
         with:
-          node-version: 20
+          node-version: 22.x
           working-directory: system-test/typescript
 
       - name: Install Playwright Dependencies
@@ -137,7 +137,6 @@ jobs:
         run: npm test -- test/latest/smoke
         env:
           ENVIRONMENT: acceptance
-          ARCHITECTURE: monolith
           EXTERNAL_SYSTEM_MODE: stub
 
       - name: Smoke (Real)
@@ -145,75 +144,66 @@ jobs:
         run: npm test -- test/latest/smoke
         env:
           ENVIRONMENT: acceptance
-          ARCHITECTURE: monolith
           EXTERNAL_SYSTEM_MODE: real
 
       - name: Acceptance - API Channel
         working-directory: system-test/typescript
-        run: npm test -- --passWithNoTests test/latest/acceptance
+        run: npm test -- test/latest/acceptance --testPathIgnorePatterns=isolated
         env:
           ENVIRONMENT: acceptance
-          ARCHITECTURE: monolith
           EXTERNAL_SYSTEM_MODE: stub
           CHANNEL: API
 
       - name: Acceptance - UI Channel
         working-directory: system-test/typescript
-        run: npm test -- --passWithNoTests test/latest/acceptance
+        run: npm test -- test/latest/acceptance --testPathIgnorePatterns=isolated
         env:
           ENVIRONMENT: acceptance
-          ARCHITECTURE: monolith
           EXTERNAL_SYSTEM_MODE: stub
           CHANNEL: UI
 
       - name: Acceptance (Isolated) - API Channel
         working-directory: system-test/typescript
-        run: npm test -- --passWithNoTests test/latest/acceptance
+        run: npm test -- "test/latest/acceptance/.*isolated" --runInBand
         env:
           ENVIRONMENT: acceptance
-          ARCHITECTURE: monolith
           EXTERNAL_SYSTEM_MODE: stub
           CHANNEL: API
 
       - name: Acceptance (Isolated) - UI Channel
         working-directory: system-test/typescript
-        run: npm test -- --passWithNoTests test/latest/acceptance
+        run: npm test -- "test/latest/acceptance/.*isolated" --runInBand
         env:
           ENVIRONMENT: acceptance
-          ARCHITECTURE: monolith
           EXTERNAL_SYSTEM_MODE: stub
           CHANNEL: UI
 
       - name: Contract (Stub)
         working-directory: system-test/typescript
-        run: npm test -- --passWithNoTests test/latest/contract
+        run: npm test -- test/latest/contract
         env:
           ENVIRONMENT: acceptance
-          ARCHITECTURE: monolith
           EXTERNAL_SYSTEM_MODE: stub
 
       - name: Contract (Real)
         working-directory: system-test/typescript
-        run: npm test -- --passWithNoTests test/latest/contract
+        run: npm test -- test/latest/contract
         env:
           ENVIRONMENT: acceptance
-          ARCHITECTURE: monolith
           EXTERNAL_SYSTEM_MODE: real
 
       - name: E2E - API Channel
         working-directory: system-test/typescript
-        run: npm test -- --passWithNoTests test/latest/e2e
+        run: npm test -- test/latest/e2e
         env:
           ENVIRONMENT: acceptance
-          ARCHITECTURE: monolith
           CHANNEL: API
 
       - name: E2E - UI Channel
         working-directory: system-test/typescript
-        run: npm test -- --passWithNoTests test/latest/e2e
+        run: npm test -- test/latest/e2e
         env:
           ENVIRONMENT: acceptance
-          ARCHITECTURE: monolith
           CHANNEL: UI
 
       - name: Read Target Version

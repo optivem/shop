@@ -7,7 +7,8 @@ services:
       context: ../../system/monolith/java
       dockerfile: Dockerfile
     ports:
-      - "2101:8080"
+      - "3101:8080"
+      - "8101:8080"
     environment:
       - POSTGRES_URL=jdbc:postgresql://postgres:5432/starter
       - POSTGRES_USERNAME=starter_user
@@ -42,7 +43,7 @@ services:
   external-real:
     image: node:18-alpine
     ports:
-      - "9103:9000"
+      - "9101:9000"
     volumes:
       - ../../system/external-real-sim:/app
     working_dir: /app

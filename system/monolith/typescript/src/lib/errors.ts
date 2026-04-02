@@ -23,6 +23,19 @@ export function validationErrorResponse(errors: FieldError[]) {
   );
 }
 
+export function generalValidationErrorResponse(detail: string) {
+  return NextResponse.json(
+    {
+      type: `${BASE_URL}/validation-error`,
+      title: 'Validation Error',
+      status: 422,
+      detail,
+      timestamp: new Date().toISOString(),
+    },
+    { status: 422 }
+  );
+}
+
 export function notFoundResponse(detail: string) {
   return NextResponse.json(
     {

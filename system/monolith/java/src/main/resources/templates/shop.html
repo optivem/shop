@@ -9,11 +9,13 @@
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="/">Home</a></li>
-            <li class="breadcrumb-item active">Shop</li>
+            <li class="breadcrumb-item active" aria-current="page">Shop</li>
         </ol>
     </nav>
 
     <h2>Shop</h2>
+
+    <div id="notifications"></div>
 
     <div class="row">
         <div class="col-lg-6 mx-auto">
@@ -22,23 +24,20 @@
                     <h4 class="mb-0">Place Your Order</h4>
                 </div>
                 <div class="card-body">
-                    <div th:if="${success}" class="alert alert-success" role="alert" th:text="${success}"></div>
-                    <div th:if="${error}" class="alert alert-danger" role="alert" th:text="${error}"></div>
-
-                    <form method="post" action="/shop">
+                    <form id="placeOrderForm">
                         <div class="mb-3">
-                            <label for="sku" class="form-label">SKU</label>
-                            <input type="text" class="form-control" id="sku" name="sku"
-                                   th:value="${sku}" placeholder="Enter product SKU" aria-label="SKU">
+                            <label for="sku" class="form-label">SKU:</label>
+                            <input type="text" class="form-control" id="sku"
+                                   placeholder="Enter product SKU" aria-label="SKU">
                         </div>
                         <div class="mb-3">
-                            <label for="quantity" class="form-label">Quantity</label>
-                            <input type="text" class="form-control" id="quantity" name="quantity"
-                                   inputmode="numeric" th:value="${quantity}" placeholder="Enter quantity"
+                            <label for="quantity" class="form-label">Quantity:</label>
+                            <input type="text" class="form-control" id="quantity"
+                                   inputmode="numeric" placeholder="Enter quantity"
                                    aria-label="Quantity">
                         </div>
                         <div class="d-grid">
-                            <button type="submit" class="btn btn-primary btn-lg" aria-label="Place Order">
+                            <button type="submit" class="btn btn-primary btn-lg" id="submitBtn" aria-label="Place Order">
                                 Place Order
                             </button>
                         </div>
@@ -47,6 +46,63 @@
             </div>
         </div>
     </div>
+
+    <script>
+        if (!window._notificationCounter) window._notificationCounter = 0;
+
+        document.getElementById('placeOrderForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            var submitBtn = document.getElementById('submitBtn');
+            var notifications = document.getElementById('notifications');
+            var sku = document.getElementById('sku').value;
+            var quantityValue = document.getElementById('quantity').value;
+
+            window._notificationCounter++;
+            var nid = window._notificationCounter;
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Placing Order...';
+            notifications.innerHTML = '';
+
+            try {
+                var body = {};
+                if (sku !== '') body.sku = sku;
+                if (quantityValue !== '') {
+                    var num = Number(quantityValue);
+                    body.quantity = isNaN(num) ? quantityValue : num;
+                }
+
+                var response = await fetch('/api/orders', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+
+                var data = await response.json();
+
+                if (response.ok) {
+                    notifications.innerHTML = '<div class="notification success" role="alert" data-notification-id="' + nid + '">Success! Order has been created with Order Number ' + data.orderNumber + '</div>';
+                } else {
+                    var errorHtml = '<div class="notification error" role="alert" data-notification-id="' + nid + '">';
+                    errorHtml += '<div class="error-message">' + (data.detail || 'An error occurred') + '</div>';
+                    if (data.errors && data.errors.length > 0) {
+                        data.errors.forEach(function(err) {
+                            var fieldPart = err.field ? err.field + ': ' : '';
+                            errorHtml += '<div class="field-error">' + fieldPart + err.message + '</div>';
+                        });
+                    }
+                    errorHtml += '</div>';
+                    notifications.innerHTML = errorHtml;
+                }
+            } catch (err) {
+                notifications.innerHTML = '<div class="notification error" role="alert" data-notification-id="' + nid + '"><div class="error-message">Network error: ' + err.message + '</div></div>';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Place Order';
+            }
+        });
+    </script>
 </section>
 </body>
 </html>

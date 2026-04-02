@@ -33,8 +33,15 @@ export class CustomValidationPipe implements PipeTransform {
         : {};
     const className = metadata.metatype.name;
 
+    // Sanitize empty/whitespace strings for typed fields so they remain
+    // null instead of being implicitly converted (e.g. "" → 0 for numbers).
+    // This allows @IsNotEmpty to fire before numeric validators.
+    const sanitizedValue = this.sanitizeEmptyStrings(value, className);
+
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const object = plainToInstance(metadata.metatype, value);
+    const object = plainToInstance(metadata.metatype, sanitizedValue, {
+      enableImplicitConversion: true,
+    });
     const errors = await validate(object as object);
 
     if (errors.length > 0) {
@@ -61,6 +68,23 @@ export class CustomValidationPipe implements PipeTransform {
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return object;
+  }
+
+  private sanitizeEmptyStrings(value: unknown, className: string): unknown {
+    if (typeof value !== 'object' || value === null) return value;
+    const fieldMeta = TYPE_VALIDATION_METADATA[className];
+    if (!fieldMeta) return value;
+
+    const sanitized = { ...value } as Record<string, unknown>;
+    for (const field of Object.keys(fieldMeta)) {
+      if (
+        typeof sanitized[field] === 'string' &&
+        (sanitized[field] as string).trim() === ''
+      ) {
+        sanitized[field] = null;
+      }
+    }
+    return sanitized;
   }
 
   private toValidate(metadata: ArgumentMetadata): boolean {

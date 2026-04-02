@@ -16,7 +16,7 @@ public abstract class BasePage
 
 {
 
-    private const string NotificationSelector = "[role='alert']";
+    private const string NotificationSelector = "[role='alert'][data-notification-id]";
 
     private const string NotificationSuccessSelector = "[role='alert'].notification.success";
 
@@ -27,8 +27,6 @@ public abstract class BasePage
     private const string NotificationErrorFieldSelector = "[role='alert'].notification.error .field-error";
 
     private const string NotificationIdAttribute = "data-notification-id";
-
-    private const string NoNotificationErrorMessage = "No notification appeared";
 
     private const string UnrecognizedNotificationErrorMessage = "Notification type is not recognized";
 
@@ -120,17 +118,7 @@ public abstract class BasePage
 
 
 
-        var hasNotification = await PageClient.IsVisibleAsync(selector);
-
-
-
-        if (!hasNotification)
-
-        {
-
-            throw new InvalidOperationException(NoNotificationErrorMessage);
-
-        }
+        await PageClient.WaitForVisibleAsync(selector);
 
 
 

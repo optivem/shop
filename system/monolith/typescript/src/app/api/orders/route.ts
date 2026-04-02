@@ -3,7 +3,7 @@ import crypto from 'crypto';
 import { insertOrder, findAllOrders } from '@/lib/db';
 import { getCurrentTime, getProductDetails } from '@/lib/external';
 import { validatePlaceOrderRequest } from '@/lib/validation';
-import { validationErrorResponse, internalErrorResponse, FieldError } from '@/lib/errors';
+import { validationErrorResponse, generalValidationErrorResponse, internalErrorResponse, FieldError } from '@/lib/errors';
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     }
 
     const sku = body.sku as string;
-    const quantity = body.quantity as number;
+    const quantity = typeof body.quantity === 'string' ? Number(body.quantity) : body.quantity as number;
 
     const now = await getCurrentTime();
 
@@ -38,11 +38,7 @@ export async function POST(request: NextRequest) {
     const hour = now.getUTCHours();
     const minute = now.getUTCMinutes();
     if (month === 11 && day === 31 && (hour === 23 && minute >= 59)) {
-      const errors: FieldError[] = [];
-      return validationErrorResponse([
-        ...errors,
-        { field: '', message: 'Orders cannot be placed between 23:59 and 00:00 on December 31st' },
-      ]);
+      return generalValidationErrorResponse('Orders cannot be placed between 23:59 and 00:00 on December 31st');
     }
 
     const product = await getProductDetails(sku);

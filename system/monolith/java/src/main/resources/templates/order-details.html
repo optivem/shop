@@ -10,7 +10,7 @@
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="/">Home</a></li>
             <li class="breadcrumb-item"><a href="/order-history">Order History</a></li>
-            <li class="breadcrumb-item active">Order Details</li>
+            <li class="breadcrumb-item active" aria-current="page">Order Details</li>
         </ol>
     </nav>
 
@@ -21,44 +21,113 @@
             <h4 class="mb-0">Order Details</h4>
         </div>
         <div class="card-body">
-            <div th:if="${error}" class="alert alert-danger" role="alert" th:text="${error}"></div>
+            <div id="loading" class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-3">Loading order details...</p>
+            </div>
 
-            <div th:if="${order}" class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label fw-bold">Order Number</label>
-                    <p th:text="${order.orderNumber}" aria-label="Display Order Number"></p>
+            <div id="orderDetails" style="display: none;">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <strong>Order Number:</strong>
+                        <p aria-label="Display Order Number" id="detailOrderNumber"></p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Order Timestamp:</strong>
+                        <p aria-label="Display Order Timestamp" id="detailOrderTimestamp"></p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Status:</strong>
+                        <p aria-label="Display Status" id="detailStatus"></p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>SKU:</strong>
+                        <p aria-label="Display SKU" id="detailSku"></p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Quantity:</strong>
+                        <p aria-label="Display Quantity" id="detailQuantity"></p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Unit Price:</strong>
+                        <p aria-label="Display Unit Price" id="detailUnitPrice"></p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Total Price:</strong>
+                        <p class="fs-5 fw-bold" aria-label="Display Total Price" id="detailTotalPrice"></p>
+                    </div>
                 </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label fw-bold">Order Timestamp</label>
-                    <p th:text="${#temporals.format(order.orderTimestamp, 'MM/dd/yyyy, hh:mm:ss a', new java.util.Locale('en', 'US'))}" aria-label="Display Order Timestamp"></p>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label fw-bold">Status</label>
-                    <p aria-label="Display Status"><span th:class="'status-' + ${order.status}" th:text="${order.status}"></span></p>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label fw-bold">SKU</label>
-                    <p th:text="${order.sku}" aria-label="Display SKU"></p>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label fw-bold">Quantity</label>
-                    <p th:text="${order.quantity}" aria-label="Display Quantity"></p>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label fw-bold">Unit Price</label>
-                    <p th:text="'$' + ${#numbers.formatDecimal(order.unitPrice, 1, 2)}" aria-label="Display Unit Price"></p>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label fw-bold">Total Price</label>
-                    <p class="fs-5 fw-bold" th:text="'$' + ${#numbers.formatDecimal(order.totalPrice, 1, 2)}" aria-label="Display Total Price"></p>
+                <div class="mt-4">
+                    <a href="/order-history" class="btn btn-secondary">Back to Order History</a>
                 </div>
             </div>
 
-            <div class="mt-4" th:if="${order}">
-                <a href="/order-history" class="btn btn-secondary">Back to Order History</a>
+            <div id="errorMessage" style="display: none;"></div>
+
+            <div id="notFound" style="display: none;" class="text-center py-5 text-muted">
+                <p>Order not found</p>
             </div>
         </div>
     </div>
+
+    <script>
+        async function loadOrderDetails() {
+            var pathParts = window.location.pathname.split('/');
+            var orderNumber = decodeURIComponent(pathParts[pathParts.length - 1]);
+            var loading = document.getElementById('loading');
+            var orderDetails = document.getElementById('orderDetails');
+            var notFound = document.getElementById('notFound');
+            var errorMessage = document.getElementById('errorMessage');
+
+            if (!orderNumber || orderNumber === 'order-details') {
+                loading.style.display = 'none';
+                notFound.style.display = 'block';
+                return;
+            }
+
+            try {
+                var response = await fetch('/api/orders/' + encodeURIComponent(orderNumber));
+
+                loading.style.display = 'none';
+
+                if (response.status === 404) {
+                    notFound.style.display = 'block';
+                    return;
+                }
+
+                if (!response.ok) {
+                    var data = await response.json();
+                    errorMessage.innerHTML = '<div class="alert alert-danger d-flex justify-content-between align-items-center" role="alert"><div><strong>Error:</strong> ' + (data.detail || 'Failed to load order') + '</div></div>';
+                    errorMessage.style.display = 'block';
+                    return;
+                }
+
+                var order = await response.json();
+
+                document.getElementById('detailOrderNumber').textContent = order.orderNumber;
+                document.getElementById('detailOrderTimestamp').textContent = new Date(order.orderTimestamp).toLocaleString('en-US', { timeZone: 'UTC' });
+
+                var statusEl = document.getElementById('detailStatus');
+                statusEl.className = 'status-' + order.status;
+                statusEl.textContent = order.status;
+
+                document.getElementById('detailSku').textContent = order.sku;
+                document.getElementById('detailQuantity').textContent = order.quantity;
+                document.getElementById('detailUnitPrice').textContent = '$' + order.unitPrice.toFixed(2);
+                document.getElementById('detailTotalPrice').textContent = '$' + order.totalPrice.toFixed(2);
+
+                orderDetails.style.display = 'block';
+            } catch (err) {
+                loading.style.display = 'none';
+                errorMessage.innerHTML = '<div class="alert alert-danger d-flex justify-content-between align-items-center" role="alert"><div><strong>Error:</strong> Network error: ' + err.message + '</div></div>';
+                errorMessage.style.display = 'block';
+            }
+        }
+
+        loadOrderDetails();
+    </script>
 </section>
 </body>
 </html>

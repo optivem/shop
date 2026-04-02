@@ -24,14 +24,14 @@ def copy_workflows(workflow_names: list[str], starter: str, repo_dir: str) -> No
 def select_docker_compose(test_dst: str, variant: str) -> None:
     """Keep the chosen docker-compose variant, remove the other.
     variant: 'single' for monolith, 'multi' for multitier.
-    The kept file retains its original name (e.g. docker-compose.multitier.yml)
-    because workflows reference the variant-specific filename.
+    Removes all docker-compose files for the unwanted variant.
     """
-    remove = "multi" if variant == "single" else "single"
-    remove_path = os.path.join(test_dst, f"docker-compose.{remove}.yml")
-
-    if os.path.exists(remove_path):
-        os.remove(remove_path)
+    remove = "multitier" if variant == "single" else "monolith"
+    for prefix in ("local", "pipeline"):
+        for suffix in ("real", "stub"):
+            path = os.path.join(test_dst, f"docker-compose.{prefix}.{remove}.{suffix}.yml")
+            if os.path.exists(path):
+                os.remove(path)
 
 
 def copy_version(starter: str, repo_dir: str) -> None:

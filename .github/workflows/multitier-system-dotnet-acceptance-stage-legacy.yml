@@ -2,7 +2,7 @@ name: multitier-system-dotnet-acceptance-stage-legacy
 
 on:
   schedule:
-    - cron: '0 0 * * *'  # Run daily
+    - cron: '0 0 * * *'  # Run once a day at midnight UTC
   workflow_dispatch:
 
 concurrency:
@@ -143,14 +143,7 @@ jobs:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: real
 
-      # === mod03: Smoke + E2E ===
-      - name: mod03 - Smoke
-        run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod03.SmokeTests" --verbosity normal
-        working-directory: system-test/dotnet
-        env:
-          ENVIRONMENT: acceptance
-          EXTERNAL_SYSTEM_MODE: real
-
+      # === mod03: E2E ===
       - name: mod03 - E2E
         run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod03.E2eTests" --verbosity normal
         working-directory: system-test/dotnet

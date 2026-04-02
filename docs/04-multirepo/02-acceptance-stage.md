@@ -39,7 +39,7 @@ In the step `Tag Docker Images for Prerelease`, set the value `GITHUB_TOKEN: ${{
 
 ## 4. Update Docker Compose
 
-Update `system-test/${TEST_LANG}/docker-compose.monolith.yml` to reference the component images from their respective repositories.
+Update the docker-compose files in `system-test/${TEST_LANG}/` (e.g. `docker-compose.pipeline.multitier.real.yml`) to reference the component images from their respective repositories.
 
 ## 5. Verify
 

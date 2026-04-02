@@ -68,7 +68,6 @@ jobs:
 
       - name: Compile Code
         run: npm run build
-        shell: bash
         working-directory: system/monolith/typescript
 
       # TODO: Implement

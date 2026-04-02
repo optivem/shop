@@ -172,9 +172,12 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       );
 
       if (isTypeMismatch === 'empty') {
+        const emptyMessage =
+          constraints['isNotEmpty'] ||
+          constraints[constraintKeys[constraintKeys.length - 1]];
         errors.push({
           field,
-          message: constraints[constraintKeys[constraintKeys.length - 1]],
+          message: emptyMessage,
           code: null,
           rejectedValue: null,
         });
@@ -220,10 +223,14 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       return 'empty';
     }
 
-    // string → check if empty/whitespace, otherwise type mismatch
+    // string → check if empty/whitespace, parseable integer, or type mismatch
     if (typeof rawValue === 'string') {
       if (rawValue.trim() === '') {
         return 'empty';
+      }
+      const num = Number(rawValue);
+      if (Number.isInteger(num)) {
+        return 'normal';
       }
       return 'type_mismatch';
     }

@@ -37,5 +37,7 @@ export class ErpStubDriver implements ErpDriver {
     return success(undefined);
   }
 
-  async close(): Promise<void> {}
+  async close(): Promise<void> {
+    await this.wireMock.removeStubs();
+  }
 }

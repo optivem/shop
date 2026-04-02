@@ -8,28 +8,18 @@
     <style>
         .status-PLACED { color: #198754; font-weight: bold; }
         .navbar-brand { font-weight: bold; }
+        .notification { padding: 12px; margin-top: 10px; margin-bottom: 16px; border-radius: 4px; font-weight: 600; }
+        .notification.success { background: #d1e7dd; color: #0f5132; border: 1px solid #badbcc; }
+        .notification.error { background: #f8d7da; color: #842029; border: 1px solid #f5c2c7; }
+        .notification .error-message { margin-bottom: 8px; }
+        .notification .field-error { margin-left: 12px; margin-top: 4px; font-weight: 400; }
+        body { min-height: 100vh; background-color: #f8f9fa; }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
             <a class="navbar-brand" href="/">eShop Starter</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/shop">Shop</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/order-history">Order History</a>
-                    </li>
-                </ul>
-            </div>
         </div>
     </nav>
 

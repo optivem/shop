@@ -58,7 +58,12 @@ export class OrderService {
     }
 
     const unitPrice = await this.getUnitPrice(sku);
-    const totalPrice = parseFloat((unitPrice * quantity).toFixed(2));
+    const dayOfWeek = orderTimestamp.getUTCDay();
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+    const discountFactor = isWeekend ? 0.5 : 1.0;
+    const totalPrice = parseFloat(
+      (unitPrice * quantity * discountFactor).toFixed(2),
+    );
 
     const orderNumber = this.generateOrderNumber();
 

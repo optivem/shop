@@ -1,4 +1,4 @@
-@page
+@page "/shop"
 @model Optivem.Starter.Monolith.Pages.ShopModel
 @{
     ViewData["Title"] = "Shop";
@@ -6,12 +6,12 @@
 
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a asp-page="/Index">Home</a></li>
+        <li class="breadcrumb-item"><a href="/">Home</a></li>
         <li class="breadcrumb-item active" aria-current="page">Shop</li>
     </ol>
 </nav>
 
-<div id="notification"></div>
+<div id="notifications"></div>
 
 <div class="row">
     <div class="col-lg-6 mx-auto">
@@ -22,11 +22,11 @@
             <div class="card-body">
                 <form id="placeOrderForm">
                     <div class="mb-3">
-                        <label for="sku" class="form-label">SKU</label>
+                        <label for="sku" class="form-label">SKU:</label>
                         <input type="text" class="form-control" id="sku" placeholder="Enter product SKU" aria-label="SKU">
                     </div>
                     <div class="mb-3">
-                        <label for="quantity" class="form-label">Quantity</label>
+                        <label for="quantity" class="form-label">Quantity:</label>
                         <input type="text" class="form-control" id="quantity" inputmode="numeric" placeholder="Enter quantity" aria-label="Quantity">
                     </div>
                     <div class="d-grid">
@@ -46,20 +46,24 @@
         e.preventDefault();
 
         const submitBtn = document.getElementById('submitBtn');
-        const notification = document.getElementById('notification');
+        const notifications = document.getElementById('notifications');
         const sku = document.getElementById('sku').value;
         const quantityValue = document.getElementById('quantity').value;
 
+        if (!window._notificationCounter) window._notificationCounter = 0;
+        window._notificationCounter++;
+        var nid = window._notificationCounter;
+
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Placing Order...';
-        notification.innerHTML = '';
+        submitBtn.textContent = 'Placing Order...';
+        notifications.innerHTML = '';
 
         try {
             const body = {};
             if (sku !== '') body.sku = sku;
             if (quantityValue !== '') {
-                const parsed = parseInt(quantityValue);
-                body.quantity = isNaN(parsed) ? quantityValue : parsed;
+                const num = Number(quantityValue);
+                body.quantity = isNaN(num) ? quantityValue : num;
             }
 
             const response = await fetch('/api/orders', {
@@ -71,22 +75,21 @@
             const data = await response.json();
 
             if (response.ok) {
-                notification.innerHTML = '<div class="alert alert-success" role="alert">Success! Order has been created with Order Number ' + data.orderNumber + '</div>';
+                notifications.innerHTML = '<div class="notification success" role="alert" data-notification-id="' + nid + '">Success! Order has been created with Order Number ' + data.orderNumber + '</div>';
             } else {
-                let errorHtml = '<div class="alert alert-danger" role="alert">';
-                if (data.detail) {
-                    errorHtml += '<div>' + data.detail + '</div>';
-                }
+                let errorHtml = '<div class="notification error" role="alert" data-notification-id="' + nid + '">';
+                errorHtml += '<div class="error-message">' + (data.detail || 'An error occurred') + '</div>';
                 if (data.errors && data.errors.length > 0) {
                     data.errors.forEach(function(err) {
-                        errorHtml += '<div>' + err.message + '</div>';
+                        var fieldPart = err.field ? err.field + ': ' : '';
+                        errorHtml += '<div class="field-error">' + fieldPart + err.message + '</div>';
                     });
                 }
                 errorHtml += '</div>';
-                notification.innerHTML = errorHtml;
+                notifications.innerHTML = errorHtml;
             }
         } catch (err) {
-            notification.innerHTML = '<div class="alert alert-danger" role="alert">Network error: ' + err.message + '</div>';
+            notifications.innerHTML = '<div class="notification error" role="alert" data-notification-id="' + nid + '"><div class="error-message">Network error: ' + err.message + '</div></div>';
         } finally {
             submitBtn.disabled = false;
             submitBtn.textContent = 'Place Order';

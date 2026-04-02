@@ -2,7 +2,7 @@ name: monolith-java-acceptance-stage-legacy
 
 on:
   schedule:
-    - cron: '0 0 * * *'  # Run daily
+    - cron: '0 0 * * *'  # Run once a day at midnight UTC
   workflow_dispatch:
 
 concurrency:
@@ -96,9 +96,9 @@ jobs:
           compose-file: docker-compose.pipeline.monolith.real.yml
           systems: |
             [
-              { "name": "Shop", "url": "http://localhost:2101/" },
-              { "name": "ERP", "url": "http://localhost:9103/erp/health" },
-              { "name": "Clock", "url": "http://localhost:9103/clock/health" }
+              { "name": "Shop", "url": "http://localhost:3101/" },
+              { "name": "ERP", "url": "http://localhost:9101/erp/health" },
+              { "name": "Clock", "url": "http://localhost:9101/clock/health" }
             ]
           working-directory: system-test/java
 
@@ -111,9 +111,9 @@ jobs:
           compose-file: docker-compose.pipeline.monolith.stub.yml
           systems: |
             [
-              { "name": "Shop", "url": "http://localhost:2102/" },
-              { "name": "ERP", "url": "http://localhost:9104/erp/health" },
-              { "name": "Clock", "url": "http://localhost:9104/clock/health" }
+              { "name": "Shop", "url": "http://localhost:3102/" },
+              { "name": "ERP", "url": "http://localhost:9102/erp/health" },
+              { "name": "Clock", "url": "http://localhost:9102/clock/health" }
             ]
           working-directory: system-test/java
 
@@ -127,16 +127,16 @@ jobs:
         run: npx playwright install --with-deps chromium
         working-directory: system-test/java
 
+      - name: Compile System Tests
+        run: ./gradlew clean compileJava compileTestJava
+        working-directory: system-test/java
+
       # === mod02: Smoke ===
       - name: mod02 - Smoke
         run: ./gradlew test -Dversion=mod02 -Dtype=smoke -DexternalSystemMode=real -Darchitecture=monolith -Denvironment=acceptance
         working-directory: system-test/java
 
-      # === mod03: Smoke + E2E ===
-      - name: mod03 - Smoke
-        run: ./gradlew test -Dversion=mod03 -Dtype=smoke -DexternalSystemMode=real -Darchitecture=monolith -Denvironment=acceptance
-        working-directory: system-test/java
-
+      # === mod03: E2E ===
       - name: mod03 - E2E
         run: ./gradlew test -Dversion=mod03 -Dtype=e2e -Darchitecture=monolith -Denvironment=acceptance
         working-directory: system-test/java

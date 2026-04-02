@@ -22,14 +22,6 @@ public class PropertyLoader {
         return ExternalSystemMode.valueOf(externalSystemMode.toUpperCase());
     }
 
-    public static Architecture getArchitecture() {
-        var architecture = System.getProperty("architecture");
-        if (architecture == null || architecture.isBlank()) {
-            return Architecture.MULTITIER;
-        }
-        return Architecture.valueOf(architecture.toUpperCase());
-    }
-
     private static String getRequiredSystemProperty(String propertyName, String allowedValues) {
         var value = System.getProperty(propertyName);
         if (value == null || value.isBlank()) {

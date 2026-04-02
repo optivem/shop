@@ -8,7 +8,7 @@ $Config = @{
         # === Smoke Tests (stub) ===
         @{  Id = "smoke-stub";
             Name = "latest - Smoke (stub)";
-            Command = "& .\gradlew.bat test -Dversion=latest -Dtype=smoke -DexternalSystemMode=stub -Darchitecture=$Architecture -Denvironment=local";
+            Command = "& .\gradlew.bat test -Dversion=latest -Dtype=smoke -DexternalSystemMode=stub -Denvironment=local";
             Path = ".";
             TestReportPath = "build\reports\tests\test\index.html";
             TestInstallCommands = $null; },
@@ -16,7 +16,7 @@ $Config = @{
         # === Smoke Tests (real) ===
         @{  Id = "smoke-real";
             Name = "latest - Smoke (real)";
-            Command = "& .\gradlew.bat test -Dversion=latest -Dtype=smoke -DexternalSystemMode=real -Darchitecture=$Architecture -Denvironment=local";
+            Command = "& .\gradlew.bat test -Dversion=latest -Dtype=smoke -DexternalSystemMode=real -Denvironment=local";
             Path = ".";
             TestReportPath = "build\reports\tests\test\index.html";
             TestInstallCommands = $null; },
@@ -24,7 +24,7 @@ $Config = @{
         # === Acceptance Tests (stub) - API ===
         @{  Id = "acceptance-api";
             Name = "latest - Acceptance (stub) - API";
-            Command = "& .\gradlew.bat test -Dversion=latest -Dtype=acceptance -DexcludeTags=isolated -Dchannel=API -Darchitecture=$Architecture -Denvironment=local";
+            Command = "& .\gradlew.bat test -Dversion=latest -Dtype=acceptance -DexcludeTags=isolated -Dchannel=API -Denvironment=local";
             Path = ".";
             TestReportPath = "build\reports\tests\test\index.html";
             TestInstallCommands = $null; },
@@ -32,7 +32,7 @@ $Config = @{
         # === Acceptance Tests (stub) - UI ===
         @{  Id = "acceptance-ui";
             Name = "latest - Acceptance (stub) - UI";
-            Command = "& .\gradlew.bat test -Dversion=latest -Dtype=acceptance -DexcludeTags=isolated -Dchannel=UI -Darchitecture=$Architecture -Denvironment=local";
+            Command = "& .\gradlew.bat test -Dversion=latest -Dtype=acceptance -DexcludeTags=isolated -Dchannel=UI -Denvironment=local";
             Path = ".";
             TestReportPath = "build\reports\tests\test\index.html";
             TestInstallCommands = $null; },
@@ -40,7 +40,7 @@ $Config = @{
         # === Acceptance Tests Isolated (stub) - API ===
         @{  Id = "acceptance-isolated-api";
             Name = "latest - Acceptance Isolated (stub) - API";
-            Command = "& .\gradlew.bat test -Dversion=latest -Dtype=acceptance -DincludeTags=isolated -Dchannel=API -Darchitecture=$Architecture -Denvironment=local";
+            Command = "& .\gradlew.bat test -Dversion=latest -Dtype=acceptance -DincludeTags=isolated -Dchannel=API -Denvironment=local";
             Path = ".";
             TestReportPath = "build\reports\tests\test\index.html";
             TestInstallCommands = $null; },
@@ -48,7 +48,7 @@ $Config = @{
         # === Acceptance Tests Isolated (stub) - UI ===
         @{  Id = "acceptance-isolated-ui";
             Name = "latest - Acceptance Isolated (stub) - UI";
-            Command = "& .\gradlew.bat test -Dversion=latest -Dtype=acceptance -DincludeTags=isolated -Dchannel=UI -Darchitecture=$Architecture -Denvironment=local";
+            Command = "& .\gradlew.bat test -Dversion=latest -Dtype=acceptance -DincludeTags=isolated -Dchannel=UI -Denvironment=local";
             Path = ".";
             TestReportPath = "build\reports\tests\test\index.html";
             TestInstallCommands = $null; },
@@ -56,7 +56,7 @@ $Config = @{
         # === Contract Tests (stub) ===
         @{  Id = "contract-stub";
             Name = "latest - Contract (stub)";
-            Command = "& .\gradlew.bat test -Dversion=latest -Dtype=contract -DexternalSystemMode=stub -Dmode=stub -Darchitecture=$Architecture -Denvironment=local";
+            Command = "& .\gradlew.bat test -Dversion=latest -Dtype=contract -DexternalSystemMode=stub -Dmode=stub -Denvironment=local";
             Path = ".";
             TestReportPath = "build\reports\tests\test\index.html";
             TestInstallCommands = $null; },
@@ -64,7 +64,7 @@ $Config = @{
         # === Contract Tests (real) ===
         @{  Id = "contract-real";
             Name = "latest - Contract (real)";
-            Command = "& .\gradlew.bat test -Dversion=latest -Dtype=contract -DexternalSystemMode=real -Dmode=real -Darchitecture=$Architecture -Denvironment=local";
+            Command = "& .\gradlew.bat test -Dversion=latest -Dtype=contract -DexternalSystemMode=real -Dmode=real -Denvironment=local";
             Path = ".";
             TestReportPath = "build\reports\tests\test\index.html";
             TestInstallCommands = $null; },
@@ -72,7 +72,7 @@ $Config = @{
         # === E2E Tests (real) - API ===
         @{  Id = "e2e-api";
             Name = "latest - E2E (real) - API";
-            Command = "& .\gradlew.bat test -Dversion=latest -Dtype=e2e -DexternalSystemMode=real -Dchannel=API -Darchitecture=$Architecture -Denvironment=local";
+            Command = "& .\gradlew.bat test -Dversion=latest -Dtype=e2e -DexternalSystemMode=real -Dchannel=API -Denvironment=local";
             Path = ".";
             TestReportPath = "build\reports\tests\test\index.html";
             TestInstallCommands = $null; },
@@ -80,7 +80,7 @@ $Config = @{
         # === E2E Tests (real) - UI ===
         @{  Id = "e2e-ui";
             Name = "latest - E2E (real) - UI";
-            Command = "& .\gradlew.bat test -Dversion=latest -Dtype=e2e -DexternalSystemMode=real -Dchannel=UI -Darchitecture=$Architecture -Denvironment=local";
+            Command = "& .\gradlew.bat test -Dversion=latest -Dtype=e2e -DexternalSystemMode=real -Dchannel=UI -Denvironment=local";
             Path = ".";
             TestReportPath = "build\reports\tests\test\index.html";
             TestInstallCommands = $null; }

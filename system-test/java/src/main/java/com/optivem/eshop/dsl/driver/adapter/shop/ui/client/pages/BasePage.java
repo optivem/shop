@@ -16,7 +16,7 @@ public abstract class BasePage {
     private static final String NOTIFICATION_ERROR_MESSAGE_SELECTOR = "[role='alert'].notification.error .error-message";
     private static final String NOTIFICATION_ERROR_FIELD_SELECTOR = "[role='alert'].notification.error .field-error";
     private static final String NOTIFICATION_ID_ATTRIBUTE = "data-notification-id";
-    private static final String NO_NOTIFICATION_ERROR_MESSAGE = "No notification appeared";
+
     private static final String UNRECOGNIZED_NOTIFICATION_ERROR_MESSAGE = "Notification type is not recognized";
 
     protected final PageClient pageClient;
@@ -59,14 +59,10 @@ public abstract class BasePage {
 
     private String waitForNewNotification() {
         var selector = lastNotificationId == null
-                ? NOTIFICATION_SELECTOR
-                : NOTIFICATION_SELECTOR + ":not([" + NOTIFICATION_ID_ATTRIBUTE + "='" + lastNotificationId + "'])";
+                ? NOTIFICATION_SELECTOR + "[" + NOTIFICATION_ID_ATTRIBUTE + "]"
+                : NOTIFICATION_SELECTOR + "[" + NOTIFICATION_ID_ATTRIBUTE + "]:not([" + NOTIFICATION_ID_ATTRIBUTE + "='" + lastNotificationId + "'])";
 
-        var hasNotification = pageClient.isVisible(selector);
-
-        if (!hasNotification) {
-            throw new IllegalStateException(NO_NOTIFICATION_ERROR_MESSAGE);
-        }
+        pageClient.waitForVisible(selector);
 
         var notificationId = pageClient.readAttribute(selector, NOTIFICATION_ID_ATTRIBUTE);
 
@@ -131,5 +127,3 @@ public abstract class BasePage {
         return selector.replace(NOTIFICATION_SELECTOR, NOTIFICATION_SELECTOR + idAttribute);
     }
 }
-
-

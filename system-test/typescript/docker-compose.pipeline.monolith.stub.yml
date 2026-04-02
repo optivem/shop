@@ -5,7 +5,8 @@ services:
   monolith:
     image: ghcr.io/optivem/starter/monolith-typescript-monolith:latest
     ports:
-      - "2302:3000"
+      - "3302:3000"
+      - "8302:3000"
     environment:
       - POSTGRES_HOST=postgres
       - POSTGRES_PORT=5432
@@ -41,7 +42,7 @@ services:
   external-stub:
     image: wiremock/wiremock:3.10.0
     ports:
-      - "9304:8080"
+      - "9302:8080"
     volumes:
       - ../../system/external-stub:/home/wiremock
     command: --verbose --global-response-templating

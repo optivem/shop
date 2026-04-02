@@ -73,7 +73,7 @@ jobs:
           environment: qa
           version: ${{ inputs.version }}
           image-urls: ${{ needs.check.outputs.image-urls }}
-          compose-file: docker-compose.multitier.yml
+          compose-file: docker-compose.pipeline.multitier.real.yml
           systems: |
             [
               { "name": "Shop UI", "url": "http://localhost:3301/" },

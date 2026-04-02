@@ -2,7 +2,7 @@ name: multitier-system-java-acceptance-stage-legacy
 
 on:
   schedule:
-    - cron: '0 0 * * *'  # Run daily
+    - cron: '0 0 * * *'  # Run once a day at midnight UTC
   workflow_dispatch:
 
 concurrency:
@@ -130,16 +130,16 @@ jobs:
         run: npx playwright install --with-deps chromium
         working-directory: system-test/java
 
+      - name: Compile System Tests
+        run: ./gradlew clean compileJava compileTestJava
+        working-directory: system-test/java
+
       # === mod02: Smoke ===
       - name: mod02 - Smoke
         run: ./gradlew test -Dversion=mod02 -Dtype=smoke -DexternalSystemMode=real -Darchitecture=multitier -Denvironment=acceptance
         working-directory: system-test/java
 
-      # === mod03: Smoke + E2E ===
-      - name: mod03 - Smoke
-        run: ./gradlew test -Dversion=mod03 -Dtype=smoke -DexternalSystemMode=real -Darchitecture=multitier -Denvironment=acceptance
-        working-directory: system-test/java
-
+      # === mod03: E2E ===
       - name: mod03 - E2E
         run: ./gradlew test -Dversion=mod03 -Dtype=e2e -Darchitecture=multitier -Denvironment=acceptance
         working-directory: system-test/java

@@ -4,27 +4,27 @@
     ViewData["Title"] = "Home page";
 }
 
-<div class="text-center">
-    <h1>Starter - .NET Monolith</h1>
-    <p class="lead">Welcome to the Starter Application</p>
-</div>
-
-<div class="row mt-4">
-    <div class="col-md-6 mb-3">
-        <div class="card shadow-sm h-100">
-            <div class="card-body text-center">
-                <h5 class="card-title">Shop</h5>
-                <p class="card-text">Place a new order by entering a product SKU and quantity.</p>
-                <a asp-page="/Shop" class="btn btn-primary">Go to Shop</a>
+<div class="jumbotron bg-light p-5 rounded">
+    <h1 class="display-4">Welcome to eShop Starter!</h1>
+    <p class="lead">Your modern e-commerce solution</p>
+    <hr class="my-4" />
+    <div class="row mt-4">
+        <div class="col-md-4 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">New Order</h5>
+                    <p class="card-text">Place a new order with our easy-to-use interface</p>
+                    <a class="btn btn-primary" href="/shop">Shop Now</a>
+                </div>
             </div>
         </div>
-    </div>
-    <div class="col-md-6 mb-3">
-        <div class="card shadow-sm h-100">
-            <div class="card-body text-center">
-                <h5 class="card-title">Order History</h5>
-                <p class="card-text">View and search your past orders.</p>
-                <a asp-page="/OrderHistory" class="btn btn-primary">View Orders</a>
+        <div class="col-md-4 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Order History</h5>
+                    <p class="card-text">View and manage your past orders</p>
+                    <a class="btn btn-primary" href="/order-history">View Orders</a>
+                </div>
             </div>
         </div>
     </div>

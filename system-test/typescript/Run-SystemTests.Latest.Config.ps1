@@ -8,7 +8,7 @@ $Config = @{
         # === Smoke Tests (stub) ===
         @{  Id = "smoke-stub";
             Name = "latest - Smoke (stub)";
-            Command = "npx jest test/latest/smoke --passWithNoTests --forceExit";
+            Command = "npx jest test/latest/smoke --forceExit";
             Path = ".";
             TestReportPath = "test-results\jest-results.html";
             TestInstallCommands = @("npx playwright install chromium") },
@@ -16,7 +16,7 @@ $Config = @{
         # === Smoke Tests (real) ===
         @{  Id = "smoke-real";
             Name = "latest - Smoke (real)";
-            Command = "npx jest test/latest/smoke --passWithNoTests --forceExit";
+            Command = "npx jest test/latest/smoke --forceExit";
             Path = ".";
             TestReportPath = "test-results\jest-results.html";
             TestInstallCommands = @("npx playwright install chromium") },
@@ -24,7 +24,7 @@ $Config = @{
         # === Acceptance Tests (stub) - API ===
         @{  Id = "acceptance-api";
             Name = "latest - Acceptance (stub) - API";
-            Command = "npx jest test/latest/acceptance --passWithNoTests --forceExit";
+            Command = "npx jest test/latest/acceptance --testPathIgnorePatterns=isolated --forceExit";
             Path = ".";
             TestReportPath = "test-results\jest-results.html";
             TestInstallCommands = $null },
@@ -32,7 +32,7 @@ $Config = @{
         # === Acceptance Tests (stub) - UI ===
         @{  Id = "acceptance-ui";
             Name = "latest - Acceptance (stub) - UI";
-            Command = "npx jest test/latest/acceptance --passWithNoTests --forceExit";
+            Command = "npx jest test/latest/acceptance --testPathIgnorePatterns=isolated --forceExit";
             Path = ".";
             TestReportPath = "test-results\jest-results.html";
             TestInstallCommands = @("npx playwright install chromium") },
@@ -40,7 +40,7 @@ $Config = @{
         # === Acceptance Tests Isolated (stub) - API ===
         @{  Id = "acceptance-isolated-api";
             Name = "latest - Acceptance Isolated (stub) - API";
-            Command = "npx jest test/latest/acceptance --passWithNoTests --forceExit";
+            Command = "npx jest `"test/latest/acceptance/.*isolated`" --runInBand --forceExit";
             Path = ".";
             TestReportPath = "test-results\jest-results.html";
             TestInstallCommands = $null },
@@ -48,7 +48,7 @@ $Config = @{
         # === Acceptance Tests Isolated (stub) - UI ===
         @{  Id = "acceptance-isolated-ui";
             Name = "latest - Acceptance Isolated (stub) - UI";
-            Command = "npx jest test/latest/acceptance --passWithNoTests --forceExit";
+            Command = "npx jest `"test/latest/acceptance/.*isolated`" --runInBand --forceExit";
             Path = ".";
             TestReportPath = "test-results\jest-results.html";
             TestInstallCommands = @("npx playwright install chromium") },
@@ -56,7 +56,7 @@ $Config = @{
         # === Contract Tests (stub) ===
         @{  Id = "contract-stub";
             Name = "latest - Contract (stub)";
-            Command = "npx jest test/latest/contract --passWithNoTests --forceExit";
+            Command = "npx jest test/latest/contract --forceExit";
             Path = ".";
             TestReportPath = "test-results\jest-results.html";
             TestInstallCommands = $null },
@@ -64,7 +64,7 @@ $Config = @{
         # === Contract Tests (real) ===
         @{  Id = "contract-real";
             Name = "latest - Contract (real)";
-            Command = "npx jest test/latest/contract --passWithNoTests --forceExit";
+            Command = "npx jest test/latest/contract --forceExit";
             Path = ".";
             TestReportPath = "test-results\jest-results.html";
             TestInstallCommands = $null },
@@ -72,7 +72,7 @@ $Config = @{
         # === E2E Tests (real) - API ===
         @{  Id = "e2e-api";
             Name = "latest - E2E (real) - API";
-            Command = "npx jest test/latest/e2e --passWithNoTests --forceExit";
+            Command = "npx jest test/latest/e2e --forceExit";
             Path = ".";
             TestReportPath = "test-results\jest-results.html";
             TestInstallCommands = $null },
@@ -80,7 +80,7 @@ $Config = @{
         # === E2E Tests (real) - UI ===
         @{  Id = "e2e-ui";
             Name = "latest - E2E (real) - UI";
-            Command = "npx jest test/latest/e2e --passWithNoTests --forceExit";
+            Command = "npx jest test/latest/e2e --forceExit";
             Path = ".";
             TestReportPath = "test-results\jest-results.html";
             TestInstallCommands = @("npx playwright install chromium") }

@@ -154,7 +154,7 @@ public class ShopUiClient : IAsyncDisposable
 
         var contentType = _response.Headers.ContainsKey(ContentType) ? _response.Headers[ContentType] : null;
 
-        if (contentType == null || !contentType.Equals(TextHtml))
+        if (contentType == null || !contentType.StartsWith(TextHtml))
 
         {
 

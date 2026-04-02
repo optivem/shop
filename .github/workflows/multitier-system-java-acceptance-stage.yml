@@ -135,6 +135,10 @@ jobs:
         run: npx playwright install --with-deps chromium
         working-directory: system-test/java
 
+      - name: Compile System Tests
+        run: ./gradlew clean compileJava compileTestJava
+        working-directory: system-test/java
+
       - name: Smoke (Stub)
         run: ./gradlew test -Dversion=latest -Dtype=smoke -DexternalSystemMode=stub -Darchitecture=multitier -Denvironment=acceptance
         working-directory: system-test/java

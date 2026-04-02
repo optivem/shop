@@ -8,13 +8,16 @@ export function validatePlaceOrderRequest(body: Record<string, unknown>): FieldE
     errors.push({ field: 'sku', message: 'SKU must not be empty' });
   }
 
-  const quantity = body.quantity;
-  if (quantity === undefined || quantity === null) {
+  const rawQuantity = body.quantity;
+  if (rawQuantity === undefined || rawQuantity === null || (typeof rawQuantity === 'string' && rawQuantity.trim() === '')) {
     errors.push({ field: 'quantity', message: 'Quantity must not be empty' });
-  } else if (typeof quantity === 'string' || typeof quantity === 'boolean' || !Number.isInteger(quantity as number)) {
-    errors.push({ field: 'quantity', message: 'Quantity must be an integer', code: 'TYPE_MISMATCH' });
-  } else if ((quantity as number) <= 0) {
-    errors.push({ field: 'quantity', message: 'Quantity must be positive' });
+  } else {
+    const quantity = typeof rawQuantity === 'string' ? Number(rawQuantity) : rawQuantity;
+    if (typeof rawQuantity === 'boolean' || isNaN(quantity as number) || !Number.isInteger(quantity as number)) {
+      errors.push({ field: 'quantity', message: 'Quantity must be an integer', code: 'TYPE_MISMATCH' });
+    } else if ((quantity as number) <= 0) {
+      errors.push({ field: 'quantity', message: 'Quantity must be positive' });
+    }
   }
 
   return errors;

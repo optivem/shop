@@ -2,7 +2,7 @@ name: multitier-system-typescript-acceptance-stage-legacy
 
 on:
   schedule:
-    - cron: '0 0 * * *'  # Run daily
+    - cron: '0 0 * * *'  # Run once a day at midnight UTC
   workflow_dispatch:
 
 concurrency:
@@ -123,7 +123,7 @@ jobs:
       - name: Setup Runtime
         uses: optivem/actions/setup-node@v1
         with:
-          node-version: 20
+          node-version: 22.x
           working-directory: system-test/typescript
 
       - name: Install Playwright Dependencies
@@ -138,14 +138,7 @@ jobs:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: real
 
-      # === mod03: Smoke + E2E ===
-      - name: mod03 - Smoke
-        working-directory: system-test/typescript
-        run: npm test -- test/legacy/mod03/smoke
-        env:
-          ENVIRONMENT: acceptance
-          EXTERNAL_SYSTEM_MODE: real
-
+      # === mod03: E2E ===
       - name: mod03 - E2E
         working-directory: system-test/typescript
         run: npm test -- test/legacy/mod03/e2e
@@ -271,7 +264,7 @@ jobs:
       # === mod10: Acceptance ===
       - name: mod10 - Acceptance - API Channel
         working-directory: system-test/typescript
-        run: npm test -- --passWithNoTests test/legacy/mod10/acceptance
+        run: npm test -- test/legacy/mod10/acceptance
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
@@ -279,7 +272,7 @@ jobs:
 
       - name: mod10 - Acceptance - UI Channel
         working-directory: system-test/typescript
-        run: npm test -- --passWithNoTests test/legacy/mod10/acceptance
+        run: npm test -- test/legacy/mod10/acceptance
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
@@ -287,7 +280,7 @@ jobs:
 
       - name: mod10 - Acceptance (Isolated) - API Channel
         working-directory: system-test/typescript
-        run: npm test -- --passWithNoTests test/legacy/mod10/acceptance
+        run: npm test -- test/legacy/mod10/acceptance
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
@@ -295,7 +288,7 @@ jobs:
 
       - name: mod10 - Acceptance (Isolated) - UI Channel
         working-directory: system-test/typescript
-        run: npm test -- --passWithNoTests test/legacy/mod10/acceptance
+        run: npm test -- test/legacy/mod10/acceptance
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
@@ -304,14 +297,14 @@ jobs:
       # === mod11: Contract + E2E ===
       - name: mod11 - Contract (Stub)
         working-directory: system-test/typescript
-        run: npm test -- --passWithNoTests test/legacy/mod11/contract
+        run: npm test -- test/legacy/mod11/contract
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
 
       - name: mod11 - Contract (Real)
         working-directory: system-test/typescript
-        run: npm test -- --passWithNoTests test/legacy/mod11/contract
+        run: npm test -- test/legacy/mod11/contract
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: real

@@ -7,33 +7,25 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Optivem.Starter.Monolith.styles.css" asp-append-version="true" />
+    <style>
+        .notification { padding: 12px; margin-top: 10px; margin-bottom: 16px; border-radius: 4px; font-weight: 600; }
+        .notification.success { background: #d1e7dd; color: #0f5132; border: 1px solid #badbcc; }
+        .notification.error { background: #f8d7da; color: #842029; border: 1px solid #f5c2c7; }
+        .notification .error-message { margin-bottom: 8px; }
+        .notification .field-error { margin-left: 12px; margin-top: 4px; font-weight: 400; }
+        .status-PLACED { color: #198754; }
+        body { min-height: 100vh; background-color: #f8f9fa; }
+    </style>
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+        <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
             <div class="container">
-                <a class="navbar-brand" asp-area="" asp-page="/Index">Optivem.Starter.Monolith</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Shop">Shop</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/OrderHistory">Order History</a>
-                        </li>
-                    </ul>
-                </div>
+                <a class="navbar-brand" href="/">eShop Starter</a>
             </div>
         </nav>
     </header>
-    <div class="container">
+    <div class="container mt-4">
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
@@ -41,7 +33,7 @@
 
     <footer class="border-top footer text-muted">
         <div class="container">
-            &copy; 2025 - Optivem.Starter.Monolith - <a asp-area="" asp-page="/Privacy">Privacy</a>
+            &copy; 2025 - Optivem.Starter.Monolith - <a href="/privacy">Privacy</a>
         </div>
     </footer>
 

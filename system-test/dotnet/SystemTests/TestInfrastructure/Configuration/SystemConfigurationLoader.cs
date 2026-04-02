@@ -24,6 +24,7 @@ public static class SystemConfigurationLoader
     {
         var env = environment.ToString().ToLower();
         var mode = externalSystemMode.ToString().ToLower();
+
         return $"appsettings.{env}.{mode}.json";
     }
 

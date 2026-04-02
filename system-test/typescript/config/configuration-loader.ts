@@ -22,12 +22,9 @@ export interface ConfigOverrides {
 
 export function loadConfiguration(overrides?: ConfigOverrides): TestConfig {
   const environment = (process.env.ENVIRONMENT || 'local').toLowerCase();
-  const architecture = (process.env.ARCHITECTURE || 'multitier').toLowerCase();
   const externalSystemMode = overrides?.externalSystemMode || (process.env.EXTERNAL_SYSTEM_MODE || 'real').toLowerCase();
 
-  const configFileName = architecture === 'monolith'
-    ? `test-config-${environment}-monolith-${externalSystemMode}.json`
-    : `test-config-${environment}-${externalSystemMode}.json`;
+  const configFileName = `test-config-${environment}-${externalSystemMode}.json`;
   const configPath = path.join(__dirname, configFileName);
 
   if (!fs.existsSync(configPath)) {

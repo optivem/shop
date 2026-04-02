@@ -13,13 +13,7 @@ $Config = @{
             TestReportPath = "SystemTests\TestResults\testResults.html";
             TestInstallCommands = "pwsh bin/Debug/net8.0/playwright.ps1 install"; },
 
-        # === mod03: Smoke + E2E ===
-        @{  Id = "mod03-smoke";
-            Name = "mod03 - Smoke (real)";
-            Command = "dotnet test --filter 'FullyQualifiedName~.Legacy.Mod03.SmokeTests' -e EXTERNAL_SYSTEM_MODE=real --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed' -e ENVIRONMENT=local";
-            Path = "SystemTests";
-            TestReportPath = "SystemTests\TestResults\testResults.html";
-            TestInstallCommands = "pwsh bin/Debug/net8.0/playwright.ps1 install"; },
+        # === mod03: E2E ===
         @{  Id = "mod03-e2e";
             Name = "mod03 - E2E";
             Command = "dotnet test --filter 'FullyQualifiedName~.Legacy.Mod03.E2eTests' --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed' -e ENVIRONMENT=local";

@@ -5,7 +5,8 @@ services:
   monolith:
     image: ghcr.io/optivem/starter/monolith-dotnet-monolith:latest
     ports:
-      - "2201:8080"
+      - "3201:8080"
+      - "8201:8080"
     environment:
       - ConnectionStrings__Postgres=Host=postgres;Port=5432;Database=starter;Username=starter_user;Password=starter_password
       - Erp__Url=http://external-real:9000/erp
@@ -38,7 +39,7 @@ services:
   external-real:
     image: node:18-alpine
     ports:
-      - "9203:9000"
+      - "9201:9000"
     volumes:
       - ../../system/external-real-sim:/app
     working_dir: /app
