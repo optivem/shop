@@ -1,4 +1,4 @@
-name: multitier-system-dotnet-prod-stage
+name: multitier-typescript-qa-stage
 
 on:
   workflow_dispatch:
@@ -9,7 +9,7 @@ on:
         type: string
 
 concurrency:
-  group: multitier-system-dotnet-prod-stage
+  group: multitier-typescript-qa-stage
 
 jobs:
   check:
@@ -37,13 +37,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Check QA Approved
-        uses: optivem/actions/check-release-exists@v1
-        with:
-          version: ${{ inputs.version }}-qa-approved
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Resolve Artifacts
         id: resolve-images
         uses: optivem/actions/resolve-docker-images@v1
@@ -51,16 +44,15 @@ jobs:
           tag: ${{ inputs.version }}
           base-image-urls: |
             ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-frontend-react
-            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-backend-dotnet
+            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-backend-typescript
 
   run:
     needs: check
     if: needs.check.result == 'success'
     runs-on: ubuntu-latest
-    environment: multitier-dotnet-production
+    environment: multitier-typescript-qa
     permissions:
       contents: write
-      packages: write
     outputs:
       version: ${{ steps.promote.outputs.version }}
       image-urls: ${{ needs.check.outputs.image-urls }}
@@ -74,26 +66,26 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Deploy System (Production Environment)
+      - name: Deploy System (QA Environment)
         id: deploy
         uses: optivem/actions/simulate-deployment@v1
         with:
-          environment: production
+          environment: qa
           version: ${{ inputs.version }}
           image-urls: ${{ needs.check.outputs.image-urls }}
           compose-file: docker-compose.pipeline.multitier.real.yml
           systems: |
             [
-              { "name": "Shop UI", "url": "http://localhost:3201/" },
-              { "name": "Shop API", "url": "http://localhost:8201/health" },
-              { "name": "ERP", "url": "http://localhost:9201/erp/health" },
-              { "name": "Clock", "url": "http://localhost:9201/clock/health" }
+              { "name": "Shop UI", "url": "http://localhost:3301/" },
+              { "name": "Shop API", "url": "http://localhost:8301/health" },
+              { "name": "ERP", "url": "http://localhost:9301/erp/health" },
+              { "name": "Clock", "url": "http://localhost:9301/clock/health" }
             ]
-          working-directory: system-test/dotnet
+          working-directory: system-test/typescript
 
-      - name: Promote RC (Production Deployed)
+      - name: Promote RC (QA Deployed)
         id: promote
-        uses: optivem/actions/promote-rc-to-prod@v1
+        uses: optivem/actions/promote-rc-to-qa@v1
         with:
           version: ${{ inputs.version }}
           artifact-urls: ${{ needs.check.outputs.image-urls }}
@@ -117,8 +109,8 @@ jobs:
     - name: Summarize Stage
       uses: optivem/actions/summarize-system-stage@v1
       with:
-        stage-name: 'Production Stage'
-        environment: production
+        stage-name: 'QA Stage'
+        environment: qa
         stage-result: ${{ needs.run.result }}
         success-version: ${{ needs.run.outputs.version }}
         success-artifact-ids: ${{ needs.run.outputs.image-urls }}

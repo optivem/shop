@@ -56,7 +56,7 @@ jobs:
     steps:
       - uses: optivem/actions/trigger-and-wait@main
         with:
-          workflow: multitier-system-java-verify.yml
+          workflow: multitier-java-verify.yml
 
   multitier-dotnet:
     if: (inputs.language == '' || inputs.language == 'dotnet') && (inputs.architecture == '' || inputs.architecture == 'multitier')
@@ -64,7 +64,7 @@ jobs:
     steps:
       - uses: optivem/actions/trigger-and-wait@main
         with:
-          workflow: multitier-system-dotnet-verify.yml
+          workflow: multitier-dotnet-verify.yml
 
   multitier-typescript:
     if: (inputs.language == '' || inputs.language == 'typescript') && (inputs.architecture == '' || inputs.architecture == 'multitier')
@@ -72,4 +72,4 @@ jobs:
     steps:
       - uses: optivem/actions/trigger-and-wait@main
         with:
-          workflow: multitier-system-typescript-verify.yml
+          workflow: multitier-typescript-verify.yml

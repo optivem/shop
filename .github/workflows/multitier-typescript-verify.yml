@@ -1,4 +1,4 @@
-name: multitier-system-typescript-verify
+name: multitier-typescript-verify
 
 on:
   workflow_dispatch:
@@ -8,5 +8,5 @@ jobs:
     uses: ./.github/workflows/_verify-pipeline.yml
     secrets: inherit
     with:
-      prefix: multitier-system-typescript
+      prefix: multitier-typescript
       commit-workflows: '["multitier-backend-typescript-commit-stage.yml", "multitier-frontend-react-commit-stage.yml"]'

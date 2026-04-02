@@ -3,7 +3,7 @@ name: starter-java-monolith-real
 services:
 
   monolith:
-    image: ghcr.io/optivem/starter/monolith-java-monolith:latest
+    image: ghcr.io/optivem/starter/monolith-system-java:latest
     ports:
       - "3101:8080"
       - "8101:8080"

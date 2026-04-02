@@ -1,4 +1,4 @@
-name: multitier-system-typescript-qa-signoff
+name: multitier-typescript-qa-signoff
 
 on:
   workflow_dispatch:
@@ -16,7 +16,7 @@ on:
           - rejected
 
 concurrency:
-  group: multitier-system-typescript-qa-signoff
+  group: multitier-typescript-qa-signoff
 
 jobs:
   check:

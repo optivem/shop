@@ -113,7 +113,7 @@ jobs:
         uses: optivem/actions/build-docker-image@v1
         with:
           working-directory: system/monolith/typescript
-          image-name: monolith-typescript-monolith
+          image-name: monolith-system-typescript
           image-namespace: ${{ github.repository }}
           commit-sha: ${{ github.sha }}
           dockerfile: Dockerfile

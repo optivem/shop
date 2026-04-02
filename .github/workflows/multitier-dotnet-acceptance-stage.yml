@@ -1,4 +1,4 @@
-name: multitier-system-dotnet-acceptance-stage
+name: multitier-dotnet-acceptance-stage
 
 on:
   schedule:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: multitier-system-dotnet-acceptance-stage
+  group: multitier-dotnet-acceptance-stage
 
 jobs:
   preflight:

@@ -3,7 +3,7 @@ name: starter-typescript-monolith-stub
 services:
 
   monolith:
-    image: ghcr.io/optivem/starter/monolith-typescript-monolith:latest
+    image: ghcr.io/optivem/starter/monolith-system-typescript:latest
     ports:
       - "3302:3000"
       - "8302:3000"

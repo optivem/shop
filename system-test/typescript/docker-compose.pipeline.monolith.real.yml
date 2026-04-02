@@ -3,7 +3,7 @@ name: starter-typescript-monolith-real
 services:
 
   monolith:
-    image: ghcr.io/optivem/starter/monolith-typescript-monolith:latest
+    image: ghcr.io/optivem/starter/monolith-system-typescript:latest
     ports:
       - "3301:3000"
       - "8301:3000"

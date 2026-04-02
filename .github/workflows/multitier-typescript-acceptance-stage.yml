@@ -1,4 +1,4 @@
-name: multitier-system-typescript-acceptance-stage
+name: multitier-typescript-acceptance-stage
 
 on:
   schedule:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: multitier-system-typescript-acceptance-stage
+  group: multitier-typescript-acceptance-stage
 
 jobs:
   preflight:

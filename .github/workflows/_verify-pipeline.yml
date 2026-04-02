@@ -4,7 +4,7 @@ on:
   workflow_call:
     inputs:
       prefix:
-        description: 'Pipeline prefix (e.g. monolith-java, multitier-system-dotnet)'
+        description: 'Pipeline prefix (e.g. monolith-java, multitier-dotnet)'
         required: true
         type: string
       commit-workflows:

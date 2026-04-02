@@ -111,7 +111,7 @@ jobs:
         uses: optivem/actions/build-docker-image@v1
         with:
           working-directory: system/monolith/dotnet
-          image-name: monolith-dotnet-monolith
+          image-name: monolith-system-dotnet
           image-namespace: ${{ github.repository }}
           commit-sha: ${{ github.sha }}
           dockerfile: Dockerfile

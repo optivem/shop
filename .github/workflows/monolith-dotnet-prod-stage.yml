@@ -50,7 +50,7 @@ jobs:
         with:
           tag: ${{ inputs.version }}
           base-image-urls: |
-            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/monolith-dotnet-monolith
+            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/monolith-system-dotnet
 
   run:
     needs: check

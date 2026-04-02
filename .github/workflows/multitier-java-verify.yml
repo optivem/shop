@@ -1,4 +1,4 @@
-name: multitier-system-java-verify
+name: multitier-java-verify
 
 on:
   workflow_dispatch:
@@ -8,5 +8,5 @@ jobs:
     uses: ./.github/workflows/_verify-pipeline.yml
     secrets: inherit
     with:
-      prefix: multitier-system-java
+      prefix: multitier-java
       commit-workflows: '["multitier-backend-java-commit-stage.yml", "multitier-frontend-react-commit-stage.yml"]'

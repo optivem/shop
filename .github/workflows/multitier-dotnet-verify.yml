@@ -1,4 +1,4 @@
-name: multitier-system-dotnet-verify
+name: multitier-dotnet-verify
 
 on:
   workflow_dispatch:
@@ -8,5 +8,5 @@ jobs:
     uses: ./.github/workflows/_verify-pipeline.yml
     secrets: inherit
     with:
-      prefix: multitier-system-dotnet
+      prefix: multitier-dotnet
       commit-workflows: '["multitier-backend-dotnet-commit-stage.yml", "multitier-frontend-react-commit-stage.yml"]'

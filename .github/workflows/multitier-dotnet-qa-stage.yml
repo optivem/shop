@@ -1,4 +1,4 @@
-name: multitier-system-dotnet-qa-stage
+name: multitier-dotnet-qa-stage
 
 on:
   workflow_dispatch:
@@ -9,7 +9,7 @@ on:
         type: string
 
 concurrency:
-  group: multitier-system-dotnet-qa-stage
+  group: multitier-dotnet-qa-stage
 
 jobs:
   check:

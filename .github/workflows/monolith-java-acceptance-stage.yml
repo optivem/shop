@@ -59,7 +59,7 @@ jobs:
         uses: optivem/actions/find-latest-docker-images@v1
         with:
           image-urls: |
-            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/monolith-java-monolith:latest
+            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/monolith-system-java:latest
 
       - name: Check Run Conditions
         id: should-run

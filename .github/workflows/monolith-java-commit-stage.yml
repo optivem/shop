@@ -96,7 +96,7 @@ jobs:
         uses: optivem/actions/build-docker-image@v1
         with:
           working-directory: system/monolith/java
-          image-name: monolith-java-monolith
+          image-name: monolith-system-java
           image-namespace: ${{ github.repository }}
           commit-sha: ${{ github.sha }}
           dockerfile: Dockerfile

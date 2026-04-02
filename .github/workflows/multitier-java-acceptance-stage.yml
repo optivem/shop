@@ -1,4 +1,4 @@
-name: multitier-system-java-acceptance-stage
+name: multitier-java-acceptance-stage
 
 on:
   schedule:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: multitier-system-java-acceptance-stage
+  group: multitier-java-acceptance-stage
 
 jobs:
   preflight:

@@ -3,7 +3,7 @@ name: starter-dotnet-monolith-stub
 services:
 
   monolith:
-    image: ghcr.io/optivem/starter/monolith-dotnet-monolith:latest
+    image: ghcr.io/optivem/starter/monolith-system-dotnet:latest
     ports:
       - "3202:8080"
       - "8202:8080"

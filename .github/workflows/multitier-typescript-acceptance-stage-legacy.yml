@@ -1,4 +1,4 @@
-name: multitier-system-dotnet-acceptance-stage-legacy
+name: multitier-typescript-acceptance-stage-legacy
 
 on:
   schedule:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: multitier-system-dotnet-acceptance-stage-legacy
+  group: multitier-typescript-acceptance-stage-legacy
 
 jobs:
   preflight:
@@ -60,7 +60,7 @@ jobs:
         with:
           image-urls: |
             ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-frontend-react:latest
-            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-backend-dotnet:latest
+            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-backend-typescript:latest
 
       - name: Check Run Conditions
         id: should-run
@@ -97,12 +97,12 @@ jobs:
           compose-file: docker-compose.pipeline.multitier.real.yml
           systems: |
             [
-              { "name": "Shop UI", "url": "http://localhost:3201/" },
-              { "name": "Shop API", "url": "http://localhost:8201/health" },
-              { "name": "ERP", "url": "http://localhost:9201/erp/health" },
-              { "name": "Clock", "url": "http://localhost:9201/clock/health" }
+              { "name": "Shop UI", "url": "http://localhost:3301/" },
+              { "name": "Shop API", "url": "http://localhost:8301/health" },
+              { "name": "ERP", "url": "http://localhost:9301/erp/health" },
+              { "name": "Clock", "url": "http://localhost:9301/clock/health" }
             ]
-          working-directory: system-test/dotnet
+          working-directory: system-test/typescript
 
       - name: Deploy System (Stub External Systems)
         uses: optivem/actions/simulate-deployment@v1
@@ -113,180 +113,182 @@ jobs:
           compose-file: docker-compose.pipeline.multitier.stub.yml
           systems: |
             [
-              { "name": "Shop UI", "url": "http://localhost:3202/" },
-              { "name": "Shop API", "url": "http://localhost:8202/health" },
-              { "name": "ERP", "url": "http://localhost:9202/erp/health" },
-              { "name": "Clock", "url": "http://localhost:9202/clock/health" }
+              { "name": "Shop UI", "url": "http://localhost:3302/" },
+              { "name": "Shop API", "url": "http://localhost:8302/health" },
+              { "name": "ERP", "url": "http://localhost:9302/erp/health" },
+              { "name": "Clock", "url": "http://localhost:9302/clock/health" }
             ]
-          working-directory: system-test/dotnet
+          working-directory: system-test/typescript
 
       - name: Setup Runtime
-        uses: optivem/actions/setup-dotnet@v1
+        uses: optivem/actions/setup-node@v1
         with:
-          dotnet-version: 8.0.x
-
-      - name: Build Test Project
-        run: dotnet build
-        working-directory: system-test/dotnet
+          node-version: 22.x
+          working-directory: system-test/typescript
 
       - name: Install Playwright Dependencies
-        run: |
-          dotnet build
-          pwsh bin/Debug/net8.0/playwright.ps1 install --with-deps
-        working-directory: system-test/dotnet/SystemTests
+        working-directory: system-test/typescript
+        run: npx playwright install --with-deps chromium
 
       # === mod02: Smoke ===
       - name: mod02 - Smoke
-        run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod02.SmokeTests" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: system-test/typescript
+        run: npm test -- test/legacy/mod02/smoke
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: real
 
       # === mod03: E2E ===
       - name: mod03 - E2E
-        run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod03.E2eTests" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: system-test/typescript
+        run: npm test -- test/legacy/mod03/e2e
         env:
           ENVIRONMENT: acceptance
 
       # === mod04: Smoke + E2E ===
       - name: mod04 - Smoke
-        run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod04.SmokeTests" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: system-test/typescript
+        run: npm test -- test/legacy/mod04/smoke
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: real
 
       - name: mod04 - E2E
-        run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod04.E2eTests" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: system-test/typescript
+        run: npm test -- test/legacy/mod04/e2e
         env:
           ENVIRONMENT: acceptance
 
       # === mod05: Smoke + E2E ===
       - name: mod05 - Smoke
-        run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod05.SmokeTests" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: system-test/typescript
+        run: npm test -- test/legacy/mod05/smoke
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: real
 
       - name: mod05 - E2E
-        run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod05.E2eTests" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: system-test/typescript
+        run: npm test -- test/legacy/mod05/e2e
         env:
           ENVIRONMENT: acceptance
+          EXTERNAL_SYSTEM_MODE: real
 
       # === mod06: Smoke + E2E ===
       - name: mod06 - Smoke
-        run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod06.SmokeTests" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: system-test/typescript
+        run: npm test -- test/legacy/mod06/smoke
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: real
 
       - name: mod06 - E2E - API Channel
-        run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod06.E2eTests" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: system-test/typescript
+        run: npm test -- test/legacy/mod06/e2e
         env:
           ENVIRONMENT: acceptance
+          EXTERNAL_SYSTEM_MODE: real
           CHANNEL: API
 
       - name: mod06 - E2E - UI Channel
-        run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod06.E2eTests" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: system-test/typescript
+        run: npm test -- test/legacy/mod06/e2e
         env:
           ENVIRONMENT: acceptance
+          EXTERNAL_SYSTEM_MODE: real
           CHANNEL: UI
 
       # === mod07: Smoke + E2E ===
       - name: mod07 - Smoke
-        run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod07.SmokeTests" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: system-test/typescript
+        run: npm test -- test/legacy/mod07/smoke
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: real
 
       - name: mod07 - E2E - API Channel
-        run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod07.E2eTests" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: system-test/typescript
+        run: npm test -- test/legacy/mod07/e2e
         env:
           ENVIRONMENT: acceptance
+          EXTERNAL_SYSTEM_MODE: real
           CHANNEL: API
 
       - name: mod07 - E2E - UI Channel
-        run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod07.E2eTests" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: system-test/typescript
+        run: npm test -- test/legacy/mod07/e2e
         env:
           ENVIRONMENT: acceptance
+          EXTERNAL_SYSTEM_MODE: real
           CHANNEL: UI
 
       # === mod08: Smoke + E2E ===
       - name: mod08 - Smoke
-        run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod08.SmokeTests" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: system-test/typescript
+        run: npm test -- test/legacy/mod08/smoke
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: real
 
       - name: mod08 - E2E - API Channel
-        run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod08.E2eTests" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: system-test/typescript
+        run: npm test -- test/legacy/mod08/e2e
         env:
           ENVIRONMENT: acceptance
+          EXTERNAL_SYSTEM_MODE: real
           CHANNEL: API
 
       - name: mod08 - E2E - UI Channel
-        run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod08.E2eTests" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: system-test/typescript
+        run: npm test -- test/legacy/mod08/e2e
         env:
           ENVIRONMENT: acceptance
+          EXTERNAL_SYSTEM_MODE: real
           CHANNEL: UI
 
       # === mod09: Smoke (stub + real) ===
       - name: mod09 - Smoke (Stub)
-        run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod09.SmokeTests" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: system-test/typescript
+        run: npm test -- test/legacy/mod09/smoke
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
 
       - name: mod09 - Smoke (Real)
-        run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod09.SmokeTests" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: system-test/typescript
+        run: npm test -- test/legacy/mod09/smoke
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: real
 
       # === mod10: Acceptance ===
       - name: mod10 - Acceptance - API Channel
-        run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod10.AcceptanceTests&Category!=isolated" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: system-test/typescript
+        run: npm test -- test/legacy/mod10/acceptance
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
           CHANNEL: API
 
       - name: mod10 - Acceptance - UI Channel
-        run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod10.AcceptanceTests&Category!=isolated" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: system-test/typescript
+        run: npm test -- test/legacy/mod10/acceptance
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
           CHANNEL: UI
 
       - name: mod10 - Acceptance (Isolated) - API Channel
-        run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod10.AcceptanceTests&Category=isolated" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: system-test/typescript
+        run: npm test -- test/legacy/mod10/acceptance
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
           CHANNEL: API
 
       - name: mod10 - Acceptance (Isolated) - UI Channel
-        run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod10.AcceptanceTests&Category=isolated" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: system-test/typescript
+        run: npm test -- test/legacy/mod10/acceptance
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
@@ -294,27 +296,29 @@ jobs:
 
       # === mod11: Contract + E2E ===
       - name: mod11 - Contract (Stub)
-        run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod11.ExternalSystemContractTests&FullyQualifiedName~Stub" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: system-test/typescript
+        run: npm test -- test/legacy/mod11/contract
         env:
           ENVIRONMENT: acceptance
+          EXTERNAL_SYSTEM_MODE: stub
 
       - name: mod11 - Contract (Real)
-        run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod11.ExternalSystemContractTests&FullyQualifiedName~Real" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: system-test/typescript
+        run: npm test -- test/legacy/mod11/contract
         env:
           ENVIRONMENT: acceptance
+          EXTERNAL_SYSTEM_MODE: real
 
       - name: mod11 - E2E - API Channel
-        run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod11.E2eTests" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: system-test/typescript
+        run: npm test -- test/legacy/mod11/e2e
         env:
           ENVIRONMENT: acceptance
           CHANNEL: API
 
       - name: mod11 - E2E - UI Channel
-        run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod11.E2eTests" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: system-test/typescript
+        run: npm test -- test/legacy/mod11/e2e
         env:
           ENVIRONMENT: acceptance
           CHANNEL: UI

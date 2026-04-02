@@ -116,31 +116,31 @@ The `.github/workflows/` directory contains runnable pipelines for all 6 matched
 
 [![backend-commit-stage](https://github.com/optivem/starter/actions/workflows/multitier-backend-java-commit-stage.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/multitier-backend-java-commit-stage.yml)
 [![frontend-commit-stage](https://github.com/optivem/starter/actions/workflows/multitier-frontend-react-commit-stage.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/multitier-frontend-react-commit-stage.yml)
-[![acceptance-stage](https://github.com/optivem/starter/actions/workflows/multitier-system-java-acceptance-stage.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/multitier-system-java-acceptance-stage.yml)
-[![acceptance-stage-legacy](https://github.com/optivem/starter/actions/workflows/multitier-system-java-acceptance-stage-legacy.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/multitier-system-java-acceptance-stage-legacy.yml)
-[![qa-stage](https://github.com/optivem/starter/actions/workflows/multitier-system-java-qa-stage.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/multitier-system-java-qa-stage.yml)
-[![qa-signoff](https://github.com/optivem/starter/actions/workflows/multitier-system-java-qa-signoff.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/multitier-system-java-qa-signoff.yml)
-[![prod-stage](https://github.com/optivem/starter/actions/workflows/multitier-system-java-prod-stage.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/multitier-system-java-prod-stage.yml)
+[![acceptance-stage](https://github.com/optivem/starter/actions/workflows/multitier-java-acceptance-stage.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/multitier-java-acceptance-stage.yml)
+[![acceptance-stage-legacy](https://github.com/optivem/starter/actions/workflows/multitier-java-acceptance-stage-legacy.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/multitier-java-acceptance-stage-legacy.yml)
+[![qa-stage](https://github.com/optivem/starter/actions/workflows/multitier-java-qa-stage.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/multitier-java-qa-stage.yml)
+[![qa-signoff](https://github.com/optivem/starter/actions/workflows/multitier-java-qa-signoff.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/multitier-java-qa-signoff.yml)
+[![prod-stage](https://github.com/optivem/starter/actions/workflows/multitier-java-prod-stage.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/multitier-java-prod-stage.yml)
 
 ### Multitier .NET
 
 [![backend-commit-stage](https://github.com/optivem/starter/actions/workflows/multitier-backend-dotnet-commit-stage.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/multitier-backend-dotnet-commit-stage.yml)
 [![frontend-commit-stage](https://github.com/optivem/starter/actions/workflows/multitier-frontend-react-commit-stage.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/multitier-frontend-react-commit-stage.yml)
-[![acceptance-stage](https://github.com/optivem/starter/actions/workflows/multitier-system-dotnet-acceptance-stage.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/multitier-system-dotnet-acceptance-stage.yml)
-[![acceptance-stage-legacy](https://github.com/optivem/starter/actions/workflows/multitier-system-dotnet-acceptance-stage-legacy.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/multitier-system-dotnet-acceptance-stage-legacy.yml)
-[![qa-stage](https://github.com/optivem/starter/actions/workflows/multitier-system-dotnet-qa-stage.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/multitier-system-dotnet-qa-stage.yml)
-[![qa-signoff](https://github.com/optivem/starter/actions/workflows/multitier-system-dotnet-qa-signoff.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/multitier-system-dotnet-qa-signoff.yml)
-[![prod-stage](https://github.com/optivem/starter/actions/workflows/multitier-system-dotnet-prod-stage.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/multitier-system-dotnet-prod-stage.yml)
+[![acceptance-stage](https://github.com/optivem/starter/actions/workflows/multitier-dotnet-acceptance-stage.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/multitier-dotnet-acceptance-stage.yml)
+[![acceptance-stage-legacy](https://github.com/optivem/starter/actions/workflows/multitier-dotnet-acceptance-stage-legacy.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/multitier-dotnet-acceptance-stage-legacy.yml)
+[![qa-stage](https://github.com/optivem/starter/actions/workflows/multitier-dotnet-qa-stage.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/multitier-dotnet-qa-stage.yml)
+[![qa-signoff](https://github.com/optivem/starter/actions/workflows/multitier-dotnet-qa-signoff.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/multitier-dotnet-qa-signoff.yml)
+[![prod-stage](https://github.com/optivem/starter/actions/workflows/multitier-dotnet-prod-stage.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/multitier-dotnet-prod-stage.yml)
 
 ### Multitier TypeScript
 
 [![backend-commit-stage](https://github.com/optivem/starter/actions/workflows/multitier-backend-typescript-commit-stage.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/multitier-backend-typescript-commit-stage.yml)
 [![frontend-commit-stage](https://github.com/optivem/starter/actions/workflows/multitier-frontend-react-commit-stage.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/multitier-frontend-react-commit-stage.yml)
-[![acceptance-stage](https://github.com/optivem/starter/actions/workflows/multitier-system-typescript-acceptance-stage.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/multitier-system-typescript-acceptance-stage.yml)
-[![acceptance-stage-legacy](https://github.com/optivem/starter/actions/workflows/multitier-system-typescript-acceptance-stage-legacy.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/multitier-system-typescript-acceptance-stage-legacy.yml)
-[![qa-stage](https://github.com/optivem/starter/actions/workflows/multitier-system-typescript-qa-stage.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/multitier-system-typescript-qa-stage.yml)
-[![qa-signoff](https://github.com/optivem/starter/actions/workflows/multitier-system-typescript-qa-signoff.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/multitier-system-typescript-qa-signoff.yml)
-[![prod-stage](https://github.com/optivem/starter/actions/workflows/multitier-system-typescript-prod-stage.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/multitier-system-typescript-prod-stage.yml)
+[![acceptance-stage](https://github.com/optivem/starter/actions/workflows/multitier-typescript-acceptance-stage.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/multitier-typescript-acceptance-stage.yml)
+[![acceptance-stage-legacy](https://github.com/optivem/starter/actions/workflows/multitier-typescript-acceptance-stage-legacy.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/multitier-typescript-acceptance-stage-legacy.yml)
+[![qa-stage](https://github.com/optivem/starter/actions/workflows/multitier-typescript-qa-stage.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/multitier-typescript-qa-stage.yml)
+[![qa-signoff](https://github.com/optivem/starter/actions/workflows/multitier-typescript-qa-signoff.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/multitier-typescript-qa-signoff.yml)
+[![prod-stage](https://github.com/optivem/starter/actions/workflows/multitier-typescript-prod-stage.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/multitier-typescript-prod-stage.yml)
 
 - **Commit stages** trigger automatically on push via path filters
 - **Acceptance/QA/Prod stages** are workflow_dispatch (manual trigger)
@@ -154,6 +154,6 @@ The `.github/workflows/` directory contains runnable pipelines for all 6 matched
 [![monolith-java-verify](https://github.com/optivem/starter/actions/workflows/monolith-java-verify.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/monolith-java-verify.yml)
 [![monolith-dotnet-verify](https://github.com/optivem/starter/actions/workflows/monolith-dotnet-verify.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/monolith-dotnet-verify.yml)
 [![monolith-typescript-verify](https://github.com/optivem/starter/actions/workflows/monolith-typescript-verify.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/monolith-typescript-verify.yml)
-[![multitier-system-java-verify](https://github.com/optivem/starter/actions/workflows/multitier-system-java-verify.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/multitier-system-java-verify.yml)
-[![multitier-system-dotnet-verify](https://github.com/optivem/starter/actions/workflows/multitier-system-dotnet-verify.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/multitier-system-dotnet-verify.yml)
-[![multitier-system-typescript-verify](https://github.com/optivem/starter/actions/workflows/multitier-system-typescript-verify.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/multitier-system-typescript-verify.yml)
+[![multitier-java-verify](https://github.com/optivem/starter/actions/workflows/multitier-java-verify.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/multitier-java-verify.yml)
+[![multitier-dotnet-verify](https://github.com/optivem/starter/actions/workflows/multitier-dotnet-verify.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/multitier-dotnet-verify.yml)
+[![multitier-typescript-verify](https://github.com/optivem/starter/actions/workflows/multitier-typescript-verify.yml/badge.svg)](https://github.com/optivem/starter/actions/workflows/multitier-typescript-verify.yml)

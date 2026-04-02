@@ -1,4 +1,4 @@
-name: multitier-system-java-prod-stage
+name: multitier-java-prod-stage
 
 on:
   workflow_dispatch:
@@ -9,7 +9,7 @@ on:
         type: string
 
 concurrency:
-  group: multitier-system-java-prod-stage
+  group: multitier-java-prod-stage
 
 jobs:
   check:
