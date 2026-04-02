@@ -61,7 +61,7 @@ jobs:
         run: |
           run_id="${{ steps.trigger-verify.outputs.run_id }}"
           echo "Waiting for run $run_id..."
-          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status --interval 60
+          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status --interval 120
 
   monolith-dotnet:
     if: (inputs.language == '' || inputs.language == 'dotnet') && (inputs.architecture == '' || inputs.architecture == 'monolith')
@@ -98,7 +98,7 @@ jobs:
         run: |
           run_id="${{ steps.trigger-verify.outputs.run_id }}"
           echo "Waiting for run $run_id..."
-          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status --interval 60
+          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status --interval 120
 
   monolith-typescript:
     if: (inputs.language == '' || inputs.language == 'typescript') && (inputs.architecture == '' || inputs.architecture == 'monolith')
@@ -135,7 +135,7 @@ jobs:
         run: |
           run_id="${{ steps.trigger-verify.outputs.run_id }}"
           echo "Waiting for run $run_id..."
-          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status --interval 60
+          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status --interval 120
 
   multitier-java:
     if: (inputs.language == '' || inputs.language == 'java') && (inputs.architecture == '' || inputs.architecture == 'multitier')
@@ -172,7 +172,7 @@ jobs:
         run: |
           run_id="${{ steps.trigger-verify.outputs.run_id }}"
           echo "Waiting for run $run_id..."
-          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status --interval 60
+          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status --interval 120
 
   multitier-dotnet:
     if: (inputs.language == '' || inputs.language == 'dotnet') && (inputs.architecture == '' || inputs.architecture == 'multitier')
@@ -209,7 +209,7 @@ jobs:
         run: |
           run_id="${{ steps.trigger-verify.outputs.run_id }}"
           echo "Waiting for run $run_id..."
-          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status --interval 60
+          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status --interval 120
 
   multitier-typescript:
     if: (inputs.language == '' || inputs.language == 'typescript') && (inputs.architecture == '' || inputs.architecture == 'multitier')
@@ -246,4 +246,4 @@ jobs:
         run: |
           run_id="${{ steps.trigger-verify.outputs.run_id }}"
           echo "Waiting for run $run_id..."
-          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status --interval 60
+          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status --interval 120

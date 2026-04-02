@@ -38,7 +38,7 @@ jobs:
         run: |
           run_id="${{ steps.trigger-commit-stage.outputs.run_id }}"
           echo "Waiting for run $run_id..."
-          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status --interval 60
+          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status --interval 120
 
   acceptance-stage:
     needs: commit-stage
@@ -77,7 +77,7 @@ jobs:
         run: |
           run_id="${{ steps.trigger-acceptance-stage.outputs.run_id }}"
           echo "Waiting for run $run_id..."
-          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status --interval 60
+          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status --interval 300
 
       - name: Get RC Version
         id: get-version
@@ -126,7 +126,7 @@ jobs:
         run: |
           run_id="${{ steps.trigger-qa-stage.outputs.run_id }}"
           echo "Waiting for run $run_id..."
-          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status --interval 60
+          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status --interval 120
 
   qa-signoff:
     needs: [acceptance-stage, qa-stage]
@@ -165,7 +165,7 @@ jobs:
         run: |
           run_id="${{ steps.trigger-qa-signoff.outputs.run_id }}"
           echo "Waiting for run $run_id..."
-          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status --interval 60
+          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status --interval 120
 
   prod-stage:
     needs: [acceptance-stage, qa-signoff]
@@ -203,4 +203,4 @@ jobs:
         run: |
           run_id="${{ steps.trigger-prod-stage.outputs.run_id }}"
           echo "Waiting for run $run_id..."
-          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status --interval 60
+          gh run watch "$run_id" --repo "${{ github.repository }}" --exit-status --interval 120
