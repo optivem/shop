@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 
 interface FieldError {
   field: string;
@@ -19,15 +18,19 @@ export default function ShopPage() {
   const [notification, setNotification] = useState<{
     type: "success" | "error";
     message: string;
-    fieldErrors: FieldError[];
-    id: string;
+    fieldErrors: string[];
+    id: number;
   } | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [notificationCounter, setNotificationCounter] = useState(0);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitting(true);
     setNotification(null);
+
+    const nextId = notificationCounter + 1;
+    setNotificationCounter(nextId);
 
     try {
       const body: Record<string, unknown> = {};
@@ -48,17 +51,24 @@ export default function ShopPage() {
       if (response.ok) {
         setNotification({
           type: "success",
-          message: `Order has been created with Order Number ${data.orderNumber}`,
+          message: `Success! Order has been created with Order Number ${data.orderNumber}`,
           fieldErrors: [],
-          id: crypto.randomUUID(),
+          id: nextId,
         });
       } else {
         const errorData = data as ErrorData;
+        const fieldErrors: string[] = [];
+        if (errorData.errors && errorData.errors.length > 0) {
+          errorData.errors.forEach((err) => {
+            const fieldPart = err.field ? `${err.field}: ` : "";
+            fieldErrors.push(`${fieldPart}${err.message}`);
+          });
+        }
         setNotification({
           type: "error",
           message: errorData.detail || "An error occurred",
-          fieldErrors: errorData.errors || [],
-          id: crypto.randomUUID(),
+          fieldErrors,
+          id: nextId,
         });
       }
     } catch (err) {
@@ -66,7 +76,7 @@ export default function ShopPage() {
         type: "error",
         message: `Network error: ${err instanceof Error ? err.message : String(err)}`,
         fieldErrors: [],
-        id: crypto.randomUUID(),
+        id: nextId,
       });
     } finally {
       setSubmitting(false);
@@ -74,12 +84,17 @@ export default function ShopPage() {
   }
 
   return (
-    <main>
-      <nav>
-        <Link href="/">Home</Link> &gt; Shop
+    <>
+      <nav aria-label="breadcrumb">
+        <ol className="breadcrumb">
+          <li className="breadcrumb-item">
+            <a href="/">Home</a>
+          </li>
+          <li className="breadcrumb-item active" aria-current="page">
+            Shop
+          </li>
+        </ol>
       </nav>
-
-      <h1>Shop</h1>
 
       {notification && (
         <div
@@ -94,7 +109,7 @@ export default function ShopPage() {
               <div className="error-message">{notification.message}</div>
               {notification.fieldErrors.map((fe, i) => (
                 <div key={i} className="field-error">
-                  {fe.field}: {fe.message}
+                  {fe}
                 </div>
               ))}
             </>
@@ -102,43 +117,58 @@ export default function ShopPage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} style={{ maxWidth: "400px", marginTop: "1rem" }}>
-        <div style={{ marginBottom: "1rem" }}>
-          <label htmlFor="sku">SKU</label>
-          <br />
-          <input
-            type="text"
-            id="sku"
-            value={sku}
-            onChange={(e) => setSku(e.target.value)}
-            placeholder="Enter product SKU"
-            aria-label="SKU"
-            style={{ width: "100%", padding: "0.5rem" }}
-          />
+      <div className="row">
+        <div className="col-lg-6 mx-auto">
+          <div className="card shadow">
+            <div className="card-header bg-primary text-white">
+              <h4 className="mb-0">Place Your Order</h4>
+            </div>
+            <div className="card-body">
+              <form onSubmit={handleSubmit}>
+                <div className="mb-3">
+                  <label htmlFor="sku" className="form-label">
+                    SKU:
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="sku"
+                    value={sku}
+                    onChange={(e) => setSku(e.target.value)}
+                    placeholder="Enter product SKU"
+                    aria-label="SKU"
+                  />
+                </div>
+                <div className="mb-3">
+                  <label htmlFor="quantity" className="form-label">
+                    Quantity:
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="quantity"
+                    inputMode="numeric"
+                    value={quantity}
+                    onChange={(e) => setQuantity(e.target.value)}
+                    placeholder="Enter quantity"
+                    aria-label="Quantity"
+                  />
+                </div>
+                <div className="d-grid">
+                  <button
+                    type="submit"
+                    className="btn btn-primary btn-lg"
+                    disabled={submitting}
+                    aria-label="Place Order"
+                  >
+                    {submitting ? "Placing Order..." : "Place Order"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
         </div>
-        <div style={{ marginBottom: "1rem" }}>
-          <label htmlFor="quantity">Quantity</label>
-          <br />
-          <input
-            type="text"
-            id="quantity"
-            inputMode="numeric"
-            value={quantity}
-            onChange={(e) => setQuantity(e.target.value)}
-            placeholder="Enter quantity"
-            aria-label="Quantity"
-            style={{ width: "100%", padding: "0.5rem" }}
-          />
-        </div>
-        <button
-          type="submit"
-          disabled={submitting}
-          aria-label="Place Order"
-          style={{ padding: "0.5rem 1.5rem", cursor: "pointer" }}
-        >
-          {submitting ? "Placing Order..." : "Place Order"}
-        </button>
-      </form>
-    </main>
+      </div>
+    </>
   );
 }
