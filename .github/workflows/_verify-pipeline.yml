@@ -43,7 +43,7 @@ jobs:
           version=$(gh release list \
             --repo "${{ github.repository }}" \
             --json tagName,isPrerelease \
-            --jq '[.[] | select(.isPrerelease)] | .[0].tagName')
+            --jq '[.[] | select(.isPrerelease) | select(.tagName | test("-qa-|-prod-") | not)] | .[0].tagName')
           echo "version=$version" >> $GITHUB_OUTPUT
 
   qa-stage:
