@@ -10,10 +10,14 @@ services:
       - "3201:8080"
       - "8201:8080"
     environment:
-      - ConnectionStrings__Postgres=Host=postgres;Port=5432;Database=starter;Username=starter_user;Password=starter_password
-      - Erp__Url=http://external-real:9000/erp
-      - Clock__Url=http://external-real:9000/clock
-      - External__SystemMode=real
+      - POSTGRES_DB_HOST=postgres
+      - POSTGRES_DB_PORT=5432
+      - POSTGRES_DB_NAME=starter
+      - POSTGRES_DB_USER=starter_user
+      - POSTGRES_DB_PASSWORD=starter_password
+      - ERP_API_URL=http://external-real:9000/erp
+      - CLOCK_API_URL=http://external-real:9000/clock
+      - EXTERNAL_SYSTEM_MODE=real
     depends_on:
       postgres:
         condition: service_healthy

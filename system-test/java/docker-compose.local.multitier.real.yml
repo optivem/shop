@@ -22,9 +22,11 @@ services:
     ports:
       - "8101:8081"
     environment:
-      - POSTGRES_URL=jdbc:postgresql://postgres:5432/starter
-      - POSTGRES_USERNAME=starter_user
-      - POSTGRES_PASSWORD=starter_password
+      - POSTGRES_DB_HOST=postgres
+      - POSTGRES_DB_PORT=5432
+      - POSTGRES_DB_NAME=starter
+      - POSTGRES_DB_USER=starter_user
+      - POSTGRES_DB_PASSWORD=starter_password
       - ALLOWED_ORIGINS=http://localhost:3101,http://frontend:3000
       - ERP_API_URL=http://external-real:9000/erp
       - CLOCK_API_URL=http://external-real:9000/clock
@@ -42,7 +44,7 @@ services:
     environment:
       - POSTGRES_DB=starter
       - POSTGRES_USER=starter_user
-      - POSTGRES_PASSWORD=starter_password
+      - POSTGRES_DB_PASSWORD=starter_password
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:

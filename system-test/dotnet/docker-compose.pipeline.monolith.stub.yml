@@ -8,10 +8,14 @@ services:
       - "3202:8080"
       - "8202:8080"
     environment:
-      - ConnectionStrings__Postgres=Host=postgres;Port=5432;Database=starter;Username=starter_user;Password=starter_password
-      - Erp__Url=http://external-stub:8080/erp
-      - Clock__Url=http://external-stub:8080/clock
-      - External__SystemMode=stub
+      - POSTGRES_DB_HOST=postgres
+      - POSTGRES_DB_PORT=5432
+      - POSTGRES_DB_NAME=starter
+      - POSTGRES_DB_USER=starter_user
+      - POSTGRES_DB_PASSWORD=starter_password
+      - ERP_API_URL=http://external-stub:8080/erp
+      - CLOCK_API_URL=http://external-stub:8080/clock
+      - EXTERNAL_SYSTEM_MODE=stub
     depends_on:
       postgres:
         condition: service_healthy

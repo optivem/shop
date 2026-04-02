@@ -16,7 +16,7 @@ public class ErpGateway
     public ErpGateway(HttpClient httpClient, IConfiguration configuration)
     {
         _httpClient = httpClient;
-        _erpUrl = configuration["Erp:Url"] ?? "http://localhost:9001/erp";
+        _erpUrl = Environment.GetEnvironmentVariable("ERP_API_URL") ?? configuration["Erp:Url"] ?? "http://localhost:9001/erp";
     }
 
     public async Task<ProductDetailsResponse?> GetProductDetailsAsync(string sku)

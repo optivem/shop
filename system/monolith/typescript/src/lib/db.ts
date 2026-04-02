@@ -1,11 +1,11 @@
 import { Pool } from 'pg';
 
 const pool = new Pool({
-  host: process.env.POSTGRES_HOST || 'localhost',
-  port: parseInt(process.env.POSTGRES_PORT || '5432', 10),
-  database: process.env.POSTGRES_DB || 'starter',
-  user: process.env.POSTGRES_USER || 'starter_user',
-  password: process.env.POSTGRES_PASSWORD || 'starter_password',
+  host: process.env.POSTGRES_DB_HOST || 'localhost',
+  port: parseInt(process.env.POSTGRES_DB_PORT || '5432', 10),
+  database: process.env.POSTGRES_DB_NAME || 'starter',
+  user: process.env.POSTGRES_DB_USER || 'starter_user',
+  password: process.env.POSTGRES_DB_PASSWORD || 'starter_password',
 });
 
 let initialized = false;

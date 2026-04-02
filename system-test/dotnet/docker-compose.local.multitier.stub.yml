@@ -22,12 +22,16 @@ services:
     ports:
       - "8202:8081"
     environment:
-      - ConnectionStrings__Postgres=Host=postgres;Port=5432;Database=starter;Username=starter_user;Password=starter_password
+      - POSTGRES_DB_HOST=postgres
+      - POSTGRES_DB_PORT=5432
+      - POSTGRES_DB_NAME=starter
+      - POSTGRES_DB_USER=starter_user
+      - POSTGRES_DB_PASSWORD=starter_password
       - Cors__AllowedOrigins__0=http://localhost:3202
       - Cors__AllowedOrigins__1=http://frontend:3000
-      - Erp__Url=http://external-stub:8080/erp
-      - Clock__Url=http://external-stub:8080/clock
-      - External__SystemMode=stub
+      - ERP_API_URL=http://external-stub:8080/erp
+      - CLOCK_API_URL=http://external-stub:8080/clock
+      - EXTERNAL_SYSTEM_MODE=stub
     depends_on:
       postgres:
         condition: service_healthy

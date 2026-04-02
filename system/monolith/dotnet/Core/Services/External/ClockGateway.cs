@@ -16,8 +16,8 @@ public class ClockGateway
     public ClockGateway(HttpClient httpClient, IConfiguration configuration)
     {
         _httpClient = httpClient;
-        _externalSystemMode = configuration["External:SystemMode"] ?? "real";
-        _clockUrl = configuration["Clock:Url"] ?? "http://localhost:9001/clock";
+        _externalSystemMode = Environment.GetEnvironmentVariable("EXTERNAL_SYSTEM_MODE") ?? configuration["External:SystemMode"] ?? "real";
+        _clockUrl = Environment.GetEnvironmentVariable("CLOCK_API_URL") ?? configuration["Clock:Url"] ?? "http://localhost:9001/clock";
     }
 
     public async Task<DateTime> GetCurrentTimeAsync()
