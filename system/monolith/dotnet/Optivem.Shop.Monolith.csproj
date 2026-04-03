@@ -20,4 +20,10 @@
     <None Remove="Tests\**" />
   </ItemGroup>
 
+  <ItemGroup>
+    <SonarQubeSetting Include="sonar.issue.ignore.multicriteria" Value="e1" />
+    <SonarQubeSetting Include="sonar.issue.ignore.multicriteria.e1.ruleKey" Value="csharpsquid:S2699" />
+    <SonarQubeSetting Include="sonar.issue.ignore.multicriteria.e1.resourceKey" Value="Tests/**" />
+  </ItemGroup>
+
 </Project>
