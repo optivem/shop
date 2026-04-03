@@ -101,6 +101,7 @@ jobs:
           projectBaseDir: system/multitier/backend-typescript
           args: >
             -Dsonar.projectKey=optivem_starter-multitier-backend-typescript
+            -Dsonar.projectName=starter-multitier-backend-typescript
             -Dsonar.organization=optivem
             -Dsonar.sources=src
 

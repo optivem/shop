@@ -101,6 +101,7 @@ jobs:
           projectBaseDir: system/multitier/frontend-react
           args: >
             -Dsonar.projectKey=optivem_starter-multitier-frontend-react
+            -Dsonar.projectName=starter-multitier-frontend-react
             -Dsonar.organization=optivem
             -Dsonar.sources=src
 

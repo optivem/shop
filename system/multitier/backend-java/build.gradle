@@ -57,6 +57,7 @@ jacocoTestReport {
 sonar {
 	properties {
 		property 'sonar.projectKey', 'optivem_starter-multitier-backend-java'
+		property 'sonar.projectName', 'starter-multitier-backend-java'
 		property 'sonar.organization', 'optivem'
 		property 'sonar.coverage.jacoco.xmlReportPaths', "${buildDir}/reports/jacoco/test/jacocoTestReport.xml"
 	}

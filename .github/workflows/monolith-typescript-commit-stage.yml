@@ -94,6 +94,7 @@ jobs:
           projectBaseDir: system/monolith/typescript
           args: >
             -Dsonar.projectKey=optivem_starter-monolith-typescript
+            -Dsonar.projectName=starter-monolith-typescript
             -Dsonar.organization=optivem
             -Dsonar.sources=src
 
