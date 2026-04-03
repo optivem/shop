@@ -118,8 +118,8 @@ export default function NewOrderPage() {
           ) : (
             <>
               <div className="error-message">{notification.message}</div>
-              {notification.fieldErrors.map((fe, i) => (
-                <div key={i} className="field-error">
+              {notification.fieldErrors.map((fe) => (
+                <div key={fe} className="field-error">
                   {fe}
                 </div>
               ))}

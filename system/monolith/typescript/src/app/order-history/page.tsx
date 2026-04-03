@@ -104,7 +104,7 @@ export default function OrderHistoryPage() {
             </div>
           </div>
 
-          {loading ? (
+          {loading && (
             <div className="text-center py-5">
               <output>
                 <div className="spinner-border text-primary">
@@ -113,7 +113,8 @@ export default function OrderHistoryPage() {
               </output>
               <p className="mt-3">Loading orders...</p>
             </div>
-          ) : error ? (
+          )}
+          {!loading && error && (
             <div
               className="alert alert-danger d-flex justify-content-between align-items-center"
               role="alert"
@@ -128,7 +129,8 @@ export default function OrderHistoryPage() {
                 Try Again
               </button>
             </div>
-          ) : orders.length === 0 ? (
+          )}
+          {!loading && !error && (
             <div className="table-responsive">
               <table className="table table-striped table-hover">
                 <thead>
@@ -143,54 +145,39 @@ export default function OrderHistoryPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <td colSpan={7} className="text-center">
-                      No orders found
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="table-responsive">
-              <table className="table table-striped table-hover">
-                <thead>
-                  <tr>
-                    <th>Order Number</th>
-                    <th>Order Date</th>
-                    <th>SKU</th>
-                    <th>Quantity</th>
-                    <th>Total Price</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {orders.map((order) => (
-                    <tr key={order.orderNumber}>
-                      <td>{order.orderNumber}</td>
-                      <td>
-                        {new Date(order.orderTimestamp).toLocaleString("en-US", {
-                          timeZone: "UTC",
-                        })}
-                      </td>
-                      <td>{order.sku}</td>
-                      <td>{order.quantity}</td>
-                      <td>${order.totalPrice.toFixed(2)}</td>
-                      <td>
-                        <span className={`status-${order.status}`}>
-                          {order.status}
-                        </span>
-                      </td>
-                      <td>
-                        <Link
-                          href={`/order-details?orderNumber=${encodeURIComponent(order.orderNumber)}`}
-                        >
-                          View Details
-                        </Link>
+                  {orders.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="text-center">
+                        No orders found
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    orders.map((order) => (
+                      <tr key={order.orderNumber}>
+                        <td>{order.orderNumber}</td>
+                        <td>
+                          {new Date(order.orderTimestamp).toLocaleString("en-US", {
+                            timeZone: "UTC",
+                          })}
+                        </td>
+                        <td>{order.sku}</td>
+                        <td>{order.quantity}</td>
+                        <td>${order.totalPrice.toFixed(2)}</td>
+                        <td>
+                          <span className={`status-${order.status}`}>
+                            {order.status}
+                          </span>
+                        </td>
+                        <td>
+                          <Link
+                            href={`/order-details?orderNumber=${encodeURIComponent(order.orderNumber)}`}
+                          >
+                            View Details
+                          </Link>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>

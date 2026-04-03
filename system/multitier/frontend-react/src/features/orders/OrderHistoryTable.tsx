@@ -138,11 +138,9 @@ export function OrderHistoryTable({
           </div>
         </div>
 
-        {isLoading ? (
-          <LoadingSpinner message="Loading orders..." />
-        ) : error ? (
-          <ErrorMessage message={error} onRetry={onRefresh} />
-        ) : (
+        {isLoading && <LoadingSpinner message="Loading orders..." />}
+        {!isLoading && error && <ErrorMessage message={error} onRetry={onRefresh} />}
+        {!isLoading && !error && (
           <div className="table-responsive">
             <table className="table table-striped table-hover">
               <thead>
