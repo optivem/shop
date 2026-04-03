@@ -18,7 +18,7 @@ export function Notification({ successMessage, error, notificationId }: Notifica
       <div className="notification error" role="alert" data-notification-id={notificationId}>
         <div className="error-message">{error.message}</div>
         {error.fieldErrors && error.fieldErrors.map((fieldError, index) => (
-          <div key={index} className="field-error">{fieldError}</div>
+          <div key={fieldError} className="field-error">{fieldError}</div>
         ))}
       </div>
     );

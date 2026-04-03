@@ -19,7 +19,7 @@ export function Breadcrumb({ items }: BreadcrumbProps) {
       <ol className="breadcrumb">
         {items.map((item, index) => (
           <li
-            key={index}
+            key={item.path ?? item.label}
             className={`breadcrumb-item ${index === items.length - 1 ? 'active' : ''}`}
             aria-current={index === items.length - 1 ? 'page' : undefined}
           >
