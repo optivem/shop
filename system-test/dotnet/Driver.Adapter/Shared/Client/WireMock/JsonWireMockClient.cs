@@ -61,28 +61,28 @@ public class JsonWireMockClient : IDisposable
     }
 
     public async Task<Result<VoidValue, string>> StubGetAsync<T>(string path, int statusCode, T response)
-        => await RegisterStubAsync("GET", path, statusCode, Serialize(response));
+        => await RegisterStubAsync("GET", path, statusCode, response);
 
     public async Task<Result<VoidValue, string>> StubGetAsync(string path, int statusCode)
-        => await RegisterStubAsync("GET", path, statusCode, null);
+        => await RegisterStubAsync<object>("GET", path, statusCode, null);
 
     public async Task<Result<VoidValue, string>> StubPostAsync<T>(string path, int statusCode, T response)
-        => await RegisterStubAsync("POST", path, statusCode, Serialize(response));
+        => await RegisterStubAsync("POST", path, statusCode, response);
 
     public async Task<Result<VoidValue, string>> StubPostAsync(string path, int statusCode)
-        => await RegisterStubAsync("POST", path, statusCode, null);
+        => await RegisterStubAsync<object>("POST", path, statusCode, null);
 
     public async Task<Result<VoidValue, string>> StubPutAsync<T>(string path, int statusCode, T response)
-        => await RegisterStubAsync("PUT", path, statusCode, Serialize(response));
+        => await RegisterStubAsync("PUT", path, statusCode, response);
 
     public async Task<Result<VoidValue, string>> StubPutAsync(string path, int statusCode)
-        => await RegisterStubAsync("PUT", path, statusCode, null);
+        => await RegisterStubAsync<object>("PUT", path, statusCode, null);
 
     public async Task<Result<VoidValue, string>> StubDeleteAsync<T>(string path, int statusCode, T response)
-        => await RegisterStubAsync("DELETE", path, statusCode, Serialize(response));
+        => await RegisterStubAsync("DELETE", path, statusCode, response);
 
     public async Task<Result<VoidValue, string>> StubDeleteAsync(string path, int statusCode)
-        => await RegisterStubAsync("DELETE", path, statusCode, null);
+        => await RegisterStubAsync<object>("DELETE", path, statusCode, null);
 
     public async Task RemoveStubsAsync()
     {
@@ -93,19 +93,28 @@ public class JsonWireMockClient : IDisposable
         _stubIds.Clear();
     }
 
-    private async Task<Result<VoidValue, string>> RegisterStubAsync(string method, string path, int statusCode, string? responseBody)
+    private async Task<Result<VoidValue, string>> RegisterStubAsync<T>(string method, string path, int statusCode, T? responseBody)
     {
         try
         {
-            var response = new
-            {
-                status = statusCode,
-                headers = new Dictionary<string, string>
+            object response = responseBody != null
+                ? new
                 {
-                    { ContentType, ApplicationJson }
-                },
-                body = responseBody
-            };
+                    status = statusCode,
+                    headers = new Dictionary<string, string>
+                    {
+                        { ContentType, ApplicationJson }
+                    },
+                    jsonBody = responseBody
+                }
+                : new
+                {
+                    status = statusCode,
+                    headers = new Dictionary<string, string>
+                    {
+                        { ContentType, ApplicationJson }
+                    }
+                };
 
             var mappingRequest = new
             {
@@ -149,15 +158,4 @@ public class JsonWireMockClient : IDisposable
         }
     }
 
-    private string Serialize<T>(T obj)
-    {
-        try
-        {
-            return JsonSerializer.Serialize(obj, _jsonOptions);
-        }
-        catch (Exception ex)
-        {
-            throw new InvalidOperationException("Failed to serialize object", ex);
-        }
-    }
 }
