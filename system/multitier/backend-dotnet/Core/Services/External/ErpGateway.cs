@@ -21,7 +21,7 @@ public class ErpGateway
 
     public async Task<ProductDetailsResponse?> GetProductDetailsAsync(string sku)
     {
-        var url = $"{_erpUrl}/api/products/{sku}";
+        var url = $"{_erpUrl}/api/products/{Uri.EscapeDataString(sku)}";
 
         try
         {
@@ -35,7 +35,7 @@ public class ErpGateway
             if (!response.IsSuccessStatusCode)
             {
                 var body = await response.Content.ReadAsStringAsync();
-                throw new Exception($"ERP API returned status {(int)response.StatusCode} for SKU: {sku}. URL: {url}. Response: {body}");
+                throw new InvalidOperationException($"ERP API returned status {(int)response.StatusCode} for SKU: {sku}. URL: {url}. Response: {body}");
             }
 
             var content = await response.Content.ReadAsStringAsync();
@@ -43,7 +43,7 @@ public class ErpGateway
         }
         catch (HttpRequestException e)
         {
-            throw new Exception($"Failed to fetch product details for SKU: {sku} from URL: {url}. Error: {e.GetType().Name}: {e.Message}", e);
+            throw new InvalidOperationException($"Failed to fetch product details for SKU: {sku} from URL: {url}. Error: {e.GetType().Name}: {e.Message}", e);
         }
     }
 }

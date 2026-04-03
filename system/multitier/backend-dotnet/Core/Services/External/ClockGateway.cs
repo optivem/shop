@@ -32,7 +32,7 @@ public class ClockGateway
         }
         else
         {
-            throw new Exception($"Unknown external system mode: {_externalSystemMode}");
+            throw new InvalidOperationException($"Unknown external system mode: {_externalSystemMode}");
         }
     }
 
@@ -46,7 +46,7 @@ public class ClockGateway
             if (!response.IsSuccessStatusCode)
             {
                 var body = await response.Content.ReadAsStringAsync();
-                throw new Exception($"Clock API returned status {(int)response.StatusCode}. URL: {url}. Response: {body}");
+                throw new InvalidOperationException($"Clock API returned status {(int)response.StatusCode}. URL: {url}. Response: {body}");
             }
 
             var content = await response.Content.ReadAsStringAsync();
@@ -55,7 +55,7 @@ public class ClockGateway
         }
         catch (HttpRequestException e)
         {
-            throw new Exception($"Failed to fetch current time from URL: {_clockUrl}. Error: {e.GetType().Name}: {e.Message}", e);
+            throw new InvalidOperationException($"Failed to fetch current time from URL: {_clockUrl}. Error: {e.GetType().Name}: {e.Message}", e);
         }
     }
 }
