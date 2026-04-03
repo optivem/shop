@@ -144,7 +144,7 @@ $Config = @{
             TestInstallCommands = $null },
         @{  Id = "mod10-acceptance-isolated-ui";
             Name = "mod10 - Acceptance Isolated (stub) - UI";
-            Command = "`$env:EXTERNAL_SYSTEM_MODE = 'stub'; `$env:CHANNEL = 'UI'; `$env:ENVIRONMENT = 'local'; npx jest `"test/legacy/mod10/acceptance/.*isolated`" --runInBand --forceExit";
+            Command = "`$env:EXTERNAL_SYSTEM_MODE = 'stub'; `$env:CHANNEL = 'UI'; `$env:ENVIRONMENT = 'local'; npx jest `"test/legacy/mod10/acceptance/.*isolated`" --forceExit";
             Path = ".";
             TestReportPath = "test-results\jest-results.html";
             TestInstallCommands = @("npx playwright install chromium") },
