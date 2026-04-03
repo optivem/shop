@@ -5,6 +5,7 @@ using Optivem.Shop.Monolith.Core.Services;
 namespace Optivem.Shop.Monolith.Controllers;
 
 [ApiController]
+[Route("api/orders")]
 public class OrderController : ControllerBase
 {
     private readonly OrderService _orderService;
@@ -14,21 +15,21 @@ public class OrderController : ControllerBase
         _orderService = orderService;
     }
 
-    [HttpGet("/api/orders")]
+    [HttpGet]
     public async Task<IActionResult> BrowseOrderHistory([FromQuery] string? orderNumber)
     {
         var response = await _orderService.BrowseOrderHistoryAsync(orderNumber);
         return Ok(response);
     }
 
-    [HttpPost("/api/orders")]
+    [HttpPost]
     public async Task<IActionResult> PlaceOrder([FromBody] PlaceOrderRequest request)
     {
         var response = await _orderService.PlaceOrderAsync(request);
         return Created($"/api/orders/{response.OrderNumber}", response);
     }
 
-    [HttpGet("/api/orders/{orderNumber}")]
+    [HttpGet("{orderNumber}")]
     public async Task<IActionResult> GetOrder(string orderNumber)
     {
         var response = await _orderService.GetOrderAsync(orderNumber);
