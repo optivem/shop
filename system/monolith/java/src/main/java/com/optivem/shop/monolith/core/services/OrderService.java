@@ -21,7 +21,6 @@ import java.time.MonthDay;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 public class OrderService {
@@ -101,7 +100,7 @@ public class OrderService {
                     item.setStatus(order.getStatus());
                     return item;
                 })
-                .collect(Collectors.toList());
+                .toList();
 
         var result = new BrowseOrderHistoryResponse();
         result.setOrders(items);

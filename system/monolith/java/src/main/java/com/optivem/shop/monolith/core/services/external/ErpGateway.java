@@ -41,14 +41,19 @@ public class ErpGateway {
             }
 
             if (response.statusCode() != 200) {
-                throw new RuntimeException("ERP API returned status " + response.statusCode()
+                throw new IllegalStateException("ERP API returned status " + response.statusCode()
                         + " for SKU: " + sku + ". URL: " + url + ". Response: " + response.body());
             }
 
             var result = OBJECT_MAPPER.readValue(response.body(), ProductDetailsResponse.class);
             return Optional.of(result);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Failed to fetch product details for SKU: " + sku
+                    + " from URL: " + url
+                    + ". Error: " + e.getClass().getSimpleName() + ": " + e.getMessage(), e);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to fetch product details for SKU: " + sku
+            throw new IllegalStateException("Failed to fetch product details for SKU: " + sku
                     + " from URL: " + url
                     + ". Error: " + e.getClass().getSimpleName() + ": " + e.getMessage(), e);
         }

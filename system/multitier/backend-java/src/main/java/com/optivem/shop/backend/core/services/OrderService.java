@@ -18,7 +18,6 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.MonthDay;
 import java.time.ZoneId;
-import java.util.stream.Collectors;
 
 @Service
 public class OrderService {
@@ -98,7 +97,7 @@ public class OrderService {
                     item.setStatus(order.getStatus());
                     return item;
                 })
-                .collect(Collectors.toList());
+                .toList();
 
         var result = new BrowseOrderHistoryResponse();
         result.setOrders(items);
