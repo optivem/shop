@@ -35,7 +35,7 @@ public class JsonHttpClient<E> implements AutoCloseable {
     }
 
     public JsonHttpClient(String baseUrl, Class<E> errorType) {
-        this(HttpClient.newHttpClient(), baseUrl, errorType, createObjectMapper());
+        this(HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).build(), baseUrl, errorType, createObjectMapper());
     }
 
     private static ObjectMapper createObjectMapper() {

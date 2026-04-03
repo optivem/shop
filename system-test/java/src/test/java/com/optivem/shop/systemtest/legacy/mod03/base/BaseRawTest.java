@@ -47,14 +47,14 @@ public class BaseRawTest extends BaseConfigurableTest {
     }
 
     protected void setUpShopHttpClient() {
-        shopApiHttpClient = HttpClient.newHttpClient();
+        shopApiHttpClient = HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).build();
         if (httpObjectMapper == null) {
             httpObjectMapper = createObjectMapper();
         }
     }
 
     protected void setUpExternalHttpClients() {
-        erpHttpClient = HttpClient.newHttpClient();
+        erpHttpClient = HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).build();
         httpObjectMapper = createObjectMapper();
     }
 
@@ -86,5 +86,3 @@ public class BaseRawTest extends BaseConfigurableTest {
         Closer.close(shopApiHttpClient);
     }
 }
-
-
