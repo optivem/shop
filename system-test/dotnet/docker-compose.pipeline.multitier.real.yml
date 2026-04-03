@@ -23,8 +23,7 @@ services:
       - POSTGRES_DB_NAME=shop
       - POSTGRES_DB_USER=shop_user
       - POSTGRES_DB_PASSWORD=shop_password
-      - Cors__AllowedOrigins__0=http://localhost:3211
-      - Cors__AllowedOrigins__1=http://frontend:3000
+      - ALLOWED_ORIGINS=http://localhost:3211,http://frontend:3000
       - ERP_API_URL=http://external-real:9000/erp
       - CLOCK_API_URL=http://external-real:9000/clock
       - EXTERNAL_SYSTEM_MODE=real

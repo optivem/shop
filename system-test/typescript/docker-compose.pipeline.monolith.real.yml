@@ -15,6 +15,7 @@ services:
       - POSTGRES_DB_PASSWORD=shop_password
       - ERP_API_URL=http://external-real:9000/erp
       - CLOCK_API_URL=http://external-real:9000/clock
+      - EXTERNAL_SYSTEM_MODE=real
     depends_on:
       postgres:
         condition: service_healthy
