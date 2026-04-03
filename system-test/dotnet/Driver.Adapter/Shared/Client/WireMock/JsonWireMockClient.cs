@@ -109,6 +109,7 @@ public class JsonWireMockClient : IDisposable
 
             var mappingRequest = new
             {
+                priority = 1,
                 request = new
                 {
                     method = method,
