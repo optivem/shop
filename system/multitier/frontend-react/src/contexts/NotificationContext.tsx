@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, useRef, ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useMemo, useRef, ReactNode } from 'react';
 import type { ApiError } from '../types/error.types';
 import type { Result } from '../types/result.types';
 import { match } from '../types/result.types';
@@ -55,16 +55,18 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     });
   }, [clearNotification, setErrorMessage]);
 
+  const value = useMemo(() => ({
+    successMessage,
+    error,
+    notificationId,
+    clearNotification,
+    setSuccess,
+    setError: setErrorMessage,
+    handleResult
+  }), [successMessage, error, notificationId, clearNotification, setSuccess, setErrorMessage, handleResult]);
+
   return (
-    <NotificationContext.Provider value={{
-      successMessage,
-      error,
-      notificationId,
-      clearNotification,
-      setSuccess,
-      setError: setErrorMessage,
-      handleResult
-    }}>
+    <NotificationContext.Provider value={value}>
       {children}
     </NotificationContext.Provider>
   );
