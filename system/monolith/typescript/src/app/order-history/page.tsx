@@ -106,9 +106,11 @@ export default function OrderHistoryPage() {
 
           {loading ? (
             <div className="text-center py-5">
-              <div className="spinner-border text-primary" role="status">
-                <span className="visually-hidden">Loading...</span>
-              </div>
+              <output>
+                <div className="spinner-border text-primary">
+                  <span className="visually-hidden">Loading...</span>
+                </div>
+              </output>
               <p className="mt-3">Loading orders...</p>
             </div>
           ) : error ? (

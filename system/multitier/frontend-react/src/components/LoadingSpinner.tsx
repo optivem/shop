@@ -13,9 +13,11 @@ export function LoadingSpinner({ message = 'Loading...', size = 'md' }: LoadingS
 
   return (
     <div className="text-center py-5">
-      <div className={`spinner-border text-primary ${sizeClass}`} role="status">
-        <span className="visually-hidden">Loading...</span>
-      </div>
+      <output>
+        <div className={`spinner-border text-primary ${sizeClass}`}>
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </output>
       {message && <p className="mt-3">{message}</p>}
     </div>
   );

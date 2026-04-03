@@ -85,9 +85,11 @@ function OrderDetailsContent() {
         <div className="card-body">
           {loading ? (
             <div className="text-center py-5">
-              <div className="spinner-border text-primary" role="status">
-                <span className="visually-hidden">Loading...</span>
-              </div>
+              <output>
+                <div className="spinner-border text-primary">
+                  <span className="visually-hidden">Loading...</span>
+                </div>
+              </output>
               <p className="mt-3">Loading order details...</p>
             </div>
           ) : error ? (
@@ -169,9 +171,11 @@ export default function OrderDetailsPage() {
     <Suspense
       fallback={
         <div className="text-center py-5">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </div>
+          <output>
+            <div className="spinner-border text-primary">
+              <span className="visually-hidden">Loading...</span>
+            </div>
+          </output>
           <p className="mt-3">Loading...</p>
         </div>
       }
