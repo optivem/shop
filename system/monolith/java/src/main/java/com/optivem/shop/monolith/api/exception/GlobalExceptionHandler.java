@@ -32,7 +32,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     private static final Pattern CLASS_NAME_PATTERN = Pattern.compile(
             "(com\\.optivem\\.shop\\.monolith\\.core\\.dtos\\.[^\\[\\]\"\\s\\)]+)");
 
-    private static final String VALIDATION_DETAIL = VALIDATION_DETAIL;
+    private static final String VALIDATION_DETAIL = "The request contains one or more validation errors";
     private static final String VALIDATION_TITLE = "Validation Error";
     private static final String PROP_TIMESTAMP = "timestamp";
     private static final String PROP_ERRORS = "errors";
