@@ -4,6 +4,7 @@ using Optivem.Testing;
 namespace SystemTests.Latest.AcceptanceTests;
 
 [Collection("Isolated")]
+[Trait("Category", "isolated")]
 public class PlaceOrderNegativeIsolatedTest : BaseAcceptanceTest
 {
     [Theory]

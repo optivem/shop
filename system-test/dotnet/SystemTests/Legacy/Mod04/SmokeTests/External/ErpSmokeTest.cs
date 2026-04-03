@@ -6,10 +6,10 @@ namespace SystemTests.Legacy.Mod04.SmokeTests.External;
 
 public class ErpSmokeTest : BaseClientTest
 {
-    public override Task InitializeAsync()
+    public override async Task InitializeAsync()
     {
+        await base.InitializeAsync();
         SetUpExternalClients();
-        return Task.CompletedTask;
     }
 
     [Fact]

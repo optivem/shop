@@ -7,10 +7,10 @@ public class ErpSmokeTest : BaseRawTest
 {
     private const string HealthEndpoint = "/health";
 
-    public override Task InitializeAsync()
+    public override async Task InitializeAsync()
     {
+        await base.InitializeAsync();
         SetUpExternalHttpClients();
-        return Task.CompletedTask;
     }
 
     [Fact]

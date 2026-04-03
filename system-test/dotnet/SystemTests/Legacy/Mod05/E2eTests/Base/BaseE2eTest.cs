@@ -15,6 +15,7 @@ public abstract class BaseE2eTest : BaseDriverTest
 
     public override async Task InitializeAsync()
     {
+        await base.InitializeAsync();
         await SetShopDriverAsync();
         SetUpExternalDrivers();
     }

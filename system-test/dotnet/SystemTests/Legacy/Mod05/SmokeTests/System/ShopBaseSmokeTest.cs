@@ -11,6 +11,7 @@ public abstract class ShopBaseSmokeTest : BaseDriverTest
 
     public override async Task InitializeAsync()
     {
+        await base.InitializeAsync();
         await SetUpShopDriverAsync();
     }
 

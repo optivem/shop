@@ -15,6 +15,7 @@ public abstract class BaseE2eTest : BaseRawTest
 
     public override async Task InitializeAsync()
     {
+        await base.InitializeAsync();
         await SetShopRawAsync();
         SetUpExternalHttpClients();
     }

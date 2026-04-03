@@ -7,10 +7,10 @@ namespace SystemTests.Legacy.Mod05.SmokeTests.External;
 
 public class ErpSmokeTest : BaseDriverTest
 {
-    public override Task InitializeAsync()
+    public override async Task InitializeAsync()
     {
+        await base.InitializeAsync();
         SetUpExternalDrivers();
-        return Task.CompletedTask;
     }
 
     [Fact]

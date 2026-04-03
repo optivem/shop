@@ -15,6 +15,7 @@ public abstract class BaseE2eTest : BaseClientTest
 
     public override async Task InitializeAsync()
     {
+        await base.InitializeAsync();
         await SetShopClientAsync();
         SetUpExternalClients();
     }

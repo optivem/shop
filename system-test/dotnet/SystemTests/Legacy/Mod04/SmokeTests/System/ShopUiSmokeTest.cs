@@ -8,6 +8,7 @@ public class ShopUiSmokeTest : BaseClientTest
 {
     public override async Task InitializeAsync()
     {
+        await base.InitializeAsync();
         await SetUpShopUiClientAsync();
     }
 

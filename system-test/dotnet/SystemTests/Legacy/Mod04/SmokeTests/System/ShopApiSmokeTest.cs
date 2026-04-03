@@ -6,10 +6,10 @@ namespace SystemTests.Legacy.Mod04.SmokeTests.System;
 
 public class ShopApiSmokeTest : BaseClientTest
 {
-    public override Task InitializeAsync()
+    public override async Task InitializeAsync()
     {
+        await base.InitializeAsync();
         SetUpShopApiClient();
-        return Task.CompletedTask;
     }
 
     [Fact]

@@ -7,6 +7,7 @@ public class ShopUiSmokeTest : BaseRawTest
 {
     public override async Task InitializeAsync()
     {
+        await base.InitializeAsync();
         await SetUpShopBrowserAsync();
     }
 

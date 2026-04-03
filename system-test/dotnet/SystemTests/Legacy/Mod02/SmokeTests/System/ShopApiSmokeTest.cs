@@ -7,10 +7,10 @@ public class ShopApiSmokeTest : BaseRawTest
 {
     private const string HealthEndpoint = "/health";
 
-    public override Task InitializeAsync()
+    public override async Task InitializeAsync()
     {
+        await base.InitializeAsync();
         SetUpShopHttpClient();
-        return Task.CompletedTask;
     }
 
     [Fact]
