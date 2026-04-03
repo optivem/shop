@@ -24,6 +24,7 @@ async function getStubTime(): Promise<Date> {
 }
 
 export interface ProductDetails {
+  id: string;
   price: number;
 }
 
@@ -36,6 +37,6 @@ export async function getProductDetails(sku: string): Promise<ProductDetails | n
   if (!response.ok) {
     throw new Error(`Failed to fetch product details: ${response.status}`);
   }
-  const data = await response.json() as { price: number };
-  return { price: data.price };
+  const data = await response.json() as { id: string; price: number };
+  return { id: data.id, price: data.price };
 }
