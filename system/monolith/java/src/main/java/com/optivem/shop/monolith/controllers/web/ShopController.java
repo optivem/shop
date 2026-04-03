@@ -36,9 +36,7 @@ public class ShopController {
             var request = new PlaceOrderRequest();
             request.setSku(sku);
 
-            try {
-                request.setQuantity(Integer.parseInt(quantity));
-            } catch (NumberFormatException e) {
+            if (!trySetQuantity(request, quantity)) {
                 return redirectWithError(redirectAttributes, "Quantity must be an integer", sku, quantity);
             }
 
@@ -58,6 +56,15 @@ public class ShopController {
             return redirectWithError(redirectAttributes, e.getMessage(), sku, quantity);
         } catch (Exception e) {
             return redirectWithError(redirectAttributes, "An unexpected error occurred: " + e.getMessage(), sku, quantity);
+        }
+    }
+
+    private boolean trySetQuantity(PlaceOrderRequest request, String quantity) {
+        try {
+            request.setQuantity(Integer.parseInt(quantity));
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
         }
     }
 
