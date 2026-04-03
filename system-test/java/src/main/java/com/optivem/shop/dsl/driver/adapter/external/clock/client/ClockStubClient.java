@@ -40,4 +40,7 @@ public class ClockStubClient implements AutoCloseable {
                 .mapError(ExtClockErrorResponse::new);
     }
 
+    public void removeStubs() {
+        wireMockClient.removeStubs();
+    }
 }

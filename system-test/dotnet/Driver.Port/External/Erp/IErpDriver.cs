@@ -4,7 +4,7 @@ using Driver.Port.External.Erp.Dtos.Error;
 
 namespace Driver.Port.External.Erp;
 
-public interface IErpDriver : IDisposable
+public interface IErpDriver : IDisposable, IAsyncDisposable
 {
     Task<Result<VoidValue, ErpErrorResponse>> GoToErpAsync();
 

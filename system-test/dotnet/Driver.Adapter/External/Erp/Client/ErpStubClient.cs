@@ -56,6 +56,8 @@ public class ErpStubClient : BaseErpClient
 
 
 
+    public Task RemoveStubsAsync() => _wireMockClient.RemoveStubsAsync();
+
 }
 
 

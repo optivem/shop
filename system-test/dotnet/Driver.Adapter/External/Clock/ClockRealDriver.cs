@@ -23,6 +23,13 @@ public class ClockRealDriver : IClockDriver
         GC.SuppressFinalize(this);
     }
 
+    public ValueTask DisposeAsync()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+        return ValueTask.CompletedTask;
+    }
+
     protected virtual void Dispose(bool disposing)
     {
         if (_disposed) return;

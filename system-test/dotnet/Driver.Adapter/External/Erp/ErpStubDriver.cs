@@ -17,6 +17,13 @@ public class ErpStubDriver : BaseErpDriver<ErpStubClient>
     {
     }
 
+    public override async ValueTask DisposeAsync()
+    {
+        await _client.RemoveStubsAsync();
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
     public override Task<Result<VoidValue, ErpErrorResponse>> ReturnsProductAsync(ReturnsProductRequest request)
     {
         var extProductDetailsResponse = new ExtProductDetailsResponse

@@ -12,6 +12,7 @@ public class JsonWireMockClient : IDisposable
     private readonly HttpClient _httpClient;
     private readonly string _wireMockBaseUrl;
     private readonly JsonSerializerOptions _jsonOptions;
+    private readonly List<string> _stubIds = new();
     private bool _disposed;
 
     public JsonWireMockClient(string baseUrl)
@@ -83,6 +84,15 @@ public class JsonWireMockClient : IDisposable
     public async Task<Result<VoidValue, string>> StubDeleteAsync(string path, int statusCode)
         => await RegisterStubAsync("DELETE", path, statusCode, null);
 
+    public async Task RemoveStubsAsync()
+    {
+        foreach (var id in _stubIds)
+        {
+            await _httpClient.DeleteAsync($"{_wireMockBaseUrl}/__admin/mappings/{id}");
+        }
+        _stubIds.Clear();
+    }
+
     private async Task<Result<VoidValue, string>> RegisterStubAsync(string method, string path, int statusCode, string? responseBody)
     {
         try
@@ -114,6 +124,16 @@ public class JsonWireMockClient : IDisposable
 
             if (apiResponse.IsSuccessStatusCode)
             {
+                var responseContent = await apiResponse.Content.ReadAsStringAsync();
+                var responseJson = JsonSerializer.Deserialize<JsonElement>(responseContent);
+                if (responseJson.TryGetProperty("id", out var idElement))
+                {
+                    var id = idElement.GetString();
+                    if (id != null)
+                    {
+                        _stubIds.Add(id);
+                    }
+                }
                 return Result<VoidValue, string>.Success(VoidValue.Empty);
             }
             else

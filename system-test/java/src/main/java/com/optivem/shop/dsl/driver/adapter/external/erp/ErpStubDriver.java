@@ -17,6 +17,12 @@ public class ErpStubDriver extends BaseErpDriver<ErpStubClient> {
     }
 
     @Override
+    public void close() throws Exception {
+        client.removeStubs();
+        super.close();
+    }
+
+    @Override
     public Result<Void, ErrorResponse> returnsProduct(ReturnsProductRequest request) {
         var extProductDetailsResponse = ExtProductDetailsResponse.builder()
                 .id(request.getSku())

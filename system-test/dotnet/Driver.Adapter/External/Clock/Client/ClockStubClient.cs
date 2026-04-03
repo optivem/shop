@@ -98,6 +98,10 @@ public class ClockStubClient : IDisposable
 
             .MapErrorAsync(ExtClockErrorResponse.From);
 
+
+
+    public Task RemoveStubsAsync() => _wireMockClient.RemoveStubsAsync();
+
 }
 
 

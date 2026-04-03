@@ -24,6 +24,13 @@ public abstract class BaseErpDriver<TClient> : IErpDriver
         GC.SuppressFinalize(this);
     }
 
+    public virtual ValueTask DisposeAsync()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+        return ValueTask.CompletedTask;
+    }
+
     protected virtual void Dispose(bool disposing)
     {
         if (_disposed) return;

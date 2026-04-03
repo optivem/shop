@@ -4,7 +4,7 @@ using Dsl.Core.Shared;
 
 namespace Dsl.Core.External.Clock;
 
-public class ClockDsl : IDisposable
+public class ClockDsl : IDisposable, IAsyncDisposable
 {
     private readonly IClockDriver _driver;
     private readonly UseCaseContext _context;
@@ -19,6 +19,13 @@ public class ClockDsl : IDisposable
     public void Dispose()
     {
         Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await _driver.DisposeAsync();
+        _disposed = true;
         GC.SuppressFinalize(this);
     }
 

@@ -7,7 +7,12 @@ import com.optivem.shop.dsl.common.Result;
 import wiremock.com.fasterxml.jackson.databind.ObjectMapper;
 import wiremock.com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
+import com.github.tomakehurst.wiremock.stubbing.StubMapping;
+
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -24,6 +29,7 @@ public class JsonWireMockClient {
     private final ObjectMapper objectMapper;
 
     private final WireMock wireMock;
+    private final List<UUID> stubIds = new ArrayList<>();
 
     public JsonWireMockClient(String baseUrl) {
         var url = URI.create(baseUrl);
@@ -91,11 +97,15 @@ public class JsonWireMockClient {
     ) {
         var responseBody = serialize(response);
 
-        wireMock.register(methodBuilder.apply(urlPathEqualTo(path))
+        var stubMapping = wireMock.register(methodBuilder.apply(urlPathEqualTo(path))
             .willReturn(aResponse()
                 .withStatus(statusCode)
                 .withHeader(CONTENT_TYPE, APPLICATION_JSON)
                 .withBody(responseBody)));
+
+        if (stubMapping != null && stubMapping.getUuid() != null) {
+            stubIds.add(stubMapping.getUuid());
+        }
 
         var mappings = wireMock.allStubMappings();
         var registered = mappings.getMappings().stream()
@@ -115,9 +125,13 @@ public class JsonWireMockClient {
         Function<UrlPathPattern, MappingBuilder> methodBuilder,
         String methodName
     ) {
-        wireMock.register(methodBuilder.apply(urlPathEqualTo(path))
+        var stubMapping = wireMock.register(methodBuilder.apply(urlPathEqualTo(path))
             .willReturn(aResponse()
                 .withStatus(statusCode)));
+
+        if (stubMapping != null && stubMapping.getUuid() != null) {
+            stubIds.add(stubMapping.getUuid());
+        }
 
         var mappings = wireMock.allStubMappings();
         var registered = mappings.getMappings().stream()
@@ -131,6 +145,13 @@ public class JsonWireMockClient {
         return Result.success();
     }
 
+    public void removeStubs() {
+        for (var id : stubIds) {
+            wireMock.removeStubMapping(id);
+        }
+        stubIds.clear();
+    }
+
     private String serialize(Object object) {
         try {
             return objectMapper.writeValueAsString(object);
@@ -139,5 +160,3 @@ public class JsonWireMockClient {
         }
     }
 }
-
-

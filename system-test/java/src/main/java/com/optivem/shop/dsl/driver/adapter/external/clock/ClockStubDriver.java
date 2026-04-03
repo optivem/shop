@@ -20,6 +20,7 @@ public class ClockStubDriver implements ClockDriver {
 
     @Override
     public void close() {
+        client.removeStubs();
         Closer.close(client);
     }
 

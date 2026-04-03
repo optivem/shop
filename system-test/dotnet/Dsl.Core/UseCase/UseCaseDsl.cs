@@ -80,8 +80,11 @@ public class UseCaseDsl : IAsyncDisposable
         if (_shop != null)
             await _shop.DisposeAsync();
 
-        _erp?.Dispose();
-        _clock?.Dispose();
+        if (_erp != null)
+            await _erp.DisposeAsync();
+
+        if (_clock != null)
+            await _clock.DisposeAsync();
 
         ChannelContext.Clear();
     }
