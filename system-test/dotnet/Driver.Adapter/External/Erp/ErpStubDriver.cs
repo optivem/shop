@@ -17,11 +17,11 @@ public class ErpStubDriver : BaseErpDriver<ErpStubClient>
     {
     }
 
-    public override ValueTask DisposeAsync()
+    public override async ValueTask DisposeAsync()
     {
+        await _client.RemoveStubsAsync();
         Dispose(true);
         GC.SuppressFinalize(this);
-        return ValueTask.CompletedTask;
     }
 
     public override Task<Result<VoidValue, ErpErrorResponse>> ReturnsProductAsync(ReturnsProductRequest request)

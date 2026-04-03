@@ -21,7 +21,10 @@ public abstract class BaseClientTest : BaseConfigurableTest, IAsyncLifetime
         _configuration = LoadConfiguration();
     }
 
-    public virtual Task InitializeAsync() => Task.CompletedTask;
+    public virtual async Task InitializeAsync()
+    {
+        await TestLock.WaitAsync();
+    }
 
     protected async Task SetUpShopUiClientAsync()
     {
@@ -40,10 +43,17 @@ public abstract class BaseClientTest : BaseConfigurableTest, IAsyncLifetime
 
     public virtual async Task DisposeAsync()
     {
-        if (_shopUiClient != null)
-            await _shopUiClient.DisposeAsync();
-        _shopApiClient?.Dispose();
-        _erpClient?.Dispose();
+        try
+        {
+            if (_shopUiClient != null)
+                await _shopUiClient.DisposeAsync();
+            _shopApiClient?.Dispose();
+            _erpClient?.Dispose();
+        }
+        finally
+        {
+            TestLock.Release();
+        }
     }
 }
 

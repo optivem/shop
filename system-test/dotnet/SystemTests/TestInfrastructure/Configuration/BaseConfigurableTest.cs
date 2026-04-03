@@ -6,6 +6,12 @@ namespace SystemTests.TestInfrastructure.Configuration;
 
 public abstract class BaseConfigurableTest
 {
+    // xUnit interleaves async test lifecycles even within the same class,
+    // causing tests that configure shared WireMock stubs to overwrite each
+    // other's stubs mid-flight. This semaphore forces truly sequential
+    // execution across all system tests. See optivem/starter#20.
+    protected static readonly SemaphoreSlim TestLock = new(1, 1);
+
     protected virtual Environment? GetFixedEnvironment()
     {
         return null;

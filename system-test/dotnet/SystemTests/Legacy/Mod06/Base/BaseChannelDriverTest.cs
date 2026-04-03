@@ -19,6 +19,8 @@ public abstract class BaseChannelDriverTest : BaseConfigurableTest, IAsyncLifeti
 
     public virtual async Task InitializeAsync()
     {
+        await TestLock.WaitAsync();
+
         var configuration = LoadConfiguration();
 
         // Only create shop driver if channel context is set (for channel-parameterized tests)
@@ -37,10 +39,17 @@ public abstract class BaseChannelDriverTest : BaseConfigurableTest, IAsyncLifeti
 
     public virtual async Task DisposeAsync()
     {
-        if (_shopDriver != null)
-            await _shopDriver.DisposeAsync();
+        try
+        {
+            if (_shopDriver != null)
+                await _shopDriver.DisposeAsync();
 
-        _erpDriver?.Dispose();
+            _erpDriver?.Dispose();
+        }
+        finally
+        {
+            TestLock.Release();
+        }
     }
 
     protected async Task SetChannelAsync(Channel channel)

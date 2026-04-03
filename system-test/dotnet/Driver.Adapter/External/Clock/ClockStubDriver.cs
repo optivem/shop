@@ -23,11 +23,11 @@ public class ClockStubDriver : IClockDriver
         GC.SuppressFinalize(this);
     }
 
-    public ValueTask DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
+        await _client.RemoveStubsAsync();
         Dispose(true);
         GC.SuppressFinalize(this);
-        return ValueTask.CompletedTask;
     }
 
     protected virtual void Dispose(bool disposing)

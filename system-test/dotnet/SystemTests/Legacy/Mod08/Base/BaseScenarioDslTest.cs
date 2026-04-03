@@ -13,9 +13,9 @@ public abstract class BaseScenarioDslTest : BaseConfigurableTest, IAsyncLifetime
 
     public virtual async Task InitializeAsync()
     {
+        await TestLock.WaitAsync();
         var configuration = LoadConfiguration();
         _app = new UseCaseDsl(configuration);
-        await Task.CompletedTask;
     }
 
     protected IScenarioDsl Scenario(Channel channel)
@@ -30,8 +30,15 @@ public abstract class BaseScenarioDslTest : BaseConfigurableTest, IAsyncLifetime
 
     public virtual async Task DisposeAsync()
     {
-        if (_app != null)
-            await _app.DisposeAsync();
+        try
+        {
+            if (_app != null)
+                await _app.DisposeAsync();
+        }
+        finally
+        {
+            TestLock.Release();
+        }
     }
 }
 

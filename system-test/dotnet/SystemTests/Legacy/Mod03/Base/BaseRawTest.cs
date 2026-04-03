@@ -25,7 +25,10 @@ public abstract class BaseRawTest : BaseConfigurableTest, IAsyncLifetime
         _configuration = LoadConfiguration();
     }
 
-    public virtual Task InitializeAsync() => Task.CompletedTask;
+    public virtual async Task InitializeAsync()
+    {
+        await TestLock.WaitAsync();
+    }
 
     protected async Task SetUpShopBrowserAsync()
     {
@@ -74,16 +77,23 @@ public abstract class BaseRawTest : BaseConfigurableTest, IAsyncLifetime
 
     public virtual async Task DisposeAsync()
     {
-        if (shopUiPage != null)
-            await shopUiPage.CloseAsync();
-        if (shopUiBrowserContext != null)
-            await shopUiBrowserContext.CloseAsync();
-        if (shopUiBrowser != null)
-            await shopUiBrowser.CloseAsync();
-        shopUiPlaywright?.Dispose();
+        try
+        {
+            if (shopUiPage != null)
+                await shopUiPage.CloseAsync();
+            if (shopUiBrowserContext != null)
+                await shopUiBrowserContext.CloseAsync();
+            if (shopUiBrowser != null)
+                await shopUiBrowser.CloseAsync();
+            shopUiPlaywright?.Dispose();
 
-        _shopApiHttpClient?.Dispose();
-        _erpHttpClient?.Dispose();
+            _shopApiHttpClient?.Dispose();
+            _erpHttpClient?.Dispose();
+        }
+        finally
+        {
+            TestLock.Release();
+        }
     }
 }
 
