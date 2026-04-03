@@ -90,7 +90,7 @@ jobs:
         if: github.ref == 'refs/heads/main' && env.SONAR_TOKEN != ''
         run: |
           dotnet tool install --global dotnet-sonarscanner
-          dotnet sonarscanner begin /k:"optivem_starter-monolith-dotnet" /n:"starter-monolith-dotnet" /o:"optivem" /d:sonar.token="${SONAR_TOKEN}"
+          dotnet sonarscanner begin /k:"optivem_starter-monolith-dotnet" /n:"starter-monolith-dotnet" /o:"optivem" /d:sonar.token="${SONAR_TOKEN}" /d:sonar.exclusions="Tests/**"
           dotnet build
           dotnet sonarscanner end /d:sonar.token="${SONAR_TOKEN}"
         working-directory: system/monolith/dotnet

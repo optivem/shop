@@ -29,6 +29,7 @@ public class ThenFailureAnd<TSuccessResponse, TSuccessVerification>
 
     public async Task<IThenClock> Clock()
     {
+        await _thenClause.GetExecutionResult();
         var verification = (await _thenClause.App.Clock().GetTime().Execute()).ShouldSucceed();
         return new Steps.ThenClock(_thenClause.App, verification);
     }
@@ -37,6 +38,7 @@ public class ThenFailureAnd<TSuccessResponse, TSuccessVerification>
 
     public async Task<IThenProduct> Product(string skuAlias)
     {
+        await _thenClause.GetExecutionResult();
         var verification = (await _thenClause.App.Erp().GetProduct().Sku(skuAlias).Execute()).ShouldSucceed();
         return new Steps.ThenProduct(_thenClause.App, verification);
     }
