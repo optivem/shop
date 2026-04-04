@@ -16,7 +16,6 @@ public class PlaceOrderRequest {
     @TypeValidationMessage("Quantity must be an integer")
     private Integer quantity;
 
-    @NotBlank(message = "Country must not be empty")
     private String country;
 
     private String couponCode;

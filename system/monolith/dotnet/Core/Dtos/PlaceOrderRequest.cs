@@ -11,7 +11,6 @@ public class PlaceOrderRequest
     [Range(1, int.MaxValue, ErrorMessage = "Quantity must be positive")]
     public int? Quantity { get; set; }
 
-    [Required(ErrorMessage = "Country must not be empty")]
     public string? Country { get; set; }
 
     public string? CouponCode { get; set; }

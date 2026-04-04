@@ -11,9 +11,9 @@ export class PlaceOrderRequest {
   @IsPositive({ message: 'Quantity must be positive' })
   quantity: number;
 
-  @IsNotEmpty({ message: 'Country must not be empty' })
+  @IsOptional()
   @IsString({ message: 'Country must not be empty' })
-  country: string;
+  country?: string;
 
   @IsOptional()
   couponCode?: string;

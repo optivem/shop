@@ -38,7 +38,7 @@ export class OrderService {
   async placeOrder(request: PlaceOrderRequest): Promise<PlaceOrderResponse> {
     const sku = request.sku;
     const quantity = request.quantity;
-    const country = request.country;
+    const country = request.country ?? 'US';
     const couponCode = request.couponCode;
 
     const orderTimestamp = await this.clockGateway.getCurrentTime();
