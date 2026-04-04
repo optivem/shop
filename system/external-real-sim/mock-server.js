@@ -20,6 +20,15 @@ server.get('/erp/health', (req, res) => {
   });
 });
 
+// Tax subsystem health check
+server.get('/tax/health', (req, res) => {
+  res.status(200).json({
+    status: 'UP',
+    subsystem: 'Tax',
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Clock subsystem health check
 server.get('/clock/health', (req, res) => {
   res.status(200).json({
@@ -83,6 +92,45 @@ server.get('/erp/api', (req, res) => {
 });
 server.use('/erp/api', erpRouter);
 
+// In-memory data for Tax API
+const taxRouter = jsonServer.router({
+  countries: [
+    {
+      id: "US",
+      countryName: "United States",
+      taxRate: 0
+    },
+    {
+      id: "GB",
+      countryName: "United Kingdom",
+      taxRate: 0.2
+    },
+    {
+      id: "DE",
+      countryName: "Germany",
+      taxRate: 0.19
+    },
+    {
+      id: "FR",
+      countryName: "France",
+      taxRate: 0.2
+    },
+    {
+      id: "JP",
+      countryName: "Japan",
+      taxRate: 0.1
+    }
+  ]
+});
+
+server.get('/tax/api', (req, res) => {
+  res.status(200).json({
+    message: 'Tax API',
+    endpoints: ['/tax/api/countries']
+  });
+});
+server.use('/tax/api', taxRouter);
+
 // Clock API - returns fixed timestamp
 server.get('/clock/api/time', (req, res) => {
   res.status(200).json({
@@ -95,6 +143,8 @@ server.listen(port, () => {
   console.log(`Mock API Server running on http://localhost:${port}`);
   console.log(`ERP Health: http://localhost:${port}/erp/health`);
   console.log(`ERP API: http://localhost:${port}/erp/api/products`);
+  console.log(`Tax Health: http://localhost:${port}/tax/health`);
+  console.log(`Tax API: http://localhost:${port}/tax/api/countries`);
   console.log(`Clock Health: http://localhost:${port}/clock/health`);
   console.log(`Clock API: http://localhost:${port}/clock/api/time`);
 });

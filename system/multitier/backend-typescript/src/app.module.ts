@@ -5,10 +5,14 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { HealthController } from './api/controller/health.controller';
 import { OrderController } from './api/controller/order.controller';
+import { CouponController } from './api/controller/coupon.controller';
 import { OrderService } from './core/services/order.service';
+import { CouponService } from './core/services/coupon.service';
 import { ErpGateway } from './core/services/external/erp.gateway';
 import { ClockGateway } from './core/services/external/clock.gateway';
+import { TaxGateway } from './core/services/external/tax.gateway';
 import { Order } from './core/entities/order.entity';
+import { Coupon } from './core/entities/coupon.entity';
 
 @Module({
   imports: [
@@ -31,15 +35,15 @@ import { Order } from './core/entities/order.entity';
           database,
           username,
           password,
-          entities: [Order],
+          entities: [Order, Coupon],
           synchronize: true,
           logging: configService.get<string>('NODE_ENV') !== 'production',
         };
       },
     }),
-    TypeOrmModule.forFeature([Order]),
+    TypeOrmModule.forFeature([Order, Coupon]),
   ],
-  controllers: [AppController, HealthController, OrderController],
-  providers: [AppService, OrderService, ErpGateway, ClockGateway],
+  controllers: [AppController, HealthController, OrderController, CouponController],
+  providers: [AppService, OrderService, CouponService, ErpGateway, ClockGateway, TaxGateway],
 })
 export class AppModule {}

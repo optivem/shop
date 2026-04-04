@@ -35,6 +35,14 @@ class NewOrderPage {
     await this.page.locator('[aria-label="Quantity"]').fill(quantity, { timeout: TIMEOUT });
   }
 
+  async fillCountry(country: string): Promise<void> {
+    await this.page.locator('[aria-label="Country"]').fill(country, { timeout: TIMEOUT });
+  }
+
+  async fillCouponCode(couponCode: string): Promise<void> {
+    await this.page.locator('[aria-label="Coupon Code"]').fill(couponCode, { timeout: TIMEOUT });
+  }
+
   async clickPlaceOrder(): Promise<void> {
     await this.page.locator('[aria-label="Place Order"]').click({ timeout: TIMEOUT });
   }
@@ -186,6 +194,9 @@ export class ShopUiDriver implements ShopDriver {
     await newOrderPage.fillSku(request.sku);
     if (request.quantity !== null) {
       await newOrderPage.fillQuantity(request.quantity);
+    }
+    if (request.country) {
+      await newOrderPage.fillCountry(request.country);
     }
     await newOrderPage.clickPlaceOrder();
 

@@ -1,0 +1,18 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/tax/health"
+  },
+  "response": {
+    "status": 200,
+    "jsonBody": {
+      "status": "UP",
+      "subsystem": "Tax",
+      "timestamp": "{{now}}"
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "transformers": ["response-template"]
+  }
+}

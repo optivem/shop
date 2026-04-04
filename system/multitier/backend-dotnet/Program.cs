@@ -58,6 +58,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // Register services
 builder.Services.AddScoped<ErpGateway>();
 builder.Services.AddScoped<ClockGateway>();
+builder.Services.AddScoped<TaxGateway>();
+builder.Services.AddScoped<CouponService>();
 builder.Services.AddScoped<OrderService>();
 
 // Register exception handler

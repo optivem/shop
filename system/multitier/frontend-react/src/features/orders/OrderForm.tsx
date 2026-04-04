@@ -11,7 +11,7 @@ export interface OrderFormProps {
 
 /**
  * Order placement form component
- * Collects SKU and quantity
+ * Collects SKU, quantity, country and optional coupon code
  */
 export function OrderForm({ formData, onFormChange, onSubmit, isSubmitting }: Readonly<OrderFormProps>) {
   return (
@@ -38,6 +38,20 @@ export function OrderForm({ formData, onFormChange, onSubmit, isSubmitting }: Re
             inputMode="numeric"
             placeholder="Enter quantity"
             ariaLabel="Quantity"
+          />
+          <FormInput
+            label="Country"
+            value={formData.country}
+            onChange={(e) => onFormChange({ country: e.target.value })}
+            placeholder="Enter country code (e.g. US)"
+            ariaLabel="Country"
+          />
+          <FormInput
+            label="Coupon Code (optional)"
+            value={formData.couponCode}
+            onChange={(e) => onFormChange({ couponCode: e.target.value })}
+            placeholder="Enter coupon code"
+            ariaLabel="Coupon Code"
           />
           <div className="d-grid">
             <SubmitButton

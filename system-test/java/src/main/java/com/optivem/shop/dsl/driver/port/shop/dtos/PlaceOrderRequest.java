@@ -12,4 +12,5 @@ import lombok.NoArgsConstructor;
 public class PlaceOrderRequest {
     private String sku;
     private String quantity;
+    private String country;
 }

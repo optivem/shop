@@ -253,6 +253,7 @@ class WhenStage {
 class WhenPlaceOrder {
   private sku: string = DEFAULTS.SKU;
   private quantity: string | null = DEFAULTS.QUANTITY;
+  private country: string = DEFAULTS.COUNTRY;
 
   constructor(
     private app: AppContext,
@@ -269,8 +270,13 @@ class WhenPlaceOrder {
     return this;
   }
 
+  withCountry(country: string): WhenPlaceOrder {
+    this.country = country;
+    return this;
+  }
+
   then(): ThenResultStage {
-    return new ThenResultStage(this.app, this.ctx, this.sku, this.quantity);
+    return new ThenResultStage(this.app, this.ctx, this.sku, this.quantity, this.country);
   }
 }
 
@@ -288,6 +294,7 @@ class ThenResultStage implements PromiseLike<void> {
     private ctx: ScenarioContext,
     private sku: string,
     private quantity: string | null,
+    private country: string = DEFAULTS.COUNTRY,
   ) {}
 
   shouldSucceed(): ThenSuccess {
@@ -344,7 +351,7 @@ class ThenResultStage implements PromiseLike<void> {
     }
 
     // 3. Execute action
-    const result = await this.app.shopDriver.placeOrder({ sku: this.sku, quantity: this.quantity });
+    const result = await this.app.shopDriver.placeOrder({ sku: this.sku, quantity: this.quantity, country: this.country });
 
     // 4. Assert
     if (this._expectSuccess) {

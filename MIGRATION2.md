@@ -47,9 +47,9 @@ After each phase, run in this order:
 1. Compilation — ensure the project compiles cleanly
 2. `./Run-SystemTests.ps1 -SkipTests` — starts the system; `-Rebuild` is baked in here to pick up source changes
 3. `./Run-SystemTests.ps1 -Suite acceptance-api`
-4. `./Run-SystemTests.ps1 -Suite acceptance-api-isolated`
+4. `./Run-SystemTests.ps1 -Suite acceptance-isolated-api`
 5. If both pass → `./Run-SystemTests.ps1 -Suite acceptance-ui`
-6. `./Run-SystemTests.ps1 -Suite acceptance-ui-isolated`
+6. `./Run-SystemTests.ps1 -Suite acceptance-isolated-ui`
 
 No need to pass `-Rebuild` on subsequent test suite runs — the system is already built from step 2.
 
@@ -63,7 +63,7 @@ All multitier first (Java → .NET → TypeScript), then all monoliths (Java →
 
 ---
 
-## Phase 1: External Stub + Real-Sim ⬜
+## Phase 1: External Stub + Real-Sim ✅
 
 Done once, shared by all backends.
 
@@ -79,7 +79,7 @@ No coupon stub needed — coupons are internal to the shop app.
 
 ---
 
-## Phase 2: Multitier Java Backend ⬜
+## Phase 2: Multitier Java Backend ✅
 
 **New files** (follow existing package/naming conventions exactly):
 - `core/entities/Coupon.java` — `@Entity`, fields: id, code (unique), discountRate, validFrom/validTo (Instant nullable), usageLimit (Integer nullable = unlimited), usedCount
@@ -102,7 +102,7 @@ No coupon stub needed — coupons are internal to the shop app.
 
 ---
 
-## Phase 3: Multitier .NET Backend ⬜
+## Phase 3: Multitier .NET Backend ✅
 
 Same domain changes as Java, translated to C#. Follow existing patterns in `backend-dotnet/`.
 
@@ -113,7 +113,7 @@ Same domain changes as Java, translated to C#. Follow existing patterns in `back
 
 ---
 
-## Phase 4: Multitier TypeScript Backend (NestJS) ⬜
+## Phase 4: Multitier TypeScript Backend (NestJS) ✅
 
 Same domain changes, translated to TypeScript/NestJS. Follow existing patterns in `backend-typescript/`.
 
@@ -124,7 +124,7 @@ Same domain changes, translated to TypeScript/NestJS. Follow existing patterns i
 
 ---
 
-## Phase 5: Monolith Java ⬜
+## Phase 5: Monolith Java ✅
 
 Same domain changes as multitier Java, applied to `system/monolith/java/`. SSR views (Thymeleaf) also need country + coupon fields on the order form and order detail view.
 
@@ -249,8 +249,8 @@ After all phases complete, all of the following must be green across every combi
 | Suite | Languages | Architectures | Versions |
 |---|---|---|---|
 | `acceptance-api` | Java, .NET, TypeScript | multitier + monolith | latest + legacy |
-| `acceptance-api-isolated` | Java, .NET, TypeScript | multitier + monolith | latest + legacy |
+| `acceptance-isolated-api` | Java, .NET, TypeScript | multitier + monolith | latest + legacy |
 | `acceptance-ui` | Java, .NET, TypeScript | multitier + monolith | latest + legacy |
-| `acceptance-ui-isolated` | Java, .NET, TypeScript | multitier + monolith | latest + legacy |
+| `acceptance-isolated-ui` | Java, .NET, TypeScript | multitier + monolith | latest + legacy |
 
-→ Only then: ask user for commit approval via `/commit`
+→ Only then: ask user for commit approval via `/commit`. Do NOT commit between phases.

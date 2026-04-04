@@ -15,4 +15,9 @@ public class PlaceOrderRequest {
     @Positive(message = "Quantity must be positive")
     @TypeValidationMessage("Quantity must be an integer")
     private Integer quantity;
+
+    @NotBlank(message = "Country must not be empty")
+    private String country;
+
+    private String couponCode;
 }

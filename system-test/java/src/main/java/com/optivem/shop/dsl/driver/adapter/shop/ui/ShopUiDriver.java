@@ -50,10 +50,12 @@ public class ShopUiDriver implements ShopDriver {
     public Result<PlaceOrderResponse, ErrorResponse> placeOrder(PlaceOrderRequest request) {
         var sku = request.getSku();
         var quantity = request.getQuantity();
+        var country = request.getCountry();
 
         ensureOnNewOrderPage();
         newOrderPage.inputSku(sku);
         newOrderPage.inputQuantity(quantity);
+        newOrderPage.inputCountry(country);
         newOrderPage.clickPlaceOrder();
 
         var result = newOrderPage.getResult();
@@ -150,5 +152,3 @@ public class ShopUiDriver implements ShopDriver {
         ORDER_DETAILS
     }
 }
-
-

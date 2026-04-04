@@ -20,5 +20,10 @@ export function validatePlaceOrderRequest(body: Record<string, unknown>): FieldE
     }
   }
 
+  const country = body.country;
+  if (country === undefined || country === null || (typeof country === 'string' && country.trim() === '')) {
+    errors.push({ field: 'country', message: 'Country must not be empty' });
+  }
+
   return errors;
 }

@@ -16,6 +16,8 @@ import { ValidationException } from '../exceptions/validation.exception';
 import { NotExistValidationException } from '../exceptions/not-exist-validation.exception';
 import { ErpGateway } from './external/erp.gateway';
 import { ClockGateway } from './external/clock.gateway';
+import { TaxGateway } from './external/tax.gateway';
+import { CouponService } from './coupon.service';
 
 @Injectable()
 export class OrderService {
@@ -29,11 +31,15 @@ export class OrderService {
     private readonly orderRepository: Repository<Order>,
     private readonly erpGateway: ErpGateway,
     private readonly clockGateway: ClockGateway,
+    private readonly taxGateway: TaxGateway,
+    private readonly couponService: CouponService,
   ) {}
 
   async placeOrder(request: PlaceOrderRequest): Promise<PlaceOrderResponse> {
     const sku = request.sku;
     const quantity = request.quantity;
+    const country = request.country;
+    const couponCode = request.couponCode;
 
     const orderTimestamp = await this.clockGateway.getCurrentTime();
 
@@ -60,21 +66,43 @@ export class OrderService {
 
     const unitPrice = await this.getUnitPrice(sku);
     const promotion = await this.erpGateway.getPromotionDetails();
-    const discountFactor = promotion.promotionActive ? promotion.discount : 1;
-    const totalPrice = new Decimal(unitPrice).mul(quantity).mul(discountFactor).toNumber();
+    const promotionFactor = promotion.promotionActive ? promotion.discount : 1;
+    const basePrice = new Decimal(unitPrice).mul(quantity).mul(promotionFactor).toNumber();
+
+    const discountRate = await this.couponService.getDiscount(couponCode);
+    const discountAmount = new Decimal(basePrice).mul(discountRate).toNumber();
+    const subtotalPrice = new Decimal(basePrice).sub(discountAmount).toNumber();
+
+    const taxRate = await this.getTaxRate(country);
+    const taxAmount = new Decimal(subtotalPrice).mul(taxRate).toNumber();
+    const totalPrice = new Decimal(subtotalPrice).add(taxAmount).toNumber();
+
+    const appliedCouponCode = discountRate > 0 ? couponCode ?? null : null;
 
     const orderNumber = this.generateOrderNumber();
 
     const order = new Order();
     order.orderNumber = orderNumber;
     order.orderTimestamp = orderTimestamp;
+    order.country = country;
     order.sku = sku;
     order.quantity = quantity;
     order.unitPrice = unitPrice;
+    order.basePrice = basePrice;
+    order.discountRate = discountRate;
+    order.discountAmount = discountAmount;
+    order.subtotalPrice = subtotalPrice;
+    order.taxRate = taxRate;
+    order.taxAmount = taxAmount;
     order.totalPrice = totalPrice;
     order.status = OrderStatus.PLACED;
+    order.appliedCouponCode = appliedCouponCode ?? null;
 
     await this.orderRepository.save(order);
+
+    if (appliedCouponCode) {
+      await this.couponService.incrementUsageCount(appliedCouponCode);
+    }
 
     const response = new PlaceOrderResponse();
     response.orderNumber = orderNumber;
@@ -91,6 +119,18 @@ export class OrderService {
     }
 
     return Number(productDetails.price);
+  }
+
+  private async getTaxRate(country: string): Promise<number> {
+    const taxDetails = await this.taxGateway.getTaxDetails(country);
+    if (taxDetails === null) {
+      throw new ValidationException(
+        'country',
+        `Country does not exist: ${country}`,
+      );
+    }
+
+    return Number(taxDetails.taxRate);
   }
 
   async browseOrderHistory(
@@ -116,9 +156,11 @@ export class OrderService {
       item.orderNumber = order.orderNumber;
       item.orderTimestamp = new Date(order.orderTimestamp).toISOString();
       item.sku = order.sku;
+      item.country = order.country;
       item.quantity = order.quantity;
       item.totalPrice = Number(order.totalPrice);
       item.status = order.status;
+      item.appliedCouponCode = order.appliedCouponCode;
       return item;
     });
 
@@ -144,8 +186,16 @@ export class OrderService {
     response.sku = order.sku;
     response.quantity = order.quantity;
     response.unitPrice = Number(order.unitPrice);
+    response.basePrice = Number(order.basePrice);
+    response.discountRate = Number(order.discountRate);
+    response.discountAmount = Number(order.discountAmount);
+    response.subtotalPrice = Number(order.subtotalPrice);
+    response.taxRate = Number(order.taxRate);
+    response.taxAmount = Number(order.taxAmount);
     response.totalPrice = Number(order.totalPrice);
     response.status = order.status;
+    response.country = order.country;
+    response.appliedCouponCode = order.appliedCouponCode;
     return response;
   }
 

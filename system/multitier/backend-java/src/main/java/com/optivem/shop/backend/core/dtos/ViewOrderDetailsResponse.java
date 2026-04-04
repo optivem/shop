@@ -13,6 +13,14 @@ public class ViewOrderDetailsResponse {
     private String sku;
     private int quantity;
     private BigDecimal unitPrice;
+    private BigDecimal basePrice;
+    private BigDecimal discountRate;
+    private BigDecimal discountAmount;
+    private BigDecimal subtotalPrice;
+    private BigDecimal taxRate;
+    private BigDecimal taxAmount;
     private BigDecimal totalPrice;
     private OrderStatus status;
+    private String country;
+    private String appliedCouponCode;
 }

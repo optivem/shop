@@ -5,7 +5,7 @@ services:
   monolith:
     build:
       context: ../../system/monolith/java
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.local
     ports:
       - "3112:8080"
       - "8112:8080"
@@ -17,6 +17,7 @@ services:
       - POSTGRES_DB_PASSWORD=app
       - ERP_API_URL=http://external-stub:8080/erp
       - CLOCK_API_URL=http://external-stub:8080/clock
+      - TAX_API_URL=http://external-stub:8080/tax
       - EXTERNAL_SYSTEM_MODE=stub
     depends_on:
       postgres:

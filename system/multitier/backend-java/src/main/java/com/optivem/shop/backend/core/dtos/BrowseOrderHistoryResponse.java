@@ -16,8 +16,10 @@ public class BrowseOrderHistoryResponse {
         private String orderNumber;
         private Instant orderTimestamp;
         private String sku;
+        private String country;
         private int quantity;
         private BigDecimal totalPrice;
         private OrderStatus status;
+        private String appliedCouponCode;
     }
 }

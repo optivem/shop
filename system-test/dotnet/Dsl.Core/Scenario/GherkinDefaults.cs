@@ -15,6 +15,7 @@ public static class GherkinDefaults
     // Order defaults
     public const string DefaultOrderNumber = "DEFAULT-ORDER";
     public const string DefaultQuantity = "1";
+    public const string DefaultCountry = "US";
     public const OrderStatus DefaultOrderStatus = OrderStatus.Placed;
 
     // Promotion defaults

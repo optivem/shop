@@ -15,19 +15,25 @@ public class OrderService
 
     private readonly AppDbContext _dbContext;
     private readonly ErpGateway _erpGateway;
+    private readonly TaxGateway _taxGateway;
     private readonly ClockGateway _clockGateway;
+    private readonly CouponService _couponService;
 
-    public OrderService(AppDbContext dbContext, ErpGateway erpGateway, ClockGateway clockGateway)
+    public OrderService(AppDbContext dbContext, ErpGateway erpGateway, TaxGateway taxGateway, ClockGateway clockGateway, CouponService couponService)
     {
         _dbContext = dbContext;
         _erpGateway = erpGateway;
+        _taxGateway = taxGateway;
         _clockGateway = clockGateway;
+        _couponService = couponService;
     }
 
     public async Task<PlaceOrderResponse> PlaceOrderAsync(PlaceOrderRequest request)
     {
         var sku = request.Sku!;
         var quantity = request.Quantity!.Value;
+        var country = request.Country!;
+        var couponCode = request.CouponCode;
 
         var orderTimestamp = await _clockGateway.GetCurrentTimeAsync();
 
@@ -44,8 +50,18 @@ public class OrderService
 
         var unitPrice = await GetUnitPriceAsync(sku);
         var promotion = await _erpGateway.GetPromotionDetailsAsync();
-        var discountFactor = promotion.PromotionActive ? promotion.Discount : 1.0m;
-        var totalPrice = unitPrice * quantity * discountFactor;
+        var promotionFactor = promotion.PromotionActive ? promotion.Discount : 1.0m;
+        var basePrice = unitPrice * quantity * promotionFactor;
+
+        var discountRate = await _couponService.GetDiscountAsync(couponCode);
+        var discountAmount = basePrice * discountRate;
+        var subtotalPrice = basePrice - discountAmount;
+
+        var taxRate = await GetTaxRateAsync(country);
+        var taxAmount = subtotalPrice * taxRate;
+        var totalPrice = subtotalPrice + taxAmount;
+
+        var appliedCouponCode = discountRate > 0m ? couponCode : null;
 
         var orderNumber = GenerateOrderNumber();
 
@@ -53,15 +69,28 @@ public class OrderService
         {
             OrderNumber = orderNumber,
             OrderTimestamp = orderTimestamp,
+            Country = country,
             Sku = sku,
             Quantity = quantity,
             UnitPrice = unitPrice,
+            BasePrice = basePrice,
+            DiscountRate = discountRate,
+            DiscountAmount = discountAmount,
+            SubtotalPrice = subtotalPrice,
+            TaxRate = taxRate,
+            TaxAmount = taxAmount,
             TotalPrice = totalPrice,
-            Status = OrderStatus.PLACED
+            Status = OrderStatus.PLACED,
+            AppliedCouponCode = appliedCouponCode
         };
 
         _dbContext.Orders.Add(order);
         await _dbContext.SaveChangesAsync();
+
+        if (appliedCouponCode != null)
+        {
+            await _couponService.IncrementUsageCountAsync(appliedCouponCode);
+        }
 
         return new PlaceOrderResponse { OrderNumber = orderNumber };
     }
@@ -75,6 +104,17 @@ public class OrderService
         }
 
         return productDetails.Price;
+    }
+
+    private async Task<decimal> GetTaxRateAsync(string country)
+    {
+        var taxDetails = await _taxGateway.GetTaxDetailsAsync(country);
+        if (taxDetails == null)
+        {
+            throw new ValidationException("country", $"Country does not exist: {country}");
+        }
+
+        return taxDetails.TaxRate;
     }
 
     public async Task<BrowseOrderHistoryResponse> BrowseOrderHistoryAsync(string? orderNumberFilter)
@@ -101,9 +141,11 @@ public class OrderService
             OrderNumber = order.OrderNumber,
             OrderTimestamp = order.OrderTimestamp,
             Sku = order.Sku,
+            Country = order.Country,
             Quantity = order.Quantity,
             TotalPrice = order.TotalPrice,
-            Status = order.Status
+            Status = order.Status,
+            AppliedCouponCode = order.AppliedCouponCode
         }).ToList();
 
         return new BrowseOrderHistoryResponse { Orders = items };
@@ -126,8 +168,16 @@ public class OrderService
             Sku = order.Sku,
             Quantity = order.Quantity,
             UnitPrice = order.UnitPrice,
+            BasePrice = order.BasePrice,
+            DiscountRate = order.DiscountRate,
+            DiscountAmount = order.DiscountAmount,
+            SubtotalPrice = order.SubtotalPrice,
+            TaxRate = order.TaxRate,
+            TaxAmount = order.TaxAmount,
             TotalPrice = order.TotalPrice,
-            Status = order.Status
+            Status = order.Status,
+            Country = order.Country,
+            AppliedCouponCode = order.AppliedCouponCode
         };
     }
 

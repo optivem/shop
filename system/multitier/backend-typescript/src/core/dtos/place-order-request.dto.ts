@@ -1,4 +1,4 @@
-import { IsInt, IsNotEmpty, IsPositive, IsString, Matches } from 'class-validator';
+import { IsInt, IsNotEmpty, IsOptional, IsPositive, IsString, Matches } from 'class-validator';
 
 export class PlaceOrderRequest {
   @IsNotEmpty({ message: 'SKU must not be empty' })
@@ -10,4 +10,11 @@ export class PlaceOrderRequest {
   @IsInt({ message: 'Quantity must be an integer' })
   @IsPositive({ message: 'Quantity must be positive' })
   quantity: number;
+
+  @IsNotEmpty({ message: 'Country must not be empty' })
+  @IsString({ message: 'Country must not be empty' })
+  country: string;
+
+  @IsOptional()
+  couponCode?: string;
 }

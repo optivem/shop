@@ -26,6 +26,7 @@ services:
       - ALLOWED_ORIGINS=http://localhost:3212,http://frontend:3000
       - ERP_API_URL=http://external-stub:8080/erp
       - CLOCK_API_URL=http://external-stub:8080/clock
+      - TAX_API_URL=http://external-stub:8080/tax
       - EXTERNAL_SYSTEM_MODE=stub
     depends_on:
       postgres:
