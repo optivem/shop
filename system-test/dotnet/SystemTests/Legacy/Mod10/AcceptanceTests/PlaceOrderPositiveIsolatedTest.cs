@@ -24,11 +24,11 @@ public class PlaceOrderPositiveIsolatedTest : BaseAcceptanceTest
 
     [Theory]
     [ChannelData(ChannelType.UI, ChannelType.API)]
-    public async Task ShouldApplyWeekendDiscount(Channel channel)
+    public async Task ShouldApplyDiscountWhenPromotionIsActive(Channel channel)
     {
         await Scenario(channel)
             .Given().Product().WithUnitPrice(20.00m)
-            .And().Clock().WithWeekend()
+            .And().Promotion().WithActive(true).WithDiscount("0.5")
             .When().PlaceOrder().WithQuantity(5)
             .Then().ShouldSucceed()
             .And().Order()
