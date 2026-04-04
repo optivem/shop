@@ -8,11 +8,10 @@ const pool = new Pool({
   password: process.env.POSTGRES_DB_PASSWORD || 'app',
 });
 
-let initialized = false;
+let schemaPromise: Promise<void> | null = null;
 
-async function ensureSchema() {
-  if (initialized) return;
-  await pool.query(`
+function ensureSchema(): Promise<void> {
+  schemaPromise ??= pool.query(`
     CREATE TABLE IF NOT EXISTS orders (
       id BIGSERIAL PRIMARY KEY,
       order_number VARCHAR(255) NOT NULL UNIQUE,
@@ -23,8 +22,8 @@ async function ensureSchema() {
       total_price NUMERIC(10,2) NOT NULL,
       status VARCHAR(50) NOT NULL
     )
-  `);
-  initialized = true;
+  `).then(() => {});
+  return schemaPromise;
 }
 
 export interface OrderRow {
