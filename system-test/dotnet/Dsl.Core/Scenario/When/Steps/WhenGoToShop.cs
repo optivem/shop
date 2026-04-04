@@ -1,5 +1,6 @@
 using Dsl.Core.Scenario;
 using Dsl.Core.Scenario.When.Steps.Base;
+using Dsl.Port;
 using Dsl.Port.When.Steps;
 using Dsl.Core.Shared;
 using Common;
@@ -15,7 +16,7 @@ public class GoToShop : BaseWhen<VoidValue, VoidVerification>, IGoToShop
 
     protected override async Task<ExecutionResult<VoidValue, VoidVerification>> Execute(UseCaseDsl app)
     {
-        var shop = await app.Shop(Channel);
+        var shop = await app.Shop(ChannelMode.Dynamic, Channel);
         var result = await shop.GoToShop()
             .Execute();
 
