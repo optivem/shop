@@ -51,3 +51,5 @@ erp:
   url: ${ERP_API_URL:http://localhost:9001/erp}
 clock:
   url: ${CLOCK_API_URL:http://localhost:9001/clock}
+tax:
+  url: ${TAX_API_URL:http://localhost:9001/tax}

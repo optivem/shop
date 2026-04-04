@@ -1,57 +1,56 @@
 # System Test (TypeScript)
 
-## Instructions
+## Prerequisites
 
-Open up the 'system-test' folder
+- PowerShell 7+
+- Docker Desktop (running)
+- Node.js 22+
 
-```shell
-cd system-test
+## Running Tests
+
+Run all latest test suites (multitier):
+
+```powershell
+./Run-SystemTests.ps1 -Architecture multitier
 ```
 
-Check that you have Powershell 7
+Run all latest test suites (monolith):
 
-```shell
-$PSVersionTable.PSVersion
+```powershell
+./Run-SystemTests.ps1 -Architecture monolith
 ```
 
-Check that you have Node.js 22 installed
+Run legacy test suites:
 
-```shell
-node -v
+```powershell
+./Run-SystemTests.ps1 -Architecture multitier -Legacy
+./Run-SystemTests.ps1 -Architecture monolith -Legacy
 ```
 
-Install dependencies
+Run a specific suite by ID:
 
-```shell
-npm install
+```powershell
+./Run-SystemTests.ps1 -Architecture multitier -Suite acceptance-api
 ```
 
-Install Playwright
+Rebuild containers before running:
 
-```shell
-npx playwright install
+```powershell
+./Run-SystemTests.ps1 -Architecture multitier -Rebuild
 ```
 
-Start Docker Containers
+## Available Suite IDs
 
-```shell
-docker compose up -d
-```
-
-Run All Tests
-
-```shell
-npm test
-```
-
-Run Smoke Tests Only
-
-```shell
-npm test -- test/smoke-tests
-```
-
-Stop Docker Containers
-
-```shell
-docker compose down
-```
+| ID | Description |
+|----|-------------|
+| `smoke-stub` | Smoke tests (stub) |
+| `smoke-real` | Smoke tests (real) |
+| `acceptance-api` | Acceptance tests - API channel |
+| `acceptance-ui` | Acceptance tests - UI channel |
+| `acceptance-isolated-api` | Isolated acceptance tests - API channel |
+| `acceptance-isolated-ui` | Isolated acceptance tests - UI channel |
+| `contract-stub` | Contract tests (stub) |
+| `contract-stub-isolated` | Isolated contract tests (stub) |
+| `contract-real` | Contract tests (real) |
+| `e2e-api` | E2E tests (real) - API channel |
+| `e2e-ui` | E2E tests (real) - UI channel |

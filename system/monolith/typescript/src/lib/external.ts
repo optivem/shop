@@ -1,5 +1,6 @@
 const ERP_API_URL = () => process.env.ERP_API_URL || 'http://localhost:9001/erp';
 const CLOCK_API_URL = () => process.env.CLOCK_API_URL || 'http://localhost:9001/clock';
+const TAX_API_URL = () => process.env.TAX_API_URL || 'http://localhost:9001/tax';
 const EXTERNAL_SYSTEM_MODE = () => process.env.EXTERNAL_SYSTEM_MODE || 'real';
 
 export async function getCurrentTime(): Promise<Date> {
@@ -54,4 +55,22 @@ export async function getProductDetails(sku: string): Promise<ProductDetails | n
   }
   const data = await response.json() as { id: string; price: number };
   return { id: data.id, price: data.price };
+}
+
+export interface TaxDetails {
+  id: string;
+  countryName: string;
+  taxRate: number;
+}
+
+export async function getTaxDetails(country: string): Promise<TaxDetails | null> {
+  const url = `${TAX_API_URL()}/api/countries/${encodeURIComponent(country)}`;
+  const response = await fetch(url, { signal: AbortSignal.timeout(10000) });
+  if (response.status === 404) {
+    return null;
+  }
+  if (!response.ok) {
+    throw new Error(`Failed to fetch tax details for country ${country}: ${response.status}`);
+  }
+  return await response.json() as TaxDetails;
 }

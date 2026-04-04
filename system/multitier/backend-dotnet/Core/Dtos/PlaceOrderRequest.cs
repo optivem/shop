@@ -10,4 +10,8 @@ public class PlaceOrderRequest
     [Required(ErrorMessage = "Quantity must not be empty")]
     [Range(1, int.MaxValue, ErrorMessage = "Quantity must be positive")]
     public int? Quantity { get; set; }
+
+    public string? Country { get; set; }
+
+    public string? CouponCode { get; set; }
 }

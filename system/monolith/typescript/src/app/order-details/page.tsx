@@ -7,10 +7,18 @@ import Link from "next/link";
 interface OrderDetail {
   orderNumber: string;
   orderTimestamp: string;
+  country: string;
   sku: string;
   quantity: number;
   unitPrice: number;
+  basePrice: number;
+  discountRate: number;
+  discountAmount: number;
+  subtotalPrice: number;
+  taxRate: number;
+  taxAmount: number;
   totalPrice: number;
+  appliedCouponCode: string | null;
   status: string;
 }
 
@@ -136,6 +144,10 @@ function OrderDetailsContent() {
                   <p aria-label="Display SKU">{order.sku}</p>
                 </div>
                 <div className="col-md-6 mb-3">
+                  <strong>Country:</strong>
+                  <p aria-label="Display Country">{order.country}</p>
+                </div>
+                <div className="col-md-6 mb-3">
                   <strong>Quantity:</strong>
                   <p aria-label="Display Quantity">{order.quantity}</p>
                 </div>
@@ -143,6 +155,42 @@ function OrderDetailsContent() {
                   <strong>Unit Price:</strong>
                   <p aria-label="Display Unit Price">
                     ${order.unitPrice.toFixed(2)}
+                  </p>
+                </div>
+                <div className="col-md-6 mb-3">
+                  <strong>Base Price:</strong>
+                  <p aria-label="Display Base Price">
+                    ${order.basePrice.toFixed(2)}
+                  </p>
+                </div>
+                <div className="col-md-6 mb-3">
+                  <strong>Discount Rate:</strong>
+                  <p aria-label="Display Discount Rate">
+                    {(order.discountRate * 100).toFixed(2)}%
+                  </p>
+                </div>
+                <div className="col-md-6 mb-3">
+                  <strong>Discount Amount:</strong>
+                  <p aria-label="Display Discount Amount">
+                    ${order.discountAmount.toFixed(2)}
+                  </p>
+                </div>
+                <div className="col-md-6 mb-3">
+                  <strong>Subtotal Price:</strong>
+                  <p aria-label="Display Subtotal Price">
+                    ${order.subtotalPrice.toFixed(2)}
+                  </p>
+                </div>
+                <div className="col-md-6 mb-3">
+                  <strong>Tax Rate:</strong>
+                  <p aria-label="Display Tax Rate">
+                    {(order.taxRate * 100).toFixed(2)}%
+                  </p>
+                </div>
+                <div className="col-md-6 mb-3">
+                  <strong>Tax Amount:</strong>
+                  <p aria-label="Display Tax Amount">
+                    ${order.taxAmount.toFixed(2)}
                   </p>
                 </div>
                 <div className="col-md-6 mb-3">
@@ -154,6 +202,14 @@ function OrderDetailsContent() {
                     ${order.totalPrice.toFixed(2)}
                   </p>
                 </div>
+                {order.appliedCouponCode && (
+                  <div className="col-md-6 mb-3">
+                    <strong>Applied Coupon Code:</strong>
+                    <p aria-label="Display Applied Coupon Code">
+                      {order.appliedCouponCode}
+                    </p>
+                  </div>
+                )}
               </div>
               <div className="mt-4">
                 <Link href="/order-history" className="btn btn-secondary">

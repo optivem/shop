@@ -26,6 +26,7 @@ services:
       - ALLOWED_ORIGINS=http://localhost:3311,http://frontend:3000
       - ERP_API_URL=http://external-real:9000/erp
       - CLOCK_API_URL=http://external-real:9000/clock
+      - TAX_API_URL=http://external-real:9000/tax
       - EXTERNAL_SYSTEM_MODE=real
     depends_on:
       postgres:

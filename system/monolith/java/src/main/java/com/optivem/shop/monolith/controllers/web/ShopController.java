@@ -31,31 +31,40 @@ public class ShopController {
     @PostMapping("/new-order")
     public String placeOrder(@RequestParam String sku,
                              @RequestParam String quantity,
+                             @RequestParam(required = false, defaultValue = "") String country,
+                             @RequestParam(required = false, defaultValue = "") String couponCode,
                              RedirectAttributes redirectAttributes) {
         try {
             var request = new PlaceOrderRequest();
             request.setSku(sku);
 
             if (!trySetQuantity(request, quantity)) {
-                return redirectWithError(redirectAttributes, "Quantity must be an integer", sku, quantity);
+                return redirectWithError(redirectAttributes, "Quantity must be an integer", sku, quantity, country, couponCode);
             }
 
             if (request.getQuantity() <= 0) {
-                return redirectWithError(redirectAttributes, "Quantity must be positive", sku, quantity);
+                return redirectWithError(redirectAttributes, "Quantity must be positive", sku, quantity, country, couponCode);
             }
 
             if (request.getSku() == null || request.getSku().isBlank()) {
-                return redirectWithError(redirectAttributes, "SKU must not be empty", sku, quantity);
+                return redirectWithError(redirectAttributes, "SKU must not be empty", sku, quantity, country, couponCode);
             }
+
+            if (country == null || country.isBlank()) {
+                return redirectWithError(redirectAttributes, "Country must not be empty", sku, quantity, country, couponCode);
+            }
+
+            request.setCountry(country);
+            request.setCouponCode(couponCode.isBlank() ? null : couponCode);
 
             PlaceOrderResponse response = orderService.placeOrder(request);
             redirectAttributes.addFlashAttribute("success",
                     "Success! Order has been created with Order Number " + response.getOrderNumber());
             return REDIRECT_NEW_ORDER;
         } catch (ValidationException e) {
-            return redirectWithError(redirectAttributes, e.getMessage(), sku, quantity);
+            return redirectWithError(redirectAttributes, e.getMessage(), sku, quantity, country, couponCode);
         } catch (Exception e) {
-            return redirectWithError(redirectAttributes, "An unexpected error occurred: " + e.getMessage(), sku, quantity);
+            return redirectWithError(redirectAttributes, "An unexpected error occurred: " + e.getMessage(), sku, quantity, country, couponCode);
         }
     }
 
@@ -68,10 +77,13 @@ public class ShopController {
         }
     }
 
-    private String redirectWithError(RedirectAttributes redirectAttributes, String errorMessage, String sku, String quantity) {
+    private String redirectWithError(RedirectAttributes redirectAttributes, String errorMessage,
+                                     String sku, String quantity, String country, String couponCode) {
         redirectAttributes.addFlashAttribute(ATTR_ERROR, errorMessage);
         redirectAttributes.addFlashAttribute("sku", sku);
         redirectAttributes.addFlashAttribute(ATTR_QUANTITY, quantity);
+        redirectAttributes.addFlashAttribute("country", country);
+        redirectAttributes.addFlashAttribute("couponCode", couponCode);
         return REDIRECT_NEW_ORDER;
     }
 }

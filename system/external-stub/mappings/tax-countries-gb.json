@@ -1,0 +1,17 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/tax/api/countries/GB"
+  },
+  "response": {
+    "status": 200,
+    "jsonBody": {
+      "id": "GB",
+      "countryName": "United Kingdom",
+      "taxRate": 0.20
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

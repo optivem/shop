@@ -11,6 +11,7 @@ public class PlaceOrder extends BaseShopUseCase<PlaceOrderResponse, PlaceOrderVe
     private String orderNumberResultAlias;
     private String skuParamAlias;
     private String quantity;
+    private String country;
 
     public PlaceOrder(ShopDriver driver, UseCaseContext context) {
         super(driver, context);
@@ -35,6 +36,11 @@ public class PlaceOrder extends BaseShopUseCase<PlaceOrderResponse, PlaceOrderVe
         return quantity(String.valueOf(quantity));
     }
 
+    public PlaceOrder country(String country) {
+        this.country = country;
+        return this;
+    }
+
     @Override
     public UseCaseResult<PlaceOrderResponse, PlaceOrderVerification> execute() {
         var sku = context.getParamValue(skuParamAlias);
@@ -42,6 +48,7 @@ public class PlaceOrder extends BaseShopUseCase<PlaceOrderResponse, PlaceOrderVe
         var request = PlaceOrderRequest.builder()
                 .sku(sku)
                 .quantity(quantity)
+                .country(country)
                 .build();
 
         var result = driver.placeOrder(request);
@@ -58,6 +65,3 @@ public class PlaceOrder extends BaseShopUseCase<PlaceOrderResponse, PlaceOrderVe
         return new UseCaseResult<>(result, context, PlaceOrderVerification::new);
     }
 }
-
-
-

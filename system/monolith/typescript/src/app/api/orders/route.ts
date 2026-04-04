@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'node:crypto';
 import Decimal from 'decimal.js';
-import { insertOrder, findAllOrders } from '@/lib/db';
-import { getCurrentTime, getProductDetails, getPromotionDetails } from '@/lib/external';
+import { insertOrder, findAllOrders, findCouponByCode, incrementCouponUsage } from '@/lib/db';
+import { getCurrentTime, getProductDetails, getPromotionDetails, getTaxDetails } from '@/lib/external';
 import { validatePlaceOrderRequest } from '@/lib/validation';
 import { validationErrorResponse, generalValidationErrorResponse, internalErrorResponse } from '@/lib/errors';
 
@@ -31,6 +31,8 @@ export async function POST(request: NextRequest) {
 
     const sku = body.sku as string;
     const quantity = typeof body.quantity === 'string' ? Number(body.quantity) : body.quantity as number;
+    const country = (body.country as string)?.trim() || 'US';
+    const couponCode = typeof body.couponCode === 'string' && body.couponCode.trim() !== '' ? body.couponCode as string : null;
 
     const now = await getCurrentTime();
 
@@ -51,8 +53,35 @@ export async function POST(request: NextRequest) {
 
     const unitPrice = product.price;
     const promotion = await getPromotionDetails();
-    const discountFactor = promotion.promotionActive ? promotion.discount : 1;
-    const totalPrice = new Decimal(unitPrice).mul(quantity).mul(discountFactor).toNumber();
+    const promotionFactor = promotion.promotionActive ? promotion.discount : 1;
+    const basePrice = new Decimal(unitPrice).mul(quantity).mul(promotionFactor).toNumber();
+
+    let discountRate = 0;
+    let appliedCouponCode: string | null = null;
+    if (couponCode) {
+      const coupon = await findCouponByCode(couponCode);
+      if (coupon) {
+        const now2 = new Date();
+        const isExpired = coupon.valid_to && new Date(coupon.valid_to) < now2;
+        const isOverLimit = coupon.usage_limit !== null && coupon.used_count >= coupon.usage_limit;
+        if (!isExpired && !isOverLimit) {
+          discountRate = Number(coupon.discount_rate);
+          appliedCouponCode = couponCode;
+        }
+      }
+    }
+    const discountAmount = new Decimal(basePrice).mul(discountRate).toNumber();
+    const subtotalPrice = new Decimal(basePrice).sub(discountAmount).toNumber();
+
+    const taxDetails = await getTaxDetails(country);
+    if (!taxDetails) {
+      return validationErrorResponse([
+        { field: 'country', message: `Country does not exist: ${country}` },
+      ]);
+    }
+    const taxRate = taxDetails.taxRate;
+    const taxAmount = new Decimal(subtotalPrice).mul(taxRate).toNumber();
+    const totalPrice = new Decimal(subtotalPrice).add(taxAmount).toNumber();
 
     const orderNumber = `ORD-${crypto.randomUUID().toUpperCase()}`;
     const orderTimestamp = now;
@@ -60,12 +89,24 @@ export async function POST(request: NextRequest) {
     await insertOrder({
       orderNumber,
       orderTimestamp,
+      country,
       sku,
       quantity,
       unitPrice,
+      basePrice,
+      discountRate,
+      discountAmount,
+      subtotalPrice,
+      taxRate,
+      taxAmount,
       totalPrice,
+      appliedCouponCode,
       status: 'PLACED',
     });
+
+    if (appliedCouponCode) {
+      await incrementCouponUsage(appliedCouponCode);
+    }
 
     return NextResponse.json(
       { orderNumber },
@@ -89,9 +130,11 @@ export async function GET(request: NextRequest) {
       orders: orders.map((o) => ({
         orderNumber: o.order_number,
         orderTimestamp: o.order_timestamp.toISOString(),
+        country: o.country,
         sku: o.sku,
         quantity: o.quantity,
         totalPrice: Number.parseFloat(o.total_price),
+        appliedCouponCode: o.applied_coupon_code,
         status: o.status,
       })),
     });

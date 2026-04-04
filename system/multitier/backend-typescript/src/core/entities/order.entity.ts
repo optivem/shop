@@ -12,6 +12,9 @@ export class Order {
   @Column({ name: 'order_timestamp', type: 'timestamptz', nullable: false })
   orderTimestamp: Date;
 
+  @Column({ name: 'country', nullable: false })
+  country: string;
+
   @Column({ name: 'sku', nullable: false })
   sku: string;
 
@@ -28,6 +31,60 @@ export class Order {
   unitPrice: number;
 
   @Column({
+    name: 'base_price',
+    type: 'numeric',
+    precision: 10,
+    scale: 2,
+    nullable: false,
+  })
+  basePrice: number;
+
+  @Column({
+    name: 'discount_rate',
+    type: 'numeric',
+    precision: 5,
+    scale: 4,
+    nullable: false,
+  })
+  discountRate: number;
+
+  @Column({
+    name: 'discount_amount',
+    type: 'numeric',
+    precision: 10,
+    scale: 2,
+    nullable: false,
+  })
+  discountAmount: number;
+
+  @Column({
+    name: 'subtotal_price',
+    type: 'numeric',
+    precision: 10,
+    scale: 2,
+    nullable: false,
+  })
+  subtotalPrice: number;
+
+  @Column({
+    name: 'tax_rate',
+    type: 'numeric',
+    precision: 5,
+    scale: 4,
+    nullable: false,
+  })
+  taxRate: number;
+
+  @Column({
+    name: 'tax_amount',
+    type: 'numeric',
+    precision: 10,
+    scale: 2,
+    nullable: false,
+  })
+  taxAmount: number;
+
+  @Column({
     name: 'total_price',
     type: 'numeric',
     precision: 10,
@@ -38,4 +95,7 @@ export class Order {
 
   @Column({ name: 'status', nullable: false })
   status: OrderStatus;
+
+  @Column({ name: 'applied_coupon_code', type: 'varchar', nullable: true, default: null })
+  appliedCouponCode: string | null;
 }

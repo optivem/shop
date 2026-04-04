@@ -19,6 +19,8 @@ export function useOrderForm() {
     sku: '',
     quantity: 0,
     quantityValue: '',
+    country: '',
+    couponCode: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -44,6 +46,7 @@ export function useOrderForm() {
       }
     }
 
+
     return errors;
   };
 
@@ -61,9 +64,12 @@ export function useOrderForm() {
     }
 
     setIsSubmitting(true);
+    const couponCode = formData.couponCode.trim() || undefined;
     const result = await orderService.placeOrder(
       formData.sku,
       formData.quantity,
+      formData.country,
+      couponCode,
     );
     setIsSubmitting(false);
 
@@ -73,6 +79,8 @@ export function useOrderForm() {
         sku: '',
         quantity: 0,
         quantityValue: '',
+        country: '',
+        couponCode: '',
       });
     }
 
@@ -88,6 +96,8 @@ export function useOrderForm() {
       sku: '',
       quantity: 0,
       quantityValue: '',
+      country: '',
+      couponCode: '',
     });
   };
 

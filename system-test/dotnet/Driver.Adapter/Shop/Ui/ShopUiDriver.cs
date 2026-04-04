@@ -53,11 +53,13 @@ public class ShopUiDriver : IShopDriver
     {
         var sku = request.Sku;
         var quantity = request.Quantity;
+        var country = request.Country;
 
         await EnsureOnNewOrderPageAsync();
 
         await _newOrderPage!.InputSkuAsync(sku);
         await _newOrderPage.InputQuantityAsync(quantity);
+        await _newOrderPage.InputCountryAsync(country);
         await _newOrderPage.ClickPlaceOrderAsync();
 
         var result = await _newOrderPage.GetResultAsync();

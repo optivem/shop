@@ -36,6 +36,16 @@
                                    inputmode="numeric" placeholder="Enter quantity"
                                    aria-label="Quantity">
                         </div>
+                        <div class="mb-3">
+                            <label for="country" class="form-label">Country:</label>
+                            <input type="text" class="form-control" id="country"
+                                   placeholder="Enter country code" aria-label="Country">
+                        </div>
+                        <div class="mb-3">
+                            <label for="couponCode" class="form-label">Coupon Code (optional):</label>
+                            <input type="text" class="form-control" id="couponCode"
+                                   placeholder="Enter coupon code" aria-label="Coupon Code">
+                        </div>
                         <div class="d-grid">
                             <button type="submit" class="btn btn-primary btn-lg" id="submitBtn" aria-label="Place Order">
                                 Place Order
@@ -57,6 +67,8 @@
             var notifications = document.getElementById('notifications');
             var sku = document.getElementById('sku').value;
             var quantityValue = document.getElementById('quantity').value;
+            var country = document.getElementById('country').value;
+            var couponCode = document.getElementById('couponCode').value;
 
             window._notificationCounter++;
             var nid = window._notificationCounter;
@@ -77,6 +89,8 @@
                         body.quantity = isNaN(num) ? quantityValue : num;
                     }
                 }
+                if (country !== '') body.country = country;
+                if (couponCode !== '') body.couponCode = couponCode;
 
                 var response = await fetch('/api/orders', {
                     method: 'POST',

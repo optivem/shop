@@ -1,0 +1,17 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/tax/api/countries/DE"
+  },
+  "response": {
+    "status": 200,
+    "jsonBody": {
+      "id": "DE",
+      "countryName": "Germany",
+      "taxRate": 0.19
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

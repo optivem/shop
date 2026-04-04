@@ -17,10 +17,18 @@ export async function GET(
     return NextResponse.json({
       orderNumber: order.order_number,
       orderTimestamp: order.order_timestamp.toISOString(),
+      country: order.country,
       sku: order.sku,
       quantity: order.quantity,
       unitPrice: Number.parseFloat(order.unit_price),
+      basePrice: Number.parseFloat(order.base_price),
+      discountRate: Number.parseFloat(order.discount_rate),
+      discountAmount: Number.parseFloat(order.discount_amount),
+      subtotalPrice: Number.parseFloat(order.subtotal_price),
+      taxRate: Number.parseFloat(order.tax_rate),
+      taxAmount: Number.parseFloat(order.tax_amount),
       totalPrice: Number.parseFloat(order.total_price),
+      appliedCouponCode: order.applied_coupon_code,
       status: order.status,
     });
   } catch (error) {

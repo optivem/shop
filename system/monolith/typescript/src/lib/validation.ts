@@ -20,5 +20,6 @@ export function validatePlaceOrderRequest(body: Record<string, unknown>): FieldE
     }
   }
 
+
   return errors;
 }

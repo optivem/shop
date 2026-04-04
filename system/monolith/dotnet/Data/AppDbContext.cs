@@ -10,6 +10,7 @@ public class AppDbContext : DbContext
     }
 
     public DbSet<Order> Orders { get; set; } = null!;
+    public DbSet<Coupon> Coupons { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -17,6 +18,11 @@ public class AppDbContext : DbContext
         {
             entity.HasIndex(e => e.OrderNumber).IsUnique();
             entity.Property(e => e.Status).HasConversion<string>();
+        });
+
+        modelBuilder.Entity<Coupon>(entity =>
+        {
+            entity.HasIndex(e => e.Code).IsUnique();
         });
     }
 }

@@ -15,6 +15,7 @@ public final class ScenarioDefaults {
     // Order defaults
     public static final String DEFAULT_ORDER_NUMBER = "DEFAULT-ORDER";
     public static final String DEFAULT_QUANTITY = "1";
+    public static final String DEFAULT_COUNTRY = "US";
     public static final OrderStatus DEFAULT_ORDER_STATUS = OrderStatus.PLACED;
 
     // Promotion defaults

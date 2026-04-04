@@ -18,6 +18,10 @@ public class NewOrderPage : BasePage
 
     private const string QuantityInputSelector = "[aria-label=\"Quantity\"]";
 
+    private const string CountryInputSelector = "[aria-label=\"Country\"]";
+
+    private const string CouponCodeInputSelector = "[aria-label=\"Coupon Code\"]";
+
     private const string PlaceOrderButtonSelector = "[aria-label=\"Place Order\"]";
 
     private const string OrderNumberRegex = @"Success! Order has been created with Order Number ([\w-]+)";
@@ -51,6 +55,26 @@ public class NewOrderPage : BasePage
     {
 
         await PageClient.FillAsync(QuantityInputSelector, quantity);
+
+    }
+
+
+
+    public async Task InputCountryAsync(string? country)
+
+    {
+
+        await PageClient.FillAsync(CountryInputSelector, country);
+
+    }
+
+
+
+    public async Task InputCouponCodeAsync(string? couponCode)
+
+    {
+
+        await PageClient.FillAsync(CouponCodeInputSelector, couponCode);
 
     }
 

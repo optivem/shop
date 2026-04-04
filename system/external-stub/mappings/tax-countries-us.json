@@ -1,0 +1,17 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/tax/api/countries/US"
+  },
+  "response": {
+    "status": 200,
+    "jsonBody": {
+      "id": "US",
+      "countryName": "United States",
+      "taxRate": 0.00
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

@@ -15,12 +15,14 @@ public class WhenPlaceOrderImpl extends BaseWhenStep<PlaceOrderResponse, PlaceOr
     private String orderNumber;
     private String sku;
     private String quantity;
+    private String country;
 
     public WhenPlaceOrderImpl(UseCaseDsl app) {
         super(app);
         withOrderNumber(DEFAULT_ORDER_NUMBER);
         withSku(DEFAULT_SKU);
         withQuantity(DEFAULT_QUANTITY);
+        withCountry(DEFAULT_COUNTRY);
     }
 
     public WhenPlaceOrderImpl withOrderNumber(String orderNumber) {
@@ -42,12 +44,18 @@ public class WhenPlaceOrderImpl extends BaseWhenStep<PlaceOrderResponse, PlaceOr
         return withQuantity(Converter.fromInteger(quantity));
     }
 
+    public WhenPlaceOrderImpl withCountry(String country) {
+        this.country = country;
+        return this;
+    }
+
     @Override
     protected ExecutionResult<PlaceOrderResponse, PlaceOrderVerification> execute(UseCaseDsl app) {
         var result = app.shop(ChannelMode.DYNAMIC).placeOrder()
                 .orderNumber(orderNumber)
                 .sku(sku)
                 .quantity(quantity)
+                .country(country)
                 .execute();
 
         return new ExecutionResultBuilder<>(result)

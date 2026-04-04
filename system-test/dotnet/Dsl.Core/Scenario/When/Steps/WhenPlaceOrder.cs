@@ -16,11 +16,13 @@ public class PlaceOrder : BaseWhen<PlaceOrderResponse, PlaceOrderVerification>, 
     private string? _orderNumber;
     private string? _sku;
     private string? _quantity;
+    private string? _country;
     public PlaceOrder(UseCaseDsl app, ScenarioDsl scenario, Func<Task> ensureGiven) : base(app, scenario, ensureGiven)
     {
         WithOrderNumber(DefaultOrderNumber);
         WithSku(DefaultSku);
         WithQuantity(DefaultQuantity);
+        WithCountry(DefaultCountry);
     }
 
     public PlaceOrder WithOrderNumber(string? orderNumber)
@@ -54,6 +56,14 @@ public class PlaceOrder : BaseWhen<PlaceOrderResponse, PlaceOrderVerification>, 
 
     IPlaceOrder IPlaceOrder.WithQuantity(int quantity) => WithQuantity(quantity);
 
+    public PlaceOrder WithCountry(string? country)
+    {
+        _country = country;
+        return this;
+    }
+
+    IPlaceOrder IPlaceOrder.WithCountry(string? country) => WithCountry(country);
+
     protected override async Task<ExecutionResult<PlaceOrderResponse, PlaceOrderVerification>> Execute(UseCaseDsl app)
     {
         var shop = await app.Shop(ChannelMode.Dynamic, Channel);
@@ -61,6 +71,7 @@ public class PlaceOrder : BaseWhen<PlaceOrderResponse, PlaceOrderVerification>, 
             .OrderNumber(_orderNumber)
             .Sku(_sku)
             .Quantity(_quantity)
+            .Country(_country)
             .Execute();
 
         return new ExecutionResultBuilder<PlaceOrderResponse, PlaceOrderVerification>(result)

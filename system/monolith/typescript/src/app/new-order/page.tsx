@@ -13,7 +13,7 @@ interface ErrorData {
   errors?: FieldError[];
 }
 
-function buildOrderBody(sku: string, quantity: string): Record<string, unknown> {
+function buildOrderBody(sku: string, quantity: string, country: string, couponCode: string): Record<string, unknown> {
   const body: Record<string, unknown> = {};
   if (sku !== "") body.sku = sku;
   if (quantity !== "") {
@@ -25,12 +25,16 @@ function buildOrderBody(sku: string, quantity: string): Record<string, unknown> 
       body.quantity = Number.isNaN(num) ? quantity : num;
     }
   }
+  if (country !== "") body.country = country;
+  if (couponCode !== "") body.couponCode = couponCode;
   return body;
 }
 
 export default function NewOrderPage() {
   const [sku, setSku] = useState("");
   const [quantity, setQuantity] = useState("");
+  const [country, setCountry] = useState("");
+  const [couponCode, setCouponCode] = useState("");
   const [notification, setNotification] = useState<{
     type: "success" | "error";
     message: string;
@@ -49,7 +53,7 @@ export default function NewOrderPage() {
     setNotificationCounter(nextId);
 
     try {
-      const body = buildOrderBody(sku, quantity);
+      const body = buildOrderBody(sku, quantity, country, couponCode);
 
       const response = await fetch("/api/orders", {
         method: "POST",
@@ -163,6 +167,34 @@ export default function NewOrderPage() {
                     onChange={(e) => setQuantity(e.target.value)}
                     placeholder="Enter quantity"
                     aria-label="Quantity"
+                  />
+                </div>
+                <div className="mb-3">
+                  <label htmlFor="country" className="form-label">
+                    Country:
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="country"
+                    value={country}
+                    onChange={(e) => setCountry(e.target.value)}
+                    placeholder="Enter country code (e.g. US)"
+                    aria-label="Country"
+                  />
+                </div>
+                <div className="mb-3">
+                  <label htmlFor="couponCode" className="form-label">
+                    Coupon Code (optional):
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="couponCode"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value)}
+                    placeholder="Enter coupon code"
+                    aria-label="Coupon Code"
                   />
                 </div>
                 <div className="d-grid">

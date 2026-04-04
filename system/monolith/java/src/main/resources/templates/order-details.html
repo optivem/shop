@@ -53,12 +53,44 @@
                         <p aria-label="Display Quantity" id="detailQuantity"></p>
                     </div>
                     <div class="col-md-6 mb-3">
+                        <strong>Country:</strong>
+                        <p aria-label="Display Country" id="detailCountry"></p>
+                    </div>
+                    <div class="col-md-6 mb-3">
                         <strong>Unit Price:</strong>
                         <p aria-label="Display Unit Price" id="detailUnitPrice"></p>
                     </div>
                     <div class="col-md-6 mb-3">
+                        <strong>Base Price:</strong>
+                        <p aria-label="Display Base Price" id="detailBasePrice"></p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Discount Rate:</strong>
+                        <p aria-label="Display Discount Rate" id="detailDiscountRate"></p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Discount Amount:</strong>
+                        <p aria-label="Display Discount Amount" id="detailDiscountAmount"></p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Subtotal Price:</strong>
+                        <p aria-label="Display Subtotal Price" id="detailSubtotalPrice"></p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Tax Rate:</strong>
+                        <p aria-label="Display Tax Rate" id="detailTaxRate"></p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Tax Amount:</strong>
+                        <p aria-label="Display Tax Amount" id="detailTaxAmount"></p>
+                    </div>
+                    <div class="col-md-6 mb-3">
                         <strong>Total Price:</strong>
                         <p class="fs-5 fw-bold" aria-label="Display Total Price" id="detailTotalPrice"></p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Applied Coupon Code:</strong>
+                        <p aria-label="Display Applied Coupon Code" id="detailAppliedCouponCode"></p>
                     </div>
                 </div>
                 <div class="mt-4">
@@ -117,8 +149,16 @@
 
                 document.getElementById('detailSku').textContent = order.sku;
                 document.getElementById('detailQuantity').textContent = order.quantity;
+                document.getElementById('detailCountry').textContent = order.country;
                 document.getElementById('detailUnitPrice').textContent = '$' + order.unitPrice.toFixed(2);
+                document.getElementById('detailBasePrice').textContent = '$' + order.basePrice.toFixed(2);
+                document.getElementById('detailDiscountRate').textContent = (order.discountRate * 100).toFixed(2) + '%';
+                document.getElementById('detailDiscountAmount').textContent = '$' + order.discountAmount.toFixed(2);
+                document.getElementById('detailSubtotalPrice').textContent = '$' + order.subtotalPrice.toFixed(2);
+                document.getElementById('detailTaxRate').textContent = (order.taxRate * 100).toFixed(2) + '%';
+                document.getElementById('detailTaxAmount').textContent = '$' + order.taxAmount.toFixed(2);
                 document.getElementById('detailTotalPrice').textContent = '$' + order.totalPrice.toFixed(2);
+                document.getElementById('detailAppliedCouponCode').textContent = order.appliedCouponCode || '-';
 
                 orderDetails.style.display = 'block';
             } catch (err) {
