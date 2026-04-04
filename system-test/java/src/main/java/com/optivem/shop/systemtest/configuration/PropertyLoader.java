@@ -1,5 +1,7 @@
 package com.optivem.shop.systemtest.configuration;
 
+import com.optivem.shop.dsl.port.ChannelMode;
+
 public class PropertyLoader {
     private PropertyLoader() {
     }
@@ -20,6 +22,26 @@ public class PropertyLoader {
 
         var externalSystemMode = getRequiredSystemProperty("externalSystemMode", "stub|real");
         return ExternalSystemMode.valueOf(externalSystemMode.toUpperCase());
+    }
+
+    public static ChannelMode getChannelMode(ChannelMode fixedChannelMode) {
+        if (fixedChannelMode != null) {
+            return fixedChannelMode;
+        }
+
+        var value = System.getProperty("channelMode");
+        if (value == null || value.isBlank()) {
+            return ChannelMode.DYNAMIC;
+        }
+        return ChannelMode.valueOf(value.toUpperCase());
+    }
+
+    public static String getStaticChannel(String fixedStaticChannel) {
+        if (fixedStaticChannel != null) {
+            return fixedStaticChannel;
+        }
+
+        return getRequiredSystemProperty("staticChannel", "UI|API");
     }
 
     private static String getRequiredSystemProperty(String propertyName, String allowedValues) {

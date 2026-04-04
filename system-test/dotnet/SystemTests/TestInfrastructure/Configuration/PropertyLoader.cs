@@ -27,6 +27,31 @@ public static class PropertyLoader
         return Enum.Parse<ExternalSystemMode>(externalSystemMode, ignoreCase: true);
     }
 
+    public static ChannelMode GetChannelMode(ChannelMode? fixedChannelMode)
+    {
+        if (fixedChannelMode != null)
+        {
+            return fixedChannelMode.Value;
+        }
+
+        var value = System.Environment.GetEnvironmentVariable("CHANNEL_MODE");
+        if (string.IsNullOrEmpty(value))
+        {
+            return ChannelMode.Dynamic;
+        }
+        return Enum.Parse<ChannelMode>(value, ignoreCase: true);
+    }
+
+    public static string? GetStaticChannel(string? fixedStaticChannel)
+    {
+        if (fixedStaticChannel != null)
+        {
+            return fixedStaticChannel;
+        }
+
+        return GetRequiredEnvironmentVariable("STATIC_CHANNEL", "UI|API");
+    }
+
     private static string GetRequiredEnvironmentVariable(string variableName, string allowedValues)
     {
         var value = System.Environment.GetEnvironmentVariable(variableName);

@@ -4,6 +4,7 @@ import com.optivem.shop.dsl.core.usecase.UseCaseDsl;
 import com.optivem.shop.dsl.driver.port.external.clock.ClockDriver;
 import com.optivem.shop.dsl.driver.port.external.erp.ErpDriver;
 import com.optivem.shop.dsl.channel.ChannelType;
+import com.optivem.shop.dsl.port.ChannelMode;
 import com.optivem.shop.dsl.driver.port.shop.ShopDriver;
 import com.optivem.shop.dsl.driver.adapter.external.clock.ClockRealDriver;
 import com.optivem.shop.dsl.driver.adapter.external.clock.ClockStubDriver;
@@ -12,7 +13,6 @@ import com.optivem.shop.dsl.driver.adapter.external.erp.ErpStubDriver;
 import com.optivem.shop.dsl.driver.adapter.shop.api.ShopApiDriver;
 import com.optivem.shop.dsl.driver.adapter.shop.ui.ShopUiDriver;
 import com.optivem.shop.systemtest.infrastructure.playwright.BrowserLifecycleExtension;
-import com.optivem.testing.contexts.ChannelContext;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(BrowserLifecycleExtension.class)
@@ -25,28 +25,40 @@ public abstract class BaseConfigurableTest {
         return null;
     }
 
-    protected Configuration loadConfiguration() {
-        var fixedEnvironment = getFixedEnvironment();
-        var fixedExternalSystemMode = getFixedExternalSystemMode();
+    protected ChannelMode getFixedChannelMode() {
+        return null;
+    }
 
-        var environment = PropertyLoader.getEnvironment(fixedEnvironment);
-        var externalSystemMode = PropertyLoader.getExternalSystemMode(fixedExternalSystemMode);
-        return ConfigurationLoader.load(environment, externalSystemMode);
+    protected String getFixedStaticChannel() {
+        return null;
+    }
+
+    protected Configuration loadConfiguration() {
+        var environment = PropertyLoader.getEnvironment(getFixedEnvironment());
+        var externalSystemMode = PropertyLoader.getExternalSystemMode(getFixedExternalSystemMode());
+        var channelMode = PropertyLoader.getChannelMode(getFixedChannelMode());
+        var staticChannel = (channelMode == ChannelMode.STATIC)
+                ? PropertyLoader.getStaticChannel(getFixedStaticChannel())
+                : null;
+
+        return ConfigurationLoader.load(environment, externalSystemMode, channelMode, staticChannel);
     }
 
     protected UseCaseDsl createUseCaseDsl(Configuration configuration) {
         var externalSystemMode = com.optivem.shop.dsl.port.ExternalSystemMode.valueOf(
                 configuration.getExternalSystemMode().name());
+
         return new UseCaseDsl(
                 externalSystemMode,
-                () -> createShopDriver(configuration),
+                configuration.getChannelMode(),
+                configuration.getStaticChannel(),
+                channel -> createShopDriverForChannel(configuration, channel),
                 () -> createErpDriver(configuration),
                 () -> createClockDriver(configuration)
         );
     }
 
-    private ShopDriver createShopDriver(Configuration configuration) {
-        var channel = ChannelContext.get();
+    private ShopDriver createShopDriverForChannel(Configuration configuration, String channel) {
         if (ChannelType.UI.equals(channel)) {
             return new ShopUiDriver(configuration.getShopUiBaseUrl(), BrowserLifecycleExtension.getBrowser());
         } else if (ChannelType.API.equals(channel)) {
@@ -70,6 +82,3 @@ public abstract class BaseConfigurableTest {
         };
     }
 }
-
-
-

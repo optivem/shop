@@ -6,6 +6,7 @@ import com.optivem.shop.dsl.core.usecase.UseCaseDsl;
 import com.optivem.shop.dsl.core.scenario.ExecutionResult;
 import com.optivem.shop.dsl.core.scenario.ExecutionResultBuilder;
 import com.optivem.shop.dsl.driver.port.shop.dtos.ViewOrderResponse;
+import com.optivem.shop.dsl.port.ChannelMode;
 import com.optivem.shop.dsl.port.when.steps.WhenViewOrder;
 import com.optivem.shop.dsl.core.usecase.shop.usecases.ViewOrderVerification;
 
@@ -24,7 +25,7 @@ public class WhenViewOrderImpl extends BaseWhenStep<ViewOrderResponse, ViewOrder
 
     @Override
     protected ExecutionResult<ViewOrderResponse, ViewOrderVerification> execute(UseCaseDsl app) {
-        var result = app.shop().viewOrder()
+        var result = app.shop(ChannelMode.DYNAMIC).viewOrder()
                 .orderNumber(orderNumber)
                 .execute();
 
@@ -33,5 +34,3 @@ public class WhenViewOrderImpl extends BaseWhenStep<ViewOrderResponse, ViewOrder
                 .build();
     }
 }
-
-

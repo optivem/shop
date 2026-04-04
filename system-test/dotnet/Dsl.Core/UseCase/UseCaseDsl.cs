@@ -20,6 +20,7 @@ public class UseCaseDsl : IAsyncDisposable
     private readonly UseCaseContext _context;
     private readonly Configuration _configuration;
     private ShopDsl? _shop;
+    private ShopDsl? _dynamicShop;
     private ErpDsl? _erp;
     private ClockDsl? _clock;
 
@@ -34,24 +35,46 @@ public class UseCaseDsl : IAsyncDisposable
 
     public async Task<ShopDsl> Shop(Channel channel)
     {
+        var effectiveType = _configuration.ChannelMode == ChannelMode.Static
+            ? _configuration.StaticChannel!
+            : channel.Type;
+
         if (_shop == null)
         {
-            _shop = await ShopDsl.CreateAsync(await CreateShopDriverAsync(channel), _context);
+            _shop = await ShopDsl.CreateAsync(await CreateShopDriverForChannelAsync(effectiveType), _context);
         }
         return _shop;
+    }
+
+    public async Task<ShopDsl> Shop(ChannelMode mode, Channel channel)
+    {
+        if (mode == ChannelMode.Dynamic)
+        {
+            if (_configuration.ChannelMode == ChannelMode.Dynamic)
+            {
+                return await Shop(channel);
+            }
+
+            if (_dynamicShop == null)
+            {
+                _dynamicShop = await ShopDsl.CreateAsync(await CreateShopDriverForChannelAsync(channel.Type), _context);
+            }
+            return _dynamicShop;
+        }
+        return await Shop(channel);
     }
 
     public ErpDsl Erp() => GetOrCreate(ref _erp, () => new ErpDsl(CreateErpDriver(), _context));
 
     public ClockDsl Clock() => GetOrCreate(ref _clock, () => new ClockDsl(CreateClockDriver(), _context));
 
-    private async Task<IShopDriver> CreateShopDriverAsync(Channel channel)
+    private async Task<IShopDriver> CreateShopDriverForChannelAsync(string channelType)
     {
-        return channel.Type switch
+        return channelType switch
         {
             ChannelType.UI => await ShopUiDriver.CreateAsync(_configuration.ShopUiBaseUrl),
             ChannelType.API => new ShopApiDriver(_configuration.ShopApiBaseUrl),
-            _ => throw new InvalidOperationException($"Unknown channel: {channel}")
+            _ => throw new InvalidOperationException($"Unknown channel type: {channelType}")
         };
     }
 
@@ -79,6 +102,9 @@ public class UseCaseDsl : IAsyncDisposable
     {
         if (_shop != null)
             await _shop.DisposeAsync();
+
+        if (_dynamicShop != null && _dynamicShop != _shop)
+            await _dynamicShop.DisposeAsync();
 
         if (_erp != null)
             await _erp.DisposeAsync();

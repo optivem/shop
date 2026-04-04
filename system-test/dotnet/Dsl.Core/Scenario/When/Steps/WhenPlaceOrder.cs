@@ -1,4 +1,5 @@
 using Dsl.Core.Scenario.When.Steps.Base;
+using Dsl.Port;
 using Dsl.Port.When.Steps;
 using Dsl.Core.Shared;
 using Common;
@@ -55,7 +56,7 @@ public class PlaceOrder : BaseWhen<PlaceOrderResponse, PlaceOrderVerification>, 
 
     protected override async Task<ExecutionResult<PlaceOrderResponse, PlaceOrderVerification>> Execute(UseCaseDsl app)
     {
-        var shop = await app.Shop(Channel);
+        var shop = await app.Shop(ChannelMode.Dynamic, Channel);
         var result = await shop.PlaceOrder()
             .OrderNumber(_orderNumber)
             .Sku(_sku)

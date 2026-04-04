@@ -7,7 +7,8 @@ namespace SystemTests.TestInfrastructure.Configuration;
 
 public static class SystemConfigurationLoader
 {
-    public static Dsl.Core.Configuration Load(Environment environment, ExternalSystemMode externalSystemMode)
+    public static Dsl.Core.Configuration Load(Environment environment, ExternalSystemMode externalSystemMode,
+        ChannelMode channelMode, string? staticChannel)
     {
         var configFile = GetConfigFileName(environment, externalSystemMode);
         var configuration = LoadJsonFile(configFile);
@@ -17,7 +18,8 @@ public static class SystemConfigurationLoader
         var erpBaseUrl = GetValue(configuration, "Erp:ApiBaseUrl");
         var clockBaseUrl = GetValue(configuration, "Clock:ApiBaseUrl");
 
-        return new Dsl.Core.Configuration(shopUiBaseUrl, shopApiBaseUrl, erpBaseUrl, clockBaseUrl, externalSystemMode);
+        return new Dsl.Core.Configuration(shopUiBaseUrl, shopApiBaseUrl, erpBaseUrl, clockBaseUrl,
+            externalSystemMode, channelMode, staticChannel);
     }
 
     private static string GetConfigFileName(Environment environment, ExternalSystemMode externalSystemMode)

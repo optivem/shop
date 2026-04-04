@@ -13,5 +13,3 @@ public class Configuration {
     private final String clockBaseUrl;
     private final ExternalSystemMode externalSystemMode;
 }
-
-

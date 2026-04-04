@@ -1,5 +1,6 @@
 package com.optivem.shop.systemtest.configuration;
 
+import com.optivem.shop.dsl.port.ChannelMode;
 import org.yaml.snakeyaml.Yaml;
 
 import java.util.Map;
@@ -11,7 +12,8 @@ public class ConfigurationLoader {
         throw new IllegalStateException("Utility class");
     }
 
-    public static Configuration load(Environment environmentMode, ExternalSystemMode externalSystemMode) {
+    public static Configuration load(Environment environmentMode, ExternalSystemMode externalSystemMode,
+                                     ChannelMode channelMode, String staticChannel) {
         var configFile = getConfigFileName(environmentMode, externalSystemMode);
         var config = loadYamlFile(configFile);
 
@@ -20,7 +22,8 @@ public class ConfigurationLoader {
         var erpBaseUrl = getNestedStringValue(config, "test", "erp", "api", BASE_URL);
         var clockBaseUrl = getNestedStringValue(config, "test", "clock", "api", BASE_URL);
 
-        return new Configuration(shopUiBaseUrl, shopApiBaseUrl, erpBaseUrl, clockBaseUrl, externalSystemMode);
+        return new Configuration(shopUiBaseUrl, shopApiBaseUrl, erpBaseUrl, clockBaseUrl,
+                externalSystemMode, channelMode, staticChannel);
     }
 
     private static String getConfigFileName(Environment environmentMode, ExternalSystemMode externalSystemMode) {

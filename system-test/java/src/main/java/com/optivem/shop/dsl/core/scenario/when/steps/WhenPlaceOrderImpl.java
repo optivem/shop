@@ -7,6 +7,7 @@ import com.optivem.shop.dsl.core.usecase.UseCaseDsl;
 import com.optivem.shop.dsl.core.scenario.ExecutionResult;
 import com.optivem.shop.dsl.core.scenario.ExecutionResultBuilder;
 import com.optivem.shop.dsl.driver.port.shop.dtos.PlaceOrderResponse;
+import com.optivem.shop.dsl.port.ChannelMode;
 import com.optivem.shop.dsl.port.when.steps.WhenPlaceOrder;
 import com.optivem.shop.dsl.core.usecase.shop.usecases.PlaceOrderVerification;
 
@@ -43,7 +44,7 @@ public class WhenPlaceOrderImpl extends BaseWhenStep<PlaceOrderResponse, PlaceOr
 
     @Override
     protected ExecutionResult<PlaceOrderResponse, PlaceOrderVerification> execute(UseCaseDsl app) {
-        var result = app.shop().placeOrder()
+        var result = app.shop(ChannelMode.DYNAMIC).placeOrder()
                 .orderNumber(orderNumber)
                 .sku(sku)
                 .quantity(quantity)
@@ -54,5 +55,3 @@ public class WhenPlaceOrderImpl extends BaseWhenStep<PlaceOrderResponse, PlaceOr
                 .build();
     }
 }
-
-

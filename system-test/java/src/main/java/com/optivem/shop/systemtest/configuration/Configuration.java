@@ -1,5 +1,6 @@
 package com.optivem.shop.systemtest.configuration;
 
+import com.optivem.shop.dsl.port.ChannelMode;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -11,4 +12,6 @@ public class Configuration {
     private final String erpBaseUrl;
     private final String clockBaseUrl;
     private final ExternalSystemMode externalSystemMode;
+    private final ChannelMode channelMode;
+    private final String staticChannel;
 }

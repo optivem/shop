@@ -1,5 +1,6 @@
 using Driver.Adapter;
 using Dsl.Core.Scenario.When.Steps.Base;
+using Dsl.Port;
 using Dsl.Port.When.Steps;
 using Driver.Port.Shop.Dtos;
 using Dsl.Core.Shop.UseCases;
@@ -27,7 +28,7 @@ public class ViewOrder : BaseWhen<ViewOrderResponse, ViewOrderVerification>, IVi
 
     protected override async Task<ExecutionResult<ViewOrderResponse, ViewOrderVerification>> Execute(UseCaseDsl app)
     {
-        var shop = await app.Shop(Channel);
+        var shop = await app.Shop(ChannelMode.Dynamic, Channel);
         var result = await shop.ViewOrder()
             .OrderNumber(_orderNumber)
             .Execute();

@@ -13,6 +13,7 @@ import { DEFAULTS } from './defaults';
 
 export interface AppContext {
   shopDriver: ShopDriver;
+  actionShopDriver: ShopDriver;
   erpDriver: ErpDriver;
   clockDriver: ClockDriver;
 }
@@ -60,6 +61,9 @@ export class ScenarioDsl {
 
   async close(): Promise<void> {
     await this.app.shopDriver.close();
+    if (this.app.actionShopDriver !== this.app.shopDriver) {
+      await this.app.actionShopDriver.close();
+    }
     await this.app.erpDriver.close();
     await this.app.clockDriver.close();
   }
@@ -343,8 +347,8 @@ class ThenResultStage implements PromiseLike<void> {
       await this.app.erpDriver.returnsProduct({ sku: this.sku, price: DEFAULTS.UNIT_PRICE });
     }
 
-    // 3. Execute action
-    const result = await this.app.shopDriver.placeOrder({ sku: this.sku, quantity: this.quantity });
+    // 3. Execute action (uses actionShopDriver for ChannelMode support)
+    const result = await this.app.actionShopDriver.placeOrder({ sku: this.sku, quantity: this.quantity });
 
     // 4. Assert
     if (this._expectSuccess) {

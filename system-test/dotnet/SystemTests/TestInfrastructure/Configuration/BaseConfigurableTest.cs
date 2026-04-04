@@ -16,15 +16,26 @@ public abstract class BaseConfigurableTest
         return null;
     }
 
+    protected virtual ChannelMode? GetFixedChannelMode()
+    {
+        return null;
+    }
+
+    protected virtual string? GetFixedStaticChannel()
+    {
+        return null;
+    }
+
     protected Dsl.Core.Configuration LoadConfiguration()
     {
-        var fixedEnvironment = GetFixedEnvironment();
-        var fixedExternalSystemMode = GetFixedExternalSystemMode();
+        var environment = PropertyLoader.GetEnvironment(GetFixedEnvironment());
+        var externalSystemMode = PropertyLoader.GetExternalSystemMode(GetFixedExternalSystemMode());
+        var channelMode = PropertyLoader.GetChannelMode(GetFixedChannelMode());
+        var staticChannel = channelMode == ChannelMode.Static
+            ? PropertyLoader.GetStaticChannel(GetFixedStaticChannel())
+            : null;
 
-        var environment = PropertyLoader.GetEnvironment(fixedEnvironment);
-        var externalSystemMode = PropertyLoader.GetExternalSystemMode(fixedExternalSystemMode);
-
-        return SystemConfigurationLoader.Load(environment, externalSystemMode);
+        return SystemConfigurationLoader.Load(environment, externalSystemMode, channelMode, staticChannel);
     }
 }
 
