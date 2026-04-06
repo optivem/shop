@@ -51,6 +51,11 @@ public class PageClient {
         return locator.allTextContents();
     }
 
+    public List<String> readAllTextContentsNoWait(String selector) {
+        var locator = page.locator(selector);
+        return locator.allTextContents();
+    }
+
     public void waitForVisible(String selector) {
         var locator = page.locator(selector);
         locator.waitFor(getDefaultWaitForOptions());
@@ -96,5 +101,3 @@ public class PageClient {
                 .setTimeout(timeoutMilliseconds);
     }
 }
-
-

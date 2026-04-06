@@ -28,6 +28,14 @@ public class AssumeImpl implements AssumeStage {
     }
 
     @Override
+    public AssumeRunning tax() {
+        return () -> {
+            app.tax().goToTax().execute().shouldSucceed();
+            return this;
+        };
+    }
+
+    @Override
     public AssumeRunning clock() {
         return () -> {
             app.clock().goToClock().execute().shouldSucceed();
@@ -35,5 +43,3 @@ public class AssumeImpl implements AssumeStage {
         };
     }
 }
-
-

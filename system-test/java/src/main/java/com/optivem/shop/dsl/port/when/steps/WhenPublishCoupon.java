@@ -3,7 +3,17 @@ package com.optivem.shop.dsl.port.when.steps;
 import com.optivem.shop.dsl.port.when.steps.base.WhenStep;
 
 public interface WhenPublishCoupon extends WhenStep {
-    WhenPublishCoupon withCode(String code);
-    WhenPublishCoupon withDiscountRate(double discountRate);
+    WhenPublishCoupon withCouponCode(String couponCode);
+
     WhenPublishCoupon withDiscountRate(String discountRate);
+
+    WhenPublishCoupon withDiscountRate(double discountRate);
+
+    WhenPublishCoupon withValidFrom(String validFrom);
+
+    WhenPublishCoupon withValidTo(String validTo);
+
+    WhenPublishCoupon withUsageLimit(String usageLimit);
+
+    WhenPublishCoupon withUsageLimit(int usageLimit);
 }

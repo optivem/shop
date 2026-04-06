@@ -41,6 +41,11 @@ public abstract class BaseThenStep<TSuccessResponse, TSuccessVerification extend
         return new ThenProductImpl(app, executionResult, verification);
     }
 
+    public ThenCountryImpl country(String countryAlias) {
+        var verification = app.tax().getTaxRate().country(countryAlias).execute().shouldSucceed();
+        return new ThenCountryImpl(app, executionResult, verification);
+    }
+
     public ThenBrowseCouponsImpl coupons() {
         BrowseCouponsVerification verification;
         if (successVerification instanceof BrowseCouponsVerification browseCouponsVerification) {
@@ -49,6 +54,14 @@ public abstract class BaseThenStep<TSuccessResponse, TSuccessVerification extend
             verification = app.shop().browseCoupons().execute().shouldSucceed();
         }
         return new ThenBrowseCouponsImpl(app, executionResult, verification);
+    }
+
+    public ThenCouponImpl<TSuccessResponse, TSuccessVerification> coupon(String couponCode) {
+        return new ThenCouponImpl<>(app, executionResult, couponCode, successVerification);
+    }
+
+    public ThenCouponImpl<TSuccessResponse, TSuccessVerification> coupon() {
+        return coupon(executionResult.getCouponCode());
     }
 
 }

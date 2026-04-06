@@ -69,13 +69,57 @@ public class ThenOrderImpl<TSuccessResponse, TSuccessVerification extends Respon
         return this;
     }
 
+    public ThenOrderImpl<TSuccessResponse, TSuccessVerification> hasBasePrice(double expectedBasePrice) {
+        orderVerification.basePrice(expectedBasePrice);
+        return this;
+    }
+
+    public ThenOrderImpl<TSuccessResponse, TSuccessVerification> hasBasePrice(String basePrice) {
+        orderVerification.basePrice(basePrice);
+        return this;
+    }
+
     public ThenOrderImpl<TSuccessResponse, TSuccessVerification> hasSubtotalPrice(double expectedSubtotalPrice) {
         orderVerification.subtotalPrice(expectedSubtotalPrice);
         return this;
     }
 
+    public ThenOrderImpl<TSuccessResponse, TSuccessVerification> hasSubtotalPrice(String expectedSubtotalPrice) {
+        orderVerification.subtotalPrice(expectedSubtotalPrice);
+        return this;
+    }
+
+    public ThenOrderImpl<TSuccessResponse, TSuccessVerification> hasDiscountAmount(double expectedDiscountAmount) {
+        orderVerification.discountAmount(expectedDiscountAmount);
+        return this;
+    }
+
+    public ThenOrderImpl<TSuccessResponse, TSuccessVerification> hasDiscountAmount(String expectedDiscountAmount) {
+        orderVerification.discountAmount(expectedDiscountAmount);
+        return this;
+    }
+
+    public ThenOrderImpl<TSuccessResponse, TSuccessVerification> hasAppliedCoupon(String expectedCouponCode) {
+        orderVerification.appliedCouponCode(expectedCouponCode);
+        return this;
+    }
+
+    public ThenOrderImpl<TSuccessResponse, TSuccessVerification> hasAppliedCoupon() {
+        return hasAppliedCoupon(executionResult.getCouponCode());
+    }
+
     public ThenOrderImpl<TSuccessResponse, TSuccessVerification> hasTaxRate(double expectedTaxRate) {
         orderVerification.taxRate(expectedTaxRate);
+        return this;
+    }
+
+    public ThenOrderImpl<TSuccessResponse, TSuccessVerification> hasTaxRate(String expectedTaxRate) {
+        orderVerification.taxRate(expectedTaxRate);
+        return this;
+    }
+
+    public ThenOrderImpl<TSuccessResponse, TSuccessVerification> hasTaxAmount(String expectedTaxAmount) {
+        orderVerification.taxAmount(expectedTaxAmount);
         return this;
     }
 
@@ -85,8 +129,7 @@ public class ThenOrderImpl<TSuccessResponse, TSuccessVerification extends Respon
     }
 
     public ThenOrderImpl<TSuccessResponse, TSuccessVerification> hasAppliedCouponCode(String expectedCouponCode) {
-        orderVerification.appliedCouponCode(expectedCouponCode);
-        return this;
+        return hasAppliedCoupon(expectedCouponCode);
     }
 
     @Override

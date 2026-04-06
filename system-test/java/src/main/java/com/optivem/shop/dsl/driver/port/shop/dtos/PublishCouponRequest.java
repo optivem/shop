@@ -12,4 +12,7 @@ import lombok.NoArgsConstructor;
 public class PublishCouponRequest {
     private String code;
     private String discountRate;
+    private String validFrom;
+    private String validTo;
+    private String usageLimit;
 }

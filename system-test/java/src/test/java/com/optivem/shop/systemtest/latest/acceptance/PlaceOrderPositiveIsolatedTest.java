@@ -27,6 +27,7 @@ class PlaceOrderPositiveIsolatedTest extends BaseAcceptanceTest {
         scenario
                 .given().product().withUnitPrice(20.00)
                 .and().promotion().withActive(false)
+                .and().country().withCode("US").withTaxRate("0.00")
                 .when().placeOrder().withQuantity(5)
                 .then().shouldSucceed()
                 .and().order()
@@ -39,6 +40,7 @@ class PlaceOrderPositiveIsolatedTest extends BaseAcceptanceTest {
         scenario
                 .given().product().withUnitPrice(20.00)
                 .and().promotion().withActive(true).withDiscount(0.5)
+                .and().country().withCode("US").withTaxRate("0.00")
                 .when().placeOrder().withQuantity(5)
                 .then().shouldSucceed()
                 .and().order()

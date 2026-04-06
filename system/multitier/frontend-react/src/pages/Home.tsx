@@ -26,6 +26,13 @@ export function Home() {
             linkTo="/order-history"
             linkText="View Orders"
           />
+          <FeatureCard
+            icon="Coupon Management"
+            title="Coupon Management"
+            description="Admin panel for managing discount coupons"
+            linkTo="/admin-coupons"
+            linkText="Manage Coupons"
+          />
         </div>
       </div>
     </Layout>

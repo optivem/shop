@@ -13,6 +13,8 @@ public interface ShopDriver extends AutoCloseable {
 
     Result<PlaceOrderResponse, ErrorResponse> placeOrder(PlaceOrderRequest request);
 
+    Result<Void, ErrorResponse> cancelOrder(String orderNumber);
+
     Result<ViewOrderResponse, ErrorResponse> viewOrder(String orderNumber);
 
     Result<Void, ErrorResponse> publishCoupon(PublishCouponRequest request);

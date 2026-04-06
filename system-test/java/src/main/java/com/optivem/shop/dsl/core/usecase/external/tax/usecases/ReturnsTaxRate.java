@@ -6,38 +6,41 @@ import com.optivem.shop.dsl.core.shared.UseCaseResult;
 import com.optivem.shop.dsl.core.shared.VoidVerification;
 import com.optivem.shop.dsl.core.usecase.external.tax.usecases.base.BaseTaxUseCase;
 import com.optivem.shop.dsl.driver.port.external.tax.TaxDriver;
-import com.optivem.shop.dsl.driver.port.external.tax.dtos.ReturnsCountryRequest;
+import com.optivem.shop.dsl.driver.port.external.tax.dtos.ReturnsTaxRateRequest;
 
-public class ReturnsCountry extends BaseTaxUseCase<Void, VoidVerification> {
-    private String country;
+public class ReturnsTaxRate extends BaseTaxUseCase<Void, VoidVerification> {
+    private String countryAlias;
     private String taxRate;
 
-    public ReturnsCountry(TaxDriver driver, UseCaseContext context) {
+    public ReturnsTaxRate(TaxDriver driver, UseCaseContext context) {
         super(driver, context);
     }
 
-    public ReturnsCountry withCountry(String country) {
-        this.country = country;
+    public ReturnsTaxRate country(String countryAlias) {
+        this.countryAlias = countryAlias;
         return this;
     }
 
-    public ReturnsCountry withTaxRate(String taxRate) {
+    public ReturnsTaxRate taxRate(String taxRate) {
         this.taxRate = taxRate;
         return this;
     }
 
-    public ReturnsCountry withTaxRate(double taxRate) {
-        return withTaxRate(Converter.fromDouble(taxRate));
+    public ReturnsTaxRate taxRate(double taxRate) {
+        return taxRate(Converter.fromDouble(taxRate));
     }
 
     @Override
     public UseCaseResult<Void, VoidVerification> execute() {
-        var request = ReturnsCountryRequest.builder()
+        var country = context.getParamValueOrLiteral(countryAlias);
+
+        var request = ReturnsTaxRateRequest.builder()
                 .country(country)
                 .taxRate(taxRate)
                 .build();
 
-        var result = driver.returnsCountry(request);
+        var result = driver.returnsTaxRate(request);
+
         return new UseCaseResult<>(result, context, VoidVerification::new);
     }
 }

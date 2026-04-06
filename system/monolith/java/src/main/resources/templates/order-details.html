@@ -16,6 +16,8 @@
 
     <h2>Order Details</h2>
 
+    <div id="notifications"></div>
+
     <div class="card shadow">
         <div class="card-header bg-primary text-white">
             <h4 class="mb-0">Order Details</h4>
@@ -93,7 +95,8 @@
                         <p aria-label="Display Applied Coupon Code" id="detailAppliedCouponCode"></p>
                     </div>
                 </div>
-                <div class="mt-4">
+                <div class="mt-4 d-flex gap-2">
+                    <button id="cancelOrderBtn" class="btn btn-danger" aria-label="Cancel Order">Cancel Order</button>
                     <a href="/order-history" class="btn btn-secondary">Back to Order History</a>
                 </div>
             </div>
@@ -169,6 +172,48 @@
         }
 
         loadOrderDetails();
+
+        document.getElementById('cancelOrderBtn').addEventListener('click', async function() {
+            var pathParts = window.location.pathname.split('/');
+            var orderNumber = decodeURIComponent(pathParts[pathParts.length - 1]);
+            var notifications = document.getElementById('notifications');
+            var btn = document.getElementById('cancelOrderBtn');
+
+            window._notificationCounter = (window._notificationCounter || 0) + 1;
+            var nid = window._notificationCounter;
+
+            btn.disabled = true;
+            btn.textContent = 'Cancelling...';
+            notifications.innerHTML = '';
+
+            try {
+                var response = await fetch('/api/orders/' + encodeURIComponent(orderNumber) + '/cancel', {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    notifications.innerHTML = '<div class="notification success" role="alert" data-notification-id="' + nid + '">Order has been cancelled successfully</div>';
+                    loadOrderDetails();
+                } else {
+                    var data = await response.json();
+                    var errorHtml = '<div class="notification error" role="alert" data-notification-id="' + nid + '">';
+                    errorHtml += '<div class="error-message">' + (data.detail || 'An error occurred') + '</div>';
+                    if (data.errors && data.errors.length > 0) {
+                        data.errors.forEach(function(err) {
+                            var fieldPart = err.field ? err.field + ': ' : '';
+                            errorHtml += '<div class="field-error">' + fieldPart + err.message + '</div>';
+                        });
+                    }
+                    errorHtml += '</div>';
+                    notifications.innerHTML = errorHtml;
+                }
+            } catch (err) {
+                notifications.innerHTML = '<div class="notification error" role="alert" data-notification-id="' + nid + '"><div class="error-message">Network error: ' + err.message + '</div></div>';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Cancel Order';
+            }
+        });
     </script>
 </section>
 </body>

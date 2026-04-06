@@ -14,4 +14,6 @@ public interface WhenPlaceOrder extends WhenStep {
     WhenPlaceOrder withCountry(String country);
 
     WhenPlaceOrder withCouponCode(String couponCode);
+
+    WhenPlaceOrder withCouponCode();
 }

@@ -7,8 +7,6 @@ import com.optivem.shop.dsl.driver.port.shop.dtos.BrowseCouponsResponse;
 import com.optivem.shop.dsl.driver.port.shop.dtos.PublishCouponRequest;
 import com.optivem.shop.dsl.common.Result;
 
-import java.util.Map;
-
 public class CouponController {
     private static final String ENDPOINT = "/api/coupons";
 
@@ -19,10 +17,12 @@ public class CouponController {
     }
 
     public Result<Void, ProblemDetailResponse> publishCoupon(PublishCouponRequest request) {
-        var body = Map.of(
-                "code", request.getCode(),
-                "discountRate", Converter.toBigDecimal(request.getDiscountRate())
-        );
+        var body = new java.util.HashMap<String, Object>();
+        body.put("code", request.getCode());
+        body.put("discountRate", Converter.toBigDecimal(request.getDiscountRate()));
+        body.put("validFrom", request.getValidFrom());
+        body.put("validTo", request.getValidTo());
+        body.put("usageLimit", request.getUsageLimit());
         return httpClient.post(ENDPOINT, body);
     }
 

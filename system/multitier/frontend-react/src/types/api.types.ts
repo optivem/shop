@@ -2,6 +2,7 @@
 
 export enum OrderStatus {
   PLACED = 'PLACED',
+  CANCELLED = 'CANCELLED',
 }
 
 // API Request types
@@ -49,4 +50,30 @@ export interface BrowseOrderHistoryItemResponse {
 
 export interface BrowseOrderHistoryResponse {
   orders: BrowseOrderHistoryItemResponse[];
+}
+
+// Coupon API types
+export interface PublishCouponRequest {
+  code: string;
+  discountRate: number;
+  validFrom?: string;
+  validTo?: string;
+  usageLimit?: number;
+}
+
+export interface CreateCouponResponse {
+  code: string;
+}
+
+export interface BrowseCouponsItemResponse {
+  code: string;
+  discountRate: number;
+  validFrom?: string;
+  validTo?: string;
+  usageLimit: number;
+  usedCount: number;
+}
+
+export interface BrowseCouponsResponse {
+  coupons: BrowseCouponsItemResponse[];
 }

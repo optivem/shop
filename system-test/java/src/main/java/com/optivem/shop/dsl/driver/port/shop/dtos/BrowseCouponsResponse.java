@@ -1,12 +1,11 @@
 package com.optivem.shop.dsl.driver.port.shop.dtos;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 
 @Data
@@ -14,15 +13,18 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class BrowseCouponsResponse {
-    private List<BrowseCouponsItemResponse> coupons;
+    private List<CouponDto> coupons;
 
     @Data
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    public static class BrowseCouponsItemResponse {
+    public static class CouponDto {
         private String code;
-        private BigDecimal discountRate;
+        private double discountRate;
+        private Instant validFrom;
+        private Instant validTo;
+        private Integer usageLimit;
+        private Integer usedCount;
     }
 }

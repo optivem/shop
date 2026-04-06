@@ -36,9 +36,7 @@ export function OrderDetailView({ order }: Readonly<OrderDetailViewProps>) {
         valueClassName="fs-5 fw-bold"
         ariaLabel="Display Total Price"
       />
-      {order.appliedCouponCode && (
-        <DetailField label="Applied Coupon Code" value={order.appliedCouponCode} ariaLabel="Display Applied Coupon Code" />
-      )}
+      <DetailField label="Applied Coupon" value={order.appliedCouponCode || 'None'} ariaLabel="Display Applied Coupon" />
     </div>
   );
 }

@@ -24,7 +24,8 @@ public class OrderController {
         return httpClient.get(ENDPOINT + "/" + orderNumber, ViewOrderResponse.class);
     }
 
+    public Result<Void, ProblemDetailResponse> cancelOrder(String orderNumber) {
+        return httpClient.post(ENDPOINT + "/" + orderNumber + "/cancel");
+    }
+
 }
-
-
-

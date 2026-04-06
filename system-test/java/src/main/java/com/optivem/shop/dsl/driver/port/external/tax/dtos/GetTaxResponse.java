@@ -11,8 +11,7 @@ import java.math.BigDecimal;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class GetCountryResponse {
-    private String id;
-    private String countryName;
+public class GetTaxResponse {
+    private String country;
     private BigDecimal taxRate;
 }

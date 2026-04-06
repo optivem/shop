@@ -1,40 +1,58 @@
 package com.optivem.shop.dsl.core.usecase.shop.usecases;
 
-import com.optivem.shop.dsl.common.Converter;
-import com.optivem.shop.dsl.core.shared.UseCaseContext;
-import com.optivem.shop.dsl.core.shared.UseCaseResult;
-import com.optivem.shop.dsl.core.shared.VoidVerification;
-import com.optivem.shop.dsl.core.usecase.shop.usecases.base.BaseShopUseCase;
-import com.optivem.shop.dsl.driver.port.shop.ShopDriver;
 import com.optivem.shop.dsl.driver.port.shop.dtos.PublishCouponRequest;
+import com.optivem.shop.dsl.driver.port.shop.ShopDriver;
+import com.optivem.shop.dsl.core.usecase.shop.usecases.base.BaseShopUseCase;
+import com.optivem.shop.dsl.core.shared.UseCaseResult;
+import com.optivem.shop.dsl.core.shared.UseCaseContext;
+import com.optivem.shop.dsl.core.shared.VoidVerification;
 
 public class PublishCoupon extends BaseShopUseCase<Void, VoidVerification> {
-    private String code;
+    private String couponCodeParamAlias;
     private String discountRate;
+    private String validFrom;
+    private String validTo;
+    private String usageLimit;
 
     public PublishCoupon(ShopDriver driver, UseCaseContext context) {
         super(driver, context);
     }
 
-    public PublishCoupon withCode(String code) {
-        this.code = code;
+    public PublishCoupon couponCode(String couponCodeParamAlias) {
+        this.couponCodeParamAlias = couponCodeParamAlias;
         return this;
     }
 
-    public PublishCoupon withDiscountRate(String discountRate) {
+    public PublishCoupon discountRate(String discountRate) {
         this.discountRate = discountRate;
         return this;
     }
 
-    public PublishCoupon withDiscountRate(double discountRate) {
-        return withDiscountRate(Converter.fromDouble(discountRate));
+    public PublishCoupon validFrom(String validFrom) {
+        this.validFrom = validFrom;
+        return this;
+    }
+
+    public PublishCoupon validTo(String validTo) {
+        this.validTo = validTo;
+        return this;
+    }
+
+    public PublishCoupon usageLimit(String usageLimit) {
+        this.usageLimit = usageLimit;
+        return this;
     }
 
     @Override
     public UseCaseResult<Void, VoidVerification> execute() {
+        var couponCode = context.getParamValue(couponCodeParamAlias);
+
         var request = PublishCouponRequest.builder()
-                .code(code)
+                .code(couponCode)
                 .discountRate(discountRate)
+                .validFrom(validFrom)
+                .validTo(validTo)
+                .usageLimit(usageLimit)
                 .build();
 
         var result = driver.publishCoupon(request);

@@ -18,7 +18,7 @@ Make `starter` match `eshop-tests` as the source of truth at every layer, for al
 - **Bottom-up always:** system → driver port → driver adapter → DSL core → DSL port → tests. Never add a test for functionality that doesn't exist at lower layers.
 - **Verbatim copy first:** copy from eshop-tests, then adapt package names (`com.optivem.eshop` → `com.optivem.shop`, namespace equivalents for .NET/TypeScript).
 - **Starter-only additions are preserved** — see list below. They are not removed or overwritten.
-- **Conflicts resolved in favour of eshop-tests** by default. When the starter version appears richer or different in a non-trivial way, **stop and ask** before proceeding — do not decide unilaterally.
+- **For any conflict between eshop-tests and starter, stop and ask** — do not resolve unilaterally, regardless of which version appears richer or simpler.
 - **Test equivalence check — applies to all languages:** when comparing any test method (new or shared), verify ALL of the following, not just the body:
   - Channel scope: does eshop-tests run on `{UI, API}`, `API` only, or `UI` only? If it differs from starter, ask.
   - Isolation: isolated (`@Isolated` / equivalent) and non-isolated tests are **separate classes** — never merge them into one file, and never move a test from isolated to non-isolated or vice versa without asking.
@@ -29,20 +29,45 @@ Make `starter` match `eshop-tests` as the source of truth at every layer, for al
 - **System before system-test:** for any language, all changes to `starter/system/` must be done and verified before touching `starter/system-test/`. This is the bottom-up rule applied at the repo level.
 - **Never touch `Run-SystemTests.ps1` or any GitHub Actions workflow files** — these are out of scope for this migration entirely.
 - Do not restructure any layer — add to existing files/packages following existing patterns.
-- **Ask for approval at the end of every phase** before starting the next one — even if everything looks green.
-- Never commit between phases. Only commit after all phases for a language are green via `/commit`.
+- **Never commit without explicit user approval.** Do not run `/commit` or any git push command unless the user has explicitly said to commit. Finishing a phase or all phases does not imply permission to commit.
 
-### Phase Verification Sequence (applies to every phase end)
+### Error Fixing
 
-Run suites against multitier first. Only if multitier is fully green, run the same suites against monolith:
+When any test fails during verification, always use eshop-tests as the reference first — compare the failing DSL/system file against the eshop-tests counterpart before making any fix. The root cause is typically a divergence from eshop-tests that was missed during migration.
+
+### Rebuild Before Tests
+
+Whenever a series of changes has been made (to system code or system-test code), always trigger a rebuild before running the test suites. Do not run tests against stale compiled artifacts.
+
+If backend system code was changed (e.g. `system/multitier/backend-java/`), the JAR must be rebuilt first before Docker can pick it up:
+```
+cd system/multitier/backend-java && ./gradlew build -x test
+```
+Then run `-Rebuild -SkipTests` as usual.
+
+### Verification — end of each language module only
+
+Run verification once after all phases for a language are complete (not per phase). If system-level code was changed during the phase, run `-Rebuild -SkipTests` first to restart the system before running any test suites.
+
+Run multitier first; only if green, run monolith:
 
 ```
-./Run-SystemTests.ps1 -Architecture multitier -Suite <suite>
-# if green →
-./Run-SystemTests.ps1 -Architecture monolith -Suite <suite>
+./Run-SystemTests.ps1 -Architecture multitier -Rebuild -SkipTests   # rebuild + restart after system code changes
+./Run-SystemTests.ps1 -Architecture multitier
+./Run-SystemTests.ps1 -Architecture monolith
 ```
 
-Which suites to run depends on the phase — listed in each phase's Verify block. If any suite fails, stop and fix before proceeding. Only when both architectures are green: ask user for approval.
+All must be green before asking for user approval to proceed to the next language.
+
+When debugging failures, run individual suites to avoid restarting from zero each time:
+```
+./Run-SystemTests.ps1 -Architecture multitier -Suite acceptance-api
+./Run-SystemTests.ps1 -Architecture multitier -Suite acceptance-isolated-api
+./Run-SystemTests.ps1 -Architecture multitier -Suite acceptance-ui
+./Run-SystemTests.ps1 -Architecture multitier -Suite acceptance-isolated-ui
+./Run-SystemTests.ps1 -Architecture multitier -Suite contract
+./Run-SystemTests.ps1 -Architecture multitier -Suite smoke
+```
 
 ---
 
@@ -100,13 +125,6 @@ The system (both monolith and multitier) is missing the cancel order endpoint. T
 ### OrderApiController / OrderController (both system variants)
 - ⬜ Add `DELETE /api/orders/{orderNumber}` endpoint calling `orderService.cancelOrder()`; returns `204 No Content`
 
-**Verify:**
-```
-./Run-SystemTests.ps1 -Architecture multitier -SkipTests
-# if green →
-./Run-SystemTests.ps1 -Architecture monolith -SkipTests
-```
-Then ask for approval.
 
 ---
 
@@ -117,7 +135,6 @@ Then ask for approval.
 - ⬜ `OrderStatus.java` — add `CANCELLED` (currently only has `PLACED`; add `DELIVERED` too to match eshop-tests)
 - ⬜ `ShopDriver.java` — add `Result<Void, ErrorResponse> cancelOrder(String orderNumber)`
 
-**Verify:** DSL compiles cleanly. Then ask for approval.
 
 ---
 
@@ -133,7 +150,6 @@ Then ask for approval.
 - ⬜ `ui/ShopUiDriver.java` — implement `cancelOrder(String orderNumber)` (Playwright: navigate to order, click Cancel button)
 - ⬜ Add any required Playwright page method (follow pattern of existing page classes)
 
-**Verify:** DSL compiles cleanly. Then ask for approval.
 
 ---
 
@@ -151,7 +167,6 @@ Then ask for approval.
 - ⬜ `scenario/assume/AssumeImpl.java` — add `tax()` method (follows erp/clock pattern: `app.tax().goToTax().execute().shouldSucceed()`)
 - ⬜ `scenario/given/steps/GivenCountryImpl.java` — add `withCode(String country)` as alias for `withCountry()` (keep `withCountry()` to avoid breaking existing tests)
 
-**Verify:** DSL compiles cleanly. Then ask for approval.
 
 ---
 
@@ -167,7 +182,6 @@ Then ask for approval.
 - ⬜ `port/assume/AssumeStage.java` — add `AssumeRunning tax()`
 - ⬜ `port/given/steps/GivenCountry.java` — add `GivenCountry withCode(String country)`
 
-**Verify:** DSL compiles cleanly (no `-Architecture` flag needed — compilation only). Then ask for approval.
 
 ---
 
@@ -249,19 +263,8 @@ eshop-tests has 4 methods; starter has 3. Add missing:
 
 **Verify after all J6+J7 changes (multitier first, then monolith):**
 ```
-./Run-SystemTests.ps1 -Architecture multitier -Suite acceptance-api
-./Run-SystemTests.ps1 -Architecture multitier -Suite acceptance-isolated-api
-./Run-SystemTests.ps1 -Architecture multitier -Suite acceptance-ui
-./Run-SystemTests.ps1 -Architecture multitier -Suite acceptance-isolated-ui
-./Run-SystemTests.ps1 -Architecture multitier -Suite contract
-./Run-SystemTests.ps1 -Architecture multitier -Suite smoke
-# if all green →
-./Run-SystemTests.ps1 -Architecture monolith -Suite acceptance-api
-./Run-SystemTests.ps1 -Architecture monolith -Suite acceptance-isolated-api
-./Run-SystemTests.ps1 -Architecture monolith -Suite acceptance-ui
-./Run-SystemTests.ps1 -Architecture monolith -Suite acceptance-isolated-ui
-./Run-SystemTests.ps1 -Architecture monolith -Suite contract
-./Run-SystemTests.ps1 -Architecture monolith -Suite smoke
+./Run-SystemTests.ps1 -Architecture multitier
+./Run-SystemTests.ps1 -Architecture monolith
 ```
 Then ask for approval.
 
@@ -310,19 +313,8 @@ Full layer-by-layer detail to be written before TypeScript work starts.
 After all Java phases (J1–J7) complete, run the full matrix — multitier first, then monolith:
 
 ```
-./Run-SystemTests.ps1 -Architecture multitier -Suite acceptance-api
-./Run-SystemTests.ps1 -Architecture multitier -Suite acceptance-isolated-api
-./Run-SystemTests.ps1 -Architecture multitier -Suite acceptance-ui
-./Run-SystemTests.ps1 -Architecture multitier -Suite acceptance-isolated-ui
-./Run-SystemTests.ps1 -Architecture multitier -Suite contract
-./Run-SystemTests.ps1 -Architecture multitier -Suite smoke
-# if all green →
-./Run-SystemTests.ps1 -Architecture monolith -Suite acceptance-api
-./Run-SystemTests.ps1 -Architecture monolith -Suite acceptance-isolated-api
-./Run-SystemTests.ps1 -Architecture monolith -Suite acceptance-ui
-./Run-SystemTests.ps1 -Architecture monolith -Suite acceptance-isolated-ui
-./Run-SystemTests.ps1 -Architecture monolith -Suite contract
-./Run-SystemTests.ps1 -Architecture monolith -Suite smoke
+./Run-SystemTests.ps1 -Architecture multitier
+./Run-SystemTests.ps1 -Architecture monolith
 ```
 
 All must be green. Then ask for approval → `/commit`.

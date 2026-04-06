@@ -34,6 +34,11 @@ public class ShopApiDriver implements ShopDriver {
     }
 
     @Override
+    public Result<Void, ErrorResponse> cancelOrder(String orderNumber) {
+        return apiClient.orders().cancelOrder(orderNumber).mapError(SystemErrorMapper::from);
+    }
+
+    @Override
     public Result<ViewOrderResponse, ErrorResponse> viewOrder(String orderNumber) {
         return apiClient.orders().viewOrder(orderNumber).mapError(SystemErrorMapper::from);
     }

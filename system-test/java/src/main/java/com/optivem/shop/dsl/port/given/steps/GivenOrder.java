@@ -12,8 +12,11 @@ public interface GivenOrder extends GivenStep {
 
     GivenOrder withQuantity(int quantity);
 
+    GivenOrder withCountry(String country);
+
+    GivenOrder withCouponCode(String couponCode);
+
     GivenOrder withStatus(String status);
 
     GivenOrder withStatus(OrderStatus status);
 }
-

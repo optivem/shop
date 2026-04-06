@@ -2,9 +2,9 @@ package com.optivem.shop.dsl.core.usecase.external.tax;
 
 import com.optivem.shop.dsl.common.Closer;
 import com.optivem.shop.dsl.core.shared.UseCaseContext;
-import com.optivem.shop.dsl.core.usecase.external.tax.usecases.GetCountry;
+import com.optivem.shop.dsl.core.usecase.external.tax.usecases.GetTaxRate;
 import com.optivem.shop.dsl.core.usecase.external.tax.usecases.GoToTax;
-import com.optivem.shop.dsl.core.usecase.external.tax.usecases.ReturnsCountry;
+import com.optivem.shop.dsl.core.usecase.external.tax.usecases.ReturnsTaxRate;
 import com.optivem.shop.dsl.driver.port.external.tax.TaxDriver;
 
 public class TaxDsl implements AutoCloseable {
@@ -25,11 +25,11 @@ public class TaxDsl implements AutoCloseable {
         return new GoToTax(driver, context);
     }
 
-    public ReturnsCountry returnsCountry() {
-        return new ReturnsCountry(driver, context);
+    public ReturnsTaxRate returnsTaxRate() {
+        return new ReturnsTaxRate(driver, context);
     }
 
-    public GetCountry getCountry() {
-        return new GetCountry(driver, context);
+    public GetTaxRate getTaxRate() {
+        return new GetTaxRate(driver, context);
     }
 }

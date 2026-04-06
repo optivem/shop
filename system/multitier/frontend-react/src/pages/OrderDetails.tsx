@@ -1,16 +1,27 @@
+import { useCallback, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Layout, DataState } from '../components';
 import { OrderDetailView } from '../features/orders';
 import { useOrderDetails } from '../hooks';
+import { useNotificationContext } from '../contexts/NotificationContext';
+import { orderService } from '../services/order-service';
 
-/**
- * Order Details page component for viewing individual order information
- * Allows users to view detailed order information
- */
 export function OrderDetails() {
   const { orderNumber } = useParams<{ orderNumber: string }>();
   const navigate = useNavigate();
-  const { order, isLoading, error } = useOrderDetails(orderNumber);
+  const { order, isLoading, error, refresh } = useOrderDetails(orderNumber);
+  const { handleResult, setSuccess } = useNotificationContext();
+  const [isCancelling, setIsCancelling] = useState(false);
+
+  const handleCancel = useCallback(async () => {
+    if (!orderNumber) return;
+    setIsCancelling(true);
+    handleResult(await orderService.cancelOrder(orderNumber), () => {
+      setSuccess('Order has been cancelled successfully');
+      refresh();
+    });
+    setIsCancelling(false);
+  }, [orderNumber, handleResult, setSuccess, refresh]);
 
   return (
     <Layout
@@ -36,7 +47,15 @@ export function OrderDetails() {
             {order && (
               <>
                 <OrderDetailView order={order} />
-                <div className="mt-4">
+                <div className="mt-4 d-flex gap-2">
+                  <button
+                    className="btn btn-danger"
+                    aria-label="Cancel Order"
+                    onClick={handleCancel}
+                    disabled={isCancelling}
+                  >
+                    {isCancelling ? 'Cancelling...' : 'Cancel Order'}
+                  </button>
                   <button
                     className="btn btn-secondary"
                     onClick={() => navigate('/order-history')}

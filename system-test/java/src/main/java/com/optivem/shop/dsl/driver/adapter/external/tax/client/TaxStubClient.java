@@ -9,8 +9,9 @@ import com.optivem.shop.dsl.driver.adapter.shared.client.http.JsonHttpClient;
 import com.optivem.shop.dsl.driver.adapter.shared.client.wiremock.JsonWireMockClient;
 
 public class TaxStubClient implements AutoCloseable {
-    private static final String HEALTH_ENDPOINT = "/tax/health";
-    private static final String COUNTRIES_ENDPOINT = "/tax/api/countries/";
+    private static final String HEALTH_ENDPOINT = "/health";
+    private static final String COUNTRIES_ENDPOINT = "/api/countries/";
+    private static final String WIREMOCK_COUNTRIES_ENDPOINT = "/tax/api/countries/";
 
     private final JsonHttpClient<ExtTaxErrorResponse> httpClient;
     private final JsonWireMockClient wireMockClient;
@@ -34,7 +35,7 @@ public class TaxStubClient implements AutoCloseable {
     }
 
     public Result<Void, ExtTaxErrorResponse> configureGetCountry(String country, ExtGetCountryResponse response) {
-        return wireMockClient.stubGet(COUNTRIES_ENDPOINT + country, HttpStatus.OK, response)
+        return wireMockClient.stubGet(WIREMOCK_COUNTRIES_ENDPOINT + country, HttpStatus.OK, response)
                 .mapError(ExtTaxErrorResponse::new);
     }
 

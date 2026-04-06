@@ -7,7 +7,7 @@ public interface AssumeStage {
 
     AssumeRunning erp();
 
+    AssumeRunning tax();
+
     AssumeRunning clock();
 }
-
-

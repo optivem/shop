@@ -98,7 +98,7 @@ const taxRouter = jsonServer.router({
     {
       id: "US",
       countryName: "United States",
-      taxRate: 0
+      taxRate: 0.07
     },
     {
       id: "GB",

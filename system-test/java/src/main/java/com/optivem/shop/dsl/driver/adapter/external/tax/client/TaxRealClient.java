@@ -7,8 +7,8 @@ import com.optivem.shop.dsl.driver.adapter.external.tax.client.dtos.error.ExtTax
 import com.optivem.shop.dsl.driver.adapter.shared.client.http.JsonHttpClient;
 
 public class TaxRealClient implements AutoCloseable {
-    private static final String HEALTH_ENDPOINT = "/tax/health";
-    private static final String COUNTRIES_ENDPOINT = "/tax/api/countries/";
+    private static final String HEALTH_ENDPOINT = "/health";
+    private static final String COUNTRIES_ENDPOINT = "/api/countries/";
 
     private final JsonHttpClient<ExtTaxErrorResponse> httpClient;
 

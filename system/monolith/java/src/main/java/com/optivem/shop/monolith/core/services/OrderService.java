@@ -113,6 +113,36 @@ public class OrderService {
         return countryDetails.get().getTaxRate();
     }
 
+    public void cancelOrder(String orderNumber) {
+        var now = LocalDateTime.ofInstant(clockGateway.getCurrentTime(), ZoneId.of("UTC"));
+        var currentMonthDay = MonthDay.from(now);
+
+        if (currentMonthDay.equals(YEAR_END_RESTRICTED_MONTH_DAY)) {
+            var currentTime = now.toLocalTime();
+            var cancelBlackoutStart = LocalTime.of(22, 0);
+            var cancelBlackoutEnd = LocalTime.of(22, 30);
+
+            if (!currentTime.isBefore(cancelBlackoutStart) && !currentTime.isAfter(cancelBlackoutEnd)) {
+                throw new ValidationException("Order cancellation is not allowed on December 31st between 22:00 and 23:00");
+            }
+        }
+
+        var optionalOrder = orderRepository.findByOrderNumber(orderNumber);
+
+        if (optionalOrder.isEmpty()) {
+            throw new NotExistValidationException("Order " + orderNumber + " does not exist.");
+        }
+
+        var order = optionalOrder.get();
+
+        if (order.getStatus() == OrderStatus.CANCELLED) {
+            throw new ValidationException("Order has already been cancelled");
+        }
+
+        order.setStatus(OrderStatus.CANCELLED);
+        orderRepository.save(order);
+    }
+
     public BrowseOrderHistoryResponse browseOrderHistory(String orderNumberFilter) {
         List<Order> orders;
         if (orderNumberFilter == null || orderNumberFilter.trim().isEmpty()) {

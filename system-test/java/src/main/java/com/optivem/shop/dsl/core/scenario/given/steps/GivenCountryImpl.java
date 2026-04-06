@@ -5,16 +5,20 @@ import com.optivem.shop.dsl.core.scenario.given.GivenImpl;
 import com.optivem.shop.dsl.core.usecase.UseCaseDsl;
 import com.optivem.shop.dsl.port.given.steps.GivenCountry;
 
+import static com.optivem.shop.dsl.core.scenario.ScenarioDefaults.*;
+
 public class GivenCountryImpl extends BaseGivenStep implements GivenCountry {
     private String country;
     private String taxRate;
 
     public GivenCountryImpl(GivenImpl given) {
         super(given);
+        withCode(DEFAULT_COUNTRY);
+        withTaxRate(DEFAULT_TAX_RATE);
     }
 
     @Override
-    public GivenCountryImpl withCountry(String country) {
+    public GivenCountryImpl withCode(String country) {
         this.country = country;
         return this;
     }
@@ -32,9 +36,9 @@ public class GivenCountryImpl extends BaseGivenStep implements GivenCountry {
 
     @Override
     public void execute(UseCaseDsl app) {
-        app.tax().returnsCountry()
-                .withCountry(country)
-                .withTaxRate(taxRate)
+        app.tax().returnsTaxRate()
+                .country(country)
+                .taxRate(taxRate)
                 .execute()
                 .shouldSucceed();
     }

@@ -29,6 +29,12 @@ class OrderService {
     });
   }
 
+  async cancelOrder(orderNumber: string): Promise<Result<void>> {
+    return fetchJson<void>(`${this.baseUrl}/${orderNumber}/cancel`, {
+      method: 'POST'
+    });
+  }
+
   async browseOrderHistory(orderNumberFilter?: string): Promise<Result<BrowseOrderHistoryResponse>> {
     const url = orderNumberFilter?.trim()
       ? `${this.baseUrl}?orderNumber=${encodeURIComponent(orderNumberFilter.trim())}`

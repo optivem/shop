@@ -2,6 +2,7 @@ package com.optivem.shop.dsl.driver.adapter.shop.ui;
 
 import com.microsoft.playwright.Browser;
 import com.optivem.shop.dsl.driver.adapter.shop.ui.client.ShopUiClient;
+import com.optivem.shop.dsl.driver.adapter.shop.ui.client.pages.CouponManagementPage;
 import com.optivem.shop.dsl.driver.adapter.shop.ui.client.pages.HomePage;
 import com.optivem.shop.dsl.driver.adapter.shop.ui.client.pages.NewOrderPage;
 import com.optivem.shop.dsl.driver.adapter.shop.ui.client.pages.OrderDetailsPage;
@@ -26,6 +27,7 @@ public class ShopUiDriver implements ShopDriver {
     private NewOrderPage newOrderPage;
     private OrderHistoryPage orderHistoryPage;
     private OrderDetailsPage orderDetailsPage;
+    private CouponManagementPage couponManagementPage;
 
     public ShopUiDriver(String baseUrl, Browser browser) {
         this.client = new ShopUiClient(baseUrl, browser);
@@ -77,6 +79,25 @@ public class ShopUiDriver implements ShopDriver {
     }
 
     @Override
+    public Result<Void, ErrorResponse> cancelOrder(String orderNumber) {
+        var viewResult = viewOrder(orderNumber);
+
+        if (viewResult.isFailure()) {
+            return viewResult.mapVoid();
+        }
+
+        orderDetailsPage.clickCancelOrder();
+
+        var result = orderDetailsPage.getResult();
+
+        if (result.isFailure()) {
+            return result.mapVoid();
+        }
+
+        return success();
+    }
+
+    @Override
     public Result<ViewOrderResponse, ErrorResponse> viewOrder(String orderNumber) {
         var result = ensureOnOrderDetailsPage(orderNumber);
         if (result.isFailure()) {
@@ -93,18 +114,34 @@ public class ShopUiDriver implements ShopDriver {
         var orderTimestamp = orderDetailsPage.getOrderTimestamp();
         var sku = orderDetailsPage.getSku();
         var quantity = orderDetailsPage.getQuantity();
+        var country = orderDetailsPage.getCountry();
         var unitPrice = orderDetailsPage.getUnitPrice();
+        var basePrice = orderDetailsPage.getBasePrice();
+        var discountRate = orderDetailsPage.getDiscountRate();
+        var discountAmount = orderDetailsPage.getDiscountAmount();
+        var subtotalPrice = orderDetailsPage.getSubtotalPrice();
+        var taxRate = orderDetailsPage.getTaxRate();
+        var taxAmount = orderDetailsPage.getTaxAmount();
         var totalPrice = orderDetailsPage.getTotalPrice();
         var status = orderDetailsPage.getStatus();
+        var appliedCoupon = orderDetailsPage.getAppliedCoupon();
 
         var response = ViewOrderResponse.builder()
                 .orderNumber(displayOrderNumber)
                 .orderTimestamp(orderTimestamp)
                 .sku(sku)
                 .quantity(quantity)
+                .country(country)
                 .unitPrice(unitPrice)
+                .basePrice(basePrice)
+                .discountRate(discountRate)
+                .discountAmount(discountAmount)
+                .subtotalPrice(subtotalPrice)
+                .taxRate(taxRate)
+                .taxAmount(taxAmount)
                 .totalPrice(totalPrice)
                 .status(status)
+                .appliedCouponCode(appliedCoupon)
                 .build();
 
         return success(response);
@@ -112,12 +149,29 @@ public class ShopUiDriver implements ShopDriver {
 
     @Override
     public Result<Void, ErrorResponse> publishCoupon(PublishCouponRequest request) {
-        throw new UnsupportedOperationException("publishCoupon is not supported via UI channel");
+        ensureOnCouponManagementPage();
+
+        couponManagementPage.inputCouponCode(request.getCode());
+        couponManagementPage.inputDiscountRate(request.getDiscountRate());
+        couponManagementPage.inputValidFrom(request.getValidFrom());
+        couponManagementPage.inputValidTo(request.getValidTo());
+        couponManagementPage.inputUsageLimit(request.getUsageLimit());
+        couponManagementPage.clickPublishCoupon();
+
+        return couponManagementPage.getResult().mapVoid();
     }
 
     @Override
     public Result<BrowseCouponsResponse, ErrorResponse> browseCoupons() {
-        throw new UnsupportedOperationException("browseCoupons is not supported via UI channel");
+        navigateToCouponManagementPage();
+
+        var coupons = couponManagementPage.readCoupons();
+
+        var response = BrowseCouponsResponse.builder()
+                .coupons(coupons)
+                .build();
+
+        return success(response);
     }
 
     // --- page navigation ---
@@ -135,6 +189,17 @@ public class ShopUiDriver implements ShopDriver {
             newOrderPage = getHomePage().clickNewOrder();
             currentPage = Page.NEW_ORDER;
         }
+    }
+
+    private void ensureOnCouponManagementPage() {
+        if (currentPage != Page.COUPON_MANAGEMENT) {
+            navigateToCouponManagementPage();
+        }
+    }
+
+    private void navigateToCouponManagementPage() {
+        couponManagementPage = getHomePage().clickCouponManagement();
+        currentPage = Page.COUPON_MANAGEMENT;
     }
 
     private void ensureOnOrderHistoryPage() {
@@ -165,6 +230,7 @@ public class ShopUiDriver implements ShopDriver {
         HOME,
         NEW_ORDER,
         ORDER_HISTORY,
-        ORDER_DETAILS
+        ORDER_DETAILS,
+        COUPON_MANAGEMENT
     }
 }

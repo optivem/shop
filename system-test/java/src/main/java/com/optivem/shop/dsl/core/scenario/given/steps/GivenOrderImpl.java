@@ -12,6 +12,9 @@ public class GivenOrderImpl extends BaseGivenStep implements GivenOrder {
     private String orderNumber;
     private String sku;
     private String quantity;
+    private String country;
+    private String couponCodeAlias;
+    private OrderStatus status;
 
     public GivenOrderImpl(GivenImpl given) {
         super(given);
@@ -19,6 +22,9 @@ public class GivenOrderImpl extends BaseGivenStep implements GivenOrder {
         withOrderNumber(DEFAULT_ORDER_NUMBER);
         withSku(DEFAULT_SKU);
         withQuantity(DEFAULT_QUANTITY);
+        withCountry(DEFAULT_COUNTRY);
+        withCouponCode(EMPTY);
+        withStatus(DEFAULT_ORDER_STATUS);
     }
 
     public GivenOrderImpl withOrderNumber(String orderNumber) {
@@ -40,7 +46,18 @@ public class GivenOrderImpl extends BaseGivenStep implements GivenOrder {
         return withQuantity(Converter.fromInteger(quantity));
     }
 
+    public GivenOrderImpl withCountry(String country) {
+        this.country = country;
+        return this;
+    }
+
+    public GivenOrderImpl withCouponCode(String couponCodeAlias) {
+        this.couponCodeAlias = couponCodeAlias;
+        return this;
+    }
+
     public GivenOrderImpl withStatus(OrderStatus status) {
+        this.status = status;
         return this;
     }
 
@@ -50,15 +67,20 @@ public class GivenOrderImpl extends BaseGivenStep implements GivenOrder {
 
     @Override
     public void execute(UseCaseDsl app) {
-
         app.shop().placeOrder()
                 .orderNumber(orderNumber)
                 .sku(sku)
                 .quantity(quantity)
+                .country(country)
+                .couponCode(couponCodeAlias)
                 .execute()
                 .shouldSucceed();
 
+        if (status == OrderStatus.CANCELLED) {
+            app.shop().cancelOrder()
+                    .orderNumber(orderNumber)
+                    .execute()
+                    .shouldSucceed();
+        }
     }
 }
-
-

@@ -107,6 +107,42 @@ public class ViewOrderVerification extends ResponseVerification<ViewOrderRespons
         return subtotalPrice(Converter.toBigDecimal(expectedSubtotalPrice));
     }
 
+    public ViewOrderVerification subtotalPrice(String expectedSubtotalPrice) {
+        return subtotalPrice(Converter.toDouble(expectedSubtotalPrice));
+    }
+
+    public ViewOrderVerification basePrice(BigDecimal expectedBasePrice) {
+        var actualBasePrice = getResponse().getBasePrice();
+        assertThat(actualBasePrice)
+                .withFailMessage("Expected base price to be %s, but was %s", expectedBasePrice, actualBasePrice)
+                .isEqualByComparingTo(expectedBasePrice);
+        return this;
+    }
+
+    public ViewOrderVerification basePrice(double expectedBasePrice) {
+        return basePrice(Converter.toBigDecimal(expectedBasePrice));
+    }
+
+    public ViewOrderVerification basePrice(String expectedBasePrice) {
+        return basePrice(Converter.toBigDecimal(expectedBasePrice));
+    }
+
+    public ViewOrderVerification discountAmount(BigDecimal expectedDiscountAmount) {
+        var actualDiscountAmount = getResponse().getDiscountAmount();
+        assertThat(actualDiscountAmount)
+                .withFailMessage("Expected discount amount to be %s, but was %s", expectedDiscountAmount, actualDiscountAmount)
+                .isEqualByComparingTo(expectedDiscountAmount);
+        return this;
+    }
+
+    public ViewOrderVerification discountAmount(double expectedDiscountAmount) {
+        return discountAmount(Converter.toBigDecimal(expectedDiscountAmount));
+    }
+
+    public ViewOrderVerification discountAmount(String expectedDiscountAmount) {
+        return discountAmount(Converter.toBigDecimal(expectedDiscountAmount));
+    }
+
     public ViewOrderVerification taxRate(BigDecimal expectedTaxRate) {
         var actualTaxRate = getResponse().getTaxRate();
         assertThat(actualTaxRate)
@@ -117,6 +153,26 @@ public class ViewOrderVerification extends ResponseVerification<ViewOrderRespons
 
     public ViewOrderVerification taxRate(double expectedTaxRate) {
         return taxRate(Converter.toBigDecimal(expectedTaxRate));
+    }
+
+    public ViewOrderVerification taxRate(String expectedTaxRate) {
+        return taxRate(Converter.toBigDecimal(expectedTaxRate));
+    }
+
+    public ViewOrderVerification taxAmount(BigDecimal expectedTaxAmount) {
+        var actualTaxAmount = getResponse().getTaxAmount();
+        assertThat(actualTaxAmount)
+                .withFailMessage("Expected tax amount to be %s, but was %s", expectedTaxAmount, actualTaxAmount)
+                .isEqualByComparingTo(expectedTaxAmount);
+        return this;
+    }
+
+    public ViewOrderVerification taxAmount(double expectedTaxAmount) {
+        return taxAmount(Converter.toBigDecimal(expectedTaxAmount));
+    }
+
+    public ViewOrderVerification taxAmount(String expectedTaxAmount) {
+        return taxAmount(Converter.toBigDecimal(expectedTaxAmount));
     }
 
     public ViewOrderVerification discountRate(BigDecimal expectedDiscountRate) {
@@ -131,7 +187,8 @@ public class ViewOrderVerification extends ResponseVerification<ViewOrderRespons
         return discountRate(Converter.toBigDecimal(expectedDiscountRate));
     }
 
-    public ViewOrderVerification appliedCouponCode(String expectedCouponCode) {
+    public ViewOrderVerification appliedCouponCode(String expectedCouponCodeAlias) {
+        var expectedCouponCode = getContext().getParamValue(expectedCouponCodeAlias);
         var actualCouponCode = getResponse().getAppliedCouponCode();
         assertThat(actualCouponCode)
                 .withFailMessage("Expected applied coupon code to be '%s', but was '%s'", expectedCouponCode, actualCouponCode)

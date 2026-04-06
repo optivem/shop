@@ -6,9 +6,8 @@ import com.optivem.shop.dsl.common.Result;
 import com.optivem.shop.dsl.driver.adapter.external.tax.client.TaxStubClient;
 import com.optivem.shop.dsl.driver.adapter.external.tax.client.dtos.ExtGetCountryResponse;
 import com.optivem.shop.dsl.driver.port.external.tax.TaxDriver;
-import com.optivem.shop.dsl.driver.port.external.tax.dtos.GetCountryRequest;
-import com.optivem.shop.dsl.driver.port.external.tax.dtos.GetCountryResponse;
-import com.optivem.shop.dsl.driver.port.external.tax.dtos.ReturnsCountryRequest;
+import com.optivem.shop.dsl.driver.port.external.tax.dtos.GetTaxResponse;
+import com.optivem.shop.dsl.driver.port.external.tax.dtos.ReturnsTaxRateRequest;
 import com.optivem.shop.dsl.driver.port.shared.dtos.ErrorResponse;
 
 public class TaxStubDriver implements TaxDriver {
@@ -31,18 +30,17 @@ public class TaxStubDriver implements TaxDriver {
     }
 
     @Override
-    public Result<GetCountryResponse, ErrorResponse> getCountry(GetCountryRequest request) {
-        return client.getCountry(request.getCountry())
-                .map(ext -> GetCountryResponse.builder()
-                        .id(ext.getId())
-                        .countryName(ext.getCountryName())
+    public Result<GetTaxResponse, ErrorResponse> getTaxRate(String country) {
+        return client.getCountry(country)
+                .map(ext -> GetTaxResponse.builder()
+                        .country(ext.getId())
                         .taxRate(ext.getTaxRate())
                         .build())
                 .mapError(ext -> ErrorResponse.builder().message(ext.getMessage()).build());
     }
 
     @Override
-    public Result<Void, ErrorResponse> returnsCountry(ReturnsCountryRequest request) {
+    public Result<Void, ErrorResponse> returnsTaxRate(ReturnsTaxRateRequest request) {
         var taxRate = Converter.toBigDecimal(request.getTaxRate());
         var extResponse = ExtGetCountryResponse.builder()
                 .id(request.getCountry())
