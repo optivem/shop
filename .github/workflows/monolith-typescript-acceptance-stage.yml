@@ -163,6 +163,7 @@ jobs:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
           CHANNEL: UI
+          CHANNEL_MODE: static
 
       - name: Run Acceptance Tests (Isolated) - API Channel
         working-directory: system-test/typescript
@@ -179,6 +180,7 @@ jobs:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
           CHANNEL: UI
+          CHANNEL_MODE: static
 
       - name: Run Contract Tests (Stub)
         working-directory: system-test/typescript
@@ -214,6 +216,7 @@ jobs:
         env:
           ENVIRONMENT: acceptance
           CHANNEL: UI
+          CHANNEL_MODE: static
 
       - name: Read Target Version
         id: read-version
