@@ -151,7 +151,7 @@ jobs:
         working-directory: system-test/java
 
       - name: Run Acceptance Tests - UI Channel
-        run: ./gradlew test -Dversion=latest -Dtype=acceptance -DexcludeTags=isolated -Dchannel=UI -Denvironment=acceptance
+        run: ./gradlew test -Dversion=latest -Dtype=acceptance -DexcludeTags=isolated -Dchannel=UI -DchannelMode=static -Denvironment=acceptance
         working-directory: system-test/java
 
       - name: Run Acceptance Tests (Isolated) - API Channel
@@ -159,7 +159,7 @@ jobs:
         working-directory: system-test/java
 
       - name: Run Acceptance Tests (Isolated) - UI Channel
-        run: ./gradlew test -Dversion=latest -Dtype=acceptance -DincludeTags=isolated -Dchannel=UI -Denvironment=acceptance
+        run: ./gradlew test -Dversion=latest -Dtype=acceptance -DincludeTags=isolated -Dchannel=UI -DchannelMode=static -Denvironment=acceptance
         working-directory: system-test/java
 
       - name: Run Contract Tests (Stub)
@@ -179,7 +179,7 @@ jobs:
         working-directory: system-test/java
 
       - name: Run E2E Tests - UI Channel
-        run: ./gradlew test -Dversion=latest -Dtype=e2e -Dchannel=UI -Denvironment=acceptance
+        run: ./gradlew test -Dversion=latest -Dtype=e2e -Dchannel=UI -DchannelMode=static -Denvironment=acceptance
         working-directory: system-test/java
 
       - name: Read Target Version

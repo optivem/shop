@@ -168,6 +168,7 @@ jobs:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
           CHANNEL: UI
+          CHANNEL_MODE: static
 
       - name: Run Acceptance Tests (Isolated) - API Channel
         run: dotnet test --filter "FullyQualifiedName~.Latest.AcceptanceTests&Category=isolated" --verbosity normal
@@ -184,6 +185,7 @@ jobs:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
           CHANNEL: UI
+          CHANNEL_MODE: static
 
       - name: Run Contract Tests (Stub)
         run: dotnet test --filter "FullyQualifiedName~.Latest.ExternalSystemContractTests&Category!=isolated" --verbosity normal
@@ -219,6 +221,7 @@ jobs:
         env:
           ENVIRONMENT: acceptance
           CHANNEL: UI
+          CHANNEL_MODE: static
 
       - name: Read Target Version
         id: read-version
