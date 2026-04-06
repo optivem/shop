@@ -6,6 +6,7 @@ using Xunit;
 namespace SystemTests.Latest.AcceptanceTests;
 
 [Collection("Isolated")]
+[Trait("Category", "isolated")]
 public class PlaceOrderNegativeIsolatedTest : BaseAcceptanceTest
 {
     [Theory]

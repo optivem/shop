@@ -63,10 +63,10 @@ public class PublishCoupon : BaseShopCommand<VoidValue, VoidVerification>
         var request = new PublishCouponRequest
         {
             Code = couponCode,
-            DiscountRate = _discountRate,
-            ValidFrom = _validFrom,
-            ValidTo = _validTo,
-            UsageLimit = _usageLimit
+            DiscountRate = string.IsNullOrWhiteSpace(_discountRate) ? null : _discountRate,
+            ValidFrom = string.IsNullOrWhiteSpace(_validFrom) ? null : _validFrom,
+            ValidTo = string.IsNullOrWhiteSpace(_validTo) ? null : _validTo,
+            UsageLimit = string.IsNullOrWhiteSpace(_usageLimit) ? null : _usageLimit
         };
 
         var result = await _driver.PublishCouponAsync(request);

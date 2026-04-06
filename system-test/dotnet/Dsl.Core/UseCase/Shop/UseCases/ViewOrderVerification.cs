@@ -53,6 +53,13 @@ public class ViewOrderVerification : ResponseVerification<ViewOrderResponse>
         return Status(Enum.Parse<OrderStatus>(expectedStatus));
     }
 
+    public ViewOrderVerification Country(string expectedCountry)
+    {
+        Response.Country.ShouldBe(expectedCountry,
+            $"Expected country: '{expectedCountry}', but got: '{Response.Country}'");
+        return this;
+    }
+
     public ViewOrderVerification UnitPrice(decimal expectedUnitPrice)
     {
         Response.UnitPrice.ShouldBe(expectedUnitPrice,
@@ -72,11 +79,125 @@ public class ViewOrderVerification : ResponseVerification<ViewOrderResponse>
         return this;
     }
 
+    public ViewOrderVerification SubtotalPrice(decimal expectedSubtotalPrice)
+    {
+        Response.SubtotalPrice.ShouldBe(expectedSubtotalPrice,
+            $"Expected subtotal price: {expectedSubtotalPrice}, but got: {Response.SubtotalPrice}");
+        return this;
+    }
+
+    public ViewOrderVerification SubtotalPrice(string expectedSubtotalPrice)
+    {
+        return SubtotalPrice(Converter.ToDecimal(expectedSubtotalPrice)!.Value);
+    }
+
+    public ViewOrderVerification SubtotalPriceGreaterThanZero()
+    {
+        Response.SubtotalPrice.ShouldBeGreaterThan(0m,
+            $"Subtotal price should be positive, but was: {Response.SubtotalPrice}");
+        return this;
+    }
+
+    public ViewOrderVerification DiscountRateGreaterThanOrEqualToZero()
+    {
+        Response.DiscountRate.ShouldBeGreaterThanOrEqualTo(0m,
+            $"Discount rate should be non-negative, but was: {Response.DiscountRate}");
+        return this;
+    }
+
+    public ViewOrderVerification DiscountAmountGreaterThanOrEqualToZero()
+    {
+        Response.DiscountAmount.ShouldBeGreaterThanOrEqualTo(0m,
+            $"Discount amount should be non-negative, but was: {Response.DiscountAmount}");
+        return this;
+    }
+
+    public ViewOrderVerification TaxRateGreaterThanOrEqualToZero()
+    {
+        Response.TaxRate.ShouldBeGreaterThanOrEqualTo(0m,
+            $"Tax rate should be non-negative, but was: {Response.TaxRate}");
+        return this;
+    }
+
+    public ViewOrderVerification TaxAmountGreaterThanOrEqualToZero()
+    {
+        Response.TaxAmount.ShouldBeGreaterThanOrEqualTo(0m,
+            $"Tax amount should be non-negative, but was: {Response.TaxAmount}");
+        return this;
+    }
+
     public ViewOrderVerification TotalPriceGreaterThanZero()
     {
         Response.TotalPrice.ShouldBeGreaterThan(0m,
             $"Total price should be positive, but was: {Response.TotalPrice}");
         return this;
+    }
+
+    public ViewOrderVerification BasePrice(decimal expectedBasePrice)
+    {
+        Response.BasePrice.ShouldBe(expectedBasePrice,
+            $"Expected base price to be {expectedBasePrice}, but was {Response.BasePrice}");
+        return this;
+    }
+
+    public ViewOrderVerification BasePrice(string expectedBasePrice)
+    {
+        return BasePrice(Converter.ToDecimal(expectedBasePrice)!.Value);
+    }
+
+    public ViewOrderVerification BasePriceGreaterThanZero()
+    {
+        Response.BasePrice.ShouldBeGreaterThan(0m,
+            $"Base price should be positive, but was: {Response.BasePrice}");
+        return this;
+    }
+
+    public ViewOrderVerification DiscountRate(decimal expectedDiscountRate)
+    {
+        Response.DiscountRate.ShouldBe(expectedDiscountRate,
+            $"Expected discount rate to be {expectedDiscountRate}, but was {Response.DiscountRate}");
+        return this;
+    }
+
+    public ViewOrderVerification DiscountRate(string expectedDiscountRate)
+    {
+        return DiscountRate(Converter.ToDecimal(expectedDiscountRate)!.Value);
+    }
+
+    public ViewOrderVerification DiscountAmount(decimal expectedDiscountAmount)
+    {
+        Response.DiscountAmount.ShouldBe(expectedDiscountAmount,
+            $"Expected discount amount to be {expectedDiscountAmount}, but was {Response.DiscountAmount}");
+        return this;
+    }
+
+    public ViewOrderVerification DiscountAmount(string expectedDiscountAmount)
+    {
+        return DiscountAmount(Converter.ToDecimal(expectedDiscountAmount)!.Value);
+    }
+
+    public ViewOrderVerification TaxRate(decimal expectedTaxRate)
+    {
+        Response.TaxRate.ShouldBe(expectedTaxRate,
+            $"Expected tax rate to be {expectedTaxRate}, but was {Response.TaxRate}");
+        return this;
+    }
+
+    public ViewOrderVerification TaxRate(string expectedTaxRate)
+    {
+        return TaxRate(Converter.ToDecimal(expectedTaxRate)!.Value);
+    }
+
+    public ViewOrderVerification TaxAmount(decimal expectedTaxAmount)
+    {
+        Response.TaxAmount.ShouldBe(expectedTaxAmount,
+            $"Expected tax amount to be {expectedTaxAmount}, but was {Response.TaxAmount}");
+        return this;
+    }
+
+    public ViewOrderVerification TaxAmount(string expectedTaxAmount)
+    {
+        return TaxAmount(Converter.ToDecimal(expectedTaxAmount)!.Value);
     }
 
     public ViewOrderVerification TotalPrice(decimal expectedTotalPrice)
@@ -91,41 +212,18 @@ public class ViewOrderVerification : ResponseVerification<ViewOrderResponse>
         return TotalPrice(Converter.ToDecimal(expectedTotalPrice)!.Value);
     }
 
+    public ViewOrderVerification AppliedCouponCode(string expectedCouponCodeAlias)
+    {
+        var expectedCouponCode = Context.GetParamValue(expectedCouponCodeAlias);
+        Response.AppliedCouponCode.ShouldBe(expectedCouponCode,
+            $"Expected applied coupon code to be '{expectedCouponCode}', but was '{Response.AppliedCouponCode}'");
+        return this;
+    }
+
     public ViewOrderVerification OrderNumberHasPrefix(string expectedPrefix)
     {
         Response.OrderNumber.ShouldStartWith(expectedPrefix, Case.Sensitive,
             $"Expected order number to start with '{expectedPrefix}', but was '{Response.OrderNumber}'");
         return this;
     }
-
-    public ViewOrderVerification SubtotalPrice(decimal expectedSubtotalPrice)
-    {
-        Response.SubtotalPrice.ShouldBe(expectedSubtotalPrice,
-            $"Expected subtotal price: {expectedSubtotalPrice}, but got: {Response.SubtotalPrice}");
-        return this;
-    }
-
-    public ViewOrderVerification TaxRate(decimal expectedTaxRate)
-    {
-        Response.TaxRate.ShouldBe(expectedTaxRate,
-            $"Expected tax rate: {expectedTaxRate}, but got: {Response.TaxRate}");
-        return this;
-    }
-
-    public ViewOrderVerification DiscountRate(decimal expectedDiscountRate)
-    {
-        Response.DiscountRate.ShouldBe(expectedDiscountRate,
-            $"Expected discount rate: {expectedDiscountRate}, but got: {Response.DiscountRate}");
-        return this;
-    }
-
-    public ViewOrderVerification AppliedCouponCode(string expectedCouponCode)
-    {
-        Response.AppliedCouponCode.ShouldBe(expectedCouponCode,
-            $"Expected applied coupon code: '{expectedCouponCode}', but got: '{Response.AppliedCouponCode}'");
-        return this;
-    }
 }
-
-
-
