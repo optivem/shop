@@ -1,0 +1,71 @@
+name: verify-acceptance-stage-all
+
+on:
+  workflow_dispatch:
+
+jobs:
+  acceptance-latest-multitier:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        workflow:
+          - multitier-java-acceptance-stage.yml
+          - multitier-dotnet-acceptance-stage.yml
+          - multitier-typescript-acceptance-stage.yml
+    steps:
+      - uses: optivem/actions/trigger-and-wait@main
+        with:
+          workflow: ${{ matrix.workflow }}
+          poll-interval: '300'
+
+  acceptance-latest-monolith:
+    needs: acceptance-latest-multitier
+    if: ${{ always() && !failure() }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        workflow:
+          - monolith-java-acceptance-stage.yml
+          - monolith-dotnet-acceptance-stage.yml
+          - monolith-typescript-acceptance-stage.yml
+    steps:
+      - uses: optivem/actions/trigger-and-wait@main
+        with:
+          workflow: ${{ matrix.workflow }}
+          poll-interval: '300'
+
+  acceptance-legacy-multitier:
+    needs: acceptance-latest-monolith
+    if: ${{ always() && !failure() }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        workflow:
+          - multitier-java-acceptance-stage-legacy.yml
+          - multitier-dotnet-acceptance-stage-legacy.yml
+          - multitier-typescript-acceptance-stage-legacy.yml
+    steps:
+      - uses: optivem/actions/trigger-and-wait@main
+        with:
+          workflow: ${{ matrix.workflow }}
+          poll-interval: '300'
+
+  acceptance-legacy-monolith:
+    needs: acceptance-legacy-multitier
+    if: ${{ always() && !failure() }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        workflow:
+          - monolith-java-acceptance-stage-legacy.yml
+          - monolith-dotnet-acceptance-stage-legacy.yml
+          - monolith-typescript-acceptance-stage-legacy.yml
+    steps:
+      - uses: optivem/actions/trigger-and-wait@main
+        with:
+          workflow: ${{ matrix.workflow }}
+          poll-interval: '300'
