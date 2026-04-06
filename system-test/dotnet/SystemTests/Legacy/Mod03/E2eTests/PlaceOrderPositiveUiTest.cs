@@ -30,6 +30,7 @@ public class PlaceOrderPositiveUiTest : BaseE2eTest
 
         await shopUiPage.Locator("[aria-label=\"SKU\"]").FillAsync(sku);
         await shopUiPage.Locator("[aria-label=\"Quantity\"]").FillAsync("5");
+        await shopUiPage.Locator("[aria-label=\"Country\"]").FillAsync("US");
         await shopUiPage.Locator("[aria-label=\"Place Order\"]").ClickAsync();
 
         var successMessageText = await shopUiPage.Locator("[role='alert']").TextContentAsync();

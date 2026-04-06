@@ -29,6 +29,7 @@ function OrderDetailsContent() {
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isCancelling, setIsCancelling] = useState(false);
 
   useEffect(() => {
     if (!orderNumber) {
@@ -68,6 +69,29 @@ function OrderDetailsContent() {
 
     loadOrder();
   }, [orderNumber]);
+
+  async function handleCancel() {
+    if (!orderNumber) return;
+    setIsCancelling(true);
+    try {
+      const response = await fetch(
+        `/api/orders/${encodeURIComponent(orderNumber)}/cancel`,
+        { method: "POST" }
+      );
+      if (response.ok) {
+        setOrder((prev) => (prev ? { ...prev, status: "CANCELLED" } : prev));
+      } else {
+        const data = await response.json();
+        setError(data.detail || "Failed to cancel order");
+      }
+    } catch (err) {
+      setError(
+        `Network error: ${err instanceof Error ? err.message : String(err)}`
+      );
+    } finally {
+      setIsCancelling(false);
+    }
+  }
 
   return (
     <>
@@ -211,7 +235,15 @@ function OrderDetailsContent() {
                   </div>
                 )}
               </div>
-              <div className="mt-4">
+              <div className="mt-4 d-flex gap-2">
+                <button
+                  className="btn btn-danger"
+                  aria-label="Cancel Order"
+                  onClick={handleCancel}
+                  disabled={isCancelling}
+                >
+                  {isCancelling ? "Cancelling..." : "Cancel Order"}
+                </button>
                 <Link href="/order-history" className="btn btn-secondary">
                   Back to Order History
                 </Link>

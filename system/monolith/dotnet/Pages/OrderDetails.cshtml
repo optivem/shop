@@ -86,11 +86,12 @@
                 </div>
                 <div class="col-md-6 mb-3">
                     <strong>Applied Coupon Code:</strong>
-                    <p id="detailAppliedCouponCode" aria-label="Display Applied Coupon Code"></p>
+                    <p id="detailAppliedCouponCode" aria-label="Display Applied Coupon"></p>
                 </div>
             </div>
 
-            <div class="mt-4">
+            <div class="mt-4 d-flex gap-2">
+                <button id="cancelOrderBtn" class="btn btn-danger" aria-label="Cancel Order" onclick="cancelOrder()">Cancel Order</button>
                 <a href="/order-history" class="btn btn-secondary">Back to Order History</a>
             </div>
         </div>
@@ -163,6 +164,33 @@
             loading.style.display = 'none';
             errorMessage.innerHTML = '<div class="alert alert-danger d-flex justify-content-between align-items-center" role="alert"><div><strong>Error:</strong> Network error: ' + err.message + '</div></div>';
             errorMessage.style.display = 'block';
+        }
+    }
+
+    async function cancelOrder() {
+        var params = new URLSearchParams(window.location.search);
+        var orderNumber = params.get('orderNumber');
+        if (!orderNumber) return;
+
+        var btn = document.getElementById('cancelOrderBtn');
+        btn.disabled = true;
+        btn.textContent = 'Cancelling...';
+
+        try {
+            var response = await fetch('/api/orders/' + encodeURIComponent(orderNumber) + '/cancel', { method: 'POST' });
+            if (response.ok) {
+                var statusEl = document.getElementById('detailStatus');
+                statusEl.className = 'status-CANCELLED';
+                statusEl.textContent = 'CANCELLED';
+            } else {
+                var data = await response.json();
+                alert(data.detail || 'Failed to cancel order');
+            }
+        } catch (err) {
+            alert('Network error: ' + err.message);
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Cancel Order';
         }
     }
 

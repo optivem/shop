@@ -1,0 +1,185 @@
+@page "/admin-coupons"
+@model Optivem.Shop.Monolith.Pages.AdminCouponsModel
+@{
+    ViewData["Title"] = "Coupon Management";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">Home</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Coupon Management</li>
+    </ol>
+</nav>
+
+<div class="card shadow mb-4">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0">Create New Coupon</h4>
+    </div>
+    <div class="card-body">
+        <div id="formError" style="display: none;"></div>
+        <div id="formSuccess" style="display: none;"></div>
+        <form id="createCouponForm" onsubmit="createCoupon(event)">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="couponCode" class="form-label">Coupon Code:</label>
+                    <input type="text" class="form-control" id="couponCode" placeholder="e.g., SUMMER2026" aria-label="Coupon Code" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="discountRate" class="form-label">Discount Rate (0-1):</label>
+                    <input type="number" class="form-control" id="discountRate" placeholder="e.g., 0.2 for 20% off" step="0.01" min="0" max="1" aria-label="Discount Rate" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="validFrom" class="form-label">Valid From (Optional):</label>
+                    <input type="datetime-local" class="form-control" id="validFrom" aria-label="Valid From">
+                    <small class="form-text text-muted">Leave empty for immediate validity</small>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="validTo" class="form-label">Valid To (Optional):</label>
+                    <input type="datetime-local" class="form-control" id="validTo" aria-label="Valid To">
+                    <small class="form-text text-muted">Leave empty for no expiration</small>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="usageLimit" class="form-label">Usage Limit (Optional):</label>
+                    <input type="number" class="form-control" id="usageLimit" placeholder="Leave empty for unlimited" min="1" aria-label="Usage Limit">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary" aria-label="Create Coupon">Create Coupon</button>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h4 class="mb-0">Existing Coupons</h4>
+        <button class="btn btn-light btn-sm" onclick="loadCoupons()">Refresh</button>
+    </div>
+    <div class="card-body">
+        <div id="couponsLoading" class="text-center py-3">
+            <output>
+                <div class="spinner-border text-primary">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </output>
+        </div>
+        <div id="couponsTable" aria-label="Coupons Table" style="display: none;">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Discount Rate</th>
+                        <th>Valid From</th>
+                        <th>Valid To</th>
+                        <th>Usage Limit</th>
+                        <th>Used Count</th>
+                    </tr>
+                </thead>
+                <tbody id="couponsBody"></tbody>
+            </table>
+        </div>
+        <div id="couponsEmpty" style="display: none;" class="text-center text-muted py-3">
+            <p>No coupons found</p>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    function formatDate(dateStr) {
+        if (!dateStr) return null;
+        return new Date(dateStr).toLocaleString('en-US', { timeZone: 'UTC' });
+    }
+
+    function formatUsageLimit(limit) {
+        if (limit === null || limit === undefined || limit === 2147483647) return 'Unlimited';
+        return limit.toString();
+    }
+
+    async function loadCoupons() {
+        var loading = document.getElementById('couponsLoading');
+        var tableDiv = document.getElementById('couponsTable');
+        var emptyDiv = document.getElementById('couponsEmpty');
+        var tbody = document.getElementById('couponsBody');
+
+        loading.style.display = 'block';
+        tableDiv.style.display = 'none';
+        emptyDiv.style.display = 'none';
+
+        try {
+            var response = await fetch('/api/coupons');
+            var data = await response.json();
+            var coupons = data.coupons || [];
+
+            loading.style.display = 'none';
+
+            if (coupons.length === 0) {
+                emptyDiv.style.display = 'block';
+                return;
+            }
+
+            tbody.innerHTML = '';
+            coupons.forEach(function(c) {
+                var row = document.createElement('tr');
+                row.innerHTML =
+                    '<td>' + c.code + '</td>' +
+                    '<td>' + (c.discountRate * 100).toFixed(0) + '%</td>' +
+                    '<td>' + (c.validFrom ? formatDate(c.validFrom) : 'Immediate') + '</td>' +
+                    '<td>' + (c.validTo ? formatDate(c.validTo) : 'Never') + '</td>' +
+                    '<td>' + formatUsageLimit(c.usageLimit) + '</td>' +
+                    '<td>' + c.usedCount + '</td>';
+                tbody.appendChild(row);
+            });
+
+            tableDiv.style.display = 'block';
+        } catch (err) {
+            loading.style.display = 'none';
+            alert('Failed to load coupons: ' + err.message);
+        }
+    }
+
+    async function createCoupon(event) {
+        event.preventDefault();
+        var formError = document.getElementById('formError');
+        var formSuccess = document.getElementById('formSuccess');
+        formError.style.display = 'none';
+        formSuccess.style.display = 'none';
+
+        var body = {
+            code: document.getElementById('couponCode').value,
+            discountRate: parseFloat(document.getElementById('discountRate').value)
+        };
+
+        var validFrom = document.getElementById('validFrom').value;
+        if (validFrom) body.validFrom = new Date(validFrom).toISOString();
+
+        var validTo = document.getElementById('validTo').value;
+        if (validTo) body.validTo = new Date(validTo).toISOString();
+
+        var usageLimit = document.getElementById('usageLimit').value;
+        if (usageLimit) body.usageLimit = parseInt(usageLimit);
+
+        try {
+            var response = await fetch('/api/coupons', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+
+            if (response.ok) {
+                formSuccess.innerHTML = '<div class="alert alert-success">Coupon created successfully!</div>';
+                formSuccess.style.display = 'block';
+                document.getElementById('createCouponForm').reset();
+                loadCoupons();
+            } else {
+                var data = await response.json();
+                formError.innerHTML = '<div class="alert alert-danger">' + (data.detail || 'Failed to create coupon') + '</div>';
+                formError.style.display = 'block';
+            }
+        } catch (err) {
+            formError.innerHTML = '<div class="alert alert-danger">Network error: ' + err.message + '</div>';
+            formError.style.display = 'block';
+        }
+    }
+
+    loadCoupons();
+</script>
+}

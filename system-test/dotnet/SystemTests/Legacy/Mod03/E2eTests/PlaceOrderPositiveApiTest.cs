@@ -27,7 +27,7 @@ public class PlaceOrderPositiveApiTest : BaseE2eTest
         var createProductResponse = await _erpHttpClient!.PostAsync(createProductUri, createProductContent);
         ((int)createProductResponse.StatusCode).ShouldBe(201);
 
-        var placeOrderJson = $$"""{"sku":"{{sku}}","quantity":"5"}""";
+        var placeOrderJson = $$"""{"sku":"{{sku}}","quantity":"5","country":"US"}""";
 
         var placeOrderUri = new Uri(_configuration.ShopApiBaseUrl + "/api/orders");
         var placeOrderContent = new StringContent(placeOrderJson, Encoding.UTF8, "application/json");

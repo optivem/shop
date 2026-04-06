@@ -82,7 +82,9 @@ class OrderDetailsPage {
   }
 
   async clickCancelOrder(): Promise<void> {
-    await this.page.locator('[aria-label="Cancel Order"]').click({ timeout: TIMEOUT });
+    const cancelButton = this.page.locator('[aria-label="Cancel Order"]');
+    await cancelButton.waitFor({ state: 'visible', timeout: TIMEOUT });
+    await cancelButton.click({ timeout: TIMEOUT });
   }
 
   async getOrderNumber(): Promise<string> {
