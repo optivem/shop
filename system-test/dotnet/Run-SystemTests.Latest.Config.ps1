@@ -31,7 +31,7 @@ $Config = @{
         # === Acceptance Tests (stub) - UI ===
         @{  Id = "acceptance-ui";
             Name = "latest - Acceptance (stub) - UI";
-            Command = "dotnet test --filter 'FullyQualifiedName~.Latest.AcceptanceTests&Category!=isolated' -e CHANNEL=UI --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed' -e ENVIRONMENT=local";
+            Command = "dotnet test --filter 'FullyQualifiedName~.Latest.AcceptanceTests&Category!=isolated' -e CHANNEL=UI -e CHANNEL_MODE=dynamic --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed' -e ENVIRONMENT=local";
             Path = "SystemTests";
             TestReportPath = "SystemTests\TestResults\testResults.html";
             TestInstallCommands = "pwsh bin/Debug/net8.0/playwright.ps1 install"; },

@@ -32,7 +32,7 @@ $Config = @{
         # === Acceptance Tests (stub) - UI ===
         @{  Id = "acceptance-ui";
             Name = "latest - Acceptance (stub) - UI";
-            Command = "`$env:EXTERNAL_SYSTEM_MODE = 'stub'; `$env:CHANNEL = 'UI'; `$env:ENVIRONMENT = 'local'; npx jest test/latest/acceptance --testPathIgnorePatterns=isolated --forceExit";
+            Command = "`$env:EXTERNAL_SYSTEM_MODE = 'stub'; `$env:CHANNEL = 'UI'; `$env:CHANNEL_MODE = 'dynamic'; `$env:ENVIRONMENT = 'local'; npx jest test/latest/acceptance --testPathIgnorePatterns=isolated --forceExit";
             Path = ".";
             TestReportPath = "test-results\jest-results.html";
             TestInstallCommands = @("npx playwright install chromium") },

@@ -32,7 +32,7 @@ $Config = @{
         # === Acceptance Tests (stub) - UI ===
         @{  Id = "acceptance-ui";
             Name = "latest - Acceptance (stub) - UI";
-            Command = "& .\gradlew.bat test -Dversion=latest -Dtype=acceptance -DexcludeTags=isolated -Dchannel=UI -Denvironment=local";
+            Command = "& .\gradlew.bat test -Dversion=latest -Dtype=acceptance -DexcludeTags=isolated -Dchannel=UI -Denvironment=local -DchannelMode=dynamic";
             Path = ".";
             TestReportPath = "build\reports\tests\test\index.html";
             TestInstallCommands = $null; },

@@ -404,8 +404,28 @@ function Test-System {
         }
     }
 
+    $script:SuiteResults = @()
+
     foreach ($test in $testsToRun) {
-        Test-System-Selected -Test $test
+        $suiteStart = Get-Date
+        $suiteStatus = "PASSED"
+
+        try {
+            Test-System-Selected -Test $test
+        } catch {
+            $suiteStatus = "FAILED"
+        }
+
+        $suiteDuration = (Get-Date) - $suiteStart
+        $script:SuiteResults += @{
+            Name = $test.Name
+            Status = $suiteStatus
+            Duration = $suiteDuration
+        }
+
+        if ($suiteStatus -eq "FAILED") {
+            throw "Some $($test.Name) failed."
+        }
     }
 }
 
@@ -504,12 +524,36 @@ try {
         $testEndTime = Get-Date
         $testDuration = $testEndTime - $testStartTime
 
+        if ($script:SuiteResults -and $script:SuiteResults.Count -gt 0) {
+            Write-Host ""
+            Write-Host "Suite Results:" -ForegroundColor Cyan
+            Write-Host ("-" * 70) -ForegroundColor Cyan
+            foreach ($result in $script:SuiteResults) {
+                $statusColor = if ($result.Status -eq "PASSED") { "Green" } else { "Red" }
+                $duration = $result.Duration.ToString('mm\:ss\.fff')
+                Write-Host ("  {0,-45} {1,-8} {2}" -f $result.Name, $result.Status, $duration) -ForegroundColor $statusColor
+            }
+            Write-Host ("-" * 70) -ForegroundColor Cyan
+        }
+
         Write-Host ""
         Write-Host "Test execution completed in: $($testDuration.ToString('mm\:ss\.fff'))" -ForegroundColor Cyan
     }
 
     Write-Heading -Text "DONE" -Color Green
 } catch {
+    if ($script:SuiteResults -and $script:SuiteResults.Count -gt 0) {
+        Write-Host ""
+        Write-Host "Suite Results:" -ForegroundColor Cyan
+        Write-Host ("-" * 70) -ForegroundColor Cyan
+        foreach ($result in $script:SuiteResults) {
+            $statusColor = if ($result.Status -eq "PASSED") { "Green" } else { "Red" }
+            $duration = $result.Duration.ToString('mm\:ss\.fff')
+            Write-Host ("  {0,-45} {1,-8} {2}" -f $result.Name, $result.Status, $duration) -ForegroundColor $statusColor
+        }
+        Write-Host ("-" * 70) -ForegroundColor Cyan
+    }
+
     Set-Location $WorkingDirectory
     Write-Host ""
     Write-Host "ERROR: $_" -ForegroundColor Red
