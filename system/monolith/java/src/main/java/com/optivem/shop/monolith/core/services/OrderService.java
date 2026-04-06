@@ -45,7 +45,7 @@ public class OrderService {
     public PlaceOrderResponse placeOrder(PlaceOrderRequest request) {
         var sku = request.getSku();
         var quantity = request.getQuantity();
-        var country = (request.getCountry() != null && !request.getCountry().isBlank()) ? request.getCountry() : "US";
+        var country = request.getCountry();
         var couponCode = request.getCouponCode();
 
         var orderTimestamp = clockGateway.getCurrentTime();
