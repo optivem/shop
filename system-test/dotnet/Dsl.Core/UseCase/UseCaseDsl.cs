@@ -55,12 +55,14 @@ public class UseCaseDsl : IAsyncDisposable
 
     private static string ResolveShopChannel(ChannelMode mode, Channel channel)
     {
-        return mode switch
+        var channelType = mode switch
         {
             ChannelMode.Static => StaticChannel,
             ChannelMode.Dynamic => channel.Type,
             _ => throw new InvalidOperationException($"Unknown channel mode: {mode}")
         };
+        Console.WriteLine($"[ChannelMode] mode={mode} → channel={channelType}");
+        return channelType;
     }
 
     public async Task<ShopDsl> ApiShop() => await GetOrCreateShop(StaticChannel);

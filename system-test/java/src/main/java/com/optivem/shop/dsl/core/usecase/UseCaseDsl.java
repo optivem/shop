@@ -2,6 +2,8 @@ package com.optivem.shop.dsl.core.usecase;
 
 import com.optivem.shop.dsl.common.Closer;
 import com.optivem.shop.dsl.core.shared.UseCaseContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.optivem.shop.dsl.core.usecase.external.clock.ClockDsl;
 import com.optivem.shop.dsl.core.usecase.external.erp.ErpDsl;
 import com.optivem.shop.dsl.core.usecase.external.tax.TaxDsl;
@@ -22,6 +24,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class UseCaseDsl implements Closeable {
+    private static final Logger log = LoggerFactory.getLogger(UseCaseDsl.class);
     private static final String STATIC_CHANNEL = ChannelType.API;
 
     private final UseCaseContext context;
@@ -92,12 +95,16 @@ public class UseCaseDsl implements Closeable {
     }
 
     private String resolveShopChannel(ChannelMode mode) {
+        String channel;
         if (mode == ChannelMode.STATIC) {
-            return STATIC_CHANNEL;
+            channel = STATIC_CHANNEL;
         } else if (mode == ChannelMode.DYNAMIC) {
-            return ChannelContext.get();
+            channel = ChannelContext.get();
+        } else {
+            throw new IllegalStateException("Unknown channel mode: " + mode);
         }
-        throw new IllegalStateException("Unknown channel mode: " + mode);
+        log.info("[ChannelMode] mode={} → channel={}", mode, channel);
+        return channel;
     }
 
     public ErpDsl erp() {
