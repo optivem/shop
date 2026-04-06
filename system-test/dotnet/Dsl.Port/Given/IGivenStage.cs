@@ -14,6 +14,8 @@ public interface IGivenStage
 
     IGivenPromotion Promotion();
 
+    IGivenCoupon Coupon();
+
     IWhenStage When();
 
     IThenStage Then();

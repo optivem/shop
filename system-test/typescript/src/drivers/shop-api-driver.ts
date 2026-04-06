@@ -5,6 +5,8 @@ import {
   ViewOrderResponse,
   ErrorResponse,
   ProblemDetailResponse,
+  PublishCouponRequest,
+  BrowseCouponsResponse,
 } from '../common/dtos';
 import { ShopDriver } from './types';
 
@@ -47,6 +49,30 @@ export class ShopApiDriver implements ShopDriver {
     const response = await fetch(`${this.baseUrl}/api/orders/${orderNumber}`);
     if (response.ok) {
       const data = (await response.json()) as ViewOrderResponse;
+      return success(data);
+    }
+
+    const problemDetail = (await response.json()) as ProblemDetailResponse;
+    return failure(mapProblemDetail(problemDetail));
+  }
+
+  async publishCoupon(request: PublishCouponRequest): Promise<Result<void, ErrorResponse>> {
+    const response = await fetch(`${this.baseUrl}/api/coupons`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(request),
+    });
+
+    if (response.ok) return success(undefined);
+
+    const problemDetail = (await response.json()) as ProblemDetailResponse;
+    return failure(mapProblemDetail(problemDetail));
+  }
+
+  async browseCoupons(): Promise<Result<BrowseCouponsResponse, ErrorResponse>> {
+    const response = await fetch(`${this.baseUrl}/api/coupons`);
+    if (response.ok) {
+      const data = (await response.json()) as BrowseCouponsResponse;
       return success(data);
     }
 

@@ -2,6 +2,7 @@ export interface PlaceOrderRequest {
   sku: string;
   quantity: string | null;
   country?: string | null;
+  couponCode?: string | null;
 }
 
 export interface PlaceOrderResponse {
@@ -14,6 +15,10 @@ export interface ViewOrderResponse {
   sku: string;
   quantity: number;
   unitPrice: number;
+  subtotalPrice?: number;
+  taxRate?: number;
+  discountRate?: number;
+  appliedCouponCode?: string | null;
   totalPrice: number;
   status: string;
 }
@@ -55,6 +60,20 @@ export interface ReturnsProductRequest {
 export interface ReturnsPromotionRequest {
   promotionActive: boolean;
   discount: string;
+}
+
+export interface PublishCouponRequest {
+  code: string;
+  discountRate: number;
+}
+
+export interface BrowseCouponItem {
+  code: string;
+  discountRate: number;
+}
+
+export interface BrowseCouponsResponse {
+  coupons: BrowseCouponItem[];
 }
 
 export interface GetTimeResponse {

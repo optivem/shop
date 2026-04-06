@@ -29,6 +29,12 @@ New Order fields to add: `country`, `taxRate`, `discountRate`, `appliedCouponCod
 
 ---
 
+## Tracking Progress
+
+When a task item within a phase is completed, mark it with ✅. When all items in a phase are done, mark the phase header ✅.
+
+---
+
 ## Execution Rules
 
 - **Verbatim copy first:** For app code, copy the relevant new files from shop verbatim (Coupon entity/service/repository/controller, TaxGateway, all related DTOs), then adapt (rename packages, adjust framework-specific details). Never rewrite from description — that introduces subtle bugs. We are *adding* this functionality, not removing it.
@@ -148,7 +154,7 @@ Same domain changes applied to `system/monolith/typescript/`. Tax gateway in `ex
 
 ---
 
-## Phase 8: React Frontend (Multitier) ⬜
+## Phase 8: React Frontend (Multitier) ✅
 
 **Modify:**
 - `api.types.ts` — add `couponCode?: string`, `country: string` to `PlaceOrderRequest`; add `subtotalPrice`, `taxRate`, `discountRate`, `appliedCouponCode` to response types
@@ -158,7 +164,7 @@ Same domain changes applied to `system/monolith/typescript/`. Tax gateway in `ex
 
 ---
 
-## Phase 9: Test DSL — Driver Port (all 3 languages) ⬜
+## Phase 9: Test DSL — Driver Port (all 3 languages) ✅
 
 Extend existing driver port interfaces — do not restructure.
 
@@ -173,7 +179,7 @@ Extend existing driver port interfaces — do not restructure.
 
 ---
 
-## Phase 10: Test DSL — Driver Adapter (all 3 languages) ⬜
+## Phase 10: Test DSL — Driver Adapter (all 3 languages) ✅
 
 **Modify:**
 - `ShopApiDriver` / `ShopUiDriver` — implement `publishCoupon`, `browseCoupons`; update `placeOrder` to include couponCode + country in request body
@@ -184,7 +190,7 @@ Extend existing driver port interfaces — do not restructure.
 
 ---
 
-## Phase 11: Test DSL — Use Case DSL (all 3 languages) ⬜
+## Phase 11: Test DSL — Use Case DSL (all 3 languages) ✅
 
 **New files** (follow ErpDsl pattern):
 - `TaxDsl` — `returnsCountry()`, `getCountry()`, `goToTax()` use cases
@@ -198,7 +204,7 @@ Extend existing driver port interfaces — do not restructure.
 
 ---
 
-## Phase 12: Test DSL — Scenario DSL (all 3 languages) ⬜
+## Phase 12: Test DSL — Scenario DSL (all 3 languages) ✅
 
 **New files:**
 - `GivenCountryImpl` — `country(name).withTaxRate(rate)` → calls `app.tax().returnsCountry()...`
@@ -214,7 +220,7 @@ Extend existing driver port interfaces — do not restructure.
 
 ---
 
-## Phase 13: New Test Classes (all 3 languages) ⬜
+## Phase 13: New Test Classes (all 3 languages) ✅
 
 **New acceptance tests:**
 - `PublishCouponPositiveTest` — valid code + discountRate → succeeds

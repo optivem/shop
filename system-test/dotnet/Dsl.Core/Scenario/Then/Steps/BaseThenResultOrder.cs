@@ -93,6 +93,38 @@ public abstract class BaseThenResultOrder<TSuccessResponse, TSuccessVerification
 
     IThenOrder IThenOrder.HasTotalPriceGreaterThanZero() => HasTotalPriceGreaterThanZero();
 
+    public TDerived HasSubtotalPrice(decimal expectedSubtotalPrice)
+    {
+        _verifications.Add(v => v.SubtotalPrice(expectedSubtotalPrice));
+        return Self;
+    }
+
+    IThenOrder IThenOrder.HasSubtotalPrice(decimal expectedSubtotalPrice) => HasSubtotalPrice(expectedSubtotalPrice);
+
+    public TDerived HasTaxRate(decimal expectedTaxRate)
+    {
+        _verifications.Add(v => v.TaxRate(expectedTaxRate));
+        return Self;
+    }
+
+    IThenOrder IThenOrder.HasTaxRate(decimal expectedTaxRate) => HasTaxRate(expectedTaxRate);
+
+    public TDerived HasDiscountRate(decimal expectedDiscountRate)
+    {
+        _verifications.Add(v => v.DiscountRate(expectedDiscountRate));
+        return Self;
+    }
+
+    IThenOrder IThenOrder.HasDiscountRate(decimal expectedDiscountRate) => HasDiscountRate(expectedDiscountRate);
+
+    public TDerived HasAppliedCouponCode(string expectedCouponCode)
+    {
+        _verifications.Add(v => v.AppliedCouponCode(expectedCouponCode));
+        return Self;
+    }
+
+    IThenOrder IThenOrder.HasAppliedCouponCode(string expectedCouponCode) => HasAppliedCouponCode(expectedCouponCode);
+
     public TaskAwaiter GetAwaiter() => Execute().GetAwaiter();
 
     private async Task Execute()

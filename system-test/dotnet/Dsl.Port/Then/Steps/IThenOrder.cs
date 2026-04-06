@@ -21,5 +21,13 @@ public interface IThenOrder
 
     IThenOrder HasTotalPriceGreaterThanZero();
 
+    IThenOrder HasSubtotalPrice(decimal expectedSubtotalPrice);
+
+    IThenOrder HasTaxRate(decimal expectedTaxRate);
+
+    IThenOrder HasDiscountRate(decimal expectedDiscountRate);
+
+    IThenOrder HasAppliedCouponCode(string expectedCouponCode);
+
     TaskAwaiter GetAwaiter();
 }

@@ -143,6 +143,12 @@ public class ShopUiDriver : IShopDriver
         }
     }
 
+    public Task<Result<VoidValue, SystemError>> PublishCouponAsync(PublishCouponRequest request)
+        => throw new NotSupportedException("PublishCoupon is not supported via UI channel");
+
+    public Task<Result<BrowseCouponsResponse, SystemError>> BrowseCouponsAsync()
+        => throw new NotSupportedException("BrowseCoupons is not supported via UI channel");
+
     private async Task<Result<VoidValue, SystemError>> EnsureOnOrderDetailsPageAsync(string? orderNumber)
     {
         await EnsureOnOrderHistoryPageAsync();

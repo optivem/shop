@@ -12,6 +12,7 @@ public class PlaceOrder : BaseShopCommand<PlaceOrderResponse, PlaceOrderVerifica
     private string? _skuParamAlias;
     private string? _quantity;
     private string? _country;
+    private string? _couponCode;
 
     public PlaceOrder(IShopDriver driver, UseCaseContext context)
         : base(driver, context)
@@ -47,6 +48,12 @@ public class PlaceOrder : BaseShopCommand<PlaceOrderResponse, PlaceOrderVerifica
         return this;
     }
 
+    public PlaceOrder CouponCode(string? couponCode)
+    {
+        _couponCode = couponCode;
+        return this;
+    }
+
     public override async Task<ShopUseCaseResult<PlaceOrderResponse, PlaceOrderVerification>> Execute()
     {
         var sku = _context.GetParamValue(_skuParamAlias);
@@ -56,6 +63,7 @@ public class PlaceOrder : BaseShopCommand<PlaceOrderResponse, PlaceOrderVerifica
             Sku = sku,
             Quantity = _quantity,
             Country = _country,
+            CouponCode = _couponCode,
         };
 
         var result = await _driver.PlaceOrderAsync(request);

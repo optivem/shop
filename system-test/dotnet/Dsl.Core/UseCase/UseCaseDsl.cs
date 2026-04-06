@@ -63,6 +63,8 @@ public class UseCaseDsl : IAsyncDisposable
         };
     }
 
+    public async Task<ShopDsl> ApiShop() => await GetOrCreateShop(StaticChannel);
+
     public ErpDsl Erp() => GetOrCreate(ref _erp, () => new ErpDsl(CreateErpDriver(), _context));
 
     public ClockDsl Clock() => GetOrCreate(ref _clock, () => new ClockDsl(CreateClockDriver(), _context));

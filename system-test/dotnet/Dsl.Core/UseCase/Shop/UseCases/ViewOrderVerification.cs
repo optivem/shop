@@ -97,6 +97,34 @@ public class ViewOrderVerification : ResponseVerification<ViewOrderResponse>
             $"Expected order number to start with '{expectedPrefix}', but was '{Response.OrderNumber}'");
         return this;
     }
+
+    public ViewOrderVerification SubtotalPrice(decimal expectedSubtotalPrice)
+    {
+        Response.SubtotalPrice.ShouldBe(expectedSubtotalPrice,
+            $"Expected subtotal price: {expectedSubtotalPrice}, but got: {Response.SubtotalPrice}");
+        return this;
+    }
+
+    public ViewOrderVerification TaxRate(decimal expectedTaxRate)
+    {
+        Response.TaxRate.ShouldBe(expectedTaxRate,
+            $"Expected tax rate: {expectedTaxRate}, but got: {Response.TaxRate}");
+        return this;
+    }
+
+    public ViewOrderVerification DiscountRate(decimal expectedDiscountRate)
+    {
+        Response.DiscountRate.ShouldBe(expectedDiscountRate,
+            $"Expected discount rate: {expectedDiscountRate}, but got: {Response.DiscountRate}");
+        return this;
+    }
+
+    public ViewOrderVerification AppliedCouponCode(string expectedCouponCode)
+    {
+        Response.AppliedCouponCode.ShouldBe(expectedCouponCode,
+            $"Expected applied coupon code: '{expectedCouponCode}', but got: '{Response.AppliedCouponCode}'");
+        return this;
+    }
 }
 
 

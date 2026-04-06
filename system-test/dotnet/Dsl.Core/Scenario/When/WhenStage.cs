@@ -78,6 +78,20 @@ namespace Dsl.Core.Scenario.When
         }
 
         IViewOrder IWhenStage.ViewOrder() => ViewOrder();
+
+        public WhenPublishCoupon PublishCoupon()
+        {
+            return new WhenPublishCoupon(_app, _scenario, () => EnsureGiven());
+        }
+
+        IPublishCoupon IWhenStage.PublishCoupon() => PublishCoupon();
+
+        public WhenBrowseCoupons BrowseCoupons()
+        {
+            return new WhenBrowseCoupons(_app, _scenario, () => EnsureGiven());
+        }
+
+        IBrowseCoupons IWhenStage.BrowseCoupons() => BrowseCoupons();
     }
 }
 

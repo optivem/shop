@@ -16,6 +16,7 @@ namespace Dsl.Core.Scenario.Given
         private readonly ScenarioDsl _scenario;
         private readonly List<GivenProduct> _products;
         private readonly List<GivenOrder> _orders;
+        private readonly List<GivenCoupon> _coupons;
         private GivenClock? _clock;
         private GivenPromotion _promotion;
 
@@ -26,6 +27,7 @@ namespace Dsl.Core.Scenario.Given
             _scenario = scenario;
             _products = new List<GivenProduct>();
             _orders = new List<GivenOrder>();
+            _coupons = new List<GivenCoupon>();
             _clock = null;
             _promotion = new GivenPromotion(this);
         }
@@ -64,6 +66,15 @@ namespace Dsl.Core.Scenario.Given
 
         IGivenPromotion IGivenStage.Promotion() => Promotion();
 
+        public GivenCoupon Coupon()
+        {
+            var couponBuilder = new GivenCoupon(this);
+            _coupons.Add(couponBuilder);
+            return couponBuilder;
+        }
+
+        IGivenCoupon IGivenStage.Coupon() => Coupon();
+
         public WhenStage When()
         {
             return new WhenStage(Channel, _app, _scenario, _products.Any(), true, SetupGiven);
@@ -84,6 +95,7 @@ namespace Dsl.Core.Scenario.Given
             await SetupPromotion();
             await SetupErp();
             await SetupShop();
+            await SetupCoupons();
         }
 
         private async Task SetupPromotion()
@@ -123,6 +135,14 @@ namespace Dsl.Core.Scenario.Given
             foreach (var order in _orders)
             {
                 await order.Execute(_app);
+            }
+        }
+
+        private async Task SetupCoupons()
+        {
+            foreach (var coupon in _coupons)
+            {
+                await coupon.Execute(_app);
             }
         }
     }

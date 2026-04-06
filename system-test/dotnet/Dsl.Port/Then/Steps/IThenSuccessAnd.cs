@@ -9,4 +9,6 @@ public interface IThenSuccessAnd
     Task<IThenClock> Clock();
 
     Task<IThenProduct> Product(string skuAlias);
+
+    IThenBrowseCoupons Coupons();
 }

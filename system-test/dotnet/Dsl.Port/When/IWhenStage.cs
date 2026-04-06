@@ -9,4 +9,8 @@ public interface IWhenStage
     IPlaceOrder PlaceOrder();
 
     IViewOrder ViewOrder();
+
+    IPublishCoupon PublishCoupon();
+
+    IBrowseCoupons BrowseCoupons();
 }
