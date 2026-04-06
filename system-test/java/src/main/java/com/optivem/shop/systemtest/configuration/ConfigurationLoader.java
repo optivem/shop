@@ -21,8 +21,9 @@ public class ConfigurationLoader {
         var shopApiBaseUrl = getNestedStringValue(config, "test", "shop", "api", BASE_URL);
         var erpBaseUrl = getNestedStringValue(config, "test", "erp", "api", BASE_URL);
         var clockBaseUrl = getNestedStringValue(config, "test", "clock", "api", BASE_URL);
+        var taxBaseUrl = getNestedStringValue(config, "test", "tax", "api", BASE_URL);
 
-        return new Configuration(shopUiBaseUrl, shopApiBaseUrl, erpBaseUrl, clockBaseUrl,
+        return new Configuration(shopUiBaseUrl, shopApiBaseUrl, erpBaseUrl, clockBaseUrl, taxBaseUrl,
                 externalSystemMode, channelMode, staticChannel);
     }
 

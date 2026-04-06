@@ -1,7 +1,9 @@
 package com.optivem.shop.dsl.core.scenario.when;
 
 import com.optivem.shop.dsl.core.usecase.UseCaseDsl;
+import com.optivem.shop.dsl.core.scenario.when.steps.WhenBrowseCouponsImpl;
 import com.optivem.shop.dsl.core.scenario.when.steps.WhenPlaceOrderImpl;
+import com.optivem.shop.dsl.core.scenario.when.steps.WhenPublishCouponImpl;
 import com.optivem.shop.dsl.core.scenario.when.steps.WhenViewOrderImpl;
 import com.optivem.shop.dsl.port.when.WhenStage;
 
@@ -54,6 +56,14 @@ public class WhenImpl implements WhenStage {
     public WhenViewOrderImpl viewOrder() {
         ensureDefaults();
         return new WhenViewOrderImpl(app);
+    }
+
+    public WhenPublishCouponImpl publishCoupon() {
+        return new WhenPublishCouponImpl(app);
+    }
+
+    public WhenBrowseCouponsImpl browseCoupons() {
+        return new WhenBrowseCouponsImpl(app);
     }
 
 }

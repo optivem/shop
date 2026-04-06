@@ -12,6 +12,7 @@ public class PlaceOrder extends BaseShopUseCase<PlaceOrderResponse, PlaceOrderVe
     private String skuParamAlias;
     private String quantity;
     private String country;
+    private String couponCode;
 
     public PlaceOrder(ShopDriver driver, UseCaseContext context) {
         super(driver, context);
@@ -41,6 +42,11 @@ public class PlaceOrder extends BaseShopUseCase<PlaceOrderResponse, PlaceOrderVe
         return this;
     }
 
+    public PlaceOrder couponCode(String couponCode) {
+        this.couponCode = couponCode;
+        return this;
+    }
+
     @Override
     public UseCaseResult<PlaceOrderResponse, PlaceOrderVerification> execute() {
         var sku = context.getParamValue(skuParamAlias);
@@ -49,6 +55,7 @@ public class PlaceOrder extends BaseShopUseCase<PlaceOrderResponse, PlaceOrderVe
                 .sku(sku)
                 .quantity(quantity)
                 .country(country)
+                .couponCode(couponCode)
                 .build();
 
         var result = driver.placeOrder(request);

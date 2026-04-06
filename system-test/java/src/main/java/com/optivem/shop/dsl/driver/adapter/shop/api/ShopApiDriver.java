@@ -2,8 +2,10 @@ package com.optivem.shop.dsl.driver.adapter.shop.api;
 
 import com.optivem.shop.dsl.driver.adapter.shop.api.client.ShopApiClient;
 import com.optivem.shop.dsl.driver.port.shared.dtos.ErrorResponse;
+import com.optivem.shop.dsl.driver.port.shop.dtos.BrowseCouponsResponse;
 import com.optivem.shop.dsl.driver.port.shop.dtos.PlaceOrderRequest;
 import com.optivem.shop.dsl.driver.port.shop.dtos.PlaceOrderResponse;
+import com.optivem.shop.dsl.driver.port.shop.dtos.PublishCouponRequest;
 import com.optivem.shop.dsl.driver.port.shop.dtos.ViewOrderResponse;
 import com.optivem.shop.dsl.driver.port.shop.ShopDriver;
 import com.optivem.shop.dsl.common.Closer;
@@ -36,6 +38,13 @@ public class ShopApiDriver implements ShopDriver {
         return apiClient.orders().viewOrder(orderNumber).mapError(SystemErrorMapper::from);
     }
 
+    @Override
+    public Result<Void, ErrorResponse> publishCoupon(PublishCouponRequest request) {
+        return apiClient.coupons().publishCoupon(request).mapError(SystemErrorMapper::from);
+    }
+
+    @Override
+    public Result<BrowseCouponsResponse, ErrorResponse> browseCoupons() {
+        return apiClient.coupons().browseCoupons().mapError(SystemErrorMapper::from);
+    }
 }
-
-

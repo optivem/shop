@@ -19,5 +19,12 @@ public interface ThenOrder extends ThenStep<ThenOrder> {
     ThenOrder hasTotalPriceGreaterThanZero();
 
     ThenOrder hasOrderNumberPrefix(String expectedPrefix);
-}
 
+    ThenOrder hasSubtotalPrice(double expectedSubtotalPrice);
+
+    ThenOrder hasTaxRate(double expectedTaxRate);
+
+    ThenOrder hasDiscountRate(double expectedDiscountRate);
+
+    ThenOrder hasAppliedCouponCode(String expectedCouponCode);
+}

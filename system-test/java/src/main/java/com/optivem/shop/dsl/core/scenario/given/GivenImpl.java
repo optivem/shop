@@ -3,6 +3,8 @@ package com.optivem.shop.dsl.core.scenario.given;
 import com.optivem.shop.dsl.core.usecase.UseCaseDsl;
 import com.optivem.shop.dsl.core.scenario.then.ThenImpl;
 import com.optivem.shop.dsl.core.scenario.given.steps.GivenClockImpl;
+import com.optivem.shop.dsl.core.scenario.given.steps.GivenCouponImpl;
+import com.optivem.shop.dsl.core.scenario.given.steps.GivenCountryImpl;
 import com.optivem.shop.dsl.core.scenario.given.steps.GivenOrderImpl;
 import com.optivem.shop.dsl.core.scenario.given.steps.GivenProductImpl;
 import com.optivem.shop.dsl.core.scenario.given.steps.GivenPromotionImpl;
@@ -17,6 +19,8 @@ public class GivenImpl implements GivenStage {
     private final UseCaseDsl app;
     private GivenClockImpl clock;
     private GivenPromotionImpl promotion;
+    private GivenCountryImpl country;
+    private final List<GivenCouponImpl> coupons;
     private final List<GivenProductImpl> products;
     private final List<GivenOrderImpl> orders;
 
@@ -24,6 +28,8 @@ public class GivenImpl implements GivenStage {
         this.app = app;
         this.clock = null;
         this.promotion = new GivenPromotionImpl(this);
+        this.country = null;
+        this.coupons = new ArrayList<>();
         this.products = new ArrayList<>();
         this.orders = new ArrayList<>();
     }
@@ -51,6 +57,17 @@ public class GivenImpl implements GivenStage {
         return promotion;
     }
 
+    public GivenCountryImpl country() {
+        country = new GivenCountryImpl(this);
+        return country;
+    }
+
+    public GivenCouponImpl coupon() {
+        var coupon = new GivenCouponImpl(this);
+        coupons.add(coupon);
+        return coupon;
+    }
+
     public WhenImpl when() {
         setup();
         return new WhenImpl(app, !products.isEmpty(), true);
@@ -63,8 +80,10 @@ public class GivenImpl implements GivenStage {
 
     private void setup() {
         setupClock();
+        setupCountry();
         setupPromotion();
         setupErp();
+        setupCoupons();
         setupShop();
     }
 
@@ -73,8 +92,20 @@ public class GivenImpl implements GivenStage {
     }
 
     private void setupClock() {
-        if(clock != null) {
+        if (clock != null) {
             clock.execute(app);
+        }
+    }
+
+    private void setupCountry() {
+        if (country != null) {
+            country.execute(app);
+        }
+    }
+
+    private void setupCoupons() {
+        for (var coupon : coupons) {
+            coupon.execute(app);
         }
     }
 

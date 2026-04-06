@@ -16,6 +16,7 @@ public class WhenPlaceOrderImpl extends BaseWhenStep<PlaceOrderResponse, PlaceOr
     private String sku;
     private String quantity;
     private String country;
+    private String couponCode;
 
     public WhenPlaceOrderImpl(UseCaseDsl app) {
         super(app);
@@ -49,6 +50,11 @@ public class WhenPlaceOrderImpl extends BaseWhenStep<PlaceOrderResponse, PlaceOr
         return this;
     }
 
+    public WhenPlaceOrderImpl withCouponCode(String couponCode) {
+        this.couponCode = couponCode;
+        return this;
+    }
+
     @Override
     protected ExecutionResult<PlaceOrderResponse, PlaceOrderVerification> execute(UseCaseDsl app) {
         var result = app.shop(ChannelMode.DYNAMIC).placeOrder()
@@ -56,6 +62,7 @@ public class WhenPlaceOrderImpl extends BaseWhenStep<PlaceOrderResponse, PlaceOr
                 .sku(sku)
                 .quantity(quantity)
                 .country(country)
+                .couponCode(couponCode)
                 .execute();
 
         return new ExecutionResultBuilder<>(result)

@@ -3,6 +3,7 @@ package com.optivem.shop.systemtest.configuration;
 import com.optivem.shop.dsl.core.usecase.UseCaseDsl;
 import com.optivem.shop.dsl.driver.port.external.clock.ClockDriver;
 import com.optivem.shop.dsl.driver.port.external.erp.ErpDriver;
+import com.optivem.shop.dsl.driver.port.external.tax.TaxDriver;
 import com.optivem.shop.dsl.channel.ChannelType;
 import com.optivem.shop.dsl.port.ChannelMode;
 import com.optivem.shop.dsl.driver.port.shop.ShopDriver;
@@ -10,6 +11,8 @@ import com.optivem.shop.dsl.driver.adapter.external.clock.ClockRealDriver;
 import com.optivem.shop.dsl.driver.adapter.external.clock.ClockStubDriver;
 import com.optivem.shop.dsl.driver.adapter.external.erp.ErpRealDriver;
 import com.optivem.shop.dsl.driver.adapter.external.erp.ErpStubDriver;
+import com.optivem.shop.dsl.driver.adapter.external.tax.TaxRealDriver;
+import com.optivem.shop.dsl.driver.adapter.external.tax.TaxStubDriver;
 import com.optivem.shop.dsl.driver.adapter.shop.api.ShopApiDriver;
 import com.optivem.shop.dsl.driver.adapter.shop.ui.ShopUiDriver;
 import com.optivem.shop.systemtest.infrastructure.playwright.BrowserLifecycleExtension;
@@ -54,7 +57,8 @@ public abstract class BaseConfigurableTest {
                 configuration.getStaticChannel(),
                 channel -> createShopDriverForChannel(configuration, channel),
                 () -> createErpDriver(configuration),
-                () -> createClockDriver(configuration)
+                () -> createClockDriver(configuration),
+                () -> createTaxDriver(configuration)
         );
     }
 
@@ -79,6 +83,13 @@ public abstract class BaseConfigurableTest {
         return switch (configuration.getExternalSystemMode()) {
             case REAL -> new ClockRealDriver();
             case STUB -> new ClockStubDriver(configuration.getClockBaseUrl());
+        };
+    }
+
+    private TaxDriver createTaxDriver(Configuration configuration) {
+        return switch (configuration.getExternalSystemMode()) {
+            case REAL -> new TaxRealDriver(configuration.getTaxBaseUrl());
+            case STUB -> new TaxStubDriver(configuration.getTaxBaseUrl());
         };
     }
 }

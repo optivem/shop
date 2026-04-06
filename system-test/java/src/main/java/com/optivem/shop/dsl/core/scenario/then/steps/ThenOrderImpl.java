@@ -69,12 +69,28 @@ public class ThenOrderImpl<TSuccessResponse, TSuccessVerification extends Respon
         return this;
     }
 
+    public ThenOrderImpl<TSuccessResponse, TSuccessVerification> hasSubtotalPrice(double expectedSubtotalPrice) {
+        orderVerification.subtotalPrice(expectedSubtotalPrice);
+        return this;
+    }
+
+    public ThenOrderImpl<TSuccessResponse, TSuccessVerification> hasTaxRate(double expectedTaxRate) {
+        orderVerification.taxRate(expectedTaxRate);
+        return this;
+    }
+
+    public ThenOrderImpl<TSuccessResponse, TSuccessVerification> hasDiscountRate(double expectedDiscountRate) {
+        orderVerification.discountRate(expectedDiscountRate);
+        return this;
+    }
+
+    public ThenOrderImpl<TSuccessResponse, TSuccessVerification> hasAppliedCouponCode(String expectedCouponCode) {
+        orderVerification.appliedCouponCode(expectedCouponCode);
+        return this;
+    }
+
     @Override
     public ThenOrderImpl<TSuccessResponse, TSuccessVerification> and() {
         return this;
     }
 }
-
-
-
-

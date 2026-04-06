@@ -10,3 +10,6 @@ test:
   clock:
     api:
       baseUrl: http://localhost:9112/clock
+  tax:
+    api:
+      baseUrl: http://localhost:9112/tax

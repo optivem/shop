@@ -1,8 +1,10 @@
 package com.optivem.shop.dsl.port.then.steps.base;
 
+import com.optivem.shop.dsl.port.then.steps.ThenBrowseCoupons;
 import com.optivem.shop.dsl.port.then.steps.ThenClock;
 import com.optivem.shop.dsl.port.then.steps.ThenOrder;
 import com.optivem.shop.dsl.port.then.steps.ThenProduct;
+
 public interface ThenStep<TThen> {
     TThen and();
 
@@ -13,5 +15,6 @@ public interface ThenStep<TThen> {
     ThenClock clock();
 
     ThenProduct product(String skuAlias);
-}
 
+    ThenBrowseCoupons coupons();
+}

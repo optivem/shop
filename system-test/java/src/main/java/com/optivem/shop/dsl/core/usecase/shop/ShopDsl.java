@@ -1,8 +1,10 @@
 package com.optivem.shop.dsl.core.usecase.shop;
 
 import com.optivem.shop.dsl.driver.port.shop.ShopDriver;
+import com.optivem.shop.dsl.core.usecase.shop.usecases.BrowseCoupons;
 import com.optivem.shop.dsl.core.usecase.shop.usecases.GoToShop;
 import com.optivem.shop.dsl.core.usecase.shop.usecases.PlaceOrder;
+import com.optivem.shop.dsl.core.usecase.shop.usecases.PublishCoupon;
 import com.optivem.shop.dsl.core.usecase.shop.usecases.ViewOrder;
 import com.optivem.shop.dsl.common.Closer;
 import com.optivem.shop.dsl.core.shared.UseCaseContext;
@@ -35,7 +37,11 @@ public class ShopDsl implements Closeable {
         return new ViewOrder(driver, context);
     }
 
+    public PublishCoupon publishCoupon() {
+        return new PublishCoupon(driver, context);
+    }
+
+    public BrowseCoupons browseCoupons() {
+        return new BrowseCoupons(driver, context);
+    }
 }
-
-
-

@@ -11,6 +11,7 @@ public class Configuration {
     private final String shopApiBaseUrl;
     private final String erpBaseUrl;
     private final String clockBaseUrl;
+    private final String taxBaseUrl;
     private final ExternalSystemMode externalSystemMode;
     private final ChannelMode channelMode;
     private final String staticChannel;

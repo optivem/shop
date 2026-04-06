@@ -6,8 +6,10 @@ import com.optivem.shop.dsl.driver.adapter.shop.ui.client.pages.HomePage;
 import com.optivem.shop.dsl.driver.adapter.shop.ui.client.pages.NewOrderPage;
 import com.optivem.shop.dsl.driver.adapter.shop.ui.client.pages.OrderDetailsPage;
 import com.optivem.shop.dsl.driver.adapter.shop.ui.client.pages.OrderHistoryPage;
+import com.optivem.shop.dsl.driver.port.shop.dtos.BrowseCouponsResponse;
 import com.optivem.shop.dsl.driver.port.shop.dtos.PlaceOrderRequest;
 import com.optivem.shop.dsl.driver.port.shop.dtos.PlaceOrderResponse;
+import com.optivem.shop.dsl.driver.port.shop.dtos.PublishCouponRequest;
 import com.optivem.shop.dsl.driver.port.shop.dtos.ViewOrderResponse;
 import com.optivem.shop.dsl.driver.port.shop.ShopDriver;
 import com.optivem.shop.dsl.driver.port.shared.dtos.ErrorResponse;
@@ -51,11 +53,15 @@ public class ShopUiDriver implements ShopDriver {
         var sku = request.getSku();
         var quantity = request.getQuantity();
         var country = request.getCountry();
+        var couponCode = request.getCouponCode();
 
         ensureOnNewOrderPage();
         newOrderPage.inputSku(sku);
         newOrderPage.inputQuantity(quantity);
         newOrderPage.inputCountry(country);
+        if (couponCode != null && !couponCode.isBlank()) {
+            newOrderPage.inputCouponCode(couponCode);
+        }
         newOrderPage.clickPlaceOrder();
 
         var result = newOrderPage.getResult();
@@ -102,6 +108,16 @@ public class ShopUiDriver implements ShopDriver {
                 .build();
 
         return success(response);
+    }
+
+    @Override
+    public Result<Void, ErrorResponse> publishCoupon(PublishCouponRequest request) {
+        throw new UnsupportedOperationException("publishCoupon is not supported via UI channel");
+    }
+
+    @Override
+    public Result<BrowseCouponsResponse, ErrorResponse> browseCoupons() {
+        throw new UnsupportedOperationException("browseCoupons is not supported via UI channel");
     }
 
     // --- page navigation ---

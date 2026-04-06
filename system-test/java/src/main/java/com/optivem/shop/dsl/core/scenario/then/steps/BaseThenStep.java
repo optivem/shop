@@ -3,6 +3,7 @@ package com.optivem.shop.dsl.core.scenario.then.steps;
 import com.optivem.shop.dsl.core.shared.ResponseVerification;
 import com.optivem.shop.dsl.core.usecase.UseCaseDsl;
 import com.optivem.shop.dsl.core.scenario.ExecutionResultContext;
+import com.optivem.shop.dsl.core.usecase.shop.usecases.BrowseCouponsVerification;
 
 public abstract class BaseThenStep<TSuccessResponse, TSuccessVerification extends ResponseVerification<TSuccessResponse>> {
     protected final UseCaseDsl app;
@@ -40,7 +41,14 @@ public abstract class BaseThenStep<TSuccessResponse, TSuccessVerification extend
         return new ThenProductImpl(app, executionResult, verification);
     }
 
+    public ThenBrowseCouponsImpl coupons() {
+        BrowseCouponsVerification verification;
+        if (successVerification instanceof BrowseCouponsVerification browseCouponsVerification) {
+            verification = browseCouponsVerification;
+        } else {
+            verification = app.shop().browseCoupons().execute().shouldSucceed();
+        }
+        return new ThenBrowseCouponsImpl(app, executionResult, verification);
+    }
+
 }
-
-
-

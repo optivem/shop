@@ -95,6 +95,50 @@ public class ViewOrderVerification extends ResponseVerification<ViewOrderRespons
         return this;
     }
 
+    public ViewOrderVerification subtotalPrice(BigDecimal expectedSubtotalPrice) {
+        var actualSubtotalPrice = getResponse().getSubtotalPrice();
+        assertThat(actualSubtotalPrice)
+                .withFailMessage("Expected subtotal price to be %s, but was %s", expectedSubtotalPrice, actualSubtotalPrice)
+                .isEqualByComparingTo(expectedSubtotalPrice);
+        return this;
+    }
+
+    public ViewOrderVerification subtotalPrice(double expectedSubtotalPrice) {
+        return subtotalPrice(Converter.toBigDecimal(expectedSubtotalPrice));
+    }
+
+    public ViewOrderVerification taxRate(BigDecimal expectedTaxRate) {
+        var actualTaxRate = getResponse().getTaxRate();
+        assertThat(actualTaxRate)
+                .withFailMessage("Expected tax rate to be %s, but was %s", expectedTaxRate, actualTaxRate)
+                .isEqualByComparingTo(expectedTaxRate);
+        return this;
+    }
+
+    public ViewOrderVerification taxRate(double expectedTaxRate) {
+        return taxRate(Converter.toBigDecimal(expectedTaxRate));
+    }
+
+    public ViewOrderVerification discountRate(BigDecimal expectedDiscountRate) {
+        var actualDiscountRate = getResponse().getDiscountRate();
+        assertThat(actualDiscountRate)
+                .withFailMessage("Expected discount rate to be %s, but was %s", expectedDiscountRate, actualDiscountRate)
+                .isEqualByComparingTo(expectedDiscountRate);
+        return this;
+    }
+
+    public ViewOrderVerification discountRate(double expectedDiscountRate) {
+        return discountRate(Converter.toBigDecimal(expectedDiscountRate));
+    }
+
+    public ViewOrderVerification appliedCouponCode(String expectedCouponCode) {
+        var actualCouponCode = getResponse().getAppliedCouponCode();
+        assertThat(actualCouponCode)
+                .withFailMessage("Expected applied coupon code to be '%s', but was '%s'", expectedCouponCode, actualCouponCode)
+                .isEqualTo(expectedCouponCode);
+        return this;
+    }
+
     public void orderNumberHasPrefix(String expectedPrefix) {
         var actualOrderNumber = getResponse().getOrderNumber();
         assertThat(actualOrderNumber)
@@ -123,6 +167,3 @@ public class ViewOrderVerification extends ResponseVerification<ViewOrderRespons
     }
 
 }
-
-
-
