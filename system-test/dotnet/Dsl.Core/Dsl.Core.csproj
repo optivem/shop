@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Optivem.Testing" Version="1.0.5" />
+    <PackageReference Include="Optivem.Testing" Version="1.1.0" />
     <PackageReference Include="Shouldly" Version="4.3.0" />
   </ItemGroup>
 
