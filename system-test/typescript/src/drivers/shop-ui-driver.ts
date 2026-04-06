@@ -5,6 +5,8 @@ import {
   PlaceOrderResponse,
   ViewOrderResponse,
   ErrorResponse,
+  PublishCouponRequest,
+  BrowseCouponsResponse,
 } from '../common/dtos';
 import { ShopDriver } from './types';
 
@@ -237,6 +239,14 @@ export class ShopUiDriver implements ShopDriver {
       totalPrice: await detailsPage.getTotalPrice(),
       status: await detailsPage.getStatus(),
     });
+  }
+
+  async publishCoupon(_request: PublishCouponRequest): Promise<Result<void, ErrorResponse>> {
+    throw new Error('publishCoupon is not supported via UI channel');
+  }
+
+  async browseCoupons(): Promise<Result<BrowseCouponsResponse, ErrorResponse>> {
+    throw new Error('browseCoupons is not supported via UI channel');
   }
 
   async close(): Promise<void> {
