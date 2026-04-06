@@ -13,10 +13,11 @@ export type Channel = 'api' | 'ui';
 export type ChannelMode = 'dynamic' | 'static';
 export type ExternalSystemMode = 'real' | 'stub';
 
+const STATIC_CHANNEL: Channel = 'api';
+
 export interface ScenarioOptions {
   channel?: Channel;
   channelMode?: ChannelMode;
-  staticChannel?: Channel;
   externalSystemMode?: ExternalSystemMode;
   browser?: Browser;
 }
@@ -26,13 +27,12 @@ export function createScenario(options: ScenarioOptions = {}): ScenarioDsl {
   const config = loadConfiguration({ externalSystemMode: mode });
 
   const channelMode = options.channelMode || (process.env.CHANNEL_MODE?.toLowerCase() as ChannelMode) || 'dynamic';
-  const staticChannel = options.staticChannel || (process.env.STATIC_CHANNEL?.toLowerCase() as Channel) || 'api';
 
-  const actionShopDriver = createShopDriver(config, options);
+  const actionShopDriver = createShopDriverForChannel(config, options.channel || 'api', options);
 
   let shopDriver: ShopDriver;
   if (channelMode === 'static') {
-    shopDriver = createShopDriverForChannel(config, staticChannel, options);
+    shopDriver = createShopDriverForChannel(config, STATIC_CHANNEL, options);
   } else {
     shopDriver = actionShopDriver;
   }
@@ -44,15 +44,7 @@ export function createScenario(options: ScenarioOptions = {}): ScenarioDsl {
   return new ScenarioDsl(app);
 }
 
-function createShopDriver(config: TestConfig, options: ScenarioOptions): ShopDriver {
-  if (options.channel === 'ui') {
-    if (!options.browser) throw new Error('Browser is required for UI channel');
-    return new ShopUiDriver(config.shop.frontendUrl, options.browser);
-  }
-  return new ShopApiDriver(config.shop.backendApiUrl);
-}
-
-function createShopDriverForChannel(config: TestConfig, channel: Channel, options: ScenarioOptions): ShopDriver {
+function createShopDriverForChannel(config: TestConfig, channel: Channel, options: ScenarioOptions) {
   if (channel === 'ui') {
     if (!options.browser) throw new Error('Browser is required for UI channel');
     return new ShopUiDriver(config.shop.frontendUrl, options.browser);

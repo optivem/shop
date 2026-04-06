@@ -1,5 +1,4 @@
 using Dsl.Port;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Dsl.Core.Shared;
 
 namespace Dsl.Core;
@@ -12,10 +11,9 @@ public class Configuration
     private readonly string clockBaseUrl;
     private readonly ExternalSystemMode externalSystemMode;
     private readonly ChannelMode channelMode;
-    private readonly string? staticChannel;
 
     public Configuration(string shopUiBaseUrl, string shopApiBaseUrl, string erpBaseUrl, string clockBaseUrl,
-        ExternalSystemMode externalSystemMode, ChannelMode channelMode = ChannelMode.Dynamic, string? staticChannel = null)
+        ExternalSystemMode externalSystemMode, ChannelMode channelMode = ChannelMode.Dynamic)
     {
         this.shopUiBaseUrl = shopUiBaseUrl;
         this.shopApiBaseUrl = shopApiBaseUrl;
@@ -23,7 +21,6 @@ public class Configuration
         this.clockBaseUrl = clockBaseUrl;
         this.externalSystemMode = externalSystemMode;
         this.channelMode = channelMode;
-        this.staticChannel = staticChannel;
     }
 
     public string ShopUiBaseUrl => shopUiBaseUrl;
@@ -32,7 +29,6 @@ public class Configuration
     public string ClockBaseUrl => clockBaseUrl;
     public ExternalSystemMode ExternalSystemMode => externalSystemMode;
     public ChannelMode ChannelMode => channelMode;
-    public string? StaticChannel => staticChannel;
 }
 
 

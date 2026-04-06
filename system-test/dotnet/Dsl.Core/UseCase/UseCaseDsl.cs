@@ -12,56 +12,55 @@ using Driver.Adapter.External.Erp;
 using Optivem.Testing;
 using Dsl.Core.Shared;
 using Driver.Adapter.External.Clock;
+using Optivem.Shop.SystemTest.Channel;
 
 namespace Dsl.Core;
 
 public class UseCaseDsl : IAsyncDisposable
 {
+    private const string StaticChannel = ChannelType.API;
+
     private readonly UseCaseContext _context;
     private readonly Configuration _configuration;
-    private ShopDsl? _shop;
-    private ShopDsl? _dynamicShop;
+    private readonly Dictionary<string, ShopDsl> _shops = new();
     private ErpDsl? _erp;
     private ClockDsl? _clock;
 
-    public UseCaseDsl(UseCaseContext context, Configuration configuration)
-    {
-        _context = context;
-        _configuration = configuration;
-    }
-
     public UseCaseDsl(Configuration configuration)
-        : this(new UseCaseContext(configuration.ExternalSystemMode), configuration) { }
-
-    public async Task<ShopDsl> Shop(Channel channel)
     {
-        var effectiveType = _configuration.ChannelMode == ChannelMode.Static
-            ? _configuration.StaticChannel!
-            : channel.Type;
-
-        if (_shop == null)
-        {
-            _shop = await ShopDsl.CreateAsync(await CreateShopDriverForChannelAsync(effectiveType), _context);
-        }
-        return _shop;
+        _context = new UseCaseContext(configuration.ExternalSystemMode);
+        _configuration = configuration;
     }
 
     public async Task<ShopDsl> Shop(ChannelMode mode, Channel channel)
     {
-        if (mode == ChannelMode.Dynamic)
-        {
-            if (_configuration.ChannelMode == ChannelMode.Dynamic)
-            {
-                return await Shop(channel);
-            }
+        var channelType = ResolveShopChannel(mode, channel);
+        return await GetOrCreateShop(channelType);
+    }
 
-            if (_dynamicShop == null)
-            {
-                _dynamicShop = await ShopDsl.CreateAsync(await CreateShopDriverForChannelAsync(channel.Type), _context);
-            }
-            return _dynamicShop;
+    public async Task<ShopDsl> Shop(Channel channel)
+    {
+        return await Shop(_configuration.ChannelMode, channel);
+    }
+
+    private async Task<ShopDsl> GetOrCreateShop(string channelType)
+    {
+        if (!_shops.TryGetValue(channelType, out var shop))
+        {
+            shop = await ShopDsl.CreateAsync(await CreateShopDriverForChannelAsync(channelType), _context);
+            _shops[channelType] = shop;
         }
-        return await Shop(channel);
+        return shop;
+    }
+
+    private static string ResolveShopChannel(ChannelMode mode, Channel channel)
+    {
+        return mode switch
+        {
+            ChannelMode.Static => StaticChannel,
+            ChannelMode.Dynamic => channel.Type,
+            _ => throw new InvalidOperationException($"Unknown channel mode: {mode}")
+        };
     }
 
     public ErpDsl Erp() => GetOrCreate(ref _erp, () => new ErpDsl(CreateErpDriver(), _context));
@@ -100,11 +99,8 @@ public class UseCaseDsl : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
-        if (_shop != null)
-            await _shop.DisposeAsync();
-
-        if (_dynamicShop != null && _dynamicShop != _shop)
-            await _dynamicShop.DisposeAsync();
+        foreach (var shop in _shops.Values)
+            await shop.DisposeAsync();
 
         if (_erp != null)
             await _erp.DisposeAsync();

@@ -42,16 +42,6 @@ public static class PropertyLoader
         return Enum.Parse<ChannelMode>(value, ignoreCase: true);
     }
 
-    public static string? GetStaticChannel(string? fixedStaticChannel)
-    {
-        if (fixedStaticChannel != null)
-        {
-            return fixedStaticChannel;
-        }
-
-        return GetRequiredEnvironmentVariable("STATIC_CHANNEL", "UI|API");
-    }
-
     private static string GetRequiredEnvironmentVariable(string variableName, string allowedValues)
     {
         var value = System.Environment.GetEnvironmentVariable(variableName);
