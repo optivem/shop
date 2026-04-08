@@ -1,8 +1,9 @@
-import { ErrorResponse, ViewOrderResponse } from '../../../common/dtos';
-import { DEFAULTS } from '../../defaults';
-import { UseCaseContext } from '../../use-case-context';
-import { AppContext } from '../app-context';
-import { ScenarioContext } from '../scenario-context';
+import { expect } from '@playwright/test';
+import { ErrorResponse, ViewOrderResponse } from '../../../common/dtos.js';
+import { DEFAULTS } from '../../defaults.js';
+import { UseCaseContext } from '../../use-case-context.js';
+import { AppContext } from '../app-context.js';
+import { ScenarioContext } from '../scenario-context.js';
 
 export class ThenCancelOrderResultStage implements PromiseLike<void> {
   private _expectSuccess = true;

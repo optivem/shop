@@ -1,7 +1,8 @@
-import { BrowseCouponsResponse } from '../../../common/dtos';
-import { UseCaseContext } from '../../use-case-context';
-import { AppContext } from '../app-context';
-import { ScenarioContext } from '../scenario-context';
+import { expect } from '@playwright/test';
+import { BrowseCouponsResponse } from '../../../common/dtos.js';
+import { UseCaseContext } from '../../use-case-context.js';
+import { AppContext } from '../app-context.js';
+import { ScenarioContext } from '../scenario-context.js';
 
 export class ThenBrowseCouponsResultStage implements PromiseLike<void> {
   private _executionPromise: Promise<void> | null = null;

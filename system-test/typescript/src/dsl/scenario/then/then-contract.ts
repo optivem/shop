@@ -1,7 +1,8 @@
-import { GetTimeResponse, GetProductResponse, GetTaxResponse } from '../../../common/dtos';
-import { UseCaseContext } from '../../use-case-context';
-import { AppContext } from '../app-context';
-import { ScenarioContext } from '../scenario-context';
+import { expect } from '@playwright/test';
+import { GetTimeResponse, GetProductResponse, GetTaxResponse } from '../../../common/dtos.js';
+import { UseCaseContext } from '../../use-case-context.js';
+import { AppContext } from '../app-context.js';
+import { ScenarioContext } from '../scenario-context.js';
 
 export class ThenContractStage implements PromiseLike<void> {
   private _clockAssertions: ((time: GetTimeResponse) => void)[] = [];

@@ -1,8 +1,8 @@
-import { DEFAULTS } from '../../defaults';
-import { UseCaseContext } from '../../use-case-context';
-import { AppContext } from '../app-context';
-import { ScenarioContext } from '../scenario-context';
-import { ThenResultStage } from '../then/then-place-order';
+import { DEFAULTS } from '../../defaults.js';
+import { UseCaseContext } from '../../use-case-context.js';
+import { AppContext } from '../app-context.js';
+import { ScenarioContext } from '../scenario-context.js';
+import { ThenResultStage } from '../then/then-place-order.js';
 
 export class WhenPlaceOrder {
   private sku: string = DEFAULTS.SKU;

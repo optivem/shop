@@ -1,4 +1,4 @@
-import { DEFAULTS } from '../defaults';
+import { DEFAULTS } from '../defaults.js';
 
 export interface ClockConfig {
   time: string;

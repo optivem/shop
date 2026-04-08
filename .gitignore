@@ -11,5 +11,9 @@ Thumbs.db
 __pycache__/
 *.pyc
 
+# Playwright
+playwright-report/
+test-results/
+
 # Claude
 .claude/settings.local.json

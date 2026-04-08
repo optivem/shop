@@ -1,19 +1,20 @@
-import { loadConfiguration, TestConfig } from '../config/configuration-loader';
-import { ScenarioDsl, AppContext, ChannelMode } from './dsl/scenario-dsl';
-import { UseCaseContext } from './dsl/use-case-context';
-import { ShopApiDriver } from './drivers/shop-api-driver';
-import { ShopUiDriver } from './drivers/shop-ui-driver';
-import { ErpRealDriver } from './drivers/erp-real-driver';
-import { ErpStubDriver } from './drivers/erp-stub-driver';
-import { ClockRealDriver } from './drivers/clock-real-driver';
-import { ClockStubDriver } from './drivers/clock-stub-driver';
-import { TaxRealDriver } from './drivers/tax-real-driver';
-import { TaxStubDriver } from './drivers/tax-stub-driver';
-import { ErpDriver, ClockDriver, TaxDriver } from './drivers/types';
+import { loadConfiguration, TestConfig } from '../config/configuration-loader.js';
+import { ScenarioDsl, AppContext } from './dsl/scenario-dsl.js';
+import type { ChannelMode } from './dsl/scenario-dsl.js';
+import { UseCaseContext } from './dsl/use-case-context.js';
+import { ShopApiDriver } from './drivers/shop-api-driver.js';
+import { ShopUiDriver } from './drivers/shop-ui-driver.js';
+import { ErpRealDriver } from './drivers/erp-real-driver.js';
+import { ErpStubDriver } from './drivers/erp-stub-driver.js';
+import { ClockRealDriver } from './drivers/clock-real-driver.js';
+import { ClockStubDriver } from './drivers/clock-stub-driver.js';
+import { TaxRealDriver } from './drivers/tax-real-driver.js';
+import { TaxStubDriver } from './drivers/tax-stub-driver.js';
+import { ErpDriver, ClockDriver, TaxDriver } from './drivers/types.js';
 import { Browser } from 'playwright';
 
 export type Channel = 'api' | 'ui';
-export { ChannelMode } from './dsl/scenario-dsl';
+export type { ChannelMode } from './dsl/scenario-dsl.js';
 export type ExternalSystemMode = 'real' | 'stub';
 
 export interface ScenarioOptions {

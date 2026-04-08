@@ -1,7 +1,7 @@
-import { UseCaseContext } from '../../use-case-context';
-import { AppContext } from '../app-context';
-import { ScenarioContext } from '../scenario-context';
-import { ThenPublishCouponResultStage } from '../then/then-publish-coupon';
+import { UseCaseContext } from '../../use-case-context.js';
+import { AppContext } from '../app-context.js';
+import { ScenarioContext } from '../scenario-context.js';
+import { ThenPublishCouponResultStage } from '../then/then-publish-coupon.js';
 
 export class WhenPublishCoupon {
   private code: string = '';

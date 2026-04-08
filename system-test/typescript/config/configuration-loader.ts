@@ -1,5 +1,9 @@
-import * as path from 'path';
-import * as fs from 'fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+import * as fs from 'node:fs';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 export interface TestConfig {
   shop: {
@@ -28,7 +32,7 @@ export function loadConfiguration(overrides?: ConfigOverrides): TestConfig {
   const externalSystemMode = overrides?.externalSystemMode || (process.env.EXTERNAL_SYSTEM_MODE || 'real').toLowerCase();
 
   const configFileName = `test-config-${environment}-${externalSystemMode}.json`;
-  const configPath = path.join(__dirname, configFileName);
+  const configPath = join(__dirname, configFileName);
 
   if (!fs.existsSync(configPath)) {
     throw new Error(`Configuration file not found: ${configPath}`);

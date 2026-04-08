@@ -1,0 +1,26 @@
+process.env.EXTERNAL_SYSTEM_MODE = 'stub';
+
+import { test } from '../base/fixtures.js';
+
+test('shouldBeAbleToGetTaxRate', async ({ scenario }) => {
+    await scenario
+        .given()
+        .country()
+        .withCode('US')
+        .withTaxRate(0.09)
+        .then()
+        .country('US')
+        .hasTaxRateIsPositive();
+});
+
+test('shouldBeAbleToGetConfiguredTaxRate', async ({ scenario }) => {
+    await scenario
+        .given()
+        .country()
+        .withCode('LALA')
+        .withTaxRate('0.23')
+        .then()
+        .country('LALA')
+        .hasCountry('LALA')
+        .hasTaxRate(0.23);
+});

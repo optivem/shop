@@ -1,7 +1,7 @@
-import { CountryConfig } from '../scenario-context';
-import { ThenContractStage } from '../then/then-contract';
-import { WhenStage } from '../when/when-stage';
-import type { GivenStage } from './given-stage';
+import { CountryConfig } from '../scenario-context.js';
+import { ThenContractStage } from '../then/then-contract.js';
+import { WhenStage } from '../when/when-stage.js';
+import type { GivenStage } from './given-stage.js';
 
 export class GivenCountry {
   constructor(

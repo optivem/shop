@@ -1,6 +1,6 @@
-import { CouponConfig } from '../scenario-context';
-import { WhenStage } from '../when/when-stage';
-import type { GivenStage } from './given-stage';
+import { CouponConfig } from '../scenario-context.js';
+import { WhenStage } from '../when/when-stage.js';
+import type { GivenStage } from './given-stage.js';
 
 export class GivenCoupon {
   constructor(

@@ -1,6 +1,6 @@
-import { Result, success, failure } from '../common/result';
-import { ErrorResponse, GetTaxResponse, ReturnsTaxRateRequest } from '../common/dtos';
-import { TaxDriver } from './types';
+import { Result, success, failure } from '../common/result.js';
+import { ErrorResponse, GetTaxResponse, ReturnsTaxRateRequest } from '../common/dtos.js';
+import { TaxDriver } from './types.js';
 
 export class TaxRealDriver implements TaxDriver {
   constructor(private baseUrl: string) {}

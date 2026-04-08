@@ -1,9 +1,9 @@
-import { AppContext } from './app-context';
-import { ScenarioContext } from './scenario-context';
-import { UseCaseContext } from '../use-case-context';
-import { AssumeStage } from './assume/assume-stage';
-import { GivenStage } from './given/given-stage';
-import { WhenStage } from './when/when-stage';
+import { AppContext } from './app-context.js';
+import { ScenarioContext } from './scenario-context.js';
+import { UseCaseContext } from '../use-case-context.js';
+import { AssumeStage } from './assume/assume-stage.js';
+import { GivenStage } from './given/given-stage.js';
+import { WhenStage } from './when/when-stage.js';
 
 export class ScenarioDsl {
   private readonly useCaseContext: UseCaseContext;

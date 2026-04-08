@@ -1,7 +1,7 @@
-import { UseCaseContext } from '../../use-case-context';
-import { AppContext } from '../app-context';
-import { ScenarioContext } from '../scenario-context';
-import { ThenBrowseCouponsResultStage } from '../then/then-browse-coupons';
+import { UseCaseContext } from '../../use-case-context.js';
+import { AppContext } from '../app-context.js';
+import { ScenarioContext } from '../scenario-context.js';
+import { ThenBrowseCouponsResultStage } from '../then/then-browse-coupons.js';
 
 export class WhenBrowseCoupons {
   constructor(

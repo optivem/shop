@@ -3,11 +3,14 @@
 
 $Config = @{
 
-    TestFilter = "--testNamePattern '<test>'"
+    TestFilter = "--grep '<test>'"
 
     BuildCommands = @(
         @{  Name = "Install Dependencies";
             Command = "npm ci"
+        },
+        @{  Name = "Install Playwright Browsers";
+            Command = "npx playwright install chromium"
         }
     )
 

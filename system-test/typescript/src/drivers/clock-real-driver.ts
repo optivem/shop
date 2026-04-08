@@ -1,6 +1,6 @@
-import { Result, success } from '../common/result';
-import { ErrorResponse, GetTimeResponse, ReturnsTimeRequest } from '../common/dtos';
-import { ClockDriver } from './types';
+import { Result, success } from '../common/result.js';
+import { ErrorResponse, GetTimeResponse, ReturnsTimeRequest } from '../common/dtos.js';
+import { ClockDriver } from './types.js';
 
 export class ClockRealDriver implements ClockDriver {
   async goToClock(): Promise<Result<void, ErrorResponse>> {

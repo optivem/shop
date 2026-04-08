@@ -1,7 +1,7 @@
-import { Result, success, failure } from '../common/result';
-import { ErrorResponse, GetTaxResponse, ReturnsTaxRateRequest } from '../common/dtos';
-import { TaxDriver } from './types';
-import { JsonWireMockClient } from '../clients/wiremock-client';
+import { Result, success, failure } from '../common/result.js';
+import { ErrorResponse, GetTaxResponse, ReturnsTaxRateRequest } from '../common/dtos.js';
+import { TaxDriver } from './types.js';
+import { JsonWireMockClient } from '../clients/wiremock-client.js';
 
 export class TaxStubDriver implements TaxDriver {
   private wireMock: JsonWireMockClient;

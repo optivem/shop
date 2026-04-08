@@ -1,8 +1,8 @@
-import { DEFAULTS } from '../../defaults';
-import { ClockConfig } from '../scenario-context';
-import { ThenContractStage } from '../then/then-contract';
-import { WhenStage } from '../when/when-stage';
-import type { GivenStage } from './given-stage';
+import { DEFAULTS } from '../../defaults.js';
+import { ClockConfig } from '../scenario-context.js';
+import { ThenContractStage } from '../then/then-contract.js';
+import { WhenStage } from '../when/when-stage.js';
+import type { GivenStage } from './given-stage.js';
 
 export class GivenClock {
   constructor(

@@ -1,8 +1,8 @@
-import { DEFAULTS } from '../../defaults';
-import { UseCaseContext } from '../../use-case-context';
-import { AppContext } from '../app-context';
-import { ScenarioContext } from '../scenario-context';
-import { ThenViewOrderResultStage } from '../then/then-view-order';
+import { DEFAULTS } from '../../defaults.js';
+import { UseCaseContext } from '../../use-case-context.js';
+import { AppContext } from '../app-context.js';
+import { ScenarioContext } from '../scenario-context.js';
+import { ThenViewOrderResultStage } from '../then/then-view-order.js';
 
 export class WhenViewOrder {
   private orderNumber: string = DEFAULTS.ORDER_NUMBER;

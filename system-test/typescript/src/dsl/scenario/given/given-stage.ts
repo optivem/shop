@@ -1,15 +1,15 @@
-import { DEFAULTS } from '../../defaults';
-import { UseCaseContext } from '../../use-case-context';
-import { AppContext } from '../app-context';
-import { ScenarioContext, ProductConfig, CouponConfig, CountryConfig, OrderConfig } from '../scenario-context';
-import { WhenStage } from '../when/when-stage';
-import { ThenContractStage } from '../then/then-contract';
-import { GivenClock } from './given-clock';
-import { GivenProduct } from './given-product';
-import { GivenPromotion } from './given-promotion';
-import { GivenCoupon } from './given-coupon';
-import { GivenCountry } from './given-country';
-import { GivenOrder } from './given-order';
+import { DEFAULTS } from '../../defaults.js';
+import { UseCaseContext } from '../../use-case-context.js';
+import { AppContext } from '../app-context.js';
+import { ScenarioContext, ProductConfig, CouponConfig, CountryConfig, OrderConfig } from '../scenario-context.js';
+import { WhenStage } from '../when/when-stage.js';
+import { ThenContractStage } from '../then/then-contract.js';
+import { GivenClock } from './given-clock.js';
+import { GivenProduct } from './given-product.js';
+import { GivenPromotion } from './given-promotion.js';
+import { GivenCoupon } from './given-coupon.js';
+import { GivenCountry } from './given-country.js';
+import { GivenOrder } from './given-order.js';
 
 export class GivenStage {
   constructor(

@@ -1,6 +1,6 @@
-import { Result, success, failure } from '../common/result';
-import { ErrorResponse, GetProductResponse, ReturnsProductRequest, ReturnsPromotionRequest } from '../common/dtos';
-import { ErpDriver } from './types';
+import { Result, success, failure } from '../common/result.js';
+import { ErrorResponse, GetProductResponse, ReturnsProductRequest, ReturnsPromotionRequest } from '../common/dtos.js';
+import { ErpDriver } from './types.js';
 
 export class ErpRealDriver implements ErpDriver {
   constructor(private baseUrl: string) {}

@@ -1,4 +1,4 @@
-import { Result } from '../common/result';
+import { Result } from '../common/result.js';
 import {
   PlaceOrderRequest,
   PlaceOrderResponse,
@@ -14,7 +14,7 @@ import {
   PublishCouponRequest,
   ViewCouponResponse,
   BrowseCouponsResponse,
-} from '../common/dtos';
+} from '../common/dtos.js';
 
 export interface ShopDriver {
   goToShop(): Promise<Result<void, ErrorResponse>>;

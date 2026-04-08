@@ -1,4 +1,5 @@
-import { AppContext } from '../app-context';
+import { expect } from '@playwright/test';
+import { AppContext } from '../app-context.js';
 
 export class AssumeStage {
   constructor(private readonly app: AppContext) {}

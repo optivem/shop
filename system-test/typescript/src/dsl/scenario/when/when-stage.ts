@@ -1,11 +1,11 @@
-import { UseCaseContext } from '../../use-case-context';
-import { AppContext } from '../app-context';
-import { ScenarioContext } from '../scenario-context';
-import { WhenPlaceOrder } from './when-place-order';
-import { WhenCancelOrder } from './when-cancel-order';
-import { WhenViewOrder } from './when-view-order';
-import { WhenPublishCoupon } from './when-publish-coupon';
-import { WhenBrowseCoupons } from './when-browse-coupons';
+import { UseCaseContext } from '../../use-case-context.js';
+import { AppContext } from '../app-context.js';
+import { ScenarioContext } from '../scenario-context.js';
+import { WhenPlaceOrder } from './when-place-order.js';
+import { WhenCancelOrder } from './when-cancel-order.js';
+import { WhenViewOrder } from './when-view-order.js';
+import { WhenPublishCoupon } from './when-publish-coupon.js';
+import { WhenBrowseCoupons } from './when-browse-coupons.js';
 
 export class WhenStage {
   constructor(
