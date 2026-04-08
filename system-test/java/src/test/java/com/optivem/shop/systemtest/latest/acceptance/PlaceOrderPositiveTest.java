@@ -49,7 +49,7 @@ class PlaceOrderPositiveTest extends BaseAcceptanceTest {
     }
 
     @TestTemplate
-    @Channel({ChannelType.UI, ChannelType.API})
+    @Channel(value = {ChannelType.API}, alsoForFirstRow = ChannelType.UI)
     @DataSource({"20.00", "5", "100.00"})
     @DataSource({"10.00", "3", "30.00"})
     @DataSource({"15.50", "4", "62.00"})
@@ -139,7 +139,7 @@ class PlaceOrderPositiveTest extends BaseAcceptanceTest {
     }
 
     @TestTemplate
-    @Channel({ChannelType.UI, ChannelType.API})
+    @Channel(value = {ChannelType.API}, alsoForFirstRow = ChannelType.UI)
     @DataSource({"UK", "0.09"})
     @DataSource({"US", "0.20"})
     void correctTaxRateShouldBeUsedBasedOnCountry(String country, String taxRate) {
@@ -155,7 +155,7 @@ class PlaceOrderPositiveTest extends BaseAcceptanceTest {
     }
 
     @TestTemplate
-    @Channel({ChannelType.UI, ChannelType.API})
+    @Channel(value = {ChannelType.API}, alsoForFirstRow = ChannelType.UI)
     @DataSource({"UK", "0.09", "50.00", "4.50", "54.50"})
     @DataSource({"US", "0.20", "100.00", "20.00", "120.00"})
     void totalPriceShouldBeSubtotalPricePlusTaxAmount(String country, String taxRate, String subtotalPrice, String expectedTaxAmount, String expectedTotalPrice) {

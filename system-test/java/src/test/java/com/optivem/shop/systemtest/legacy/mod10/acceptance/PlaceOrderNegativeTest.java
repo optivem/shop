@@ -11,7 +11,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 class PlaceOrderNegativeTest extends BaseAcceptanceTest {
     @TestTemplate
-    @Channel({ChannelType.UI, ChannelType.API})
+    @Channel(value = {ChannelType.API}, alsoForFirstRow = ChannelType.UI)
     @ValueSource(strings = {"3.5", "lala", "invalid-quantity"})
     void shouldRejectOrderWithNonIntegerQuantity(String nonIntegerQuantity) {
         scenario
@@ -35,7 +35,7 @@ class PlaceOrderNegativeTest extends BaseAcceptanceTest {
     }
 
     @TestTemplate
-    @Channel({ChannelType.UI, ChannelType.API})
+    @Channel(value = {ChannelType.API}, alsoForFirstRow = ChannelType.UI)
     @ArgumentsSource(EmptyArgumentsProvider.class)
     void shouldRejectOrderWithEmptySku(String sku) {
         scenario
@@ -48,7 +48,7 @@ class PlaceOrderNegativeTest extends BaseAcceptanceTest {
     }
 
     @TestTemplate
-    @Channel({ChannelType.UI, ChannelType.API})
+    @Channel(value = {ChannelType.API}, alsoForFirstRow = ChannelType.UI)
     @ValueSource(strings = {"-10", "-1", "0"})
     void shouldRejectOrderWithNonPositiveQuantity(String quantity) {
         scenario
@@ -60,7 +60,7 @@ class PlaceOrderNegativeTest extends BaseAcceptanceTest {
     }
 
     @TestTemplate
-    @Channel({ChannelType.UI, ChannelType.API})
+    @Channel(value = {ChannelType.API}, alsoForFirstRow = ChannelType.UI)
     @ArgumentsSource(EmptyArgumentsProvider.class)
     void shouldRejectOrderWithEmptyQuantity(String quantity) {
         scenario

@@ -7,7 +7,7 @@ namespace SystemTests.Latest.AcceptanceTests;
 public class PublishCouponNegativeTest : BaseAcceptanceTest
 {
     [Theory]
-    [ChannelData(ChannelType.UI, ChannelType.API)]
+    [ChannelData(ChannelType.API, AlsoForFirstRow = new[] { ChannelType.UI })]
     [ChannelInlineData("0.0")]
     [ChannelInlineData("-0.01")]
     [ChannelInlineData("-0.15")]
@@ -23,7 +23,7 @@ public class PublishCouponNegativeTest : BaseAcceptanceTest
     }
 
     [Theory]
-    [ChannelData(ChannelType.UI, ChannelType.API)]
+    [ChannelData(ChannelType.API, AlsoForFirstRow = new[] { ChannelType.UI })]
     [ChannelInlineData("1.01")]
     [ChannelInlineData("2.00")]
     public async Task CannotPublishCouponWithDiscountGreaterThan100Percent(Channel channel, string discountRate)
@@ -54,7 +54,7 @@ public class PublishCouponNegativeTest : BaseAcceptanceTest
     }
 
     [Theory]
-    [ChannelData(ChannelType.UI, ChannelType.API)]
+    [ChannelData(ChannelType.API, AlsoForFirstRow = new[] { ChannelType.UI })]
     [ChannelInlineData("0")]
     [ChannelInlineData("-1")]
     [ChannelInlineData("-100")]

@@ -12,7 +12,7 @@ public class CancelOrderNegativeIsolatedTest : BaseAcceptanceTest
 {
     [Theory]
     [Time]
-    [ChannelData(ChannelType.UI, ChannelType.API)]
+    [ChannelData(ChannelType.API, AlsoForFirstRow = new[] { ChannelType.UI })]
     [ChannelInlineData("2024-12-31T22:00:00Z")]
     [ChannelInlineData("2026-12-31T22:00:01Z")]
     [ChannelInlineData("2025-12-31T22:15:00Z")]

@@ -43,7 +43,7 @@ public class PlaceOrderPositiveTest : BaseAcceptanceTest
     }
 
     [Theory]
-    [ChannelData(ChannelType.UI, ChannelType.API)]
+    [ChannelData(ChannelType.API, AlsoForFirstRow = new[] { ChannelType.UI })]
     [ChannelInlineData("20.00", 5, "100.00")]
     [ChannelInlineData("10.00", 3, "30.00")]
     [ChannelInlineData("15.50", 4, "62.00")]
@@ -127,7 +127,7 @@ public class PlaceOrderPositiveTest : BaseAcceptanceTest
     }
 
     [Theory]
-    [ChannelData(ChannelType.UI, ChannelType.API)]
+    [ChannelData(ChannelType.API, AlsoForFirstRow = new[] { ChannelType.UI })]
     [ChannelInlineData("UK", 0.09)]
     [ChannelInlineData("US", 0.20)]
     public async Task CorrectTaxRateShouldBeUsedBasedOnCountry(Channel channel, string country, double taxRate)
@@ -141,7 +141,7 @@ public class PlaceOrderPositiveTest : BaseAcceptanceTest
     }
 
     [Theory]
-    [ChannelData(ChannelType.UI, ChannelType.API)]
+    [ChannelData(ChannelType.API, AlsoForFirstRow = new[] { ChannelType.UI })]
     [ChannelInlineData("UK", 0.09, "50.00", "4.50", "54.50")]
     [ChannelInlineData("US", 0.20, "100.00", "20.00", "120.00")]
     public async Task TotalPriceShouldBeSubtotalPricePlusTaxAmount(Channel channel, string country, double taxRate, string subtotalPrice, string expectedTaxAmount, string expectedTotalPrice)

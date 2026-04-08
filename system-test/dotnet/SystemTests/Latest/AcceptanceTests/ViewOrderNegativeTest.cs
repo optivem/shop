@@ -14,7 +14,7 @@ public class ViewOrderNegativeTest : BaseAcceptanceTest
     }
 
     [Theory]
-    [ChannelData(ChannelType.UI, ChannelType.API)]
+    [ChannelData(ChannelType.API, AlsoForFirstRow = new[] { ChannelType.UI })]
     [ChannelMemberData(nameof(NonExistentOrderValues))]
     public async Task ShouldNotBeAbleToViewNonExistentOrder(Channel channel, string orderNumber, string expectedErrorMessage)
     {

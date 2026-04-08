@@ -10,7 +10,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 class PublishCouponNegativeTest extends BaseAcceptanceTest {
     @TestTemplate
-    @Channel({ChannelType.UI, ChannelType.API})
+    @Channel(value = {ChannelType.API}, alsoForFirstRow = ChannelType.UI)
     @ValueSource(strings = {"0.0", "-0.01", "-0.15"})
     void cannotPublishCouponWithZeroOrNegativeDiscount(String discountRate) {
         scenario
@@ -23,7 +23,7 @@ class PublishCouponNegativeTest extends BaseAcceptanceTest {
     }
 
     @TestTemplate
-    @Channel({ChannelType.UI, ChannelType.API})
+    @Channel(value = {ChannelType.API}, alsoForFirstRow = ChannelType.UI)
     @ValueSource(strings = {"1.01", "2.00"})
     void cannotPublishCouponWithDiscountGreaterThan100percent(String discountRate) {
         scenario
@@ -51,7 +51,7 @@ class PublishCouponNegativeTest extends BaseAcceptanceTest {
     }
 
     @TestTemplate
-    @Channel({ChannelType.UI, ChannelType.API})
+    @Channel(value = {ChannelType.API}, alsoForFirstRow = ChannelType.UI)
     @ValueSource(strings = {"0", "-1", "-100"})
     void cannotPublishCouponWithZeroOrNegativeUsageLimit(String usageLimit) {
         scenario

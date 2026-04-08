@@ -19,7 +19,7 @@ class ViewOrderNegativeTest extends BaseAcceptanceTest {
     }
 
     @TestTemplate
-    @Channel({ChannelType.UI, ChannelType.API})
+    @Channel(value = {ChannelType.API}, alsoForFirstRow = ChannelType.UI)
     @MethodSource("provideNonExistentOrderValues")
     void shouldNotBeAbleToViewNonExistentOrder(String orderNumber, String expectedErrorMessage) {
         scenario

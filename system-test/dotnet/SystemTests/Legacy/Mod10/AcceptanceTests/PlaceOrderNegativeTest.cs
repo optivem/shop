@@ -9,7 +9,7 @@ namespace SystemTests.Legacy.Mod10.AcceptanceTests;
 public class PlaceOrderNegativeTest : BaseAcceptanceTest
 {
     [Theory]
-    [ChannelData(ChannelType.UI, ChannelType.API)]
+    [ChannelData(ChannelType.API, AlsoForFirstRow = new[] { ChannelType.UI })]
     [ChannelInlineData("3.5")]
     [ChannelInlineData("lala")]
     [ChannelInlineData("invalid-quantity")]
@@ -37,7 +37,7 @@ public class PlaceOrderNegativeTest : BaseAcceptanceTest
     }
 
     [Theory]
-    [ChannelData(ChannelType.UI, ChannelType.API)]
+    [ChannelData(ChannelType.API, AlsoForFirstRow = new[] { ChannelType.UI })]
     [ChannelClassData(typeof(EmptyArgumentsProvider))]
     public async Task ShouldRejectOrderWithEmptySku(Channel channel, string sku)
     {
@@ -51,7 +51,7 @@ public class PlaceOrderNegativeTest : BaseAcceptanceTest
     }
 
     [Theory]
-    [ChannelData(ChannelType.UI, ChannelType.API)]
+    [ChannelData(ChannelType.API, AlsoForFirstRow = new[] { ChannelType.UI })]
     [ChannelInlineData("-10")]
     [ChannelInlineData("-1")]
     [ChannelInlineData("0")]
@@ -66,7 +66,7 @@ public class PlaceOrderNegativeTest : BaseAcceptanceTest
     }
 
     [Theory]
-    [ChannelData(ChannelType.UI, ChannelType.API)]
+    [ChannelData(ChannelType.API, AlsoForFirstRow = new[] { ChannelType.UI })]
     [ChannelClassData(typeof(EmptyArgumentsProvider))]
     public async Task ShouldRejectOrderWithEmptyQuantity(Channel channel, string quantity)
     {

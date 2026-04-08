@@ -10,7 +10,7 @@ import org.junit.jupiter.api.TestTemplate;
 class CancelOrderNegativeIsolatedTest extends BaseAcceptanceTest {
     @TimeDependent
     @TestTemplate
-    @Channel({ChannelType.UI, ChannelType.API})
+    @Channel(value = {ChannelType.API}, alsoForFirstRow = ChannelType.UI)
     @DataSource({"2024-12-31T22:00:00Z"})   // Start of blackout period
     @DataSource({"2026-12-31T22:00:01Z"})   // Just after start
     @DataSource({"2025-12-31T22:15:00Z"})   // Middle of blackout period

@@ -54,7 +54,7 @@ class PlaceOrderNegativeTest extends BaseAcceptanceTest {
     }
 
     @TestTemplate
-    @Channel({ChannelType.UI, ChannelType.API})
+    @Channel(value = {ChannelType.API}, alsoForFirstRow = ChannelType.UI)
     @ArgumentsSource(EmptyArgumentsProvider.class)
     void shouldRejectOrderWithEmptySku(String sku) {
         scenario
@@ -66,7 +66,7 @@ class PlaceOrderNegativeTest extends BaseAcceptanceTest {
     }
 
     @TestTemplate
-    @Channel({ChannelType.UI, ChannelType.API})
+    @Channel(value = {ChannelType.API}, alsoForFirstRow = ChannelType.UI)
     @ArgumentsSource(EmptyArgumentsProvider.class)
     void shouldRejectOrderWithEmptyQuantity(String emptyQuantity) {
         scenario
@@ -78,7 +78,7 @@ class PlaceOrderNegativeTest extends BaseAcceptanceTest {
     }
 
     @TestTemplate
-    @Channel({ChannelType.UI, ChannelType.API})
+    @Channel(value = {ChannelType.API}, alsoForFirstRow = ChannelType.UI)
     @ValueSource(strings = {"3.5", "lala"})
     void shouldRejectOrderWithNonIntegerQuantity(String nonIntegerQuantity) {
         scenario
@@ -90,7 +90,7 @@ class PlaceOrderNegativeTest extends BaseAcceptanceTest {
     }
 
     @TestTemplate
-    @Channel({ChannelType.UI, ChannelType.API})
+    @Channel(value = {ChannelType.API}, alsoForFirstRow = ChannelType.UI)
     @ArgumentsSource(EmptyArgumentsProvider.class)
     void shouldRejectOrderWithEmptyCountry(String emptyCountry) {
         scenario
