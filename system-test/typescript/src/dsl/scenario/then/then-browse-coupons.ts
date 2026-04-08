@@ -17,7 +17,7 @@ export class ThenBrowseCouponsResultStage implements PromiseLike<void> {
 
   shouldSucceed(): ThenBrowseCouponsSuccess {
     this._expectSuccess = true;
-    return new ThenBrowseCouponsSuccess(this);
+    return new ThenBrowseCouponsSuccess(this, this.useCaseContext);
   }
 
   async _getResult(): Promise<BrowseCouponsResponse> {
@@ -53,14 +53,17 @@ export class ThenBrowseCouponsResultStage implements PromiseLike<void> {
 }
 
 export class ThenBrowseCouponsSuccess implements PromiseLike<void> {
-  constructor(private readonly stage: ThenBrowseCouponsResultStage) {}
+  constructor(
+    private readonly stage: ThenBrowseCouponsResultStage,
+    private readonly useCaseContext: UseCaseContext,
+  ) {}
 
   and(): ThenBrowseCouponsSuccess {
     return this;
   }
 
   coupons(): ThenBrowseCoupons {
-    return new ThenBrowseCoupons(this.stage);
+    return new ThenBrowseCoupons(this.stage, this.useCaseContext);
   }
 
   then<TResult1 = void, TResult2 = never>(
@@ -74,11 +77,15 @@ export class ThenBrowseCouponsSuccess implements PromiseLike<void> {
 export class ThenBrowseCoupons implements PromiseLike<void> {
   private _assertions: ((result: BrowseCouponsResponse) => void)[] = [];
 
-  constructor(private readonly stage: ThenBrowseCouponsResultStage) {}
+  constructor(
+    private readonly stage: ThenBrowseCouponsResultStage,
+    private readonly useCaseContext: UseCaseContext,
+  ) {}
 
   containsCouponWithCode(expectedCode: string): ThenBrowseCoupons {
     this._assertions.push((result) => {
-      const found = result.coupons.some((c) => c.code === expectedCode);
+      const resolvedCode = this.useCaseContext.getParamValue(expectedCode) as string;
+      const found = result.coupons.some((c) => c.code === resolvedCode);
       expect(found).toBe(true);
     });
     return this;

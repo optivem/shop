@@ -100,7 +100,7 @@ public class ShopUiDriver : IShopDriver
         }
 
         var successMessage = cancelResult.Value;
-        if (!successMessage.Contains("cancelled successfully!"))
+        if (!successMessage.Contains("cancelled successfully"))
         {
             return Failure("Did not receive expected cancellation success message");
         }
