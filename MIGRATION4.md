@@ -2,6 +2,10 @@
 
 Single sequenced plan combining ESHOP_COMPARISON (app code) and ESHOP_TESTS_COMPARISON (test code).
 
+## CRITICAL: DO NOT COMMIT
+
+**DO NOT commit, push, or sync ANY repos until explicitly told by the user.** All changes stay local. The user will commit manually after verifying everything works with `./Run-SystemTests` and `./Run-SystemTests -Legacy`.
+
 ---
 
 ## Phase 1: Fix What's Wrong in Starter
