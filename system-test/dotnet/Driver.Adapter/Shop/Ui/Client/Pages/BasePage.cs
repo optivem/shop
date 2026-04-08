@@ -262,7 +262,7 @@ public abstract class BasePage
 
         var idAttribute = $"[{NotificationIdAttribute}='{notificationId}']";
 
-        return selector.Replace("[role='alert']", $"[role='alert']{idAttribute}");
+        return selector.Replace(NotificationSelector, NotificationSelector + idAttribute);
 
     }
 
