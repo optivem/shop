@@ -71,6 +71,8 @@ class PlaceOrderPositiveUiTest extends BaseE2eTest {
         var viewDetailsSelector = String.format("%s//a[contains(text(), 'View Details')]", rowSelector);
         shopUiPage.locator(viewDetailsSelector).click();
 
+        shopUiPage.locator("[aria-label='Display Order Number']")
+                .waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
         assertThat(shopUiPage.locator("[aria-label='Display Order Number']").textContent()).isEqualTo(orderNumber);
         assertThat(shopUiPage.locator("[aria-label='Display SKU']").textContent()).isEqualTo(sku);
         assertThat(Integer.parseInt(shopUiPage.locator("[aria-label='Display Quantity']").textContent())).isEqualTo(5);
