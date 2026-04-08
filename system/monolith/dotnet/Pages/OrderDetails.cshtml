@@ -96,6 +96,8 @@
             </div>
         </div>
 
+        <div id="notifications"></div>
+
         <div id="errorMessage" style="display: none;"></div>
 
         <div id="notFound" style="display: none;" class="text-center py-5 text-muted">
@@ -172,22 +174,37 @@
         var orderNumber = params.get('orderNumber');
         if (!orderNumber) return;
 
+        var notifications = document.getElementById('notifications');
         var btn = document.getElementById('cancelOrderBtn');
+
+        window._notificationCounter = (window._notificationCounter || 0) + 1;
+        var nid = window._notificationCounter;
+
         btn.disabled = true;
         btn.textContent = 'Cancelling...';
+        notifications.innerHTML = '';
 
         try {
             var response = await fetch('/api/orders/' + encodeURIComponent(orderNumber) + '/cancel', { method: 'POST' });
+
             if (response.ok) {
-                var statusEl = document.getElementById('detailStatus');
-                statusEl.className = 'status-CANCELLED';
-                statusEl.textContent = 'CANCELLED';
+                notifications.innerHTML = '<div class="notification success" role="alert" data-notification-id="' + nid + '">Order has been cancelled successfully</div>';
+                loadOrderDetails();
             } else {
                 var data = await response.json();
-                alert(data.detail || 'Failed to cancel order');
+                var errorHtml = '<div class="notification error" role="alert" data-notification-id="' + nid + '">';
+                errorHtml += '<div class="error-message">' + (data.detail || 'An error occurred') + '</div>';
+                if (data.errors && data.errors.length > 0) {
+                    data.errors.forEach(function(err) {
+                        var fieldPart = err.field ? err.field + ': ' : '';
+                        errorHtml += '<div class="field-error">' + fieldPart + err.message + '</div>';
+                    });
+                }
+                errorHtml += '</div>';
+                notifications.innerHTML = errorHtml;
             }
         } catch (err) {
-            alert('Network error: ' + err.message);
+            notifications.innerHTML = '<div class="notification error" role="alert" data-notification-id="' + nid + '"><div class="error-message">Network error: ' + err.message + '</div></div>';
         } finally {
             btn.disabled = false;
             btn.textContent = 'Cancel Order';
