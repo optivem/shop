@@ -138,100 +138,83 @@ Differences that SHOULD be flagged:
 3. Produce the report with actionable findings.
 4. Write the plan file to disk (see Output section below).
 
-## Report Format
+## Output
+
+When the comparison is complete, write the results to a **timestamped plan file** at:
 
 ```
-Workflow Comparison Report
-==========================
+.claude/plans/workflow-diff-{timestamp}.md
+```
 
+where `{timestamp}` is the current date and time in `YYYY-MM-DD-HHmmss` format (e.g., `workflow-diff-2026-04-08-143052.md`).
+
+To get the timestamp, run: `date -u +"%Y-%m-%d-%H%M%S"`
+
+If the `.claude/plans/` directory does not exist, create it first.
+
+### Plan File Format
+
+The plan file must contain both the **differences found** and **recommendations for how to resolve each one**. Use this structure:
+
+```markdown
+# Workflow Diff Plan
+
+Generated: {YYYY-MM-DD HH:MM:SS UTC}
 Architecture: [monolith | multitier | both]
 Stage: [all | specific stage]
 
-## Monolith Workflows
+## Differences
 
-### Commit Stage
+### DIFF-1: {short title}
 
-#### Files Compared
-- monolith-java-commit-stage.yml
-- monolith-dotnet-commit-stage.yml
-- monolith-typescript-commit-stage.yml
+**Stage:** {stage name}
+**Scope:** {which architectures / languages are affected}
 
-#### Job Structure
-| Job Name   | Java | .NET | TypeScript | Match? |
-|------------|------|------|------------|--------|
-| check      |  Y   |  Y   |     Y      |  Full  |
-| run        |  Y   |  Y   |     Y      |  Diff  |
-| summary    |  Y   |  Y   |     Y      |  Full  |
+**Files:**
+- `{workflow-file.yml}:{line}` — {what this file has}
+- `{workflow-file.yml}:{line}` — {what this file has}
+- `{workflow-file.yml}` — {missing / TODO / etc.}
 
-#### Step Differences — Job: run
+**Details:**
+{Concrete description of the difference — what each language does, with code snippets where helpful.}
 
-| Step Name (Java)               | .NET              | TypeScript         | Issue           |
-|--------------------------------|-------------------|--------------------|-----------------|
-| Run Unit Tests                 | TODO placeholder  | TODO placeholder   | Not implemented |
-| Run Narrow Integration Tests   | —                 | TODO placeholder   | Missing in .NET |
+**Recommendation:**
+{Specific action to resolve the inconsistency. State which file(s) to change and what the change should be. If there are multiple valid approaches, pick the recommended one and explain why.}
 
-Details:
-  - Step "Run Unit Tests": Java runs `./gradlew test`, .NET has `echo "TODO"`, TypeScript has `echo "TODO"`
-    Action: Implement unit tests in .NET and TypeScript commit-stage workflows
+---
 
-  - Step "Run Linter": Java uses `./gradlew checkstyleMain`, .NET uses `dotnet format ... --verify-no-changes`, TypeScript uses `npm run lint`
-    Status: Expected language difference — OK
-
-#### Configuration Differences
-
-  - Action version mismatch: Java uses actions/checkout@v5, .NET uses actions/checkout@v4
-    Action: Update .NET to actions/checkout@v5
-
-  - Condition mismatch on "Run Code Analysis": Java checks `github.ref == 'refs/heads/main'`, TypeScript missing this condition
-    Action: Add condition to TypeScript workflow
-
-### Acceptance Stage
+### DIFF-2: {short title}
 ...
 
-### QA Stage
-...
+---
 
-### QA Signoff
-...
+## Summary
 
-### Prod Stage
-...
+| #      | Stage               | Issue                          | Recommendation                        |
+|--------|---------------------|--------------------------------|---------------------------------------|
+| DIFF-1 | {stage}             | {one-line issue}               | {one-line recommendation}             |
+| DIFF-2 | {stage}             | {one-line issue}               | {one-line recommendation}             |
+| ...    | ...                 | ...                            | ...                                   |
 
-### Verify
-...
-
-## Multitier Workflows
-
-### Commit Stage (Backend)
-...
-### Commit Stage (Frontend)
-(Note: only React frontend — no cross-language comparison needed, but check it exists)
-...
-
-### Acceptance Stage
-...
-
-(same structure as monolith)
-
-## Summary of Inconsistencies
-
-Total inconsistencies found: <count>
+**Total: {count} inconsistencies found**
 
 By architecture:
-  - Monolith: <count>
-  - Multitier: <count>
-
-By stage:
-  - Commit Stage: <count>
-  - Acceptance Stage: <count>
-  - QA Stage: <count>
-  - QA Signoff: <count>
-  - Prod Stage: <count>
-  - Verify: <count>
+  - Monolith: {count}
+  - Multitier: {count}
 
 By severity:
-  - Missing steps/jobs: <count>
-  - TODO placeholders: <count>
-  - Configuration mismatches: <count>
-  - Action version mismatches: <count>
+  - Missing steps/jobs: {count}
+  - TODO placeholders: {count}
+  - Configuration mismatches: {count}
+  - Action version mismatches: {count}
 ```
+
+### Recommendation Guidelines
+
+When writing recommendations:
+- **TODO placeholders**: Recommend implementing the step if it is implemented in at least one language. Name the language that has the working implementation as the reference.
+- **Missing steps**: Recommend adding the step to the languages that lack it, using the existing implementation as a template.
+- **Step name mismatches**: Recommend standardizing on one name. Prefer the most descriptive name.
+- **Configuration mismatches**: Recommend aligning to the most correct or most recent version (e.g., latest action version, most complete condition).
+- **Cross-architecture differences**: Only recommend aligning if the difference is clearly unintentional. If it could be a deliberate architectural distinction, note that and recommend verifying intent.
+- **Parameter order**: Recommend aligning to match the majority for consistency.
