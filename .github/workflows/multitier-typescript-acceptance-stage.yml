@@ -145,21 +145,21 @@ jobs:
 
       - name: Run Smoke Tests (Stub)
         working-directory: system-test/typescript
-        run: npm test -- test/latest/smoke
+        run: npm test -- tests/latest/smoke
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
 
       - name: Run Smoke Tests (Real)
         working-directory: system-test/typescript
-        run: npm test -- test/latest/smoke
+        run: npm test -- tests/latest/smoke
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: real
 
       - name: Run Acceptance Tests - API Channel
         working-directory: system-test/typescript
-        run: npm test -- test/latest/acceptance --testPathIgnorePatterns=isolated
+        run: npm test -- tests/latest/acceptance --testPathIgnorePatterns=isolated
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
@@ -167,7 +167,7 @@ jobs:
 
       - name: Run Acceptance Tests - UI Channel
         working-directory: system-test/typescript
-        run: npm test -- test/latest/acceptance --testPathIgnorePatterns=isolated
+        run: npm test -- tests/latest/acceptance --testPathIgnorePatterns=isolated
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
@@ -176,7 +176,7 @@ jobs:
 
       - name: Run Acceptance Tests (Isolated) - API Channel
         working-directory: system-test/typescript
-        run: npm test -- "test/latest/acceptance/.*isolated" --runInBand
+        run: npm test -- "tests/latest/acceptance/.*isolated" --runInBand
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
@@ -184,7 +184,7 @@ jobs:
 
       - name: Run Acceptance Tests (Isolated) - UI Channel
         working-directory: system-test/typescript
-        run: npm test -- "test/latest/acceptance/.*isolated" --runInBand
+        run: npm test -- "tests/latest/acceptance/.*isolated" --runInBand
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
@@ -193,35 +193,35 @@ jobs:
 
       - name: Run Contract Tests (Stub)
         working-directory: system-test/typescript
-        run: npm test -- test/latest/contract --testPathIgnorePatterns=isolated
+        run: npm test -- tests/latest/contract --testPathIgnorePatterns=isolated
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
 
       - name: Run Contract Tests (Isolated) (Stub)
         working-directory: system-test/typescript
-        run: npm test -- "test/latest/contract/.*isolated" --runInBand
+        run: npm test -- "tests/latest/contract/.*isolated" --runInBand
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
 
       - name: Run Contract Tests (Real)
         working-directory: system-test/typescript
-        run: npm test -- test/latest/contract
+        run: npm test -- tests/latest/contract
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: real
 
       - name: Run E2E Tests - API Channel
         working-directory: system-test/typescript
-        run: npm test -- test/latest/e2e
+        run: npm test -- tests/latest/e2e
         env:
           ENVIRONMENT: acceptance
           CHANNEL: API
 
       - name: Run E2E Tests - UI Channel
         working-directory: system-test/typescript
-        run: npm test -- test/latest/e2e
+        run: npm test -- tests/latest/e2e
         env:
           ENVIRONMENT: acceptance
           CHANNEL: UI

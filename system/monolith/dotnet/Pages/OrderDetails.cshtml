@@ -162,6 +162,10 @@
             document.getElementById('detailTotalPrice').textContent = '$' + order.totalPrice.toFixed(2);
             document.getElementById('detailAppliedCouponCode').textContent = order.appliedCouponCode || '-';
 
+            var isTerminal = order.status === 'CANCELLED' || order.status === 'DELIVERED';
+            document.getElementById('cancelOrderBtn').style.display = isTerminal ? 'none' : '';
+            document.getElementById('deliverOrderBtn').style.display = isTerminal ? 'none' : '';
+
             orderDetails.style.display = 'block';
         } catch (err) {
             loading.style.display = 'none';

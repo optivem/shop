@@ -339,22 +339,26 @@ function OrderDetailsContent() {
                 )}
               </div>
               <div className="mt-4 d-flex gap-2">
-                <button
-                  className="btn btn-danger"
-                  aria-label="Cancel Order"
-                  onClick={handleCancel}
-                  disabled={isCancelling}
-                >
-                  {isCancelling ? "Cancelling..." : "Cancel Order"}
-                </button>
-                <button
-                  className="btn btn-warning"
-                  aria-label="Deliver Order"
-                  onClick={handleDeliver}
-                  disabled={isDelivering}
-                >
-                  {isDelivering ? "Delivering..." : "Deliver Order"}
-                </button>
+                {order.status !== "CANCELLED" && order.status !== "DELIVERED" && (
+                  <button
+                    className="btn btn-danger"
+                    aria-label="Cancel Order"
+                    onClick={handleCancel}
+                    disabled={isCancelling}
+                  >
+                    {isCancelling ? "Cancelling..." : "Cancel Order"}
+                  </button>
+                )}
+                {order.status !== "CANCELLED" && order.status !== "DELIVERED" && (
+                  <button
+                    className="btn btn-warning"
+                    aria-label="Deliver Order"
+                    onClick={handleDeliver}
+                    disabled={isDelivering}
+                  >
+                    {isDelivering ? "Delivering..." : "Deliver Order"}
+                  </button>
+                )}
                 <Link href="/order-history" className="btn btn-secondary">
                   Back to Order History
                 </Link>
