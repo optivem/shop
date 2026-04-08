@@ -2,7 +2,7 @@ name: monolith-dotnet-acceptance-stage
 
 on:
   schedule:
-    - cron: '0 0 * * *'  # Run once per day at midnight UTC
+    - cron: '0 * * * *'  # Run every hour
   workflow_dispatch:
 
 concurrency:

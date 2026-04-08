@@ -5,7 +5,7 @@ services:
   monolith:
     build:
       context: ../../system/monolith/java
-      dockerfile: Dockerfile.local
+      dockerfile: Dockerfile
     ports:
       - "3111:8080"
       - "8111:8080"
