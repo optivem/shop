@@ -37,8 +37,7 @@ public abstract class BaseRawTest : BaseConfigurableTest, IAsyncLifetime
 
         var launchOptions = new BrowserTypeLaunchOptions
         {
-            Headless = true,
-            SlowMo = 100
+            Headless = true
         };
 
         shopUiBrowser = await shopUiPlaywright.Chromium.LaunchAsync(launchOptions);

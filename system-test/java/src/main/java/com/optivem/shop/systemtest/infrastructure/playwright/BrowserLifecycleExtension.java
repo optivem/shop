@@ -28,7 +28,6 @@ public class BrowserLifecycleExtension implements BeforeAllCallback, AfterAllCal
     private static final AtomicInteger ACTIVE_TEST_CLASSES = new AtomicInteger(0);
 
     private static final boolean IS_HEADLESS = getHeadlessMode();
-    private static final int SLOW_MO_MS = 100;
     private static final boolean DEFAULT_HEADLESS = true;
 
     private static boolean getHeadlessMode() {
@@ -129,8 +128,7 @@ public class BrowserLifecycleExtension implements BeforeAllCallback, AfterAllCal
             this.playwright = Playwright.create();
 
             var launchOptions = new BrowserType.LaunchOptions()
-                    .setHeadless(IS_HEADLESS)
-                    .setSlowMo(SLOW_MO_MS);
+                    .setHeadless(IS_HEADLESS);
 
             this.browser = playwright.chromium().launch(launchOptions);
         }
@@ -157,4 +155,3 @@ public class BrowserLifecycleExtension implements BeforeAllCallback, AfterAllCal
         }
     }
 }
-

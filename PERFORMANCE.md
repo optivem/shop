@@ -2,9 +2,28 @@
 
 ## Problem
 
-The acceptance stage takes ~19 minutes, with ~15 minutes (79%) spent on UI test steps alone.
+The acceptance stage for Java takes ~19 minutes, with ~15 minutes (79%) spent on UI test steps alone.
 
-**Baseline (monolith-java-acceptance-stage, 2026-04-08):**
+### Cross-Language Comparison (2026-04-08)
+
+All six acceptance stage workflows run the same test cases against the same application. The only difference is the language of the test runner.
+
+| Workflow                      | Acceptance UI | Isolated UI | Run Job Total |
+|-------------------------------|---------------|-------------|---------------|
+| **monolith-java**             | **8 min 14s** | **6 min 53s** | **19 min 12s** |
+| **multitier-java**            | **8 min 13s** | **6 min 52s** | **18 min 44s** |
+| monolith-dotnet               | 45s           | 11s         | 5 min 43s     |
+| multitier-dotnet              | 45s           | 11s         | 5 min 3s      |
+| monolith-typescript           | 17s           | 10s         | 3 min 28s     |
+| multitier-typescript          | 15s           | 10s         | 2 min 51s     |
+
+**Java UI tests are 30-60x slower than TypeScript and 10-20x slower than .NET for the identical test scenarios.**
+
+TypeScript completes all UI acceptance tests (non-isolated + isolated) in ~27 seconds. .NET completes them in ~56 seconds. Java takes ~15 minutes.
+
+The monolith vs multitier architecture makes no meaningful difference within a language - the bottleneck is the test runner, not the system under test.
+
+### Java Step-Level Breakdown
 
 | Step                                  | Duration  |
 |---------------------------------------|-----------|
@@ -17,17 +36,43 @@ The acceptance stage takes ~19 minutes, with ~15 minutes (79%) spent on UI test 
 | Contract + E2E + Promote              | ~1 min    |
 | **Total**                             | **~19 min** |
 
-API tests for the same test cases complete in seconds. The bottleneck is entirely in the UI channel.
+API tests for the same Java test cases complete in seconds. The bottleneck is entirely in the UI channel.
+
+## Industry Benchmark
+
+Dave Farley recommends that a full acceptance stage should complete within 1 hour, even for a real-life production project with hundreds of tests and complex infrastructure.
+
+This simple starter project — with only ~55-63 acceptance tests and a straightforward e-commerce domain — already consumes 20 minutes for Java. That's a third of the entire budget before any real-world complexity is added (more features, more test scenarios, more external system integrations, more browsers, more environments).
+
+If this scales linearly, a production-sized test suite with 3-5x more tests would blow past the 1-hour ceiling without optimization. The time to address this is now, while the test suite is small enough to experiment with different strategies safely.
 
 ## Root Causes
 
-1. **Browser overhead per test** - Each UI test launches Chromium, creates a context, navigates multiple pages (Home -> Form -> Submit -> Verify). A single place-order UI test performs 5-8 Playwright operations with 30s timeout caps.
+### Primary: `slowMo: 100` in Java Playwright (FOUND)
 
-2. **Limited parallelism** - Java uses `maxParallelForks = availableProcessors() / 2` (= 2 on a 4-vCPU runner). TypeScript uses `maxWorkers: 1` (zero parallelism).
+The Java `BrowserLifecycleExtension.java` launches Chromium with `.setSlowMo(100)`, which adds a **100ms artificial delay to every single Playwright operation** — every click, fill, navigation, waitFor, and textContent call.
 
-3. **Uneven test distribution** - The largest test classes (`PlaceOrderPositiveTest` = 16 tests, `PlaceOrderNegativeTest` = 14 tests) dominate runtime. With 2 forks, one fork may get both heavy classes while the other idles.
+A single place-order UI test performs roughly 50-80 Playwright operations. That's **5-8 seconds of pure artificial delay per test**, just from slowMo. Across 55 acceptance tests, that's ~5-7 minutes of the browser doing nothing but waiting.
 
-4. **Sequential isolated tests** - Isolated tests run with `maxParallelForks = 1` / `--runInBand` by design. The 6 isolated Java tests (14 TypeScript) run one at a time, each with full browser lifecycle.
+**TypeScript had zero slowMo. .NET latest had zero slowMo. Java latest and all legacy code (Java, .NET, TypeScript in eshop-tests) had it.**
+
+The `slowMo` setting is useful for local debugging (watching the browser in headed mode so you can follow along), but it should never run in CI. Removing it should bring Java UI test time from ~15 minutes down to the ~1-2 minute range, close to the .NET results.
+
+**File:** `system-test/java/src/main/java/com/optivem/shop/systemtest/infrastructure/playwright/BrowserLifecycleExtension.java` (line 133)
+
+### Secondary: Other contributing factors
+
+These are minor compared to slowMo but still relevant:
+
+### Secondary: Limited parallelism
+
+- Java uses `maxParallelForks = availableProcessors() / 2` (= 2 on a 4-vCPU runner)
+- TypeScript uses `maxWorkers: 1` (zero parallelism — but tests are so fast it barely matters)
+- Isolated tests run sequentially by design in all languages
+
+### Secondary: Uneven test distribution
+
+The largest test classes (`PlaceOrderPositiveTest` = 16 tests, `PlaceOrderNegativeTest` = 14 tests) contain 30 of 49 non-isolated tests (61%). With 2 forks, one fork may get both heavy classes while the other idles.
 
 ## Test Suite Size
 
@@ -73,88 +118,90 @@ API tests for the same test cases complete in seconds. The bottleneck is entirel
 
 ## Optimization Strategies
 
-### Strategy 1: Increase Test Worker/Fork Count
+### Strategy 1: Remove `slowMo` entirely (DONE)
 
-**Impact: Medium (~8 min -> ~5 min for non-isolated UI)**
+**Impact: Very High (expected ~15 min -> ~1-2 min for Java UI tests)**
+**Risk: Low**
+**Effort: Trivial**
+
+Root cause found: `slowMo: 100` was present in multiple files across both repos. Removed from all 11 locations:
+
+**starter repo (5 files):**
+- `system-test/java/src/main/java/.../BrowserLifecycleExtension.java` (latest)
+- `system-test/java/src/test/java/.../legacy/mod02/base/BaseRawTest.java`
+- `system-test/java/src/test/java/.../legacy/mod03/base/BaseRawTest.java`
+- `system-test/dotnet/SystemTests/Legacy/Mod02/Base/BaseRawTest.cs`
+- `system-test/dotnet/SystemTests/Legacy/Mod03/Base/BaseRawTest.cs`
+
+**eshop-tests repo (6 files):**
+- `typescript/driver-adapter/shop/ui/client/ShopUiClient.ts` (latest)
+- `java/system-test/src/main/java/.../BrowserLifecycleExtension.java` (latest)
+- `java/system-test/src/test/java/.../legacy/mod02/base/BaseRawTest.java`
+- `java/system-test/src/test/java/.../legacy/mod03/base/BaseRawTest.java`
+- `dotnet/SystemTests/Legacy/Mod02/Base/BaseRawTest.cs`
+- `dotnet/SystemTests/Legacy/Mod03/Base/BaseRawTest.cs`
+
+### Strategy 2: Shared Browser Instance (Java)
+
+**Impact: High (eliminates per-class browser launch overhead)**
+**Risk: Medium (test isolation)**
+**Effort: Medium**
+
+Currently each Java test class calls `chromium.launch()` in its own `@BeforeAll`. With 9 non-isolated test classes running in 2 forks, that's multiple browser launches.
+
+Alternative: Use a JUnit Extension or global setup to launch one browser per fork, shared across test classes. Each test class creates its own `BrowserContext` (lightweight) instead of a new browser.
+
+### Strategy 3: Increase Test Worker/Fork Count
+
+**Impact: Medium (only helps Java; TypeScript/C# already fast enough)**
 **Risk: Medium (memory pressure)**
 **Effort: Low**
 
-Currently Java uses `maxParallelForks = availableProcessors() / 2` and TypeScript uses `maxWorkers: 1`.
-
-- **Java**: Could increase to `availableProcessors()` (4 forks). Risk: each fork runs a JVM + Chromium browser (~300-500MB each). Four of them + Docker containers could cause OOM on the 7GB GitHub Actions runner.
-- **TypeScript**: Override `maxWorkers` to 2 in the workflow command. Currently zero parallelism, so even 2 workers would be a significant improvement with lower risk than 4.
+- **Java**: Could increase `maxParallelForks` from `availableProcessors() / 2` to `availableProcessors()` (2 -> 4 forks). Risk: each fork runs a JVM + Chromium browser (~300-500MB each). Four of them + Docker containers could cause OOM on the 7GB GitHub Actions runner.
+- **TypeScript**: Override `maxWorkers` from 1 to 2. Currently zero parallelism, but tests are so fast (~27s total) that the savings would be minimal.
 
 **Safeguard**: Monitor for flaky timeout failures after increasing. If OOM occurs, fall back to current values.
 
-### Strategy 2: CI Sharding (Split Across Multiple Jobs)
+### Strategy 4: CI Sharding (Split Across Multiple Jobs)
 
-**Impact: High (~15 min -> ~5-7 min for all UI tests)**
+**Impact: High (divides wall-clock time by shard count)**
 **Risk: Low**
 **Effort: Medium**
 
-Split UI test execution across multiple parallel GitHub Actions jobs. Each job gets a subset of tests.
+Split Java UI test execution across multiple parallel GitHub Actions jobs. Each job gets its own runner with full CPU and memory.
 
-- **Java (Gradle)**: No built-in shard flag. Requires manually splitting test classes across jobs using `-DincludeTestsMatching` patterns, or using a Gradle plugin like `test-distribution`.
-- **TypeScript (Jest)**: Built-in `--shard=1/3` flag (Jest 28+). Easy to implement.
+- **Java (Gradle)**: No built-in shard flag. Requires manually splitting test classes across jobs using `-DincludeTestsMatching` patterns, or using a Gradle plugin.
+- **TypeScript (Jest)**: Built-in `--shard=1/3` flag. Easy but unnecessary given tests already finish in ~27s.
 
-This is the single highest-impact optimization because it adds CPU and memory linearly (each job gets its own runner) without the OOM risk of more forks on a single runner.
+This avoids the OOM risk of more forks on a single runner by adding runners instead.
 
-**Trade-off**: More CI complexity. Need to aggregate test results across jobs. Increases total CI compute cost (more runner-minutes).
+**Trade-off**: More CI complexity. Need to aggregate test results across jobs. Increases total CI compute cost.
 
-### Strategy 3: Rebalance Test Classes
+### Strategy 5: Rebalance Test Classes
 
-**Impact: Medium (improves fork utilization)**
+**Impact: Medium (improves fork utilization for Java)**
 **Risk: Low**
 **Effort: Medium**
 
 The two heaviest classes (`PlaceOrderPositiveTest` = 16, `PlaceOrderNegativeTest` = 14) contain 30 of 49 non-isolated tests (61%). With 2 forks, if both land on the same fork, one fork does 61% of the work while the other finishes early.
 
 Options:
-- Split large test classes into smaller ones (e.g., `PlaceOrderPositiveBasicTest`, `PlaceOrderPositiveCouponTest`)
-- Use Gradle's `test-distribution` or Jest's `--shard` to distribute by estimated duration rather than by class
+- Split large test classes into smaller ones
+- Use Gradle's test distribution to balance by estimated duration rather than by class
 
-**Trade-off**: Splitting classes for performance reasons adds organizational complexity and may conflict with the domain grouping.
+**Trade-off**: Splitting classes for performance reasons adds organizational complexity.
 
-### Strategy 4: API Setup + UI Verify Pattern
+### Strategy 6: API Setup + UI Verify Pattern
 
-**Impact: High (could halve per-test time)**
+**Impact: High (could halve per-test time for Java)**
 **Risk: Low**
 **Effort: High**
 
-Many UI tests follow the pattern: navigate -> fill form -> submit -> verify result. The navigation and form-filling portion is slow but isn't testing anything unique to the UI - it's just setting up state.
+Many UI tests follow: navigate -> fill form -> submit -> verify. The setup portion is slow but isn't testing anything unique to the UI.
 
-Alternative: Use the API to create test data (place orders, publish coupons), then use the UI only for the verification step. For example, a "view order" test could create the order via API, then only use Playwright to navigate to the order details page and verify display.
+Alternative: Use the API to create test data, then use the UI only for verification. A "view order" test could create the order via API, then only use Playwright to verify display.
 
-This would reduce UI operations per test from 5-8 steps to 1-3 steps.
-
-**Trade-off**: This changes what the test verifies. A "place order via UI" test that uses the API for setup is no longer testing the full UI flow. This strategy works best for tests where the core assertion is about display, not about form submission.
-
-### Strategy 5: Shared Browser Instance
-
-**Impact: Low-Medium (saves ~1-2s per test file)**
-**Risk: Medium (test isolation)**
-**Effort: Medium**
-
-Currently each test file calls `chromium.launch()` in its `beforeAll`. With 9 non-isolated test files, that's 9 browser launches.
-
-Alternative: Use a global setup to launch one browser instance shared across all non-isolated test files. Each test file creates its own `BrowserContext` (which is lightweight) instead of a new browser.
-
-- **Java**: Use a JUnit `@BeforeAll` in a shared base class or a custom Extension
-- **TypeScript**: Use Jest's `globalSetup` to launch browser and store the WebSocket endpoint
-
-**Trade-off**: Shared browser means a crash in one test could affect others. Browser contexts provide isolation for cookies/storage but share the browser process.
-
-### Strategy 6: Reduce Playwright Timeouts
-
-**Impact: Low (only helps when things are fast)**
-**Risk: Medium (false failures on slow CI)**
-**Effort: Low**
-
-The current timeout is 30s per Playwright operation. On a healthy system, operations complete in 1-3s, so the timeout doesn't affect happy-path runtime. However, if a test is going to fail, it wastes up to 30s waiting before timing out.
-
-Reducing to 10-15s would make failing tests fail faster, but risks false failures on a loaded CI runner.
-
-**Not recommended** as a primary strategy - the timeout only affects failing tests.
+**Trade-off**: Changes what the test verifies. Works best for tests where the assertion is about display, not form submission.
 
 ### Strategy 7: Cache Playwright Browser Binaries
 
@@ -181,41 +228,43 @@ Small absolute savings but essentially free to implement.
 
 GitHub Actions offers larger runners (8, 16, 32, 64 vCPUs) on paid plans. A larger runner allows more parallel forks without memory pressure, and each individual test runs faster due to more CPU.
 
-An 8-vCPU runner with `maxParallelForks = 4` would likely cut the non-isolated UI time in half with no code changes.
+**Trade-off**: Direct cost increase. Only worth it for the Java workflow — TypeScript and .NET are already fast on standard runners.
 
-**Trade-off**: Direct cost increase. Larger runners are 2-4x more expensive per minute.
+### Strategy 9: Reduce Isolated Test Count
 
-### Strategy 9: Run UI Tests Only for Changed Features
+**Impact: Medium (Java isolated UI = ~7 min)**
+**Risk: Low**
+**Effort: Medium**
+
+Review whether all isolated tests truly need isolation. A test needs isolation only if it modifies shared state (e.g., WireMock stubs) that would affect other tests. If some are marked conservatively, moving them to non-isolated would let them run in parallel.
+
+### Strategy 10: Run UI Tests Only for Changed Features
 
 **Impact: High (skip most UI tests on most runs)**
 **Risk: Medium (missed regressions)**
 **Effort: High**
 
-If the change only affects order placement, skip coupon and cancel-order UI tests. Requires mapping code changes to test categories and maintaining that mapping.
+If the change only affects order placement, skip coupon and cancel-order UI tests. Requires mapping code changes to test categories.
 
-**Not recommended** for acceptance stage - the whole point is to run the full suite. Better suited for a developer-feedback CI stage.
-
-### Strategy 10: Reduce Isolated Test Count
-
-**Impact: Medium (~7 min isolated UI -> less)**
-**Risk: Low**
-**Effort: Medium**
-
-Review whether all isolated tests truly need isolation. A test needs isolation only if it modifies shared state (e.g., WireMock stubs) that would affect other tests. If some isolated tests are marked conservatively, moving them to non-isolated would let them run in parallel.
+**Not recommended** for acceptance stage — the whole point is to run the full suite.
 
 ---
 
 ## Recommended Priority
 
+The cross-language comparison makes the priority clear: **fix the Java-specific problem first**, then consider general optimizations.
+
 | Priority | Strategy | Impact | Risk | Effort |
 |----------|----------|--------|------|--------|
-| 1 | TypeScript: add `--maxWorkers=2` | Medium | Low | Low |
-| 2 | Cache Playwright binaries | Low | Low | Low |
-| 3 | CI sharding (TypeScript first) | High | Low | Medium |
-| 4 | Shared browser instance | Medium | Medium | Medium |
-| 5 | Rebalance test classes | Medium | Low | Medium |
-| 6 | API setup + UI verify | High | Low | High |
-| 7 | Java: increase maxParallelForks | Medium | Medium | Low |
-| 8 | Larger CI runners | High | Low | Low (cost) |
+| 1 | Investigate Java Playwright overhead | Very High | Low | Medium |
+| 2 | Shared browser instance (Java) | High | Medium | Medium |
+| 3 | CI sharding (Java only) | High | Low | Medium |
+| 4 | Increase Java maxParallelForks | Medium | Medium | Low |
+| 5 | Cache Playwright binaries | Low | Low | Low |
+| 6 | Rebalance test classes | Medium | Low | Medium |
+| 7 | API setup + UI verify | High | Low | High |
+| 8 | Larger CI runners | High | Low | Cost |
 | 9 | Reduce isolated test count | Medium | Low | Medium |
 | 10 | Selective test execution | High | Medium | High |
+
+TypeScript and .NET workflows do not need optimization at this time — their total acceptance stage runtimes (3-6 minutes) are well within the 1-hour budget even at 10x scale.

@@ -33,8 +33,7 @@ public class BaseRawTest extends BaseConfigurableTest {
         shopUiPlaywright = Playwright.create();
 
         var launchOptions = new BrowserType.LaunchOptions()
-                .setHeadless(true)
-                .setSlowMo(100);
+                .setHeadless(true);
 
         shopUiBrowser = shopUiPlaywright.chromium().launch(launchOptions);
 
