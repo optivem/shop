@@ -58,7 +58,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v5
 
-      - name: Read Component Version
+      - name: Read Component Target Version
         id: read-version
         uses: optivem/actions/read-target-version@v1
         with:

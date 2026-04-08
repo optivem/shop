@@ -238,7 +238,7 @@ jobs:
           CHANNEL: UI
           CHANNEL_MODE: static
 
-      - name: Read Target Version
+      - name: Read System Target Version
         id: read-version
         uses: optivem/actions/read-target-version@v1
 

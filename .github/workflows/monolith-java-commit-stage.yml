@@ -80,7 +80,7 @@ jobs:
         run: ./gradlew build sonar --info
         working-directory: system/monolith/java
 
-      - name: Read Target Version
+      - name: Read Component Target Version
         if: github.ref == 'refs/heads/main'
         id: read-version
         uses: optivem/actions/read-target-version@v1

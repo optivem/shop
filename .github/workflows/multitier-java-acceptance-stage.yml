@@ -191,7 +191,7 @@ jobs:
         run: ./gradlew test -Dversion=latest -Dtype=e2e -Dchannel=UI -DchannelMode=static -Denvironment=acceptance
         working-directory: system-test/java
 
-      - name: Read Target Version
+      - name: Read System Target Version
         id: read-version
         uses: optivem/actions/read-target-version@v1
 
