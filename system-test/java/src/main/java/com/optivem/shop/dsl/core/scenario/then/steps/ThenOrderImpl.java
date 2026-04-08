@@ -17,10 +17,14 @@ public class ThenOrderImpl<TSuccessResponse, TSuccessVerification extends Respon
         if (orderNumber == null) {
             throw new IllegalStateException("Cannot verify order: no order number available from the executed operation");
         }
-        this.orderVerification = app.shop().viewOrder()
-                .orderNumber(orderNumber)
-                .execute()
-                .shouldSucceed();
+        if (successVerification instanceof ViewOrderVerification viewOrderVerification) {
+            this.orderVerification = viewOrderVerification;
+        } else {
+            this.orderVerification = app.shop().viewOrder()
+                    .orderNumber(orderNumber)
+                    .execute()
+                    .shouldSucceed();
+        }
     }
 
     public ThenOrderImpl<TSuccessResponse, TSuccessVerification> hasSku(String expectedSku) {

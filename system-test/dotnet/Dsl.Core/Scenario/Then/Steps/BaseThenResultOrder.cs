@@ -26,7 +26,7 @@ public abstract class BaseThenResultOrder<TSuccessResponse, TSuccessVerification
         _orderNumberFactory = orderNumberFactory;
     }
 
-    protected abstract Task RunPrelude(ExecutionResult<TSuccessResponse, TSuccessVerification> result);
+    protected abstract Task<ViewOrderVerification?> RunPrelude(ExecutionResult<TSuccessResponse, TSuccessVerification> result);
 
     protected TDerived Self => (TDerived)this;
 
@@ -243,12 +243,21 @@ public abstract class BaseThenResultOrder<TSuccessResponse, TSuccessVerification
     private async Task Execute()
     {
         var result = await _thenClause.GetExecutionResult();
-        await RunPrelude(result);
+        var cachedVerification = await RunPrelude(result);
 
         var orderNumber = await _orderNumberFactory();
-        var shop = await _thenClause.App.Shop(_thenClause.Channel);
-        var viewOrderResult = await shop.ViewOrder().OrderNumber(orderNumber).Execute();
-        var verification = viewOrderResult.ShouldSucceed();
+
+        ViewOrderVerification verification;
+        if (cachedVerification != null)
+        {
+            verification = cachedVerification;
+        }
+        else
+        {
+            var shop = await _thenClause.App.Shop(_thenClause.Channel);
+            var viewOrderResult = await shop.ViewOrder().OrderNumber(orderNumber).Execute();
+            verification = viewOrderResult.ShouldSucceed();
+        }
 
         foreach (var v in _verifications)
         {

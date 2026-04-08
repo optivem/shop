@@ -1,6 +1,7 @@
 using Dsl.Port.Then.Steps;
 using Dsl.Core.Shared;
 using Dsl.Core.Scenario;
+using Dsl.Core.Shop.UseCases;
 using Dsl.Core.Shop.UseCases.Base;
 
 namespace Dsl.Core.Scenario.Then;
@@ -23,7 +24,7 @@ public class ThenFailureOrder<TSuccessResponse, TSuccessVerification>
         _failureAssertions = failureAssertions;
     }
 
-    protected override Task RunPrelude(ExecutionResult<TSuccessResponse, TSuccessVerification> result)
+    protected override Task<ViewOrderVerification?> RunPrelude(ExecutionResult<TSuccessResponse, TSuccessVerification> result)
     {
         if (result.Result == null)
             throw new InvalidOperationException("Cannot verify failure: no operation was executed");
@@ -32,7 +33,7 @@ public class ThenFailureOrder<TSuccessResponse, TSuccessVerification>
         {
             assertion(failureVerification);
         }
-        return Task.CompletedTask;
+        return Task.FromResult<ViewOrderVerification?>(null);
     }
 }
 

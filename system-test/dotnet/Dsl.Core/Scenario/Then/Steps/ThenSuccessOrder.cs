@@ -1,6 +1,7 @@
 using Dsl.Port.Then.Steps;
 using Dsl.Core.Shared;
 using Dsl.Core.Scenario;
+using Dsl.Core.Shop.UseCases;
 
 namespace Dsl.Core.Scenario.Then;
 
@@ -15,10 +16,10 @@ public class ThenSuccessOrder<TSuccessResponse, TSuccessVerification>
     {
     }
 
-    protected override Task RunPrelude(ExecutionResult<TSuccessResponse, TSuccessVerification> result)
+    protected override Task<ViewOrderVerification?> RunPrelude(ExecutionResult<TSuccessResponse, TSuccessVerification> result)
     {
-        _ = result.Result.ShouldSucceed();
-        return Task.CompletedTask;
+        var verification = result.Result.ShouldSucceed();
+        return Task.FromResult(verification as ViewOrderVerification);
     }
 }
 

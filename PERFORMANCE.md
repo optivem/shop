@@ -38,6 +38,16 @@ The monolith vs multitier architecture makes no meaningful difference within a l
 
 API tests for the same Java test cases complete in seconds. The bottleneck is entirely in the UI channel.
 
+### After removing `slowMo` (2026-04-08, run 24128254978)
+
+| Step                                  | Before    | After     | Change |
+|---------------------------------------|-----------|-----------|--------|
+| Acceptance Tests - UI Channel         | 8 min 14s | 7 min 57s | -17s   |
+| Acceptance Tests (Isolated) - UI      | 6 min 53s | 6 min 48s | -5s    |
+| **Total run job**                     | **19 min 12s** | **18 min 40s** | **-32s** |
+
+Removing `slowMo` had negligible impact. The root cause is elsewhere.
+
 ## Industry Benchmark
 
 Dave Farley recommends that a full acceptance stage should complete within 1 hour, even for a real-life production project with hundreds of tests and complex infrastructure.
@@ -48,21 +58,21 @@ If this scales linearly, a production-sized test suite with 3-5x more tests woul
 
 ## Root Causes
 
-### Primary: `slowMo: 100` in Java Playwright (FOUND)
+### Primary: Java Playwright bridge overhead (UNRESOLVED)
 
-The Java `BrowserLifecycleExtension.java` launches Chromium with `.setSlowMo(100)`, which adds a **100ms artificial delay to every single Playwright operation** — every click, fill, navigation, waitFor, and textContent call.
+After removing `slowMo: 100` (which only saved 32 seconds), the 30-60x gap between Java and TypeScript remains unexplained. The dominant bottleneck is the Java Playwright architecture itself:
 
-A single place-order UI test performs roughly 50-80 Playwright operations. That's **5-8 seconds of pure artificial delay per test**, just from slowMo. Across 55 acceptance tests, that's ~5-7 minutes of the browser doing nothing but waiting.
+- **Java Playwright runs a Node.js subprocess** under the hood. Every Playwright call from Java goes: JVM -> IPC -> Node.js -> WebSocket -> Chromium. TypeScript talks directly to Chromium via WebSocket, skipping one IPC hop entirely.
+- **Per-test overhead compounds** — each of the 55 acceptance tests pays this bridge cost on every click, fill, navigate, and waitFor operation.
+- **.NET Playwright also uses a subprocess bridge** but completes in ~56 seconds (vs Java's ~15 minutes), suggesting the Java binding has additional overhead beyond the bridge pattern.
 
-**TypeScript had zero slowMo. .NET latest had zero slowMo. Java latest and all legacy code (Java, .NET, TypeScript in eshop-tests) had it.**
+**Next investigation needed**: Add timing instrumentation inside the Java UI driver to measure exactly how long each Playwright operation takes (browser.newContext, page.navigate, locator.click, locator.fill, waitFor) and compare against TypeScript equivalents. This would pinpoint whether the cost is in browser launch, navigation, element interaction, or notification waiting.
 
-The `slowMo` setting is useful for local debugging (watching the browser in headed mode so you can follow along), but it should never run in CI. Removing it should bring Java UI test time from ~15 minutes down to the ~1-2 minute range, close to the .NET results.
+### Ruled out: `slowMo: 100`
 
-**File:** `system-test/java/src/main/java/com/optivem/shop/systemtest/infrastructure/playwright/BrowserLifecycleExtension.java` (line 133)
+`slowMo` was present in Java (and some legacy .NET/TypeScript files) but removing it only saved 32 seconds out of 15 minutes. Not the primary cause.
 
 ### Secondary: Other contributing factors
-
-These are minor compared to slowMo but still relevant:
 
 ### Secondary: Limited parallelism
 
@@ -118,13 +128,14 @@ The largest test classes (`PlaceOrderPositiveTest` = 16 tests, `PlaceOrderNegati
 
 ## Optimization Strategies
 
-### Strategy 1: Remove `slowMo` entirely (DONE)
+### Strategy 1: Remove `slowMo` entirely (DONE — minimal impact)
 
-**Impact: Very High (expected ~15 min -> ~1-2 min for Java UI tests)**
+**Expected impact: Very High (~15 min -> ~1-2 min)**
+**Actual impact: Negligible (~19 min 12s -> ~18 min 40s, only 32 seconds saved)**
 **Risk: Low**
 **Effort: Trivial**
 
-Root cause found: `slowMo: 100` was present in multiple files across both repos. Removed from all 11 locations:
+`slowMo: 100` was present in multiple files across both repos. Removed from all 11 locations. However, the results show this was **not the primary cause** of the 30-60x gap between Java and TypeScript. The real bottleneck is elsewhere — likely the Java Playwright bridge overhead (JVM -> Node.js subprocess -> Chromium IPC).
 
 **starter repo (5 files):**
 - `system-test/java/src/main/java/.../BrowserLifecycleExtension.java` (latest)
