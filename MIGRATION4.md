@@ -6,18 +6,47 @@ Single sequenced plan combining ESHOP_COMPARISON (app code) and ESHOP_TESTS_COMP
 
 **DO NOT commit, push, or sync ANY repos until explicitly told by the user.** All changes stay local. The user will commit manually after verifying everything works with `./Run-SystemTests` and `./Run-SystemTests -Legacy`.
 
+## Optimization Rules
+
+- **Read only files you need to change** — the comparison docs already identify exact files and line numbers.
+- **Work on all 3 languages + all architectures in parallel** — spawn agents for Java, .NET, TypeScript simultaneously per phase.
+- **Copy and adapt from eshop** — don't write from scratch.
+- **Run tests per phase, not per file:**
+  1. If system code changed: `./Run-SystemTests -Rebuild -SkipTests`
+  2. Then: `./Run-SystemTests`
+  3. For legacy test changes: `./Run-SystemTests -Legacy`
+- **Fix before moving on** — if a phase fails, diagnose and fix before starting the next phase.
+- **Keep this doc up to date** — if you discover new optimizations, blockers, or corrections during work, update this doc immediately.
+
 ---
 
 ## Phase 1: Fix What's Wrong in Starter
 
-### 1.1 Fix promotion pricing logic (all 3 languages)
+### 1.1 Fix promotion pricing logic (all 3 languages, all architectures)
 
 Promotion discount is applied at the wrong level. Fix in system code + test assertions.
 
-**Current (wrong):** `basePrice = unitPrice * quantity * promotionFactor`
-**Correct:** `basePrice = unitPrice * quantity`, then `subtotalPrice = basePrice - promotionAmount - couponAmount`
+**Current (wrong):**
+```
+basePrice     = unitPrice × quantity × promotionFactor
+discountAmt   = basePrice × couponRate
+subtotalPrice = basePrice - discountAmt
+```
 
-Affected: backend system code (all 3 langs), test DSL defaults, test assertions.
+**Correct (sequential):**
+```
+basePrice      = unitPrice × quantity
+promotedPrice  = basePrice × promotionFactor
+discountAmount = promotedPrice × couponRate
+subtotalPrice  = promotedPrice - discountAmount
+taxAmount      = subtotalPrice × taxRate
+totalPrice     = subtotalPrice + taxAmount
+```
+
+`promotionFactor` = `promotion.discount` if active, else `1.0` (default "1.00" = no discount).
+`promotedPrice` is a local variable, not stored in Order.
+
+Affected: 6 OrderService files (3 langs × 2 architectures), possibly test assertions on `basePrice`.
 
 ---
 
