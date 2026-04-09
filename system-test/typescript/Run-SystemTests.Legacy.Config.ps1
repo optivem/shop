@@ -56,9 +56,15 @@ $Config = @{
             Path = ".";
             TestReportPath = "playwright-report\index.html";
             TestInstallCommands = $null },
-        @{  Id = "mod06-e2e";
-            Name = "mod06 - E2E";
-            Command = "`$env:ENVIRONMENT = 'local'; npx playwright test --project=e2e-test tests/legacy/mod06/e2e";
+        @{  Id = "mod06-e2e-api";
+            Name = "mod06 - E2E - API";
+            Command = "`$env:CHANNEL = 'api'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=e2e-test tests/legacy/mod06/e2e";
+            Path = ".";
+            TestReportPath = "playwright-report\index.html";
+            TestInstallCommands = $null },
+        @{  Id = "mod06-e2e-ui";
+            Name = "mod06 - E2E - UI";
+            Command = "`$env:CHANNEL = 'ui'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=e2e-test tests/legacy/mod06/e2e";
             Path = ".";
             TestReportPath = "playwright-report\index.html";
             TestInstallCommands = $null },
@@ -70,9 +76,15 @@ $Config = @{
             Path = ".";
             TestReportPath = "playwright-report\index.html";
             TestInstallCommands = $null },
-        @{  Id = "mod07-e2e";
-            Name = "mod07 - E2E";
-            Command = "`$env:ENVIRONMENT = 'local'; npx playwright test --project=e2e-test tests/legacy/mod07/e2e";
+        @{  Id = "mod07-e2e-api";
+            Name = "mod07 - E2E - API";
+            Command = "`$env:CHANNEL = 'api'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=e2e-test tests/legacy/mod07/e2e";
+            Path = ".";
+            TestReportPath = "playwright-report\index.html";
+            TestInstallCommands = $null },
+        @{  Id = "mod07-e2e-ui";
+            Name = "mod07 - E2E - UI";
+            Command = "`$env:CHANNEL = 'ui'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=e2e-test tests/legacy/mod07/e2e";
             Path = ".";
             TestReportPath = "playwright-report\index.html";
             TestInstallCommands = $null },
@@ -84,9 +96,15 @@ $Config = @{
             Path = ".";
             TestReportPath = "playwright-report\index.html";
             TestInstallCommands = $null },
-        @{  Id = "mod08-e2e";
-            Name = "mod08 - E2E";
-            Command = "`$env:ENVIRONMENT = 'local'; npx playwright test --project=e2e-test tests/legacy/mod08/e2e";
+        @{  Id = "mod08-e2e-api";
+            Name = "mod08 - E2E - API";
+            Command = "`$env:CHANNEL = 'api'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=e2e-test tests/legacy/mod08/e2e";
+            Path = ".";
+            TestReportPath = "playwright-report\index.html";
+            TestInstallCommands = $null },
+        @{  Id = "mod08-e2e-ui";
+            Name = "mod08 - E2E - UI";
+            Command = "`$env:CHANNEL = 'ui'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=e2e-test tests/legacy/mod08/e2e";
             Path = ".";
             TestReportPath = "playwright-report\index.html";
             TestInstallCommands = $null },
@@ -105,10 +123,28 @@ $Config = @{
             TestReportPath = "playwright-report\index.html";
             TestInstallCommands = $null },
 
-        # === mod10: Acceptance ===
-        @{  Id = "mod10-acceptance";
-            Name = "mod10 - Acceptance (stub)";
-            Command = "`$env:EXTERNAL_SYSTEM_MODE = 'stub'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=acceptance-test tests/legacy/mod10/acceptance";
+        # === mod10: Acceptance Tests ===
+        @{  Id = "mod10-acceptance-api";
+            Name = "mod10 - Acceptance (stub) - API";
+            Command = "`$env:CHANNEL = 'api'; `$env:EXTERNAL_SYSTEM_MODE = 'stub'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=acceptance-test --grep-invert @isolated tests/legacy/mod10/acceptance";
+            Path = ".";
+            TestReportPath = "playwright-report\index.html";
+            TestInstallCommands = $null },
+        @{  Id = "mod10-acceptance-ui";
+            Name = "mod10 - Acceptance (stub) - UI";
+            Command = "`$env:CHANNEL = 'ui'; `$env:EXTERNAL_SYSTEM_MODE = 'stub'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=acceptance-test --grep-invert @isolated tests/legacy/mod10/acceptance";
+            Path = ".";
+            TestReportPath = "playwright-report\index.html";
+            TestInstallCommands = $null },
+        @{  Id = "mod10-acceptance-isolated-api";
+            Name = "mod10 - Acceptance Isolated (stub) - API";
+            Command = "`$env:CHANNEL = 'api'; `$env:EXTERNAL_SYSTEM_MODE = 'stub'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=acceptance-test --grep @isolated tests/legacy/mod10/acceptance";
+            Path = ".";
+            TestReportPath = "playwright-report\index.html";
+            TestInstallCommands = $null },
+        @{  Id = "mod10-acceptance-isolated-ui";
+            Name = "mod10 - Acceptance Isolated (stub) - UI";
+            Command = "`$env:CHANNEL = 'ui'; `$env:EXTERNAL_SYSTEM_MODE = 'stub'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=acceptance-test --grep @isolated tests/legacy/mod10/acceptance";
             Path = ".";
             TestReportPath = "playwright-report\index.html";
             TestInstallCommands = $null },
@@ -116,7 +152,13 @@ $Config = @{
         # === mod11: Contract + E2E ===
         @{  Id = "mod11-contract-stub";
             Name = "mod11 - Contract (stub)";
-            Command = "`$env:EXTERNAL_SYSTEM_MODE = 'stub'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=external-system-contract-test tests/legacy/mod11/contract";
+            Command = "`$env:EXTERNAL_SYSTEM_MODE = 'stub'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=external-system-contract-test --grep-invert @isolated tests/legacy/mod11/contract";
+            Path = ".";
+            TestReportPath = "playwright-report\index.html";
+            TestInstallCommands = $null },
+        @{  Id = "mod11-contract-stub-isolated";
+            Name = "mod11 - Contract Isolated (stub)";
+            Command = "`$env:EXTERNAL_SYSTEM_MODE = 'stub'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=external-system-contract-test --grep @isolated tests/legacy/mod11/contract";
             Path = ".";
             TestReportPath = "playwright-report\index.html";
             TestInstallCommands = $null },
@@ -126,9 +168,15 @@ $Config = @{
             Path = ".";
             TestReportPath = "playwright-report\index.html";
             TestInstallCommands = $null },
-        @{  Id = "mod11-e2e";
-            Name = "mod11 - E2E";
-            Command = "`$env:ENVIRONMENT = 'local'; npx playwright test --project=e2e-test tests/legacy/mod11/e2e";
+        @{  Id = "mod11-e2e-api";
+            Name = "mod11 - E2E - API";
+            Command = "`$env:CHANNEL = 'api'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=e2e-test tests/legacy/mod11/e2e";
+            Path = ".";
+            TestReportPath = "playwright-report\index.html";
+            TestInstallCommands = $null },
+        @{  Id = "mod11-e2e-ui";
+            Name = "mod11 - E2E - UI";
+            Command = "`$env:CHANNEL = 'ui'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=e2e-test tests/legacy/mod11/e2e";
             Path = ".";
             TestReportPath = "playwright-report\index.html";
             TestInstallCommands = $null }
