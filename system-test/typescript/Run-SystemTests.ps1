@@ -2,7 +2,6 @@ param(
     [ValidateSet("local", "pipeline")]
     [string]$Mode = "local",
 
-    [Parameter(Mandatory)]
     [ValidateSet("multitier", "monolith")]
     [string]$Architecture,
 
@@ -19,6 +18,17 @@ param(
 
     [string]$WorkingDirectory = (Get-Location).Path
 )
+
+# Auto-detect architecture from project config if not specified
+if (-not $Architecture) {
+    $configPath = Join-Path (Split-Path $PSScriptRoot -Parent) ".optivem" "config.json"
+    if (Test-Path $configPath) {
+        $projectConfig = Get-Content $configPath -Raw | ConvertFrom-Json
+        $Architecture = $projectConfig.architecture
+    } else {
+        throw "Architecture not specified and .optivem/config.json not found. Use -Architecture monolith|multitier"
+    }
+}
 
 # Constants
 $TestConfigFileName = "Run-SystemTests.Config.ps1"
