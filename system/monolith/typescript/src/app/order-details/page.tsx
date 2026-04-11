@@ -329,14 +329,12 @@ function OrderDetailsContent() {
                     ${order.totalPrice.toFixed(2)}
                   </p>
                 </div>
-                {order.appliedCouponCode && (
-                  <div className="col-md-6 mb-3">
-                    <strong>Applied Coupon Code:</strong>
-                    <p aria-label="Display Applied Coupon">
-                      {order.appliedCouponCode}
-                    </p>
-                  </div>
-                )}
+                <div className="col-md-6 mb-3">
+                  <strong>Applied Coupon Code:</strong>
+                  <p aria-label="Display Applied Coupon">
+                    {order.appliedCouponCode}
+                  </p>
+                </div>
               </div>
               <div className="mt-4 d-flex gap-2">
                 {order.status !== "CANCELLED" && order.status !== "DELIVERED" && (
