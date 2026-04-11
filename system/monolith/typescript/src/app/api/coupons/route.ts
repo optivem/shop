@@ -54,6 +54,8 @@ export async function GET() {
       coupons: coupons.map((c) => ({
         code: c.code,
         discountRate: Number.parseFloat(c.discount_rate),
+        validFrom: c.valid_from ? c.valid_from.toISOString() : null,
+        validTo: c.valid_to ? c.valid_to.toISOString() : null,
         usageLimit: c.usage_limit,
         usedCount: c.used_count,
       })),

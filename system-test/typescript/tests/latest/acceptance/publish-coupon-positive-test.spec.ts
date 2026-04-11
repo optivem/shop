@@ -37,7 +37,13 @@ forChannels('ui', 'api')(() => {
             .withValidTo('2024-08-31T23:59:00Z')
             .withUsageLimit(100)
             .then()
-            .shouldSucceed();
+            .shouldSucceed()
+            .and().coupon('SUMMER2025')
+            .hasDiscountRate(0.15)
+            .isValidFrom('2024-06-01T00:00:00Z')
+            .isValidTo('2024-08-31T23:59:00Z')
+            .hasUsageLimit(100)
+            .hasUsedCount(0);
     });
 });
 
