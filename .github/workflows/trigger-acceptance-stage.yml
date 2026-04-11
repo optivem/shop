@@ -1,0 +1,74 @@
+name: trigger-acceptance-stage
+
+on:
+  workflow_dispatch:
+    inputs:
+      include-latest:
+        description: 'Include latest acceptance stages'
+        type: boolean
+        default: true
+      include-legacy:
+        description: 'Include legacy acceptance stages'
+        type: boolean
+        default: false
+
+jobs:
+  trigger-latest-multitier:
+    if: ${{ inputs.include-latest }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        workflow:
+          - multitier-java-acceptance-stage.yml
+          - multitier-dotnet-acceptance-stage.yml
+          - multitier-typescript-acceptance-stage.yml
+    steps:
+      - run: gh workflow run ${{ matrix.workflow }} --repo ${{ github.repository }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+  trigger-latest-monolith:
+    if: ${{ inputs.include-latest }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        workflow:
+          - monolith-java-acceptance-stage.yml
+          - monolith-dotnet-acceptance-stage.yml
+          - monolith-typescript-acceptance-stage.yml
+    steps:
+      - run: gh workflow run ${{ matrix.workflow }} --repo ${{ github.repository }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+  trigger-legacy-multitier:
+    if: ${{ inputs.include-legacy }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        workflow:
+          - multitier-java-acceptance-stage-legacy.yml
+          - multitier-dotnet-acceptance-stage-legacy.yml
+          - multitier-typescript-acceptance-stage-legacy.yml
+    steps:
+      - run: gh workflow run ${{ matrix.workflow }} --repo ${{ github.repository }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+  trigger-legacy-monolith:
+    if: ${{ inputs.include-legacy }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        workflow:
+          - monolith-java-acceptance-stage-legacy.yml
+          - monolith-dotnet-acceptance-stage-legacy.yml
+          - monolith-typescript-acceptance-stage-legacy.yml
+    steps:
+      - run: gh workflow run ${{ matrix.workflow }} --repo ${{ github.repository }}
+        env:
+          GH_TOKEN: ${{ github.token }}
