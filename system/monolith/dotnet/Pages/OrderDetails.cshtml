@@ -160,7 +160,7 @@
             document.getElementById('detailTaxRate').textContent = (order.taxRate * 100).toFixed(2) + '%';
             document.getElementById('detailTaxAmount').textContent = '$' + order.taxAmount.toFixed(2);
             document.getElementById('detailTotalPrice').textContent = '$' + order.totalPrice.toFixed(2);
-            document.getElementById('detailAppliedCouponCode').textContent = order.appliedCouponCode || '-';
+            document.getElementById('detailAppliedCouponCode').textContent = order.appliedCouponCode || 'None';
 
             var isTerminal = order.status === 'CANCELLED' || order.status === 'DELIVERED';
             if (isTerminal) {
