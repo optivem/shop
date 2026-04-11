@@ -177,9 +177,7 @@ class OrderDetailsPage {
   }
 
   async getAppliedCouponCode(): Promise<string | null> {
-    const locator = this.page.locator("[aria-label='Display Applied Coupon']");
-    if ((await locator.count()) === 0) return null;
-    const text = (await locator.textContent({ timeout: TIMEOUT }))?.trim() || '';
+    const text = (await this.page.locator("[aria-label='Display Applied Coupon']").textContent({ timeout: TIMEOUT }))?.trim() || '';
     return text === 'None' ? null : text;
   }
 
