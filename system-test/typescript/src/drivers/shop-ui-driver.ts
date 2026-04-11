@@ -25,6 +25,10 @@ class HomePage {
   async clickOrderHistory(): Promise<void> {
     await this.page.locator("a[href='/order-history']").click({ timeout: TIMEOUT });
   }
+
+  async clickAdminCoupons(): Promise<void> {
+    await this.page.locator("a[href='/admin-coupons']").click({ timeout: TIMEOUT });
+  }
 }
 
 class NewOrderPage {
@@ -125,16 +129,120 @@ class OrderDetailsPage {
     return parseFloat(text.replace('$', ''));
   }
 
+  async getBasePrice(): Promise<number> {
+    const text =
+      (await this.page.locator("[aria-label='Display Base Price']").textContent({ timeout: TIMEOUT }))?.trim() || '0';
+    return parseFloat(text.replace('$', ''));
+  }
+
+  async getDiscountRate(): Promise<number> {
+    const text =
+      (await this.page.locator("[aria-label='Display Discount Rate']").textContent({ timeout: TIMEOUT }))?.trim() || '0';
+    return parseFloat(text.replace('%', '')) / 100;
+  }
+
+  async getDiscountAmount(): Promise<number> {
+    const text =
+      (await this.page.locator("[aria-label='Display Discount Amount']").textContent({ timeout: TIMEOUT }))?.trim() || '0';
+    return parseFloat(text.replace('$', ''));
+  }
+
+  async getSubtotalPrice(): Promise<number> {
+    const text =
+      (await this.page.locator("[aria-label='Display Subtotal Price']").textContent({ timeout: TIMEOUT }))?.trim() || '0';
+    return parseFloat(text.replace('$', ''));
+  }
+
+  async getTaxRate(): Promise<number> {
+    const text =
+      (await this.page.locator("[aria-label='Display Tax Rate']").textContent({ timeout: TIMEOUT }))?.trim() || '0';
+    return parseFloat(text.replace('%', '')) / 100;
+  }
+
+  async getTaxAmount(): Promise<number> {
+    const text =
+      (await this.page.locator("[aria-label='Display Tax Amount']").textContent({ timeout: TIMEOUT }))?.trim() || '0';
+    return parseFloat(text.replace('$', ''));
+  }
+
   async getTotalPrice(): Promise<number> {
     const text =
       (await this.page.locator("[aria-label='Display Total Price']").textContent({ timeout: TIMEOUT }))?.trim() || '0';
     return parseFloat(text.replace('$', ''));
   }
 
+  async getCountry(): Promise<string> {
+    return (
+      (await this.page.locator("[aria-label='Display Country']").textContent({ timeout: TIMEOUT }))?.trim() || ''
+    );
+  }
+
+  async getAppliedCouponCode(): Promise<string | null> {
+    const locator = this.page.locator("[aria-label='Display Applied Coupon Code']");
+    if ((await locator.count()) === 0) {
+      const altLocator = this.page.locator("[aria-label='Display Applied Coupon']");
+      if ((await altLocator.count()) === 0) return null;
+      const text = (await altLocator.textContent({ timeout: TIMEOUT }))?.trim() || '';
+      return text === 'None' ? null : text;
+    }
+    const text = (await locator.textContent({ timeout: TIMEOUT }))?.trim() || '';
+    return text === 'None' ? null : text;
+  }
+
   async getStatus(): Promise<string> {
     return (
       (await this.page.locator("[aria-label='Display Status']").textContent({ timeout: TIMEOUT }))?.trim() || ''
     );
+  }
+}
+
+class AdminCouponsPage {
+  constructor(private page: Page) {}
+
+  async fillCouponCode(code: string): Promise<void> {
+    await this.page.locator('[aria-label="Coupon Code"]').fill(code, { timeout: TIMEOUT });
+  }
+
+  async fillDiscountRate(rate: number): Promise<void> {
+    await this.page.locator('[aria-label="Discount Rate"]').fill(rate.toString(), { timeout: TIMEOUT });
+  }
+
+  async fillValidFrom(dateStr: string): Promise<void> {
+    const localValue = dateStr.replace('Z', '').replace('T', 'T').slice(0, 16);
+    await this.page.locator('[aria-label="Valid From"]').fill(localValue, { timeout: TIMEOUT });
+  }
+
+  async fillValidTo(dateStr: string): Promise<void> {
+    const localValue = dateStr.replace('Z', '').replace('T', 'T').slice(0, 16);
+    await this.page.locator('[aria-label="Valid To"]').fill(localValue, { timeout: TIMEOUT });
+  }
+
+  async fillUsageLimit(limit: number): Promise<void> {
+    await this.page.locator('[aria-label="Usage Limit"]').fill(limit.toString(), { timeout: TIMEOUT });
+  }
+
+  async clickCreateCoupon(): Promise<void> {
+    await this.page.locator('[aria-label="Create Coupon"]').click({ timeout: TIMEOUT });
+  }
+
+  async clickRefreshCouponList(): Promise<void> {
+    await this.page.locator('[aria-label="Refresh Coupon List"]').click({ timeout: TIMEOUT });
+  }
+
+  async getCouponRows(): Promise<Array<{ code: string; discountRate: number }>> {
+    const table = this.page.locator("[aria-label='Coupons Table']");
+    await table.waitFor({ state: 'visible', timeout: TIMEOUT });
+    const rows = table.locator('tbody tr');
+    const count = await rows.count();
+    const result: Array<{ code: string; discountRate: number }> = [];
+    for (let i = 0; i < count; i++) {
+      const cells = rows.nth(i).locator('td');
+      const code = (await cells.nth(0).textContent())?.trim() || '';
+      const rateText = (await cells.nth(1).textContent())?.trim() || '0';
+      const discountRate = Number.parseFloat(rateText.replace('%', '')) / 100;
+      result.push({ code, discountRate });
+    }
+    return result;
   }
 }
 
@@ -253,7 +361,15 @@ export class ShopUiDriver implements ShopDriver {
       sku: await detailsPage.getSku(),
       quantity: await detailsPage.getQuantity(),
       unitPrice: await detailsPage.getUnitPrice(),
+      basePrice: await detailsPage.getBasePrice(),
+      discountRate: await detailsPage.getDiscountRate(),
+      discountAmount: await detailsPage.getDiscountAmount(),
+      subtotalPrice: await detailsPage.getSubtotalPrice(),
+      taxRate: await detailsPage.getTaxRate(),
+      taxAmount: await detailsPage.getTaxAmount(),
       totalPrice: await detailsPage.getTotalPrice(),
+      country: await detailsPage.getCountry(),
+      appliedCouponCode: await detailsPage.getAppliedCouponCode(),
       status: await detailsPage.getStatus(),
     });
   }
@@ -310,16 +426,57 @@ export class ShopUiDriver implements ShopDriver {
     return failure(notificationResult.error);
   }
 
-  async publishCoupon(_request: PublishCouponRequest): Promise<Result<void, ErrorResponse>> {
-    throw new Error('publishCoupon is not supported via UI channel');
+  async publishCoupon(request: PublishCouponRequest): Promise<Result<void, ErrorResponse>> {
+    if (!this.page) {
+      const goResult = await this.goToShop();
+      if (!goResult.success) return failure(goResult.error);
+    }
+
+    await this.page!.goto(this.baseUrl);
+    const homePage = new HomePage(this.page!);
+    await homePage.clickAdminCoupons();
+
+    const adminPage = new AdminCouponsPage(this.page!);
+    await adminPage.fillCouponCode(request.code);
+    await adminPage.fillDiscountRate(request.discountRate);
+    if (request.validFrom) {
+      await adminPage.fillValidFrom(request.validFrom);
+    }
+    if (request.validTo) {
+      await adminPage.fillValidTo(request.validTo);
+    }
+    if (request.usageLimit !== undefined && request.usageLimit !== null) {
+      await adminPage.fillUsageLimit(Number(request.usageLimit));
+    }
+    await adminPage.clickCreateCoupon();
+
+    const notificationResult = await getNotification(this.page!);
+    if (notificationResult.success) {
+      return success(undefined);
+    }
+    return failure(notificationResult.error);
   }
 
   async viewCoupon(_code: string): Promise<Result<ViewCouponResponse, ErrorResponse>> {
+    // The UI does not have a dedicated view-coupon page; fall back to API
     throw new Error('viewCoupon is not supported via UI channel');
   }
 
   async browseCoupons(): Promise<Result<BrowseCouponsResponse, ErrorResponse>> {
-    throw new Error('browseCoupons is not supported via UI channel');
+    if (!this.page) {
+      const goResult = await this.goToShop();
+      if (!goResult.success) return failure(goResult.error);
+    }
+
+    await this.page!.goto(this.baseUrl);
+    const homePage = new HomePage(this.page!);
+    await homePage.clickAdminCoupons();
+
+    const adminPage = new AdminCouponsPage(this.page!);
+    await adminPage.clickRefreshCouponList();
+    const rows = await adminPage.getCouponRows();
+
+    return success({ coupons: rows });
   }
 
   async close(): Promise<void> {
