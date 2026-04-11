@@ -1,4 +1,4 @@
-import { ShopDriver, ErpDriver, ClockDriver, TaxDriver } from '../../drivers/types.js';
+import { ShopDriver, ErpDriver, ClockDriver, TaxDriver } from '../drivers/types.js';
 
 export type ChannelMode = 'dynamic' | 'static';
 

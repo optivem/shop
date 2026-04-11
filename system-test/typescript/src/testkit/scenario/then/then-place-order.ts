@@ -4,7 +4,7 @@ import {
   ViewOrderResponse,
   BrowseCouponItem,
   GetTimeResponse,
-} from '../../../common/dtos.js';
+} from '../../common/dtos.js';
 import { DEFAULTS } from '../../defaults.js';
 import { UseCaseContext } from '../../use-case-context.js';
 import { AppContext } from '../app-context.js';

@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test';
-import { ErrorResponse, ViewOrderResponse } from '../../../common/dtos.js';
+import { ErrorResponse, ViewOrderResponse } from '../../common/dtos.js';
 import { DEFAULTS } from '../../defaults.js';
 import { UseCaseContext } from '../../use-case-context.js';
 import { AppContext } from '../app-context.js';

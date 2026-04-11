@@ -1,7 +1,7 @@
-import { loadConfiguration, TestConfig } from '../config/configuration-loader.js';
-import { ScenarioDsl, AppContext } from './testkit/scenario-dsl.js';
-import type { ChannelMode } from './testkit/scenario-dsl.js';
-import { UseCaseContext } from './testkit/use-case-context.js';
+import { loadConfiguration, TestConfig } from '../../config/configuration-loader.js';
+import { ScenarioDsl, AppContext } from './scenario-dsl.js';
+import type { ChannelMode } from './scenario-dsl.js';
+import { UseCaseContext } from './use-case-context.js';
 import { ShopApiDriver } from './drivers/shop-api-driver.js';
 import { ShopUiDriver } from './drivers/shop-ui-driver.js';
 import { ErpRealDriver } from './drivers/erp-real-driver.js';
@@ -14,7 +14,7 @@ import { ErpDriver, ClockDriver, TaxDriver } from './drivers/types.js';
 import { Browser } from 'playwright';
 
 export type Channel = 'api' | 'ui';
-export type { ChannelMode } from './testkit/scenario-dsl.js';
+export type { ChannelMode } from './scenario-dsl.js';
 export type ExternalSystemMode = 'real' | 'stub';
 
 export interface ScenarioOptions {

@@ -1,5 +1,5 @@
 import { test, forChannels } from './base/fixtures.js';
-import { OrderStatus } from '../../../src/common/dtos.js';
+import { OrderStatus } from '../../../src/testkit/common/dtos.js';
 
 const timesInsideBlackout = [
     '2024-12-31T22:00:00Z',

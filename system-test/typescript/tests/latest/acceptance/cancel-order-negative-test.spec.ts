@@ -1,5 +1,5 @@
 import { test, forChannels } from './base/fixtures.js';
-import { OrderStatus } from '../../../src/common/dtos.js';
+import { OrderStatus } from '../../../src/testkit/common/dtos.js';
 
 const nonExistentOrderCases = [
     { orderNumber: 'NON-EXISTENT-ORDER-99999', message: 'Order NON-EXISTENT-ORDER-99999 does not exist.' },

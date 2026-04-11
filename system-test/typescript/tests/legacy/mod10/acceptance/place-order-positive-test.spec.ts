@@ -1,5 +1,5 @@
 import { test, forChannels } from './fixtures.js';
-import { OrderStatus } from '../../../../src/common/dtos.js';
+import { OrderStatus } from '../../../../src/testkit/common/dtos.js';
 
 forChannels('ui', 'api')(() => {
     test('orderNumberShouldStartWithORD', async ({ scenario }) => {
