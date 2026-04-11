@@ -148,14 +148,14 @@ export class ThenPublishCouponCoupon implements PromiseLike<void> {
 
   isValidFrom(validFrom: string): ThenPublishCouponCoupon {
     this.stage._addCouponAssertion(this.code, (coupon) => {
-      expect(coupon.validFrom).toBe(validFrom);
+      expect(new Date(coupon.validFrom!).getTime()).toBe(new Date(validFrom).getTime());
     });
     return this;
   }
 
   isValidTo(validTo: string): ThenPublishCouponCoupon {
     this.stage._addCouponAssertion(this.code, (coupon) => {
-      expect(coupon.validTo).toBe(validTo);
+      expect(new Date(coupon.validTo!).getTime()).toBe(new Date(validTo).getTime());
     });
     return this;
   }
