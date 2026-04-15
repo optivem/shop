@@ -143,6 +143,21 @@ jobs:
         working-directory: system-test/typescript
         run: npx playwright install --with-deps chromium
 
+      # TODO(debug-smoke-0-tests): remove once the "Total tests: 0" failure on CI is resolved.
+      - name: Debug Smoke Discovery
+        working-directory: system-test/typescript
+        run: |
+          echo "--- pwd ---"
+          pwd
+          echo "--- tree tests/latest/smoke ---"
+          ls -laR tests/latest/smoke
+          echo "--- playwright --list ---"
+          npx playwright test --project=smoke-test tests/latest/smoke --list || true
+          echo "--- playwright version ---"
+          npx playwright --version
+          echo "--- installed playwright packages ---"
+          npm ls --all 2>/dev/null | grep -iE "playwright|optivem-testing" || true
+
       - name: Run Smoke Tests (Stub)
         working-directory: system-test/typescript
         run: npx playwright test --project=smoke-test tests/latest/smoke
