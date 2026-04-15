@@ -152,19 +152,19 @@ $Config = @{
         # === mod11: Contract Tests ===
         @{  Id = "mod11-contract-stub";
             Name = "mod11 (contract) - Contract (stub)";
-            Command = "& .\gradlew.bat test -Dversion=mod11 -Dtype=contract -DexcludeTags=isolated -DexternalSystemMode=stub -Dmode=stub -Denvironment=local";
+            Command = "& .\gradlew.bat test -Dversion=mod11 -Dtype=contract -DexcludeTags=isolated -DexternalSystemMode=stub -Denvironment=local";
             Path = ".";
             TestReportPath = "build\reports\tests\test\index.html";
             TestInstallCommands = $null; },
         @{  Id = "mod11-contract-stub-isolated";
             Name = "mod11 (contract) - Contract Isolated (stub)";
-            Command = "& .\gradlew.bat test -Dversion=mod11 -Dtype=contract -DincludeTags=isolated -DexternalSystemMode=stub -Dmode=stub -Denvironment=local";
+            Command = "& .\gradlew.bat test -Dversion=mod11 -Dtype=contract -DincludeTags=isolated -DexternalSystemMode=stub -Denvironment=local";
             Path = ".";
             TestReportPath = "build\reports\tests\test\index.html";
             TestInstallCommands = $null; },
         @{  Id = "mod11-contract-real";
             Name = "mod11 (contract) - Contract (real)";
-            Command = "& .\gradlew.bat test -Dversion=mod11 -Dtype=contract -DexternalSystemMode=real -Dmode=real -Denvironment=local";
+            Command = "& .\gradlew.bat test -Dversion=mod11 -Dtype=contract -DexternalSystemMode=real -Denvironment=local";
             Path = ".";
             TestReportPath = "build\reports\tests\test\index.html";
             TestInstallCommands = $null; },

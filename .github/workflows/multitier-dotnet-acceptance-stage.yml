@@ -217,7 +217,7 @@ jobs:
           EXTERNAL_SYSTEM_MODE: stub
 
       - name: Run Contract Tests (Real)
-        run: dotnet test --filter "FullyQualifiedName~.Latest.ExternalSystemContractTests" --verbosity normal
+        run: dotnet test --filter "FullyQualifiedName~.Latest.ExternalSystemContractTests&FullyQualifiedName~Real" --verbosity normal
         working-directory: system-test/dotnet
         env:
           ENVIRONMENT: acceptance

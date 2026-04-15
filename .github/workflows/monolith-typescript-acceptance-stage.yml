@@ -206,7 +206,7 @@ jobs:
 
       - name: Run Contract Tests (Real)
         working-directory: system-test/typescript
-        run: npx playwright test --project=external-system-contract-test tests/latest/contract --workers=1
+        run: npx playwright test --project=external-system-contract-test "tests/latest/contract/.*-real-.*\.spec\.ts" --workers=1
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: real

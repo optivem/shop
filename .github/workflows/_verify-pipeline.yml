@@ -36,23 +36,18 @@ jobs:
     if: ${{ always() && (inputs.skip-commit-stage || needs.commit-stage.result == 'success') }}
     runs-on: ubuntu-latest
     outputs:
-      version: ${{ steps.get-version.outputs.version }}
+      version: ${{ steps.get-version.outputs.tag }}
     steps:
-      - uses: optivem/actions/trigger-and-wait@main
+      - id: trigger
+        uses: optivem/actions/trigger-and-wait@main
         with:
           workflow: ${{ inputs.prefix }}-acceptance-stage.yml
           poll-interval: '300'
 
-      - name: Get RC Version
-        id: get-version
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          version=$(gh release list \
-            --repo "${{ github.repository }}" \
-            --json tagName,isPrerelease \
-            --jq '[.[] | select(.isPrerelease) | select(.tagName | test("-qa-|-prod-") | not)] | .[0].tagName')
-          echo "version=$version" >> $GITHUB_OUTPUT
+      - id: get-version
+        uses: optivem/actions/find-release-by-run@main
+        with:
+          run-id: ${{ steps.trigger.outputs.run-id }}
 
   acceptance-stage-legacy:
     needs: acceptance-stage

@@ -124,6 +124,8 @@ Next step: Run the GCP setup script to configure your cloud environment:
 - `*-qa-stage-cloud.yml` (6 files)
 - `*-prod-stage-cloud.yml` (6 files)
 
+**All cloud workflows use `workflow_dispatch` only** -- no scheduled triggers. Unlike the Docker acceptance stages (hourly cron), Cloud Run deployments are manual-only to avoid unnecessary cloud costs and deployments.
+
 ### Job graph comparison
 
 **Docker (existing) -- sequential single job:**

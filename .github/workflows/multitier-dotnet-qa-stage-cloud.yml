@@ -1,0 +1,224 @@
+name: multitier-dotnet-qa-stage-cloud
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Prerelease version to deploy (e.g., v1.0.0-rc.1)'
+        required: true
+        type: string
+
+concurrency:
+  group: multitier-dotnet-qa-stage-cloud
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      image-urls: ${{ steps.resolve-images.outputs.image-urls }}
+    steps:
+      - name: Validate Config
+        uses: optivem/actions/validate-config@v1
+        with:
+          names: |
+            DOCKERHUB_USERNAME
+            DOCKERHUB_TOKEN
+            GCP_PROJECT_ID
+            GCP_REGION
+            GCP_WORKLOAD_IDENTITY_PROVIDER
+            GCP_SERVICE_ACCOUNT
+        env:
+          DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+          GCP_REGION: ${{ vars.GCP_REGION }}
+          GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          GCP_SERVICE_ACCOUNT: ${{ vars.GCP_SERVICE_ACCOUNT }}
+
+      - name: Check RC Exists
+        id: check-release
+        uses: optivem/actions/check-release-exists@v1
+        with:
+          version: ${{ inputs.version }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Resolve Artifacts
+        id: resolve-images
+        uses: optivem/actions/resolve-docker-images@v1
+        with:
+          tag: ${{ inputs.version }}
+          base-image-urls: |
+            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-frontend-react
+            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-backend-dotnet
+
+  deploy-frontend:
+    needs: check
+    if: needs.check.result == 'success'
+    runs-on: ubuntu-latest
+    environment: multitier-dotnet-qa
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      app-url: ${{ steps.deploy.outputs.service-url }}
+    steps:
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+
+      - name: Setup Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy Frontend to Cloud Run
+        id: deploy
+        uses: optivem/actions/deploy-to-cloud-run@v1
+        with:
+          environment: qa
+          version: ${{ inputs.version }}
+          image-url: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-frontend-react:${{ inputs.version }}
+          project-id: ${{ vars.GCP_PROJECT_ID }}
+          region: ${{ vars.GCP_REGION }}
+          service-name: multitier-dotnet-frontend
+          port: '3000'
+
+  deploy-backend:
+    needs: check
+    if: needs.check.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      app-url: ${{ steps.deploy.outputs.service-url }}
+    steps:
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+
+      - name: Setup Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy Backend to Cloud Run
+        id: deploy
+        uses: optivem/actions/deploy-to-cloud-run@v1
+        with:
+          environment: qa
+          version: ${{ inputs.version }}
+          image-url: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-backend-dotnet:${{ inputs.version }}
+          project-id: ${{ vars.GCP_PROJECT_ID }}
+          region: ${{ vars.GCP_REGION }}
+          service-name: multitier-dotnet-backend
+          port: '8080'
+          env-vars: |
+            ASPNETCORE_ENVIRONMENT=Cloud
+          secrets: |
+            DATABASE_URL=db-connection-string:latest
+
+  deploy-external-real:
+    needs: check
+    if: needs.check.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      external-url: ${{ steps.deploy.outputs.service-url }}
+    steps:
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+
+      - name: Setup Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy External Real to Cloud Run
+        id: deploy
+        uses: optivem/actions/deploy-to-cloud-run@v1
+        with:
+          environment: qa
+          version: ${{ inputs.version }}
+          image-url: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/external-real-sim:latest
+          project-id: ${{ vars.GCP_PROJECT_ID }}
+          region: ${{ vars.GCP_REGION }}
+          service-name: external-real
+          port: '9000'
+
+  promote:
+    needs: [check, deploy-frontend, deploy-backend, deploy-external-real]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      version: ${{ steps.promote.outputs.version }}
+      image-urls: ${{ needs.check.outputs.image-urls }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v5
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Promote RC (QA Deployed)
+        id: promote
+        uses: optivem/actions/promote-rc-to-qa@v1
+        with:
+          version: ${{ inputs.version }}
+          artifact-urls: ${{ needs.check.outputs.image-urls }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  summary:
+    needs: [check, promote]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v5
+
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v4
+      with:
+        username: ${{ vars.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Summarize Stage
+      uses: optivem/actions/summarize-system-stage@v1
+      with:
+        stage-name: 'QA Stage (Cloud Run)'
+        environment: qa
+        stage-result: ${{ needs.promote.result }}
+        success-version: ${{ needs.promote.outputs.version }}
+        success-artifact-ids: ${{ needs.promote.outputs.image-urls }}

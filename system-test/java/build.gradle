@@ -64,9 +64,9 @@ tasks.named('test') {
 	dependsOn 'installPlaywright'
 
 	filter {
-		def type    = System.getProperty('type')    // smoke | acceptance | e2e | contract
-		def version = System.getProperty('version') // mod02 | mod03 | ... | latest
-		def mode    = System.getProperty('mode')    // stub | real (contract tests only)
+		def type               = System.getProperty('type')               // smoke | acceptance | e2e | contract
+		def version            = System.getProperty('version')            // mod02 | mod03 | ... | latest
+		def externalSystemMode = System.getProperty('externalSystemMode') // stub | real (contract tests only)
 		if (type && version) {
 			includeTestsMatching "*${version}*${type}*"
 		} else if (type) {
@@ -74,10 +74,10 @@ tasks.named('test') {
 		} else if (version) {
 			includeTestsMatching "*${version}*"
 		}
-		if (type == 'contract' && mode == 'stub') {
+		if (type == 'contract' && externalSystemMode == 'stub') {
 			includeTestsMatching "*Stub*"
 		}
-		if (type == 'contract' && mode == 'real') {
+		if (type == 'contract' && externalSystemMode == 'real') {
 			includeTestsMatching "*Real*"
 		}
 	}
@@ -96,8 +96,7 @@ tasks.named('test') {
 	systemProperty 'environment',        System.getProperty('environment')
 	systemProperty 'externalSystemMode', System.getProperty('externalSystemMode')
 	systemProperty 'channel',            System.getProperty('channel')
-	systemProperty 'mode',               System.getProperty('mode')
-	systemProperty 'channelMode',       System.getProperty('channelMode')
+	systemProperty 'channelMode',        System.getProperty('channelMode')
 
 	def includeTags = System.getProperty('includeTags')
 	if (includeTags?.contains('isolated')) {

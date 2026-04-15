@@ -1,0 +1,460 @@
+name: monolith-java-acceptance-stage-cloud
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: monolith-java-acceptance-stage-cloud
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: read
+    outputs:
+      artifacts-exist: ${{ steps.check-artifacts.outputs.exist }}
+    steps:
+      - name: Check Artifacts Exist
+        id: check-artifacts
+        uses: optivem/actions/check-artifacts-exist@v1
+
+  check:
+    needs: preflight
+    if: needs.preflight.outputs.artifacts-exist == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      should-run: ${{ steps.should-run.outputs.should-run }}
+      image-digest-urls: ${{ steps.find-latest.outputs.image-digest-urls }}
+    steps:
+      - name: Validate Config
+        uses: optivem/actions/validate-config@v1
+        with:
+          names: |
+            DOCKERHUB_USERNAME
+            DOCKERHUB_TOKEN
+            GCP_PROJECT_ID
+            GCP_REGION
+            GCP_WORKLOAD_IDENTITY_PROVIDER
+            GCP_SERVICE_ACCOUNT
+        env:
+          DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+          GCP_REGION: ${{ vars.GCP_REGION }}
+          GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          GCP_SERVICE_ACCOUNT: ${{ vars.GCP_SERVICE_ACCOUNT }}
+
+      - name: Checkout Repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Check Target Version Exists
+        uses: optivem/actions/check-target-version-exists@v1
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Find Latest Artifacts
+        id: find-latest
+        uses: optivem/actions/find-latest-docker-images@v1
+        with:
+          image-urls: |
+            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/monolith-system-java:latest
+
+      - name: Check Run Conditions
+        id: should-run
+        uses: optivem/actions/should-run-acceptance-stage@v1
+        with:
+          latest-image-timestamp: ${{ steps.find-latest.outputs.latest-image-timestamp }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  deploy-app:
+    needs: check
+    if: needs.check.outputs.should-run == 'true'
+    runs-on: ubuntu-latest
+    environment: monolith-java-acceptance
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      app-url: ${{ steps.deploy.outputs.service-url }}
+    steps:
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+
+      - name: Setup Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy App to Cloud Run
+        id: deploy
+        uses: optivem/actions/deploy-to-cloud-run@v1
+        with:
+          environment: acceptance
+          version: latest
+          image-url: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/monolith-system-java:latest
+          project-id: ${{ vars.GCP_PROJECT_ID }}
+          region: ${{ vars.GCP_REGION }}
+          service-name: monolith-java
+          port: '8080'
+          env-vars: |
+            SPRING_PROFILES_ACTIVE=cloud
+          secrets: |
+            DATABASE_URL=db-connection-string:latest
+
+  deploy-external-real:
+    needs: check
+    if: needs.check.outputs.should-run == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      external-url: ${{ steps.deploy.outputs.service-url }}
+    steps:
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+
+      - name: Setup Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy External Real to Cloud Run
+        id: deploy
+        uses: optivem/actions/deploy-to-cloud-run@v1
+        with:
+          environment: acceptance
+          version: latest
+          image-url: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/external-real-sim:latest
+          project-id: ${{ vars.GCP_PROJECT_ID }}
+          region: ${{ vars.GCP_REGION }}
+          service-name: external-real
+          port: '9000'
+
+  deploy-external-stub:
+    needs: check
+    if: needs.check.outputs.should-run == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      external-url: ${{ steps.deploy.outputs.service-url }}
+    steps:
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+
+      - name: Setup Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy External Stub to Cloud Run
+        id: deploy
+        uses: optivem/actions/deploy-to-cloud-run@v1
+        with:
+          environment: acceptance
+          version: latest
+          image-url: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/external-stub:latest
+          project-id: ${{ vars.GCP_PROJECT_ID }}
+          region: ${{ vars.GCP_REGION }}
+          service-name: external-stub
+          port: '8080'
+
+  test-smoke-real:
+    needs: [deploy-app, deploy-external-real]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v5
+
+      - name: Setup Runtime
+        uses: optivem/actions/setup-java-gradle@v1
+        with:
+          java-version: 21
+          working-directory: system-test/java
+
+      - name: Run Smoke Tests (Real)
+        run: ./gradlew test -Dversion=latest -Dtype=smoke -DexternalSystemMode=real -Denvironment=acceptance -DbaseUrl=${{ needs.deploy-app.outputs.app-url }} -DexternalBaseUrl=${{ needs.deploy-external-real.outputs.external-url }}
+        working-directory: system-test/java
+
+  test-smoke-stub:
+    needs: [deploy-app, deploy-external-stub]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v5
+
+      - name: Setup Runtime
+        uses: optivem/actions/setup-java-gradle@v1
+        with:
+          java-version: 21
+          working-directory: system-test/java
+
+      - name: Run Smoke Tests (Stub)
+        run: ./gradlew test -Dversion=latest -Dtype=smoke -DexternalSystemMode=stub -Denvironment=acceptance -DbaseUrl=${{ needs.deploy-app.outputs.app-url }} -DexternalBaseUrl=${{ needs.deploy-external-stub.outputs.external-url }}
+        working-directory: system-test/java
+
+  test-acceptance-api:
+    needs: [deploy-app, deploy-external-real]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v5
+
+      - name: Setup Runtime
+        uses: optivem/actions/setup-java-gradle@v1
+        with:
+          java-version: 21
+          working-directory: system-test/java
+
+      - name: Run Acceptance Tests - API Channel
+        run: ./gradlew test -Dversion=latest -Dtype=acceptance -DexcludeTags=isolated -Dchannel=API -Denvironment=acceptance -DbaseUrl=${{ needs.deploy-app.outputs.app-url }} -DexternalBaseUrl=${{ needs.deploy-external-real.outputs.external-url }}
+        working-directory: system-test/java
+
+  test-acceptance-ui:
+    needs: [deploy-app, deploy-external-real]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v5
+
+      - name: Setup Runtime
+        uses: optivem/actions/setup-java-gradle@v1
+        with:
+          java-version: 21
+          working-directory: system-test/java
+
+      - name: Cache Playwright Browsers
+        id: cache-playwright
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('system-test/java/build.gradle') }}
+
+      - name: Install Playwright Dependencies
+        if: steps.cache-playwright.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+        working-directory: system-test/java
+
+      - name: Run Acceptance Tests - UI Channel
+        run: ./gradlew test -Dversion=latest -Dtype=acceptance -DexcludeTags=isolated -Dchannel=UI -DchannelMode=static -Denvironment=acceptance -DbaseUrl=${{ needs.deploy-app.outputs.app-url }} -DexternalBaseUrl=${{ needs.deploy-external-real.outputs.external-url }}
+        working-directory: system-test/java
+
+  test-acceptance-isolated-api:
+    needs: [deploy-app, deploy-external-real]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v5
+
+      - name: Setup Runtime
+        uses: optivem/actions/setup-java-gradle@v1
+        with:
+          java-version: 21
+          working-directory: system-test/java
+
+      - name: Run Acceptance Tests (Isolated) - API Channel
+        run: ./gradlew test -Dversion=latest -Dtype=acceptance -DincludeTags=isolated -Dchannel=API -Denvironment=acceptance -DbaseUrl=${{ needs.deploy-app.outputs.app-url }} -DexternalBaseUrl=${{ needs.deploy-external-real.outputs.external-url }}
+        working-directory: system-test/java
+
+  test-acceptance-isolated-ui:
+    needs: [deploy-app, deploy-external-real]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v5
+
+      - name: Setup Runtime
+        uses: optivem/actions/setup-java-gradle@v1
+        with:
+          java-version: 21
+          working-directory: system-test/java
+
+      - name: Cache Playwright Browsers
+        id: cache-playwright
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('system-test/java/build.gradle') }}
+
+      - name: Install Playwright Dependencies
+        if: steps.cache-playwright.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+        working-directory: system-test/java
+
+      - name: Run Acceptance Tests (Isolated) - UI Channel
+        run: ./gradlew test -Dversion=latest -Dtype=acceptance -DincludeTags=isolated -Dchannel=UI -DchannelMode=static -Denvironment=acceptance -DbaseUrl=${{ needs.deploy-app.outputs.app-url }} -DexternalBaseUrl=${{ needs.deploy-external-real.outputs.external-url }}
+        working-directory: system-test/java
+
+  test-contract-stub:
+    needs: [deploy-app, deploy-external-stub]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v5
+
+      - name: Setup Runtime
+        uses: optivem/actions/setup-java-gradle@v1
+        with:
+          java-version: 21
+          working-directory: system-test/java
+
+      - name: Run Contract Tests (Stub)
+        run: ./gradlew test -Dversion=latest -Dtype=contract -DexcludeTags=isolated -DexternalSystemMode=stub -Denvironment=acceptance -DbaseUrl=${{ needs.deploy-app.outputs.app-url }} -DexternalBaseUrl=${{ needs.deploy-external-stub.outputs.external-url }}
+        working-directory: system-test/java
+
+  test-contract-isolated-stub:
+    needs: [deploy-app, deploy-external-stub]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v5
+
+      - name: Setup Runtime
+        uses: optivem/actions/setup-java-gradle@v1
+        with:
+          java-version: 21
+          working-directory: system-test/java
+
+      - name: Run Contract Tests (Isolated) (Stub)
+        run: ./gradlew test -Dversion=latest -Dtype=contract -DincludeTags=isolated -DexternalSystemMode=stub -Denvironment=acceptance -DbaseUrl=${{ needs.deploy-app.outputs.app-url }} -DexternalBaseUrl=${{ needs.deploy-external-stub.outputs.external-url }}
+        working-directory: system-test/java
+
+  test-contract-real:
+    needs: [deploy-app, deploy-external-real]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v5
+
+      - name: Setup Runtime
+        uses: optivem/actions/setup-java-gradle@v1
+        with:
+          java-version: 21
+          working-directory: system-test/java
+
+      - name: Run Contract Tests (Real)
+        run: ./gradlew test -Dversion=latest -Dtype=contract -DexternalSystemMode=real -Denvironment=acceptance -DbaseUrl=${{ needs.deploy-app.outputs.app-url }} -DexternalBaseUrl=${{ needs.deploy-external-real.outputs.external-url }}
+        working-directory: system-test/java
+
+  test-e2e-api:
+    needs: [deploy-app, deploy-external-real]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v5
+
+      - name: Setup Runtime
+        uses: optivem/actions/setup-java-gradle@v1
+        with:
+          java-version: 21
+          working-directory: system-test/java
+
+      - name: Run E2E Tests - API Channel
+        run: ./gradlew test -Dversion=latest -Dtype=e2e -Dchannel=API -Denvironment=acceptance -DbaseUrl=${{ needs.deploy-app.outputs.app-url }} -DexternalBaseUrl=${{ needs.deploy-external-real.outputs.external-url }}
+        working-directory: system-test/java
+
+  test-e2e-ui:
+    needs: [deploy-app, deploy-external-real]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v5
+
+      - name: Setup Runtime
+        uses: optivem/actions/setup-java-gradle@v1
+        with:
+          java-version: 21
+          working-directory: system-test/java
+
+      - name: Cache Playwright Browsers
+        id: cache-playwright
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('system-test/java/build.gradle') }}
+
+      - name: Install Playwright Dependencies
+        if: steps.cache-playwright.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+        working-directory: system-test/java
+
+      - name: Run E2E Tests - UI Channel
+        run: ./gradlew test -Dversion=latest -Dtype=e2e -Dchannel=UI -DchannelMode=static -Denvironment=acceptance -DbaseUrl=${{ needs.deploy-app.outputs.app-url }} -DexternalBaseUrl=${{ needs.deploy-external-real.outputs.external-url }}
+        working-directory: system-test/java
+
+  promote:
+    needs: [check, deploy-app, test-smoke-real, test-smoke-stub, test-acceptance-api, test-acceptance-ui, test-acceptance-isolated-api, test-acceptance-isolated-ui, test-contract-stub, test-contract-isolated-stub, test-contract-real, test-e2e-api, test-e2e-ui]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+    outputs:
+      version: ${{ steps.promote-to-rc.outputs.version }}
+      image-urls: ${{ steps.promote-to-rc.outputs.image-urls }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Read System Target Version
+        id: read-version
+        uses: optivem/actions/read-target-version@v1
+
+      - name: Promote to RC
+        id: promote-to-rc
+        uses: optivem/actions/promote-to-rc@v1
+        with:
+          target-version: ${{ steps.read-version.outputs.target-version }}
+          image-urls: ${{ needs.check.outputs.image-digest-urls }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  summary:
+    needs: [check, promote]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+    - name: Summarize Stage
+      uses: optivem/actions/summarize-system-stage@v1
+      with:
+        stage-name: 'Acceptance Stage (Cloud Run)'
+        environment: acceptance
+        stage-result: ${{ needs.promote.result }}
+        success-version: ${{ needs.promote.outputs.version }}
+        success-artifact-ids: ${{ needs.promote.outputs.image-urls }}
