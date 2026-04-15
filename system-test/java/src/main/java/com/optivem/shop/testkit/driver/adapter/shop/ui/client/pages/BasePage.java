@@ -6,8 +6,8 @@ import com.optivem.shop.testkit.driver.adapter.shared.client.playwright.PageClie
 
 import java.util.List;
 
-import static com.optivem.shop.testkit.core.usecase.shop.commons.SystemResults.failure;
-import static com.optivem.shop.testkit.core.usecase.shop.commons.SystemResults.success;
+import static com.optivem.shop.testkit.dsl.core.usecase.shop.commons.SystemResults.failure;
+import static com.optivem.shop.testkit.dsl.core.usecase.shop.commons.SystemResults.success;
 
 public abstract class BasePage {
     private static final String NOTIFICATION_SELECTOR = "[role='alert']";

@@ -1,9 +1,9 @@
 package com.optivem.shop.systemtest.latest.base;
 
 import com.optivem.shop.systemtest.configuration.BaseConfigurableTest;
-import com.optivem.shop.testkit.core.usecase.UseCaseDsl;
-import com.optivem.shop.testkit.core.ScenarioDslImpl;
-import com.optivem.shop.testkit.port.ScenarioDsl;
+import com.optivem.shop.testkit.dsl.core.usecase.UseCaseDsl;
+import com.optivem.shop.testkit.dsl.core.ScenarioDslImpl;
+import com.optivem.shop.testkit.dsl.port.ScenarioDsl;
 import com.optivem.shop.testkit.common.Closer;
 import com.optivem.shop.systemtest.infrastructure.playwright.BrowserLifecycleExtension;
 import com.optivem.testing.extensions.ChannelExtension;

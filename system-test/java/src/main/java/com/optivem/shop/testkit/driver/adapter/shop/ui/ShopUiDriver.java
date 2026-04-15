@@ -16,8 +16,8 @@ import com.optivem.shop.testkit.driver.port.shop.ShopDriver;
 import com.optivem.shop.testkit.driver.port.shared.dtos.ErrorResponse;
 import com.optivem.shop.testkit.common.Result;
 
-import static com.optivem.shop.testkit.core.usecase.shop.commons.SystemResults.failure;
-import static com.optivem.shop.testkit.core.usecase.shop.commons.SystemResults.success;
+import static com.optivem.shop.testkit.dsl.core.usecase.shop.commons.SystemResults.failure;
+import static com.optivem.shop.testkit.dsl.core.usecase.shop.commons.SystemResults.success;
 
 public class ShopUiDriver implements ShopDriver {
     private final ShopUiClient client;

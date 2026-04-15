@@ -1,20 +1,22 @@
 import { loadConfiguration, TestConfig } from '../../config/configuration-loader.js';
-import { ScenarioDsl, AppContext } from './scenario-dsl.js';
-import type { ChannelMode } from './scenario-dsl.js';
-import { UseCaseContext } from './use-case-context.js';
-import { ShopApiDriver } from './drivers/shop-api-driver.js';
-import { ShopUiDriver } from './drivers/shop-ui-driver.js';
-import { ErpRealDriver } from './drivers/erp-real-driver.js';
-import { ErpStubDriver } from './drivers/erp-stub-driver.js';
-import { ClockRealDriver } from './drivers/clock-real-driver.js';
-import { ClockStubDriver } from './drivers/clock-stub-driver.js';
-import { TaxRealDriver } from './drivers/tax-real-driver.js';
-import { TaxStubDriver } from './drivers/tax-stub-driver.js';
-import { ErpDriver, ClockDriver, TaxDriver } from './drivers/types.js';
+import { ScenarioDsl, AppContext } from './dsl/scenario-dsl.js';
+import type { ChannelMode } from './dsl/scenario-dsl.js';
+import { UseCaseContext } from './dsl/core/use-case-context.js';
+import { ShopApiDriver } from './driver/adapter/shop/api/shop-api-driver.js';
+import { ShopUiDriver } from './driver/adapter/shop/ui/shop-ui-driver.js';
+import { ErpRealDriver } from './driver/adapter/external/erp/erp-real-driver.js';
+import { ErpStubDriver } from './driver/adapter/external/erp/erp-stub-driver.js';
+import { ClockRealDriver } from './driver/adapter/external/clock/clock-real-driver.js';
+import { ClockStubDriver } from './driver/adapter/external/clock/clock-stub-driver.js';
+import { TaxRealDriver } from './driver/adapter/external/tax/tax-real-driver.js';
+import { TaxStubDriver } from './driver/adapter/external/tax/tax-stub-driver.js';
+import { ErpDriver } from './driver/port/external/erp/erp-driver.js';
+import { ClockDriver } from './driver/port/external/clock/clock-driver.js';
+import { TaxDriver } from './driver/port/external/tax/tax-driver.js';
 import { Browser } from 'playwright';
 
 export type Channel = 'api' | 'ui';
-export type { ChannelMode } from './scenario-dsl.js';
+export type { ChannelMode } from './dsl/scenario-dsl.js';
 export type ExternalSystemMode = 'real' | 'stub';
 
 export interface ScenarioOptions {

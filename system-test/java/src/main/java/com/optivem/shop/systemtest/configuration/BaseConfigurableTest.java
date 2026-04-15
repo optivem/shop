@@ -1,11 +1,11 @@
 package com.optivem.shop.systemtest.configuration;
 
-import com.optivem.shop.testkit.core.usecase.UseCaseDsl;
+import com.optivem.shop.testkit.dsl.core.usecase.UseCaseDsl;
 import com.optivem.shop.testkit.driver.port.external.clock.ClockDriver;
 import com.optivem.shop.testkit.driver.port.external.erp.ErpDriver;
 import com.optivem.shop.testkit.driver.port.external.tax.TaxDriver;
 import com.optivem.shop.testkit.channel.ChannelType;
-import com.optivem.shop.testkit.port.ChannelMode;
+import com.optivem.shop.testkit.dsl.port.ChannelMode;
 import com.optivem.shop.testkit.driver.port.shop.ShopDriver;
 import com.optivem.shop.testkit.driver.adapter.external.clock.ClockRealDriver;
 import com.optivem.shop.testkit.driver.adapter.external.clock.ClockStubDriver;
@@ -41,7 +41,7 @@ public abstract class BaseConfigurableTest {
     }
 
     protected UseCaseDsl createUseCaseDsl(Configuration configuration) {
-        var externalSystemMode = com.optivem.shop.testkit.port.ExternalSystemMode.valueOf(
+        var externalSystemMode = com.optivem.shop.testkit.dsl.port.ExternalSystemMode.valueOf(
                 configuration.getExternalSystemMode().name());
 
         return new UseCaseDsl(

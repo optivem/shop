@@ -1,6 +1,6 @@
 package com.optivem.shop.systemtest.configuration;
 
-import com.optivem.shop.testkit.port.ChannelMode;
+import com.optivem.shop.testkit.dsl.port.ChannelMode;
 
 public class PropertyLoader {
     private PropertyLoader() {

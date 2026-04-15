@@ -1,7 +1,7 @@
 package com.optivem.shop.systemtest.legacy.mod07.base;
 
 import com.optivem.shop.systemtest.configuration.BaseConfigurableTest;
-import com.optivem.shop.testkit.core.usecase.UseCaseDsl;
+import com.optivem.shop.testkit.dsl.core.usecase.UseCaseDsl;
 import com.optivem.shop.testkit.common.Closer;
 import com.optivem.testing.extensions.ChannelExtension;
 import org.junit.jupiter.api.AfterEach;
