@@ -24,6 +24,8 @@ jobs:
     secrets: inherit
     with:
       prefix: multitier-dotnet
+      architecture: multitier
+      language: dotnet
       commit-workflows: '["multitier-backend-dotnet-commit-stage.yml", "multitier-frontend-react-commit-stage.yml"]'
       level: ${{ inputs.level || 'release' }}
       skip-commit-stage: ${{ inputs.skip-commit-stage == true }}

@@ -35,6 +35,17 @@ on:
           - multitier
 
 jobs:
+  print-inputs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print input parameters
+        run: |
+          echo "=== Workflow Inputs ==="
+          echo "Level: ${{ inputs.level || 'release (default)' }}"
+          echo "Language: ${{ inputs.language || 'all (default)' }}"
+          echo "Architecture: ${{ inputs.architecture || 'all (default)' }}"
+          echo "Triggered by: ${{ github.event_name }}"
+
   # Phase 1: Run all commit stages in parallel (deduplicated)
   commit-monolith-java:
     if: (inputs.language == '' || inputs.language == 'java') && (inputs.architecture == '' || inputs.architecture == 'monolith')

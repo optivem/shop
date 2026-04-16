@@ -24,6 +24,8 @@ jobs:
     secrets: inherit
     with:
       prefix: monolith-typescript
+      architecture: monolith
+      language: typescript
       commit-workflows: '["monolith-typescript-commit-stage.yml"]'
       level: ${{ inputs.level || 'release' }}
       skip-commit-stage: ${{ inputs.skip-commit-stage == true }}

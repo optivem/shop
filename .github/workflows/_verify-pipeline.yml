@@ -7,6 +7,14 @@ on:
         description: 'Pipeline prefix (e.g. monolith-java, multitier-dotnet)'
         required: true
         type: string
+      architecture:
+        description: 'Architecture: monolith or multitier'
+        required: true
+        type: string
+      language:
+        description: 'Language: java, dotnet, or typescript'
+        required: true
+        type: string
       commit-workflows:
         description: 'JSON array of commit-stage workflow filenames'
         required: false
@@ -24,7 +32,88 @@ on:
         default: 'release'
 
 jobs:
+  precommit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v5
+
+      # Setup runtimes
+      - name: Setup Node.js
+        if: inputs.language == 'typescript' || inputs.architecture == 'multitier'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Setup Java
+        if: inputs.language == 'java'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Setup .NET
+        if: inputs.language == 'dotnet'
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      # Compile source — monolith
+      - name: Compile System (monolith, typescript)
+        if: inputs.architecture == 'monolith' && inputs.language == 'typescript'
+        run: npm ci && npx tsc --noEmit
+        working-directory: system/monolith/typescript
+
+      - name: Compile System (monolith, java)
+        if: inputs.architecture == 'monolith' && inputs.language == 'java'
+        run: ./gradlew compileJava compileTestJava
+        working-directory: system/monolith/java
+
+      - name: Compile System (monolith, dotnet)
+        if: inputs.architecture == 'monolith' && inputs.language == 'dotnet'
+        run: dotnet build
+        working-directory: system/monolith/dotnet
+
+      # Compile source — multitier backend
+      - name: Compile Backend (multitier, typescript)
+        if: inputs.architecture == 'multitier' && inputs.language == 'typescript'
+        run: npm ci && npx tsc --noEmit
+        working-directory: system/multitier/backend-typescript
+
+      - name: Compile Backend (multitier, java)
+        if: inputs.architecture == 'multitier' && inputs.language == 'java'
+        run: ./gradlew compileJava compileTestJava
+        working-directory: system/multitier/backend-java
+
+      - name: Compile Backend (multitier, dotnet)
+        if: inputs.architecture == 'multitier' && inputs.language == 'dotnet'
+        run: dotnet build
+        working-directory: system/multitier/backend-dotnet
+
+      # Compile source — multitier frontend
+      - name: Compile Frontend (multitier)
+        if: inputs.architecture == 'multitier'
+        run: npm ci && npm run build
+        working-directory: system/multitier/frontend-react
+
+      # Compile system tests
+      - name: Compile System Tests (typescript)
+        if: inputs.language == 'typescript'
+        run: npm ci && npx tsc --noEmit
+        working-directory: system-test/typescript
+
+      - name: Compile System Tests (java)
+        if: inputs.language == 'java'
+        run: ./gradlew compileJava compileTestJava
+        working-directory: system-test/java
+
+      - name: Compile System Tests (dotnet)
+        if: inputs.language == 'dotnet'
+        run: dotnet build
+        working-directory: system-test/dotnet
+
   commit-stage:
+    needs: precommit
     if: ${{ !inputs.skip-commit-stage }}
     runs-on: ubuntu-latest
     strategy:
@@ -37,8 +126,8 @@ jobs:
           workflow: ${{ matrix.workflow }}
 
   acceptance-stage:
-    needs: commit-stage
-    if: ${{ always() && inputs.level != 'commit' && (inputs.skip-commit-stage || needs.commit-stage.result == 'success') }}
+    needs: [precommit, commit-stage]
+    if: ${{ always() && inputs.level != 'commit' && needs.precommit.result == 'success' && (inputs.skip-commit-stage || needs.commit-stage.result == 'success') }}
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.get-version.outputs.tag }}

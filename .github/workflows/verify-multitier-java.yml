@@ -24,6 +24,8 @@ jobs:
     secrets: inherit
     with:
       prefix: multitier-java
+      architecture: multitier
+      language: java
       commit-workflows: '["multitier-backend-java-commit-stage.yml", "multitier-frontend-react-commit-stage.yml"]'
       level: ${{ inputs.level || 'release' }}
       skip-commit-stage: ${{ inputs.skip-commit-stage == true }}

@@ -24,6 +24,8 @@ jobs:
     secrets: inherit
     with:
       prefix: monolith-java
+      architecture: monolith
+      language: java
       commit-workflows: '["monolith-java-commit-stage.yml"]'
       level: ${{ inputs.level || 'release' }}
       skip-commit-stage: ${{ inputs.skip-commit-stage == true }}
