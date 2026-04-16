@@ -1,34 +1,27 @@
 name: cleanup-all
 
 on:
+  schedule:
+    - cron: '0 23 * * *'  # Run daily at midnight CET (23:00 UTC)
   workflow_dispatch:
 
 jobs:
-  cleanup:
+  cleanup-prerelease-versions:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v5
-
-      - name: Checkout github-utils
-        uses: actions/checkout@v5
         with:
-          repository: optivem/github-utils
-          path: ../github-utils
-          token: ${{ secrets.VERIFY_TOKEN }}
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.13'
+          fetch-depth: 0
 
       - name: Authenticate GitHub CLI
         run: |
           echo "${{ secrets.VERIFY_TOKEN }}" | gh auth login --with-token
 
-      - name: Run Cleanup
-        run: |
-          cd scripts
-          python cleanup.py
+      - name: Cleanup Prerelease Versions
+        uses: optivem/actions/cleanup-prerelease-versions@v1
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.VERIFY_TOKEN }}
