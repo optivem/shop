@@ -5,7 +5,7 @@ using Xunit;
 
 namespace SystemTests.Legacy.Mod08.SmokeTests.External;
 
-public class TaxSmokeTest : BaseSystemDslTest
+public class TaxSmokeTest : BaseUseCaseDslTest
 {
     [Fact]
     public async Task ShouldBeAbleToGoToTax()

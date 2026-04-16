@@ -1,85 +1,83 @@
 # System Test Comparison — Action Plan (2026-04-16)
 
 **Source:** [TEST-COMPARISON-2026-04-16.md](../reports/TEST-COMPARISON-2026-04-16.md)  
-**Date:** 2026-04-16
+**Date:** 2026-04-16  
+**Target repo:** `starter` only. Do NOT modify `eshop-tests`.
 
 ---
 
-## Priority 1: Missing/Wrong Assertions (Latest)
+## TypeScript
 
-- [ ] Step 1 (DIFF-L1): **`shouldBeAbleToPlaceOrderForValidInput`** — TS missing entire given-setup and when-params. Java/.NET have `.given().product().withSku("ABC").withUnitPrice(20.00).and().country().withCode("US").withTaxRate(0.10)` and `.when().placeOrder().withSku("ABC").withQuantity(5).withCountry("US")`. TS just has `.when().placeOrder().then().shouldSucceed()`. | TS |
+### Latest — Missing/Wrong Assertions
 
-- [ ] Step 2 (DIFF-L8): **`couponUsageCountHasBeenIncrementedAfterItsBeenUsed`** — TS asserts on wrong entity (order instead of coupon). Should be `.and().coupon(code).hasUsedCount(1)` not `.and().order().hasAppliedCouponCode(code)`. | TS |
+- [ ] (DIFF-L1): **PlaceOrderPositive** — `shouldBeAbleToPlaceOrderForValidInput` missing entire given-setup and when-params. Java/.NET have `.given().product().withSku("ABC").withUnitPrice(20.00).and().country().withCode("US").withTaxRate(0.10)` and `.when().placeOrder().withSku("ABC").withQuantity(5).withCountry("US")`. TS just has `.when().placeOrder().then().shouldSucceed()`.
 
-- [ ] Step 3 (DIFF-L19): **`CancelOrderNegativeIsolatedTest`** — TS missing `.and().order().hasStatus(OrderStatus.PLACED)` after `.shouldFail().errorMessage(BLACKOUT_ERROR)`. Java/.NET have it. | TS |
+- [ ] (DIFF-L8): **PlaceOrderPositive** — `couponUsageCountHasBeenIncrementedAfterItsBeenUsed` asserts on wrong entity (order instead of coupon). Should be `.and().coupon(code).hasUsedCount(1)` not `.and().order().hasAppliedCouponCode(code)`.
 
-- [ ] Step 4 (DIFF-L5): **`subtotalPriceShouldBeCalculatedAsTheBasePriceMinusDiscountAmountWhenWeHaveCoupon`** — TS missing `.hasAppliedCoupon()` and `.hasDiscountRate(0.15)` assertions. Java/.NET have them. | TS |
+- [ ] (DIFF-L19): **CancelOrderNegativeIsolated** — Missing `.and().order().hasStatus(OrderStatus.PLACED)` after `.shouldFail().errorMessage(BLACKOUT_ERROR)`.
 
-- [ ] Step 5 (DIFF-L6): **`totalPriceShouldBeSubtotalPricePlusTaxAmount`** — TS missing `.hasTaxRate(taxRate)` assertion. Java/.NET have it. | TS |
+- [ ] (DIFF-L5): **PlaceOrderPositive** — `subtotalPriceShouldBeCalculatedAsTheBasePriceMinusDiscountAmountWhenWeHaveCoupon` missing `.hasAppliedCoupon()` and `.hasDiscountRate(0.15)` assertions.
 
-- [ ] Step 6 (DIFF-L3): **`discountRateShouldBeNotAppliedWhenThereIsNoCoupon`** — TS missing `.withCouponCode(null)` on the when-step. Java/.NET have it. | TS |
+- [ ] (DIFF-L6): **PlaceOrderPositive** — `totalPriceShouldBeSubtotalPricePlusTaxAmount` missing `.hasTaxRate(taxRate)` assertion.
+
+- [ ] (DIFF-L3): **PlaceOrderPositive** — `discountRateShouldBeNotAppliedWhenThereIsNoCoupon` missing `.withCouponCode(null)` on the when-step.
+
+- [ ] (from DIFF-L9): **PlaceOrderNegative** — Add standalone `shouldRejectOrderWithInvalidQuantity` test (currently folded into parameterized `shouldRejectOrderWithNonIntegerQuantity`). Match Java's standalone approach.
+
+### Latest — DSL Naming
+
+- [ ] (DIFF-L4): **DSL layer (systematic)** — TS uses `hasAppliedCouponCode` everywhere, Java/.NET use `hasAppliedCoupon`. Rename in TS DSL source + all test files.
+
+- [ ] (DIFF-L2): **PlaceOrderPositive** — Test name `discountRateShouldNotBeAppliedWhenThereIsNoCoupon` differs from Java/.NET `discountRateShouldBeNotAppliedWhenThereIsNoCoupon`.
+
+### Latest — Test Data Mismatches
+
+- [ ] (DIFF-L21): **PublishCouponNegative** — `cannotPublishCouponWithZeroOrNegativeDiscount` uses coupon code `'INVALID'`, Java/.NET use `'INVALID-COUPON'`.
+
+- [ ] (DIFF-L22): **PublishCouponNegative** — `cannotPublishCouponWithZeroOrNegativeUsageLimit` uses `.withDiscountRate(0.1)`, Java/.NET use `.withDiscountRate(0.15)`.
+
+- [ ] (DIFF-L11–L15): **PlaceOrderNegative** — Several tests add `.withQuantity(1)` that Java/.NET don't have. Affected: `shouldRejectOrderWithNonExistentSku`, `shouldRejectOrderWithEmptySku`, `shouldRejectOrderWithInvalidCountry`, `cannotPlaceOrderWithNonExistentCoupon`, `shouldRejectOrderWithEmptyCountry`. Decide: add to Java/.NET or remove from TS.
+
+### Latest — Contract Tests
+
+- [ ] (from DIFF-G16): **Clock contract tests (latest)** — `.withTime("2024-01-02T09:00:00Z")` should be `.withTime()` (no argument) to match Java. Check all clock contract test files.
+
+- [ ] (DIFF-L25): **ClockStubContractIsolatedTest** — Has extra `shouldBeAbleToGetTime` that Java/.NET don't have. Remove.
+
+- [ ] (DIFF-L26): **TaxStubContractTest** — Type inconsistency: real uses string `'0.09'`, stub uses number `0.09`. Make consistent.
+
+### Latest — Structural
+
+- [ ] (DIFF-L7): **PlaceOrderPositive** — `totalPriceShouldBeSubtotalPricePlusTaxAmount` given-order is `product` then `country`, Java/.NET is `country` then `product`. Reorder to match.
+
+- [ ] (DIFF-L23): **ViewOrderNegative** — Only runs API channel. Java/.NET run API + UI for first row. Add UI.
+
+### Latest — Review
+
+- [ ] (DIFF-L20): **PublishCouponPositive** — `shouldBeAbleToPublishCouponWithEmptyOptionalFields` uses `undefined`, Java/.NET use `null`. May be intentional language difference.
+
+### Legacy
+
+- [ ] (DIFF-G3): **mod03 PlaceOrderNegative** — Uses `'3.5'` as invalid quantity, Java/.NET use `"invalid-quantity"`. Align.
+
+- [ ] (DIFF-G5): **mod05 PlaceOrderPositive** — Missing assertions: `hasQuantity`, `hasUnitPrice`, `hasTotalPriceGreaterThanZero`.
+
+- [ ] (DIFF-G8, G9): **mod08 PlaceOrderPositive** — Splits into two tests, Java/.NET have one combined. Also missing assertions. Decide structure.
+
+- [ ] (DIFF-G17): **mod11 ClockStubContractIsolatedTest** — Has extra `shouldBeAbleToGetTime` (same as Step 17). Remove.
 
 ---
 
-## Priority 2: Systematic DSL Naming (Latest)
+## Cross-Language Decisions Needed
 
-- [ ] Step 7 (DIFF-L4): **`hasAppliedCouponCode` vs `hasAppliedCoupon`** — TS uses `hasAppliedCouponCode` everywhere, Java/.NET use `hasAppliedCoupon`. Rename in TS DSL source + all test files. | TS |
-
-- [ ] Step 8 (DIFF-L2): **`discountRateShouldNotBeAppliedWhenThereIsNoCoupon`** — TS name differs from Java/.NET `discountRateShouldBeNotAppliedWhenThereIsNoCoupon`. | TS |
-
----
-
-## Priority 3: Test Data Mismatches (Latest)
-
-- [ ] Step 9 (DIFF-L21): **`cannotPublishCouponWithZeroOrNegativeDiscount`** — TS coupon code `'INVALID'`, Java/.NET `'INVALID-COUPON'`. | TS |
-
-- [ ] Step 10 (DIFF-L22): **`cannotPublishCouponWithZeroOrNegativeUsageLimit`** — TS `.withDiscountRate(0.1)`, Java/.NET `.withDiscountRate(0.15)`. | TS |
-
-- [ ] Step 11 (DIFF-L11–L15): **Multiple negative tests** — TS adds `.withQuantity(1)` that Java/.NET don't have. Affected: `shouldRejectOrderWithNonExistentSku`, `shouldRejectOrderWithEmptySku`, `shouldRejectOrderWithInvalidCountry`, `cannotPlaceOrderWithNonExistentCoupon`, `shouldRejectOrderWithEmptyCountry`. | TS vs Java/.NET — decide direction |
+- **DIFF-L11–L15 (`.withQuantity(1)`)**: Add to Java/.NET or remove from TS?
+- **DIFF-G8/G9 (mod08 structure)**: TS splits into two tests vs Java/.NET one combined. Decide structure.
 
 ---
 
-## Priority 4: Contract Test Fixes (Latest)
+## Investigations
 
-- [ ] Step 12 (DIFF-L24): **`ClockStubContractTest.shouldBeAbleToGetTime`** — TS uses `.withTime()` (no argument), Java/.NET use `.withTime("2024-01-02T09:00:00Z")`. | TS |
-
-- [ ] Step 13 (DIFF-L25): **`ClockStubContractIsolatedTest`** — TS has extra `shouldBeAbleToGetTime` that Java/.NET don't have. Remove from TS. | TS |
-
-- [ ] Step 14 (DIFF-L26): **`TaxStubContractTest`** — TS type inconsistency: real uses string `'0.09'`, stub uses number `0.09`. Make consistent. | TS |
-
----
-
-## Priority 5: Structural Convergence (Latest)
-
-- [ ] Step 15 (DIFF-L7): **`totalPriceShouldBeSubtotalPricePlusTaxAmount`** — TS given-order is `product` then `country`, Java/.NET is `country` then `product`. Reorder TS. | TS |
-
-- [ ] Step 16 (DIFF-L9): **`shouldRejectOrderWithInvalidQuantity`** — Java/.NET have standalone test, TS folds it into parameterized `shouldRejectOrderWithNonIntegerQuantity`. | TS vs Java/.NET — decide direction |
-
-- [ ] Step 17 (DIFF-L10): **Negative/zero quantity tests** — Java has separate tests, .NET/TS use parameterized `shouldRejectOrderWithNonPositiveQuantity`. | Java — recommended: adopt parameterized approach |
-
-- [ ] Step 18 (DIFF-L23): **`ViewOrderNegativeTest` channel scope** — TS only runs API, Java/.NET run API + UI for first row. | TS |
-
----
-
-## Priority 6: Review Items (Latest)
-
-- [ ] Step 19 (DIFF-L20): **`shouldBeAbleToPublishCouponWithEmptyOptionalFields`** — TS uses `undefined`, Java/.NET use `null`. May be intentional language difference. | Review |
-
----
-
-## Priority 7: Legacy Fixes
-
-- [ ] Step 20 (DIFF-G3): **mod03 `PlaceOrderNegative`** — TS uses `'3.5'` as invalid quantity, Java/.NET use `"invalid-quantity"`. | TS |
-
-- [ ] Step 21 (DIFF-G5): **mod05 `PlaceOrderPositive`** — TS missing assertions: `hasQuantity`, `hasUnitPrice`, `hasTotalPriceGreaterThanZero`. | TS |
-
-- [ ] Step 22 (DIFF-G8, G9): **mod08 `PlaceOrderPositive`** — TS splits into two tests, Java/.NET have one combined. TS also missing assertions. | TS vs Java/.NET — decide structure |
-
-- [ ] Step 23 (DIFF-G16): **mod11 `BaseClockContractTest.shouldBeAbleToGetTime`** — Java uses `.withTime()` (no argument), .NET/TS use `.withTime("2024-01-02T09:00:00Z")`. | Java |
-
-- [ ] Step 24 (DIFF-G17): **mod11 `ClockStubContractIsolatedTest`** — TS has extra `shouldBeAbleToGetTime` (same as latest Step 13). | TS |
-
-- [ ] Step 25 (DIFF-G7): **mod07 base test class name** — Java `BaseUseCaseDslTest` vs .NET `BaseSystemDslTest`. | .NET |
+- [ ] **DSL: skip `.given()` when no setup needed** — Investigate whether `scenario.then()` (without `.given()`) is possible across all three DSL implementations. Would simplify contract tests like `shouldBeAbleToGetTime` which currently use `.given().then()` with no actual setup.
 
 ---
 
