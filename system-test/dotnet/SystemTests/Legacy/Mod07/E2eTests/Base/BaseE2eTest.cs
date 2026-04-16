@@ -4,7 +4,7 @@ using SystemTests.Legacy.Mod07.Base;
 
 namespace SystemTests.Legacy.Mod07.E2eTests.Base;
 
-public abstract class BaseE2eTest : BaseSystemDslTest
+public abstract class BaseE2eTest : BaseUseCaseDslTest
 {
     protected override ExternalSystemMode? GetFixedExternalSystemMode()
     {

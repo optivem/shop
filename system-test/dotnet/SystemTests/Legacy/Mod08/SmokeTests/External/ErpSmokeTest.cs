@@ -5,7 +5,7 @@ using Xunit;
 
 namespace SystemTests.Legacy.Mod08.SmokeTests.External;
 
-public class ErpSmokeTest : BaseSystemDslTest
+public class ErpSmokeTest : BaseUseCaseDslTest
 {
     [Fact]
     public async Task ShouldBeAbleToGoToErp()
