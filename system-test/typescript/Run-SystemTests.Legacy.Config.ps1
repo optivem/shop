@@ -110,14 +110,14 @@ $Config = @{
             TestReportPath = "playwright-report\index.html";
             TestInstallCommands = $null },
         @{  Id = "mod08-e2e-api";
-            SampleTest = "shouldPlaceOrder";
+            SampleTest = "orderNumberShouldStartWithORD";
             Name = "mod08 - E2E - API";
             Command = "`$env:CHANNEL = 'api'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=e2e-test tests/legacy/mod08/e2e";
             Path = ".";
             TestReportPath = "playwright-report\index.html";
             TestInstallCommands = $null },
         @{  Id = "mod08-e2e-ui";
-            SampleTest = "shouldPlaceOrder";
+            SampleTest = "orderNumberShouldStartWithORD";
             Name = "mod08 - E2E - UI";
             Command = "`$env:CHANNEL = 'ui'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=e2e-test tests/legacy/mod08/e2e";
             Path = ".";
@@ -142,28 +142,28 @@ $Config = @{
 
         # === mod10: Acceptance Tests ===
         @{  Id = "mod10-acceptance-api";
-            SampleTest = "shouldBeAbleToBrowseCoupons";
+            SampleTest = "orderNumberShouldStartWithORD";
             Name = "mod10 - Acceptance (stub) - API";
             Command = "`$env:CHANNEL = 'api'; `$env:EXTERNAL_SYSTEM_MODE = 'stub'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=acceptance-test --grep-invert '@isolated' tests/legacy/mod10/acceptance";
             Path = ".";
             TestReportPath = "playwright-report\index.html";
             TestInstallCommands = $null },
         @{  Id = "mod10-acceptance-ui";
-            SampleTest = "shouldBeAbleToBrowseCoupons";
+            SampleTest = "orderNumberShouldStartWithORD";
             Name = "mod10 - Acceptance (stub) - UI";
             Command = "`$env:CHANNEL = 'ui'; `$env:EXTERNAL_SYSTEM_MODE = 'stub'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=acceptance-test --grep-invert '@isolated' tests/legacy/mod10/acceptance";
             Path = ".";
             TestReportPath = "playwright-report\index.html";
             TestInstallCommands = $null },
         @{  Id = "mod10-acceptance-isolated-api";
-            SampleTest = "shouldBeAbleToCancelOrder";
+            SampleTest = "shouldRecordPlacementTimestamp";
             Name = "mod10 - Acceptance Isolated (stub) - API";
             Command = "`$env:CHANNEL = 'api'; `$env:EXTERNAL_SYSTEM_MODE = 'stub'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=acceptance-test --grep '@isolated' tests/legacy/mod10/acceptance";
             Path = ".";
             TestReportPath = "playwright-report\index.html";
             TestInstallCommands = $null },
         @{  Id = "mod10-acceptance-isolated-ui";
-            SampleTest = "shouldBeAbleToCancelOrder";
+            SampleTest = "shouldRecordPlacementTimestamp";
             Name = "mod10 - Acceptance Isolated (stub) - UI";
             Command = "`$env:CHANNEL = 'ui'; `$env:EXTERNAL_SYSTEM_MODE = 'stub'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=acceptance-test --grep '@isolated' tests/legacy/mod10/acceptance";
             Path = ".";
