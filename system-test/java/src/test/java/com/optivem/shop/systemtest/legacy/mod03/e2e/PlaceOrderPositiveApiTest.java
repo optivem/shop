@@ -78,6 +78,7 @@ class PlaceOrderPositiveApiTest extends BaseE2eTest {
         assertThat(order.get("sku").asText()).isEqualTo(sku);
         assertThat(order.get("quantity").asInt()).isEqualTo(5);
         assertThat(order.get("unitPrice").asDouble()).isEqualTo(20.00);
+        assertThat(order.get("basePrice").asDouble()).isEqualTo(100.00);
         assertThat(order.get("totalPrice").asDouble()).isGreaterThan(0);
         assertThat(order.get("status").asText()).isEqualTo("PLACED");
     }

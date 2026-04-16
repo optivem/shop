@@ -80,6 +80,9 @@ class PlaceOrderPositiveUiTest extends BaseE2eTest {
         var unitPriceText = shopUiPage.locator("[aria-label='Display Unit Price']").textContent().replace("$", "");
         assertThat(Double.parseDouble(unitPriceText)).isEqualTo(20.00);
 
+        var basePriceText = shopUiPage.locator("[aria-label='Display Base Price']").textContent().replace("$", "");
+        assertThat(Double.parseDouble(basePriceText)).isEqualTo(100.00);
+
         var totalPriceText = shopUiPage.locator("[aria-label='Display Total Price']").textContent().replace("$", "");
         assertThat(Double.parseDouble(totalPriceText)).isGreaterThan(0.0);
 

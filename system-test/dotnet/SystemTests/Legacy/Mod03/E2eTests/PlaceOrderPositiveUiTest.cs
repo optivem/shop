@@ -60,6 +60,9 @@ public class PlaceOrderPositiveUiTest : BaseE2eTest
         var unitPriceText = await shopUiPage.Locator("[aria-label='Display Unit Price']").TextContentAsync();
         decimal.Parse((unitPriceText ?? "").Replace("$", "")).ShouldBe(20.00m);
 
+        var basePriceText = await shopUiPage.Locator("[aria-label='Display Base Price']").TextContentAsync();
+        decimal.Parse((basePriceText ?? "").Replace("$", "")).ShouldBe(100.00m);
+
         var totalPriceText = await shopUiPage.Locator("[aria-label='Display Total Price']").TextContentAsync();
         decimal.Parse((totalPriceText ?? "").Replace("$", "")).ShouldBeGreaterThan(0);
 

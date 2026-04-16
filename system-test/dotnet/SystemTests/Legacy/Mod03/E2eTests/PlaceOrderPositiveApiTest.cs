@@ -50,6 +50,7 @@ public class PlaceOrderPositiveApiTest : BaseE2eTest
         order.GetProperty("sku").GetString().ShouldBe(sku);
         order.GetProperty("quantity").GetInt32().ShouldBe(5);
         order.GetProperty("unitPrice").GetDecimal().ShouldBe(20.00m);
+        order.GetProperty("basePrice").GetDecimal().ShouldBe(100.00m);
         order.GetProperty("totalPrice").GetDecimal().ShouldBeGreaterThan(0);
         order.GetProperty("status").GetString().ShouldBe("PLACED");
     }
