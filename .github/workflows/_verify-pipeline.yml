@@ -26,13 +26,13 @@ on:
         type: boolean
         default: false
       level:
-        description: 'Verification level: commit, acceptance, or release'
+        description: 'Verification level: local, commit, acceptance, or release'
         required: false
         type: string
         default: 'release'
 
 jobs:
-  precommit:
+  local:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -123,8 +123,8 @@ jobs:
         working-directory: system-test/${{ inputs.language }}
 
   commit-stage:
-    needs: precommit
-    if: ${{ !inputs.skip-commit-stage }}
+    needs: local
+    if: ${{ inputs.level != 'local' && !inputs.skip-commit-stage }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: true
@@ -136,8 +136,8 @@ jobs:
           workflow: ${{ matrix.workflow }}
 
   acceptance-stage:
-    needs: [precommit, commit-stage]
-    if: ${{ always() && inputs.level != 'commit' && needs.precommit.result == 'success' && (inputs.skip-commit-stage || needs.commit-stage.result == 'success') }}
+    needs: [local, commit-stage]
+    if: ${{ always() && inputs.level != 'local' && inputs.level != 'commit' && needs.local.result == 'success' && (inputs.skip-commit-stage || needs.commit-stage.result == 'success') }}
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.get-version.outputs.tag }}

@@ -10,6 +10,7 @@ on:
         required: false
         type: choice
         options:
+          - local
           - commit
           - acceptance
           - release
