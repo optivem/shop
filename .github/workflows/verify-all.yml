@@ -34,6 +34,11 @@ on:
           - ''
           - monolith
           - multitier
+      skip-commit-stage:
+        description: 'Skip commit stage (Phase 1)'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   print-inputs:
@@ -45,11 +50,12 @@ jobs:
           echo "Level: ${{ inputs.level || 'release (default)' }}"
           echo "Language: ${{ inputs.language || 'all (default)' }}"
           echo "Architecture: ${{ inputs.architecture || 'all (default)' }}"
+          echo "Skip commit stage: ${{ inputs.skip-commit-stage || false }}"
           echo "Triggered by: ${{ github.event_name }}"
 
   # Phase 1: Run all commit stages in parallel (deduplicated)
   commit-monolith-java:
-    if: (inputs.language == '' || inputs.language == 'java') && (inputs.architecture == '' || inputs.architecture == 'monolith')
+    if: !inputs.skip-commit-stage && (inputs.language == '' || inputs.language == 'java') && (inputs.architecture == '' || inputs.architecture == 'monolith')
     runs-on: ubuntu-latest
     steps:
       - uses: optivem/actions/trigger-and-wait@main
@@ -57,7 +63,7 @@ jobs:
           workflow: monolith-java-commit-stage.yml
 
   commit-monolith-dotnet:
-    if: (inputs.language == '' || inputs.language == 'dotnet') && (inputs.architecture == '' || inputs.architecture == 'monolith')
+    if: !inputs.skip-commit-stage && (inputs.language == '' || inputs.language == 'dotnet') && (inputs.architecture == '' || inputs.architecture == 'monolith')
     runs-on: ubuntu-latest
     steps:
       - uses: optivem/actions/trigger-and-wait@main
@@ -65,7 +71,7 @@ jobs:
           workflow: monolith-dotnet-commit-stage.yml
 
   commit-monolith-typescript:
-    if: (inputs.language == '' || inputs.language == 'typescript') && (inputs.architecture == '' || inputs.architecture == 'monolith')
+    if: !inputs.skip-commit-stage && (inputs.language == '' || inputs.language == 'typescript') && (inputs.architecture == '' || inputs.architecture == 'monolith')
     runs-on: ubuntu-latest
     steps:
       - uses: optivem/actions/trigger-and-wait@main
@@ -73,7 +79,7 @@ jobs:
           workflow: monolith-typescript-commit-stage.yml
 
   commit-multitier-backend-java:
-    if: (inputs.language == '' || inputs.language == 'java') && (inputs.architecture == '' || inputs.architecture == 'multitier')
+    if: !inputs.skip-commit-stage && (inputs.language == '' || inputs.language == 'java') && (inputs.architecture == '' || inputs.architecture == 'multitier')
     runs-on: ubuntu-latest
     steps:
       - uses: optivem/actions/trigger-and-wait@main
@@ -81,7 +87,7 @@ jobs:
           workflow: multitier-backend-java-commit-stage.yml
 
   commit-multitier-backend-dotnet:
-    if: (inputs.language == '' || inputs.language == 'dotnet') && (inputs.architecture == '' || inputs.architecture == 'multitier')
+    if: !inputs.skip-commit-stage && (inputs.language == '' || inputs.language == 'dotnet') && (inputs.architecture == '' || inputs.architecture == 'multitier')
     runs-on: ubuntu-latest
     steps:
       - uses: optivem/actions/trigger-and-wait@main
@@ -89,7 +95,7 @@ jobs:
           workflow: multitier-backend-dotnet-commit-stage.yml
 
   commit-multitier-backend-typescript:
-    if: (inputs.language == '' || inputs.language == 'typescript') && (inputs.architecture == '' || inputs.architecture == 'multitier')
+    if: !inputs.skip-commit-stage && (inputs.language == '' || inputs.language == 'typescript') && (inputs.architecture == '' || inputs.architecture == 'multitier')
     runs-on: ubuntu-latest
     steps:
       - uses: optivem/actions/trigger-and-wait@main
@@ -97,7 +103,7 @@ jobs:
           workflow: multitier-backend-typescript-commit-stage.yml
 
   commit-multitier-frontend-react:
-    if: inputs.architecture == '' || inputs.architecture == 'multitier'
+    if: !inputs.skip-commit-stage && (inputs.architecture == '' || inputs.architecture == 'multitier')
     runs-on: ubuntu-latest
     steps:
       - uses: optivem/actions/trigger-and-wait@main
