@@ -26,8 +26,33 @@ on:
           - multitier
 
 jobs:
+  # Phase 0: Bump VERSION files where the final release already exists
+  bump-versions:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Bump Patch Versions
+        uses: optivem/actions/bump-patch-versions@v1
+        with:
+          version-files: |
+            VERSION
+            system/monolith/java/VERSION
+            system/monolith/dotnet/VERSION
+            system/monolith/typescript/VERSION
+            system/multitier/backend-java/VERSION
+            system/multitier/backend-dotnet/VERSION
+            system/multitier/backend-typescript/VERSION
+            system/multitier/frontend-react/VERSION
+
   # Phase 1: Run all commit stages in parallel (deduplicated)
   commit-monolith-java:
+    needs: bump-versions
     if: (inputs.language == '' || inputs.language == 'java') && (inputs.architecture == '' || inputs.architecture == 'monolith')
     runs-on: ubuntu-latest
     steps:
@@ -36,6 +61,7 @@ jobs:
           workflow: monolith-java-commit-stage.yml
 
   commit-monolith-dotnet:
+    needs: bump-versions
     if: (inputs.language == '' || inputs.language == 'dotnet') && (inputs.architecture == '' || inputs.architecture == 'monolith')
     runs-on: ubuntu-latest
     steps:
@@ -44,6 +70,7 @@ jobs:
           workflow: monolith-dotnet-commit-stage.yml
 
   commit-monolith-typescript:
+    needs: bump-versions
     if: (inputs.language == '' || inputs.language == 'typescript') && (inputs.architecture == '' || inputs.architecture == 'monolith')
     runs-on: ubuntu-latest
     steps:
@@ -52,6 +79,7 @@ jobs:
           workflow: monolith-typescript-commit-stage.yml
 
   commit-multitier-backend-java:
+    needs: bump-versions
     if: (inputs.language == '' || inputs.language == 'java') && (inputs.architecture == '' || inputs.architecture == 'multitier')
     runs-on: ubuntu-latest
     steps:
@@ -60,6 +88,7 @@ jobs:
           workflow: multitier-backend-java-commit-stage.yml
 
   commit-multitier-backend-dotnet:
+    needs: bump-versions
     if: (inputs.language == '' || inputs.language == 'dotnet') && (inputs.architecture == '' || inputs.architecture == 'multitier')
     runs-on: ubuntu-latest
     steps:
@@ -68,6 +97,7 @@ jobs:
           workflow: multitier-backend-dotnet-commit-stage.yml
 
   commit-multitier-backend-typescript:
+    needs: bump-versions
     if: (inputs.language == '' || inputs.language == 'typescript') && (inputs.architecture == '' || inputs.architecture == 'multitier')
     runs-on: ubuntu-latest
     steps:
@@ -76,6 +106,7 @@ jobs:
           workflow: multitier-backend-typescript-commit-stage.yml
 
   commit-multitier-frontend-react:
+    needs: bump-versions
     if: inputs.architecture == '' || inputs.architecture == 'multitier'
     runs-on: ubuntu-latest
     steps:
