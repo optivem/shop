@@ -66,6 +66,7 @@ jobs:
         uses: optivem/actions/should-run-acceptance-stage@v1
         with:
           latest-image-timestamp: ${{ steps.find-latest.outputs.latest-image-timestamp }}
+          workflow-name: ${{ github.workflow }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
