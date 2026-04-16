@@ -20,6 +20,11 @@ on:
         required: false
         type: string
         default: '[]'
+      skip-local-stage:
+        description: 'Skip local stage (when local stages are run externally)'
+        required: false
+        type: boolean
+        default: false
       skip-commit-stage:
         description: 'Skip commit stage (when commit stages are run externally)'
         required: false
@@ -33,6 +38,7 @@ on:
 
 jobs:
   local:
+    if: ${{ !inputs.skip-local-stage }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -124,7 +130,7 @@ jobs:
 
   commit-stage:
     needs: local
-    if: ${{ inputs.level != 'local' && !inputs.skip-commit-stage }}
+    if: ${{ always() && inputs.level != 'local' && !inputs.skip-commit-stage && (inputs.skip-local-stage || needs.local.result == 'success') }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: true
@@ -137,7 +143,7 @@ jobs:
 
   acceptance-stage:
     needs: [local, commit-stage]
-    if: ${{ always() && inputs.level != 'local' && inputs.level != 'commit' && needs.local.result == 'success' && (inputs.skip-commit-stage || needs.commit-stage.result == 'success') }}
+    if: ${{ always() && inputs.level != 'local' && inputs.level != 'commit' && (inputs.skip-local-stage || needs.local.result == 'success') && (inputs.skip-commit-stage || needs.commit-stage.result == 'success') }}
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.get-version.outputs.tag }}

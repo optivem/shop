@@ -13,6 +13,11 @@ on:
           - acceptance
           - release
         default: 'release'
+      skip-local-stage:
+        description: 'Skip local stage'
+        required: false
+        type: boolean
+        default: false
       skip-commit-stage:
         description: 'Skip commit stage'
         required: false
@@ -29,4 +34,5 @@ jobs:
       language: java
       commit-workflows: '["multitier-backend-java-commit-stage.yml", "multitier-frontend-react-commit-stage.yml"]'
       level: ${{ inputs.level || 'release' }}
+      skip-local-stage: ${{ inputs.skip-local-stage == true }}
       skip-commit-stage: ${{ inputs.skip-commit-stage == true }}
