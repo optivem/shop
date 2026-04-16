@@ -181,20 +181,9 @@ export class ThenResultStage implements PromiseLike<void> {
 export class ThenSuccess implements PromiseLike<void> {
   constructor(private readonly stage: ThenResultStage) {}
 
-  and(): ThenSuccessAnd {
-    return new ThenSuccessAnd(this.stage);
+  and(): this {
+    return this;
   }
-
-  then<TResult1 = void, TResult2 = never>(
-    onfulfilled?: ((value: void) => TResult1 | PromiseLike<TResult1>) | null,
-    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
-  ): PromiseLike<TResult1 | TResult2> {
-    return this.stage.then(onfulfilled, onrejected);
-  }
-}
-
-export class ThenSuccessAnd implements PromiseLike<void> {
-  constructor(private readonly stage: ThenResultStage) {}
 
   order(): ThenOrder {
     return new ThenOrder(this.stage);
@@ -219,49 +208,95 @@ export class ThenSuccessAnd implements PromiseLike<void> {
 export class ThenOrder implements PromiseLike<void> {
   constructor(private readonly stage: ThenResultStage) {}
 
-  hasOrderNumberPrefix(prefix: string): ThenOrder {
+  and(): this {
+    return this;
+  }
+
+  hasSku(expectedSku: string): this {
+    this.stage._addOrderAssertion((order) => {
+      expect(order.sku).toBe(expectedSku);
+    });
+    return this;
+  }
+
+  hasQuantity(expectedQuantity: number): this {
+    this.stage._addOrderAssertion((order) => {
+      expect(order.quantity).toBe(expectedQuantity);
+    });
+    return this;
+  }
+
+  hasUnitPrice(expectedUnitPrice: number): this {
+    this.stage._addOrderAssertion((order) => {
+      expect(order.unitPrice).toBe(expectedUnitPrice);
+    });
+    return this;
+  }
+
+  hasOrderNumberPrefix(prefix: string): this {
     this.stage._addOrderAssertion((order) => {
       expect(order.orderNumber.startsWith(prefix)).toBe(true);
     });
     return this;
   }
 
-  hasStatus(status: string): ThenOrder {
+  hasStatus(status: string): this {
     this.stage._addOrderAssertion((order) => {
       expect(order.status).toBe(status);
     });
     return this;
   }
 
-  hasTotalPrice(price: number): ThenOrder {
+  hasTotalPrice(totalPrice: string | number): this {
     this.stage._addOrderAssertion((order) => {
-      expect(order.totalPrice).toBe(price);
+      expect(order.totalPrice).toBe(Number(totalPrice));
     });
     return this;
   }
 
-  hasSubtotalPrice(price: number): ThenOrder {
+  hasTotalPriceGreaterThanZero(): this {
     this.stage._addOrderAssertion((order) => {
-      expect(order.subtotalPrice).toBe(price);
+      expect(order.totalPrice).toBeGreaterThan(0);
     });
     return this;
   }
 
-  hasTaxRate(rate: number): ThenOrder {
+  hasSubtotalPrice(subtotalPrice: string | number): this {
     this.stage._addOrderAssertion((order) => {
-      expect(order.taxRate).toBe(rate);
+      expect(order.subtotalPrice).toBe(Number(subtotalPrice));
     });
     return this;
   }
 
-  hasDiscountRate(rate: number): ThenOrder {
+  hasTaxRate(taxRate: string | number): this {
+    this.stage._addOrderAssertion((order) => {
+      expect(order.taxRate).toBe(Number(taxRate));
+    });
+    return this;
+  }
+
+  hasTaxAmount(taxAmount: string | number): this {
+    this.stage._addOrderAssertion((order) => {
+      expect(order.taxAmount).toBe(Number(taxAmount));
+    });
+    return this;
+  }
+
+  hasDiscountRate(rate: number): this {
     this.stage._addOrderAssertion((order) => {
       expect(order.discountRate).toBe(rate);
     });
     return this;
   }
 
-  hasAppliedCouponCode(code: string | null): ThenOrder {
+  hasDiscountAmount(discountAmount: string | number): this {
+    this.stage._addOrderAssertion((order) => {
+      expect(order.discountAmount).toBe(Number(discountAmount));
+    });
+    return this;
+  }
+
+  hasAppliedCouponCode(code: string | null): this {
     this.stage._addOrderAssertion((order) => {
       const resolvedCode = this.stage.useCaseContext.getParamValue(code);
       expect(order.appliedCouponCode).toBe(resolvedCode);
@@ -269,23 +304,21 @@ export class ThenOrder implements PromiseLike<void> {
     return this;
   }
 
-  hasBasePrice(price: number): ThenOrder {
+  hasAppliedCoupon(expectedCouponCode?: string): this {
     this.stage._addOrderAssertion((order) => {
-      expect(order.basePrice).toBe(price);
+      if (expectedCouponCode === undefined) {
+        expect(order.appliedCouponCode).toBeDefined();
+      } else {
+        const resolvedCode = this.stage.useCaseContext.getParamValue(expectedCouponCode);
+        expect(order.appliedCouponCode).toBe(resolvedCode);
+      }
     });
     return this;
   }
 
-  hasDiscountAmount(amount: number): ThenOrder {
+  hasBasePrice(basePrice: string | number): this {
     this.stage._addOrderAssertion((order) => {
-      expect(order.discountAmount).toBe(amount);
-    });
-    return this;
-  }
-
-  hasTaxAmount(amount: number): ThenOrder {
-    this.stage._addOrderAssertion((order) => {
-      expect(order.taxAmount).toBe(amount);
+      expect(order.basePrice).toBe(Number(basePrice));
     });
     return this;
   }
@@ -323,14 +356,14 @@ export class ThenClock implements PromiseLike<void> {
 export class ThenFailure implements PromiseLike<void> {
   constructor(private readonly stage: ThenResultStage) {}
 
-  errorMessage(expected: string): ThenFailure {
+  errorMessage(expected: string): this {
     this.stage._addErrorAssertion((error, useCaseContext) => {
       expect(error.message).toBe(useCaseContext.expandAliases(expected));
     });
     return this;
   }
 
-  fieldErrorMessage(field: string, message: string): ThenFailure {
+  fieldErrorMessage(field: string, message: string): this {
     this.stage._addErrorAssertion((error, useCaseContext) => {
       const expandedMessage = useCaseContext.expandAliases(message);
       const fieldError = error.fieldErrors.find((fe) => fe.field === field);
@@ -338,6 +371,29 @@ export class ThenFailure implements PromiseLike<void> {
       expect(fieldError!.message).toBe(expandedMessage);
     });
     return this;
+  }
+
+  and(): this {
+    return this;
+  }
+
+  then<TResult1 = void, TResult2 = never>(
+    onfulfilled?: ((value: void) => TResult1 | PromiseLike<TResult1>) | null,
+    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
+  ): PromiseLike<TResult1 | TResult2> {
+    return this.stage.then(onfulfilled, onrejected);
+  }
+}
+
+export class ThenFailureAnd implements PromiseLike<void> {
+  constructor(private readonly stage: ThenResultStage) {}
+
+  order(): ThenOrder {
+    return new ThenOrder(this.stage);
+  }
+
+  coupon(code: string): ThenCoupon {
+    return new ThenCoupon(this.stage, code);
   }
 
   then<TResult1 = void, TResult2 = never>(
@@ -354,37 +410,41 @@ export class ThenCoupon implements PromiseLike<void> {
     private readonly code: string,
   ) {}
 
-  hasDiscountRate(rate: number): ThenCoupon {
+  and(): this {
+    return this;
+  }
+
+  hasDiscountRate(rate: number): this {
     this.stage._addCouponAssertion(this.code, (coupon) => {
       expect(coupon.discountRate).toBe(rate);
     });
     return this;
   }
 
-  isValidFrom(validFrom: string): ThenCoupon {
+  isValidFrom(validFrom: string): this {
     this.stage._addCouponAssertion(this.code, (coupon) => {
       expect(new Date(coupon.validFrom!).getTime()).toBe(new Date(validFrom).getTime());
     });
     return this;
   }
 
-  isValidTo(validTo: string): ThenCoupon {
+  isValidTo(validTo: string): this {
     this.stage._addCouponAssertion(this.code, (coupon) => {
       expect(new Date(coupon.validTo!).getTime()).toBe(new Date(validTo).getTime());
     });
     return this;
   }
 
-  hasUsageLimit(limit: number): ThenCoupon {
+  hasUsageLimit(limit: number): this {
     this.stage._addCouponAssertion(this.code, (coupon) => {
       expect(coupon.usageLimit).toBe(limit);
     });
     return this;
   }
 
-  hasUsedCount(count: number): ThenCoupon {
+  hasUsedCount(expectedUsedCount: number): this {
     this.stage._addCouponAssertion(this.code, (coupon) => {
-      expect(coupon.usedCount).toBe(count);
+      expect(coupon.usedCount).toBe(expectedUsedCount);
     });
     return this;
   }

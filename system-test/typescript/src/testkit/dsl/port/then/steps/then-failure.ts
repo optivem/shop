@@ -1,7 +1,5 @@
-import type { ThenFailureAnd } from './then-failure-and.js';
-
 export interface ThenFailure extends PromiseLike<void> {
   errorMessage(expectedMessage: string): this;
   fieldErrorMessage(expectedField: string, expectedMessage: string): this;
-  and(): ThenFailureAnd;
+  and(): this;
 }

@@ -140,20 +140,9 @@ export class ThenCancelOrderResultStage implements PromiseLike<void> {
 export class ThenCancelOrderSuccess implements PromiseLike<void> {
   constructor(private readonly stage: ThenCancelOrderResultStage) {}
 
-  and(): ThenCancelOrderSuccessAnd {
-    return new ThenCancelOrderSuccessAnd(this.stage);
+  and(): this {
+    return this;
   }
-
-  then<TResult1 = void, TResult2 = never>(
-    onfulfilled?: ((value: void) => TResult1 | PromiseLike<TResult1>) | null,
-    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
-  ): PromiseLike<TResult1 | TResult2> {
-    return this.stage.then(onfulfilled, onrejected);
-  }
-}
-
-export class ThenCancelOrderSuccessAnd implements PromiseLike<void> {
-  constructor(private readonly stage: ThenCancelOrderResultStage) {}
 
   order(): ThenCancelOrderOrder {
     return new ThenCancelOrderOrder(this.stage);
@@ -170,7 +159,7 @@ export class ThenCancelOrderSuccessAnd implements PromiseLike<void> {
 export class ThenCancelOrderOrder implements PromiseLike<void> {
   constructor(private readonly stage: ThenCancelOrderResultStage) {}
 
-  hasStatus(status: string): ThenCancelOrderOrder {
+  hasStatus(status: string): this {
     this.stage._addOrderAssertion((order) => {
       expect(order.status).toBe(status);
     });
@@ -188,14 +177,18 @@ export class ThenCancelOrderOrder implements PromiseLike<void> {
 export class ThenCancelOrderFailure implements PromiseLike<void> {
   constructor(private readonly stage: ThenCancelOrderResultStage) {}
 
-  errorMessage(expected: string): ThenCancelOrderFailure {
+  and(): this {
+    return this;
+  }
+
+  errorMessage(expected: string): this {
     this.stage._addErrorAssertion((error, useCaseContext) => {
       expect(error.message).toBe(useCaseContext.expandAliases(expected));
     });
     return this;
   }
 
-  fieldErrorMessage(field: string, message: string): ThenCancelOrderFailure {
+  fieldErrorMessage(field: string, message: string): this {
     this.stage._addErrorAssertion((error, useCaseContext) => {
       const expandedMessage = useCaseContext.expandAliases(message);
       const fieldError = error.fieldErrors.find((fe) => fe.field === field);

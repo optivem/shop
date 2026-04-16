@@ -3,8 +3,8 @@ import type { WhenStage } from '../../when/when-stage.js';
 import type { ThenStage } from '../../then/then-stage.js';
 
 export interface GivenPromotion {
-  withActive(promotionActive: boolean): this;
-  withDiscount(discount: string | number): this;
+  withActive(promotionActive: boolean): GivenPromotion;
+  withDiscount(discount: string | number): GivenPromotion;
   and(): GivenStage;
   when(): WhenStage;
   then(): ThenStage;

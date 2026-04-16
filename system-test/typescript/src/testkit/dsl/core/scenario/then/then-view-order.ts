@@ -129,20 +129,9 @@ export class ThenViewOrderResultStage implements PromiseLike<void> {
 export class ThenViewOrderSuccess implements PromiseLike<void> {
   constructor(private readonly stage: ThenViewOrderResultStage) {}
 
-  and(): ThenViewOrderSuccessAnd {
-    return new ThenViewOrderSuccessAnd(this.stage);
+  and(): this {
+    return this;
   }
-
-  then<TResult1 = void, TResult2 = never>(
-    onfulfilled?: ((value: void) => TResult1 | PromiseLike<TResult1>) | null,
-    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
-  ): PromiseLike<TResult1 | TResult2> {
-    return this.stage.then(onfulfilled, onrejected);
-  }
-}
-
-export class ThenViewOrderSuccessAnd implements PromiseLike<void> {
-  constructor(private readonly stage: ThenViewOrderResultStage) {}
 
   order(): ThenViewOrderOrder {
     return new ThenViewOrderOrder(this.stage);
@@ -159,14 +148,14 @@ export class ThenViewOrderSuccessAnd implements PromiseLike<void> {
 export class ThenViewOrderOrder implements PromiseLike<void> {
   constructor(private readonly stage: ThenViewOrderResultStage) {}
 
-  hasStatus(status: string): ThenViewOrderOrder {
+  hasStatus(status: string): this {
     this.stage._addOrderAssertion((order) => {
       expect(order.status).toBe(status);
     });
     return this;
   }
 
-  hasOrderNumberPrefix(prefix: string): ThenViewOrderOrder {
+  hasOrderNumberPrefix(prefix: string): this {
     this.stage._addOrderAssertion((order) => {
       expect(order.orderNumber.startsWith(prefix)).toBe(true);
     });
@@ -184,9 +173,23 @@ export class ThenViewOrderOrder implements PromiseLike<void> {
 export class ThenViewOrderFailure implements PromiseLike<void> {
   constructor(private readonly stage: ThenViewOrderResultStage) {}
 
-  errorMessage(expected: string): ThenViewOrderFailure {
+  and(): this {
+    return this;
+  }
+
+  errorMessage(expected: string): this {
     this.stage._addErrorAssertion((error, useCaseContext) => {
       expect(error.message).toBe(useCaseContext.expandAliases(expected));
+    });
+    return this;
+  }
+
+  fieldErrorMessage(field: string, message: string): this {
+    this.stage._addErrorAssertion((error, useCaseContext) => {
+      const expandedMessage = useCaseContext.expandAliases(message);
+      const fieldError = error.fieldErrors.find((fe) => fe.field === field);
+      expect(fieldError).toBeDefined();
+      expect(fieldError!.message).toBe(expandedMessage);
     });
     return this;
   }

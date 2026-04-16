@@ -106,20 +106,9 @@ export class ThenPublishCouponResultStage implements PromiseLike<void> {
 export class ThenPublishCouponSuccess implements PromiseLike<void> {
   constructor(private readonly stage: ThenPublishCouponResultStage) {}
 
-  and(): ThenPublishCouponSuccessAnd {
-    return new ThenPublishCouponSuccessAnd(this.stage);
+  and(): this {
+    return this;
   }
-
-  then<TResult1 = void, TResult2 = never>(
-    onfulfilled?: ((value: void) => TResult1 | PromiseLike<TResult1>) | null,
-    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
-  ): PromiseLike<TResult1 | TResult2> {
-    return this.stage.then(onfulfilled, onrejected);
-  }
-}
-
-export class ThenPublishCouponSuccessAnd implements PromiseLike<void> {
-  constructor(private readonly stage: ThenPublishCouponResultStage) {}
 
   coupon(code: string): ThenPublishCouponCoupon {
     return new ThenPublishCouponCoupon(this.stage, code);
@@ -139,35 +128,35 @@ export class ThenPublishCouponCoupon implements PromiseLike<void> {
     private readonly code: string,
   ) {}
 
-  hasDiscountRate(rate: number): ThenPublishCouponCoupon {
+  hasDiscountRate(rate: number): this {
     this.stage._addCouponAssertion(this.code, (coupon) => {
       expect(coupon.discountRate).toBe(rate);
     });
     return this;
   }
 
-  isValidFrom(validFrom: string): ThenPublishCouponCoupon {
+  isValidFrom(validFrom: string): this {
     this.stage._addCouponAssertion(this.code, (coupon) => {
       expect(new Date(coupon.validFrom!).getTime()).toBe(new Date(validFrom).getTime());
     });
     return this;
   }
 
-  isValidTo(validTo: string): ThenPublishCouponCoupon {
+  isValidTo(validTo: string): this {
     this.stage._addCouponAssertion(this.code, (coupon) => {
       expect(new Date(coupon.validTo!).getTime()).toBe(new Date(validTo).getTime());
     });
     return this;
   }
 
-  hasUsageLimit(limit: number): ThenPublishCouponCoupon {
+  hasUsageLimit(limit: number): this {
     this.stage._addCouponAssertion(this.code, (coupon) => {
       expect(coupon.usageLimit).toBe(limit);
     });
     return this;
   }
 
-  hasUsedCount(count: number): ThenPublishCouponCoupon {
+  hasUsedCount(count: number): this {
     this.stage._addCouponAssertion(this.code, (coupon) => {
       expect(coupon.usedCount).toBe(count);
     });
@@ -185,14 +174,18 @@ export class ThenPublishCouponCoupon implements PromiseLike<void> {
 export class ThenPublishCouponFailure implements PromiseLike<void> {
   constructor(private readonly stage: ThenPublishCouponResultStage) {}
 
-  errorMessage(expected: string): ThenPublishCouponFailure {
+  and(): this {
+    return this;
+  }
+
+  errorMessage(expected: string): this {
     this.stage._addErrorAssertion((error, useCaseContext) => {
       expect(error.message).toBe(useCaseContext.expandAliases(expected));
     });
     return this;
   }
 
-  fieldErrorMessage(field: string, message: string): ThenPublishCouponFailure {
+  fieldErrorMessage(field: string, message: string): this {
     this.stage._addErrorAssertion((error, useCaseContext) => {
       const expandedMessage = useCaseContext.expandAliases(message);
       const fieldError = error.fieldErrors.find((fe) => fe.field === field);

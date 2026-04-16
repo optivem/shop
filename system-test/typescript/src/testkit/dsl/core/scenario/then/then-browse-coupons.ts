@@ -20,6 +20,11 @@ export class ThenBrowseCouponsResultStage implements PromiseLike<void> {
     return new ThenBrowseCouponsSuccess(this, this.useCaseContext);
   }
 
+  shouldFail(): ThenBrowseCouponsFailure {
+    this._expectSuccess = false;
+    return new ThenBrowseCouponsFailure(this);
+  }
+
   async _getResult(): Promise<BrowseCouponsResponse> {
     await this._execute();
     return this._browseResult!;
@@ -58,7 +63,7 @@ export class ThenBrowseCouponsSuccess implements PromiseLike<void> {
     private readonly useCaseContext: UseCaseContext,
   ) {}
 
-  and(): ThenBrowseCouponsSuccess {
+  and(): this {
     return this;
   }
 
@@ -82,7 +87,7 @@ export class ThenBrowseCoupons implements PromiseLike<void> {
     private readonly useCaseContext: UseCaseContext,
   ) {}
 
-  containsCouponWithCode(expectedCode: string): ThenBrowseCoupons {
+  containsCouponWithCode(expectedCode: string): this {
     this._assertions.push((result) => {
       const resolvedCode = this.useCaseContext.getParamValue(expectedCode) as string;
       const found = result.coupons.some((c) => c.code === resolvedCode);
@@ -91,7 +96,7 @@ export class ThenBrowseCoupons implements PromiseLike<void> {
     return this;
   }
 
-  couponCount(expectedCount: number): ThenBrowseCoupons {
+  couponCount(expectedCount: number): this {
     this._assertions.push((result) => {
       expect(result.coupons.length).toBe(expectedCount);
     });
@@ -108,5 +113,28 @@ export class ThenBrowseCoupons implements PromiseLike<void> {
         for (const fn of this._assertions) fn(result);
       })
       .then(onfulfilled, onrejected);
+  }
+}
+
+export class ThenBrowseCouponsFailure implements PromiseLike<void> {
+  constructor(private readonly stage: ThenBrowseCouponsResultStage) {}
+
+  errorMessage(expected: string): this {
+    return this;
+  }
+
+  fieldErrorMessage(field: string, message: string): this {
+    return this;
+  }
+
+  and(): this {
+    return this;
+  }
+
+  then<TResult1 = void, TResult2 = never>(
+    onfulfilled?: ((value: void) => TResult1 | PromiseLike<TResult1>) | null,
+    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
+  ): PromiseLike<TResult1 | TResult2> {
+    return this.stage.then(onfulfilled, onrejected);
   }
 }

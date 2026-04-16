@@ -3,11 +3,11 @@ import type { WhenStage } from '../../when/when-stage.js';
 import type { ThenStage } from '../../then/then-stage.js';
 
 export interface GivenCoupon {
-  withCouponCode(couponCode: string): this;
-  withDiscountRate(discountRate: string | number): this;
-  withValidFrom(validFrom: string): this;
-  withValidTo(validTo: string): this;
-  withUsageLimit(usageLimit: string | number): this;
+  withCouponCode(couponCode: string): GivenCoupon;
+  withDiscountRate(discountRate: string | number): GivenCoupon;
+  withValidFrom(validFrom: string): GivenCoupon;
+  withValidTo(validTo: string): GivenCoupon;
+  withUsageLimit(usageLimit: string | number): GivenCoupon;
   and(): GivenStage;
   when(): WhenStage;
   then(): ThenStage;

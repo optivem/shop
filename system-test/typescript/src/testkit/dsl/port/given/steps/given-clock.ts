@@ -3,9 +3,9 @@ import type { WhenStage } from '../../when/when-stage.js';
 import type { ThenStage } from '../../then/then-stage.js';
 
 export interface GivenClock {
-  withTime(time?: string): this;
-  withWeekday(): this;
-  withWeekend(): this;
+  withTime(time?: string): GivenClock;
+  withWeekday(): GivenClock;
+  withWeekend(): GivenClock;
   and(): GivenStage;
   when(): WhenStage;
   then(): ThenStage;
