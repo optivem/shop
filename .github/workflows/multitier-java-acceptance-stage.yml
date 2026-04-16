@@ -48,6 +48,9 @@ jobs:
       - name: Check Target Version Exists
         uses: optivem/actions/check-target-version-exists@v1
 
+      - name: Check Version Unreleased
+        uses: optivem/actions/check-version-unreleased@v1
+
       - name: Log in to Docker Hub
         uses: docker/login-action@v4
         with:

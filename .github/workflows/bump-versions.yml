@@ -1,0 +1,28 @@
+name: bump-versions
+
+on:
+  workflow_dispatch:
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Bump Patch Versions
+        uses: optivem/actions/bump-patch-versions@v1
+        with:
+          version-files: |
+            VERSION
+            system/monolith/dotnet/VERSION
+            system/monolith/java/VERSION
+            system/monolith/typescript/VERSION
+            system/multitier/backend-dotnet/VERSION
+            system/multitier/backend-java/VERSION
+            system/multitier/backend-typescript/VERSION
+            system/multitier/frontend-react/VERSION
