@@ -15,6 +15,9 @@ forChannels('ui', 'api')(() => {
             .and()
             .order()
             .hasOrderNumberPrefix('ORD-')
-            .hasStatus(OrderStatus.PLACED);
+            .hasQuantity(5)
+            .hasUnitPrice(20)
+            .hasStatus(OrderStatus.PLACED)
+            .hasTotalPriceGreaterThanZero();
     });
 });

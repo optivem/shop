@@ -1,7 +1,18 @@
 import { test, forChannels } from './base/fixtures.js';
 
 forChannels('ui', 'api')(() => {
-    const nonIntegerQuantities = ['3.5', 'lala', 'invalid-quantity'];
+    test('shouldRejectOrderWithInvalidQuantity', async ({ scenario }) => {
+        await scenario
+            .when()
+            .placeOrder()
+            .withQuantity('invalid-quantity')
+            .then()
+            .shouldFail()
+            .errorMessage('The request contains one or more validation errors')
+            .fieldErrorMessage('quantity', 'Quantity must be an integer');
+    });
+
+    const nonIntegerQuantities = ['3.5', 'lala'];
 
     nonIntegerQuantities.forEach((qty) => {
         test(`shouldRejectOrderWithNonIntegerQuantity_${qty}`, async ({ scenario }) => {

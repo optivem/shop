@@ -45,7 +45,7 @@ $Config = @{
         @{  Id = "acceptance-isolated-api";
             SampleTest = "shouldBeAbleToCancelOrder";
             Name = "latest - Acceptance Isolated (stub) - API";
-            Command = "`$env:CHANNEL = 'api'; `$env:EXTERNAL_SYSTEM_MODE = 'stub'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=acceptance-test --grep '@isolated' tests/latest/acceptance";
+            Command = "`$env:CHANNEL = 'api'; `$env:EXTERNAL_SYSTEM_MODE = 'stub'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=acceptance-test --workers=1 --grep '@isolated' tests/latest/acceptance";
             Path = ".";
             TestReportPath = "playwright-report\index.html";
             TestInstallCommands = $null },
@@ -54,7 +54,7 @@ $Config = @{
         @{  Id = "acceptance-isolated-ui";
             SampleTest = "shouldBeAbleToCancelOrder";
             Name = "latest - Acceptance Isolated (stub) - UI";
-            Command = "`$env:CHANNEL = 'ui'; `$env:EXTERNAL_SYSTEM_MODE = 'stub'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=acceptance-test --grep '@isolated' tests/latest/acceptance";
+            Command = "`$env:CHANNEL = 'ui'; `$env:EXTERNAL_SYSTEM_MODE = 'stub'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=acceptance-test --workers=1 --grep '@isolated' tests/latest/acceptance";
             Path = ".";
             TestReportPath = "playwright-report\index.html";
             TestInstallCommands = $null },
@@ -63,7 +63,16 @@ $Config = @{
         @{  Id = "contract-stub";
             SampleTest = "shouldBeAbleToGetTime";
             Name = "latest - Contract (stub)";
-            Command = "`$env:EXTERNAL_SYSTEM_MODE = 'stub'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=external-system-contract-test tests/latest/contract";
+            Command = "`$env:EXTERNAL_SYSTEM_MODE = 'stub'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=external-system-contract-test --workers=1 --grep-invert '@isolated' tests/latest/contract";
+            Path = ".";
+            TestReportPath = "playwright-report\index.html";
+            TestInstallCommands = $null },
+
+        # === Contract Tests Isolated (stub) ===
+        @{  Id = "contract-isolated-stub";
+            SampleTest = "shouldBeAbleToGetConfiguredTime";
+            Name = "latest - Contract Isolated (stub)";
+            Command = "`$env:EXTERNAL_SYSTEM_MODE = 'stub'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=external-system-contract-test --workers=1 --grep '@isolated' tests/latest/contract";
             Path = ".";
             TestReportPath = "playwright-report\index.html";
             TestInstallCommands = $null },
@@ -72,7 +81,7 @@ $Config = @{
         @{  Id = "contract-real";
             SampleTest = "shouldBeAbleToGetTime";
             Name = "latest - Contract (real)";
-            Command = "`$env:EXTERNAL_SYSTEM_MODE = 'real'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=external-system-contract-test tests/latest/contract";
+            Command = "`$env:EXTERNAL_SYSTEM_MODE = 'real'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=external-system-contract-test --workers=1 --grep-invert '@isolated' tests/latest/contract";
             Path = ".";
             TestReportPath = "playwright-report\index.html";
             TestInstallCommands = $null },

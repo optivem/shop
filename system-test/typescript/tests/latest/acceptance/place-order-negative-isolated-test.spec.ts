@@ -1,6 +1,7 @@
 import { test, forChannels } from './base/fixtures.js';
 
 test.describe('@isolated', () => {
+    test.describe.configure({ mode: 'serial' });
     forChannels('ui', 'api')(() => {
         test('cannotPlaceOrderWithExpiredCoupon', async ({ scenario }) => {
             await scenario

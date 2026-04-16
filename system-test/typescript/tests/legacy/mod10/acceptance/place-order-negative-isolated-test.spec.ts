@@ -1,6 +1,7 @@
 import { test, forChannels } from './fixtures.js';
 
 test.describe('@isolated', () => {
+    test.describe.configure({ mode: 'serial' });
     forChannels('ui', 'api')(() => {
         test('shouldRejectOrderPlacedAtYearEnd', async ({ scenario }) => {
             await scenario

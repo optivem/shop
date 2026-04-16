@@ -18,6 +18,23 @@ Each version contains test categories: `acceptance`, `contract`, `e2e`, `smoke`.
 
 Legacy tests are organized by module (`mod02` through `mod11`). Each module is **incremental** — it only contains the tests added or changed in that module, not a cumulative copy. When comparing legacy, compare **each module individually** against the same module in other languages.
 
+The legacy modules represent a **pedagogical progression** through abstraction layers. Each module should use the same abstraction layer across all languages. The expected progression is:
+
+| Module | Abstraction Layer |
+|--------|------------------|
+| mod02 | Raw (direct HTTP/Playwright calls, no clients) |
+| mod03 | Raw (direct HTTP/Playwright calls, no clients) |
+| mod04 | Client (typed API/UI clients, but no driver abstraction) |
+| mod05 | Driver (driver adapters abstracting over clients) |
+| mod06 | Channel Driver (unified channel-aware tests) |
+| mod07 | Use-Case DSL (fluent use-case builders) |
+| mod08 | Scenario DSL (given/when/then scenario builders) |
+| mod09 | Scenario DSL + Clock (adds clock external system) |
+| mod10 | Scenario DSL + Isolated (adds stub-based isolated tests) |
+| mod11 | Scenario DSL + Contract (adds contract tests) |
+
+If a language uses a higher-level abstraction than expected for a module (e.g., TS uses scenario DSL in mod03 where Java/.NET use raw HTTP), that is an **actionable architectural mismatch** — the module is not teaching the intended abstraction layer.
+
 The DSL infrastructure lives alongside the tests:
 
 - **Java:** `system-test/java/src/main/java/com/optivem/shop/dsl/`
@@ -56,7 +73,28 @@ If no depth is specified, default to **tests** (recommended for quick checks; us
 
 ## Test Comparison Dimensions
 
-For each pair of languages being compared, check these three levels:
+For each pair of languages being compared, check these levels:
+
+### 0. Architectural Abstraction (legacy only)
+
+Before comparing individual tests, verify that each legacy module uses the **same abstraction layer** across all languages. Check:
+
+- **What the test code calls directly** — raw HTTP requests? Typed clients? Driver adapters? Use-case DSL? Scenario DSL?
+- **How channels are handled** — separate Api/Ui test classes? Unified channel-annotated tests?
+- **What infrastructure files exist** — does the module introduce clients, drivers, or DSL builders that shouldn't exist at this stage?
+
+Flag as an **actionable architectural mismatch** any case where a language uses a different abstraction layer than the others for the same module. These are critical because the course teaches each layer incrementally — skipping ahead defeats the pedagogical purpose.
+
+Report these in a per-module table:
+
+```
+#### Architectural Abstraction
+| Module | Expected Layer | Java | .NET | TypeScript | Match? |
+|--------|---------------|------|------|------------|--------|
+| mod03  | Raw           | Raw  | Raw  | Scenario DSL | MISMATCH |
+```
+
+For each mismatch, provide an action item stating which language must be changed and to which abstraction layer.
 
 ### 1. Test Classes
 - List all test classes in each language for the given version and category.
@@ -122,21 +160,29 @@ For each layer, flag:
 - **Be exhaustive** — compare every test class, every method, every assertion. Do not skip files or summarize with "and similar".
 - **Be concrete** — always name the specific file, class, and method when reporting a difference.
 - **Group by category** — organize findings by test category (acceptance, contract, e2e, smoke).
+- **Architectural layer first** — for legacy comparisons, always check the abstraction layer before comparing test details. An architectural mismatch is the most critical type of difference.
 
 ## Workflow
 
 1. Determine the comparison mode (latest, legacy, or both) and depth (tests or full).
-2. For each mode:
-   a. Discover all test files in each language for that version.
+2. **Always compare latest first, then legacy.** Latest is the reference implementation — understanding it first provides the baseline for judging legacy modules.
+3. For latest:
+   a. Discover all test files in each language for the latest version.
    b. Group test files by category and class name.
    c. For each class, read the file in each language.
    d. Compare classes, methods, and bodies as described above.
-3. If depth is **full**, also:
+4. For legacy (after latest is complete):
+   a. For each module (mod02 through mod11), first check the **architectural abstraction layer** — verify all languages use the same layer for that module.
+   b. Then discover all test files in each language for that module.
+   c. Group test files by category and class name.
+   d. For each class, read the file in each language.
+   e. Compare classes, methods, and bodies as described above.
+5. If depth is **full**, also:
    a. Discover all DSL source files in each language.
    b. Group by layer (channel, common, core, driver).
    c. For each layer, read corresponding files across languages.
    d. Compare classes, interfaces, methods, and DTOs as described above.
-4. Produce the report with actionable changes needed to make them match.
+6. Produce the report with actionable changes needed to make them match.
 
 ## Report Format
 
@@ -196,11 +242,23 @@ Missing methods:
 
 ## Legacy Comparison
 
+### Architectural Abstraction Summary
+| Module | Expected Layer   | Java | .NET | TypeScript | Match? |
+|--------|-----------------|------|------|------------|--------|
+| mod02  | Raw             | Raw  | Raw  | Raw        | Full   |
+| mod03  | Raw             | Raw  | Raw  | ???        | ???    |
+| mod04  | Client          | ...  | ...  | ...        | ...    |
+...
+
+Architectural Mismatches:
+  - mod03: TypeScript uses Scenario DSL, should use Raw to match Java/.NET
+    Action: Rewrite TS mod03 tests to use raw HTTP/Playwright calls
+
 ### mod02
 ...
 ### mod03
 ...
-(one section per module)
+(one section per module — each starts with its architectural layer check, then class/method/body comparisons)
 
 ## DSL Comparison (full depth only)
 
@@ -234,6 +292,7 @@ By language:
   - TypeScript: <count> changes needed
 
 By area:
+  - Architectural mismatches (legacy): <count>
   - Test — Acceptance: <count>
   - Test — Contract: <count>
   - Test — E2E: <count>

@@ -12,6 +12,7 @@ const timesInsideBlackout = [
 const BLACKOUT_ERROR = 'Order cancellation is not allowed on December 31st between 22:00 and 23:00';
 
 test.describe('@isolated', () => {
+    test.describe.configure({ mode: 'serial' });
     forChannels('ui', 'api')(() => {
         timesInsideBlackout.forEach((time) => {
             test(`cannotCancelAnOrderOn31stDecBetween2200And2230_${time}`, async ({ scenario }) => {
@@ -26,7 +27,10 @@ test.describe('@isolated', () => {
                     .cancelOrder()
                     .then()
                     .shouldFail()
-                    .errorMessage(BLACKOUT_ERROR);
+                    .errorMessage(BLACKOUT_ERROR)
+                    .and()
+                    .order()
+                    .hasStatus(OrderStatus.PLACED);
             });
         });
     });
