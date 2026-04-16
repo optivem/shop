@@ -112,6 +112,16 @@ jobs:
         run: dotnet build
         working-directory: system-test/dotnet
 
+      # Run system tests (sample) — latest
+      - name: Run System Tests - Latest (Sample)
+        run: pwsh -NonInteractive -Command "./Run-SystemTests.ps1 -Architecture ${{ inputs.architecture }} -Sample"
+        working-directory: system-test/${{ inputs.language }}
+
+      # Run system tests (sample) — legacy
+      - name: Run System Tests - Legacy (Sample)
+        run: pwsh -NonInteractive -Command "./Run-SystemTests.ps1 -Architecture ${{ inputs.architecture }} -Legacy -Sample"
+        working-directory: system-test/${{ inputs.language }}
+
   commit-stage:
     needs: precommit
     if: ${{ !inputs.skip-commit-stage }}
