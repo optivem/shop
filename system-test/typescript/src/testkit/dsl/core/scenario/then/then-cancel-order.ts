@@ -126,6 +126,14 @@ export class ThenCancelOrderResultStage implements PromiseLike<void> {
       if (!result.success) {
         for (const fn of this._errorAssertions) fn(result.error, this.useCaseContext);
       }
+
+      if (this._orderAssertions.length > 0) {
+        const orderResult = await this.app.shop().viewOrder(targetOrderNumber);
+        expect(orderResult.success).toBe(true);
+        if (orderResult.success) {
+          for (const fn of this._orderAssertions) fn(orderResult.value);
+        }
+      }
     }
   }
 
@@ -179,6 +187,10 @@ export class ThenCancelOrderFailure implements PromiseLike<void> {
 
   and(): this {
     return this;
+  }
+
+  order(): ThenCancelOrderOrder {
+    return new ThenCancelOrderOrder(this.stage);
   }
 
   errorMessage(expected: string): this {

@@ -11,8 +11,7 @@ export interface ThenOrder extends PromiseLike<void> {
   hasOrderNumberPrefix(expectedPrefix: string): this;
   hasDiscountRate(expectedDiscountRate: number): this;
   hasDiscountAmount(expectedDiscountAmount: string | number): this;
-  hasAppliedCouponCode(expectedCouponCode: string | null): this;
-  hasAppliedCoupon(expectedCouponCode?: string): this;
+  hasAppliedCoupon(expectedCouponCode?: string | null): this;
   hasTaxRate(expectedTaxRate: string | number): this;
   hasTaxAmount(expectedTaxAmount: string | number): this;
 }

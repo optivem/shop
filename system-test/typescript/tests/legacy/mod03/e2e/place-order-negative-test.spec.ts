@@ -5,7 +5,7 @@ forChannels('ui', 'api')(() => {
         await scenario
             .when()
             .placeOrder()
-            .withQuantity('3.5')
+            .withQuantity('invalid-quantity')
             .then()
             .shouldFail()
             .errorMessage('The request contains one or more validation errors')

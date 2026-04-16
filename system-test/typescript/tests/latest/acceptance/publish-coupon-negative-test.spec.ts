@@ -8,7 +8,7 @@ forChannels('ui', 'api')(() => {
             await scenario
                 .when()
                 .publishCoupon()
-                .withCouponCode('INVALID')
+                .withCouponCode('INVALID-COUPON')
                 .withDiscountRate(discountRate)
                 .then()
                 .shouldFail()
@@ -24,7 +24,7 @@ forChannels('ui', 'api')(() => {
             await scenario
                 .when()
                 .publishCoupon()
-                .withCouponCode('INVALID')
+                .withCouponCode('INVALID-COUPON')
                 .withDiscountRate(discountRate)
                 .then()
                 .shouldFail()
@@ -58,7 +58,7 @@ forChannels('ui', 'api')(() => {
                 .when()
                 .publishCoupon()
                 .withCouponCode('INVALID-LIMIT')
-                .withDiscountRate(0.1)
+                .withDiscountRate(0.15)
                 .withUsageLimit(usageLimit)
                 .then()
                 .shouldFail()

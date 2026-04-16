@@ -7,7 +7,7 @@ test('shouldBeAbleToGetTaxRate', async ({ scenario }) => {
         .given()
         .country()
         .withCode('US')
-        .withTaxRate(0.09)
+        .withTaxRate('0.09')
         .then()
         .country('US')
         .hasTaxRateIsPositive();

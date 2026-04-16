@@ -296,15 +296,7 @@ export class ThenOrder implements PromiseLike<void> {
     return this;
   }
 
-  hasAppliedCouponCode(code: string | null): this {
-    this.stage._addOrderAssertion((order) => {
-      const resolvedCode = this.stage.useCaseContext.getParamValue(code);
-      expect(order.appliedCouponCode).toBe(resolvedCode);
-    });
-    return this;
-  }
-
-  hasAppliedCoupon(expectedCouponCode?: string): this {
+  hasAppliedCoupon(expectedCouponCode?: string | null): this {
     this.stage._addOrderAssertion((order) => {
       if (expectedCouponCode === undefined) {
         expect(order.appliedCouponCode).toBeDefined();

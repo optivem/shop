@@ -3,6 +3,7 @@ process.env.EXTERNAL_SYSTEM_MODE = 'stub';
 import { test } from '../fixtures.js';
 
 test.describe('@isolated', () => {
+    test.describe.configure({ mode: 'serial' });
     test('shouldBeAbleToGetTime', async ({ scenario }) => {
         await scenario.given().clock().withTime().then().clock().hasTime();
     });

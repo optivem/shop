@@ -2,25 +2,22 @@ import { test, forChannels } from './fixtures.js';
 import { OrderStatus } from '../../../../src/testkit/common/dtos.js';
 
 forChannels('ui', 'api')(() => {
-    test('orderNumberShouldStartWithORD', async ({ scenario }) => {
+    test('shouldPlaceOrderForValidInput', async ({ scenario }) => {
         await scenario
+            .given()
+            .product()
+            .withUnitPrice(20)
             .when()
             .placeOrder()
+            .withQuantity(5)
             .then()
             .shouldSucceed()
             .and()
             .order()
-            .hasOrderNumberPrefix('ORD-');
-    });
-
-    test('orderStatusShouldBePlacedAfterPlacingOrder', async ({ scenario }) => {
-        await scenario
-            .when()
-            .placeOrder()
-            .then()
-            .shouldSucceed()
-            .and()
-            .order()
-            .hasStatus(OrderStatus.PLACED);
+            .hasOrderNumberPrefix('ORD-')
+            .hasQuantity(5)
+            .hasUnitPrice(20)
+            .hasStatus(OrderStatus.PLACED)
+            .hasTotalPriceGreaterThanZero();
     });
 });

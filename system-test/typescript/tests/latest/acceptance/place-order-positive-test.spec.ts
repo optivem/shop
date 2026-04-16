@@ -4,8 +4,19 @@ import { OrderStatus } from '../../../src/testkit/common/dtos.js';
 forChannels('ui', 'api')(() => {
     test('shouldBeAbleToPlaceOrderForValidInput', async ({ scenario }) => {
         await scenario
+            .given()
+            .product()
+            .withSku('ABC')
+            .withUnitPrice(20)
+            .and()
+            .country()
+            .withCode('US')
+            .withTaxRate(0.1)
             .when()
             .placeOrder()
+            .withSku('ABC')
+            .withQuantity(5)
+            .withCountry('US')
             .then()
             .shouldSucceed();
     });
@@ -86,11 +97,11 @@ forChannels('ui', 'api')(() => {
             .shouldSucceed()
             .and()
             .order()
-            .hasAppliedCouponCode(code)
+            .hasAppliedCoupon(code)
             .hasDiscountRate(0.15);
     });
 
-    test('discountRateShouldNotBeAppliedWhenThereIsNoCoupon', async ({ scenario }) => {
+    test('discountRateShouldBeNotAppliedWhenThereIsNoCoupon', async ({ scenario }) => {
         await scenario
             .when()
             .placeOrder()
@@ -98,7 +109,7 @@ forChannels('ui', 'api')(() => {
             .shouldSucceed()
             .and()
             .order()
-            .hasAppliedCouponCode(null)
+            .hasAppliedCoupon(null)
             .hasDiscountRate(0)
             .hasDiscountAmount('0.00');
     });
@@ -121,6 +132,8 @@ forChannels('ui', 'api')(() => {
             .shouldSucceed()
             .and()
             .order()
+            .hasAppliedCoupon(code)
+            .hasDiscountRate(0.15)
             .hasBasePrice('100.00')
             .hasDiscountAmount('15.00')
             .hasSubtotalPrice('85.00');
@@ -177,20 +190,21 @@ forChannels('ui', 'api')(() => {
         async ({ scenario, country, taxRate, unitPrice, subtotalPrice, expectedTaxAmount, expectedTotalPrice }) => {
             await scenario
                 .given()
-                .product()
-                .withUnitPrice(unitPrice)
-                .and()
                 .country()
                 .withCode(country)
                 .withTaxRate(taxRate)
+                .and()
+                .product()
+                .withUnitPrice(unitPrice)
                 .when()
                 .placeOrder()
-                .withQuantity(1)
                 .withCountry(country)
+                .withQuantity(1)
                 .then()
                 .shouldSucceed()
                 .and()
                 .order()
+                .hasTaxRate(Number.parseFloat(taxRate))
                 .hasSubtotalPrice(subtotalPrice)
                 .hasTaxAmount(expectedTaxAmount)
                 .hasTotalPrice(expectedTotalPrice);
@@ -203,15 +217,14 @@ forChannels('ui', 'api')(() => {
             .given()
             .coupon()
             .withCouponCode(code)
-            .withDiscountRate(0.1)
             .when()
             .placeOrder()
             .withCouponCode(code)
             .then()
             .shouldSucceed()
             .and()
-            .order()
-            .hasAppliedCouponCode(code);
+            .coupon(code)
+            .hasUsedCount(1);
     });
 });
 
@@ -250,7 +263,7 @@ forChannels('api')(() => {
             .order()
             .hasSubtotalPrice('18.00')
             .hasDiscountRate(0.1)
-            .hasAppliedCouponCode(couponCode)
+            .hasAppliedCoupon(couponCode)
             .hasTotalPrice('19.26');
     });
 
@@ -276,7 +289,7 @@ forChannels('api')(() => {
             .hasSubtotalPrice('18.00')
             .hasDiscountRate(0.1)
             .hasTaxRate(0.2)
-            .hasAppliedCouponCode(comboCode)
+            .hasAppliedCoupon(comboCode)
             .hasTotalPrice('21.60');
     });
 });
