@@ -1,5 +1,6 @@
-import { test } from '../fixtures.js';
+import { apiTest as test, expect } from '../fixtures.js';
 
-test('shouldBeAbleToGoToTax', async ({ scenario }) => {
-    await scenario.assume().tax().shouldBeRunning();
+test('shouldBeAbleToGoToTax', async ({ taxClient }) => {
+    const result = await taxClient.checkHealth();
+    expect(result.success).toBe(true);
 });

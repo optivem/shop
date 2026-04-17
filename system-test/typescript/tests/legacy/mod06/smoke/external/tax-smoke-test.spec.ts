@@ -1,5 +1,6 @@
-import { test } from '../fixtures.js';
+import { test, expect } from '../fixtures.js';
 
-test('shouldBeAbleToGoToTax', async ({ scenario }) => {
-    await scenario.assume().tax().shouldBeRunning();
+test('shouldBeAbleToGoToTax', async ({ taxDriver }) => {
+    const result = await taxDriver.goToTax();
+    expect(result.success).toBe(true);
 });

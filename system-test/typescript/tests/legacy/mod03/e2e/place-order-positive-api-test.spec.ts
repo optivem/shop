@@ -36,6 +36,6 @@ test('shouldPlaceOrder', async ({ config }) => {
 
     // Then: should succeed
     expect(placeOrderResponse.ok).toBe(true);
-    const orderData = await placeOrderResponse.json();
+    const orderData = (await placeOrderResponse.json()) as { orderNumber: string };
     expect(orderData.orderNumber).toBeDefined();
 });

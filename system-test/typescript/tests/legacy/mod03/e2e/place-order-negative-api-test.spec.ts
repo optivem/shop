@@ -12,8 +12,8 @@ test('shouldRejectOrderWithNonIntegerQuantity', async ({ config }) => {
 
     // Then: should fail with validation error
     expect(response.ok).toBe(false);
-    const errorData = await response.json();
+    const errorData = (await response.json()) as { detail: string; errors?: Array<{ field: string; message: string }> };
     expect(errorData.detail).toContain('The request contains one or more validation errors');
-    const quantityError = errorData.errors?.find((e: { field: string }) => e.field === 'quantity');
+    const quantityError = errorData.errors?.find((e) => e.field === 'quantity');
     expect(quantityError?.message).toBe('Quantity must be an integer');
 });

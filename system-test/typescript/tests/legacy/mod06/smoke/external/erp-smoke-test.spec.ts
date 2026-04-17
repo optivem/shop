@@ -1,5 +1,6 @@
-import { test } from '../fixtures.js';
+import { test, expect } from '../fixtures.js';
 
-test('shouldBeAbleToGoToErp', async ({ scenario }) => {
-    await scenario.assume().erp().shouldBeRunning();
+test('shouldBeAbleToGoToErp', async ({ erpDriver }) => {
+    const result = await erpDriver.goToErp();
+    expect(result.success).toBe(true);
 });
