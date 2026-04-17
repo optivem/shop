@@ -64,7 +64,7 @@ Create a new composite action that:
 
 ### How it works
 
-The starter repo contains **both sets** of workflow files side by side:
+The shop repo contains **both sets** of workflow files side by side:
 - `monolith-java-acceptance-stage.yml` -- Docker-based (existing)
 - `monolith-java-acceptance-stage-cloud.yml` -- Cloud Run-based (new)
 
@@ -113,13 +113,13 @@ Next step: Run the GCP setup script to configure your cloud environment:
 
 ---
 
-## Phase 4: Create Cloud Run Workflow Files in Starter
+## Phase 4: Create Cloud Run Workflow Files in Shop
 
 **Important:** Do NOT modify existing Docker-based workflows. Create new `-cloud.yml` variants alongside them. The job graph is fundamentally different:
 - Docker workflows: deployment + tests in a single job (everything on one runner via Docker Compose)
 - Cloud Run workflows: deploy jobs in parallel, then fan out test jobs in parallel against live URLs
 
-### New files to create in starter (18 total)
+### New files to create in shop (18 total)
 - `*-acceptance-stage-cloud.yml` (6 files)
 - `*-qa-stage-cloud.yml` (6 files)
 - `*-prod-stage-cloud.yml` (6 files)
@@ -427,13 +427,13 @@ Neon requires browser-based signup (GitHub OAuth). The script opens the browser,
 |------|------|-------|--------|
 | 1 | Create `deploy-to-cloud-run` action | `optivem/actions` | Medium |
 | 2 | Rename `simulate-deployment` to `deploy-to-docker` | `optivem/actions` | Small |
-| 3 | Create 18 `*-cloud.yml` workflow files in starter | `optivem/starter` | Medium |
-| 4 | Create `_verify-pipeline-cloud.yml` | `optivem/starter` | Small |
-| 5 | Add `setup-gcp.sh` and `teardown-gcp.sh` scripts | `optivem/starter` | Medium |
+| 3 | Create 18 `*-cloud.yml` workflow files in shop | `optivem/shop` | Medium |
+| 4 | Create `_verify-pipeline-cloud.yml` | `optivem/shop` | Small |
+| 5 | Add `setup-gcp.sh` and `teardown-gcp.sh` scripts | `optivem/shop` | Medium |
 | 6 | Add `--deploy` flag to `gh optivem init` | `optivem/gh-optivem` | Medium |
 | 7 | Update workflow copy logic for `-cloud.yml` variants | `optivem/gh-optivem` | Small |
 | 8 | Test end-to-end with one combo (Java monolith, cloud-run) | All repos | Medium |
-| 9 | Roll out remaining 5 language/arch `-cloud.yml` files | `optivem/starter` | Small (mechanical) |
+| 9 | Roll out remaining 5 language/arch `-cloud.yml` files | `optivem/shop` | Small (mechanical) |
 
 ---
 

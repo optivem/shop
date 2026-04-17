@@ -93,8 +93,8 @@ jobs:
         with:
           projectBaseDir: system/monolith/typescript
           args: >
-            -Dsonar.projectKey=optivem_starter-monolith-typescript
-            -Dsonar.projectName=starter-monolith-typescript
+            -Dsonar.projectKey=optivem_shop-monolith-typescript
+            -Dsonar.projectName=shop-monolith-typescript
             -Dsonar.organization=optivem
             -Dsonar.sources=src
 

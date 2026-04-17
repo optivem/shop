@@ -52,7 +52,7 @@ Removing `slowMo` had negligible impact. The root cause is elsewhere.
 
 Dave Farley recommends that a full acceptance stage should complete within 1 hour, even for a real-life production project with hundreds of tests and complex infrastructure.
 
-This simple starter project — with only ~55-63 acceptance tests and a straightforward e-commerce domain — already consumes 20 minutes for Java. That's a third of the entire budget before any real-world complexity is added (more features, more test scenarios, more external system integrations, more browsers, more environments).
+This simple shop project — with only ~55-63 acceptance tests and a straightforward e-commerce domain — already consumes 20 minutes for Java. That's a third of the entire budget before any real-world complexity is added (more features, more test scenarios, more external system integrations, more browsers, more environments).
 
 If this scales linearly, a production-sized test suite with 3-5x more tests would blow past the 1-hour ceiling without optimization. The time to address this is now, while the test suite is small enough to experiment with different strategies safely.
 
@@ -137,7 +137,7 @@ The largest test classes (`PlaceOrderPositiveTest` = 16 tests, `PlaceOrderNegati
 
 `slowMo: 100` was present in multiple files across both repos. Removed from all 11 locations. However, the results show this was **not the primary cause** of the 30-60x gap between Java and TypeScript. The real bottleneck is elsewhere — likely the Java Playwright bridge overhead (JVM -> Node.js subprocess -> Chromium IPC).
 
-**starter repo (5 files):**
+**shop repo (5 files):**
 - `system-test/java/src/main/java/.../BrowserLifecycleExtension.java` (latest)
 - `system-test/java/src/test/java/.../legacy/mod02/base/BaseRawTest.java`
 - `system-test/java/src/test/java/.../legacy/mod03/base/BaseRawTest.java`

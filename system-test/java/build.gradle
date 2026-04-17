@@ -6,7 +6,7 @@ plugins {
 
 group = 'com.optivem.shop.systemtest'
 version = '0.0.1-SNAPSHOT'
-description = 'Starter - System Test'
+description = 'Shop - System Test'
 
 java {
 	toolchain {

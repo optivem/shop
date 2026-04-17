@@ -2,7 +2,7 @@
 
 ## Context
 
-The `optivem/starter` repo (Shop domain) is a full e-commerce system with orders, coupons, pricing, external integrations (ERP, Clock, Tax), and a complex domain model. It serves as:
+The `optivem/shop` repo (Shop domain) is a full e-commerce system with orders, coupons, pricing, external integrations (ERP, Clock, Tax), and a complex domain model. It serves as:
 - The reference architecture for the ATDD course
 - The scaffolding source for `gh optivem init`
 
@@ -21,15 +21,15 @@ The repo is called `greeter` (not `hello-world`) because it describes the domain
 |---|---|---|
 | **Repo name** | `optivem/greeter` | Describes the domain; old greeter repos are archived |
 | **System name** | `"Greeter"` | Maps to GreeterService, GreeterApiController |
-| **Separate repo vs inside starter** | Separate repo | Avoids doubling starter's ~68 workflow files |
+| **Separate repo vs inside shop** | Separate repo | Avoids doubling shop's ~68 workflow files |
 | **Database** | Postgres | Template must support real project scaffolding with persistence |
 | **CRUD** | POST + GET (list) + GET by id | Standard CRUD pattern for real-project scaffolding |
 | **External systems** | Clock + Scorer | Clock for determinism (isolated via stub); Scorer for opaque external logic (non-isolated by design) |
 | **Stubs (WireMock)** | Yes | Required to demonstrate acceptance testing |
-| **External simulator** | Yes | Same pattern as starter, two endpoints |
+| **External simulator** | Yes | Same pattern as shop, two endpoints |
 | **Acceptance tests** | Yes, full harness | Template must be complete for real project scaffolding |
 | **UI** | Yes, minimal | Text field + button + result display |
-| **Frontend framework** | React + Vite (multitier), Thymeleaf/Razor/Next.js (monolith) | Same as starter |
+| **Frontend framework** | React + Vite (multitier), Thymeleaf/Razor/Next.js (monolith) | Same as shop |
 
 ---
 
@@ -127,9 +127,9 @@ greeter/
 └── README.md
 ```
 
-### Comparison with starter
+### Comparison with shop
 
-| Component | starter (Shop) | greeter |
+| Component | shop | greeter |
 |---|---|---|
 | **API controllers** | OrderApiController, CouponApiController, HealthController | GreeterApiController, HealthController |
 | **Services** | OrderService, CouponService | GreeterService |
@@ -170,7 +170,7 @@ Each backend variant (e.g. `system/monolith/java/`) contains:
 | Build config | `build.gradle` / `.csproj` / `package.json` |
 | DB migration (V1) | Create `greetings` table (Flyway / EF Core migration / TypeORM migration) |
 
-~15 source files per variant vs ~25+ in starter.
+~15 source files per variant vs ~25+ in shop.
 
 ---
 
@@ -270,7 +270,7 @@ Then the page shows a new greeting row with:
 
 ### Test Harness Structure
 
-Same DSL layers as starter, minimal content:
+Same DSL layers as shop, minimal content:
 
 ```
 system-test/{lang}/
@@ -314,7 +314,7 @@ In `stub` variants, Clock is served by WireMock and Scorer by real-sim. In `real
 
 ## CI/CD Workflows
 
-Same naming convention as starter. Same stages, simplified content.
+Same naming convention as shop. Same stages, simplified content.
 
 ### Workflow files
 
@@ -334,9 +334,9 @@ Plus shared:
 - `cleanup-prereleases.yml`
 - `bump-versions.yml`
 
-### Differences from starter workflows
+### Differences from shop workflows
 
-| Stage | starter | greeter |
+| Stage | shop | greeter |
 |---|---|---|
 | **Commit** | Build, unit test, checkstyle/lint, SonarCloud, Docker build+push | Same |
 | **Acceptance** | Deploy app + DB + externals, run system tests (stub + real) | Same (Postgres + Clock + Scorer externals) |
@@ -354,18 +354,18 @@ Plus shared:
 
 Add to Config struct:
 ```go
-Base string // "starter" or "greeter"
+Base string // "shop" or "greeter"
 ```
 
 Add flag parsing:
 ```go
-base := flag.String("base", "starter", "Template base: starter or greeter")
+base := flag.String("base", "shop", "Template base: shop or greeter")
 ```
 
 Add validation:
 ```go
-if *base != "starter" && *base != "greeter" {
-    log.FatalExit("--base must be 'starter' or 'greeter'")
+if *base != "shop" && *base != "greeter" {
+    log.FatalExit("--base must be 'shop' or 'greeter'")
 }
 ```
 
@@ -373,7 +373,7 @@ if *base != "starter" && *base != "greeter" {
 
 **File:** `internal/config/config.go`
 
-Rename `cloneStarter()` → `cloneTemplate(base string)`:
+Rename `cloneShop()` → `cloneTemplate(base string)`:
 ```go
 func cloneTemplate(base string) (string, error) {
     dir, err := os.MkdirTemp("", base+"-")
@@ -397,12 +397,12 @@ func cloneTemplate(base string) (string, error) {
 **File:** `internal/config/config.go`
 
 The system name old/new mappings depend on the base:
-- starter: `SysNamePascalOld = "Shop"`, `SysNameCamelOld = "shop"`, etc.
+- shop: `SysNamePascalOld = "Shop"`, `SysNameCamelOld = "shop"`, etc.
 - greeter: `SysNamePascalOld = "Greeter"`, `SysNameCamelOld = "greeter"`, etc.
 
 ```go
 switch cfg.Base {
-case "starter":
+case "shop":
     cfg.SysNamePascalOld = "Shop"
     cfg.SysNameCamelOld = "shop"
     cfg.SysNameKebabOld = "shop"
@@ -417,13 +417,13 @@ case "greeter":
 
 ### 4. No changes needed to apply_template.go
 
-The template application logic is architecture-based (monolith/multitier × monorepo/multirepo), not domain-based. Since greeter follows the exact same directory structure as starter, the existing `applyMonolithMonorepo`, `applyMultitierMonorepo`, etc. functions work as-is. The `StarterPath` just points to a different cloned directory.
+The template application logic is architecture-based (monolith/multitier × monorepo/multirepo), not domain-based. Since greeter follows the exact same directory structure as shop, the existing `applyMonolithMonorepo`, `applyMultitierMonorepo`, etc. functions work as-is. The `ShopPath` just points to a different cloned directory.
 
 ### 5. Replacement rules
 
 **File:** `internal/steps/replacements.go`
 
-The replacement rules reference `"starter"` in SonarCloud keys and a few other places. These already get replaced by the repo name, so they should work if the greeter repo follows the same naming convention. Verify during integration testing.
+The replacement rules reference `"shop"` in SonarCloud keys and a few other places. These already get replaced by the repo name, so they should work if the greeter repo follows the same naming convention. Verify during integration testing.
 
 ### 6. Reserved words
 
@@ -494,9 +494,9 @@ Add `"greeter"` and `"scorer"` to `isScaffoldReserved()` to prevent users from c
 
 | Step | Task | Details |
 |---|---|---|
-| 6.1 | Add `--base` flag to config.go | Default: "starter", options: "starter", "greeter" |
-| 6.2 | Rename cloneStarter → cloneTemplate | Dynamic repo cloning based on --base |
-| 6.3 | Add base-aware system name defaults | "Shop" for starter, "Greeter" for greeter |
+| 6.1 | Add `--base` flag to config.go | Default: "shop", options: "shop", "greeter" |
+| 6.2 | Rename cloneShop → cloneTemplate | Dynamic repo cloning based on --base |
+| 6.3 | Add base-aware system name defaults | "Shop" for shop, "Greeter" for greeter |
 | 6.4 | Add reserved words | "greeter", "quote" |
 | 6.5 | Update README and docs | Document --base flag |
 | 6.6 | Rebuild Go binary | `go build ./...` |
@@ -525,7 +525,7 @@ Add `"greeter"` and `"scorer"` to `isScaffoldReserved()` to prevent users from c
    - **Recommended:** Docker only initially. Add cloud-run later if needed.
 Agree
 
-2. **Monolith frontend pages:** Starter has 5 web pages. Greeter has 1. Should the monolith variants even have SSR pages, or just serve the API?
+2. **Monolith frontend pages:** Shop has 5 web pages. Greeter has 1. Should the monolith variants even have SSR pages, or just serve the API?
    - **Recommended:** Include one simple SSR page (same greeting form) to match the pattern. Students should see how Thymeleaf/Razor/Next.js SSR works.
 SSR
 

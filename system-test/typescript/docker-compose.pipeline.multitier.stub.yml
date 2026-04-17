@@ -3,7 +3,7 @@ name: shop-typescript-multitier-stub
 services:
 
   frontend:
-    image: ghcr.io/optivem/starter/multitier-frontend-react:latest
+    image: ghcr.io/optivem/shop/multitier-frontend-react:latest
     ports:
       - "3312:3000"
     environment:
@@ -14,7 +14,7 @@ services:
       - app-network
 
   backend:
-    image: ghcr.io/optivem/starter/multitier-backend-typescript:latest
+    image: ghcr.io/optivem/shop/multitier-backend-typescript:latest
     ports:
       - "8312:8081"
     environment:

@@ -2,7 +2,7 @@
 
 **Source:** [TEST-COMPARISON-2026-04-16.md](../reports/TEST-COMPARISON-2026-04-16.md)
 **Date:** 2026-04-16
-**Target repo:** `starter` only. Do NOT modify `eshop-tests`.
+**Target repo:** `shop` only. Do NOT modify `eshop-tests`.
 
 ---
 

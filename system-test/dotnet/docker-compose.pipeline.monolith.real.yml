@@ -3,7 +3,7 @@ name: shop-dotnet-monolith-real
 services:
 
   monolith:
-    image: ghcr.io/optivem/starter/monolith-system-dotnet:latest
+    image: ghcr.io/optivem/shop/monolith-system-dotnet:latest
     ports:
       - "3211:8080"
       - "8211:8080"

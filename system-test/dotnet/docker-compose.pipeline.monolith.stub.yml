@@ -3,7 +3,7 @@ name: shop-dotnet-monolith-stub
 services:
 
   monolith:
-    image: ghcr.io/optivem/starter/monolith-system-dotnet:latest
+    image: ghcr.io/optivem/shop/monolith-system-dotnet:latest
     ports:
       - "3212:8080"
       - "8212:8080"

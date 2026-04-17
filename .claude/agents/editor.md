@@ -61,7 +61,7 @@ Fixes applied:
   ...
 
 Logic issues found and fixed:
-  1. [agents/scaffolder.md] Path "docs/starter/index.md" corrected to "docs/index.md"
+  1. [agents/scaffolder.md] Path "docs/shop/index.md" corrected to "docs/index.md"
   ...
 
 No-fix notes (issues that need human decision):

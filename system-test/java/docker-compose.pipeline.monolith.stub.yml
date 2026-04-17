@@ -3,7 +3,7 @@ name: shop-java-monolith-stub
 services:
 
   monolith:
-    image: ghcr.io/optivem/starter/monolith-system-java:latest
+    image: ghcr.io/optivem/shop/monolith-system-java:latest
     ports:
       - "3112:8080"
       - "8112:8080"

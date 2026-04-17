@@ -4,13 +4,13 @@
 
 1. **Trigger** the failing acceptance stage workflow(s):
    ```bash
-   gh workflow run <workflow-name>.yml --repo optivem/starter --ref main
+   gh workflow run <workflow-name>.yml --repo optivem/shop --ref main
    ```
    Only trigger workflows that are currently failing. Do not re-trigger workflows that are already passing.
 
 2. **Monitor** the run. Sleep 5 minutes between status checks (to avoid rate limiting):
    ```bash
-   sleep 300 && gh run list --workflow <workflow-name>.yml --repo optivem/starter --limit 1
+   sleep 300 && gh run list --workflow <workflow-name>.yml --repo optivem/shop --limit 1
    ```
    Repeat until the run status is "completed".
 
@@ -19,10 +19,10 @@
 4. **If the run failed:**
    - Get the failed job logs:
      ```bash
-     gh run view <run-id> --repo optivem/starter --log-failed
+     gh run view <run-id> --repo optivem/shop --log-failed
      ```
    - Investigate the root cause of the failure.
-   - Fix the issue in the starter repo only.
+   - Fix the issue in the shop repo only.
    - Verify the fix compiles:
      ```bash
      dotnet build
@@ -48,7 +48,7 @@ There are 12 acceptance stage workflows, organized by architecture and language:
 
 To check which acceptance stage workflows are currently failing:
 ```bash
-gh run list --repo optivem/starter --limit 20 --json name,conclusion | jq '.[] | select(.conclusion=="failure" and (.name | test("acceptance-stage")))'
+gh run list --repo optivem/shop --limit 20 --json name,conclusion | jq '.[] | select(.conclusion=="failure" and (.name | test("acceptance-stage")))'
 ```
 
 ## Stop Conditions
@@ -65,4 +65,4 @@ Stop the loop and report to the user if:
 - Java is the reference implementation. All backends (Java/.NET/TypeScript) must return identical API responses.
 - Never use `git pull --rebase`. Always plain `git pull`.
 - Never commit, push, or sync repos with ad-hoc commands. Always use the `/commit` skill.
-- Only make changes to the starter repo. Do not modify other repos.
+- Only make changes to the shop repo. Do not modify other repos.

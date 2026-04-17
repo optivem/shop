@@ -3,7 +3,7 @@ name: shop-java-monolith-real
 services:
 
   monolith:
-    image: ghcr.io/optivem/starter/monolith-system-java:latest
+    image: ghcr.io/optivem/shop/monolith-system-java:latest
     ports:
       - "3111:8080"
       - "8111:8080"

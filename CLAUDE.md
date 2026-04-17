@@ -1,4 +1,4 @@
-# Starter Repo Guidelines
+# Shop Repo Guidelines
 
 ## Pre-Commit Verification
 
@@ -27,6 +27,6 @@ This runs one sample test per suite across all test categories (smoke, acceptanc
 When fixing a failing CI workflow, always follow this sequence:
 
 1. **Reproduce locally first**: Before making any code changes, run `Run-SystemTests.ps1` locally with the appropriate flags to reproduce the failure. Report whether the failure was reproduced or not.
-2. **Check all languages for the same issue**: The starter repo has parallel implementations in .NET, Java, and TypeScript. When a test fails in one language, check the equivalent test in the other languages for the same problem or inconsistency. Fix all affected languages, not just the one that failed.
+2. **Check all languages for the same issue**: The shop repo has parallel implementations in .NET, Java, and TypeScript. When a test fails in one language, check the equivalent test in the other languages for the same problem or inconsistency. Fix all affected languages, not just the one that failed.
 3. **Test locally after fixing**: After applying the fix, run `Run-SystemTests.ps1` again locally to verify the fix works.
 4. **Then commit**: Only commit and push after local verification passes.

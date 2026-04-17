@@ -14,7 +14,7 @@ checkstyle {
 
 group = 'com.optivem.shop.monolith'
 version = '0.0.1-SNAPSHOT'
-description = 'Starter - Monolith'
+description = 'Shop - Monolith'
 
 java {
 	toolchain {
@@ -60,8 +60,8 @@ jacocoTestReport {
 
 sonar {
 	properties {
-		property 'sonar.projectKey', 'optivem_starter-monolith-java'
-		property 'sonar.projectName', 'starter-monolith-java'
+		property 'sonar.projectKey', 'optivem_shop-monolith-java'
+		property 'sonar.projectName', 'shop-monolith-java'
 		property 'sonar.organization', 'optivem'
 		property 'sonar.coverage.jacoco.xmlReportPaths', "${buildDir}/reports/jacoco/test/jacocoTestReport.xml"
 		property 'sonar.issue.ignore.multicriteria', 'e1,e2'

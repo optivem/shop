@@ -3,7 +3,7 @@ name: shop-typescript-monolith-stub
 services:
 
   monolith:
-    image: ghcr.io/optivem/starter/monolith-system-typescript:latest
+    image: ghcr.io/optivem/shop/monolith-system-typescript:latest
     ports:
       - "3312:8080"
       - "8312:8080"

@@ -17,14 +17,27 @@ Bulk find-and-replace across all repos:
 - Display names: `eShop Starter` / `Shop Starter` → `Shop`
 - Filename rename: `02-shop-starter.md` → `02-shop.md`
 
-### 1.1 — `starter/` repo (~15 files)
-- `README.md` — ~48 badge/link URLs
-- `system-test/java/docker-compose.pipeline.*.yml` (4 files) — GHCR image refs
-- `system-test/dotnet/docker-compose.pipeline.*.yml` (4 files) — GHCR image refs
-- `system-test/typescript/docker-compose.pipeline.*.yml` (4 files) — GHCR image refs
-- `docs/monitor-process.md` — CLI examples
-- `plans/MIGRATION-CLOUD-DEPLOY.md` — references
-- `.claude/agents/*.md` — agent instructions referencing starter
+### 1.1 — `starter/` repo (~23 files)
+
+**String refs** `optivem/starter` → `optivem/shop`:
+- `README.md` — 54 badge/link URLs
+- `docs/monitor-process.md` — 4 CLI examples
+- `plans/MIGRATION-CLOUD-DEPLOY.md` — 4 references
+- `plans/HELLO-WORLD-GREETER.md` — 1 reference
+- 5 workflow files under `.github/workflows/*-commit-stage.yml`
+- 12 docker-compose files under `system-test/{java,dotnet,typescript}/docker-compose.pipeline.*.yml` (these are `ghcr.io/optivem/starter/` refs)
+
+**SonarCloud keys**:
+- `system/multitier/backend-java/build.gradle:62-63` — `sonar.projectKey`, `sonar.projectName`
+- `system/monolith/java/build.gradle:63-64` — same
+
+**Gradle descriptions** `'Starter - *'` → `'Shop - *'`:
+- Same two `build.gradle` files, line 17
+
+**Display names** `eShop Starter` / `Shop Starter` → `Shop`:
+- Grep before committing; replace matches.
+
+**Guardrail**: Do NOT touch `spring-boot-starter-*` or `springdoc-openapi-starter-*` — those are Spring dependency names.
 
 ### 1.2 — `gh-optivem/` repo (full rename, no back-compat)
 
@@ -86,7 +99,31 @@ Bulk find-and-replace across all repos:
 ### 1.6 — `claude/` repo
 - `.claude/commands/update-plan.md` — references to starter
 
-### 1.7 — Commit and push all repos using `/commit` skill
+### 1.7 — Verify via Run-SystemTests (run after ALL edits 1.1-1.6 complete)
+
+Run the full local system-test suites (latest + legacy) for all three languages. All six runs must pass before proceeding to commit.
+
+```powershell
+# Java
+pwsh -c "cd system-test/java; ./Run-SystemTests.ps1 -Config ./Run-SystemTests.Latest.Config.ps1"
+pwsh -c "cd system-test/java; ./Run-SystemTests.ps1 -Config ./Run-SystemTests.Legacy.Config.ps1"
+
+# .NET
+pwsh -c "cd system-test/dotnet; ./Run-SystemTests.ps1 -Config ./Run-SystemTests.Latest.Config.ps1"
+pwsh -c "cd system-test/dotnet; ./Run-SystemTests.ps1 -Config ./Run-SystemTests.Legacy.Config.ps1"
+
+# TypeScript
+pwsh -c "cd system-test/typescript; ./Run-SystemTests.ps1 -Config ./Run-SystemTests.Latest.Config.ps1"
+pwsh -c "cd system-test/typescript; ./Run-SystemTests.ps1 -Config ./Run-SystemTests.Legacy.Config.ps1"
+```
+
+If any fail, stop and investigate. Do not commit.
+
+Also verify gh-optivem builds: `cd gh-optivem && go build ./... && go test ./...`.
+
+### 1.8 — Ask user for commit approval, then commit and push all repos using `/commit` skill
+
+**REQUIRED**: Wait for explicit user approval before invoking `/commit`. Never commit autonomously.
 
 ---
 

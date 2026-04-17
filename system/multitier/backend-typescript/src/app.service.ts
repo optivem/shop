@@ -13,11 +13,11 @@ export class AppService {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Starter</title>
+    <title>Shop</title>
 </head>
 <body>
     <h1>Hello World!</h1>
-    <p>Welcome to the Starter - TypeScript</p>
+    <p>Welcome to the Shop - TypeScript</p>
 </body>
 </html>
     `;

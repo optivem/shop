@@ -9,7 +9,7 @@ Ordering: architectural mismatches first, then architecture layers (clients → 
 **Porting legend** (based on audit of `eshop-tests/typescript/`):
 - ✅ **Port from eshop-tests** — target file/folder already exists in eshop-tests with the target layered architecture; copy over with minimal adjustment.
 - 🟡 **Partial** — some pieces exist in eshop-tests, others need to be created or relocated.
-- ✏️ **Net-new** — not present in eshop-tests; typically legacy-mod progression work or starter-specific test-body tweaks that eshop-tests doesn't cover.
+- ✏️ **Net-new** — not present in eshop-tests; typically legacy-mod progression work or shop-specific test-body tweaks that eshop-tests doesn't cover.
 
 ---
 
@@ -212,7 +212,7 @@ Four TypeScript commits landed after this plan was generated. Their impact on pl
   - **O2, O3, O4** unchanged — mod04 api still lacks viewOrder assertions; mod04 UI still uses raw `shopPage.locator(...)` (no `ShopUiClient`); mod04 negative specs not touched.
 
 - **a14a51b** — "Port architecture layers from eshop-tests to TS system-test (Phase 1)"
-  - Structural alignment of TypeScript testkit to Java reference, keeping starter's idioms (raw fetch, functional `Result<T,E>`, no axios/class-Result/decimal.js stack from eshop-tests).
+  - Structural alignment of TypeScript testkit to Java reference, keeping shop's idioms (raw fetch, functional `Result<T,E>`, no axios/class-Result/decimal.js stack from eshop-tests).
   - **Fully resolves B1, B2, B3, B5, B6, B9, C1, F4, G2, G3, H1, P3** (all ✅ entries from section X).
   - **G1 marked as EXCEPTION** — TS has no `AutoCloseable` equivalent; only stub clients have `close()` and callers invoke directly.
   - Local verification: full latest + full legacy suite run on monolith, both green.
