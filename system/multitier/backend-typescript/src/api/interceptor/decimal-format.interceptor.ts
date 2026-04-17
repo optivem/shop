@@ -4,6 +4,7 @@ import {
   Injectable,
   NestInterceptor,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
@@ -56,7 +57,7 @@ export class DecimalFormatInterceptor implements NestInterceptor {
         const json = JSON.stringify(marked);
         const formatted = json.replace(SENTINEL_REGEX, '$1');
 
-        const response = context.switchToHttp().getResponse();
+        const response = context.switchToHttp().getResponse<Response>();
         response.setHeader('Content-Type', 'application/json');
         response.end(formatted);
 
