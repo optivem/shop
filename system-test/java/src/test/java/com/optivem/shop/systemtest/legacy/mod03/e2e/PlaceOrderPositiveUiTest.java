@@ -52,7 +52,7 @@ class PlaceOrderPositiveUiTest extends BaseE2eTest {
         shopUiPage.locator("[aria-label=\"Country\"]").fill(COUNTRY);
         shopUiPage.locator("[aria-label=\"Place Order\"]").click();
 
-        var successMessageText = shopUiPage.locator("[role='alert']").textContent();
+        var successMessageText = shopUiPage.locator("[role='alert'][data-notification-id]").textContent();
         var pattern = Pattern.compile("Success! Order has been created with Order Number ([\\w-]+)");
         var matcher = pattern.matcher(successMessageText);
         assertThat(matcher.find()).isTrue();

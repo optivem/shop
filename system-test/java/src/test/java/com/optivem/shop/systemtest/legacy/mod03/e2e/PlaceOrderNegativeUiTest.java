@@ -23,7 +23,7 @@ class PlaceOrderNegativeUiTest extends BaseE2eTest {
         shopUiPage.locator("[aria-label=\"Quantity\"]").fill("invalid-quantity");
         shopUiPage.locator("[aria-label=\"Place Order\"]").click();
 
-        var errorAlert = shopUiPage.locator("[role='alert']");
+        var errorAlert = shopUiPage.locator("[role='alert'][data-notification-id]");
         errorAlert.waitFor();
         assertThat(errorAlert.isVisible()).isTrue();
         var errorText = errorAlert.textContent();
