@@ -3,7 +3,7 @@ import { test, forChannels, ChannelType } from './base/fixtures.js';
 test.describe('@isolated', () => {
     test.describe.configure({ mode: 'serial' });
     forChannels(ChannelType.UI, ChannelType.API)(() => {
-        test('cannotPlaceOrderWithExpiredCoupon', async ({ scenario }) => {
+        test('cannotPlaceOrderWithExpiredCoupon @time-dependent', async ({ scenario }) => {
             await scenario
                 .given()
                 .clock()
@@ -22,7 +22,7 @@ test.describe('@isolated', () => {
                 .fieldErrorMessage('couponCode', 'Coupon code SUMMER2023 has expired');
         });
 
-        test('shouldRejectOrderPlacedAtYearEnd', async ({ scenario }) => {
+        test('shouldRejectOrderPlacedAtYearEnd @time-dependent', async ({ scenario }) => {
             await scenario
                 .given()
                 .clock()

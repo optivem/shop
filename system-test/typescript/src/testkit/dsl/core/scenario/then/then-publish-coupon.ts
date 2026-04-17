@@ -16,7 +16,7 @@ export class ThenPublishCouponResultStage implements PromiseLike<void> {
     private readonly ctx: ScenarioContext,
     private readonly useCaseContext: UseCaseContext,
     private readonly code: string,
-    private readonly discountRate: number,
+    private readonly discountRate: number | string,
     private readonly validFrom?: string,
     private readonly validTo?: string,
     private readonly usageLimit?: number | string,

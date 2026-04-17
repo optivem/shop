@@ -30,15 +30,15 @@ export class ShopUiDriver implements ShopDriver {
     await homeResult.value.clickNewOrder();
 
     const newOrderPage = this.client.newOrderPage();
-    await newOrderPage.fillSku(request.sku);
+    await newOrderPage.inputSku(request.sku);
     if (request.quantity !== null) {
-      await newOrderPage.fillQuantity(request.quantity);
+      await newOrderPage.inputQuantity(request.quantity);
     }
     if (request.country !== undefined && request.country !== null) {
-      await newOrderPage.fillCountry(request.country);
+      await newOrderPage.inputCountry(request.country);
     }
     if (request.couponCode) {
-      await newOrderPage.fillCouponCode(request.couponCode);
+      await newOrderPage.inputCouponCode(request.couponCode);
     }
     await newOrderPage.clickPlaceOrder();
 
@@ -59,8 +59,13 @@ export class ShopUiDriver implements ShopDriver {
     await homeResult.value.clickOrderHistory();
 
     const orderHistoryPage = this.client.orderHistoryPage();
-    await orderHistoryPage.fillOrderNumber(orderNumber);
+    await orderHistoryPage.inputOrderNumber(orderNumber);
     await orderHistoryPage.clickSearch();
+
+    if (!(await orderHistoryPage.isOrderListed(orderNumber))) {
+      return failure({ message: `Order ${orderNumber} does not exist.`, fieldErrors: [] });
+    }
+
     await orderHistoryPage.clickViewOrderDetails(orderNumber);
 
     const detailsPage = this.client.orderDetailsPage();
@@ -91,8 +96,13 @@ export class ShopUiDriver implements ShopDriver {
     await homeResult.value.clickOrderHistory();
 
     const orderHistoryPage = this.client.orderHistoryPage();
-    await orderHistoryPage.fillOrderNumber(orderNumber);
+    await orderHistoryPage.inputOrderNumber(orderNumber);
     await orderHistoryPage.clickSearch();
+
+    if (!(await orderHistoryPage.isOrderListed(orderNumber))) {
+      return failure({ message: `Order ${orderNumber} does not exist.`, fieldErrors: [] });
+    }
+
     await orderHistoryPage.clickViewOrderDetails(orderNumber);
 
     const detailsPage = this.client.orderDetailsPage();
@@ -110,8 +120,13 @@ export class ShopUiDriver implements ShopDriver {
     await homeResult.value.clickOrderHistory();
 
     const orderHistoryPage = this.client.orderHistoryPage();
-    await orderHistoryPage.fillOrderNumber(orderNumber);
+    await orderHistoryPage.inputOrderNumber(orderNumber);
     await orderHistoryPage.clickSearch();
+
+    if (!(await orderHistoryPage.isOrderListed(orderNumber))) {
+      return failure({ message: `Order ${orderNumber} does not exist.`, fieldErrors: [] });
+    }
+
     await orderHistoryPage.clickViewOrderDetails(orderNumber);
 
     const detailsPage = this.client.orderDetailsPage();
@@ -129,18 +144,18 @@ export class ShopUiDriver implements ShopDriver {
     await homeResult.value.clickAdminCoupons();
 
     const couponPage = this.client.couponManagementPage();
-    await couponPage.fillCouponCode(request.code);
-    await couponPage.fillDiscountRate(request.discountRate);
+    await couponPage.inputCouponCode(request.code);
+    await couponPage.inputDiscountRate(request.discountRate);
     if (request.validFrom) {
-      await couponPage.fillValidFrom(request.validFrom);
+      await couponPage.inputValidFrom(request.validFrom);
     }
     if (request.validTo) {
-      await couponPage.fillValidTo(request.validTo);
+      await couponPage.inputValidTo(request.validTo);
     }
     if (request.usageLimit !== undefined && request.usageLimit !== null) {
-      await couponPage.fillUsageLimit(Number(request.usageLimit));
+      await couponPage.inputUsageLimit(Number(request.usageLimit));
     }
-    await couponPage.clickCreateCoupon();
+    await couponPage.clickPublishCoupon();
 
     const notificationResult = await couponPage.getResult();
     if (notificationResult.success) return success(undefined);

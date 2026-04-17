@@ -86,7 +86,7 @@ export class ThenContractStage implements PromiseLike<void>, IThenStage {
 
     for (const [countryCode, assertions] of this._countryAssertions) {
       const resolvedCountry = this.useCaseContext.getParamValueOrLiteral(countryCode) as string;
-      const taxResult = await this.app.taxDriver.getTaxRate(resolvedCountry);
+      const taxResult = await this.app.taxDriver.getTaxRate({ country: resolvedCountry });
       expect(taxResult.success).toBe(true);
       if (taxResult.success) {
         for (const fn of assertions) fn(taxResult.value);

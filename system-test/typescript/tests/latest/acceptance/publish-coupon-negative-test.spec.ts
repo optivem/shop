@@ -1,7 +1,7 @@
 import { test, forChannels, ChannelType } from './base/fixtures.js';
 
 forChannels(ChannelType.UI, ChannelType.API)(() => {
-    test.eachAlsoFirstRow([0, -0.01, -0.15])(
+    test.eachAlsoFirstRow(['0.0', '-0.01', '-0.15'])(
         'cannotPublishCouponWithZeroOrNegativeDiscount_$discountRate',
         async ({ scenario, discountRate }) => {
             await scenario
@@ -16,7 +16,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
         },
     );
 
-    test.eachAlsoFirstRow([1.01, 2])(
+    test.eachAlsoFirstRow(['1.01', '2.00'])(
         'cannotPublishCouponWithDiscountGreaterThan100percent_$discountRate',
         async ({ scenario, discountRate }) => {
             await scenario

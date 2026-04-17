@@ -4,7 +4,7 @@ import type { PublishCouponRequest } from '../../../../../port/shop/dtos/Publish
 import type { BrowseCouponsResponse } from '../../../../../port/shop/dtos/BrowseCouponsResponse.js';
 import type { SystemError } from '../../../../../port/shop/dtos/SystemError.js';
 import type { ProblemDetailResponse } from '../dtos/errors/ProblemDetailResponse.js';
-import { mapProblemDetail } from '../problem-detail-mapper.js';
+import { SystemErrorMapper } from '../../SystemErrorMapper.js';
 
 export class CouponController {
   private static readonly ENDPOINT = '/api/coupons';
@@ -21,7 +21,7 @@ export class CouponController {
     if (response.ok) return success(undefined);
 
     const problemDetail = (await response.json()) as ProblemDetailResponse;
-    return failure(mapProblemDetail(problemDetail));
+    return failure(SystemErrorMapper.from(problemDetail));
   }
 
   async browseCoupons(): Promise<Result<BrowseCouponsResponse, SystemError>> {
@@ -32,6 +32,6 @@ export class CouponController {
     }
 
     const problemDetail = (await response.json()) as ProblemDetailResponse;
-    return failure(mapProblemDetail(problemDetail));
+    return failure(SystemErrorMapper.from(problemDetail));
   }
 }

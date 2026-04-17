@@ -4,6 +4,8 @@ import type { ReturnsProductRequest } from '../../../../port/external/erp/dtos/R
 import type { ReturnsPromotionRequest } from '../../../../port/external/erp/dtos/ReturnsPromotionRequest.js';
 import { JsonWireMockClient } from '../../../shared/wiremock/wiremock-client.js';
 import { BaseErpClient } from './BaseErpClient.js';
+import type { ExtProductDetailsResponse } from './dtos/ExtProductDetailsResponse.js';
+import type { ExtGetPromotionResponse } from './dtos/ExtGetPromotionResponse.js';
 
 export class ErpStubClient extends BaseErpClient {
   private readonly wireMock: JsonWireMockClient;
@@ -14,22 +16,24 @@ export class ErpStubClient extends BaseErpClient {
   }
 
   async configureProduct(request: ReturnsProductRequest): Promise<Result<void, ErpErrorResponse>> {
-    await this.wireMock.stubGet(`/erp/api/products/${request.sku}`, {
+    const stubBody: ExtProductDetailsResponse = {
       id: request.sku,
       title: 'Test Product',
       description: 'Test Product Description',
-      price: parseFloat(request.price),
+      price: Number.parseFloat(request.price),
       category: 'Test',
       brand: 'Test',
-    });
+    };
+    await this.wireMock.stubGet(`/erp/api/products/${request.sku}`, stubBody);
     return success(undefined);
   }
 
   async configurePromotion(request: ReturnsPromotionRequest): Promise<Result<void, ErpErrorResponse>> {
-    await this.wireMock.stubGet('/erp/api/promotion', {
+    const stubBody: ExtGetPromotionResponse = {
       promotionActive: request.promotionActive,
       discount: Number.parseFloat(request.discount),
-    });
+    };
+    await this.wireMock.stubGet('/erp/api/promotion', stubBody);
     return success(undefined);
   }
 

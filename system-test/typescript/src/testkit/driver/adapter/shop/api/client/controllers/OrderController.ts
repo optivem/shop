@@ -5,7 +5,7 @@ import type { PlaceOrderResponse } from '../../../../../port/shop/dtos/PlaceOrde
 import type { ViewOrderResponse } from '../../../../../port/shop/dtos/ViewOrderResponse.js';
 import type { SystemError } from '../../../../../port/shop/dtos/SystemError.js';
 import type { ProblemDetailResponse } from '../dtos/errors/ProblemDetailResponse.js';
-import { mapProblemDetail } from '../problem-detail-mapper.js';
+import { SystemErrorMapper } from '../../SystemErrorMapper.js';
 
 export class OrderController {
   private static readonly ENDPOINT = '/api/orders';
@@ -25,7 +25,7 @@ export class OrderController {
     }
 
     const problemDetail = (await response.json()) as ProblemDetailResponse;
-    return failure(mapProblemDetail(problemDetail));
+    return failure(SystemErrorMapper.from(problemDetail));
   }
 
   async viewOrder(orderNumber: string): Promise<Result<ViewOrderResponse, SystemError>> {
@@ -36,7 +36,7 @@ export class OrderController {
     }
 
     const problemDetail = (await response.json()) as ProblemDetailResponse;
-    return failure(mapProblemDetail(problemDetail));
+    return failure(SystemErrorMapper.from(problemDetail));
   }
 
   async cancelOrder(orderNumber: string): Promise<Result<void, SystemError>> {
@@ -49,7 +49,7 @@ export class OrderController {
     if (response.ok || response.status === 204) return success(undefined);
 
     const problemDetail = (await response.json()) as ProblemDetailResponse;
-    return failure(mapProblemDetail(problemDetail));
+    return failure(SystemErrorMapper.from(problemDetail));
   }
 
   async deliverOrder(orderNumber: string): Promise<Result<void, SystemError>> {
@@ -62,6 +62,6 @@ export class OrderController {
     if (response.ok || response.status === 204) return success(undefined);
 
     const problemDetail = (await response.json()) as ProblemDetailResponse;
-    return failure(mapProblemDetail(problemDetail));
+    return failure(SystemErrorMapper.from(problemDetail));
   }
 }

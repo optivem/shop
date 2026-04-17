@@ -15,7 +15,7 @@ test.describe('@isolated', () => {
     test.describe.configure({ mode: 'serial' });
     forChannels(ChannelType.UI, ChannelType.API)(() => {
         test.eachAlsoFirstRow(timesInsideBlackout)(
-            'cannotCancelAnOrderOn31stDecBetween2200And2230_$time',
+            'cannotCancelAnOrderOn31stDecBetween2200And2230_$time @time-dependent',
             async ({ scenario, time }) => {
                 await scenario
                     .given()

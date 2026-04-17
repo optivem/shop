@@ -12,7 +12,7 @@ export class TaxDsl {
   }
 
   async getTaxRate(country: string): Promise<Result<GetTaxResponse, TaxErrorResponse>> {
-    return this.driver.getTaxRate(country);
+    return this.driver.getTaxRate({ country });
   }
 
   async returnsTaxRate(request: ReturnsTaxRateRequest): Promise<Result<void, TaxErrorResponse>> {

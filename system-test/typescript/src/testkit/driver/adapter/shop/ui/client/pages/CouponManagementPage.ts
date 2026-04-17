@@ -21,29 +21,29 @@ function parseDisplayedDateToIso(displayed: string | undefined): string | undefi
 }
 
 export class CouponManagementPage extends BasePage {
-  async fillCouponCode(code: string): Promise<void> {
+  async inputCouponCode(code: string): Promise<void> {
     await this.page.locator('[aria-label="Coupon Code"]').fill(code, { timeout: PAGE_TIMEOUT_MS });
   }
 
-  async fillDiscountRate(rate: number): Promise<void> {
-    await this.page.locator('[aria-label="Discount Rate"]').fill(rate.toString(), { timeout: PAGE_TIMEOUT_MS });
+  async inputDiscountRate(rate: number | string): Promise<void> {
+    await this.page.locator('[aria-label="Discount Rate"]').fill(String(rate), { timeout: PAGE_TIMEOUT_MS });
   }
 
-  async fillValidFrom(dateStr: string): Promise<void> {
+  async inputValidFrom(dateStr: string): Promise<void> {
     const localValue = dateStr.replace('Z', '').replace('T', 'T').slice(0, 16);
     await this.page.locator('[aria-label="Valid From"]').fill(localValue, { timeout: PAGE_TIMEOUT_MS });
   }
 
-  async fillValidTo(dateStr: string): Promise<void> {
+  async inputValidTo(dateStr: string): Promise<void> {
     const localValue = dateStr.replace('Z', '').replace('T', 'T').slice(0, 16);
     await this.page.locator('[aria-label="Valid To"]').fill(localValue, { timeout: PAGE_TIMEOUT_MS });
   }
 
-  async fillUsageLimit(limit: number): Promise<void> {
-    await this.page.locator('[aria-label="Usage Limit"]').fill(limit.toString(), { timeout: PAGE_TIMEOUT_MS });
+  async inputUsageLimit(limit: number | string): Promise<void> {
+    await this.page.locator('[aria-label="Usage Limit"]').fill(String(limit), { timeout: PAGE_TIMEOUT_MS });
   }
 
-  async clickCreateCoupon(): Promise<void> {
+  async clickPublishCoupon(): Promise<void> {
     await this.page.locator('[aria-label="Create Coupon"]').click({ timeout: PAGE_TIMEOUT_MS });
   }
 

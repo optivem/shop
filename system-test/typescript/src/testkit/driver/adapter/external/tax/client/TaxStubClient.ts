@@ -3,6 +3,7 @@ import type { TaxErrorResponse } from '../../../../port/external/tax/dtos/TaxErr
 import type { ReturnsTaxRateRequest } from '../../../../port/external/tax/dtos/ReturnsTaxRateRequest.js';
 import { JsonWireMockClient } from '../../../shared/wiremock/wiremock-client.js';
 import { BaseTaxClient } from './BaseTaxClient.js';
+import type { ExtGetCountryResponse } from './dtos/ExtGetCountryResponse.js';
 
 export class TaxStubClient extends BaseTaxClient {
   private readonly wireMock: JsonWireMockClient;
@@ -13,11 +14,12 @@ export class TaxStubClient extends BaseTaxClient {
   }
 
   async configureTaxRate(request: ReturnsTaxRateRequest): Promise<Result<void, TaxErrorResponse>> {
-    await this.wireMock.stubGet(`/tax/api/countries/${request.country}`, {
+    const stubBody: ExtGetCountryResponse = {
       id: request.country,
       countryName: request.country,
-      taxRate: parseFloat(request.taxRate),
-    });
+      taxRate: Number.parseFloat(request.taxRate),
+    };
+    await this.wireMock.stubGet(`/tax/api/countries/${request.country}`, stubBody);
     return success(undefined);
   }
 

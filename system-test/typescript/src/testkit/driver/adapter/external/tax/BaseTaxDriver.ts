@@ -1,5 +1,6 @@
 import type { Result } from '../../../../common/result.js';
 import type { TaxErrorResponse } from '../../../port/external/tax/dtos/TaxErrorResponse.js';
+import type { GetCountryRequest } from '../../../port/external/tax/dtos/GetCountryRequest.js';
 import type { GetTaxResponse } from '../../../port/external/tax/dtos/GetTaxResponse.js';
 import type { ReturnsTaxRateRequest } from '../../../port/external/tax/dtos/ReturnsTaxRateRequest.js';
 import type { TaxDriver } from '../../../port/external/tax/tax-driver.js';
@@ -12,8 +13,8 @@ export abstract class BaseTaxDriver<TClient extends BaseTaxClient> implements Ta
     return this.client.checkHealth();
   }
 
-  async getTaxRate(country: string): Promise<Result<GetTaxResponse, TaxErrorResponse>> {
-    return this.client.getTaxRate(country);
+  async getTaxRate(request: GetCountryRequest): Promise<Result<GetTaxResponse, TaxErrorResponse>> {
+    return this.client.getTaxRate(request.country);
   }
 
   abstract returnsTaxRate(request: ReturnsTaxRateRequest): Promise<Result<void, TaxErrorResponse>>;

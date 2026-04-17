@@ -5,7 +5,7 @@ import { ThenPublishCouponResultStage } from '../then/then-publish-coupon.js';
 
 export class WhenPublishCoupon {
   private code: string = '';
-  private discountRate: number = 0;
+  private discountRate: number | string = 0;
   private validFrom?: string;
   private validTo?: string;
   private usageLimit?: number | string;
@@ -25,7 +25,7 @@ export class WhenPublishCoupon {
     return this.withCode(code);
   }
 
-  withDiscountRate(discountRate: number): WhenPublishCoupon {
+  withDiscountRate(discountRate: number | string): WhenPublishCoupon {
     this.discountRate = discountRate;
     return this;
   }

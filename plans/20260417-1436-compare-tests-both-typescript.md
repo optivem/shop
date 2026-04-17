@@ -124,13 +124,6 @@ No changes required (aligned across all three languages).
 
 ## I. Latest Tests — Acceptance
 
-### I1. TypeScript — split `shouldRejectOrderWithNonPositiveQuantity` or adjust Java/.NET
-- Current TS: parameterized `['-10', '-1', '0']` in one test `shouldRejectOrderWithNonPositiveQuantity`.
-- Current Java/.NET: two separate tests `shouldRejectOrderWithNegativeQuantity`(-10) and `shouldRejectOrderWithZeroQuantity`(0).
-- **Recommended**: align TS to Java/.NET by splitting into two non-parameterized tests; drop the `-1` case to match. Rationale: Java is the reference.
-- Files: `system-test/typescript/tests/latest/acceptance/place-order-negative-test.spec.ts`.
-- **Source:** ✏️ Net-new — starter-specific test-body tweak; eshop-tests' `latest/acceptance/PlaceOrderNegative.spec.ts` uses different naming and doesn't share the starter's parameterization regression.
-
 ### I2. TypeScript — add `@TimeDependent`/`[Time]` equivalent marker
 - Files: `system-test/typescript/tests/latest/acceptance/place-order-negative-isolated-test.spec.ts` (for `cannotPlaceOrderWithExpiredCoupon`), `cancel-order-positive-isolated-test.spec.ts`, `cancel-order-negative-isolated-test.spec.ts`.
 - Add a TypeScript-idiomatic equivalent (a tag or hook) and document the mapping in the TS testing helpers package (`@optivem/optivem-testing`).
