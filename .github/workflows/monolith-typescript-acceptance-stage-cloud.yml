@@ -215,10 +215,14 @@ jobs:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('system-test/typescript/package-lock.json') }}
 
-      - name: Install Playwright Dependencies
+      - name: Install Playwright Browsers
         if: steps.cache-playwright.outputs.cache-hit != 'true'
         working-directory: system-test/typescript
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install chromium
+
+      - name: Install Playwright System Dependencies
+        working-directory: system-test/typescript
+        run: npx playwright install-deps chromium
 
       - name: Run Smoke Tests (Real)
         working-directory: system-test/typescript
@@ -249,10 +253,14 @@ jobs:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('system-test/typescript/package-lock.json') }}
 
-      - name: Install Playwright Dependencies
+      - name: Install Playwright Browsers
         if: steps.cache-playwright.outputs.cache-hit != 'true'
         working-directory: system-test/typescript
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install chromium
+
+      - name: Install Playwright System Dependencies
+        working-directory: system-test/typescript
+        run: npx playwright install-deps chromium
 
       - name: Run Smoke Tests (Stub)
         working-directory: system-test/typescript
@@ -306,10 +314,14 @@ jobs:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('system-test/typescript/package-lock.json') }}
 
-      - name: Install Playwright Dependencies
+      - name: Install Playwright Browsers
         if: steps.cache-playwright.outputs.cache-hit != 'true'
         working-directory: system-test/typescript
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install chromium
+
+      - name: Install Playwright System Dependencies
+        working-directory: system-test/typescript
+        run: npx playwright install-deps chromium
 
       - name: Run Acceptance Tests - UI Channel
         working-directory: system-test/typescript
@@ -365,10 +377,14 @@ jobs:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('system-test/typescript/package-lock.json') }}
 
-      - name: Install Playwright Dependencies
+      - name: Install Playwright Browsers
         if: steps.cache-playwright.outputs.cache-hit != 'true'
         working-directory: system-test/typescript
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install chromium
+
+      - name: Install Playwright System Dependencies
+        working-directory: system-test/typescript
+        run: npx playwright install-deps chromium
 
       - name: Run Acceptance Tests (Isolated) - UI Channel
         working-directory: system-test/typescript
@@ -489,10 +505,14 @@ jobs:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('system-test/typescript/package-lock.json') }}
 
-      - name: Install Playwright Dependencies
+      - name: Install Playwright Browsers
         if: steps.cache-playwright.outputs.cache-hit != 'true'
         working-directory: system-test/typescript
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install chromium
+
+      - name: Install Playwright System Dependencies
+        working-directory: system-test/typescript
+        run: npx playwright install-deps chromium
 
       - name: Run E2E Tests - UI Channel
         working-directory: system-test/typescript

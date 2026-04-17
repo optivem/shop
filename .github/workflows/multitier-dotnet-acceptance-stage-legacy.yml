@@ -144,10 +144,13 @@ jobs:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('system-test/dotnet/**/*.csproj') }}
 
-      - name: Install Playwright Dependencies
+      - name: Install Playwright Browsers
         if: steps.cache-playwright.outputs.cache-hit != 'true'
-        run: |
-          pwsh SystemTests/bin/Debug/net8.0/playwright.ps1 install --with-deps chromium
+        run: pwsh SystemTests/bin/Debug/net8.0/playwright.ps1 install chromium
+        working-directory: system-test/dotnet
+
+      - name: Install Playwright System Dependencies
+        run: pwsh SystemTests/bin/Debug/net8.0/playwright.ps1 install-deps chromium
         working-directory: system-test/dotnet
 
       - name: mod02 - Run Smoke Tests

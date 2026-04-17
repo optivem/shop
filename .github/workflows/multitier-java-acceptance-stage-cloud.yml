@@ -305,9 +305,13 @@ jobs:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('system-test/java/build.gradle') }}
 
-      - name: Install Playwright Dependencies
+      - name: Install Playwright Browsers
         if: steps.cache-playwright.outputs.cache-hit != 'true'
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install chromium
+        working-directory: system-test/java
+
+      - name: Install Playwright System Dependencies
+        run: npx playwright install-deps chromium
         working-directory: system-test/java
 
       - name: Run Acceptance Tests - UI Channel
@@ -351,9 +355,13 @@ jobs:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('system-test/java/build.gradle') }}
 
-      - name: Install Playwright Dependencies
+      - name: Install Playwright Browsers
         if: steps.cache-playwright.outputs.cache-hit != 'true'
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install chromium
+        working-directory: system-test/java
+
+      - name: Install Playwright System Dependencies
+        run: npx playwright install-deps chromium
         working-directory: system-test/java
 
       - name: Run Acceptance Tests (Isolated) - UI Channel
@@ -448,9 +456,13 @@ jobs:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('system-test/java/build.gradle') }}
 
-      - name: Install Playwright Dependencies
+      - name: Install Playwright Browsers
         if: steps.cache-playwright.outputs.cache-hit != 'true'
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install chromium
+        working-directory: system-test/java
+
+      - name: Install Playwright System Dependencies
+        run: npx playwright install-deps chromium
         working-directory: system-test/java
 
       - name: Run E2E Tests - UI Channel
