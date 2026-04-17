@@ -22,7 +22,7 @@ public class PlaceOrderNegativeUiTest : BaseE2eTest
         await shopUiPage.Locator("[aria-label=\"Quantity\"]").FillAsync("invalid-quantity");
         await shopUiPage.Locator("[aria-label=\"Place Order\"]").ClickAsync();
 
-        var errorAlert = shopUiPage.Locator("[role='alert']");
+        var errorAlert = shopUiPage.Locator("[role='alert'][data-notification-id]");
         await errorAlert.WaitForAsync();
         (await errorAlert.IsVisibleAsync()).ShouldBeTrue();
         var errorText = await errorAlert.TextContentAsync();

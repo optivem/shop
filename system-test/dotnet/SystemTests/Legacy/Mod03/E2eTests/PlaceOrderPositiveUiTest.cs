@@ -33,7 +33,7 @@ public class PlaceOrderPositiveUiTest : BaseE2eTest
         await shopUiPage.Locator("[aria-label=\"Country\"]").FillAsync("US");
         await shopUiPage.Locator("[aria-label=\"Place Order\"]").ClickAsync();
 
-        var successMessageText = await shopUiPage.Locator("[role='alert']").TextContentAsync();
+        var successMessageText = await shopUiPage.Locator("[role='alert'][data-notification-id]").TextContentAsync();
         var match = Regex.Match(successMessageText ?? "", @"Success! Order has been created with Order Number ([\w-]+)");
         match.Success.ShouldBeTrue();
         var orderNumber = match.Groups[1].Value;
