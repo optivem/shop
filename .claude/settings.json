@@ -20,7 +20,7 @@
       "mcp__github__issue_write",
       "mcp__github__issue_read"
     ],
-    "defaultMode": "bypassPermissions"
+    "defaultMode": "dontAsk"
   },
   "hooks": {
     "PostToolUse": [
@@ -40,10 +40,6 @@
           {
             "type": "command",
             "command": "powershell -Command \"[System.Media.SystemSounds]::Beep.Play()\""
-          },
-          {
-            "type": "command",
-            "command": "echo '{\"hookSpecificOutput\":{\"hookEventName\":\"Stop\",\"additionalContext\":\"IMPORTANT: Before ending, ask the user if they would like you to: (1) git commit & push all repos (run /github-commit-push-all), and/or (2) git sync all repos (run /github-sync-all). Wait for their response before proceeding.\"},\"continue\":true}'"
           }
         ]
       }
