@@ -1,38 +1,30 @@
-import { Result, success, failure } from '../../../../common/result.js';
-import { ClockErrorResponse } from '../../../port/external/clock/dtos/ClockErrorResponse.js';
-import { GetTimeResponse } from '../../../port/external/clock/dtos/GetTimeResponse.js';
-import { ReturnsTimeRequest } from '../../../port/external/clock/dtos/ReturnsTimeRequest.js';
-import { ClockDriver } from '../../../port/external/clock/clock-driver.js';
-import { JsonWireMockClient } from '../../shared/wiremock/wiremock-client.js';
+import type { Result } from '../../../../common/result.js';
+import type { ClockErrorResponse } from '../../../port/external/clock/dtos/ClockErrorResponse.js';
+import type { GetTimeResponse } from '../../../port/external/clock/dtos/GetTimeResponse.js';
+import type { ReturnsTimeRequest } from '../../../port/external/clock/dtos/ReturnsTimeRequest.js';
+import type { ClockDriver } from '../../../port/external/clock/clock-driver.js';
+import { ClockStubClient } from './client/ClockStubClient.js';
 
 export class ClockStubDriver implements ClockDriver {
-  private wireMock: JsonWireMockClient;
+  private readonly client: ClockStubClient;
 
-  constructor(private baseUrl: string) {
-    this.wireMock = new JsonWireMockClient(baseUrl);
+  constructor(baseUrl: string) {
+    this.client = new ClockStubClient(baseUrl);
   }
 
   async goToClock(): Promise<Result<void, ClockErrorResponse>> {
-    const response = await fetch(`${this.baseUrl}/health`);
-    if (response.ok) return success(undefined);
-    return failure({ message: `Clock stub not available: ${response.status}` });
+    return this.client.checkHealth();
   }
 
   async getTime(): Promise<Result<GetTimeResponse, ClockErrorResponse>> {
-    const response = await fetch(`${this.baseUrl}/api/time`);
-    if (response.ok) {
-      const data = (await response.json()) as GetTimeResponse;
-      return success(data);
-    }
-    return failure({ message: `Failed to get time: ${response.status}` });
+    return this.client.getTime();
   }
 
   async returnsTime(request: ReturnsTimeRequest): Promise<Result<void, ClockErrorResponse>> {
-    await this.wireMock.stubGet('/clock/api/time', { time: request.time });
-    return success(undefined);
+    return this.client.configureGetTime(request);
   }
 
   async close(): Promise<void> {
-    await this.wireMock.removeStubs();
+    await this.client.close();
   }
 }
