@@ -1,30 +1,34 @@
-import { test, expect, forChannels, ChannelType } from './fixtures.js';
-import { randomUUID } from 'node:crypto';
+import { test, forChannels, ChannelType } from './fixtures.js';
+
+// Aliases resolved through UseCaseContext (matching Java/.NET/eshop-tests):
+//   SKU          → context.getParamValue('sku')            → generates 'sku-<uuid>' on first use
+//   ORDER_NUMBER → result alias; stored after placeOrder, retrieved by viewOrder
+//   COUNTRY      → context.getParamValueOrLiteral('US')    → literal in real mode
+const SKU = 'sku';
+const ORDER_NUMBER = 'order-number';
+const COUNTRY = 'US';
 
 forChannels(ChannelType.UI, ChannelType.API)(() => {
     test('shouldPlaceOrderForValidInput', async ({ useCase }) => {
-        const sku = `SKU-${randomUUID().substring(0, 8)}`;
+        (await useCase.erp().returnsProduct()
+            .sku(SKU).unitPrice('20.00').execute())
+            .shouldSucceed();
 
-        // Given
-        const productResult = await useCase.erp().returnsProduct({ sku, price: '20.00' });
-        expect(productResult.success).toBe(true);
+        (await useCase.shop().placeOrder()
+            .orderNumber(ORDER_NUMBER)
+            .sku(SKU).quantity(5).country(COUNTRY).execute())
+            .shouldSucceed()
+            .orderNumber(ORDER_NUMBER)
+            .orderNumberStartsWith('ORD-');
 
-        const taxResult = await useCase.tax().returnsTaxRate({ country: 'US', taxRate: '0.07' });
-        expect(taxResult.success).toBe(true);
-
-        // When
-        const result = await useCase.shop().placeOrder({ sku, quantity: '5', country: 'US' });
-
-        // Then
-        expect(result.success).toBe(true);
-        if (result.success) {
-            expect(result.value.orderNumber).toMatch(/^ORD-/);
-
-            const viewResult = await useCase.shop().viewOrder(result.value.orderNumber);
-            expect(viewResult.success).toBe(true);
-            if (viewResult.success) {
-                expect(viewResult.value.status).toBe('PLACED');
-            }
-        }
+        (await useCase.shop().viewOrder()
+            .orderNumber(ORDER_NUMBER).execute())
+            .shouldSucceed()
+            .orderNumber(ORDER_NUMBER)
+            .sku(SKU)
+            .quantity(5)
+            .unitPrice(20)
+            .status('PLACED')
+            .totalPriceGreaterThanZero();
     });
 });

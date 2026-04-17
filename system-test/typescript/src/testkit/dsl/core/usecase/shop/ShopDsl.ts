@@ -1,41 +1,26 @@
 import type { Result } from '../../../../common/result.js';
 import type { ShopDriver } from '../../../../driver/port/shop/shop-driver.js';
-import type { PlaceOrderRequest } from '../../../../driver/port/shop/dtos/PlaceOrderRequest.js';
-import type { PlaceOrderResponse } from '../../../../driver/port/shop/dtos/PlaceOrderResponse.js';
-import type { ViewOrderResponse } from '../../../../driver/port/shop/dtos/ViewOrderResponse.js';
 import type { SystemError } from '../../../../driver/port/shop/dtos/SystemError.js';
-import type { PublishCouponRequest } from '../../../../driver/port/shop/dtos/PublishCouponRequest.js';
-import type { BrowseCouponsResponse } from '../../../../driver/port/shop/dtos/BrowseCouponsResponse.js';
+import type { UseCaseContext } from '../../use-case-context.js';
+import { PlaceOrder } from './usecases/PlaceOrder.js';
+import { ViewOrder } from './usecases/ViewOrder.js';
 
 export class ShopDsl {
-  constructor(private readonly driver: ShopDriver) {}
+  constructor(
+    private readonly driver: ShopDriver,
+    private readonly context: UseCaseContext,
+  ) {}
 
   async goToShop(): Promise<Result<void, SystemError>> {
     return this.driver.goToShop();
   }
 
-  async placeOrder(request: PlaceOrderRequest): Promise<Result<PlaceOrderResponse, SystemError>> {
-    return this.driver.placeOrder(request);
+  placeOrder(): PlaceOrder {
+    return new PlaceOrder(this.driver, this.context);
   }
 
-  async viewOrder(orderNumber: string): Promise<Result<ViewOrderResponse, SystemError>> {
-    return this.driver.viewOrder(orderNumber);
-  }
-
-  async cancelOrder(orderNumber: string): Promise<Result<void, SystemError>> {
-    return this.driver.cancelOrder(orderNumber);
-  }
-
-  async deliverOrder(orderNumber: string): Promise<Result<void, SystemError>> {
-    return this.driver.deliverOrder(orderNumber);
-  }
-
-  async publishCoupon(request: PublishCouponRequest): Promise<Result<void, SystemError>> {
-    return this.driver.publishCoupon(request);
-  }
-
-  async browseCoupons(): Promise<Result<BrowseCouponsResponse, SystemError>> {
-    return this.driver.browseCoupons();
+  viewOrder(): ViewOrder {
+    return new ViewOrder(this.driver, this.context);
   }
 
   async close(): Promise<void> {
