@@ -20,7 +20,11 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
             const viewResult = await shopDriver.viewOrder(result.value.orderNumber);
             expect(viewResult.success).toBe(true);
             if (viewResult.success) {
+                expect(viewResult.value.sku).toBe(sku);
+                expect(viewResult.value.quantity).toBe(5);
+                expect(viewResult.value.unitPrice).toBe(20);
                 expect(viewResult.value.status).toBe('PLACED');
+                expect(viewResult.value.totalPrice).toBeGreaterThan(0);
             }
         }
     });

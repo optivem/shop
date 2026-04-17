@@ -1,7 +1,7 @@
 import { apiTest as test, expect } from './fixtures.js';
 import { randomUUID } from 'node:crypto';
 
-test('shouldPlaceOrder', async ({ config }) => {
+test('shouldPlaceOrderForValidInput', async ({ config }) => {
     const sku = `SKU-${randomUUID().substring(0, 8)}`;
     const erpBaseUrl = config.externalSystems.erp.url;
     const shopApiUrl = config.shop.backendApiUrl;
@@ -21,8 +21,28 @@ test('shouldPlaceOrder', async ({ config }) => {
         body: JSON.stringify({ sku, quantity: '5', country: 'US' }),
     });
 
-    // Then: should succeed
+    // Then: place order should succeed
     expect(placeOrderResponse.ok).toBe(true);
     const orderData = (await placeOrderResponse.json()) as { orderNumber: string };
     expect(orderData.orderNumber).toBeDefined();
+
+    // Then: view order via raw HTTP and assert full details
+    const viewOrderResponse = await fetch(`${shopApiUrl}/api/orders/${orderData.orderNumber}`);
+    expect(viewOrderResponse.ok).toBe(true);
+    const order = (await viewOrderResponse.json()) as {
+        orderNumber: string;
+        sku: string;
+        quantity: number;
+        unitPrice: number;
+        basePrice: number;
+        totalPrice: number;
+        status: string;
+    };
+    expect(order.orderNumber).toBe(orderData.orderNumber);
+    expect(order.sku).toBe(sku);
+    expect(order.quantity).toBe(5);
+    expect(order.unitPrice).toBe(20);
+    expect(order.basePrice).toBe(100);
+    expect(order.totalPrice).toBeGreaterThan(0);
+    expect(order.status).toBe('PLACED');
 });

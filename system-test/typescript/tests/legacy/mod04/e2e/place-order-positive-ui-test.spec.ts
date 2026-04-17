@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 
 const TIMEOUT = 30_000;
 
-test('shouldPlaceOrder', async ({ shopPage, shopUiUrl, erpClient }) => {
+test('shouldPlaceOrderForValidInput', async ({ shopPage, shopUiUrl, erpClient }) => {
     const sku = `SKU-${randomUUID().substring(0, 8)}`;
 
     // Given: create product in real ERP

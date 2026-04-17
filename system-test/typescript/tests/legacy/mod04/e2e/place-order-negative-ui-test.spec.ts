@@ -7,7 +7,7 @@ test('shouldRejectOrderWithNonIntegerQuantity', async ({ shopPage, shopUiUrl }) 
     await shopPage.goto(shopUiUrl);
     await shopPage.locator("a[href='/new-order']").click({ timeout: TIMEOUT });
     await shopPage.locator('[aria-label="SKU"]').fill('SOME-SKU', { timeout: TIMEOUT });
-    await shopPage.locator('[aria-label="Quantity"]').fill('3.5', { timeout: TIMEOUT });
+    await shopPage.locator('[aria-label="Quantity"]').fill('invalid-quantity', { timeout: TIMEOUT });
     await shopPage.locator('[aria-label="Country"]').fill('US', { timeout: TIMEOUT });
     await shopPage.locator('[aria-label="Place Order"]').click({ timeout: TIMEOUT });
 

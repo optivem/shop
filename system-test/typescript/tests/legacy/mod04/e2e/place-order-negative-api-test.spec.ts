@@ -2,7 +2,7 @@ import { apiTest as test, expect } from './fixtures.js';
 
 test('shouldRejectOrderWithNonIntegerQuantity', async ({ shopApiClient }) => {
     // When: place order with non-integer quantity via API client
-    const result = await shopApiClient.orders().placeOrder({ sku: 'SOME-SKU', quantity: '3.5', country: 'US' });
+    const result = await shopApiClient.orders().placeOrder({ sku: 'SOME-SKU', quantity: 'invalid-quantity', country: 'US' });
 
     // Then: should fail
     expect(result.success).toBe(false);
