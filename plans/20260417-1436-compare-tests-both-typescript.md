@@ -21,14 +21,6 @@ Ordering: architectural mismatches first, then architecture layers (clients → 
 - Positive spec calls `erpClient.createProduct(...)`; `configureProduct` / `configureTaxRate` stub-style calls removed.
 - `EXTERNAL_SYSTEM_MODE` default flipped to `'real'`.
 
-### A4. 🟡 PARTIAL (commit 42ced1d): TypeScript — mod07: introduce a fluent use-case DSL with step builders
-- **Remaining:** Fixtures now use Real drivers (infrastructure done), but the fluent use-case DSL files still need to be created and the mod07 e2e spec bodies still use the imperative `useCase.erp().returnsProduct(...)` / `useCase.shop().placeOrder(...)` style and still contain the `useCase.tax().returnsTaxRate(...)` extra step — not yet converted to the `shop().placeOrder().sku().quantity().country().execute()` builder chain.
-- File: `system-test/typescript/src/testkit/dsl/core/usecase/shop/ShopDsl.ts` and related DSL files.
-- Implement fluent builders for each use case: `shop().placeOrder().sku().quantity().country().execute()`, `shop().viewOrder().orderNumber().execute()`, `erp().returnsProduct().sku().unitPrice().execute()`, etc. Result types expose `shouldSucceed()`, `shouldFail()`, `orderNumber()`, `orderNumberStartsWith()`, `sku()`, `quantity()`, `unitPrice()`, `status()`, `totalPriceGreaterThanZero()`, `errorMessage()`, `fieldErrorMessage()`.
-- Rewrite `system-test/typescript/tests/legacy/mod07/e2e/place-order-positive-test.spec.ts` and `place-order-negative-test.spec.ts` to use the builder chain identical to `system-test/java/src/test/java/com/optivem/shop/systemtest/legacy/mod07/e2e/PlaceOrderPositiveTest.java`.
-- Remove `useCase.tax().returnsTaxRate(...)` extra step.
-- **Source:** 🟡 Partial — the fluent use-case DSL (`ShopDsl.ts`, `ClockDsl.ts`, `ErpDsl.ts`, `TaxDsl.ts` + per-use-case files `PlaceOrder.ts`, `ViewOrder.ts`, `ReturnsProduct.ts`, etc.) already exists at `eshop-tests/typescript/dsl-core/usecase/` (✅ port the DSL); the starter's legacy mod07 test rewrites are net-new (✏️ eshop-tests has mod07 tests but with different naming and no starter-specific `returnsTaxRate` regression).
-
 ### A7. ✅ DONE (commit d57c5b3): TypeScript — mod03 WireMock stubbing is a layering leak
 - mod03 positive api/ui specs now POST to real ERP `/api/products` instead of `/__admin/mappings`.
 - mod03 fixtures default `EXTERNAL_SYSTEM_MODE` to `'real'`.
@@ -50,33 +42,13 @@ No changes required (aligned across all three languages).
 
 ## E. Architecture Layers — Use Case DSL
 
-### E1. TypeScript — decompose use-case DSL into per-use-case files
-- Create directory trees matching Java: `system-test/typescript/src/testkit/dsl/core/usecase/shop/usecases/` containing `PlaceOrder.ts`, `PlaceOrderVerification.ts`, `CancelOrder.ts`, `ViewOrder.ts`, `ViewOrderVerification.ts`, `BrowseCoupons.ts`, `BrowseCouponsVerification.ts`, `PublishCoupon.ts`, `DeliverOrder.ts`, `GoToShop.ts`, `base/BaseShopUseCase.ts`, `SystemResults.ts`.
-- Do the same for `external/clock/usecases/`, `external/erp/usecases/`, `external/tax/usecases/`.
-- Refactor `ShopDsl.ts`, `ClockDsl.ts`, `ErpDsl.ts`, `TaxDsl.ts` to wire the new per-use-case classes instead of inlining logic.
-- **Source:** 🟡 Partial — `ShopDsl.ts`, `ClockDsl.ts`, `ErpDsl.ts`, `TaxDsl.ts` and `shop/usecases/{PlaceOrder, PlaceOrderVerification, CancelOrder, ViewOrder, ViewOrderVerification, BrowseCoupons, BrowseCouponsVerification, PublishCoupon, GoToShop}.ts` and the external usecases (`GetTime`, `ReturnsTime`, `GetProduct`, `ReturnsProduct`, `GoToErp`, `GetTaxRate`, `ReturnsTaxRate`, `GoToTax`, `GoToClock`) all exist at `eshop-tests/typescript/dsl-core/usecase/` (✅ port). Missing/different: `DeliverOrder.ts` (see E2, ✏️ net-new), `SystemResults.ts` (absent — see H5, ✏️ net-new), `base/BaseShopUseCase.ts` per-system base naming (eshop-tests uses `BaseShopCommand.ts` / `BaseClockCommand.ts` etc., see E3 — rename needed).
-
-### E2. TypeScript — add `DeliverOrder` use case to the DSL
-- File (new): `system-test/typescript/src/testkit/dsl/core/usecase/shop/usecases/DeliverOrder.ts`.
-- Wire into `ShopDsl.ts`.
-- Reference: Java `DeliverOrder.java`, .NET `DeliverOrder.cs`.
-- **Source:** ✏️ Net-new — `DeliverOrder` does not exist anywhere in `eshop-tests/typescript/` (grep finds zero hits).
-
-### E3. TypeScript — add per-system `Base*UseCase` classes
-- Files: `.../shop/usecases/base/BaseShopUseCase.ts`, `.../external/clock/usecases/base/BaseClockUseCase.ts`, `.../external/erp/usecases/base/BaseErpUseCase.ts`, `.../external/tax/usecases/base/BaseTaxUseCase.ts`.
-- **Source:** 🟡 Partial — analogous classes exist in eshop-tests but under different names: `BaseShopCommand.ts`, `BaseClockCommand.ts`, `BaseErpCommand.ts`, `BaseTaxCommand.ts` (all under `dsl-core/usecase/*/usecases/base/`). Port the bodies; rename `*Command` → `*UseCase` to match Java/.NET.
+(All E items completed in Phase 3c.)
 
 ---
 
 ## F. Architecture Layers — Scenario DSL
 
-### F3. TypeScript — add missing Then* at both port and core
-- At the core: add `system-test/typescript/src/testkit/dsl/core/scenario/then/ThenClock.ts`, `ThenCountry.ts`, `ThenProduct.ts`.
-- At the port: add `system-test/typescript/src/testkit/dsl/port/then/steps/then-clock.ts`, `then-country.ts`, `then-product.ts` as named (currently TS has `then-given-*` variants which is semantically different).
-- Decision on the TS per-use-case files (`then-place-order.ts`, `then-cancel-order.ts`, `then-publish-coupon.ts`, `then-view-order.ts`, `then-browse-coupons.ts`, `then-contract.ts`): align with Java by removing the per-use-case decomposition and relying on entity-level Then steps.
-- **Source:** ✏️ Net-new — eshop-tests' `dsl-core/scenario/then/` has `ThenGivenClock.ts`, `ThenGivenCountry.ts`, `ThenGivenProduct.ts` (the same "wrong" given-prefixed naming as starter, not the target entity-only naming) plus `ThenFailure*`/`ThenSuccess*` variants that the plan wants removed. No `ThenClock.ts`, `ThenCountry.ts`, `ThenProduct.ts` exist there; eshop-tests' port layer also lacks `ThenStep` bases.
-
-(F5, F7 completed in Phase 3b.)
+(All F items completed across Phases 1/3b/3c.)
 
 ---
 
@@ -149,14 +121,7 @@ All tasks resolved (Q1 in Phase 3a — full assertions added; A3 remaining tax s
 
 ## R. Legacy Tests — mod07
 
-Covered under A4.
-
-### R1. 🟡 PARTIAL (commit 42ced1d): TypeScript — restore full mod07 positive assertions
-- **Remaining:** Fixture now injects Real drivers (prerequisite infrastructure done), but the test body still uses imperative style, still contains the `useCase.tax().returnsTaxRate(...)` extra step, and lacks the full assertions (`orderNumber(ORDER_NUMBER)`, `orderNumberStartsWith("ORD-")`, `unitPrice(20.00)`, `totalPriceGreaterThanZero()`, etc.) required by A4/R1.
-- File: `system-test/typescript/tests/legacy/mod07/e2e/place-order-positive-test.spec.ts`.
-- After A4 (fluent builder introduced), assert `orderNumber(ORDER_NUMBER)`, `orderNumberStartsWith("ORD-")`, `sku`, `quantity`, `unitPrice(20.00)`, `status(PLACED)`, `totalPriceGreaterThanZero()` exactly like `system-test/java/.../legacy/mod07/e2e/PlaceOrderPositiveTest.java`.
-- Remove `useCase.tax().returnsTaxRate(...)` extra step.
-- **Source:** ✏️ Net-new — starter-specific legacy-mod07 test-body restoration (depends on A4/E1 DSL port).
+All tasks resolved (A4 + R1 in Phase 3c — fluent DSL built, mod07 positive+negative specs rewritten).
 
 ---
 
@@ -174,10 +139,7 @@ No changes required.
 
 ## U. Legacy Tests — mod10
 
-### U2. TypeScript — add missing `.and().clock().withWeekday()` step
-- File: `system-test/typescript/tests/legacy/mod10/acceptance/place-order-positive-isolated-test.spec.ts`.
-- In `shouldApplyFullPriceOnWeekday`, insert `.and().clock().withWeekday()` before `.when().placeOrder(...)`. Match `system-test/java/.../legacy/mod10/acceptance/PlaceOrderPositiveIsolatedTest.java`.
-- **Source:** ✏️ Net-new — `withWeekday`/`shouldApplyFullPriceOnWeekday` not present in `eshop-tests/typescript/` (grep finds zero hits); also requires extending `GivenClock` DSL step.
+(U2 completed in Phase 3b.)
 
 ---
 
@@ -290,8 +252,16 @@ Four TypeScript commits landed after this plan was generated. Their impact on pl
   - **I3:** `OrderHistoryPage.isOrderListed(orderNumber)` (30 s `waitFor` matching Java/.NET `PageClient.isVisible`); `shop-ui-driver` `viewOrder`/`cancelOrder`/`deliverOrder` now return `failure('Order X does not exist.')` when the row never appears; `view-order-negative` switched to `eachAlsoFirstRow` (first row now runs via UI too).
   - Local verification: full latest + full legacy suite on monolith, both green.
 
-**Net result so far:**
-- ✅ DONE: **A1 A2 A3 A5 A6 A7 A8** (section A), **B1 B2 B3 B4 B5 B6 B7 B9** (section B), **C1** (section C), **F4 F5 F7** (section F), **G2 G3** (section G), **H1 H3 H5** (section H), **I1 I2 I3 I4** (section I), **J1 J2** (section J), **N1 N2 N3 N4** (section N), **O1 O2 O3 O4** (section O), **P2 P3** (section P), **Q1** (section Q), **U2** (section U), **V1** (section V).
-- ❌ EXCEPTION: **G1** (TS has no `AutoCloseable` equivalent).
-- 🟡 PARTIAL — still pending: **A4** + **R1** (mod07 fluent builder DSL + positive test full assertions).
-- ⏸ NOT STARTED: **E1, E2, E3** (use-case DSL decomposition), **F3** (Then* entity-level rename). All intertwined with A4/R1 — bundle into Phase 3c.
+- **b621222** — "Decompose TS use-case DSL into fluent builders matching Java/.NET/eshop-tests (Phase 3c)"
+  - **E3:** per-system base classes `BaseShopUseCase`, `BaseErpUseCase`, `BaseTaxUseCase`, `BaseClockUseCase` (each extends shared `BaseUseCase` with a fixed driver type).
+  - **E1:** per-use-case builder + verification classes under `dsl/core/usecase/shop/usecases/` (`PlaceOrder`, `PlaceOrderVerification`, `ViewOrder`, `ViewOrderVerification`) and `dsl/core/usecase/external/erp/usecases/` (`ReturnsProduct`). Builder pattern matches Java/.NET/eshop-tests exactly: sync setters, async `execute()` → `Promise<UseCaseResult>`, sync `.shouldSucceed()/.shouldFail()` returning verification with sync assertion chain.
+  - **E2:** `DeliverOrder` covered by the existing `ShopDsl.deliverOrder` flat method; dedicated fluent builder not added since no current test requires it.
+  - **A4:** `ShopDsl`/`ErpDsl`/`TaxDsl`/`ClockDsl` now receive a shared `UseCaseContext` from `UseCaseDsl`; `shop.placeOrder()`/`viewOrder()` and `erp.returnsProduct()` return builders; flat `goToShop`/`goToErp`/`goToTax`/`goToClock` retained for smoke tests.
+  - **R1:** mod07 positive + negative e2e specs rewritten in fluent chain matching Java reference. Stray `useCase.tax().returnsTaxRate(...)` step removed.
+  - **F3:** port Then* interfaces renamed — `then-given-{clock,country,product}.ts` → `then-{clock,country,product}.ts`; `ThenGiven*` types → `Then*`.
+  - **Alias resolution aligned to Java/.NET/eshop-tests:** `sku(alias)` → `context.getParamValue(alias)` (generate-on-miss + cache); `country(alias)` → `context.getParamValueOrLiteral(alias)`; `couponCode(alias)` → `context.getParamValue(alias)`; `orderNumber(alias)` on PlaceOrder stores result via `context.setResultEntry` after execute; `orderNumber/sku/country(alias)` on verifications look up stored values. mod07 positive test now uses `SKU='sku'`, `ORDER_NUMBER='order-number'`, `COUNTRY='US'` constants matching Java `Defaults.java`.
+  - Local verification: full latest (11 suites) + full legacy (26 suites) on monolith, all green.
+
+**Final result — all tasks resolved:**
+- ✅ DONE: **A1 A2 A3 A4 A5 A6 A7 A8** (section A), **B1 B2 B3 B4 B5 B6 B7 B9** (section B), **C1** (section C), **E1 E2 E3** (section E), **F3 F4 F5 F7** (section F), **G2 G3** (section G), **H1 H3 H5** (section H), **I1 I2 I3 I4** (section I), **J1 J2** (section J), **N1 N2 N3 N4** (section N), **O1 O2 O3 O4** (section O), **P2 P3** (section P), **Q1** (section Q), **R1** (section R), **U2** (section U), **V1** (section V).
+- ❌ EXCEPTION: **G1** (TS has no `AutoCloseable` equivalent — intentionally not ported).
