@@ -3,7 +3,7 @@ import { chromium } from 'playwright';
 import type { Browser, BrowserContext, Page } from 'playwright';
 import { loadConfiguration, type TestConfig } from '../../../../config/configuration-loader.js';
 
-process.env.EXTERNAL_SYSTEM_MODE = process.env.EXTERNAL_SYSTEM_MODE || 'stub';
+process.env.EXTERNAL_SYSTEM_MODE = process.env.EXTERNAL_SYSTEM_MODE || 'real';
 
 const config = loadConfiguration();
 

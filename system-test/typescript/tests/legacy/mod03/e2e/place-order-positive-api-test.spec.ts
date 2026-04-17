@@ -6,26 +6,13 @@ test('shouldPlaceOrder', async ({ config }) => {
     const erpBaseUrl = config.externalSystems.erp.url;
     const shopApiUrl = config.shop.backendApiUrl;
 
-    // Given: create product in ERP
-    const createProductResponse = await fetch(`${erpBaseUrl}/api/products/${sku}`, { method: 'HEAD' }).catch(() => null);
-    await fetch(`${erpBaseUrl}/__admin/mappings`, {
+    // Given: create product in real ERP
+    const createProductResponse = await fetch(`${erpBaseUrl}/api/products`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            request: { method: 'GET', urlPath: `/erp/api/products/${sku}` },
-            response: { status: 200, headers: { 'Content-Type': 'application/json' }, jsonBody: { id: sku, title: 'Test Product', description: 'Test', price: 20.0, category: 'Test', brand: 'Test' } },
-        }),
+        body: JSON.stringify({ id: sku, title: 'Test Product', description: 'Test', category: 'Test', brand: 'Test', price: '20.00' }),
     });
-
-    // Given: set up tax rate
-    await fetch(`${config.externalSystems.tax.url}/__admin/mappings`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            request: { method: 'GET', urlPath: `/tax/api/countries/US` },
-            response: { status: 200, headers: { 'Content-Type': 'application/json' }, jsonBody: { id: 'US', countryName: 'US', taxRate: 0.07 } },
-        }),
-    });
+    expect(createProductResponse.status).toBe(201);
 
     // When: place order via raw HTTP
     const placeOrderResponse = await fetch(`${shopApiUrl}/api/orders`, {

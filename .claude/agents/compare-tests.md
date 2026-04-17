@@ -255,24 +255,39 @@ For each layer, flag:
 
 ## Output Files
 
-Write **two separate files** at the end of every run. Do not print the report inline — write it to disk.
+Write the report as one file and the plan as **one file per language that has action items**. Do not print content inline — write to disk.
 
 ### Report — `reports/{YYYYMMDD-HHMM}-compare-tests-{mode}.md`
 
 - Purpose: descriptive findings. What exists, what is missing, what differs.
 - Contents: everything under the **Report Format** section below (class coverage tables, method differences, body differences, architectural abstraction tables, architecture layer tables, summary counts).
 - Read-only data — no action items, no ordering, no prescriptions. Just the current state.
+- Single file (not split by language) — the report is a reference document.
 
-### Plan — `plans/{YYYYMMDD-HHMM}-compare-tests-{mode}.md`
+### Plan — one file per language with action items
 
-- Purpose: prescriptive, ordered, actionable steps to align the codebases.
-- Contents:
-  - Numbered tasks, grouped by language then by area (tests vs architecture layer).
-  - Each task: concrete file path(s), what to change, reference implementation to copy from (usually Java).
-  - Ordering: architectural mismatches first (legacy), then architecture layers (clients → drivers → channels → use-case DSL → scenario DSL → common), then tests (acceptance → contract → e2e → smoke).
-  - No findings or tables — that belongs in the report. Link back to the report filename at the top.
+Write a **separate plan file per language** that has at least one action item. File naming:
 
-Both filenames share the same `{mode}` and timestamp so report/plan pairs are obvious.
+- `plans/{YYYYMMDD-HHMM}-compare-tests-{mode}-java.md`
+- `plans/{YYYYMMDD-HHMM}-compare-tests-{mode}-dotnet.md`
+- `plans/{YYYYMMDD-HHMM}-compare-tests-{mode}-typescript.md`
+
+**Skip any language that has zero action items** — do not create an empty plan file for it. Java is the reference implementation and typically has no action items; in that case, do not write a Java plan file.
+
+Each per-language plan file must contain:
+
+- A top-level heading naming the language (e.g. `# TypeScript — System Test Alignment Plan`).
+- A `Reference report:` link back to the single shared report file at the top.
+- Purpose: prescriptive, ordered, actionable steps to align that language to Java.
+- Task ordering within the file: architectural mismatches (legacy) → architecture layers (clients → drivers → channels → use-case DSL → scenario DSL → common) → tests (acceptance → contract → e2e → smoke).
+- Each task: concrete file path(s), what to change, reference implementation to copy from (usually Java).
+- **End-of-file checkpoint** — a final `## Local verification & commit` section with:
+  1. From the language's `system-test/{java|dotnet|typescript}/` directory, run `Run-SystemTests -Architecture monolith` (latest suite) and `Run-SystemTests -Architecture monolith -Legacy` (legacy suite). **Never** substitute raw language toolchain commands (`./gradlew test`, `dotnet test`, `npm test`, `npx playwright test`) — `Run-SystemTests.ps1` is the only supported entry point because it manages containers and config.
+  2. Fix any failures before moving on.
+  3. Commit the language's changes as a single logical commit (or small set of commits) with a message describing the alignment work done.
+- No findings or tables — that belongs in the report.
+
+All plan files share the same `{YYYYMMDD-HHMM}` timestamp and `{mode}` so report/plan-set pairs are obvious.
 
 Before writing, create the directories if they do not exist (`mkdir -p reports plans`).
 

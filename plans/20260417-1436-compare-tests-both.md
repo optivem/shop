@@ -14,6 +14,97 @@ Ordering: architectural mismatches first, then architecture layers (clients → 
 
 ---
 
+# Java
+
+No changes required — reference implementation.
+
+## Local verification & commit
+
+- Sanity check: from `system-test/java/`, run `Run-SystemTests -Architecture monolith` (latest suite) and `Run-SystemTests -Architecture monolith -Legacy` (legacy suite). Do not substitute `./gradlew test` — `Run-SystemTests.ps1` is the only supported entry point because it manages containers and config.
+
+---
+
+# .NET
+
+## B. Architecture Layers — Clients
+
+### B8. .NET — verify `SystemErrorMapper` equivalent exists
+- Check `system-test/dotnet/Driver.Adapter/Shop/Api/` for an equivalent. If absent, add it mirroring Java.
+
+---
+
+## F. Architecture Layers — Scenario DSL
+
+### F1. .NET — remove extra `WhenGoToShop.cs`
+- File: `system-test/dotnet/Dsl.Core/Scenario/When/Steps/WhenGoToShop.cs`.
+- Decision: Java and TS have no equivalent. Either remove from .NET, or add to Java and TS. **Recommended**: remove from .NET (Java is reference and has no equivalent).
+
+### F2. .NET — reconcile ThenFailureAnd/ThenSuccessAnd/ThenFailureCoupon/ThenFailureOrder/ThenSuccessCoupon/ThenSuccessOrder/BaseThenResultCoupon/BaseThenResultOrder/ThenStageBase
+- Files under `system-test/dotnet/Dsl.Core/Scenario/Then/Steps/`.
+- Java aggregates by entity (`ThenClock`, `ThenCountry`, `ThenCoupon`, `ThenOrder`, `ThenProduct`). .NET splits by outcome+entity.
+- Decision: align .NET to Java — collapse the `Success*` / `Failure*` / `*And` variants into a unified entity-based `Then*` set. **Recommended**: collapse; Java's decomposition is simpler.
+
+### F6. .NET — add `GivenStep`/`ThenStep` base ports
+- Files: `system-test/dotnet/Dsl.Port/Given/Steps/Base/IGivenStep.cs` (exists), `Then/Steps/Base/IThenStep.cs` (add).
+
+### F8. .NET — remove `ScenarioDslFactory.cs` or add to Java/TS
+- Decision: .NET has it; Java does not. **Recommended**: remove from .NET to match Java.
+
+---
+
+## G. Architecture Layers — Common
+
+### G4. .NET — reconcile `ResultTaskExtensions.cs` and `VoidValue.cs`
+- Files: `system-test/dotnet/Common/ResultTaskExtensions.cs`, `VoidValue.cs`.
+- Java does not have these. **Recommended**: keep in .NET only if language idiom requires them; document they're language-specific in a comment. Do not add to Java or TS.
+
+### G5. Java — reconcile `Closer.java`
+- Referenced by nearly every base test — keep. Ensure .NET has an equivalent pattern (IDisposable + using).
+
+---
+
+## H. Architecture Layers — Driver Ports
+
+### H2. .NET — add `GetCountryRequest`
+- File (new): `system-test/dotnet/Driver.Port/External/Tax/Dtos/GetCountryRequest.cs`.
+- Reference: Java `GetCountryRequest.java`.
+
+### H4. .NET and TypeScript — add `GetPromotionResponse`
+- Files: `system-test/dotnet/Driver.Port/External/Erp/Dtos/GetPromotionResponse.cs`, `system-test/typescript/src/testkit/driver/port/external/erp/dtos/GetPromotionResponse.ts`.
+- Reference: Java `GetPromotionResponse.java`.
+- **Source (TS):** ✏️ Net-new — `GetPromotionResponse` not present anywhere in `eshop-tests/typescript/` (grep finds zero hits).
+
+---
+
+## P. Legacy Tests — mod05
+
+### P1. .NET — align `PlaceOrderNegativeBaseTest` parameterization with Java
+- File: `system-test/dotnet/SystemTests/Legacy/Mod05/E2eTests/PlaceOrderNegativeBaseTest.cs`.
+- Current: `[InlineData("3.5"), InlineData("lala")]` — two cases.
+- Java: single case `"3.5"`.
+- **Recommended**: remove `[InlineData("lala")]` so .NET matches Java. Alternatively, add `"lala"` to Java if both languages should have both cases; but Java is the reference.
+
+---
+
+## U. Legacy Tests — mod10
+
+### U1. .NET — add `ShouldRejectOrderWithNonPositiveQuantity` to mod10 acceptance
+- File: `system-test/dotnet/SystemTests/Legacy/Mod10/AcceptanceTests/PlaceOrderNegativeTest.cs`.
+- Add method parameterized over `"-10"`, `"-1"`, `"0"` asserting field error `quantity / Quantity must be positive`.
+- Reference: `system-test/java/.../legacy/mod10/acceptance/PlaceOrderNegativeTest.java` lines with `@ValueSource(strings = {"-10", "-1", "0"})`.
+
+---
+
+## Local verification & commit
+
+- From `system-test/dotnet/`, run `Run-SystemTests -Architecture monolith` (latest suite) and `Run-SystemTests -Architecture monolith -Legacy` (legacy suite). Do not substitute `dotnet test` — `Run-SystemTests.ps1` is the only supported entry point because it manages containers and config.
+- Fix any failures before moving on.
+- Commit .NET changes as one logical commit (or a small series if the .NET work groups into distinct concerns such as scenario-DSL cleanup vs. driver-port additions).
+
+---
+
+# TypeScript
+
 ## A. Architectural Mismatches (Legacy) — Highest Priority
 
 ### A1. TypeScript — mod04 UI: introduce a `ShopUiClient` page-object client
@@ -103,9 +194,6 @@ Ordering: architectural mismatches first, then architecture layers (clients → 
 - Reference: Java `SystemErrorMapper.java`.
 - **Source:** ✏️ Net-new — `SystemErrorMapper` not present anywhere in `eshop-tests/typescript/` (grep finds zero hits).
 
-### B8. .NET — verify `SystemErrorMapper` equivalent exists
-- Check `system-test/dotnet/Driver.Adapter/Shop/Api/` for an equivalent. If absent, add it mirroring Java.
-
 ### B9. TypeScript — move `ProblemDetailResponse` from port to adapter
 - Current: `system-test/typescript/src/testkit/driver/port/shop/dtos/ProblemDetailResponse.ts`.
 - Move to: `system-test/typescript/src/testkit/driver/adapter/shop/api/client/dtos/errors/ProblemDetailResponse.ts` to match Java/.NET placement.
@@ -151,15 +239,6 @@ No changes required (aligned across all three languages).
 
 ## F. Architecture Layers — Scenario DSL
 
-### F1. .NET — remove extra `WhenGoToShop.cs`
-- File: `system-test/dotnet/Dsl.Core/Scenario/When/Steps/WhenGoToShop.cs`.
-- Decision: Java and TS have no equivalent. Either remove from .NET, or add to Java and TS. **Recommended**: remove from .NET (Java is reference and has no equivalent).
-
-### F2. .NET — reconcile ThenFailureAnd/ThenSuccessAnd/ThenFailureCoupon/ThenFailureOrder/ThenSuccessCoupon/ThenSuccessOrder/BaseThenResultCoupon/BaseThenResultOrder/ThenStageBase
-- Files under `system-test/dotnet/Dsl.Core/Scenario/Then/Steps/`.
-- Java aggregates by entity (`ThenClock`, `ThenCountry`, `ThenCoupon`, `ThenOrder`, `ThenProduct`). .NET splits by outcome+entity.
-- Decision: align .NET to Java — collapse the `Success*` / `Failure*` / `*And` variants into a unified entity-based `Then*` set. **Recommended**: collapse; Java's decomposition is simpler.
-
 ### F3. TypeScript — add missing Then* at both port and core
 - At the core: add `system-test/typescript/src/testkit/dsl/core/scenario/then/ThenClock.ts`, `ThenCountry.ts`, `ThenProduct.ts`.
 - At the port: add `system-test/typescript/src/testkit/dsl/port/then/steps/then-clock.ts`, `then-country.ts`, `then-product.ts` as named (currently TS has `then-given-*` variants which is semantically different).
@@ -175,16 +254,10 @@ No changes required (aligned across all three languages).
 - Files: `system-test/typescript/src/testkit/dsl/port/when/steps/base/when-step.ts`, `.../given/steps/base/given-step.ts`, `.../then/steps/base/then-step.ts`.
 - **Source:** ✏️ Net-new — eshop-tests' `dsl-port/scenario/` has only `*StagePort`/`*ResultPort` files; no `WhenStep`/`GivenStep`/`ThenStep` port bases.
 
-### F6. .NET — add `GivenStep`/`ThenStep` base ports
-- Files: `system-test/dotnet/Dsl.Port/Given/Steps/Base/IGivenStep.cs` (exists), `Then/Steps/Base/IThenStep.cs` (add).
-
 ### F7. TypeScript — add shared DSL verification classes
 - Files (new): `system-test/typescript/src/testkit/dsl/core/shared/base-use-case.ts`, `use-case-result.ts`, `error-verification.ts`, `response-verification.ts`, `void-verification.ts`.
 - Reference: Java `BaseUseCase.java`, `UseCaseResult.java`, `ErrorVerification.java`, `ResponseVerification.java`, `VoidVerification.java`.
 - **Source:** 🟡 Partial — `eshop-tests/typescript/dsl-core/shared/` has `BaseUseCase.ts`, `UseCaseResult.ts`, `ResponseVerification.ts`, `VoidVerification.ts` (✅ port). Missing: `error-verification.ts` — eshop-tests instead has per-system error verifications (`ClockErrorVerification.ts`, `ErpErrorVerification.ts`, `TaxErrorVerification.ts`) under each `*/usecases/base/` (✏️ consolidate into a shared one).
-
-### F8. .NET — remove `ScenarioDslFactory.cs` or add to Java/TS
-- Decision: .NET has it; Java does not. **Recommended**: remove from .NET to match Java.
 
 ---
 
@@ -204,13 +277,6 @@ No changes required (aligned across all three languages).
 - Reference: Java `ResultAssert.java`, .NET `ResultAssertExtensions.cs`.
 - **Source:** ✅ Port from eshop-tests — `eshop-tests/typescript/common/src/ResultAssert.ts` exists (also `ResultPromiseExtensions.ts` for Promise-returning results).
 
-### G4. .NET — reconcile `ResultTaskExtensions.cs` and `VoidValue.cs`
-- Files: `system-test/dotnet/Common/ResultTaskExtensions.cs`, `VoidValue.cs`.
-- Java does not have these. **Recommended**: keep in .NET only if language idiom requires them; document they're language-specific in a comment. Do not add to Java or TS.
-
-### G5. Java — reconcile `Closer.java`
-- Referenced by nearly every base test — keep. Ensure .NET has an equivalent pattern (IDisposable + using).
-
 ---
 
 ## H. Architecture Layers — Driver Ports
@@ -220,18 +286,9 @@ No changes required (aligned across all three languages).
 - Reference: Java `GetProductRequest.java`.
 - **Source:** ✅ Port from eshop-tests — `eshop-tests/typescript/driver-port/external/erp/dtos/GetProductRequest.ts` exists.
 
-### H2. .NET — add `GetCountryRequest`
-- File (new): `system-test/dotnet/Driver.Port/External/Tax/Dtos/GetCountryRequest.cs`.
-- Reference: Java `GetCountryRequest.java`.
-
 ### H3. TypeScript — add `GetCountryRequest`
 - File (new): `system-test/typescript/src/testkit/driver/port/external/tax/dtos/GetCountryRequest.ts`.
 - **Source:** ✏️ Net-new — `GetCountryRequest` not present in `eshop-tests/typescript/driver-port/external/tax/dtos/` (only `GetTaxResponse.ts`, `ReturnsTaxRateRequest.ts`).
-
-### H4. .NET and TypeScript — add `GetPromotionResponse`
-- Files: `system-test/dotnet/Driver.Port/External/Erp/Dtos/GetPromotionResponse.cs`, `system-test/typescript/src/testkit/driver/port/external/erp/dtos/GetPromotionResponse.ts`.
-- Reference: Java `GetPromotionResponse.java`.
-- **Source (TS):** ✏️ Net-new — `GetPromotionResponse` not present anywhere in `eshop-tests/typescript/` (grep finds zero hits).
 
 ### H5. TypeScript — add `SystemResults`
 - File (new): `system-test/typescript/src/testkit/dsl/core/usecase/shop/commons/system-results.ts` (matching Java placement).
@@ -353,12 +410,6 @@ Covered under A5.
 
 ## P. Legacy Tests — mod05
 
-### P1. .NET — align `PlaceOrderNegativeBaseTest` parameterization with Java
-- File: `system-test/dotnet/SystemTests/Legacy/Mod05/E2eTests/PlaceOrderNegativeBaseTest.cs`.
-- Current: `[InlineData("3.5"), InlineData("lala")]` — two cases.
-- Java: single case `"3.5"`.
-- **Recommended**: remove `[InlineData("lala")]` so .NET matches Java. Alternatively, add `"lala"` to Java if both languages should have both cases; but Java is the reference.
-
 ### P2. TypeScript — restore full positive assertions in mod05
 - Files: `system-test/typescript/tests/legacy/mod05/e2e/place-order-positive-api-test.spec.ts`, `place-order-positive-ui-test.spec.ts`.
 - After A3 (external drivers switched to Real + extra `taxDriver.returnsTaxRate` call removed), add assertions on `orderNumber`, `sku`, `unitPrice`, `totalPrice > 0`, `status === 'PLACED'`.
@@ -408,11 +459,6 @@ No changes required.
 
 ## U. Legacy Tests — mod10
 
-### U1. .NET — add `ShouldRejectOrderWithNonPositiveQuantity` to mod10 acceptance
-- File: `system-test/dotnet/SystemTests/Legacy/Mod10/AcceptanceTests/PlaceOrderNegativeTest.cs`.
-- Add method parameterized over `"-10"`, `"-1"`, `"0"` asserting field error `quantity / Quantity must be positive`.
-- Reference: `system-test/java/.../legacy/mod10/acceptance/PlaceOrderNegativeTest.java` lines with `@ValueSource(strings = {"-10", "-1", "0"})`.
-
 ### U2. TypeScript — add missing `.and().clock().withWeekday()` step
 - File: `system-test/typescript/tests/legacy/mod10/acceptance/place-order-positive-isolated-test.spec.ts`.
 - In `shouldApplyFullPriceOnWeekday`, insert `.and().clock().withWeekday()` before `.when().placeOrder(...)`. Match `system-test/java/.../legacy/mod10/acceptance/PlaceOrderPositiveIsolatedTest.java`.
@@ -428,6 +474,14 @@ Covered under A6 (base classes), J1 (clock stub body).
 - File: `system-test/typescript/tests/legacy/mod11/contract/clock/clock-stub-contract-test.spec.ts`.
 - Remove `.clock().withTime()` no-arg call; align to Java's `.given().then().clock().hasTime()`.
 - **Source:** ✏️ Net-new — starter-specific test-body tweak (mirror of J1 for legacy mod11).
+
+---
+
+## Local verification & commit
+
+- From `system-test/typescript/`, run `Run-SystemTests -Architecture monolith` (latest suite) and `Run-SystemTests -Architecture monolith -Legacy` (legacy suite). Do not substitute `npm test`, `npx playwright test`, or bare `docker compose` — `Run-SystemTests.ps1` is the only supported entry point because it manages containers and config.
+- Fix any failures before moving on.
+- Commit TS changes as one logical commit (or a small series split along the natural boundaries: A. architectural mismatches → B/C/E/F/G/H. architecture-layer ports → I/J. latest test alignment → N–V. legacy-mod test-body restoration).
 
 ---
 
