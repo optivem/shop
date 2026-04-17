@@ -7,10 +7,10 @@ import type { ErpDriver } from '../../../../src/testkit/driver/port/external/erp
 import type { TaxDriver } from '../../../../src/testkit/driver/port/external/tax/tax-driver.js';
 import { ShopApiDriver } from '../../../../src/testkit/driver/adapter/shop/api/shop-api-driver.js';
 import { ShopUiDriver } from '../../../../src/testkit/driver/adapter/shop/ui/shop-ui-driver.js';
-import { ErpStubDriver } from '../../../../src/testkit/driver/adapter/external/erp/erp-stub-driver.js';
-import { TaxStubDriver } from '../../../../src/testkit/driver/adapter/external/tax/tax-stub-driver.js';
+import { ErpRealDriver } from '../../../../src/testkit/driver/adapter/external/erp/erp-real-driver.js';
+import { TaxRealDriver } from '../../../../src/testkit/driver/adapter/external/tax/tax-real-driver.js';
 
-process.env.EXTERNAL_SYSTEM_MODE = process.env.EXTERNAL_SYSTEM_MODE || 'stub';
+process.env.EXTERNAL_SYSTEM_MODE = process.env.EXTERNAL_SYSTEM_MODE || 'real';
 
 const config = loadConfiguration();
 
@@ -21,12 +21,12 @@ export const apiTest = base.extend<{ shopDriver: ShopDriver; erpDriver: ErpDrive
         await driver.close();
     },
     erpDriver: async ({}, use) => {
-        const driver = new ErpStubDriver(config.externalSystems.erp.url);
+        const driver = new ErpRealDriver(config.externalSystems.erp.url);
         await use(driver);
         await driver.close();
     },
     taxDriver: async ({}, use) => {
-        const driver = new TaxStubDriver(config.externalSystems.tax.url);
+        const driver = new TaxRealDriver(config.externalSystems.tax.url);
         await use(driver);
         await driver.close();
     },
@@ -44,12 +44,12 @@ export const uiTest = base.extend<{ shopDriver: ShopDriver; erpDriver: ErpDriver
         await driver.close();
     },
     erpDriver: async ({}, use) => {
-        const driver = new ErpStubDriver(config.externalSystems.erp.url);
+        const driver = new ErpRealDriver(config.externalSystems.erp.url);
         await use(driver);
         await driver.close();
     },
     taxDriver: async ({}, use) => {
-        const driver = new TaxStubDriver(config.externalSystems.tax.url);
+        const driver = new TaxRealDriver(config.externalSystems.tax.url);
         await use(driver);
         await driver.close();
     },

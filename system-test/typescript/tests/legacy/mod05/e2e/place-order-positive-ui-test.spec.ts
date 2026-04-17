@@ -1,7 +1,8 @@
 import { uiTest as test, expect } from './fixtures.js';
+import { randomUUID } from 'node:crypto';
 
 test('shouldPlaceOrderForValidInput', async ({ shopDriver, erpDriver, taxDriver }) => {
-    const sku = 'DEFAULT-SKU';
+    const sku = `SKU-${randomUUID().substring(0, 8)}`;
 
     // Given: set up product and tax via driver ports
     const productResult = await erpDriver.returnsProduct({ sku, price: '20.00' });

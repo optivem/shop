@@ -10,8 +10,11 @@ Ordering: architectural mismatches first, then architecture layers (clients → 
 
 ## B. Architecture Layers — Clients
 
-### B8. .NET — verify `SystemErrorMapper` equivalent exists
-- Check `system-test/dotnet/Driver.Adapter/Shop/Api/` for an equivalent. If absent, add it mirroring Java.
+### B8. .NET — add `SystemErrorMapper`
+- .NET has no equivalent. Error mapping currently happens inline in `BaseTaxClient.cs` and stub drivers (no centralized transform from `ProblemDetailResponse` → `SystemError`).
+- Java reference: `SystemErrorMapper.java` in `testkit/driver/adapter/shop/api/`.
+- Action: add `system-test/dotnet/Driver.Adapter/Shop/Api/SystemErrorMapper.cs` mirroring Java.
+APPROVED
 
 ---
 
@@ -20,28 +23,70 @@ Ordering: architectural mismatches first, then architecture layers (clients → 
 ### F1. .NET — remove extra `WhenGoToShop.cs`
 - File: `system-test/dotnet/Dsl.Core/Scenario/When/Steps/WhenGoToShop.cs`.
 - Decision: Java and TS have no equivalent. Either remove from .NET, or add to Java and TS. **Recommended**: remove from .NET (Java is reference and has no equivalent).
+APPROVED
 
-### F2. .NET — reconcile ThenFailureAnd/ThenSuccessAnd/ThenFailureCoupon/ThenFailureOrder/ThenSuccessCoupon/ThenSuccessOrder/BaseThenResultCoupon/BaseThenResultOrder/ThenStageBase
+### F2. .NET — keep Success/Failure split (language-specific divergence; registered as an exception in the compare-tests agent)
 - Files under `system-test/dotnet/Dsl.Core/Scenario/Then/Steps/`.
-- Java aggregates by entity (`ThenClock`, `ThenCountry`, `ThenCoupon`, `ThenOrder`, `ThenProduct`). .NET splits by outcome+entity.
-- Decision: align .NET to Java — collapse the `Success*` / `Failure*` / `*And` variants into a unified entity-based `Then*` set. **Recommended**: collapse; Java's decomposition is simpler.
+- The split is required by C# async semantics (different `RunPrelude()` for success vs failure; `GetAwaiter()` enables `await thenClause.HasSku(...)`). Java is synchronous and does not need it.
+- No code change in the .NET source.
+- Action: **registered as an exception in `.claude/agents/compare-tests.md` → Known Language-Specific Divergences → .NET-only.** Future compare-tests runs will not re-flag this.
+RESOLVED
 
-### F6. .NET — add `GivenStep`/`ThenStep` base ports
+### F6. .NET — add `IThenStep<TThen>` base port (`IGivenStep` already exists)
 - Files: `system-test/dotnet/Dsl.Port/Given/Steps/Base/IGivenStep.cs` (exists), `Then/Steps/Base/IThenStep.cs` (add).
+- Java reference (`ThenStep.java`):
+  ```java
+  public interface ThenStep<TThen> {
+      TThen and();
+      ThenOrder order();
+      ThenOrder order(String orderNumber);
+      ThenCoupon coupon();
+      ThenCoupon coupon(String couponCode);
+      ThenClock clock();
+      ThenProduct product(String skuAlias);
+      ThenCountry country(String countryAlias);
+  }
+  ```
+- Proposed .NET shape (`IThenStep.cs`):
+  ```csharp
+  public interface IThenStep<TThen> where TThen : IThenStep<TThen> {
+      TThen And();
+      Task<IThenOrder> Order();
+      Task<IThenOrder> Order(string orderNumber);
+      Task<IThenCoupon> Coupon();
+      Task<IThenCoupon> Coupon(string couponCode);
+      Task<IThenClock> Clock();
+      Task<IThenProduct> Product(string skuAlias);
+      Task<IThenCountry> Country(string countryAlias);
+  }
+  ```
+- Returns are `Task<...>` to stay consistent with .NET async DSL (`IGivenStage`/`IWhenStage`/`IThenStage` already async).
+APPROVED
 
-### F8. .NET — remove `ScenarioDslFactory.cs` or add to Java/TS
-- Decision: .NET has it; Java does not. **Recommended**: remove from .NET to match Java.
+### F8. .NET — remove `ScenarioDslFactory.cs`
+- Investigation: grep across `system-test/dotnet/**/*.cs` finds only the class definition at `Dsl.Core/Scenario/ScenarioDslFactory.cs:6` — **zero references / instantiations**. Dead code.
+- Action: delete the file.
+APPROVED
 
 ---
 
 ## G. Architecture Layers — Common
 
-### G4. .NET — reconcile `ResultTaskExtensions.cs` and `VoidValue.cs`
+### G4. .NET — keep `ResultTaskExtensions.cs` and `VoidValue.cs` (idiomatic, do not add to Java/TS)
 - Files: `system-test/dotnet/Common/ResultTaskExtensions.cs`, `VoidValue.cs`.
-- Java does not have these. **Recommended**: keep in .NET only if language idiom requires them; document they're language-specific in a comment. Do not add to Java or TS.
+- Investigation:
+  - `VoidValue` fills C#'s generic gap — `Result<T, E>` cannot take `void` as `T`, so `Result<VoidValue, E>` is the idiomatic stand-in. 20+ references across driver adapters.
+  - `ResultTaskExtensions` provides `MapAsync` / `MapErrorAsync` / `MapVoidAsync` for composing async `Task<Result<...>>` chains — required because C# async composition isn't fluent by default. Java composes synchronously and doesn't need the extensions.
+- Decision: **keep in .NET, do not port to Java or TS**.
+- Action: add a one-line XML-doc comment on each class noting they are language-specific helpers for `Task<Result<T, E>>` composition.
+RESOLVED
+VJ: Don't add those comments in the classes, instead mark it as Exceptions in the compare-tests agent
 
-### G5. Java — reconcile `Closer.java`
-- Referenced by nearly every base test — keep. Ensure .NET has an equivalent pattern (IDisposable + using).
+### G5. No .NET action (Java-only utility; .NET already uses `IDisposable`/`using`)
+- `Closer.java` is a Java-side helper that wraps `AutoCloseable.close()` and converts checked exceptions to unchecked. Referenced by nearly every Java base test.
+- .NET already uses the language-native `IDisposable` + `Dispose(bool)` + `using` pattern (e.g. `BaseTaxClient.cs:20-33`). No equivalent utility class is needed.
+- Action: **none for .NET**. This item belongs in a Java plan, if anywhere.
+RESOLVED
 
 ---
 
@@ -50,21 +95,28 @@ Ordering: architectural mismatches first, then architecture layers (clients → 
 ### H2. .NET — add `GetCountryRequest`
 - File (new): `system-test/dotnet/Driver.Port/External/Tax/Dtos/GetCountryRequest.cs`.
 - Reference: Java `GetCountryRequest.java`.
+- Why it worked without the DTO: `BaseTaxClient.GetCountryAsync(string? country)` takes a raw `string` and inlines it into the URL (`$"{CountriesEndpoint}/{country}"`). A simple GET with a single path parameter doesn't strictly require a request object — the call compiles and executes fine. The DTO is added for **structural parity with Java**, not because the runtime needs it.
+APPROVED
 
-### H4. .NET and TypeScript — add `GetPromotionResponse`
-- Files: `system-test/dotnet/Driver.Port/External/Erp/Dtos/GetPromotionResponse.cs`, `system-test/typescript/src/testkit/driver/port/external/erp/dtos/GetPromotionResponse.ts`.
-- Reference: Java `GetPromotionResponse.java`.
-- **Source (TS):** ✏️ Net-new — `GetPromotionResponse` not present anywhere in `eshop-tests/typescript/` (grep finds zero hits).
+### H4. .NET — add `GetPromotionResponse` (TS half split out to a separate plan)
+- File (new): `system-test/dotnet/Driver.Port/External/Erp/Dtos/GetPromotionResponse.cs`.
+- Reference: Java `GetPromotionResponse.java` (fields: `promotionActive: bool`, `discount: decimal`).
+- TypeScript is also missing this DTO (confirmed: zero hits in `system-test/typescript/`), but the TS add belongs in a **TypeScript-scoped plan file** to mirror how we've split per-language plans. Do not do the TS work here.
+APPROVED (.NET); TS tracked separately
 
 ---
 
 ## P. Legacy Tests — mod05
 
-### P1. .NET — align `PlaceOrderNegativeBaseTest` parameterization with Java
-- File: `system-test/dotnet/SystemTests/Legacy/Mod05/E2eTests/PlaceOrderNegativeBaseTest.cs`.
-- Current: `[InlineData("3.5"), InlineData("lala")]` — two cases.
-- Java: single case `"3.5"`.
-- **Recommended**: remove `[InlineData("lala")]` so .NET matches Java. Alternatively, add `"lala"` to Java if both languages should have both cases; but Java is the reference.
+### P1. .NET — convert `PlaceOrderNegativeBaseTest` to non-parameterized, single-case, matching Java
+- Files:
+  - .NET: `system-test/dotnet/SystemTests/Legacy/Mod05/E2eTests/PlaceOrderNegativeBaseTest.cs` — currently `[Theory] + [InlineData("3.5"), InlineData("lala")]` (parameterized, 2 rows).
+  - Java: `system-test/java/.../legacy/mod05/e2e/PlaceOrderNegativeBaseTest.java` — `@Test` (plain, not parameterized), hardcoded `"3.5"`.
+- Is it parameterized? **.NET yes, Java no.** To reach structural parity with Java (reference):
+  - Remove `[InlineData("lala")]`.
+  - Replace `[Theory] + [InlineData("3.5")]` with `[Fact]` and hardcode `"3.5"` in the method body.
+- Net effect: both languages run a single plain test asserting the `"3.5"` → "Quantity must be an integer" failure path.
+APPROVED
 
 ---
 
@@ -74,6 +126,7 @@ Ordering: architectural mismatches first, then architecture layers (clients → 
 - File: `system-test/dotnet/SystemTests/Legacy/Mod10/AcceptanceTests/PlaceOrderNegativeTest.cs`.
 - Add method parameterized over `"-10"`, `"-1"`, `"0"` asserting field error `quantity / Quantity must be positive`.
 - Reference: `system-test/java/.../legacy/mod10/acceptance/PlaceOrderNegativeTest.java` lines with `@ValueSource(strings = {"-10", "-1", "0"})`.
+APPROVED
 
 ---
 

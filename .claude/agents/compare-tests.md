@@ -227,6 +227,21 @@ For each layer, flag:
 - **Be concrete** — always name the specific file, class, and method when reporting a difference.
 - **Group by category** — organize findings by test category (acceptance, contract, e2e, smoke).
 - **Architectural layer first** — for legacy comparisons, always check the abstraction layer before comparing test details. An architectural mismatch is the most critical type of difference.
+- **Respect the Exceptions list.** Before flagging a class/file/pattern as a cross-language mismatch, check the **Known Language-Specific Divergences** section below. If it is listed there, do not flag it and do not include it in the plan — it is an accepted, language-specific divergence. Still include it in the report under an "Exceptions (known divergences)" subsection so the state is visible, but with no action item.
+
+## Known Language-Specific Divergences (Exceptions)
+
+These are accepted cross-language differences caused by language idioms or type-system constraints. Do **not** propose aligning them. Do **not** list them as action items in any plan. Do list them under an "Exceptions (known divergences)" subsection of the report so their state remains visible.
+
+### .NET-only
+
+- `system-test/dotnet/Common/VoidValue.cs` — fills C#'s generic gap (`Result<T, E>` cannot take `void` as `T`, so `Result<VoidValue, E>` is the idiomatic stand-in). No Java/TS equivalent needed.
+- `system-test/dotnet/Common/ResultTaskExtensions.cs` — provides `MapAsync` / `MapErrorAsync` / `MapVoidAsync` for composing `Task<Result<T, E>>` chains. Required because C# async composition is not fluent by default; Java composes synchronously and does not need it.
+- Scenario Then-step Success/Failure split under `system-test/dotnet/Dsl.Core/Scenario/Then/Steps/` (`ThenSuccessOrder`, `ThenFailureOrder`, `ThenSuccessCoupon`, `ThenFailureCoupon`, `BaseThenResultOrder`, `BaseThenResultCoupon`, `ThenStageBase`, and `*And` variants) — required by C# async semantics. `ThenSuccess*.RunPrelude()` awaits `result.ShouldSucceed()` and caches the verification; `ThenFailure*.RunPrelude()` awaits `result.ShouldFail()` and runs failure assertions. `BaseThenResult*.GetAwaiter()` implements the `TaskAwaiter` pattern so tests can `await thenClause.HasSku(...)`. Java is synchronous and collapses these into a single `Then{Entity}` per entity; do not try to collapse .NET to match.
+
+### Java-only
+
+- `system-test/java/src/main/java/com/optivem/shop/testkit/common/Closer.java` — wraps `AutoCloseable.close()` and converts checked exceptions to unchecked. Java needs this because of checked exceptions. .NET uses native `IDisposable` + `using`; TypeScript uses `try/finally` or `using` (TS 5.2+). Do not require .NET or TS to port `Closer`.
 
 ## Workflow
 

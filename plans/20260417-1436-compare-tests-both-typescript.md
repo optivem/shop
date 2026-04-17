@@ -1,109 +1,17 @@
-Plan: Align Latest & Legacy System Tests and Architecture Across Languages
-==========================================================================
+# TypeScript — System Test Alignment Plan
 
 Reference report: `reports/20260417-1436-compare-tests-both.md`
 
-Reference implementation: **Java**. Each task aligns .NET and/or TypeScript to Java unless noted.
+Reference implementation: **Java**. Each task aligns TypeScript to Java unless noted.
 
 Ordering: architectural mismatches first, then architecture layers (clients → drivers → channels → use-case DSL → scenario DSL → common → ports), then tests (acceptance → contract → e2e → smoke).
 
-**Porting legend** (TypeScript tasks only — based on audit of `eshop-tests/typescript/`):
+**Porting legend** (based on audit of `eshop-tests/typescript/`):
 - ✅ **Port from eshop-tests** — target file/folder already exists in eshop-tests with the target layered architecture; copy over with minimal adjustment.
 - 🟡 **Partial** — some pieces exist in eshop-tests, others need to be created or relocated.
 - ✏️ **Net-new** — not present in eshop-tests; typically legacy-mod progression work or starter-specific test-body tweaks that eshop-tests doesn't cover.
 
 ---
-
-# Java
-
-No changes required — reference implementation.
-
-## Local verification & commit
-
-- Sanity check: from `system-test/java/`, run `Run-SystemTests -Architecture monolith` (latest suite) and `Run-SystemTests -Architecture monolith -Legacy` (legacy suite). Do not substitute `./gradlew test` — `Run-SystemTests.ps1` is the only supported entry point because it manages containers and config.
-
----
-
-# .NET
-
-## B. Architecture Layers — Clients
-
-### B8. .NET — verify `SystemErrorMapper` equivalent exists
-- Check `system-test/dotnet/Driver.Adapter/Shop/Api/` for an equivalent. If absent, add it mirroring Java.
-
----
-
-## F. Architecture Layers — Scenario DSL
-
-### F1. .NET — remove extra `WhenGoToShop.cs`
-- File: `system-test/dotnet/Dsl.Core/Scenario/When/Steps/WhenGoToShop.cs`.
-- Decision: Java and TS have no equivalent. Either remove from .NET, or add to Java and TS. **Recommended**: remove from .NET (Java is reference and has no equivalent).
-
-### F2. .NET — reconcile ThenFailureAnd/ThenSuccessAnd/ThenFailureCoupon/ThenFailureOrder/ThenSuccessCoupon/ThenSuccessOrder/BaseThenResultCoupon/BaseThenResultOrder/ThenStageBase
-- Files under `system-test/dotnet/Dsl.Core/Scenario/Then/Steps/`.
-- Java aggregates by entity (`ThenClock`, `ThenCountry`, `ThenCoupon`, `ThenOrder`, `ThenProduct`). .NET splits by outcome+entity.
-- Decision: align .NET to Java — collapse the `Success*` / `Failure*` / `*And` variants into a unified entity-based `Then*` set. **Recommended**: collapse; Java's decomposition is simpler.
-
-### F6. .NET — add `GivenStep`/`ThenStep` base ports
-- Files: `system-test/dotnet/Dsl.Port/Given/Steps/Base/IGivenStep.cs` (exists), `Then/Steps/Base/IThenStep.cs` (add).
-
-### F8. .NET — remove `ScenarioDslFactory.cs` or add to Java/TS
-- Decision: .NET has it; Java does not. **Recommended**: remove from .NET to match Java.
-
----
-
-## G. Architecture Layers — Common
-
-### G4. .NET — reconcile `ResultTaskExtensions.cs` and `VoidValue.cs`
-- Files: `system-test/dotnet/Common/ResultTaskExtensions.cs`, `VoidValue.cs`.
-- Java does not have these. **Recommended**: keep in .NET only if language idiom requires them; document they're language-specific in a comment. Do not add to Java or TS.
-
-### G5. Java — reconcile `Closer.java`
-- Referenced by nearly every base test — keep. Ensure .NET has an equivalent pattern (IDisposable + using).
-
----
-
-## H. Architecture Layers — Driver Ports
-
-### H2. .NET — add `GetCountryRequest`
-- File (new): `system-test/dotnet/Driver.Port/External/Tax/Dtos/GetCountryRequest.cs`.
-- Reference: Java `GetCountryRequest.java`.
-
-### H4. .NET and TypeScript — add `GetPromotionResponse`
-- Files: `system-test/dotnet/Driver.Port/External/Erp/Dtos/GetPromotionResponse.cs`, `system-test/typescript/src/testkit/driver/port/external/erp/dtos/GetPromotionResponse.ts`.
-- Reference: Java `GetPromotionResponse.java`.
-- **Source (TS):** ✏️ Net-new — `GetPromotionResponse` not present anywhere in `eshop-tests/typescript/` (grep finds zero hits).
-
----
-
-## P. Legacy Tests — mod05
-
-### P1. .NET — align `PlaceOrderNegativeBaseTest` parameterization with Java
-- File: `system-test/dotnet/SystemTests/Legacy/Mod05/E2eTests/PlaceOrderNegativeBaseTest.cs`.
-- Current: `[InlineData("3.5"), InlineData("lala")]` — two cases.
-- Java: single case `"3.5"`.
-- **Recommended**: remove `[InlineData("lala")]` so .NET matches Java. Alternatively, add `"lala"` to Java if both languages should have both cases; but Java is the reference.
-
----
-
-## U. Legacy Tests — mod10
-
-### U1. .NET — add `ShouldRejectOrderWithNonPositiveQuantity` to mod10 acceptance
-- File: `system-test/dotnet/SystemTests/Legacy/Mod10/AcceptanceTests/PlaceOrderNegativeTest.cs`.
-- Add method parameterized over `"-10"`, `"-1"`, `"0"` asserting field error `quantity / Quantity must be positive`.
-- Reference: `system-test/java/.../legacy/mod10/acceptance/PlaceOrderNegativeTest.java` lines with `@ValueSource(strings = {"-10", "-1", "0"})`.
-
----
-
-## Local verification & commit
-
-- From `system-test/dotnet/`, run `Run-SystemTests -Architecture monolith` (latest suite) and `Run-SystemTests -Architecture monolith -Legacy` (legacy suite). Do not substitute `dotnet test` — `Run-SystemTests.ps1` is the only supported entry point because it manages containers and config.
-- Fix any failures before moving on.
-- Commit .NET changes as one logical commit (or a small series if the .NET work groups into distinct concerns such as scenario-DSL cleanup vs. driver-port additions).
-
----
-
-# TypeScript
 
 ## A. Architectural Mismatches (Legacy) — Highest Priority
 
@@ -485,13 +393,12 @@ Covered under A6 (base classes), J1 (clock stub body).
 
 ---
 
-## W. Summary of priorities
+## W. Summary of priorities (TypeScript-relevant)
 
 1. **Section A** — resolve architectural mismatches (A1–A8). Without these, the per-module pedagogical layering is broken in TS.
 2. **Sections B, C, E, F, G, H** — architecture layers alignment; start with Clients (B), then Drivers (C), then Use Case DSL (E), then Scenario DSL (F), then Common (G), then Driver Ports (H). **Recommended** order: B → C → D (no-op) → E → F → G → H.
 3. **Section I / J** — latest test body alignment (acceptance I1–I4, contract J1–J2).
 4. **Sections N → V** — legacy test alignment per module, mod03 → mod11.
-5. **Sections U / V / P / N / J1 / F1 / F8** — small .NET-specific fixes (add NonPositive test, remove extra inline data, remove WhenGoToShop, remove ScenarioDslFactory).
 
 Java remains unchanged throughout (reference).
 
@@ -508,7 +415,7 @@ Java remains unchanged throughout (reference).
 
 ---
 
-## Y. Interim commit reconciliation
+## Y. Interim commit reconciliation (TypeScript)
 
 Two TypeScript commits landed after this plan was generated. Their impact on plan tasks:
 

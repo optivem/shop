@@ -1,34 +1,26 @@
-import { test as base, expect } from '@playwright/test';
+import { test as base } from '@playwright/test';
 import { chromium } from 'playwright';
 import type { Browser, BrowserContext, Page } from 'playwright';
 import { loadConfiguration } from '../../../../config/configuration-loader.js';
 import { ShopApiClient } from '../../../../src/testkit/driver/adapter/shop/api/client/ShopApiClient.js';
-import { ErpStubClient } from '../../../../src/testkit/driver/adapter/external/erp/client/ErpStubClient.js';
-import { TaxStubClient } from '../../../../src/testkit/driver/adapter/external/tax/client/TaxStubClient.js';
+import { ErpRealClient } from '../../../../src/testkit/driver/adapter/external/erp/client/ErpRealClient.js';
 
-process.env.EXTERNAL_SYSTEM_MODE = process.env.EXTERNAL_SYSTEM_MODE || 'stub';
+process.env.EXTERNAL_SYSTEM_MODE = process.env.EXTERNAL_SYSTEM_MODE || 'real';
 
 const config = loadConfiguration();
 
 // Client fixtures for API tests
-export const apiTest = base.extend<{ shopApiClient: ShopApiClient; erpClient: ErpStubClient; taxClient: TaxStubClient }>({
+export const apiTest = base.extend<{ shopApiClient: ShopApiClient; erpClient: ErpRealClient }>({
     shopApiClient: async ({}, use) => {
         await use(new ShopApiClient(config.shop.backendApiUrl));
     },
     erpClient: async ({}, use) => {
-        const client = new ErpStubClient(config.externalSystems.erp.url);
-        await use(client);
-        await client.close();
-    },
-    taxClient: async ({}, use) => {
-        const client = new TaxStubClient(config.externalSystems.tax.url);
-        await use(client);
-        await client.close();
+        await use(new ErpRealClient(config.externalSystems.erp.url));
     },
 });
 
-// Client fixtures for UI tests — uses ShopUiDriver since UI client is embedded in the driver
-export const uiTest = base.extend<{ shopPage: Page; _shopBrowser: Browser; _shopContext: BrowserContext; shopUiUrl: string; erpClient: ErpStubClient; taxClient: TaxStubClient }>({
+// Client fixtures for UI tests
+export const uiTest = base.extend<{ shopPage: Page; _shopBrowser: Browser; _shopContext: BrowserContext; shopUiUrl: string; erpClient: ErpRealClient }>({
     shopUiUrl: async ({}, use) => {
         await use(config.shop.frontendUrl);
     },
@@ -48,14 +40,7 @@ export const uiTest = base.extend<{ shopPage: Page; _shopBrowser: Browser; _shop
         await page.close();
     },
     erpClient: async ({}, use) => {
-        const client = new ErpStubClient(config.externalSystems.erp.url);
-        await use(client);
-        await client.close();
-    },
-    taxClient: async ({}, use) => {
-        const client = new TaxStubClient(config.externalSystems.tax.url);
-        await use(client);
-        await client.close();
+        await use(new ErpRealClient(config.externalSystems.erp.url));
     },
 });
 

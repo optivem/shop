@@ -3,26 +3,22 @@ import { chromium } from 'playwright';
 import type { Browser, BrowserContext, Page } from 'playwright';
 import { loadConfiguration } from '../../../../config/configuration-loader.js';
 import { ShopApiClient } from '../../../../src/testkit/driver/adapter/shop/api/client/ShopApiClient.js';
-import { ErpStubClient } from '../../../../src/testkit/driver/adapter/external/erp/client/ErpStubClient.js';
-import { TaxStubClient } from '../../../../src/testkit/driver/adapter/external/tax/client/TaxStubClient.js';
+import { ErpRealClient } from '../../../../src/testkit/driver/adapter/external/erp/client/ErpRealClient.js';
+import { TaxRealClient } from '../../../../src/testkit/driver/adapter/external/tax/client/TaxRealClient.js';
 
-process.env.EXTERNAL_SYSTEM_MODE = process.env.EXTERNAL_SYSTEM_MODE || 'stub';
+process.env.EXTERNAL_SYSTEM_MODE = process.env.EXTERNAL_SYSTEM_MODE || 'real';
 
 const config = loadConfiguration();
 
-export const apiTest = base.extend<{ shopApiClient: ShopApiClient; erpClient: ErpStubClient; taxClient: TaxStubClient }>({
+export const apiTest = base.extend<{ shopApiClient: ShopApiClient; erpClient: ErpRealClient; taxClient: TaxRealClient }>({
     shopApiClient: async ({}, use) => {
         await use(new ShopApiClient(config.shop.backendApiUrl));
     },
     erpClient: async ({}, use) => {
-        const client = new ErpStubClient(config.externalSystems.erp.url);
-        await use(client);
-        await client.close();
+        await use(new ErpRealClient(config.externalSystems.erp.url));
     },
     taxClient: async ({}, use) => {
-        const client = new TaxStubClient(config.externalSystems.tax.url);
-        await use(client);
-        await client.close();
+        await use(new TaxRealClient(config.externalSystems.tax.url));
     },
 });
 
