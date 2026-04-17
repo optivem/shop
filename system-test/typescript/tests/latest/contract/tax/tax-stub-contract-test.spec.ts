@@ -1,17 +1,9 @@
 process.env.EXTERNAL_SYSTEM_MODE = 'stub';
 
 import { test } from '../base/fixtures.js';
+import { registerTaxContractTests } from './BaseTaxContractTest.js';
 
-test('shouldBeAbleToGetTaxRate', async ({ scenario }) => {
-    await scenario
-        .given()
-        .country()
-        .withCode('US')
-        .withTaxRate('0.09')
-        .then()
-        .country('US')
-        .hasTaxRateIsPositive();
-});
+registerTaxContractTests(test);
 
 test('shouldBeAbleToGetConfiguredTaxRate', async ({ scenario }) => {
     await scenario

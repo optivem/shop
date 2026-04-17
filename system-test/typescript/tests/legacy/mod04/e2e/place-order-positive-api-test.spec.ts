@@ -1,7 +1,7 @@
 import { apiTest as test, expect } from './fixtures.js';
 import { randomUUID } from 'node:crypto';
 
-test('shouldPlaceOrder', async ({ shopApiClient, erpClient }) => {
+test('shouldPlaceOrderForValidInput', async ({ shopApiClient, erpClient }) => {
     const sku = `SKU-${randomUUID().substring(0, 8)}`;
 
     // Given: create product in real ERP

@@ -1,7 +1,6 @@
 process.env.EXTERNAL_SYSTEM_MODE = 'stub';
 
 import { test } from '../fixtures.js';
+import { registerClockContractTests } from './BaseClockContractTest.js';
 
-test('shouldBeAbleToGetTime', async ({ scenario }) => {
-    await scenario.given().clock().withTime().then().clock().hasTime();
-});
+registerClockContractTests(test);

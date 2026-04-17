@@ -51,19 +51,26 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
         },
     );
 
-    const nonPositiveQuantities = ['-10', '-1', '0'];
+    test('shouldRejectOrderWithNegativeQuantity', async ({ scenario }) => {
+        await scenario
+            .when()
+            .placeOrder()
+            .withQuantity('-10')
+            .then()
+            .shouldFail()
+            .errorMessage('The request contains one or more validation errors')
+            .fieldErrorMessage('quantity', 'Quantity must be positive');
+    });
 
-    nonPositiveQuantities.forEach((qty) => {
-        test(`shouldRejectOrderWithNonPositiveQuantity_${qty}`, async ({ scenario }) => {
-            await scenario
-                .when()
-                .placeOrder()
-                .withQuantity(qty)
-                .then()
-                .shouldFail()
-                .errorMessage('The request contains one or more validation errors')
-                .fieldErrorMessage('quantity', 'Quantity must be positive');
-        });
+    test('shouldRejectOrderWithZeroQuantity', async ({ scenario }) => {
+        await scenario
+            .when()
+            .placeOrder()
+            .withQuantity('0')
+            .then()
+            .shouldFail()
+            .errorMessage('The request contains one or more validation errors')
+            .fieldErrorMessage('quantity', 'Quantity must be positive');
     });
 
     test.eachAlsoFirstRow(['', '   '])(

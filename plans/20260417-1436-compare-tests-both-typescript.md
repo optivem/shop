@@ -28,11 +28,6 @@ Ordering: architectural mismatches first, then architecture layers (clients → 
 - Positive spec calls `erpClient.createProduct(...)`; `configureProduct` / `configureTaxRate` stub-style calls removed.
 - `EXTERNAL_SYSTEM_MODE` default flipped to `'real'`.
 
-### A3. 🟡 PARTIAL (commit e2b660e): TypeScript — mod05/mod06 External systems: switch to `ErpRealDriver` / `TaxRealDriver`
-- **Done:** mod05 e2e, mod05 smoke, mod06 e2e, mod06 smoke fixtures all now use `ErpRealDriver` / `TaxRealDriver`; `EXTERNAL_SYSTEM_MODE` default flipped to `'real'`.
-- **Remaining:** Remove the extra `taxDriver.returnsTaxRate({country:'US', taxRate:'0.07'})` calls still present in mod05 e2e positive api/ui spec files and mod06 e2e positive spec (Java/.NET do not have this step).
-- **Source:** ✏️ Net-new — remaining work is a test-body tweak.
-
 ### A4. 🟡 PARTIAL (commit 42ced1d): TypeScript — mod07: introduce a fluent use-case DSL with step builders
 - **Remaining:** Fixtures now use Real drivers (infrastructure done), but the fluent use-case DSL files still need to be created and the mod07 e2e spec bodies still use the imperative `useCase.erp().returnsProduct(...)` / `useCase.shop().placeOrder(...)` style and still contain the `useCase.tax().returnsTaxRate(...)` extra step — not yet converted to the `shop().placeOrder().sku().quantity().country().execute()` builder chain.
 - File: `system-test/typescript/src/testkit/dsl/core/usecase/shop/ShopDsl.ts` and related DSL files.
@@ -41,28 +36,10 @@ Ordering: architectural mismatches first, then architecture layers (clients → 
 - Remove `useCase.tax().returnsTaxRate(...)` extra step.
 - **Source:** 🟡 Partial — the fluent use-case DSL (`ShopDsl.ts`, `ClockDsl.ts`, `ErpDsl.ts`, `TaxDsl.ts` + per-use-case files `PlaceOrder.ts`, `ViewOrder.ts`, `ReturnsProduct.ts`, etc.) already exists at `eshop-tests/typescript/dsl-core/usecase/` (✅ port the DSL); the starter's legacy mod07 test rewrites are net-new (✏️ eshop-tests has mod07 tests but with different naming and no starter-specific `returnsTaxRate` regression).
 
-### A5. TypeScript — mod02: introduce a `BaseRawTest` equivalent
-- File: `system-test/typescript/tests/legacy/mod02/base/BaseRawTest.ts` (new).
-- Extract shared `configuration`, `shopApiHttpClient` (raw `fetch` wrapper), Playwright browser setup into a base fixture module similar to Java's `BaseRawTest`. Let each spec import and use it.
-- Reference: `system-test/java/src/test/java/com/optivem/shop/systemtest/legacy/mod02/base/BaseRawTest.java`.
-- **Source:** 🟡 Partial — `BaseRawTest.ts` exists in eshop-tests at `system-test/src/base/v1/BaseRawTest.ts` but not at the mod02 location; needs to be relocated/adapted to `tests/legacy/mod02/base/BaseRawTest.ts` and rewired into the starter's mod02 spec files.
-
-### A6. TypeScript — mod11: introduce `BaseExternalSystemContractTest`, `BaseClockContractTest`, `BaseErpContractTest`
-- Files (new): `system-test/typescript/tests/legacy/mod11/contract/base/BaseExternalSystemContractTest.ts`, `system-test/typescript/tests/legacy/mod11/contract/clock/BaseClockContractTest.ts`, `system-test/typescript/tests/legacy/mod11/contract/erp/BaseErpContractTest.ts`.
-- Extract the `shouldBeAbleToGetTime` / `shouldBeAbleToGetProduct` body into a base contract helper that parameterizes by external-system mode. Make `clock-real-contract-test.spec.ts`, `clock-stub-contract-test.spec.ts`, `erp-real-contract-test.spec.ts`, `erp-stub-contract-test.spec.ts` thin wrappers that set the mode and call the shared test.
-- Apply the same pattern to the `latest` contract tests in `system-test/typescript/tests/latest/contract/` for consistency.
-- **Source:** ✏️ Net-new — `BaseExternalSystemContractTest.ts`, `BaseClockContractTest.ts`, `BaseErpContractTest.ts` do not exist anywhere in eshop-tests (its mod11 contract base contains only `fixtures.ts`).
-
 ### A7. ✅ DONE (commit d57c5b3): TypeScript — mod03 WireMock stubbing is a layering leak
 - mod03 positive api/ui specs now POST to real ERP `/api/products` instead of `/__admin/mappings`.
 - mod03 fixtures default `EXTERNAL_SYSTEM_MODE` to `'real'`.
 - Negative specs untouched (they don't contain WireMock admin calls — verify separately if new regressions appear).
-
-### A8. TypeScript — mod08 negative test: remove premature coverage
-- File: `system-test/typescript/tests/legacy/mod08/e2e/place-order-negative-test.spec.ts`.
-- Reduce to a single test `shouldRejectOrderWithNonIntegerQuantity` with `'3.5'` matching `system-test/java/.../legacy/mod08/e2e/PlaceOrderNegativeTest.java`.
-- The `shouldRejectOrderForNonExistentProduct`, `shouldRejectOrderWithEmptySku`, `shouldRejectOrderWithNonPositiveQuantity`, `shouldRejectOrderWithEmptyQuantity`, `shouldRejectOrderWithNullQuantity` tests belong to mod10 in Java/.NET — keep them there and remove from mod08.
-- **Source:** ✏️ Net-new — starter-specific mod08 test-body pruning; eshop-tests' mod08 does not carry the premature coverage.
 
 ---
 
@@ -164,27 +141,15 @@ No changes required (aligned across all three languages).
 - Change from `forChannels(ChannelType.API)` to `test.eachAlsoFirstRow(nonExistentOrderCases)` or equivalent Channel helper so the first row also runs via UI, matching Java `alsoForFirstRow = ChannelType.UI` and .NET `AlsoForFirstRow = new[] { ChannelType.UI }`.
 - **Source:** ✏️ Net-new — `alsoForFirstRow`/`eachAlsoFirstRow` pattern does not exist anywhere in `eshop-tests/typescript/` (grep finds zero hits); requires extending the TS channel helper.
 
-### I4. TypeScript/Java/.NET — align PublishCouponNegativeTest discount-rate value types
-- Decision: Java/.NET pass strings (`"0.0"`, `"-0.01"`); TS passes numbers.
-- **Recommended**: convert TS to strings to match Java reference.
-- File: `system-test/typescript/tests/latest/acceptance/publish-coupon-negative-test.spec.ts`.
-- **Source:** ✏️ Net-new — starter-specific test-body tweak.
+### I4. TypeScript/Java/.NET — align PublishCouponNegativeTest discount-rate value types — ⏳ Deferred
+- Java/.NET pass strings (`"0.0"`, `"-0.01"`); TS passes numbers.
+- **Deferred to Phase 3c:** the core `WhenPublishCoupon.withDiscountRate` signature is `number` (and the `PublishCouponRequest.discountRate` DTO is `number`). Aligning requires extending the DSL + DTO to accept `number | string` and parsing at the serialization boundary — bundled with other DSL work in Phase 3c.
 
 ---
 
 ## J. Latest Tests — Contract
 
-### J1. TypeScript — remove stray `.withTime()` from `clock-stub-contract-test.spec.ts`
-- File: `system-test/typescript/tests/latest/contract/clock/clock-stub-contract-test.spec.ts`.
-- Current: `scenario.given().clock().withTime().then().clock().hasTime()`.
-- Target: `scenario.given().then().clock().hasTime()` matching Java `BaseClockContractTest.java` and .NET `BaseClockContractTest.cs`.
-- **Source:** ✏️ Net-new — starter-specific test-body tweak (one-line fix in the starter spec).
-
-### J2. TypeScript — align `tax-real/stub-contract-test.spec.ts` taxRate argument type
-- Current TS: `.withTaxRate('0.09')`.
-- Java: `.withTaxRate(0.09)` (double).
-- **Recommended**: convert TS to numeric. Files under `system-test/typescript/tests/latest/contract/tax/`.
-- **Source:** ✏️ Net-new — starter-specific test-body tweak.
+(All J items completed in Phase 2 + Phase 3a.)
 
 ---
 
@@ -208,37 +173,11 @@ Covered under A5.
 
 ## N. Legacy Tests — mod03 (TypeScript)
 
-### N1. Rename TS mod03 test methods to match Java
-- Files: `system-test/typescript/tests/legacy/mod03/e2e/place-order-positive-api-test.spec.ts`, `place-order-positive-ui-test.spec.ts`.
-- Rename `shouldPlaceOrder` → `shouldPlaceOrderForValidInput`.
-- **Source:** ✏️ Net-new — starter-specific legacy-mod03 rename; eshop-tests' mod03 has different spec filenames and does not carry the same method name.
-
-### N2. TypeScript — restore full API positive assertions
-- File: `system-test/typescript/tests/legacy/mod03/e2e/place-order-positive-api-test.spec.ts`.
-- After `placeOrder`, issue a raw `fetch` view-order call and assert `orderNumber`, `sku`, `quantity=5`, `unitPrice=20.00`, `basePrice=100.00`, `totalPrice>0`, `status='PLACED'`.
-- **Source:** ✏️ Net-new — starter-specific legacy-mod03 test-body restoration.
-
-### N3. 🟡 PARTIAL (commit d57c5b3): TypeScript — restore full UI positive flow
-- **Done:** Unique SKU (random UUID) now used in mod03 UI positive spec.
-- **Remaining:** After placing order, navigate to `/order-history`, filter by orderNumber, click View Details, assert orderNumber/sku/quantity/unitPrice/basePrice/totalPrice/status on details page.
-- File: `system-test/typescript/tests/legacy/mod03/e2e/place-order-positive-ui-test.spec.ts`.
-- **Source:** ✏️ Net-new — starter-specific legacy-mod03 test-body restoration.
-
-### N4. TypeScript — fix UI negative test selector assumptions
-- File: `system-test/typescript/tests/legacy/mod03/e2e/place-order-negative-ui-test.spec.ts`.
-- Align assertions to Java/.NET: a single error alert containing the validation message, "quantity" field, and "Quantity must be an integer". Use a single text match rather than `.error-message` + `.field-error` split, to match the UI that Java/.NET test against.
-- **Source:** ✏️ Net-new — starter-specific selector/assertion fix.
-
-### N5. Already covered by A7 — remove WireMock setup
+All tasks resolved (N1, N2, N3 rem, N4 in Phase 3a; N5 covered by A7).
 
 ---
 
 ## O. Legacy Tests — mod04 (TypeScript)
-
-### O1. Rename TS mod04 positive tests to match Java method name
-- Files: `system-test/typescript/tests/legacy/mod04/e2e/place-order-positive-api-test.spec.ts`, `place-order-positive-ui-test.spec.ts`.
-- Rename `shouldPlaceOrder` → `shouldPlaceOrderForValidInput`.
-- **Source:** ✏️ Net-new — starter-specific legacy-mod04 rename.
 
 ### O2. TypeScript — restore API positive full assertions via viewOrder
 - File: `place-order-positive-api-test.spec.ts`.
@@ -250,30 +189,19 @@ Covered under A5.
 - After A1 (ShopUiClient added), rewrite to use `shopUiClient.openHomePage().clickNewOrder().inputSku(sku).inputQuantity("5").inputCountry("US").clickPlaceOrder().getResult()`, then `openHomePage().clickOrderHistory().inputOrderNumber().clickSearch().clickViewOrderDetails(orderNumber)` and assert each field.
 - **Source:** ✏️ Net-new — starter-specific legacy-mod04 UI test rewrite (depends on A1/B2 ShopUiClient port).
 
-### O4. TypeScript — negative tests: replace `'3.5'` with `"invalid-quantity"`
-- Files: `place-order-negative-api-test.spec.ts`, `place-order-negative-ui-test.spec.ts`.
-- Match Java/.NET data.
-- **Source:** ✏️ Net-new — starter-specific data tweak.
+(O1, O4 completed in Phase 3a.)
 
 ---
 
 ## P. Legacy Tests — mod05
 
-### P2. 🟡 PARTIAL (commit e2b660e): TypeScript — restore full positive assertions in mod05
-- **Done:** Both mod05 e2e api + ui positive specs now assert `orderNumber` matches `/^ORD-/`, `quantity=5`, `unitPrice=20`, `status='PLACED'`, `totalPrice>0` via `viewOrder`. Unique SKU used in both.
-- **Remaining:** Remove the `taxDriver.returnsTaxRate({country:'US', taxRate:'0.07'})` step (depends on A3 remaining work). Consider adding explicit `sku` assertion on the view response to match Java.
-- Files: `system-test/typescript/tests/legacy/mod05/e2e/place-order-positive-api-test.spec.ts`, `place-order-positive-ui-test.spec.ts`.
-- **Source:** ✏️ Net-new — starter-specific legacy-mod05 test-body restoration.
+All tasks resolved (P2 in Phase 3a — sku assertion added; A3 remaining tax step removed in Phase 2).
 
 ---
 
 ## Q. Legacy Tests — mod06
 
-### Q1. 🟡 PARTIAL (commit e2b660e): TypeScript — restore full positive assertions in mod06
-- **Done:** mod06 e2e positive spec now matches `orderNumber` on `/^ORD-/` and asserts `status='PLACED'` via `viewOrder`.
-- **Remaining:** Add assertions on `sku`, `quantity=5`, `unitPrice=20.00`, `totalPrice>0`. Remove `taxDriver.returnsTaxRate(...)` extra step (depends on A3 remaining work).
-- File: `system-test/typescript/tests/legacy/mod06/e2e/place-order-positive-test.spec.ts`.
-- **Source:** ✏️ Net-new — starter-specific legacy-mod06 test-body restoration.
+All tasks resolved (Q1 in Phase 3a — full assertions added; A3 remaining tax step removed in Phase 2).
 
 ---
 
@@ -313,12 +241,7 @@ No changes required.
 
 ## V. Legacy Tests — mod11
 
-Covered under A6 (base classes), J1 (clock stub body).
-
-### V1. TypeScript — mod11 contract clock-stub body alignment
-- File: `system-test/typescript/tests/legacy/mod11/contract/clock/clock-stub-contract-test.spec.ts`.
-- Remove `.clock().withTime()` no-arg call; align to Java's `.given().then().clock().hasTime()`.
-- **Source:** ✏️ Net-new — starter-specific test-body tweak (mirror of J1 for legacy mod11).
+All tasks resolved in Phase 2 (commit dc85f61).
 
 ---
 
@@ -390,7 +313,29 @@ Four TypeScript commits landed after this plan was generated. Their impact on pl
   - **G1 marked as EXCEPTION** — TS has no `AutoCloseable` equivalent; only stub clients have `close()` and callers invoke directly.
   - Local verification: full latest + full legacy suite run on monolith, both green.
 
+- **dc85f61** — "Align TS legacy tests with Java: mod02 BaseRawTest, mod05/06/08 test body, mod11+latest contract base classes (Phase 2)"
+  - **A3:** removed stray `taxDriver.returnsTaxRate(...)` calls from mod05 e2e api/ui + mod06 e2e positive specs.
+  - **A5:** added `tests/legacy/mod02/base/BaseRawTest.ts` helper module (config getters, `createUniqueSku`, browser setup/teardown); rewired all 4 mod02 smoke specs.
+  - **A6:** added `BaseExternalSystemContractTest.ts` + `BaseClockContractTest.ts` + `BaseErpContractTest.ts` (and `BaseTaxContractTest.ts` for latest); thin-wrappered all 10 contract spec files (mod11 clock-real/stub, erp-real/stub + latest clock-real/stub, erp-real/stub, tax-real/stub).
+  - **A8:** pruned mod08 negative spec to single `shouldRejectOrderWithNonIntegerQuantity('3.5')` test.
+  - **J1, V1:** stray `.clock().withTime()` removed from clock-stub bodies (resolved as side-effect of A6).
+  - Local verification: full latest + full legacy suite run on monolith, both green.
+
+- **c8229de** — "Align TS test bodies with Java (Phase 3a)"
+  - **N1, O1:** renamed `shouldPlaceOrder` → `shouldPlaceOrderForValidInput` in mod03 + mod04 positive specs (api + ui).
+  - **N2:** mod03 api positive spec now asserts full order details via raw fetch viewOrder (orderNumber, sku, quantity=5, unitPrice=20, basePrice=100, totalPrice>0, status=PLACED).
+  - **N3 rem:** mod03 ui positive spec now navigates to order-history, filters by order number, clicks View Details, asserts all fields.
+  - **N4:** mod03 ui negative spec switched to single text match on `[role='alert'][data-notification-id]`, matching Java.
+  - **O4:** mod04 negative quantity data `'3.5'` → `'invalid-quantity'`.
+  - **I1:** latest acceptance parameterized `shouldRejectOrderWithNonPositiveQuantity` split into `shouldRejectOrderWithNegativeQuantity('-10')` + `shouldRejectOrderWithZeroQuantity('0')` (matches Java).
+  - **J2:** `BaseTaxContractTest.withTaxRate('0.09')` → `0.09` (numeric, matches Java double).
+  - **P2 rem:** mod05 e2e api + ui positive specs now also assert `sku`.
+  - **Q1 rem:** mod06 e2e positive spec now also asserts `sku`, `quantity`, `unitPrice`, `totalPrice`.
+  - Local verification: full latest + full legacy suite on monolith, both green.
+
 **Net result so far:**
-- ✅ DONE: **A2** (e2b660e), **A7** (d57c5b3), **B1 B2 B3 B5 B6 B9 C1 F4 G2 G3 H1 P3** (a14a51b).
+- ✅ DONE: **A2** (e2b660e), **A3 A5 A6 A8 J1 V1** (dc85f61), **A7** (d57c5b3), **B1 B2 B3 B5 B6 B9 C1 F4 G2 G3 H1 P3** (a14a51b), **I1 J2 N1 N2 N3 N4 O1 O4 P2 Q1** (c8229de).
 - ❌ EXCEPTION: **G1** (a14a51b — not ported; TS-specific).
-- 🟡 PARTIAL: **A3** (e2b660e), **A4** (42ced1d), **N3** (d57c5b3), **P2** (e2b660e), **Q1** (e2b660e), **R1** (42ced1d).
+- ⏳ DEFERRED: **I4** (DSL signature change needed), **U2** (GivenClock `withWeekday` step needed).
+- 🟡 PARTIAL: **A4** (42ced1d), **R1** (42ced1d).
+- ⏸ NOT STARTED: **A1, B4, B7, E1, E2, E3, F3, F5, F7, H3, H4, H5, I2, I3, O2, O3.**
