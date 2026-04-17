@@ -1,5 +1,7 @@
 import { Result, success, failure } from '../../../../common/result.js';
-import { TaxErrorResponse, GetTaxResponse, ReturnsTaxRateRequest } from '../../../../common/dtos.js';
+import { TaxErrorResponse } from '../../../port/external/tax/dtos/TaxErrorResponse.js';
+import { GetTaxResponse } from '../../../port/external/tax/dtos/GetTaxResponse.js';
+import { ReturnsTaxRateRequest } from '../../../port/external/tax/dtos/ReturnsTaxRateRequest.js';
 import { TaxDriver } from '../../../port/external/tax/tax-driver.js';
 import { JsonWireMockClient } from '../../shared/wiremock/wiremock-client.js';
 

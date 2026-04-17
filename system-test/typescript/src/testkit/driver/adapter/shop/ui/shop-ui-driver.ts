@@ -1,13 +1,11 @@
 import { Browser, BrowserContext, Page } from 'playwright';
 import { Result, success, failure } from '../../../../common/result.js';
-import {
-  PlaceOrderRequest,
-  PlaceOrderResponse,
-  ViewOrderResponse,
-  SystemError,
-  PublishCouponRequest,
-  BrowseCouponsResponse,
-} from '../../../../common/dtos.js';
+import { PlaceOrderRequest } from '../../../port/shop/dtos/PlaceOrderRequest.js';
+import { PlaceOrderResponse } from '../../../port/shop/dtos/PlaceOrderResponse.js';
+import { ViewOrderResponse } from '../../../port/shop/dtos/ViewOrderResponse.js';
+import { SystemError } from '../../../port/shop/dtos/SystemError.js';
+import { PublishCouponRequest } from '../../../port/shop/dtos/PublishCouponRequest.js';
+import { BrowseCouponsResponse } from '../../../port/shop/dtos/BrowseCouponsResponse.js';
 import { ShopDriver } from '../../../port/shop/shop-driver.js';
 
 const TIMEOUT = 30_000;

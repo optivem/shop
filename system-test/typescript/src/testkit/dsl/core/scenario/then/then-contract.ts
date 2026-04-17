@@ -1,5 +1,7 @@
 import { expect } from '@playwright/test';
-import { GetTimeResponse, GetProductResponse, GetTaxResponse } from '../../../../common/dtos.js';
+import { GetTimeResponse } from '../../../../driver/port/external/clock/dtos/GetTimeResponse.js';
+import { GetProductResponse } from '../../../../driver/port/external/erp/dtos/GetProductResponse.js';
+import { GetTaxResponse } from '../../../../driver/port/external/tax/dtos/GetTaxResponse.js';
 import { UseCaseContext } from '../../use-case-context.js';
 import { AppContext } from '../app-context.js';
 import { ScenarioContext } from '../scenario-context.js';

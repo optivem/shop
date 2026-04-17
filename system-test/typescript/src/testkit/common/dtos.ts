@@ -1,120 +1,28 @@
-export interface PlaceOrderRequest {
-  sku: string;
-  quantity: string | null;
-  country?: string | null;
-  couponCode?: string | null;
-}
+// Barrel re-export — DTOs are now split by domain under driver/port/
+// This file preserves backward compatibility for existing imports.
 
-export interface PlaceOrderResponse {
-  orderNumber: string;
-}
+// Shop
+export type { PlaceOrderRequest } from '../driver/port/shop/dtos/PlaceOrderRequest.js';
+export type { PlaceOrderResponse } from '../driver/port/shop/dtos/PlaceOrderResponse.js';
+export type { ViewOrderResponse } from '../driver/port/shop/dtos/ViewOrderResponse.js';
+export { OrderStatus } from '../driver/port/shop/dtos/OrderStatus.js';
+export type { PublishCouponRequest } from '../driver/port/shop/dtos/PublishCouponRequest.js';
+export type { BrowseCouponItem, BrowseCouponsResponse } from '../driver/port/shop/dtos/BrowseCouponsResponse.js';
+export type { SystemError, FieldError } from '../driver/port/shop/dtos/SystemError.js';
+export type { ProblemDetailResponse } from '../driver/port/shop/dtos/ProblemDetailResponse.js';
 
-export interface ViewOrderResponse {
-  orderNumber: string;
-  orderTimestamp: string;
-  sku: string;
-  quantity: number;
-  unitPrice: number;
-  basePrice?: number;
-  discountRate?: number;
-  discountAmount?: number;
-  subtotalPrice?: number;
-  taxRate?: number;
-  taxAmount?: number;
-  totalPrice: number;
-  country?: string;
-  appliedCouponCode?: string | null;
-  status: string;
-}
+// Clock
+export type { GetTimeResponse } from '../driver/port/external/clock/dtos/GetTimeResponse.js';
+export type { ReturnsTimeRequest } from '../driver/port/external/clock/dtos/ReturnsTimeRequest.js';
+export type { ClockErrorResponse } from '../driver/port/external/clock/dtos/ClockErrorResponse.js';
 
-export enum OrderStatus {
-  PLACED = 'PLACED',
-  CANCELLED = 'CANCELLED',
-  DELIVERED = 'DELIVERED',
-}
+// ERP
+export type { GetProductResponse } from '../driver/port/external/erp/dtos/GetProductResponse.js';
+export type { ReturnsProductRequest } from '../driver/port/external/erp/dtos/ReturnsProductRequest.js';
+export type { ReturnsPromotionRequest } from '../driver/port/external/erp/dtos/ReturnsPromotionRequest.js';
+export type { ErpErrorResponse } from '../driver/port/external/erp/dtos/ErpErrorResponse.js';
 
-export interface ClockErrorResponse {
-  message: string;
-}
-
-export interface ErpErrorResponse {
-  message: string;
-}
-
-export interface TaxErrorResponse {
-  message: string;
-}
-
-export interface SystemError {
-  message: string;
-  fieldErrors: FieldError[];
-}
-
-export interface FieldError {
-  field: string;
-  message: string;
-}
-
-export interface ProblemDetailResponse {
-  type?: string;
-  title?: string;
-  status?: number;
-  detail?: string;
-  instance?: string;
-  timestamp?: string;
-  errors?: { field: string; message: string; code?: string; rejectedValue?: string }[];
-}
-
-export interface GetProductResponse {
-  sku: string;
-  price: number;
-}
-
-export interface ReturnsProductRequest {
-  sku: string;
-  price: string;
-}
-
-export interface ReturnsPromotionRequest {
-  promotionActive: boolean;
-  discount: string;
-}
-
-export interface PublishCouponRequest {
-  code: string;
-  discountRate: number;
-  validFrom?: string;
-  validTo?: string;
-  usageLimit?: number | string;
-}
-
-export interface BrowseCouponItem {
-  code: string;
-  discountRate: number;
-  validFrom?: string;
-  validTo?: string;
-  usageLimit?: number;
-  usedCount: number;
-}
-
-export interface BrowseCouponsResponse {
-  coupons: BrowseCouponItem[];
-}
-
-export interface GetTimeResponse {
-  time: string;
-}
-
-export interface ReturnsTimeRequest {
-  time: string;
-}
-
-export interface GetTaxResponse {
-  country: string;
-  taxRate: number;
-}
-
-export interface ReturnsTaxRateRequest {
-  country: string;
-  taxRate: string;
-}
+// Tax
+export type { GetTaxResponse } from '../driver/port/external/tax/dtos/GetTaxResponse.js';
+export type { ReturnsTaxRateRequest } from '../driver/port/external/tax/dtos/ReturnsTaxRateRequest.js';
+export type { TaxErrorResponse } from '../driver/port/external/tax/dtos/TaxErrorResponse.js';

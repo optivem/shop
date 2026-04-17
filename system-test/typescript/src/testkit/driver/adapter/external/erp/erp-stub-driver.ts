@@ -1,5 +1,8 @@
 import { Result, success, failure } from '../../../../common/result.js';
-import { ErpErrorResponse, GetProductResponse, ReturnsProductRequest, ReturnsPromotionRequest } from '../../../../common/dtos.js';
+import { ErpErrorResponse } from '../../../port/external/erp/dtos/ErpErrorResponse.js';
+import { GetProductResponse } from '../../../port/external/erp/dtos/GetProductResponse.js';
+import { ReturnsProductRequest } from '../../../port/external/erp/dtos/ReturnsProductRequest.js';
+import { ReturnsPromotionRequest } from '../../../port/external/erp/dtos/ReturnsPromotionRequest.js';
 import { ErpDriver } from '../../../port/external/erp/erp-driver.js';
 import { JsonWireMockClient } from '../../shared/wiremock/wiremock-client.js';
 

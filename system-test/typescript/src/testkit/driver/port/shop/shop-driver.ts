@@ -1,12 +1,10 @@
 import { Result } from '../../../common/result.js';
-import {
-  PlaceOrderRequest,
-  PlaceOrderResponse,
-  ViewOrderResponse,
-  SystemError,
-  PublishCouponRequest,
-  BrowseCouponsResponse,
-} from '../../../common/dtos.js';
+import { PlaceOrderRequest } from './dtos/PlaceOrderRequest.js';
+import { PlaceOrderResponse } from './dtos/PlaceOrderResponse.js';
+import { ViewOrderResponse } from './dtos/ViewOrderResponse.js';
+import { SystemError } from './dtos/SystemError.js';
+import { PublishCouponRequest } from './dtos/PublishCouponRequest.js';
+import { BrowseCouponsResponse } from './dtos/BrowseCouponsResponse.js';
 
 export interface ShopDriver {
   goToShop(): Promise<Result<void, SystemError>>;

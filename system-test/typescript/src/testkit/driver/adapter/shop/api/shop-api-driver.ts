@@ -1,13 +1,11 @@
 import { Result, success, failure } from '../../../../common/result.js';
-import {
-  PlaceOrderRequest,
-  PlaceOrderResponse,
-  ViewOrderResponse,
-  SystemError,
-  ProblemDetailResponse,
-  PublishCouponRequest,
-  BrowseCouponsResponse,
-} from '../../../../common/dtos.js';
+import { PlaceOrderRequest } from '../../../port/shop/dtos/PlaceOrderRequest.js';
+import { PlaceOrderResponse } from '../../../port/shop/dtos/PlaceOrderResponse.js';
+import { ViewOrderResponse } from '../../../port/shop/dtos/ViewOrderResponse.js';
+import { SystemError } from '../../../port/shop/dtos/SystemError.js';
+import { ProblemDetailResponse } from '../../../port/shop/dtos/ProblemDetailResponse.js';
+import { PublishCouponRequest } from '../../../port/shop/dtos/PublishCouponRequest.js';
+import { BrowseCouponsResponse } from '../../../port/shop/dtos/BrowseCouponsResponse.js';
 import { ShopDriver } from '../../../port/shop/shop-driver.js';
 
 function mapProblemDetail(pd: ProblemDetailResponse): SystemError {

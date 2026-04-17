@@ -1,10 +1,8 @@
 import { expect } from '@playwright/test';
-import {
-  SystemError,
-  ViewOrderResponse,
-  BrowseCouponItem,
-  GetTimeResponse,
-} from '../../../../common/dtos.js';
+import { SystemError } from '../../../../driver/port/shop/dtos/SystemError.js';
+import { ViewOrderResponse } from '../../../../driver/port/shop/dtos/ViewOrderResponse.js';
+import { BrowseCouponItem } from '../../../../driver/port/shop/dtos/BrowseCouponsResponse.js';
+import { GetTimeResponse } from '../../../../driver/port/external/clock/dtos/GetTimeResponse.js';
 import { DEFAULTS } from '../../defaults.js';
 import { UseCaseContext } from '../../use-case-context.js';
 import { AppContext } from '../app-context.js';

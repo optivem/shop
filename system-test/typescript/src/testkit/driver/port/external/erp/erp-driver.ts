@@ -1,10 +1,8 @@
 import { Result } from '../../../../common/result.js';
-import {
-  ErpErrorResponse,
-  GetProductResponse,
-  ReturnsProductRequest,
-  ReturnsPromotionRequest,
-} from '../../../../common/dtos.js';
+import { ErpErrorResponse } from './dtos/ErpErrorResponse.js';
+import { GetProductResponse } from './dtos/GetProductResponse.js';
+import { ReturnsProductRequest } from './dtos/ReturnsProductRequest.js';
+import { ReturnsPromotionRequest } from './dtos/ReturnsPromotionRequest.js';
 
 export interface ErpDriver {
   goToErp(): Promise<Result<void, ErpErrorResponse>>;

@@ -1,9 +1,7 @@
 import { Result } from '../../../../common/result.js';
-import {
-  TaxErrorResponse,
-  GetTaxResponse,
-  ReturnsTaxRateRequest,
-} from '../../../../common/dtos.js';
+import { TaxErrorResponse } from './dtos/TaxErrorResponse.js';
+import { GetTaxResponse } from './dtos/GetTaxResponse.js';
+import { ReturnsTaxRateRequest } from './dtos/ReturnsTaxRateRequest.js';
 
 export interface TaxDriver {
   goToTax(): Promise<Result<void, TaxErrorResponse>>;

@@ -1,5 +1,6 @@
 import { expect } from '@playwright/test';
-import { SystemError, BrowseCouponItem } from '../../../../common/dtos.js';
+import { SystemError } from '../../../../driver/port/shop/dtos/SystemError.js';
+import { BrowseCouponItem } from '../../../../driver/port/shop/dtos/BrowseCouponsResponse.js';
 import { UseCaseContext } from '../../use-case-context.js';
 import { AppContext } from '../app-context.js';
 import { ScenarioContext } from '../scenario-context.js';
