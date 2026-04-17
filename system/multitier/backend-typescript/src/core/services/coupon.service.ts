@@ -42,31 +42,28 @@ export class CouponService {
 
     const now = await this.clockGateway.getCurrentTime();
 
-    if (coupon!.validFrom && now < coupon!.validFrom) {
+    if (coupon.validFrom && now < coupon.validFrom) {
       this.throwCouponValidationException(
         CouponService.MSG_COUPON_NOT_YET_VALID,
         couponCode,
       );
     }
 
-    if (coupon!.validTo && now > coupon!.validTo) {
+    if (coupon.validTo && now > coupon.validTo) {
       this.throwCouponValidationException(
         CouponService.MSG_COUPON_EXPIRED,
         couponCode,
       );
     }
 
-    if (
-      coupon!.usageLimit !== null &&
-      coupon!.usedCount >= coupon!.usageLimit
-    ) {
+    if (coupon.usageLimit !== null && coupon.usedCount >= coupon.usageLimit) {
       this.throwCouponValidationException(
         CouponService.MSG_COUPON_USAGE_LIMIT_REACHED,
         couponCode,
       );
     }
 
-    return Number(coupon!.discountRate);
+    return Number(coupon.discountRate);
   }
 
   async incrementUsageCount(couponCode: string): Promise<void> {

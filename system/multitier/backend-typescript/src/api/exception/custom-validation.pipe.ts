@@ -79,7 +79,7 @@ export class CustomValidationPipe implements PipeTransform {
     for (const field of Object.keys(fieldMeta)) {
       if (
         typeof sanitized[field] === 'string' &&
-        (sanitized[field] as string).trim() === ''
+        sanitized[field].trim() === ''
       ) {
         sanitized[field] = null;
       }

@@ -27,13 +27,19 @@ export class OrderController {
   }
 
   @Post(':orderNumber/cancel')
-  async cancelOrder(@Param('orderNumber') orderNumber: string, @Res() res: Response) {
+  async cancelOrder(
+    @Param('orderNumber') orderNumber: string,
+    @Res() res: Response,
+  ) {
     await this.orderService.cancelOrder(orderNumber);
     res.status(204).send();
   }
 
   @Post(':orderNumber/deliver')
-  async deliverOrder(@Param('orderNumber') orderNumber: string, @Res() res: Response) {
+  async deliverOrder(
+    @Param('orderNumber') orderNumber: string,
+    @Res() res: Response,
+  ) {
     await this.orderService.deliverOrder(orderNumber);
     res.status(204).send();
   }

@@ -68,17 +68,23 @@ export class OrderService {
     const promotion = await this.erpGateway.getPromotionDetails();
     const promotionFactor = promotion.promotionActive ? promotion.discount : 1;
     const basePrice = new Decimal(unitPrice).mul(quantity).toNumber();
-    const promotedPrice = new Decimal(basePrice).mul(promotionFactor).toNumber();
+    const promotedPrice = new Decimal(basePrice)
+      .mul(promotionFactor)
+      .toNumber();
 
     const discountRate = await this.couponService.getDiscount(couponCode);
-    const discountAmount = new Decimal(promotedPrice).mul(discountRate).toNumber();
-    const subtotalPrice = new Decimal(promotedPrice).sub(discountAmount).toNumber();
+    const discountAmount = new Decimal(promotedPrice)
+      .mul(discountRate)
+      .toNumber();
+    const subtotalPrice = new Decimal(promotedPrice)
+      .sub(discountAmount)
+      .toNumber();
 
     const taxRate = await this.getTaxRate(country);
     const taxAmount = new Decimal(subtotalPrice).mul(taxRate).toNumber();
     const totalPrice = new Decimal(subtotalPrice).add(taxAmount).toNumber();
 
-    const appliedCouponCode = discountRate > 0 ? couponCode ?? null : null;
+    const appliedCouponCode = discountRate > 0 ? (couponCode ?? null) : null;
 
     const orderNumber = this.generateOrderNumber();
 
@@ -162,8 +168,12 @@ export class OrderService {
     const utcDay = now.getUTCDate();
 
     if (utcMonth === 11 && utcDay === 31) {
-      const blackoutStart = new Date(Date.UTC(now.getUTCFullYear(), 11, 31, 22, 0, 0));
-      const blackoutEnd = new Date(Date.UTC(now.getUTCFullYear(), 11, 31, 22, 30, 0));
+      const blackoutStart = new Date(
+        Date.UTC(now.getUTCFullYear(), 11, 31, 22, 0, 0),
+      );
+      const blackoutEnd = new Date(
+        Date.UTC(now.getUTCFullYear(), 11, 31, 22, 30, 0),
+      );
 
       if (now >= blackoutStart && now <= blackoutEnd) {
         throw new ValidationException(

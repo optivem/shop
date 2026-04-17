@@ -96,6 +96,11 @@ export class Order {
   @Column({ name: 'status', nullable: false })
   status: OrderStatus;
 
-  @Column({ name: 'applied_coupon_code', type: 'varchar', nullable: true, default: null })
+  @Column({
+    name: 'applied_coupon_code',
+    type: 'varchar',
+    nullable: true,
+    default: null,
+  })
   appliedCouponCode: string | null;
 }

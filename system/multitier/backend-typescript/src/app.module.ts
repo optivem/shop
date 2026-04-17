@@ -27,7 +27,10 @@ import { Coupon } from './core/entities/coupon.entity';
         const port = configService.get<number>('POSTGRES_DB_PORT', 5432);
         const database = configService.get<string>('POSTGRES_DB_NAME', 'app');
         const username = configService.get<string>('POSTGRES_DB_USER', 'app');
-        const password = configService.get<string>('POSTGRES_DB_PASSWORD', 'app');
+        const password = configService.get<string>(
+          'POSTGRES_DB_PASSWORD',
+          'app',
+        );
         return {
           type: 'postgres' as const,
           host,
@@ -43,7 +46,19 @@ import { Coupon } from './core/entities/coupon.entity';
     }),
     TypeOrmModule.forFeature([Order, Coupon]),
   ],
-  controllers: [AppController, HealthController, OrderController, CouponController],
-  providers: [AppService, OrderService, CouponService, ErpGateway, ClockGateway, TaxGateway],
+  controllers: [
+    AppController,
+    HealthController,
+    OrderController,
+    CouponController,
+  ],
+  providers: [
+    AppService,
+    OrderService,
+    CouponService,
+    ErpGateway,
+    ClockGateway,
+    TaxGateway,
+  ],
 })
 export class AppModule {}

@@ -46,13 +46,16 @@ function markDecimals(obj: unknown): unknown {
   return obj;
 }
 
-const SENTINEL_REGEX = new RegExp(String.raw`"${SENTINEL}([\d.]+)${SENTINEL}"`, 'g');
+const SENTINEL_REGEX = new RegExp(
+  String.raw`"${SENTINEL}([\d.]+)${SENTINEL}"`,
+  'g',
+);
 
 @Injectable()
 export class DecimalFormatInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     return next.handle().pipe(
-      map((data) => {
+      map((data: unknown) => {
         if (data === undefined || data === null) {
           return data;
         }
@@ -62,8 +65,10 @@ export class DecimalFormatInterceptor implements NestInterceptor {
         const formatted = json.replaceAll(SENTINEL_REGEX, '$1');
 
         const response = context.switchToHttp().getResponse<Response>();
-        response.setHeader('Content-Type', 'application/json');
-        response.end(formatted);
+        if (!response.headersSent) {
+          response.setHeader('Content-Type', 'application/json; charset=utf-8');
+          response.send(formatted);
+        }
 
         return undefined;
       }),
