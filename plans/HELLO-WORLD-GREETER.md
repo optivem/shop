@@ -22,9 +22,9 @@ The repo is called `greeter` (not `hello-world`) because it describes the domain
 | **Repo name** | `optivem/greeter` | Describes the domain; old greeter repos are archived |
 | **System name** | `"Greeter"` | Maps to GreeterService, GreeterApiController |
 | **Separate repo vs inside starter** | Separate repo | Avoids doubling starter's ~68 workflow files |
-| **Database** | None | Simplicity; no migrations, no connection strings |
-| **CRUD** | No — single GET endpoint | Minimal surface area |
-| **External systems** | Clock + Quote API | Clock for determinism; Quote API for external I/O pattern |
+| **Database** | Postgres | Template must support real project scaffolding with persistence |
+| **CRUD** | POST + GET (list) + GET by id | Standard CRUD pattern for real-project scaffolding |
+| **External systems** | Clock + Scorer | Clock for determinism (isolated via stub); Scorer for opaque external logic (non-isolated by design) |
 | **Stubs (WireMock)** | Yes | Required to demonstrate acceptance testing |
 | **External simulator** | Yes | Same pattern as starter, two endpoints |
 | **Acceptance tests** | Yes, full harness | Template must be complete for real project scaffolding |
@@ -35,46 +35,69 @@ The repo is called `greeter` (not `hello-world`) because it describes the domain
 
 ## Domain
 
-### Endpoint
+### Endpoints
 
+| Method | Path | Purpose |
+|---|---|---|
+| POST | `/api/greetings` | Create a greeting |
+| GET | `/api/greetings` | List all greetings |
+| GET | `/api/greetings/{id}` | Get one greeting |
+
+### POST /api/greetings
+
+Request (`message` optional, defaults to `"Hello, World!"`):
+```json
+{ "message": "Hello, World!" }
 ```
-GET /api/greetings?name=World
-```
 
-### Response
-
+Response (`201 Created`):
 ```json
 {
+  "id": 1,
   "message": "Hello, World!",
-  "quote": "Have a great day!",
+  "score": 42,
   "timestamp": "2026-04-17T10:30:00Z"
 }
 ```
 
-### Business logic (GreeterService)
+### GET /api/greetings/{id}
 
-1. Generate message: `"Hello, {name}!"` — local logic
-2. Call Quote API: `GET /api/quotes` → `{"quote": "Have a great day!"}` — external I/O
-3. Call Clock API: `GET /api/clock` → `{"timestamp": "2026-04-17T10:30:00Z"}` — external I/O (determinism)
-4. Return combined response
+Response: same shape as POST response.
 
-### UI display
+### GET /api/greetings
+
+Response: array of greeting records, newest first.
+
+### Business logic (`GreeterService.create`)
+
+1. Accept `message` (default `"Hello, World!"`) — local logic
+2. Call Scorer: `GET /api/score?text={message}` → `{"score": 42}` — **external I/O, non-isolated (opaque logic)**
+3. Call Clock: `GET /api/clock` → `{"timestamp": "..."}` — **external I/O, isolated via stub (deterministic)**
+4. Persist `{ id, message, score, timestamp }` — database
+5. Return persisted record
+
+### UI
 
 ```
-[ World          ] [ Greet ]
+[ Hello, World!                ] [ Greet ]
 
-Hello, World! Have a great day! The current time is 2026-04-17T10:30:00Z.
+Recent greetings:
+#2  Hello, Alice!   score: 38   2026-04-17T11:05:00Z
+#1  Hello, World!   score: 42   2026-04-17T10:30:00Z
 ```
+
+Input field defaults to `"Hello, World!"`. List shows persisted greetings (newest first).
 
 ### Architecture layers
 
 ```
-Controller (API)  →  Service (business logic)  →  External gateways (Clock, Quote)
-     ↑                                                      ↓
-  DTO (response)                                    External API calls
+Controller (API)  →  Service  →  External gateways (Clock, Scorer)
+                              →  Repository  →  Database
+     ↑
+  DTO (response)
 ```
 
-No repository layer. No entities. No database.
+One entity (`Greeting`), one repository, one service. DB migrations managed per backend (Flyway / EF Core / TypeORM).
 
 ---
 
@@ -92,8 +115,8 @@ greeter/
 │   │   ├── backend-dotnet/          # ASP.NET Core API
 │   │   ├── backend-typescript/      # NestJS API
 │   │   └── frontend-react/          # React + Vite + Nginx
-│   ├── external-real-sim/           # Node.js simulator (Clock + Quote)
-│   └── external-stub/               # WireMock mappings (Clock + Quote)
+│   ├── external-real-sim/           # Node.js simulator (Clock + Score)
+│   └── external-stub/               # WireMock mappings (Clock only — Score is always real)
 ├── system-test/
 │   ├── java/                        # JUnit 5 + Playwright
 │   ├── dotnet/                      # xUnit + Playwright
@@ -110,16 +133,16 @@ greeter/
 |---|---|---|
 | **API controllers** | OrderApiController, CouponApiController, HealthController | GreeterApiController, HealthController |
 | **Services** | OrderService, CouponService | GreeterService |
-| **DTOs** | PlaceOrderRequest/Response, BrowseCouponsResponse, ViewOrderDetailsResponse, PublishCouponRequest | GreetingResponse |
-| **Entities** | Order, OrderStatus, Coupon | None |
-| **Repositories** | OrderRepository, CouponRepository | None |
-| **External gateways** | ErpGateway, ClockGateway, TaxGateway | ClockGateway, QuoteGateway |
-| **External DTOs** | GetPromotionResponse, GetTimeResponse, ProductDetailsResponse, TaxDetailsResponse | GetTimeResponse, GetQuoteResponse |
+| **DTOs** | PlaceOrderRequest/Response, BrowseCouponsResponse, ViewOrderDetailsResponse, PublishCouponRequest | CreateGreetingRequest, GreetingResponse |
+| **Entities** | Order, OrderStatus, Coupon | Greeting |
+| **Repositories** | OrderRepository, CouponRepository | GreetingRepository |
+| **External gateways** | ErpGateway, ClockGateway, TaxGateway | ClockGateway, ScorerGateway |
+| **External DTOs** | GetPromotionResponse, GetTimeResponse, ProductDetailsResponse, TaxDetailsResponse | GetTimeResponse, GetScoreResponse |
 | **Exception handling** | GlobalExceptionHandler, ValidationException, NotExistValidationException | GlobalExceptionHandler |
 | **Web controllers (monolith)** | HomeController, ShopController, OrderHistoryController, OrderDetailsController, AdminCouponsController | HomeController |
 | **Frontend pages** | Home, NewOrder, OrderHistory, OrderDetails, AdminCoupons | Home (single page) |
-| **Docker Compose services** | App + DB + External Sim + WireMock | App + External Sim + WireMock (no DB) |
-| **WireMock mappings** | Clock, ERP products, ERP promotions, Tax | Clock, Quote |
+| **Docker Compose services** | App + DB + External Sim + WireMock | App + DB + External Sim + WireMock |
+| **WireMock mappings** | Clock, ERP products, ERP promotions, Tax | Clock only (Score always uses real-sim — non-isolated by design) |
 
 ---
 
@@ -129,40 +152,53 @@ Each backend variant (e.g. `system/monolith/java/`) contains:
 
 | File | Purpose |
 |---|---|
-| `GreeterApiController` | `GET /api/greetings?name=...` endpoint |
+| `GreeterApiController` | `POST /api/greetings`, `GET /api/greetings`, `GET /api/greetings/{id}` |
 | `HealthController` | `GET /health` endpoint |
-| `GreeterService` | Business logic: combine message + quote + timestamp |
-| `GreetingResponse` | Response DTO: message, quote, timestamp |
+| `GreeterService` | Business logic: score + clock + persist |
+| `Greeting` | Entity: id, message, score, timestamp |
+| `GreetingRepository` | Persistence (Spring Data / EF Core / TypeORM) |
+| `CreateGreetingRequest` | Request DTO: message (optional) |
+| `GreetingResponse` | Response DTO: id, message, score, timestamp |
 | `ClockGateway` | HTTP client for Clock external API |
-| `QuoteGateway` | HTTP client for Quote external API |
+| `ScorerGateway` | HTTP client for Scorer external API |
 | `GetTimeResponse` | DTO for Clock API response |
-| `GetQuoteResponse` | DTO for Quote API response |
+| `GetScoreResponse` | DTO for Scorer API response |
 | `GlobalExceptionHandler` | Error handling |
 | `Application` (main class) | Spring Boot / ASP.NET / NestJS entry point |
 | `Dockerfile` | Container build |
 | `VERSION` | Semantic version |
 | Build config | `build.gradle` / `.csproj` / `package.json` |
+| DB migration (V1) | Create `greetings` table (Flyway / EF Core migration / TypeORM migration) |
 
-~12 source files per variant vs ~25+ in starter.
+~15 source files per variant vs ~25+ in starter.
 
 ---
 
 ## External Systems
+
+Two external systems, intentionally different in **testability**:
+
+| System | Stubbable? | Test isolation |
+|---|---|---|
+| **Clock** | Yes (WireMock) | Isolated — test sets exact timestamp, asserts exact timestamp |
+| **Scorer** | No (real-sim only) | Non-isolated — test asserts only on shape (score is an integer) |
 
 ### External Real Simulator (`external-real-sim/`)
 
 Node.js Express app with two endpoints:
 
 ```
-GET /api/clock     → {"timestamp": "<current ISO timestamp>"}
-GET /api/quotes    → {"quote": "Have a great day!"}
+GET /api/clock            → {"timestamp": "<current ISO timestamp>"}
+GET /api/score?text=...   → {"score": <opaque integer>}
 ```
 
-The quote can be a hardcoded value or rotate through a small list — doesn't matter for the template.
+**Clock** returns `new Date().toISOString()`.
+
+**Scorer** returns an integer derived from `text` via an **intentionally opaque** algorithm (e.g. `sum(charCodes) % 100`). The algorithm is not documented to consumers — this is the teaching point: the real system is a black box, so tests must not depend on specific values.
 
 ### External Stubs (`external-stub/`)
 
-WireMock mappings:
+Only Clock is stubbed. In both `stub` and `real` Docker Compose variants, the Scorer is served by `external-real-sim`. This forces tests touching the Scorer to assert on shape, not values — demonstrating the non-isolated test pattern.
 
 **Clock stub:**
 ```json
@@ -176,44 +212,60 @@ WireMock mappings:
 }
 ```
 
-**Quote stub:**
-```json
-{
-  "request": { "method": "GET", "url": "/api/quotes" },
-  "response": {
-    "status": 200,
-    "jsonBody": { "quote": "Have a great day!" },
-    "headers": { "Content-Type": "application/json" }
-  }
-}
-```
-
 ---
 
 ## System Tests
 
 ### Test Scenarios
 
-**API e2e test:**
+Two styles of assertions, demonstrating **isolated** (Clock, stubbed) vs **non-isolated** (Scorer, real & opaque) external dependencies.
+
+#### Isolated — Clock
+
 ```
 Given the system is running
-  And the Clock returns "2026-01-15T10:30:00Z"
-  And the Quote API returns "Have a great day!"
-When I call GET /api/greetings?name=World
-Then the response status is 200
-  And the message is "Hello, World!"
-  And the quote is "Have a great day!"
-  And the timestamp is "2026-01-15T10:30:00Z"
+  And the Clock is set to "2026-01-15T10:30:00Z"
+When I POST /api/greetings with body {"message": "Hello, World!"}
+Then the response status is 201
+  And the response message is "Hello, World!"
+  And the response timestamp is "2026-01-15T10:30:00Z"
 ```
 
-**UI e2e test (Playwright):**
+The Clock stub lets the test assert the exact timestamp — external output is fully controlled.
+
+#### Non-isolated — Scorer
+
 ```
 Given the system is running
-  And the Clock returns "2026-01-15T10:30:00Z"
-  And the Quote API returns "Have a great day!"
-When I type "World" in the name field
+When I POST /api/greetings with body {"message": "Hello, World!"}
+Then the response status is 201
+  And the response message is "Hello, World!"
+  And the response score is an integer
+```
+
+The Scorer is always real. The test cannot predict the value, so it asserts only on shape — demonstrating how to test against an opaque external service.
+
+#### Persistence round-trip
+
+```
+Given the system is running
+  And the Clock is set to "2026-01-15T10:30:00Z"
+When I POST /api/greetings with body {"message": "Hello, World!"}
+  And I GET /api/greetings/{id} with the returned id
+Then the returned record equals the POST response
+```
+
+#### UI e2e test (Playwright)
+
+```
+Given the system is running
+  And the Clock is set to "2026-01-15T10:30:00Z"
+When I type "Hello, World!" in the message field
   And I click the Greet button
-Then the page displays "Hello, World! Have a great day! The current time is 2026-01-15T10:30:00Z."
+Then the page shows a new greeting row with:
+  - message "Hello, World!"
+  - timestamp "2026-01-15T10:30:00Z"
+  - an integer score
 ```
 
 ### Test Harness Structure
@@ -236,8 +288,7 @@ system-test/{lang}/
 ├── Driver.Adapter/
 │   ├── Greeter.Api.Client/    # HTTP client for API
 │   ├── Greeter.Ui.Client/     # Playwright browser client
-│   └── External.Clock.Client/ # HTTP client for Clock stubs
-│   └── External.Quote.Client/ # HTTP client for Quote stubs
+│   └── External.Clock.Client/ # HTTP client for Clock stub (sets expected timestamp)
 ├── SystemTests/           # Actual test classes
 ├── docker-compose.*.yml   # Variants: local/pipeline × stub/real
 ├── Run-SystemTests.ps1    # Test runner script
@@ -248,16 +299,16 @@ system-test/{lang}/
 
 | Variant | Services |
 |---|---|
-| `local.monolith.stub` | App + WireMock |
-| `local.monolith.real` | App + External Sim |
-| `local.multitier.stub` | Backend + Frontend + WireMock |
-| `local.multitier.real` | Backend + Frontend + External Sim |
-| `pipeline.monolith.stub` | App (from GHCR) + WireMock |
-| `pipeline.monolith.real` | App (from GHCR) + External Sim |
-| `pipeline.multitier.stub` | Backend + Frontend (from GHCR) + WireMock |
-| `pipeline.multitier.real` | Backend + Frontend (from GHCR) + External Sim |
+| `local.monolith.stub` | App + Postgres + WireMock (Clock) + Real-sim (Scorer) |
+| `local.monolith.real` | App + Postgres + Real-sim (Clock + Scorer) |
+| `local.multitier.stub` | Backend + Frontend + Postgres + WireMock (Clock) + Real-sim (Scorer) |
+| `local.multitier.real` | Backend + Frontend + Postgres + Real-sim (Clock + Scorer) |
+| `pipeline.monolith.stub` | App (from GHCR) + Postgres + WireMock (Clock) + Real-sim (Scorer) |
+| `pipeline.monolith.real` | App (from GHCR) + Postgres + Real-sim (Clock + Scorer) |
+| `pipeline.multitier.stub` | Backend + Frontend (from GHCR) + Postgres + WireMock (Clock) + Real-sim (Scorer) |
+| `pipeline.multitier.real` | Backend + Frontend (from GHCR) + Postgres + Real-sim (Clock + Scorer) |
 
-No Postgres in any variant.
+In `stub` variants, Clock is served by WireMock and Scorer by real-sim. In `real` variants, both are served by real-sim. Postgres is always present.
 
 ---
 
@@ -288,7 +339,7 @@ Plus shared:
 | Stage | starter | greeter |
 |---|---|---|
 | **Commit** | Build, unit test, checkstyle/lint, SonarCloud, Docker build+push | Same |
-| **Acceptance** | Deploy app + DB + externals, run system tests (stub + real) | Deploy app + externals, run system tests (stub + real) — no DB |
+| **Acceptance** | Deploy app + DB + externals, run system tests (stub + real) | Same (Postgres + Clock + Scorer externals) |
 | **Acceptance-legacy** | Same as acceptance, hourly schedule | Same |
 | **QA** | Manual deployment + signoff | Same |
 | **Prod** | Production deployment | Same |
@@ -378,7 +429,7 @@ The replacement rules reference `"starter"` in SonarCloud keys and a few other p
 
 **File:** `internal/config/config.go`
 
-Add `"greeter"` and `"quote"` to `isScaffoldReserved()` to prevent users from choosing system names that collide with template infrastructure names.
+Add `"greeter"` and `"scorer"` to `isScaffoldReserved()` to prevent users from choosing system names that collide with template infrastructure names.
 
 ---
 
@@ -478,9 +529,8 @@ Agree
    - **Recommended:** Include one simple SSR page (same greeting form) to match the pattern. Students should see how Thymeleaf/Razor/Next.js SSR works.
 SSR
 
-3. **Quote API response variety:** Should the stub always return the same quote, or have multiple mappings?
-   - **Recommended:** Single fixed quote (`"Have a great day!"`). Keeps stubs trivial.
-AGREE
+3. **Scorer algorithm:** The real-sim Scorer needs an opaque algorithm. Suggested: `sum(charCodes) % 100`.
+   - **Recommended:** Single hidden algorithm, not documented in README. Teaches tests to assert on shape, not values.
 
 4. **Naming in scaffolded projects:** When someone runs `gh optivem init --base greeter --system-name "Task Manager"`, the replacement system changes `Greeter` → `TaskManager`, `greeter` → `taskManager`, etc. Verify this works cleanly with no leftover `Greeter` strings.
    - **Action:** Test during Phase 7.
