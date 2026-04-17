@@ -26,15 +26,44 @@ Bulk find-and-replace across all repos:
 - `plans/MIGRATION-CLOUD-DEPLOY.md` — references
 - `.claude/agents/*.md` — agent instructions referencing starter
 
-### 1.2 — `gh-optivem/` repo (~8 files)
-- `internal/config/config.go:555-562` — `cloneStarter()` clones `"optivem/starter"` → change to `"optivem/shop"`
-- `internal/steps/replacements.go:22,27,155-158` — hardcoded `"optivem/starter"` strings → `"optivem/shop"`
-- `internal/steps/apply_template.go` — comments referencing starter
-- `internal/templates/templates.go` — comments referencing starter
-- `MAPPING.md` — prose references
+### 1.2 — `gh-optivem/` repo (full rename, no back-compat)
+
+**Principle**: rename everything — strings, Go symbols, CLI flags, env vars, workflow job names — to `shop` for consistency. No aliases, no deprecation shims (user is sole consumer).
+
+**String refs** `optivem/starter` → `optivem/shop`:
+- `internal/config/config.go` — lines 42, 330, 564, 573 (comments, flag description, `cloneStarter()` clone target)
+- `internal/steps/replacements.go` — lines 22, 27, 155-158 (comments + `ReplaceInTree`/`ReplaceInDockerfiles` pass-1 literals)
+- `internal/steps/apply_template.go` — comments
+- `internal/templates/templates.go` — comments
+- `MAPPING.md` — prose
 - `docs/gh-monitoring-process.md` — CLI examples
-- `archived/scaffold/*.py` — legacy Python code references (config.py, templates.py, files.py, replacements.py)
-- **Rebuild Go binary** after editing: `cd gh-optivem && go build ./...`
+- `archived/scaffold/*.py` — config.py, templates.py, files.py, steps/replacements.py, steps/apply_template.py
+
+**Go symbols** (`StarterRef` → `ShopRef`, `StarterTag` → `ShopTag`, `cloneStarter` → `cloneShop`, `starterRef`/`resolvedStarterRef`/`starterPath` → `shopRef`/`resolvedShopRef`/`shopPath`, `StarterPath` → `ShopPath`):
+- `internal/version/version.go` — lines 9-31 (var decls, docstring, `versionString()` logic)
+- `internal/config/config.go` — lines 42, 330, 444-447, 451, 525-526, 564-573
+
+**CLI flag** `--starter-ref` → `--shop-ref`:
+- `internal/config/config.go:330` — flag decl
+- `internal/config/config_system_test.go:52` — test arg
+
+**Env vars** `STARTER_TAG`/`STARTER_SHA` → `SHOP_TAG`/`SHOP_SHA`, `TEST_STARTER_REF` → `TEST_SHOP_REF`:
+- `.goreleaser.yml` — lines 9-10 (ldflags), 40 (release notes)
+- `.github/workflows/release-stage.yml` — lines 30 (`repos/optivem/starter/tags`), 58-59 (env output wiring)
+- `.github/workflows/acceptance-stage-full.yml` — lines 43, 45 (`repos/optivem/starter/commits/main`, error msg), 84 (action input)
+- `.github/actions/acceptance-test/action.yml` — lines 23-24 (input decl), 82 (echo), 105 (`TEST_STARTER_REF`)
+- `internal/config/config_system_test.go:51` — reads `TEST_STARTER_REF`
+
+**Workflow job names** `resolve-starter` → `resolve-shop`:
+- `.github/workflows/release-stage.yml` — lines 12, 37, 58-59 (job + `needs:` refs)
+- `.github/workflows/acceptance-stage-full.yml` — lines 33, 53, 84, 88, 95 (job + `needs:` refs)
+- `.github/workflows/verify-release-chain.yml:16` — `repo: optivem/starter` string
+
+**Other**:
+- `BACKLOG.md`, `NAMING.md` — prose references to "starter"
+- `archived/cleanup.py`, `archived/scaffold.py` — legacy references
+
+**After editing**: `cd gh-optivem && go build ./...` to rebuild binary; run `go test ./...` to verify symbol renames compile.
 
 ### 1.3 — `courses/` repo (~72 files)
 - `docs/rules/00-shared.md:153-159` — canonical name: change "Shop Starter" → "Shop"
