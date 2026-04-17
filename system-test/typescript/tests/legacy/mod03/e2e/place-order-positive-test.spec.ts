@@ -1,6 +1,6 @@
-import { test, forChannels } from './fixtures.js';
+import { test, forChannels, ChannelType } from './fixtures.js';
 
-forChannels('ui', 'api')(() => {
+forChannels(ChannelType.UI, ChannelType.API)(() => {
     test('shouldPlaceOrder', async ({ scenario }) => {
         await scenario.when().placeOrder().then().shouldSucceed();
     });

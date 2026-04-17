@@ -1,7 +1,7 @@
-import { test, forChannels } from './base/fixtures.js';
+import { test, forChannels, ChannelType } from './base/fixtures.js';
 import { OrderStatus } from '../../../src/testkit/common/dtos.js';
 
-forChannels('ui', 'api')(() => {
+forChannels(ChannelType.UI, ChannelType.API)(() => {
     test('shouldHaveCancelledStatusWhenCancelled', async ({ scenario }) => {
         await scenario
             .given()

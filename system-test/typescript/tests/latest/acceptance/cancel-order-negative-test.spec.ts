@@ -1,4 +1,4 @@
-import { test, forChannels } from './base/fixtures.js';
+import { test, forChannels, ChannelType } from './base/fixtures.js';
 import { OrderStatus } from '../../../src/testkit/common/dtos.js';
 
 const nonExistentOrderCases = [
@@ -7,7 +7,7 @@ const nonExistentOrderCases = [
     { orderNumber: 'NON-EXISTENT-ORDER-77777', message: 'Order NON-EXISTENT-ORDER-77777 does not exist.' },
 ];
 
-forChannels('api')(() => {
+forChannels(ChannelType.API)(() => {
     test.each(nonExistentOrderCases)(
         'shouldNotCancelNonExistentOrder_$orderNumber',
         async ({ scenario, orderNumber, message }) => {

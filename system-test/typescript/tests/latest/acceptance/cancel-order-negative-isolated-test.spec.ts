@@ -1,4 +1,4 @@
-import { test, forChannels } from './base/fixtures.js';
+import { test, forChannels, ChannelType } from './base/fixtures.js';
 import { OrderStatus } from '../../../src/testkit/common/dtos.js';
 
 const timesInsideBlackout = [
@@ -13,7 +13,7 @@ const BLACKOUT_ERROR = 'Order cancellation is not allowed on December 31st betwe
 
 test.describe('@isolated', () => {
     test.describe.configure({ mode: 'serial' });
-    forChannels('ui', 'api')(() => {
+    forChannels(ChannelType.UI, ChannelType.API)(() => {
         test.eachAlsoFirstRow(timesInsideBlackout)(
             'cannotCancelAnOrderOn31stDecBetween2200And2230_$time',
             async ({ scenario, time }) => {

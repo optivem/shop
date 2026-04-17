@@ -1,6 +1,6 @@
-import { test, forChannels } from './base/fixtures.js';
+import { test, forChannels, ChannelType } from './base/fixtures.js';
 
-forChannels('ui', 'api')(() => {
+forChannels(ChannelType.UI, ChannelType.API)(() => {
     test('shouldBeAbleToBrowseCoupons', async ({ scenario }) => {
         await scenario
             .when()

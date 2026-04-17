@@ -1,7 +1,7 @@
-import { test, forChannels } from './fixtures.js';
+import { test, forChannels, ChannelType } from './fixtures.js';
 import { OrderStatus } from '../../../../src/testkit/common/dtos.js';
 
-forChannels('ui', 'api')(() => {
+forChannels(ChannelType.UI, ChannelType.API)(() => {
     test('orderNumberShouldStartWithORD', async ({ scenario }) => {
         await scenario
             .when()

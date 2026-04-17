@@ -1,8 +1,8 @@
-import { test, forChannels } from './fixtures.js';
+import { test, forChannels, ChannelType } from './fixtures.js';
 
 test.describe('@isolated', () => {
     test.describe.configure({ mode: 'serial' });
-    forChannels('ui', 'api')(() => {
+    forChannels(ChannelType.UI, ChannelType.API)(() => {
         test('shouldRecordPlacementTimestamp', async ({ scenario }) => {
             await scenario
                 .given()

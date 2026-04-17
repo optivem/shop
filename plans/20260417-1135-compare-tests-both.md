@@ -45,8 +45,8 @@ Reference implementation: **Java**. Tasks below are ordered so prerequisites com
 7. **DIFF-ARCH-3 — Extract separate Use-Case DSL classes per domain** *(Medium)*
    - Add `ShopDsl`, `ClockDsl`, `ErpDsl`, `TaxDsl` mirroring Java; current logic is embedded in the scenario DSL.
 
-8. **DIFF-ARCH-6 — Verify whether TS needs a `Converter` class** *(Low)*
-   - If yes, add matching TS implementation; if not, document why it's not needed.
+8. ~~**DIFF-ARCH-6 — Verify whether TS needs a `Converter` class** *(Low)*~~
+   - **Resolved:** Not needed. Java Converter handles String↔BigDecimal/Integer/Instant; TS uses native idioms (Number.parseFloat, String(), new Date()).
 
 ### C. Tests — Acceptance
 

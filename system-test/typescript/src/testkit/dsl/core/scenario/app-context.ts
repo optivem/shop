@@ -1,3 +1,4 @@
+import { ChannelType } from '../../../channel/channel-type.js';
 import { ShopDriver } from '../../../driver/port/shop/shop-driver.js';
 import { ErpDriver } from '../../../driver/port/external/erp/erp-driver.js';
 import { ClockDriver } from '../../../driver/port/external/clock/clock-driver.js';
@@ -5,7 +6,7 @@ import { TaxDriver } from '../../../driver/port/external/tax/tax-driver.js';
 
 export type ChannelMode = 'dynamic' | 'static';
 
-const STATIC_CHANNEL = 'api';
+const STATIC_CHANNEL = ChannelType.API;
 
 export class AppContext {
   private readonly shops = new Map<string, ShopDriver>();

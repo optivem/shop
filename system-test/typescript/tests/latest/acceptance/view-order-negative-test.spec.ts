@@ -1,4 +1,4 @@
-import { test, forChannels } from './base/fixtures.js';
+import { test, forChannels, ChannelType } from './base/fixtures.js';
 
 const nonExistentOrderCases = [
     { orderNumber: 'NON-EXISTENT-ORDER-99999', message: 'Order NON-EXISTENT-ORDER-99999 does not exist.' },
@@ -6,7 +6,7 @@ const nonExistentOrderCases = [
     { orderNumber: 'NON-EXISTENT-ORDER-77777', message: 'Order NON-EXISTENT-ORDER-77777 does not exist.' },
 ];
 
-forChannels('api')(() => {
+forChannels(ChannelType.API)(() => {
     test.each(nonExistentOrderCases)(
         'shouldNotBeAbleToViewNonExistentOrder_$orderNumber',
         async ({ scenario, orderNumber, message }) => {

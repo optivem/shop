@@ -1,6 +1,6 @@
-import { test, forChannels } from './fixtures.js';
+import { test, forChannels, ChannelType } from './fixtures.js';
 
-forChannels('ui', 'api')(() => {
+forChannels(ChannelType.UI, ChannelType.API)(() => {
     const nonIntegerQuantities = ['3.5', 'lala', 'invalid-quantity'];
 
     nonIntegerQuantities.forEach((qty) => {
@@ -75,7 +75,7 @@ forChannels('ui', 'api')(() => {
     });
 });
 
-forChannels('api')(() => {
+forChannels(ChannelType.API)(() => {
     test('shouldRejectOrderWithNullQuantity', async ({ scenario }) => {
         await scenario
             .when()

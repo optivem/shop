@@ -6,3 +6,4 @@ const test = Object.assign(_test, { each: bindTestEach(_test) });
 const { forChannels } = bindChannels(test);
 export { test, forChannels };
 export { expect } from '@playwright/test';
+export { ChannelType } from '../../../../src/testkit/channel/channel-type.js';

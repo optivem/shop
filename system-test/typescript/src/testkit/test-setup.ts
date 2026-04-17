@@ -14,8 +14,9 @@ import { ErpDriver } from './driver/port/external/erp/erp-driver.js';
 import { ClockDriver } from './driver/port/external/clock/clock-driver.js';
 import { TaxDriver } from './driver/port/external/tax/tax-driver.js';
 import { Browser } from 'playwright';
+import { ChannelType, type ChannelTypeValue } from './channel/channel-type.js';
 
-export type Channel = 'api' | 'ui';
+export type Channel = ChannelTypeValue;
 export type { ChannelMode } from './dsl/scenario-dsl.js';
 export type ExternalSystemMode = 'real' | 'stub';
 
@@ -31,7 +32,7 @@ export function createScenario(options: ScenarioOptions = {}): ScenarioDsl {
   const config = loadConfiguration({ externalSystemMode: mode });
 
   const channelMode: ChannelMode = options.channelMode || (process.env.CHANNEL_MODE?.toLowerCase() as ChannelMode) || 'dynamic';
-  const channel = options.channel || 'api';
+  const channel = options.channel || ChannelType.API;
 
   const app = new AppContext({
     channelMode,
@@ -47,7 +48,7 @@ export function createScenario(options: ScenarioOptions = {}): ScenarioDsl {
 }
 
 function createShopDriverForChannel(config: TestConfig, channel: Channel, options: ScenarioOptions) {
-  if (channel === 'ui') {
+  if (channel === ChannelType.UI) {
     if (!options.browser) throw new Error('Browser is required for UI channel');
     return new ShopUiDriver(config.shop.frontendUrl, options.browser);
   }

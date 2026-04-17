@@ -1,6 +1,6 @@
-import { test, forChannels } from './base/fixtures.js';
+import { test, forChannels, ChannelType } from './base/fixtures.js';
 
-forChannels('ui', 'api')(() => {
+forChannels(ChannelType.UI, ChannelType.API)(() => {
     test('shouldBeAbleToPublishValidCoupon', async ({ scenario }) => {
         await scenario
             .when()
@@ -47,7 +47,7 @@ forChannels('ui', 'api')(() => {
     });
 });
 
-forChannels('api')(() => {
+forChannels(ChannelType.API)(() => {
     test('shouldPublishCouponSuccessfully', async ({ scenario }) => {
         await scenario
             .when()

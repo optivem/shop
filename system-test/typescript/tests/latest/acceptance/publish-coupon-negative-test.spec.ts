@@ -1,6 +1,6 @@
-import { test, forChannels } from './base/fixtures.js';
+import { test, forChannels, ChannelType } from './base/fixtures.js';
 
-forChannels('ui', 'api')(() => {
+forChannels(ChannelType.UI, ChannelType.API)(() => {
     test.eachAlsoFirstRow([0, -0.01, -0.15])(
         'cannotPublishCouponWithZeroOrNegativeDiscount_$discountRate',
         async ({ scenario, discountRate }) => {
@@ -65,7 +65,7 @@ forChannels('ui', 'api')(() => {
     );
 });
 
-forChannels('api')(() => {
+forChannels(ChannelType.API)(() => {
     const emptyCodes = ['', '   '];
 
     emptyCodes.forEach((code) => {
