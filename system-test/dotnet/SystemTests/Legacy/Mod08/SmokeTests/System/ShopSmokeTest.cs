@@ -1,5 +1,4 @@
 using SystemTests.Legacy.Mod08.Base;
-using Dsl.Core.Shop;
 using Optivem.Testing;
 using Xunit;
 
@@ -12,18 +11,6 @@ public class ShopSmokeTest : BaseScenarioDslTest
     public async Task ShouldBeAbleToGoToShop(Channel channel)
     {
         await Scenario(channel)
-            .When().GoToShop()
-            .Then().ShouldSucceed();
+            .Assume().Shop().ShouldBeRunning();
     }
 }
-
-
-
-
-
-
-
-
-
-
-

@@ -4,8 +4,6 @@ namespace Dsl.Port.When;
 
 public interface IWhenStage
 {
-    IGoToShop GoToShop();
-
     IPlaceOrder PlaceOrder();
 
     ICancelOrder CancelOrder();

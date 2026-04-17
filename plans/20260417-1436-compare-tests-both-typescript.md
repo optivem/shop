@@ -22,15 +22,16 @@ Ordering: architectural mismatches first, then architecture layers (clients → 
 - Reference: `system-test/java/src/main/java/com/optivem/shop/testkit/driver/adapter/shop/ui/client/ShopUiClient.java` and page classes.
 - **Source:** 🟡 Partial — ShopUiClient + all page objects (`BasePage`, `HomePage`, `NewOrderPage`, `OrderHistoryPage`, `OrderDetailsPage`, `CouponManagementPage`) already exist at `eshop-tests/typescript/driver-adapter/shop/ui/client/` and `.../client/pages/` (✅ port the client + pages); mod04 `place-order-positive-ui-test.spec.ts` / `place-order-negative-ui-test.spec.ts` rewrites and `fixtures.ts` update are starter-specific (✏️ net-new).
 
-### A2. TypeScript — mod04 External systems: switch to `ErpRealClient` / `TaxRealClient`
-- Edit `system-test/typescript/tests/legacy/mod04/e2e/fixtures.ts` and `system-test/typescript/tests/legacy/mod04/smoke/fixtures.ts` to use `ErpRealClient` and `TaxRealClient` (TS already has both real clients at `src/testkit/driver/adapter/external/erp/client/ErpRealClient.ts` and `.../tax/client/TaxRealClient.ts`).
-- Remove the `ErpStubClient`/`TaxStubClient` fixtures from mod04 and the `WireMock`-style `configureProduct`/`configureTaxRate` calls in positive/negative spec files. Use real `createProduct` / equivalents.
-- **Source:** ✏️ Net-new — `ErpRealClient`/`TaxRealClient` already exist in eshop-tests (`driver-adapter/external/erp/client/ErpRealClient.ts`, `.../tax/client/TaxRealClient.ts`) and in starter too; the work here is starter-legacy-mod04 fixture rewrites (eshop-tests has no mod04 progression that mirrors the starter's stub→real pedagogy).
+### A2. ✅ DONE (commit e2b660e): TypeScript — mod04 External systems: switch to `ErpRealClient` / `TaxRealClient`
+- mod04 e2e fixtures now use `ErpRealClient` (tax client dropped — mod04 positive spec no longer configures tax, matching Java/.NET).
+- mod04 smoke fixtures use `ErpRealClient` + `TaxRealClient`.
+- Positive spec calls `erpClient.createProduct(...)`; `configureProduct` / `configureTaxRate` stub-style calls removed.
+- `EXTERNAL_SYSTEM_MODE` default flipped to `'real'`.
 
-### A3. TypeScript — mod05/mod06 External systems: switch to `ErpRealDriver` / `TaxRealDriver`
-- Edit `system-test/typescript/tests/legacy/mod05/e2e/fixtures.ts`, `system-test/typescript/tests/legacy/mod05/smoke/fixtures.ts`, `system-test/typescript/tests/legacy/mod06/e2e/fixtures.ts`, `system-test/typescript/tests/legacy/mod06/smoke/fixtures.ts` to use `ErpRealDriver` and `TaxRealDriver` in place of the stub variants.
-- Remove the extra `taxDriver.returnsTaxRate({country:'US', taxRate:'0.07'})` calls added in TS positive tests (Java/.NET do not have this step).
-- **Source:** ✏️ Net-new — `ErpRealDriver`/`TaxRealDriver` exist in eshop-tests (`driver-adapter/external/erp/ErpRealDriver.ts`, `.../tax/TaxRealDriver.ts`); the legacy mod05/mod06 fixture/test-body rewrites are starter-specific.
+### A3. 🟡 PARTIAL (commit e2b660e): TypeScript — mod05/mod06 External systems: switch to `ErpRealDriver` / `TaxRealDriver`
+- **Done:** mod05 e2e, mod05 smoke, mod06 e2e, mod06 smoke fixtures all now use `ErpRealDriver` / `TaxRealDriver`; `EXTERNAL_SYSTEM_MODE` default flipped to `'real'`.
+- **Remaining:** Remove the extra `taxDriver.returnsTaxRate({country:'US', taxRate:'0.07'})` calls still present in mod05 e2e positive api/ui spec files and mod06 e2e positive spec (Java/.NET do not have this step).
+- **Source:** ✏️ Net-new — remaining work is a test-body tweak.
 
 ### A4. 🟡 PARTIAL (commit 42ced1d): TypeScript — mod07: introduce a fluent use-case DSL with step builders
 - **Remaining:** Fixtures now use Real drivers (infrastructure done), but the fluent use-case DSL files still need to be created and the mod07 e2e spec bodies still use the imperative `useCase.erp().returnsProduct(...)` / `useCase.shop().placeOrder(...)` style and still contain the `useCase.tax().returnsTaxRate(...)` extra step — not yet converted to the `shop().placeOrder().sku().quantity().country().execute()` builder chain.
@@ -52,10 +53,10 @@ Ordering: architectural mismatches first, then architecture layers (clients → 
 - Apply the same pattern to the `latest` contract tests in `system-test/typescript/tests/latest/contract/` for consistency.
 - **Source:** ✏️ Net-new — `BaseExternalSystemContractTest.ts`, `BaseClockContractTest.ts`, `BaseErpContractTest.ts` do not exist anywhere in eshop-tests (its mod11 contract base contains only `fixtures.ts`).
 
-### A7. TypeScript — mod03 WireMock stubbing is a layering leak
-- Files: `system-test/typescript/tests/legacy/mod03/e2e/place-order-positive-api-test.spec.ts`, `place-order-positive-ui-test.spec.ts`, `place-order-negative-*.spec.ts`.
-- Remove inline `fetch(\`${url}/__admin/mappings\`)` calls. Align with Java/.NET mod03: POST a real ERP product through a raw HTTP request, then run the order flow. This requires running mod03 TS against **real** external systems, not WireMock stubs. If the TS test infrastructure cannot currently support real external systems, fix the infrastructure first.
-- **Source:** ✏️ Net-new — starter-specific mod03 WireMock-removal work; eshop-tests' mod03 uses a different test style and does not carry the starter's inline WireMock leak.
+### A7. ✅ DONE (commit d57c5b3): TypeScript — mod03 WireMock stubbing is a layering leak
+- mod03 positive api/ui specs now POST to real ERP `/api/products` instead of `/__admin/mappings`.
+- mod03 fixtures default `EXTERNAL_SYSTEM_MODE` to `'real'`.
+- Negative specs untouched (they don't contain WireMock admin calls — verify separately if new regressions appear).
 
 ### A8. TypeScript — mod08 negative test: remove premature coverage
 - File: `system-test/typescript/tests/legacy/mod08/e2e/place-order-negative-test.spec.ts`.
@@ -278,9 +279,10 @@ Covered under A5.
 - After `placeOrder`, issue a raw `fetch` view-order call and assert `orderNumber`, `sku`, `quantity=5`, `unitPrice=20.00`, `basePrice=100.00`, `totalPrice>0`, `status='PLACED'`.
 - **Source:** ✏️ Net-new — starter-specific legacy-mod03 test-body restoration.
 
-### N3. TypeScript — restore full UI positive flow
+### N3. 🟡 PARTIAL (commit d57c5b3): TypeScript — restore full UI positive flow
+- **Done:** Unique SKU (random UUID) now used in mod03 UI positive spec.
+- **Remaining:** After placing order, navigate to `/order-history`, filter by orderNumber, click View Details, assert orderNumber/sku/quantity/unitPrice/basePrice/totalPrice/status on details page.
 - File: `system-test/typescript/tests/legacy/mod03/e2e/place-order-positive-ui-test.spec.ts`.
-- After placing order, navigate to `/order-history`, filter by orderNumber, click View Details, assert orderNumber/sku/quantity/unitPrice/basePrice/totalPrice/status on details page. Generate a unique SKU instead of using `DEFAULT-SKU`.
 - **Source:** ✏️ Net-new — starter-specific legacy-mod03 test-body restoration.
 
 ### N4. TypeScript — fix UI negative test selector assumptions
@@ -318,10 +320,10 @@ Covered under A5.
 
 ## P. Legacy Tests — mod05
 
-### P2. TypeScript — restore full positive assertions in mod05
+### P2. 🟡 PARTIAL (commit e2b660e): TypeScript — restore full positive assertions in mod05
+- **Done:** Both mod05 e2e api + ui positive specs now assert `orderNumber` matches `/^ORD-/`, `quantity=5`, `unitPrice=20`, `status='PLACED'`, `totalPrice>0` via `viewOrder`. Unique SKU used in both.
+- **Remaining:** Remove the `taxDriver.returnsTaxRate({country:'US', taxRate:'0.07'})` step (depends on A3 remaining work). Consider adding explicit `sku` assertion on the view response to match Java.
 - Files: `system-test/typescript/tests/legacy/mod05/e2e/place-order-positive-api-test.spec.ts`, `place-order-positive-ui-test.spec.ts`.
-- After A3 (external drivers switched to Real + extra `taxDriver.returnsTaxRate` call removed), add assertions on `orderNumber`, `sku`, `unitPrice`, `totalPrice > 0`, `status === 'PLACED'`.
-- Use a unique SKU in UI spec (not `DEFAULT-SKU`).
 - **Source:** ✏️ Net-new — starter-specific legacy-mod05 test-body restoration.
 
 ### P3. TypeScript — add `ShopBaseSmokeTest` abstraction (optional)
@@ -332,10 +334,10 @@ Covered under A5.
 
 ## Q. Legacy Tests — mod06
 
-### Q1. TypeScript — restore full positive assertions in mod06
+### Q1. 🟡 PARTIAL (commit e2b660e): TypeScript — restore full positive assertions in mod06
+- **Done:** mod06 e2e positive spec now matches `orderNumber` on `/^ORD-/` and asserts `status='PLACED'` via `viewOrder`.
+- **Remaining:** Add assertions on `sku`, `quantity=5`, `unitPrice=20.00`, `totalPrice>0`. Remove `taxDriver.returnsTaxRate(...)` extra step (depends on A3 remaining work).
 - File: `system-test/typescript/tests/legacy/mod06/e2e/place-order-positive-test.spec.ts`.
-- Remove `taxDriver.returnsTaxRate(...)` extra step.
-- Add assertions on `orderNumber`, `sku`, `quantity=5`, `unitPrice=20.00`, `totalPrice>0`, `status==='PLACED'`.
 - **Source:** ✏️ Net-new — starter-specific legacy-mod06 test-body restoration.
 
 ---
@@ -417,17 +419,36 @@ Java remains unchanged throughout (reference).
 
 ## Y. Interim commit reconciliation (TypeScript)
 
-Two TypeScript commits landed after this plan was generated. Their impact on plan tasks:
+Four TypeScript commits landed after this plan was generated. Their impact on plan tasks:
 
 - **f5ef50c** — "Fix TS system tests: mod03 type casts, mod04-07 smoke/external rewrites"
-  - mod03 positive/negative API specs: only added TypeScript type casts on `response.json()` return values (dev-ergonomics fix). Does NOT address **A7** (WireMock leak removal) — A7 remains open.
-  - mod04 smoke `fixtures.ts` + `erp-smoke-test.spec.ts` / `tax-smoke-test.spec.ts`: added `erpClient`/`taxClient` fixtures using `ErpStubClient`/`TaxStubClient` and rewrote the smoke specs to call `checkHealth()`. Does NOT address **A2** (which requires `ErpRealClient`/`TaxRealClient`) — A2 remains open.
-  - mod05 / mod06 smoke `fixtures.ts` + smoke external specs: added `erpDriver`/`taxDriver` fixtures using `ErpStubDriver`/`TaxStubDriver` and rewrote the smoke specs to call `goToErp()`/`goToTax()`. Does NOT address **A3** (which requires `ErpRealDriver`/`TaxRealDriver`) — A3 remains open.
+  - mod03 positive/negative API specs: only added TypeScript type casts on `response.json()` return values (dev-ergonomics fix). Does NOT address **A7** (WireMock leak removal) at this point.
+  - mod04 smoke `fixtures.ts` + `erp-smoke-test.spec.ts` / `tax-smoke-test.spec.ts`: added `erpClient`/`taxClient` fixtures using `ErpStubClient`/`TaxStubClient` and rewrote the smoke specs to call `checkHealth()`. Does NOT address **A2** (which requires `ErpRealClient`/`TaxRealClient`) at this point.
+  - mod05 / mod06 smoke `fixtures.ts` + smoke external specs: added `erpDriver`/`taxDriver` fixtures using `ErpStubDriver`/`TaxStubDriver` and rewrote the smoke specs to call `goToErp()`/`goToTax()`. Does NOT address **A3** at this point.
   - mod07 smoke external specs: rewritten to use `useCase.erp().goToErp()` / `useCase.tax().goToTax()` (unrelated to the e2e fluent DSL of A4).
-  - No plan task fully resolved by f5ef50c.
+  - No plan task fully resolved by f5ef50c. (Later superseded for mod04 smoke by e2b660e which switched those fixtures to Real clients.)
 
 - **42ced1d** — "Fix mod07 fixtures: use Real drivers (stubs not introduced until mod09)"
   - mod07 e2e/smoke `fixtures.ts`: swapped `ErpStubDriver`/`TaxStubDriver`/`ClockStubDriver` for `ErpRealDriver`/`TaxRealDriver`/`ClockRealDriver` and removed the `EXTERNAL_SYSTEM_MODE=stub` default.
   - Partially resolves **A4** and **R1** (infrastructure/fixture-level prerequisite for Real external systems is now in place). Test-body rewrite, fluent builder DSL, and `returnsTaxRate` removal still pending.
 
-**Net result:** No tasks moved to DONE. Tasks moved to PARTIAL: **A4**, **R1** (both annotated with commit 42ced1d).
+- **d57c5b3** — "Fix legacy/mod03/e2e TS tests: run against real ERP (not WireMock admin)"
+  - mod03 e2e `fixtures.ts`: default `EXTERNAL_SYSTEM_MODE` flipped to `'real'`.
+  - mod03 positive api/ui specs: `/__admin/mappings` calls replaced with raw POST to `/api/products` on the real ERP; UI spec now uses a random UUID SKU instead of `DEFAULT-SKU`.
+  - **Fully resolves A7** (WireMock layering leak removed).
+  - **Partially resolves N3** (unique SKU done; order-history view-details flow still pending).
+  - **N2** unchanged — positive api spec still lacks the raw `fetch` view-order call and full-field assertions.
+
+- **e2b660e** — "Align TS mod04-07 legacy e2e/smoke with Java/.NET: switch fixtures to Real drivers/clients"
+  - mod04 e2e + smoke `fixtures.ts`: `ErpStubClient`/`TaxStubClient` → `ErpRealClient` (tax client dropped in e2e; both Real in smoke); default `EXTERNAL_SYSTEM_MODE='real'`; positive specs call `erpClient.createProduct(...)`.
+  - mod05 e2e + smoke `fixtures.ts`: `ErpStubDriver`/`TaxStubDriver` → `ErpRealDriver`/`TaxRealDriver`; UI positive spec now uses unique SKU.
+  - mod06 e2e + smoke `fixtures.ts`: `ErpStubDriver`/`TaxStubDriver` → `ErpRealDriver`/`TaxRealDriver`.
+  - **Fully resolves A2** (mod04 Real clients + stub-style calls removed).
+  - **Partially resolves A3** (mod05/06 fixtures switched to Real drivers; the `taxDriver.returnsTaxRate(...)` extra step is still present in mod05 e2e api/ui and mod06 e2e positive specs and must be removed).
+  - **Partially resolves P2** (mod05 api + ui positive specs already have full viewOrder assertions: `orderNumber~/^ORD-/`, `quantity=5`, `unitPrice=20`, `status='PLACED'`, `totalPrice>0`; unique SKU in both; blocked on A3 remaining work to remove the tax step).
+  - **Partially resolves Q1** (mod06 e2e positive spec has `orderNumber~/^ORD-/` + `status='PLACED'` via viewOrder; still missing `sku`/`quantity`/`unitPrice`/`totalPrice` assertions and the tax step removal).
+  - **O2, O3, O4** unchanged — mod04 api still lacks viewOrder assertions; mod04 UI still uses raw `shopPage.locator(...)` (no `ShopUiClient`); mod04 negative specs not touched.
+
+**Net result so far:**
+- ✅ DONE: **A2** (commit e2b660e), **A7** (commit d57c5b3).
+- 🟡 PARTIAL: **A3** (e2b660e), **A4** (42ced1d), **N3** (d57c5b3), **P2** (e2b660e), **Q1** (e2b660e), **R1** (42ced1d).

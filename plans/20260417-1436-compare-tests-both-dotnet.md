@@ -20,10 +20,18 @@ APPROVED
 
 ## F. Architecture Layers — Scenario DSL
 
-### F1. .NET — remove extra `WhenGoToShop.cs`
-- File: `system-test/dotnet/Dsl.Core/Scenario/When/Steps/WhenGoToShop.cs`.
-- Decision: Java and TS have no equivalent. Either remove from .NET, or add to Java and TS. **Recommended**: remove from .NET (Java is reference and has no equivalent).
-APPROVED
+### F1. .NET — remove scenario-layer `GoToShop` step and align mod08 smoke test to Java's `assume` pattern
+- Scope (expanded — deleting the file alone would break compilation because the step is exposed by the `IWhenStage` interface and used by the mod08 smoke test):
+  1. Delete `system-test/dotnet/Dsl.Core/Scenario/When/Steps/WhenGoToShop.cs`.
+  2. Delete `system-test/dotnet/Dsl.Port/When/Steps/IGoToShop.cs`.
+  3. Remove `IGoToShop GoToShop();` from `system-test/dotnet/Dsl.Port/When/IWhenStage.cs`.
+  4. Remove both `GoToShop()` methods (public + explicit interface impl) from `system-test/dotnet/Dsl.Core/Scenario/When/WhenStage.cs`.
+  5. Rewrite `system-test/dotnet/SystemTests/Legacy/Mod08/SmokeTests/System/ShopSmokeTest.cs` body to `await Scenario(channel).Assume().Shop().ShouldBeRunning();` (mirrors Java mod08 `scenario.assume().shop().shouldBeRunning();`).
+- Not affected (these reference the unrelated use-case-layer `GoToShop` class under `Dsl.Core/UseCase/Shop/UseCases/GoToShop.cs`, which is kept):
+  - `SystemTests/Legacy/Mod07/SmokeTests/System/ShopSmokeTest.cs` (uses `_app.Shop(channel).GoToShop()`).
+  - `Dsl.Core/Scenario/Assume/AssumeStage.cs` (uses `_app.Shop(_channel).GoToShop()` internally).
+  - `Dsl.Core/UseCase/Shop/ShopDsl.cs`.
+APPROVED (expanded)
 
 ### F2. .NET — keep Success/Failure split (language-specific divergence; registered as an exception in the compare-tests agent)
 - Files under `system-test/dotnet/Dsl.Core/Scenario/Then/Steps/`.

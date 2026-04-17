@@ -70,13 +70,6 @@ namespace Dsl.Core.Scenario.When
             }
         }
 
-        public GoToShop GoToShop()
-        {
-            return new GoToShop(_app, _scenario, () => EnsureGiven());
-        }
-
-        IGoToShop IWhenStage.GoToShop() => GoToShop();
-
         public PlaceOrder PlaceOrder()
         {
             return new PlaceOrder(_app, _scenario, () => EnsureGiven());
