@@ -14,7 +14,7 @@ on:
           - commit
           - acceptance
           - release
-        default: 'release'
+        default: 'local'
       language:
         description: 'Language to verify (java, dotnet, typescript). Leave empty to run all.'
         required: false
