@@ -1,9 +1,39 @@
-import { bindChannels, bindTestEach } from '@optivem/optivem-testing';
-import { withApp } from '../../../../src/testkit/driver/adapter/shared/playwright/withApp.js';
+import { test as base, expect } from '@playwright/test';
+import { chromium } from 'playwright';
+import type { Browser, BrowserContext, Page } from 'playwright';
+import { loadConfiguration, type TestConfig } from '../../../../config/configuration-loader.js';
 
-const _test = withApp();
-const test = Object.assign(_test, { each: bindTestEach(_test) });
-const { forChannels } = bindChannels(test);
-export { test, forChannels };
-export { expect } from '@playwright/test';
-export { ChannelType } from '../../../../src/testkit/channel/channel-type.js';
+process.env.EXTERNAL_SYSTEM_MODE = process.env.EXTERNAL_SYSTEM_MODE || 'stub';
+
+const config = loadConfiguration();
+
+// Raw HTTP fixtures for API tests
+export const apiTest = base.extend<{ config: TestConfig }>({
+    config: async ({}, use) => {
+        await use(config);
+    },
+});
+
+// Raw Playwright fixtures for UI tests
+export const uiTest = base.extend<{ config: TestConfig; shopPage: Page; _shopBrowser: Browser; _shopContext: BrowserContext }>({
+    config: async ({}, use) => {
+        await use(config);
+    },
+    _shopBrowser: async ({}, use) => {
+        const browser = await chromium.launch();
+        await use(browser);
+        await browser.close();
+    },
+    _shopContext: async ({ _shopBrowser }, use) => {
+        const context = await _shopBrowser.newContext({ viewport: { width: 1920, height: 1080 } });
+        await use(context);
+        await context.close();
+    },
+    shopPage: async ({ _shopContext }, use) => {
+        const page = await _shopContext.newPage();
+        await use(page);
+        await page.close();
+    },
+});
+
+export { expect, config };

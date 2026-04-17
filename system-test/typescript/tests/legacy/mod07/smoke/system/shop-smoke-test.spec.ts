@@ -1,7 +1,8 @@
-import { test, forChannels, ChannelType } from '../fixtures.js';
+import { test, expect, forChannels, ChannelType } from '../fixtures.js';
 
 forChannels(ChannelType.UI, ChannelType.API)(() => {
-    test('shouldBeAbleToGoToShop', async ({ scenario }) => {
-        await scenario.assume().shop().shouldBeRunning();
+    test('shouldBeAbleToGoToShop', async ({ useCase }) => {
+        const result = await useCase.shop().goToShop();
+        expect(result.success).toBe(true);
     });
 });
