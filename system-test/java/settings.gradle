@@ -1,1 +1,11 @@
+// Fallback mirror in case Maven Central has a transient outage (502/503).
+// Google-hosted, widely used by Apache projects as a Central mirror.
+pluginManagement {
+	repositories {
+		gradlePluginPortal()
+		mavenCentral()
+		maven { url 'https://maven-central.storage-download.googleapis.com/maven2/' }
+	}
+}
+
 rootProject.name = 'system-test'

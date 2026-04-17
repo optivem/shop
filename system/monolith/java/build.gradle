@@ -24,6 +24,8 @@ java {
 
 repositories {
 	mavenCentral()
+	// Fallback mirror in case Maven Central has a transient outage (502/503).
+	maven { url 'https://maven-central.storage-download.googleapis.com/maven2/' }
 }
 
 dependencies {
