@@ -50,16 +50,16 @@ function Format-Duration {
     return $Span.ToString('m\:ss')
 }
 
-function Invoke-PhaseInParallel {
+function Invoke-Phase {
     param(
         [string]$Phase,
         [string[]]$Languages,
         [hashtable]$ScriptArgs
     )
 
-    Write-Heading -Text "PHASE: $Phase (parallel: $($Languages -join ', '))"
+    Write-Heading -Text "PHASE: $Phase (sequential: $($Languages -join ', '))"
 
-    $jobs = @()
+    $results = @()
     foreach ($lang in $Languages) {
         $langDir = Join-Path $SystemTestRoot $lang
         $script  = Join-Path $langDir "Run-SystemTests.ps1"
@@ -69,74 +69,38 @@ function Invoke-PhaseInParallel {
             continue
         }
 
-        $exitCodeFile = Join-Path ([System.IO.Path]::GetTempPath()) "shop-systemtest-$Phase-$lang-$PID.exit"
-        if (Test-Path $exitCodeFile) { Remove-Item $exitCodeFile -Force }
+        Write-Host ""
+        Write-Host "--- $Phase / $lang ---" -ForegroundColor Cyan
 
+        $outputLines = [System.Collections.Generic.List[string]]::new()
         $startTime = Get-Date
-
-        $job = Start-Job -Name "$Phase/$lang" -ScriptBlock {
-            param($LangDir, $ScriptArgs, $ExitCodeFile)
-            Set-Location $LangDir
-            & ".\Run-SystemTests.ps1" @ScriptArgs *>&1
-            $LASTEXITCODE | Out-File -FilePath $ExitCodeFile -Encoding ascii
-        } -ArgumentList $langDir, $ScriptArgs, $exitCodeFile
-
-        $jobs += [pscustomobject]@{
-            Job          = $job
-            Language     = $lang
-            Phase        = $Phase
-            ExitCodeFile = $exitCodeFile
-            StartTime    = $startTime
-            EndTime      = $null
-            OutputLines  = [System.Collections.Generic.List[string]]::new()
-        }
-    }
-
-    # Stream output as it arrives (prefixed with [lang]) and accumulate for later parsing
-    while ($jobs.Job | Where-Object { $_.State -eq 'Running' -or $_.HasMoreData }) {
-        foreach ($entry in $jobs) {
-            $data = Receive-Job -Job $entry.Job -ErrorAction SilentlyContinue
-            if ($data) {
-                foreach ($line in $data) {
-                    $lineStr = "$line"
-                    Write-Host "[$($entry.Language)] $lineStr"
-                    $entry.OutputLines.Add($lineStr)
-                }
-            }
-            if ($entry.Job.State -ne 'Running' -and -not $entry.EndTime) {
-                $entry.EndTime = Get-Date
-            }
-        }
-        Start-Sleep -Milliseconds 300
-    }
-
-    # Build results
-    $results = @()
-    foreach ($entry in $jobs) {
-        if (-not $entry.EndTime) { $entry.EndTime = Get-Date }
-
         $exitCode = $null
-        if (Test-Path $entry.ExitCodeFile) {
-            $raw = (Get-Content $entry.ExitCodeFile -Raw).Trim()
-            if ($raw -ne '') { $exitCode = [int]$raw }
-            Remove-Item $entry.ExitCodeFile -Force -ErrorAction SilentlyContinue
+
+        Push-Location $langDir
+        try {
+            & ".\Run-SystemTests.ps1" @ScriptArgs 2>&1 | ForEach-Object {
+                $lineStr = "$_"
+                Write-Host "[$lang] $lineStr"
+                $outputLines.Add($lineStr)
+            }
+            $exitCode = $LASTEXITCODE
+        } finally {
+            Pop-Location
         }
 
+        $endTime = Get-Date
         $status = if ($exitCode -eq 0 -or $null -eq $exitCode) { "PASSED" } else { "FAILED" }
-        $counts = Get-PassFailCounts -OutputLines $entry.OutputLines
-        $duration = $entry.EndTime - $entry.StartTime
+        $counts = Get-PassFailCounts -OutputLines $outputLines
 
         $results += [pscustomobject]@{
-            Phase    = $entry.Phase
-            Language = $entry.Language
+            Phase    = $Phase
+            Language = $lang
             Status   = $status
             ExitCode = $exitCode
             Passed   = $counts.Passed
             Failed   = $counts.Failed
-            Duration = $duration
+            Duration = $endTime - $startTime
         }
-
-        Remove-Job -Job $entry.Job -Force -ErrorAction SilentlyContinue
     }
 
     return $results
@@ -152,14 +116,14 @@ if ($Rebuild) {
     $rebuildArgs = $baseArgs.Clone()
     $rebuildArgs.Rebuild   = $true
     $rebuildArgs.SkipTests = $true
-    $allResults += Invoke-PhaseInParallel -Phase "Rebuild" -Languages $Languages -ScriptArgs $rebuildArgs
+    $allResults += Invoke-Phase -Phase "Rebuild" -Languages $Languages -ScriptArgs $rebuildArgs
 }
 
-$allResults += Invoke-PhaseInParallel -Phase "Latest" -Languages $Languages -ScriptArgs $baseArgs
+$allResults += Invoke-Phase -Phase "Latest" -Languages $Languages -ScriptArgs $baseArgs
 
 $legacyArgs = $baseArgs.Clone()
 $legacyArgs.Legacy = $true
-$allResults += Invoke-PhaseInParallel -Phase "Legacy" -Languages $Languages -ScriptArgs $legacyArgs
+$allResults += Invoke-Phase -Phase "Legacy" -Languages $Languages -ScriptArgs $legacyArgs
 
 $overallDuration = (Get-Date) - $overallStart
 
