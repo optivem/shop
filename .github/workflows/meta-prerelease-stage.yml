@@ -64,7 +64,15 @@ jobs:
           done
 
           if [[ ${#FOUND[@]} -gt 0 ]]; then
-            echo "::error::Version ${VERSION} is already used as a final release by: ${FOUND[*]}. Bump VERSION before re-running."
+            BUMP_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/workflows/auto-bump-patch.yml"
+            {
+              echo "## Version already released"
+              echo ""
+              echo "Version \`${VERSION}\` is already used as a final release by: ${FOUND[*]}."
+              echo ""
+              echo "Run the [auto-bump-patch workflow](${BUMP_URL}) to bump VERSION, then re-run this workflow."
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "::error::Version ${VERSION} is already used as a final release by: ${FOUND[*]}. Run the auto-bump-patch workflow to bump VERSION, then re-run this workflow: ${BUMP_URL}"
             exit 1
           fi
           echo "Version ${VERSION} is available across meta and all pipelines. OK to proceed."
