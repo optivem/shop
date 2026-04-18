@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.4
 FROM eclipse-temurin:21-jdk-alpine AS build
 WORKDIR /app
 COPY gradlew .
@@ -6,7 +7,8 @@ COPY build.gradle .
 COPY settings.gradle .
 COPY src src
 COPY config config
-RUN sed -i 's/\r$//' gradlew && chmod +x gradlew && ./gradlew bootJar
+RUN --mount=type=cache,target=/root/.gradle \
+    sed -i 's/\r$//' gradlew && chmod +x gradlew && ./gradlew bootJar --no-daemon
 
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app

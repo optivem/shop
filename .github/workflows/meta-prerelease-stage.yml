@@ -16,6 +16,10 @@ on:
           - qa
         default: 'qa'
 
+concurrency:
+  group: meta-prerelease-stage
+  cancel-in-progress: false
+
 jobs:
   print-inputs:
     runs-on: ubuntu-latest
