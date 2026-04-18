@@ -26,6 +26,30 @@ function Write-Heading {
     Write-Host ""
 }
 
+function Get-PassFailCounts {
+    param([string[]]$OutputLines)
+
+    # Match suite result lines from inner script's summary block:
+    #   "  <name>                   PASSED   mm:ss.fff"
+    #   "  <name>                   FAILED   mm:ss.fff"
+    $passed = 0
+    $failed = 0
+    foreach ($line in $OutputLines) {
+        if ($line -match '\s(PASSED|FAILED)\s+\d+:\d+') {
+            if ($matches[1] -eq 'PASSED') { $passed++ } else { $failed++ }
+        }
+    }
+    return @{ Passed = $passed; Failed = $failed }
+}
+
+function Format-Duration {
+    param([TimeSpan]$Span)
+    if ($Span.TotalHours -ge 1) {
+        return $Span.ToString('h\:mm\:ss')
+    }
+    return $Span.ToString('m\:ss')
+}
+
 function Invoke-PhaseInParallel {
     param(
         [string]$Phase,
@@ -48,6 +72,8 @@ function Invoke-PhaseInParallel {
         $exitCodeFile = Join-Path ([System.IO.Path]::GetTempPath()) "shop-systemtest-$Phase-$lang-$PID.exit"
         if (Test-Path $exitCodeFile) { Remove-Item $exitCodeFile -Force }
 
+        $startTime = Get-Date
+
         $job = Start-Job -Name "$Phase/$lang" -ScriptBlock {
             param($LangDir, $ScriptArgs, $ExitCodeFile)
             Set-Location $LangDir
@@ -60,17 +86,25 @@ function Invoke-PhaseInParallel {
             Language     = $lang
             Phase        = $Phase
             ExitCodeFile = $exitCodeFile
+            StartTime    = $startTime
+            EndTime      = $null
+            OutputLines  = [System.Collections.Generic.List[string]]::new()
         }
     }
 
-    # Stream output as it arrives, prefixed with [lang]
+    # Stream output as it arrives (prefixed with [lang]) and accumulate for later parsing
     while ($jobs.Job | Where-Object { $_.State -eq 'Running' -or $_.HasMoreData }) {
         foreach ($entry in $jobs) {
             $data = Receive-Job -Job $entry.Job -ErrorAction SilentlyContinue
             if ($data) {
                 foreach ($line in $data) {
-                    Write-Host "[$($entry.Language)] $line"
+                    $lineStr = "$line"
+                    Write-Host "[$($entry.Language)] $lineStr"
+                    $entry.OutputLines.Add($lineStr)
                 }
+            }
+            if ($entry.Job.State -ne 'Running' -and -not $entry.EndTime) {
+                $entry.EndTime = Get-Date
             }
         }
         Start-Sleep -Milliseconds 300
@@ -79,6 +113,8 @@ function Invoke-PhaseInParallel {
     # Build results
     $results = @()
     foreach ($entry in $jobs) {
+        if (-not $entry.EndTime) { $entry.EndTime = Get-Date }
+
         $exitCode = $null
         if (Test-Path $entry.ExitCodeFile) {
             $raw = (Get-Content $entry.ExitCodeFile -Raw).Trim()
@@ -87,12 +123,17 @@ function Invoke-PhaseInParallel {
         }
 
         $status = if ($exitCode -eq 0 -or $null -eq $exitCode) { "PASSED" } else { "FAILED" }
+        $counts = Get-PassFailCounts -OutputLines $entry.OutputLines
+        $duration = $entry.EndTime - $entry.StartTime
 
         $results += [pscustomobject]@{
             Phase    = $entry.Phase
             Language = $entry.Language
             Status   = $status
             ExitCode = $exitCode
+            Passed   = $counts.Passed
+            Failed   = $counts.Failed
+            Duration = $duration
         }
 
         Remove-Job -Job $entry.Job -Force -ErrorAction SilentlyContinue
@@ -122,24 +163,48 @@ $allResults += Invoke-PhaseInParallel -Phase "Legacy" -Languages $Languages -Scr
 
 $overallDuration = (Get-Date) - $overallStart
 
-# Summary
-Write-Heading -Text "SUMMARY" -Color Cyan
-Write-Host ("{0,-10} {1,-12} {2,-8} {3}" -f "Phase", "Language", "Status", "Exit") -ForegroundColor Cyan
-Write-Host ("-" * 50) -ForegroundColor Cyan
-foreach ($r in $allResults) {
-    $color = if ($r.Status -eq "PASSED") { "Green" } else { "Red" }
-    Write-Host ("{0,-10} {1,-12} {2,-8} {3}" -f $r.Phase, $r.Language, $r.Status, $r.ExitCode) -ForegroundColor $color
-}
-Write-Host ("-" * 50) -ForegroundColor Cyan
-Write-Host ("Total duration: {0}" -f $overallDuration.ToString('hh\:mm\:ss')) -ForegroundColor Cyan
+# Summary (Rebuild phase skipped tests so it isn't shown here)
+$testResults = $allResults | Where-Object { $_.Phase -ne 'Rebuild' }
+$failed = $testResults | Where-Object { $_.Status -eq "FAILED" }
+$total  = $testResults.Count
 
-$failed = $allResults | Where-Object { $_.Status -eq "FAILED" }
+Write-Heading -Text "SUMMARY" -Color Cyan
+
+if ($failed) {
+    Write-Host "$($failed.Count) of $total run(s) FAILED." -ForegroundColor Red
+} else {
+    Write-Host "All $total runs completed successfully." -ForegroundColor Green
+}
+Write-Host ""
+
+$header = "{0,-12} {1,-8} {2,-28} {3}" -f "Language", "Suite", "Result", "Duration"
+Write-Host $header -ForegroundColor Cyan
+Write-Host ("-" * $header.Length) -ForegroundColor Cyan
+
+foreach ($r in $testResults) {
+    $resultText = if ($r.Failed -gt 0) {
+        "$($r.Passed) PASSED, $($r.Failed) FAILED"
+    } elseif ($r.Status -eq "FAILED") {
+        "FAILED (no parsed counts)"
+    } elseif ($r.Passed -eq 0) {
+        "PASSED (no parsed counts)"
+    } else {
+        "$($r.Passed) suites PASSED"
+    }
+
+    $color = if ($r.Status -eq "PASSED") { "Green" } else { "Red" }
+    Write-Host ("{0,-12} {1,-8} {2,-28} {3}" -f $r.Language, $r.Phase, $resultText, (Format-Duration $r.Duration)) -ForegroundColor $color
+}
+
+Write-Host ("-" * $header.Length) -ForegroundColor Cyan
+Write-Host ("Total duration: {0}" -f (Format-Duration $overallDuration)) -ForegroundColor Cyan
+
 if ($failed) {
     Write-Host ""
-    Write-Host "$($failed.Count) run(s) FAILED" -ForegroundColor Red
+    Write-Host "Zero failures required — $($failed.Count) failed." -ForegroundColor Red
     exit 1
 }
 
 Write-Host ""
-Write-Host "All runs PASSED" -ForegroundColor Green
+Write-Host "All passing, zero failures." -ForegroundColor Green
 exit 0
