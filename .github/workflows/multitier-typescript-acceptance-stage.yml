@@ -50,6 +50,8 @@ jobs:
 
       - name: Check Version Unreleased
         uses: optivem/actions/check-version-unreleased@v1
+        with:
+          prefix: multitier-typescript
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v4
