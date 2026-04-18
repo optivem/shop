@@ -1,7 +1,7 @@
 import type { Browser, BrowserContext, Page } from 'playwright';
 import type { Result } from '../../../../../common/result.js';
 import { success, failure } from '../../../../../common/result.js';
-import type { SystemError } from '../../../../port/shop/dtos/SystemError.js';
+import type { SystemError } from '../../../../port/shop/dtos/errors/SystemError.js';
 import { HomePage } from './pages/HomePage.js';
 import { NewOrderPage } from './pages/NewOrderPage.js';
 import { OrderHistoryPage } from './pages/OrderHistoryPage.js';

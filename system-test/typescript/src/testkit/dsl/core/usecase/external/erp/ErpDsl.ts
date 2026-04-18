@@ -1,8 +1,9 @@
-import type { Result } from '../../../../../common/result.js';
 import type { ErpDriver } from '../../../../../driver/port/external/erp/erp-driver.js';
-import type { ErpErrorResponse } from '../../../../../driver/port/external/erp/dtos/ErpErrorResponse.js';
 import type { UseCaseContext } from '../../../use-case-context.js';
 import { ReturnsProduct } from './usecases/ReturnsProduct.js';
+import { ReturnsPromotion } from './usecases/ReturnsPromotion.js';
+import { GetProduct } from './usecases/GetProduct.js';
+import { GoToErp } from './usecases/GoToErp.js';
 
 export class ErpDsl {
   constructor(
@@ -10,12 +11,20 @@ export class ErpDsl {
     private readonly context: UseCaseContext,
   ) {}
 
-  async goToErp(): Promise<Result<void, ErpErrorResponse>> {
-    return this.driver.goToErp();
+  goToErp(): GoToErp {
+    return new GoToErp(this.driver, this.context);
   }
 
   returnsProduct(): ReturnsProduct {
     return new ReturnsProduct(this.driver, this.context);
+  }
+
+  returnsPromotion(): ReturnsPromotion {
+    return new ReturnsPromotion(this.driver, this.context);
+  }
+
+  getProduct(): GetProduct {
+    return new GetProduct(this.driver, this.context);
   }
 
   async close(): Promise<void> {

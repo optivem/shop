@@ -4,7 +4,7 @@ import { success, failure } from '../../../../common/result.js';
 import type { PlaceOrderRequest } from '../../../port/shop/dtos/PlaceOrderRequest.js';
 import type { PlaceOrderResponse } from '../../../port/shop/dtos/PlaceOrderResponse.js';
 import type { ViewOrderResponse } from '../../../port/shop/dtos/ViewOrderResponse.js';
-import type { SystemError } from '../../../port/shop/dtos/SystemError.js';
+import type { SystemError } from '../../../port/shop/dtos/errors/SystemError.js';
 import type { PublishCouponRequest } from '../../../port/shop/dtos/PublishCouponRequest.js';
 import type { BrowseCouponsResponse } from '../../../port/shop/dtos/BrowseCouponsResponse.js';
 import type { ShopDriver } from '../../../port/shop/shop-driver.js';

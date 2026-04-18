@@ -1,6 +1,5 @@
-import { test, expect } from '../fixtures.js';
+import { test } from '../fixtures.js';
 
 test('shouldBeAbleToGoToErp', async ({ useCase }) => {
-    const result = await useCase.erp().goToErp();
-    expect(result.success).toBe(true);
+    (await useCase.erp().goToErp().execute()).shouldSucceed();
 });

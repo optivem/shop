@@ -2,7 +2,7 @@ import type { Result } from '../../../../../../common/result.js';
 import { success, failure } from '../../../../../../common/result.js';
 import type { PublishCouponRequest } from '../../../../../port/shop/dtos/PublishCouponRequest.js';
 import type { BrowseCouponsResponse } from '../../../../../port/shop/dtos/BrowseCouponsResponse.js';
-import type { SystemError } from '../../../../../port/shop/dtos/SystemError.js';
+import type { SystemError } from '../../../../../port/shop/dtos/errors/SystemError.js';
 import type { ProblemDetailResponse } from '../dtos/errors/ProblemDetailResponse.js';
 import { SystemErrorMapper } from '../../SystemErrorMapper.js';
 

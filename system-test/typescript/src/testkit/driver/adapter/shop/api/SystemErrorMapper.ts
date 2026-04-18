@@ -1,4 +1,4 @@
-import type { SystemError } from '../../../port/shop/dtos/SystemError.js';
+import type { SystemError } from '../../../port/shop/dtos/errors/SystemError.js';
 import type { ProblemDetailResponse } from './client/dtos/errors/ProblemDetailResponse.js';
 
 export class SystemErrorMapper {

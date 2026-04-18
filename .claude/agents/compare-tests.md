@@ -244,6 +244,11 @@ These are accepted cross-language differences caused by language idioms or type-
 
 - `system-test/java/src/main/java/com/optivem/shop/testkit/common/Closer.java` — wraps `AutoCloseable.close()` and converts checked exceptions to unchecked. Java needs this because of checked exceptions. .NET uses native `IDisposable` + `using`; TypeScript uses `try/finally` or `using` (TS 5.2+). Do not require .NET or TS to port `Closer`.
 
+### TypeScript-only
+
+- `system-test/typescript/src/testkit/dsl/port/then/steps/then-failure-and.ts` and the matching `ThenFailureAnd` class in `system-test/typescript/src/testkit/dsl/core/scenario/then/then-place-order.ts` — required by TypeScript's async semantics. `Result<T, E>` verifications return `PromiseLike<void>`, so `ThenFailure.and()` returns a separate awaited `ThenFailureAnd` step — parallels .NET's `IThenFailureAnd.cs`. Do **not** flag the port interface file as dead code even when it is not currently imported by the class (the class declares its shape inline); it documents the async-adapted port shape that mirrors .NET.
+- The absence of a `then-success-and.ts` (and of a `ThenSuccessAnd` class) is intentional. `ThenSuccess.and()` in TypeScript returns `this` (one-step), closer to Java's `ThenStep<TThen>.and()`. Do **not** propose adding `ThenSuccessAnd` to TypeScript just to symmetrize with .NET — the asymmetric shape (async `and` on Failure, inline `and` on Success) is the chosen design for TS.
+
 ## Workflow
 
 1. Determine the comparison mode (latest, legacy, or both).

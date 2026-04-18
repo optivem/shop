@@ -18,7 +18,7 @@ public class TaxStubDriver : BaseTaxDriver<TaxStubClient>
         var country = request.Country!;
         var taxRate = Converter.ToDecimal(request.TaxRate)!.Value;
 
-        var response = new ExtCountryDetailsResponse
+        var response = new ExtGetCountryResponse
         {
             Id = country,
             TaxRate = taxRate,

@@ -1,5 +1,5 @@
 import type { Result } from '../../../common/result.js';
-import type { SystemError } from '../../../driver/port/shop/dtos/SystemError.js';
+import type { SystemError } from '../../../driver/port/shop/dtos/errors/SystemError.js';
 import type { ScenarioContext } from './scenario-context.js';
 import type { ExecutionResult } from './execution-result.js';
 

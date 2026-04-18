@@ -22,7 +22,7 @@ test.describe('@isolated', () => {
                 .fieldErrorMessage('couponCode', 'Coupon code SUMMER2023 has expired');
         });
 
-        test('shouldRejectOrderPlacedAtYearEnd @time-dependent', async ({ scenario }) => {
+        test('shouldRejectOrderPlacedAtYearEnd', async ({ scenario }) => {
             await scenario
                 .given()
                 .clock()

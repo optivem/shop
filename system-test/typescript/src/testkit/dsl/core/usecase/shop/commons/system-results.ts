@@ -1,5 +1,5 @@
 import { success, failure, type Result } from '../../../../../common/result.js';
-import type { SystemError } from '../../../../../driver/port/shop/dtos/SystemError.js';
+import type { SystemError } from '../../../../../driver/port/shop/dtos/errors/SystemError.js';
 
 export class SystemResults {
   private constructor() {

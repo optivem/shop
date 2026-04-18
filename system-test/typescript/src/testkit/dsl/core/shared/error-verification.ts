@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test';
-import type { SystemError } from '../../../driver/port/shop/dtos/SystemError.js';
+import type { SystemError } from '../../../driver/port/shop/dtos/errors/SystemError.js';
 import { ResponseVerification } from './response-verification.js';
 import type { UseCaseContext } from './use-case-context.js';
 

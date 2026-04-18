@@ -1,7 +1,8 @@
-import type { Result } from '../../../../../common/result.js';
 import type { ClockDriver } from '../../../../../driver/port/external/clock/clock-driver.js';
-import type { ClockErrorResponse } from '../../../../../driver/port/external/clock/dtos/ClockErrorResponse.js';
 import type { UseCaseContext } from '../../../use-case-context.js';
+import { GoToClock } from './usecases/GoToClock.js';
+import { GetTime } from './usecases/GetTime.js';
+import { ReturnsTime } from './usecases/ReturnsTime.js';
 
 export class ClockDsl {
   constructor(
@@ -9,8 +10,16 @@ export class ClockDsl {
     private readonly context: UseCaseContext,
   ) {}
 
-  async goToClock(): Promise<Result<void, ClockErrorResponse>> {
-    return this.driver.goToClock();
+  goToClock(): GoToClock {
+    return new GoToClock(this.driver, this.context);
+  }
+
+  getTime(): GetTime {
+    return new GetTime(this.driver, this.context);
+  }
+
+  returnsTime(): ReturnsTime {
+    return new ReturnsTime(this.driver, this.context);
   }
 
   async close(): Promise<void> {

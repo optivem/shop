@@ -1,9 +1,12 @@
-import type { Result } from '../../../../common/result.js';
 import type { ShopDriver } from '../../../../driver/port/shop/shop-driver.js';
-import type { SystemError } from '../../../../driver/port/shop/dtos/SystemError.js';
 import type { UseCaseContext } from '../../use-case-context.js';
 import { PlaceOrder } from './usecases/PlaceOrder.js';
 import { ViewOrder } from './usecases/ViewOrder.js';
+import { CancelOrder } from './usecases/CancelOrder.js';
+import { DeliverOrder } from './usecases/DeliverOrder.js';
+import { BrowseCoupons } from './usecases/BrowseCoupons.js';
+import { PublishCoupon } from './usecases/PublishCoupon.js';
+import { GoToShop } from './usecases/GoToShop.js';
 
 export class ShopDsl {
   constructor(
@@ -11,8 +14,8 @@ export class ShopDsl {
     private readonly context: UseCaseContext,
   ) {}
 
-  async goToShop(): Promise<Result<void, SystemError>> {
-    return this.driver.goToShop();
+  goToShop(): GoToShop {
+    return new GoToShop(this.driver, this.context);
   }
 
   placeOrder(): PlaceOrder {
@@ -21,6 +24,22 @@ export class ShopDsl {
 
   viewOrder(): ViewOrder {
     return new ViewOrder(this.driver, this.context);
+  }
+
+  cancelOrder(): CancelOrder {
+    return new CancelOrder(this.driver, this.context);
+  }
+
+  deliverOrder(): DeliverOrder {
+    return new DeliverOrder(this.driver, this.context);
+  }
+
+  browseCoupons(): BrowseCoupons {
+    return new BrowseCoupons(this.driver, this.context);
+  }
+
+  publishCoupon(): PublishCoupon {
+    return new PublishCoupon(this.driver, this.context);
   }
 
   async close(): Promise<void> {
