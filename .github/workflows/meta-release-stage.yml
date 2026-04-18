@@ -1,5 +1,15 @@
 name: meta-release-stage
 
+# Promotes a meta-rc to a final meta release by:
+#   1. Resolving the meta-rc tag and extracting its version + SHA
+#   2. Finding each flavor's latest QA-approved RC at that version
+#   3. Triggering all 6 flavor prod-stages in parallel to release each flavor
+#   4. After all flavor releases succeed, creating the final meta-v{VERSION} tag
+#   5. Calling auto-bump-patch to bump all VERSION files for the next cycle
+#
+# This is the single canonical release path. Pipeline workflows only run through QA;
+# actual production release happens here (or via direct dispatch on a flavor-prod-stage.yml).
+
 on:
   workflow_dispatch:
     inputs:
@@ -8,21 +18,23 @@ on:
         required: false
         default: ''
         type: string
-      bump:
-        description: 'VERSION bump after promotion'
-        required: false
-        type: choice
-        options:
-          - patch
-          - minor
-          - major
-        default: patch
 
 jobs:
-  promote:
+  resolve:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
+    outputs:
+      meta_rc_tag: ${{ steps.rc.outputs.rc_tag }}
+      sha: ${{ steps.resolve.outputs.sha }}
+      version: ${{ steps.resolve.outputs.version }}
+      release_tag: ${{ steps.resolve.outputs.release_tag }}
+      monolith-java-rc: ${{ steps.flavor-rcs.outputs.monolith-java-rc }}
+      monolith-dotnet-rc: ${{ steps.flavor-rcs.outputs.monolith-dotnet-rc }}
+      monolith-typescript-rc: ${{ steps.flavor-rcs.outputs.monolith-typescript-rc }}
+      multitier-java-rc: ${{ steps.flavor-rcs.outputs.multitier-java-rc }}
+      multitier-dotnet-rc: ${{ steps.flavor-rcs.outputs.multitier-dotnet-rc }}
+      multitier-typescript-rc: ${{ steps.flavor-rcs.outputs.multitier-typescript-rc }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -42,7 +54,6 @@ jobs:
           else
             VERSION=$(tr -d '[:space:]' < VERSION)
             echo "VERSION on main: ${VERSION}"
-            # List matching rc tags, pick the one with the highest numeric suffix
             RC_TAG=$(git tag --list "meta-v${VERSION}-rc.*" \
               | awk -F'-rc\\.' '{print $2 " " $0}' \
               | sort -k1,1 -n \
@@ -66,16 +77,13 @@ jobs:
           RC_TAG: ${{ steps.rc.outputs.rc_tag }}
         run: |
           set -euo pipefail
-          # Ensure tag is fetched
           git fetch origin "refs/tags/${RC_TAG}:refs/tags/${RC_TAG}" || true
           SHA=$(git rev-list -n 1 "${RC_TAG}")
           if [[ -z "${SHA}" ]]; then
             echo "::error::Could not resolve SHA for tag ${RC_TAG}"
             exit 1
           fi
-          # Read VERSION at that SHA (not current main)
           TAG_VERSION=$(git show "${SHA}:VERSION" | tr -d '[:space:]')
-          # Extract version embedded in the tag name
           EMBEDDED_VERSION=$(echo "${RC_TAG}" | sed -E 's/^meta-v([0-9]+\.[0-9]+\.[0-9]+)-rc\.[0-9]+$/\1/')
           if [[ "${TAG_VERSION}" != "${EMBEDDED_VERSION}" ]]; then
             echo "::error::VERSION at tag SHA (${TAG_VERSION}) does not match version embedded in tag name (${EMBEDDED_VERSION})"
@@ -86,7 +94,7 @@ jobs:
           echo "version=${TAG_VERSION}" >> "$GITHUB_OUTPUT"
           echo "release_tag=${RELEASE_TAG}" >> "$GITHUB_OUTPUT"
 
-      - name: Verify release tag does not already exist
+      - name: Verify meta release tag does not already exist
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_TAG: ${{ steps.resolve.outputs.release_tag }}
@@ -98,11 +106,94 @@ jobs:
           fi
           echo "Release tag ${RELEASE_TAG} is available"
 
-      - name: Create release tag
+      - name: Find flavor QA-approved RCs
+        id: flavor-rcs
+        env:
+          VERSION: ${{ steps.resolve.outputs.version }}
+        run: |
+          set -euo pipefail
+          # For each flavor, find the highest-numbered RC whose QA-approved tag exists at this VERSION.
+          # The flavor prod-stage takes the RC version (without the -qa-approved suffix) as input.
+          for flavor in monolith-java monolith-dotnet monolith-typescript multitier-java multitier-dotnet multitier-typescript; do
+            rc=$(git tag --list "${flavor}-v${VERSION}-rc.*-qa-approved" \
+              | sed -E 's/-qa-approved$//' \
+              | awk -F'-rc\.' '{print $2 " " $0}' \
+              | sort -k1,1 -n \
+              | tail -n 1 \
+              | awk '{print $2}')
+            if [[ -z "$rc" ]]; then
+              echo "::error::No QA-approved RC found for ${flavor} at v${VERSION}. Was the acceptance pipeline run to completion?"
+              exit 1
+            fi
+            echo "${flavor}-rc=${rc}" >> "$GITHUB_OUTPUT"
+            echo "Found: ${rc}"
+          done
+
+  promote-monolith-java:
+    needs: resolve
+    runs-on: ubuntu-latest
+    steps:
+      - uses: optivem/actions/trigger-and-wait@main
+        with:
+          workflow: monolith-java-prod-stage.yml
+          inputs: '{"version": "${{ needs.resolve.outputs.monolith-java-rc }}"}'
+
+  promote-monolith-dotnet:
+    needs: resolve
+    runs-on: ubuntu-latest
+    steps:
+      - uses: optivem/actions/trigger-and-wait@main
+        with:
+          workflow: monolith-dotnet-prod-stage.yml
+          inputs: '{"version": "${{ needs.resolve.outputs.monolith-dotnet-rc }}"}'
+
+  promote-monolith-typescript:
+    needs: resolve
+    runs-on: ubuntu-latest
+    steps:
+      - uses: optivem/actions/trigger-and-wait@main
+        with:
+          workflow: monolith-typescript-prod-stage.yml
+          inputs: '{"version": "${{ needs.resolve.outputs.monolith-typescript-rc }}"}'
+
+  promote-multitier-java:
+    needs: resolve
+    runs-on: ubuntu-latest
+    steps:
+      - uses: optivem/actions/trigger-and-wait@main
+        with:
+          workflow: multitier-java-prod-stage.yml
+          inputs: '{"version": "${{ needs.resolve.outputs.multitier-java-rc }}"}'
+
+  promote-multitier-dotnet:
+    needs: resolve
+    runs-on: ubuntu-latest
+    steps:
+      - uses: optivem/actions/trigger-and-wait@main
+        with:
+          workflow: multitier-dotnet-prod-stage.yml
+          inputs: '{"version": "${{ needs.resolve.outputs.multitier-dotnet-rc }}"}'
+
+  promote-multitier-typescript:
+    needs: resolve
+    runs-on: ubuntu-latest
+    steps:
+      - uses: optivem/actions/trigger-and-wait@main
+        with:
+          workflow: multitier-typescript-prod-stage.yml
+          inputs: '{"version": "${{ needs.resolve.outputs.multitier-typescript-rc }}"}'
+
+  tag-meta-release:
+    needs: [resolve, promote-monolith-java, promote-monolith-dotnet, promote-monolith-typescript, promote-multitier-java, promote-multitier-dotnet, promote-multitier-typescript]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Create meta release tag
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RELEASE_TAG: ${{ steps.resolve.outputs.release_tag }}
-          SHA: ${{ steps.resolve.outputs.sha }}
+          RELEASE_TAG: ${{ needs.resolve.outputs.release_tag }}
+          SHA: ${{ needs.resolve.outputs.sha }}
         run: |
           set -euo pipefail
           gh api \
@@ -112,46 +203,11 @@ jobs:
             -f sha="${SHA}"
           echo "Created tag ${RELEASE_TAG} on ${SHA}"
 
-      - name: Bump VERSION on main
-        id: bump
-        env:
-          BUMP: ${{ inputs.bump }}
-        run: |
-          set -euo pipefail
-          # Read current VERSION on main (not at the rc SHA)
-          CURRENT=$(tr -d '[:space:]' < VERSION)
-          IFS='.' read -r MAJOR MINOR PATCH <<< "${CURRENT}"
-          case "${BUMP}" in
-            major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
-            minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
-            patch) PATCH=$((PATCH + 1)) ;;
-            *) echo "::error::Invalid bump: ${BUMP}"; exit 1 ;;
-          esac
-          NEW="${MAJOR}.${MINOR}.${PATCH}"
-          echo "${NEW}" > VERSION
-          echo "current=${CURRENT}" >> "$GITHUB_OUTPUT"
-          echo "new=${NEW}" >> "$GITHUB_OUTPUT"
-          echo "Bumped VERSION ${CURRENT} -> ${NEW} (${BUMP})"
-
-      - name: Commit VERSION bump
-        env:
-          NEW: ${{ steps.bump.outputs.new }}
-          CURRENT: ${{ steps.bump.outputs.current }}
-        run: |
-          set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add VERSION
-          git commit -m "chore: bump VERSION ${CURRENT} -> ${NEW} [skip ci]"
-          git push origin HEAD:main
-
       - name: Summary
         env:
-          RC_TAG: ${{ steps.rc.outputs.rc_tag }}
-          RELEASE_TAG: ${{ steps.resolve.outputs.release_tag }}
-          SHA: ${{ steps.resolve.outputs.sha }}
-          OLD: ${{ steps.bump.outputs.current }}
-          NEW: ${{ steps.bump.outputs.new }}
+          RC_TAG: ${{ needs.resolve.outputs.meta_rc_tag }}
+          RELEASE_TAG: ${{ needs.resolve.outputs.release_tag }}
+          SHA: ${{ needs.resolve.outputs.sha }}
         run: |
           {
             echo "## Meta release promoted"
@@ -161,5 +217,19 @@ jobs:
             echo "| RC tag | \`${RC_TAG}\` |"
             echo "| Release tag | \`${RELEASE_TAG}\` |"
             echo "| SHA | \`${SHA}\` |"
-            echo "| VERSION on main | \`${OLD}\` -> \`${NEW}\` |"
+            echo ""
+            echo "### Flavor RCs promoted"
+            echo "| Flavor | RC version |"
+            echo "|---|---|"
+            echo "| monolith-java | \`${{ needs.resolve.outputs.monolith-java-rc }}\` |"
+            echo "| monolith-dotnet | \`${{ needs.resolve.outputs.monolith-dotnet-rc }}\` |"
+            echo "| monolith-typescript | \`${{ needs.resolve.outputs.monolith-typescript-rc }}\` |"
+            echo "| multitier-java | \`${{ needs.resolve.outputs.multitier-java-rc }}\` |"
+            echo "| multitier-dotnet | \`${{ needs.resolve.outputs.multitier-dotnet-rc }}\` |"
+            echo "| multitier-typescript | \`${{ needs.resolve.outputs.multitier-typescript-rc }}\` |"
           } >> "$GITHUB_STEP_SUMMARY"
+
+  auto-bump-patch:
+    needs: tag-meta-release
+    uses: ./.github/workflows/auto-bump-patch.yml
+    secrets: inherit

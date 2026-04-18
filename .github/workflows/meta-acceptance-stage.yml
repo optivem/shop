@@ -13,8 +13,8 @@ on:
           - local
           - commit
           - acceptance
-          - release
-        default: 'release'
+          - qa
+        default: 'qa'
 
 jobs:
   print-inputs:
@@ -23,7 +23,7 @@ jobs:
       - name: Print input parameters
         run: |
           echo "=== Workflow Inputs ==="
-          echo "Level: ${{ inputs.level || 'release' }}"
+          echo "Level: ${{ inputs.level || 'qa' }}"
           echo "Triggered by: ${{ github.event_name }} ${{ github.event.schedule }}"
 
   # Fail fast if VERSION has already been used as a final release by meta
@@ -76,7 +76,7 @@ jobs:
     steps:
       - uses: optivem/actions/trigger-and-wait@main
         with:
-          workflow: pipeline-monolith-java.yml
+          workflow: prerelease-pipeline-monolith-java.yml
           inputs: '{"level": "local", "skip-commit-stage": "true"}'
 
   local-monolith-dotnet:
@@ -85,7 +85,7 @@ jobs:
     steps:
       - uses: optivem/actions/trigger-and-wait@main
         with:
-          workflow: pipeline-monolith-dotnet.yml
+          workflow: prerelease-pipeline-monolith-dotnet.yml
           inputs: '{"level": "local", "skip-commit-stage": "true"}'
 
   local-monolith-typescript:
@@ -94,7 +94,7 @@ jobs:
     steps:
       - uses: optivem/actions/trigger-and-wait@main
         with:
-          workflow: pipeline-monolith-typescript.yml
+          workflow: prerelease-pipeline-monolith-typescript.yml
           inputs: '{"level": "local", "skip-commit-stage": "true"}'
 
   local-multitier-java:
@@ -103,7 +103,7 @@ jobs:
     steps:
       - uses: optivem/actions/trigger-and-wait@main
         with:
-          workflow: pipeline-multitier-java.yml
+          workflow: prerelease-pipeline-multitier-java.yml
           inputs: '{"level": "local", "skip-commit-stage": "true"}'
 
   local-multitier-dotnet:
@@ -112,7 +112,7 @@ jobs:
     steps:
       - uses: optivem/actions/trigger-and-wait@main
         with:
-          workflow: pipeline-multitier-dotnet.yml
+          workflow: prerelease-pipeline-multitier-dotnet.yml
           inputs: '{"level": "local", "skip-commit-stage": "true"}'
 
   local-multitier-typescript:
@@ -121,13 +121,13 @@ jobs:
     steps:
       - uses: optivem/actions/trigger-and-wait@main
         with:
-          workflow: pipeline-multitier-typescript.yml
+          workflow: prerelease-pipeline-multitier-typescript.yml
           inputs: '{"level": "local", "skip-commit-stage": "true"}'
 
   # Phase 1: Run all commit stages in parallel (deduplicated)
   commit-monolith-java:
     needs: [local-monolith-java, local-monolith-dotnet, local-monolith-typescript, local-multitier-java, local-multitier-dotnet, local-multitier-typescript]
-    if: ${{ contains(fromJSON('["commit","acceptance","release"]'), inputs.level || 'release') }}
+    if: ${{ contains(fromJSON('["commit","acceptance","qa"]'), inputs.level || 'qa') }}
     runs-on: ubuntu-latest
     steps:
       - uses: optivem/actions/trigger-and-wait@main
@@ -136,7 +136,7 @@ jobs:
 
   commit-monolith-dotnet:
     needs: [local-monolith-java, local-monolith-dotnet, local-monolith-typescript, local-multitier-java, local-multitier-dotnet, local-multitier-typescript]
-    if: ${{ contains(fromJSON('["commit","acceptance","release"]'), inputs.level || 'release') }}
+    if: ${{ contains(fromJSON('["commit","acceptance","qa"]'), inputs.level || 'qa') }}
     runs-on: ubuntu-latest
     steps:
       - uses: optivem/actions/trigger-and-wait@main
@@ -145,7 +145,7 @@ jobs:
 
   commit-monolith-typescript:
     needs: [local-monolith-java, local-monolith-dotnet, local-monolith-typescript, local-multitier-java, local-multitier-dotnet, local-multitier-typescript]
-    if: ${{ contains(fromJSON('["commit","acceptance","release"]'), inputs.level || 'release') }}
+    if: ${{ contains(fromJSON('["commit","acceptance","qa"]'), inputs.level || 'qa') }}
     runs-on: ubuntu-latest
     steps:
       - uses: optivem/actions/trigger-and-wait@main
@@ -154,7 +154,7 @@ jobs:
 
   commit-multitier-backend-java:
     needs: [local-monolith-java, local-monolith-dotnet, local-monolith-typescript, local-multitier-java, local-multitier-dotnet, local-multitier-typescript]
-    if: ${{ contains(fromJSON('["commit","acceptance","release"]'), inputs.level || 'release') }}
+    if: ${{ contains(fromJSON('["commit","acceptance","qa"]'), inputs.level || 'qa') }}
     runs-on: ubuntu-latest
     steps:
       - uses: optivem/actions/trigger-and-wait@main
@@ -163,7 +163,7 @@ jobs:
 
   commit-multitier-backend-dotnet:
     needs: [local-monolith-java, local-monolith-dotnet, local-monolith-typescript, local-multitier-java, local-multitier-dotnet, local-multitier-typescript]
-    if: ${{ contains(fromJSON('["commit","acceptance","release"]'), inputs.level || 'release') }}
+    if: ${{ contains(fromJSON('["commit","acceptance","qa"]'), inputs.level || 'qa') }}
     runs-on: ubuntu-latest
     steps:
       - uses: optivem/actions/trigger-and-wait@main
@@ -172,7 +172,7 @@ jobs:
 
   commit-multitier-backend-typescript:
     needs: [local-monolith-java, local-monolith-dotnet, local-monolith-typescript, local-multitier-java, local-multitier-dotnet, local-multitier-typescript]
-    if: ${{ contains(fromJSON('["commit","acceptance","release"]'), inputs.level || 'release') }}
+    if: ${{ contains(fromJSON('["commit","acceptance","qa"]'), inputs.level || 'qa') }}
     runs-on: ubuntu-latest
     steps:
       - uses: optivem/actions/trigger-and-wait@main
@@ -181,7 +181,7 @@ jobs:
 
   commit-multitier-frontend-react:
     needs: [local-monolith-java, local-monolith-dotnet, local-monolith-typescript, local-multitier-java, local-multitier-dotnet, local-multitier-typescript]
-    if: ${{ contains(fromJSON('["commit","acceptance","release"]'), inputs.level || 'release') }}
+    if: ${{ contains(fromJSON('["commit","acceptance","qa"]'), inputs.level || 'qa') }}
     runs-on: ubuntu-latest
     steps:
       - uses: optivem/actions/trigger-and-wait@main
@@ -192,68 +192,68 @@ jobs:
   # by its prefix (e.g. monolith-java-v1.0.0-rc.N), so there are no shared-counter collisions.
   monolith-java:
     needs: [commit-monolith-java, commit-monolith-dotnet, commit-monolith-typescript, commit-multitier-backend-java, commit-multitier-backend-dotnet, commit-multitier-backend-typescript, commit-multitier-frontend-react]
-    if: ${{ always() && !failure() && !cancelled() && contains(fromJSON('["acceptance","release"]'), inputs.level || 'release') }}
+    if: ${{ always() && !failure() && !cancelled() && contains(fromJSON('["acceptance","qa"]'), inputs.level || 'qa') }}
     runs-on: ubuntu-latest
     steps:
       - uses: optivem/actions/trigger-and-wait@main
         with:
-          workflow: pipeline-monolith-java.yml
-          inputs: '{"level": "${{ inputs.level || ''release'' }}", "skip-local-stage": "true", "skip-commit-stage": "true"}'
+          workflow: prerelease-pipeline-monolith-java.yml
+          inputs: '{"level": "${{ inputs.level || ''qa'' }}", "skip-local-stage": "true", "skip-commit-stage": "true"}'
 
   monolith-dotnet:
     needs: [commit-monolith-java, commit-monolith-dotnet, commit-monolith-typescript, commit-multitier-backend-java, commit-multitier-backend-dotnet, commit-multitier-backend-typescript, commit-multitier-frontend-react]
-    if: ${{ always() && !failure() && !cancelled() && contains(fromJSON('["acceptance","release"]'), inputs.level || 'release') }}
+    if: ${{ always() && !failure() && !cancelled() && contains(fromJSON('["acceptance","qa"]'), inputs.level || 'qa') }}
     runs-on: ubuntu-latest
     steps:
       - uses: optivem/actions/trigger-and-wait@main
         with:
-          workflow: pipeline-monolith-dotnet.yml
-          inputs: '{"level": "${{ inputs.level || ''release'' }}", "skip-local-stage": "true", "skip-commit-stage": "true"}'
+          workflow: prerelease-pipeline-monolith-dotnet.yml
+          inputs: '{"level": "${{ inputs.level || ''qa'' }}", "skip-local-stage": "true", "skip-commit-stage": "true"}'
 
   monolith-typescript:
     needs: [commit-monolith-java, commit-monolith-dotnet, commit-monolith-typescript, commit-multitier-backend-java, commit-multitier-backend-dotnet, commit-multitier-backend-typescript, commit-multitier-frontend-react]
-    if: ${{ always() && !failure() && !cancelled() && contains(fromJSON('["acceptance","release"]'), inputs.level || 'release') }}
+    if: ${{ always() && !failure() && !cancelled() && contains(fromJSON('["acceptance","qa"]'), inputs.level || 'qa') }}
     runs-on: ubuntu-latest
     steps:
       - uses: optivem/actions/trigger-and-wait@main
         with:
-          workflow: pipeline-monolith-typescript.yml
-          inputs: '{"level": "${{ inputs.level || ''release'' }}", "skip-local-stage": "true", "skip-commit-stage": "true"}'
+          workflow: prerelease-pipeline-monolith-typescript.yml
+          inputs: '{"level": "${{ inputs.level || ''qa'' }}", "skip-local-stage": "true", "skip-commit-stage": "true"}'
 
   multitier-java:
     needs: [commit-monolith-java, commit-monolith-dotnet, commit-monolith-typescript, commit-multitier-backend-java, commit-multitier-backend-dotnet, commit-multitier-backend-typescript, commit-multitier-frontend-react]
-    if: ${{ always() && !failure() && !cancelled() && contains(fromJSON('["acceptance","release"]'), inputs.level || 'release') }}
+    if: ${{ always() && !failure() && !cancelled() && contains(fromJSON('["acceptance","qa"]'), inputs.level || 'qa') }}
     runs-on: ubuntu-latest
     steps:
       - uses: optivem/actions/trigger-and-wait@main
         with:
-          workflow: pipeline-multitier-java.yml
-          inputs: '{"level": "${{ inputs.level || ''release'' }}", "skip-local-stage": "true", "skip-commit-stage": "true"}'
+          workflow: prerelease-pipeline-multitier-java.yml
+          inputs: '{"level": "${{ inputs.level || ''qa'' }}", "skip-local-stage": "true", "skip-commit-stage": "true"}'
 
   multitier-dotnet:
     needs: [commit-monolith-java, commit-monolith-dotnet, commit-monolith-typescript, commit-multitier-backend-java, commit-multitier-backend-dotnet, commit-multitier-backend-typescript, commit-multitier-frontend-react]
-    if: ${{ always() && !failure() && !cancelled() && contains(fromJSON('["acceptance","release"]'), inputs.level || 'release') }}
+    if: ${{ always() && !failure() && !cancelled() && contains(fromJSON('["acceptance","qa"]'), inputs.level || 'qa') }}
     runs-on: ubuntu-latest
     steps:
       - uses: optivem/actions/trigger-and-wait@main
         with:
-          workflow: pipeline-multitier-dotnet.yml
-          inputs: '{"level": "${{ inputs.level || ''release'' }}", "skip-local-stage": "true", "skip-commit-stage": "true"}'
+          workflow: prerelease-pipeline-multitier-dotnet.yml
+          inputs: '{"level": "${{ inputs.level || ''qa'' }}", "skip-local-stage": "true", "skip-commit-stage": "true"}'
 
   multitier-typescript:
     needs: [commit-monolith-java, commit-monolith-dotnet, commit-monolith-typescript, commit-multitier-backend-java, commit-multitier-backend-dotnet, commit-multitier-backend-typescript, commit-multitier-frontend-react]
-    if: ${{ always() && !failure() && !cancelled() && contains(fromJSON('["acceptance","release"]'), inputs.level || 'release') }}
+    if: ${{ always() && !failure() && !cancelled() && contains(fromJSON('["acceptance","qa"]'), inputs.level || 'qa') }}
     runs-on: ubuntu-latest
     steps:
       - uses: optivem/actions/trigger-and-wait@main
         with:
-          workflow: pipeline-multitier-typescript.yml
-          inputs: '{"level": "${{ inputs.level || ''release'' }}", "skip-local-stage": "true", "skip-commit-stage": "true"}'
+          workflow: prerelease-pipeline-multitier-typescript.yml
+          inputs: '{"level": "${{ inputs.level || ''qa'' }}", "skip-local-stage": "true", "skip-commit-stage": "true"}'
 
-  # Final: tag SHA as meta-rc — only when level is release and all 6 language×architecture combos passed
+  # Final: tag SHA as meta-rc — only when level is qa and all 6 language×architecture combos passed
   tag-meta-rc:
     needs: [monolith-java, monolith-dotnet, monolith-typescript, multitier-java, multitier-dotnet, multitier-typescript]
-    if: ${{ success() && (inputs.level || 'release') == 'release' }}
+    if: ${{ success() && (inputs.level || 'qa') == 'qa' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write

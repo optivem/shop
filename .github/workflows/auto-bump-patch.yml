@@ -1,0 +1,38 @@
+name: auto-bump-patch
+
+# Post-release VERSION bumper. Triggered automatically at the end of meta-acceptance-stage
+# when releases have just been cut, or manually by a developer (workflow_dispatch) to recover
+# from a missed auto-run or after a direct prod-stage dispatch.
+#
+# Uses the GitHub Contents API with SHA preconditions — no `git push`, no main-branch race.
+# Idempotent: only bumps a VERSION file if its matching release tag exists on the remote.
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+concurrency:
+  group: shop-auto-bump-patch
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Bump Patch Versions
+        uses: optivem/actions/bump-patch-versions@v1
+        with:
+          version-files: |
+            VERSION
+            system/monolith/dotnet/VERSION
+            system/monolith/java/VERSION
+            system/monolith/typescript/VERSION
+            system/multitier/backend-dotnet/VERSION
+            system/multitier/backend-java/VERSION
+            system/multitier/backend-typescript/VERSION
+            system/multitier/frontend-react/VERSION

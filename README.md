@@ -7,17 +7,17 @@ A catalog of project templates organized by two independent dimensions: **system
 [![meta-acceptance-stage](https://github.com/optivem/shop/actions/workflows/meta-acceptance-stage.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/meta-acceptance-stage.yml)
 [![meta-release-stage](https://github.com/optivem/shop/actions/workflows/meta-release-stage.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/meta-release-stage.yml)
 
-**meta-acceptance-stage** — runs the full pipeline across all languages and architectures; tags the SHA as `meta-v<VERSION>-rc.<N>` on success.
-**meta-release-stage** — promotes a meta-rc tag to `meta-v<VERSION>` and bumps `VERSION`.
+**meta-acceptance-stage** — runs the prerelease pipeline (local → commit → acceptance → QA) across all languages and architectures; tags the SHA as `meta-v<VERSION>-rc.<N>` on success. Does not release to production.
+**meta-release-stage** — takes a meta-rc tag, orchestrates production releases across all 6 flavor prod-stages, tags `meta-v<VERSION>`, and bumps all VERSION files via `auto-bump-patch`. This is the single canonical release path.
 
 Per-language pipeline drivers (ad-hoc single-language runs):
 
-[![pipeline-monolith-java](https://github.com/optivem/shop/actions/workflows/pipeline-monolith-java.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/pipeline-monolith-java.yml)
-[![pipeline-monolith-dotnet](https://github.com/optivem/shop/actions/workflows/pipeline-monolith-dotnet.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/pipeline-monolith-dotnet.yml)
-[![pipeline-monolith-typescript](https://github.com/optivem/shop/actions/workflows/pipeline-monolith-typescript.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/pipeline-monolith-typescript.yml)
-[![pipeline-multitier-java](https://github.com/optivem/shop/actions/workflows/pipeline-multitier-java.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/pipeline-multitier-java.yml)
-[![pipeline-multitier-dotnet](https://github.com/optivem/shop/actions/workflows/pipeline-multitier-dotnet.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/pipeline-multitier-dotnet.yml)
-[![pipeline-multitier-typescript](https://github.com/optivem/shop/actions/workflows/pipeline-multitier-typescript.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/pipeline-multitier-typescript.yml)
+[![prerelease-pipeline-monolith-java](https://github.com/optivem/shop/actions/workflows/prerelease-pipeline-monolith-java.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/prerelease-pipeline-monolith-java.yml)
+[![prerelease-pipeline-monolith-dotnet](https://github.com/optivem/shop/actions/workflows/prerelease-pipeline-monolith-dotnet.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/prerelease-pipeline-monolith-dotnet.yml)
+[![prerelease-pipeline-monolith-typescript](https://github.com/optivem/shop/actions/workflows/prerelease-pipeline-monolith-typescript.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/prerelease-pipeline-monolith-typescript.yml)
+[![prerelease-pipeline-multitier-java](https://github.com/optivem/shop/actions/workflows/prerelease-pipeline-multitier-java.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/prerelease-pipeline-multitier-java.yml)
+[![prerelease-pipeline-multitier-dotnet](https://github.com/optivem/shop/actions/workflows/prerelease-pipeline-multitier-dotnet.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/prerelease-pipeline-multitier-dotnet.yml)
+[![prerelease-pipeline-multitier-typescript](https://github.com/optivem/shop/actions/workflows/prerelease-pipeline-multitier-typescript.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/prerelease-pipeline-multitier-typescript.yml)
 
 ## Cleanup
 

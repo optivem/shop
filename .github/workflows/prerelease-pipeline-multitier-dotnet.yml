@@ -1,4 +1,4 @@
-name: pipeline-monolith-typescript
+name: prerelease-pipeline-multitier-dotnet
 
 on:
   workflow_dispatch:
@@ -11,8 +11,8 @@ on:
           - local
           - commit
           - acceptance
-          - release
-        default: 'release'
+          - qa
+        default: 'qa'
       skip-local-stage:
         description: 'Skip local stage'
         required: false
@@ -26,13 +26,13 @@ on:
 
 jobs:
   verify:
-    uses: ./.github/workflows/_pipeline.yml
+    uses: ./.github/workflows/_prerelease-pipeline.yml
     secrets: inherit
     with:
-      prefix: monolith-typescript
-      architecture: monolith
-      language: typescript
-      commit-workflows: '["monolith-typescript-commit-stage.yml"]'
-      level: ${{ inputs.level || 'release' }}
+      prefix: multitier-dotnet
+      architecture: multitier
+      language: dotnet
+      commit-workflows: '["multitier-backend-dotnet-commit-stage.yml", "multitier-frontend-react-commit-stage.yml"]'
+      level: ${{ inputs.level || 'qa' }}
       skip-local-stage: ${{ inputs.skip-local-stage == true }}
       skip-commit-stage: ${{ inputs.skip-commit-stage == true }}

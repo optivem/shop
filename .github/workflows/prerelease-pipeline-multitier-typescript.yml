@@ -1,4 +1,4 @@
-name: pipeline-multitier-java
+name: prerelease-pipeline-multitier-typescript
 
 on:
   workflow_dispatch:
@@ -11,8 +11,8 @@ on:
           - local
           - commit
           - acceptance
-          - release
-        default: 'release'
+          - qa
+        default: 'qa'
       skip-local-stage:
         description: 'Skip local stage'
         required: false
@@ -26,13 +26,13 @@ on:
 
 jobs:
   verify:
-    uses: ./.github/workflows/_pipeline.yml
+    uses: ./.github/workflows/_prerelease-pipeline.yml
     secrets: inherit
     with:
-      prefix: multitier-java
+      prefix: multitier-typescript
       architecture: multitier
-      language: java
-      commit-workflows: '["multitier-backend-java-commit-stage.yml", "multitier-frontend-react-commit-stage.yml"]'
-      level: ${{ inputs.level || 'release' }}
+      language: typescript
+      commit-workflows: '["multitier-backend-typescript-commit-stage.yml", "multitier-frontend-react-commit-stage.yml"]'
+      level: ${{ inputs.level || 'qa' }}
       skip-local-stage: ${{ inputs.skip-local-stage == true }}
       skip-commit-stage: ${{ inputs.skip-commit-stage == true }}

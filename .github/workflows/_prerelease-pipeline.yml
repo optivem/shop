@@ -1,4 +1,4 @@
-name: _pipeline
+name: _prerelease-pipeline
 
 on:
   workflow_call:
@@ -31,10 +31,10 @@ on:
         type: boolean
         default: false
       level:
-        description: 'Verification level: local, commit, acceptance, or release'
+        description: 'Verification level: local, commit, acceptance, or qa'
         required: false
         type: string
-        default: 'release'
+        default: 'qa'
 
 jobs:
   local:
@@ -171,7 +171,7 @@ jobs:
 
   qa-stage:
     needs: [acceptance-stage, acceptance-stage-legacy]
-    if: ${{ always() && inputs.level == 'release' && needs.acceptance-stage-legacy.result == 'success' }}
+    if: ${{ always() && inputs.level == 'qa' && needs.acceptance-stage-legacy.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - uses: optivem/actions/trigger-and-wait@main
@@ -181,7 +181,7 @@ jobs:
 
   qa-signoff:
     needs: [acceptance-stage, qa-stage]
-    if: ${{ always() && inputs.level == 'release' && needs.qa-stage.result == 'success' }}
+    if: ${{ always() && inputs.level == 'qa' && needs.qa-stage.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - uses: optivem/actions/trigger-and-wait@main
@@ -189,12 +189,8 @@ jobs:
           workflow: ${{ inputs.prefix }}-qa-signoff.yml
           inputs: '{"version": "${{ needs.acceptance-stage.outputs.version }}", "result": "approved"}'
 
-  prod-stage:
-    needs: [acceptance-stage, qa-signoff]
-    if: ${{ always() && inputs.level == 'release' && needs.qa-signoff.result == 'success' }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: optivem/actions/trigger-and-wait@main
-        with:
-          workflow: ${{ inputs.prefix }}-prod-stage.yml
-          inputs: '{"version": "${{ needs.acceptance-stage.outputs.version }}"}'
+  # Note: prod-stage is intentionally NOT part of the pipeline.
+  # Production releases are orchestrated externally via meta-release-stage (for full releases)
+  # or via direct workflow_dispatch on the per-flavor *-prod-stage.yml workflows.
+  # Keeping the release step out of the pipeline enforces the rule that
+  # "verification" and "release" are separate concerns.
