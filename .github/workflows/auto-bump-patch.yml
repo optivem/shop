@@ -28,11 +28,11 @@ jobs:
         uses: optivem/actions/bump-patch-versions@v1
         with:
           version-files: |
-            VERSION
-            system/monolith/dotnet/VERSION
-            system/monolith/java/VERSION
-            system/monolith/typescript/VERSION
-            system/multitier/backend-dotnet/VERSION
-            system/multitier/backend-java/VERSION
-            system/multitier/backend-typescript/VERSION
-            system/multitier/frontend-react/VERSION
+            VERSION:meta-v
+            system/monolith/dotnet/VERSION:monolith-dotnet-v
+            system/monolith/java/VERSION:monolith-java-v
+            system/monolith/typescript/VERSION:monolith-typescript-v
+            system/multitier/backend-dotnet/VERSION:multitier-backend-dotnet-v
+            system/multitier/backend-java/VERSION:multitier-backend-java-v
+            system/multitier/backend-typescript/VERSION:multitier-backend-typescript-v
+            system/multitier/frontend-react/VERSION:multitier-frontend-react-v
