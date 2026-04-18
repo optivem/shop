@@ -21,7 +21,9 @@ Per-language pipeline drivers (ad-hoc single-language runs):
 
 ## Cleanup
 
-[![cleanup-prereleases](https://github.com/optivem/shop/actions/workflows/cleanup-prereleases.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/cleanup-prereleases.yml)
+[![cleanup](https://github.com/optivem/shop/actions/workflows/cleanup.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/cleanup.yml)
+
+Daily cleanup (23:00 UTC) of superseded deployments, prerelease git tags, GitHub releases, and Docker image tags.
 
 ## Architecture
 
