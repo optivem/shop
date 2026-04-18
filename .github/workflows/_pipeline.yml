@@ -53,7 +53,7 @@ jobs:
 
       - name: Setup Java
         if: inputs.language == 'java'
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 21
