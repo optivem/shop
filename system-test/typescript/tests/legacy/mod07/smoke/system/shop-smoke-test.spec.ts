@@ -1,7 +1,7 @@
 import { test, forChannels, ChannelType } from '../fixtures.js';
 
 forChannels(ChannelType.UI, ChannelType.API)(() => {
-    test('shouldBeAbleToGoToShop', async ({ useCase }) => {
-        (await useCase.shop().goToShop().execute()).shouldSucceed();
+    test('shouldBeAbleToGoToShop', async ({ app }) => {
+        (await app.shop().goToShop().execute()).shouldSucceed();
     });
 });

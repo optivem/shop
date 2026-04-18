@@ -494,11 +494,14 @@ TypeScript uses lowercase `'ui'`/`'api'` (see `system-test/typescript/src/testki
 | Shop port: ShopDriver / IShopDriver / shop-driver.ts             |  Y   |  Y   |     Y      | Full   |
 | Shop DTOs: PlaceOrderRequest, PlaceOrderResponse, ViewOrderResponse, PublishCouponRequest, BrowseCouponsResponse, OrderStatus | Y | Y | Y | Full |
 | Shop error DTO: SystemError                                      |  Y (dtos/error/) | Y (Dtos/Error/) | Y (dtos/errors/) | Full (folder case/plural differs) |
-| SystemResults (value-type factories)                             |  Y (in dsl/core/usecase/shop/commons) | Y (in Driver.Port/Shop/) | Y (in dsl/core/usecase/shop/commons) | Layer-placement differs — .NET at port level, Java/TS at use-case-dsl level |
+| SystemResults (value-type factories)                             |  Y (in dsl/core/usecase/shop/commons) | Y (in Driver.Port/Shop/) | Y (in dsl/core/usecase/shop/commons) | Exception — see below |
 | External: ClockDriver / IClockDriver / clock-driver.ts           |  Y   |  Y   |     Y      | Full   |
 | External: ErpDriver / IErpDriver / erp-driver.ts                 |  Y   |  Y   |     Y      | Full   |
 | External: TaxDriver / ITaxDriver / tax-driver.ts                 |  Y   |  Y   |     Y      | Full   |
 | External DTOs (clock/erp/tax: GetXResponse, ReturnsXRequest, error DTO) | Y | Y | Y | Full (TS puts error DTO at top of dtos/ folder instead of dtos/error/ subfolder) |
+
+#### Exceptions (known divergences)
+- `SystemResults` lives in `Driver.Port/Shop/` in .NET (vs `dsl/core/usecase/shop/commons/` in Java/TS). Moving it into `Shop.csproj` (the use-case-dsl project) would create a circular project reference: `Driver.Adapter` consumes `SystemResults` (in `ShopUiDriver.cs`, `BasePage.cs`) and `Shop.csproj` already references `Driver.Adapter`. Java/TS don't hit this because they're single-module. **TODO (later):** resolve by inlining `SystemResults.*` calls in the two `Driver.Adapter` files, then move to `Dsl.Core/UseCase/Shop/Commons/` to match Java/TS.
 
 ### Clients Layer (Driver Adapters)
 #### Shop (API)
@@ -545,7 +548,7 @@ TypeScript uses lowercase `'ui'`/`'api'` (see `system-test/typescript/src/testki
 | Shop usecases/base/: BaseShopUseCase/BaseShopCommand  |  Y (BaseShopUseCase) | Y (BaseShopCommand) | Y (BaseShopUseCase) | Naming differs |
 | Shop usecases/base/: ShopUseCaseResult                |  —   |  Y   |     —      | .NET-only helper type |
 | Shop usecases/base/: SystemErrorFailureVerification   |  —   |  Y   |     —      | .NET-only helper type |
-| Shop commons/: SystemResults                          |  Y (dsl/core/usecase/shop/commons/SystemResults.java) | — (in Driver.Port/Shop) | Y (dsl/core/usecase/shop/commons/system-results.ts) | Layer divergence (see Driver Ports) |
+| Shop commons/: SystemResults                          |  Y (dsl/core/usecase/shop/commons/SystemResults.java) | — (in Driver.Port/Shop) | Y (dsl/core/usecase/shop/commons/system-results.ts) | Exception — see Driver Ports Layer > Exceptions |
 | ClockDsl, ErpDsl, TaxDsl                              |  Y   |  Y   |     Y      | Full   |
 | External Clock UseCases: GetTime, GetTimeVerification, GoToClock, ReturnsTime | Y | Y | Y | Full |
 | External Erp UseCases: GetProduct, ReturnsProduct, ReturnsPromotion, GoToErp (with verifications) | Y | Y | Y | Full |

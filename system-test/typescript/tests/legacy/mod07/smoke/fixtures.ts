@@ -13,15 +13,15 @@ import { ChannelType } from '../../../../src/testkit/channel/channel-type.js';
 
 const config = loadConfiguration();
 
-const _test = base.extend<{ useCase: UseCaseDsl; _shopBrowser: Browser }>({
+const _test = base.extend<{ app: UseCaseDsl; _shopBrowser: Browser }>({
     _shopBrowser: async ({}, use) => {
         const browser = await chromium.launch();
         await use(browser);
         await browser.close();
     },
-    useCase: async ({ _shopBrowser }, use) => {
+    app: async ({ _shopBrowser }, use) => {
         const channel = ChannelContext.get() || ChannelType.API;
-        const app = new AppContext({
+        const appContext = new AppContext({
             channelMode: 'dynamic',
             channel,
             shopDriverFactory: (ch) => {
@@ -34,9 +34,9 @@ const _test = base.extend<{ useCase: UseCaseDsl; _shopBrowser: Browser }>({
             clockDriver: new ClockRealDriver(),
             taxDriver: new TaxRealDriver(config.externalSystems.tax.url),
         });
-        const useCase = new UseCaseDsl(app);
-        await use(useCase);
-        await useCase.close();
+        const app = new UseCaseDsl(appContext);
+        await use(app);
+        await app.close();
     },
 });
 

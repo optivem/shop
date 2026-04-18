@@ -1,5 +1,5 @@
 import { test } from '../fixtures.js';
 
-test('shouldBeAbleToGoToTax', async ({ useCase }) => {
-    (await useCase.tax().goToTax().execute()).shouldSucceed();
+test('shouldBeAbleToGoToTax', async ({ app }) => {
+    (await app.tax().goToTax().execute()).shouldSucceed();
 });

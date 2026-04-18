@@ -9,19 +9,19 @@ const ORDER_NUMBER = 'order-number';
 const COUNTRY = 'US';
 
 forChannels(ChannelType.UI, ChannelType.API)(() => {
-    test('shouldPlaceOrderForValidInput', async ({ useCase }) => {
-        (await useCase.erp().returnsProduct()
+    test('shouldPlaceOrderForValidInput', async ({ app }) => {
+        (await app.erp().returnsProduct()
             .sku(SKU).unitPrice('20.00').execute())
             .shouldSucceed();
 
-        (await useCase.shop().placeOrder()
+        (await app.shop().placeOrder()
             .orderNumber(ORDER_NUMBER)
             .sku(SKU).quantity(5).country(COUNTRY).execute())
             .shouldSucceed()
             .orderNumber(ORDER_NUMBER)
             .orderNumberStartsWith('ORD-');
 
-        (await useCase.shop().viewOrder()
+        (await app.shop().viewOrder()
             .orderNumber(ORDER_NUMBER).execute())
             .shouldSucceed()
             .orderNumber(ORDER_NUMBER)
