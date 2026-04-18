@@ -273,6 +273,7 @@ jobs:
         uses: optivem/actions/promote-to-rc@v1
         with:
           target-version: ${{ steps.read-version.outputs.target-version }}
+          prefix: multitier-typescript
           image-urls: ${{ needs.check.outputs.image-digest-urls }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
