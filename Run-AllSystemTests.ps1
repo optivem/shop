@@ -78,7 +78,7 @@ function Invoke-Phase {
 
         Push-Location $langDir
         try {
-            & ".\Run-SystemTests.ps1" @ScriptArgs 2>&1 | ForEach-Object {
+            & ".\Run-SystemTests.ps1" @ScriptArgs *>&1 | ForEach-Object {
                 $lineStr = "$_"
                 Write-Host "[$lang] $lineStr"
                 $outputLines.Add($lineStr)
