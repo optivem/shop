@@ -197,8 +197,9 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ secrets.VERIFY_TOKEN }}
-      - name: Create meta release tag
+      - name: Create meta release tag and GitHub release
         env:
+          GH_TOKEN: ${{ secrets.VERIFY_TOKEN }}
           RELEASE_TAG: ${{ needs.check.outputs.release_tag }}
           SHA: ${{ needs.check.outputs.sha }}
         run: |
@@ -208,7 +209,13 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git tag "$RELEASE_TAG" "$SHA"
           git push origin "$RELEASE_TAG"
-          echo "Created tag ${RELEASE_TAG} on ${SHA}"
+          echo "Creating GitHub release ${RELEASE_TAG}"
+          gh release create "$RELEASE_TAG" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --target "$SHA" \
+            --title "$RELEASE_TAG" \
+            --notes "Meta release aggregating all flavor releases at this version."
+          echo "Created tag and release ${RELEASE_TAG}"
 
       - name: Summary
         env:
