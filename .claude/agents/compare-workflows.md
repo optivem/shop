@@ -33,7 +33,7 @@ Pipeline stages (per architecture per language):
 - **verify** — verify pipeline health
 
 Aggregate workflows (not language-specific):
-- `meta-acceptance-stage.yml`
+- `meta-prerelease-stage.yml`
 - `meta-release-stage.yml`
 - `cleanup-all.yml`
 

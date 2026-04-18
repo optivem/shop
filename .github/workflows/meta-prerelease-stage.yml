@@ -1,4 +1,4 @@
-name: meta-acceptance-stage
+name: meta-prerelease-stage
 
 on:
   schedule:

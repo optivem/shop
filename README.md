@@ -4,10 +4,10 @@ A catalog of project templates organized by two independent dimensions: **system
 
 ## Verification
 
-[![meta-acceptance-stage](https://github.com/optivem/shop/actions/workflows/meta-acceptance-stage.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/meta-acceptance-stage.yml)
+[![meta-prerelease-stage](https://github.com/optivem/shop/actions/workflows/meta-prerelease-stage.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/meta-prerelease-stage.yml)
 [![meta-release-stage](https://github.com/optivem/shop/actions/workflows/meta-release-stage.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/meta-release-stage.yml)
 
-**meta-acceptance-stage** — runs the prerelease pipeline (local → commit → acceptance → QA) across all languages and architectures; tags the SHA as `meta-v<VERSION>-rc.<N>` on success. Does not release to production.
+**meta-prerelease-stage** — runs the prerelease pipeline (local → commit → acceptance → QA) across all languages and architectures; tags the SHA as `meta-v<VERSION>-rc.<N>` on success. Does not release to production.
 **meta-release-stage** — takes a meta-rc tag, orchestrates production releases across all 6 flavor prod-stages, tags `meta-v<VERSION>`, and bumps all VERSION files via `auto-bump-patch`. This is the single canonical release path.
 
 Per-language pipeline drivers (ad-hoc single-language runs):
