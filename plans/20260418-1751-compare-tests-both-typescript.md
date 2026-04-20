@@ -19,7 +19,7 @@ export const ChannelType = {
 
 Then audit all uses — in particular `system-test/typescript/src/testkit/driver/adapter/shared/playwright/withApp.ts` line 10 (`process.env.CHANNEL?.toLowerCase() || ChannelType.API`). Remove the `.toLowerCase()` if the env var is also now upper-case, or keep the normalization but update the constant the compare is against. Also audit `system-test/typescript/src/testkit/test-setup.ts` (lines 35, 51) and `system-test/typescript/src/testkit/dsl/core/scenario/app-context.ts` (line 9).
 
-## 2. Architecture — Drivers — collapse TS-specific error-DTO folder nesting
+## 2. Architecture — Drivers — align error-DTO folder nesting (keep plural `errors/`)
 
 The Java and .NET driver-port trees nest error DTOs under an `error/` (singular) subfolder:
 
@@ -28,16 +28,18 @@ The Java and .NET driver-port trees nest error DTOs under an `error/` (singular)
 
 TypeScript uses `errors/` (plural) for shop (`system-test/typescript/src/testkit/driver/port/shop/dtos/errors/SystemError.ts`) and does **not** nest at all for external systems (`clock/dtos/ClockErrorResponse.ts`, `erp/dtos/ErpErrorResponse.ts`, `tax/dtos/TaxErrorResponse.ts` are direct children of `dtos/`).
 
-Align the TypeScript layout to Java's singular `error/` subfolder convention:
+JS/TS convention is **plural** for folders holding multiple items of the same kind, so keep the TS `errors/` folder name rather than switching to Java's singular `error/`. Still fix the inconsistency *within* TypeScript by adding the subfolder for every DTO tree:
 
-- Rename `system-test/typescript/src/testkit/driver/port/shop/dtos/errors/` → `.../dtos/error/`.
-- Create `system-test/typescript/src/testkit/driver/port/external/clock/dtos/error/` and move `ClockErrorResponse.ts` into it.
-- Create `system-test/typescript/src/testkit/driver/port/external/erp/dtos/error/` and move `ErpErrorResponse.ts` into it.
-- Create `system-test/typescript/src/testkit/driver/port/external/tax/dtos/error/` and move `TaxErrorResponse.ts` into it.
+- Keep `system-test/typescript/src/testkit/driver/port/shop/dtos/errors/` as-is.
+- Create `system-test/typescript/src/testkit/driver/port/external/clock/dtos/errors/` and move `ClockErrorResponse.ts` into it.
+- Create `system-test/typescript/src/testkit/driver/port/external/erp/dtos/errors/` and move `ErpErrorResponse.ts` into it.
+- Create `system-test/typescript/src/testkit/driver/port/external/tax/dtos/errors/` and move `TaxErrorResponse.ts` into it.
 
 Update every import site (including the barrel `system-test/typescript/src/testkit/common/dtos.ts`) and any adapter under `system-test/typescript/src/testkit/driver/adapter/` that references these DTOs.
 
-## 3. Architecture — Clients — align shared-client folder naming and path nesting
+Singular/plural divergence from Java/.NET is an accepted idiom difference — do **not** rename to `error/`.
+
+## 3. Architecture — Clients — align shared-client folder nesting (keep kebab-case filenames)
 
 The Java/.NET trees wrap shared driver-adapter infrastructure under `shared/client/<http|playwright|wiremock>/...`:
 
@@ -45,19 +47,19 @@ The Java/.NET trees wrap shared driver-adapter infrastructure under `shared/clie
 - `system-test/java/src/main/java/com/optivem/shop/testkit/driver/adapter/shared/client/playwright/PageClient.java`
 - `system-test/java/src/main/java/com/optivem/shop/testkit/driver/adapter/shared/client/wiremock/JsonWireMockClient.java`
 
-TypeScript drops the `client/` nesting and also drops the `Json` prefix from the HTTP and WireMock client filenames:
+TypeScript drops the `client/` nesting:
 
 - `system-test/typescript/src/testkit/driver/adapter/shared/http/{HttpStatus.ts, http-client.ts}`
 - `system-test/typescript/src/testkit/driver/adapter/shared/playwright/{PageClient.ts, withApp.ts}`
 - `system-test/typescript/src/testkit/driver/adapter/shared/wiremock/wiremock-client.ts`
 
-Align to the Java convention:
+Align the *folder nesting* to Java but **keep TS filename conventions**. The existing TS convention in this codebase is: PascalCase for types/DTOs/enums (`HttpStatus.ts`, `PageClient.ts`), kebab-case for modules/services (`http-client.ts`, `wiremock-client.ts`, `scenario-dsl.ts`). Do not rename client modules to PascalCase just to mirror Java — that fights the existing idiom.
 
-- Rename `shared/http/http-client.ts` → `shared/client/http/JsonHttpClient.ts` (move file under a new `client/` subfolder and rename to match `JsonHttpClient.java` by case — kebab-case can be changed to PascalCase to mirror Java, or kept as `json-http-client.ts` if the TS convention for filenames is kebab-case; pick the consistent naming used by other adapter files in TS).
-- Move `shared/http/HttpStatus.ts` → `shared/client/http/HttpStatus.ts`.
-- Move `shared/playwright/PageClient.ts` → `shared/client/playwright/PageClient.ts`.
-- Move `shared/playwright/withApp.ts` → `shared/client/playwright/withApp.ts`.
-- Rename `shared/wiremock/wiremock-client.ts` → `shared/client/wiremock/JsonWireMockClient.ts` (or `json-wiremock-client.ts` to follow kebab-case).
+- Move `shared/http/http-client.ts` → `shared/client/http/json-http-client.ts` (kebab-case, with `json-` prefix to mirror Java's `JsonHttpClient` semantically).
+- Move `shared/http/HttpStatus.ts` → `shared/client/http/HttpStatus.ts` (keep PascalCase — it's a type/enum).
+- Move `shared/playwright/PageClient.ts` → `shared/client/playwright/PageClient.ts` (keep PascalCase — it's a class).
+- Move `shared/playwright/withApp.ts` → `shared/client/playwright/withApp.ts` (keep camelCase — it's a function).
+- Move `shared/wiremock/wiremock-client.ts` → `shared/client/wiremock/json-wiremock-client.ts` (kebab-case, `json-` prefix).
 
 Update all importers — notably every test fixture file and every driver under `shared/`, `shop/`, and `external/`.
 
@@ -78,16 +80,16 @@ Rename the TS root variable (and its fixture key) from `useCase` → `app`. Touc
 - The mod07 and higher fixtures: `system-test/typescript/tests/legacy/mod07/e2e/fixtures.ts` (and similar for mod07 smoke if applicable).
 - Every test file under `tests/legacy/mod07/` that destructures `{ useCase }` from the fixture.
 
-## 5. Architecture — Scenario DSL — rename `ExecutionResultContext` equivalent
+## 5. Architecture — Scenario DSL — document the two-file factoring
 
-Java (`system-test/java/src/main/java/com/optivem/shop/testkit/dsl/core/scenario/ExecutionResultContext.java`) and .NET (`system-test/dotnet/Dsl.Core/Scenario/ExecutionResultContext.cs`) both have a file named `ExecutionResultContext`. TypeScript has two different files in the same directory that together play this role (`scenario-context.ts` and `app-context.ts`) — neither matches the Java name.
+Java (`system-test/java/src/main/java/com/optivem/shop/testkit/dsl/core/scenario/ExecutionResultContext.java`) and .NET (`system-test/dotnet/Dsl.Core/Scenario/ExecutionResultContext.cs`) both have a single file named `ExecutionResultContext`. TypeScript has two files in the same directory that together play this role (`scenario-context.ts` and `app-context.ts`).
 
-Audit `system-test/typescript/src/testkit/dsl/core/scenario/{scenario-context.ts,app-context.ts}` and either:
+Audit `system-test/typescript/src/testkit/dsl/core/scenario/{scenario-context.ts,app-context.ts}` and determine whether the split reflects a deliberate responsibility boundary (e.g. scenario-level state vs app-channel state).
 
-- (a) Consolidate them into a single `execution-result-context.ts` to mirror Java/.NET, **or**
-- (b) Document in `system-test/typescript/src/testkit/dsl/core/scenario/scenario-context.ts` why the TS factoring differs.
+- If the split **is** deliberate: keep the two files. Add a short header comment at the top of `scenario-context.ts` explaining the factoring and noting that Java/.NET collapse both into a single `ExecutionResultContext`. No code changes otherwise.
+- If the split is **incidental** (no real SRP distinction): consolidate into a single `execution-result-context.ts` to mirror Java/.NET and adjust every import across `scenario/`, `scenario-dsl.ts`, `execution-result-builder.ts`, etc.
 
-Recommended: (a) rename for parity. Adjust every import across `scenario/`, `scenario-dsl.ts`, `execution-result-builder.ts`, etc.
+Default: **keep the split and document**. Do not merge files just to mirror Java — TS frequently factors smaller modules than Java does, and forcing a merge works against the existing TS structure.
 
 ## 6. Architecture — Scenario DSL — verify `defaults.ts` vs Java `ScenarioDefaults.java`
 
@@ -148,70 +150,81 @@ File: `system-test/typescript/tests/latest/acceptance/place-order-negative-test.
 
 Java uses `.withQuantity(-10)` and `.withQuantity(0)` (int). TS uses `.withQuantity('-10')` / `.withQuantity('0')` (string). Change TS to integer literals to match.
 
-## 12. Legacy — Architecture — add shared `BaseRawTest` abstraction to mod03
+## 12. Legacy — Architecture — add shared `BaseRawTest` module to mod03
 
-Java: `system-test/java/src/test/java/com/optivem/shop/systemtest/legacy/mod03/base/BaseRawTest.java`. .NET: `system-test/dotnet/SystemTests/Legacy/Mod03/Base/BaseRawTest.cs`. TS has no equivalent base class — tests import loose helpers from `tests/legacy/base/BaseRawTest.js` (global) but do not share per-module setup.
+Java: `system-test/java/src/test/java/com/optivem/shop/systemtest/legacy/mod03/base/BaseRawTest.java`. .NET: `system-test/dotnet/SystemTests/Legacy/Mod03/Base/BaseRawTest.cs`. TS has no per-module equivalent — tests import loose helpers from the global `tests/legacy/mod02/base/BaseRawTest.ts` but do not share per-module setup.
 
-Add `system-test/typescript/tests/legacy/mod03/base/BaseRawTest.ts` — export a shared Playwright fixture or helper that exposes `shopApiHttpClient`, `erpHttpClient`, `getErpBaseUrl()`, `getShopApiBaseUrl()` (these already exist individually). Update the mod03 e2e spec files to depend on this per-module base instead of reaching into the global one.
+**TS idiom:** follow the existing pattern in `system-test/typescript/tests/legacy/mod02/base/BaseRawTest.ts` — a module that **exports helper functions and interfaces**, not an abstract class with inheritance. Java's `extends BaseRawTest` is translated in TS as importing and invoking these helpers (or consuming them via a Playwright fixture).
 
-Also add `system-test/typescript/tests/legacy/mod03/e2e/base/BaseE2eTest.ts` to mirror Java's `legacy/mod03/e2e/base/BaseE2eTest.java`.
+Add `system-test/typescript/tests/legacy/mod03/base/BaseRawTest.ts` — export helper functions/interfaces exposing `shopApiHttpClient`, `erpHttpClient`, `getErpBaseUrl()`, `getShopApiBaseUrl()` (these already exist individually). Update the mod03 e2e spec files to import from this per-module module instead of reaching into the global one.
 
-## 13. Legacy — Architecture — add shared `BaseClientTest` and `BaseE2eTest` to mod04
+Also add `system-test/typescript/tests/legacy/mod03/e2e/base/BaseE2eTest.ts` as a module exporting a Playwright fixture (or a `runBaseE2eSetup(test)` helper), mirroring Java's `legacy/mod03/e2e/base/BaseE2eTest.java`. Do **not** implement as an abstract class.
 
-Java: `legacy/mod04/base/BaseClientTest.java` + `legacy/mod04/e2e/base/BaseE2eTest.java`. .NET: same files under `Mod04/Base/` and `Mod04/E2eTests/Base/`. TS mod04 has no matching base files.
+## 13. Legacy — Architecture — add shared `BaseClientTest` and `BaseE2eTest` modules to mod04
 
-Add both as TypeScript modules. `BaseClientTest.ts` should expose the typed client fixtures used in mod04 tests (`shopApiClient`, `erpClient`), and `BaseE2eTest.ts` should configure per-test setup matching Java's `BaseE2eTest.java`. Refactor the four `place-order-*.spec.ts` files in mod04 to consume the new shared base.
+Java: `legacy/mod04/base/BaseClientTest.java` + `legacy/mod04/e2e/base/BaseE2eTest.java`. .NET: same files under `Mod04/Base/` and `Mod04/E2eTests/Base/`. TS mod04 has no matching modules.
 
-## 14. Legacy — Architecture — add shared `*BaseTest`, `BaseDriverTest`, `BaseE2eTest` to mod05
+Add both as TypeScript modules that **export Playwright fixtures and/or helper functions** — **not** abstract classes. Follow the existing mod02 `BaseRawTest.ts` pattern.
+
+- `BaseClientTest.ts`: export Playwright fixtures exposing the typed clients used in mod04 tests (`shopApiClient`, `erpClient`). Consumers import and extend their `test` via Playwright's `test.extend(...)`, not via `class Foo extends BaseClientTest`.
+- `BaseE2eTest.ts`: export a fixture (or `runBaseE2eSetup(test)` helper) that configures per-test setup matching Java's `BaseE2eTest.java`.
+
+Refactor the four `place-order-*.spec.ts` files in mod04 to consume these modules via fixture composition.
+
+## 14. Legacy — Architecture — add shared `*BaseTest`, `BaseDriverTest`, `BaseE2eTest` modules to mod05
 
 Java mod05 has two patterns missing in TS:
 
 - `mod05/base/BaseDriverTest.java` and `mod05/e2e/base/BaseE2eTest.java` (module-level bases).
-- `mod05/e2e/PlaceOrderPositiveBaseTest.java` and `PlaceOrderNegativeBaseTest.java` — **abstract** test classes that hold the test body, with empty `Api` and `Ui` subclasses that only choose the driver.
+- `mod05/e2e/PlaceOrderPositiveBaseTest.java` and `PlaceOrderNegativeBaseTest.java` — abstract test classes that hold the test body, with empty `Api` and `Ui` subclasses that only choose the driver.
 
 TS currently duplicates each test body between `place-order-positive-api-test.spec.ts` and `place-order-positive-ui-test.spec.ts` (and the negative pair). This duplication is the only cross-language mismatch at mod05.
 
-Refactor: extract the shared body into a helper function (e.g. `runPlaceOrderPositive(test)`) exported from a shared `place-order-positive-base-test.ts` module. Both `*-api-test.spec.ts` and `*-ui-test.spec.ts` then import and invoke it with their respective fixture (`apiTest` vs `uiTest`). This reproduces Java's abstract-base pattern in TS's function-oriented idiom.
+**TS idiom:** extract the shared body into a helper function (e.g. `runPlaceOrderPositive(test)`) exported from a shared module. Both `*-api-test.spec.ts` and `*-ui-test.spec.ts` then import and invoke it with their respective fixture (`apiTest` vs `uiTest`). This reproduces Java's abstract-base pattern via functions, **not** via `abstract class` inheritance. The existing `system-test/typescript/tests/legacy/mod05/smoke/system/ShopBaseSmokeTest.ts` already exemplifies this pattern (exports `runShopBaseSmokeTest(test)`) — reuse it.
 
-Also add `mod05/base/BaseDriverTest.ts` and `mod05/e2e/base/BaseE2eTest.ts` as per-module bases (mirroring mod04 work in step 13).
+- Add `mod05/e2e/place-order-positive-base-test.ts` exporting `runPlaceOrderPositive(test)`.
+- Add `mod05/e2e/place-order-negative-base-test.ts` exporting `runPlaceOrderNegative(test)`.
+- Have `*-api-test.spec.ts` and `*-ui-test.spec.ts` import and invoke these.
 
-Also add `mod05/smoke/system/ShopBaseSmokeTest.ts` — verify the existing file at `system-test/typescript/tests/legacy/mod05/smoke/system/ShopBaseSmokeTest.ts` actually implements the abstract-base pattern (currently a helper, not an abstract test). Refactor to expose a shared function that `ShopApiSmokeTest.ts` and `ShopUiSmokeTest.ts` invoke, matching `ShopBaseSmokeTest.java` + `ShopApiSmokeTest.java` + `ShopUiSmokeTest.java`.
+Also add `mod05/base/BaseDriverTest.ts` and `mod05/e2e/base/BaseE2eTest.ts` as per-module modules exporting fixtures/helpers (mirroring mod04 work in step 13).
 
-## 15. Legacy — Architecture — add shared `BaseChannelDriverTest` and `BaseE2eTest` to mod06
+For the smoke tests: `ShopBaseSmokeTest.ts` already implements the correct pattern. Ensure `ShopApiSmokeTest.ts` and `ShopUiSmokeTest.ts` (matching `ShopApiSmokeTest.java` + `ShopUiSmokeTest.java`) exist and invoke `runShopBaseSmokeTest(test)`.
+
+## 15. Legacy — Architecture — add shared `BaseChannelDriverTest` and `BaseE2eTest` modules to mod06
 
 Java: `mod06/base/BaseChannelDriverTest.java` + `mod06/e2e/base/BaseE2eTest.java`. .NET: same. TS: absent.
 
-Add `system-test/typescript/tests/legacy/mod06/base/BaseChannelDriverTest.ts` and `system-test/typescript/tests/legacy/mod06/e2e/base/BaseE2eTest.ts`. Refactor `place-order-positive-test.spec.ts` and `place-order-negative-test.spec.ts` to use them.
+Add `system-test/typescript/tests/legacy/mod06/base/BaseChannelDriverTest.ts` and `system-test/typescript/tests/legacy/mod06/e2e/base/BaseE2eTest.ts` as **modules exporting Playwright fixtures or helper functions** (same pattern as mod02's `BaseRawTest.ts`). Do **not** implement as abstract classes. Refactor `place-order-positive-test.spec.ts` and `place-order-negative-test.spec.ts` to consume them via fixture composition.
 
-## 16. Legacy — Architecture — add shared `BaseUseCaseDslTest` and `BaseE2eTest` to mod07
+## 16. Legacy — Architecture — add shared `BaseUseCaseDslTest` and `BaseE2eTest` modules to mod07
 
 Java: `mod07/base/BaseUseCaseDslTest.java` + `mod07/e2e/base/BaseE2eTest.java`. .NET: same. TS: absent.
 
-Add matching TS files and refactor the two mod07 e2e specs to use them.
+Add matching TS modules — exports fixtures/helpers, not abstract classes. Refactor the two mod07 e2e specs to consume them.
 
-## 17. Legacy — Architecture — add shared `BaseScenarioDslTest` and `BaseE2eTest` to mod08
+## 17. Legacy — Architecture — add shared `BaseScenarioDslTest` and `BaseE2eTest` modules to mod08
 
 Java: `mod08/base/BaseScenarioDslTest.java` + `mod08/e2e/base/BaseE2eTest.java`. .NET: same. TS: absent.
 
-Add matching TS files and refactor the two mod08 e2e specs to use them.
+Add matching TS modules — exports fixtures/helpers, not abstract classes. Refactor the two mod08 e2e specs to consume them.
 
-## 18. Legacy — Architecture — add shared `BaseScenarioDslTest` to mod09
+## 18. Legacy — Architecture — add shared `BaseScenarioDslTest` module to mod09
 
 Java: `mod09/base/BaseScenarioDslTest.java`. .NET: same. TS: absent.
 
-Add `system-test/typescript/tests/legacy/mod09/base/BaseScenarioDslTest.ts`. Refactor the mod09 smoke specs (`clock-smoke-test.spec.ts`, `erp-smoke-test.spec.ts`, `tax-smoke-test.spec.ts`, `shop-smoke-test.spec.ts`) to use it.
+Add `system-test/typescript/tests/legacy/mod09/base/BaseScenarioDslTest.ts` as a module exporting a fixture/helper (not an abstract class). Refactor the mod09 smoke specs (`clock-smoke-test.spec.ts`, `erp-smoke-test.spec.ts`, `tax-smoke-test.spec.ts`, `shop-smoke-test.spec.ts`) to consume it.
 
-## 19. Legacy — Architecture — add shared `BaseAcceptanceTest` and `BaseScenarioDslTest` to mod10
+## 19. Legacy — Architecture — add shared `BaseAcceptanceTest` and `BaseScenarioDslTest` modules to mod10
 
 Java: `mod10/base/BaseScenarioDslTest.java` + `mod10/acceptance/base/BaseAcceptanceTest.java`. .NET: same. TS: absent.
 
-Add `system-test/typescript/tests/legacy/mod10/base/BaseScenarioDslTest.ts` and `system-test/typescript/tests/legacy/mod10/acceptance/base/BaseAcceptanceTest.ts`. Refactor the four mod10 acceptance specs (`place-order-positive-test.spec.ts`, `place-order-negative-test.spec.ts`, `place-order-positive-isolated-test.spec.ts`, `place-order-negative-isolated-test.spec.ts`) to use them.
+Add `system-test/typescript/tests/legacy/mod10/base/BaseScenarioDslTest.ts` and `system-test/typescript/tests/legacy/mod10/acceptance/base/BaseAcceptanceTest.ts` as modules exporting fixtures/helpers (not abstract classes). Refactor the four mod10 acceptance specs (`place-order-positive-test.spec.ts`, `place-order-negative-test.spec.ts`, `place-order-positive-isolated-test.spec.ts`, `place-order-negative-isolated-test.spec.ts`) to consume them.
 
-## 20. Legacy — Architecture — add shared `BaseScenarioDslTest` and `BaseE2eTest` to mod11
+## 20. Legacy — Architecture — add shared `BaseScenarioDslTest` and `BaseE2eTest` modules to mod11
 
 Java: `mod11/base/BaseScenarioDslTest.java` + `mod11/e2e/base/BaseE2eTest.java`. .NET: same. TS: absent.
 
-Add matching TS files and refactor `mod11/e2e/place-order-positive-test.spec.ts` to use them.
+Add matching TS modules — exports fixtures/helpers, not abstract classes. Refactor `mod11/e2e/place-order-positive-test.spec.ts` to consume them.
 
 ## 21. Legacy — Contract — restructure Contract tests to match Java/.NET abstract-class pattern (optional)
 
