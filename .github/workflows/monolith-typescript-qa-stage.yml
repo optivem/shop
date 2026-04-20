@@ -19,7 +19,7 @@ jobs:
     outputs:
       image-urls: ${{ steps.resolve-images.outputs.image-urls }}
     steps:
-      - name: Validate Config
+      - name: Ensure Environment Variables Defined
         uses: optivem/actions/ensure-env-vars-defined@v1
         with:
           names: |

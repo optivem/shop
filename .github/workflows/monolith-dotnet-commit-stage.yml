@@ -19,7 +19,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - name: Validate Config
+      - name: Ensure Environment Variables Defined
         uses: optivem/actions/ensure-env-vars-defined@v1
         with:
           names: |

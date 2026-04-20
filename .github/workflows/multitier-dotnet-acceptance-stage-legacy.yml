@@ -32,7 +32,7 @@ jobs:
       latest-image-timestamp: ${{ steps.find-latest.outputs.latest-image-timestamp }}
       last-run-at: ${{ steps.should-run.outputs.last-run-at }}
     steps:
-      - name: Validate Config
+      - name: Ensure Environment Variables Defined
         uses: optivem/actions/ensure-env-vars-defined@v1
         with:
           names: |
@@ -53,7 +53,7 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Find Latest Artifacts
+      - name: Resolve Docker Image Digests
         id: find-latest
         uses: optivem/actions/resolve-docker-image-digests@v1
         with:
