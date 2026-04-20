@@ -28,10 +28,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Authenticate GitHub CLI
-        run: |
-          echo "${{ secrets.VERIFY_TOKEN }}" | gh auth login --with-token
-
       # Deployments first: Scenario 1 (released-RC deployments) needs
       # the RC git tags to resolve SHAs; cleanup-prereleases deletes those.
       - name: Cleanup Deployments
@@ -40,7 +36,7 @@ jobs:
           retention-days: ${{ inputs.retention-days || '30' }}
           dry-run: ${{ inputs.dry-run || false }}
         env:
-          GITHUB_TOKEN: ${{ secrets.VERIFY_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Cleanup Prereleases
         uses: optivem/actions/cleanup-prereleases@v1
@@ -48,4 +44,4 @@ jobs:
           retention-days: ${{ inputs.retention-days || '30' }}
           dry-run: ${{ inputs.dry-run || false }}
         env:
-          GITHUB_TOKEN: ${{ secrets.VERIFY_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
