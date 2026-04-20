@@ -21,28 +21,30 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  print-inputs:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Print input parameters
-        run: |
-          echo "=== Workflow Inputs ==="
-          echo "Level: ${{ inputs.level || 'qa' }}"
-          echo "Triggered by: ${{ github.event_name }} ${{ github.event.schedule }}"
-
-  # On scheduled runs, skip the pipeline if nothing meaningful has changed since
-  # the last build — comparing HEAD against the latest meta-rc at this VERSION
-  # (falling back to the latest meta-v release). Only changes under
-  # .github/workflows/, system/, or system-test/ count as meaningful; VERSION
-  # bumps, docs, plans, and reports do not. workflow_dispatch always proceeds.
-  check-changes:
-    needs: print-inputs
+  # Single gate before any downstream jobs:
+  #   1. Print inputs for visibility.
+  #   2. On scheduled runs, skip the pipeline if nothing meaningful has changed since
+  #      the last build — comparing HEAD against the latest meta-rc at this VERSION
+  #      (falling back to the latest meta-v release). Only changes under
+  #      .github/workflows/, system/, or system-test/ count as meaningful; VERSION
+  #      bumps, docs, plans, and reports do not. workflow_dispatch always proceeds.
+  #   3. Fail fast if any VERSION file's version has already been used as a final
+  #      release by meta, any pipeline, or any per-stack artifact. Mirrors the
+  #      VERSION → prefix mapping in bump-versions.yml so every tag that auto-bump
+  #      would touch is checked — otherwise we'd only discover it deep into the
+  #      downstream pipeline acceptance stages.
+  check:
     runs-on: ubuntu-latest
     permissions:
       contents: read
     outputs:
       should_run: ${{ steps.decide.outputs.should_run }}
     steps:
+      - name: Print input parameters
+        run: |
+          echo "=== Workflow Inputs ==="
+          echo "Level: ${{ inputs.level || 'qa' }}"
+          echo "Triggered by: ${{ github.event_name }} ${{ github.event.schedule }}"
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
@@ -92,23 +94,8 @@ jobs:
             echo "No meaningful changes — skipping run."
             echo "should_run=false" >> "$GITHUB_OUTPUT"
           fi
-
-  # Fail fast if any VERSION file's version has already been used as a final
-  # release by meta, any pipeline, or any per-stack artifact. Mirrors the
-  # VERSION → prefix mapping in bump-versions.yml so every tag that auto-bump
-  # would touch is checked — otherwise we'd only discover it deep into the
-  # downstream pipeline acceptance stages.
-  check-version:
-    needs: check-changes
-    if: ${{ needs.check-changes.outputs.should_run == 'true' }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
       - name: Check versions not already released
+        if: ${{ steps.decide.outputs.should_run == 'true' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -161,7 +148,8 @@ jobs:
 
   # Phase 0: Run all local stages in parallel
   local-monolith-java:
-    needs: check-version
+    needs: check
+    if: ${{ needs.check.outputs.should_run == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: optivem/actions/trigger-and-wait@v1
@@ -170,7 +158,8 @@ jobs:
           inputs: '{"level": "local", "skip-commit-stage": "true"}'
 
   local-monolith-dotnet:
-    needs: check-version
+    needs: check
+    if: ${{ needs.check.outputs.should_run == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: optivem/actions/trigger-and-wait@v1
@@ -179,7 +168,8 @@ jobs:
           inputs: '{"level": "local", "skip-commit-stage": "true"}'
 
   local-monolith-typescript:
-    needs: check-version
+    needs: check
+    if: ${{ needs.check.outputs.should_run == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: optivem/actions/trigger-and-wait@v1
@@ -188,7 +178,8 @@ jobs:
           inputs: '{"level": "local", "skip-commit-stage": "true"}'
 
   local-multitier-java:
-    needs: check-version
+    needs: check
+    if: ${{ needs.check.outputs.should_run == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: optivem/actions/trigger-and-wait@v1
@@ -197,7 +188,8 @@ jobs:
           inputs: '{"level": "local", "skip-commit-stage": "true"}'
 
   local-multitier-dotnet:
-    needs: check-version
+    needs: check
+    if: ${{ needs.check.outputs.should_run == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: optivem/actions/trigger-and-wait@v1
@@ -206,7 +198,8 @@ jobs:
           inputs: '{"level": "local", "skip-commit-stage": "true"}'
 
   local-multitier-typescript:
-    needs: check-version
+    needs: check
+    if: ${{ needs.check.outputs.should_run == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: optivem/actions/trigger-and-wait@v1
