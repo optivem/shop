@@ -145,7 +145,7 @@ jobs:
     needs: check
     runs-on: ubuntu-latest
     steps:
-      - uses: optivem/actions/trigger-and-wait@v1
+      - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
         with:
           workflow: monolith-java-prod-stage.yml
           inputs: '{"version": "${{ needs.check.outputs.monolith-java-rc }}"}'
@@ -154,7 +154,7 @@ jobs:
     needs: check
     runs-on: ubuntu-latest
     steps:
-      - uses: optivem/actions/trigger-and-wait@v1
+      - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
         with:
           workflow: monolith-dotnet-prod-stage.yml
           inputs: '{"version": "${{ needs.check.outputs.monolith-dotnet-rc }}"}'
@@ -163,7 +163,7 @@ jobs:
     needs: check
     runs-on: ubuntu-latest
     steps:
-      - uses: optivem/actions/trigger-and-wait@v1
+      - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
         with:
           workflow: monolith-typescript-prod-stage.yml
           inputs: '{"version": "${{ needs.check.outputs.monolith-typescript-rc }}"}'
@@ -172,7 +172,7 @@ jobs:
     needs: check
     runs-on: ubuntu-latest
     steps:
-      - uses: optivem/actions/trigger-and-wait@v1
+      - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
         with:
           workflow: multitier-java-prod-stage.yml
           inputs: '{"version": "${{ needs.check.outputs.multitier-java-rc }}"}'
@@ -181,7 +181,7 @@ jobs:
     needs: check
     runs-on: ubuntu-latest
     steps:
-      - uses: optivem/actions/trigger-and-wait@v1
+      - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
         with:
           workflow: multitier-dotnet-prod-stage.yml
           inputs: '{"version": "${{ needs.check.outputs.multitier-dotnet-rc }}"}'
@@ -190,7 +190,7 @@ jobs:
     needs: check
     runs-on: ubuntu-latest
     steps:
-      - uses: optivem/actions/trigger-and-wait@v1
+      - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
         with:
           workflow: multitier-typescript-prod-stage.yml
           inputs: '{"version": "${{ needs.check.outputs.multitier-typescript-rc }}"}'

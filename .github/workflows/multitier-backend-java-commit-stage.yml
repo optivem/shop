@@ -20,7 +20,7 @@ jobs:
       contents: read
     steps:
       - name: Validate Config
-        uses: optivem/actions/validate-config@v1
+        uses: optivem/actions/ensure-env-vars-defined@v1
         with:
           names: |
             DOCKERHUB_USERNAME

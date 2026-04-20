@@ -20,7 +20,7 @@ jobs:
       image-urls: ${{ steps.resolve-images.outputs.image-urls }}
     steps:
       - name: Validate Config
-        uses: optivem/actions/validate-config@v1
+        uses: optivem/actions/ensure-env-vars-defined@v1
         with:
           names: |
             DOCKERHUB_USERNAME
@@ -31,18 +31,14 @@ jobs:
 
       - name: Check RC Exists
         id: check-release
-        uses: optivem/actions/ensure-release-exists@v1
+        uses: optivem/actions/ensure-tag-exists@v1
         with:
-          version: ${{ inputs.version }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ inputs.version }}
 
       - name: Check QA Approved
-        uses: optivem/actions/ensure-release-exists@v1
+        uses: optivem/actions/ensure-tag-exists@v1
         with:
-          version: ${{ inputs.version }}-qa-approved
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ inputs.version }}-qa-approved
 
       - name: Generate Release Version
         id: release-version
@@ -51,16 +47,9 @@ jobs:
           prerelease-version: ${{ inputs.version }}
 
       - name: Verify Release Does Not Exist
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RELEASE_VERSION: ${{ steps.release-version.outputs.version }}
-        shell: bash
-        run: |
-          if gh release view "$RELEASE_VERSION" --repo "${{ github.repository }}" >/dev/null 2>&1; then
-            echo "::error::Release $RELEASE_VERSION already exists — cannot release again. Bump the VERSION file and create a new RC."
-            exit 1
-          fi
-          echo "Release $RELEASE_VERSION does not exist — OK to proceed"
+        uses: optivem/actions/ensure-version-unreleased@v1
+        with:
+          version: ${{ steps.release-version.outputs.version }}
 
       - name: Resolve Artifacts
         id: resolve-images

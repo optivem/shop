@@ -31,7 +31,7 @@ jobs:
       # Deployments first: Scenario 1 (released-RC deployments) needs
       # the RC git tags to resolve SHAs; cleanup-prereleases deletes those.
       - name: Cleanup Deployments
-        uses: optivem/actions/cleanup-deployments@v1
+        uses: optivem/actions/cleanup-github-deployments@v1
         with:
           retention-days: ${{ inputs.retention-days || '3' }}
           dry-run: ${{ inputs.dry-run || false }}

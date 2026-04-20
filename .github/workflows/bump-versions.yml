@@ -14,7 +14,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Bump Patch Versions
+      - name: Compute Patch Bumps
         id: bump
         uses: optivem/actions/bump-patch-versions@v1
         with:
@@ -27,6 +27,29 @@ jobs:
             system/multitier/backend-java/VERSION:multitier-backend-java-v,multitier-java-v,meta-v
             system/multitier/backend-typescript/VERSION:multitier-backend-typescript-v,multitier-typescript-v,meta-v
             system/multitier/frontend-react/VERSION:multitier-frontend-react-v,multitier-java-v,multitier-dotnet-v,multitier-typescript-v,meta-v
+
+      - name: Build Commit Payload
+        id: payload
+        if: steps.bump.outputs.bumped == 'true'
+        shell: bash
+        env:
+          BUMPS: ${{ steps.bump.outputs.bumps }}
+        run: |
+          set -euo pipefail
+          files=$(jq -c '[.[] | {
+            path: .path,
+            content: ("\(.["new-version"])\n"),
+            message: "Bump \(.path) \(.["old-version"]) -> \(.["new-version"]) (post \(.["release-tag"]))"
+          }]' <<< "$BUMPS")
+          echo "files=$files" >> "$GITHUB_OUTPUT"
+
+      - name: Commit Bumped VERSION Files
+        if: steps.bump.outputs.bumped == 'true'
+        uses: optivem/actions/commit-files-via-github-contents-api@v1
+        with:
+          files: ${{ steps.payload.outputs.files }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Write summary
         shell: bash

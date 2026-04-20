@@ -25,11 +25,9 @@ jobs:
       contents: read
     steps:
       - name: Check RC Exists
-        uses: optivem/actions/ensure-release-exists@v1
+        uses: optivem/actions/ensure-tag-exists@v1
         with:
-          version: ${{ inputs.version }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ inputs.version }}
 
   run:
     needs: check
@@ -46,13 +44,9 @@ jobs:
 
       - name: Determine Stage Result
         id: determine-result
-        run: |
-          if [[ "${{ inputs.result }}" == "approved" ]]; then
-            echo "stage-result=success" >> $GITHUB_OUTPUT
-          else
-            echo "stage-result=failure" >> $GITHUB_OUTPUT
-          fi
-        shell: bash
+        uses: optivem/actions/map-signoff-result@v1
+        with:
+          result: ${{ inputs.result }}
 
       - name: Promote Prerelease (QA Signoff)
         id: promote

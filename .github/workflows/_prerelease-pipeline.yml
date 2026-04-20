@@ -51,10 +51,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Check Version Unreleased
-        uses: optivem/actions/check-version-unreleased@v1
+      - name: Read Target Version
+        id: read-target-version
+        uses: optivem/actions/read-target-version@v1
+
+      - name: Ensure Version Unreleased
+        uses: optivem/actions/ensure-version-unreleased@v1
         with:
-          prefix: ${{ inputs.prefix }}
+          version: ${{ inputs.prefix }}-v${{ steps.read-target-version.outputs.target-version }}
 
   local:
     needs: check-version
@@ -157,7 +161,7 @@ jobs:
       matrix:
         workflow: ${{ fromJSON(inputs.commit-workflows) }}
     steps:
-      - uses: optivem/actions/trigger-and-wait@v1
+      - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
         with:
           workflow: ${{ matrix.workflow }}
 
@@ -169,7 +173,7 @@ jobs:
       version: ${{ steps.get-version.outputs.tag }}
     steps:
       - id: trigger
-        uses: optivem/actions/trigger-and-wait@v1
+        uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
         with:
           workflow: ${{ inputs.prefix }}-acceptance-stage.yml
           poll-interval: '300'
@@ -184,7 +188,7 @@ jobs:
     if: ${{ always() && inputs.level != 'commit' && needs.acceptance-stage.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: optivem/actions/trigger-and-wait@v1
+      - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
         with:
           workflow: ${{ inputs.prefix }}-acceptance-stage-legacy.yml
           poll-interval: '300'
@@ -194,7 +198,7 @@ jobs:
     if: ${{ always() && inputs.level == 'qa' && needs.acceptance-stage-legacy.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: optivem/actions/trigger-and-wait@v1
+      - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
         with:
           workflow: ${{ inputs.prefix }}-qa-stage.yml
           inputs: '{"version": "${{ needs.acceptance-stage.outputs.version }}"}'
@@ -204,7 +208,7 @@ jobs:
     if: ${{ always() && inputs.level == 'qa' && needs.qa-stage.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: optivem/actions/trigger-and-wait@v1
+      - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
         with:
           workflow: ${{ inputs.prefix }}-qa-signoff.yml
           inputs: '{"version": "${{ needs.acceptance-stage.outputs.version }}", "result": "approved"}'

@@ -20,7 +20,7 @@ jobs:
       image-urls: ${{ steps.resolve-images.outputs.image-urls }}
     steps:
       - name: Validate Config
-        uses: optivem/actions/validate-config@v1
+        uses: optivem/actions/ensure-env-vars-defined@v1
         with:
           names: |
             DOCKERHUB_USERNAME
@@ -39,11 +39,9 @@ jobs:
 
       - name: Check RC Exists
         id: check-release
-        uses: optivem/actions/ensure-release-exists@v1
+        uses: optivem/actions/ensure-tag-exists@v1
         with:
-          version: ${{ inputs.version }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ inputs.version }}
 
       - name: Resolve Artifacts
         id: resolve-images

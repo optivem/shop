@@ -152,7 +152,7 @@ jobs:
     if: ${{ needs.check.outputs.should_run == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: optivem/actions/trigger-and-wait@v1
+      - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
         with:
           workflow: prerelease-pipeline-monolith-java.yml
           inputs: '{"level": "local", "skip-commit-stage": "true"}'
@@ -162,7 +162,7 @@ jobs:
     if: ${{ needs.check.outputs.should_run == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: optivem/actions/trigger-and-wait@v1
+      - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
         with:
           workflow: prerelease-pipeline-monolith-dotnet.yml
           inputs: '{"level": "local", "skip-commit-stage": "true"}'
@@ -172,7 +172,7 @@ jobs:
     if: ${{ needs.check.outputs.should_run == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: optivem/actions/trigger-and-wait@v1
+      - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
         with:
           workflow: prerelease-pipeline-monolith-typescript.yml
           inputs: '{"level": "local", "skip-commit-stage": "true"}'
@@ -182,7 +182,7 @@ jobs:
     if: ${{ needs.check.outputs.should_run == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: optivem/actions/trigger-and-wait@v1
+      - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
         with:
           workflow: prerelease-pipeline-multitier-java.yml
           inputs: '{"level": "local", "skip-commit-stage": "true"}'
@@ -192,7 +192,7 @@ jobs:
     if: ${{ needs.check.outputs.should_run == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: optivem/actions/trigger-and-wait@v1
+      - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
         with:
           workflow: prerelease-pipeline-multitier-dotnet.yml
           inputs: '{"level": "local", "skip-commit-stage": "true"}'
@@ -202,7 +202,7 @@ jobs:
     if: ${{ needs.check.outputs.should_run == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: optivem/actions/trigger-and-wait@v1
+      - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
         with:
           workflow: prerelease-pipeline-multitier-typescript.yml
           inputs: '{"level": "local", "skip-commit-stage": "true"}'
@@ -213,7 +213,7 @@ jobs:
     if: ${{ contains(fromJSON('["commit","acceptance","qa"]'), inputs.level || 'qa') }}
     runs-on: ubuntu-latest
     steps:
-      - uses: optivem/actions/trigger-and-wait@v1
+      - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
         with:
           workflow: monolith-java-commit-stage.yml
 
@@ -222,7 +222,7 @@ jobs:
     if: ${{ contains(fromJSON('["commit","acceptance","qa"]'), inputs.level || 'qa') }}
     runs-on: ubuntu-latest
     steps:
-      - uses: optivem/actions/trigger-and-wait@v1
+      - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
         with:
           workflow: monolith-dotnet-commit-stage.yml
 
@@ -231,7 +231,7 @@ jobs:
     if: ${{ contains(fromJSON('["commit","acceptance","qa"]'), inputs.level || 'qa') }}
     runs-on: ubuntu-latest
     steps:
-      - uses: optivem/actions/trigger-and-wait@v1
+      - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
         with:
           workflow: monolith-typescript-commit-stage.yml
 
@@ -240,7 +240,7 @@ jobs:
     if: ${{ contains(fromJSON('["commit","acceptance","qa"]'), inputs.level || 'qa') }}
     runs-on: ubuntu-latest
     steps:
-      - uses: optivem/actions/trigger-and-wait@v1
+      - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
         with:
           workflow: multitier-backend-java-commit-stage.yml
 
@@ -249,7 +249,7 @@ jobs:
     if: ${{ contains(fromJSON('["commit","acceptance","qa"]'), inputs.level || 'qa') }}
     runs-on: ubuntu-latest
     steps:
-      - uses: optivem/actions/trigger-and-wait@v1
+      - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
         with:
           workflow: multitier-backend-dotnet-commit-stage.yml
 
@@ -258,7 +258,7 @@ jobs:
     if: ${{ contains(fromJSON('["commit","acceptance","qa"]'), inputs.level || 'qa') }}
     runs-on: ubuntu-latest
     steps:
-      - uses: optivem/actions/trigger-and-wait@v1
+      - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
         with:
           workflow: multitier-backend-typescript-commit-stage.yml
 
@@ -267,7 +267,7 @@ jobs:
     if: ${{ contains(fromJSON('["commit","acceptance","qa"]'), inputs.level || 'qa') }}
     runs-on: ubuntu-latest
     steps:
-      - uses: optivem/actions/trigger-and-wait@v1
+      - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
         with:
           workflow: multitier-frontend-react-commit-stage.yml
 
@@ -278,7 +278,7 @@ jobs:
     if: ${{ always() && !failure() && !cancelled() && contains(fromJSON('["acceptance","qa"]'), inputs.level || 'qa') }}
     runs-on: ubuntu-latest
     steps:
-      - uses: optivem/actions/trigger-and-wait@v1
+      - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
         with:
           workflow: prerelease-pipeline-monolith-java.yml
           inputs: '{"level": "${{ inputs.level || ''qa'' }}", "skip-local-stage": "true", "skip-commit-stage": "true"}'
@@ -288,7 +288,7 @@ jobs:
     if: ${{ always() && !failure() && !cancelled() && contains(fromJSON('["acceptance","qa"]'), inputs.level || 'qa') }}
     runs-on: ubuntu-latest
     steps:
-      - uses: optivem/actions/trigger-and-wait@v1
+      - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
         with:
           workflow: prerelease-pipeline-monolith-dotnet.yml
           inputs: '{"level": "${{ inputs.level || ''qa'' }}", "skip-local-stage": "true", "skip-commit-stage": "true"}'
@@ -298,7 +298,7 @@ jobs:
     if: ${{ always() && !failure() && !cancelled() && contains(fromJSON('["acceptance","qa"]'), inputs.level || 'qa') }}
     runs-on: ubuntu-latest
     steps:
-      - uses: optivem/actions/trigger-and-wait@v1
+      - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
         with:
           workflow: prerelease-pipeline-monolith-typescript.yml
           inputs: '{"level": "${{ inputs.level || ''qa'' }}", "skip-local-stage": "true", "skip-commit-stage": "true"}'
@@ -308,7 +308,7 @@ jobs:
     if: ${{ always() && !failure() && !cancelled() && contains(fromJSON('["acceptance","qa"]'), inputs.level || 'qa') }}
     runs-on: ubuntu-latest
     steps:
-      - uses: optivem/actions/trigger-and-wait@v1
+      - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
         with:
           workflow: prerelease-pipeline-multitier-java.yml
           inputs: '{"level": "${{ inputs.level || ''qa'' }}", "skip-local-stage": "true", "skip-commit-stage": "true"}'
@@ -318,7 +318,7 @@ jobs:
     if: ${{ always() && !failure() && !cancelled() && contains(fromJSON('["acceptance","qa"]'), inputs.level || 'qa') }}
     runs-on: ubuntu-latest
     steps:
-      - uses: optivem/actions/trigger-and-wait@v1
+      - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
         with:
           workflow: prerelease-pipeline-multitier-dotnet.yml
           inputs: '{"level": "${{ inputs.level || ''qa'' }}", "skip-local-stage": "true", "skip-commit-stage": "true"}'
@@ -328,7 +328,7 @@ jobs:
     if: ${{ always() && !failure() && !cancelled() && contains(fromJSON('["acceptance","qa"]'), inputs.level || 'qa') }}
     runs-on: ubuntu-latest
     steps:
-      - uses: optivem/actions/trigger-and-wait@v1
+      - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
         with:
           workflow: prerelease-pipeline-multitier-typescript.yml
           inputs: '{"level": "${{ inputs.level || ''qa'' }}", "skip-local-stage": "true", "skip-commit-stage": "true"}'

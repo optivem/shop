@@ -16,7 +16,7 @@ jobs:
     steps:
       - name: Check Artifacts Exist
         id: check-artifacts
-        uses: optivem/actions/check-artifacts-exist@v1
+        uses: optivem/actions/check-github-container-packages-exist@v1
 
   check:
     needs: preflight
@@ -31,7 +31,7 @@ jobs:
       last-run-at: ${{ steps.should-run.outputs.last-run-at }}
     steps:
       - name: Validate Config
-        uses: optivem/actions/validate-config@v1
+        uses: optivem/actions/ensure-env-vars-defined@v1
         with:
           names: |
             DOCKERHUB_USERNAME
@@ -61,14 +61,14 @@ jobs:
 
       - name: Find Latest Artifacts
         id: find-latest
-        uses: optivem/actions/find-latest-docker-images@v1
+        uses: optivem/actions/resolve-docker-image-digests@v1
         with:
           image-urls: |
             ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/monolith-system-dotnet:latest
 
       - name: Check Run Conditions
         id: should-run
-        uses: optivem/actions/has-update-since-last-run@v1
+        uses: optivem/actions/has-update-since-last-github-workflow-run@v1
         with:
           last-updated-at: ${{ steps.find-latest.outputs.latest-image-timestamp }}
           workflow-name: ${{ github.workflow }}
