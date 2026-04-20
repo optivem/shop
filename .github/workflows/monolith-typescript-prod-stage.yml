@@ -80,7 +80,7 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Deploy System (Production Environment)
+      - name: Simulate Deployment (Production Environment)
         id: deploy
         uses: optivem/actions/run-docker-compose@v1
         with:

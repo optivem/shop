@@ -86,7 +86,7 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Deploy System (Real External Systems)
+      - name: Simulate Deployment (Real External Systems)
         uses: optivem/actions/run-docker-compose@v1
         with:
           environment: acceptance
@@ -102,7 +102,7 @@ jobs:
             ]
           working-directory: system-test/java
 
-      - name: Deploy System (Stub External Systems)
+      - name: Simulate Deployment (Stub External Systems)
         uses: optivem/actions/run-docker-compose@v1
         with:
           environment: acceptance
