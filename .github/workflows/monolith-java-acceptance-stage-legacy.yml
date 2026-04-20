@@ -60,7 +60,7 @@ jobs:
           image-urls: |
             ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/monolith-system-java:latest
 
-      - name: Check Run Conditions
+      - name: Check for Docker Image Updates Since Last Run
         id: should-run
         uses: optivem/actions/has-update-since-last-github-workflow-run@v1
         with:
