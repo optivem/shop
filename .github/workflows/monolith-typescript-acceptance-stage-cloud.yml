@@ -557,6 +557,8 @@ jobs:
     needs: [preflight, check, promote]
     if: always()
     runs-on: ubuntu-latest
+    permissions:
+      actions: write
     steps:
     - name: Summarize Stage
       uses: optivem/actions/summarize-system-stage@v1

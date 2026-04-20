@@ -125,6 +125,8 @@ jobs:
     needs: [check, run]
     if: always()
     runs-on: ubuntu-latest
+    permissions:
+      actions: write
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v5
