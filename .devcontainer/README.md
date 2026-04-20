@@ -11,10 +11,17 @@ Install once on your host machine:
 
 ## Setup
 
-1. Open the repo in VS Code.
+1. Open the `shop/` folder **directly** in VS Code:
+   - If a folder or workspace is already open: **File → Close Folder** (or **Close Workspace**) first.
+   - **File → Open Folder…** → navigate to and select the `shop/` folder itself (not a parent like `academy/`), then click **Select Folder**.
+   - Verify the Explorer sidebar shows `SHOP` at the top and contains `Run-AllSystemTests.ps1`, `CLAUDE.md`, and `.devcontainer/` at the root. If it shows any other folder name, you opened the wrong level.
+   - The `.devcontainer/` must sit at the root of the opened folder — multi-root workspaces and parent directories will not work.
 2. Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`) → **Dev Containers: Reopen in Container**.
+   - ⚠️ Do **not** pick **Dev Containers: Add Dev Container Configuration Files…** — that creates a new config from templates. The repo already ships one in `.devcontainer/`.
 3. First launch builds the image (~3-5 min); subsequent launches are instant.
 4. [.devcontainer/post-create.sh](post-create.sh) runs automatically and verifies tooling.
+
+**Troubleshooting:** if you see an **"Add configuration to workspace / user data folder"** prompt or a template picker (Alpine, C#, Show all templates…), VS Code did **not** detect the existing config. Cancel, close the folder, and reopen `shop/` directly — do not pick a template, or you'll overwrite the shared config.
 
 ## Deploy to Google Cloud Run
 
