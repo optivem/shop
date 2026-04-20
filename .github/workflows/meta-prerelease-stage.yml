@@ -30,13 +30,77 @@ jobs:
           echo "Level: ${{ inputs.level || 'qa' }}"
           echo "Triggered by: ${{ github.event_name }} ${{ github.event.schedule }}"
 
+  # On scheduled runs, skip the pipeline if nothing meaningful has changed since
+  # the last build — comparing HEAD against the latest meta-rc at this VERSION
+  # (falling back to the latest meta-v release). Only changes under
+  # .github/workflows/, system/, or system-test/ count as meaningful; VERSION
+  # bumps, docs, plans, and reports do not. workflow_dispatch always proceeds.
+  check-changes:
+    needs: print-inputs
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      should_run: ${{ steps.decide.outputs.should_run }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Read VERSION
+        id: version
+        shell: bash
+        run: echo "value=$(tr -d '[:space:]' < VERSION)" >> "$GITHUB_OUTPUT"
+      - name: Detect meaningful changes since last build
+        id: changes
+        uses: optivem/actions/has-changes-since-tag@main
+        with:
+          tag-patterns: |
+            meta-v${{ steps.version.outputs.value }}-rc.*
+            meta-v[0-9]*.[0-9]*.[0-9]*
+          paths: |
+            .github/workflows/
+            system/
+            system-test/
+      - name: Decide whether to run
+        id: decide
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          CHANGED: ${{ steps.changes.outputs.changed }}
+          BASELINE_TAG: ${{ steps.changes.outputs.baseline-tag }}
+          CHANGED_FILES: ${{ steps.changes.outputs.changed-files }}
+        run: |
+          set -euo pipefail
+          if [[ "$EVENT_NAME" != "schedule" ]]; then
+            echo "Triggered by $EVENT_NAME — always run."
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [[ "$CHANGED" == "true" ]]; then
+            echo "Meaningful changes detected — running pipeline."
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+          else
+            TAG_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/releases/tag/${BASELINE_TAG}"
+            {
+              echo "## Skipped — no meaningful changes"
+              echo ""
+              echo "No changes in \`.github/workflows/\`, \`system/\`, or \`system-test/\` since [\`${BASELINE_TAG}\`](${TAG_URL})."
+              echo ""
+              echo "Runs again on next schedule tick, or trigger manually via workflow_dispatch to force a rebuild."
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "No meaningful changes — skipping run."
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+          fi
+
   # Fail fast if any VERSION file's version has already been used as a final
   # release by meta, any pipeline, or any per-stack artifact. Mirrors the
   # VERSION → prefix mapping in bump-versions.yml so every tag that auto-bump
   # would touch is checked — otherwise we'd only discover it deep into the
   # downstream pipeline acceptance stages.
   check-version:
-    needs: print-inputs
+    needs: check-changes
+    if: ${{ needs.check-changes.outputs.should_run == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
