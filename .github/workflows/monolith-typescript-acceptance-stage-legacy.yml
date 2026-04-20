@@ -15,8 +15,9 @@ jobs:
       packages: read
     outputs:
       artifacts-exist: ${{ steps.check-artifacts.outputs.exist }}
+      skip-reason: ${{ steps.check-artifacts.outputs.exist != 'true' && 'No artifacts published yet — waiting for the commit stage to produce images.' || '' }}
     steps:
-      - name: Check Artifacts Exist
+      - name: Check Container Packages Exist
         id: check-artifacts
         uses: optivem/actions/check-github-container-packages-exist@v1
 
@@ -28,6 +29,7 @@ jobs:
       contents: read
     outputs:
       should-run: ${{ steps.should-run.outputs.changed }}
+      skip-reason: ${{ steps.should-run.outputs.changed != 'true' && 'No new artifacts since the last successful run.' || '' }}
       image-digest-urls: ${{ steps.find-latest.outputs.image-digest-urls }}
       latest-image-timestamp: ${{ steps.find-latest.outputs.latest-image-timestamp }}
       last-run-at: ${{ steps.should-run.outputs.last-run-at }}
@@ -336,7 +338,7 @@ jobs:
         environment: acceptance
         stage-result: ${{ needs.run.result }}
         success-version: latest
-        skipped-reason: ${{ needs.preflight.outputs.artifacts-exist != 'true' && 'No artifacts published yet — waiting for the commit stage to produce images.' || (needs.check.outputs.should-run != 'true' && 'No new artifacts since the last successful run.' || '') }}
+        skipped-reason: ${{ needs.preflight.outputs.skip-reason || needs.check.outputs.skip-reason }}
         latest-artifact-ids: ${{ needs.check.outputs.image-digest-urls }}
         latest-updated-at: ${{ needs.check.outputs.latest-image-timestamp }}
         last-run-at: ${{ needs.check.outputs.last-run-at }}

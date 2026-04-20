@@ -48,15 +48,18 @@ jobs:
         with:
           result: ${{ inputs.result }}
 
-      - name: Promote Prerelease (QA Signoff)
+      - name: Generate QA Signoff Tag
         id: promote
-        uses: optivem/actions/promote-prerelease@v1
+        uses: optivem/actions/generate-status-version@v1
         with:
           version: ${{ inputs.version }}
           environment: qa
           status: ${{ inputs.result }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create QA Signoff Tag
+        uses: optivem/actions/create-and-push-tag@v1
+        with:
+          tag: ${{ steps.promote.outputs.version }}
 
   summary:
     needs: [check, run]

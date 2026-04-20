@@ -13,8 +13,9 @@ jobs:
       packages: read
     outputs:
       artifacts-exist: ${{ steps.check-artifacts.outputs.exist }}
+      skip-reason: ${{ steps.check-artifacts.outputs.exist != 'true' && 'No artifacts published yet — waiting for the commit stage to produce images.' || '' }}
     steps:
-      - name: Check Artifacts Exist
+      - name: Check Container Packages Exist
         id: check-artifacts
         uses: optivem/actions/check-github-container-packages-exist@v1
 
@@ -26,6 +27,7 @@ jobs:
       contents: read
     outputs:
       should-run: ${{ steps.should-run.outputs.changed }}
+      skip-reason: ${{ steps.should-run.outputs.changed != 'true' && 'No new artifacts since the last successful run.' || '' }}
       image-digest-urls: ${{ steps.find-latest.outputs.image-digest-urls }}
       latest-image-timestamp: ${{ steps.find-latest.outputs.latest-image-timestamp }}
       last-run-at: ${{ steps.should-run.outputs.last-run-at }}
@@ -434,8 +436,8 @@ jobs:
       contents: write
       packages: write
     outputs:
-      version: ${{ steps.promote-to-rc.outputs.version }}
-      image-urls: ${{ steps.promote-to-rc.outputs.image-urls }}
+      version: ${{ steps.generate-version.outputs.version }}
+      image-urls: ${{ steps.tag-images.outputs.image-urls }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v5
@@ -446,15 +448,26 @@ jobs:
         id: read-version
         uses: optivem/actions/read-target-version@v1
 
-      - name: Promote to RC
-        id: promote-to-rc
-        uses: optivem/actions/create-prerelease@v1
+      - name: Generate Prerelease Version
+        id: generate-version
+        uses: optivem/actions/generate-prerelease-version@v1
         with:
           target-version: ${{ steps.read-version.outputs.target-version }}
           prefix: monolith-java-cloud
+
+      - name: Tag Docker Images for Prerelease
+        id: tag-images
+        uses: optivem/actions/tag-docker-images@v1
+        with:
           image-urls: ${{ needs.check.outputs.image-digest-urls }}
+          tag: ${{ steps.generate-version.outputs.version }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create and Push Git Tag
+        uses: optivem/actions/create-and-push-tag@v1
+        with:
+          tag: ${{ steps.generate-version.outputs.version }}
 
   summary:
     needs: [preflight, check, promote]
@@ -471,7 +484,7 @@ jobs:
         stage-result: ${{ needs.promote.result }}
         success-version: ${{ needs.promote.outputs.version }}
         success-artifact-ids: ${{ needs.promote.outputs.image-urls }}
-        skipped-reason: ${{ needs.preflight.outputs.artifacts-exist != 'true' && 'No artifacts published yet — waiting for the commit stage to produce images.' || (needs.check.outputs.should-run != 'true' && 'No new artifacts since the last successful run.' || '') }}
+        skipped-reason: ${{ needs.preflight.outputs.skip-reason || needs.check.outputs.skip-reason }}
         latest-artifact-ids: ${{ needs.check.outputs.image-digest-urls }}
         latest-updated-at: ${{ needs.check.outputs.latest-image-timestamp }}
         last-run-at: ${{ needs.check.outputs.last-run-at }}

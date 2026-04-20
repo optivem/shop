@@ -46,12 +46,12 @@ jobs:
         with:
           prerelease-version: ${{ inputs.version }}
 
-      - name: Verify Release Does Not Exist
+      - name: Verify Version Not Yet Released
         uses: optivem/actions/ensure-version-unreleased@v1
         with:
           version: ${{ steps.release-version.outputs.version }}
 
-      - name: Resolve Artifacts
+      - name: Resolve Docker Images
         id: resolve-images
         uses: optivem/actions/resolve-docker-images@v1
         with:
@@ -98,17 +98,42 @@ jobs:
             ]
           working-directory: system-test/java
 
-      - name: Promote RC (Production Deployed)
+      - name: Generate Release Version
         id: promote
-        uses: optivem/actions/create-release@v1
+        uses: optivem/actions/generate-release-version@v1
         with:
-          version: ${{ inputs.version }}
-          artifact-urls: ${{ needs.check.outputs.image-urls }}
-          component-versions: |
-            multitier-backend-java:system/multitier/backend-java/VERSION
-            multitier-frontend-react:system/multitier/frontend-react/VERSION
+          prerelease-version: ${{ inputs.version }}
+
+      - name: Tag Docker Images
+        id: tag-images
+        uses: optivem/actions/tag-docker-images@v1
+        with:
+          image-urls: ${{ needs.check.outputs.image-urls }}
+          tag: ${{ steps.promote.outputs.version }}
+
+      - name: Create Release Tag
+        uses: optivem/actions/create-and-push-tag@v1
+        with:
+          tag: ${{ steps.promote.outputs.version }}
+
+      - name: Create GitHub Release
+        uses: optivem/actions/create-github-release@v1
+        with:
+          base-version: ${{ inputs.version }}
+          release-version: ${{ steps.promote.outputs.version }}
+          environment: prod
+          status: deployed
+          artifact-urls: ${{ steps.tag-images.outputs.image-urls }}
+          is-prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Component Tags
+        uses: optivem/actions/create-component-tags@v1
+        with:
+          components: |
+            multitier-backend-java:system/multitier/backend-java/VERSION
+            multitier-frontend-react:system/multitier/frontend-react/VERSION
 
   summary:
     needs: [check, run]

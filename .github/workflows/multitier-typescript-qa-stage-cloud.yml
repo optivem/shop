@@ -43,7 +43,7 @@ jobs:
         with:
           tag: ${{ inputs.version }}
 
-      - name: Resolve Artifacts
+      - name: Resolve Docker Images
         id: resolve-images
         uses: optivem/actions/resolve-docker-images@v1
         with:
@@ -189,16 +189,18 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Promote Prerelease (QA Deployed)
+      - name: Generate QA Deployed Tag
         id: promote
-        uses: optivem/actions/promote-prerelease@v1
+        uses: optivem/actions/generate-status-version@v1
         with:
           version: ${{ inputs.version }}
           environment: qa
           status: deployed
-          artifact-urls: ${{ needs.check.outputs.image-urls }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create QA Deployed Tag
+        uses: optivem/actions/create-and-push-tag@v1
+        with:
+          tag: ${{ steps.promote.outputs.version }}
 
   summary:
     needs: [check, promote]
