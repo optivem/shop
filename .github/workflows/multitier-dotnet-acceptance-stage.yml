@@ -29,6 +29,8 @@ jobs:
     outputs:
       should-run: ${{ steps.should-run.outputs.changed }}
       image-digest-urls: ${{ steps.find-latest.outputs.image-digest-urls }}
+      latest-image-timestamp: ${{ steps.find-latest.outputs.latest-image-timestamp }}
+      last-run-at: ${{ steps.should-run.outputs.last-run-at }}
     steps:
       - name: Validate Config
         uses: optivem/actions/validate-config@v1
@@ -260,7 +262,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   summary:
-    needs: [check, run]
+    needs: [preflight, check, run]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -272,3 +274,7 @@ jobs:
         stage-result: ${{ needs.run.result }}
         success-version: ${{ needs.run.outputs.version }}
         success-artifact-ids: ${{ needs.run.outputs.image-urls }}
+        skipped-reason: ${{ needs.preflight.outputs.artifacts-exist != 'true' && 'No artifacts published yet — waiting for the commit stage to produce images.' || (needs.check.outputs.should-run != 'true' && 'No new artifacts since the last successful run.' || '') }}
+        latest-artifact-ids: ${{ needs.check.outputs.image-digest-urls }}
+        latest-updated-at: ${{ needs.check.outputs.latest-image-timestamp }}
+        last-run-at: ${{ needs.check.outputs.last-run-at }}
