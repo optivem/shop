@@ -137,7 +137,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Summarize Stage
-      uses: optivem/actions/summarize-commit-stage@v1
+      uses: optivem/actions/compose-commit-stage-summary@v1
       with:
         stage-result: ${{ needs.run.result }}
         success-artifact-url: ${{ needs.run.outputs.image-digest-url }}

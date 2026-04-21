@@ -110,7 +110,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Simulate Deployment (Real External Systems)
-        uses: optivem/actions/start-docker-compose@v1
+        uses: optivem/actions/deploy-docker-compose@v1
         with:
           environment: acceptance
           version: latest
@@ -132,7 +132,7 @@ jobs:
           working-directory: system-test/java
 
       - name: Simulate Deployment (Stub External Systems)
-        uses: optivem/actions/start-docker-compose@v1
+        uses: optivem/actions/deploy-docker-compose@v1
         with:
           environment: acceptance
           version: latest
@@ -255,7 +255,7 @@ jobs:
       actions: write
     steps:
     - name: Summarize Stage
-      uses: optivem/actions/summarize-system-stage@v1
+      uses: optivem/actions/compose-system-stage-summary@v1
       with:
         stage-name: 'Acceptance Stage'
         environment: acceptance

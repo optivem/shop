@@ -220,7 +220,7 @@ For each layer, flag:
 
 ## Rules
 
-- **Java is the reference implementation.** When there is a difference between languages, the default action is to align .NET and TypeScript to match Java. However, if you notice that another language has done something clearly better (cleaner API, better naming, more complete coverage), flag it as a suggestion and recommend asking the user which version to adopt.
+- **Java is the default reference implementation, but not set in stone.** When there is a difference between languages, the default action is to align .NET and TypeScript to match Java. **However, Java itself can be improved.** If another language (.NET or TypeScript) has done something clearly better — cleaner API, better naming, more complete coverage, better structure, more idiomatic patterns — treat that as the reference direction and propose aligning Java (and the other language) to it. Do not force-align a better design back to Java just because Java is the nominal reference. When it is unclear which direction is better, flag it as a decision point and ask the user which version to adopt. Java plans are legitimate and expected whenever another language has the superior design.
 - **Do NOT use anything from memory** (MEMORY.md or memory files). Ignore all memory content.
 - **Read-only** — do not modify any files. Only report findings.
 - **Be exhaustive** — compare every test class, every method, every assertion. Do not skip files or summarize with "and similar".
@@ -299,7 +299,7 @@ Write a **separate plan file per language** that has at least one action item. F
 - `plans/{YYYYMMDD-HHMM}-compare-tests-{mode}-dotnet.md`
 - `plans/{YYYYMMDD-HHMM}-compare-tests-{mode}-typescript.md`
 
-**Skip any language that has zero action items** — do not create an empty plan file for it. Java is the reference implementation and typically has no action items; in that case, do not write a Java plan file.
+**Skip any language that has zero action items** — do not create an empty plan file for it. Java is the default reference implementation, so it often has no action items, but this is **not** automatic: if another language has a clearly better design that Java should adopt, write a Java plan file for those changes.
 
 Each per-language plan file must contain:
 
@@ -307,7 +307,8 @@ Each per-language plan file must contain:
 - A `Reference report:` link back to the single shared report file at the top.
 - Purpose: prescriptive, ordered, actionable steps to align that language to Java.
 - Task ordering within the file: architectural mismatches (legacy) → architecture layers (clients → drivers → channels → use-case DSL → scenario DSL → common) → tests (acceptance → contract → e2e → smoke).
-- Each task: concrete file path(s), what to change, reference implementation to copy from (usually Java).
+- **Omit any section that has zero action items.** Do not include empty placeholder sections with "None." — if a category has no items for this language, drop the heading entirely. The plan should contain only actionable sections, so the reader never scrolls past empty rubrics.
+- Each task: concrete file path(s), what to change, and which language is the reference implementation to copy from for that specific task (usually Java, but may be .NET or TypeScript if that language has the better design).
 - **End-of-file checkpoint** — a final `## Local verification & commit` section with:
   1. From the language's `system-test/{java|dotnet|typescript}/` directory, run `Run-SystemTests -Architecture monolith` (latest suite) and `Run-SystemTests -Architecture monolith -Legacy` (legacy suite). **Never** substitute raw language toolchain commands (`./gradlew test`, `dotnet test`, `npm test`, `npx playwright test`) — `Run-SystemTests.ps1` is the only supported entry point because it manages containers and config.
   2. Fix any failures before moving on.

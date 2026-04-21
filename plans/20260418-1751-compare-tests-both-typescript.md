@@ -7,6 +7,9 @@ TypeScript has full cross-language parity at the **abstraction-layer** level for
 ## 21. Legacy — Contract — restructure Contract tests to match Java/.NET abstract-class pattern (optional) — ⏳ Deferred: suggestion-only per plan; not implemented unless explicitly approved.
 
 TypeScript currently uses `registerXxxContractTests(test)` helper functions instead of abstract base classes with real/stub subclasses (as Java and .NET do). Functionally equivalent. If the user wants strict parity, refactor to an abstract-class pattern — but this is stylistic and the current approach is a reasonable TS idiom. Flag as a **suggestion only** and do not execute unless explicitly approved.
+VJ: is it possible with TYpeScirpt?what's the best way in TypeScript? Or already done?
+
+
 
 ## Local verification & commit
 

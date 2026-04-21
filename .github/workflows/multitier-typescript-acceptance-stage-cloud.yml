@@ -608,7 +608,7 @@ jobs:
       actions: write
     steps:
     - name: Summarize Stage
-      uses: optivem/actions/summarize-system-stage@v1
+      uses: optivem/actions/compose-system-stage-summary@v1
       with:
         stage-name: 'Acceptance Stage (Cloud Run)'
         environment: acceptance

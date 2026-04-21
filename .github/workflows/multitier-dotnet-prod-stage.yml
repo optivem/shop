@@ -51,9 +51,9 @@ jobs:
         with:
           version: ${{ steps.release-version.outputs.version }}
 
-      - name: Resolve Docker Images
+      - name: Compose Docker Image URLs
         id: resolve-images
-        uses: optivem/actions/resolve-docker-images@v1
+        uses: optivem/actions/compose-docker-image-urls@v1
         with:
           tag: ${{ inputs.version }}
           base-image-urls: |
@@ -85,7 +85,7 @@ jobs:
 
       - name: Simulate Deployment (Production Environment)
         id: deploy
-        uses: optivem/actions/start-docker-compose@v1
+        uses: optivem/actions/deploy-docker-compose@v1
         with:
           environment: production
           version: ${{ inputs.version }}
@@ -166,7 +166,7 @@ jobs:
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
     - name: Summarize Stage
-      uses: optivem/actions/summarize-system-stage@v1
+      uses: optivem/actions/compose-system-stage-summary@v1
       with:
         stage-name: 'Production Stage'
         environment: production

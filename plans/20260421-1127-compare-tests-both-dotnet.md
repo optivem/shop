@@ -12,25 +12,9 @@ Ordering: architectural mismatches → architecture layers (clients → drivers 
 
 ---
 
-## 1. Architectural mismatches (legacy)
+## 1. Architecture — Use Case DSL
 
-None.
-
-## 2. Architecture — Clients
-
-None.
-
-## 3. Architecture — Drivers (ports)
-
-None (the extra `Driver.Port/Shop/SystemResults.cs` is tied to the accepted `VoidValue.cs` exception and stays).
-
-## 4. Architecture — Channels
-
-None.
-
-## 5. Architecture — Use Case DSL
-
-### 5.1 Rename `Base{X}Command` → `Base{X}UseCase` across all use-case bases
+### 1.1 Rename `Base{X}Command` → `Base{X}UseCase` across all use-case bases
 
 Java uses `BaseShopUseCase`, `BaseErpUseCase`, `BaseTaxUseCase`, `BaseClockUseCase`. TS matches Java. .NET currently uses `Base{X}Command`.
 
@@ -41,7 +25,9 @@ Java uses `BaseShopUseCase`, `BaseErpUseCase`, `BaseTaxUseCase`, `BaseClockUseCa
 - Update all `: BaseShopCommand<...>` / `: BaseErpCommand<...>` / `: BaseTaxCommand<...>` / `: BaseClockCommand<...>` subclass inheritance across `Dsl.Core/UseCase/**/UseCases/*.cs` (ReturnsProduct.cs, PlaceOrder.cs, GetProduct.cs, GetTaxRate.cs, ReturnsTime.cs, GetTime.cs, GoToShop.cs, CancelOrder.cs, BrowseCoupons.cs, PublishCoupon.cs, DeliverOrder.cs, ViewOrder.cs, GetTimeVerification.cs, GetProductVerification.cs, GetTaxVerification.cs, BrowseCouponsVerification.cs, PlaceOrderVerification.cs, ViewOrderVerification.cs, GoToClock.cs, GoToErp.cs, GoToTax.cs, ReturnsTaxRate.cs, ReturnsPromotion.cs).
 - Reference: `system-test/java/src/main/java/com/optivem/shop/testkit/dsl/core/usecase/shop/usecases/base/BaseShopUseCase.java` and siblings under `testkit/dsl/core/usecase/external/{clock,erp,tax}/usecases/base/`.
 
-### 5.2 Add `SystemResults` at the use-case layer for shop
+APPROVED
+
+### 1.2 Add `SystemResults` at the use-case layer for shop
 
 Java has `system-test/java/src/main/java/com/optivem/shop/testkit/dsl/core/usecase/shop/commons/SystemResults.java`. TS has `system-test/typescript/src/testkit/dsl/core/usecase/shop/commons/system-results.ts`. .NET has only `Driver.Port/Shop/SystemResults.cs` (at port layer).
 
@@ -49,9 +35,9 @@ Java has `system-test/java/src/main/java/com/optivem/shop/testkit/dsl/core/useca
 - Keep `Driver.Port/Shop/SystemResults.cs` only if it is genuinely needed at the port layer for the `VoidValue` idiom; otherwise remove to avoid duplication. Decide after porting.
 - Reference: `system-test/java/src/main/java/com/optivem/shop/testkit/dsl/core/usecase/shop/commons/SystemResults.java`.
 
-## 6. Architecture — Scenario DSL
+## 2. Architecture — Scenario DSL
 
-### 6.1 Rename `GherkinDefaults` → `ScenarioDefaults` and move out of `Dsl.Core.Gherkin` namespace
+### 2.1 Rename `GherkinDefaults` → `ScenarioDefaults` and move out of `Dsl.Core.Gherkin` namespace
 
 Java: `ScenarioDefaults` in `com.optivem.shop.testkit.dsl.core.scenario` package. .NET: `GherkinDefaults` in `Dsl.Core.Gherkin` namespace — both name and namespace diverge.
 
@@ -62,7 +48,7 @@ Java: `ScenarioDefaults` in `com.optivem.shop.testkit.dsl.core.scenario` package
 - Update all imports across the .NET codebase: `using Dsl.Core.Gherkin;` → `using Dsl.Core.Scenario;`.
 - Reference: `system-test/java/src/main/java/com/optivem/shop/testkit/dsl/core/scenario/ScenarioDefaults.java`.
 
-### 6.2 Rename `When/Steps/I{X}.cs` → `I When{X}.cs` interfaces
+### 2.2 Rename `When/Steps/I{X}.cs` → `IWhen{X}.cs` interfaces
 
 Java uses `WhenBrowseCoupons`, `WhenCancelOrder`, `WhenPlaceOrder`, `WhenPublishCoupon`, `WhenViewOrder` as interface names. TS matches Java. .NET drops the `When` prefix.
 
@@ -73,26 +59,6 @@ Java uses `WhenBrowseCoupons`, `WhenCancelOrder`, `WhenPlaceOrder`, `WhenPublish
 - File: `system-test/dotnet/Dsl.Port/When/Steps/IViewOrder.cs` → rename to `IWhenViewOrder.cs`; rename interface `IViewOrder` → `IWhenViewOrder`.
 - Update all implementations and usages in `Dsl.Core/Scenario/When/Steps/*.cs` and any `using Dsl.Port.When.Steps;` consumers.
 - Reference: `system-test/java/src/main/java/com/optivem/shop/testkit/dsl/port/when/steps/{WhenBrowseCoupons,WhenCancelOrder,WhenPlaceOrder,WhenPublishCoupon,WhenViewOrder}.java`.
-
-## 7. Tests — Acceptance
-
-### 7.1 Rename `CannotPublishCouponWithDiscountGreaterThan100Percent` → `CannotPublishCouponWithDiscountGreaterThan100percent`
-
-Low-priority cosmetic alignment. Java uses lowercase `percent`; TS matches Java. .NET uses PascalCase `Percent`. Since .NET method names normally follow PascalCase, this is a **suggestion**, not a hard mismatch. Recommend keeping `Percent` as .NET idiomatic — **no action item**.
-
-*(Leaving this here as a documented non-action; no change required.)*
-
-## 8. Tests — Contract
-
-None.
-
-## 9. Tests — E2E
-
-None.
-
-## 10. Tests — Smoke
-
-None.
 
 ---
 
