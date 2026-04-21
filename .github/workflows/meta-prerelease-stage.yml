@@ -15,6 +15,19 @@ on:
           - acceptance
           - qa
         default: 'qa'
+      variant:
+        description: 'Variant to run (all = full matrix; any single variant = dry-run; dry-runs do NOT produce a meta-rc tag)'
+        required: false
+        type: choice
+        options:
+          - all
+          - monolith-java
+          - monolith-dotnet
+          - monolith-typescript
+          - multitier-java
+          - multitier-dotnet
+          - multitier-typescript
+        default: 'all'
 
 concurrency:
   group: meta-prerelease-stage
@@ -44,6 +57,7 @@ jobs:
         run: |
           echo "=== Workflow Inputs ==="
           echo "Level: ${{ inputs.level || 'qa' }}"
+          echo "Variant: ${{ inputs.variant || 'all' }}"
           echo "Triggered by: ${{ github.event_name }} ${{ github.event.schedule }}"
       - uses: actions/checkout@v5
         with:
@@ -149,7 +163,7 @@ jobs:
   # Phase 0: Run all local stages in parallel
   local-monolith-java:
     needs: check
-    if: ${{ needs.check.outputs.should_run == 'true' }}
+    if: ${{ needs.check.outputs.should_run == 'true' && contains(fromJSON('["all","monolith-java"]'), inputs.variant || 'all') }}
     runs-on: ubuntu-latest
     steps:
       - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
@@ -159,7 +173,7 @@ jobs:
 
   local-monolith-dotnet:
     needs: check
-    if: ${{ needs.check.outputs.should_run == 'true' }}
+    if: ${{ needs.check.outputs.should_run == 'true' && contains(fromJSON('["all","monolith-dotnet"]'), inputs.variant || 'all') }}
     runs-on: ubuntu-latest
     steps:
       - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
@@ -169,7 +183,7 @@ jobs:
 
   local-monolith-typescript:
     needs: check
-    if: ${{ needs.check.outputs.should_run == 'true' }}
+    if: ${{ needs.check.outputs.should_run == 'true' && contains(fromJSON('["all","monolith-typescript"]'), inputs.variant || 'all') }}
     runs-on: ubuntu-latest
     steps:
       - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
@@ -179,7 +193,7 @@ jobs:
 
   local-multitier-java:
     needs: check
-    if: ${{ needs.check.outputs.should_run == 'true' }}
+    if: ${{ needs.check.outputs.should_run == 'true' && contains(fromJSON('["all","multitier-java"]'), inputs.variant || 'all') }}
     runs-on: ubuntu-latest
     steps:
       - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
@@ -189,7 +203,7 @@ jobs:
 
   local-multitier-dotnet:
     needs: check
-    if: ${{ needs.check.outputs.should_run == 'true' }}
+    if: ${{ needs.check.outputs.should_run == 'true' && contains(fromJSON('["all","multitier-dotnet"]'), inputs.variant || 'all') }}
     runs-on: ubuntu-latest
     steps:
       - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
@@ -199,7 +213,7 @@ jobs:
 
   local-multitier-typescript:
     needs: check
-    if: ${{ needs.check.outputs.should_run == 'true' }}
+    if: ${{ needs.check.outputs.should_run == 'true' && contains(fromJSON('["all","multitier-typescript"]'), inputs.variant || 'all') }}
     runs-on: ubuntu-latest
     steps:
       - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
@@ -210,7 +224,7 @@ jobs:
   # Phase 1: Run all commit stages in parallel (deduplicated)
   commit-monolith-java:
     needs: [local-monolith-java, local-monolith-dotnet, local-monolith-typescript, local-multitier-java, local-multitier-dotnet, local-multitier-typescript]
-    if: ${{ contains(fromJSON('["commit","acceptance","qa"]'), inputs.level || 'qa') }}
+    if: ${{ always() && !failure() && !cancelled() && contains(fromJSON('["commit","acceptance","qa"]'), inputs.level || 'qa') && contains(fromJSON('["all","monolith-java"]'), inputs.variant || 'all') }}
     runs-on: ubuntu-latest
     steps:
       - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
@@ -219,7 +233,7 @@ jobs:
 
   commit-monolith-dotnet:
     needs: [local-monolith-java, local-monolith-dotnet, local-monolith-typescript, local-multitier-java, local-multitier-dotnet, local-multitier-typescript]
-    if: ${{ contains(fromJSON('["commit","acceptance","qa"]'), inputs.level || 'qa') }}
+    if: ${{ always() && !failure() && !cancelled() && contains(fromJSON('["commit","acceptance","qa"]'), inputs.level || 'qa') && contains(fromJSON('["all","monolith-dotnet"]'), inputs.variant || 'all') }}
     runs-on: ubuntu-latest
     steps:
       - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
@@ -228,7 +242,7 @@ jobs:
 
   commit-monolith-typescript:
     needs: [local-monolith-java, local-monolith-dotnet, local-monolith-typescript, local-multitier-java, local-multitier-dotnet, local-multitier-typescript]
-    if: ${{ contains(fromJSON('["commit","acceptance","qa"]'), inputs.level || 'qa') }}
+    if: ${{ always() && !failure() && !cancelled() && contains(fromJSON('["commit","acceptance","qa"]'), inputs.level || 'qa') && contains(fromJSON('["all","monolith-typescript"]'), inputs.variant || 'all') }}
     runs-on: ubuntu-latest
     steps:
       - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
@@ -237,7 +251,7 @@ jobs:
 
   commit-multitier-backend-java:
     needs: [local-monolith-java, local-monolith-dotnet, local-monolith-typescript, local-multitier-java, local-multitier-dotnet, local-multitier-typescript]
-    if: ${{ contains(fromJSON('["commit","acceptance","qa"]'), inputs.level || 'qa') }}
+    if: ${{ always() && !failure() && !cancelled() && contains(fromJSON('["commit","acceptance","qa"]'), inputs.level || 'qa') && contains(fromJSON('["all","multitier-java"]'), inputs.variant || 'all') }}
     runs-on: ubuntu-latest
     steps:
       - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
@@ -246,7 +260,7 @@ jobs:
 
   commit-multitier-backend-dotnet:
     needs: [local-monolith-java, local-monolith-dotnet, local-monolith-typescript, local-multitier-java, local-multitier-dotnet, local-multitier-typescript]
-    if: ${{ contains(fromJSON('["commit","acceptance","qa"]'), inputs.level || 'qa') }}
+    if: ${{ always() && !failure() && !cancelled() && contains(fromJSON('["commit","acceptance","qa"]'), inputs.level || 'qa') && contains(fromJSON('["all","multitier-dotnet"]'), inputs.variant || 'all') }}
     runs-on: ubuntu-latest
     steps:
       - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
@@ -255,7 +269,7 @@ jobs:
 
   commit-multitier-backend-typescript:
     needs: [local-monolith-java, local-monolith-dotnet, local-monolith-typescript, local-multitier-java, local-multitier-dotnet, local-multitier-typescript]
-    if: ${{ contains(fromJSON('["commit","acceptance","qa"]'), inputs.level || 'qa') }}
+    if: ${{ always() && !failure() && !cancelled() && contains(fromJSON('["commit","acceptance","qa"]'), inputs.level || 'qa') && contains(fromJSON('["all","multitier-typescript"]'), inputs.variant || 'all') }}
     runs-on: ubuntu-latest
     steps:
       - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
@@ -264,7 +278,7 @@ jobs:
 
   commit-multitier-frontend-react:
     needs: [local-monolith-java, local-monolith-dotnet, local-monolith-typescript, local-multitier-java, local-multitier-dotnet, local-multitier-typescript]
-    if: ${{ contains(fromJSON('["commit","acceptance","qa"]'), inputs.level || 'qa') }}
+    if: ${{ always() && !failure() && !cancelled() && contains(fromJSON('["commit","acceptance","qa"]'), inputs.level || 'qa') && contains(fromJSON('["all","multitier-java","multitier-dotnet","multitier-typescript"]'), inputs.variant || 'all') }}
     runs-on: ubuntu-latest
     steps:
       - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
@@ -275,7 +289,7 @@ jobs:
   # by its prefix (e.g. monolith-java-v1.0.0-rc.N), so there are no shared-counter collisions.
   monolith-java:
     needs: [commit-monolith-java, commit-monolith-dotnet, commit-monolith-typescript, commit-multitier-backend-java, commit-multitier-backend-dotnet, commit-multitier-backend-typescript, commit-multitier-frontend-react]
-    if: ${{ always() && !failure() && !cancelled() && contains(fromJSON('["acceptance","qa"]'), inputs.level || 'qa') }}
+    if: ${{ always() && !failure() && !cancelled() && contains(fromJSON('["acceptance","qa"]'), inputs.level || 'qa') && contains(fromJSON('["all","monolith-java"]'), inputs.variant || 'all') }}
     runs-on: ubuntu-latest
     steps:
       - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
@@ -285,7 +299,7 @@ jobs:
 
   monolith-dotnet:
     needs: [commit-monolith-java, commit-monolith-dotnet, commit-monolith-typescript, commit-multitier-backend-java, commit-multitier-backend-dotnet, commit-multitier-backend-typescript, commit-multitier-frontend-react]
-    if: ${{ always() && !failure() && !cancelled() && contains(fromJSON('["acceptance","qa"]'), inputs.level || 'qa') }}
+    if: ${{ always() && !failure() && !cancelled() && contains(fromJSON('["acceptance","qa"]'), inputs.level || 'qa') && contains(fromJSON('["all","monolith-dotnet"]'), inputs.variant || 'all') }}
     runs-on: ubuntu-latest
     steps:
       - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
@@ -295,7 +309,7 @@ jobs:
 
   monolith-typescript:
     needs: [commit-monolith-java, commit-monolith-dotnet, commit-monolith-typescript, commit-multitier-backend-java, commit-multitier-backend-dotnet, commit-multitier-backend-typescript, commit-multitier-frontend-react]
-    if: ${{ always() && !failure() && !cancelled() && contains(fromJSON('["acceptance","qa"]'), inputs.level || 'qa') }}
+    if: ${{ always() && !failure() && !cancelled() && contains(fromJSON('["acceptance","qa"]'), inputs.level || 'qa') && contains(fromJSON('["all","monolith-typescript"]'), inputs.variant || 'all') }}
     runs-on: ubuntu-latest
     steps:
       - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
@@ -305,7 +319,7 @@ jobs:
 
   multitier-java:
     needs: [commit-monolith-java, commit-monolith-dotnet, commit-monolith-typescript, commit-multitier-backend-java, commit-multitier-backend-dotnet, commit-multitier-backend-typescript, commit-multitier-frontend-react]
-    if: ${{ always() && !failure() && !cancelled() && contains(fromJSON('["acceptance","qa"]'), inputs.level || 'qa') }}
+    if: ${{ always() && !failure() && !cancelled() && contains(fromJSON('["acceptance","qa"]'), inputs.level || 'qa') && contains(fromJSON('["all","multitier-java"]'), inputs.variant || 'all') }}
     runs-on: ubuntu-latest
     steps:
       - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
@@ -315,7 +329,7 @@ jobs:
 
   multitier-dotnet:
     needs: [commit-monolith-java, commit-monolith-dotnet, commit-monolith-typescript, commit-multitier-backend-java, commit-multitier-backend-dotnet, commit-multitier-backend-typescript, commit-multitier-frontend-react]
-    if: ${{ always() && !failure() && !cancelled() && contains(fromJSON('["acceptance","qa"]'), inputs.level || 'qa') }}
+    if: ${{ always() && !failure() && !cancelled() && contains(fromJSON('["acceptance","qa"]'), inputs.level || 'qa') && contains(fromJSON('["all","multitier-dotnet"]'), inputs.variant || 'all') }}
     runs-on: ubuntu-latest
     steps:
       - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
@@ -325,7 +339,7 @@ jobs:
 
   multitier-typescript:
     needs: [commit-monolith-java, commit-monolith-dotnet, commit-monolith-typescript, commit-multitier-backend-java, commit-multitier-backend-dotnet, commit-multitier-backend-typescript, commit-multitier-frontend-react]
-    if: ${{ always() && !failure() && !cancelled() && contains(fromJSON('["acceptance","qa"]'), inputs.level || 'qa') }}
+    if: ${{ always() && !failure() && !cancelled() && contains(fromJSON('["acceptance","qa"]'), inputs.level || 'qa') && contains(fromJSON('["all","multitier-typescript"]'), inputs.variant || 'all') }}
     runs-on: ubuntu-latest
     steps:
       - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
@@ -333,10 +347,11 @@ jobs:
           workflow: prerelease-pipeline-multitier-typescript.yml
           inputs: '{"level": "${{ inputs.level || ''qa'' }}", "skip-local-stage": "true", "skip-commit-stage": "true"}'
 
-  # Final: tag SHA as meta-rc — only when level is qa and all 6 language×architecture combos passed
+  # Final: tag SHA as meta-rc — only when level is qa, variant is all, and all 6 language×architecture combos passed.
+  # Dry-runs (variant != 'all') never produce a tag regardless of level.
   tag-meta-rc:
     needs: [monolith-java, monolith-dotnet, monolith-typescript, multitier-java, multitier-dotnet, multitier-typescript]
-    if: ${{ success() && (inputs.level || 'qa') == 'qa' }}
+    if: ${{ success() && (inputs.level || 'qa') == 'qa' && (inputs.variant || 'all') == 'all' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
