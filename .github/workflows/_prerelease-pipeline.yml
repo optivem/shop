@@ -45,6 +45,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    outputs:
+      target-version: ${{ steps.read-target-version.outputs.target-version }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v5
@@ -170,7 +172,7 @@ jobs:
     if: ${{ always() && inputs.level != 'local' && inputs.level != 'commit' && needs.check-version.result == 'success' && (inputs.skip-local-stage || needs.local.result == 'success') && (inputs.skip-commit-stage || needs.commit-stage.result == 'success') }}
     runs-on: ubuntu-latest
     outputs:
-      version: ${{ steps.get-version.outputs.tag }}
+      version: ${{ steps.get-version.outputs.version }}
     steps:
       - id: trigger
         uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
@@ -178,10 +180,18 @@ jobs:
           workflow: ${{ inputs.prefix }}-acceptance-stage.yml
           poll-interval: '300'
 
-      - id: get-version
-        uses: optivem/actions/find-release-by-run@v1
+      - id: get-run-number
+        uses: optivem/actions/read-workflow-run-number@v1
         with:
           run-id: ${{ steps.trigger.outputs.run-id }}
+
+      - id: get-version
+        uses: optivem/actions/compose-prerelease-version@v1
+        with:
+          target-version: ${{ needs.check-version.outputs.target-version }}
+          suffix: rc
+          number: ${{ steps.get-run-number.outputs.run-number }}
+          prefix: ${{ inputs.prefix }}
 
   acceptance-stage-legacy:
     needs: acceptance-stage
