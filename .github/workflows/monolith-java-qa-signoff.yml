@@ -36,7 +36,7 @@ jobs:
     permissions:
       contents: write
     outputs:
-      version: ${{ steps.promote.outputs.version }}
+      version: ${{ steps.promote.outputs.tag }}
       stage-result: ${{ steps.determine-result.outputs.stage-result }}
     steps:
       - name: Checkout Repository
@@ -46,22 +46,22 @@ jobs:
 
       - name: Determine Stage Result
         id: determine-result
-        uses: optivem/actions/map-signoff-result@v1
+        uses: optivem/actions/map-signoff-to-stage-result@v1
         with:
           result: ${{ inputs.result }}
 
       - name: Generate QA Signoff Tag
         id: promote
-        uses: optivem/actions/generate-status-version@v1
+        uses: optivem/actions/compose-prerelease-status@v1
         with:
-          version: ${{ inputs.version }}
+          prerelease-version: ${{ inputs.version }}
           environment: qa
           status: ${{ inputs.result }}
 
       - name: Create QA Signoff Tag
         uses: optivem/actions/create-and-push-tag@v1
         with:
-          tag: ${{ steps.promote.outputs.version }}
+          tag: ${{ steps.promote.outputs.tag }}
 
   summary:
     needs: [check, run]

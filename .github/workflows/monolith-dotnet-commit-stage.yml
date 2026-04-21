@@ -113,20 +113,38 @@ jobs:
         with:
           working-directory: system/monolith/dotnet
           image-name: monolith-system-dotnet
-          image-namespace: ${{ github.repository }}
           commit-sha: ${{ inputs.ref || github.sha }}
           dockerfile: Dockerfile
-          component-version: ${{ steps.read-version.outputs.target-version }}
-          build-number: ${{ github.run_number }}
+
+      - name: Compose Dev Version
+        if: github.ref == 'refs/heads/main'
+        id: dev-version
+        uses: optivem/actions/compose-prerelease-version@v1
+        with:
+          target-version: ${{ steps.read-version.outputs.target-version }}
+          suffix: dev
+          number: ${{ github.run_number }}
+
+      - name: Tag Docker Image
+        if: github.ref == 'refs/heads/main'
+        id: tag
+        uses: optivem/actions/tag-docker-image-local@v1
+        with:
+          source: ${{ steps.build.outputs.local-image-ref }}
+          image-name: monolith-system-dotnet
+          tags: |
+            ${{ github.sha }}
+            latest
+            ${{ steps.dev-version.outputs.version }}
 
       - name: Push Artifact
         if: github.ref == 'refs/heads/main'
         id: push
         uses: optivem/actions/push-docker-image@v1
         with:
-          image-sha-tag: ${{ steps.build.outputs.image-sha-tag }}
-          image-latest-url: ${{ steps.build.outputs.image-latest-url }}
-          image-version-tag: ${{ steps.build.outputs.image-version-tag }}
+          image-sha-tag: ${{ fromJSON(steps.tag.outputs.image-urls)[0] }}
+          image-latest-url: ${{ fromJSON(steps.tag.outputs.image-urls)[1] }}
+          image-version-tag: ${{ fromJSON(steps.tag.outputs.image-urls)[2] }}
         env:
           REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
 

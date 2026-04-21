@@ -138,7 +138,7 @@ jobs:
     permissions:
       contents: write
     outputs:
-      version: ${{ steps.promote.outputs.version }}
+      version: ${{ steps.promote.outputs.tag }}
       image-urls: ${{ needs.check.outputs.image-urls }}
     steps:
       - name: Checkout Repository
@@ -154,16 +154,16 @@ jobs:
 
       - name: Generate QA Deployed Tag
         id: promote
-        uses: optivem/actions/generate-status-version@v1
+        uses: optivem/actions/compose-prerelease-status@v1
         with:
-          version: ${{ inputs.version }}
+          prerelease-version: ${{ inputs.version }}
           environment: qa
           status: deployed
 
       - name: Create QA Deployed Tag
         uses: optivem/actions/create-and-push-tag@v1
         with:
-          tag: ${{ steps.promote.outputs.version }}
+          tag: ${{ steps.promote.outputs.tag }}
 
   summary:
     needs: [check, promote]

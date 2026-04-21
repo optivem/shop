@@ -42,7 +42,7 @@ jobs:
 
       - name: Generate Release Version
         id: release-version
-        uses: optivem/actions/generate-release-version@v1
+        uses: optivem/actions/compose-release-version@v1
         with:
           prerelease-version: ${{ inputs.version }}
 
@@ -85,12 +85,17 @@ jobs:
 
       - name: Simulate Deployment (Production Environment)
         id: deploy
-        uses: optivem/actions/run-docker-compose@v1
+        uses: optivem/actions/start-docker-compose@v1
         with:
           environment: production
           version: ${{ inputs.version }}
           image-urls: ${{ needs.check.outputs.image-urls }}
           compose-file: docker-compose.pipeline.multitier.real.yml
+          working-directory: system-test/java
+
+      - name: Wait for Systems (Simulate Deployment (Production Environment))
+        uses: optivem/actions/wait-for-urls@v1
+        with:
           systems: |
             [
               { "name": "Shop UI", "url": "http://localhost:3111/" },
@@ -98,11 +103,12 @@ jobs:
               { "name": "ERP", "url": "http://localhost:9111/erp/health" },
               { "name": "Clock", "url": "http://localhost:9111/clock/health" }
             ]
+          compose-file: docker-compose.pipeline.multitier.real.yml
           working-directory: system-test/java
 
       - name: Generate Release Version
         id: promote
-        uses: optivem/actions/generate-release-version@v1
+        uses: optivem/actions/compose-release-version@v1
         with:
           prerelease-version: ${{ inputs.version }}
 

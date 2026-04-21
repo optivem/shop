@@ -52,7 +52,7 @@ jobs:
     permissions:
       contents: write
     outputs:
-      version: ${{ steps.promote.outputs.version }}
+      version: ${{ steps.promote.outputs.tag }}
       image-urls: ${{ needs.check.outputs.image-urls }}
     steps:
       - name: Checkout Repository
@@ -68,12 +68,17 @@ jobs:
 
       - name: Simulate Deployment (QA Environment)
         id: deploy
-        uses: optivem/actions/run-docker-compose@v1
+        uses: optivem/actions/start-docker-compose@v1
         with:
           environment: qa
           version: ${{ inputs.version }}
           image-urls: ${{ needs.check.outputs.image-urls }}
           compose-file: docker-compose.pipeline.multitier.real.yml
+          working-directory: system-test/typescript
+
+      - name: Wait for Systems (Simulate Deployment (QA Environment))
+        uses: optivem/actions/wait-for-urls@v1
+        with:
           systems: |
             [
               { "name": "Shop UI", "url": "http://localhost:3311/" },
@@ -81,20 +86,21 @@ jobs:
               { "name": "ERP", "url": "http://localhost:9311/erp/health" },
               { "name": "Clock", "url": "http://localhost:9311/clock/health" }
             ]
+          compose-file: docker-compose.pipeline.multitier.real.yml
           working-directory: system-test/typescript
 
       - name: Generate QA Deployed Tag
         id: promote
-        uses: optivem/actions/generate-status-version@v1
+        uses: optivem/actions/compose-prerelease-status@v1
         with:
-          version: ${{ inputs.version }}
+          prerelease-version: ${{ inputs.version }}
           environment: qa
           status: deployed
 
       - name: Create QA Deployed Tag
         uses: optivem/actions/create-and-push-tag@v1
         with:
-          tag: ${{ steps.promote.outputs.version }}
+          tag: ${{ steps.promote.outputs.tag }}
 
   summary:
     needs: [check, run]

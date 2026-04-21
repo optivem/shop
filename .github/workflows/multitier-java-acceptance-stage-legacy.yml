@@ -96,12 +96,17 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Simulate Deployment (Real External Systems)
-        uses: optivem/actions/run-docker-compose@v1
+        uses: optivem/actions/start-docker-compose@v1
         with:
           environment: acceptance
           version: latest
           image-urls: ${{ needs.check.outputs.image-digest-urls }}
           compose-file: docker-compose.pipeline.multitier.real.yml
+          working-directory: system-test/java
+
+      - name: Wait for Systems (Simulate Deployment (Real External Systems))
+        uses: optivem/actions/wait-for-urls@v1
+        with:
           systems: |
             [
               { "name": "Shop UI", "url": "http://localhost:3111/" },
@@ -109,15 +114,21 @@ jobs:
               { "name": "ERP", "url": "http://localhost:9111/erp/health" },
               { "name": "Clock", "url": "http://localhost:9111/clock/health" }
             ]
+          compose-file: docker-compose.pipeline.multitier.real.yml
           working-directory: system-test/java
 
       - name: Simulate Deployment (Stub External Systems)
-        uses: optivem/actions/run-docker-compose@v1
+        uses: optivem/actions/start-docker-compose@v1
         with:
           environment: acceptance
           version: latest
           image-urls: ${{ needs.check.outputs.image-digest-urls }}
           compose-file: docker-compose.pipeline.multitier.stub.yml
+          working-directory: system-test/java
+
+      - name: Wait for Systems (Simulate Deployment (Stub External Systems))
+        uses: optivem/actions/wait-for-urls@v1
+        with:
           systems: |
             [
               { "name": "Shop UI", "url": "http://localhost:3112/" },
@@ -125,6 +136,7 @@ jobs:
               { "name": "ERP", "url": "http://localhost:9112/erp/health" },
               { "name": "Clock", "url": "http://localhost:9112/clock/health" }
             ]
+          compose-file: docker-compose.pipeline.multitier.stub.yml
           working-directory: system-test/java
 
       - name: Setup Java and Gradle
