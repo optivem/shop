@@ -90,7 +90,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: monolith-dotnet-acceptance
     permissions:
-      contents: write
+      contents: read
       packages: write
     outputs:
       version: ${{ steps.generate-version.outputs.version }}
@@ -288,14 +288,25 @@ jobs:
           image-urls: ${{ needs.check.outputs.image-digest-urls }}
           tag: ${{ steps.generate-version.outputs.version }}
 
-      - name: Create and Push Git Tag
-        uses: optivem/actions/create-and-push-tag@v1
+  publish-tag:
+    needs: run
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v5
         with:
-          tag: ${{ steps.generate-version.outputs.version }}
-          sha: ${{ inputs.sha || github.sha }}
+          ref: ${{ inputs.sha || github.sha }}
+
+      - name: Publish Git Tag
+        uses: optivem/actions/publish-tag@v1
+        with:
+          tag: ${{ needs.run.outputs.version }}
+          token: ${{ secrets.WORKFLOW_TOKEN }}
 
   summary:
-    needs: [preflight, check, run]
+    needs: [preflight, check, run, publish-tag]
     if: always()
     runs-on: ubuntu-latest
     permissions:
@@ -306,7 +317,7 @@ jobs:
       with:
         stage-name: 'Acceptance Stage'
         environment: acceptance
-        stage-result: ${{ needs.run.result }}
+        stage-result: ${{ needs.publish-tag.result == 'failure' && 'failure' || needs.run.result }}
         success-version: ${{ needs.run.outputs.version }}
         success-artifact-ids: ${{ needs.run.outputs.image-urls }}
         skipped-reason: ${{ needs.preflight.outputs.skip-reason || needs.check.outputs.skip-reason }}

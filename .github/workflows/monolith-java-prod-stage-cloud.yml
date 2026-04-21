@@ -182,10 +182,11 @@ jobs:
           image-urls: ${{ needs.check.outputs.image-urls }}
           tag: ${{ steps.promote.outputs.version }}
 
-      - name: Create Release Tag
-        uses: optivem/actions/create-and-push-tag@v1
+      - name: Publish Release Tag
+        uses: optivem/actions/publish-tag@v1
         with:
           tag: ${{ steps.promote.outputs.version }}
+          token: ${{ secrets.WORKFLOW_TOKEN }}
 
       - name: Compose Release Notes
         id: release-notes
@@ -210,6 +211,7 @@ jobs:
         with:
           components: |
             monolith-system-java:system/monolith/java/VERSION
+          token: ${{ secrets.WORKFLOW_TOKEN }}
 
   summary:
     needs: [check, promote]

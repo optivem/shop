@@ -50,7 +50,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: multitier-typescript-qa
     permissions:
-      contents: write
+      contents: read
     outputs:
       version: ${{ steps.promote.outputs.tag }}
       image-urls: ${{ needs.check.outputs.image-urls }}
@@ -97,13 +97,25 @@ jobs:
           environment: qa
           status: deployed
 
-      - name: Create QA Deployed Tag
-        uses: optivem/actions/create-and-push-tag@v1
+  publish-tag:
+    needs: run
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v5
         with:
-          tag: ${{ steps.promote.outputs.tag }}
+          ref: ${{ inputs.version }}
+
+      - name: Publish Git Tag
+        uses: optivem/actions/publish-tag@v1
+        with:
+          tag: ${{ needs.run.outputs.version }}
+          token: ${{ secrets.WORKFLOW_TOKEN }}
 
   summary:
-    needs: [check, run]
+    needs: [check, run, publish-tag]
     if: always()
     runs-on: ubuntu-latest
     permissions:
@@ -123,6 +135,6 @@ jobs:
       with:
         stage-name: 'QA Stage'
         environment: qa
-        stage-result: ${{ needs.run.result }}
+        stage-result: ${{ needs.publish-tag.result == 'failure' && 'failure' || needs.run.result }}
         success-version: ${{ needs.run.outputs.version }}
         success-artifact-ids: ${{ needs.run.outputs.image-urls }}

@@ -175,7 +175,7 @@ jobs:
     needs: [check, deploy-frontend, deploy-backend, deploy-external-real]
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
     outputs:
       version: ${{ steps.promote.outputs.tag }}
       image-urls: ${{ needs.check.outputs.image-urls }}
@@ -199,13 +199,25 @@ jobs:
           environment: qa
           status: deployed
 
-      - name: Create QA Deployed Tag
-        uses: optivem/actions/create-and-push-tag@v1
+  publish-tag:
+    needs: promote
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v5
         with:
-          tag: ${{ steps.promote.outputs.tag }}
+          ref: ${{ inputs.version }}
+
+      - name: Publish Git Tag
+        uses: optivem/actions/publish-tag@v1
+        with:
+          tag: ${{ needs.promote.outputs.version }}
+          token: ${{ secrets.WORKFLOW_TOKEN }}
 
   summary:
-    needs: [check, promote]
+    needs: [check, promote, publish-tag]
     if: always()
     runs-on: ubuntu-latest
     permissions:
@@ -225,6 +237,6 @@ jobs:
       with:
         stage-name: 'QA Stage (Cloud Run)'
         environment: qa
-        stage-result: ${{ needs.promote.result }}
+        stage-result: ${{ needs.publish-tag.result == 'failure' && 'failure' || needs.promote.result }}
         success-version: ${{ needs.promote.outputs.version }}
         success-artifact-ids: ${{ needs.promote.outputs.image-urls }}

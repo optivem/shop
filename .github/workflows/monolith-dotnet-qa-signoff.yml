@@ -34,7 +34,7 @@ jobs:
     if: needs.check.result == 'success'
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
     outputs:
       version: ${{ steps.promote.outputs.tag }}
       stage-result: ${{ steps.determine-result.outputs.stage-result }}
@@ -58,13 +58,25 @@ jobs:
           environment: qa
           status: ${{ inputs.result }}
 
-      - name: Create QA Signoff Tag
-        uses: optivem/actions/create-and-push-tag@v1
+  publish-tag:
+    needs: run
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v5
         with:
-          tag: ${{ steps.promote.outputs.tag }}
+          ref: ${{ inputs.version }}
+
+      - name: Publish Git Tag
+        uses: optivem/actions/publish-tag@v1
+        with:
+          tag: ${{ needs.run.outputs.version }}
+          token: ${{ secrets.WORKFLOW_TOKEN }}
 
   summary:
-    needs: [check, run]
+    needs: [check, run, publish-tag]
     if: always()
     runs-on: ubuntu-latest
     permissions:
@@ -78,5 +90,5 @@ jobs:
       with:
         stage-name: 'QA Signoff'
         environment: qa
-        stage-result: ${{ needs.run.outputs.stage-result }}
+        stage-result: ${{ needs.publish-tag.result == 'failure' && 'failure' || needs.run.outputs.stage-result }}
         success-version: ${{ needs.run.outputs.version }}

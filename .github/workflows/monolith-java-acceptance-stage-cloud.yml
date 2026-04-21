@@ -433,7 +433,7 @@ jobs:
     needs: [check, deploy-app, test-smoke-real, test-smoke-stub, test-acceptance-api, test-acceptance-ui, test-acceptance-isolated-api, test-acceptance-isolated-ui, test-contract-stub, test-contract-isolated-stub, test-contract-real, test-e2e-api, test-e2e-ui]
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
       packages: write
     outputs:
       version: ${{ steps.generate-version.outputs.version }}
@@ -464,13 +464,23 @@ jobs:
           image-urls: ${{ needs.check.outputs.image-digest-urls }}
           tag: ${{ steps.generate-version.outputs.version }}
 
-      - name: Create and Push Git Tag
-        uses: optivem/actions/create-and-push-tag@v1
+  publish-tag:
+    needs: promote
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v5
+
+      - name: Publish Git Tag
+        uses: optivem/actions/publish-tag@v1
         with:
-          tag: ${{ steps.generate-version.outputs.version }}
+          tag: ${{ needs.promote.outputs.version }}
+          token: ${{ secrets.WORKFLOW_TOKEN }}
 
   summary:
-    needs: [preflight, check, promote]
+    needs: [preflight, check, promote, publish-tag]
     if: always()
     runs-on: ubuntu-latest
     permissions:
@@ -481,7 +491,7 @@ jobs:
       with:
         stage-name: 'Acceptance Stage (Cloud Run)'
         environment: acceptance
-        stage-result: ${{ needs.promote.result }}
+        stage-result: ${{ needs.publish-tag.result == 'failure' && 'failure' || needs.promote.result }}
         success-version: ${{ needs.promote.outputs.version }}
         success-artifact-ids: ${{ needs.promote.outputs.image-urls }}
         skipped-reason: ${{ needs.preflight.outputs.skip-reason || needs.check.outputs.skip-reason }}
