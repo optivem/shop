@@ -71,7 +71,7 @@ jobs:
 
       - name: Check for Docker Image Updates Since Last Run
         id: should-run
-        uses: optivem/actions/has-update-since-last-github-workflow-run@v1
+        uses: optivem/actions/check-update-since-last-github-workflow-run@v1
         with:
           last-updated-at: ${{ steps.find-latest.outputs.latest-image-timestamp }}
           workflow-name: ${{ github.workflow }}

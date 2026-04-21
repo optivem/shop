@@ -61,7 +61,7 @@ jobs:
         run: echo "value=$(tr -d '[:space:]' < VERSION)" >> "$GITHUB_OUTPUT"
       - name: Detect meaningful changes since last build
         id: changes
-        uses: optivem/actions/has-changes-since-tag@v1
+        uses: optivem/actions/check-changes-since-tag@v1
         with:
           tag-patterns: |
             meta-v${{ steps.version.outputs.value }}-rc.*
