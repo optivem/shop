@@ -17,7 +17,7 @@ jobs:
     steps:
       - name: Check Container Packages Exist
         id: check-artifacts
-        uses: optivem/actions/check-github-container-packages-exist@v1
+        uses: optivem/actions/check-ghcr-packages-exist@v1
 
   check:
     needs: preflight

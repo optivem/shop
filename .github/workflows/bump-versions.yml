@@ -45,7 +45,7 @@ jobs:
 
       - name: Commit Bumped VERSION Files
         if: steps.bump.outputs.bumped == 'true'
-        uses: optivem/actions/commit-files-via-github-contents-api@v1
+        uses: optivem/actions/commit-files@v1
         with:
           files: ${{ steps.payload.outputs.files }}
           token: ${{ secrets.GITHUB_TOKEN }}
