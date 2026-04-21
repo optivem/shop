@@ -555,8 +555,6 @@ jobs:
         with:
           image-urls: ${{ needs.check.outputs.image-digest-urls }}
           tag: ${{ steps.generate-version.outputs.version }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create and Push Git Tag
         uses: optivem/actions/create-and-push-tag@v1
