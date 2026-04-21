@@ -123,17 +123,23 @@ jobs:
         with:
           tag: ${{ steps.promote.outputs.version }}
 
-      - name: Create GitHub Release
-        uses: optivem/actions/create-github-release@v1
+      - name: Compose Release Notes
+        id: release-notes
+        uses: optivem/actions/compose-release-notes@v1
         with:
           base-version: ${{ inputs.version }}
           release-version: ${{ steps.promote.outputs.version }}
           environment: prod
           status: deployed
           artifact-urls: ${{ steps.tag-images.outputs.image-urls }}
+
+      - name: Create GitHub Release
+        uses: optivem/actions/create-github-release@v1
+        with:
+          tag: ${{ steps.promote.outputs.version }}
+          title: ${{ steps.release-notes.outputs.title }}
+          notes-file: ${{ steps.release-notes.outputs.notes-file }}
           is-prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create Component Tags
         uses: optivem/actions/create-component-tags@v1
