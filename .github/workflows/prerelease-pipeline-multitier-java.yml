@@ -23,6 +23,10 @@ on:
         required: false
         type: boolean
         default: false
+      ref:
+        description: 'Git SHA to pin (leave empty for HEAD)'
+        required: false
+        type: string
 
 jobs:
   verify:
@@ -36,3 +40,4 @@ jobs:
       level: ${{ inputs.level || 'qa' }}
       skip-local-stage: ${{ inputs.skip-local-stage == true }}
       skip-commit-stage: ${{ inputs.skip-commit-stage == true }}
+      ref: ${{ inputs.ref }}

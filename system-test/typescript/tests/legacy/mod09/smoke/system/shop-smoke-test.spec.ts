@@ -1,4 +1,4 @@
-import { test, forChannels, ChannelType } from '../fixtures.js';
+import { test, forChannels, ChannelType } from '../../base/BaseScenarioDslTest.js';
 
 forChannels(ChannelType.UI, ChannelType.API)(() => {
     test('shouldBeAbleToGoToShop', async ({ scenario }) => {

@@ -1,5 +1,5 @@
 import type { Result } from '../../../../common/result.js';
-import type { ErpErrorResponse } from '../../../port/external/erp/dtos/ErpErrorResponse.js';
+import type { ErpErrorResponse } from '../../../port/external/erp/dtos/errors/ErpErrorResponse.js';
 import type { GetProductRequest } from '../../../port/external/erp/dtos/GetProductRequest.js';
 import type { GetProductResponse } from '../../../port/external/erp/dtos/GetProductResponse.js';
 import type { ReturnsProductRequest } from '../../../port/external/erp/dtos/ReturnsProductRequest.js';

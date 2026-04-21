@@ -1,4 +1,5 @@
 import { test, forChannels, ChannelType } from './base/fixtures.js';
+import { emptyArguments } from '../../commons/providers/empty-arguments-provider.js';
 
 forChannels(ChannelType.UI, ChannelType.API)(() => {
     test('shouldRejectOrderWithInvalidQuantity', async ({ scenario }) => {
@@ -37,7 +38,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
             .fieldErrorMessage('sku', 'Product does not exist for SKU: NON-EXISTENT-SKU-12345');
     });
 
-    test.eachAlsoFirstRow(['', '   '])(
+    test.eachAlsoFirstRow(emptyArguments)(
         'shouldRejectOrderWithEmptySku_"$sku"',
         async ({ scenario, sku }) => {
             await scenario
@@ -55,7 +56,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
         await scenario
             .when()
             .placeOrder()
-            .withQuantity('-10')
+            .withQuantity(-10)
             .then()
             .shouldFail()
             .errorMessage('The request contains one or more validation errors')
@@ -66,14 +67,14 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
         await scenario
             .when()
             .placeOrder()
-            .withQuantity('0')
+            .withQuantity(0)
             .then()
             .shouldFail()
             .errorMessage('The request contains one or more validation errors')
             .fieldErrorMessage('quantity', 'Quantity must be positive');
     });
 
-    test.eachAlsoFirstRow(['', '   '])(
+    test.eachAlsoFirstRow(emptyArguments)(
         'shouldRejectOrderWithEmptyQuantity_"$emptyQuantity"',
         async ({ scenario, emptyQuantity }) => {
             await scenario
@@ -87,7 +88,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
         },
     );
 
-    test.eachAlsoFirstRow(['', '   '])(
+    test.eachAlsoFirstRow(emptyArguments)(
         'shouldRejectOrderWithEmptyCountry_"$emptyCountry"',
         async ({ scenario, emptyCountry }) => {
             await scenario

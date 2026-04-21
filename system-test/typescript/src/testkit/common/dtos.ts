@@ -14,15 +14,15 @@ export type { ProblemDetailResponse } from '../driver/adapter/shop/api/client/dt
 // Clock
 export type { GetTimeResponse } from '../driver/port/external/clock/dtos/GetTimeResponse.js';
 export type { ReturnsTimeRequest } from '../driver/port/external/clock/dtos/ReturnsTimeRequest.js';
-export type { ClockErrorResponse } from '../driver/port/external/clock/dtos/ClockErrorResponse.js';
+export type { ClockErrorResponse } from '../driver/port/external/clock/dtos/errors/ClockErrorResponse.js';
 
 // ERP
 export type { GetProductResponse } from '../driver/port/external/erp/dtos/GetProductResponse.js';
 export type { ReturnsProductRequest } from '../driver/port/external/erp/dtos/ReturnsProductRequest.js';
 export type { ReturnsPromotionRequest } from '../driver/port/external/erp/dtos/ReturnsPromotionRequest.js';
-export type { ErpErrorResponse } from '../driver/port/external/erp/dtos/ErpErrorResponse.js';
+export type { ErpErrorResponse } from '../driver/port/external/erp/dtos/errors/ErpErrorResponse.js';
 
 // Tax
 export type { GetTaxResponse } from '../driver/port/external/tax/dtos/GetTaxResponse.js';
 export type { ReturnsTaxRateRequest } from '../driver/port/external/tax/dtos/ReturnsTaxRateRequest.js';
-export type { TaxErrorResponse } from '../driver/port/external/tax/dtos/TaxErrorResponse.js';
+export type { TaxErrorResponse } from '../driver/port/external/tax/dtos/errors/TaxErrorResponse.js';

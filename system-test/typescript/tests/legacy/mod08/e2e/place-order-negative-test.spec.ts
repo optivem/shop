@@ -1,4 +1,4 @@
-import { test, forChannels, ChannelType } from './fixtures.js';
+import { test, forChannels, ChannelType } from './base/BaseE2eTest.js';
 
 forChannels(ChannelType.UI, ChannelType.API)(() => {
     test('shouldRejectOrderWithNonIntegerQuantity', async ({ scenario }) => {

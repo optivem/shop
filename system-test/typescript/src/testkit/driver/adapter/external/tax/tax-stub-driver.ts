@@ -1,5 +1,5 @@
 import type { Result } from '../../../../common/result.js';
-import type { TaxErrorResponse } from '../../../port/external/tax/dtos/TaxErrorResponse.js';
+import type { TaxErrorResponse } from '../../../port/external/tax/dtos/errors/TaxErrorResponse.js';
 import type { ReturnsTaxRateRequest } from '../../../port/external/tax/dtos/ReturnsTaxRateRequest.js';
 import { BaseTaxDriver } from './BaseTaxDriver.js';
 import { TaxStubClient } from './client/TaxStubClient.js';

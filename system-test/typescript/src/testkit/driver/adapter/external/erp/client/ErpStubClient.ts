@@ -1,8 +1,8 @@
 import { Result, success } from '../../../../../common/result.js';
-import type { ErpErrorResponse } from '../../../../port/external/erp/dtos/ErpErrorResponse.js';
+import type { ErpErrorResponse } from '../../../../port/external/erp/dtos/errors/ErpErrorResponse.js';
 import type { ReturnsProductRequest } from '../../../../port/external/erp/dtos/ReturnsProductRequest.js';
 import type { ReturnsPromotionRequest } from '../../../../port/external/erp/dtos/ReturnsPromotionRequest.js';
-import { JsonWireMockClient } from '../../../shared/wiremock/wiremock-client.js';
+import { JsonWireMockClient } from '../../../shared/client/wiremock/json-wiremock-client.js';
 import { BaseErpClient } from './BaseErpClient.js';
 import type { ExtProductDetailsResponse } from './dtos/ExtProductDetailsResponse.js';
 import type { ExtGetPromotionResponse } from './dtos/ExtGetPromotionResponse.js';

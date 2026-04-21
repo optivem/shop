@@ -27,7 +27,7 @@ $Config = @{
         @{  Id = "acceptance-api";
             SampleTest = "shouldBeAbleToBrowseCoupons";
             Name = "latest - Acceptance (stub) - API";
-            Command = "`$env:CHANNEL = 'api'; `$env:EXTERNAL_SYSTEM_MODE = 'stub'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=acceptance-test --grep-invert '@isolated' tests/latest/acceptance";
+            Command = "`$env:CHANNEL = 'API'; `$env:EXTERNAL_SYSTEM_MODE = 'stub'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=acceptance-test --grep-invert '@isolated' tests/latest/acceptance";
             Path = ".";
             TestReportPath = "playwright-report\index.html";
             TestInstallCommands = $null },
@@ -36,7 +36,7 @@ $Config = @{
         @{  Id = "acceptance-ui";
             SampleTest = "shouldBeAbleToBrowseCoupons";
             Name = "latest - Acceptance (stub) - UI";
-            Command = "`$env:CHANNEL = 'ui'; `$env:EXTERNAL_SYSTEM_MODE = 'stub'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=acceptance-test --grep-invert '@isolated' tests/latest/acceptance";
+            Command = "`$env:CHANNEL = 'UI'; `$env:EXTERNAL_SYSTEM_MODE = 'stub'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=acceptance-test --grep-invert '@isolated' tests/latest/acceptance";
             Path = ".";
             TestReportPath = "playwright-report\index.html";
             TestInstallCommands = $null },
@@ -45,7 +45,7 @@ $Config = @{
         @{  Id = "acceptance-isolated-api";
             SampleTest = "shouldBeAbleToCancelOrder";
             Name = "latest - Acceptance Isolated (stub) - API";
-            Command = "`$env:CHANNEL = 'api'; `$env:EXTERNAL_SYSTEM_MODE = 'stub'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=acceptance-test --workers=1 --grep '@isolated' tests/latest/acceptance";
+            Command = "`$env:CHANNEL = 'API'; `$env:EXTERNAL_SYSTEM_MODE = 'stub'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=acceptance-test --workers=1 --grep '@isolated' tests/latest/acceptance";
             Path = ".";
             TestReportPath = "playwright-report\index.html";
             TestInstallCommands = $null },
@@ -54,7 +54,7 @@ $Config = @{
         @{  Id = "acceptance-isolated-ui";
             SampleTest = "shouldBeAbleToCancelOrder";
             Name = "latest - Acceptance Isolated (stub) - UI";
-            Command = "`$env:CHANNEL = 'ui'; `$env:EXTERNAL_SYSTEM_MODE = 'stub'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=acceptance-test --workers=1 --grep '@isolated' tests/latest/acceptance";
+            Command = "`$env:CHANNEL = 'UI'; `$env:EXTERNAL_SYSTEM_MODE = 'stub'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=acceptance-test --workers=1 --grep '@isolated' tests/latest/acceptance";
             Path = ".";
             TestReportPath = "playwright-report\index.html";
             TestInstallCommands = $null },
@@ -90,7 +90,7 @@ $Config = @{
         @{  Id = "e2e-api";
             SampleTest = "shouldPlaceOrder";
             Name = "latest - E2E (real) - API";
-            Command = "`$env:CHANNEL = 'api'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=e2e-test tests/latest/e2e";
+            Command = "`$env:CHANNEL = 'API'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=e2e-test tests/latest/e2e";
             Path = ".";
             TestReportPath = "playwright-report\index.html";
             TestInstallCommands = $null },
@@ -99,7 +99,7 @@ $Config = @{
         @{  Id = "e2e-ui";
             SampleTest = "shouldPlaceOrder";
             Name = "latest - E2E (real) - UI";
-            Command = "`$env:CHANNEL = 'ui'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=e2e-test tests/latest/e2e";
+            Command = "`$env:CHANNEL = 'UI'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=e2e-test tests/latest/e2e";
             Path = ".";
             TestReportPath = "playwright-report\index.html";
             TestInstallCommands = $null }

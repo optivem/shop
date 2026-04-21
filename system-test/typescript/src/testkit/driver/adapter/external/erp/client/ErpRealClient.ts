@@ -1,5 +1,5 @@
 import { Result, success, failure } from '../../../../../common/result.js';
-import type { ErpErrorResponse } from '../../../../port/external/erp/dtos/ErpErrorResponse.js';
+import type { ErpErrorResponse } from '../../../../port/external/erp/dtos/errors/ErpErrorResponse.js';
 import type { ReturnsProductRequest } from '../../../../port/external/erp/dtos/ReturnsProductRequest.js';
 import { BaseErpClient } from './BaseErpClient.js';
 import type { ExtCreateProductRequest } from './dtos/ExtCreateProductRequest.js';

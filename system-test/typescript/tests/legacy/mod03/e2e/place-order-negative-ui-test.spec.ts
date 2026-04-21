@@ -1,4 +1,4 @@
-import { uiTest as test, expect } from './fixtures.js';
+import { uiTest as test, expect } from './base/BaseE2eTest.js';
 
 const TIMEOUT = 30_000;
 

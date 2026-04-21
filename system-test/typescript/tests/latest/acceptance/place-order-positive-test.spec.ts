@@ -180,13 +180,13 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
     );
 
     const totalPriceCases = [
-        { country: 'UK', taxRate: '0.09', unitPrice: '50.00', subtotalPrice: '50.00', expectedTaxAmount: '4.50', expectedTotalPrice: '54.50' },
-        { country: 'US', taxRate: '0.20', unitPrice: '100.00', subtotalPrice: '100.00', expectedTaxAmount: '20.00', expectedTotalPrice: '120.00' },
+        { country: 'UK', taxRate: '0.09', subtotalPrice: '50.00', expectedTaxAmount: '4.50', expectedTotalPrice: '54.50' },
+        { country: 'US', taxRate: '0.20', subtotalPrice: '100.00', expectedTaxAmount: '20.00', expectedTotalPrice: '120.00' },
     ];
 
     test.eachAlsoFirstRow(totalPriceCases)(
         'totalPriceShouldBeSubtotalPricePlusTaxAmount_country=$country',
-        async ({ scenario, country, taxRate, unitPrice, subtotalPrice, expectedTaxAmount, expectedTotalPrice }) => {
+        async ({ scenario, country, taxRate, subtotalPrice, expectedTaxAmount, expectedTotalPrice }) => {
             await scenario
                 .given()
                 .country()
@@ -194,7 +194,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
                 .withTaxRate(taxRate)
                 .and()
                 .product()
-                .withUnitPrice(unitPrice)
+                .withUnitPrice(subtotalPrice)
                 .when()
                 .placeOrder()
                 .withCountry(country)

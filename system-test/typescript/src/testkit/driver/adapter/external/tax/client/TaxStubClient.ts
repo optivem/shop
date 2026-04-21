@@ -1,7 +1,7 @@
 import { Result, success } from '../../../../../common/result.js';
-import type { TaxErrorResponse } from '../../../../port/external/tax/dtos/TaxErrorResponse.js';
+import type { TaxErrorResponse } from '../../../../port/external/tax/dtos/errors/TaxErrorResponse.js';
 import type { ReturnsTaxRateRequest } from '../../../../port/external/tax/dtos/ReturnsTaxRateRequest.js';
-import { JsonWireMockClient } from '../../../shared/wiremock/wiremock-client.js';
+import { JsonWireMockClient } from '../../../shared/client/wiremock/json-wiremock-client.js';
 import { BaseTaxClient } from './BaseTaxClient.js';
 import type { ExtGetCountryResponse } from './dtos/ExtGetCountryResponse.js';
 

@@ -1,4 +1,4 @@
-import { test, forChannels, ChannelType } from './fixtures.js';
+import { test, forChannels, ChannelType } from './base/BaseAcceptanceTest.js';
 
 forChannels(ChannelType.UI, ChannelType.API)(() => {
     const nonIntegerQuantities = ['3.5', 'lala', 'invalid-quantity'];

@@ -4,6 +4,11 @@ on:
   schedule:
     - cron: '0 * * * *'  # Run every hour
   workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Git SHA to test (leave empty for latest image)'
+        required: false
+        type: string
 
 concurrency:
   group: multitier-typescript-acceptance-stage-legacy
@@ -48,6 +53,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
+          ref: ${{ inputs.ref || github.sha }}
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v4
@@ -60,8 +66,8 @@ jobs:
         uses: optivem/actions/resolve-docker-image-digests@v1
         with:
           image-urls: |
-            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-frontend-react:latest
-            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-backend-typescript:latest
+            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-frontend-react:${{ inputs.ref || 'latest' }}
+            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-backend-typescript:${{ inputs.ref || 'latest' }}
 
       - name: Check for Docker Image Updates Since Last Run
         id: should-run
@@ -81,6 +87,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
+          ref: ${{ inputs.ref || github.sha }}
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v4

@@ -1,4 +1,4 @@
-import { test, forChannels, ChannelType } from './base/fixtures.js';
+import { test } from './base/fixtures.js';
 import { OrderStatus } from '../../../src/testkit/common/dtos.js';
 
 const timesInsideBlackout = [
@@ -13,26 +13,24 @@ const BLACKOUT_ERROR = 'Order cancellation is not allowed on December 31st betwe
 
 test.describe('@isolated', () => {
     test.describe.configure({ mode: 'serial' });
-    forChannels(ChannelType.UI, ChannelType.API)(() => {
-        test.eachAlsoFirstRow(timesInsideBlackout)(
-            'cannotCancelAnOrderOn31stDecBetween2200And2230_$time @time-dependent',
-            async ({ scenario, time }) => {
-                await scenario
-                    .given()
-                    .clock()
-                    .withTime(time)
-                    .and()
-                    .order()
-                    .withStatus(OrderStatus.PLACED)
-                    .when()
-                    .cancelOrder()
-                    .then()
-                    .shouldFail()
-                    .errorMessage(BLACKOUT_ERROR)
-                    .and()
-                    .order()
-                    .hasStatus(OrderStatus.PLACED);
-            },
-        );
-    });
+    test.eachAlsoFirstRow(timesInsideBlackout)(
+        'cannotCancelAnOrderOn31stDecBetween2200And2230_$time @time-dependent',
+        async ({ scenario, time }) => {
+            await scenario
+                .given()
+                .clock()
+                .withTime(time)
+                .and()
+                .order()
+                .withStatus(OrderStatus.PLACED)
+                .when()
+                .cancelOrder()
+                .then()
+                .shouldFail()
+                .errorMessage(BLACKOUT_ERROR)
+                .and()
+                .order()
+                .hasStatus(OrderStatus.PLACED);
+        },
+    );
 });

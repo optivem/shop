@@ -1,4 +1,4 @@
-import { DEFAULTS } from '../../defaults.js';
+import { DEFAULTS } from '../defaults.js';
 import { UseCaseContext } from '../../use-case-context.js';
 import { AppContext } from '../app-context.js';
 import { ScenarioContext, ProductConfig, CouponConfig, CountryConfig, OrderConfig } from '../scenario-context.js';

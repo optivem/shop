@@ -1,4 +1,4 @@
-import { test, forChannels, ChannelType } from './fixtures.js';
+import { test, forChannels, ChannelType } from './base/BaseAcceptanceTest.js';
 import { OrderStatus } from '../../../../src/testkit/common/dtos.js';
 
 forChannels(ChannelType.UI, ChannelType.API)(() => {

@@ -1,5 +1,5 @@
 import { Result } from '../../../../common/result.js';
-import { ErpErrorResponse } from './dtos/ErpErrorResponse.js';
+import { ErpErrorResponse } from './dtos/errors/ErpErrorResponse.js';
 import { GetProductRequest } from './dtos/GetProductRequest.js';
 import { GetProductResponse } from './dtos/GetProductResponse.js';
 import { ReturnsProductRequest } from './dtos/ReturnsProductRequest.js';

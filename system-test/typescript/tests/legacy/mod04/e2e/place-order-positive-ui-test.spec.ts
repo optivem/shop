@@ -1,4 +1,4 @@
-import { uiTest as test, expect } from './fixtures.js';
+import { uiTest as test, expect } from './base/BaseE2eTest.js';
 import { randomUUID } from 'node:crypto';
 import { NewOrderPage } from '../../../../src/testkit/driver/adapter/shop/ui/client/pages/NewOrderPage.js';
 

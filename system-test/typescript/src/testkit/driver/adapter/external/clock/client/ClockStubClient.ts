@@ -1,8 +1,8 @@
 import { Result, success, failure } from '../../../../../common/result.js';
-import type { ClockErrorResponse } from '../../../../port/external/clock/dtos/ClockErrorResponse.js';
+import type { ClockErrorResponse } from '../../../../port/external/clock/dtos/errors/ClockErrorResponse.js';
 import type { GetTimeResponse } from '../../../../port/external/clock/dtos/GetTimeResponse.js';
 import type { ReturnsTimeRequest } from '../../../../port/external/clock/dtos/ReturnsTimeRequest.js';
-import { JsonWireMockClient } from '../../../shared/wiremock/wiremock-client.js';
+import { JsonWireMockClient } from '../../../shared/client/wiremock/json-wiremock-client.js';
 
 export class ClockStubClient {
   private wireMock: JsonWireMockClient;

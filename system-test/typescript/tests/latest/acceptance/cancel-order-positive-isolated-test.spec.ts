@@ -1,4 +1,4 @@
-import { test, forChannels, ChannelType } from './base/fixtures.js';
+import { test } from './base/fixtures.js';
 import { OrderStatus } from '../../../src/testkit/common/dtos.js';
 
 const timesOutsideBlackout = [
@@ -10,22 +10,20 @@ const timesOutsideBlackout = [
 
 test.describe('@isolated', () => {
     test.describe.configure({ mode: 'serial' });
-    forChannels(ChannelType.UI, ChannelType.API)(() => {
-        test.eachAlsoFirstRow(timesOutsideBlackout)(
-            'shouldBeAbleToCancelOrderOutsideOfBlackoutPeriod31stDecBetween2200And2230_$time @time-dependent',
-            async ({ scenario, time }) => {
-                await scenario
-                    .given()
-                    .clock()
-                    .withTime(time)
-                    .and()
-                    .order()
-                    .withStatus(OrderStatus.PLACED)
-                    .when()
-                    .cancelOrder()
-                    .then()
-                    .shouldSucceed();
-            },
-        );
-    });
+    test.eachAlsoFirstRow(timesOutsideBlackout)(
+        'shouldBeAbleToCancelOrderOutsideOfBlackoutPeriod31stDecBetween2200And2230_$time @time-dependent',
+        async ({ scenario, time }) => {
+            await scenario
+                .given()
+                .clock()
+                .withTime(time)
+                .and()
+                .order()
+                .withStatus(OrderStatus.PLACED)
+                .when()
+                .cancelOrder()
+                .then()
+                .shouldSucceed();
+        },
+    );
 });

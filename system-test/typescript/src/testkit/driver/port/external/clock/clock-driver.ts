@@ -1,5 +1,5 @@
 import { Result } from '../../../../common/result.js';
-import { ClockErrorResponse } from './dtos/ClockErrorResponse.js';
+import { ClockErrorResponse } from './dtos/errors/ClockErrorResponse.js';
 import { GetTimeResponse } from './dtos/GetTimeResponse.js';
 import { ReturnsTimeRequest } from './dtos/ReturnsTimeRequest.js';
 

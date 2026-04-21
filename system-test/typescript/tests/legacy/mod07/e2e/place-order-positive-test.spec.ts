@@ -1,4 +1,4 @@
-import { test, forChannels, ChannelType } from './fixtures.js';
+import { test, forChannels, ChannelType } from './base/BaseE2eTest.js';
 
 // Aliases resolved through UseCaseContext (matching Java/.NET/eshop-tests):
 //   SKU          → context.getParamValue('sku')            → generates 'sku-<uuid>' on first use

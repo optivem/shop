@@ -1,4 +1,4 @@
-import { test, expect, forChannels, ChannelType } from './fixtures.js';
+import { test, expect, forChannels, ChannelType } from './base/BaseE2eTest.js';
 
 forChannels(ChannelType.UI, ChannelType.API)(() => {
     test('shouldRejectOrderWithNonIntegerQuantity', async ({ shopDriver }) => {

@@ -1,4 +1,4 @@
-import { apiTest as test, expect } from './fixtures.js';
+import { apiTest as test, expect } from './base/BaseE2eTest.js';
 
 test('shouldRejectOrderWithNonIntegerQuantity', async ({ shopApiClient }) => {
     // When: place order with non-integer quantity via API client

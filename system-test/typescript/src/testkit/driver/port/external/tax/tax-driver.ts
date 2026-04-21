@@ -1,5 +1,5 @@
 import { Result } from '../../../../common/result.js';
-import { TaxErrorResponse } from './dtos/TaxErrorResponse.js';
+import { TaxErrorResponse } from './dtos/errors/TaxErrorResponse.js';
 import { GetCountryRequest } from './dtos/GetCountryRequest.js';
 import { GetTaxResponse } from './dtos/GetTaxResponse.js';
 import { ReturnsTaxRateRequest } from './dtos/ReturnsTaxRateRequest.js';

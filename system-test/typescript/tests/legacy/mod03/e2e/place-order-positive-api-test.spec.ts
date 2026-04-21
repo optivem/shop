@@ -1,4 +1,4 @@
-import { apiTest as test, expect } from './fixtures.js';
+import { apiTest as test, expect } from './base/BaseE2eTest.js';
 import { randomUUID } from 'node:crypto';
 
 test('shouldPlaceOrderForValidInput', async ({ config }) => {

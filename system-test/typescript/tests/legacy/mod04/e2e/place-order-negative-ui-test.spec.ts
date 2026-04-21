@@ -1,4 +1,4 @@
-import { uiTest as test, expect } from './fixtures.js';
+import { uiTest as test, expect } from './base/BaseE2eTest.js';
 
 test('shouldRejectOrderWithNonIntegerQuantity', async ({ shopUiClient }) => {
     // When: place order with invalid quantity via UI client

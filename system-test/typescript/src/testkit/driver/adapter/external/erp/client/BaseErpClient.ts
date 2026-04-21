@@ -1,5 +1,5 @@
 import { Result, success, failure } from '../../../../../common/result.js';
-import type { ErpErrorResponse } from '../../../../port/external/erp/dtos/ErpErrorResponse.js';
+import type { ErpErrorResponse } from '../../../../port/external/erp/dtos/errors/ErpErrorResponse.js';
 import type { GetProductResponse } from '../../../../port/external/erp/dtos/GetProductResponse.js';
 import type { ExtProductDetailsResponse } from './dtos/ExtProductDetailsResponse.js';
 

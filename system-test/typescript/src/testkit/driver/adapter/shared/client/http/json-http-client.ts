@@ -1,4 +1,4 @@
-import { Result, success, failure } from '../../../../common/result.js';
+import { Result, success, failure } from '../../../../../common/result.js';
 
 export class JsonHttpClient<E> {
   constructor(private baseUrl: string) {}

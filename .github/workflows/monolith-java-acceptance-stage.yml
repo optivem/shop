@@ -4,6 +4,11 @@ on:
   schedule:
     - cron: '0 * * * *'  # Run every hour
   workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Git SHA to test (leave empty for latest image)'
+        required: false
+        type: string
 
 concurrency:
   group: monolith-java-acceptance-stage
@@ -48,6 +53,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
+          ref: ${{ inputs.ref || github.sha }}
 
       - name: Read Target Version
         id: read-target-version
@@ -69,7 +75,7 @@ jobs:
         uses: optivem/actions/resolve-docker-image-digests@v1
         with:
           image-urls: |
-            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/monolith-system-java:latest
+            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/monolith-system-java:${{ inputs.ref || 'latest' }}
 
       - name: Check for Docker Image Updates Since Last Run
         id: should-run
@@ -94,6 +100,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
+          ref: ${{ inputs.ref || github.sha }}
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v4
@@ -225,6 +232,7 @@ jobs:
         uses: optivem/actions/create-and-push-tag@v1
         with:
           tag: ${{ steps.generate-version.outputs.version }}
+          sha: ${{ inputs.ref || github.sha }}
 
   summary:
     needs: [preflight, check, run]

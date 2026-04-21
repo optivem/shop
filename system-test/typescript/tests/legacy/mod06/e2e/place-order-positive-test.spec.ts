@@ -1,4 +1,4 @@
-import { test, expect, forChannels, ChannelType } from './fixtures.js';
+import { test, expect, forChannels, ChannelType } from './base/BaseE2eTest.js';
 import { randomUUID } from 'node:crypto';
 
 forChannels(ChannelType.UI, ChannelType.API)(() => {

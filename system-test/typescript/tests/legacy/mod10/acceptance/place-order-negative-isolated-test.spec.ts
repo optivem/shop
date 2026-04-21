@@ -1,4 +1,4 @@
-import { test, forChannels, ChannelType } from './fixtures.js';
+import { test, forChannels, ChannelType } from './base/BaseAcceptanceTest.js';
 
 test.describe('@isolated', () => {
     test.describe.configure({ mode: 'serial' });

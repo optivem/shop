@@ -1,4 +1,4 @@
-import { DEFAULTS } from '../../defaults.js';
+import { DEFAULTS } from '../defaults.js';
 import { ClockConfig } from '../scenario-context.js';
 import { ThenContractStage } from '../then/then-contract.js';
 import { WhenStage } from '../when/when-stage.js';

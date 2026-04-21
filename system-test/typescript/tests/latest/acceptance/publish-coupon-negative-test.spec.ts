@@ -1,4 +1,5 @@
 import { test, forChannels, ChannelType } from './base/fixtures.js';
+import { emptyArguments } from '../../commons/providers/empty-arguments-provider.js';
 
 forChannels(ChannelType.UI, ChannelType.API)(() => {
     test.eachAlsoFirstRow(['0.0', '-0.01', '-0.15'])(
@@ -48,7 +49,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
             .fieldErrorMessage('couponCode', `Coupon code ${dupCode} already exists`);
     });
 
-    test.eachAlsoFirstRow([0, -1, -100])(
+    test.eachAlsoFirstRow(['0', '-1', '-100'])(
         'cannotPublishCouponWithZeroOrNegativeUsageLimit_$usageLimit',
         async ({ scenario, usageLimit }) => {
             await scenario
@@ -66,9 +67,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
 });
 
 forChannels(ChannelType.API)(() => {
-    const emptyCodes = ['', '   '];
-
-    emptyCodes.forEach((code) => {
+    emptyArguments.forEach((code) => {
         test(`shouldRejectCouponWithBlankCode_"${code}"`, async ({ scenario }) => {
             await scenario
                 .when()

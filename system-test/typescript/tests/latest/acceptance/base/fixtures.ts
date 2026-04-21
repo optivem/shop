@@ -1,7 +1,7 @@
 process.env.EXTERNAL_SYSTEM_MODE = process.env.EXTERNAL_SYSTEM_MODE || 'stub';
 
 import { bindChannels, bindTestEach } from '@optivem/optivem-testing';
-import { withApp } from '../../../../src/testkit/driver/adapter/shared/playwright/withApp.js';
+import { withApp } from '../../../../src/testkit/driver/adapter/shared/client/playwright/withApp.js';
 import { ChannelType } from '../../../../src/testkit/channel/channel-type.js';
 
 const _test = withApp();

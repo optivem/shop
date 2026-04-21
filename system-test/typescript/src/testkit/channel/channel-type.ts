@@ -1,6 +1,6 @@
 export const ChannelType = {
-    UI: 'ui',
-    API: 'api',
+    UI: 'UI',
+    API: 'API',
 } as const;
 
 export type ChannelTypeValue = (typeof ChannelType)[keyof typeof ChannelType];

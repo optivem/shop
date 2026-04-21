@@ -161,7 +161,7 @@ jobs:
         uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
         with:
           workflow: prerelease-pipeline-${{ matrix.variant }}.yml
-          inputs: '{"level": "local", "skip-commit-stage": "true"}'
+          inputs: '{"level": "local", "skip-commit-stage": "true", "ref": "${{ github.sha }}"}'
 
   # Phase 1: Run all commit stages in parallel (deduplicated — frontend-react is shared
   # across multitier variants). fail-fast cancels siblings on first failure.
@@ -199,6 +199,7 @@ jobs:
         uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
         with:
           workflow: ${{ matrix.workflow }}
+          inputs: '{"ref": "${{ github.sha }}"}'
 
   # Phase 2: Run all pipelines in parallel. Each pipeline produces RC tags namespaced
   # by its prefix (e.g. monolith-java-v1.0.0-rc.N), so there are no shared-counter collisions.
@@ -216,7 +217,7 @@ jobs:
         uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
         with:
           workflow: prerelease-pipeline-${{ matrix.variant }}.yml
-          inputs: '{"level": "${{ inputs.level }}", "skip-local-stage": "true", "skip-commit-stage": "true"}'
+          inputs: '{"level": "${{ inputs.level }}", "skip-local-stage": "true", "skip-commit-stage": "true", "ref": "${{ github.sha }}"}'
 
   # Final: tag SHA as meta-rc — only when level is qa, variant is all, and all 6 language×architecture combos passed.
   # Dry-runs (variant != 'all') never produce a tag regardless of level.

@@ -35,6 +35,11 @@ on:
         required: false
         type: string
         default: 'qa'
+      ref:
+        description: 'Git SHA to pin the pipeline to (leave empty for HEAD)'
+        required: false
+        type: string
+        default: ''
 
 jobs:
   # Early fail-fast: catch the case where <prefix>-v<VERSION> has been tagged
@@ -52,6 +57,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
+          ref: ${{ inputs.ref || github.sha }}
 
       - name: Read Target Version
         id: read-target-version
@@ -69,6 +75,8 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.ref || github.sha }}
 
       # Setup runtimes
       - name: Setup Node.js
@@ -166,6 +174,7 @@ jobs:
       - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
         with:
           workflow: ${{ matrix.workflow }}
+          inputs: '{"ref": "${{ inputs.ref }}"}'
 
   acceptance-stage:
     needs: [check-version, local, commit-stage]
@@ -179,6 +188,7 @@ jobs:
         with:
           workflow: ${{ inputs.prefix }}-acceptance-stage.yml
           poll-interval: '300'
+          inputs: '{"ref": "${{ inputs.ref }}"}'
 
       - id: get-run-number
         uses: optivem/actions/read-workflow-run-number@v1
@@ -202,6 +212,7 @@ jobs:
         with:
           workflow: ${{ inputs.prefix }}-acceptance-stage-legacy.yml
           poll-interval: '300'
+          inputs: '{"ref": "${{ inputs.ref }}"}'
 
   qa-stage:
     needs: [acceptance-stage, acceptance-stage-legacy]

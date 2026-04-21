@@ -3,7 +3,7 @@ import { SystemError } from '../../../../driver/port/shop/dtos/errors/SystemErro
 import { ViewOrderResponse } from '../../../../driver/port/shop/dtos/ViewOrderResponse.js';
 import { BrowseCouponItem } from '../../../../driver/port/shop/dtos/BrowseCouponsResponse.js';
 import { GetTimeResponse } from '../../../../driver/port/external/clock/dtos/GetTimeResponse.js';
-import { DEFAULTS } from '../../defaults.js';
+import { DEFAULTS } from '../defaults.js';
 import { UseCaseContext } from '../../use-case-context.js';
 import { AppContext } from '../app-context.js';
 import { ScenarioContext } from '../scenario-context.js';

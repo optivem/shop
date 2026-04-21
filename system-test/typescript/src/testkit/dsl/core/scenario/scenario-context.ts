@@ -1,4 +1,9 @@
-import { DEFAULTS } from '../defaults.js';
+// Together with `app-context.ts`, this file fills the role that Java/.NET collapse
+// into a single `ExecutionResultContext`. Here the split is deliberate:
+// `scenario-context.ts` holds Given-stage scenario data (products, coupons, orders, etc.),
+// and `app-context.ts` holds the active channel and driver registry.
+
+import { DEFAULTS } from './defaults.js';
 
 export interface ClockConfig {
   time: string;

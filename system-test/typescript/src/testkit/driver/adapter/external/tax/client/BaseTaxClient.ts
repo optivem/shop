@@ -1,5 +1,5 @@
 import { Result, success, failure } from '../../../../../common/result.js';
-import type { TaxErrorResponse } from '../../../../port/external/tax/dtos/TaxErrorResponse.js';
+import type { TaxErrorResponse } from '../../../../port/external/tax/dtos/errors/TaxErrorResponse.js';
 import type { GetTaxResponse } from '../../../../port/external/tax/dtos/GetTaxResponse.js';
 import type { ExtGetCountryResponse } from './dtos/ExtGetCountryResponse.js';
 

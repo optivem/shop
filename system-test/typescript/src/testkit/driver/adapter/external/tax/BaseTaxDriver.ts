@@ -1,5 +1,5 @@
 import type { Result } from '../../../../common/result.js';
-import type { TaxErrorResponse } from '../../../port/external/tax/dtos/TaxErrorResponse.js';
+import type { TaxErrorResponse } from '../../../port/external/tax/dtos/errors/TaxErrorResponse.js';
 import type { GetCountryRequest } from '../../../port/external/tax/dtos/GetCountryRequest.js';
 import type { GetTaxResponse } from '../../../port/external/tax/dtos/GetTaxResponse.js';
 import type { ReturnsTaxRateRequest } from '../../../port/external/tax/dtos/ReturnsTaxRateRequest.js';
