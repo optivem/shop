@@ -289,6 +289,7 @@ Write the report as one file and the plan as **one file per language that has ac
 - Contents: everything under the **Report Format** section below (class coverage tables, method differences, body differences, architectural abstraction tables, architecture layer tables, summary counts).
 - Read-only data — no action items, no ordering, no prescriptions. Just the current state.
 - Single file (not split by language) — the report is a reference document.
+- **H1 title must include the timestamp and mode**, matching the filename stem. Format: `# {YYYYMMDD-HHMM} — System Test Comparison Report ({mode})` (e.g. `# 20260421-1127 — System Test Comparison Report (both)`).
 
 ### Plan — one file per language with action items
 
@@ -302,7 +303,7 @@ Write a **separate plan file per language** that has at least one action item. F
 
 Each per-language plan file must contain:
 
-- A top-level heading naming the language (e.g. `# TypeScript — System Test Alignment Plan`).
+- A top-level heading that includes the timestamp, language, and mode, matching the filename stem. Format: `# {YYYYMMDD-HHMM} — {Language} System Test Alignment Plan ({mode})` (e.g. `# 20260421-1127 — TypeScript System Test Alignment Plan (both)`, `# 20260421-1127 — .NET System Test Alignment Plan (both)`).
 - A `Reference report:` link back to the single shared report file at the top.
 - Purpose: prescriptive, ordered, actionable steps to align that language to Java.
 - Task ordering within the file: architectural mismatches (legacy) → architecture layers (clients → drivers → channels → use-case DSL → scenario DSL → common) → tests (acceptance → contract → e2e → smoke).
@@ -320,8 +321,7 @@ Before writing, create the directories if they do not exist (`mkdir -p reports p
 ## Report Format
 
 ```
-System Test Comparison Report
-=============================
+# {YYYYMMDD-HHMM} — System Test Comparison Report ({mode})
 
 Mode: [latest | legacy | both]
 

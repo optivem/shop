@@ -1,4 +1,4 @@
-# TypeScript — System Test Alignment Plan
+# 20260421-1127 — TypeScript System Test Alignment Plan (both)
 
 Reference report: [20260421-1127-compare-tests-both.md](../reports/20260421-1127-compare-tests-both.md)
 

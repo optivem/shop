@@ -1,4 +1,4 @@
-# System Test Comparison Report
+# 20260421-1127 — System Test Comparison Report (both)
 
 Mode: both (latest + legacy + architecture)
 
