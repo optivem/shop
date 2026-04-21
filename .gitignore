@@ -17,3 +17,6 @@ test-results/
 
 # Claude
 .claude/settings.local.json
+
+# Scratch
+.tmp/
