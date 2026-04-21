@@ -35,13 +35,9 @@ jobs:
         with:
           retention-days: ${{ inputs.retention-days || '3' }}
           dry-run: ${{ inputs.dry-run || false }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Cleanup Prereleases
         uses: optivem/actions/cleanup-prereleases@v1
         with:
           retention-days: ${{ inputs.retention-days || '3' }}
           dry-run: ${{ inputs.dry-run || false }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
