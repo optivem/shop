@@ -1,7 +1,7 @@
 import { loadConfiguration, TestConfig } from '../../config/configuration-loader.js';
 import { ScenarioDsl, AppContext } from './dsl/scenario-dsl.js';
 import type { ChannelMode } from './dsl/scenario-dsl.js';
-import { UseCaseContext } from './dsl/core/use-case-context.js';
+import { UseCaseContext } from './dsl/core/shared/use-case-context.js';
 import { ShopApiDriver } from './driver/adapter/shop/api/shop-api-driver.js';
 import { ShopUiDriver } from './driver/adapter/shop/ui/shop-ui-driver.js';
 import { ErpRealDriver } from './driver/adapter/external/erp/erp-real-driver.js';

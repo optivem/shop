@@ -1,10 +1,12 @@
+import { OrderStatus } from '../../../driver/port/shop/dtos/OrderStatus.js';
+
 export const DEFAULTS = {
   SKU: 'DEFAULT-SKU',
   QUANTITY: '1',
   COUNTRY: 'US',
   UNIT_PRICE: '20.00',
   ORDER_NUMBER: 'DEFAULT-ORDER',
-  STATUS: 'PLACED',
+  ORDER_STATUS: OrderStatus.PLACED,
   CLOCK_TIME: '2025-12-24T10:00:00Z',
   WEEKDAY_TIME: '2026-01-15T10:30:00Z',
   WEEKEND_TIME: '2026-01-17T10:30:00Z',
@@ -13,4 +15,8 @@ export const DEFAULTS = {
   TAX_RATE: '0.07',
   COUPON_CODE: 'DEFAULT-COUPON',
   DISCOUNT_RATE: '0.10',
+  VALID_FROM: '2024-01-01T00:00:00Z',
+  VALID_TO: '2024-12-31T23:59:59Z',
+  USAGE_LIMIT: '1000',
+  EMPTY: null,
 };

@@ -1,5 +1,5 @@
 import type { AppContext, ChannelMode } from '../scenario/app-context.js';
-import { UseCaseContext, type ExternalSystemMode } from '../use-case-context.js';
+import { UseCaseContext, type ExternalSystemMode } from '../shared/use-case-context.js';
 import { ShopDsl } from './shop/ShopDsl.js';
 import { ClockDsl } from './external/clock/ClockDsl.js';
 import { ErpDsl } from './external/erp/ErpDsl.js';

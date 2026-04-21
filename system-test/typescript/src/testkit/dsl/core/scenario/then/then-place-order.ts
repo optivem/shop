@@ -4,7 +4,7 @@ import { ViewOrderResponse } from '../../../../driver/port/shop/dtos/ViewOrderRe
 import { BrowseCouponItem } from '../../../../driver/port/shop/dtos/BrowseCouponsResponse.js';
 import { GetTimeResponse } from '../../../../driver/port/external/clock/dtos/GetTimeResponse.js';
 import { DEFAULTS } from '../defaults.js';
-import { UseCaseContext } from '../../use-case-context.js';
+import { UseCaseContext } from '../../shared/use-case-context.js';
 import { AppContext } from '../app-context.js';
 import { ScenarioContext } from '../scenario-context.js';
 

@@ -1,5 +1,5 @@
 import { DEFAULTS } from '../defaults.js';
-import { UseCaseContext } from '../../use-case-context.js';
+import { UseCaseContext } from '../../shared/use-case-context.js';
 import { AppContext } from '../app-context.js';
 import { ScenarioContext, ProductConfig, CouponConfig, CountryConfig, OrderConfig } from '../scenario-context.js';
 import { WhenStage } from '../when/when-stage.js';
@@ -54,7 +54,7 @@ export class GivenStage implements IGivenStage {
       quantity: DEFAULTS.QUANTITY,
       country: DEFAULTS.COUNTRY,
       couponCode: null,
-      status: DEFAULTS.STATUS,
+      status: DEFAULTS.ORDER_STATUS,
     };
     this.ctx.orderConfigs.push(config);
     return new GivenOrder(this, config);

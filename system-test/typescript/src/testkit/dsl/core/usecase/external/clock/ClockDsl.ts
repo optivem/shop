@@ -1,5 +1,5 @@
 import type { ClockDriver } from '../../../../../driver/port/external/clock/clock-driver.js';
-import type { UseCaseContext } from '../../../use-case-context.js';
+import type { UseCaseContext } from '../../../shared/use-case-context.js';
 import { GoToClock } from './usecases/GoToClock.js';
 import { GetTime } from './usecases/GetTime.js';
 import { ReturnsTime } from './usecases/ReturnsTime.js';
