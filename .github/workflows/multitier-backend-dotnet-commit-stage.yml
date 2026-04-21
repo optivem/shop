@@ -145,8 +145,6 @@ jobs:
           image-sha-tag: ${{ fromJSON(steps.tag.outputs.image-urls)[0] }}
           image-latest-url: ${{ fromJSON(steps.tag.outputs.image-urls)[1] }}
           image-version-tag: ${{ fromJSON(steps.tag.outputs.image-urls)[2] }}
-        env:
-          REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
 
   summary:
     needs: [check, run]
