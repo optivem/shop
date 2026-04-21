@@ -103,7 +103,7 @@ jobs:
           image-url: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/monolith-system-typescript:${{ inputs.version }}
           project-id: ${{ vars.GCP_PROJECT_ID }}
           region: ${{ vars.GCP_REGION }}
-          service-name: monolith-typescript
+          service-name: monolith-typescript-production
           port: '8080'
           env-vars: |
             NODE_ENV=production
@@ -145,7 +145,7 @@ jobs:
           image-url: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/external-real-sim:latest
           project-id: ${{ vars.GCP_PROJECT_ID }}
           region: ${{ vars.GCP_REGION }}
-          service-name: external-real
+          service-name: external-real-production
           port: '9000'
 
   promote:

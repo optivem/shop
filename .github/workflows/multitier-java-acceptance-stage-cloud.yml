@@ -112,7 +112,7 @@ jobs:
           image-url: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-frontend-react:latest
           project-id: ${{ vars.GCP_PROJECT_ID }}
           region: ${{ vars.GCP_REGION }}
-          service-name: multitier-java-frontend
+          service-name: multitier-java-frontend-acceptance
           port: '3000'
 
   deploy-backend:
@@ -150,7 +150,7 @@ jobs:
           image-url: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-backend-java:latest
           project-id: ${{ vars.GCP_PROJECT_ID }}
           region: ${{ vars.GCP_REGION }}
-          service-name: multitier-java-backend
+          service-name: multitier-java-backend-acceptance
           port: '8080'
           env-vars: |
             SPRING_PROFILES_ACTIVE=cloud
@@ -192,7 +192,7 @@ jobs:
           image-url: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/external-real-sim:latest
           project-id: ${{ vars.GCP_PROJECT_ID }}
           region: ${{ vars.GCP_REGION }}
-          service-name: external-real
+          service-name: external-real-acceptance
           port: '9000'
 
   deploy-external-stub:
@@ -230,7 +230,7 @@ jobs:
           image-url: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/external-stub:latest
           project-id: ${{ vars.GCP_PROJECT_ID }}
           region: ${{ vars.GCP_REGION }}
-          service-name: external-stub
+          service-name: external-stub-acceptance
           port: '8080'
 
   test-smoke-real:

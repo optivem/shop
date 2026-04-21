@@ -104,7 +104,7 @@ jobs:
           image-url: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-frontend-react:${{ inputs.version }}
           project-id: ${{ vars.GCP_PROJECT_ID }}
           region: ${{ vars.GCP_REGION }}
-          service-name: multitier-dotnet-frontend
+          service-name: multitier-dotnet-frontend-production
           port: '3000'
 
   deploy-backend:
@@ -142,7 +142,7 @@ jobs:
           image-url: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-backend-dotnet:${{ inputs.version }}
           project-id: ${{ vars.GCP_PROJECT_ID }}
           region: ${{ vars.GCP_REGION }}
-          service-name: multitier-dotnet-backend
+          service-name: multitier-dotnet-backend-production
           port: '8080'
           env-vars: |
             ASPNETCORE_ENVIRONMENT=Cloud
@@ -184,7 +184,7 @@ jobs:
           image-url: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/external-real-sim:latest
           project-id: ${{ vars.GCP_PROJECT_ID }}
           region: ${{ vars.GCP_REGION }}
-          service-name: external-real
+          service-name: external-real-production
           port: '9000'
 
   promote:
