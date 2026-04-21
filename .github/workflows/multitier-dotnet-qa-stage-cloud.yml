@@ -4,9 +4,10 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Prerelease version to deploy (e.g., v1.0.0-rc.1)'
-        required: true
+        description: 'Prerelease version to deploy (e.g., multitier-dotnet-cloud-v1.0.0-rc.1). Leave empty to deploy the latest available RC.'
+        required: false
         type: string
+        default: ''
 
 concurrency:
   group: multitier-dotnet-qa-stage-cloud
@@ -17,6 +18,7 @@ jobs:
     permissions:
       contents: read
     outputs:
+      version: ${{ inputs.version || steps.resolve-latest.outputs.tag }}
       image-urls: ${{ steps.resolve-images.outputs.image-urls }}
     steps:
       - name: Ensure Environment Variables Defined
@@ -37,8 +39,15 @@ jobs:
           GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           GCP_SERVICE_ACCOUNT: ${{ vars.GCP_SERVICE_ACCOUNT }}
 
+      - name: Resolve Latest RC
+        id: resolve-latest
+        if: inputs.version == ''
+        uses: optivem/actions/resolve-latest-prerelease-tag@v1
+        with:
+          tag-prefix: multitier-dotnet-cloud-v
+
       - name: Check RC Exists
-        id: check-release
+        if: inputs.version != ''
         uses: optivem/actions/ensure-tag-exists@v1
         with:
           tag: ${{ inputs.version }}
@@ -47,7 +56,7 @@ jobs:
         id: resolve-images
         uses: optivem/actions/compose-docker-image-urls@v1
         with:
-          tag: ${{ inputs.version }}
+          tag: ${{ inputs.version || steps.resolve-latest.outputs.tag }}
           base-image-urls: |
             ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-frontend-react
             ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-backend-dotnet
@@ -84,8 +93,8 @@ jobs:
         uses: optivem/actions/deploy-to-cloud-run@v1
         with:
           environment: qa
-          version: ${{ inputs.version }}
-          image-url: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-frontend-react:${{ inputs.version }}
+          version: ${{ needs.check.outputs.version }}
+          image-url: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-frontend-react:${{ needs.check.outputs.version }}
           project-id: ${{ vars.GCP_PROJECT_ID }}
           region: ${{ vars.GCP_REGION }}
           service-name: multitier-dotnet-frontend-qa
@@ -122,8 +131,8 @@ jobs:
         uses: optivem/actions/deploy-to-cloud-run@v1
         with:
           environment: qa
-          version: ${{ inputs.version }}
-          image-url: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-backend-dotnet:${{ inputs.version }}
+          version: ${{ needs.check.outputs.version }}
+          image-url: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-backend-dotnet:${{ needs.check.outputs.version }}
           project-id: ${{ vars.GCP_PROJECT_ID }}
           region: ${{ vars.GCP_REGION }}
           service-name: multitier-dotnet-backend-qa
@@ -164,7 +173,7 @@ jobs:
         uses: optivem/actions/deploy-to-cloud-run@v1
         with:
           environment: qa
-          version: ${{ inputs.version }}
+          version: ${{ needs.check.outputs.version }}
           image-url: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/external-real-sim:latest
           project-id: ${{ vars.GCP_PROJECT_ID }}
           region: ${{ vars.GCP_REGION }}
@@ -183,7 +192,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v5
         with:
-          ref: ${{ inputs.version }}
+          ref: ${{ needs.check.outputs.version }}
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v4
@@ -195,7 +204,7 @@ jobs:
         id: promote
         uses: optivem/actions/compose-prerelease-status@v1
         with:
-          prerelease-version: ${{ inputs.version }}
+          prerelease-version: ${{ needs.check.outputs.version }}
           environment: qa
           status: deployed
 

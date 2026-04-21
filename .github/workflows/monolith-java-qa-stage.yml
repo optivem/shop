@@ -4,9 +4,10 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Prerelease version to deploy (e.g., v1.0.0-rc.1)'
-        required: true
+        description: 'Prerelease version to deploy (e.g., monolith-java-v1.0.0-rc.1). Leave empty to deploy the latest available RC.'
+        required: false
         type: string
+        default: ''
 
 concurrency:
   group: monolith-java-qa-stage
@@ -17,6 +18,7 @@ jobs:
     permissions:
       contents: read
     outputs:
+      version: ${{ inputs.version || steps.resolve-latest.outputs.tag }}
       image-urls: ${{ steps.resolve-images.outputs.image-urls }}
     steps:
       - name: Ensure Environment Variables Defined
@@ -29,8 +31,15 @@ jobs:
           DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Resolve Latest RC
+        id: resolve-latest
+        if: inputs.version == ''
+        uses: optivem/actions/resolve-latest-prerelease-tag@v1
+        with:
+          tag-prefix: monolith-java-v
+
       - name: Check RC Exists
-        id: check-release
+        if: inputs.version != ''
         uses: optivem/actions/ensure-tag-exists@v1
         with:
           tag: ${{ inputs.version }}
@@ -39,7 +48,7 @@ jobs:
         id: resolve-images
         uses: optivem/actions/compose-docker-image-urls@v1
         with:
-          tag: ${{ inputs.version }}
+          tag: ${{ inputs.version || steps.resolve-latest.outputs.tag }}
           base-image-urls: |
             ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/monolith-system-java
 
@@ -57,7 +66,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v5
         with:
-          ref: ${{ inputs.version }}
+          ref: ${{ needs.check.outputs.version }}
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v4
@@ -70,7 +79,7 @@ jobs:
         uses: optivem/actions/deploy-docker-compose@v1
         with:
           environment: qa
-          version: ${{ inputs.version }}
+          version: ${{ needs.check.outputs.version }}
           image-urls: ${{ needs.check.outputs.image-urls }}
           compose-file: docker-compose.pipeline.monolith.real.yml
           working-directory: system-test/java
@@ -92,7 +101,7 @@ jobs:
         id: promote
         uses: optivem/actions/compose-prerelease-status@v1
         with:
-          prerelease-version: ${{ inputs.version }}
+          prerelease-version: ${{ needs.check.outputs.version }}
           environment: qa
           status: deployed
 
