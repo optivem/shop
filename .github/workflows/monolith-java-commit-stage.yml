@@ -82,6 +82,18 @@ jobs:
         run: ./gradlew test
         working-directory: system/monolith/java
 
+      # TODO: Implement
+      - name: Run Narrow Integration Tests
+        run: echo "TODO - not yet implemented"
+
+      # TODO: Implement
+      - name: Run Component Tests
+        run: echo "TODO - not yet implemented"
+
+      # TODO: Implement
+      - name: Run Contract Tests
+        run: echo "TODO - not yet implemented"
+
       - name: Run Linter
         run: ./gradlew checkstyleMain
         working-directory: system/monolith/java
