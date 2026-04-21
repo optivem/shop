@@ -661,9 +661,11 @@ jobs:
 
       - name: Generate Prerelease Version
         id: generate-version
-        uses: optivem/actions/generate-prerelease-version@v1
+        uses: optivem/actions/compose-prerelease-version@v1
         with:
           target-version: ${{ steps.read-version.outputs.target-version }}
+          suffix: rc
+          number: ${{ github.run_number }}
           prefix: multitier-dotnet-cloud
 
       - name: Tag Docker Images for Prerelease
