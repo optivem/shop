@@ -43,9 +43,9 @@ jobs:
         with:
           tag: ${{ inputs.version }}
 
-      - name: Resolve Docker Images
+      - name: Compose Docker Image URLs
         id: resolve-images
-        uses: optivem/actions/resolve-docker-images@v1
+        uses: optivem/actions/compose-docker-image-urls@v1
         with:
           tag: ${{ inputs.version }}
           base-image-urls: |
