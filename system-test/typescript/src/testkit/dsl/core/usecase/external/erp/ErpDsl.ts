@@ -1,5 +1,5 @@
 import type { ErpDriver } from '../../../../../driver/port/external/erp/erp-driver.js';
-import type { UseCaseContext } from '../../../use-case-context.js';
+import type { UseCaseContext } from '../../../shared/use-case-context.js';
 import { ReturnsProduct } from './usecases/ReturnsProduct.js';
 import { ReturnsPromotion } from './usecases/ReturnsPromotion.js';
 import { GetProduct } from './usecases/GetProduct.js';

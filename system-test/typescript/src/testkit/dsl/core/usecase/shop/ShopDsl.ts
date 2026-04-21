@@ -1,5 +1,5 @@
 import type { ShopDriver } from '../../../../driver/port/shop/shop-driver.js';
-import type { UseCaseContext } from '../../use-case-context.js';
+import type { UseCaseContext } from '../../shared/use-case-context.js';
 import { PlaceOrder } from './usecases/PlaceOrder.js';
 import { ViewOrder } from './usecases/ViewOrder.js';
 import { CancelOrder } from './usecases/CancelOrder.js';

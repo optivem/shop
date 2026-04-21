@@ -1,5 +1,5 @@
 import type { TaxDriver } from '../../../../../driver/port/external/tax/tax-driver.js';
-import type { UseCaseContext } from '../../../use-case-context.js';
+import type { UseCaseContext } from '../../../shared/use-case-context.js';
 import { GoToTax } from './usecases/GoToTax.js';
 import { GetTaxRate } from './usecases/GetTaxRate.js';
 import { ReturnsTaxRate } from './usecases/ReturnsTaxRate.js';
