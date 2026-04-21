@@ -1,4 +1,4 @@
-# .NET — System Test Alignment Plan
+# 20260421-1127 — .NET System Test Alignment Plan (both)
 
 Reference report: [20260421-1127-compare-tests-both.md](../reports/20260421-1127-compare-tests-both.md)
 
@@ -59,6 +59,8 @@ Java uses `WhenBrowseCoupons`, `WhenCancelOrder`, `WhenPlaceOrder`, `WhenPublish
 - File: `system-test/dotnet/Dsl.Port/When/Steps/IViewOrder.cs` → rename to `IWhenViewOrder.cs`; rename interface `IViewOrder` → `IWhenViewOrder`.
 - Update all implementations and usages in `Dsl.Core/Scenario/When/Steps/*.cs` and any `using Dsl.Port.When.Steps;` consumers.
 - Reference: `system-test/java/src/main/java/com/optivem/shop/testkit/dsl/port/when/steps/{WhenBrowseCoupons,WhenCancelOrder,WhenPlaceOrder,WhenPublishCoupon,WhenViewOrder}.java`.
+
+APPROVED
 
 ---
 

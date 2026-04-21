@@ -1,4 +1,4 @@
-# TypeScript — System Test Alignment Plan
+# 20260421-1127 — TypeScript System Test Alignment Plan (both)
 
 Reference report: [20260421-1127-compare-tests-both.md](../reports/20260421-1127-compare-tests-both.md)
 
@@ -39,6 +39,8 @@ None.
 - Leave the singular `error/` in Java/.NET untouched (this is the TS-only rename).
 - Reference: the TS convention already in use at `system-test/typescript/src/testkit/driver/port/**/dtos/errors/`.
 
+APPROVED
+
 ### 2.2 Verify `shared/client/playwright/withApp.ts` is needed
 
 - File: `system-test/typescript/src/testkit/driver/adapter/shared/client/playwright/withApp.ts`
@@ -46,6 +48,8 @@ None.
   - (a) If actively used by page-object adapters or fixtures, document its purpose with a top-of-file comment. Then treat as a TS-specific Playwright idiom and no further action.
   - (b) If it is dead code or only used historically, delete it.
 - Recommended: perform a usage check (`grep -r "from.*withApp"` across `typescript/src` and `typescript/tests`). If there are 0 callers, delete.
+
+APPROVED
 
 ## 3. Architecture — Drivers (ports)
 
@@ -57,6 +61,9 @@ Java has `system-test/java/src/main/java/com/optivem/shop/testkit/driver/port/ex
 - Shape: mirror Java `GetPromotionResponse.java` (fields and types).
 - Update any adapter/use-case code that currently references `ExtGetPromotionResponse` at the port-level boundary to use the new port DTO.
 - Reference: `system-test/java/src/main/java/com/optivem/shop/testkit/driver/port/external/erp/dtos/GetPromotionResponse.java`.
+
+
+VJ: Wjhy in textenral the Java and .net workflows dont have Ext as prefix? Java has `system-test/java/src/main/java/com/optivem/shop/testkit/driver/port/external/erp/dtos/GetPromotionResponse.java`. .NET has `system-test/dotnet/Driver.Port/External/Erp/Dtos/GetPromotionResponse.cs`.
 
 ## 4. Architecture — Channels
 
@@ -76,6 +83,8 @@ Java has exactly one: `UseCaseContext` under `shared/`.
 - If `core/use-case-context.ts` is a barrel re-export, it may be kept as a convenience, but ensure there is only **one** source-of-truth class.
 - If both define the class, delete the non-authoritative copy and update all imports to point to `core/shared/use-case-context.ts` (matching Java's `shared/UseCaseContext`).
 - Reference: `system-test/java/src/main/java/com/optivem/shop/testkit/dsl/core/shared/UseCaseContext.java`.
+
+APPROVED
 
 ## 6. Architecture — Scenario DSL
 
@@ -101,6 +110,8 @@ TS current structure (`dsl/core/scenario/then/`):
 - Update each of the existing `then-place-order.ts`, `then-cancel-order.ts`, `then-browse-coupons.ts`, `then-publish-coupon.ts`, `then-view-order.ts`, `then-contract.ts` to import these classes rather than re-define them inline.
 - Reference: `system-test/java/src/main/java/com/optivem/shop/testkit/dsl/core/scenario/then/steps/ThenOrderImpl.java` and siblings.
 
+VJ: Did you also look at .NET? can you write inthe agent that regarding async stuff in Scenario DSL (Gherkin), to also use .NET as a refernece. Repeat this comparson with .NET/
+
 ### 6.2 Add `BaseGivenStep`, `BaseThenStep`, `BaseWhenStep` base classes
 
 Java has:
@@ -116,6 +127,9 @@ TS has none of these.
 - Update the corresponding step classes (`given-product.ts`, `given-order.ts`, `when-place-order.ts`, etc.) to extend these base classes where they currently duplicate common context/state-management code.
 - Reference: `system-test/java/src/main/java/com/optivem/shop/testkit/dsl/core/scenario/{given,then,when}/steps/Base{Given,Then,When}Step.java`.
 
+
+APPROVED
+
 ### 6.3 Add `markAsExecuted()` safeguard on `ScenarioDsl`
 
 Java `ScenarioDslImpl.markAsExecuted()` and .NET `ScenarioDsl.MarkAsExecuted()` both prevent a test from calling `.given()` or `.when()` twice on the same scenario (throws an explicit error). TS does not have this safeguard.
@@ -126,6 +140,8 @@ Java `ScenarioDslImpl.markAsExecuted()` and .NET `ScenarioDsl.MarkAsExecuted()` 
 - Modify `given()` and `when()` to throw `new Error('Scenario has already been executed. ...')` if `executed === true`.
 - Have the scenario execution path (likely `ThenResultStage` once it finishes) call `markAsExecuted()` after the primary use-case executes.
 - Reference: `system-test/java/src/main/java/com/optivem/shop/testkit/dsl/core/ScenarioDslImpl.java` lines 11, 22, 27, 32, 36-40.
+
+APPROVED
 
 ### 6.4 Complete TS `DEFAULTS` to cover Java `ScenarioDefaults` keys
 
@@ -141,9 +157,12 @@ TS `defaults.ts` is missing some keys present in Java `ScenarioDefaults`:
 - Import `OrderStatus` from `../../../driver/port/shop/dtos/OrderStatus.js` for `ORDER_STATUS: OrderStatus.PLACED`.
 - Reference: `system-test/java/src/main/java/com/optivem/shop/testkit/dsl/core/scenario/ScenarioDefaults.java`.
 
+VJ: Not jsut add them but use them. Cna you check if used eveyrwhrre like in Java?
+
 ## 7. Architecture — Common
 
 None (per the exceptions list, TS-only `dtos.ts` barrel is accepted).
+VJ: What does this mean?
 
 ## 8. Tests — Acceptance
 
