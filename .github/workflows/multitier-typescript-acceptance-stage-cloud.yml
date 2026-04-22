@@ -26,11 +26,11 @@ jobs:
     permissions:
       contents: read
     outputs:
-      should-run: ${{ steps.should-run.outputs.changed }}
-      skip-reason: ${{ steps.should-run.outputs.changed != 'true' && 'No new artifacts since the last successful run.' || '' }}
+      should-run: ${{ steps.should-run.outputs.newer }}
+      skip-reason: ${{ steps.should-run.outputs.newer != 'true' && 'No new artifacts since the last successful run.' || '' }}
       image-digest-urls: ${{ steps.find-latest.outputs.image-digest-urls }}
       latest-updated-at: ${{ steps.find-latest.outputs.latest-updated-at }}
-      last-run-at: ${{ steps.should-run.outputs.last-run-at }}
+      last-run-at: ${{ steps.last-run.outputs.timestamp }}
     steps:
       - name: Ensure Environment Variables Defined
         uses: optivem/actions/ensure-env-vars-defined@v1
@@ -71,12 +71,18 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-frontend-react:latest
             ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-backend-typescript:latest
 
+      - name: Get Last Successful Workflow Run Timestamp
+        id: last-run
+        uses: optivem/actions/get-last-successful-github-workflow-run-timestamp@v1
+        with:
+          workflow-name: ${{ github.workflow }}
+
       - name: Check for Docker Image Updates Since Last Run
         id: should-run
-        uses: optivem/actions/check-update-since-last-github-workflow-run@v1
+        uses: optivem/actions/check-timestamp-newer@v1
         with:
-          last-updated-at: ${{ steps.find-latest.outputs.latest-updated-at }}
-          workflow-name: ${{ github.workflow }}
+          subject: ${{ steps.find-latest.outputs.latest-updated-at }}
+          baseline: ${{ steps.last-run.outputs.timestamp }}
 
   deploy-frontend:
     needs: check
@@ -87,7 +93,7 @@ jobs:
       contents: read
       id-token: write
     outputs:
-      app-url: ${{ steps.deploy.outputs.service-url }}
+      app-url: ${{ steps.deploy.outputs.url }}
     steps:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
@@ -107,16 +113,18 @@ jobs:
 
       - name: Deploy Frontend to Cloud Run
         id: deploy
-        uses: optivem/actions/deploy-to-cloud-run@v1
+        uses: google-github-actions/deploy-cloudrun@v2
         with:
-          environment: acceptance
-          version: latest
-          image-url: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-frontend-react:latest
-          project-id: ${{ vars.GCP_PROJECT_ID }}
+          service: multitier-typescript-frontend-acceptance
+          image: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-frontend-react:latest
           region: ${{ vars.GCP_REGION }}
-          service-name: multitier-typescript-frontend-acceptance
-          port: '3000'
-          allow-unauthenticated: 'true'
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+          flags: --port=3000 --max-instances=3 --allow-unauthenticated
+
+      - name: Wait for Frontend Ready
+        uses: optivem/actions/wait-for-endpoints@v1
+        with:
+          endpoints: '[{"name": "multitier-typescript-frontend-acceptance", "url": "${{ steps.deploy.outputs.url }}"}]'
 
   deploy-backend:
     needs: check
@@ -126,7 +134,7 @@ jobs:
       contents: read
       id-token: write
     outputs:
-      app-url: ${{ steps.deploy.outputs.service-url }}
+      app-url: ${{ steps.deploy.outputs.url }}
     steps:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
@@ -146,20 +154,22 @@ jobs:
 
       - name: Deploy Backend to Cloud Run
         id: deploy
-        uses: optivem/actions/deploy-to-cloud-run@v1
+        uses: google-github-actions/deploy-cloudrun@v2
         with:
-          environment: acceptance
-          version: latest
-          image-url: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-backend-typescript:latest
-          project-id: ${{ vars.GCP_PROJECT_ID }}
+          service: multitier-typescript-backend-acceptance
+          image: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-backend-typescript:latest
           region: ${{ vars.GCP_REGION }}
-          service-name: multitier-typescript-backend-acceptance
-          port: '8080'
-          env-vars: |
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+          env_vars: |
             NODE_ENV=production
           secrets: |
             DATABASE_URL=db-connection-string:latest
-          allow-unauthenticated: 'true'
+          flags: --port=8080 --max-instances=3 --allow-unauthenticated
+
+      - name: Wait for Backend Ready
+        uses: optivem/actions/wait-for-endpoints@v1
+        with:
+          endpoints: '[{"name": "multitier-typescript-backend-acceptance", "url": "${{ steps.deploy.outputs.url }}"}]'
 
   deploy-external-real:
     needs: check
@@ -169,7 +179,7 @@ jobs:
       contents: read
       id-token: write
     outputs:
-      external-url: ${{ steps.deploy.outputs.service-url }}
+      external-url: ${{ steps.deploy.outputs.url }}
     steps:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
@@ -189,16 +199,18 @@ jobs:
 
       - name: Deploy External Real to Cloud Run
         id: deploy
-        uses: optivem/actions/deploy-to-cloud-run@v1
+        uses: google-github-actions/deploy-cloudrun@v2
         with:
-          environment: acceptance
-          version: latest
-          image-url: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/external-real-sim:latest
-          project-id: ${{ vars.GCP_PROJECT_ID }}
+          service: external-real-acceptance
+          image: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/external-real-sim:latest
           region: ${{ vars.GCP_REGION }}
-          service-name: external-real-acceptance
-          port: '9000'
-          allow-unauthenticated: 'true'
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+          flags: --port=9000 --max-instances=3 --allow-unauthenticated
+
+      - name: Wait for External Real Ready
+        uses: optivem/actions/wait-for-endpoints@v1
+        with:
+          endpoints: '[{"name": "external-real-acceptance", "url": "${{ steps.deploy.outputs.url }}"}]'
 
   deploy-external-stub:
     needs: check
@@ -208,7 +220,7 @@ jobs:
       contents: read
       id-token: write
     outputs:
-      external-url: ${{ steps.deploy.outputs.service-url }}
+      external-url: ${{ steps.deploy.outputs.url }}
     steps:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
@@ -228,16 +240,18 @@ jobs:
 
       - name: Deploy External Stub to Cloud Run
         id: deploy
-        uses: optivem/actions/deploy-to-cloud-run@v1
+        uses: google-github-actions/deploy-cloudrun@v2
         with:
-          environment: acceptance
-          version: latest
-          image-url: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/external-stub:latest
-          project-id: ${{ vars.GCP_PROJECT_ID }}
+          service: external-stub-acceptance
+          image: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/external-stub:latest
           region: ${{ vars.GCP_REGION }}
-          service-name: external-stub-acceptance
-          port: '8080'
-          allow-unauthenticated: 'true'
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+          flags: --port=8080 --max-instances=3 --allow-unauthenticated
+
+      - name: Wait for External Stub Ready
+        uses: optivem/actions/wait-for-endpoints@v1
+        with:
+          endpoints: '[{"name": "external-stub-acceptance", "url": "${{ steps.deploy.outputs.url }}"}]'
 
   test-smoke-real:
     needs: [deploy-frontend, deploy-backend, deploy-external-real]

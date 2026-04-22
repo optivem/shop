@@ -36,11 +36,11 @@ jobs:
     permissions:
       contents: read
     outputs:
-      should-run: ${{ steps.should-run.outputs.changed }}
-      skip-reason: ${{ steps.should-run.outputs.changed != 'true' && 'No new artifacts since the last successful run.' || '' }}
+      should-run: ${{ steps.should-run.outputs.newer }}
+      skip-reason: ${{ steps.should-run.outputs.newer != 'true' && 'No new artifacts since the last successful run.' || '' }}
       image-digest-urls: ${{ steps.find-latest.outputs.image-digest-urls }}
       latest-updated-at: ${{ steps.find-latest.outputs.latest-updated-at }}
-      last-run-at: ${{ steps.should-run.outputs.last-run-at }}
+      last-run-at: ${{ steps.last-run.outputs.timestamp }}
     steps:
       - name: Ensure Environment Variables Defined
         uses: optivem/actions/ensure-env-vars-defined@v1
@@ -83,12 +83,18 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-frontend-react:${{ inputs.commit-sha || 'latest' }}
             ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-backend-dotnet:${{ inputs.commit-sha || 'latest' }}
 
+      - name: Get Last Successful Workflow Run Timestamp
+        id: last-run
+        uses: optivem/actions/get-last-successful-github-workflow-run-timestamp@v1
+        with:
+          workflow-name: ${{ github.workflow }}
+
       - name: Check for Docker Image Updates Since Last Run
         id: should-run
-        uses: optivem/actions/check-update-since-last-github-workflow-run@v1
+        uses: optivem/actions/check-timestamp-newer@v1
         with:
-          last-updated-at: ${{ steps.find-latest.outputs.latest-updated-at }}
-          workflow-name: ${{ github.workflow }}
+          subject: ${{ steps.find-latest.outputs.latest-updated-at }}
+          baseline: ${{ steps.last-run.outputs.timestamp }}
 
   run:
     needs: check
@@ -124,9 +130,9 @@ jobs:
           working-directory: system-test/dotnet
 
       - name: Wait for Systems (Simulate Deployment (Real External Systems))
-        uses: optivem/actions/wait-for-urls@v1
+        uses: optivem/actions/wait-for-endpoints@v1
         with:
-          systems: |
+          endpoints: |
             [
               { "name": "Shop UI", "url": "http://localhost:3211/" },
               { "name": "Shop API", "url": "http://localhost:8211/health" },
@@ -146,9 +152,9 @@ jobs:
           working-directory: system-test/dotnet
 
       - name: Wait for Systems (Simulate Deployment (Stub External Systems))
-        uses: optivem/actions/wait-for-urls@v1
+        uses: optivem/actions/wait-for-endpoints@v1
         with:
-          systems: |
+          endpoints: |
             [
               { "name": "Shop UI", "url": "http://localhost:3212/" },
               { "name": "Shop API", "url": "http://localhost:8212/health" },

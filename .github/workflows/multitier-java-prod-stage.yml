@@ -96,9 +96,9 @@ jobs:
           working-directory: system-test/java
 
       - name: Wait for Systems (Simulate Deployment (Production Environment))
-        uses: optivem/actions/wait-for-urls@v1
+        uses: optivem/actions/wait-for-endpoints@v1
         with:
-          systems: |
+          endpoints: |
             [
               { "name": "Shop UI", "url": "http://localhost:3111/" },
               { "name": "Shop API", "url": "http://localhost:8111/health" },

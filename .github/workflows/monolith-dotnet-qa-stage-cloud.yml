@@ -104,9 +104,9 @@ jobs:
           flags: --port=8080 --max-instances=3 --allow-unauthenticated
 
       - name: Wait for App Ready
-        uses: optivem/actions/wait-for-urls@v1
+        uses: optivem/actions/wait-for-endpoints@v1
         with:
-          systems: '[{"name": "monolith-dotnet-qa", "url": "${{ steps.deploy.outputs.url }}"}]'
+          endpoints: '[{"name": "monolith-dotnet-qa", "url": "${{ steps.deploy.outputs.url }}"}]'
 
   deploy-external-real:
     needs: check
@@ -145,9 +145,9 @@ jobs:
           flags: --port=9000 --max-instances=3 --allow-unauthenticated
 
       - name: Wait for External Real Ready
-        uses: optivem/actions/wait-for-urls@v1
+        uses: optivem/actions/wait-for-endpoints@v1
         with:
-          systems: '[{"name": "external-real-qa", "url": "${{ steps.deploy.outputs.url }}"}]'
+          endpoints: '[{"name": "external-real-qa", "url": "${{ steps.deploy.outputs.url }}"}]'
 
   promote:
     needs: [check, deploy-app, deploy-external-real]

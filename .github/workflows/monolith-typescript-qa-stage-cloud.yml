@@ -71,7 +71,7 @@ jobs:
       contents: read
       id-token: write
     outputs:
-      app-url: ${{ steps.deploy.outputs.service-url }}
+      app-url: ${{ steps.deploy.outputs.url }}
     steps:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
@@ -91,20 +91,22 @@ jobs:
 
       - name: Deploy App to Cloud Run
         id: deploy
-        uses: optivem/actions/deploy-to-cloud-run@v1
+        uses: google-github-actions/deploy-cloudrun@v2
         with:
-          environment: qa
-          version: ${{ needs.check.outputs.version }}
-          image-url: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/monolith-system-typescript:${{ needs.check.outputs.version }}
-          project-id: ${{ vars.GCP_PROJECT_ID }}
+          service: monolith-typescript-qa
+          image: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/monolith-system-typescript:${{ needs.check.outputs.version }}
           region: ${{ vars.GCP_REGION }}
-          service-name: monolith-typescript-qa
-          port: '8080'
-          env-vars: |
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+          env_vars: |
             NODE_ENV=production
           secrets: |
             DATABASE_URL=db-connection-string:latest
-          allow-unauthenticated: 'true'
+          flags: --port=8080 --max-instances=3 --allow-unauthenticated
+
+      - name: Wait for App Ready
+        uses: optivem/actions/wait-for-endpoints@v1
+        with:
+          endpoints: '[{"name": "monolith-typescript-qa", "url": "${{ steps.deploy.outputs.url }}"}]'
 
   deploy-external-real:
     needs: check
@@ -114,7 +116,7 @@ jobs:
       contents: read
       id-token: write
     outputs:
-      external-url: ${{ steps.deploy.outputs.service-url }}
+      external-url: ${{ steps.deploy.outputs.url }}
     steps:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
@@ -134,16 +136,18 @@ jobs:
 
       - name: Deploy External Real to Cloud Run
         id: deploy
-        uses: optivem/actions/deploy-to-cloud-run@v1
+        uses: google-github-actions/deploy-cloudrun@v2
         with:
-          environment: qa
-          version: ${{ needs.check.outputs.version }}
-          image-url: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/external-real-sim:latest
-          project-id: ${{ vars.GCP_PROJECT_ID }}
+          service: external-real-qa
+          image: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/external-real-sim:latest
           region: ${{ vars.GCP_REGION }}
-          service-name: external-real-qa
-          port: '9000'
-          allow-unauthenticated: 'true'
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+          flags: --port=9000 --max-instances=3 --allow-unauthenticated
+
+      - name: Wait for External Real Ready
+        uses: optivem/actions/wait-for-endpoints@v1
+        with:
+          endpoints: '[{"name": "external-real-qa", "url": "${{ steps.deploy.outputs.url }}"}]'
 
   promote:
     needs: [check, deploy-app, deploy-external-real]
