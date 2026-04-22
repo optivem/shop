@@ -159,7 +159,8 @@ jobs:
       - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
         with:
           workflow: monolith-java-prod-stage.yml
-          inputs: '{"version": "${{ needs.check.outputs.monolith-java-rc }}"}'
+          timeout-seconds: '3600'
+          workflow-inputs: '{"version": "${{ needs.check.outputs.monolith-java-rc }}"}'
 
   promote-monolith-dotnet:
     needs: check
@@ -168,7 +169,8 @@ jobs:
       - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
         with:
           workflow: monolith-dotnet-prod-stage.yml
-          inputs: '{"version": "${{ needs.check.outputs.monolith-dotnet-rc }}"}'
+          timeout-seconds: '3600'
+          workflow-inputs: '{"version": "${{ needs.check.outputs.monolith-dotnet-rc }}"}'
 
   promote-monolith-typescript:
     needs: check
@@ -177,7 +179,8 @@ jobs:
       - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
         with:
           workflow: monolith-typescript-prod-stage.yml
-          inputs: '{"version": "${{ needs.check.outputs.monolith-typescript-rc }}"}'
+          timeout-seconds: '3600'
+          workflow-inputs: '{"version": "${{ needs.check.outputs.monolith-typescript-rc }}"}'
 
   promote-multitier-java:
     needs: check
@@ -186,7 +189,8 @@ jobs:
       - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
         with:
           workflow: multitier-java-prod-stage.yml
-          inputs: '{"version": "${{ needs.check.outputs.multitier-java-rc }}"}'
+          timeout-seconds: '3600'
+          workflow-inputs: '{"version": "${{ needs.check.outputs.multitier-java-rc }}"}'
 
   promote-multitier-dotnet:
     needs: check
@@ -195,7 +199,8 @@ jobs:
       - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
         with:
           workflow: multitier-dotnet-prod-stage.yml
-          inputs: '{"version": "${{ needs.check.outputs.multitier-dotnet-rc }}"}'
+          timeout-seconds: '3600'
+          workflow-inputs: '{"version": "${{ needs.check.outputs.multitier-dotnet-rc }}"}'
 
   promote-multitier-typescript:
     needs: check
@@ -204,7 +209,8 @@ jobs:
       - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
         with:
           workflow: multitier-typescript-prod-stage.yml
-          inputs: '{"version": "${{ needs.check.outputs.multitier-typescript-rc }}"}'
+          timeout-seconds: '3600'
+          workflow-inputs: '{"version": "${{ needs.check.outputs.multitier-typescript-rc }}"}'
 
   tag-meta-release:
     needs: [check, promote-monolith-java, promote-monolith-dotnet, promote-monolith-typescript, promote-multitier-java, promote-multitier-dotnet, promote-multitier-typescript]

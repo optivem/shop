@@ -183,7 +183,7 @@ jobs:
       - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
         with:
           workflow: ${{ matrix.workflow }}
-          inputs: '{"commit-sha": "${{ inputs.commit-sha }}"}'
+          workflow-inputs: '{"commit-sha": "${{ inputs.commit-sha }}"}'
 
   acceptance-stage:
     needs: [check-version, local, commit-stage]
@@ -196,7 +196,8 @@ jobs:
         with:
           workflow: ${{ inputs.prefix }}-acceptance-stage.yml
           poll-interval: '300'
-          inputs: '{"commit-sha": "${{ inputs.commit-sha }}"}'
+          timeout-seconds: '7200'
+          workflow-inputs: '{"commit-sha": "${{ inputs.commit-sha }}"}'
 
       # Resolve the rc tag that actually points at the tested SHA — whether our
       # dispatched run created it or a concurrent scheduled run did. This makes
@@ -226,7 +227,8 @@ jobs:
         with:
           workflow: ${{ inputs.prefix }}-acceptance-stage-legacy.yml
           poll-interval: '300'
-          inputs: '{"commit-sha": "${{ inputs.commit-sha }}"}'
+          timeout-seconds: '7200'
+          workflow-inputs: '{"commit-sha": "${{ inputs.commit-sha }}"}'
 
   qa-stage:
     needs: [acceptance-stage, acceptance-stage-legacy]
@@ -236,7 +238,8 @@ jobs:
       - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
         with:
           workflow: ${{ inputs.prefix }}-qa-stage.yml
-          inputs: '{"version": "${{ needs.acceptance-stage.outputs.version }}"}'
+          timeout-seconds: '3600'
+          workflow-inputs: '{"version": "${{ needs.acceptance-stage.outputs.version }}"}'
 
   qa-signoff:
     needs: [acceptance-stage, qa-stage]
@@ -246,7 +249,7 @@ jobs:
       - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
         with:
           workflow: ${{ inputs.prefix }}-qa-signoff.yml
-          inputs: '{"version": "${{ needs.acceptance-stage.outputs.version }}", "result": "approved"}'
+          workflow-inputs: '{"version": "${{ needs.acceptance-stage.outputs.version }}", "result": "approved"}'
 
   # Note: prod-stage is intentionally NOT part of the pipeline.
   # Production releases are orchestrated externally via meta-release-stage (for full releases)
