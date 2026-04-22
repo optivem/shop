@@ -54,7 +54,7 @@ jobs:
     env:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     outputs:
-      image-digest-url: ${{ steps.push.outputs.image-digest-url }}
+      image-version-url: ${{ fromJSON(steps.tag.outputs.image-urls)[2] }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v5
@@ -162,4 +162,4 @@ jobs:
         stage-name: 'Commit Stage'
         stage-success-content: |
           **Artifact URL:**
-          `${{ needs.run.outputs.image-digest-url }}`
+          `${{ needs.run.outputs.image-version-url }}`
