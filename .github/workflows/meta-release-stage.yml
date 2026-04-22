@@ -11,6 +11,12 @@ name: meta-release-stage
 # actual production release happens here (or via direct dispatch on a flavor-prod-stage.yml).
 
 on:
+  # Auto-trigger when _meta-prerelease-pipeline's tag-meta-rc job pushes a new RC tag.
+  # Tag push is effectively equivalent to "tag-meta-rc succeeded" — the tag is only
+  # pushed at the end of that job, so this fires exactly when a releasable RC exists.
+  push:
+    tags:
+      - 'meta-v*-rc.*'
   workflow_dispatch:
     inputs:
       meta_rc_tag:
@@ -50,9 +56,14 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           INPUT_TAG: ${{ inputs.meta_rc_tag }}
+          EVENT_NAME: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
         run: |
           set -euo pipefail
-          if [[ -n "${INPUT_TAG}" ]]; then
+          if [[ "${EVENT_NAME}" == "push" ]]; then
+            RC_TAG="${REF_NAME}"
+            echo "Triggered by tag push: ${RC_TAG}"
+          elif [[ -n "${INPUT_TAG}" ]]; then
             RC_TAG="${INPUT_TAG}"
             echo "Using provided rc tag: ${RC_TAG}"
           else
@@ -263,3 +274,30 @@ jobs:
     needs: tag-meta-release
     uses: ./.github/workflows/auto-bump-patch.yml
     secrets: inherit
+
+  # Fire-and-forget: kick off post-release acceptance testing in optivem/gh-optivem
+  # against the just-published meta-v* tag. We do not wait for it to finish —
+  # gh-acceptance-stage verifies the release, it does not gate it. The target
+  # workflow idempotently skips already-verified SHAs, so re-dispatches are safe.
+  trigger-gh-acceptance:
+    needs: [check, tag-meta-release]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch gh-acceptance-stage in optivem/gh-optivem
+        env:
+          GH_TOKEN: ${{ secrets.REPO_TOKEN }}
+          SHOP_TAG: ${{ needs.check.outputs.release_tag }}
+        run: |
+          set -euo pipefail
+          echo "Dispatching gh-acceptance-stage.yml with shop-tag=${SHOP_TAG}"
+          gh workflow run gh-acceptance-stage.yml \
+            --repo optivem/gh-optivem \
+            -f shop-tag="${SHOP_TAG}" \
+            -f verify-level=release
+          {
+            echo "## Dispatched gh-acceptance-stage"
+            echo ""
+            echo "- Target repo: [optivem/gh-optivem](https://github.com/optivem/gh-optivem/actions/workflows/gh-acceptance-stage.yml)"
+            echo "- shop-tag: \`${SHOP_TAG}\`"
+            echo "- verify-level: \`release\`"
+          } >> "$GITHUB_STEP_SUMMARY"

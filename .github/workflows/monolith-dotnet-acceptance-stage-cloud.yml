@@ -117,6 +117,7 @@ jobs:
             ASPNETCORE_ENVIRONMENT=Cloud
           secrets: |
             DATABASE_URL=db-connection-string:latest
+          allow-unauthenticated: 'true'
 
   deploy-external-real:
     needs: check
@@ -155,6 +156,7 @@ jobs:
           region: ${{ vars.GCP_REGION }}
           service-name: external-real-acceptance
           port: '9000'
+          allow-unauthenticated: 'true'
 
   deploy-external-stub:
     needs: check
@@ -193,6 +195,7 @@ jobs:
           region: ${{ vars.GCP_REGION }}
           service-name: external-stub-acceptance
           port: '8080'
+          allow-unauthenticated: 'true'
 
   test-smoke-real:
     needs: [deploy-app, deploy-external-real]

@@ -106,6 +106,7 @@ jobs:
           region: ${{ vars.GCP_REGION }}
           service-name: multitier-dotnet-frontend-production
           port: '3000'
+          allow-unauthenticated: 'true'
 
   deploy-backend:
     needs: check
@@ -148,6 +149,7 @@ jobs:
             ASPNETCORE_ENVIRONMENT=Cloud
           secrets: |
             DATABASE_URL=db-connection-string:latest
+          allow-unauthenticated: 'true'
 
   deploy-external-real:
     needs: check
@@ -186,6 +188,7 @@ jobs:
           region: ${{ vars.GCP_REGION }}
           service-name: external-real-production
           port: '9000'
+          allow-unauthenticated: 'true'
 
   promote:
     needs: [check, deploy-frontend, deploy-backend, deploy-external-real]

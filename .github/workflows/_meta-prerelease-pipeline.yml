@@ -23,6 +23,11 @@ on:
         required: false
         type: boolean
         default: false
+      is-release-run:
+        description: 'When true, tag-meta-rc runs on success and produces a meta-rc tag (which triggers meta-release-stage). Dry-run callers must leave this false to prevent accidentally promoting a dry-run to production.'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   # Single gate before any downstream jobs:
@@ -225,11 +230,13 @@ jobs:
           workflow: prerelease-pipeline-${{ matrix.variant }}.yml
           inputs: '{"level": "${{ inputs.level }}", "skip-local-stage": "true", "skip-commit-stage": "true", "skip-acceptance-legacy": "${{ inputs.skip-acceptance-legacy }}", "sha": "${{ github.sha }}"}'
 
-  # Final: tag SHA as meta-rc — only when level is qa, variant is all, and all 6 language×architecture combos passed.
-  # Dry-runs (variant != 'all') never produce a tag regardless of level.
+  # Final: tag SHA as meta-rc — only when the caller opts in via is-release-run AND
+  # level is qa, variant is all, and all 6 language×architecture combos passed.
+  # is-release-run defaults to false, so meta-prerelease-dry-run never tags even if
+  # invoked with variant=all — preventing accidental promotion to a real release.
   tag-meta-rc:
     needs: pipeline
-    if: ${{ success() && inputs.level == 'qa' && inputs.variant == 'all' && !inputs.skip-acceptance-legacy }}
+    if: ${{ success() && inputs.is-release-run && inputs.level == 'qa' && inputs.variant == 'all' && !inputs.skip-acceptance-legacy }}
     runs-on: ubuntu-latest
     permissions:
       contents: write

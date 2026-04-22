@@ -17,7 +17,7 @@ on:
           - qa
         default: 'qa'
       variant:
-        description: 'Variant to run (all = full matrix; any single variant = dry-run; dry-runs do NOT produce a meta-rc tag)'
+        description: 'Variant to run (all = full matrix; any single variant = single-flavor run). This workflow never produces a meta-rc tag regardless of variant — is-release-run is not passed, so the shared pipeline defaults it to false.'
         required: false
         type: choice
         options:
@@ -35,7 +35,7 @@ on:
         type: boolean
         default: false
       skip-acceptance-legacy:
-        description: 'Skip the legacy sample in local stages and the acceptance-stage-legacy job in Phase 2 (prevents meta-rc tagging)'
+        description: 'Skip the legacy sample in local stages and the acceptance-stage-legacy job in Phase 2'
         required: false
         type: boolean
         default: false

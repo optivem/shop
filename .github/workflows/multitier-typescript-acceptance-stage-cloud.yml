@@ -114,6 +114,7 @@ jobs:
           region: ${{ vars.GCP_REGION }}
           service-name: multitier-typescript-frontend-acceptance
           port: '3000'
+          allow-unauthenticated: 'true'
 
   deploy-backend:
     needs: check
@@ -156,6 +157,7 @@ jobs:
             NODE_ENV=production
           secrets: |
             DATABASE_URL=db-connection-string:latest
+          allow-unauthenticated: 'true'
 
   deploy-external-real:
     needs: check
@@ -194,6 +196,7 @@ jobs:
           region: ${{ vars.GCP_REGION }}
           service-name: external-real-acceptance
           port: '9000'
+          allow-unauthenticated: 'true'
 
   deploy-external-stub:
     needs: check
@@ -232,6 +235,7 @@ jobs:
           region: ${{ vars.GCP_REGION }}
           service-name: external-stub-acceptance
           port: '8080'
+          allow-unauthenticated: 'true'
 
   test-smoke-real:
     needs: [deploy-frontend, deploy-backend, deploy-external-real]

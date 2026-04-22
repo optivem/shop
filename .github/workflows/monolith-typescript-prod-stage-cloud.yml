@@ -109,6 +109,7 @@ jobs:
             NODE_ENV=production
           secrets: |
             DATABASE_URL=db-connection-string:latest
+          allow-unauthenticated: 'true'
 
   deploy-external-real:
     needs: check
@@ -147,6 +148,7 @@ jobs:
           region: ${{ vars.GCP_REGION }}
           service-name: external-real-production
           port: '9000'
+          allow-unauthenticated: 'true'
 
   promote:
     needs: [check, deploy-app, deploy-external-real]

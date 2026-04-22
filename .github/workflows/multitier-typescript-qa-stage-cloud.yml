@@ -99,6 +99,7 @@ jobs:
           region: ${{ vars.GCP_REGION }}
           service-name: multitier-typescript-frontend-qa
           port: '3000'
+          allow-unauthenticated: 'true'
 
   deploy-backend:
     needs: check
@@ -141,6 +142,7 @@ jobs:
             NODE_ENV=production
           secrets: |
             DATABASE_URL=db-connection-string:latest
+          allow-unauthenticated: 'true'
 
   deploy-external-real:
     needs: check
@@ -179,6 +181,7 @@ jobs:
           region: ${{ vars.GCP_REGION }}
           service-name: external-real-qa
           port: '9000'
+          allow-unauthenticated: 'true'
 
   promote:
     needs: [check, deploy-frontend, deploy-backend, deploy-external-real]
