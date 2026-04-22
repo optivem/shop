@@ -140,7 +140,7 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository }}/monolith-system-dotnet
           tags: |
-            type=sha,format=long
+            type=raw,value=sha-${{ env.COMMIT_SHA }}
             type=raw,value=latest
             type=raw,value=${{ steps.dev-version.outputs.version }}
 
