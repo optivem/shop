@@ -79,9 +79,10 @@ jobs:
         id: find-latest
         uses: optivem/actions/resolve-docker-image-digests@v1
         with:
-          image-urls: |
-            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-frontend-react:${{ inputs.commit-sha || 'latest' }}
-            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-backend-java:${{ inputs.commit-sha || 'latest' }}
+          base-image-urls: |
+            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-frontend-react
+            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-backend-java
+          commit-sha: ${{ inputs.commit-sha }}
 
       - name: Get Last Successful Workflow Run Timestamp
         id: last-run

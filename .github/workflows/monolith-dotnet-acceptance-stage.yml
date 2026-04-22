@@ -79,8 +79,9 @@ jobs:
         id: find-latest
         uses: optivem/actions/resolve-docker-image-digests@v1
         with:
-          image-urls: |
-            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/monolith-system-dotnet:${{ inputs.commit-sha || 'latest' }}
+          base-image-urls: |
+            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/monolith-system-dotnet
+          commit-sha: ${{ inputs.commit-sha }}
 
       - name: Get Last Successful Workflow Run Timestamp
         id: last-run
