@@ -513,6 +513,8 @@ jobs:
         with:
           image-urls: ${{ needs.check.outputs.image-digest-urls }}
           tag: ${{ steps.rc-version.outputs.version }}
+          registry-username: ${{ github.repository_owner }}
+          token: ${{ secrets.GHCR_TOKEN || github.token }}
 
   publish-tag:
     needs: promote
