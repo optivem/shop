@@ -4,9 +4,10 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Prerelease version to deploy (e.g., v1.0.0-rc.1)'
-        required: true
+        description: 'Prerelease version to deploy (e.g., multitier-java-v1.0.0-rc.1). Leave empty to deploy the latest QA-approved RC.'
+        required: false
         type: string
+        default: ''
 
 concurrency:
   group: multitier-java-prod-stage
@@ -17,6 +18,7 @@ jobs:
     permissions:
       contents: read
     outputs:
+      version: ${{ inputs.version || steps.resolve-latest.outputs.base-tag }}
       image-urls: ${{ steps.resolve-images.outputs.image-urls }}
     steps:
       - name: Ensure Environment Variables Defined
@@ -31,13 +33,22 @@ jobs:
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
           WORKFLOW_TOKEN: ${{ secrets.WORKFLOW_TOKEN }}
 
+      - name: Resolve Latest QA-Approved RC
+        id: resolve-latest
+        if: inputs.version == ''
+        uses: optivem/actions/resolve-latest-prerelease-tag@v1
+        with:
+          tag-prefix: multitier-java-v
+          tag-suffix: -qa-approved
+
       - name: Check RC Exists
-        id: check-release
+        if: inputs.version != ''
         uses: optivem/actions/ensure-tag-exists@v1
         with:
           tag: ${{ inputs.version }}
 
       - name: Check QA Approved
+        if: inputs.version != ''
         uses: optivem/actions/ensure-tag-exists@v1
         with:
           tag: ${{ inputs.version }}-qa-approved
@@ -46,7 +57,7 @@ jobs:
         id: release-version
         uses: optivem/actions/compose-release-version@v1
         with:
-          prerelease-version: ${{ inputs.version }}
+          prerelease-version: ${{ inputs.version || steps.resolve-latest.outputs.base-tag }}
 
       - name: Verify Version Not Yet Released
         uses: optivem/actions/ensure-version-unreleased@v1
@@ -57,7 +68,7 @@ jobs:
         id: resolve-images
         uses: optivem/actions/compose-docker-image-urls@v1
         with:
-          tag: ${{ inputs.version }}
+          tag: ${{ inputs.version || steps.resolve-latest.outputs.base-tag }}
           base-image-urls: |
             ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-frontend-react
             ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-backend-java
@@ -77,7 +88,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v5
         with:
-          ref: ${{ inputs.version }}
+          ref: ${{ needs.check.outputs.version }}
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v4
@@ -90,7 +101,7 @@ jobs:
         uses: optivem/actions/deploy-docker-compose@v1
         with:
           environment: production
-          version: ${{ inputs.version }}
+          version: ${{ needs.check.outputs.version }}
           image-urls: ${{ needs.check.outputs.image-urls }}
           compose-file: docker-compose.pipeline.multitier.real.yml
           working-directory: system-test/java
@@ -112,7 +123,7 @@ jobs:
         id: promote
         uses: optivem/actions/compose-release-version@v1
         with:
-          prerelease-version: ${{ inputs.version }}
+          prerelease-version: ${{ needs.check.outputs.version }}
 
       - name: Tag Docker Images
         id: tag-images
@@ -131,7 +142,7 @@ jobs:
         id: release-notes
         uses: optivem/actions/compose-release-notes@v1
         with:
-          base-version: ${{ inputs.version }}
+          base-version: ${{ needs.check.outputs.version }}
           release-version: ${{ steps.promote.outputs.version }}
           environment: prod
           status: deployed
