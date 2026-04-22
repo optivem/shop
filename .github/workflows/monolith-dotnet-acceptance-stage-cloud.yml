@@ -42,6 +42,7 @@ jobs:
             GCP_REGION
             GCP_WORKLOAD_IDENTITY_PROVIDER
             GCP_SERVICE_ACCOUNT
+            WORKFLOW_TOKEN
         env:
           DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -49,6 +50,7 @@ jobs:
           GCP_REGION: ${{ vars.GCP_REGION }}
           GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           GCP_SERVICE_ACCOUNT: ${{ vars.GCP_SERVICE_ACCOUNT }}
+          WORKFLOW_TOKEN: ${{ secrets.WORKFLOW_TOKEN }}
 
       - name: Checkout Repository
         uses: actions/checkout@v5

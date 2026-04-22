@@ -25,9 +25,11 @@ jobs:
           names: |
             DOCKERHUB_USERNAME
             DOCKERHUB_TOKEN
+            WORKFLOW_TOKEN
         env:
           DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          WORKFLOW_TOKEN: ${{ secrets.WORKFLOW_TOKEN }}
 
       - name: Check RC Exists
         id: check-release
