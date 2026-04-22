@@ -176,6 +176,10 @@ jobs:
         working-directory: system-test/typescript
         run: npx playwright install-deps chromium
 
+      - name: Compile System Tests
+        working-directory: system-test/typescript
+        run: npx tsc --noEmit
+
       - name: Run Smoke Tests (Stub)
         working-directory: system-test/typescript
         run: npx playwright test --project=smoke-test tests/latest/smoke

@@ -166,7 +166,7 @@ jobs:
           key: nuget-${{ runner.os }}-${{ hashFiles('system-test/dotnet/**/*.csproj') }}
           restore-keys: nuget-${{ runner.os }}-
 
-      - name: Build Test Project
+      - name: Compile System Tests
         run: dotnet build
         working-directory: system-test/dotnet
 
