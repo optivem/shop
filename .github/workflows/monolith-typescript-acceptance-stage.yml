@@ -208,7 +208,7 @@ jobs:
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
-          CHANNEL: api
+          CHANNEL: API
 
       - name: Run Acceptance Tests - UI Channel
         working-directory: system-test/typescript
@@ -216,7 +216,7 @@ jobs:
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
-          CHANNEL: ui
+          CHANNEL: UI
           CHANNEL_MODE: static
 
       - name: Run Acceptance Tests (Isolated) - API Channel
@@ -225,7 +225,7 @@ jobs:
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
-          CHANNEL: api
+          CHANNEL: API
 
       - name: Run Acceptance Tests (Isolated) - UI Channel
         working-directory: system-test/typescript
@@ -233,7 +233,7 @@ jobs:
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
-          CHANNEL: ui
+          CHANNEL: UI
           CHANNEL_MODE: static
 
       - name: Run Contract Tests (Stub)
@@ -262,14 +262,14 @@ jobs:
         run: npx playwright test --project=e2e-test tests/latest/e2e
         env:
           ENVIRONMENT: acceptance
-          CHANNEL: api
+          CHANNEL: API
 
       - name: Run E2E Tests - UI Channel
         working-directory: system-test/typescript
         run: npx playwright test --project=e2e-test tests/latest/e2e
         env:
           ENVIRONMENT: acceptance
-          CHANNEL: ui
+          CHANNEL: UI
           CHANNEL_MODE: static
 
       - name: Read Base System Version

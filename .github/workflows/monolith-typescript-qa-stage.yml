@@ -62,7 +62,7 @@ jobs:
     permissions:
       contents: read
     outputs:
-      version: ${{ steps.promote.outputs.tag }}
+      version: ${{ steps.promote.outputs.status-tag }}
       image-urls: ${{ needs.check.outputs.image-urls }}
     steps:
       - name: Checkout Repository
