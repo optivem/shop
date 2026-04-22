@@ -7,32 +7,6 @@ Stage: all
 
 ## Remaining items (awaiting author decision)
 
-### DIFF-8: acceptance-stage-legacy — same `Compile System Tests` / `Build Test Project` / missing pattern as DIFF-7
-
-**Stage:** acceptance-stage-legacy
-**Scope:** monolith and multitier — Java vs .NET vs TypeScript
-
-**Files (monolith):**
-- `.github/workflows/monolith-java-acceptance-stage-legacy.yml:163-165` — `Compile System Tests` present
-- `.github/workflows/monolith-dotnet-acceptance-stage-legacy.yml:153-155` — `Build Test Project` present
-- `.github/workflows/monolith-typescript-acceptance-stage-legacy.yml` — no equivalent step
-
-**Files (multitier):**
-- `.github/workflows/multitier-java-acceptance-stage-legacy.yml:163-165` — `Compile System Tests` present
-- `.github/workflows/multitier-dotnet-acceptance-stage-legacy.yml:153-155` — `Build Test Project` present
-- `.github/workflows/multitier-typescript-acceptance-stage-legacy.yml` — no equivalent step
-
-**Details:**
-Identical shape to DIFF-7 but in the legacy variant.
-
-**Recommendation:**
-Apply the same fixes as DIFF-7 to the four legacy workflow files.
-
-VJ: Let's call it Compile System Tests... also in TypeScript, can we add compilation? should we?
-(→ VJ already approved the `Compile System Tests` rename; TypeScript compile question resolved via DIFF-7 → `tsc --noEmit`)
-
----
-
 ### DIFF-13: acceptance-stage — `CHANNEL` env value case differs between Java/.NET (uppercase) and TypeScript (lowercase)
 
 **Stage:** acceptance-stage, acceptance-stage-legacy, acceptance-stage-cloud
