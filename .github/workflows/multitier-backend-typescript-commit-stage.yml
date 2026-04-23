@@ -38,7 +38,7 @@ jobs:
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Checkout Repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           ref: ${{ env.COMMIT_SHA }}
 
@@ -61,7 +61,7 @@ jobs:
       image-digest-url: ${{ steps.digest-url.outputs.value }}
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           ref: ${{ env.COMMIT_SHA }}
           fetch-depth: 0
@@ -79,7 +79,7 @@ jobs:
           file: system/multitier/backend-typescript/VERSION
 
       - name: Setup Node
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: 22.x
           cache: 'npm'
@@ -144,7 +144,7 @@ jobs:
       - name: Extract Docker Metadata
         if: steps.verify-main.outputs.on-branch == 'true'
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ghcr.io/${{ github.repository }}/multitier-backend-typescript
           tags: |
@@ -154,12 +154,12 @@ jobs:
 
       - name: Set up Docker Buildx
         if: steps.verify-main.outputs.on-branch == 'true'
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Build and Push Docker Image
         if: steps.verify-main.outputs.on-branch == 'true'
         id: push
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: system/multitier/backend-typescript
           file: system/multitier/backend-typescript/Dockerfile

@@ -67,7 +67,7 @@ jobs:
       image-urls: ${{ needs.check.outputs.image-urls }}
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           ref: ${{ needs.check.outputs.version }}
 
@@ -115,7 +115,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           ref: ${{ inputs.version }}
 

@@ -211,7 +211,7 @@ jobs:
     needs: [deploy-app, deploy-external-real]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: optivem/actions/setup-java-gradle@v1
       - run: ./gradlew test -Dtype=smoke -DexternalSystemMode=real -DbaseUrl=${{ needs.deploy-app.outputs.app-url }}
         working-directory: system-test/java

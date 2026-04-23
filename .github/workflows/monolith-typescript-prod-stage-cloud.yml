@@ -92,13 +92,13 @@ jobs:
       app-url: ${{ steps.deploy.outputs.url }}
     steps:
       - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
+        uses: google-github-actions/auth@v3
         with:
           workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
 
       - name: Setup Cloud SDK
-        uses: google-github-actions/setup-gcloud@v2
+        uses: google-github-actions/setup-gcloud@v3
 
       - name: Log in to GHCR
         uses: docker/login-action@v4
@@ -109,7 +109,7 @@ jobs:
 
       - name: Deploy App to Cloud Run
         id: deploy
-        uses: google-github-actions/deploy-cloudrun@v2
+        uses: google-github-actions/deploy-cloudrun@v3
         with:
           service: monolith-typescript-production
           image: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/monolith-system-typescript:${{ needs.check.outputs.version }}
@@ -137,13 +137,13 @@ jobs:
       external-url: ${{ steps.deploy.outputs.url }}
     steps:
       - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
+        uses: google-github-actions/auth@v3
         with:
           workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
 
       - name: Setup Cloud SDK
-        uses: google-github-actions/setup-gcloud@v2
+        uses: google-github-actions/setup-gcloud@v3
 
       - name: Log in to GHCR
         uses: docker/login-action@v4
@@ -154,7 +154,7 @@ jobs:
 
       - name: Deploy External Real to Cloud Run
         id: deploy
-        uses: google-github-actions/deploy-cloudrun@v2
+        uses: google-github-actions/deploy-cloudrun@v3
         with:
           service: external-real-production
           image: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/external-real-sim:latest
@@ -178,7 +178,7 @@ jobs:
       image-urls: ${{ needs.check.outputs.image-urls }}
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           ref: ${{ needs.check.outputs.version }}
 
@@ -216,7 +216,7 @@ jobs:
           artifact-urls: ${{ steps.tag-images.outputs.tagged-image-urls }}
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ steps.promote.outputs.version }}
           name: ${{ steps.release-notes.outputs.title }}

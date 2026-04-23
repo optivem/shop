@@ -46,7 +46,7 @@ jobs:
       multitier-dotnet-rc: ${{ steps.flavor-rcs.outputs.multitier-dotnet-rc }}
       multitier-typescript-rc: ${{ steps.flavor-rcs.outputs.multitier-typescript-rc }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -218,7 +218,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
           token: ${{ secrets.VERIFY_TOKEN }}

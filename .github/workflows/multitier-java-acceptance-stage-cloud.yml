@@ -53,7 +53,7 @@ jobs:
           WORKFLOW_TOKEN: ${{ secrets.WORKFLOW_TOKEN }}
 
       - name: Checkout Repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -96,13 +96,13 @@ jobs:
       app-url: ${{ steps.deploy.outputs.url }}
     steps:
       - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
+        uses: google-github-actions/auth@v3
         with:
           workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
 
       - name: Setup Cloud SDK
-        uses: google-github-actions/setup-gcloud@v2
+        uses: google-github-actions/setup-gcloud@v3
 
       - name: Log in to GHCR
         uses: docker/login-action@v4
@@ -113,7 +113,7 @@ jobs:
 
       - name: Deploy Frontend to Cloud Run
         id: deploy
-        uses: google-github-actions/deploy-cloudrun@v2
+        uses: google-github-actions/deploy-cloudrun@v3
         with:
           service: multitier-java-frontend-acceptance
           image: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-frontend-react:latest
@@ -137,13 +137,13 @@ jobs:
       app-url: ${{ steps.deploy.outputs.url }}
     steps:
       - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
+        uses: google-github-actions/auth@v3
         with:
           workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
 
       - name: Setup Cloud SDK
-        uses: google-github-actions/setup-gcloud@v2
+        uses: google-github-actions/setup-gcloud@v3
 
       - name: Log in to GHCR
         uses: docker/login-action@v4
@@ -154,7 +154,7 @@ jobs:
 
       - name: Deploy Backend to Cloud Run
         id: deploy
-        uses: google-github-actions/deploy-cloudrun@v2
+        uses: google-github-actions/deploy-cloudrun@v3
         with:
           service: multitier-java-backend-acceptance
           image: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-backend-java:latest
@@ -182,13 +182,13 @@ jobs:
       external-url: ${{ steps.deploy.outputs.url }}
     steps:
       - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
+        uses: google-github-actions/auth@v3
         with:
           workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
 
       - name: Setup Cloud SDK
-        uses: google-github-actions/setup-gcloud@v2
+        uses: google-github-actions/setup-gcloud@v3
 
       - name: Log in to GHCR
         uses: docker/login-action@v4
@@ -199,7 +199,7 @@ jobs:
 
       - name: Deploy External Real to Cloud Run
         id: deploy
-        uses: google-github-actions/deploy-cloudrun@v2
+        uses: google-github-actions/deploy-cloudrun@v3
         with:
           service: external-real-acceptance
           image: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/external-real-sim:latest
@@ -223,13 +223,13 @@ jobs:
       external-url: ${{ steps.deploy.outputs.url }}
     steps:
       - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
+        uses: google-github-actions/auth@v3
         with:
           workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
 
       - name: Setup Cloud SDK
-        uses: google-github-actions/setup-gcloud@v2
+        uses: google-github-actions/setup-gcloud@v3
 
       - name: Log in to GHCR
         uses: docker/login-action@v4
@@ -240,7 +240,7 @@ jobs:
 
       - name: Deploy External Stub to Cloud Run
         id: deploy
-        uses: google-github-actions/deploy-cloudrun@v2
+        uses: google-github-actions/deploy-cloudrun@v3
         with:
           service: external-stub-acceptance
           image: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/external-stub:latest
@@ -258,7 +258,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Setup Java
         uses: actions/setup-java@v5
@@ -267,7 +267,7 @@ jobs:
           distribution: temurin
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v5
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Run Smoke Tests (Real)
         run: ./gradlew test -Dversion=latest -Dtype=smoke -DexternalSystemMode=real -Denvironment=acceptance -DbaseUrl=${{ needs.deploy-frontend.outputs.app-url }} -DexternalBaseUrl=${{ needs.deploy-external-real.outputs.external-url }}
@@ -278,7 +278,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Setup Java
         uses: actions/setup-java@v5
@@ -287,7 +287,7 @@ jobs:
           distribution: temurin
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v5
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Run Smoke Tests (Stub)
         run: ./gradlew test -Dversion=latest -Dtype=smoke -DexternalSystemMode=stub -Denvironment=acceptance -DbaseUrl=${{ needs.deploy-frontend.outputs.app-url }} -DexternalBaseUrl=${{ needs.deploy-external-stub.outputs.external-url }}
@@ -298,7 +298,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Setup Java
         uses: actions/setup-java@v5
@@ -307,7 +307,7 @@ jobs:
           distribution: temurin
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v5
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Run Acceptance Tests - API Channel
         run: ./gradlew test -Dversion=latest -Dtype=acceptance -DexcludeTags=isolated -Dchannel=API -Denvironment=acceptance -DbaseUrl=${{ needs.deploy-frontend.outputs.app-url }} -DexternalBaseUrl=${{ needs.deploy-external-real.outputs.external-url }}
@@ -318,7 +318,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Setup Java
         uses: actions/setup-java@v5
@@ -327,7 +327,7 @@ jobs:
           distribution: temurin
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v5
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Cache Playwright Browsers
         id: cache-playwright
@@ -356,7 +356,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Setup Java
         uses: actions/setup-java@v5
@@ -365,7 +365,7 @@ jobs:
           distribution: temurin
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v5
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Run Acceptance Tests (Isolated) - API Channel
         run: ./gradlew test -Dversion=latest -Dtype=acceptance -DincludeTags=isolated -Dchannel=API -Denvironment=acceptance -DbaseUrl=${{ needs.deploy-frontend.outputs.app-url }} -DexternalBaseUrl=${{ needs.deploy-external-real.outputs.external-url }}
@@ -376,7 +376,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Setup Java
         uses: actions/setup-java@v5
@@ -385,7 +385,7 @@ jobs:
           distribution: temurin
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v5
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Cache Playwright Browsers
         id: cache-playwright
@@ -414,7 +414,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Setup Java
         uses: actions/setup-java@v5
@@ -423,7 +423,7 @@ jobs:
           distribution: temurin
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v5
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Run Contract Tests (Stub)
         run: ./gradlew test -Dversion=latest -Dtype=contract -DexcludeTags=isolated -DexternalSystemMode=stub -Denvironment=acceptance -DbaseUrl=${{ needs.deploy-frontend.outputs.app-url }} -DexternalBaseUrl=${{ needs.deploy-external-stub.outputs.external-url }}
@@ -434,7 +434,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Setup Java
         uses: actions/setup-java@v5
@@ -443,7 +443,7 @@ jobs:
           distribution: temurin
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v5
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Run Contract Tests (Isolated) (Stub)
         run: ./gradlew test -Dversion=latest -Dtype=contract -DincludeTags=isolated -DexternalSystemMode=stub -Denvironment=acceptance -DbaseUrl=${{ needs.deploy-frontend.outputs.app-url }} -DexternalBaseUrl=${{ needs.deploy-external-stub.outputs.external-url }}
@@ -454,7 +454,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Setup Java
         uses: actions/setup-java@v5
@@ -463,7 +463,7 @@ jobs:
           distribution: temurin
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v5
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Run Contract Tests (Real)
         run: ./gradlew test -Dversion=latest -Dtype=contract -DexternalSystemMode=real -Denvironment=acceptance -DbaseUrl=${{ needs.deploy-frontend.outputs.app-url }} -DexternalBaseUrl=${{ needs.deploy-external-real.outputs.external-url }}
@@ -474,7 +474,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Setup Java
         uses: actions/setup-java@v5
@@ -483,7 +483,7 @@ jobs:
           distribution: temurin
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v5
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Run E2E Tests - API Channel
         run: ./gradlew test -Dversion=latest -Dtype=e2e -Dchannel=API -Denvironment=acceptance -DbaseUrl=${{ needs.deploy-frontend.outputs.app-url }} -DexternalBaseUrl=${{ needs.deploy-external-real.outputs.external-url }}
@@ -494,7 +494,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Setup Java
         uses: actions/setup-java@v5
@@ -503,7 +503,7 @@ jobs:
           distribution: temurin
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v5
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Cache Playwright Browsers
         id: cache-playwright
@@ -538,7 +538,7 @@ jobs:
       image-urls: ${{ steps.tag-images.outputs.tagged-image-urls }}
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -571,7 +571,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Publish Git Tag
         uses: optivem/actions/publish-tag@v1

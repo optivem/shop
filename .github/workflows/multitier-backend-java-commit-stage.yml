@@ -38,7 +38,7 @@ jobs:
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Checkout Repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           ref: ${{ env.COMMIT_SHA }}
 
@@ -61,7 +61,7 @@ jobs:
       image-digest-url: ${{ steps.digest-url.outputs.value }}
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           ref: ${{ env.COMMIT_SHA }}
           fetch-depth: 0
@@ -85,7 +85,7 @@ jobs:
           distribution: temurin
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v5
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Compile Code
         run: ./gradlew build
@@ -136,7 +136,7 @@ jobs:
       - name: Extract Docker Metadata
         if: steps.verify-main.outputs.on-branch == 'true'
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ghcr.io/${{ github.repository }}/multitier-backend-java
           tags: |
@@ -146,12 +146,12 @@ jobs:
 
       - name: Set up Docker Buildx
         if: steps.verify-main.outputs.on-branch == 'true'
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Build and Push Docker Image
         if: steps.verify-main.outputs.on-branch == 'true'
         id: push
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: system/multitier/backend-java
           file: system/multitier/backend-java/Dockerfile

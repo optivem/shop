@@ -55,7 +55,7 @@ jobs:
           WORKFLOW_TOKEN: ${{ secrets.WORKFLOW_TOKEN }}
 
       - name: Checkout Repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
           ref: ${{ env.COMMIT_SHA }}
@@ -122,7 +122,7 @@ jobs:
       image-urls: ${{ steps.tag-images.outputs.tagged-image-urls }}
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
           ref: ${{ env.COMMIT_SHA }}
@@ -324,7 +324,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           ref: ${{ env.COMMIT_SHA }}
 

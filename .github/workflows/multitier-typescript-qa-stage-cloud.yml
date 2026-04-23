@@ -75,13 +75,13 @@ jobs:
       app-url: ${{ steps.deploy.outputs.url }}
     steps:
       - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
+        uses: google-github-actions/auth@v3
         with:
           workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
 
       - name: Setup Cloud SDK
-        uses: google-github-actions/setup-gcloud@v2
+        uses: google-github-actions/setup-gcloud@v3
 
       - name: Log in to GHCR
         uses: docker/login-action@v4
@@ -92,7 +92,7 @@ jobs:
 
       - name: Deploy Frontend to Cloud Run
         id: deploy
-        uses: google-github-actions/deploy-cloudrun@v2
+        uses: google-github-actions/deploy-cloudrun@v3
         with:
           service: multitier-typescript-frontend-qa
           image: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-frontend-react:${{ needs.check.outputs.version }}
@@ -116,13 +116,13 @@ jobs:
       app-url: ${{ steps.deploy.outputs.url }}
     steps:
       - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
+        uses: google-github-actions/auth@v3
         with:
           workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
 
       - name: Setup Cloud SDK
-        uses: google-github-actions/setup-gcloud@v2
+        uses: google-github-actions/setup-gcloud@v3
 
       - name: Log in to GHCR
         uses: docker/login-action@v4
@@ -133,7 +133,7 @@ jobs:
 
       - name: Deploy Backend to Cloud Run
         id: deploy
-        uses: google-github-actions/deploy-cloudrun@v2
+        uses: google-github-actions/deploy-cloudrun@v3
         with:
           service: multitier-typescript-backend-qa
           image: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-backend-typescript:${{ needs.check.outputs.version }}
@@ -161,13 +161,13 @@ jobs:
       external-url: ${{ steps.deploy.outputs.url }}
     steps:
       - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
+        uses: google-github-actions/auth@v3
         with:
           workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
 
       - name: Setup Cloud SDK
-        uses: google-github-actions/setup-gcloud@v2
+        uses: google-github-actions/setup-gcloud@v3
 
       - name: Log in to GHCR
         uses: docker/login-action@v4
@@ -178,7 +178,7 @@ jobs:
 
       - name: Deploy External Real to Cloud Run
         id: deploy
-        uses: google-github-actions/deploy-cloudrun@v2
+        uses: google-github-actions/deploy-cloudrun@v3
         with:
           service: external-real-qa
           image: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/external-real-sim:latest
@@ -201,7 +201,7 @@ jobs:
       image-urls: ${{ needs.check.outputs.image-urls }}
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           ref: ${{ needs.check.outputs.version }}
 
@@ -226,7 +226,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           ref: ${{ inputs.version }}
 

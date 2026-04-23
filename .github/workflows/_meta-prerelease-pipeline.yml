@@ -57,7 +57,7 @@ jobs:
           echo "Skip local: ${{ inputs.skip-local }}"
           echo "Skip acceptance-legacy: ${{ inputs.skip-acceptance-legacy }}"
           echo "Triggered by: ${{ github.event_name }} ${{ github.event.schedule }}"
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - name: Read VERSION
@@ -242,7 +242,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           token: ${{ secrets.VERIFY_TOKEN }}
       - name: Tag meta-rc
