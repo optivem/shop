@@ -36,8 +36,8 @@ jobs:
     permissions:
       contents: read
     outputs:
-      should-run: ${{ steps.should-run.outputs.newer }}
-      skip-reason: ${{ steps.should-run.outputs.newer != 'true' && 'No new artifacts since the last successful run.' || '' }}
+      should-run: ${{ steps.decide.outputs.should-run }}
+      skip-reason: ${{ steps.decide.outputs.skip-reason }}
       image-digest-urls: ${{ steps.find-latest.outputs.image-digest-urls }}
       latest-updated-at: ${{ steps.find-latest.outputs.latest-updated-at }}
       last-run-at: ${{ steps.last-run.outputs.timestamp }}
@@ -65,9 +65,11 @@ jobs:
         uses: optivem/actions/read-base-version@v1
 
       - name: Ensure Version Unreleased
+        id: ensure-unreleased
         uses: optivem/actions/validate-version-unreleased@v1
         with:
           version: monolith-typescript-v${{ steps.read-base-version.outputs.base-version }}
+          on-already-released: skip
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v4
@@ -95,6 +97,24 @@ jobs:
         with:
           subject: ${{ steps.find-latest.outputs.latest-updated-at }}
           baseline: ${{ steps.last-run.outputs.timestamp }}
+
+      - name: Decide Whether to Run
+        id: decide
+        shell: bash
+        env:
+          ALREADY_RELEASED: ${{ steps.ensure-unreleased.outputs.already-released }}
+          NEWER: ${{ steps.should-run.outputs.newer }}
+        run: |
+          if [[ "$ALREADY_RELEASED" == "true" ]]; then
+            echo "should-run=false" >> "$GITHUB_OUTPUT"
+            echo "skip-reason=Release in progress — version already tagged, awaiting post-release VERSION bump." >> "$GITHUB_OUTPUT"
+          elif [[ "$NEWER" != "true" ]]; then
+            echo "should-run=false" >> "$GITHUB_OUTPUT"
+            echo "skip-reason=No new artifacts since the last successful run." >> "$GITHUB_OUTPUT"
+          else
+            echo "should-run=true" >> "$GITHUB_OUTPUT"
+            echo "skip-reason=" >> "$GITHUB_OUTPUT"
+          fi
 
   run:
     needs: check
