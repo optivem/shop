@@ -115,7 +115,7 @@ jobs:
 
       - name: Run Code Analysis
         if: steps.verify-main.outputs.on-branch == 'true' && env.SONAR_TOKEN != ''
-        uses: SonarSource/sonarcloud-github-action@v5
+        uses: SonarSource/sonarqube-scan-action@v7
         with:
           projectBaseDir: system/multitier/backend-typescript
           args: >
