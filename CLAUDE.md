@@ -1,5 +1,11 @@
 # Shop Repo Guidelines
 
+## Documentation: No GitHub Pages
+
+Never enable GitHub Pages on this repo or on repos scaffolded from it. Docs live as plain markdown under `docs/`; link to them from the README using relative paths (e.g. `[Architecture](docs/architecture.md)`). GitHub renders markdown and Mermaid natively on github.com, which is sufficient for the dev audience and avoids the Pages workflow, `id-token: write` permissions, and deploy-time failures.
+
+If you find yourself proposing a `pages.yml` workflow, a `build_type=workflow` Pages API call, or any `*.github.io` URL, stop and reconsider — the answer is always README + `docs/*.md` links.
+
 ## Pre-Commit Verification
 
 Before committing any code changes, always verify compilation locally for the affected components:
