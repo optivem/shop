@@ -64,7 +64,7 @@ jobs:
         id: read-base-version
         uses: optivem/actions/read-base-version@v1
 
-      - name: Check Version Already Released
+      - name: Check System Release Already Published
         id: check-tag
         uses: optivem/actions/check-tag-exists@v1
         with:
