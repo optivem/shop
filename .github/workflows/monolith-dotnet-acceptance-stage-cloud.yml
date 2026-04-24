@@ -28,7 +28,7 @@ jobs:
         uses: optivem/actions/check-ghcr-packages-exist@v1
         with:
           image-urls: |
-            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/monolith-system-dotnet
+            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/sysapp-dotnet
 
   check:
     needs: preflight
@@ -80,7 +80,7 @@ jobs:
         uses: optivem/actions/resolve-docker-image-digests@v1
         with:
           base-image-urls: |
-            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/monolith-system-dotnet
+            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/sysapp-dotnet
           tag: ${{ inputs.commit-sha && format('sha-{0}', inputs.commit-sha) || 'latest' }}
 
       - name: Get Last Successful Workflow Run Timestamp

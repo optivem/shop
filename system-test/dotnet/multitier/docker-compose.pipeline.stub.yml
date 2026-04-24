@@ -14,7 +14,7 @@ services:
       - app-network
 
   backend:
-    image: ghcr.io/optivem/shop/multitier-backend-dotnet:latest
+    image: ghcr.io/optivem/shop/backend-dotnet:latest
     ports:
       - "8212:8081"
     environment:

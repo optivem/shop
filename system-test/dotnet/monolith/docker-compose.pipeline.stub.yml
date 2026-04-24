@@ -2,8 +2,8 @@ name: shop-stub
 
 services:
 
-  monolith:
-    image: ghcr.io/optivem/shop/monolith-system-dotnet:latest
+  sysapp:
+    image: ghcr.io/optivem/shop/sysapp-dotnet:latest
     ports:
       - "3212:8080"
       - "8212:8080"

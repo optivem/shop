@@ -9,10 +9,10 @@ $SystemConfig = @{
         SystemComponents = @(
             @{ Name = "Monolith";
                 Url = "http://localhost:3111";
-                ContainerName = "monolith" }
+                ContainerName = "sysapp" }
             @{ Name = "Monolith API";
                 Url = "http://localhost:8111/health";
-                ContainerName = "monolith" }
+                ContainerName = "sysapp" }
         )
 
         ExternalSystems = @(
@@ -31,10 +31,10 @@ $SystemConfig = @{
         SystemComponents = @(
             @{ Name = "Monolith";
                 Url = "http://localhost:3112";
-                ContainerName = "monolith" }
+                ContainerName = "sysapp" }
             @{ Name = "Monolith API";
                 Url = "http://localhost:8112/health";
-                ContainerName = "monolith" }
+                ContainerName = "sysapp" }
         )
 
         ExternalSystems = @(

@@ -60,7 +60,7 @@ jobs:
         with:
           tag: ${{ inputs.version || steps.resolve-latest.outputs.tag }}
           base-image-urls: |
-            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/monolith-system-typescript
+            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/sysapp-typescript
 
   deploy-app:
     needs: check
@@ -94,7 +94,7 @@ jobs:
         uses: google-github-actions/deploy-cloudrun@v3
         with:
           service: monolith-typescript-qa
-          image: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/monolith-system-typescript:${{ needs.check.outputs.version }}
+          image: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/sysapp-typescript:${{ needs.check.outputs.version }}
           region: ${{ vars.GCP_REGION }}
           project_id: ${{ vars.GCP_PROJECT_ID }}
           env_vars: |

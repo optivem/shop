@@ -80,7 +80,7 @@ jobs:
         with:
           tag: ${{ inputs.version || steps.resolve-latest.outputs.base-tag }}
           base-image-urls: |
-            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/monolith-system-dotnet
+            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/sysapp-dotnet
 
   run:
     needs: check
@@ -169,7 +169,7 @@ jobs:
         with:
           entries: |
             [
-              {"key": "ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/monolith-system-dotnet:${{ needs.check.outputs.version }}",
+              {"key": "ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/sysapp-dotnet:${{ needs.check.outputs.version }}",
                "file": "VERSION"}
             ]
 

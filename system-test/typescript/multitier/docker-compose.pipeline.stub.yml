@@ -14,7 +14,7 @@ services:
       - app-network
 
   backend:
-    image: ghcr.io/optivem/shop/multitier-backend-typescript:latest
+    image: ghcr.io/optivem/shop/backend-typescript:latest
     ports:
       - "8312:8081"
     environment:

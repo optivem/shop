@@ -2,7 +2,7 @@ name: shop-real
 
 services:
 
-  monolith:
+  sysapp:
     build:
       context: ../../../system/monolith/java
       dockerfile: Dockerfile

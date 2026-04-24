@@ -90,9 +90,9 @@ Pick based on your architecture and language:
 
 | Language | Directory | Framework | Port | SonarCloud |
 |---|---|---|---|---|
-| Java | `system/multitier/backend-java/` | Spring Boot API | 8081 | [shop-multitier-backend-java](https://sonarcloud.io/project/overview?id=optivem_shop-multitier-backend-java) |
-| .NET | `system/multitier/backend-dotnet/` | ASP.NET Core API | 8081 | [shop-multitier-backend-dotnet](https://sonarcloud.io/project/overview?id=optivem_shop-multitier-backend-dotnet) |
-| TypeScript | `system/multitier/backend-typescript/` | NestJS API | 8081 | [shop-multitier-backend-typescript](https://sonarcloud.io/project/overview?id=optivem_shop-multitier-backend-typescript) |
+| Java | `system/multitier/backend-java/` | Spring Boot API | 8081 | [shop-backend-java](https://sonarcloud.io/project/overview?id=optivem_shop-backend-java) |
+| .NET | `system/multitier/backend-dotnet/` | ASP.NET Core API | 8081 | [shop-backend-dotnet](https://sonarcloud.io/project/overview?id=optivem_shop-backend-dotnet) |
+| TypeScript | `system/multitier/backend-typescript/` | NestJS API | 8081 | [shop-backend-typescript](https://sonarcloud.io/project/overview?id=optivem_shop-backend-typescript) |
 
 ## System-Test Templates
 
@@ -139,7 +139,7 @@ The `.github/workflows/` directory contains runnable pipelines for all 6 matched
 
 ### Multitier Java
 
-[![backend-commit-stage](https://github.com/optivem/shop/actions/workflows/multitier-backend-java-commit-stage.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/multitier-backend-java-commit-stage.yml)
+[![backend-commit-stage](https://github.com/optivem/shop/actions/workflows/backend-java-commit-stage.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/backend-java-commit-stage.yml)
 [![frontend-commit-stage](https://github.com/optivem/shop/actions/workflows/multitier-frontend-react-commit-stage.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/multitier-frontend-react-commit-stage.yml)
 [![acceptance-stage](https://github.com/optivem/shop/actions/workflows/multitier-java-acceptance-stage.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/multitier-java-acceptance-stage.yml)
 [![acceptance-stage-legacy](https://github.com/optivem/shop/actions/workflows/multitier-java-acceptance-stage-legacy.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/multitier-java-acceptance-stage-legacy.yml)
@@ -149,7 +149,7 @@ The `.github/workflows/` directory contains runnable pipelines for all 6 matched
 
 ### Multitier .NET
 
-[![backend-commit-stage](https://github.com/optivem/shop/actions/workflows/multitier-backend-dotnet-commit-stage.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/multitier-backend-dotnet-commit-stage.yml)
+[![backend-commit-stage](https://github.com/optivem/shop/actions/workflows/backend-dotnet-commit-stage.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/backend-dotnet-commit-stage.yml)
 [![frontend-commit-stage](https://github.com/optivem/shop/actions/workflows/multitier-frontend-react-commit-stage.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/multitier-frontend-react-commit-stage.yml)
 [![acceptance-stage](https://github.com/optivem/shop/actions/workflows/multitier-dotnet-acceptance-stage.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/multitier-dotnet-acceptance-stage.yml)
 [![acceptance-stage-legacy](https://github.com/optivem/shop/actions/workflows/multitier-dotnet-acceptance-stage-legacy.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/multitier-dotnet-acceptance-stage-legacy.yml)
@@ -159,7 +159,7 @@ The `.github/workflows/` directory contains runnable pipelines for all 6 matched
 
 ### Multitier TypeScript
 
-[![backend-commit-stage](https://github.com/optivem/shop/actions/workflows/multitier-backend-typescript-commit-stage.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/multitier-backend-typescript-commit-stage.yml)
+[![backend-commit-stage](https://github.com/optivem/shop/actions/workflows/backend-typescript-commit-stage.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/backend-typescript-commit-stage.yml)
 [![frontend-commit-stage](https://github.com/optivem/shop/actions/workflows/multitier-frontend-react-commit-stage.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/multitier-frontend-react-commit-stage.yml)
 [![acceptance-stage](https://github.com/optivem/shop/actions/workflows/multitier-typescript-acceptance-stage.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/multitier-typescript-acceptance-stage.yml)
 [![acceptance-stage-legacy](https://github.com/optivem/shop/actions/workflows/multitier-typescript-acceptance-stage-legacy.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/multitier-typescript-acceptance-stage-legacy.yml)

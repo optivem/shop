@@ -31,7 +31,7 @@ jobs:
         with:
           image-urls: |
             ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-frontend-react
-            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-backend-dotnet
+            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/backend-dotnet
 
   check:
     needs: preflight
@@ -86,7 +86,7 @@ jobs:
         with:
           base-image-urls: |
             ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-frontend-react
-            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-backend-dotnet
+            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/backend-dotnet
           tag: ${{ inputs.commit-sha && format('sha-{0}', inputs.commit-sha) || 'latest' }}
 
       - name: Get Last Successful Workflow Run Timestamp

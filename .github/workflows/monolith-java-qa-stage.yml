@@ -52,7 +52,7 @@ jobs:
         with:
           tag: ${{ inputs.version || steps.resolve-latest.outputs.tag }}
           base-image-urls: |
-            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/monolith-system-java
+            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/sysapp-java
 
   run:
     needs: check

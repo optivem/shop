@@ -41,7 +41,7 @@ jobs:
       prefix: multitier-java
       architecture: multitier
       language: java
-      commit-workflows: '["multitier-backend-java-commit-stage.yml", "multitier-frontend-react-commit-stage.yml"]'
+      commit-workflows: '["backend-java-commit-stage.yml", "multitier-frontend-react-commit-stage.yml"]'
       level: ${{ inputs.level || 'qa' }}
       skip-local-stage: ${{ inputs.skip-local-stage == true }}
       skip-commit-stage: ${{ inputs.skip-commit-stage == true }}

@@ -14,7 +14,7 @@ services:
       - app-network
 
   backend:
-    image: ghcr.io/optivem/shop/multitier-backend-java:latest
+    image: ghcr.io/optivem/shop/backend-java:latest
     ports:
       - "8111:8081"
     environment:

@@ -61,7 +61,7 @@ jobs:
           tag: ${{ inputs.version || steps.resolve-latest.outputs.tag }}
           base-image-urls: |
             ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-frontend-react
-            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-backend-java
+            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/backend-java
 
   deploy-frontend:
     needs: check
@@ -136,7 +136,7 @@ jobs:
         uses: google-github-actions/deploy-cloudrun@v3
         with:
           service: multitier-java-backend-qa
-          image: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-backend-java:${{ needs.check.outputs.version }}
+          image: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/backend-java:${{ needs.check.outputs.version }}
           region: ${{ vars.GCP_REGION }}
           project_id: ${{ vars.GCP_PROJECT_ID }}
           env_vars: |

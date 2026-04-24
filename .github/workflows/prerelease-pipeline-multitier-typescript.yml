@@ -41,7 +41,7 @@ jobs:
       prefix: multitier-typescript
       architecture: multitier
       language: typescript
-      commit-workflows: '["multitier-backend-typescript-commit-stage.yml", "multitier-frontend-react-commit-stage.yml"]'
+      commit-workflows: '["backend-typescript-commit-stage.yml", "multitier-frontend-react-commit-stage.yml"]'
       level: ${{ inputs.level || 'qa' }}
       skip-local-stage: ${{ inputs.skip-local-stage == true }}
       skip-commit-stage: ${{ inputs.skip-commit-stage == true }}

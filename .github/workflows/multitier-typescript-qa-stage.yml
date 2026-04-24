@@ -53,7 +53,7 @@ jobs:
           tag: ${{ inputs.version || steps.resolve-latest.outputs.tag }}
           base-image-urls: |
             ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-frontend-react
-            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-backend-typescript
+            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/backend-typescript
 
   run:
     needs: check

@@ -88,7 +88,7 @@ jobs:
         with:
           tag: ${{ inputs.version || steps.resolve-latest.outputs.base-tag }}
           base-image-urls: |
-            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/monolith-system-java
+            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/sysapp-java
 
   deploy-app:
     needs: check
@@ -122,7 +122,7 @@ jobs:
         uses: google-github-actions/deploy-cloudrun@v3
         with:
           service: monolith-java-production
-          image: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/monolith-system-java:${{ needs.check.outputs.version }}
+          image: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/sysapp-java:${{ needs.check.outputs.version }}
           region: ${{ vars.GCP_REGION }}
           project_id: ${{ vars.GCP_PROJECT_ID }}
           env_vars: |
@@ -239,7 +239,7 @@ jobs:
         with:
           entries: |
             [
-              {"key": "ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/monolith-system-java:${{ needs.check.outputs.version }}",
+              {"key": "ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/sysapp-java:${{ needs.check.outputs.version }}",
                "file": "VERSION"}
             ]
 

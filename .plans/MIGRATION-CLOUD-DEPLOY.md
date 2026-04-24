@@ -178,7 +178,7 @@ jobs:
         id: deploy
         with:
           service-name: shop-monolith-java-acceptance
-          image-url: ghcr.io/.../monolith-system-java:latest
+          image-url: ghcr.io/.../sysapp-java:latest
           project-id: ${{ vars.GCP_PROJECT_ID }}
           region: ${{ vars.GCP_REGION }}
 

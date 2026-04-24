@@ -1,16 +1,16 @@
-name: multitier-backend-typescript-commit-stage
+name: backend-typescript-commit-stage
 
 on:
   push:
     branches: [ "main" ]
     paths:
         - 'system/multitier/backend-typescript/**'
-        - '.github/workflows/multitier-backend-typescript-commit-stage.yml'
+        - '.github/workflows/backend-typescript-commit-stage.yml'
   pull_request:
     branches: [ "main" ]
     paths:
         - 'system/multitier/backend-typescript/**'
-        - '.github/workflows/multitier-backend-typescript-commit-stage.yml'
+        - '.github/workflows/backend-typescript-commit-stage.yml'
   workflow_dispatch:
     inputs:
       commit-sha:
@@ -119,8 +119,8 @@ jobs:
         with:
           projectBaseDir: system/multitier/backend-typescript
           args: >
-            -Dsonar.projectKey=optivem_shop-multitier-backend-typescript
-            -Dsonar.projectName=shop-multitier-backend-typescript
+            -Dsonar.projectKey=optivem_shop-backend-typescript
+            -Dsonar.projectName=shop-backend-typescript
             -Dsonar.organization=optivem
             -Dsonar.sources=src
 
@@ -146,7 +146,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v6
         with:
-          images: ghcr.io/${{ github.repository }}/multitier-backend-typescript
+          images: ghcr.io/${{ github.repository }}/backend-typescript
           tags: |
             type=raw,value=sha-${{ env.COMMIT_SHA }}
             type=raw,value=latest
@@ -173,7 +173,7 @@ jobs:
         if: steps.verify-main.outputs.on-branch == 'true'
         id: digest-url
         shell: bash
-        run: echo "value=ghcr.io/${{ github.repository }}/multitier-backend-typescript@${{ steps.push.outputs.digest }}" >> "$GITHUB_OUTPUT"
+        run: echo "value=ghcr.io/${{ github.repository }}/backend-typescript@${{ steps.push.outputs.digest }}" >> "$GITHUB_OUTPUT"
 
   summary:
     needs: [check, run]

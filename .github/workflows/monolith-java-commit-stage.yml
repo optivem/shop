@@ -138,7 +138,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v6
         with:
-          images: ghcr.io/${{ github.repository }}/monolith-system-java
+          images: ghcr.io/${{ github.repository }}/sysapp-java
           tags: |
             type=raw,value=sha-${{ env.COMMIT_SHA }}
             type=raw,value=latest
@@ -165,7 +165,7 @@ jobs:
         if: steps.verify-main.outputs.on-branch == 'true'
         id: digest-url
         shell: bash
-        run: echo "value=ghcr.io/${{ github.repository }}/monolith-system-java@${{ steps.push.outputs.digest }}" >> "$GITHUB_OUTPUT"
+        run: echo "value=ghcr.io/${{ github.repository }}/sysapp-java@${{ steps.push.outputs.digest }}" >> "$GITHUB_OUTPUT"
 
   summary:
     needs: [check, run]

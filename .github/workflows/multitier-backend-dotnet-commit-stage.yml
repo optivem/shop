@@ -1,16 +1,16 @@
-name: multitier-backend-dotnet-commit-stage
+name: backend-dotnet-commit-stage
 
 on:
   push:
     branches: [ "main" ]
     paths:
         - 'system/multitier/backend-dotnet/**'
-        - '.github/workflows/multitier-backend-dotnet-commit-stage.yml'
+        - '.github/workflows/backend-dotnet-commit-stage.yml'
   pull_request:
     branches: [ "main" ]
     paths:
         - 'system/multitier/backend-dotnet/**'
-        - '.github/workflows/multitier-backend-dotnet-commit-stage.yml'
+        - '.github/workflows/backend-dotnet-commit-stage.yml'
   workflow_dispatch:
     inputs:
       commit-sha:
@@ -111,7 +111,7 @@ jobs:
         if: steps.verify-main.outputs.on-branch == 'true' && env.SONAR_TOKEN != ''
         run: |
           dotnet tool install --global dotnet-sonarscanner
-          dotnet sonarscanner begin /k:"optivem_shop-multitier-backend-dotnet" /n:"shop-multitier-backend-dotnet" /o:"optivem" /d:sonar.token="${SONAR_TOKEN}" /d:sonar.issue.ignore.multicriteria=e1,e2,e3,e4,e5 /d:sonar.issue.ignore.multicriteria.e1.ruleKey=csharpsquid:S2699 /d:sonar.issue.ignore.multicriteria.e1.resourceKey="Tests/**" /d:sonar.issue.ignore.multicriteria.e2.ruleKey=csharpsquid:S1118 /d:sonar.issue.ignore.multicriteria.e2.resourceKey="Program.cs" /d:sonar.issue.ignore.multicriteria.e3.ruleKey=csharpsquid:S2068 /d:sonar.issue.ignore.multicriteria.e3.resourceKey="appsettings.json" /d:sonar.issue.ignore.multicriteria.e4.ruleKey=csharpsquid:S1075 /d:sonar.issue.ignore.multicriteria.e4.resourceKey="**/*" /d:sonar.issue.ignore.multicriteria.e5.ruleKey=csharpsquid:S3267 /d:sonar.issue.ignore.multicriteria.e5.resourceKey="**/*"
+          dotnet sonarscanner begin /k:"optivem_shop-backend-dotnet" /n:"shop-backend-dotnet" /o:"optivem" /d:sonar.token="${SONAR_TOKEN}" /d:sonar.issue.ignore.multicriteria=e1,e2,e3,e4,e5 /d:sonar.issue.ignore.multicriteria.e1.ruleKey=csharpsquid:S2699 /d:sonar.issue.ignore.multicriteria.e1.resourceKey="Tests/**" /d:sonar.issue.ignore.multicriteria.e2.ruleKey=csharpsquid:S1118 /d:sonar.issue.ignore.multicriteria.e2.resourceKey="Program.cs" /d:sonar.issue.ignore.multicriteria.e3.ruleKey=csharpsquid:S2068 /d:sonar.issue.ignore.multicriteria.e3.resourceKey="appsettings.json" /d:sonar.issue.ignore.multicriteria.e4.ruleKey=csharpsquid:S1075 /d:sonar.issue.ignore.multicriteria.e4.resourceKey="**/*" /d:sonar.issue.ignore.multicriteria.e5.ruleKey=csharpsquid:S3267 /d:sonar.issue.ignore.multicriteria.e5.resourceKey="**/*"
           dotnet build
           dotnet sonarscanner end /d:sonar.token="${SONAR_TOKEN}"
         working-directory: system/multitier/backend-dotnet
@@ -138,7 +138,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v6
         with:
-          images: ghcr.io/${{ github.repository }}/multitier-backend-dotnet
+          images: ghcr.io/${{ github.repository }}/backend-dotnet
           tags: |
             type=raw,value=sha-${{ env.COMMIT_SHA }}
             type=raw,value=latest
@@ -165,7 +165,7 @@ jobs:
         if: steps.verify-main.outputs.on-branch == 'true'
         id: digest-url
         shell: bash
-        run: echo "value=ghcr.io/${{ github.repository }}/multitier-backend-dotnet@${{ steps.push.outputs.digest }}" >> "$GITHUB_OUTPUT"
+        run: echo "value=ghcr.io/${{ github.repository }}/backend-dotnet@${{ steps.push.outputs.digest }}" >> "$GITHUB_OUTPUT"
 
   summary:
     needs: [check, run]

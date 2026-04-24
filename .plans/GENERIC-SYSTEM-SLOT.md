@@ -10,15 +10,15 @@
 
 The repo already treats a handful of words as generic architecture vocabulary that is **never replaced during scaffolding**: `backend`, `frontend`, `monolith`, `multitier`. Docker image names extend this list with `system`, used as the "single deployable = the whole system" role in monolith images:
 
-- `ghcr.io/${github.repository}/monolith-system-java`
-- `ghcr.io/${github.repository}/multitier-backend-java`
+- `ghcr.io/${github.repository}/sysapp-java`
+- `ghcr.io/${github.repository}/backend-java`
 - `ghcr.io/${github.repository}/multitier-frontend-react`
 
 No placeholder appears in any of these names — they are fully generic.
 
 Other artifact identifiers are **not** consistent with that model. They embed `shop` as the system-name slot and so require placeholder replacement at scaffold time:
 
-- SonarCloud: `optivem_shop-monolith-java`, `shop-multitier-backend-java`, …
+- SonarCloud: `optivem_shop-monolith-java`, `shop-backend-java`, …
 - docker-compose project names: `name: shop-monolith`, `name: shop-stub`, `name: shop-real`, `name: shop-backend`
 - docker-compose DB env: `POSTGRES_DB=shop`, `POSTGRES_USER=shop_user`, `POSTGRES_PASSWORD=shop_password`
 - Workflow inputs/env: `shop-tag`, `SHOP_TAG`, `shop-auto-bump-patch` concurrency group
@@ -26,7 +26,7 @@ Other artifact identifiers are **not** consistent with that model. They embed `s
 - Devcontainer: `optivem-shop`
 - npm package names: `@optivem/shop-system-test`, `optivem-shop-frontend`, `shop-backend`, `shop-monolith`
 
-This plan promotes `system` to a real generic slot, used everywhere the system name appears next to architecture descriptors (`monolith`, `multitier-backend`, `multitier-frontend-react`, `tests`, etc.). After this change, those identifiers need no placeholder substitution — they read as `system-monolith-java`, `my-company_system-multitier-backend-java`, and so on.
+This plan promotes `system` to a real generic slot, used everywhere the system name appears next to architecture descriptors (`monolith`, `backend`, `multitier-frontend-react`, `tests`, etc.). After this change, those identifiers need no placeholder substitution — they read as `system-monolith-java`, `my-company_system-backend-java`, and so on.
 
 ---
 
@@ -48,11 +48,11 @@ Boundary rule: **if the identifier sits next to an architecture word (`monolith`
 |---|---|---|
 | `.github/workflows/monolith-dotnet-commit-stage.yml` | `/k:"optivem_shop-monolith-dotnet" /n:"shop-monolith-dotnet"` | `/k:"optivem_system-monolith-dotnet" /n:"system-monolith-dotnet"` |
 | `.github/workflows/monolith-typescript-commit-stage.yml` | `optivem_shop-monolith-typescript`, `shop-monolith-typescript` | `optivem_system-monolith-typescript`, `system-monolith-typescript` |
-| `.github/workflows/multitier-backend-dotnet-commit-stage.yml` | `optivem_shop-multitier-backend-dotnet`, `shop-multitier-backend-dotnet` | `optivem_system-multitier-backend-dotnet`, `system-multitier-backend-dotnet` |
-| `.github/workflows/multitier-backend-typescript-commit-stage.yml` | `optivem_shop-multitier-backend-typescript`, `shop-multitier-backend-typescript` | `optivem_system-multitier-backend-typescript`, `system-multitier-backend-typescript` |
+| `.github/workflows/backend-dotnet-commit-stage.yml` | `optivem_shop-backend-dotnet`, `shop-backend-dotnet` | `optivem_system-backend-dotnet`, `system-backend-dotnet` |
+| `.github/workflows/backend-typescript-commit-stage.yml` | `optivem_shop-backend-typescript`, `shop-backend-typescript` | `optivem_system-backend-typescript`, `system-backend-typescript` |
 | `.github/workflows/multitier-frontend-react-commit-stage.yml` | `optivem_shop-multitier-frontend-react`, `shop-multitier-frontend-react` | `optivem_system-multitier-frontend-react`, `system-multitier-frontend-react` |
 | `system/monolith/java/build.gradle` | `optivem_shop-monolith-java`, `shop-monolith-java` | `optivem_system-monolith-java`, `system-monolith-java` |
-| `system/multitier/backend-java/build.gradle` | `optivem_shop-multitier-backend-java`, `shop-multitier-backend-java` | `optivem_system-multitier-backend-java`, `system-multitier-backend-java` |
+| `system/multitier/backend-java/build.gradle` | `optivem_shop-backend-java`, `shop-backend-java` | `optivem_system-backend-java`, `system-backend-java` |
 | `system-test/dotnet/Run-Sonar.ps1` | `optivem_shop-tests-dotnet` | `optivem_system-tests-dotnet` |
 
 Cross-check: audit `system-test/java/**` and `system-test/typescript/**` for equivalent sonar keys (not surfaced in initial grep; confirm during execution).
@@ -159,7 +159,7 @@ With this plan merged, re-scope PLACEHOLDER-RENAME's Phase 1d / 1e to cover only
    - `app` — too generic, collides with `appsettings.json` pattern in .NET.
    - `product` — less neutral, implies commercial offering.
    - `service` — confusing next to Cloud Run services.
-   - **Recommended: `system`.** It's already established in the repo (top-level `system/` dir, `monolith-system-*` image names), short, and neutral.
+   - **Recommended: `system`.** It's already established in the repo (top-level `system/` dir, `sysapp-*` image names), short, and neutral.
 2. **Terraform rewrite (section E): in or out?** Recommended: **out** for this plan, handled inside PLACEHOLDER-RENAME. Rationale: GCP project ID rename is a re-provisioning operation, not a refactor.
 3. **Single PR or split per section?** Recommended: **single PR**. Sections are related and splitting would leave the repo in mixed-naming intermediate states; the total diff size is moderate (~40–60 files) and reviewers can navigate by section heading.
 4. **SonarCloud re-registration ownership.** Who runs it? (Needs SonarCloud admin rights.) Plan assumes the user handles it manually before PR merge.

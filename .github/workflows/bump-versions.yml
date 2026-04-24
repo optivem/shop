@@ -21,9 +21,9 @@ jobs:
           version-files: |
             [
               {"path": "VERSION", "signal": "git-tag", "value": "meta-v"},
-              {"path": "system/multitier/backend-dotnet/VERSION",    "signal": "ghcr-image", "value": "ghcr.io/${{ github.repository }}/multitier-backend-dotnet"},
-              {"path": "system/multitier/backend-java/VERSION",      "signal": "ghcr-image", "value": "ghcr.io/${{ github.repository }}/multitier-backend-java"},
-              {"path": "system/multitier/backend-typescript/VERSION","signal": "ghcr-image", "value": "ghcr.io/${{ github.repository }}/multitier-backend-typescript"},
+              {"path": "system/multitier/backend-dotnet/VERSION",    "signal": "ghcr-image", "value": "ghcr.io/${{ github.repository }}/backend-dotnet"},
+              {"path": "system/multitier/backend-java/VERSION",      "signal": "ghcr-image", "value": "ghcr.io/${{ github.repository }}/backend-java"},
+              {"path": "system/multitier/backend-typescript/VERSION","signal": "ghcr-image", "value": "ghcr.io/${{ github.repository }}/backend-typescript"},
               {"path": "system/multitier/frontend-react/VERSION",    "signal": "ghcr-image", "value": "ghcr.io/${{ github.repository }}/multitier-frontend-react"}
             ]
 

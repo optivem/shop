@@ -1,16 +1,16 @@
-name: multitier-backend-java-commit-stage
+name: backend-java-commit-stage
 
 on:
   push:
     branches: [ "main" ]
     paths:
         - 'system/multitier/backend-java/**'
-        - '.github/workflows/multitier-backend-java-commit-stage.yml'
+        - '.github/workflows/backend-java-commit-stage.yml'
   pull_request:
     branches: [ "main" ]
     paths:
         - 'system/multitier/backend-java/**'
-        - '.github/workflows/multitier-backend-java-commit-stage.yml'
+        - '.github/workflows/backend-java-commit-stage.yml'
   workflow_dispatch:
     inputs:
       commit-sha:
@@ -138,7 +138,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v6
         with:
-          images: ghcr.io/${{ github.repository }}/multitier-backend-java
+          images: ghcr.io/${{ github.repository }}/backend-java
           tags: |
             type=raw,value=sha-${{ env.COMMIT_SHA }}
             type=raw,value=latest
@@ -165,7 +165,7 @@ jobs:
         if: steps.verify-main.outputs.on-branch == 'true'
         id: digest-url
         shell: bash
-        run: echo "value=ghcr.io/${{ github.repository }}/multitier-backend-java@${{ steps.push.outputs.digest }}" >> "$GITHUB_OUTPUT"
+        run: echo "value=ghcr.io/${{ github.repository }}/backend-java@${{ steps.push.outputs.digest }}" >> "$GITHUB_OUTPUT"
 
   summary:
     needs: [check, run]

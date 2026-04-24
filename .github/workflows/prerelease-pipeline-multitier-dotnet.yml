@@ -41,7 +41,7 @@ jobs:
       prefix: multitier-dotnet
       architecture: multitier
       language: dotnet
-      commit-workflows: '["multitier-backend-dotnet-commit-stage.yml", "multitier-frontend-react-commit-stage.yml"]'
+      commit-workflows: '["backend-dotnet-commit-stage.yml", "multitier-frontend-react-commit-stage.yml"]'
       level: ${{ inputs.level || 'qa' }}
       skip-local-stage: ${{ inputs.skip-local-stage == true }}
       skip-commit-stage: ${{ inputs.skip-commit-stage == true }}

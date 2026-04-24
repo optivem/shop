@@ -134,12 +134,12 @@ jobs:
         with:
           fail-on-error: 'true'
           image-urls: |
-            ghcr.io/${{ github.repository }}/monolith-system-dotnet:v${{ steps.read-versions.outputs.meta }}
-            ghcr.io/${{ github.repository }}/monolith-system-java:v${{ steps.read-versions.outputs.meta }}
-            ghcr.io/${{ github.repository }}/monolith-system-typescript:v${{ steps.read-versions.outputs.meta }}
-            ghcr.io/${{ github.repository }}/multitier-backend-dotnet:v${{ steps.read-versions.outputs.mt_be_dotnet }}
-            ghcr.io/${{ github.repository }}/multitier-backend-java:v${{ steps.read-versions.outputs.mt_be_java }}
-            ghcr.io/${{ github.repository }}/multitier-backend-typescript:v${{ steps.read-versions.outputs.mt_be_typescript }}
+            ghcr.io/${{ github.repository }}/sysapp-dotnet:v${{ steps.read-versions.outputs.meta }}
+            ghcr.io/${{ github.repository }}/sysapp-java:v${{ steps.read-versions.outputs.meta }}
+            ghcr.io/${{ github.repository }}/sysapp-typescript:v${{ steps.read-versions.outputs.meta }}
+            ghcr.io/${{ github.repository }}/backend-dotnet:v${{ steps.read-versions.outputs.mt_be_dotnet }}
+            ghcr.io/${{ github.repository }}/backend-java:v${{ steps.read-versions.outputs.mt_be_java }}
+            ghcr.io/${{ github.repository }}/backend-typescript:v${{ steps.read-versions.outputs.mt_be_typescript }}
             ghcr.io/${{ github.repository }}/multitier-frontend-react:v${{ steps.read-versions.outputs.mt_fe_react }}
 
       - name: Verify System Release + Component Images Not Yet Published
@@ -219,14 +219,14 @@ jobs:
           - stage: monolith-typescript
             workflow: monolith-typescript-commit-stage.yml
             variants: '["all","monolith-typescript"]'
-          - stage: multitier-backend-java
-            workflow: multitier-backend-java-commit-stage.yml
+          - stage: backend-java
+            workflow: backend-java-commit-stage.yml
             variants: '["all","multitier-java"]'
-          - stage: multitier-backend-dotnet
-            workflow: multitier-backend-dotnet-commit-stage.yml
+          - stage: backend-dotnet
+            workflow: backend-dotnet-commit-stage.yml
             variants: '["all","multitier-dotnet"]'
-          - stage: multitier-backend-typescript
-            workflow: multitier-backend-typescript-commit-stage.yml
+          - stage: backend-typescript
+            workflow: backend-typescript-commit-stage.yml
             variants: '["all","multitier-typescript"]'
           - stage: multitier-frontend-react
             workflow: multitier-frontend-react-commit-stage.yml

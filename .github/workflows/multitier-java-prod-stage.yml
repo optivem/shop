@@ -81,7 +81,7 @@ jobs:
           tag: ${{ inputs.version || steps.resolve-latest.outputs.base-tag }}
           base-image-urls: |
             ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-frontend-react
-            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-backend-java
+            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/backend-java
 
   run:
     needs: check
@@ -170,7 +170,7 @@ jobs:
         with:
           entries: |
             [
-              {"key": "ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-backend-java:${{ needs.check.outputs.version }}",
+              {"key": "ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/backend-java:${{ needs.check.outputs.version }}",
                "file": "system/multitier/backend-java/VERSION"},
               {"key": "ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-frontend-react:${{ needs.check.outputs.version }}",
                "file": "system/multitier/frontend-react/VERSION"}

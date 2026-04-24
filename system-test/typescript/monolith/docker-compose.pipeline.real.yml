@@ -2,8 +2,8 @@ name: shop-real
 
 services:
 
-  monolith:
-    image: ghcr.io/optivem/shop/monolith-system-typescript:latest
+  sysapp:
+    image: ghcr.io/optivem/shop/sysapp-typescript:latest
     ports:
       - "3311:8080"
       - "8311:8080"
