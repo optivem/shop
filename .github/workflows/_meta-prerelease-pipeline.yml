@@ -130,18 +130,17 @@ jobs:
       - name: Probe Component + Monolith Image Tags
         id: probe-images
         if: ${{ steps.decide.outputs.should_run == 'true' }}
-        uses: optivem/actions/check-ghcr-image-tag-exists@v1
+        uses: optivem/actions/check-ghcr-packages-exist@v1
         with:
-          images: |
-            [
-              {"key": "monolith-system-dotnet:v${{ steps.read-versions.outputs.meta }} (from VERSION)",         "image-url": "ghcr.io/${{ github.repository }}/monolith-system-dotnet",         "tag": "v${{ steps.read-versions.outputs.meta }}"},
-              {"key": "monolith-system-java:v${{ steps.read-versions.outputs.meta }} (from VERSION)",           "image-url": "ghcr.io/${{ github.repository }}/monolith-system-java",           "tag": "v${{ steps.read-versions.outputs.meta }}"},
-              {"key": "monolith-system-typescript:v${{ steps.read-versions.outputs.meta }} (from VERSION)",     "image-url": "ghcr.io/${{ github.repository }}/monolith-system-typescript", "tag": "v${{ steps.read-versions.outputs.meta }}"},
-              {"key": "multitier-backend-dotnet:v${{ steps.read-versions.outputs.mt_be_dotnet }} (from system/multitier/backend-dotnet/VERSION)",     "image-url": "ghcr.io/${{ github.repository }}/multitier-backend-dotnet",     "tag": "v${{ steps.read-versions.outputs.mt_be_dotnet }}"},
-              {"key": "multitier-backend-java:v${{ steps.read-versions.outputs.mt_be_java }} (from system/multitier/backend-java/VERSION)",           "image-url": "ghcr.io/${{ github.repository }}/multitier-backend-java",       "tag": "v${{ steps.read-versions.outputs.mt_be_java }}"},
-              {"key": "multitier-backend-typescript:v${{ steps.read-versions.outputs.mt_be_typescript }} (from system/multitier/backend-typescript/VERSION)", "image-url": "ghcr.io/${{ github.repository }}/multitier-backend-typescript", "tag": "v${{ steps.read-versions.outputs.mt_be_typescript }}"},
-              {"key": "multitier-frontend-react:v${{ steps.read-versions.outputs.mt_fe_react }} (from system/multitier/frontend-react/VERSION)",       "image-url": "ghcr.io/${{ github.repository }}/multitier-frontend-react",     "tag": "v${{ steps.read-versions.outputs.mt_fe_react }}"}
-            ]
+          fail-on-error: 'true'
+          image-urls: |
+            ghcr.io/${{ github.repository }}/monolith-system-dotnet:v${{ steps.read-versions.outputs.meta }}
+            ghcr.io/${{ github.repository }}/monolith-system-java:v${{ steps.read-versions.outputs.meta }}
+            ghcr.io/${{ github.repository }}/monolith-system-typescript:v${{ steps.read-versions.outputs.meta }}
+            ghcr.io/${{ github.repository }}/multitier-backend-dotnet:v${{ steps.read-versions.outputs.mt_be_dotnet }}
+            ghcr.io/${{ github.repository }}/multitier-backend-java:v${{ steps.read-versions.outputs.mt_be_java }}
+            ghcr.io/${{ github.repository }}/multitier-backend-typescript:v${{ steps.read-versions.outputs.mt_be_typescript }}
+            ghcr.io/${{ github.repository }}/multitier-frontend-react:v${{ steps.read-versions.outputs.mt_fe_react }}
 
       - name: Verify System Release + Component Images Not Yet Published
         if: ${{ steps.decide.outputs.should_run == 'true' }}
@@ -152,7 +151,20 @@ jobs:
           IMAGE_RESULTS: ${{ steps.probe-images.outputs.results }}
         run: |
           set -euo pipefail
-          found=$(jq -c '[.[] | select(.exists == true) | .key]' <<< "$IMAGE_RESULTS")
+          # Rebuild "<image-suffix>:<tag> (from <VERSION-path>)" display strings client-side.
+          # monolith-* images are pinned by the top-level VERSION; multitier-* images each
+          # have their own VERSION under system/multitier/{component}/VERSION.
+          found=$(jq -c '
+            [
+              .[] | select(.exists == true) |
+              (.image | sub("^ghcr.io/[^/]+/[^/]+/"; "")) as $suffix |
+              (if ($suffix | startswith("monolith-"))
+               then "VERSION"
+               else "system/multitier/" + ($suffix | sub("^multitier-"; "")) + "/VERSION"
+               end) as $provenance |
+              "\($suffix):\(.tag) (from \($provenance))"
+            ]
+          ' <<< "$IMAGE_RESULTS")
           if [[ "$META_EXISTS" == "true" ]]; then
             found=$(jq -c --arg k "$META_KEY" '. + [$k]' <<< "$found")
           fi
