@@ -239,7 +239,7 @@ jobs:
         working-directory: system-test/java
 
       - name: mod08 - Run E2E Tests - UI Channel
-        run: ./gradlew test -Dversion=mod08 -Dtype=e2e -Dchannel=UI -Denvironment=acceptance
+        run: ./gradlew test -Dversion=mod08 -Dtype=e2e -Dchannel=UI -DchannelMode=static -Denvironment=acceptance
         working-directory: system-test/java
 
       - name: mod09 - Run Smoke Tests (Stub)
@@ -255,7 +255,7 @@ jobs:
         working-directory: system-test/java
 
       - name: mod10 - Run Acceptance Tests - UI Channel
-        run: ./gradlew test -Dversion=mod10 -Dtype=acceptance -DexcludeTags=isolated -Dchannel=UI -Denvironment=acceptance
+        run: ./gradlew test -Dversion=mod10 -Dtype=acceptance -DexcludeTags=isolated -Dchannel=UI -DchannelMode=static -Denvironment=acceptance
         working-directory: system-test/java
 
       - name: mod10 - Run Acceptance Tests (Isolated) - API Channel
@@ -263,7 +263,7 @@ jobs:
         working-directory: system-test/java
 
       - name: mod10 - Run Acceptance Tests (Isolated) - UI Channel
-        run: ./gradlew test -Dversion=mod10 -Dtype=acceptance -DincludeTags=isolated -Dchannel=UI -Denvironment=acceptance
+        run: ./gradlew test -Dversion=mod10 -Dtype=acceptance -DincludeTags=isolated -Dchannel=UI -DchannelMode=static -Denvironment=acceptance
         working-directory: system-test/java
 
       - name: mod11 - Run Contract Tests (Stub)
@@ -283,7 +283,7 @@ jobs:
         working-directory: system-test/java
 
       - name: mod11 - Run E2E Tests - UI Channel
-        run: ./gradlew test -Dversion=mod11 -Dtype=e2e -Dchannel=UI -Denvironment=acceptance
+        run: ./gradlew test -Dversion=mod11 -Dtype=e2e -Dchannel=UI -DchannelMode=static -Denvironment=acceptance
         working-directory: system-test/java
 
   summary:

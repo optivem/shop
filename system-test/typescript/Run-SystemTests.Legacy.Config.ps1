@@ -119,7 +119,7 @@ $Config = @{
         @{  Id = "mod08-e2e-ui";
             SampleTest = "shouldPlaceOrder";
             Name = "mod08 - E2E - UI";
-            Command = "`$env:CHANNEL = 'UI'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=e2e-test tests/legacy/mod08/e2e";
+            Command = "`$env:CHANNEL = 'UI'; `$env:CHANNEL_MODE = 'static'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=e2e-test tests/legacy/mod08/e2e";
             Path = ".";
             TestReportPath = "playwright-report\index.html";
             TestInstallCommands = $null },
@@ -151,7 +151,7 @@ $Config = @{
         @{  Id = "mod10-acceptance-ui";
             SampleTest = "orderNumberShouldStartWithORD";
             Name = "mod10 - Acceptance (stub) - UI";
-            Command = "`$env:CHANNEL = 'UI'; `$env:EXTERNAL_SYSTEM_MODE = 'stub'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=acceptance-test --grep-invert '@isolated' tests/legacy/mod10/acceptance";
+            Command = "`$env:CHANNEL = 'UI'; `$env:CHANNEL_MODE = 'static'; `$env:EXTERNAL_SYSTEM_MODE = 'stub'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=acceptance-test --grep-invert '@isolated' tests/legacy/mod10/acceptance";
             Path = ".";
             TestReportPath = "playwright-report\index.html";
             TestInstallCommands = $null },
@@ -165,7 +165,7 @@ $Config = @{
         @{  Id = "mod10-acceptance-isolated-ui";
             SampleTest = "shouldRecordPlacementTimestamp";
             Name = "mod10 - Acceptance Isolated (stub) - UI";
-            Command = "`$env:CHANNEL = 'UI'; `$env:EXTERNAL_SYSTEM_MODE = 'stub'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=acceptance-test --workers=1 --grep '@isolated' tests/legacy/mod10/acceptance";
+            Command = "`$env:CHANNEL = 'UI'; `$env:CHANNEL_MODE = 'static'; `$env:EXTERNAL_SYSTEM_MODE = 'stub'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=acceptance-test --workers=1 --grep '@isolated' tests/legacy/mod10/acceptance";
             Path = ".";
             TestReportPath = "playwright-report\index.html";
             TestInstallCommands = $null },
@@ -202,7 +202,7 @@ $Config = @{
         @{  Id = "mod11-e2e-ui";
             SampleTest = "shouldPlaceOrder";
             Name = "mod11 - E2E - UI";
-            Command = "`$env:CHANNEL = 'UI'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=e2e-test tests/legacy/mod11/e2e";
+            Command = "`$env:CHANNEL = 'UI'; `$env:CHANNEL_MODE = 'static'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=e2e-test tests/legacy/mod11/e2e";
             Path = ".";
             TestReportPath = "playwright-report\index.html";
             TestInstallCommands = $null }

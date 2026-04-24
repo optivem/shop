@@ -286,6 +286,7 @@ jobs:
         env:
           ENVIRONMENT: acceptance
           CHANNEL: UI
+          CHANNEL_MODE: static
 
       - name: mod09 - Run Smoke Tests (Stub)
         run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod09.SmokeTests" --verbosity normal
@@ -316,6 +317,7 @@ jobs:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
           CHANNEL: UI
+          CHANNEL_MODE: static
 
       - name: mod10 - Run Acceptance Tests (Isolated) - API Channel
         run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod10.AcceptanceTests&Category=isolated" --verbosity normal
@@ -332,6 +334,7 @@ jobs:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
           CHANNEL: UI
+          CHANNEL_MODE: static
 
       - name: mod11 - Run Contract Tests (Stub)
         run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod11.ExternalSystemContractTests&FullyQualifiedName~Stub&Category!=isolated" --verbosity normal
@@ -364,6 +367,7 @@ jobs:
         env:
           ENVIRONMENT: acceptance
           CHANNEL: UI
+          CHANNEL_MODE: static
 
   summary:
     needs: [preflight, check, run]

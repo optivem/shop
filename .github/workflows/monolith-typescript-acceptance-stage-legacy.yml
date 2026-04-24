@@ -285,6 +285,7 @@ jobs:
         env:
           ENVIRONMENT: acceptance
           CHANNEL: UI
+          CHANNEL_MODE: static
 
       - name: mod09 - Run Smoke Tests (Stub)
         working-directory: system-test/typescript
@@ -315,6 +316,7 @@ jobs:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
           CHANNEL: UI
+          CHANNEL_MODE: static
 
       - name: mod10 - Run Acceptance Tests (Isolated) - API Channel
         working-directory: system-test/typescript
@@ -331,6 +333,7 @@ jobs:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
           CHANNEL: UI
+          CHANNEL_MODE: static
 
       - name: mod11 - Run Contract Tests (Stub)
         working-directory: system-test/typescript
@@ -366,6 +369,7 @@ jobs:
         env:
           ENVIRONMENT: acceptance
           CHANNEL: UI
+          CHANNEL_MODE: static
 
   summary:
     needs: [preflight, check, run]
