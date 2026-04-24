@@ -188,7 +188,7 @@ $Config = @{
         @{  Id = "mod11-contract-real";
             SampleTest = "shouldBeAbleToGetTime";
             Name = "mod11 - Contract (real)";
-            Command = "`$env:EXTERNAL_SYSTEM_MODE = 'real'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=external-system-contract-test --workers=1 tests/legacy/mod11/contract";
+            Command = "`$env:EXTERNAL_SYSTEM_MODE = 'real'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=external-system-contract-test --workers=1 'tests/legacy/mod11/contract/.*-real-.*\.spec\.ts'";
             Path = ".";
             TestReportPath = "playwright-report\index.html";
             TestInstallCommands = $null },

@@ -36,7 +36,7 @@ $Config = @{
         @{  Id = "acceptance-ui";
             SampleTest = "shouldBeAbleToBrowseCoupons";
             Name = "latest - Acceptance (stub) - UI";
-            Command = "`$env:CHANNEL = 'UI'; `$env:EXTERNAL_SYSTEM_MODE = 'stub'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=acceptance-test --grep-invert '@isolated' tests/latest/acceptance";
+            Command = "`$env:CHANNEL = 'UI'; `$env:CHANNEL_MODE = 'static'; `$env:EXTERNAL_SYSTEM_MODE = 'stub'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=acceptance-test --grep-invert '@isolated' tests/latest/acceptance";
             Path = ".";
             TestReportPath = "playwright-report\index.html";
             TestInstallCommands = $null },
@@ -54,7 +54,7 @@ $Config = @{
         @{  Id = "acceptance-isolated-ui";
             SampleTest = "shouldBeAbleToCancelOrder";
             Name = "latest - Acceptance Isolated (stub) - UI";
-            Command = "`$env:CHANNEL = 'UI'; `$env:EXTERNAL_SYSTEM_MODE = 'stub'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=acceptance-test --workers=1 --grep '@isolated' tests/latest/acceptance";
+            Command = "`$env:CHANNEL = 'UI'; `$env:CHANNEL_MODE = 'static'; `$env:EXTERNAL_SYSTEM_MODE = 'stub'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=acceptance-test --workers=1 --grep '@isolated' tests/latest/acceptance";
             Path = ".";
             TestReportPath = "playwright-report\index.html";
             TestInstallCommands = $null },
@@ -81,7 +81,7 @@ $Config = @{
         @{  Id = "contract-real";
             SampleTest = "shouldBeAbleToGetTime";
             Name = "latest - Contract (real)";
-            Command = "`$env:EXTERNAL_SYSTEM_MODE = 'real'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=external-system-contract-test --workers=1 --grep-invert '@isolated' tests/latest/contract";
+            Command = "`$env:EXTERNAL_SYSTEM_MODE = 'real'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=external-system-contract-test --workers=1 'tests/latest/contract/.*-real-.*\.spec\.ts'";
             Path = ".";
             TestReportPath = "playwright-report\index.html";
             TestInstallCommands = $null },
@@ -99,7 +99,7 @@ $Config = @{
         @{  Id = "e2e-ui";
             SampleTest = "shouldPlaceOrder";
             Name = "latest - E2E (real) - UI";
-            Command = "`$env:CHANNEL = 'UI'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=e2e-test tests/latest/e2e";
+            Command = "`$env:CHANNEL = 'UI'; `$env:CHANNEL_MODE = 'static'; `$env:ENVIRONMENT = 'local'; npx playwright test --project=e2e-test tests/latest/e2e";
             Path = ".";
             TestReportPath = "playwright-report\index.html";
             TestInstallCommands = $null }
