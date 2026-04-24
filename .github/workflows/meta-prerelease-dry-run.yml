@@ -28,17 +28,17 @@ on:
           - multitier-java
           - multitier-dotnet
           - multitier-typescript
-        default: 'monolith-java'
+        default: 'monolith-typescript'
       skip-local:
         description: 'Skip Phase 0 (local stages) for debugging — Phase 1 and Phase 2 still run if level permits'
         required: false
         type: boolean
-        default: false
+        default: true
       skip-acceptance-legacy:
         description: 'Skip the legacy sample in local stages and the acceptance-stage-legacy job in Phase 2'
         required: false
         type: boolean
-        default: false
+        default: true
 
 # Shared concurrency group with meta-prerelease-stage so dry-runs and whole runs
 # serialize rather than stepping on each other.
@@ -55,3 +55,26 @@ jobs:
       variant: ${{ inputs.variant }}
       skip-local: ${{ inputs.skip-local }}
       skip-acceptance-legacy: ${{ inputs.skip-acceptance-legacy }}
+
+  # Fire-and-forget: on successful dry-run, dispatch the real meta-prerelease-stage.
+  # Cannot trigger-and-wait because both workflows share the meta-prerelease-stage
+  # concurrency group — waiting here would deadlock the stage run.
+  trigger-stage:
+    needs: run
+    if: success()
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - name: Dispatch meta-prerelease-stage
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          gh workflow run meta-prerelease-stage.yml --repo "${{ github.repository }}"
+          {
+            echo "## Dispatched meta-prerelease-stage"
+            echo ""
+            echo "- Trigger: dry-run succeeded"
+            echo "- Target: [meta-prerelease-stage](https://github.com/${{ github.repository }}/actions/workflows/meta-prerelease-stage.yml)"
+          } >> "$GITHUB_STEP_SUMMARY"
