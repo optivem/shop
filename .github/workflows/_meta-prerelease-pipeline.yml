@@ -37,11 +37,11 @@ jobs:
   #      (falling back to the latest meta-v release). Only changes under
   #      .github/workflows/, system/, or system-test/ count as meaningful; VERSION
   #      bumps, docs, plans, and reports do not. workflow_dispatch always proceeds.
-  #   3. Fail fast if any VERSION file's version has already been used as a final
-  #      release by meta, any pipeline, or any per-stack artifact. Mirrors the
-  #      VERSION → prefix mapping in bump-versions.yml so every tag that auto-bump
-  #      would touch is checked — otherwise we'd only discover it deep into the
-  #      downstream pipeline acceptance stages.
+  #   3. Fail fast if any VERSION file's version has already been released.
+  #      Each VERSION file has one release signal (matching bump-versions.yml):
+  #      top-level VERSION probes the meta GitHub Release; every other VERSION
+  #      file probes its corresponding GHCR image tag. Otherwise we'd only
+  #      discover the collision deep into the downstream pipeline acceptance stages.
   check:
     runs-on: ubuntu-latest
     permissions:
@@ -106,57 +106,74 @@ jobs:
             echo "No meaningful changes — skipping run."
             echo "should_run=false" >> "$GITHUB_OUTPUT"
           fi
-      - name: Check versions not already released
+      - name: Read VERSION values
+        id: read-versions
         if: ${{ steps.decide.outputs.should_run == 'true' }}
         shell: bash
         run: |
           set -euo pipefail
+          {
+            echo "meta=$(tr -d '[:space:]' < VERSION)"
+            echo "mono_dotnet=$(tr -d '[:space:]' < system/monolith/dotnet/VERSION)"
+            echo "mono_java=$(tr -d '[:space:]' < system/monolith/java/VERSION)"
+            echo "mono_typescript=$(tr -d '[:space:]' < system/monolith/typescript/VERSION)"
+            echo "mt_be_dotnet=$(tr -d '[:space:]' < system/multitier/backend-dotnet/VERSION)"
+            echo "mt_be_java=$(tr -d '[:space:]' < system/multitier/backend-java/VERSION)"
+            echo "mt_be_typescript=$(tr -d '[:space:]' < system/multitier/backend-typescript/VERSION)"
+            echo "mt_fe_react=$(tr -d '[:space:]' < system/multitier/frontend-react/VERSION)"
+          } >> "$GITHUB_OUTPUT"
 
-          # "<file> <prefix> [<prefix>...]" — matches bump-versions.yml mapping.
-          # Prefixes include their trailing "v" (e.g. "meta-v" → tag "meta-v1.0.21").
-          mapping=(
-            "VERSION v meta-v monolith-java-v monolith-dotnet-v monolith-typescript-v multitier-java-v multitier-dotnet-v multitier-typescript-v"
-            "system/monolith/dotnet/VERSION monolith-dotnet-v meta-v"
-            "system/monolith/java/VERSION monolith-java-v meta-v"
-            "system/monolith/typescript/VERSION monolith-typescript-v meta-v"
-            "system/multitier/backend-dotnet/VERSION multitier-backend-dotnet-v multitier-dotnet-v meta-v"
-            "system/multitier/backend-java/VERSION multitier-backend-java-v multitier-java-v meta-v"
-            "system/multitier/backend-typescript/VERSION multitier-backend-typescript-v multitier-typescript-v meta-v"
-            "system/multitier/frontend-react/VERSION multitier-frontend-react-v multitier-java-v multitier-dotnet-v multitier-typescript-v meta-v"
-          )
+      - name: Probe meta GitHub Release
+        id: probe-release
+        if: ${{ steps.decide.outputs.should_run == 'true' }}
+        uses: optivem/actions/check-github-release-exists@v1
+        with:
+          releases: |
+            [
+              {"key": "meta-v${{ steps.read-versions.outputs.meta }} (from VERSION)", "tag": "meta-v${{ steps.read-versions.outputs.meta }}"}
+            ]
 
-          declare -A SEEN
-          FOUND=()
-          for entry in "${mapping[@]}"; do
-            read -ra parts <<< "$entry"
-            file="${parts[0]}"
-            version=$(tr -d '[:space:]' < "$file")
-            for ((i=1; i<${#parts[@]}; i++)); do
-              prefix="${parts[$i]}"
-              tag="${prefix}${version}"
-              [[ -n "${SEEN[$tag]:-}" ]] && continue
-              SEEN[$tag]=1
-              if git tag -l "$tag" | grep -qx "$tag"; then
-                FOUND+=("$tag (from $file)")
-              fi
-            done
-          done
+      - name: Probe component/monolith GHCR images
+        id: probe-images
+        if: ${{ steps.decide.outputs.should_run == 'true' }}
+        uses: optivem/actions/check-ghcr-image-tag-exists@v1
+        with:
+          images: |
+            [
+              {"key": "monolith-system-dotnet:v${{ steps.read-versions.outputs.mono_dotnet }} (from system/monolith/dotnet/VERSION)",         "image-url": "ghcr.io/${{ github.repository }}/monolith-system-dotnet",         "tag": "v${{ steps.read-versions.outputs.mono_dotnet }}"},
+              {"key": "monolith-system-java:v${{ steps.read-versions.outputs.mono_java }} (from system/monolith/java/VERSION)",               "image-url": "ghcr.io/${{ github.repository }}/monolith-system-java",           "tag": "v${{ steps.read-versions.outputs.mono_java }}"},
+              {"key": "monolith-system-typescript:v${{ steps.read-versions.outputs.mono_typescript }} (from system/monolith/typescript/VERSION)", "image-url": "ghcr.io/${{ github.repository }}/monolith-system-typescript", "tag": "v${{ steps.read-versions.outputs.mono_typescript }}"},
+              {"key": "multitier-backend-dotnet:v${{ steps.read-versions.outputs.mt_be_dotnet }} (from system/multitier/backend-dotnet/VERSION)",     "image-url": "ghcr.io/${{ github.repository }}/multitier-backend-dotnet",     "tag": "v${{ steps.read-versions.outputs.mt_be_dotnet }}"},
+              {"key": "multitier-backend-java:v${{ steps.read-versions.outputs.mt_be_java }} (from system/multitier/backend-java/VERSION)",           "image-url": "ghcr.io/${{ github.repository }}/multitier-backend-java",       "tag": "v${{ steps.read-versions.outputs.mt_be_java }}"},
+              {"key": "multitier-backend-typescript:v${{ steps.read-versions.outputs.mt_be_typescript }} (from system/multitier/backend-typescript/VERSION)", "image-url": "ghcr.io/${{ github.repository }}/multitier-backend-typescript", "tag": "v${{ steps.read-versions.outputs.mt_be_typescript }}"},
+              {"key": "multitier-frontend-react:v${{ steps.read-versions.outputs.mt_fe_react }} (from system/multitier/frontend-react/VERSION)",       "image-url": "ghcr.io/${{ github.repository }}/multitier-frontend-react",     "tag": "v${{ steps.read-versions.outputs.mt_fe_react }}"}
+            ]
 
-          if [[ ${#FOUND[@]} -gt 0 ]]; then
+      - name: Verify versions not already released
+        if: ${{ steps.decide.outputs.should_run == 'true' }}
+        shell: bash
+        env:
+          RELEASE_RESULTS: ${{ steps.probe-release.outputs.results }}
+          IMAGE_RESULTS: ${{ steps.probe-images.outputs.results }}
+        run: |
+          set -euo pipefail
+          found=$(jq -sc '[.[] | .[] | select(.exists == true) | .key]' <<< "$RELEASE_RESULTS"$'\n'"$IMAGE_RESULTS")
+          if [[ "$(jq 'length' <<< "$found")" -gt 0 ]]; then
             BUMP_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/workflows/auto-bump-patch.yml"
             {
               echo "## Version already released"
               echo ""
-              echo "The following tags already exist as final releases:"
+              echo "The following artifacts already exist:"
               echo ""
-              for item in "${FOUND[@]}"; do echo "- \`${item}\`"; done
+              jq -r '.[] | "- `\(.)`"' <<< "$found"
               echo ""
               echo "Run the [auto-bump-patch workflow](${BUMP_URL}) to bump VERSION files, then re-run this workflow."
             } >> "$GITHUB_STEP_SUMMARY"
-            echo "::error::Version already released: ${FOUND[*]}. Run the auto-bump-patch workflow to bump VERSION files, then re-run this workflow: ${BUMP_URL}"
+            found_flat=$(jq -r 'join(", ")' <<< "$found")
+            echo "::error::Version already released: ${found_flat}. Run the auto-bump-patch workflow to bump VERSION files, then re-run this workflow: ${BUMP_URL}"
             exit 1
           fi
-          echo "All version tags available across meta and all pipelines. OK to proceed."
+          echo "All artifacts available for current VERSION values across meta + monoliths + components. OK to proceed."
 
   # Phase 0: Run all local stages in parallel. fail-fast cancels siblings on first failure.
   local:
