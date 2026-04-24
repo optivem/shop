@@ -119,9 +119,9 @@ jobs:
         with:
           projectBaseDir: system/multitier/frontend-react
           args: >
-            -Dsonar.projectKey=my-company_my-shop-frontend-react
-            -Dsonar.projectName=my-shop-frontend-react
-            -Dsonar.organization=my-company
+            -Dsonar.projectKey=optivem_shop-frontend-react
+            -Dsonar.projectName=shop-frontend-react
+            -Dsonar.organization=optivem
             -Dsonar.sources=src
 
       - name: Compose Dev Version

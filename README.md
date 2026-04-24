@@ -74,9 +74,9 @@ Pick based on your architecture and language:
 
 | Language | Directory | Framework | Port | SonarCloud |
 |---|---|---|---|---|
-| Java | `system/monolith/java/` | Spring Boot + Thymeleaf (SSR) | 8080 | [my-shop-monolith-java](https://sonarcloud.io/project/overview?id=my-company_my-shop-monolith-java) |
-| .NET | `system/monolith/dotnet/` | ASP.NET Core Razor Pages | 8080 | [my-shop-monolith-dotnet](https://sonarcloud.io/project/overview?id=my-company_my-shop-monolith-dotnet) |
-| TypeScript | `system/monolith/typescript/` | Next.js (SSR) | 3000 | [my-shop-monolith-typescript](https://sonarcloud.io/project/overview?id=my-company_my-shop-monolith-typescript) |
+| Java | `system/monolith/java/` | Spring Boot + Thymeleaf (SSR) | 8080 | [shop-monolith-java](https://sonarcloud.io/project/overview?id=optivem_shop-monolith-java) |
+| .NET | `system/monolith/dotnet/` | ASP.NET Core Razor Pages | 8080 | [shop-monolith-dotnet](https://sonarcloud.io/project/overview?id=optivem_shop-monolith-dotnet) |
+| TypeScript | `system/monolith/typescript/` | Next.js (SSR) | 3000 | [shop-monolith-typescript](https://sonarcloud.io/project/overview?id=optivem_shop-monolith-typescript) |
 
 ### Multitier
 
@@ -84,15 +84,15 @@ Pick based on your architecture and language:
 
 | Language | Directory | Framework | Port | SonarCloud |
 |---|---|---|---|---|
-| TypeScript | `system/multitier/frontend-react/` | React + Nginx | 8080 | [my-shop-frontend-react](https://sonarcloud.io/project/overview?id=my-company_my-shop-frontend-react) |
+| TypeScript | `system/multitier/frontend-react/` | React + Nginx | 8080 | [shop-frontend-react](https://sonarcloud.io/project/overview?id=optivem_shop-frontend-react) |
 
 #### Backend
 
 | Language | Directory | Framework | Port | SonarCloud |
 |---|---|---|---|---|
-| Java | `system/multitier/backend-java/` | Spring Boot API | 8081 | [my-shop-backend-java](https://sonarcloud.io/project/overview?id=my-company_my-shop-backend-java) |
-| .NET | `system/multitier/backend-dotnet/` | ASP.NET Core API | 8081 | [my-shop-backend-dotnet](https://sonarcloud.io/project/overview?id=my-company_my-shop-backend-dotnet) |
-| TypeScript | `system/multitier/backend-typescript/` | NestJS API | 8081 | [my-shop-backend-typescript](https://sonarcloud.io/project/overview?id=my-company_my-shop-backend-typescript) |
+| Java | `system/multitier/backend-java/` | Spring Boot API | 8081 | [shop-backend-java](https://sonarcloud.io/project/overview?id=optivem_shop-backend-java) |
+| .NET | `system/multitier/backend-dotnet/` | ASP.NET Core API | 8081 | [shop-backend-dotnet](https://sonarcloud.io/project/overview?id=optivem_shop-backend-dotnet) |
+| TypeScript | `system/multitier/backend-typescript/` | NestJS API | 8081 | [shop-backend-typescript](https://sonarcloud.io/project/overview?id=optivem_shop-backend-typescript) |
 
 ## System-Test Templates
 

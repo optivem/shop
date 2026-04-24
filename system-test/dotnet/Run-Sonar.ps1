@@ -27,8 +27,8 @@ if (-not $Token) {
     exit 1
 }
 
-$projectKey = "my-company_my-shop-tests-dotnet"
-$projectName = "MyShop Tests (.NET)"
+$projectKey = "optivem_shop-tests-dotnet"
+$projectName = "Shop Tests (.NET)"
 
 Write-Host "Running SonarScanner for .NET..." -ForegroundColor Cyan
 

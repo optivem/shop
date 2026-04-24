@@ -119,9 +119,9 @@ jobs:
         with:
           projectBaseDir: system/multitier/backend-typescript
           args: >
-            -Dsonar.projectKey=my-company_my-shop-backend-typescript
-            -Dsonar.projectName=my-shop-backend-typescript
-            -Dsonar.organization=my-company
+            -Dsonar.projectKey=optivem_shop-backend-typescript
+            -Dsonar.projectName=shop-backend-typescript
+            -Dsonar.organization=optivem
             -Dsonar.sources=src
 
       - name: Compose Dev Version
