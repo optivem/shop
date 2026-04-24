@@ -1,7 +1,7 @@
 name: meta-prerelease-dry-run
 
 run-name: >-
-  meta-prerelease-dry-run${{ inputs.variant != 'all' && format(' [variant:{0}]', inputs.variant) || '' }}${{ inputs.skip-local && ' [skip-local]' || '' }}${{ inputs.skip-acceptance-legacy && ' [skip-acceptance-legacy]' || '' }}
+  meta-prerelease-dry-run${{ inputs.variant != 'all' && format(' [variant:{0}]', inputs.variant) || '' }}${{ inputs.skip-local && ' [skip-local]' || '' }}${{ inputs.skip-acceptance-legacy && ' [skip-acceptance-legacy]' || '' }}${{ !inputs.auto-trigger-stage && ' [no-auto-stage]' || '' }}
 
 on:
   workflow_dispatch:
@@ -39,6 +39,11 @@ on:
         required: false
         type: boolean
         default: true
+      auto-trigger-stage:
+        description: 'Automatically dispatch meta-prerelease-stage if the dry-run succeeds'
+        required: false
+        type: boolean
+        default: true
 
 # Shared concurrency group with meta-prerelease-stage so dry-runs and whole runs
 # serialize rather than stepping on each other.
@@ -61,7 +66,7 @@ jobs:
   # concurrency group — waiting here would deadlock the stage run.
   trigger-stage:
     needs: run
-    if: success()
+    if: success() && inputs.auto-trigger-stage
     runs-on: ubuntu-latest
     permissions:
       actions: write
