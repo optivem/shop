@@ -36,102 +36,8 @@ if (-not $Architecture) {
 $TestConfigFileName = "Run-SystemTests.Config.ps1"
 $ExternalModes = @("real", "stub")
 
-# Load configuration - keyed by Architecture, then ExternalMode
-$AllSystemConfig = @{
-    "multitier" = @{
-        "real" = @{
-            ContainerName = "shop-dotnet-multitier-real"
-
-            SystemComponents = @(
-                @{ Name = "Frontend";
-                    Url = "http://localhost:3211";
-                    ContainerName = "frontend" }
-                @{ Name = "Backend API";
-                    Url = "http://localhost:8211/health";
-                    ContainerName = "backend" }
-            )
-
-            ExternalSystems = @(
-                @{ Name = "ERP API (Real)";
-                    Url = "http://localhost:9211/erp/health";
-                    ContainerName = "external-real" }
-                @{ Name = "Clock API (Real)";
-                    Url = "http://localhost:9211/clock/health";
-                    ContainerName = "external-real" }
-            )
-        }
-
-        "stub" = @{
-            ContainerName = "shop-dotnet-multitier-stub"
-
-            SystemComponents = @(
-                @{ Name = "Frontend";
-                    Url = "http://localhost:3212";
-                    ContainerName = "frontend" }
-                @{ Name = "Backend API";
-                    Url = "http://localhost:8212/health";
-                    ContainerName = "backend" }
-            )
-
-            ExternalSystems = @(
-                @{ Name = "ERP API (Stub)";
-                    Url = "http://localhost:9212/erp/health";
-                    ContainerName = "external-stub" }
-                @{ Name = "Clock API (Stub)";
-                    Url = "http://localhost:9212/clock/health";
-                    ContainerName = "external-stub" }
-            )
-        }
-    }
-
-    "monolith" = @{
-        "real" = @{
-            ContainerName = "shop-dotnet-monolith-real"
-
-            SystemComponents = @(
-                @{ Name = "Monolith";
-                    Url = "http://localhost:3211";
-                    ContainerName = "monolith" }
-                @{ Name = "Monolith API";
-                    Url = "http://localhost:8211/health";
-                    ContainerName = "monolith" }
-            )
-
-            ExternalSystems = @(
-                @{ Name = "ERP API (Real)";
-                    Url = "http://localhost:9211/erp/health";
-                    ContainerName = "external-real" }
-                @{ Name = "Clock API (Real)";
-                    Url = "http://localhost:9211/clock/health";
-                    ContainerName = "external-real" }
-            )
-        }
-
-        "stub" = @{
-            ContainerName = "shop-dotnet-monolith-stub"
-
-            SystemComponents = @(
-                @{ Name = "Monolith";
-                    Url = "http://localhost:3212";
-                    ContainerName = "monolith" }
-                @{ Name = "Monolith API";
-                    Url = "http://localhost:8212/health";
-                    ContainerName = "monolith" }
-            )
-
-            ExternalSystems = @(
-                @{ Name = "ERP API (Stub)";
-                    Url = "http://localhost:9212/erp/health";
-                    ContainerName = "external-stub" }
-                @{ Name = "Clock API (Stub)";
-                    Url = "http://localhost:9212/clock/health";
-                    ContainerName = "external-stub" }
-            )
-        }
-    }
-}
-
-$SystemConfig = $AllSystemConfig[$Architecture]
+# Load the architecture-specific system config (sets $SystemConfig).
+$SystemConfig = . "$PSScriptRoot/$Architecture/Run-SystemTests.Config.Architecture.ps1"
 
 # Load test configuration only if tests will be run
 if (-not $SkipTests) {
@@ -181,7 +87,7 @@ $script:ExternalSystems = $null
 function Set-CurrentMode {
     param([string]$ExternalMode)
 
-    $script:ComposeFile = "docker-compose.$Mode.$Architecture.$ExternalMode.yml"
+    $script:ComposeFile = "$Architecture/docker-compose.$Mode.$ExternalMode.yml"
 
     $modeConfig = $SystemConfig[$ExternalMode]
     $script:ContainerName = $modeConfig.ContainerName

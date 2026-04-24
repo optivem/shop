@@ -1,43 +1,21 @@
-# System Test (.NET)
+# System Test (C#/.NET)
 
 ## Prerequisites
 
 - PowerShell 7+
 - Docker Desktop (running)
-- .NET 8 SDK
+- .NET SDK 8+
 
-## Running Tests
+## Architectures
 
-Run all latest test suites (multitier):
+Shop ships two architectures side-by-side. Each has its own compose files and
+usage examples:
 
-```powershell
-./Run-SystemTests.ps1 -Architecture multitier
-```
+- [monolith/README.md](monolith/README.md) — single-service system
+- [multitier/README.md](multitier/README.md) — frontend + backend + external simulators
 
-Run all latest test suites (monolith):
-
-```powershell
-./Run-SystemTests.ps1 -Architecture monolith
-```
-
-Run legacy test suites:
-
-```powershell
-./Run-SystemTests.ps1 -Architecture multitier -Legacy
-./Run-SystemTests.ps1 -Architecture monolith -Legacy
-```
-
-Run a specific suite by ID:
-
-```powershell
-./Run-SystemTests.ps1 -Architecture multitier -Suite acceptance-api
-```
-
-Rebuild containers before running:
-
-```powershell
-./Run-SystemTests.ps1 -Architecture multitier -Rebuild
-```
+The entry-point script `Run-SystemTests.ps1` accepts `-Architecture monolith|multitier`
+and dot-sources the selected architecture's configuration from its subdirectory.
 
 ## Available Suite IDs
 

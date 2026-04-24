@@ -290,11 +290,11 @@ jobs:
 
       - name: Build Test Project
         run: dotnet build
-        working-directory: system-test/dotnet
+        working-directory: system-test/dotnet/multitier
 
       - name: Run Smoke Tests (Real)
         run: dotnet test --filter "FullyQualifiedName~.Latest.SmokeTests" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: system-test/dotnet/multitier
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: real
@@ -324,11 +324,11 @@ jobs:
 
       - name: Build Test Project
         run: dotnet build
-        working-directory: system-test/dotnet
+        working-directory: system-test/dotnet/multitier
 
       - name: Run Smoke Tests (Stub)
         run: dotnet test --filter "FullyQualifiedName~.Latest.SmokeTests" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: system-test/dotnet/multitier
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
@@ -358,11 +358,11 @@ jobs:
 
       - name: Build Test Project
         run: dotnet build
-        working-directory: system-test/dotnet
+        working-directory: system-test/dotnet/multitier
 
       - name: Run Acceptance Tests - API Channel
         run: dotnet test --filter "FullyQualifiedName~.Latest.AcceptanceTests&Category!=isolated" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: system-test/dotnet/multitier
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
@@ -393,7 +393,7 @@ jobs:
 
       - name: Build Test Project
         run: dotnet build
-        working-directory: system-test/dotnet
+        working-directory: system-test/dotnet/multitier
 
       - name: Cache Playwright Browsers
         id: cache-playwright
@@ -406,16 +406,16 @@ jobs:
         timeout-minutes: 5
         if: steps.cache-playwright.outputs.cache-hit != 'true'
         run: pwsh SystemTests/bin/Debug/net8.0/playwright.ps1 install chromium
-        working-directory: system-test/dotnet
+        working-directory: system-test/dotnet/multitier
 
       - name: Install Playwright System Dependencies
         timeout-minutes: 5
         run: pwsh SystemTests/bin/Debug/net8.0/playwright.ps1 install-deps chromium
-        working-directory: system-test/dotnet
+        working-directory: system-test/dotnet/multitier
 
       - name: Run Acceptance Tests - UI Channel
         run: dotnet test --filter "FullyQualifiedName~.Latest.AcceptanceTests&Category!=isolated" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: system-test/dotnet/multitier
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
@@ -447,11 +447,11 @@ jobs:
 
       - name: Build Test Project
         run: dotnet build
-        working-directory: system-test/dotnet
+        working-directory: system-test/dotnet/multitier
 
       - name: Run Acceptance Tests (Isolated) - API Channel
         run: dotnet test --filter "FullyQualifiedName~.Latest.AcceptanceTests&Category=isolated" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: system-test/dotnet/multitier
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
@@ -482,7 +482,7 @@ jobs:
 
       - name: Build Test Project
         run: dotnet build
-        working-directory: system-test/dotnet
+        working-directory: system-test/dotnet/multitier
 
       - name: Cache Playwright Browsers
         id: cache-playwright
@@ -495,16 +495,16 @@ jobs:
         timeout-minutes: 5
         if: steps.cache-playwright.outputs.cache-hit != 'true'
         run: pwsh SystemTests/bin/Debug/net8.0/playwright.ps1 install chromium
-        working-directory: system-test/dotnet
+        working-directory: system-test/dotnet/multitier
 
       - name: Install Playwright System Dependencies
         timeout-minutes: 5
         run: pwsh SystemTests/bin/Debug/net8.0/playwright.ps1 install-deps chromium
-        working-directory: system-test/dotnet
+        working-directory: system-test/dotnet/multitier
 
       - name: Run Acceptance Tests (Isolated) - UI Channel
         run: dotnet test --filter "FullyQualifiedName~.Latest.AcceptanceTests&Category=isolated" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: system-test/dotnet/multitier
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
@@ -536,11 +536,11 @@ jobs:
 
       - name: Build Test Project
         run: dotnet build
-        working-directory: system-test/dotnet
+        working-directory: system-test/dotnet/multitier
 
       - name: Run Contract Tests (Stub)
         run: dotnet test --filter "FullyQualifiedName~.Latest.ExternalSystemContractTests&FullyQualifiedName~Stub&Category!=isolated" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: system-test/dotnet/multitier
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
@@ -570,11 +570,11 @@ jobs:
 
       - name: Build Test Project
         run: dotnet build
-        working-directory: system-test/dotnet
+        working-directory: system-test/dotnet/multitier
 
       - name: Run Contract Tests (Stub) (Isolated)
         run: dotnet test --filter "FullyQualifiedName~.Latest.ExternalSystemContractTests&FullyQualifiedName~Stub&Category=isolated" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: system-test/dotnet/multitier
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
@@ -604,11 +604,11 @@ jobs:
 
       - name: Build Test Project
         run: dotnet build
-        working-directory: system-test/dotnet
+        working-directory: system-test/dotnet/multitier
 
       - name: Run Contract Tests (Real)
         run: dotnet test --filter "FullyQualifiedName~.Latest.ExternalSystemContractTests&FullyQualifiedName~Real" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: system-test/dotnet/multitier
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: real
@@ -638,11 +638,11 @@ jobs:
 
       - name: Build Test Project
         run: dotnet build
-        working-directory: system-test/dotnet
+        working-directory: system-test/dotnet/multitier
 
       - name: Run E2E Tests - API Channel
         run: dotnet test --filter "FullyQualifiedName~.Latest.E2eTests" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: system-test/dotnet/multitier
         env:
           ENVIRONMENT: acceptance
           CHANNEL: API
@@ -672,7 +672,7 @@ jobs:
 
       - name: Build Test Project
         run: dotnet build
-        working-directory: system-test/dotnet
+        working-directory: system-test/dotnet/multitier
 
       - name: Cache Playwright Browsers
         id: cache-playwright
@@ -685,16 +685,16 @@ jobs:
         timeout-minutes: 5
         if: steps.cache-playwright.outputs.cache-hit != 'true'
         run: pwsh SystemTests/bin/Debug/net8.0/playwright.ps1 install chromium
-        working-directory: system-test/dotnet
+        working-directory: system-test/dotnet/multitier
 
       - name: Install Playwright System Dependencies
         timeout-minutes: 5
         run: pwsh SystemTests/bin/Debug/net8.0/playwright.ps1 install-deps chromium
-        working-directory: system-test/dotnet
+        working-directory: system-test/dotnet/multitier
 
       - name: Run E2E Tests - UI Channel
         run: dotnet test --filter "FullyQualifiedName~.Latest.E2eTests" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: system-test/dotnet/multitier
         env:
           ENVIRONMENT: acceptance
           CHANNEL: UI

@@ -1,0 +1,59 @@
+name: shop-stub
+
+services:
+
+  monolith:
+    image: ghcr.io/optivem/shop/monolith-system-java:latest
+    ports:
+      - "3112:8080"
+      - "8112:8080"
+    environment:
+      - POSTGRES_DB_HOST=postgres
+      - POSTGRES_DB_PORT=5432
+      - POSTGRES_DB_NAME=app
+      - POSTGRES_DB_USER=app
+      - POSTGRES_DB_PASSWORD=app
+      - ERP_API_URL=http://external-stub:8080/erp
+      - CLOCK_API_URL=http://external-stub:8080/clock
+      - TAX_API_URL=http://external-stub:8080/tax
+      - EXTERNAL_SYSTEM_MODE=stub
+    depends_on:
+      postgres:
+        condition: service_healthy
+      external-stub:
+        condition: service_started
+    networks:
+      - app-network
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_DB=app
+      - POSTGRES_USER=app
+      - POSTGRES_PASSWORD=app
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d app"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  external-stub:
+    image: wiremock/wiremock:3.10.0
+    ports:
+      - "9112:8080"
+    volumes:
+      - ../../../system/external-stub:/home/wiremock
+    command: --verbose --global-response-templating
+    networks:
+      - app-network
+
+volumes:
+  postgres-data:
+
+networks:
+  app-network:
+    driver: bridge
