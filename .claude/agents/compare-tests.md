@@ -260,7 +260,7 @@ The agent's cross-language rules live in separate docs. Read them before running
    d. Compare classes, interfaces, methods, and DTOs as described above.
 6. Produce two output files:
    a. A **report** (findings — what is different) written to `reports/` at the repo root.
-   b. A **plan** (prescriptive, ordered, actionable steps to make them match) written to `plans/` at the repo root.
+   b. A **plan** (prescriptive, ordered, actionable steps to make them match) written to `.plans/` at the repo root.
 
 ## Output Files
 
@@ -278,9 +278,9 @@ Write the report as one file and the plan as **one file per language that has ac
 
 Write a **separate plan file per language** that has at least one action item. File naming:
 
-- `plans/{YYYYMMDD-HHMM}-compare-tests-{mode}-java.md`
-- `plans/{YYYYMMDD-HHMM}-compare-tests-{mode}-dotnet.md`
-- `plans/{YYYYMMDD-HHMM}-compare-tests-{mode}-typescript.md`
+- `.plans/{YYYYMMDD-HHMM}-compare-tests-{mode}-java.md`
+- `.plans/{YYYYMMDD-HHMM}-compare-tests-{mode}-dotnet.md`
+- `.plans/{YYYYMMDD-HHMM}-compare-tests-{mode}-typescript.md`
 
 **Skip any language that has zero action items** — do not create an empty plan file for it. Java is the default reference implementation, so it often has no action items, but this is **not** automatic: if another language has a clearly better design that Java should adopt, write a Java plan file for those changes.
 

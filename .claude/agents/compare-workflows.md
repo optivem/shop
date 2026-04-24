@@ -146,14 +146,14 @@ Differences that SHOULD be flagged:
 When the comparison is complete, write the results to a **timestamped plan file** at the repo root:
 
 ```
-plans/{YYYYMMDD-HHMM}-compare-workflows.md
+.plans/{YYYYMMDD-HHMM}-compare-workflows.md
 ```
 
-where `{YYYYMMDD-HHMM}` is the current date and time (e.g. `plans/20260422-1430-compare-workflows.md`).
+where `{YYYYMMDD-HHMM}` is the current date and time (e.g. `.plans/20260422-1430-compare-workflows.md`).
 
 To get the timestamp, run: `date -u +"%Y%m%d-%H%M"`
 
-If the `plans/` directory does not exist, create it first (`mkdir -p plans`).
+If the `.plans/` directory does not exist, create it first (`mkdir -p .plans`).
 
 ### Plan File Format
 

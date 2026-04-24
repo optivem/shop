@@ -707,6 +707,6 @@ By area:
 - Architecture — Common: **0** (all language-idiomatic files are on the exceptions list)
 
 Plan files:
-- `plans/20260421-1127-compare-tests-both-dotnet.md`
-- `plans/20260421-1127-compare-tests-both-typescript.md`
+- `.plans/20260421-1127-compare-tests-both-dotnet.md`
+- `.plans/20260421-1127-compare-tests-both-typescript.md`
 - No Java plan file (reference implementation, 0 action items).
