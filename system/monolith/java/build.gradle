@@ -12,7 +12,7 @@ checkstyle {
 	configFile = file("${rootDir}/config/checkstyle/checkstyle.xml")
 }
 
-group = 'com.mycompany.myshop.monolith'
+group = 'com.mycompany.myshop.sysapp'
 version = '0.0.1-SNAPSHOT'
 description = 'MyShop - Monolith'
 
