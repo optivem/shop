@@ -2,7 +2,7 @@ name: meta-prerelease-stage
 
 on:
   schedule:
-    - cron: '0 */6 * * *'  # Every 6 hours
+    - cron: '0 */3 * * *'  # Every 3 hours
   workflow_dispatch:
 
 concurrency:
