@@ -85,7 +85,7 @@ jobs:
         with:
           base-image-urls: |
             ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/monolith-system-java
-          commit-sha: ${{ inputs.commit-sha }}
+          tag: ${{ inputs.commit-sha && format('sha-{0}', inputs.commit-sha) || 'latest' }}
 
       - name: Get Last Successful Workflow Run Timestamp
         id: last-run
@@ -97,8 +97,8 @@ jobs:
         id: should-run
         uses: optivem/actions/check-timestamp-newer@v1
         with:
-          subject: ${{ steps.find-latest.outputs.latest-updated-at }}
-          baseline: ${{ steps.last-run.outputs.timestamp }}
+          latest: ${{ steps.find-latest.outputs.latest-updated-at }}
+          since: ${{ steps.last-run.outputs.timestamp }}
 
       - name: Evaluate Run Gate
         id: gate
@@ -138,7 +138,7 @@ jobs:
         uses: optivem/actions/deploy-docker-compose@v1
         with:
           environment: acceptance
-          version: latest
+          version: ${{ env.COMMIT_SHA }}
           image-urls: ${{ needs.check.outputs.image-digest-urls }}
           compose-file: docker-compose.pipeline.monolith.real.yml
           working-directory: system-test/java
@@ -160,7 +160,7 @@ jobs:
         uses: optivem/actions/deploy-docker-compose@v1
         with:
           environment: acceptance
-          version: latest
+          version: ${{ env.COMMIT_SHA }}
           image-urls: ${{ needs.check.outputs.image-digest-urls }}
           compose-file: docker-compose.pipeline.monolith.stub.yml
           working-directory: system-test/java
@@ -237,7 +237,7 @@ jobs:
         run: ./gradlew test -Dversion=latest -Dtype=contract -DexcludeTags=isolated -DexternalSystemMode=stub -Denvironment=acceptance
         working-directory: system-test/java
 
-      - name: Run Contract Tests (Isolated) (Stub)
+      - name: Run Contract Tests (Stub) (Isolated)
         run: ./gradlew test -Dversion=latest -Dtype=contract -DincludeTags=isolated -DexternalSystemMode=stub -Denvironment=acceptance
         working-directory: system-test/java
 
@@ -273,7 +273,7 @@ jobs:
           image-urls: ${{ needs.check.outputs.image-digest-urls }}
           tag: ${{ steps.rc-version.outputs.version }}
           registry-username: ${{ github.repository_owner }}
-          token: ${{ secrets.GHCR_TOKEN || github.token }}
+          token: ${{ secrets.GHCR_TOKEN }}
 
   publish-tag:
     needs: run

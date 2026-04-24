@@ -83,7 +83,7 @@ jobs:
           base-image-urls: |
             ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-frontend-react
             ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-backend-java
-          commit-sha: ${{ inputs.commit-sha }}
+          tag: ${{ inputs.commit-sha && format('sha-{0}', inputs.commit-sha) || 'latest' }}
 
       - name: Get Last Successful Workflow Run Timestamp
         id: last-run
@@ -95,8 +95,8 @@ jobs:
         id: should-run
         uses: optivem/actions/check-timestamp-newer@v1
         with:
-          subject: ${{ steps.find-latest.outputs.latest-updated-at }}
-          baseline: ${{ steps.last-run.outputs.timestamp }}
+          latest: ${{ steps.find-latest.outputs.latest-updated-at }}
+          since: ${{ steps.last-run.outputs.timestamp }}
 
   deploy-frontend:
     needs: check
@@ -475,7 +475,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
 
-      - name: Run Contract Tests (Isolated) (Stub)
+      - name: Run Contract Tests (Stub) (Isolated)
         run: ./gradlew test -Dversion=latest -Dtype=contract -DincludeTags=isolated -DexternalSystemMode=stub -Denvironment=acceptance -DbaseUrl=${{ needs.deploy-frontend.outputs.app-url }} -DexternalBaseUrl=${{ needs.deploy-external-stub.outputs.external-url }}
         working-directory: system-test/java
 
@@ -599,7 +599,7 @@ jobs:
           image-urls: ${{ needs.check.outputs.image-digest-urls }}
           tag: ${{ steps.rc-version.outputs.version }}
           registry-username: ${{ github.repository_owner }}
-          token: ${{ secrets.GHCR_TOKEN || github.token }}
+          token: ${{ secrets.GHCR_TOKEN }}
 
   publish-tag:
     needs: promote

@@ -73,7 +73,7 @@ jobs:
         with:
           base-image-urls: |
             ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/monolith-system-dotnet
-          commit-sha: ${{ inputs.commit-sha }}
+          tag: ${{ inputs.commit-sha && format('sha-{0}', inputs.commit-sha) || 'latest' }}
 
       - name: Get Last Successful Workflow Run Timestamp
         id: last-run
@@ -85,8 +85,8 @@ jobs:
         id: should-run
         uses: optivem/actions/check-timestamp-newer@v1
         with:
-          subject: ${{ steps.find-latest.outputs.latest-updated-at }}
-          baseline: ${{ steps.last-run.outputs.timestamp }}
+          latest: ${{ steps.find-latest.outputs.latest-updated-at }}
+          since: ${{ steps.last-run.outputs.timestamp }}
 
   run:
     needs: check
@@ -111,7 +111,7 @@ jobs:
         uses: optivem/actions/deploy-docker-compose@v1
         with:
           environment: acceptance
-          version: latest
+          version: ${{ env.COMMIT_SHA }}
           image-urls: ${{ needs.check.outputs.image-digest-urls }}
           compose-file: docker-compose.pipeline.monolith.real.yml
           working-directory: system-test/dotnet
@@ -133,7 +133,7 @@ jobs:
         uses: optivem/actions/deploy-docker-compose@v1
         with:
           environment: acceptance
-          version: latest
+          version: ${{ env.COMMIT_SHA }}
           image-urls: ${{ needs.check.outputs.image-digest-urls }}
           compose-file: docker-compose.pipeline.monolith.stub.yml
           working-directory: system-test/dotnet
@@ -339,7 +339,7 @@ jobs:
         env:
           ENVIRONMENT: acceptance
 
-      - name: mod11 - Run Contract Tests (Isolated) (Stub)
+      - name: mod11 - Run Contract Tests (Stub) (Isolated)
         run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod11.ExternalSystemContractTests&FullyQualifiedName~Stub&Category=isolated" --verbosity normal
         working-directory: system-test/dotnet
         env:
