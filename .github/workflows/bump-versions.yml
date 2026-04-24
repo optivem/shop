@@ -19,14 +19,16 @@ jobs:
         uses: optivem/actions/bump-patch-versions@v1
         with:
           version-files: |
-            VERSION:meta-v,monolith-java-v,monolith-dotnet-v,monolith-typescript-v,multitier-java-v,multitier-dotnet-v,multitier-typescript-v
-            system/monolith/dotnet/VERSION:monolith-dotnet-v,meta-v
-            system/monolith/java/VERSION:monolith-java-v,meta-v
-            system/monolith/typescript/VERSION:monolith-typescript-v,meta-v
-            system/multitier/backend-dotnet/VERSION:multitier-backend-dotnet-v,multitier-dotnet-v,meta-v
-            system/multitier/backend-java/VERSION:multitier-backend-java-v,multitier-java-v,meta-v
-            system/multitier/backend-typescript/VERSION:multitier-backend-typescript-v,multitier-typescript-v,meta-v
-            system/multitier/frontend-react/VERSION:multitier-frontend-react-v,multitier-java-v,multitier-dotnet-v,multitier-typescript-v,meta-v
+            [
+              {"path": "VERSION", "signal": "github-release", "value": "meta-v"},
+              {"path": "system/monolith/dotnet/VERSION",         "signal": "ghcr-image", "value": "ghcr.io/${{ github.repository }}/monolith-system-dotnet"},
+              {"path": "system/monolith/java/VERSION",           "signal": "ghcr-image", "value": "ghcr.io/${{ github.repository }}/monolith-system-java"},
+              {"path": "system/monolith/typescript/VERSION",     "signal": "ghcr-image", "value": "ghcr.io/${{ github.repository }}/monolith-system-typescript"},
+              {"path": "system/multitier/backend-dotnet/VERSION",    "signal": "ghcr-image", "value": "ghcr.io/${{ github.repository }}/multitier-backend-dotnet"},
+              {"path": "system/multitier/backend-java/VERSION",      "signal": "ghcr-image", "value": "ghcr.io/${{ github.repository }}/multitier-backend-java"},
+              {"path": "system/multitier/backend-typescript/VERSION","signal": "ghcr-image", "value": "ghcr.io/${{ github.repository }}/multitier-backend-typescript"},
+              {"path": "system/multitier/frontend-react/VERSION",    "signal": "ghcr-image", "value": "ghcr.io/${{ github.repository }}/multitier-frontend-react"}
+            ]
 
       - name: Build Commit Payload
         id: payload
@@ -39,7 +41,7 @@ jobs:
           files=$(jq -c '[.[] | {
             path: .path,
             content: ("\(.["new-version"])\n"),
-            message: "Bump \(.path) \(.["old-version"]) -> \(.["new-version"]) (post \(.["release-tag"]))"
+            message: "Bump \(.path) \(.["old-version"]) -> \(.["new-version"]) (post \(.["release-signal"]))"
           }]' <<< "$BUMPS")
           echo "files=$files" >> "$GITHUB_OUTPUT"
 
