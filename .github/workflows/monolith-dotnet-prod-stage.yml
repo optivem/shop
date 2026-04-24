@@ -59,13 +59,13 @@ jobs:
         with:
           prerelease-version: ${{ inputs.version || steps.resolve-latest.outputs.base-tag }}
 
-      - name: Check Version Already Released
+      - name: Check System Release Already Published
         id: check-release-tag
         uses: optivem/actions/check-tag-exists@v1
         with:
           tag: ${{ steps.release-version.outputs.version }}
 
-      - name: Verify Version Not Yet Released
+      - name: Verify System Release Not Yet Published
         if: steps.check-release-tag.outputs.exists == 'true'
         shell: bash
         env:
@@ -162,13 +162,6 @@ jobs:
           name: ${{ steps.release-notes.outputs.title }}
           body_path: ${{ steps.release-notes.outputs.notes-file }}
           prerelease: false
-
-      - name: Create Component Tags
-        uses: optivem/actions/create-component-tags@v1
-        with:
-          components: |
-            monolith-system-dotnet:system/monolith/dotnet/VERSION
-          token: ${{ secrets.WORKFLOW_TOKEN }}
 
       - name: Read Component Base Versions
         id: read-component-versions
