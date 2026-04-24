@@ -123,7 +123,7 @@ jobs:
             echo "mt_fe_react=$(tr -d '[:space:]' < system/multitier/frontend-react/VERSION)"
           } >> "$GITHUB_OUTPUT"
 
-      - name: Probe meta GitHub Release
+      - name: Probe Meta System Release
         id: probe-release
         if: ${{ steps.decide.outputs.should_run == 'true' }}
         uses: optivem/actions/check-github-release-exists@v1
@@ -133,7 +133,7 @@ jobs:
               {"key": "meta-v${{ steps.read-versions.outputs.meta }} (from VERSION)", "tag": "meta-v${{ steps.read-versions.outputs.meta }}"}
             ]
 
-      - name: Probe component/monolith GHCR images
+      - name: Probe Component + Monolith Image Tags
         id: probe-images
         if: ${{ steps.decide.outputs.should_run == 'true' }}
         uses: optivem/actions/check-ghcr-image-tag-exists@v1
@@ -149,7 +149,7 @@ jobs:
               {"key": "multitier-frontend-react:v${{ steps.read-versions.outputs.mt_fe_react }} (from system/multitier/frontend-react/VERSION)",       "image-url": "ghcr.io/${{ github.repository }}/multitier-frontend-react",     "tag": "v${{ steps.read-versions.outputs.mt_fe_react }}"}
             ]
 
-      - name: Verify versions not already released
+      - name: Verify System Release + Component Images Not Yet Published
         if: ${{ steps.decide.outputs.should_run == 'true' }}
         shell: bash
         env:

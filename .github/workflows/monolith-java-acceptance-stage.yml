@@ -64,11 +64,14 @@ jobs:
         id: read-base-version
         uses: optivem/actions/read-base-version@v1
 
-      - name: Check Version Already Released
+      - name: Check System Release Already Published
         id: check-tag
-        uses: optivem/actions/check-tag-exists@v1
+        uses: optivem/actions/check-github-release-exists@v1
         with:
-          tag: monolith-java-v${{ steps.read-base-version.outputs.base-version }}
+          releases: |
+            [
+              {"key": "monolith-java-v${{ steps.read-base-version.outputs.base-version }}", "tag": "monolith-java-v${{ steps.read-base-version.outputs.base-version }}"}
+            ]
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v4
@@ -103,7 +106,7 @@ jobs:
         with:
           skip-conditions: |
             [
-              {"when": ${{ steps.check-tag.outputs.exists == 'true' }}, "reason": "Release in progress — version already tagged, awaiting post-release VERSION bump."},
+              {"when": ${{ steps.check-tag.outputs.any-exist == 'true' }}, "reason": "Release in progress — version already tagged, awaiting post-release VERSION bump."},
               {"when": ${{ steps.should-run.outputs.newer != 'true' }}, "reason": "No new artifacts since the last successful run."}
             ]
 
