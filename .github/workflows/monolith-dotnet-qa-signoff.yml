@@ -4,9 +4,10 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version that was tested in QA (e.g., v1.0.0-rc.1)'
-        required: true
+        description: 'Version that was tested in QA (e.g., monolith-dotnet-v1.0.0-rc.1). Leave empty to sign off on the latest RC deployed to QA.'
+        required: false
         type: string
+        default: ''
       result:
         description: 'QA testing result'
         required: true
@@ -23,6 +24,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    outputs:
+      version: ${{ inputs.version || steps.resolve-latest.outputs.base-tag }}
     steps:
       - name: Ensure Environment Variables Defined
         uses: optivem/actions/validate-env-vars-defined@v1
@@ -32,7 +35,16 @@ jobs:
         env:
           WORKFLOW_TOKEN: ${{ secrets.WORKFLOW_TOKEN }}
 
+      - name: Resolve Latest QA-Deployed RC
+        id: resolve-latest
+        if: inputs.version == ''
+        uses: optivem/actions/resolve-latest-prerelease-tag@v1
+        with:
+          tag-prefix: monolith-dotnet-v
+          tag-suffix: -qa-deployed
+
       - name: Check RC Exists
+        if: inputs.version != ''
         uses: optivem/actions/validate-tag-exists@v1
         with:
           tag: ${{ inputs.version }}
@@ -50,13 +62,13 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v6
         with:
-          ref: ${{ inputs.version }}
+          ref: ${{ needs.check.outputs.version }}
 
       - name: Generate QA Signoff Tag
         id: promote
         uses: optivem/actions/compose-prerelease-status@v1
         with:
-          prerelease-version: ${{ inputs.version }}
+          prerelease-version: ${{ needs.check.outputs.version }}
           environment: qa
           status: ${{ inputs.result }}
 
