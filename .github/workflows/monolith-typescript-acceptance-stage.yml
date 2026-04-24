@@ -261,14 +261,14 @@ jobs:
 
       - name: Run Contract Tests (Stub)
         working-directory: system-test/typescript
-        run: npx playwright test --project=external-system-contract-test tests/latest/contract --grep-invert "@isolated" --workers=1
+        run: npx playwright test --project=external-system-contract-test "tests/latest/contract/.*-stub-.*\.spec\.ts" --grep-invert "@isolated" --workers=1
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
 
       - name: Run Contract Tests (Stub) (Isolated)
         working-directory: system-test/typescript
-        run: npx playwright test --project=external-system-contract-test tests/latest/contract --grep "@isolated" --workers=1
+        run: npx playwright test --project=external-system-contract-test "tests/latest/contract/.*-stub-.*\.spec\.ts" --grep "@isolated" --workers=1
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub

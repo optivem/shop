@@ -287,6 +287,7 @@ jobs:
         env:
           ENVIRONMENT: acceptance
           CHANNEL: UI
+          CHANNEL_MODE: static
 
       - name: mod09 - Run Smoke Tests (Stub)
         working-directory: system-test/typescript
@@ -317,6 +318,7 @@ jobs:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
           CHANNEL: UI
+          CHANNEL_MODE: static
 
       - name: mod10 - Run Acceptance Tests (Isolated) - API Channel
         working-directory: system-test/typescript
@@ -333,17 +335,18 @@ jobs:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
           CHANNEL: UI
+          CHANNEL_MODE: static
 
       - name: mod11 - Run Contract Tests (Stub)
         working-directory: system-test/typescript
-        run: npx playwright test --project=external-system-contract-test tests/legacy/mod11/contract --grep-invert "@isolated" --workers=1
+        run: npx playwright test --project=external-system-contract-test "tests/legacy/mod11/contract/.*-stub-.*\.spec\.ts" --grep-invert "@isolated" --workers=1
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
 
       - name: mod11 - Run Contract Tests (Stub) (Isolated)
         working-directory: system-test/typescript
-        run: npx playwright test --project=external-system-contract-test tests/legacy/mod11/contract --grep "@isolated" --workers=1
+        run: npx playwright test --project=external-system-contract-test "tests/legacy/mod11/contract/.*-stub-.*\.spec\.ts" --grep "@isolated" --workers=1
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
@@ -368,6 +371,7 @@ jobs:
         env:
           ENVIRONMENT: acceptance
           CHANNEL: UI
+          CHANNEL_MODE: static
 
   summary:
     needs: [preflight, check, run]

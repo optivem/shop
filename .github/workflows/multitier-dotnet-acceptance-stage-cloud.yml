@@ -539,7 +539,7 @@ jobs:
         working-directory: system-test/dotnet
 
       - name: Run Contract Tests (Stub)
-        run: dotnet test --filter "FullyQualifiedName~.Latest.ExternalSystemContractTests&Category!=isolated" --verbosity normal
+        run: dotnet test --filter "FullyQualifiedName~.Latest.ExternalSystemContractTests&FullyQualifiedName~Stub&Category!=isolated" --verbosity normal
         working-directory: system-test/dotnet
         env:
           ENVIRONMENT: acceptance
@@ -573,7 +573,7 @@ jobs:
         working-directory: system-test/dotnet
 
       - name: Run Contract Tests (Stub) (Isolated)
-        run: dotnet test --filter "FullyQualifiedName~.Latest.ExternalSystemContractTests&Category=isolated" --verbosity normal
+        run: dotnet test --filter "FullyQualifiedName~.Latest.ExternalSystemContractTests&FullyQualifiedName~Stub&Category=isolated" --verbosity normal
         working-directory: system-test/dotnet
         env:
           ENVIRONMENT: acceptance

@@ -119,7 +119,7 @@ $Config = @{
         @{  Id = "mod08-e2e-ui";
             SampleTest = "shouldPlaceOrder";
             Name = "mod08 (scenario dsl) - E2E (real) - UI";
-            Command = "& .\gradlew.bat test -Dversion=mod08 -Dtype=e2e -Dchannel=UI -Denvironment=local";
+            Command = "& .\gradlew.bat test -Dversion=mod08 -Dtype=e2e -Dchannel=UI -DchannelMode=static -Denvironment=local";
             Path = ".";
             TestReportPath = "build\reports\tests\test\index.html";
             TestInstallCommands = $null; },
@@ -151,7 +151,7 @@ $Config = @{
         @{  Id = "mod10-acceptance-ui";
             SampleTest = "orderNumberShouldStartWithORD";
             Name = "mod10 (acceptance) - Acceptance (stub) - UI";
-            Command = "& .\gradlew.bat test -Dversion=mod10 -Dtype=acceptance -DexcludeTags=isolated -Dchannel=UI -Denvironment=local";
+            Command = "& .\gradlew.bat test -Dversion=mod10 -Dtype=acceptance -DexcludeTags=isolated -Dchannel=UI -DchannelMode=static -Denvironment=local";
             Path = ".";
             TestReportPath = "build\reports\tests\test\index.html";
             TestInstallCommands = $null; },
@@ -165,7 +165,7 @@ $Config = @{
         @{  Id = "mod10-acceptance-isolated-ui";
             SampleTest = "shouldRecordPlacementTimestamp";
             Name = "mod10 (acceptance) - Acceptance Isolated (stub) - UI";
-            Command = "& .\gradlew.bat test -Dversion=mod10 -Dtype=acceptance -DincludeTags=isolated -Dchannel=UI -Denvironment=local";
+            Command = "& .\gradlew.bat test -Dversion=mod10 -Dtype=acceptance -DincludeTags=isolated -Dchannel=UI -DchannelMode=static -Denvironment=local";
             Path = ".";
             TestReportPath = "build\reports\tests\test\index.html";
             TestInstallCommands = $null; },
@@ -202,7 +202,7 @@ $Config = @{
         @{  Id = "mod11-e2e-ui";
             SampleTest = "shouldPlaceOrder";
             Name = "mod11 (contract) - E2E (real) - UI";
-            Command = "& .\gradlew.bat test -Dversion=mod11 -Dtype=e2e -Dchannel=UI -Denvironment=local";
+            Command = "& .\gradlew.bat test -Dversion=mod11 -Dtype=e2e -Dchannel=UI -DchannelMode=static -Denvironment=local";
             Path = ".";
             TestReportPath = "build\reports\tests\test\index.html";
             TestInstallCommands = $null; }
