@@ -75,9 +75,9 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/sysapp-java
           tag: ${{ inputs.commit-sha && format('sha-{0}', inputs.commit-sha) || 'latest' }}
 
-      - name: Get Last Successful Workflow Run Timestamp
+      - name: Get Last Workflow Run
         id: last-run
-        uses: optivem/actions/get-last-successful-github-workflow-run-timestamp@v1
+        uses: optivem/actions/get-last-workflow-run@v1
         with:
           workflow-name: ${{ github.workflow }}
 

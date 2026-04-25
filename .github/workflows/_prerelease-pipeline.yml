@@ -190,7 +190,7 @@ jobs:
       matrix:
         workflow: ${{ fromJSON(inputs.commit-workflows) }}
     steps:
-      - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
+      - uses: optivem/actions/trigger-and-wait-for-workflow@v1
         with:
           workflow: ${{ matrix.workflow }}
           workflow-inputs: '{"commit-sha": "${{ inputs.commit-sha }}"}'
@@ -202,7 +202,7 @@ jobs:
     outputs:
       version: ${{ steps.get-version.outputs.tag }}
     steps:
-      - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
+      - uses: optivem/actions/trigger-and-wait-for-workflow@v1
         with:
           workflow: ${{ inputs.prefix }}-acceptance-stage.yml
           poll-interval: '300'
@@ -233,7 +233,7 @@ jobs:
     if: ${{ always() && inputs.level != 'commit' && !inputs.skip-acceptance-legacy && needs.acceptance-stage.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
+      - uses: optivem/actions/trigger-and-wait-for-workflow@v1
         with:
           workflow: ${{ inputs.prefix }}-acceptance-stage-legacy.yml
           poll-interval: '300'
@@ -245,7 +245,7 @@ jobs:
     if: ${{ always() && inputs.level == 'qa' && needs.acceptance-stage.result == 'success' && contains(fromJSON('["success","skipped"]'), needs.acceptance-stage-legacy.result) }}
     runs-on: ubuntu-latest
     steps:
-      - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
+      - uses: optivem/actions/trigger-and-wait-for-workflow@v1
         with:
           workflow: ${{ inputs.prefix }}-qa-stage.yml
           timeout-seconds: '3600'
@@ -256,7 +256,7 @@ jobs:
     if: ${{ always() && inputs.level == 'qa' && needs.qa-stage.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
+      - uses: optivem/actions/trigger-and-wait-for-workflow@v1
         with:
           workflow: ${{ inputs.prefix }}-qa-signoff.yml
           workflow-inputs: '{"version": "${{ needs.acceptance-stage.outputs.version }}", "result": "approved"}'

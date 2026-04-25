@@ -156,7 +156,7 @@ jobs:
     needs: check
     runs-on: ubuntu-latest
     steps:
-      - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
+      - uses: optivem/actions/trigger-and-wait-for-workflow@v1
         with:
           workflow: monolith-java-prod-stage.yml
           timeout-seconds: '3600'
@@ -166,7 +166,7 @@ jobs:
     needs: check
     runs-on: ubuntu-latest
     steps:
-      - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
+      - uses: optivem/actions/trigger-and-wait-for-workflow@v1
         with:
           workflow: monolith-dotnet-prod-stage.yml
           timeout-seconds: '3600'
@@ -176,7 +176,7 @@ jobs:
     needs: check
     runs-on: ubuntu-latest
     steps:
-      - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
+      - uses: optivem/actions/trigger-and-wait-for-workflow@v1
         with:
           workflow: monolith-typescript-prod-stage.yml
           timeout-seconds: '3600'
@@ -186,7 +186,7 @@ jobs:
     needs: check
     runs-on: ubuntu-latest
     steps:
-      - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
+      - uses: optivem/actions/trigger-and-wait-for-workflow@v1
         with:
           workflow: multitier-java-prod-stage.yml
           timeout-seconds: '3600'
@@ -196,7 +196,7 @@ jobs:
     needs: check
     runs-on: ubuntu-latest
     steps:
-      - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
+      - uses: optivem/actions/trigger-and-wait-for-workflow@v1
         with:
           workflow: multitier-dotnet-prod-stage.yml
           timeout-seconds: '3600'
@@ -206,7 +206,7 @@ jobs:
     needs: check
     runs-on: ubuntu-latest
     steps:
-      - uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
+      - uses: optivem/actions/trigger-and-wait-for-workflow@v1
         with:
           workflow: multitier-typescript-prod-stage.yml
           timeout-seconds: '3600'

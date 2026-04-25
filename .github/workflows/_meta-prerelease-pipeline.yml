@@ -196,7 +196,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - if: ${{ inputs.variant == 'all' || inputs.variant == matrix.variant }}
-        uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
+        uses: optivem/actions/trigger-and-wait-for-workflow@v1
         with:
           workflow: prerelease-pipeline-${{ matrix.variant }}.yml
           workflow-inputs: '{"level": "local", "skip-commit-stage": "true", "skip-acceptance-legacy": "${{ inputs.skip-acceptance-legacy }}", "commit-sha": "${{ github.sha }}"}'
@@ -234,7 +234,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - if: ${{ contains(fromJSON(matrix.variants), inputs.variant) }}
-        uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
+        uses: optivem/actions/trigger-and-wait-for-workflow@v1
         with:
           workflow: ${{ matrix.workflow }}
           workflow-inputs: '{"commit-sha": "${{ github.sha }}"}'
@@ -252,7 +252,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - if: ${{ inputs.variant == 'all' || inputs.variant == matrix.variant }}
-        uses: optivem/actions/trigger-and-wait-for-github-workflow@v1
+        uses: optivem/actions/trigger-and-wait-for-workflow@v1
         with:
           workflow: prerelease-pipeline-${{ matrix.variant }}.yml
           timeout-seconds: '14400'
