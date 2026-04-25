@@ -38,7 +38,7 @@ jobs:
       contents: read
     outputs:
       should-run: ${{ steps.should-run.outputs.newer }}
-      skip-reason: ${{ steps.should-run.outputs.newer != 'true' && 'No new artifacts since the last successful run.' || '' }}
+      skip-reason: ${{ steps.should-run.outputs.newer != 'true' && 'No new artifacts since the last run.' || '' }}
       image-digest-urls: ${{ steps.find-latest.outputs.image-digest-urls }}
       latest-updated-at: ${{ steps.find-latest.outputs.latest-updated-at }}
       last-run-at: ${{ steps.last-run.outputs.timestamp }}

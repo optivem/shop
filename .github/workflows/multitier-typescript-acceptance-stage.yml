@@ -109,7 +109,7 @@ jobs:
           skip-conditions: |
             [
               {"when": ${{ steps.check-tag.outputs.exists == 'true' }}, "reason": "Release in progress — version already tagged, awaiting post-release VERSION bump."},
-              {"when": ${{ steps.should-run.outputs.newer != 'true' }}, "reason": "No new artifacts since the last successful run."}
+              {"when": ${{ steps.should-run.outputs.newer != 'true' }}, "reason": "No new artifacts since the last run."}
             ]
 
   run:
