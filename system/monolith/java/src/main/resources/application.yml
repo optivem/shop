@@ -1,6 +1,6 @@
 spring:
   application:
-    name: sysapp
+    name: myShop
   jackson:
     deserialization:
       ACCEPT_FLOAT_AS_INT: false

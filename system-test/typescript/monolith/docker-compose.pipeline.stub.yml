@@ -2,7 +2,7 @@ name: my-shop-stub
 
 services:
 
-  sysapp:
+  system:
     image: ghcr.io/optivem/shop/monolith-system-typescript:latest
     ports:
       - "3312:8080"

@@ -2,7 +2,7 @@ name: my-shop-stub
 
 services:
 
-  sysapp:
+  system:
     image: ghcr.io/optivem/shop/monolith-system-dotnet:latest
     ports:
       - "3212:8080"

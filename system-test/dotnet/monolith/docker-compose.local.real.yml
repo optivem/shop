@@ -2,7 +2,7 @@ name: my-shop-real
 
 services:
 
-  sysapp:
+  system:
     build:
       context: ../../../system/monolith/dotnet
       dockerfile: Dockerfile

@@ -2,7 +2,7 @@ name: my-shop-real
 
 services:
 
-  sysapp:
+  system:
     image: ghcr.io/optivem/shop/monolith-system-java:latest
     ports:
       - "3111:8080"

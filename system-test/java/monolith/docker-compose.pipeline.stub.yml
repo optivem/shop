@@ -2,7 +2,7 @@ name: my-shop-stub
 
 services:
 
-  sysapp:
+  system:
     image: ghcr.io/optivem/shop/monolith-system-java:latest
     ports:
       - "3112:8080"

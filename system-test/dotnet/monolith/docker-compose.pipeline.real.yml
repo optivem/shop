@@ -2,7 +2,7 @@ name: my-shop-real
 
 services:
 
-  sysapp:
+  system:
     image: ghcr.io/optivem/shop/monolith-system-dotnet:latest
     ports:
       - "3211:8080"
