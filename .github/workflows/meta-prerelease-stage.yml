@@ -5,6 +5,11 @@ on:
     - cron: '0 */3 * * *'  # Every 3 hours
   workflow_dispatch:
     inputs:
+      skip-tests:
+        description: 'Bypass ALL test phases and tag the meta-rc directly. RECOVERY-ONLY: meta-release-stage requires all 6 <flavor>-v<VERSION>-rc.*-qa-approved git tags to already exist. Use this only when those approvals exist from a previous run but the meta-rc tag itself was never created (e.g. a transient failure after qa-approved was set). Without those flavor approvals the meta-rc will be tagged but meta-release-stage will fail.'
+        required: false
+        type: boolean
+        default: false
       fail-fast:
         description: 'When true (default), the first failing matrix entry cancels its siblings. Set false to let every variant run to completion.'
         required: false
@@ -23,5 +28,6 @@ jobs:
       level: qa
       variant: all
       skip-local: false
+      skip-tests: ${{ inputs.skip-tests == null && false || inputs.skip-tests }}
       is-release-run: true
       fail-fast: ${{ inputs.fail-fast == null && true || inputs.fail-fast }}

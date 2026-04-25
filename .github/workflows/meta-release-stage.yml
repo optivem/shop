@@ -24,6 +24,11 @@ on:
         required: false
         default: ''
         type: string
+      skip-qa:
+        description: 'Bypass the per-flavor QA approval gate. For each flavor, use the latest <flavor>-v<VERSION>-rc.* tag (the RC published by meta-prerelease) instead of requiring the *-qa-approved variant. Promote jobs still run against those RCs and the meta-v tag/release is created normally — the only thing skipped is the QA approval requirement.'
+        required: false
+        default: false
+        type: boolean
 
 concurrency:
   group: meta-release-stage
@@ -129,23 +134,40 @@ jobs:
           fi
           echo "Release tag ${RELEASE_TAG} is available"
 
-      - name: Find flavor QA-approved RCs
+      - name: Find flavor RCs to promote
         id: flavor-rcs
         env:
           VERSION: ${{ steps.resolve.outputs.version }}
+          SKIP_QA: ${{ inputs.skip-qa }}
         run: |
           set -euo pipefail
-          # For each flavor, find the highest-numbered RC whose QA-approved tag exists at this VERSION.
-          # The flavor prod-stage takes the RC version (without the -qa-approved suffix) as input.
+          # Default mode: require the *-qa-approved suffix (QA gate).
+          # skip-qa mode: accept any <flavor>-v<VERSION>-rc.* tag (the RC published by meta-prerelease's
+          # per-flavor acceptance stages, before QA approval). Filter out any -qa-approved variants
+          # that happen to match the glob so they don't get picked over the bare RC.
+          if [[ "$SKIP_QA" == "true" ]]; then
+            echo "skip-qa=true — using latest <flavor>-v<VERSION>-rc.* (QA approval not required)"
+          fi
           for flavor in monolith-java monolith-dotnet monolith-typescript multitier-java multitier-dotnet multitier-typescript; do
-            rc=$(git tag --list "${flavor}-v${VERSION}-rc.*-qa-approved" \
-              | sed -E 's/-qa-approved$//' \
-              | awk -F'-rc\.' '{print $2 " " $0}' \
-              | sort -k1,1 -n \
-              | tail -n 1 \
-              | awk '{print $2}')
+            if [[ "$SKIP_QA" == "true" ]]; then
+              rc=$(git tag --list "${flavor}-v${VERSION}-rc.*" \
+                | awk '!/-qa-approved$/' \
+                | awk -F'-rc\.' '{print $2 " " $0}' \
+                | sort -k1,1 -n \
+                | tail -n 1 \
+                | awk '{print $2}')
+              missing="No RC tag matching ${flavor}-v${VERSION}-rc.* — was meta-prerelease run to completion?"
+            else
+              rc=$(git tag --list "${flavor}-v${VERSION}-rc.*-qa-approved" \
+                | sed -E 's/-qa-approved$//' \
+                | awk -F'-rc\.' '{print $2 " " $0}' \
+                | sort -k1,1 -n \
+                | tail -n 1 \
+                | awk '{print $2}')
+              missing="No QA-approved RC found for ${flavor} at v${VERSION}. Was the acceptance pipeline run to completion? (Re-dispatch with skip-qa=true to bypass the QA gate and use the latest unapproved RC.)"
+            fi
             if [[ -z "$rc" ]]; then
-              echo "::error::No QA-approved RC found for ${flavor} at v${VERSION}. Was the acceptance pipeline run to completion?"
+              echo "::error::${missing}"
               exit 1
             fi
             echo "${flavor}-rc=${rc}" >> "$GITHUB_OUTPUT"

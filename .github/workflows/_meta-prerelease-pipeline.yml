@@ -28,6 +28,11 @@ on:
         required: false
         type: boolean
         default: false
+      skip-tests:
+        description: 'Bypass ALL test phases (local, commit, pipeline) and tag the meta-rc directly. RECOVERY-ONLY: meta-release-stage (triggered by the meta-rc tag) requires all 6 <flavor>-v<VERSION>-rc.*-qa-approved git tags to already exist. Use this only when those flavor approvals exist from a previous run but the meta-rc tag itself was never created (e.g. a transient failure after qa-approved was set). Otherwise the meta-rc will be tagged but meta-release-stage will fail. The check job still runs (no-meaningful-changes / version-already-released probes).'
+        required: false
+        type: boolean
+        default: false
       fail-fast:
         description: 'When true (default), the first failing matrix entry cancels its siblings. Set false to let every variant run to completion — useful when comparing failures across variants in one run.'
         required: false
@@ -62,6 +67,7 @@ jobs:
           echo "Skip local: ${{ inputs.skip-local }}"
           echo "Skip acceptance-legacy: ${{ inputs.skip-acceptance-legacy }}"
           echo "Is release run: ${{ inputs.is-release-run }}"
+          echo "Skip tests: ${{ inputs.skip-tests }}"
           echo "Fail-fast: ${{ inputs.fail-fast }}"
           echo "Triggered by: ${{ github.event_name }} ${{ github.event.schedule }}"
       - uses: actions/checkout@v6
@@ -195,7 +201,7 @@ jobs:
   # Phase 0: Run all local stages in parallel. fail-fast (input, default true) cancels siblings on first failure.
   local:
     needs: check
-    if: ${{ needs.check.outputs.should_run == 'true' && !inputs.skip-local }}
+    if: ${{ needs.check.outputs.should_run == 'true' && !inputs.skip-local && !inputs.skip-tests }}
     strategy:
       fail-fast: ${{ inputs.fail-fast }}
       matrix:
@@ -212,7 +218,7 @@ jobs:
   # across multitier variants). fail-fast (input, default true) cancels siblings on first failure.
   commit:
     needs: local
-    if: ${{ always() && !failure() && !cancelled() && contains(fromJSON('["commit","acceptance","qa"]'), inputs.level) }}
+    if: ${{ always() && !failure() && !cancelled() && !inputs.skip-tests && contains(fromJSON('["commit","acceptance","qa"]'), inputs.level) }}
     strategy:
       fail-fast: ${{ inputs.fail-fast }}
       matrix:
@@ -251,7 +257,7 @@ jobs:
   # fail-fast (input, default true) cancels siblings on first failure.
   pipeline:
     needs: commit
-    if: ${{ always() && !failure() && !cancelled() && contains(fromJSON('["acceptance","qa"]'), inputs.level) }}
+    if: ${{ always() && !failure() && !cancelled() && !inputs.skip-tests && contains(fromJSON('["acceptance","qa"]'), inputs.level) }}
     strategy:
       fail-fast: ${{ inputs.fail-fast }}
       matrix:
@@ -269,9 +275,12 @@ jobs:
   # level is qa, variant is all, and all 6 language×architecture combos passed.
   # is-release-run defaults to false, so meta-prerelease-dry-run never tags even if
   # invoked with variant=all — preventing accidental promotion to a real release.
+  # When skip-tests is true the strict gates (level/variant/skip-acceptance-legacy)
+  # are bypassed: the caller has already accepted that no testing was performed.
+  # check is in needs so should_run still guards scheduled no-change skips.
   tag-meta-rc:
-    needs: pipeline
-    if: ${{ success() && inputs.is-release-run && inputs.level == 'qa' && inputs.variant == 'all' && !inputs.skip-acceptance-legacy }}
+    needs: [check, pipeline]
+    if: ${{ always() && !failure() && !cancelled() && needs.check.outputs.should_run == 'true' && inputs.is-release-run && (inputs.skip-tests || (inputs.level == 'qa' && inputs.variant == 'all' && !inputs.skip-acceptance-legacy)) }}
     runs-on: ubuntu-latest
     permissions:
       contents: write

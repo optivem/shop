@@ -6,9 +6,6 @@
 - Docker Desktop (running)
 - JDK 21+
 
-> **Note:** Suite commands in `tests-*.json` invoke `.\gradlew.bat` and are
-> currently Windows-only. Linux/macOS support is a follow-up.
-
 ## Running Tests
 
 All commands are run from this directory (`system-test/java/`).
