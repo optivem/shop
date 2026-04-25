@@ -28,6 +28,11 @@ on:
         required: false
         type: boolean
         default: false
+      fail-fast:
+        description: 'When true (default), the first failing matrix entry cancels its siblings. Set false to let every variant run to completion — useful when comparing failures across variants in one run.'
+        required: false
+        type: boolean
+        default: true
 
 jobs:
   # Single gate before any downstream jobs:
@@ -185,12 +190,12 @@ jobs:
           fi
           echo "All artifacts available for current VERSION values across meta + monoliths + components. OK to proceed."
 
-  # Phase 0: Run all local stages in parallel. fail-fast cancels siblings on first failure.
+  # Phase 0: Run all local stages in parallel. fail-fast (input, default true) cancels siblings on first failure.
   local:
     needs: check
     if: ${{ needs.check.outputs.should_run == 'true' && !inputs.skip-local }}
     strategy:
-      fail-fast: true
+      fail-fast: ${{ inputs.fail-fast }}
       matrix:
         variant: [monolith-java, monolith-dotnet, monolith-typescript, multitier-java, multitier-dotnet, multitier-typescript]
     runs-on: ubuntu-latest
@@ -202,12 +207,12 @@ jobs:
           workflow-inputs: '{"level": "local", "skip-commit-stage": "true", "skip-acceptance-legacy": "${{ inputs.skip-acceptance-legacy }}", "commit-sha": "${{ github.sha }}"}'
 
   # Phase 1: Run all commit stages in parallel (deduplicated — frontend-react is shared
-  # across multitier variants). fail-fast cancels siblings on first failure.
+  # across multitier variants). fail-fast (input, default true) cancels siblings on first failure.
   commit:
     needs: local
     if: ${{ always() && !failure() && !cancelled() && contains(fromJSON('["commit","acceptance","qa"]'), inputs.level) }}
     strategy:
-      fail-fast: true
+      fail-fast: ${{ inputs.fail-fast }}
       matrix:
         include:
           - stage: monolith-java
@@ -241,12 +246,12 @@ jobs:
 
   # Phase 2: Run all pipelines in parallel. Each pipeline produces RC tags namespaced
   # by its prefix (e.g. monolith-java-v1.0.0-rc.N), so there are no shared-counter collisions.
-  # fail-fast cancels siblings on first failure.
+  # fail-fast (input, default true) cancels siblings on first failure.
   pipeline:
     needs: commit
     if: ${{ always() && !failure() && !cancelled() && contains(fromJSON('["acceptance","qa"]'), inputs.level) }}
     strategy:
-      fail-fast: true
+      fail-fast: ${{ inputs.fail-fast }}
       matrix:
         variant: [monolith-java, monolith-dotnet, monolith-typescript, multitier-java, multitier-dotnet, multitier-typescript]
     runs-on: ubuntu-latest

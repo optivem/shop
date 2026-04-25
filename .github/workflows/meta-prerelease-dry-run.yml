@@ -44,6 +44,11 @@ on:
         required: false
         type: boolean
         default: true
+      fail-fast:
+        description: 'When true (default), the first failing matrix entry cancels its siblings. Set false to let every variant run to completion.'
+        required: false
+        type: boolean
+        default: true
 
 # Shared concurrency group with meta-prerelease-stage so dry-runs and whole runs
 # serialize rather than stepping on each other.
@@ -60,6 +65,7 @@ jobs:
       variant: ${{ inputs.variant }}
       skip-local: ${{ inputs.skip-local }}
       skip-acceptance-legacy: ${{ inputs.skip-acceptance-legacy }}
+      fail-fast: ${{ inputs.fail-fast }}
 
   # Fire-and-forget: on successful dry-run, dispatch the real meta-prerelease-stage.
   # Cannot trigger-and-wait because both workflows share the meta-prerelease-stage

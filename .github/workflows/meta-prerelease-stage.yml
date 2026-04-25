@@ -4,6 +4,12 @@ on:
   schedule:
     - cron: '0 */3 * * *'  # Every 3 hours
   workflow_dispatch:
+    inputs:
+      fail-fast:
+        description: 'When true (default), the first failing matrix entry cancels its siblings. Set false to let every variant run to completion.'
+        required: false
+        type: boolean
+        default: true
 
 concurrency:
   group: meta-prerelease-stage
@@ -18,3 +24,4 @@ jobs:
       variant: all
       skip-local: false
       is-release-run: true
+      fail-fast: ${{ inputs.fail-fast == null && true || inputs.fail-fast }}
