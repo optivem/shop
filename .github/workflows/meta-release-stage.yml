@@ -314,8 +314,13 @@ jobs:
             echo "| multitier-typescript | $(tag_link "${MULTITIER_TYPESCRIPT_RC}") |"
           } >> "$GITHUB_STEP_SUMMARY"
 
+  # Explicit if: required because GitHub's implicit success() propagates skipped
+  # status through transitive needs — when skip-qa=true the 6 promote-<flavor>
+  # jobs are skipped, and the implicit check would skip this job too even though
+  # tag-meta-release succeeded.
   auto-bump-patch:
     needs: tag-meta-release
+    if: ${{ !failure() && !cancelled() && needs.tag-meta-release.result == 'success' }}
     uses: ./.github/workflows/auto-bump-patch.yml
     secrets: inherit
 
@@ -323,8 +328,10 @@ jobs:
   # against the just-published meta-v* tag. We do not wait for it to finish —
   # gh-acceptance-stage verifies the release, it does not gate it. The target
   # workflow idempotently skips already-verified SHAs, so re-dispatches are safe.
+  # Explicit if: required for the same reason as auto-bump-patch above.
   trigger-gh-acceptance:
     needs: [check, tag-meta-release]
+    if: ${{ !failure() && !cancelled() && needs.tag-meta-release.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - name: Dispatch gh-acceptance-stage in optivem/gh-optivem
