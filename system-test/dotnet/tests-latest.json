@@ -1,0 +1,103 @@
+{
+  "setupCommands": [
+    { "name": "Clean", "command": "dotnet clean" },
+    { "name": "Build", "command": "dotnet build" }
+  ],
+  "testFilter": "&DisplayName~<test>",
+  "suites": [
+    {
+      "id": "smoke-stub",
+      "name": "latest - Smoke (stub)",
+      "command": "dotnet test --filter 'FullyQualifiedName~.Latest.SmokeTests' -e EXTERNAL_SYSTEM_MODE=stub --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed' -e ENVIRONMENT=local",
+      "path": "SystemTests",
+      "testReportPath": "SystemTests\\TestResults\\testResults.html",
+      "sampleTest": "ShouldBeAbleToGoToMyShop",
+      "testInstallCommands": ["pwsh bin/Debug/net8.0/playwright.ps1 install"]
+    },
+    {
+      "id": "smoke-real",
+      "name": "latest - Smoke (real)",
+      "command": "dotnet test --filter 'FullyQualifiedName~.Latest.SmokeTests' -e EXTERNAL_SYSTEM_MODE=real --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed' -e ENVIRONMENT=local",
+      "path": "SystemTests",
+      "testReportPath": "SystemTests\\TestResults\\testResults.html",
+      "sampleTest": "ShouldBeAbleToGoToMyShop",
+      "testInstallCommands": ["pwsh bin/Debug/net8.0/playwright.ps1 install"]
+    },
+    {
+      "id": "acceptance-api",
+      "name": "latest - Acceptance (stub) - API",
+      "command": "dotnet test --filter 'FullyQualifiedName~.Latest.AcceptanceTests&Category!=isolated' -e CHANNEL=API --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed' -e ENVIRONMENT=local",
+      "path": "SystemTests",
+      "testReportPath": "SystemTests\\TestResults\\testResults.html",
+      "sampleTest": "ShouldBeAbleToPlaceOrderForValidInput"
+    },
+    {
+      "id": "acceptance-ui",
+      "name": "latest - Acceptance (stub) - UI",
+      "command": "dotnet test --filter 'FullyQualifiedName~.Latest.AcceptanceTests&Category!=isolated' -e CHANNEL=UI -e CHANNEL_MODE=static --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed' -e ENVIRONMENT=local",
+      "path": "SystemTests",
+      "testReportPath": "SystemTests\\TestResults\\testResults.html",
+      "sampleTest": "ShouldBeAbleToPlaceOrderForValidInput",
+      "testInstallCommands": ["pwsh bin/Debug/net8.0/playwright.ps1 install"]
+    },
+    {
+      "id": "acceptance-isolated-api",
+      "name": "latest - Acceptance Isolated (stub) - API",
+      "command": "dotnet test --filter 'FullyQualifiedName~.Latest.AcceptanceTests&Category=isolated' -e CHANNEL=API --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed' -e ENVIRONMENT=local",
+      "path": "SystemTests",
+      "testReportPath": "SystemTests\\TestResults\\testResults.html",
+      "sampleTest": "ShouldRecordPlacementTimestamp"
+    },
+    {
+      "id": "acceptance-isolated-ui",
+      "name": "latest - Acceptance Isolated (stub) - UI",
+      "command": "dotnet test --filter 'FullyQualifiedName~.Latest.AcceptanceTests&Category=isolated' -e CHANNEL=UI -e CHANNEL_MODE=static --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed' -e ENVIRONMENT=local",
+      "path": "SystemTests",
+      "testReportPath": "SystemTests\\TestResults\\testResults.html",
+      "sampleTest": "ShouldRecordPlacementTimestamp",
+      "testInstallCommands": ["pwsh bin/Debug/net8.0/playwright.ps1 install"]
+    },
+    {
+      "id": "contract-stub",
+      "name": "latest - Contract (stub)",
+      "command": "dotnet test --filter 'FullyQualifiedName~.Latest.ExternalSystemContractTests&FullyQualifiedName~Stub&Category!=isolated' --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed' -e ENVIRONMENT=local",
+      "path": "SystemTests",
+      "testReportPath": "SystemTests\\TestResults\\testResults.html",
+      "sampleTest": "ShouldBeAbleToGetTime"
+    },
+    {
+      "id": "contract-stub-isolated",
+      "name": "latest - Contract Isolated (stub)",
+      "command": "dotnet test --filter 'FullyQualifiedName~.Latest.ExternalSystemContractTests&FullyQualifiedName~Stub&Category=isolated' --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed' -e ENVIRONMENT=local",
+      "path": "SystemTests",
+      "testReportPath": "SystemTests\\TestResults\\testResults.html",
+      "sampleTest": "ShouldBeAbleToGetConfiguredTime"
+    },
+    {
+      "id": "contract-real",
+      "name": "latest - Contract (real)",
+      "command": "dotnet test --filter 'FullyQualifiedName~.Latest.ExternalSystemContractTests&FullyQualifiedName~Real' --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed' -e ENVIRONMENT=local",
+      "path": "SystemTests",
+      "testReportPath": "SystemTests\\TestResults\\testResults.html",
+      "sampleTest": "ShouldBeAbleToGetTime"
+    },
+    {
+      "id": "e2e-api",
+      "name": "latest - E2E (real) - API",
+      "command": "dotnet test --filter 'FullyQualifiedName~.Latest.E2eTests' -e CHANNEL=API --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed' -e ENVIRONMENT=local",
+      "path": "SystemTests",
+      "testReportPath": "SystemTests\\TestResults\\testResults.html",
+      "sampleTest": "ShouldPlaceOrder",
+      "testInstallCommands": ["pwsh bin/Debug/net8.0/playwright.ps1 install"]
+    },
+    {
+      "id": "e2e-ui",
+      "name": "latest - E2E (real) - UI",
+      "command": "dotnet test --filter 'FullyQualifiedName~.Latest.E2eTests' -e CHANNEL=UI -e CHANNEL_MODE=static --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed' -e ENVIRONMENT=local",
+      "path": "SystemTests",
+      "testReportPath": "SystemTests\\TestResults\\testResults.html",
+      "sampleTest": "ShouldPlaceOrder",
+      "testInstallCommands": ["pwsh bin/Debug/net8.0/playwright.ps1 install"]
+    }
+  ]
+}

@@ -1,33 +1,57 @@
 # Running System Tests
 
-## All languages at once — `Run-AllSystemTests.ps1`
+The `gh optivem` CLI extension orchestrates the docker-compose stacks and runs
+the test suites. Install it once with:
+
+```bash
+gh extension install optivem/gh-optivem
+```
+
+## All languages at once — `run-all-system-tests.sh`
 
 From the repo root:
 
-```powershell
-./Run-AllSystemTests.ps1 -Architecture monolith
+```bash
+./run-all-system-tests.sh -a monolith
 ```
 
-Runs both **latest** and **legacy** suites across all three languages (.NET, Java, TypeScript) sequentially, prints a per-language / per-phase summary, and exits non-zero on any failure.
+Runs both **latest** and **legacy** suites across all three languages (.NET,
+Java, TypeScript) sequentially, prints a per-language / per-phase summary, and
+exits non-zero on any failure.
 
 Useful flags:
 
-- `-Languages dotnet,java` — run only a subset of languages
-- `-Rebuild` — rebuild containers before running tests
-- `-Mode pipeline` — use pipeline config instead of local
+- `-l dotnet,java` — run only a subset of languages
+- `-a multitier` — run against the multitier architecture instead of monolith
 
 This is the preferred entry point for verifying cross-language changes.
 
-## Single language — `Run-SystemTests.ps1`
+## Single language — `gh optivem run system tests`
 
-From `system-test/<language>/`:
+From `system-test/<language>/`, e.g. `system-test/typescript/`:
 
-```powershell
-./Run-SystemTests.ps1 -Architecture monolith            # latest suites
-./Run-SystemTests.ps1 -Architecture monolith -Legacy    # legacy suites
-./Run-SystemTests.ps1 -Architecture monolith -Sample    # one sample per suite (fast smoke)
+```bash
+# Bring up the docker-compose stacks for the chosen architecture
+gh optivem run system --system monolith/system.json
+
+# Run the latest suites
+gh optivem run system tests --system monolith/system.json --tests tests-latest.json
+
+# Or the legacy suites
+gh optivem run system tests --system monolith/system.json --tests tests-legacy.json
+
+# Or a fast smoke (one sample per suite)
+gh optivem run system tests --system monolith/system.json --tests tests-latest.json --sample
+
+# Stop when done
+gh optivem stop system --system monolith/system.json
 ```
 
-Use this when iterating on a single language, or for the `-Sample` pre-commit verification described in [CLAUDE.md](../CLAUDE.md).
+Use this when iterating on a single language, or for the `--sample`
+pre-commit verification described in [CLAUDE.md](../CLAUDE.md).
 
-Do **not** substitute `./gradlew test`, `mvn test`, `dotnet test`, or `npm test` — these wrappers manage Docker containers and config selection that the raw toolchain does not.
+Substitute `multitier/system.json` for the multitier architecture.
+
+Do **not** substitute `./gradlew test`, `mvn test`, `dotnet test`, or `npm
+test` — these wrappers manage Docker containers and per-suite environment
+variables that the raw toolchain does not.

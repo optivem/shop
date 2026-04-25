@@ -1,0 +1,96 @@
+{
+  "setupCommands": [
+    { "name": "Clean Build", "command": ".\\gradlew.bat clean compileJava compileTestJava" }
+  ],
+  "testFilter": "--tests '*.<test>'",
+  "suites": [
+    {
+      "id": "smoke-stub",
+      "name": "latest - Smoke (stub)",
+      "command": ".\\gradlew.bat test -Dversion=latest -Dtype=smoke -DexternalSystemMode=stub -Denvironment=local",
+      "path": ".",
+      "testReportPath": "build\\reports\\tests\\test\\index.html",
+      "sampleTest": "shouldBeAbleToGoToClock"
+    },
+    {
+      "id": "smoke-real",
+      "name": "latest - Smoke (real)",
+      "command": ".\\gradlew.bat test -Dversion=latest -Dtype=smoke -DexternalSystemMode=real -Denvironment=local",
+      "path": ".",
+      "testReportPath": "build\\reports\\tests\\test\\index.html",
+      "sampleTest": "shouldBeAbleToGoToClock"
+    },
+    {
+      "id": "acceptance-api",
+      "name": "latest - Acceptance (stub) - API",
+      "command": ".\\gradlew.bat test -Dversion=latest -Dtype=acceptance -DexcludeTags=isolated -Dchannel=API -Denvironment=local",
+      "path": ".",
+      "testReportPath": "build\\reports\\tests\\test\\index.html",
+      "sampleTest": "shouldBeAbleToPlaceOrderForValidInput"
+    },
+    {
+      "id": "acceptance-ui",
+      "name": "latest - Acceptance (stub) - UI",
+      "command": ".\\gradlew.bat test -Dversion=latest -Dtype=acceptance -DexcludeTags=isolated -Dchannel=UI -Denvironment=local -DchannelMode=static",
+      "path": ".",
+      "testReportPath": "build\\reports\\tests\\test\\index.html",
+      "sampleTest": "shouldBeAbleToPlaceOrderForValidInput"
+    },
+    {
+      "id": "acceptance-isolated-api",
+      "name": "latest - Acceptance Isolated (stub) - API",
+      "command": ".\\gradlew.bat test -Dversion=latest -Dtype=acceptance -DincludeTags=isolated -Dchannel=API -Denvironment=local",
+      "path": ".",
+      "testReportPath": "build\\reports\\tests\\test\\index.html",
+      "sampleTest": "shouldRecordPlacementTimestamp"
+    },
+    {
+      "id": "acceptance-isolated-ui",
+      "name": "latest - Acceptance Isolated (stub) - UI",
+      "command": ".\\gradlew.bat test -Dversion=latest -Dtype=acceptance -DincludeTags=isolated -Dchannel=UI -Denvironment=local -DchannelMode=static",
+      "path": ".",
+      "testReportPath": "build\\reports\\tests\\test\\index.html",
+      "sampleTest": "shouldRecordPlacementTimestamp"
+    },
+    {
+      "id": "contract-stub",
+      "name": "latest - Contract (stub)",
+      "command": ".\\gradlew.bat test -Dversion=latest -Dtype=contract -DexcludeTags=isolated -DexternalSystemMode=stub -Denvironment=local",
+      "path": ".",
+      "testReportPath": "build\\reports\\tests\\test\\index.html",
+      "sampleTest": "shouldBeAbleToGetProduct"
+    },
+    {
+      "id": "contract-stub-isolated",
+      "name": "latest - Contract Isolated (stub)",
+      "command": ".\\gradlew.bat test -Dversion=latest -Dtype=contract -DincludeTags=isolated -DexternalSystemMode=stub -Denvironment=local",
+      "path": ".",
+      "testReportPath": "build\\reports\\tests\\test\\index.html",
+      "sampleTest": "shouldBeAbleToGetConfiguredTime"
+    },
+    {
+      "id": "contract-real",
+      "name": "latest - Contract (real)",
+      "command": ".\\gradlew.bat test -Dversion=latest -Dtype=contract -DexternalSystemMode=real -Denvironment=local",
+      "path": ".",
+      "testReportPath": "build\\reports\\tests\\test\\index.html",
+      "sampleTest": "shouldBeAbleToGetProduct"
+    },
+    {
+      "id": "e2e-api",
+      "name": "latest - E2E (real) - API",
+      "command": ".\\gradlew.bat test -Dversion=latest -Dtype=e2e -Dchannel=API -Denvironment=local",
+      "path": ".",
+      "testReportPath": "build\\reports\\tests\\test\\index.html",
+      "sampleTest": "shouldPlaceOrder"
+    },
+    {
+      "id": "e2e-ui",
+      "name": "latest - E2E (real) - UI",
+      "command": ".\\gradlew.bat test -Dversion=latest -Dtype=e2e -Dchannel=UI -Denvironment=local -DchannelMode=static",
+      "path": ".",
+      "testReportPath": "build\\reports\\tests\\test\\index.html",
+      "sampleTest": "shouldPlaceOrder"
+    }
+  ]
+}

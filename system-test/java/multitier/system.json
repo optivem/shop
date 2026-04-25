@@ -1,0 +1,30 @@
+{
+  "systems": [
+    {
+      "label": "real",
+      "composeFile": "docker-compose.local.real.yml",
+      "containerName": "my-shop-real",
+      "components": [
+        { "name": "Frontend",    "url": "http://localhost:3111",        "containerName": "frontend" },
+        { "name": "Backend API", "url": "http://localhost:8111/health", "containerName": "backend" }
+      ],
+      "externalSystems": [
+        { "name": "ERP API (Real)",   "url": "http://localhost:9111/erp/health",   "containerName": "external-real" },
+        { "name": "Clock API (Real)", "url": "http://localhost:9111/clock/health", "containerName": "external-real" }
+      ]
+    },
+    {
+      "label": "stub",
+      "composeFile": "docker-compose.local.stub.yml",
+      "containerName": "my-shop-stub",
+      "components": [
+        { "name": "Frontend",    "url": "http://localhost:3112",        "containerName": "frontend" },
+        { "name": "Backend API", "url": "http://localhost:8112/health", "containerName": "backend" }
+      ],
+      "externalSystems": [
+        { "name": "ERP API (Stub)",   "url": "http://localhost:9112/erp/health",   "containerName": "external-stub" },
+        { "name": "Clock API (Stub)", "url": "http://localhost:9112/clock/health", "containerName": "external-stub" }
+      ]
+    }
+  ]
+}

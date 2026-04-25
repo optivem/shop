@@ -1,0 +1,108 @@
+{
+  "setupCommands": [
+    { "name": "Install Dependencies", "command": "npm ci" },
+    { "name": "Install Playwright Browsers", "command": "npx playwright install chromium" }
+  ],
+  "testFilter": "--grep '<test>'",
+  "suites": [
+    {
+      "id": "smoke-stub",
+      "name": "latest - Smoke (stub)",
+      "command": "npx playwright test --project=smoke-test tests/latest/smoke",
+      "env": { "EXTERNAL_SYSTEM_MODE": "stub", "ENVIRONMENT": "local" },
+      "path": ".",
+      "testReportPath": "playwright-report\\index.html",
+      "sampleTest": "shouldBeAbleToGoToMyShop"
+    },
+    {
+      "id": "smoke-real",
+      "name": "latest - Smoke (real)",
+      "command": "npx playwright test --project=smoke-test tests/latest/smoke",
+      "env": { "EXTERNAL_SYSTEM_MODE": "real", "ENVIRONMENT": "local" },
+      "path": ".",
+      "testReportPath": "playwright-report\\index.html",
+      "sampleTest": "shouldBeAbleToGoToMyShop"
+    },
+    {
+      "id": "acceptance-api",
+      "name": "latest - Acceptance (stub) - API",
+      "command": "npx playwright test --project=acceptance-test --grep-invert '@isolated' tests/latest/acceptance",
+      "env": { "CHANNEL": "API", "EXTERNAL_SYSTEM_MODE": "stub", "ENVIRONMENT": "local" },
+      "path": ".",
+      "testReportPath": "playwright-report\\index.html",
+      "sampleTest": "shouldBeAbleToBrowseCoupons"
+    },
+    {
+      "id": "acceptance-ui",
+      "name": "latest - Acceptance (stub) - UI",
+      "command": "npx playwright test --project=acceptance-test --grep-invert '@isolated' tests/latest/acceptance",
+      "env": { "CHANNEL": "UI", "CHANNEL_MODE": "static", "EXTERNAL_SYSTEM_MODE": "stub", "ENVIRONMENT": "local" },
+      "path": ".",
+      "testReportPath": "playwright-report\\index.html",
+      "sampleTest": "shouldBeAbleToBrowseCoupons"
+    },
+    {
+      "id": "acceptance-isolated-api",
+      "name": "latest - Acceptance Isolated (stub) - API",
+      "command": "npx playwright test --project=acceptance-test --workers=1 --grep '@isolated' tests/latest/acceptance",
+      "env": { "CHANNEL": "API", "EXTERNAL_SYSTEM_MODE": "stub", "ENVIRONMENT": "local" },
+      "path": ".",
+      "testReportPath": "playwright-report\\index.html",
+      "sampleTest": "shouldBeAbleToCancelOrder"
+    },
+    {
+      "id": "acceptance-isolated-ui",
+      "name": "latest - Acceptance Isolated (stub) - UI",
+      "command": "npx playwright test --project=acceptance-test --workers=1 --grep '@isolated' tests/latest/acceptance",
+      "env": { "CHANNEL": "UI", "CHANNEL_MODE": "static", "EXTERNAL_SYSTEM_MODE": "stub", "ENVIRONMENT": "local" },
+      "path": ".",
+      "testReportPath": "playwright-report\\index.html",
+      "sampleTest": "shouldBeAbleToCancelOrder"
+    },
+    {
+      "id": "contract-stub",
+      "name": "latest - Contract (stub)",
+      "command": "npx playwright test --project=external-system-contract-test --workers=1 --grep-invert '@isolated' 'tests/latest/contract/.*-stub-.*\\.spec\\.ts'",
+      "env": { "EXTERNAL_SYSTEM_MODE": "stub", "ENVIRONMENT": "local" },
+      "path": ".",
+      "testReportPath": "playwright-report\\index.html",
+      "sampleTest": "shouldBeAbleToGetTime"
+    },
+    {
+      "id": "contract-isolated-stub",
+      "name": "latest - Contract Isolated (stub)",
+      "command": "npx playwright test --project=external-system-contract-test --workers=1 --grep '@isolated' 'tests/latest/contract/.*-stub-.*\\.spec\\.ts'",
+      "env": { "EXTERNAL_SYSTEM_MODE": "stub", "ENVIRONMENT": "local" },
+      "path": ".",
+      "testReportPath": "playwright-report\\index.html",
+      "sampleTest": "shouldBeAbleToGetConfiguredTime"
+    },
+    {
+      "id": "contract-real",
+      "name": "latest - Contract (real)",
+      "command": "npx playwright test --project=external-system-contract-test --workers=1 'tests/latest/contract/.*-real-.*\\.spec\\.ts'",
+      "env": { "EXTERNAL_SYSTEM_MODE": "real", "ENVIRONMENT": "local" },
+      "path": ".",
+      "testReportPath": "playwright-report\\index.html",
+      "sampleTest": "shouldBeAbleToGetTime"
+    },
+    {
+      "id": "e2e-api",
+      "name": "latest - E2E (real) - API",
+      "command": "npx playwright test --project=e2e-test tests/latest/e2e",
+      "env": { "CHANNEL": "API", "ENVIRONMENT": "local" },
+      "path": ".",
+      "testReportPath": "playwright-report\\index.html",
+      "sampleTest": "shouldPlaceOrder"
+    },
+    {
+      "id": "e2e-ui",
+      "name": "latest - E2E (real) - UI",
+      "command": "npx playwright test --project=e2e-test tests/latest/e2e",
+      "env": { "CHANNEL": "UI", "CHANNEL_MODE": "static", "ENVIRONMENT": "local" },
+      "path": ".",
+      "testReportPath": "playwright-report\\index.html",
+      "sampleTest": "shouldPlaceOrder"
+    }
+  ]
+}

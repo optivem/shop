@@ -2,20 +2,57 @@
 
 ## Prerequisites
 
-- PowerShell 7+
+- gh CLI with the optivem extension: `gh extension install optivem/gh-optivem`
 - Docker Desktop (running)
 - Node.js 22+
 
-## Architectures
+## Running Tests
 
-MyShop ships two architectures side-by-side. Each has its own compose files and
-usage examples:
+All commands are run from this directory (`system-test/typescript/`).
 
-- [monolith/README.md](monolith/README.md) — single-service system
-- [multitier/README.md](multitier/README.md) — frontend + backend + external simulators
+Bring up the system stack (real + stub) for the chosen architecture:
 
-The entry-point script `Run-SystemTests.ps1` accepts `-Architecture monolith|multitier`
-and dot-sources the selected architecture's configuration from its subdirectory.
+```bash
+gh optivem run system --system monolith/system.json
+```
+
+Run all latest test suites:
+
+```bash
+gh optivem run system tests --system monolith/system.json --tests tests-latest.json
+```
+
+Run legacy test suites:
+
+```bash
+gh optivem run system tests --system monolith/system.json --tests tests-legacy.json
+```
+
+Run only sample tests (one per suite, fast smoke):
+
+```bash
+gh optivem run system tests --system monolith/system.json --tests tests-latest.json --sample
+```
+
+Run a specific suite by ID:
+
+```bash
+gh optivem run system tests --system monolith/system.json --tests tests-latest.json --suite acceptance-api
+```
+
+Rebuild container images before bringing the system up:
+
+```bash
+gh optivem build system --system monolith/system.json
+```
+
+Stop the system when done:
+
+```bash
+gh optivem stop system --system monolith/system.json
+```
+
+Substitute `multitier/system.json` for the multitier architecture.
 
 ## Available Suite IDs
 
@@ -28,7 +65,7 @@ and dot-sources the selected architecture's configuration from its subdirectory.
 | `acceptance-isolated-api` | Isolated acceptance tests - API channel |
 | `acceptance-isolated-ui` | Isolated acceptance tests - UI channel |
 | `contract-stub` | Contract tests (stub) |
-| `contract-stub-isolated` | Isolated contract tests (stub) |
+| `contract-isolated-stub` | Isolated contract tests (stub) |
 | `contract-real` | Contract tests (real) |
 | `e2e-api` | E2E tests (real) - API channel |
 | `e2e-ui` | E2E tests (real) - UI channel |
