@@ -10,7 +10,7 @@
       "command": ".\\gradlew.bat test -Dversion=mod02 -Dtype=smoke -DexternalSystemMode=real -Denvironment=local",
       "path": ".",
       "testReportPath": "build\\reports\\tests\\test\\index.html",
-      "sampleTest": "shouldBeAbleToGoToClock"
+      "sampleTest": "shouldBeAbleToGoToMyShop"
     },
     {
       "id": "mod03-e2e",
@@ -26,7 +26,7 @@
       "command": ".\\gradlew.bat test -Dversion=mod04 -Dtype=smoke -DexternalSystemMode=real -Denvironment=local",
       "path": ".",
       "testReportPath": "build\\reports\\tests\\test\\index.html",
-      "sampleTest": "shouldBeAbleToGoToClock"
+      "sampleTest": "shouldBeAbleToGoToMyShop"
     },
     {
       "id": "mod04-e2e",
@@ -42,7 +42,7 @@
       "command": ".\\gradlew.bat test -Dversion=mod05 -Dtype=smoke -DexternalSystemMode=real -Denvironment=local",
       "path": ".",
       "testReportPath": "build\\reports\\tests\\test\\index.html",
-      "sampleTest": "shouldBeAbleToGoToClock"
+      "sampleTest": "shouldBeAbleToGoToMyShop"
     },
     {
       "id": "mod05-e2e",
@@ -58,7 +58,7 @@
       "command": ".\\gradlew.bat test -Dversion=mod06 -Dtype=smoke -DexternalSystemMode=real -Denvironment=local",
       "path": ".",
       "testReportPath": "build\\reports\\tests\\test\\index.html",
-      "sampleTest": "shouldBeAbleToGoToClock"
+      "sampleTest": "shouldBeAbleToGoToMyShop"
     },
     {
       "id": "mod06-e2e-api",
@@ -82,7 +82,7 @@
       "command": ".\\gradlew.bat test -Dversion=mod07 -Dtype=smoke -DexternalSystemMode=real -Denvironment=local",
       "path": ".",
       "testReportPath": "build\\reports\\tests\\test\\index.html",
-      "sampleTest": "shouldBeAbleToGoToClock"
+      "sampleTest": "shouldBeAbleToGoToMyShop"
     },
     {
       "id": "mod07-e2e-api",
@@ -106,7 +106,7 @@
       "command": ".\\gradlew.bat test -Dversion=mod08 -Dtype=smoke -DexternalSystemMode=real -Denvironment=local",
       "path": ".",
       "testReportPath": "build\\reports\\tests\\test\\index.html",
-      "sampleTest": "shouldBeAbleToGoToClock"
+      "sampleTest": "shouldBeAbleToGoToMyShop"
     },
     {
       "id": "mod08-e2e-api",

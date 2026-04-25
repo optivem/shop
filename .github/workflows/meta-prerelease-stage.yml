@@ -11,10 +11,10 @@ on:
         type: boolean
         default: false
       fail-fast:
-        description: 'When true (default), the first failing matrix entry cancels its siblings. Set false to let every variant run to completion.'
+        description: 'When true, the first failing matrix entry cancels its siblings. Default false lets every variant run to completion.'
         required: false
         type: boolean
-        default: true
+        default: false
 
 concurrency:
   group: meta-prerelease-stage
@@ -30,4 +30,4 @@ jobs:
       skip-local: false
       skip-tests: ${{ inputs.skip-tests == null && false || inputs.skip-tests }}
       is-release-run: true
-      fail-fast: ${{ inputs.fail-fast == null && true || inputs.fail-fast }}
+      fail-fast: ${{ inputs.fail-fast == null && false || inputs.fail-fast }}
