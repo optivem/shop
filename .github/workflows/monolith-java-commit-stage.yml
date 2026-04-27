@@ -80,6 +80,13 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
 
+      - name: Pre-warm Gradle Wrapper (retry transient CDN flakes)
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 5
+          max_attempts: 3
+          command: cd system/monolith/java && ./gradlew --version
+
       - name: Compile Code
         run: ./gradlew build
         working-directory: system/monolith/java

@@ -186,6 +186,13 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
 
+      - name: Pre-warm Gradle Wrapper (retry transient CDN flakes)
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 5
+          max_attempts: 3
+          command: cd system-test/java && ./gradlew --version
+
       - name: Cache Playwright Browsers
         id: cache-playwright
         uses: actions/cache@v5
