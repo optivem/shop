@@ -145,7 +145,6 @@ jobs:
         if: ${{ steps.decide.outputs.should_run == 'true' }}
         uses: optivem/actions/check-ghcr-packages-exist@v1
         with:
-          fail-on-error: 'true'
           image-urls: |
             ghcr.io/${{ github.repository }}/monolith-system-dotnet:v${{ steps.read-versions.outputs.meta }}
             ghcr.io/${{ github.repository }}/monolith-system-java:v${{ steps.read-versions.outputs.meta }}
