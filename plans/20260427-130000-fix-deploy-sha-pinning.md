@@ -1,5 +1,7 @@
 # Plan — Fix SHA-Pinning in Pipeline Deploy
 
+🤖 **Picked up by agent** — `Valentina_Desk` at `2026-04-27T17:17:07Z`
+
 **Date:** 2026-04-27
 **Status:** not started
 **Owner:** unassigned

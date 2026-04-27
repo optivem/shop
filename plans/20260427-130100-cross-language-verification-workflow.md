@@ -16,9 +16,9 @@ This is purely a **regression check**. It does NOT tag images, publish git tags,
 - **Not in per-(arch, lang) acceptance stages** — those produce per-artifact RC tags. Adding cross-lang verification to each stage would (a) get template-copy-pasted across 6 workflows, (b) couple "Java RC release" to "all 3 backends green" — wrong, since a flaky .NET image should not block a Java release.
 - **One standalone workflow** — runs on its own cadence, fails loud, blocks nothing.
 
-## Out of scope
+## Out of scope (for Phase 1 / Phase 2)
 
-- `tests-legacy.json` — legacy tests pin to specific historical module versions. Cross-lang parity is about current behavior. If a future audit shows legacy parity is also valuable, add a second cron job.
+- `tests-legacy.json` cross-lang verification. **Not dropped — deferred to Phase 3** as a standalone workflow rather than co-mounted in this matrix. Rationale: legacy tests pin to specific historical module versions, so the failure modes (version-pin drift vs cross-lang behavior drift) are different in kind from latest. Mixing them in one matrix would muddy the signal and double wall time before we even know if the latest matrix is stable. See Phase 3 below.
 - Fixing the SHA-pinning gap in pipeline compose files. Tracked separately in [20260427-130000-fix-deploy-sha-pinning.md](20260427-130000-fix-deploy-sha-pinning.md). Phase 2 of this plan depends on that being done.
 - Test code base-URL parameterization. The cross-lang matrix maps each system-lang to its own port set (java=31xx, dotnet=32xx, ts=33xx). If `system-test/<test-lang>/` test code hardcodes one port set in its config, those tests will hit "wrong" ports when pointed at a different system-lang. Likely needs base-URL injection via env var. **Defer until Phase 1 dry run reveals whether this is actually broken** — possible the test runner already reads URLs from `system.json` via the gh-optivem runner.
 
@@ -70,6 +70,26 @@ Once `deploy-docker-compose` honors the resolved digest and the pipeline compose
 
 **Risk specific to Phase 2:**
 - Cross-lang testing pre-built images means failures could indicate (a) genuine cross-lang behavior drift OR (b) drift between source HEAD and the published image. Minor confusion, manageable via good error messaging in the test summary.
+
+## Phase 3 — legacy cross-lang verification (open question, separate workflow)
+
+**Status:** open question — do we want this at all?
+
+If Phases 1–2 prove the cross-lang signal is valuable, consider extending coverage to `tests-legacy.json`. Two design rules:
+
+1. **Separate workflow file** — `cross-lang-system-verification-legacy.yml`, not a `tests-config` matrix dimension on the existing workflow. Keeps the latest signal independent (a flaky legacy run must not bury a clean latest result).
+2. **Separate cron** — distinct schedule from latest (e.g. weekly, or shifted off the daily latest run) to avoid runner contention and keep wall time bounded.
+
+**Open questions to answer before starting Phase 3:**
+
+- [ ] **Is legacy cross-lang parity a meaningful signal?** Legacy tests pin to specific historical module versions. A failure could mean (a) genuine cross-lang behavior drift OR (b) version-pin artifacts that have nothing to do with cross-lang. If it's mostly (b), the workflow is noise.
+- [ ] **What's the right cadence?** Weekly is the strawman — legacy moves slowly, daily is overkill. Confirm after a few sample runs.
+- [ ] **Does build-from-source even apply to legacy?** Phase 1's "build SUT from current SHA" semantics make less sense when the *test* config pins to historical module versions. May need to pull pre-built images for the pinned SHAs from GHCR (only viable post-Phase 2).
+
+**Items remaining for Phase 3:**
+
+- [ ] **Decide go/no-go after Phase 1 dry run** — if latest cross-lang fails for boring reasons (port mismatches, infra flake), there's no point extending to legacy until the basic mechanism is proven.
+- [ ] **If go: copy `cross-lang-system-verification.yml` to `*-legacy.yml`**, swap `tests-latest.json` → `tests-legacy.json`, give it a separate cron, and revisit the build-vs-pull decision.
 
 ## Cron cadence
 
