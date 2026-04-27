@@ -22,7 +22,75 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      should-run: ${{ steps.gate.outputs.should-run }}
+      skip-reason: ${{ steps.gate.outputs.skip-reason }}
+      trigger-name: ${{ steps.trigger.outputs.name }}
+    steps:
+      - name: Resolve Trigger Name
+        id: trigger
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          SCHEDULE: ${{ github.event.schedule }}
+        run: |
+          set -euo pipefail
+          if [[ "$EVENT_NAME" == 'workflow_dispatch' ]]; then
+            name='manual'
+          elif [[ "$SCHEDULE" == '0 */3 * * *' ]]; then
+            name='gated-3h'
+          elif [[ "$SCHEDULE" == '0 7 * * 1' ]]; then
+            name='weekly-heartbeat'
+          else
+            name='unrecognized-schedule'
+            echo "::warning::Unrecognized schedule expression '$SCHEDULE' — gate will fail-open and run the pipeline."
+          fi
+          echo "Trigger: $name (event=$EVENT_NAME, schedule='$SCHEDULE')"
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Get Latest Commit Timestamp
+        id: commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          ts=$(git log -1 --format=%cI HEAD)
+          echo "Latest commit timestamp: $ts"
+          echo "timestamp=$ts" >> "$GITHUB_OUTPUT"
+
+      - name: Get Last Workflow Run
+        id: last-run
+        uses: optivem/actions/get-last-workflow-run@v1
+        with:
+          workflow-name: ${{ github.workflow }}
+
+      - name: Check for New Commits Since Last Run
+        id: should-run
+        uses: optivem/actions/check-timestamp-newer@v1
+        with:
+          latest: ${{ steps.commit.outputs.timestamp }}
+          since: ${{ steps.last-run.outputs.timestamp }}
+
+      - name: Evaluate Run Gate
+        id: gate
+        uses: optivem/actions/evaluate-run-gate@v1
+        with:
+          skip-conditions: |
+            [
+              {"when": ${{ steps.trigger.outputs.name == 'gated-3h' && steps.should-run.outputs.newer != 'true' }}, "reason": "Gated 3-hour run skipped — no new commits since the last run. Weekly heartbeat will still fire."}
+            ]
+
   run:
+    needs: check
+    if: needs.check.outputs.should-run == 'true'
     uses: ./.github/workflows/_meta-prerelease-pipeline.yml
     secrets: inherit
     with:
