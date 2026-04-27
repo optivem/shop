@@ -76,8 +76,7 @@ If a GitHub issue number was provided as input, prefix every commit message with
 2. Implement the External System Stubs.
 3. Run the External System Contract Tests:
    ```
-   gh optivem build system --rebuild
-   gh optivem test system --suite <suite-contract-stub> --test <TestMethodName>
+   gh optivem test system --rebuild --suite <suite-contract-stub> --test <TestMethodName>
    ```
 4. Verify that the tests pass. If they fail, ask the user. STOP. Do NOT continue.
 5. STOP. Present the stub implementation to the user and ask for approval. Do NOT continue.

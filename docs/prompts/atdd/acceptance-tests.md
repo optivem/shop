@@ -103,8 +103,7 @@ If a GitHub issue number was provided as input, prefix every commit message with
    a. Implement the backend changes.
    b. Run acceptance tests for the API channel:
       ```
-      gh optivem build system --rebuild
-      gh optivem test system --suite <acceptance-api> --test <TestMethodName>
+      gh optivem test system --rebuild --suite <acceptance-api> --test <TestMethodName>
       ```
    c. If tests fail, fix the backend until the tests pass.
    d. If you have challenges making the tests pass, ask the user.
@@ -113,8 +112,7 @@ If a GitHub issue number was provided as input, prefix every commit message with
    a. Implement the frontend changes.
    b. Run acceptance tests for the UI channel:
       ```
-      gh optivem build system --rebuild
-      gh optivem test system --suite <acceptance-ui> --test <TestMethodName>
+      gh optivem test system --rebuild --suite <acceptance-ui> --test <TestMethodName>
       ```
    c. If tests fail, fix the frontend until the tests pass.
    d. If you have challenges making the tests pass, ask the user.
