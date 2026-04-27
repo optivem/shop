@@ -94,8 +94,8 @@ jobs:
           attempt_delay: 10000
           with: |
             registry: ghcr.io
-            username: ${{ github.actor }}
-            password: ${{ secrets.GITHUB_TOKEN }}
+            username: ${{ github.repository_owner }}
+            password: ${{ secrets.GHCR_TOKEN }}
 
       - name: Resolve Docker Image Digests
         id: find-latest
@@ -189,8 +189,8 @@ jobs:
           attempt_delay: 10000
           with: |
             registry: ghcr.io
-            username: ${{ github.actor }}
-            password: ${{ secrets.GITHUB_TOKEN }}
+            username: ${{ github.repository_owner }}
+            password: ${{ secrets.GHCR_TOKEN }}
 
       - name: Simulate Deployment (Real External Systems)
         uses: optivem/actions/deploy-docker-compose@v1

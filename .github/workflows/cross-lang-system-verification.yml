@@ -1,0 +1,99 @@
+name: cross-lang-system-verification
+
+# Verifies behavior parity across system languages: each test-lang's suite
+# is run against every other system-lang's SUT (Java tests vs .NET system,
+# .NET tests vs TypeScript system, etc.). Same-lang-vs-same-system combos
+# are excluded — they are already covered by the per-(arch, lang)
+# acceptance stages.
+#
+# This workflow is purely a regression check. It does NOT tag images,
+# publish git tags, or trigger downstream prerelease pipelines. Failures
+# here surface backend-behavior drift but do not block any release.
+#
+# SHA pinning is structurally tighter than the per-lang acceptance stages:
+# `checkout @ <sha>` atomically pins source code, docker-compose files,
+# system.json, and tests config to one commit. Images are built from source
+# at that SHA — no GHCR lookups, no digest resolution.
+
+on:
+  schedule:
+    - cron: '0 6 * * *'  # Daily at 06:00 UTC (off-peak; per-lang stages run hourly)
+  workflow_dispatch:
+    inputs:
+      commit-sha:
+        description: 'Git SHA to test (leave empty for HEAD of default branch)'
+        required: false
+        type: string
+
+concurrency:
+  group: cross-lang-system-verification
+  cancel-in-progress: false
+
+env:
+  COMMIT_SHA: ${{ inputs.commit-sha || github.sha }}
+
+jobs:
+  verify:
+    name: ${{ matrix.test-lang }} tests vs ${{ matrix.arch }} ${{ matrix.system-lang }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      # Independent regression signals — one failing combo must not mask the others.
+      fail-fast: false
+      matrix:
+        arch: [monolith, multitier]
+        test-lang: [java, dotnet, typescript]
+        system-lang: [java, dotnet, typescript]
+        exclude:
+          # Same-lang combos are covered by <arch>-<lang>-acceptance-stage.yml.
+          - { test-lang: java,       system-lang: java }
+          - { test-lang: dotnet,     system-lang: dotnet }
+          - { test-lang: typescript, system-lang: typescript }
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          ref: ${{ env.COMMIT_SHA }}
+
+      - name: Setup Java
+        if: matrix.test-lang == 'java'
+        uses: actions/setup-java@v5
+        with:
+          java-version: 21
+          distribution: temurin
+
+      - name: Setup Gradle
+        if: matrix.test-lang == 'java'
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Setup .NET
+        if: matrix.test-lang == 'dotnet'
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Setup Node
+        if: matrix.test-lang == 'typescript'
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Install gh-optivem CLI extension
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh extension install optivem/gh-optivem
+
+      - name: Build SUT (${{ matrix.system-lang }} ${{ matrix.arch }})
+        run: gh optivem build system --system docker/${{ matrix.system-lang }}/${{ matrix.arch }}/system.json
+
+      - name: Start SUT (${{ matrix.system-lang }} ${{ matrix.arch }})
+        run: gh optivem run system --system docker/${{ matrix.system-lang }}/${{ matrix.arch }}/system.json
+
+      - name: Run ${{ matrix.test-lang }} system tests vs ${{ matrix.system-lang }} SUT
+        run: gh optivem test system --system docker/${{ matrix.system-lang }}/${{ matrix.arch }}/system.json --tests system-test/${{ matrix.test-lang }}/tests-latest.json
+
+      - name: Stop SUT
+        if: always()
+        run: gh optivem stop system --system docker/${{ matrix.system-lang }}/${{ matrix.arch }}/system.json
