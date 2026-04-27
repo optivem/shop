@@ -6,40 +6,6 @@
 
 ---
 
-## 6. Bump `external-real-sim` from node:18 to node:22 + bake into Dockerfile
-
-**Status:** All 12 `*-real.yml` compose files use `image: node:18-alpine` then run `sh -c "npm install && npm start"` at container start. Node 18 reached EOL April 2025. The runtime `npm install` adds 10–30s to every `up`.
-
-**Affected files:**
-- `system/external-real-sim/Dockerfile` (create)
-- All 12 `docker-compose.*.real.yml` files (replace `image: node:18-alpine` + volume + working_dir + command with `build: ../../../system/external-real-sim` for local files, and `image: ghcr.io/...` for pipeline files — match existing pattern).
-
-**Actions:**
-1. Create `system/external-real-sim/Dockerfile`:
-   ```dockerfile
-   # syntax=docker/dockerfile:1.4
-   FROM node:22-alpine AS deps
-   WORKDIR /app
-   COPY package*.json ./
-   RUN --mount=type=cache,target=/root/.npm npm ci --omit=dev
-
-   FROM node:22-alpine
-   WORKDIR /app
-   COPY --from=deps /app/node_modules ./node_modules
-   COPY . .
-   USER node
-   EXPOSE 9000
-   CMD ["npm", "start"]
-   ```
-2. Add `system/external-real-sim/.dockerignore`.
-3. Update all 6 `docker-compose.local.*.real.yml` to use `build:` instead of `image: node:18-alpine` + volume mount.
-4. Update all 6 `docker-compose.pipeline.*.real.yml` to use a published image (matches existing pattern for backend/frontend).
-5. Add a publish workflow for the new image (mirror existing patterns under `.github/workflows/`).
-
-**Verification:** `docker compose up` starts external-real-sim in <5s instead of 15-30s.
-
----
-
 ## 7. Pin image digests in pipeline compose files
 
 **Status:** All compose files use mutable tags (`postgres:16-alpine`, `wiremock/wiremock:3.10.0`, `node:18-alpine`). For reproducibility in CI, pin digests.

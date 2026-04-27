@@ -33,7 +33,7 @@ services:
       postgres:
         condition: service_healthy
       external-real:
-        condition: service_started
+        condition: service_healthy
     networks:
       - app-network
 
@@ -54,13 +54,11 @@ services:
       - app-network
 
   external-real:
-    image: node:18-alpine
+    build:
+      context: ../../../system/external-real-sim
+      dockerfile: Dockerfile
     ports:
       - "9211:9000"
-    volumes:
-      - ../../../system/external-real-sim:/app
-    working_dir: /app
-    command: sh -c "npm install && npm start"
     networks:
       - app-network
 
