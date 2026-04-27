@@ -13,26 +13,6 @@
 
 ---
 
-## W8 — npm audit reports vulnerabilities
-
-**Findings (from latest run):**
-
-| Workflow | Vulns reported |
-|---|---|
-| `monolith-typescript-commit-stage` | 2 (1 moderate, 1 high) |
-| `multitier-backend-typescript-commit-stage` | 15 (9 moderate, 6 high) |
-| `prerelease-pipeline-monolith-typescript` | 2 (1 moderate, 1 high) |
-| `prerelease-pipeline-multitier-typescript` | 15 (9 moderate, 6 high) + 8 (3 moderate, 5 high) (backend Docker prod stage) |
-
-**Proposed fix:**
-1. Run `npm audit --json` locally on each project to see exact CVEs.
-2. For each: bump direct dep, override transitive, or accept-with-comment if the path is unreachable.
-3. Add an `npm audit --audit-level=high` step that **fails** the build on high+ vulnerabilities once cleaned up. Right now nothing enforces it.
-
-**Risk:** Medium–high (security). Some vulns may be in dev-only dependencies and not exploitable in prod. Triage before fixing. This is the warning category that most directly affects students who copy this repo as a template — they will inherit the vulns.
-
----
-
 ## W9 — ESLint `@typescript-eslint/no-unsafe-argument`
 
 **Symptom**
@@ -135,6 +115,28 @@ You can use '--warning-mode all' to show the individual deprecation warnings…
 3. Bump Gradle version once warnings are clean.
 
 **Risk:** Medium. Gradle deprecations are usually mechanical fixes, but the build files in this repo are referenced by course materials. Some patterns may be deliberately old to teach a specific approach. Coordinate with the Java track owner before bulk-rewriting build.gradle files.
+
+---
+
+## W8 — npm audit reports vulnerabilities
+
+**Findings (from latest run):**
+
+| Workflow | Vulns reported |
+|---|---|
+| `monolith-typescript-commit-stage` | 2 (1 moderate, 1 high) |
+| `multitier-backend-typescript-commit-stage` | 15 (9 moderate, 6 high) |
+| `prerelease-pipeline-monolith-typescript` | 2 (1 moderate, 1 high) |
+| `prerelease-pipeline-multitier-typescript` | 15 (9 moderate, 6 high) + 8 (3 moderate, 5 high) (backend Docker prod stage) |
+
+**Proposed fix:**
+1. Run `npm audit --json` locally on each project to see exact CVEs.
+2. For each: bump direct dep, override transitive, or accept-with-comment if the path is unreachable.
+3. Add an `npm audit --audit-level=high` step that **fails** the build on high+ vulnerabilities once cleaned up. Right now nothing enforces it.
+
+**Risk:** Medium–high (security). Some vulns may be in dev-only dependencies and not exploitable in prod. Triage before fixing. This is the warning category that most directly affects students who copy this repo as a template — they will inherit the vulns.
+
+**Investigation note (2026-04-27):** Deferred from inline W-sweep — needs dedicated session. 4 npm projects in scope (monolith/typescript, multitier/backend-typescript, multitier/frontend-react, system-test/typescript). Lockfile diffs will be huge; cleanup deserves its own focus rather than being mixed into mechanical warning fixes.
 
 ---
 
