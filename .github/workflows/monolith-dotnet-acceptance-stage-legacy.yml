@@ -31,6 +31,7 @@ jobs:
         with:
           image-urls: |
             ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/monolith-system-dotnet
+          token: ${{ secrets.GHCR_TOKEN }}
 
   check:
     needs: preflight

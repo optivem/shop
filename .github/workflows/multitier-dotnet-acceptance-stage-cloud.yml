@@ -30,6 +30,7 @@ jobs:
           image-urls: |
             ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-frontend-react
             ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-backend-dotnet
+          token: ${{ secrets.GHCR_TOKEN }}
 
   check:
     needs: preflight
