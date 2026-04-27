@@ -62,6 +62,7 @@ jobs:
     environment: multitier-java-qa
     permissions:
       contents: read
+      packages: read
     outputs:
       version: ${{ steps.promote.outputs.status-tag }}
       image-urls: ${{ needs.check.outputs.image-urls }}
