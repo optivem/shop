@@ -166,8 +166,8 @@ jobs:
           environment: acceptance
           version: ${{ env.COMMIT_SHA }}
           image-urls: ${{ needs.check.outputs.image-digest-urls }}
-          compose-file: multitier/docker-compose.pipeline.real.yml
-          working-directory: system-test/dotnet
+          compose-file: docker-compose.pipeline.real.yml
+          working-directory: docker/dotnet/multitier
 
       - name: Wait for Systems (Simulate Deployment (Real External Systems))
         uses: optivem/actions/wait-for-endpoints@v1
@@ -179,8 +179,8 @@ jobs:
               { "name": "ERP", "url": "http://localhost:9211/erp/health" },
               { "name": "Clock", "url": "http://localhost:9211/clock/health" }
             ]
-          compose-file: multitier/docker-compose.pipeline.real.yml
-          working-directory: system-test/dotnet
+          compose-file: docker-compose.pipeline.real.yml
+          working-directory: docker/dotnet/multitier
 
       - name: Simulate Deployment (Stub External Systems)
         uses: optivem/actions/deploy-docker-compose@v1
@@ -188,8 +188,8 @@ jobs:
           environment: acceptance
           version: ${{ env.COMMIT_SHA }}
           image-urls: ${{ needs.check.outputs.image-digest-urls }}
-          compose-file: multitier/docker-compose.pipeline.stub.yml
-          working-directory: system-test/dotnet
+          compose-file: docker-compose.pipeline.stub.yml
+          working-directory: docker/dotnet/multitier
 
       - name: Wait for Systems (Simulate Deployment (Stub External Systems))
         uses: optivem/actions/wait-for-endpoints@v1
@@ -201,8 +201,8 @@ jobs:
               { "name": "ERP", "url": "http://localhost:9212/erp/health" },
               { "name": "Clock", "url": "http://localhost:9212/clock/health" }
             ]
-          compose-file: multitier/docker-compose.pipeline.stub.yml
-          working-directory: system-test/dotnet
+          compose-file: docker-compose.pipeline.stub.yml
+          working-directory: docker/dotnet/multitier
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v5
@@ -218,7 +218,7 @@ jobs:
 
       - name: Compile System Tests
         run: dotnet build
-        working-directory: system-test/dotnet
+        working-directory: docker/dotnet/multitier
 
       - name: Cache Playwright Browsers
         id: cache-playwright
@@ -231,30 +231,30 @@ jobs:
         timeout-minutes: 5
         if: steps.cache-playwright.outputs.cache-hit != 'true'
         run: pwsh SystemTests/bin/Debug/net8.0/playwright.ps1 install chromium
-        working-directory: system-test/dotnet
+        working-directory: docker/dotnet/multitier
 
       - name: Install Playwright System Dependencies
         timeout-minutes: 5
         run: pwsh SystemTests/bin/Debug/net8.0/playwright.ps1 install-deps chromium
-        working-directory: system-test/dotnet
+        working-directory: docker/dotnet/multitier
 
       - name: Run Smoke Tests (Stub)
         run: dotnet test --filter "FullyQualifiedName~.Latest.SmokeTests" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: docker/dotnet/multitier
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
 
       - name: Run Smoke Tests (Real)
         run: dotnet test --filter "FullyQualifiedName~.Latest.SmokeTests" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: docker/dotnet/multitier
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: real
 
       - name: Run Acceptance Tests - API Channel
         run: dotnet test --filter "FullyQualifiedName~.Latest.AcceptanceTests&Category!=isolated" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: docker/dotnet/multitier
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
@@ -262,7 +262,7 @@ jobs:
 
       - name: Run Acceptance Tests - UI Channel
         run: dotnet test --filter "FullyQualifiedName~.Latest.AcceptanceTests&Category!=isolated" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: docker/dotnet/multitier
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
@@ -271,7 +271,7 @@ jobs:
 
       - name: Run Acceptance Tests (Isolated) - API Channel
         run: dotnet test --filter "FullyQualifiedName~.Latest.AcceptanceTests&Category=isolated" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: docker/dotnet/multitier
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
@@ -279,7 +279,7 @@ jobs:
 
       - name: Run Acceptance Tests (Isolated) - UI Channel
         run: dotnet test --filter "FullyQualifiedName~.Latest.AcceptanceTests&Category=isolated" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: docker/dotnet/multitier
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
@@ -288,35 +288,35 @@ jobs:
 
       - name: Run Contract Tests (Stub)
         run: dotnet test --filter "FullyQualifiedName~.Latest.ExternalSystemContractTests&FullyQualifiedName~Stub&Category!=isolated" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: docker/dotnet/multitier
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
 
       - name: Run Contract Tests (Stub) (Isolated)
         run: dotnet test --filter "FullyQualifiedName~.Latest.ExternalSystemContractTests&FullyQualifiedName~Stub&Category=isolated" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: docker/dotnet/multitier
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
 
       - name: Run Contract Tests (Real)
         run: dotnet test --filter "FullyQualifiedName~.Latest.ExternalSystemContractTests&FullyQualifiedName~Real" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: docker/dotnet/multitier
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: real
 
       - name: Run E2E Tests - API Channel
         run: dotnet test --filter "FullyQualifiedName~.Latest.E2eTests" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: docker/dotnet/multitier
         env:
           ENVIRONMENT: acceptance
           CHANNEL: API
 
       - name: Run E2E Tests - UI Channel
         run: dotnet test --filter "FullyQualifiedName~.Latest.E2eTests" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: docker/dotnet/multitier
         env:
           ENVIRONMENT: acceptance
           CHANNEL: UI
@@ -379,7 +379,7 @@ jobs:
           dotnet-version: 8.0.x
 
       - name: Run Sonar Analysis
-        working-directory: system-test/dotnet
+        working-directory: docker/dotnet/multitier
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: pwsh ./Run-Sonar.ps1

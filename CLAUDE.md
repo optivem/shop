@@ -20,12 +20,12 @@ Never commit code that does not compile. If multiple components are changed, ver
 
 ### System Test Verification
 
-After compilation passes, run system tests with `--sample` for each affected language before committing. From each language's `system-test/<language>/` directory:
+After compilation passes, run system tests with `--sample` for each affected language before committing. From the repo root, substituting `<language>` ∈ {java, dotnet, typescript}:
 
 ```bash
-gh optivem run system --system monolith/system.json
-gh optivem test system --system monolith/system.json --tests tests-latest.json --sample
-gh optivem stop system --system monolith/system.json
+gh optivem run system --system docker/<language>/monolith/system.json
+gh optivem test system --system docker/<language>/monolith/system.json --tests system-test/<language>/tests-latest.json --sample
+gh optivem stop system --system docker/<language>/monolith/system.json
 ```
 
 This runs one sample test per suite across all test categories (smoke, acceptance, contract, e2e) to catch regressions without running the full suite. All sample tests must pass before committing.

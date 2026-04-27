@@ -112,8 +112,8 @@ jobs:
           environment: production
           version: ${{ needs.check.outputs.version }}
           image-urls: ${{ needs.check.outputs.image-urls }}
-          compose-file: monolith/docker-compose.pipeline.real.yml
-          working-directory: system-test/typescript
+          compose-file: docker-compose.pipeline.real.yml
+          working-directory: docker/typescript/monolith
 
       - name: Wait for Systems (Simulate Deployment (Production Environment))
         uses: optivem/actions/wait-for-endpoints@v1
@@ -125,8 +125,8 @@ jobs:
               { "name": "ERP", "url": "http://localhost:9311/erp/health" },
               { "name": "Clock", "url": "http://localhost:9311/clock/health" }
             ]
-          compose-file: monolith/docker-compose.pipeline.real.yml
-          working-directory: system-test/typescript
+          compose-file: docker-compose.pipeline.real.yml
+          working-directory: docker/typescript/monolith
 
       - name: Generate Release Version
         id: promote

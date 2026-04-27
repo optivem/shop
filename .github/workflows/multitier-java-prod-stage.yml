@@ -113,8 +113,8 @@ jobs:
           environment: production
           version: ${{ needs.check.outputs.version }}
           image-urls: ${{ needs.check.outputs.image-urls }}
-          compose-file: multitier/docker-compose.pipeline.real.yml
-          working-directory: system-test/java
+          compose-file: docker-compose.pipeline.real.yml
+          working-directory: docker/java/multitier
 
       - name: Wait for Systems (Simulate Deployment (Production Environment))
         uses: optivem/actions/wait-for-endpoints@v1
@@ -126,8 +126,8 @@ jobs:
               { "name": "ERP", "url": "http://localhost:9111/erp/health" },
               { "name": "Clock", "url": "http://localhost:9111/clock/health" }
             ]
-          compose-file: multitier/docker-compose.pipeline.real.yml
-          working-directory: system-test/java
+          compose-file: docker-compose.pipeline.real.yml
+          working-directory: docker/java/multitier
 
       - name: Generate Release Version
         id: promote

@@ -166,8 +166,8 @@ jobs:
           environment: acceptance
           version: ${{ env.COMMIT_SHA }}
           image-urls: ${{ needs.check.outputs.image-digest-urls }}
-          compose-file: multitier/docker-compose.pipeline.real.yml
-          working-directory: system-test/typescript
+          compose-file: docker-compose.pipeline.real.yml
+          working-directory: docker/typescript/multitier
 
       - name: Wait for Systems (Simulate Deployment (Real External Systems))
         uses: optivem/actions/wait-for-endpoints@v1
@@ -179,8 +179,8 @@ jobs:
               { "name": "ERP", "url": "http://localhost:9311/erp/health" },
               { "name": "Clock", "url": "http://localhost:9311/clock/health" }
             ]
-          compose-file: multitier/docker-compose.pipeline.real.yml
-          working-directory: system-test/typescript
+          compose-file: docker-compose.pipeline.real.yml
+          working-directory: docker/typescript/multitier
 
       - name: Simulate Deployment (Stub External Systems)
         uses: optivem/actions/deploy-docker-compose@v1
@@ -188,8 +188,8 @@ jobs:
           environment: acceptance
           version: ${{ env.COMMIT_SHA }}
           image-urls: ${{ needs.check.outputs.image-digest-urls }}
-          compose-file: multitier/docker-compose.pipeline.stub.yml
-          working-directory: system-test/typescript
+          compose-file: docker-compose.pipeline.stub.yml
+          working-directory: docker/typescript/multitier
 
       - name: Wait for Systems (Simulate Deployment (Stub External Systems))
         uses: optivem/actions/wait-for-endpoints@v1
@@ -201,8 +201,8 @@ jobs:
               { "name": "ERP", "url": "http://localhost:9312/erp/health" },
               { "name": "Clock", "url": "http://localhost:9312/clock/health" }
             ]
-          compose-file: multitier/docker-compose.pipeline.stub.yml
-          working-directory: system-test/typescript
+          compose-file: docker-compose.pipeline.stub.yml
+          working-directory: docker/typescript/multitier
 
       - name: Setup Node
         uses: actions/setup-node@v6
@@ -213,7 +213,7 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-        working-directory: system-test/typescript
+        working-directory: docker/typescript/multitier
 
       - name: Cache Playwright Browsers
         id: cache-playwright
@@ -225,34 +225,34 @@ jobs:
       - name: Install Playwright Browsers
         timeout-minutes: 5
         if: steps.cache-playwright.outputs.cache-hit != 'true'
-        working-directory: system-test/typescript
+        working-directory: docker/typescript/multitier
         run: npx playwright install chromium
 
       - name: Install Playwright System Dependencies
         timeout-minutes: 5
-        working-directory: system-test/typescript
+        working-directory: docker/typescript/multitier
         run: npx playwright install-deps chromium
 
       - name: Compile System Tests
-        working-directory: system-test/typescript
+        working-directory: docker/typescript/multitier
         run: npx tsc --noEmit
 
       - name: Run Smoke Tests (Stub)
-        working-directory: system-test/typescript
+        working-directory: docker/typescript/multitier
         run: npx playwright test --project=smoke-test tests/latest/smoke
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
 
       - name: Run Smoke Tests (Real)
-        working-directory: system-test/typescript
+        working-directory: docker/typescript/multitier
         run: npx playwright test --project=smoke-test tests/latest/smoke
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: real
 
       - name: Run Acceptance Tests - API Channel
-        working-directory: system-test/typescript
+        working-directory: docker/typescript/multitier
         run: npx playwright test --project=acceptance-test tests/latest/acceptance --grep-invert "@isolated"
         env:
           ENVIRONMENT: acceptance
@@ -260,7 +260,7 @@ jobs:
           CHANNEL: API
 
       - name: Run Acceptance Tests - UI Channel
-        working-directory: system-test/typescript
+        working-directory: docker/typescript/multitier
         run: npx playwright test --project=acceptance-test tests/latest/acceptance --grep-invert "@isolated"
         env:
           ENVIRONMENT: acceptance
@@ -269,7 +269,7 @@ jobs:
           CHANNEL_MODE: static
 
       - name: Run Acceptance Tests (Isolated) - API Channel
-        working-directory: system-test/typescript
+        working-directory: docker/typescript/multitier
         run: npx playwright test --project=acceptance-test tests/latest/acceptance --grep "@isolated" --workers=1
         env:
           ENVIRONMENT: acceptance
@@ -277,7 +277,7 @@ jobs:
           CHANNEL: API
 
       - name: Run Acceptance Tests (Isolated) - UI Channel
-        working-directory: system-test/typescript
+        working-directory: docker/typescript/multitier
         run: npx playwright test --project=acceptance-test tests/latest/acceptance --grep "@isolated" --workers=1
         env:
           ENVIRONMENT: acceptance
@@ -286,35 +286,35 @@ jobs:
           CHANNEL_MODE: static
 
       - name: Run Contract Tests (Stub)
-        working-directory: system-test/typescript
+        working-directory: docker/typescript/multitier
         run: npx playwright test --project=external-system-contract-test "tests/latest/contract/.*-stub-.*\.spec\.ts" --grep-invert "@isolated" --workers=1
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
 
       - name: Run Contract Tests (Stub) (Isolated)
-        working-directory: system-test/typescript
+        working-directory: docker/typescript/multitier
         run: npx playwright test --project=external-system-contract-test "tests/latest/contract/.*-stub-.*\.spec\.ts" --grep "@isolated" --workers=1
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
 
       - name: Run Contract Tests (Real)
-        working-directory: system-test/typescript
+        working-directory: docker/typescript/multitier
         run: npx playwright test --project=external-system-contract-test "tests/latest/contract/.*-real-.*\.spec\.ts" --workers=1
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: real
 
       - name: Run E2E Tests - API Channel
-        working-directory: system-test/typescript
+        working-directory: docker/typescript/multitier
         run: npx playwright test --project=e2e-test tests/latest/e2e
         env:
           ENVIRONMENT: acceptance
           CHANNEL: API
 
       - name: Run E2E Tests - UI Channel
-        working-directory: system-test/typescript
+        working-directory: docker/typescript/multitier
         run: npx playwright test --project=e2e-test tests/latest/e2e
         env:
           ENVIRONMENT: acceptance
@@ -380,7 +380,7 @@ jobs:
           cache-dependency-path: system-test/typescript/package-lock.json
 
       - name: Run Sonar Analysis
-        working-directory: system-test/typescript
+        working-directory: docker/typescript/multitier
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: pwsh ./Run-Sonar.ps1

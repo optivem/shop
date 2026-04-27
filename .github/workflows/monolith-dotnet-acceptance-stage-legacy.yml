@@ -137,8 +137,8 @@ jobs:
           environment: acceptance
           version: ${{ env.COMMIT_SHA }}
           image-urls: ${{ needs.check.outputs.image-digest-urls }}
-          compose-file: monolith/docker-compose.pipeline.real.yml
-          working-directory: system-test/dotnet
+          compose-file: docker-compose.pipeline.real.yml
+          working-directory: docker/dotnet/monolith
 
       - name: Wait for Systems (Simulate Deployment (Real External Systems))
         uses: optivem/actions/wait-for-endpoints@v1
@@ -150,8 +150,8 @@ jobs:
               { "name": "ERP", "url": "http://localhost:9211/erp/health" },
               { "name": "Clock", "url": "http://localhost:9211/clock/health" }
             ]
-          compose-file: monolith/docker-compose.pipeline.real.yml
-          working-directory: system-test/dotnet
+          compose-file: docker-compose.pipeline.real.yml
+          working-directory: docker/dotnet/monolith
 
       - name: Simulate Deployment (Stub External Systems)
         uses: optivem/actions/deploy-docker-compose@v1
@@ -159,8 +159,8 @@ jobs:
           environment: acceptance
           version: ${{ env.COMMIT_SHA }}
           image-urls: ${{ needs.check.outputs.image-digest-urls }}
-          compose-file: monolith/docker-compose.pipeline.stub.yml
-          working-directory: system-test/dotnet
+          compose-file: docker-compose.pipeline.stub.yml
+          working-directory: docker/dotnet/monolith
 
       - name: Wait for Systems (Simulate Deployment (Stub External Systems))
         uses: optivem/actions/wait-for-endpoints@v1
@@ -172,8 +172,8 @@ jobs:
               { "name": "ERP", "url": "http://localhost:9212/erp/health" },
               { "name": "Clock", "url": "http://localhost:9212/clock/health" }
             ]
-          compose-file: monolith/docker-compose.pipeline.stub.yml
-          working-directory: system-test/dotnet
+          compose-file: docker-compose.pipeline.stub.yml
+          working-directory: docker/dotnet/monolith
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v5
@@ -189,7 +189,7 @@ jobs:
 
       - name: Compile System Tests
         run: dotnet build
-        working-directory: system-test/dotnet
+        working-directory: docker/dotnet/monolith
 
       - name: Cache Playwright Browsers
         id: cache-playwright
@@ -202,111 +202,111 @@ jobs:
         timeout-minutes: 5
         if: steps.cache-playwright.outputs.cache-hit != 'true'
         run: pwsh SystemTests/bin/Debug/net8.0/playwright.ps1 install chromium
-        working-directory: system-test/dotnet
+        working-directory: docker/dotnet/monolith
 
       - name: Install Playwright System Dependencies
         timeout-minutes: 5
         run: pwsh SystemTests/bin/Debug/net8.0/playwright.ps1 install-deps chromium
-        working-directory: system-test/dotnet
+        working-directory: docker/dotnet/monolith
 
       - name: mod02 - Run Smoke Tests
         run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod02.SmokeTests" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: docker/dotnet/monolith
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: real
 
       - name: mod03 - Run E2E Tests
         run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod03.E2eTests" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: docker/dotnet/monolith
         env:
           ENVIRONMENT: acceptance
 
       - name: mod04 - Run Smoke Tests
         run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod04.SmokeTests" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: docker/dotnet/monolith
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: real
 
       - name: mod04 - Run E2E Tests
         run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod04.E2eTests" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: docker/dotnet/monolith
         env:
           ENVIRONMENT: acceptance
 
       - name: mod05 - Run Smoke Tests
         run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod05.SmokeTests" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: docker/dotnet/monolith
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: real
 
       - name: mod05 - Run E2E Tests
         run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod05.E2eTests" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: docker/dotnet/monolith
         env:
           ENVIRONMENT: acceptance
 
       - name: mod06 - Run Smoke Tests
         run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod06.SmokeTests" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: docker/dotnet/monolith
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: real
 
       - name: mod06 - Run E2E Tests - API Channel
         run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod06.E2eTests" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: docker/dotnet/monolith
         env:
           ENVIRONMENT: acceptance
           CHANNEL: API
 
       - name: mod06 - Run E2E Tests - UI Channel
         run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod06.E2eTests" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: docker/dotnet/monolith
         env:
           ENVIRONMENT: acceptance
           CHANNEL: UI
 
       - name: mod07 - Run Smoke Tests
         run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod07.SmokeTests" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: docker/dotnet/monolith
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: real
 
       - name: mod07 - Run E2E Tests - API Channel
         run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod07.E2eTests" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: docker/dotnet/monolith
         env:
           ENVIRONMENT: acceptance
           CHANNEL: API
 
       - name: mod07 - Run E2E Tests - UI Channel
         run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod07.E2eTests" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: docker/dotnet/monolith
         env:
           ENVIRONMENT: acceptance
           CHANNEL: UI
 
       - name: mod08 - Run Smoke Tests
         run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod08.SmokeTests" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: docker/dotnet/monolith
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: real
 
       - name: mod08 - Run E2E Tests - API Channel
         run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod08.E2eTests" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: docker/dotnet/monolith
         env:
           ENVIRONMENT: acceptance
           CHANNEL: API
 
       - name: mod08 - Run E2E Tests - UI Channel
         run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod08.E2eTests" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: docker/dotnet/monolith
         env:
           ENVIRONMENT: acceptance
           CHANNEL: UI
@@ -314,21 +314,21 @@ jobs:
 
       - name: mod09 - Run Smoke Tests (Stub)
         run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod09.SmokeTests" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: docker/dotnet/monolith
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
 
       - name: mod09 - Run Smoke Tests (Real)
         run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod09.SmokeTests" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: docker/dotnet/monolith
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: real
 
       - name: mod10 - Run Acceptance Tests - API Channel
         run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod10.AcceptanceTests&Category!=isolated" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: docker/dotnet/monolith
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
@@ -336,7 +336,7 @@ jobs:
 
       - name: mod10 - Run Acceptance Tests - UI Channel
         run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod10.AcceptanceTests&Category!=isolated" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: docker/dotnet/monolith
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
@@ -345,7 +345,7 @@ jobs:
 
       - name: mod10 - Run Acceptance Tests (Isolated) - API Channel
         run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod10.AcceptanceTests&Category=isolated" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: docker/dotnet/monolith
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
@@ -353,7 +353,7 @@ jobs:
 
       - name: mod10 - Run Acceptance Tests (Isolated) - UI Channel
         run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod10.AcceptanceTests&Category=isolated" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: docker/dotnet/monolith
         env:
           ENVIRONMENT: acceptance
           EXTERNAL_SYSTEM_MODE: stub
@@ -362,32 +362,32 @@ jobs:
 
       - name: mod11 - Run Contract Tests (Stub)
         run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod11.ExternalSystemContractTests&FullyQualifiedName~Stub&Category!=isolated" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: docker/dotnet/monolith
         env:
           ENVIRONMENT: acceptance
 
       - name: mod11 - Run Contract Tests (Stub) (Isolated)
         run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod11.ExternalSystemContractTests&FullyQualifiedName~Stub&Category=isolated" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: docker/dotnet/monolith
         env:
           ENVIRONMENT: acceptance
 
       - name: mod11 - Run Contract Tests (Real)
         run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod11.ExternalSystemContractTests&FullyQualifiedName~Real" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: docker/dotnet/monolith
         env:
           ENVIRONMENT: acceptance
 
       - name: mod11 - Run E2E Tests - API Channel
         run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod11.E2eTests" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: docker/dotnet/monolith
         env:
           ENVIRONMENT: acceptance
           CHANNEL: API
 
       - name: mod11 - Run E2E Tests - UI Channel
         run: dotnet test --filter "FullyQualifiedName~.Legacy.Mod11.E2eTests" --verbosity normal
-        working-directory: system-test/dotnet
+        working-directory: docker/dotnet/monolith
         env:
           ENVIRONMENT: acceptance
           CHANNEL: UI

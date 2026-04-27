@@ -38,8 +38,6 @@ if [ "$ARCH" != "monolith" ] && [ "$ARCH" != "multitier" ]; then
 fi
 
 REPO_ROOT="$(cd "$(dirname "$0")" && pwd)"
-SYSTEM_TEST_ROOT="$REPO_ROOT/system-test"
-SYSTEM_JSON="$ARCH/system.json"
 
 IFS=',' read -ra LANGS <<< "$LANGS_CSV"
 
@@ -51,7 +49,8 @@ run_phase() {
   local lang="$1"
   local phase="$2"
   local tests_file="$3"
-  local lang_dir="$SYSTEM_TEST_ROOT/$lang"
+  local system_json="$REPO_ROOT/docker/$lang/$ARCH/system.json"
+  local tests_json="$REPO_ROOT/system-test/$lang/$tests_file"
 
   echo
   echo "=================================================================="
@@ -61,9 +60,9 @@ run_phase() {
   start=$(date +%s)
   local status="PASSED"
   (
-    cd "$lang_dir" \
-      && gh optivem run system --system "$SYSTEM_JSON" \
-      && gh optivem test system --system "$SYSTEM_JSON" --tests "$tests_file"
+    cd "$REPO_ROOT" \
+      && gh optivem run system --system "$system_json" \
+      && gh optivem test system --system "$system_json" --tests "$tests_json"
   ) || status="FAILED"
   local end
   end=$(date +%s)

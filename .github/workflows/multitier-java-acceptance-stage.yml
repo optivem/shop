@@ -166,8 +166,8 @@ jobs:
           environment: acceptance
           version: ${{ env.COMMIT_SHA }}
           image-urls: ${{ needs.check.outputs.image-digest-urls }}
-          compose-file: multitier/docker-compose.pipeline.real.yml
-          working-directory: system-test/java
+          compose-file: docker-compose.pipeline.real.yml
+          working-directory: docker/java/multitier
 
       - name: Wait for Systems (Simulate Deployment (Real External Systems))
         uses: optivem/actions/wait-for-endpoints@v1
@@ -179,8 +179,8 @@ jobs:
               { "name": "ERP", "url": "http://localhost:9111/erp/health" },
               { "name": "Clock", "url": "http://localhost:9111/clock/health" }
             ]
-          compose-file: multitier/docker-compose.pipeline.real.yml
-          working-directory: system-test/java
+          compose-file: docker-compose.pipeline.real.yml
+          working-directory: docker/java/multitier
 
       - name: Simulate Deployment (Stub External Systems)
         uses: optivem/actions/deploy-docker-compose@v1
@@ -188,8 +188,8 @@ jobs:
           environment: acceptance
           version: ${{ env.COMMIT_SHA }}
           image-urls: ${{ needs.check.outputs.image-digest-urls }}
-          compose-file: multitier/docker-compose.pipeline.stub.yml
-          working-directory: system-test/java
+          compose-file: docker-compose.pipeline.stub.yml
+          working-directory: docker/java/multitier
 
       - name: Wait for Systems (Simulate Deployment (Stub External Systems))
         uses: optivem/actions/wait-for-endpoints@v1
@@ -201,8 +201,8 @@ jobs:
               { "name": "ERP", "url": "http://localhost:9112/erp/health" },
               { "name": "Clock", "url": "http://localhost:9112/clock/health" }
             ]
-          compose-file: multitier/docker-compose.pipeline.stub.yml
-          working-directory: system-test/java
+          compose-file: docker-compose.pipeline.stub.yml
+          working-directory: docker/java/multitier
 
       - name: Setup Java
         uses: actions/setup-java@v5
@@ -231,60 +231,60 @@ jobs:
         timeout-minutes: 5
         if: steps.cache-playwright.outputs.cache-hit != 'true'
         run: npx playwright install chromium
-        working-directory: system-test/java
+        working-directory: docker/java/multitier
 
       - name: Install Playwright System Dependencies
         timeout-minutes: 5
         run: npx playwright install-deps chromium
-        working-directory: system-test/java
+        working-directory: docker/java/multitier
 
       - name: Compile System Tests
         run: ./gradlew clean compileJava compileTestJava
-        working-directory: system-test/java
+        working-directory: docker/java/multitier
 
       - name: Run Smoke Tests (Stub)
         run: ./gradlew test -Dversion=latest -Dtype=smoke -DexternalSystemMode=stub -Denvironment=acceptance
-        working-directory: system-test/java
+        working-directory: docker/java/multitier
 
       - name: Run Smoke Tests (Real)
         run: ./gradlew test -Dversion=latest -Dtype=smoke -DexternalSystemMode=real -Denvironment=acceptance
-        working-directory: system-test/java
+        working-directory: docker/java/multitier
 
       - name: Run Acceptance Tests - API Channel
         run: ./gradlew test -Dversion=latest -Dtype=acceptance -DexcludeTags=isolated -Dchannel=API -Denvironment=acceptance
-        working-directory: system-test/java
+        working-directory: docker/java/multitier
 
       - name: Run Acceptance Tests - UI Channel
         run: ./gradlew test -Dversion=latest -Dtype=acceptance -DexcludeTags=isolated -Dchannel=UI -DchannelMode=static -Denvironment=acceptance
-        working-directory: system-test/java
+        working-directory: docker/java/multitier
 
       - name: Run Acceptance Tests (Isolated) - API Channel
         run: ./gradlew test -Dversion=latest -Dtype=acceptance -DincludeTags=isolated -Dchannel=API -Denvironment=acceptance
-        working-directory: system-test/java
+        working-directory: docker/java/multitier
 
       - name: Run Acceptance Tests (Isolated) - UI Channel
         run: ./gradlew test -Dversion=latest -Dtype=acceptance -DincludeTags=isolated -Dchannel=UI -DchannelMode=static -Denvironment=acceptance
-        working-directory: system-test/java
+        working-directory: docker/java/multitier
 
       - name: Run Contract Tests (Stub)
         run: ./gradlew test -Dversion=latest -Dtype=contract -DexcludeTags=isolated -DexternalSystemMode=stub -Denvironment=acceptance
-        working-directory: system-test/java
+        working-directory: docker/java/multitier
 
       - name: Run Contract Tests (Stub) (Isolated)
         run: ./gradlew test -Dversion=latest -Dtype=contract -DincludeTags=isolated -DexternalSystemMode=stub -Denvironment=acceptance
-        working-directory: system-test/java
+        working-directory: docker/java/multitier
 
       - name: Run Contract Tests (Real)
         run: ./gradlew test -Dversion=latest -Dtype=contract -DexternalSystemMode=real -Denvironment=acceptance
-        working-directory: system-test/java
+        working-directory: docker/java/multitier
 
       - name: Run E2E Tests - API Channel
         run: ./gradlew test -Dversion=latest -Dtype=e2e -Dchannel=API -Denvironment=acceptance
-        working-directory: system-test/java
+        working-directory: docker/java/multitier
 
       - name: Run E2E Tests - UI Channel
         run: ./gradlew test -Dversion=latest -Dtype=e2e -Dchannel=UI -DchannelMode=static -Denvironment=acceptance
-        working-directory: system-test/java
+        working-directory: docker/java/multitier
 
       - name: Read Base System Version
         id: read-version
@@ -354,7 +354,7 @@ jobs:
           command: cd system-test/java && ./gradlew --version
 
       - name: Run Sonar Analysis
-        working-directory: system-test/java
+        working-directory: docker/java/multitier
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: pwsh ./Run-Sonar.ps1
