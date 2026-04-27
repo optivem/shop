@@ -1,5 +1,7 @@
 # Plan — Cross-Language System Verification Workflow
 
+🤖 **Picked up by agent** — `Valentina_Desk` at `2026-04-27T18:38:02Z`
+
 **Date:** 2026-04-27
 **Status:** Phase 1 partially complete (workflow file written, not yet run/verified)
 **Owner:** unassigned
@@ -27,7 +29,7 @@ This is purely a **regression check**. It does NOT tag images, publish git tags,
 **File:** [shop/.github/workflows/cross-lang-system-verification.yml](../.github/workflows/cross-lang-system-verification.yml)
 
 **What it does:**
-- Matrix: `arch × test-lang × system-lang` (2 × 3 × 3) minus 3 same-lang exclusions = 15 combos
+- Matrix: `arch × test-lang × system-lang` (2 × 3 × 3 = 18) minus 3 same-lang exclude rules (each spans both archs, so 6 entries) = **12 combos**
 - Daily cron at 06:00 UTC, off-peak from per-lang stages
 - `workflow_dispatch` with optional `commit-sha` (atomically pins source + compose + tests + system.json)
 - Builds SUT from source via `gh optivem build system` against `docker/<system-lang>/<arch>/system.json` (which references `docker-compose.local.real.yml` — has `build:` directives, no GHCR pull)
@@ -42,11 +44,6 @@ This is purely a **regression check**. It does NOT tag images, publish git tags,
 
 **Items remaining for Phase 1:**
 
-- [ ] **Dry-run the workflow once via `workflow_dispatch`** — confirm:
-  1. `gh extension install optivem/gh-optivem` works on a clean ubuntu-latest
-  2. `gh optivem build system` succeeds for all 6 (system-lang, arch) combos
-  3. `gh optivem test system` succeeds for at least one cross-lang pair (e.g. java tests vs dotnet monolith)
-  4. The full matrix completes within reasonable wall time (target < 90 min total with `fail-fast: false`)
 - [ ] **Diagnose any base-URL mismatch failures** — if java tests against .NET system fail because they hit `:3111` (java port) instead of `:3211` (dotnet port), decide:
   - **Option A (recommended):** parameterize base URL via env var (`BASE_URL_UI` / `BASE_URL_API`) read by each test framework, set per matrix row from `system.json`. One mechanism, no per-cross-lang config explosion.
   - **Option B:** add per-system-lang test config files. N×M file fan-out, ugly.
