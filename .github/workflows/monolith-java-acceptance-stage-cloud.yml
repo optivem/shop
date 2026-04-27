@@ -267,7 +267,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
 
       - name: Pre-warm Gradle Wrapper (retry transient CDN flakes)
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@v4
         with:
           timeout_minutes: 5
           max_attempts: 3
@@ -296,7 +296,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
 
       - name: Pre-warm Gradle Wrapper (retry transient CDN flakes)
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@v4
         with:
           timeout_minutes: 5
           max_attempts: 3
@@ -325,7 +325,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
 
       - name: Pre-warm Gradle Wrapper (retry transient CDN flakes)
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@v4
         with:
           timeout_minutes: 5
           max_attempts: 3
@@ -354,7 +354,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
 
       - name: Pre-warm Gradle Wrapper (retry transient CDN flakes)
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@v4
         with:
           timeout_minutes: 5
           max_attempts: 3
@@ -401,7 +401,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
 
       - name: Pre-warm Gradle Wrapper (retry transient CDN flakes)
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@v4
         with:
           timeout_minutes: 5
           max_attempts: 3
@@ -430,7 +430,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
 
       - name: Pre-warm Gradle Wrapper (retry transient CDN flakes)
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@v4
         with:
           timeout_minutes: 5
           max_attempts: 3
@@ -477,7 +477,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
 
       - name: Pre-warm Gradle Wrapper (retry transient CDN flakes)
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@v4
         with:
           timeout_minutes: 5
           max_attempts: 3
@@ -506,7 +506,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
 
       - name: Pre-warm Gradle Wrapper (retry transient CDN flakes)
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@v4
         with:
           timeout_minutes: 5
           max_attempts: 3
@@ -535,7 +535,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
 
       - name: Pre-warm Gradle Wrapper (retry transient CDN flakes)
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@v4
         with:
           timeout_minutes: 5
           max_attempts: 3
@@ -564,7 +564,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
 
       - name: Pre-warm Gradle Wrapper (retry transient CDN flakes)
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@v4
         with:
           timeout_minutes: 5
           max_attempts: 3
@@ -593,7 +593,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
 
       - name: Pre-warm Gradle Wrapper (retry transient CDN flakes)
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@v4
         with:
           timeout_minutes: 5
           max_attempts: 3

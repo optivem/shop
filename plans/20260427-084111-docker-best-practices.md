@@ -6,25 +6,6 @@
 
 ---
 
-## 2. Add `HEALTHCHECK` to every app Dockerfile
-
-**Status:** Postgres has a healthcheck; no app service does. `depends_on` only waits for container start, not readiness.
-
-**Affected files:** All 7 Dockerfiles.
-
-**Actions:**
-- Java: `HEALTHCHECK --interval=10s --timeout=3s --start-period=20s --retries=5 CMD wget -qO- http://localhost:8081/actuator/health || exit 1` (verify Spring Actuator health endpoint exists; if not, expose one).
-- .NET: same pattern, hitting `/health` (verify Microsoft.AspNetCore.Diagnostics.HealthChecks is wired; add if missing).
-- TypeScript backend: same pattern, hitting whatever existing health endpoint (verify in code).
-- TS monolith (Next.js): hit `/api/health` or root path.
-- React frontend (nginx): `wget -qO- http://localhost:8080/ || exit 1`.
-
-**Compose follow-up:** Switch all `depends_on: <backend>` lines (without condition) to `depends_on: { <svc>: { condition: service_healthy } }`. Affects all 12 multitier compose files.
-
-**Verification:** `docker compose ps` shows `(healthy)` after startup.
-
----
-
 ## 3. Fix .NET NuGet cache mount
 
 **Status:** `--mount=type=cache,target=/root/.nuget/packages` is silently ignored — `dotnet restore` writes to `~/.nuget/packages` (per `$HOME`), not `/root/.nuget/packages`, unless `NUGET_PACKAGES` is set.

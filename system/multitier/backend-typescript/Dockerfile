@@ -29,5 +29,8 @@ USER node
 # Expose port
 EXPOSE 8081
 
+HEALTHCHECK --interval=10s --timeout=3s --start-period=15s --retries=5 \
+  CMD wget -qO- http://localhost:8081/health || exit 1
+
 # Start the app
 CMD ["node", "dist/main"]

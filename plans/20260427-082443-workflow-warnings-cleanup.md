@@ -13,53 +13,6 @@
 
 ---
 
-## W3 — C# nullable-reference warnings (CS8603, CS8604)
-
-**Affected workflows (5):** All 4 `*-dotnet-acceptance-stage*` + `prerelease-pipeline-monolith-dotnet`.
-
-**Sample:**
-```
-.../Dsl.Core/Scenario/Assume/AssumeStage.cs(22,39): warning CS8604: Possible null reference argument for parameter 'channel' …
-.../Dsl.Core/Scenario/When/Steps/Base/BaseWhenStep.cs(38,34): warning CS8603: Possible null reference return.
-```
-
-**Root cause:** Nullable reference types are enabled but the DSL helpers use `T?`-able fields without null-checks.
-
-**Proposed fix:** In `system-test/dotnet/Dsl.Core/`, either:
-1. Add `ArgumentNullException.ThrowIfNull(channel)` guards (preferred — surfaces real null bugs at runtime).
-2. Mark parameters as `T?` and add explicit `??` fallbacks.
-3. Use `!` null-forgiving where the value is guaranteed non-null by construction.
-
-**Risk:** Low. Code is in test DSL only. Adding guards strengthens test reliability; loosening type with `?` weakens it. Prefer option 1.
-
----
-
-## W4 — Node.js 20 actions deprecation (runner-level)
-
-**Symptom**
-```
-##[warning]Node.js 20 actions are deprecated. The following actions are running on Node.js 20 and may not work as expected:
-   nick-fields/retry@v3, Wandalen/wretry.action@v3.8.0_js_action.
-   Actions will be forced to run with Node.js 24 by default starting June 2nd, 2026.
-   Node.js 20 will be removed from the runner on September 16th, 2026.
-```
-
-**Affected workflows (9):** All `*-commit-stage` + `monolith-java-acceptance-stage`, `multitier-java-acceptance-stage`.
-
-**Deadlines:** **June 2, 2026** — forced Node 24. **Sept 16, 2026** — Node 20 removed. We have ~5 weeks until the forced switch.
-
-**Proposed fix:**
-- `Wandalen/wretry.action` — check if a Node 20→24 release exists; if not, file an upstream issue and pin to whatever the latest version is. As of audit, `v3.8.0_js_action` is the pinned tag.
-- `nick-fields/retry` — same; check for a version published with Node 24 runtime in `action.yml`. v3 has been stable for years; upstream may not have rebuilt for Node 24.
-
-If neither has a Node 24 release: replace with bash-loop retries (`for i in 1 2 3; do … && break; done`) or run-script step. Both actions are small wrappers and we don't depend on exotic features.
-
-**Risk:** Medium. Hard deadline is external (GitHub). If upstream doesn't ship Node 24 versions before June 2, our pipelines will start failing automatically. Plan to migrate off these actions before the deadline regardless of warning urgency.
-
-**Recommendation:** Schedule a follow-up agent for May 15, 2026 to re-check upstream status and either bump pins or open replacement PRs.
-
----
-
 ## W5 — Playwright host-validation warning (missing system libraries)
 
 **Symptom**
@@ -210,11 +163,33 @@ This is teaching material — some "smells" may be deliberate. Annotate with com
 
 ---
 
+## W3 — C# nullable-reference warnings (CS8603, CS8604)
+
+**Affected workflows (5):** All 4 `*-dotnet-acceptance-stage*` + `prerelease-pipeline-monolith-dotnet`.
+
+**Sample:**
+```
+.../Dsl.Core/Scenario/Assume/AssumeStage.cs(22,39): warning CS8604: Possible null reference argument for parameter 'channel' …
+.../Dsl.Core/Scenario/When/Steps/Base/BaseWhenStep.cs(38,34): warning CS8603: Possible null reference return.
+```
+
+**Root cause:** Nullable reference types are enabled but the DSL helpers use `T?`-able fields without null-checks.
+
+**Proposed fix:** In `system-test/dotnet/Dsl.Core/`, either:
+1. Add `ArgumentNullException.ThrowIfNull(channel)` guards (preferred — surfaces real null bugs at runtime).
+2. Mark parameters as `T?` and add explicit `??` fallbacks.
+3. Use `!` null-forgiving where the value is guaranteed non-null by construction.
+
+**Risk:** Low. Code is in test DSL only. Adding guards strengthens test reliability; loosening type with `?` weakens it. Prefer option 1.
+
+**Investigation note (2026-04-27):** The DSL already treats `Channel` as nullable across `ScenarioDsl`, `BaseClause`, `WhenStage`, `GivenStage`, `BaseGivenStep` — `BaseWhen.Channel` is the only outlier re-typing it as non-null. `AssumeStage`'s constructor defaults `channel = null`. Plan-recommended option 1 (throw guards) conflicts with that prevailing design. Option 2 (extend the nullable pattern: change `BaseWhen.Channel` to `Channel?` and `UseCaseDsl.MyShop` to accept `Channel?`) better matches existing semantics. Decide before re-attempting.
+
+---
+
 ## Priority order (recommended)
 
 | Priority | Warning | Why |
 |---|---|---|
-| **P0** | W4 (Node 20 deprecation) | Hard external deadline — June 2, 2026 |
 | **P0** | W8 (npm vulnerabilities) | Security; students copy this template |
 | **P1** | W5 (Playwright deps) | Cheap reliability win |
 | **P2** | W6 (Gradle 9.0) | Future-proofing; needs investigation pass |

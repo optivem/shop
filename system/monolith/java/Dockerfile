@@ -16,4 +16,6 @@ RUN addgroup -S app && adduser -S app -G app
 COPY --from=build --chown=app:app /app/build/libs/*.jar app.jar
 USER app
 EXPOSE 8080
+HEALTHCHECK --interval=10s --timeout=3s --start-period=30s --retries=5 \
+  CMD wget -qO- http://localhost:8080/health || exit 1
 ENTRYPOINT ["java", "-jar", "app.jar"]
