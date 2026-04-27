@@ -178,21 +178,25 @@ jobs:
       - name: Build and Push Docker Image
         if: steps.verify-main.outputs.on-branch == 'true'
         id: push
-        uses: docker/build-push-action@v7
+        uses: Wandalen/wretry.action@v3
         with:
-          context: system/multitier/frontend-react
-          file: system/multitier/frontend-react/Dockerfile
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          provenance: mode=max
-          sbom: true
+          action: docker/build-push-action@v7
+          attempt_limit: 3
+          attempt_delay: 30000
+          with: |
+            context: system/multitier/frontend-react
+            file: system/multitier/frontend-react/Dockerfile
+            push: true
+            tags: ${{ steps.meta.outputs.tags }}
+            labels: ${{ steps.meta.outputs.labels }}
+            provenance: mode=max
+            sbom: true
 
       - name: Compose Digest URL
         if: steps.verify-main.outputs.on-branch == 'true'
         id: digest-url
         shell: bash
-        run: echo "value=ghcr.io/${{ github.repository }}/multitier-frontend-react@${{ steps.push.outputs.digest }}" >> "$GITHUB_OUTPUT"
+        run: echo "value=ghcr.io/${{ github.repository }}/multitier-frontend-react@${{ fromJSON(steps.push.outputs.outputs).digest }}" >> "$GITHUB_OUTPUT"
 
   summary:
     needs: [check, run]

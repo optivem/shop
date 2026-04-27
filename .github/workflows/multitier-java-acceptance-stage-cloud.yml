@@ -309,6 +309,13 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
 
+      - name: Pre-warm Gradle Wrapper (retry transient CDN flakes)
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 5
+          max_attempts: 3
+          command: cd system-test/java && ./gradlew --version
+
       - name: Run Smoke Tests (Real)
         run: ./gradlew test -Dversion=latest -Dtype=smoke -DexternalSystemMode=real -Denvironment=acceptance -DbaseUrl=${{ needs.deploy-frontend.outputs.app-url }} -DexternalBaseUrl=${{ needs.deploy-external-real.outputs.external-url }}
         working-directory: system-test/java
@@ -330,6 +337,13 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
+
+      - name: Pre-warm Gradle Wrapper (retry transient CDN flakes)
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 5
+          max_attempts: 3
+          command: cd system-test/java && ./gradlew --version
 
       - name: Run Smoke Tests (Stub)
         run: ./gradlew test -Dversion=latest -Dtype=smoke -DexternalSystemMode=stub -Denvironment=acceptance -DbaseUrl=${{ needs.deploy-frontend.outputs.app-url }} -DexternalBaseUrl=${{ needs.deploy-external-stub.outputs.external-url }}
@@ -353,6 +367,13 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
 
+      - name: Pre-warm Gradle Wrapper (retry transient CDN flakes)
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 5
+          max_attempts: 3
+          command: cd system-test/java && ./gradlew --version
+
       - name: Run Acceptance Tests - API Channel
         run: ./gradlew test -Dversion=latest -Dtype=acceptance -DexcludeTags=isolated -Dchannel=API -Denvironment=acceptance -DbaseUrl=${{ needs.deploy-frontend.outputs.app-url }} -DexternalBaseUrl=${{ needs.deploy-external-real.outputs.external-url }}
         working-directory: system-test/java
@@ -374,6 +395,13 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
+
+      - name: Pre-warm Gradle Wrapper (retry transient CDN flakes)
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 5
+          max_attempts: 3
+          command: cd system-test/java && ./gradlew --version
 
       - name: Cache Playwright Browsers
         id: cache-playwright
@@ -415,6 +443,13 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
 
+      - name: Pre-warm Gradle Wrapper (retry transient CDN flakes)
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 5
+          max_attempts: 3
+          command: cd system-test/java && ./gradlew --version
+
       - name: Run Acceptance Tests (Isolated) - API Channel
         run: ./gradlew test -Dversion=latest -Dtype=acceptance -DincludeTags=isolated -Dchannel=API -Denvironment=acceptance -DbaseUrl=${{ needs.deploy-frontend.outputs.app-url }} -DexternalBaseUrl=${{ needs.deploy-external-real.outputs.external-url }}
         working-directory: system-test/java
@@ -436,6 +471,13 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
+
+      - name: Pre-warm Gradle Wrapper (retry transient CDN flakes)
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 5
+          max_attempts: 3
+          command: cd system-test/java && ./gradlew --version
 
       - name: Cache Playwright Browsers
         id: cache-playwright
@@ -477,6 +519,13 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
 
+      - name: Pre-warm Gradle Wrapper (retry transient CDN flakes)
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 5
+          max_attempts: 3
+          command: cd system-test/java && ./gradlew --version
+
       - name: Run Contract Tests (Stub)
         run: ./gradlew test -Dversion=latest -Dtype=contract -DexcludeTags=isolated -DexternalSystemMode=stub -Denvironment=acceptance -DbaseUrl=${{ needs.deploy-frontend.outputs.app-url }} -DexternalBaseUrl=${{ needs.deploy-external-stub.outputs.external-url }}
         working-directory: system-test/java
@@ -498,6 +547,13 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
+
+      - name: Pre-warm Gradle Wrapper (retry transient CDN flakes)
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 5
+          max_attempts: 3
+          command: cd system-test/java && ./gradlew --version
 
       - name: Run Contract Tests (Stub) (Isolated)
         run: ./gradlew test -Dversion=latest -Dtype=contract -DincludeTags=isolated -DexternalSystemMode=stub -Denvironment=acceptance -DbaseUrl=${{ needs.deploy-frontend.outputs.app-url }} -DexternalBaseUrl=${{ needs.deploy-external-stub.outputs.external-url }}
@@ -521,6 +577,13 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
 
+      - name: Pre-warm Gradle Wrapper (retry transient CDN flakes)
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 5
+          max_attempts: 3
+          command: cd system-test/java && ./gradlew --version
+
       - name: Run Contract Tests (Real)
         run: ./gradlew test -Dversion=latest -Dtype=contract -DexternalSystemMode=real -Denvironment=acceptance -DbaseUrl=${{ needs.deploy-frontend.outputs.app-url }} -DexternalBaseUrl=${{ needs.deploy-external-real.outputs.external-url }}
         working-directory: system-test/java
@@ -543,6 +606,13 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
 
+      - name: Pre-warm Gradle Wrapper (retry transient CDN flakes)
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 5
+          max_attempts: 3
+          command: cd system-test/java && ./gradlew --version
+
       - name: Run E2E Tests - API Channel
         run: ./gradlew test -Dversion=latest -Dtype=e2e -Dchannel=API -Denvironment=acceptance -DbaseUrl=${{ needs.deploy-frontend.outputs.app-url }} -DexternalBaseUrl=${{ needs.deploy-external-real.outputs.external-url }}
         working-directory: system-test/java
@@ -564,6 +634,13 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
+
+      - name: Pre-warm Gradle Wrapper (retry transient CDN flakes)
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 5
+          max_attempts: 3
+          command: cd system-test/java && ./gradlew --version
 
       - name: Cache Playwright Browsers
         id: cache-playwright
