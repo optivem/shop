@@ -15,7 +15,7 @@ export class PublishCouponRequest {
 
   @IsNumber({}, { message: 'Discount rate must not be null' })
   @Min(0.0001, { message: 'Discount rate must be greater than 0.00' })
-  @Max(1.0, { message: 'Discount rate must be at most 1.00' })
+  @Max(1, { message: 'Discount rate must be at most 1.00' })
   discountRate: number;
 
   @IsOptional()

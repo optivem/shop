@@ -16,26 +16,26 @@ export class WhenPlaceOrder {
     private readonly useCaseContext: UseCaseContext,
   ) {}
 
-  withOrderNumber(_orderNumber: string): WhenPlaceOrder {
+  withOrderNumber(_orderNumber: string): this {
     return this;
   }
 
-  withSku(sku: string | null): WhenPlaceOrder {
+  withSku(sku: string | null): this {
     this.sku = sku as string;
     return this;
   }
 
-  withQuantity(quantity: string | number | null): WhenPlaceOrder {
+  withQuantity(quantity: string | number | null): this {
     this.quantity = quantity === null ? null : String(quantity);
     return this;
   }
 
-  withCountry(country: string | null): WhenPlaceOrder {
+  withCountry(country: string | null): this {
     this.country = country as string;
     return this;
   }
 
-  withCouponCode(couponCode?: string | null): WhenPlaceOrder {
+  withCouponCode(couponCode?: string | null): this {
     this.couponCode = couponCode === undefined ? DEFAULTS.COUPON_CODE : couponCode;
     return this;
   }

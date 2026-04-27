@@ -13,7 +13,7 @@ export class WhenCancelOrder {
     private readonly useCaseContext: UseCaseContext,
   ) {}
 
-  withOrderNumber(orderNumber: string): WhenCancelOrder {
+  withOrderNumber(orderNumber: string): this {
     this.orderNumber = orderNumber;
     return this;
   }

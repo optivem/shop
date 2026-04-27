@@ -10,32 +10,32 @@ export class GivenOrder implements IGivenOrder {
     private readonly config: OrderConfig,
   ) {}
 
-  withOrderNumber(orderNumber: string): GivenOrder {
+  withOrderNumber(orderNumber: string): this {
     this.config.orderNumber = orderNumber;
     return this;
   }
 
-  withSku(sku: string): GivenOrder {
+  withSku(sku: string): this {
     this.config.sku = sku;
     return this;
   }
 
-  withQuantity(quantity: string | number): GivenOrder {
+  withQuantity(quantity: string | number): this {
     this.config.quantity = String(quantity);
     return this;
   }
 
-  withCountry(country: string): GivenOrder {
+  withCountry(country: string): this {
     this.config.country = country;
     return this;
   }
 
-  withCouponCode(couponCode: string | null): GivenOrder {
+  withCouponCode(couponCode: string | null): this {
     this.config.couponCode = couponCode;
     return this;
   }
 
-  withStatus(status: string): GivenOrder {
+  withStatus(status: string): this {
     this.config.status = status;
     return this;
   }

@@ -60,7 +60,7 @@ export class GivenStage implements IGivenStage {
     return new GivenOrder(this, config);
   }
 
-  and(): GivenStage {
+  and(): this {
     return this;
   }
 

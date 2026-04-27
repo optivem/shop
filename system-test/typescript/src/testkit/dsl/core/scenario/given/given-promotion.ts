@@ -10,12 +10,12 @@ export class GivenPromotion implements IGivenPromotion {
     private readonly config: PromotionConfig,
   ) {}
 
-  withActive(promotionActive: boolean): GivenPromotion {
+  withActive(promotionActive: boolean): this {
     this.config.promotionActive = promotionActive;
     return this;
   }
 
-  withDiscount(discount: number | string): GivenPromotion {
+  withDiscount(discount: number | string): this {
     this.config.discount = typeof discount === 'number' ? discount.toFixed(2) : discount;
     return this;
   }

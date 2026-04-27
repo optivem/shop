@@ -7,12 +7,12 @@ the test suites. Install it once with:
 gh extension install optivem/gh-optivem
 ```
 
-## All languages at once — `run-all-system-tests.sh`
+## All languages at once — `test-all.sh`
 
 From the repo root:
 
 ```bash
-./run-all-system-tests.sh -a monolith
+./test-all.sh -a monolith
 ```
 
 Runs both **latest** and **legacy** suites across all three languages (.NET,

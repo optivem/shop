@@ -10,12 +10,12 @@ export class GivenProduct implements IGivenProduct {
     private readonly config: ProductConfig,
   ) {}
 
-  withSku(sku: string): GivenProduct {
+  withSku(sku: string): this {
     this.config.sku = sku;
     return this;
   }
 
-  withUnitPrice(price: number | string): GivenProduct {
+  withUnitPrice(price: number | string): this {
     this.config.price = typeof price === 'number' ? price.toFixed(2) : price;
     return this;
   }

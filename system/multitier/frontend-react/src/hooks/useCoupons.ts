@@ -36,10 +36,10 @@ export function useCoupons() {
     setError(null);
     setIsCreating(true);
 
-    const validFrom = formData.validFrom && formData.validFrom.trim()
+    const validFrom = formData.validFrom?.trim()
       ? new Date(formData.validFrom + 'Z').toISOString()
       : null;
-    const validTo = formData.validTo && formData.validTo.trim()
+    const validTo = formData.validTo?.trim()
       ? new Date(formData.validTo + 'Z').toISOString()
       : null;
 
@@ -48,7 +48,7 @@ export function useCoupons() {
       formData.discountRate,
       validFrom,
       validTo,
-      formData.usageLimit ? parseInt(formData.usageLimit) : null
+      formData.usageLimit ? Number.parseInt(formData.usageLimit) : null
     );
 
     setIsCreating(false);

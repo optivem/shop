@@ -16,31 +16,31 @@ export class WhenPublishCoupon {
     private readonly useCaseContext: UseCaseContext,
   ) {}
 
-  withCode(code: string): WhenPublishCoupon {
+  withCode(code: string): this {
     this.code = code;
     return this;
   }
 
-  withCouponCode(code: string): WhenPublishCoupon {
+  withCouponCode(code: string): this {
     return this.withCode(code);
   }
 
-  withDiscountRate(discountRate: number | string): WhenPublishCoupon {
+  withDiscountRate(discountRate: number | string): this {
     this.discountRate = discountRate;
     return this;
   }
 
-  withValidFrom(validFrom: string | null | undefined): WhenPublishCoupon {
+  withValidFrom(validFrom: string | null | undefined): this {
     this.validFrom = validFrom ?? undefined;
     return this;
   }
 
-  withValidTo(validTo: string | null | undefined): WhenPublishCoupon {
+  withValidTo(validTo: string | null | undefined): this {
     this.validTo = validTo ?? undefined;
     return this;
   }
 
-  withUsageLimit(usageLimit: number | string | null | undefined): WhenPublishCoupon {
+  withUsageLimit(usageLimit: number | string | null | undefined): this {
     this.usageLimit = usageLimit ?? undefined;
     return this;
   }

@@ -10,10 +10,10 @@ import { ScenarioContext } from '../scenario-context.js';
 
 export class ThenResultStage implements PromiseLike<void> {
   private _expectSuccess = true;
-  private _orderAssertions: ((order: ViewOrderResponse) => void)[] = [];
+  private readonly _orderAssertions: ((order: ViewOrderResponse) => void)[] = [];
   private readonly _couponAssertions: { code: string; fns: ((coupon: BrowseCouponItem) => void)[] }[] = [];
-  private _clockAssertions: ((time: GetTimeResponse) => void)[] = [];
-  private _errorAssertions: ((error: SystemError, useCaseContext: UseCaseContext) => void)[] = [];
+  private readonly _clockAssertions: ((time: GetTimeResponse) => void)[] = [];
+  private readonly _errorAssertions: ((error: SystemError, useCaseContext: UseCaseContext) => void)[] = [];
   private _executionPromise: Promise<void> | null = null;
 
   constructor(
@@ -324,7 +324,7 @@ export class ThenOrder implements PromiseLike<void> {
 export class ThenClock implements PromiseLike<void> {
   constructor(private readonly stage: ThenResultStage) {}
 
-  hasTime(time?: string): ThenClock {
+  hasTime(time?: string): this {
     this.stage._addClockAssertion((t) => {
       if (time) {
         expect(t.time).toContain(time);

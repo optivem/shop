@@ -1,4 +1,4 @@
-import { test as base, expect } from '@playwright/test';
+import { test as base } from '@playwright/test';
 import { chromium } from 'playwright';
 import type { Browser, BrowserContext, Page } from 'playwright';
 import { loadConfiguration, type TestConfig } from '../../../../config/configuration-loader.js';
@@ -36,4 +36,5 @@ export const uiTest = base.extend<{ config: TestConfig; myShopPage: Page; _mySho
     },
 });
 
-export { expect, config };
+export { expect } from '@playwright/test';
+export { config };

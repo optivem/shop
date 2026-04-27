@@ -6,10 +6,10 @@ export function registerErpContractTests(test: ContractTest): void {
       .given()
       .product()
       .withSku('SKU-123')
-      .withUnitPrice(12.0)
+      .withUnitPrice(12)
       .then()
       .product('SKU-123')
       .hasSku('SKU-123')
-      .hasPrice(12.0);
+      .hasPrice(12);
   });
 }

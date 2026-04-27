@@ -30,7 +30,7 @@ gh optivem stop system --system docker/<language>/monolith/system.json
 
 This runs one sample test per suite across all test categories (smoke, acceptance, contract, e2e) to catch regressions without running the full suite. All sample tests must pass before committing.
 
-For full-suite runs across all three languages (latest + legacy), use `./run-all-system-tests.sh` from the repo root — see [docs/running-system-tests.md](docs/running-system-tests.md).
+For full-suite runs across all three languages (latest + legacy), use `./test-all.sh` from the repo root — see [docs/running-system-tests.md](docs/running-system-tests.md).
 
 ## Fixing Failing Workflows
 

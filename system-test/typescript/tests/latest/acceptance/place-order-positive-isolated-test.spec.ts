@@ -21,7 +21,7 @@ test.describe('@isolated', () => {
             await scenario
                 .given()
                 .product()
-                .withUnitPrice(20.0)
+                .withUnitPrice(20)
                 .and()
                 .promotion()
                 .withActive(false)
@@ -42,7 +42,7 @@ test.describe('@isolated', () => {
             await scenario
                 .given()
                 .product()
-                .withUnitPrice(20.0)
+                .withUnitPrice(20)
                 .and()
                 .promotion()
                 .withActive(true)

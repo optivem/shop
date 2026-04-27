@@ -3,7 +3,7 @@ import type { Result } from './result.js';
 export class ResultAssert<T, E> {
   constructor(private readonly result: Result<T, E>) {}
 
-  isSuccess(): ResultAssert<T, E> {
+  isSuccess(): this {
     if (!this.result.success) {
       throw new Error(
         `Expected success but was failure: ${JSON.stringify(this.result.error)}`
@@ -12,7 +12,7 @@ export class ResultAssert<T, E> {
     return this;
   }
 
-  isFailure(): ResultAssert<T, E> {
+  isFailure(): this {
     if (this.result.success) {
       throw new Error(
         `Expected failure but was success: ${JSON.stringify(this.result.value)}`

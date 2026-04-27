@@ -12,6 +12,20 @@ interface Coupon {
   usedCount: number;
 }
 
+function formatDateOrFallback(dateStr: string | undefined, fallback: string): string {
+  if (!dateStr) return fallback;
+  return new Date(dateStr).toLocaleString("en-US", { timeZone: "UTC" });
+}
+
+const formatDate = (dateStr?: string) => formatDateOrFallback(dateStr, "Immediate");
+const formatValidTo = (dateStr?: string) => formatDateOrFallback(dateStr, "Never");
+
+function formatUsageLimit(value?: number): string {
+  if (value === undefined || value === null || value === 2147483647)
+    return "Unlimited";
+  return value.toString();
+}
+
 export default function AdminCouponsPage() {
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [loading, setLoading] = useState(true);
@@ -112,22 +126,6 @@ export default function AdminCouponsPage() {
         id: nextId,
       });
     }
-  }
-
-  function formatDate(dateStr?: string): string {
-    if (!dateStr) return "Immediate";
-    return new Date(dateStr).toLocaleString("en-US", { timeZone: "UTC" });
-  }
-
-  function formatValidTo(dateStr?: string): string {
-    if (!dateStr) return "Never";
-    return new Date(dateStr).toLocaleString("en-US", { timeZone: "UTC" });
-  }
-
-  function formatUsageLimit(value?: number): string {
-    if (value === undefined || value === null || value === 2147483647)
-      return "Unlimited";
-    return value.toString();
   }
 
   return (

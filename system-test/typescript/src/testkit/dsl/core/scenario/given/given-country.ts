@@ -10,16 +10,16 @@ export class GivenCountry implements IGivenCountry {
     private readonly config: CountryConfig,
   ) {}
 
-  withCode(country: string): GivenCountry {
+  withCode(country: string): this {
     this.config.country = country;
     return this;
   }
 
-  withCountry(country: string): GivenCountry {
+  withCountry(country: string): this {
     return this.withCode(country);
   }
 
-  withTaxRate(taxRate: string | number): GivenCountry {
+  withTaxRate(taxRate: string | number): this {
     this.config.taxRate = typeof taxRate === 'number' ? taxRate.toString() : taxRate;
     return this;
   }

@@ -8,8 +8,8 @@ import { ScenarioContext } from '../scenario-context.js';
 
 export class ThenCancelOrderResultStage implements PromiseLike<void> {
   private _expectSuccess = true;
-  private _orderAssertions: ((order: ViewOrderResponse) => void)[] = [];
-  private _errorAssertions: ((error: SystemError, useCaseContext: UseCaseContext) => void)[] = [];
+  private readonly _orderAssertions: ((order: ViewOrderResponse) => void)[] = [];
+  private readonly _errorAssertions: ((error: SystemError, useCaseContext: UseCaseContext) => void)[] = [];
   private _executionPromise: Promise<void> | null = null;
 
   constructor(

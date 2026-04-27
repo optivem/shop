@@ -1,7 +1,7 @@
 import { Result, success, failure } from '../../../../../common/result.js';
 
 export class JsonHttpClient<E> {
-  constructor(private baseUrl: string) {}
+  constructor(private readonly baseUrl: string) {}
 
   async get<T>(path: string): Promise<Result<T, E>> {
     const response = await fetch(`${this.baseUrl}${path}`);
@@ -12,7 +12,7 @@ export class JsonHttpClient<E> {
     const response = await fetch(`${this.baseUrl}${path}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: body !== undefined ? JSON.stringify(body) : undefined,
+      body: body === undefined ? undefined : JSON.stringify(body),
     });
     return this.handleResponse<T>(response);
   }
@@ -32,7 +32,7 @@ export class JsonHttpClient<E> {
     const response = await fetch(`${this.baseUrl}${path}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: body !== undefined ? JSON.stringify(body) : undefined,
+      body: body === undefined ? undefined : JSON.stringify(body),
     });
     if (response.ok) return success(undefined);
     try {

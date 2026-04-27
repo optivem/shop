@@ -9,9 +9,9 @@ import { ScenarioContext } from '../scenario-context.js';
 import type { ThenStage as IThenStage } from '../../../port/then/then-stage.js';
 
 export class ThenContractStage implements PromiseLike<void>, IThenStage {
-  private _clockAssertions: ((time: GetTimeResponse) => void)[] = [];
-  private _productAssertions: Map<string, ((product: GetProductResponse) => void)[]> = new Map();
-  private _countryAssertions: Map<string, ((tax: GetTaxResponse) => void)[]> = new Map();
+  private readonly _clockAssertions: ((time: GetTimeResponse) => void)[] = [];
+  private readonly _productAssertions: Map<string, ((product: GetProductResponse) => void)[]> = new Map();
+  private readonly _countryAssertions: Map<string, ((tax: GetTaxResponse) => void)[]> = new Map();
   private _executionPromise: Promise<void> | null = null;
 
   constructor(
@@ -105,7 +105,7 @@ export class ThenContractStage implements PromiseLike<void>, IThenStage {
 export class ThenContractClock implements PromiseLike<void> {
   constructor(private readonly stage: ThenContractStage) {}
 
-  hasTime(time?: string): ThenContractClock {
+  hasTime(time?: string): this {
     this.stage._addClockAssertion((t) => {
       if (time) {
         expect(t.time).toContain(time);
@@ -130,7 +130,7 @@ export class ThenContractProduct implements PromiseLike<void> {
     private readonly sku: string,
   ) {}
 
-  hasSku(expectedSku: string): ThenContractProduct {
+  hasSku(expectedSku: string): this {
     this.stage._addProductAssertion(this.sku, (p) => {
       const resolved = this.stage.useCaseContext.getParamValue(expectedSku) as string;
       expect(p.sku).toBe(resolved);
@@ -138,7 +138,7 @@ export class ThenContractProduct implements PromiseLike<void> {
     return this;
   }
 
-  hasPrice(price: number): ThenContractProduct {
+  hasPrice(price: number): this {
     this.stage._addProductAssertion(this.sku, (p) => {
       expect(p.price).toBe(price);
     });
@@ -159,7 +159,7 @@ export class ThenContractCountry implements PromiseLike<void> {
     private readonly countryCode: string,
   ) {}
 
-  hasCountry(expected: string): ThenContractCountry {
+  hasCountry(expected: string): this {
     this.stage._addCountryAssertion(this.countryCode, (t) => {
       const resolved = this.stage.useCaseContext.getParamValueOrLiteral(expected) as string;
       expect(t.country).toBe(resolved);
@@ -167,14 +167,14 @@ export class ThenContractCountry implements PromiseLike<void> {
     return this;
   }
 
-  hasTaxRate(rate: number): ThenContractCountry {
+  hasTaxRate(rate: number): this {
     this.stage._addCountryAssertion(this.countryCode, (t) => {
       expect(t.taxRate).toBe(rate);
     });
     return this;
   }
 
-  hasTaxRateIsPositive(): ThenContractCountry {
+  hasTaxRateIsPositive(): this {
     this.stage._addCountryAssertion(this.countryCode, (t) => {
       expect(t.taxRate).toBeGreaterThan(0);
     });

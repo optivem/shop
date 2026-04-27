@@ -10,31 +10,31 @@ export class GivenCoupon implements IGivenCoupon {
     private readonly config: CouponConfig,
   ) {}
 
-  withCode(code: string): GivenCoupon {
+  withCode(code: string): this {
     this.config.code = code;
     return this;
   }
 
-  withCouponCode(code: string): GivenCoupon {
+  withCouponCode(code: string): this {
     return this.withCode(code);
   }
 
-  withDiscountRate(discountRate: number): GivenCoupon {
+  withDiscountRate(discountRate: number): this {
     this.config.discountRate = discountRate;
     return this;
   }
 
-  withValidFrom(validFrom: string): GivenCoupon {
+  withValidFrom(validFrom: string): this {
     this.config.validFrom = validFrom;
     return this;
   }
 
-  withValidTo(validTo: string): GivenCoupon {
+  withValidTo(validTo: string): this {
     this.config.validTo = validTo;
     return this;
   }
 
-  withUsageLimit(usageLimit: number | string): GivenCoupon {
+  withUsageLimit(usageLimit: number | string): this {
     this.config.usageLimit = usageLimit;
     return this;
   }

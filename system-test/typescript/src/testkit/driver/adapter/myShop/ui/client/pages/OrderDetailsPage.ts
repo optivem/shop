@@ -47,49 +47,49 @@ export class OrderDetailsPage extends BasePage {
   async getUnitPrice(): Promise<number> {
     const text =
       (await this.page.locator("[aria-label='Display Unit Price']").textContent({ timeout: PAGE_TIMEOUT_MS }))?.trim() || '0';
-    return parseFloat(text.replace('$', ''));
+    return Number.parseFloat(text.replace('$', ''));
   }
 
   async getBasePrice(): Promise<number> {
     const text =
       (await this.page.locator("[aria-label='Display Base Price']").textContent({ timeout: PAGE_TIMEOUT_MS }))?.trim() || '0';
-    return parseFloat(text.replace('$', ''));
+    return Number.parseFloat(text.replace('$', ''));
   }
 
   async getDiscountRate(): Promise<number> {
     const text =
       (await this.page.locator("[aria-label='Display Discount Rate']").textContent({ timeout: PAGE_TIMEOUT_MS }))?.trim() || '0';
-    return parseFloat(text.replace('%', '')) / 100;
+    return Number.parseFloat(text.replace('%', '')) / 100;
   }
 
   async getDiscountAmount(): Promise<number> {
     const text =
       (await this.page.locator("[aria-label='Display Discount Amount']").textContent({ timeout: PAGE_TIMEOUT_MS }))?.trim() || '0';
-    return parseFloat(text.replace('$', ''));
+    return Number.parseFloat(text.replace('$', ''));
   }
 
   async getSubtotalPrice(): Promise<number> {
     const text =
       (await this.page.locator("[aria-label='Display Subtotal Price']").textContent({ timeout: PAGE_TIMEOUT_MS }))?.trim() || '0';
-    return parseFloat(text.replace('$', ''));
+    return Number.parseFloat(text.replace('$', ''));
   }
 
   async getTaxRate(): Promise<number> {
     const text =
       (await this.page.locator("[aria-label='Display Tax Rate']").textContent({ timeout: PAGE_TIMEOUT_MS }))?.trim() || '0';
-    return parseFloat(text.replace('%', '')) / 100;
+    return Number.parseFloat(text.replace('%', '')) / 100;
   }
 
   async getTaxAmount(): Promise<number> {
     const text =
       (await this.page.locator("[aria-label='Display Tax Amount']").textContent({ timeout: PAGE_TIMEOUT_MS }))?.trim() || '0';
-    return parseFloat(text.replace('$', ''));
+    return Number.parseFloat(text.replace('$', ''));
   }
 
   async getTotalPrice(): Promise<number> {
     const text =
       (await this.page.locator("[aria-label='Display Total Price']").textContent({ timeout: PAGE_TIMEOUT_MS }))?.trim() || '0';
-    return parseFloat(text.replace('$', ''));
+    return Number.parseFloat(text.replace('$', ''));
   }
 
   async getCountry(): Promise<string> {

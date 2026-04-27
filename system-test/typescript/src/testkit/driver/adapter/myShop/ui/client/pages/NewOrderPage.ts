@@ -22,7 +22,7 @@ export class NewOrderPage extends BasePage {
   }
 
   static getOrderNumber(successMessage: string): string | null {
-    const match = successMessage.match(/Order has been created with Order Number ([\w-]+)/);
+    const match = /Order has been created with Order Number ([\w-]+)/.exec(successMessage);
     return match ? match[1] : null;
   }
 }

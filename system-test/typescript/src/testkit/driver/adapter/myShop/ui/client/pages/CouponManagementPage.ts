@@ -12,7 +12,7 @@ type CouponRow = {
 function parseDisplayedDateToIso(displayed: string | undefined): string | undefined {
   if (!displayed || displayed.trim() === '') return undefined;
   const parsed = new Date(displayed.trim());
-  if (isNaN(parsed.getTime())) return displayed.trim();
+  if (Number.isNaN(parsed.getTime())) return displayed.trim();
   const utcMs = Date.UTC(
     parsed.getFullYear(), parsed.getMonth(), parsed.getDate(),
     parsed.getHours(), parsed.getMinutes(), parsed.getSeconds(),

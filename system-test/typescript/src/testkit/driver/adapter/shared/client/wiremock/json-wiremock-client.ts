@@ -1,5 +1,5 @@
 export class JsonWireMockClient {
-  private adminUrl: string;
+  private readonly adminUrl: string;
   private stubIds: string[] = [];
 
   constructor(baseUrl: string) {

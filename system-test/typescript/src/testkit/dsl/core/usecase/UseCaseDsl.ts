@@ -21,30 +21,26 @@ export class UseCaseDsl {
   }
 
   myShop(mode?: ChannelMode): MyShopDsl {
-    if (!this._myShopDsl || mode) {
+    if (mode) {
       this._myShopDsl = new MyShopDsl(this.app.myShop(mode), this.useCaseContext);
+    } else {
+      this._myShopDsl ??= new MyShopDsl(this.app.myShop(mode), this.useCaseContext);
     }
     return this._myShopDsl;
   }
 
   clock(): ClockDsl {
-    if (!this._clockDsl) {
-      this._clockDsl = new ClockDsl(this.app.clockDriver, this.useCaseContext);
-    }
+    this._clockDsl ??= new ClockDsl(this.app.clockDriver, this.useCaseContext);
     return this._clockDsl;
   }
 
   erp(): ErpDsl {
-    if (!this._erpDsl) {
-      this._erpDsl = new ErpDsl(this.app.erpDriver, this.useCaseContext);
-    }
+    this._erpDsl ??= new ErpDsl(this.app.erpDriver, this.useCaseContext);
     return this._erpDsl;
   }
 
   tax(): TaxDsl {
-    if (!this._taxDsl) {
-      this._taxDsl = new TaxDsl(this.app.taxDriver, this.useCaseContext);
-    }
+    this._taxDsl ??= new TaxDsl(this.app.taxDriver, this.useCaseContext);
     return this._taxDsl;
   }
 

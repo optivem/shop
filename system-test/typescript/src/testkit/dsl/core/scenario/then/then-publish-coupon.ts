@@ -7,7 +7,7 @@ import { ScenarioContext } from '../scenario-context.js';
 
 export class ThenPublishCouponResultStage implements PromiseLike<void> {
   private _expectSuccess = true;
-  private _errorAssertions: ((error: SystemError, useCaseContext: UseCaseContext) => void)[] = [];
+  private readonly _errorAssertions: ((error: SystemError, useCaseContext: UseCaseContext) => void)[] = [];
   private readonly _couponAssertions: { code: string; fns: ((coupon: BrowseCouponItem) => void)[] }[] = [];
   private _executionPromise: Promise<void> | null = null;
 

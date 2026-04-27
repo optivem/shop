@@ -24,7 +24,7 @@ export class MyShopUiClient {
         this.currentPage = await this.context.newPage();
       }
       const response = await this.currentPage!.goto(this.baseUrl);
-      if (response && response.status() === 200) {
+      if (response?.status() === 200) {
         return success(new HomePage(this.currentPage!));
       }
       return failure({ message: `MyShop UI not available: ${response?.status()}`, fieldErrors: [] });

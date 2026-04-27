@@ -11,17 +11,17 @@ export class GivenClock implements IGivenClock {
     private readonly config: ClockConfig,
   ) {}
 
-  withTime(time?: string): GivenClock {
+  withTime(time?: string): this {
     this.config.time = time || DEFAULTS.CLOCK_TIME;
     return this;
   }
 
-  withWeekday(): GivenClock {
+  withWeekday(): this {
     this.config.time = DEFAULTS.WEEKDAY_TIME;
     return this;
   }
 
-  withWeekend(): GivenClock {
+  withWeekend(): this {
     this.config.time = DEFAULTS.WEEKEND_TIME;
     return this;
   }

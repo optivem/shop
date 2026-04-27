@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
 
     const validFrom = body.validFrom ? new Date(body.validFrom as string) : null;
     const validTo = body.validTo ? new Date(body.validTo as string) : null;
-    const usageLimit = body.usageLimit != null ? Number(body.usageLimit) : null;
+    const usageLimit = body.usageLimit == null ? null : Number(body.usageLimit);
 
     await insertCoupon({ code: codeStr, discountRate, validFrom, validTo, usageLimit });
 

@@ -43,5 +43,7 @@ export class MyShopApiDriver implements MyShopDriver {
     return this.client.coupons().browseCoupons();
   }
 
-  async close(): Promise<void> {}
+  async close(): Promise<void> {
+    // No resources to release: the API client uses fetch per-call.
+  }
 }

@@ -6,8 +6,8 @@
 # failure (zero-failures policy).
 #
 # Usage:
-#   ./run-all-system-tests.sh -a monolith
-#   ./run-all-system-tests.sh -a multitier -l dotnet,java
+#   ./test-all.sh -a monolith
+#   ./test-all.sh -a multitier -l dotnet,java
 set -uo pipefail
 
 ARCH=""

@@ -19,7 +19,7 @@ interface CouponTableProps {
   onRefresh: () => void;
 }
 
-export function CouponTable({ coupons, isLoading, getCouponStatus, onRefresh }: CouponTableProps) {
+export function CouponTable({ coupons, isLoading, getCouponStatus, onRefresh }: Readonly<CouponTableProps>) {
   const [sorting, setSorting] = useState<SortingState>([]);
 
   const columns = useMemo(

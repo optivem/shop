@@ -15,7 +15,7 @@ export interface CouponFormProps {
   generateCouponCode: () => string;
 }
 
-export function CouponForm({ onSubmit, isSubmitting, generateCouponCode }: CouponFormProps) {
+export function CouponForm({ onSubmit, isSubmitting, generateCouponCode }: Readonly<CouponFormProps>) {
   const getDefaultFormData = useCallback(() => ({
     code: generateCouponCode(),
     discountRate: 0.2,
@@ -60,7 +60,7 @@ export function CouponForm({ onSubmit, isSubmitting, generateCouponCode }: Coupo
                 id="discountRate"
                 aria-label="Discount Rate"
                 value={formData.discountRate}
-                onChange={(e) => setFormData({ ...formData, discountRate: parseFloat(e.target.value) })}
+                onChange={(e) => setFormData({ ...formData, discountRate: Number.parseFloat(e.target.value) })}
                 step="0.01"
                 placeholder="e.g., 0.2 for 20% off"
               />

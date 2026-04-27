@@ -14,7 +14,7 @@ Install once on your host machine:
 1. Open the `shop/` folder **directly** in VS Code:
    - If a folder or workspace is already open: **File → Close Folder** (or **Close Workspace**) first.
    - **File → Open Folder…** → navigate to and select the `shop/` folder itself (not a parent like `academy/`), then click **Select Folder**.
-   - Verify the Explorer sidebar shows `MY_SHOP` at the top and contains `run-all-system-tests.sh`, `CLAUDE.md`, and `.devcontainer/` at the root. If it shows any other folder name, you opened the wrong level.
+   - Verify the Explorer sidebar shows `MY_SHOP` at the top and contains `test-all.sh`, `CLAUDE.md`, and `.devcontainer/` at the root. If it shows any other folder name, you opened the wrong level.
    - The `.devcontainer/` must sit at the root of the opened folder — multi-root workspaces and parent directories will not work.
 2. Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`) → **Dev Containers: Reopen in Container**.
    - ⚠️ Do **not** pick **Dev Containers: Add Dev Container Configuration Files…** — that creates a new config from templates. The repo already ships one in `.devcontainer/`.

@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     const sku = body.sku as string;
     const quantity = typeof body.quantity === 'string' ? Number(body.quantity) : body.quantity as number;
     const country = (body.country as string)?.trim() || '';
-    const couponCode = typeof body.couponCode === 'string' && body.couponCode.trim() !== '' ? body.couponCode as string : null;
+    const couponCode = typeof body.couponCode === 'string' && body.couponCode.trim() !== '' ? body.couponCode : null;
 
     const now = await getCurrentTime();
 
