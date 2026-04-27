@@ -46,19 +46,21 @@ Net effect: `docker compose up` pulls whatever `:latest` points to *now*, not th
 
 ## Scope
 
-### Compose files (6 files in shop)
+### Compose files (12 files in shop)
 
-Switch every pipeline compose file from a hardcoded `:latest` tag to an env-var-substituted reference, with `:latest` as the fallback (preserves cron-path behavior when no SHA is specified).
+Switch every pipeline compose file from a hardcoded `:latest` tag to an env-var reference, with `:latest` as the fallback default. The action exports `SYSTEM_IMAGE_<NAME>=<digest-url>` strictly (it fails loud if `service-names` is missing), so the fallback is rarely exercised in pipeline runs — but it's kept as a safety net for any path that runs compose without going through the action (manual `docker compose up`, ad-hoc debugging, future callers we haven't anticipated).
 
 **Pattern:**
 ```yaml
 # Before
 image: ghcr.io/optivem/shop/monolith-system-java:latest
 
-# After (single-image case — monolith)
-image: ${SYSTEM_IMAGE:-ghcr.io/optivem/shop/monolith-system-java:latest}
+# After (monolith — service stanza named `system`)
+services:
+  system:
+    image: ${SYSTEM_IMAGE_SYSTEM:-ghcr.io/optivem/shop/monolith-system-java:latest}
 
-# After (multi-image case — multitier with frontend + backend)
+# After (multitier — service stanzas `frontend` + `backend`)
 services:
   frontend:
     image: ${SYSTEM_IMAGE_FRONTEND:-ghcr.io/optivem/shop/multitier-frontend-react:latest}
@@ -76,66 +78,44 @@ services:
 
 Verify each via `grep -n "image:.*:latest" shop/docker/*/*/docker-compose.pipeline.*.yml` returning empty after the edits.
 
-### `deploy-docker-compose` action
-
-Plumb the resolved digest URLs through to compose as env vars.
-
-**Current behavior:** `IMAGE_URLS` env var carries a JSON array of digest URLs, used only for logging.
-
-**New behavior:** Parse the JSON array, derive a service-name → digest map, and export each as `SYSTEM_IMAGE` (single image) or `SYSTEM_IMAGE_<UPPER_SERVICE_NAME>` (multi-image). Pass via the inline `env:` block on the `docker compose` invocation so the substitutions land.
-
-**Service naming convention** — keep simple and explicit:
-- Monolith: digest array has one entry → `SYSTEM_IMAGE`
-- Multitier: digest array has two entries, ordered `frontend` then `backend` (or alphabetical) → `SYSTEM_IMAGE_FRONTEND`, `SYSTEM_IMAGE_BACKEND`. Add a new optional input `service-names` (newline list) so the caller declares the order/keys explicitly. Default: empty → action falls back to a single `SYSTEM_IMAGE` if exactly one URL was provided, errors otherwise.
-
-**Required input change** — `service-names` (optional, multi-line list). Keep `image-urls` semantics unchanged.
-
-**Backward compatibility** — when `service-names` is empty AND there's one URL, behavior matches the new single-image case. When there's >1 URL and no `service-names`, fail with a clear error rather than guessing.
-
-### Acceptance stage workflows (6 in shop)
-
-No changes required at first — each stage already passes `image-urls: ${{ needs.check.outputs.image-digest-urls }}` to `deploy-docker-compose`. Once the action plumbs them through, behavior is corrected automatically.
-
-For multitier stages, add `service-names: |\n  frontend\n  backend` (or whatever names match the compose service stanza). Without this, the action will error on multi-image inputs.
-
 ### Verification
 
 1. Run `monolith-java-acceptance-stage` via `workflow_dispatch` with `commit-sha: <known-old-sha>`. Confirm the deployed container's image reference (`docker compose ps --format json | jq '.[0].Image'`) matches the digest of the old SHA, not whatever `:latest` currently is. Easy way: introduce a deliberate divergence by pushing a no-op image change to bump `:latest`, then re-run with the older `commit-sha` and assert the old digest deployed.
 2. Run `multitier-java-acceptance-stage` the same way to exercise multi-image plumbing.
 3. Confirm scheduled hourly runs still pass on all 6 stages (`:latest` fallback path).
 
-### Final sweep — no naked `:latest` in pipeline compose
+### Final sweep — no literal image tags in pipeline compose
 
-Run these greps as the **last step** before declaring done. Each must return empty.
+Run these greps as the **last step** before declaring done. Each must return empty (or match the expected pattern).
 
-**1. No naked ghcr.io image references in pipeline compose files.** Every shop image must be wrapped in a `${SYSTEM_IMAGE…:-…}` template. The substitution syntax means the line starts with `image: ${`, so `image: ghcr.io…` (without the `${`) anywhere is a miss:
+**1. No naked ghcr.io image references in pipeline compose files.** Every shop image must be wrapped in a `${SYSTEM_IMAGE_<NAME>}` template. The substitution syntax means the line starts with `image: ${`, so `image: ghcr.io…` (without the `${`) anywhere is a miss:
 
 ```bash
 grep -rnE 'image:\s+ghcr\.io' shop/docker/*/*/docker-compose.pipeline.*.yml
 ```
 Expected: empty. Any hit is a compose file that wasn't templated.
 
-**2. No naked `:latest` in pipeline compose files.** This catches stragglers where someone left `:latest` outside a `${...}` block, including any non-ghcr image we forgot about. Note that the fallback default inside `${SYSTEM_IMAGE:-...:latest}` is *intentional* — those references are inside `${…}` and the grep below excludes them by requiring `:latest` to appear on a line that doesn't contain `${`:
+**2. No naked `:latest` outside fallback defaults.** This catches stragglers where someone left `:latest` outside a `${...}` block. Note that the fallback default inside `${SYSTEM_IMAGE_<NAME>:-...:latest}` is *intentional* — those references are inside `${…}` and the grep below excludes them by requiring `:latest` to appear on a line that doesn't contain `${`:
 
 ```bash
 grep -rn ':latest' shop/docker/*/*/docker-compose.pipeline.*.yml | grep -v '\${'
 ```
-Expected: empty. Any hit is either (a) a non-templated image still pinning to `:latest`, or (b) a tag literal somewhere unexpected — investigate before closing the plan.
+Expected: empty. Any hit is either (a) a non-templated image still pinning to `:latest` directly, or (b) a tag literal somewhere unexpected — investigate before closing the plan.
 
 **3. Spot-check one templated file** to confirm the substitution syntax is correct (not e.g. `${SYSTEM_IMGE...}` typo):
 
 ```bash
 grep -nE 'image:\s+\$\{SYSTEM_IMAGE' shop/docker/java/monolith/docker-compose.pipeline.real.yml
 ```
-Expected: at least one hit, with the var name exactly `SYSTEM_IMAGE` (or `SYSTEM_IMAGE_<SERVICE>` for multitier).
+Expected: at least one hit, with the var name exactly `SYSTEM_IMAGE_<SERVICE>` matching the compose service stanza.
 
-**4. Symmetric check on the action side** — the env vars the action exports must match what the compose files consume. Misspelling here is the silent-failure mode (compose falls back to `:latest`, bug returns invisibly):
+**4. Symmetric check** — the service names the workflows pass must match what the compose files consume. Misspelling here is the failure mode (compose substitution resolves to empty, container fails to start):
 
 ```bash
-grep -n 'SYSTEM_IMAGE' actions/deploy-docker-compose/
-grep -n 'SYSTEM_IMAGE' shop/docker/
+grep -rn 'service-names' shop/.github/workflows/
+grep -rn '\${SYSTEM_IMAGE' shop/docker/
 ```
-Eyeball that the two lists contain the same variable names. Any name in one but not the other is a typo or an orphan.
+Eyeball that every service name in `service-names` has a matching `${SYSTEM_IMAGE_<UPPER>}` reference in the corresponding compose file. Any name in one but not the other is a typo or orphan.
 
 Only after all four greps come back clean is the SHA-pinning fix structurally complete.
 
@@ -143,17 +123,16 @@ Only after all four greps come back clean is the SHA-pinning fix structurally co
 
 | Order | Step | Reason |
 |---|---|---|
-| 1 | Update `deploy-docker-compose` action in `actions/` repo, ship as v2 (or extend v1 with backward-compatible new input). | Action change must precede compose-file edits — otherwise compose files reference an env var nothing exports, and `:latest` fallback masks the failure silently. |
-| 2 | Edit 12 shop compose files. | Atomic with action update — once action exports `SYSTEM_IMAGE`, compose files consume it. |
-| 3 | Add `service-names` input to multitier acceptance stages (3 workflows). | Required for multi-image cases to not fail-error post-action-update. |
-| 4 | Verify on one stage manually (step 1 in Verification). | Confirm SHA pinning works end-to-end before declaring done. |
-| 5 | Let next hourly cron run on all 6 stages. | Confirm `:latest` fallback still works. |
+| 1 | Update `deploy-docker-compose` in `actions/` repo: add required `service-names` input, export `SYSTEM_IMAGE_<NAME>=<url>` env vars. ✅ done. | Foundational — every compose change downstream depends on this. |
+| 2 | Add `service-names` to all 24 shop workflows that call `deploy-docker-compose`. ✅ done. | The action is now strict; until every caller passes `service-names`, all stages will fail-loud on next run. |
+| 3 | Edit 12 shop compose files: replace `:latest` with `${SYSTEM_IMAGE_<NAME>:-...:latest}` (env-var with fallback). | Once workflows pass service-names, env vars are exported; compose files consume them. Fallback is a safety net for paths that bypass the action. |
+| 4 | Verify on one stage manually (Verification step 1). | Confirm SHA pinning works end-to-end. |
+| 5 | Let next hourly cron run on all 6 stages. | Confirm scheduled path still works. |
 
 ## Risk
 
-- **Action change is breaking-by-default for multi-image callers without the new input.** Mitigation: ship as v2 of the action, leave v1 alone, callers opt in. Or: keep v1, make `service-names` optional with helpful error message naming what to add.
-- **Compose env-var substitution is silent on typos.** If `SYSTEM_IMAGE` is misspelled in either the action or the compose file, the fallback `:latest` kicks in and the bug returns invisibly. Mitigation: post-edit, `grep "SYSTEM_IMAGE" actions/deploy-docker-compose/` and `grep "SYSTEM_IMAGE" shop/docker/` and eyeball that they match.
-- **Per-lang stages currently work in 95% of runs.** Don't ship this fix alone if there's appetite to also do the cross-lang workflow refactor — bundle the verification cost.
+- **Compose env-var substitution is silent on typos.** If `SYSTEM_IMAGE_<NAME>` is misspelled in either the action input or the compose file, the substitution resolves to empty and the container fails to start (loud — but error message is `image not found ""` which is unintuitive). Mitigation: post-edit, run the symmetric grep in Final sweep #4 and eyeball that workflow service-names match compose env var references.
+- **Sequencing window:** between actions push (done) and shop push, every cron-triggered stage will fail. Mitigation: ship steps 2 + 3 in a single shop commit so the window is one push, not multiple.
 
 ## Estimate
 

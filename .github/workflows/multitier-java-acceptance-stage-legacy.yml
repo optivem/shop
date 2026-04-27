@@ -172,6 +172,9 @@ jobs:
           environment: acceptance
           version: ${{ env.COMMIT_SHA }}
           image-urls: ${{ needs.check.outputs.image-digest-urls }}
+          service-names: |
+            frontend
+            backend
           compose-file: docker-compose.pipeline.real.yml
           working-directory: docker/java/multitier
 
@@ -194,6 +197,9 @@ jobs:
           environment: acceptance
           version: ${{ env.COMMIT_SHA }}
           image-urls: ${{ needs.check.outputs.image-digest-urls }}
+          service-names: |
+            frontend
+            backend
           compose-file: docker-compose.pipeline.stub.yml
           working-directory: docker/java/multitier
 

@@ -99,6 +99,7 @@ jobs:
           environment: qa
           version: ${{ needs.check.outputs.version }}
           image-urls: ${{ needs.check.outputs.image-urls }}
+          service-names: system
           compose-file: docker-compose.pipeline.real.yml
           working-directory: docker/java/monolith
 

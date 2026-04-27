@@ -196,6 +196,7 @@ jobs:
           environment: acceptance
           version: ${{ env.COMMIT_SHA }}
           image-urls: ${{ needs.check.outputs.image-digest-urls }}
+          service-names: system
           compose-file: docker-compose.pipeline.real.yml
           working-directory: docker/typescript/monolith
 
@@ -218,6 +219,7 @@ jobs:
           environment: acceptance
           version: ${{ env.COMMIT_SHA }}
           image-urls: ${{ needs.check.outputs.image-digest-urls }}
+          service-names: system
           compose-file: docker-compose.pipeline.stub.yml
           working-directory: docker/typescript/monolith
 
