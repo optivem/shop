@@ -44,6 +44,5 @@ Net effect: `docker compose up` pulls whatever `:latest` points to *now*, not th
 
 ## Remaining verification
 
-1. Run `monolith-java-acceptance-stage` via `workflow_dispatch` with `commit-sha: <known-old-sha>`. Confirm the deployed container's image reference (`docker compose ps --format json | jq '.[0].Image'`) matches the digest of the old SHA, not whatever `:latest` currently is. Easy way: introduce a deliberate divergence by pushing a no-op image change to bump `:latest`, then re-run with the older `commit-sha` and assert the old digest deployed.
-2. Run `multitier-java-acceptance-stage` the same way to exercise multi-image plumbing.
-3. Confirm scheduled hourly runs still pass on all 6 stages (`:latest` fallback path).
+1. Run a multitier acceptance stage (e.g. `multitier-java-acceptance-stage`) end-to-end to exercise multi-image plumbing (`SYSTEM_IMAGE_FRONTEND` + `SYSTEM_IMAGE_BACKEND`). Single-image (monolith) was verified live via `monolith-typescript-acceptance-stage` run [25011526625](https://github.com/optivem/shop/actions/runs/25011526625) — the deploy step's logs show `SYSTEM_IMAGE_SYSTEM=ghcr.io/.../monolith-system-typescript@sha256:ccf797ef...` exported to `$GITHUB_ENV` and consumed by compose. Multi-image plumbing was unit-verified locally (`docker compose config` shows both env vars substituted) but not yet exercised live.
+2. Confirm next scheduled hourly runs pass on all 6 stages (passive observation — verifies cron path picks up the new code without regression).
