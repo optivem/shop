@@ -1,4 +1,4 @@
-Pick the top ticket from the GitHub project board and implement it using the multi-agent ATDD workflow defined in `docs/prompts/atdd/workflow.md`.
+Pick the top ticket from the GitHub project board and implement it using the multi-agent ATDD workflow defined in `docs/atdd/process/workflow.md`.
 
 Input: $ARGUMENTS
 

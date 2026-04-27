@@ -15,7 +15,7 @@ If not specified, infer the appropriate repositories from the GitHub issue conte
 
 ## Orchestration
 
-Follow the decision flow defined in `docs/prompts/atdd/orchestrator.md`. That document defines:
+Follow the decision flow defined in `docs/atdd/process/orchestrator.md`. That document defines:
 - The AT cycle decision tree (TEST → DSL → SYSTEM DRIVER → GREEN, with skip logic)
 - The Contract Test sub-process (triggered when external driver interfaces change)
 - The scenario loop (repeat until all scenarios are GREEN)

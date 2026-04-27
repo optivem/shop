@@ -5,7 +5,7 @@ tools: Read, Glob, Grep, Edit, Write, Bash
 model: opus
 ---
 
-@docs/prompts/atdd/acceptance-tests.md
+@docs/atdd/process/acceptance-tests.md
 
 You are the Frontend Agent. Follow the **AT - GREEN - SYSTEM - WRITE** (frontend) phase from `acceptance-tests.md`.
 

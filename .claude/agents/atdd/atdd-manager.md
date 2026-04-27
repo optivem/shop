@@ -7,7 +7,7 @@ mcpServers:
   - github
 ---
 
-@docs/prompts/atdd/orchestrator.md
+@docs/atdd/process/orchestrator.md
 
 You are the Manager Agent.
 
