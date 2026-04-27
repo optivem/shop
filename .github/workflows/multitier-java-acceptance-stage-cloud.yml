@@ -73,17 +73,25 @@ jobs:
           ref: ${{ env.COMMIT_SHA }}
 
       - name: Log in to Docker Hub
-        uses: docker/login-action@v4
+        uses: Wandalen/wretry.action@v3
         with:
-          username: ${{ vars.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          action: docker/login-action@v4
+          attempt_limit: 3
+          attempt_delay: 10000
+          with: |
+            username: ${{ vars.DOCKERHUB_USERNAME }}
+            password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Log in to GHCR
-        uses: docker/login-action@v4
+        uses: Wandalen/wretry.action@v3
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          action: docker/login-action@v4
+          attempt_limit: 3
+          attempt_delay: 10000
+          with: |
+            registry: ghcr.io
+            username: ${{ github.actor }}
+            password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Resolve Docker Image Digests
         id: find-latest
@@ -152,11 +160,15 @@ jobs:
         uses: google-github-actions/setup-gcloud@v3
 
       - name: Log in to GHCR
-        uses: docker/login-action@v4
+        uses: Wandalen/wretry.action@v3
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          action: docker/login-action@v4
+          attempt_limit: 3
+          attempt_delay: 10000
+          with: |
+            registry: ghcr.io
+            username: ${{ github.actor }}
+            password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Deploy Frontend to Cloud Run
         id: deploy
@@ -193,11 +205,15 @@ jobs:
         uses: google-github-actions/setup-gcloud@v3
 
       - name: Log in to GHCR
-        uses: docker/login-action@v4
+        uses: Wandalen/wretry.action@v3
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          action: docker/login-action@v4
+          attempt_limit: 3
+          attempt_delay: 10000
+          with: |
+            registry: ghcr.io
+            username: ${{ github.actor }}
+            password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Deploy Backend to Cloud Run
         id: deploy
@@ -238,11 +254,15 @@ jobs:
         uses: google-github-actions/setup-gcloud@v3
 
       - name: Log in to GHCR
-        uses: docker/login-action@v4
+        uses: Wandalen/wretry.action@v3
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          action: docker/login-action@v4
+          attempt_limit: 3
+          attempt_delay: 10000
+          with: |
+            registry: ghcr.io
+            username: ${{ github.actor }}
+            password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Deploy External Real to Cloud Run
         id: deploy
@@ -279,11 +299,15 @@ jobs:
         uses: google-github-actions/setup-gcloud@v3
 
       - name: Log in to GHCR
-        uses: docker/login-action@v4
+        uses: Wandalen/wretry.action@v3
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          action: docker/login-action@v4
+          attempt_limit: 3
+          attempt_delay: 10000
+          with: |
+            registry: ghcr.io
+            username: ${{ github.actor }}
+            password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Deploy External Stub to Cloud Run
         id: deploy

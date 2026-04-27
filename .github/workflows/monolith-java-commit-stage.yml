@@ -43,10 +43,14 @@ jobs:
           ref: ${{ env.COMMIT_SHA }}
 
       - name: Log in to Docker Hub
-        uses: docker/login-action@v4
+        uses: Wandalen/wretry.action@v3
         with:
-          username: ${{ vars.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          action: docker/login-action@v4
+          attempt_limit: 3
+          attempt_delay: 10000
+          with: |
+            username: ${{ vars.DOCKERHUB_USERNAME }}
+            password: ${{ secrets.DOCKERHUB_TOKEN }}
 
   run:
     needs: check
@@ -134,11 +138,15 @@ jobs:
 
       - name: Log in to GHCR
         if: steps.verify-main.outputs.on-branch == 'true'
-        uses: docker/login-action@v4
+        uses: Wandalen/wretry.action@v3
         with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GHCR_TOKEN }}
+          action: docker/login-action@v4
+          attempt_limit: 3
+          attempt_delay: 10000
+          with: |
+            registry: ghcr.io
+            username: ${{ github.repository_owner }}
+            password: ${{ secrets.GHCR_TOKEN }}
 
       - name: Extract Docker Metadata
         if: steps.verify-main.outputs.on-branch == 'true'

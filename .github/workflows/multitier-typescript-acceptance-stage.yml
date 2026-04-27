@@ -77,17 +77,25 @@ jobs:
           tag: multitier-typescript-v${{ steps.read-base-version.outputs.base-version }}
 
       - name: Log in to Docker Hub
-        uses: docker/login-action@v4
+        uses: Wandalen/wretry.action@v3
         with:
-          username: ${{ vars.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          action: docker/login-action@v4
+          attempt_limit: 3
+          attempt_delay: 10000
+          with: |
+            username: ${{ vars.DOCKERHUB_USERNAME }}
+            password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Log in to GHCR
-        uses: docker/login-action@v4
+        uses: Wandalen/wretry.action@v3
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          action: docker/login-action@v4
+          attempt_limit: 3
+          attempt_delay: 10000
+          with: |
+            registry: ghcr.io
+            username: ${{ github.actor }}
+            password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Resolve Docker Image Digests
         id: find-latest
@@ -164,17 +172,25 @@ jobs:
           ref: ${{ env.COMMIT_SHA }}
 
       - name: Log in to Docker Hub
-        uses: docker/login-action@v4
+        uses: Wandalen/wretry.action@v3
         with:
-          username: ${{ vars.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          action: docker/login-action@v4
+          attempt_limit: 3
+          attempt_delay: 10000
+          with: |
+            username: ${{ vars.DOCKERHUB_USERNAME }}
+            password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Log in to GHCR
-        uses: docker/login-action@v4
+        uses: Wandalen/wretry.action@v3
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          action: docker/login-action@v4
+          attempt_limit: 3
+          attempt_delay: 10000
+          with: |
+            registry: ghcr.io
+            username: ${{ github.actor }}
+            password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Simulate Deployment (Real External Systems)
         uses: optivem/actions/deploy-docker-compose@v1
