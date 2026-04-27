@@ -1,0 +1,16 @@
+bin/
+obj/
+out/
+TestResults/
+*.user
+*.suo
+.vs/
+.vscode/
+.idea/
+.git/
+*.log
+*.pdb
+README.md
+Run-Sonar.ps1
+Dockerfile
+.dockerignore

@@ -1,0 +1,16 @@
+.gradle/
+build/
+bin/
+out/
+.idea/
+.vscode/
+.classpath
+.project
+.settings/
+.git/
+*.log
+HELP.md
+README.md
+Run-Sonar.ps1
+Dockerfile
+.dockerignore

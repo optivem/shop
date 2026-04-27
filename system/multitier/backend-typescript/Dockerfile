@@ -1,10 +1,11 @@
+# syntax=docker/dockerfile:1.4
 # Stage 1: Build the app
 FROM node:22-alpine AS build
 WORKDIR /app
 
 # Install dependencies
 COPY package*.json ./
-RUN npm ci
+RUN --mount=type=cache,target=/root/.npm npm ci
 
 # Copy source code and build
 COPY . .
@@ -16,7 +17,7 @@ WORKDIR /app
 
 # Copy package files and install production dependencies
 COPY --from=build /app/package*.json ./
-RUN npm ci --omit=dev
+RUN --mount=type=cache,target=/root/.npm npm ci --omit=dev
 
 # Copy built files
 COPY --from=build /app/dist ./dist
