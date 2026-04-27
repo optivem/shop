@@ -26,7 +26,7 @@ Useful flags:
 
 This is the preferred entry point for verifying cross-language changes.
 
-## Single language — `gh optivem run system tests`
+## Single language — `gh optivem test system`
 
 From `system-test/<language>/`, e.g. `system-test/typescript/`:
 
@@ -35,13 +35,13 @@ From `system-test/<language>/`, e.g. `system-test/typescript/`:
 gh optivem run system --system monolith/system.json
 
 # Run the latest suites
-gh optivem run system tests --system monolith/system.json --tests tests-latest.json
+gh optivem test system --system monolith/system.json --tests tests-latest.json
 
 # Or the legacy suites
-gh optivem run system tests --system monolith/system.json --tests tests-legacy.json
+gh optivem test system --system monolith/system.json --tests tests-legacy.json
 
 # Or a fast smoke (one sample per suite)
-gh optivem run system tests --system monolith/system.json --tests tests-latest.json --sample
+gh optivem test system --system monolith/system.json --tests tests-latest.json --sample
 
 # Stop when done
 gh optivem stop system --system monolith/system.json

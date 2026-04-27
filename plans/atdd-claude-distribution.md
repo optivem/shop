@@ -110,10 +110,10 @@ Rejected — guarantees we'll do the work twice and have to migrate shop's copy 
 - [ ] Copy `eshop-tests/.claude/commands/*.md` → `gh-optivem/internal/templates/atdd/commands/`.
 - [ ] Copy `eshop-tests/docs/prompts/{atdd,architecture,code}/` → `gh-optivem/internal/templates/atdd/prompts/`.
 - [ ] Replace hardcoded `eshop` / `eshop-tests` with placeholder `{{.SystemRepo}}`. Audit results: 5 hits in `acceptance-tests.md`, 3 in `orchestrator.md`.
-- [ ] Replace `Run-SystemTests.ps1` invocations with `gh optivem run system tests` calls (cross-platform, no .ps1 vs .sh divergence, tied to the CLI students already have installed). Mapping:
-  - `.\Run-SystemTests.ps1 -Suite <s> -Test <t>` → `gh optivem run system tests --suite <s> --test <t>` (verify `--test` flag exists; if not, drop it or add it as part of this work).
-  - `.\Run-SystemTests.ps1 -Suite <s>` → `gh optivem run system tests --suite <s>`.
-  - Full suite → `gh optivem run system tests` (no `--suite`).
+- [ ] Replace `Run-SystemTests.ps1` invocations with `gh optivem test system` calls (cross-platform, no .ps1 vs .sh divergence, tied to the CLI students already have installed). Mapping:
+  - `.\Run-SystemTests.ps1 -Suite <s> -Test <t>` → `gh optivem test system --suite <s> --test <t>` (verify `--test` flag exists; if not, drop it or add it as part of this work).
+  - `.\Run-SystemTests.ps1 -Suite <s>` → `gh optivem test system --suite <s>`.
+  - Full suite → `gh optivem test system` (no `--suite`).
 - [ ] Decide what to do with the `shop/` package convention — it's a generic ATDD term in the prompts (the SUT subfolder, distinct from `external/`), not the repo name. Keep as-is; do NOT templatize.
 - [ ] Decide whether to embed the templates (Go `embed.FS`) — consistent with how `gh-optivem/internal/templates/templates.go` already works.
 

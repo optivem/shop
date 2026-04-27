@@ -171,7 +171,7 @@ jobs:
         working-directory: system-test/dotnet
 
       # Install the gh-optivem CLI extension. The extension provides the
-      # `gh optivem run system` and `gh optivem run system tests` subcommands
+      # `gh optivem run system` and `gh optivem test system` subcommands
       # that replaced the old Run-SystemTests.ps1 orchestrator.
       - name: Install gh-optivem CLI extension
         env:
@@ -186,13 +186,13 @@ jobs:
 
       # Run system tests (sample) — latest
       - name: Run System Tests - Latest (Sample)
-        run: gh optivem run system tests --system ${{ inputs.architecture }}/system.json --tests tests-latest.json --sample
+        run: gh optivem test system --system ${{ inputs.architecture }}/system.json --tests tests-latest.json --sample
         working-directory: system-test/${{ inputs.language }}
 
       # Run system tests (sample) — legacy
       - name: Run System Tests - Legacy (Sample)
         if: ${{ !inputs.skip-acceptance-legacy }}
-        run: gh optivem run system tests --system ${{ inputs.architecture }}/system.json --tests tests-legacy.json --sample
+        run: gh optivem test system --system ${{ inputs.architecture }}/system.json --tests tests-legacy.json --sample
         working-directory: system-test/${{ inputs.language }}
 
   commit-stage:

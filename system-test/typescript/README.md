@@ -19,25 +19,25 @@ gh optivem run system --system monolith/system.json
 Run all latest test suites:
 
 ```bash
-gh optivem run system tests --system monolith/system.json --tests tests-latest.json
+gh optivem test system --system monolith/system.json --tests tests-latest.json
 ```
 
 Run legacy test suites:
 
 ```bash
-gh optivem run system tests --system monolith/system.json --tests tests-legacy.json
+gh optivem test system --system monolith/system.json --tests tests-legacy.json
 ```
 
 Run only sample tests (one per suite, fast smoke):
 
 ```bash
-gh optivem run system tests --system monolith/system.json --tests tests-latest.json --sample
+gh optivem test system --system monolith/system.json --tests tests-latest.json --sample
 ```
 
 Run a specific suite by ID:
 
 ```bash
-gh optivem run system tests --system monolith/system.json --tests tests-latest.json --suite acceptance-api
+gh optivem test system --system monolith/system.json --tests tests-latest.json --suite acceptance-api
 ```
 
 Rebuild container images before bringing the system up:
