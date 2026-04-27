@@ -1,7 +1,5 @@
 # Plan — Shop Workflow Warnings Cleanup
 
-🤖 **Picked up by agent** — `Valentina_Desk` at `2026-04-27T08:35:44Z`
-
 **Date:** 2026-04-27
 **Source audit:** Latest runs of all 69 workflows in the shop repo. 48 had completed runs analyzed; 19 cloud workflows have never run; 2 were in progress at audit time.
 **Scope:** Address warnings (not failures). The Docker YAML parse error breaking every commit-stage workflow is tracked separately.
