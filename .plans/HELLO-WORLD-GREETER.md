@@ -291,7 +291,6 @@ system-test/{lang}/
 │   └── External.Clock.Client/ # HTTP client for Clock stub (sets expected timestamp)
 ├── SystemTests/           # Actual test classes
 ├── docker-compose.*.yml   # Variants: local/pipeline × stub/real
-├── Run-SystemTests.ps1    # Test runner script
 └── build config           # build.gradle / .csproj / package.json
 ```
 
@@ -464,7 +463,7 @@ Add `"greeter"` and `"scorer"` to `isScaffoldReserved()` to prevent users from c
 | 3.2 | Create .NET system test harness | `system-test/dotnet/` — full DSL layers, 2 test scenarios |
 | 3.3 | Create TypeScript system test harness | `system-test/typescript/` — full DSL layers, 2 test scenarios |
 | 3.4 | Create Docker Compose files | 8 variants per language (local/pipeline × monolith/multitier × stub/real) |
-| 3.5 | Create Run-SystemTests.ps1 | Test runner scripts per language |
+| 3.5 | Wire per-language test runner | `gh optivem test system` integration per language |
 
 ### Phase 4: CI/CD workflows
 

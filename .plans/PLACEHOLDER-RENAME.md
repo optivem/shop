@@ -12,7 +12,7 @@ This plan covers the `shop` repo only. `gh-optivem` simplification and `courses/
 
 ## Execution approach
 
-Work **language by language**. For each language: bulk content replacement → file/dir renames → basic compilation check (`tsc --noEmit`, `dotnet build`, `gradlew compileJava`). Run `Run-SystemTests.ps1 -Architecture monolith -Sample` **only at the end** after all languages are done (expensive to spin up per language).
+Work **language by language**. For each language: bulk content replacement → file/dir renames → basic compilation check (`tsc --noEmit`, `dotnet build`, `gradlew compileJava`). Run `gh optivem test system --sample` **only at the end** after all languages are done (expensive to spin up per language).
 
 Order:
 
@@ -20,7 +20,7 @@ Order:
 2. **.NET** — monolith, multitier backend-dotnet, system-test/dotnet
 3. **Java** — monolith, multitier backend-java, system-test/java
 4. **Cross-cutting** — workflows, SonarCloud keys, docs/README/agent prompts
-5. **Run-SystemTests `-Sample`** — one sample run per language once everything is renamed
+5. **`gh optivem test system --sample`** — one sample run per language once everything is renamed
 
 ### Decisions taken (recommendations accepted)
 
@@ -180,7 +180,7 @@ Per `feedback_use_run_scripts` — use existing scripts, don't craft ad-hoc dock
 - .NET: `dotnet build` each renamed solution
 - Java: `./gradlew build` each module
 - TypeScript: `npm install && npm run build`
-- System tests: `Run-SystemTests.ps1` (full suite, not `-Suite smoke`)
+- System tests: `gh optivem test system` (full suite, not `--suite smoke`)
 
 ### 3c. Scaffold end-to-end with unchanged gh-optivem
 

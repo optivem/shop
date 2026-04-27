@@ -124,7 +124,7 @@ Affected workflow files (per grep):
 
 - **Local — monolith × 3 langs × {real, stub}:** `docker compose -f system/monolith/<lang>/docker-compose.local.<mode>.yml up --build` succeeds. Hit health endpoints from `system.json`.
 - **Local — multitier × 3 langs × {real, stub}:** same.
-- **Run system tests locally** for at least one language using existing test scripts (`Run-SystemTests.ps1` or equivalent) to confirm `system.json` resolves the new `composeFile` path correctly.
+- **Run system tests locally** for at least one language using `gh optivem test system` (or equivalent) to confirm `system.json` resolves the new `composeFile` path correctly.
 - **CI:** push and watch one commit-stage + one acceptance-stage workflow per language to confirm the new paths work in pipeline.
 
 ---

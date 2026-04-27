@@ -8,8 +8,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Root", "Root", "{6530B213-D
 		.gitignore = .gitignore
 		LICENSE = LICENSE
 		README.md = README.md
-		Run-SystemTests.Config.ps1 = Run-SystemTests.Config.ps1
-		Run-SystemTests.ps1 = Run-SystemTests.ps1
+		run-all-system-tests.sh = run-all-system-tests.sh
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{65C2C82B-4368-4B45-B4C7-298C5926EEDF}"

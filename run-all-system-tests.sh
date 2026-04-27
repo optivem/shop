@@ -63,7 +63,7 @@ run_phase() {
   (
     cd "$lang_dir" \
       && gh optivem run system --system "$SYSTEM_JSON" \
-      && gh optivem run system tests --system "$SYSTEM_JSON" --tests "$tests_file"
+      && gh optivem test system --system "$SYSTEM_JSON" --tests "$tests_file"
   ) || status="FAILED"
   local end
   end=$(date +%s)

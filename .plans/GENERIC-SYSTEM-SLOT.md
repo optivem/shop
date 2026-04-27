@@ -144,7 +144,7 @@ If any action under `optivem/actions` names an input `shop-tag` (or similar), th
 
 ### Phase 4 — Validation
 - Full local build: .NET `dotnet build`, Java `./gradlew build`, TS `npm run build`
-- System tests: `Run-SystemTests.ps1` (full suite per `feedback_full_test_runs`)
+- System tests: `gh optivem test system` (full suite per `feedback_full_test_runs`)
 - Full pipeline dry-run against the branch — verify every commit-stage workflow creates its SonarCloud report under the new key
 - Grep check: `rg -n "\bshop-(monolith|multitier|backend|frontend|stub|real|tag|system|tests|auto-bump)"` should return zero hits; `rg -n "optivem_shop-"` should return zero hits
 
