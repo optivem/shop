@@ -13,22 +13,6 @@
 
 ---
 
-## W9 — ESLint `@typescript-eslint/no-unsafe-argument`
-
-**Symptom**
-```
-##[warning]  19:20  warning  Unsafe argument of type `any` assigned to a parameter of type `App`  @typescript-eslint/no-unsafe-argument
-✖ 1 problem (0 errors, 1 warning)
-```
-
-**Affected workflows (1):** `multitier-backend-typescript-commit-stage`.
-
-**Proposed fix:** At line 19 col 20 of the offending file, add an explicit type annotation or `as App` cast where the `any` flows in. Single-file, single-line fix.
-
-**Risk:** Trivial. Local code change; no behavioral impact.
-
----
-
 ## W10 — `awk: warning: escape sequence \. treated as plain .`
 
 **Symptom**
@@ -173,7 +157,6 @@ npm warn deprecated glob@10.5.0: Old versions of glob are not supported…
 | **P2** | W3 (CS8603/CS8604) | Test-DSL hardening |
 | **P3** | W2 (C# Sonar) | Pedagogical review needed first |
 | **P3** | W7 (npm deprecated) | Cleanup after W8 |
-| **P3** | W9 (ESLint) | One-line fix; do at any time |
 | **P3** | W10 (awk) | Cosmetic |
 
 ---
