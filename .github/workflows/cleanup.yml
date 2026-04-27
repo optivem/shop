@@ -13,6 +13,11 @@ on:
         description: 'Delete items older than N days (cutoff = now - N days)'
         required: false
         default: '1'
+      include-production:
+        description: 'Also delete production deployments (overrides default protected-environments)'
+        type: boolean
+        required: false
+        default: false
       dry-run:
         description: 'Log what would be deleted without deleting'
         type: boolean
@@ -39,6 +44,7 @@ jobs:
         with:
           keep-count: ${{ inputs.keep-count || '1' }}
           retention-days: ${{ inputs.retention-days || '1' }}
+          protected-environments: ${{ inputs.include-production && '' || '*-production,production' }}
           dry-run: ${{ inputs.dry-run || false }}
 
       - name: Cleanup Prereleases
