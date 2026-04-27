@@ -391,7 +391,7 @@ jobs:
 
       - name: Install Playwright System Dependencies
         timeout-minutes: 5
-        run: pwsh SystemTests/bin/Debug/net8.0/playwright.ps1 install-deps chromium
+        run: pwsh SystemTests/bin/Debug/net8.0/playwright.ps1 install-deps
         working-directory: system-test/dotnet
 
       - name: Run Acceptance Tests - UI Channel
@@ -480,7 +480,7 @@ jobs:
 
       - name: Install Playwright System Dependencies
         timeout-minutes: 5
-        run: pwsh SystemTests/bin/Debug/net8.0/playwright.ps1 install-deps chromium
+        run: pwsh SystemTests/bin/Debug/net8.0/playwright.ps1 install-deps
         working-directory: system-test/dotnet
 
       - name: Run Acceptance Tests (Isolated) - UI Channel
@@ -670,7 +670,7 @@ jobs:
 
       - name: Install Playwright System Dependencies
         timeout-minutes: 5
-        run: pwsh SystemTests/bin/Debug/net8.0/playwright.ps1 install-deps chromium
+        run: pwsh SystemTests/bin/Debug/net8.0/playwright.ps1 install-deps
         working-directory: system-test/dotnet
 
       - name: Run E2E Tests - UI Channel

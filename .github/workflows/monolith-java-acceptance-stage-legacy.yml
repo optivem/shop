@@ -206,7 +206,7 @@ jobs:
 
       - name: Install Playwright System Dependencies
         timeout-minutes: 5
-        run: npx playwright install-deps chromium
+        run: npx playwright install-deps
         working-directory: docker/java/monolith
 
       - name: Compile System Tests

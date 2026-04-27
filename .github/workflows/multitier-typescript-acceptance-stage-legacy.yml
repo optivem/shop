@@ -204,7 +204,7 @@ jobs:
       - name: Install Playwright System Dependencies
         timeout-minutes: 5
         working-directory: docker/typescript/multitier
-        run: npx playwright install-deps chromium
+        run: npx playwright install-deps
 
       - name: Compile System Tests
         working-directory: docker/typescript/multitier

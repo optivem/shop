@@ -327,7 +327,7 @@ jobs:
       - name: Install Playwright System Dependencies
         timeout-minutes: 5
         working-directory: system-test/typescript
-        run: npx playwright install-deps chromium
+        run: npx playwright install-deps
 
       - name: Run Smoke Tests (Real)
         working-directory: system-test/typescript
@@ -374,7 +374,7 @@ jobs:
       - name: Install Playwright System Dependencies
         timeout-minutes: 5
         working-directory: system-test/typescript
-        run: npx playwright install-deps chromium
+        run: npx playwright install-deps
 
       - name: Run Smoke Tests (Stub)
         working-directory: system-test/typescript
@@ -451,7 +451,7 @@ jobs:
       - name: Install Playwright System Dependencies
         timeout-minutes: 5
         working-directory: system-test/typescript
-        run: npx playwright install-deps chromium
+        run: npx playwright install-deps
 
       - name: Run Acceptance Tests - UI Channel
         working-directory: system-test/typescript
@@ -530,7 +530,7 @@ jobs:
       - name: Install Playwright System Dependencies
         timeout-minutes: 5
         working-directory: system-test/typescript
-        run: npx playwright install-deps chromium
+        run: npx playwright install-deps
 
       - name: Run Acceptance Tests (Isolated) - UI Channel
         working-directory: system-test/typescript
@@ -695,7 +695,7 @@ jobs:
       - name: Install Playwright System Dependencies
         timeout-minutes: 5
         working-directory: system-test/typescript
-        run: npx playwright install-deps chromium
+        run: npx playwright install-deps
 
       - name: Run E2E Tests - UI Channel
         working-directory: system-test/typescript

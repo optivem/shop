@@ -6,33 +6,11 @@
 
 ---
 
-## 7. Pin image digests in pipeline compose files
+## 7. Pin image digests in pipeline compose files — DEFERRED
 
-**Status:** All compose files use mutable tags (`postgres:16-alpine`, `wiremock/wiremock:3.10.0`, `node:18-alpine`). For reproducibility in CI, pin digests.
+**Status:** Deferred 2026-04-27. Verified that no Renovate/Dependabot config exists in this repo. Pinning digests without an automated update mechanism would cause silent rot — pinned digests become stale, security patches get missed.
 
-**Affected files:** 12 `docker-compose.pipeline.*.yml` files.
-
-**Actions:**
-- For each external image used in pipeline compose, look up the current digest (`docker pull <image> && docker inspect <image> --format '{{index .RepoDigests 0}}'`) and pin: `image: postgres:16-alpine@sha256:...`.
-- Skip local compose files — keep them on tags for dev convenience.
-- Add Renovate/Dependabot config to keep digests fresh (check if already exists in `.github/`).
-
-**Verification:** `docker compose -f docker-compose.pipeline.X.yml pull` returns stable digests.
-
----
-
-## 8. Tighten `.dockerignore` files
-
-**Status:** Each `.dockerignore` lists `README.md` and `Run-Sonar.ps1` individually. Build context could be smaller and more uniform.
-
-**Affected files:** All 7 `.dockerignore` files.
-
-**Actions per file:**
-- Replace `README.md` (and `HELP.md` for Java) with broader `*.md` + `!path/needed.md` if any markdown is consumed at build time (none observed).
-- Add: `Dockerfile.*`, `docker-compose*.yml`, `.github/`, `.gitignore`, `.editorconfig`, `*.sln` (.NET only), `tests/`, `test/` (TS — verify not needed for build first).
-- Verify build still works after each addition (`docker build .` should not error on missing files).
-
-**Verification:** `docker build` shows smaller "transferring context" size.
+**Prerequisite:** Set up Renovate or Dependabot first (separate task), then revisit this.
 
 ---
 

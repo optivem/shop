@@ -233,7 +233,7 @@ jobs:
 
       - name: Install Playwright System Dependencies
         timeout-minutes: 5
-        run: pwsh SystemTests/bin/Debug/net8.0/playwright.ps1 install-deps chromium
+        run: pwsh SystemTests/bin/Debug/net8.0/playwright.ps1 install-deps
         working-directory: docker/dotnet/monolith
 
       - name: Run Smoke Tests (Stub)

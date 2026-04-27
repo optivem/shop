@@ -13,32 +13,6 @@
 
 ---
 
-## W5 — Playwright host-validation warning (missing system libraries)
-
-**Symptom**
-```
-Playwright Host validation warning:
-╔══════════════════════════════════════════════════════╗
-║ Host system is missing dependencies to run browsers. ║
-║ Missing libraries:                                   ║
-║     libwoff2dec.so.1.0.2                             ║
-║     libvpx.so.7                                      ║
-║     ...                                              ║
-╚══════════════════════════════════════════════════════╝
-```
-
-**Affected workflows (7):** `monolith-java-acceptance-stage(-legacy)`, `multitier-java-acceptance-stage(-legacy)`, `prerelease-pipeline-monolith-java`, `prerelease-pipeline-multitier-java`, `prerelease-pipeline-monolith-dotnet`.
-
-**Root cause:** The runner has Playwright browser binaries installed but not the OS-level libraries they link against. Tests still pass because Playwright falls back to whatever is available, but the warning indicates fragility.
-
-**Proposed fix:** In each affected workflow (or the shared composite action that drives system tests), run `npx playwright install-deps` (or `playwright install --with-deps`) before the test step. For Java/Maven builds, the command is `mvn exec:java -e -D exec.mainClass=com.microsoft.playwright.CLI -D exec.args="install-deps"`.
-
-If this is a shared action in `actions/`, fix it once there and let all callers inherit. Otherwise edit each workflow.
-
-**Risk:** Low. `install-deps` uses `apt-get install` for known-safe packages and only adds time (~30s) to the run. No behavioral change to the tests themselves; they will continue to pass with or without the libs in place because Playwright is falling back. Adds reliability for less-common code paths (video capture, certain font rendering).
-
----
-
 ## W6 — Gradle 9.0 deprecation warnings
 
 **Symptom**
@@ -191,7 +165,6 @@ This is teaching material — some "smells" may be deliberate. Annotate with com
 | Priority | Warning | Why |
 |---|---|---|
 | **P0** | W8 (npm vulnerabilities) | Security; students copy this template |
-| **P1** | W5 (Playwright deps) | Cheap reliability win |
 | **P2** | W6 (Gradle 9.0) | Future-proofing; needs investigation pass |
 | **P2** | W3 (CS8603/CS8604) | Test-DSL hardening |
 | **P3** | W2 (C# Sonar) | Pedagogical review needed first |

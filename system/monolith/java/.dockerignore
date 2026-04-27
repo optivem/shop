@@ -8,9 +8,13 @@ out/
 .project
 .settings/
 .git/
+.github/
+.gitignore
+.gitattributes
+.editorconfig
+*.md
 *.log
-HELP.md
-README.md
-Run-Sonar.ps1
-Dockerfile
+*.ps1
+Dockerfile*
+docker-compose*.yml
 .dockerignore
