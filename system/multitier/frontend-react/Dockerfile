@@ -22,8 +22,11 @@ FROM nginxinc/nginx-unprivileged:alpine
 # Copy built assets from build stage
 COPY --from=build /app/dist /usr/share/nginx/html
 
-# Copy nginx configuration template
+# Copy nginx configuration template — image's entrypoint runs envsubst on /etc/nginx/templates/*.template
 COPY nginx.conf /etc/nginx/templates/default.conf.template
+
+# Limit envsubst to BACKEND_API_URL so nginx variables ($host, $remote_addr, ...) are left intact
+ENV NGINX_ENVSUBST_FILTER=BACKEND_API_URL
 
 # Expose port 3000 (unprivileged user can bind ports >1024)
 EXPOSE 3000
@@ -31,5 +34,4 @@ EXPOSE 3000
 HEALTHCHECK --interval=10s --timeout=3s --start-period=10s --retries=5 \
   CMD wget -qO- http://127.0.0.1:3000/ || exit 1
 
-# Start nginx with envsubst to replace environment variables
-CMD ["/bin/sh", "-c", "envsubst '$$BACKEND_API_URL' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
+# Default CMD inherited from base image: ["nginx", "-g", "daemon off;"]
