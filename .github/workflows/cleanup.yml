@@ -5,10 +5,14 @@ on:
     - cron: '0 23 * * *'  # Run daily at midnight CET (23:00 UTC)
   workflow_dispatch:
     inputs:
+      keep-count:
+        description: 'Per-environment count cap for cleanup-deployments (newest N kept)'
+        required: false
+        default: '1'
       retention-days:
         description: 'Delete items older than N days (cutoff = now - N days)'
         required: false
-        default: '3'
+        default: '1'
       dry-run:
         description: 'Log what would be deleted without deleting'
         type: boolean
@@ -33,11 +37,12 @@ jobs:
       - name: Cleanup Deployments
         uses: optivem/actions/cleanup-deployments@v1
         with:
-          retention-days: ${{ inputs.retention-days || '3' }}
+          keep-count: ${{ inputs.keep-count || '1' }}
+          retention-days: ${{ inputs.retention-days || '1' }}
           dry-run: ${{ inputs.dry-run || false }}
 
       - name: Cleanup Prereleases
         uses: optivem/actions/cleanup-prereleases@v1
         with:
-          retention-days: ${{ inputs.retention-days || '3' }}
+          retention-days: ${{ inputs.retention-days || '1' }}
           dry-run: ${{ inputs.dry-run || false }}

@@ -2,10 +2,10 @@
 
 ## Context
 
-`meta-prerelease-stage.yml` orchestrates Phase 0 (local), Phase 1 (commit-stage), Phase 2 (pipelines) for six variants. Because of this, the `local` and `commit-stage` jobs inside `_prerelease-pipeline.yml` are always skipped when called via meta:
-- Phase 0 triggers the variant pipeline with `{"level": "local", "skip-commit-stage": "true"}` — the pipeline's `local` job runs.
-- Phase 1 triggers `*-commit-stage.yml` directly (not through the pipeline).
-- Phase 2 triggers the pipeline with `{"skip-local-stage": "true", "skip-commit-stage": "true"}` — both inner jobs skip.
+`_meta-prerelease-pipeline.yml` (the reusable workflow called by `meta-prerelease-stage.yml` and `meta-prerelease-dry-run.yml`) orchestrates Phase 0 (local), Phase 1 (commit-stage), Phase 2 (pipelines) for six variants via matrix jobs. Because of this, the `local` and `commit-stage` jobs inside `_prerelease-pipeline.yml` are always skipped when called via meta:
+- Phase 0 (`local` matrix job) triggers the variant pipeline with `{"level": "local", "skip-commit-stage": "true"}` — the pipeline's `local` job runs.
+- Phase 1 (`commit` matrix job) triggers `*-commit-stage.yml` directly (not through the pipeline).
+- Phase 2 (`pipeline` matrix job) triggers the pipeline with `{"skip-local-stage": "true", "skip-commit-stage": "true"}` — both inner jobs skip.
 
 So the `commit-stage` job in `_prerelease-pipeline.yml` is never reached via meta, and the `local` job is only reached via the `level=local` path. The skip inputs and `level=local|commit` options exist only to serve this dead internal branching.
 
@@ -15,7 +15,7 @@ Goal: strip the dead code without losing the six named per-variant entry points 
 
 - [ ] Create `_local-stage.yml` as a reusable workflow (`workflow_call` + `workflow_dispatch`) taking `architecture` and `language` inputs. Move the current `local` job body from `_prerelease-pipeline.yml` into it (runtime setup, compile system, compile system tests, run sample system tests latest + legacy).
 
-- [ ] Update `meta-prerelease-stage.yml` Phase 0 jobs (`local-monolith-java`, `local-monolith-dotnet`, `local-monolith-typescript`, `local-multitier-java`, `local-multitier-dotnet`, `local-multitier-typescript`) to trigger `_local-stage.yml` with `architecture` + `language` inputs instead of triggering `prerelease-pipeline-<variant>.yml` with `level=local`.
+- [ ] Update `_meta-prerelease-pipeline.yml` Phase 0 (`local` matrix job, lines ~200-214) to trigger `_local-stage.yml` with `architecture` + `language` derived from `matrix.variant` (split the variant name on `-`), instead of triggering `prerelease-pipeline-<variant>.yml` with `level=local`. Preserve `skip-acceptance-legacy` passthrough.
 
 - [ ] Strip `_prerelease-pipeline.yml`:
   - Remove the `local` job (moved to `_local-stage.yml`).
@@ -29,10 +29,10 @@ Goal: strip the dead code without losing the six named per-variant entry points 
   - Remove `local` and `commit` from the `level` options.
   - Remove the `commit-workflows` input passthrough.
 
-- [ ] Update `meta-prerelease-stage.yml` Phase 2 jobs (six `monolith-*` / `multitier-*` jobs) — remove `skip-local-stage` and `skip-commit-stage` from the `inputs` JSON; keep only `level`.
+- [ ] Update `_meta-prerelease-pipeline.yml` Phase 2 (`pipeline` matrix job, lines ~257-271) — remove `skip-local-stage` and `skip-commit-stage` from the workflow-inputs JSON; keep `level`, `skip-acceptance-legacy`, and `commit-sha`.
 
-- [ ] Update `meta-prerelease-stage.yml` `workflow_dispatch.inputs.level.options` — remove `local` and `commit` only if meta-level Phase 0 / Phase 1 gating still works with just `acceptance` and `qa`. VJ: keep `local` and `commit` in meta's level dropdown — they control which meta phases run, not pipeline-internal levels.
+- [ ] No-op (documented for clarity): keep `meta-prerelease-dry-run.yml`'s `level` choice dropdown (`local`, `commit`, `acceptance`, `qa`) and `_meta-prerelease-pipeline.yml`'s `level` input intact. They gate which meta phases run (Phase 0 / Phase 1 / Phase 2), not pipeline-internal levels — so removing `local`/`commit` here would break the dry-run knob. Per VJ.
 
 - [ ] Verify no other workflows reference the removed inputs/options. Search for `skip-local-stage`, `skip-commit-stage`, `commit-workflows`, and `level: local` / `level: commit` across `.github/workflows/`.
 
-- [ ] Run `meta-prerelease-stage` via `workflow_dispatch` with `variant=monolith-java, level=qa` as a dry-run smoke test (no meta-rc tag produced because variant != all). Confirm Phase 0, Phase 1, Phase 2 all run correctly for that variant.
+- [ ] Run `meta-prerelease-dry-run` via `workflow_dispatch` with `variant=monolith-java, level=qa, skip-local=false, skip-commit=false, auto-trigger-stage=false` as a smoke test (dry-run never tags meta-rc — `is-release-run` is not passed, so `_meta-prerelease-pipeline.yml` defaults it to false). Confirm Phase 0 (now via `_local-stage.yml`), Phase 1, Phase 2 all run correctly for that variant.
