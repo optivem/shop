@@ -1,7 +1,7 @@
 name: meta-prerelease-dry-run
 
 run-name: >-
-  meta-prerelease-dry-run${{ inputs.variant != 'all' && format(' [variant:{0}]', inputs.variant) || '' }}${{ inputs.skip-local && ' [skip-local]' || '' }}${{ inputs.skip-acceptance-legacy && ' [skip-acceptance-legacy]' || '' }}${{ !inputs.auto-trigger-stage && ' [no-auto-stage]' || '' }}
+  meta-prerelease-dry-run${{ inputs.variant != 'all' && format(' [variant:{0}]', inputs.variant) || '' }}${{ inputs.skip-local && ' [skip-local]' || '' }}${{ inputs.skip-commit && ' [skip-commit]' || '' }}${{ inputs.skip-acceptance-legacy && ' [skip-acceptance-legacy]' || '' }}${{ !inputs.auto-trigger-stage && ' [no-auto-stage]' || '' }}
 
 on:
   workflow_dispatch:
@@ -34,6 +34,11 @@ on:
         required: false
         type: boolean
         default: true
+      skip-commit:
+        description: 'Skip Phase 1 (commit stages) — useful when iterating on workflow/test-only changes; Phase 2 reuses whatever images are already in GHCR'
+        required: false
+        type: boolean
+        default: false
       skip-acceptance-legacy:
         description: 'Skip the legacy sample in local stages and the acceptance-stage-legacy job in Phase 2'
         required: false
@@ -49,6 +54,11 @@ on:
         required: false
         type: boolean
         default: true
+      pipeline-timeout-seconds:
+        description: 'Hard timeout (seconds) for each Phase 2 variant pipeline run before giving up. Default 14400 (4h). Lower this when iterating on the dry-run to fail faster.'
+        required: false
+        type: string
+        default: '14400'
 
 # Shared concurrency group with meta-prerelease-stage so dry-runs and whole runs
 # serialize rather than stepping on each other.
@@ -64,8 +74,10 @@ jobs:
       level: ${{ inputs.level }}
       variant: ${{ inputs.variant }}
       skip-local: ${{ inputs.skip-local }}
+      skip-commit: ${{ inputs.skip-commit }}
       skip-acceptance-legacy: ${{ inputs.skip-acceptance-legacy }}
       fail-fast: ${{ inputs.fail-fast }}
+      pipeline-timeout-seconds: ${{ inputs.pipeline-timeout-seconds }}
 
   # Fire-and-forget: on successful dry-run, dispatch the real meta-prerelease-stage.
   # Cannot trigger-and-wait because both workflows share the meta-prerelease-stage

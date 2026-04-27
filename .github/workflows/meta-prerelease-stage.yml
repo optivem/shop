@@ -16,6 +16,11 @@ on:
         required: false
         type: boolean
         default: false
+      pipeline-timeout-seconds:
+        description: 'Hard timeout (seconds) for each Phase 2 variant pipeline run before giving up. Default 14400 (4h).'
+        required: false
+        type: string
+        default: '14400'
 
 concurrency:
   group: meta-prerelease-stage
@@ -100,3 +105,4 @@ jobs:
       skip-tests: ${{ inputs.skip-tests || false }}
       is-release-run: true
       fail-fast: ${{ inputs.fail-fast || false }}
+      pipeline-timeout-seconds: ${{ inputs.pipeline-timeout-seconds || '14400' }}

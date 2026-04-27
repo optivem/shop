@@ -18,6 +18,11 @@ on:
         required: false
         type: boolean
         default: false
+      skip-commit:
+        description: 'Skip Phase 1 (commit stages) — Phase 2 reuses whatever images are already in GHCR. Useful for workflow/test-only iterations.'
+        required: false
+        type: boolean
+        default: false
       skip-acceptance-legacy:
         description: 'Skip the legacy sample in local stages and the acceptance-stage-legacy job in Phase 2'
         required: false
@@ -38,6 +43,11 @@ on:
         required: false
         type: boolean
         default: true
+      pipeline-timeout-seconds:
+        description: 'Hard timeout (seconds) for each Phase 2 prerelease-pipeline-{variant} run before this workflow gives up waiting. Default 14400 (4h).'
+        required: false
+        type: string
+        default: '14400'
 
 jobs:
   # Single gate before any downstream jobs:
@@ -65,10 +75,12 @@ jobs:
           echo "Level: ${{ inputs.level }}"
           echo "Variant: ${{ inputs.variant }}"
           echo "Skip local: ${{ inputs.skip-local }}"
+          echo "Skip commit: ${{ inputs.skip-commit }}"
           echo "Skip acceptance-legacy: ${{ inputs.skip-acceptance-legacy }}"
           echo "Is release run: ${{ inputs.is-release-run }}"
           echo "Skip tests: ${{ inputs.skip-tests }}"
           echo "Fail-fast: ${{ inputs.fail-fast }}"
+          echo "Pipeline timeout (seconds): ${{ inputs.pipeline-timeout-seconds }}"
           echo "Triggered by: ${{ github.event_name }} ${{ github.event.schedule }}"
       - uses: actions/checkout@v6
         with:
@@ -217,7 +229,7 @@ jobs:
   # across multitier variants). fail-fast (input, default true) cancels siblings on first failure.
   commit:
     needs: local
-    if: ${{ always() && !failure() && !cancelled() && !inputs.skip-tests && contains(fromJSON('["commit","acceptance","qa"]'), inputs.level) }}
+    if: ${{ always() && !failure() && !cancelled() && !inputs.skip-tests && !inputs.skip-commit && contains(fromJSON('["commit","acceptance","qa"]'), inputs.level) }}
     strategy:
       fail-fast: ${{ inputs.fail-fast }}
       matrix:
@@ -267,7 +279,7 @@ jobs:
         uses: optivem/actions/trigger-and-wait-for-workflow@v1
         with:
           workflow: prerelease-pipeline-${{ matrix.variant }}.yml
-          timeout-seconds: '14400'
+          timeout-seconds: ${{ inputs.pipeline-timeout-seconds }}
           workflow-inputs: '{"level": "${{ inputs.level }}", "skip-local-stage": "true", "skip-commit-stage": "true", "skip-acceptance-legacy": "${{ inputs.skip-acceptance-legacy }}", "commit-sha": "${{ github.sha }}"}'
 
   # Final: tag SHA as meta-rc — only when the caller opts in via is-release-run AND
