@@ -10,7 +10,7 @@ on:
         required: false
         default: '1'
       retention-days:
-        description: 'Delete items older than N days (cutoff = now - N days)'
+        description: 'Retention window for cleanup-prereleases (tags/releases/Docker tags older than N days)'
         required: false
         default: '1'
       include-production:
@@ -43,7 +43,6 @@ jobs:
         uses: optivem/actions/cleanup-deployments@v1
         with:
           keep-count: ${{ inputs.keep-count || '1' }}
-          retention-days: ${{ inputs.retention-days || '1' }}
           protected-environments: ${{ inputs.include-production && '' || '*-production,production' }}
           dry-run: ${{ inputs.dry-run || false }}
 
@@ -51,4 +50,5 @@ jobs:
         uses: optivem/actions/cleanup-prereleases@v1
         with:
           retention-days: ${{ inputs.retention-days || '1' }}
+          container-packages: shop/monolith-system-java,shop/monolith-system-dotnet,shop/monolith-system-typescript,shop/multitier-backend-java,shop/multitier-backend-dotnet,shop/multitier-backend-typescript,shop/multitier-frontend-react
           dry-run: ${{ inputs.dry-run || false }}
