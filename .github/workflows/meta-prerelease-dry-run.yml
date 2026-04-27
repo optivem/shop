@@ -77,12 +77,18 @@ jobs:
     permissions:
       actions: write
     steps:
+      - uses: actions/checkout@v6
+        with:
+          sparse-checkout: |
+            .github/workflows/scripts
+          sparse-checkout-cone-mode: false
       - name: Dispatch meta-prerelease-stage
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          gh workflow run meta-prerelease-stage.yml --repo "${{ github.repository }}"
+          source "$GITHUB_WORKSPACE/.github/workflows/scripts/gh-retry.sh"
+          gh_retry workflow run meta-prerelease-stage.yml --repo "${{ github.repository }}"
           {
             echo "## Dispatched meta-prerelease-stage"
             echo ""

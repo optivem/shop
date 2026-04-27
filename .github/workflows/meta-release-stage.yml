@@ -128,7 +128,8 @@ jobs:
           RELEASE_TAG: ${{ steps.resolve.outputs.release_tag }}
         run: |
           set -euo pipefail
-          if gh api "repos/${{ github.repository }}/git/ref/tags/${RELEASE_TAG}" >/dev/null 2>&1; then
+          source "$GITHUB_WORKSPACE/.github/workflows/scripts/gh-retry.sh"
+          if gh_retry api "repos/${{ github.repository }}/git/ref/tags/${RELEASE_TAG}" >/dev/null 2>&1; then
             echo "::error::Release tag ${RELEASE_TAG} already exists — cannot overwrite"
             exit 1
           fi
@@ -261,16 +262,35 @@ jobs:
           SHA: ${{ needs.check.outputs.commit-sha }}
         run: |
           set -euo pipefail
+          source "$GITHUB_WORKSPACE/.github/workflows/scripts/gh-retry.sh"
           echo "Creating tag ${RELEASE_TAG} on ${SHA}"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git tag "$RELEASE_TAG" "$SHA"
-          git push origin "$RELEASE_TAG"
+          git_push_retry origin "$RELEASE_TAG"
           echo "Creating GitHub release ${RELEASE_TAG}"
-          gh release create "$RELEASE_TAG" \
-            --target "$SHA" \
-            --title "$RELEASE_TAG" \
-            --notes "Meta release aggregating all flavor releases at this version."
+          # gh release create is non-idempotent — a transient post-write failure on attempt 1
+          # leaves the release created. On retry attempt 2+, gh returns HTTP 422 "already_exists".
+          # gh_retry's hard-fail policy (don't retry 4xx) lets that 422 surface; we then verify
+          # the release exists and treat it as success.
+          create_err=$(mktemp)
+          if gh_retry release create "$RELEASE_TAG" \
+              --target "$SHA" \
+              --title "$RELEASE_TAG" \
+              --notes "Meta release aggregating all flavor releases at this version." 2>"$create_err"; then
+            cat "$create_err" >&2
+          else
+            rc=$?
+            if grep -Eqi 'already_exists|already exists' "$create_err" \
+               && gh_retry release view "$RELEASE_TAG" >/dev/null 2>&1; then
+              echo "::notice::Release ${RELEASE_TAG} already exists (likely created by an earlier attempt) — treating as success"
+            else
+              cat "$create_err" >&2
+              rm -f "$create_err"
+              exit "$rc"
+            fi
+          fi
+          rm -f "$create_err"
           echo "Created tag and release ${RELEASE_TAG}"
 
       - name: Summary
@@ -334,14 +354,20 @@ jobs:
     if: ${{ !failure() && !cancelled() && needs.tag-meta-release.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v6
+        with:
+          sparse-checkout: |
+            .github/workflows/scripts
+          sparse-checkout-cone-mode: false
       - name: Dispatch gh-acceptance-stage in optivem/gh-optivem
         env:
           GH_TOKEN: ${{ secrets.REPO_TOKEN }}
           SHOP_TAG: ${{ needs.check.outputs.release_tag }}
         run: |
           set -euo pipefail
+          source "$GITHUB_WORKSPACE/.github/workflows/scripts/gh-retry.sh"
           echo "Dispatching gh-acceptance-stage.yml with shop-tag=${SHOP_TAG}"
-          gh workflow run gh-acceptance-stage.yml \
+          gh_retry workflow run gh-acceptance-stage.yml \
             --repo optivem/gh-optivem \
             -f shop-tag="${SHOP_TAG}" \
             -f verify-level=release
