@@ -21,7 +21,7 @@
       "mcp__github__issue_read",
       "PowerShell(*)"
     ],
-    "defaultMode": "dontAsk"
+    "defaultMode": "default"
   },
   "hooks": {
     "PostToolUse": [
