@@ -262,11 +262,12 @@ jobs:
 
   # Phase 2: Run all pipelines in parallel. Each pipeline produces RC tags namespaced
   # by its prefix (e.g. monolith-java-v1.0.0-rc.N), so there are no shared-counter collisions.
-  # Needs both Phase 1 jobs — `local` (parallel with commit) is allowed to be skipped
-  # but must not have failed; `commit` provides the GHCR images this phase consumes.
+  # Only needs `commit` (the GHCR images this phase consumes); `local` runs in parallel
+  # but does not gate this phase — a local failure still blocks `tag-meta-rc` upstream
+  # via the workflow_call's aggregate result.
   # fail-fast (input, default true) cancels siblings on first failure.
   pipeline:
-    needs: [local, commit]
+    needs: commit
     if: ${{ always() && !failure() && !cancelled() && !inputs.skip-tests && contains(fromJSON('["acceptance","qa"]'), inputs.level) }}
     strategy:
       fail-fast: ${{ inputs.fail-fast }}
@@ -283,8 +284,7 @@ jobs:
 
   # Cross-language behavior-parity regression check. Runs in parallel with `pipeline`
   # above — both need `commit` because cross-lang pulls the `sha-<sha>` images that
-  # the commit stages publish (resolve-docker-image-digests would 404 otherwise), and
-  # `local` is included so a Phase 1 local-stage failure still blocks Phase 2.
+  # the commit stages publish (resolve-docker-image-digests would 404 otherwise).
   # Pinned to the same SHA so workflow files / system.json / tests config match the
   # commit being verified.
   #
@@ -292,7 +292,7 @@ jobs:
   # against each other; a single-variant run only publishes one SUT image set, so the
   # other matrix entries would 404 on digest resolution.
   cross-lang:
-    needs: [local, commit]
+    needs: commit
     if: ${{ always() && !failure() && !cancelled() && !inputs.skip-tests && inputs.variant == 'all' && contains(fromJSON('["acceptance","qa"]'), inputs.level) }}
     uses: ./.github/workflows/cross-lang-system-verification.yml
     secrets: inherit
