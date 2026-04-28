@@ -137,22 +137,55 @@ jobs:
       variant: all
       skip-local: false
       skip-tests: ${{ inputs.skip-tests || false }}
-      is-release-run: true
       fail-fast: ${{ inputs.fail-fast || false }}
       pipeline-timeout-seconds: ${{ inputs.pipeline-timeout-seconds || '14400' }}
 
   cross-lang:
     # Cross-language behavior-parity regression check. Runs in parallel with the
-    # per-flavor pipeline above — independent signal, does not gate the release.
-    # Pinned to the same SHA meta-prerelease is processing so the cross-lang
-    # check reads the workflow files / system.json / tests config from the same
-    # commit (image resolution looks for `sha-<sha>` images, falling back behavior
-    # is owned by resolve-docker-image-digests). Failures surface backend drift
-    # between language implementations but do NOT block the meta-rc tag —
-    # release gating is owned by the per-flavor acceptance stages inside `run`.
+    # per-flavor pipeline above. BOTH `run` and `cross-lang` must finish
+    # successfully (or be cleanly skipped, e.g. via skip-tests) for `tag-meta-rc`
+    # below to fire — cross-lang is a release gate, not an FYI signal. Pinned to
+    # the same SHA meta-prerelease is processing so it reads workflow files /
+    # system.json / tests config from the same commit (image resolution looks
+    # for `sha-<sha>` images via resolve-docker-image-digests).
+    # Honors `skip-tests` (recovery-mode bypass) — same semantics as `run`.
     needs: check
-    if: needs.check.outputs.should-run == 'true'
+    if: needs.check.outputs.should-run == 'true' && !inputs.skip-tests
     uses: ./.github/workflows/cross-lang-system-verification.yml
     secrets: inherit
     with:
       commit-sha: ${{ github.sha }}
+
+  tag-meta-rc:
+    # Tag SHA as meta-rc once both `run` (per-flavor pipeline) and `cross-lang`
+    # have settled successfully — produces the tag that triggers meta-release-stage.
+    # Uses !failure() && !cancelled() so a skipped cross-lang (skip-tests bypass)
+    # still permits tagging, while any failure on either gate blocks it.
+    # Moved here from `_meta-prerelease-pipeline.yml` so cross-lang can also gate it.
+    needs: [check, run, cross-lang]
+    if: ${{ !failure() && !cancelled() && needs.check.outputs.should-run == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          token: ${{ secrets.VERIFY_TOKEN }}
+      - name: Tag meta-rc
+        run: |
+          set -euo pipefail
+          VERSION=$(tr -d '[:space:]' < VERSION)
+          TAG="meta-v${VERSION}-rc.${{ github.run_number }}"
+          echo "Creating tag ${TAG} on ${{ github.sha }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag "$TAG" "${{ github.sha }}"
+          git push origin "$TAG"
+          echo "Tagged ${{ github.sha }} as ${TAG}"
+          TAG_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/releases/tag/${TAG}"
+          {
+            echo "## Meta RC tagged"
+            echo ""
+            echo "- Tag: [\`${TAG}\`](${TAG_URL})"
+            echo "- Commit: [\`${GITHUB_SHA::7}\`](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/commit/${GITHUB_SHA})"
+          } >> "$GITHUB_STEP_SUMMARY"

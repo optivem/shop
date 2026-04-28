@@ -17,7 +17,7 @@ on:
           - qa
         default: 'qa'
       variant:
-        description: 'Variant to run (all = full matrix; any single variant = single-flavor run). This workflow never produces a meta-rc tag regardless of variant — is-release-run is not passed, so the shared pipeline defaults it to false.'
+        description: 'Variant to run (all = full matrix; any single variant = single-flavor run). This workflow never produces a meta-rc tag regardless of variant — `tag-meta-rc` lives in `meta-prerelease-stage.yml`, not in the shared pipeline this workflow invokes.'
         required: false
         type: choice
         options:
