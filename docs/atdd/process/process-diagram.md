@@ -15,13 +15,21 @@
 flowchart TD
     START([Ticket picked])
     INTAKE[Intake — see § Intake]
+    LEGACY_GATE{Ticket has Legacy Coverage section?}
+    AT_GATE{Change-driven AC?}
     AT_CYCLE[AT Cycle — see § AT Cycle]
+    LEGACY_CYCLE[Legacy Coverage Cycle — see § Legacy Coverage Cycle]
     CT_SUBPROCESS[Contract Test Sub-Process — see § Contract Test Sub-Process]
     SCENARIO_LOOP[Scenario Loop — see § Scenario Loop]
     DONE([All scenarios GREEN])
 
     START --> INTAKE
-    INTAKE -->|STOP for approval, then per scenario| AT_CYCLE
+    INTAKE --> LEGACY_GATE
+    LEGACY_GATE -->|yes| LEGACY_CYCLE
+    LEGACY_GATE -->|no| AT_GATE
+    LEGACY_CYCLE --> AT_GATE
+    AT_GATE -->|yes| AT_CYCLE
+    AT_GATE -->|no — task/chore with no behavioral change| DONE
     AT_CYCLE -->|External System Driver Interface Changed = yes| CT_SUBPROCESS
     CT_SUBPROCESS -->|return to AT cycle| AT_CYCLE
     AT_CYCLE -->|AT - GREEN - SYSTEM complete| SCENARIO_LOOP
@@ -35,17 +43,26 @@ flowchart TD
 flowchart TD
     TICKET([Ticket picked])
     CLASSIFY{Ticket type classified by atdd-manager}
-    STORY[atdd-story — one scenario per acceptance criterion + optional Legacy Coverage]
-    BUG[atdd-bug — one scenario per distinct reproduction path + optional Legacy Coverage]
-    STOP_INTAKE[STOP for human approval]
-    TO_AT[Proceed to AT Cycle — see § AT Cycle]
+    STORY[atdd-story — change-driven AC scenarios, one per acceptance criterion; optional legacy-coverage AC if the ticket has a Legacy Coverage section]
+    BUG[atdd-bug — change-driven AC scenarios, one per distinct reproduction path; optional legacy-coverage AC if the ticket has a Legacy Coverage section]
+    TASK[atdd-task — interface change at the system boundary, structural change; optional legacy-coverage AC if the ticket has a Legacy Coverage section]
+    CHORE[atdd-chore — internal-only change, structural change; optional legacy-coverage AC if the ticket has a Legacy Coverage section]
+    STOP_INTAKE[STOP - HUMAN REVIEW — ticket classification approval]
+    TO_GATES[Proceed to cycle-routing gates — see § Overview]
 
     TICKET --> CLASSIFY
     CLASSIFY -->|story| STORY
     CLASSIFY -->|bug| BUG
+    CLASSIFY -->|task| TASK
+    CLASSIFY -->|chore| CHORE
     STORY --> STOP_INTAKE
     BUG --> STOP_INTAKE
-    STOP_INTAKE --> TO_AT
+    TASK --> STOP_INTAKE
+    CHORE --> STOP_INTAKE
+    STOP_INTAKE --> TO_GATES
+
+    classDef stopNode fill:#fff3cd,stroke:#856404,stroke-width:2px
+    class STOP_INTAKE stopNode
 ```
 
 ## AT Cycle
@@ -53,7 +70,7 @@ flowchart TD
 ```mermaid
 flowchart TD
     AT_RED_TEST[AT - RED - TEST]
-    DSL_CHANGED{DSL Interface Changed?}
+    DSL_CHANGED{"DSL Interface Changed?<br/>determined by compile failure in WRITE"}
     AT_RED_DSL[AT - RED - DSL]
     EXT_CHANGED{External System Driver Interface Changed?}
     CT_SUBPROCESS[Contract Test Sub-Process — see § Contract Test Sub-Process]
@@ -77,34 +94,36 @@ flowchart TD
 
 ## AT - RED - TEST Phase Detail
 
+**Goal:** every test in the scenario set compiles and fails only with runtime failure, then is marked as known-failing for the next phase.
+
 ```mermaid
 flowchart TD
-    WRITE[AT - RED - TEST - WRITE: write tests, attempt compile]
-    COMPILE{Compile succeeds?}
-    KEEP_ALL[Keep all written tests as real methods]
-    KEEP_ONE[Keep exactly one real test - first scenario; convert others to // TODO: comments]
-    RUN_FAIL[Run tests; verify they fail]
-    STOP_WRITE[STOP — present to user for approval]
-    HAS_COMPILE_ERR{Compile-time errors in WRITE?}
-    EXTEND_DSL[Extend DSL interfaces with new methods; throw 'TODO: DSL']
-    RUN_RUNTIME[Run tests; verify runtime failure]
-    DISABLE[Mark tests disabled with reason 'AT - RED - TEST']
-    COMMIT[COMMIT: Scenario | AT - RED - TEST]
-    STOP_END[STOP — phase progression controlled by orchestrator]
+    WRITE[AT - RED - TEST - WRITE: write tests]
+    STOP_WRITE_TESTS[STOP - HUMAN REVIEW — review tests; user may revise DSL usage]
+    ATTEMPT_COMPILE[Compile tests]
+    COMPILE_SUCCEEDS{Compilation succeeds?}
+    EXTEND_DSL["Change DSL interfaces; implement DSL stubs (throw 'TODO: DSL')"]
+    STOP_DSL[STOP - HUMAN REVIEW — review DSL changes and stubs for approval]
+    RUN_FAIL[Run tests; verify runtime failure]
+    DISABLE_ALL[Mark all tests disabled with reason 'AT - RED - TEST']
+    COMMIT["COMMIT: Ticket | AT - RED - TEST"]
+    STOP_END[STOP - ORCHESTRATOR — phase progression]
 
-    WRITE --> COMPILE
-    COMPILE -->|Yes| KEEP_ALL
-    COMPILE -->|No| KEEP_ONE
-    KEEP_ALL --> RUN_FAIL
-    KEEP_ONE --> RUN_FAIL
-    RUN_FAIL --> STOP_WRITE
-    STOP_WRITE --> HAS_COMPILE_ERR
-    HAS_COMPILE_ERR -->|Yes| EXTEND_DSL
-    EXTEND_DSL --> RUN_RUNTIME
-    RUN_RUNTIME --> DISABLE
-    HAS_COMPILE_ERR -->|No| DISABLE
-    DISABLE --> COMMIT
+    WRITE --> STOP_WRITE_TESTS
+    STOP_WRITE_TESTS --> ATTEMPT_COMPILE
+    ATTEMPT_COMPILE --> COMPILE_SUCCEEDS
+    COMPILE_SUCCEEDS -->|Yes| RUN_FAIL
+    COMPILE_SUCCEEDS -->|No| EXTEND_DSL
+    EXTEND_DSL --> STOP_DSL
+    STOP_DSL --> RUN_FAIL
+    RUN_FAIL --> DISABLE_ALL
+    DISABLE_ALL --> COMMIT
     COMMIT --> STOP_END
+
+    classDef stopNode fill:#fff3cd,stroke:#856404,stroke-width:2px
+    class STOP_WRITE_TESTS,STOP_DSL,STOP_END stopNode
+    classDef commitNode fill:#d4edda,stroke:#155724,stroke-width:2px
+    class COMMIT commitNode
 ```
 
 ## AT - RED - DSL Phase Detail
@@ -116,12 +135,12 @@ flowchart TD
     UPDATE_DRIVER_IFACE[Update Driver interfaces as needed]
     CHECK_EXT[Set flag: External System Driver Interface Changed = yes/no]
     CHECK_SYS[Set flag: System Driver Interface Changed = yes/no]
-    STOP_WRITE[STOP — present DSL, Driver changes, both flags for approval]
+    STOP_WRITE[STOP - HUMAN REVIEW — present DSL, Driver changes, both flags for approval]
     IMPL_DRIVERS_STUB[Implement Drivers by throwing 'TODO: Driver']
     RUN_RUNTIME[Run tests; verify runtime failure]
     DISABLE[Mark tests disabled with reason 'AT - RED - DSL']
     NO_TEST_FILES[Ensure no test files in changed files list]
-    COMMIT[COMMIT: Scenario | AT - RED - DSL]
+    COMMIT["COMMIT: Scenario | AT - RED - DSL"]
     GH_COMMENT[If issue number provided, post DSL changes summary on issue]
     PROCEED[Proceed to AT - RED - SYSTEM DRIVER - WRITE]
 
@@ -137,6 +156,11 @@ flowchart TD
     NO_TEST_FILES --> COMMIT
     COMMIT --> GH_COMMENT
     GH_COMMENT --> PROCEED
+
+    classDef stopNode fill:#fff3cd,stroke:#856404,stroke-width:2px
+    class STOP_WRITE stopNode
+    classDef commitNode fill:#d4edda,stroke:#155724,stroke-width:2px
+    class COMMIT commitNode
 ```
 
 ## AT - RED - SYSTEM DRIVER Phase Detail
@@ -148,12 +172,12 @@ flowchart TD
     NOTE_EXTERNAL[Do NOT implement drivers under external/ - handled by CT sub-process]
     NOTE_NO_SOURCE[Do NOT read backend/frontend source - model on existing driver methods]
     RUN[Run tests; verify runtime failure]
-    STOP_WRITE[STOP — present Driver implementation for approval]
+    STOP_WRITE[STOP - HUMAN REVIEW — present Driver implementation for approval]
     DISABLE[Mark tests disabled with reason 'AT - RED - SYSTEM DRIVER']
     NO_TEST_FILES[Ensure no test files in changed files]
-    COMMIT[COMMIT: Scenario | AT - RED - SYSTEM DRIVER]
+    COMMIT["COMMIT: Scenario | AT - RED - SYSTEM DRIVER"]
     GH_COMMENT[If issue number provided, post Driver changes summary on issue]
-    STOP_END[STOP — phase progression controlled by orchestrator]
+    STOP_END[STOP - ORCHESTRATOR — phase progression]
 
     ENABLE --> IMPL
     IMPL --> NOTE_EXTERNAL
@@ -165,6 +189,11 @@ flowchart TD
     NO_TEST_FILES --> COMMIT
     COMMIT --> GH_COMMENT
     GH_COMMENT --> STOP_END
+
+    classDef stopNode fill:#fff3cd,stroke:#856404,stroke-width:2px
+    class STOP_WRITE,STOP_END stopNode
+    classDef commitNode fill:#d4edda,stroke:#155724,stroke-width:2px
+    class COMMIT commitNode
 ```
 
 ## AT - GREEN - SYSTEM Phase Detail
@@ -179,11 +208,11 @@ flowchart TD
     RUN_UI[Run acceptance tests for UI channel]
     UI_PASS{UI tests pass?}
     FIX_FRONTEND[Fix frontend code only - do NOT change tests/dsl/drivers]
-    STOP_WRITE[STOP — present implementation for approval]
-    COMMIT_SYS[COMMIT: Scenario | AT - GREEN - SYSTEM - backend + frontend changes]
+    STOP_WRITE[STOP - HUMAN REVIEW — present implementation for approval]
+    COMMIT_SYS["COMMIT: Scenario | AT - GREEN - SYSTEM - backend + frontend changes"]
     REMOVE_DISABLED[Remove disabled annotation reason 'AT - RED - SYSTEM DRIVER']
     RUN_VERIFY[Run all tests; verify they pass]
-    COMMIT_TESTS[COMMIT: Scenario | AT - GREEN - SYSTEM - test changes only]
+    COMMIT_TESTS["COMMIT: Scenario | AT - GREEN - SYSTEM - test changes only"]
     GH_TICK[Tick acceptance criterion checkbox; if all ticked move issue to In Review]
     LOOP_BACK[If remaining // TODO: scenarios, return to AT - RED - TEST - WRITE]
 
@@ -203,6 +232,11 @@ flowchart TD
     RUN_VERIFY --> COMMIT_TESTS
     COMMIT_TESTS --> GH_TICK
     GH_TICK --> LOOP_BACK
+
+    classDef stopNode fill:#fff3cd,stroke:#856404,stroke-width:2px
+    class STOP_WRITE stopNode
+    classDef commitNode fill:#d4edda,stroke:#155724,stroke-width:2px
+    class COMMIT_SYS,COMMIT_TESTS commitNode
 ```
 
 ## Contract Test Sub-Process
@@ -213,7 +247,7 @@ flowchart TD
     EXISTS{External System exists?}
     SMOKE[Make Smoke Tests pass first]
     CT_RED_TEST[CT - RED - TEST]
-    DSL_CHANGED{DSL Interface Changed?}
+    DSL_CHANGED{"DSL Interface Changed?<br/>determined by compile failure in WRITE"}
     CT_RED_DSL[CT - RED - DSL]
     EXT_CHANGED{External System Driver Interface Changed?}
     CT_RED_EXT_DRIVER[CT - RED - EXTERNAL DRIVER]
@@ -245,12 +279,12 @@ flowchart TD
     RUN_STUB[Run against Stub External System]
     STUB_FAIL{Tests fail?}
     DISABLE[Mark tests disabled with reason 'CT - RED - TEST']
-    STOP_WRITE[STOP — present contract tests for approval]
+    STOP_WRITE[STOP - HUMAN REVIEW — present contract tests for approval]
     HAS_COMPILE_ERR{Compile-time errors in WRITE?}
-    EXTEND_DSL[Extend DSL interfaces; throw 'TODO: DSL']
+    EXTEND_DSL["Extend DSL interfaces with new methods; implement DSL stubs (throw 'TODO: DSL')"]
     RUN_RUNTIME[Run tests; verify runtime failure]
-    COMMIT[COMMIT: Scenario | CT - RED - TEST]
-    STOP_END[STOP — phase progression controlled by orchestrator]
+    COMMIT["COMMIT: Scenario | CT - RED - TEST"]
+    STOP_END[STOP - ORCHESTRATOR — phase progression]
 
     WRITE --> RUN_REAL
     RUN_REAL --> REAL_PASS
@@ -266,6 +300,11 @@ flowchart TD
     RUN_RUNTIME --> COMMIT
     HAS_COMPILE_ERR -->|No| COMMIT
     COMMIT --> STOP_END
+
+    classDef stopNode fill:#fff3cd,stroke:#856404,stroke-width:2px
+    class STOP_WRITE,STOP_END stopNode
+    classDef commitNode fill:#d4edda,stroke:#155724,stroke-width:2px
+    class COMMIT commitNode
 ```
 
 ## CT - RED - DSL Phase Detail
@@ -276,11 +315,11 @@ flowchart TD
     IMPL_DSL[Implement DSL for real - replace 'TODO: DSL' stub]
     UPDATE_DRIVER_IFACE[Update Driver interfaces as needed]
     CHECK_EXT[Set flag: External System Driver Interface Changed = yes/no - no recursive triggering]
-    STOP_WRITE[STOP — present DSL, Driver changes, flag for approval]
+    STOP_WRITE[STOP - HUMAN REVIEW — present DSL, Driver changes, flag for approval]
     IMPL_DRIVERS_STUB[Implement Drivers by throwing 'TODO: Driver']
     RUN_RUNTIME[Run tests against suite-contract-stub; verify runtime failure]
     DISABLE[Mark tests disabled with reason 'CT - RED - DSL']
-    COMMIT[COMMIT: Scenario | CT - RED - DSL]
+    COMMIT["COMMIT: Scenario | CT - RED - DSL"]
     GH_COMMENT[If issue number provided, post DSL changes summary on issue]
     PROCEED[Proceed to CT - RED - EXTERNAL DRIVER - WRITE]
 
@@ -294,6 +333,11 @@ flowchart TD
     DISABLE --> COMMIT
     COMMIT --> GH_COMMENT
     GH_COMMENT --> PROCEED
+
+    classDef stopNode fill:#fff3cd,stroke:#856404,stroke-width:2px
+    class STOP_WRITE stopNode
+    classDef commitNode fill:#d4edda,stroke:#155724,stroke-width:2px
+    class COMMIT commitNode
 ```
 
 ## CT - RED - EXTERNAL DRIVER Phase Detail
@@ -303,11 +347,11 @@ flowchart TD
     ENABLE[Enable tests disabled with reason 'CT - RED - DSL']
     IMPL[Implement Drivers under external/ only - replace 'TODO: Driver' stub]
     RUN[Run tests; verify runtime failure]
-    STOP_WRITE[STOP — present Driver implementation for approval]
+    STOP_WRITE[STOP - HUMAN REVIEW — present Driver implementation for approval]
     DISABLE[Mark tests disabled with reason 'CT - RED - EXTERNAL DRIVER']
-    COMMIT[COMMIT: Scenario | CT - RED - EXTERNAL DRIVER]
+    COMMIT["COMMIT: Scenario | CT - RED - EXTERNAL DRIVER"]
     GH_COMMENT[If issue number provided, post Driver changes summary on issue]
-    STOP_END[STOP — phase progression controlled by orchestrator]
+    STOP_END[STOP - ORCHESTRATOR — phase progression]
 
     ENABLE --> IMPL
     IMPL --> RUN
@@ -316,6 +360,11 @@ flowchart TD
     DISABLE --> COMMIT
     COMMIT --> GH_COMMENT
     GH_COMMENT --> STOP_END
+
+    classDef stopNode fill:#fff3cd,stroke:#856404,stroke-width:2px
+    class STOP_WRITE,STOP_END stopNode
+    classDef commitNode fill:#d4edda,stroke:#155724,stroke-width:2px
+    class COMMIT commitNode
 ```
 
 ## CT - GREEN - STUBS Phase Detail
@@ -327,11 +376,11 @@ flowchart TD
     RUN[Run External System Contract Tests against suite-contract-stub]
     PASS{Tests pass?}
     ASK_USER[Ask user; STOP]
-    STOP_WRITE[STOP — present stub implementation for approval]
+    STOP_WRITE[STOP - HUMAN REVIEW — present stub implementation for approval]
     REMOVE_DISABLED[Remove disabled annotation reason 'CT - RED - EXTERNAL DRIVER']
     RUN_VERIFY[Run tests; verify they pass]
-    COMMIT[COMMIT: Scenario | CT - GREEN - STUBS]
-    STOP_END[STOP — phase progression controlled by orchestrator]
+    COMMIT["COMMIT: Scenario | CT - GREEN - STUBS"]
+    STOP_END[STOP - ORCHESTRATOR — phase progression]
 
     ENABLE --> IMPL_STUBS
     IMPL_STUBS --> RUN
@@ -342,6 +391,11 @@ flowchart TD
     REMOVE_DISABLED --> RUN_VERIFY
     RUN_VERIFY --> COMMIT
     COMMIT --> STOP_END
+
+    classDef stopNode fill:#fff3cd,stroke:#856404,stroke-width:2px
+    class STOP_WRITE,STOP_END stopNode
+    classDef commitNode fill:#d4edda,stroke:#155724,stroke-width:2px
+    class COMMIT commitNode
 ```
 
 ## Scenario Loop
@@ -357,6 +411,18 @@ flowchart TD
     AFTER_GREEN -->|Yes| NEXT
     NEXT --> AFTER_GREEN
     AFTER_GREEN -->|No| DONE
+```
+
+## Legacy Coverage Cycle
+
+```mermaid
+flowchart TD
+    START([Triggered: ticket has Legacy Coverage section])
+    LEGACY_COVERAGE_CYCLE[Legacy Coverage Cycle — phases TBD]
+    END([Done])
+
+    START --> LEGACY_COVERAGE_CYCLE
+    LEGACY_COVERAGE_CYCLE --> END
 ```
 
 ## Notes

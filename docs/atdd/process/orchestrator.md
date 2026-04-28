@@ -6,14 +6,50 @@ This document defines the decision flow for the ATDD pipeline. Each phase is def
 
 ## Intake (per ticket)
 
-Before the AT cycle runs, the picked ticket must be turned into Gherkin scenarios. The agent that does this depends on the ticket type classified by `atdd-manager`:
+Before any cycle runs, the picked ticket is classified by `atdd-manager` into one of four ticket types: **story**, **bug**, **task**, or **chore**. Classification by ticket type happens first; cycle routing is decided afterwards by two orthogonal gates (see below). See `glossary.md` for the full definitions of *behavioral change*, *structural change*, and *Legacy Coverage*.
 
-| Ticket type | Agent | Scenarios produced |
-|-------------|-------|---------------------|
-| `story` | `atdd-story` | One scenario per acceptance criterion, plus optional Legacy Coverage |
-| `bug` | `atdd-bug` | One scenario per distinct reproduction path (default: one), plus optional Legacy Coverage |
+Each of the four intake agents reads the ticket, processes the type-specific content, AND processes the **optional Legacy Coverage section** if it appears in the ticket schema:
 
-Both agents end with **STOP** for human approval before the AT cycle begins. From AT - RED - TEST onward the pipeline is identical regardless of intake variant.
+- `atdd-story` → reads the story's acceptance criteria; produces 1+ change-driven AC scenarios (one per acceptance criterion). Behavioral.
+- `atdd-bug` → reads the bug's reproduction paths; produces 1+ change-driven AC scenarios (one per distinct reproduction path; default: one). Behavioral.
+- `atdd-task` → reads the structural change description; the change is at the system boundary (system API, system UI, external system API). Driver *implementations* update to match the new interface; driver *interfaces* stay the same so existing acceptance tests still pass through them. Produces no change-driven AC scenarios. Structural.
+- `atdd-chore` → reads the structural change description; the change is internal-only (refactor a class, rename, dependency upgrade). No boundary change; drivers untouched. Produces no change-driven AC scenarios. Structural.
+
+In addition, **all four agents** produce 0+ legacy-coverage AC scenarios from the optional Legacy Coverage section in the ticket schema (see [Legacy Coverage in glossary.md](glossary.md#legacy-coverage)).
+
+All four agents end with **STOP** for human approval before any cycle begins.
+
+After STOP, two **orthogonal gates** are evaluated per ticket:
+
+1. **Ticket has a Legacy Coverage section?** — Universal; applies to all four ticket types.
+   - Yes → enter the **Legacy Coverage Cycle** (test-last; retroactive AC for already-built behavior; tests should pass on first run; **not ATDD**).
+   - No → skip the Legacy Coverage Cycle.
+2. **Change-driven AC produced?** — Determined by ticket type: yes for story/bug, no for task/chore. This *is* the behavioral-vs-structural distinction.
+   - Yes → enter the **AT Cycle** (test-first ATDD; Red → Green per scenario).
+   - No → skip the AT Cycle.
+
+**Order when both gates fire: Legacy Coverage Cycle first, then AT Cycle.** Rationale: fill the coverage gap before piling new behavior on top.
+
+The four possible per-ticket flows:
+
+- story/bug + Legacy Coverage section → Legacy Coverage Cycle → AT Cycle → DONE
+- story/bug, no Legacy Coverage section → AT Cycle → DONE
+- task/chore + Legacy Coverage section → Legacy Coverage Cycle → DONE
+- task/chore, no Legacy Coverage section → DONE (the structural change itself is plain code work governed by "existing AC stay green" — not a cycle)
+
+**Output asymmetry — change-driven AC vs legacy-coverage AC.** The two artifact streams are produced under different rules:
+
+- **Change-driven AC** is **ticket-type-specific** — only `atdd-story` and `atdd-bug` produce it (one scenario per acceptance criterion or per distinct reproduction path). It is the input to the AT Cycle; each scenario drives one pass through AT - RED - TEST → AT - GREEN - SYSTEM (see the Scenario Loop below).
+- **Legacy-coverage AC** is **universal-optional** — any ticket type may produce it, gated by whether the ticket schema carries a Legacy Coverage section. It is the input to the Legacy Coverage Cycle, which is **test-last** (retroactive tests for already-built behavior; tests should pass on first run; not ATDD).
+
+| Ticket type | Agent | Class | Change-driven AC | Legacy-coverage AC | Routes to |
+|-------------|-------|-------|------------------|--------------------|-----------|
+| `story` | `atdd-story` | Behavioral | One scenario per acceptance criterion | 0+ scenarios if the ticket has a Legacy Coverage section | AT Cycle (always); Legacy Coverage Cycle if the ticket has a Legacy Coverage section (Legacy first, then AT) |
+| `bug` | `atdd-bug` | Behavioral | One scenario per distinct reproduction path (default: one) | 0+ scenarios if the ticket has a Legacy Coverage section | AT Cycle (always); Legacy Coverage Cycle if the ticket has a Legacy Coverage section (Legacy first, then AT) |
+| `task` | `atdd-task` | Structural | None | 0+ scenarios if the ticket has a Legacy Coverage section | Legacy Coverage Cycle if the ticket has a Legacy Coverage section; otherwise no cycle (structural change is plain code work governed by existing AC staying green) |
+| `chore` | `atdd-chore` | Structural | None | 0+ scenarios if the ticket has a Legacy Coverage section | Legacy Coverage Cycle if the ticket has a Legacy Coverage section; otherwise no cycle (structural change is plain code work governed by existing AC staying green) |
+
+From AT - RED - TEST onward the AT Cycle pipeline is identical regardless of which behavioral intake variant produced the scenarios. The Legacy Coverage Cycle's internal phases are TBD; see `glossary.md`.
 
 ## AT Cycle (per scenario)
 
@@ -90,8 +126,10 @@ The AT cycle repeats for each scenario in the ticket:
 
 | Phase | Agent | Notes |
 |-------|-------|-------|
-| Intake (story) | atdd-story | One scenario per acceptance criterion + Legacy Coverage. STOP for approval. |
-| Intake (bug) | atdd-bug | One scenario per distinct reproduction path (default: one) + Legacy Coverage. STOP for approval. |
+| Intake (story) | atdd-story | Behavioral. Change-driven AC: one scenario per acceptance criterion. Optional legacy-coverage AC if the ticket has a Legacy Coverage section. STOP for approval. Routes to AT Cycle (always); Legacy Coverage Cycle first if the ticket has a Legacy Coverage section. |
+| Intake (bug) | atdd-bug | Behavioral. Change-driven AC: one scenario per distinct reproduction path (default: one). Optional legacy-coverage AC if the ticket has a Legacy Coverage section. STOP for approval. Routes to AT Cycle (always); Legacy Coverage Cycle first if the ticket has a Legacy Coverage section. |
+| Intake (task) | atdd-task | Structural. Interface change at the system boundary; no change-driven AC. Optional legacy-coverage AC if the ticket has a Legacy Coverage section. STOP for approval. Routes to Legacy Coverage Cycle if the ticket has a Legacy Coverage section; otherwise no cycle (existing AC must stay green). |
+| Intake (chore) | atdd-chore | Structural. Internal-only change; no change-driven AC. Optional legacy-coverage AC if the ticket has a Legacy Coverage section. STOP for approval. Routes to Legacy Coverage Cycle if the ticket has a Legacy Coverage section; otherwise no cycle (existing AC must stay green). |
 | AT - RED - TEST | test-agent | WRITE = STOP, COMMIT = commit + push |
 | AT - RED - DSL | dsl-agent | WRITE = STOP, COMMIT = commit + push |
 | AT - RED - SYSTEM DRIVER | driver-agent | WRITE = STOP, COMMIT = commit + push. Only `shop/` drivers. |
