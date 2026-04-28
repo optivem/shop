@@ -12,8 +12,10 @@ name: cross-lang-system-verification
 #
 # Pulls pre-built `sha-<sha>` images from GHCR (same artifacts the per-lang
 # acceptance stages publish). Assumes commit stages have already run and
-# images are published — missing images are an error, not a skip. Intended
-# to run after meta-prerelease has greenlit the per-lang flavors.
+# images are published — missing images are an error, not a skip. Inside
+# `_meta-prerelease-pipeline.yml` this is enforced by `needs: commit`; the
+# scheduled / workflow_dispatch entry points assume commit images already
+# exist for the resolved SHA.
 
 on:
   schedule:

@@ -275,3 +275,20 @@ jobs:
           workflow: prerelease-pipeline-${{ matrix.variant }}.yml
           timeout-seconds: ${{ inputs.pipeline-timeout-seconds }}
           workflow-inputs: '{"level": "${{ inputs.level }}", "skip-local-stage": "true", "skip-commit-stage": "true", "skip-acceptance-legacy": "${{ inputs.skip-acceptance-legacy }}", "commit-sha": "${{ github.sha }}"}'
+
+  # Cross-language behavior-parity regression check. Runs in parallel with `pipeline`
+  # above — both gate on `commit` because cross-lang pulls the `sha-<sha>` images
+  # that the commit stages publish (resolve-docker-image-digests would 404 otherwise).
+  # Pinned to the same SHA so workflow files / system.json / tests config match the
+  # commit being verified.
+  #
+  # Gated on variant == 'all' because cross-lang exercises all 6 (arch, lang) SUTs
+  # against each other; a single-variant run only publishes one SUT image set, so the
+  # other matrix entries would 404 on digest resolution.
+  cross-lang:
+    needs: commit
+    if: ${{ always() && !failure() && !cancelled() && !inputs.skip-tests && inputs.variant == 'all' && contains(fromJSON('["acceptance","qa"]'), inputs.level) }}
+    uses: ./.github/workflows/cross-lang-system-verification.yml
+    secrets: inherit
+    with:
+      commit-sha: ${{ github.sha }}

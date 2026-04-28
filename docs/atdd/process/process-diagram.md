@@ -4,160 +4,363 @@
 
 ## Source docs
 
-- `docs/atdd/process/glossary.md`
 - `docs/atdd/process/acceptance-tests.md`
 - `docs/atdd/process/contract-tests.md`
+- `docs/atdd/process/glossary.md`
 - `docs/atdd/process/orchestrator.md`
 
 ## Overview
 
 ```mermaid
 flowchart TD
-    TICKET[Ticket picked]
-    INTAKE[Intake - per ticket<br/>see &sect; Intake]
-    AT_CYCLE[AT Cycle - per scenario<br/>see &sect; AT Cycle]
-    EXT_CHANGED{External System Driver<br/>Interface Changed?}
-    CT_SUB[Contract Test Sub-Process<br/>see &sect; Contract Test Sub-Process]
-    SYS_CHANGED{System Driver<br/>Interface Changed?}
-    AT_GREEN_SYSTEM[AT - GREEN - SYSTEM]
-    LOOP{Remaining TODO<br/>scenarios?}
-    DONE[All scenarios GREEN]
-    RESUME[Resume Detection<br/>see &sect; Resume Detection]
+    START([Ticket picked])
+    INTAKE[Intake — see § Intake]
+    AT_CYCLE[AT Cycle — see § AT Cycle]
+    CT_SUBPROCESS[Contract Test Sub-Process — see § Contract Test Sub-Process]
+    SCENARIO_LOOP[Scenario Loop — see § Scenario Loop]
+    DONE([All scenarios GREEN])
 
-    TICKET --> INTAKE
-    INTAKE --> AT_CYCLE
-    AT_CYCLE --> EXT_CHANGED
-    EXT_CHANGED -->|Yes| CT_SUB
-    CT_SUB --> SYS_CHANGED
-    EXT_CHANGED -->|No| SYS_CHANGED
-    SYS_CHANGED -->|Yes| AT_GREEN_SYSTEM
-    SYS_CHANGED -->|No| AT_GREEN_SYSTEM
-    AT_GREEN_SYSTEM --> LOOP
-    LOOP -->|Yes| AT_CYCLE
-    LOOP -->|No| DONE
-    RESUME -.->|on resume| AT_CYCLE
-    RESUME -.->|on resume| CT_SUB
+    START --> INTAKE
+    INTAKE -->|STOP for approval, then per scenario| AT_CYCLE
+    AT_CYCLE -->|External System Driver Interface Changed = yes| CT_SUBPROCESS
+    CT_SUBPROCESS -->|return to AT cycle| AT_CYCLE
+    AT_CYCLE -->|AT - GREEN - SYSTEM complete| SCENARIO_LOOP
+    SCENARIO_LOOP -->|remaining // TODO: scenarios| AT_CYCLE
+    SCENARIO_LOOP -->|all scenarios GREEN| DONE
 ```
 
 ## Intake
 
 ```mermaid
 flowchart TD
-    TICKET[Ticket picked]
-    CLASSIFY{Ticket type<br/>classified by atdd-manager}
-    STORY[atdd-story<br/>One scenario per acceptance criterion<br/>plus optional Legacy Coverage]
-    BUG[atdd-bug<br/>One scenario per distinct reproduction path<br/>default one, plus optional Legacy Coverage]
-    STOP_INTAKE[STOP - human approval]
-    AT_CYCLE_ENTRY[Enter AT Cycle<br/>see &sect; AT Cycle]
+    TICKET([Ticket picked])
+    CLASSIFY{Ticket type classified by atdd-manager}
+    STORY[atdd-story — one scenario per acceptance criterion + optional Legacy Coverage]
+    BUG[atdd-bug — one scenario per distinct reproduction path + optional Legacy Coverage]
+    STOP_INTAKE[STOP for human approval]
+    TO_AT[Proceed to AT Cycle — see § AT Cycle]
 
     TICKET --> CLASSIFY
     CLASSIFY -->|story| STORY
     CLASSIFY -->|bug| BUG
     STORY --> STOP_INTAKE
     BUG --> STOP_INTAKE
-    STOP_INTAKE --> AT_CYCLE_ENTRY
+    STOP_INTAKE --> TO_AT
 ```
 
 ## AT Cycle
 
 ```mermaid
 flowchart TD
-    AT_RED_TEST[AT - RED - TEST<br/>WRITE STOP then COMMIT]
-    DSL_CHANGED{DSL Interface<br/>Changed?}
-    AT_RED_DSL[AT - RED - DSL<br/>WRITE STOP then COMMIT]
-    EXT_CHANGED{External System Driver<br/>Interface Changed?}
-    CT_SUB[Contract Test Sub-Process<br/>see &sect; Contract Test Sub-Process]
-    SYS_CHANGED{System Driver<br/>Interface Changed?}
-    AT_RED_SYS_DRIVER[AT - RED - SYSTEM DRIVER<br/>WRITE STOP then COMMIT<br/>only shop/ drivers]
-    AT_GREEN_SYSTEM[AT - GREEN - SYSTEM<br/>backend then frontend<br/>then release commit]
-    LOOP{Remaining TODO<br/>scenarios?}
-    DONE[All scenarios GREEN]
+    AT_RED_TEST[AT - RED - TEST]
+    DSL_CHANGED{DSL Interface Changed?}
+    AT_RED_DSL[AT - RED - DSL]
+    EXT_CHANGED{External System Driver Interface Changed?}
+    CT_SUBPROCESS[Contract Test Sub-Process — see § Contract Test Sub-Process]
+    SYS_CHANGED{System Driver Interface Changed?}
+    AT_RED_SYSTEM_DRIVER[AT - RED - SYSTEM DRIVER]
+    AT_GREEN_SYSTEM[AT - GREEN - SYSTEM]
+    LOOP[To Scenario Loop — see § Scenario Loop]
 
     AT_RED_TEST --> DSL_CHANGED
     DSL_CHANGED -->|No| AT_GREEN_SYSTEM
     DSL_CHANGED -->|Yes| AT_RED_DSL
     AT_RED_DSL --> EXT_CHANGED
-    EXT_CHANGED -->|Yes| CT_SUB
-    CT_SUB --> SYS_CHANGED
+    EXT_CHANGED -->|Yes| CT_SUBPROCESS
+    CT_SUBPROCESS --> SYS_CHANGED
     EXT_CHANGED -->|No| SYS_CHANGED
     SYS_CHANGED -->|No| AT_GREEN_SYSTEM
-    SYS_CHANGED -->|Yes| AT_RED_SYS_DRIVER
-    AT_RED_SYS_DRIVER --> AT_GREEN_SYSTEM
+    SYS_CHANGED -->|Yes| AT_RED_SYSTEM_DRIVER
+    AT_RED_SYSTEM_DRIVER --> AT_GREEN_SYSTEM
     AT_GREEN_SYSTEM --> LOOP
-    LOOP -->|Yes| AT_RED_TEST
-    LOOP -->|No| DONE
+```
+
+## AT - RED - TEST Phase Detail
+
+```mermaid
+flowchart TD
+    WRITE[AT - RED - TEST - WRITE: write tests, attempt compile]
+    COMPILE{Compile succeeds?}
+    KEEP_ALL[Keep all written tests as real methods]
+    KEEP_ONE[Keep exactly one real test - first scenario; convert others to // TODO: comments]
+    RUN_FAIL[Run tests; verify they fail]
+    STOP_WRITE[STOP — present to user for approval]
+    HAS_COMPILE_ERR{Compile-time errors in WRITE?}
+    EXTEND_DSL[Extend DSL interfaces with new methods; throw 'TODO: DSL']
+    RUN_RUNTIME[Run tests; verify runtime failure]
+    DISABLE[Mark tests disabled with reason 'AT - RED - TEST']
+    COMMIT[COMMIT: Scenario | AT - RED - TEST]
+    STOP_END[STOP — phase progression controlled by orchestrator]
+
+    WRITE --> COMPILE
+    COMPILE -->|Yes| KEEP_ALL
+    COMPILE -->|No| KEEP_ONE
+    KEEP_ALL --> RUN_FAIL
+    KEEP_ONE --> RUN_FAIL
+    RUN_FAIL --> STOP_WRITE
+    STOP_WRITE --> HAS_COMPILE_ERR
+    HAS_COMPILE_ERR -->|Yes| EXTEND_DSL
+    EXTEND_DSL --> RUN_RUNTIME
+    RUN_RUNTIME --> DISABLE
+    HAS_COMPILE_ERR -->|No| DISABLE
+    DISABLE --> COMMIT
+    COMMIT --> STOP_END
+```
+
+## AT - RED - DSL Phase Detail
+
+```mermaid
+flowchart TD
+    ENABLE[Enable tests disabled with reason 'AT - RED - TEST']
+    IMPL_DSL[Implement DSL for real - replace 'TODO: DSL' stub]
+    UPDATE_DRIVER_IFACE[Update Driver interfaces as needed]
+    CHECK_EXT[Set flag: External System Driver Interface Changed = yes/no]
+    CHECK_SYS[Set flag: System Driver Interface Changed = yes/no]
+    STOP_WRITE[STOP — present DSL, Driver changes, both flags for approval]
+    IMPL_DRIVERS_STUB[Implement Drivers by throwing 'TODO: Driver']
+    RUN_RUNTIME[Run tests; verify runtime failure]
+    DISABLE[Mark tests disabled with reason 'AT - RED - DSL']
+    NO_TEST_FILES[Ensure no test files in changed files list]
+    COMMIT[COMMIT: Scenario | AT - RED - DSL]
+    GH_COMMENT[If issue number provided, post DSL changes summary on issue]
+    PROCEED[Proceed to AT - RED - SYSTEM DRIVER - WRITE]
+
+    ENABLE --> IMPL_DSL
+    IMPL_DSL --> UPDATE_DRIVER_IFACE
+    UPDATE_DRIVER_IFACE --> CHECK_EXT
+    CHECK_EXT --> CHECK_SYS
+    CHECK_SYS --> STOP_WRITE
+    STOP_WRITE --> IMPL_DRIVERS_STUB
+    IMPL_DRIVERS_STUB --> RUN_RUNTIME
+    RUN_RUNTIME --> DISABLE
+    DISABLE --> NO_TEST_FILES
+    NO_TEST_FILES --> COMMIT
+    COMMIT --> GH_COMMENT
+    GH_COMMENT --> PROCEED
+```
+
+## AT - RED - SYSTEM DRIVER Phase Detail
+
+```mermaid
+flowchart TD
+    ENABLE[Enable tests disabled with reason 'AT - RED - DSL']
+    IMPL[Implement Drivers under shop/ - replace 'TODO: Driver' stub]
+    NOTE_EXTERNAL[Do NOT implement drivers under external/ - handled by CT sub-process]
+    NOTE_NO_SOURCE[Do NOT read backend/frontend source - model on existing driver methods]
+    RUN[Run tests; verify runtime failure]
+    STOP_WRITE[STOP — present Driver implementation for approval]
+    DISABLE[Mark tests disabled with reason 'AT - RED - SYSTEM DRIVER']
+    NO_TEST_FILES[Ensure no test files in changed files]
+    COMMIT[COMMIT: Scenario | AT - RED - SYSTEM DRIVER]
+    GH_COMMENT[If issue number provided, post Driver changes summary on issue]
+    STOP_END[STOP — phase progression controlled by orchestrator]
+
+    ENABLE --> IMPL
+    IMPL --> NOTE_EXTERNAL
+    NOTE_EXTERNAL --> NOTE_NO_SOURCE
+    NOTE_NO_SOURCE --> RUN
+    RUN --> STOP_WRITE
+    STOP_WRITE --> DISABLE
+    DISABLE --> NO_TEST_FILES
+    NO_TEST_FILES --> COMMIT
+    COMMIT --> GH_COMMENT
+    GH_COMMENT --> STOP_END
+```
+
+## AT - GREEN - SYSTEM Phase Detail
+
+```mermaid
+flowchart TD
+    BACKEND[Implement backend changes]
+    RUN_API[Run acceptance tests for API channel]
+    API_PASS{API tests pass?}
+    FIX_BACKEND[Fix backend code only - do NOT change tests/dsl/drivers]
+    FRONTEND[Implement frontend changes]
+    RUN_UI[Run acceptance tests for UI channel]
+    UI_PASS{UI tests pass?}
+    FIX_FRONTEND[Fix frontend code only - do NOT change tests/dsl/drivers]
+    STOP_WRITE[STOP — present implementation for approval]
+    COMMIT_SYS[COMMIT: Scenario | AT - GREEN - SYSTEM - backend + frontend changes]
+    REMOVE_DISABLED[Remove disabled annotation reason 'AT - RED - SYSTEM DRIVER']
+    RUN_VERIFY[Run all tests; verify they pass]
+    COMMIT_TESTS[COMMIT: Scenario | AT - GREEN - SYSTEM - test changes only]
+    GH_TICK[Tick acceptance criterion checkbox; if all ticked move issue to In Review]
+    LOOP_BACK[If remaining // TODO: scenarios, return to AT - RED - TEST - WRITE]
+
+    BACKEND --> RUN_API
+    RUN_API --> API_PASS
+    API_PASS -->|No| FIX_BACKEND
+    FIX_BACKEND --> RUN_API
+    API_PASS -->|Yes| FRONTEND
+    FRONTEND --> RUN_UI
+    RUN_UI --> UI_PASS
+    UI_PASS -->|No| FIX_FRONTEND
+    FIX_FRONTEND --> RUN_UI
+    UI_PASS -->|Yes| STOP_WRITE
+    STOP_WRITE --> COMMIT_SYS
+    COMMIT_SYS --> REMOVE_DISABLED
+    REMOVE_DISABLED --> RUN_VERIFY
+    RUN_VERIFY --> COMMIT_TESTS
+    COMMIT_TESTS --> GH_TICK
+    GH_TICK --> LOOP_BACK
 ```
 
 ## Contract Test Sub-Process
 
 ```mermaid
 flowchart TD
-    TRIGGER[Triggered by AT cycle<br/>External System Driver Interface Changed = yes]
-    CT_RED_TEST[CT - RED - TEST<br/>WRITE STOP then COMMIT]
-    CT_DSL_CHANGED{DSL Interface<br/>Changed?}
-    CT_RED_DSL[CT - RED - DSL<br/>WRITE STOP then COMMIT]
-    CT_EXT_CHANGED{External System Driver<br/>Interface Changed?<br/>no recursive triggering}
-    CT_RED_EXT_DRIVER[CT - RED - EXTERNAL DRIVER<br/>WRITE STOP then COMMIT<br/>only external/ drivers]
-    CT_GREEN_STUB[CT - GREEN - STUB<br/>implement stubs<br/>then release commit]
-    RETURN[Return to AT Cycle<br/>continue with System Driver check]
+    TRIGGER([Triggered: External System Driver Interface Changed = yes in AT cycle])
+    EXISTS{External System exists?}
+    SMOKE[Make Smoke Tests pass first]
+    CT_RED_TEST[CT - RED - TEST]
+    DSL_CHANGED{DSL Interface Changed?}
+    CT_RED_DSL[CT - RED - DSL]
+    EXT_CHANGED{External System Driver Interface Changed?}
+    CT_RED_EXT_DRIVER[CT - RED - EXTERNAL DRIVER]
+    CT_GREEN_STUB[CT - GREEN - STUB]
+    RETURN[Return to AT cycle - continue with system driver check]
 
-    TRIGGER --> CT_RED_TEST
-    CT_RED_TEST --> CT_DSL_CHANGED
-    CT_DSL_CHANGED -->|No| CT_GREEN_STUB
-    CT_DSL_CHANGED -->|Yes| CT_RED_DSL
-    CT_RED_DSL --> CT_EXT_CHANGED
-    CT_EXT_CHANGED -->|No| CT_GREEN_STUB
-    CT_EXT_CHANGED -->|Yes| CT_RED_EXT_DRIVER
+    TRIGGER --> EXISTS
+    EXISTS -->|No| SMOKE
+    SMOKE --> CT_RED_TEST
+    EXISTS -->|Yes| CT_RED_TEST
+    CT_RED_TEST --> DSL_CHANGED
+    DSL_CHANGED -->|No| CT_GREEN_STUB
+    DSL_CHANGED -->|Yes| CT_RED_DSL
+    CT_RED_DSL --> EXT_CHANGED
+    EXT_CHANGED -->|No| CT_GREEN_STUB
+    EXT_CHANGED -->|Yes| CT_RED_EXT_DRIVER
     CT_RED_EXT_DRIVER --> CT_GREEN_STUB
     CT_GREEN_STUB --> RETURN
 ```
 
-## Resume Detection
+## CT - RED - TEST Phase Detail
 
 ```mermaid
 flowchart TD
-    SCAN[Scan for @Disabled annotations]
-    M_AT_TEST[Marker: AT - RED - TEST]
-    M_AT_DSL[Marker: AT - RED - DSL]
-    M_AT_SYS[Marker: AT - RED - SYSTEM DRIVER]
-    M_CT_TEST[Marker: CT - RED - TEST]
-    M_CT_DSL[Marker: CT - RED - DSL]
-    M_CT_EXT[Marker: CT - RED - EXTERNAL DRIVER]
-    CHK_DSL_AT{TODO: DSL<br/>stubs found?}
-    CHK_DRV_AT{TODO: Driver<br/>stubs in shop/?}
-    CHK_DSL_CT{TODO: DSL<br/>stubs found?}
-    CHK_DRV_CT{TODO: Driver<br/>stubs in external/?}
-    R_AT_DSL[Resume at AT - RED - DSL]
-    R_AT_SYS[Resume at AT - RED - SYSTEM DRIVER]
-    R_AT_GREEN[Resume at AT - GREEN - SYSTEM]
-    R_CT_DSL[Resume at CT - RED - DSL]
-    R_CT_EXT[Resume at CT - RED - EXTERNAL DRIVER]
-    R_CT_GREEN[Resume at CT - GREEN - STUB]
+    WRITE[CT - RED - TEST - WRITE: write External System Contract Tests]
+    RUN_REAL[Run against Real External System]
+    REAL_PASS{Tests pass?}
+    ASK_USER[Ask user for support; STOP]
+    RUN_STUB[Run against Stub External System]
+    STUB_FAIL{Tests fail?}
+    DISABLE[Mark tests disabled with reason 'CT - RED - TEST']
+    STOP_WRITE[STOP — present contract tests for approval]
+    HAS_COMPILE_ERR{Compile-time errors in WRITE?}
+    EXTEND_DSL[Extend DSL interfaces; throw 'TODO: DSL']
+    RUN_RUNTIME[Run tests; verify runtime failure]
+    COMMIT[COMMIT: Scenario | CT - RED - TEST]
+    STOP_END[STOP — phase progression controlled by orchestrator]
 
-    SCAN --> M_AT_TEST
-    SCAN --> M_AT_DSL
-    SCAN --> M_AT_SYS
-    SCAN --> M_CT_TEST
-    SCAN --> M_CT_DSL
-    SCAN --> M_CT_EXT
-    M_AT_TEST --> CHK_DSL_AT
-    CHK_DSL_AT -->|Yes| R_AT_DSL
-    CHK_DSL_AT -->|No| R_AT_GREEN
-    M_AT_DSL --> CHK_DRV_AT
-    CHK_DRV_AT -->|Yes| R_AT_SYS
-    CHK_DRV_AT -->|No| R_AT_GREEN
-    M_AT_SYS --> R_AT_GREEN
-    M_CT_TEST --> CHK_DSL_CT
-    CHK_DSL_CT -->|Yes| R_CT_DSL
-    CHK_DSL_CT -->|No| R_CT_GREEN
-    M_CT_DSL --> CHK_DRV_CT
-    CHK_DRV_CT -->|Yes| R_CT_EXT
-    CHK_DRV_CT -->|No| R_CT_GREEN
-    M_CT_EXT --> R_CT_GREEN
+    WRITE --> RUN_REAL
+    RUN_REAL --> REAL_PASS
+    REAL_PASS -->|No| ASK_USER
+    REAL_PASS -->|Yes| RUN_STUB
+    RUN_STUB --> STUB_FAIL
+    STUB_FAIL -->|Yes| DISABLE
+    STUB_FAIL -->|No| ASK_USER
+    DISABLE --> STOP_WRITE
+    STOP_WRITE --> HAS_COMPILE_ERR
+    HAS_COMPILE_ERR -->|Yes| EXTEND_DSL
+    EXTEND_DSL --> RUN_RUNTIME
+    RUN_RUNTIME --> COMMIT
+    HAS_COMPILE_ERR -->|No| COMMIT
+    COMMIT --> STOP_END
+```
+
+## CT - RED - DSL Phase Detail
+
+```mermaid
+flowchart TD
+    ENABLE[Enable tests disabled with reason 'CT - RED - TEST']
+    IMPL_DSL[Implement DSL for real - replace 'TODO: DSL' stub]
+    UPDATE_DRIVER_IFACE[Update Driver interfaces as needed]
+    CHECK_EXT[Set flag: External System Driver Interface Changed = yes/no - no recursive triggering]
+    STOP_WRITE[STOP — present DSL, Driver changes, flag for approval]
+    IMPL_DRIVERS_STUB[Implement Drivers by throwing 'TODO: Driver']
+    RUN_RUNTIME[Run tests against suite-contract-stub; verify runtime failure]
+    DISABLE[Mark tests disabled with reason 'CT - RED - DSL']
+    COMMIT[COMMIT: Scenario | CT - RED - DSL]
+    GH_COMMENT[If issue number provided, post DSL changes summary on issue]
+    PROCEED[Proceed to CT - RED - EXTERNAL DRIVER - WRITE]
+
+    ENABLE --> IMPL_DSL
+    IMPL_DSL --> UPDATE_DRIVER_IFACE
+    UPDATE_DRIVER_IFACE --> CHECK_EXT
+    CHECK_EXT --> STOP_WRITE
+    STOP_WRITE --> IMPL_DRIVERS_STUB
+    IMPL_DRIVERS_STUB --> RUN_RUNTIME
+    RUN_RUNTIME --> DISABLE
+    DISABLE --> COMMIT
+    COMMIT --> GH_COMMENT
+    GH_COMMENT --> PROCEED
+```
+
+## CT - RED - EXTERNAL DRIVER Phase Detail
+
+```mermaid
+flowchart TD
+    ENABLE[Enable tests disabled with reason 'CT - RED - DSL']
+    IMPL[Implement Drivers under external/ only - replace 'TODO: Driver' stub]
+    RUN[Run tests; verify runtime failure]
+    STOP_WRITE[STOP — present Driver implementation for approval]
+    DISABLE[Mark tests disabled with reason 'CT - RED - EXTERNAL DRIVER']
+    COMMIT[COMMIT: Scenario | CT - RED - EXTERNAL DRIVER]
+    GH_COMMENT[If issue number provided, post Driver changes summary on issue]
+    STOP_END[STOP — phase progression controlled by orchestrator]
+
+    ENABLE --> IMPL
+    IMPL --> RUN
+    RUN --> STOP_WRITE
+    STOP_WRITE --> DISABLE
+    DISABLE --> COMMIT
+    COMMIT --> GH_COMMENT
+    GH_COMMENT --> STOP_END
+```
+
+## CT - GREEN - STUBS Phase Detail
+
+```mermaid
+flowchart TD
+    ENABLE[Enable tests disabled with reason 'CT - RED - EXTERNAL DRIVER']
+    IMPL_STUBS[Implement External System Stubs]
+    RUN[Run External System Contract Tests against suite-contract-stub]
+    PASS{Tests pass?}
+    ASK_USER[Ask user; STOP]
+    STOP_WRITE[STOP — present stub implementation for approval]
+    REMOVE_DISABLED[Remove disabled annotation reason 'CT - RED - EXTERNAL DRIVER']
+    RUN_VERIFY[Run tests; verify they pass]
+    COMMIT[COMMIT: Scenario | CT - GREEN - STUBS]
+    STOP_END[STOP — phase progression controlled by orchestrator]
+
+    ENABLE --> IMPL_STUBS
+    IMPL_STUBS --> RUN
+    RUN --> PASS
+    PASS -->|No| ASK_USER
+    PASS -->|Yes| STOP_WRITE
+    STOP_WRITE --> REMOVE_DISABLED
+    REMOVE_DISABLED --> RUN_VERIFY
+    RUN_VERIFY --> COMMIT
+    COMMIT --> STOP_END
+```
+
+## Scenario Loop
+
+```mermaid
+flowchart TD
+    FIRST[Run AT cycle for first scenario - or first scenario that needs new DSL]
+    AFTER_GREEN{After AT - GREEN - SYSTEM: remaining // TODO: scenarios?}
+    NEXT[Loop back to AT - RED - TEST for next scenario - see § AT Cycle]
+    DONE([All scenarios GREEN])
+
+    FIRST --> AFTER_GREEN
+    AFTER_GREEN -->|Yes| NEXT
+    NEXT --> AFTER_GREEN
+    AFTER_GREEN -->|No| DONE
 ```
 
 ## Notes
 
-- The orchestrator prose (`orchestrator.md` &sect; AT Cycle) places the External Driver decision *between* AT - RED - DSL and the System Driver decision, with the Contract Test Sub-Process running on Yes and then *continuing* into the System Driver check. The acceptance-tests prose (`acceptance-tests.md` AT - RED - DSL - WRITE) records both flags simultaneously without specifying ordering. The Overview and AT Cycle diagrams follow the orchestrator's explicit ordering.
-- `acceptance-tests.md` AT - RED - DSL - COMMIT step 7 says it "Automatically proceed[s] to AT - RED - SYSTEM DRIVER - WRITE", but the orchestrator gates that step on `System Driver Interface Changed = yes`. The diagrams follow the orchestrator's gating.
-- The orchestrator phase table names the final CT phase `CT - GREEN - STUB` (singular); `contract-tests.md` headings name it `CT - GREEN - STUBS` (plural). The diagrams use `CT - GREEN - STUB` to match the orchestrator's flow diagram, which is the source of process structure.
+- `orchestrator.md` shows the AT cycle's external-driver branch as `External System Driver Interface Changed? — Yes → Contract Test Sub-Process → (then continue ↓)` returning into the System Driver Interface check. The AT Cycle diagram routes the CT return edge into the `System Driver Interface Changed?` decision to match this prose; the No branch from `External System Driver Interface Changed?` flows into the same decision.
+- `contract-tests.md` step 2 in CT - RED - TEST says "If they don't pass, ask the user for support. STOP." for the Real run, but for the Stub run only states "Verify that they fail" without an explicit branch for the unexpected case (Stub tests passing). The CT - RED - TEST detail diagram routes that anomaly to `ASK_USER` for completeness; this is an inferred edge.
+- The Scenario Loop's "first scenario that needs new DSL" wording is taken verbatim from `orchestrator.md`. `acceptance-tests.md` orders scenarios as Legacy Coverage → existing-DSL → new-DSL, which is structurally consistent but uses different wording.

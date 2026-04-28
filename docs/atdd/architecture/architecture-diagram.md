@@ -10,109 +10,188 @@
 - `docs/atdd/architecture/dsl-port.md`
 - `docs/atdd/architecture/test.md`
 
-## Diagram
+## Overview
 
 ```mermaid
 flowchart TD
-    POSITIVE_TEST[UseCase PositiveTest]
-    NEGATIVE_TEST[UseCase NegativeTest]
+    TEST[Test Layer — see § Test Layer]
+    DSL_PORT[DSL Port — see § DSL Port]
+    DSL_CORE[DSL Core — see § DSL Core]
+    DRIVER_PORT[Driver Port — see § Driver Port]
+    DRIVER_ADAPTER[Driver Adapter — see § Driver Adapter]
+    EXTERNAL[External Systems — see § External Systems]
 
-    subgraph DSL_PORT_SG[DSL Port]
-        GIVEN_STAGE[GivenStage]
-        WHEN_STAGE[WhenStage]
-        THEN_STAGE[ThenStage]
-        THEN_RESULT_STAGE[ThenResultStage]
-        THEN_STEP[ThenStep TThen]
-        THEN_SUCCESS[ThenSuccess]
-        THEN_FAILURE[ThenFailure]
-    end
-
-    subgraph DSL_CORE_SG[DSL Core]
-        GIVEN_IMPL[Given step classes]
-        WHEN_IMPL[When step classes - e.g. WhenPlaceOrderImpl]
-        THEN_IMPL[Then step classes]
-        VERIFICATION[Verification classes - e.g. PlaceOrderVerification]
-        USE_CASE[Use case classes - usecase/external + usecase/shop]
-    end
-
-    subgraph DRIVER_PORT_SG[Driver Port]
-        DRIVER_PORT_EXTERNAL[driver-port/external - clock, erp, tax]
-        DRIVER_PORT_SHOP[driver-port/shop - api, ui]
-    end
-
-    subgraph DRIVER_ADAPTER_SG[Driver Adapter]
-        BASE_DRIVER[BaseXyzDriver]
-        REAL_DRIVER[XyzRealDriver]
-        STUB_DRIVER[XyzStubDriver]
-        BASE_CLIENT[BaseXyzClient]
-        REAL_CLIENT[XyzRealClient]
-        STUB_CLIENT[XyzStubClient]
-        SHOP_API_CLIENT[ShopApiClient]
-        CONTROLLERS[OrderController / CouponController / ProductController]
-        SYSTEM_ERROR_MAPPER[SystemErrorMapper]
-        UI_DRIVER[Shop UI Driver - page objects + page state enum]
-    end
-
-    EXT_REQ[Ext Request DTOs - string fields only]
-    EXT_RES[Ext Response DTOs - typed fields allowed]
-    PROBLEM_DETAIL[ProblemDetailResponse]
-    ERROR_RESPONSE[domain ErrorResponse]
-
-    REAL_SERVICE[Real external service via HTTP]
-    WIREMOCK[WireMock stubs]
-    SHOP_API[Shop API]
-    SHOP_UI[Shop UI - home page + clicks]
-
-    POSITIVE_TEST -->|asserts shouldSucceed via| DSL_PORT_SG
-    NEGATIVE_TEST -->|asserts shouldFailWith via| DSL_PORT_SG
-
-    GIVEN_STAGE -->|and / when / then| WHEN_STAGE
-    GIVEN_STAGE -->|then transitions to| THEN_STAGE
-    WHEN_STAGE -->|then transitions to| THEN_STAGE
-    THEN_RESULT_STAGE -->|extends| THEN_STAGE
-    THEN_RESULT_STAGE -->|shouldSucceed| THEN_SUCCESS
-    THEN_RESULT_STAGE -->|shouldFail| THEN_FAILURE
-    THEN_SUCCESS -->|extends| THEN_STEP
-    THEN_FAILURE -->|extends| THEN_STEP
-    THEN_SUCCESS -->|and navigates to| THEN_IMPL
-
-    GIVEN_IMPL -.implements.-> GIVEN_STAGE
-    WHEN_IMPL -.implements.-> WHEN_STAGE
-    THEN_IMPL -.implements.-> THEN_STAGE
-    THEN_IMPL -.implements.-> THEN_RESULT_STAGE
-
-    GIVEN_IMPL -->|with FieldName setters| USE_CASE
-    WHEN_IMPL -->|alias e.g. DEFAULT_ORDER_NUMBER| USE_CASE
-    THEN_IMPL -->|delegates assertions to| VERIFICATION
-
-    USE_CASE -->|calls methods on| DRIVER_PORT_SG
-
-    DRIVER_PORT_EXTERNAL -.implemented by.-> BASE_DRIVER
-    DRIVER_PORT_SHOP -.implemented by.-> SHOP_API_CLIENT
-    DRIVER_PORT_SHOP -.implemented by.-> UI_DRIVER
-
-    REAL_DRIVER -->|delegates to| BASE_DRIVER
-    STUB_DRIVER -->|delegates to| BASE_DRIVER
-    BASE_DRIVER -->|delegates to| BASE_CLIENT
-    REAL_CLIENT -->|extends| BASE_CLIENT
-    STUB_CLIENT -->|extends| BASE_CLIENT
-
-    REAL_CLIENT -->|createProduct via real HTTP using| EXT_REQ
-    REAL_CLIENT -->|deserializes| EXT_RES
-    REAL_CLIENT -->|HTTP| REAL_SERVICE
-    STUB_CLIENT -->|configureGetProduct registers| WIREMOCK
-
-    SHOP_API_CLIENT -->|composes| CONTROLLERS
-    CONTROLLERS -->|HTTP| SHOP_API
-    SHOP_API -->|returns| PROBLEM_DETAIL
-    PROBLEM_DETAIL -->|mapped by| SYSTEM_ERROR_MAPPER
-    SYSTEM_ERROR_MAPPER -->|exposes| ERROR_RESPONSE
-
-    UI_DRIVER -->|aria-label selectors, role=alert notifications| SHOP_UI
-
-    BASE_DRIVER -->|goTo Xyz health check in Assume stage| REAL_SERVICE
+    TEST -->|uses fluent DSL| DSL_PORT
+    DSL_CORE -->|implements| DSL_PORT
+    DSL_CORE -->|calls| DRIVER_PORT
+    DRIVER_ADAPTER -->|implements| DRIVER_PORT
+    DRIVER_ADAPTER -->|talks to| EXTERNAL
 ```
 
-## Notes
+## Test Layer
 
-The architecture prose describes a single component-dependency view; no separate runtime call-flow view is rendered. The diagram preserves the source naming conventions (`Ext*` DTO prefix, `BaseXyzDriver`/`BaseXyzClient`, `external/` vs `shop/` driver split) and reflects rules without inventing layers — for example, `Ext*Request` vs request DTO field-typing rules are surfaced as edge labels rather than as a separate node.
+```mermaid
+flowchart TD
+    POSITIVE[UseCase Positive Test]
+    NEGATIVE[UseCase Negative Test]
+    DSL_PORT_REF[DSL Port — see § DSL Port]
+
+    POSITIVE -->|asserts shouldSucceed| DSL_PORT_REF
+    NEGATIVE -->|asserts shouldFailWith| DSL_PORT_REF
+```
+
+## DSL Port
+
+```mermaid
+flowchart TD
+    GIVEN[Given base interface]
+    WHEN_STAGE[WhenStage]
+    THEN_STAGE[ThenStage]
+    THEN_STEP[ThenStep TThen]
+    THEN_RESULT[ThenResultStage]
+    THEN_SUCCESS[ThenSuccess]
+    THEN_FAILURE[ThenFailure]
+    THEN_ORDER[ThenOrder]
+    THEN_COUPON[ThenCoupon]
+
+    GIVEN -->|when| WHEN_STAGE
+    GIVEN -->|then| THEN_STAGE
+    WHEN_STAGE -->|then| THEN_STAGE
+    THEN_RESULT -->|extends| THEN_STAGE
+    THEN_STAGE -->|extends| THEN_STEP
+    THEN_RESULT -->|shouldSucceed| THEN_SUCCESS
+    THEN_RESULT -->|shouldFail| THEN_FAILURE
+    THEN_SUCCESS -->|and| THEN_ORDER
+    THEN_SUCCESS -->|and| THEN_COUPON
+```
+
+## DSL Core
+
+```mermaid
+flowchart TD
+    GIVEN_IMPL[Given Step Class]
+    WHEN_IMPL[When Step Class]
+    THEN_IMPL[Then Step Class]
+    VERIFICATION[Verification Class]
+    USECASE[Use Case Class]
+    USECASE_EXT[usecase/external/]
+    USECASE_SHOP[usecase/shop/]
+    DSL_PORT_REF[DSL Port — see § DSL Port]
+    DRIVER_PORT_REF[Driver Port — see § Driver Port]
+
+    GIVEN_IMPL -->|implements| DSL_PORT_REF
+    WHEN_IMPL -->|implements| DSL_PORT_REF
+    THEN_IMPL -->|implements| DSL_PORT_REF
+    THEN_IMPL --> VERIFICATION
+    WHEN_IMPL --> USECASE
+    USECASE --> USECASE_EXT
+    USECASE --> USECASE_SHOP
+    USECASE -->|calls| DRIVER_PORT_REF
+```
+
+## Driver Port
+
+```mermaid
+flowchart TD
+    EXT_DIR[external/]
+    SHOP_DIR[shop/]
+    EXT_CLOCK[external/clock]
+    EXT_ERP[external/erp]
+    EXT_TAX[external/tax]
+    SHOP_API[Shop API driver]
+    SHOP_UI[Shop UI driver]
+    REQ_DTO[Request DTO — string fields]
+    RES_DTO[Response DTO — ID first]
+    CONTRACT[Contract Tests]
+
+    EXT_DIR --> EXT_CLOCK
+    EXT_DIR --> EXT_ERP
+    EXT_DIR --> EXT_TAX
+    SHOP_DIR --> SHOP_API
+    SHOP_DIR --> SHOP_UI
+    EXT_DIR -.->|uses| REQ_DTO
+    EXT_DIR -.->|uses| RES_DTO
+    SHOP_DIR -.->|uses| REQ_DTO
+    SHOP_DIR -.->|uses| RES_DTO
+    EXT_DIR -->|requires| CONTRACT
+```
+
+## Driver Adapter
+
+```mermaid
+flowchart TD
+    BASE_DRIVER[BaseXyzDriver]
+    REAL_DRIVER[XyzRealDriver]
+    STUB_DRIVER[XyzStubDriver]
+    BASE_CLIENT[BaseXyzClient]
+    REAL_CLIENT[XyzRealClient]
+    STUB_CLIENT[XyzStubClient]
+    SHOP_API_SUB[Shop API — see § Shop API Adapter]
+    SHOP_UI_SUB[Shop UI — see § Shop UI Adapter]
+    EXT_REF[External Systems — see § External Systems]
+
+    REAL_DRIVER -->|extends| BASE_DRIVER
+    STUB_DRIVER -->|extends| BASE_DRIVER
+    BASE_DRIVER -->|delegates| BASE_CLIENT
+    REAL_CLIENT -->|extends| BASE_CLIENT
+    STUB_CLIENT -->|extends| BASE_CLIENT
+    REAL_CLIENT -->|HTTP| EXT_REF
+    STUB_CLIENT -->|configures| EXT_REF
+    BASE_DRIVER -.-> SHOP_API_SUB
+    BASE_DRIVER -.-> SHOP_UI_SUB
+```
+
+## Shop API Adapter
+
+```mermaid
+flowchart TD
+    SHOP_API_CLIENT[ShopApiClient]
+    ORDER_CTRL[OrderController]
+    COUPON_CTRL[CouponController]
+    PRODUCT_CTRL[ProductController]
+    PROBLEM[ProblemDetailResponse]
+    MAPPER[SystemErrorMapper]
+    ERROR[ErrorResponse]
+
+    SHOP_API_CLIENT --> ORDER_CTRL
+    SHOP_API_CLIENT --> COUPON_CTRL
+    SHOP_API_CLIENT --> PRODUCT_CTRL
+    PROBLEM -->|mapped by| MAPPER
+    MAPPER --> ERROR
+```
+
+## Shop UI Adapter
+
+```mermaid
+flowchart TD
+    UI_DRIVER[Shop UI Driver]
+    PAGE_STATE[Page State Enum]
+    PAGE_OBJECT[Page Object]
+    ARIA[aria-label selectors]
+    NOTIFICATION[role=alert notifications]
+    HOME[Home Page entry]
+
+    UI_DRIVER --> PAGE_STATE
+    UI_DRIVER --> PAGE_OBJECT
+    PAGE_OBJECT -->|selects via| ARIA
+    PAGE_OBJECT -->|reads results| NOTIFICATION
+    UI_DRIVER -->|always starts at| HOME
+```
+
+## External Systems
+
+```mermaid
+flowchart TD
+    ADAPTER_REF[Driver Adapter — see § Driver Adapter]
+    REAL_SVC[Real Service via HTTP]
+    WIREMOCK[WireMock]
+    EXT_REQ[Ext Request DTO — strings]
+    EXT_RES[Ext Response DTO — typed]
+    GOTO[goTo health check]
+
+    ADAPTER_REF -->|HTTP calls| REAL_SVC
+    ADAPTER_REF -->|stub config| WIREMOCK
+    ADAPTER_REF -.->|sends| EXT_REQ
+    ADAPTER_REF -.->|receives| EXT_RES
+    ADAPTER_REF -->|Assume stage| GOTO
+```
