@@ -42,9 +42,7 @@ This is purely a **regression check**. It does NOT tag images, publish git tags,
 - ❌ Rebuilds 3 systems (Java/Maven, .NET/dotnet, Node/npm) from scratch on every run, ~5–15 min per matrix entry overhead
 - ❌ Tests fresh source build, not the artifact that will actually be released
 
-**Items remaining for Phase 1:**
-
-- [ ] **Add summary step** — a final `if: always()` step that posts a matrix-result table to `$GITHUB_STEP_SUMMARY` so a failed combo is obvious without clicking in. Use `optivem/actions/render-system-stage-summary@v1` or a small inline bash that reads `needs.*.result`.
+**Items remaining for Phase 1:** _(none — Phase 1 complete pending verification CI run)_
 
 ## Phase 2 — switch to pre-built images (depends on [fix-deploy-sha-pinning](20260427-130000-fix-deploy-sha-pinning.md))
 

@@ -124,3 +124,24 @@ jobs:
       - name: Stop SUT
         if: always()
         run: gh optivem stop system --system docker/${{ matrix.system-lang }}/${{ matrix.arch }}/system.json
+
+  summary:
+    # Aggregate headline for the run page. Per-row pass/fail is already visible
+    # in the matrix table — this surfaces the "12/12 green" or "X failed" line at
+    # the top of the run summary without needing to click into individual jobs.
+    name: Cross-lang verification summary
+    runs-on: ubuntu-latest
+    needs: verify
+    if: always()
+    steps:
+      - name: Aggregate result
+        run: |
+          {
+            echo "## Cross-lang system verification"
+            echo ""
+            echo "**Aggregate:** ${{ needs.verify.result }}"
+            echo ""
+            echo "Per-combo pass/fail is visible in the matrix table on this run's page."
+            echo "\`fail-fast\` is disabled — failing combos do not mask others."
+          } >> "$GITHUB_STEP_SUMMARY"
+          [[ "${{ needs.verify.result }}" == "success" ]] || exit 1
