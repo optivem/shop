@@ -4,6 +4,17 @@ This document defines the decision flow for the ATDD pipeline. Each phase is def
 
 > **Naming note**: The word *shop* appears in two distinct senses in ATDD content — `shop/` (with slash) is a package/folder convention inside the driver layer; `shop` (without slash) is the SUT repository name. See `glossary.md` for details.
 
+## Intake (per ticket)
+
+Before the AT cycle runs, the picked ticket must be turned into Gherkin scenarios. The agent that does this depends on the ticket type classified by `atdd-manager`:
+
+| Ticket type | Agent | Scenarios produced |
+|-------------|-------|---------------------|
+| `story` | `atdd-story` | One scenario per acceptance criterion, plus optional Legacy Coverage |
+| `bug` | `atdd-bug` | One scenario per distinct reproduction path (default: one), plus optional Legacy Coverage |
+
+Both agents end with **STOP** for human approval before the AT cycle begins. From AT - RED - TEST onward the pipeline is identical regardless of intake variant.
+
 ## AT Cycle (per scenario)
 
 ```
@@ -79,6 +90,8 @@ The AT cycle repeats for each scenario in the ticket:
 
 | Phase | Agent | Notes |
 |-------|-------|-------|
+| Intake (story) | atdd-story | One scenario per acceptance criterion + Legacy Coverage. STOP for approval. |
+| Intake (bug) | atdd-bug | One scenario per distinct reproduction path (default: one) + Legacy Coverage. STOP for approval. |
 | AT - RED - TEST | test-agent | WRITE = STOP, COMMIT = commit + push |
 | AT - RED - DSL | dsl-agent | WRITE = STOP, COMMIT = commit + push |
 | AT - RED - SYSTEM DRIVER | driver-agent | WRITE = STOP, COMMIT = commit + push. Only `shop/` drivers. |

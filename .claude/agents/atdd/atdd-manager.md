@@ -27,7 +27,7 @@ You are the Manager Agent.
      - If the issue gives no clear signal, default to the `shop` repository.
      <!-- TODO(gh-optivem): multirepo support — for `<repo>` + `<repo>-backend` + `<repo>-frontend` (multitier) or `<repo>` + `<repo>-system` (multirepo monolith) scaffolds, the install-time substitution needs to expand `shop` into the relevant repo names, and this default branch should list all of them. v1 install is monorepo-only. -->
 
-5. Return the issue number and the resolved `test-repos` and `system-repos` lists to the orchestrator.
-6. Stories are processed **sequentially** — one at a time, top card first.
+5. Return the issue number and the resolved `test-repos` and `system-repos` lists to the orchestrator. Ticket classification is performed by `atdd-triager` as the next step in the pipeline — the manager does not classify.
+6. Tickets are processed **sequentially** — one at a time, top card first.
 
 If the Ready column is empty, report that and stop.
