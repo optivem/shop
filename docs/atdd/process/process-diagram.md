@@ -61,8 +61,8 @@ flowchart TD
     CHORE --> STOP_INTAKE
     STOP_INTAKE --> TO_GATES
 
-    classDef stopNode fill:#fff3cd,stroke:#856404,stroke-width:2px
-    class STOP_INTAKE stopNode
+    classDef humanReviewNode fill:#ffeb3b,stroke:#fbc02d,stroke-width:2px,color:#000
+    class STOP_INTAKE humanReviewNode
 ```
 
 ## AT Cycle
@@ -102,8 +102,8 @@ flowchart TD
     STOP_WRITE_TESTS[STOP - HUMAN REVIEW — review tests; user may revise DSL usage]
     ATTEMPT_COMPILE[Compile tests]
     COMPILE_SUCCEEDS{Compilation succeeds?}
-    EXTEND_DSL["Change DSL interfaces; implement DSL stubs (throw 'TODO: DSL')"]
-    STOP_DSL[STOP - HUMAN REVIEW — review DSL changes and stubs for approval]
+    EXTEND_DSL["Change DSL interfaces; implement DSL prototypes (throw 'TODO: DSL')"]
+    STOP_DSL[STOP - HUMAN REVIEW — review DSL changes and prototypes for approval]
     RUN_FAIL[Run tests; verify runtime failure]
     DISABLE_ALL["DISABLE TESTS: &lt;Ticket&gt; | AT - RED - TEST"]
     COMMIT["COMMIT: &lt;Ticket&gt; | AT - RED - TEST"]
@@ -120,10 +120,10 @@ flowchart TD
     DISABLE_ALL --> COMMIT
     COMMIT --> STOP_END
 
-    classDef stopNode fill:#fff3cd,stroke:#856404,stroke-width:2px
-    class STOP_WRITE_TESTS,STOP_DSL,STOP_END stopNode
-    classDef commitNode fill:#d4edda,stroke:#155724,stroke-width:2px
-    class COMMIT commitNode
+    classDef effortNode fill:#004085,stroke:#002752,stroke-width:2px,color:#fff
+    class WRITE,EXTEND_DSL effortNode
+    classDef humanReviewNode fill:#ffeb3b,stroke:#fbc02d,stroke-width:2px,color:#000
+    class STOP_WRITE_TESTS,STOP_DSL humanReviewNode
 ```
 
 ## AT - RED - DSL Phase Detail
@@ -131,19 +131,19 @@ flowchart TD
 ```mermaid
 flowchart TD
     ENABLE["ENABLE TESTS: &lt;Ticket&gt; | AT - RED - TEST"]
-    IMPL_DSL[Implement DSL for real - replace 'TODO: DSL' stub]
+    IMPL_DSL[Implement DSL for real - replace 'TODO: DSL' prototype]
     UPDATE_DRIVER_IFACE[Update Driver interfaces as needed]
     CHECK_EXT[Set flag: External System Driver Interface Changed = yes/no]
     CHECK_SYS[Set flag: System Driver Interface Changed = yes/no]
     STOP_WRITE[STOP - HUMAN REVIEW — present DSL, Driver changes, both flags for approval]
     DRIVER_CHANGED{Any Driver Interface Changed?}
-    IMPL_DRIVERS_STUB["Implement Drivers by throwing 'TODO: Driver'"]
+    IMPL_DRIVERS_PROTOTYPE["Implement Driver prototypes (throw 'TODO: Driver')"]
     RUN_RUNTIME[Run tests; verify runtime failure]
-    DISABLE["DISABLE TESTS: &lt;Scenario&gt; | AT - RED - DSL"]
-    NO_TEST_FILES[Ensure no test files in changed files list]
-    COMMIT["COMMIT: &lt;Scenario&gt; | AT - RED - DSL"]
-    GH_COMMENT[If issue number provided, post DSL changes summary on issue]
-    PROCEED[Proceed to AT - RED - SYSTEM DRIVER - WRITE]
+    DISABLE["DISABLE TESTS: &lt;Ticket&gt; | AT - RED - DSL"]
+    NO_TEST_FILES["Ensure no test files (accidentally) in changed files list"]
+    COMMIT["COMMIT: &lt;Ticket&gt; | AT - RED - DSL"]
+    OUTPUTS[[Outputs: EXT_CHANGED flag, SYS_CHANGED flag]]
+    STOP_END[STOP - ORCHESTRATOR — phase progression]
 
     ENABLE --> IMPL_DSL
     IMPL_DSL --> UPDATE_DRIVER_IFACE
@@ -152,52 +152,50 @@ flowchart TD
     CHECK_EXT --> STOP_WRITE
     CHECK_SYS --> STOP_WRITE
     STOP_WRITE --> DRIVER_CHANGED
-    DRIVER_CHANGED -->|No| DISABLE
-    DRIVER_CHANGED -->|Yes| IMPL_DRIVERS_STUB
-    IMPL_DRIVERS_STUB --> RUN_RUNTIME
+    DRIVER_CHANGED -->|No| RUN_RUNTIME
+    DRIVER_CHANGED -->|Yes| IMPL_DRIVERS_PROTOTYPE
+    IMPL_DRIVERS_PROTOTYPE --> RUN_RUNTIME
     RUN_RUNTIME --> DISABLE
     DISABLE --> NO_TEST_FILES
     NO_TEST_FILES --> COMMIT
-    COMMIT --> GH_COMMENT
-    GH_COMMENT --> PROCEED
+    COMMIT --> OUTPUTS
+    OUTPUTS --> STOP_END
 
-    classDef stopNode fill:#fff3cd,stroke:#856404,stroke-width:2px
-    class STOP_WRITE stopNode
-    classDef commitNode fill:#d4edda,stroke:#155724,stroke-width:2px
-    class COMMIT commitNode
+    classDef effortNode fill:#004085,stroke:#002752,stroke-width:2px,color:#fff
+    class IMPL_DSL,UPDATE_DRIVER_IFACE,IMPL_DRIVERS_PROTOTYPE effortNode
+    classDef humanReviewNode fill:#ffeb3b,stroke:#fbc02d,stroke-width:2px,color:#000
+    class STOP_WRITE humanReviewNode
 ```
 
 ## AT - RED - SYSTEM DRIVER Phase Detail
 
+**Notes:**
+- Do NOT implement External Drivers — handled by the CT sub-process.
+- Do NOT read system implementation source — model on existing driver methods.
+
 ```mermaid
 flowchart TD
-    ENABLE["ENABLE TESTS: &lt;Scenario&gt; | AT - RED - DSL"]
-    IMPL[Implement Drivers under shop/ - replace 'TODO: Driver' stub]
-    NOTE_EXTERNAL[Do NOT implement drivers under external/ - handled by CT sub-process]
-    NOTE_NO_SOURCE[Do NOT read backend/frontend source - model on existing driver methods]
+    ENABLE["ENABLE TESTS: &lt;Ticket&gt; | AT - RED - DSL"]
+    IMPL[Implement System Drivers - replace 'TODO: Driver' prototype]
     RUN[Run tests; verify runtime failure]
     STOP_WRITE[STOP - HUMAN REVIEW — present Driver implementation for approval]
     DISABLE["DISABLE TESTS: &lt;Scenario&gt; | AT - RED - SYSTEM DRIVER"]
-    NO_TEST_FILES[Ensure no test files in changed files]
+    NO_TEST_FILES["Ensure no test files (accidentally) in changed files list"]
     COMMIT["COMMIT: &lt;Scenario&gt; | AT - RED - SYSTEM DRIVER"]
-    GH_COMMENT[If issue number provided, post Driver changes summary on issue]
     STOP_END[STOP - ORCHESTRATOR — phase progression]
 
     ENABLE --> IMPL
-    IMPL --> NOTE_EXTERNAL
-    NOTE_EXTERNAL --> NOTE_NO_SOURCE
-    NOTE_NO_SOURCE --> RUN
+    IMPL --> RUN
     RUN --> STOP_WRITE
     STOP_WRITE --> DISABLE
     DISABLE --> NO_TEST_FILES
     NO_TEST_FILES --> COMMIT
-    COMMIT --> GH_COMMENT
-    GH_COMMENT --> STOP_END
+    COMMIT --> STOP_END
 
-    classDef stopNode fill:#fff3cd,stroke:#856404,stroke-width:2px
-    class STOP_WRITE,STOP_END stopNode
-    classDef commitNode fill:#d4edda,stroke:#155724,stroke-width:2px
-    class COMMIT commitNode
+    classDef effortNode fill:#004085,stroke:#002752,stroke-width:2px,color:#fff
+    class IMPL effortNode
+    classDef humanReviewNode fill:#ffeb3b,stroke:#fbc02d,stroke-width:2px,color:#000
+    class STOP_WRITE humanReviewNode
 ```
 
 ## AT - GREEN - SYSTEM Phase Detail
@@ -237,10 +235,10 @@ flowchart TD
     COMMIT_TESTS --> GH_TICK
     GH_TICK --> LOOP_BACK
 
-    classDef stopNode fill:#fff3cd,stroke:#856404,stroke-width:2px
-    class STOP_WRITE stopNode
-    classDef commitNode fill:#d4edda,stroke:#155724,stroke-width:2px
-    class COMMIT_SYS,COMMIT_TESTS commitNode
+    classDef effortNode fill:#004085,stroke:#002752,stroke-width:2px,color:#fff
+    class BACKEND,FRONTEND effortNode
+    classDef humanReviewNode fill:#ffeb3b,stroke:#fbc02d,stroke-width:2px,color:#000
+    class STOP_WRITE humanReviewNode
 ```
 
 ## Contract Test Sub-Process
@@ -285,7 +283,7 @@ flowchart TD
     DISABLE["DISABLE TESTS: &lt;Scenario&gt; | CT - RED - TEST"]
     STOP_WRITE[STOP - HUMAN REVIEW — present contract tests for approval]
     HAS_COMPILE_ERR{Compile-time errors in WRITE?}
-    EXTEND_DSL["Extend DSL interfaces with new methods; implement DSL stubs (throw 'TODO: DSL')"]
+    EXTEND_DSL["Extend DSL interfaces with new methods; implement DSL prototypes (throw 'TODO: DSL')"]
     RUN_RUNTIME[Run tests; verify runtime failure]
     COMMIT["COMMIT: &lt;Scenario&gt; | CT - RED - TEST"]
     STOP_END[STOP - ORCHESTRATOR — phase progression]
@@ -305,10 +303,10 @@ flowchart TD
     HAS_COMPILE_ERR -->|No| COMMIT
     COMMIT --> STOP_END
 
-    classDef stopNode fill:#fff3cd,stroke:#856404,stroke-width:2px
-    class STOP_WRITE,STOP_END stopNode
-    classDef commitNode fill:#d4edda,stroke:#155724,stroke-width:2px
-    class COMMIT commitNode
+    classDef effortNode fill:#004085,stroke:#002752,stroke-width:2px,color:#fff
+    class WRITE effortNode
+    classDef humanReviewNode fill:#ffeb3b,stroke:#fbc02d,stroke-width:2px,color:#000
+    class STOP_WRITE humanReviewNode
 ```
 
 ## CT - RED - DSL Phase Detail
@@ -316,11 +314,11 @@ flowchart TD
 ```mermaid
 flowchart TD
     ENABLE["ENABLE TESTS: &lt;Scenario&gt; | CT - RED - TEST"]
-    IMPL_DSL[Implement DSL for real - replace 'TODO: DSL' stub]
+    IMPL_DSL[Implement DSL for real - replace 'TODO: DSL' prototype]
     UPDATE_DRIVER_IFACE[Update Driver interfaces as needed]
     CHECK_EXT[Set flag: External System Driver Interface Changed = yes/no - no recursive triggering]
     STOP_WRITE[STOP - HUMAN REVIEW — present DSL, Driver changes, flag for approval]
-    IMPL_DRIVERS_STUB[Implement Drivers by throwing 'TODO: Driver']
+    IMPL_DRIVERS_PROTOTYPE[Implement Driver prototypes (throw 'TODO: Driver')]
     RUN_RUNTIME[Run tests against suite-contract-stub; verify runtime failure]
     DISABLE["DISABLE TESTS: &lt;Scenario&gt; | CT - RED - DSL"]
     COMMIT["COMMIT: &lt;Scenario&gt; | CT - RED - DSL"]
@@ -331,17 +329,17 @@ flowchart TD
     IMPL_DSL --> UPDATE_DRIVER_IFACE
     UPDATE_DRIVER_IFACE --> CHECK_EXT
     CHECK_EXT --> STOP_WRITE
-    STOP_WRITE --> IMPL_DRIVERS_STUB
-    IMPL_DRIVERS_STUB --> RUN_RUNTIME
+    STOP_WRITE --> IMPL_DRIVERS_PROTOTYPE
+    IMPL_DRIVERS_PROTOTYPE --> RUN_RUNTIME
     RUN_RUNTIME --> DISABLE
     DISABLE --> COMMIT
     COMMIT --> GH_COMMENT
     GH_COMMENT --> PROCEED
 
-    classDef stopNode fill:#fff3cd,stroke:#856404,stroke-width:2px
-    class STOP_WRITE stopNode
-    classDef commitNode fill:#d4edda,stroke:#155724,stroke-width:2px
-    class COMMIT commitNode
+    classDef effortNode fill:#004085,stroke:#002752,stroke-width:2px,color:#fff
+    class IMPL_DSL,UPDATE_DRIVER_IFACE effortNode
+    classDef humanReviewNode fill:#ffeb3b,stroke:#fbc02d,stroke-width:2px,color:#000
+    class STOP_WRITE humanReviewNode
 ```
 
 ## CT - RED - EXTERNAL DRIVER Phase Detail
@@ -349,7 +347,7 @@ flowchart TD
 ```mermaid
 flowchart TD
     ENABLE["ENABLE TESTS: &lt;Scenario&gt; | CT - RED - DSL"]
-    IMPL[Implement Drivers under external/ only - replace 'TODO: Driver' stub]
+    IMPL[Implement External Drivers only - replace 'TODO: Driver' prototype]
     RUN[Run tests; verify runtime failure]
     STOP_WRITE[STOP - HUMAN REVIEW — present Driver implementation for approval]
     DISABLE["DISABLE TESTS: &lt;Scenario&gt; | CT - RED - EXTERNAL DRIVER"]
@@ -365,10 +363,10 @@ flowchart TD
     COMMIT --> GH_COMMENT
     GH_COMMENT --> STOP_END
 
-    classDef stopNode fill:#fff3cd,stroke:#856404,stroke-width:2px
-    class STOP_WRITE,STOP_END stopNode
-    classDef commitNode fill:#d4edda,stroke:#155724,stroke-width:2px
-    class COMMIT commitNode
+    classDef effortNode fill:#004085,stroke:#002752,stroke-width:2px,color:#fff
+    class IMPL effortNode
+    classDef humanReviewNode fill:#ffeb3b,stroke:#fbc02d,stroke-width:2px,color:#000
+    class STOP_WRITE humanReviewNode
 ```
 
 ## CT - GREEN - STUBS Phase Detail
@@ -396,10 +394,10 @@ flowchart TD
     RUN_VERIFY --> COMMIT
     COMMIT --> STOP_END
 
-    classDef stopNode fill:#fff3cd,stroke:#856404,stroke-width:2px
-    class STOP_WRITE,STOP_END stopNode
-    classDef commitNode fill:#d4edda,stroke:#155724,stroke-width:2px
-    class COMMIT commitNode
+    classDef effortNode fill:#004085,stroke:#002752,stroke-width:2px,color:#fff
+    class IMPL_STUBS effortNode
+    classDef humanReviewNode fill:#ffeb3b,stroke:#fbc02d,stroke-width:2px,color:#000
+    class STOP_WRITE humanReviewNode
 ```
 
 ## Scenario Loop
