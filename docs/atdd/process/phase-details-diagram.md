@@ -136,7 +136,7 @@ flowchart TD
     FIX_FRONTEND[Fix frontend code only]
     STOP_WRITE[STOP - HUMAN REVIEW — present implementation for approval]
     COMMIT["COMMIT: &lt;Ticket&gt; | AT - GREEN - SYSTEM"]
-    GH_TICK[Tick acceptance criterion checkbox; if all ticked move issue to In Review]
+    GH_TICK[Tick acceptance criterion checkbox; if all ticked move issue to DONE]
     STOP_END[STOP - ORCHESTRATOR — phase progression]
 
     ENABLE --> BACKEND

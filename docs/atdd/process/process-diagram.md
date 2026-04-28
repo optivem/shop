@@ -19,10 +19,15 @@ flowchart TD
     INTAKE[Intake — see § Intake]
     LEGACY_GATE{Ticket has Legacy Coverage section?}
     AT_GATE{Change-driven AC?}
+    TYPE_GATE{Ticket type?}
     AT_CYCLE[AT Cycle — see § AT Cycle]
     LEGACY_CYCLE[Legacy Coverage Cycle — see § Legacy Coverage Cycle]
     CT_SUBPROCESS[Contract Test Sub-Process — see § Contract Test Sub-Process]
-    DONE([Ticket complete])
+    SYSTEM_API_TASK_CYCLE[System API Task Cycle — see § System API Task Cycle]
+    SYSTEM_UI_TASK_CYCLE[System UI Task Cycle — see § System UI Task Cycle]
+    EXTERNAL_API_TASK_CYCLE[External API Task Cycle — see § External API Task Cycle]
+    CHORE_CYCLE[Chore Cycle — see § Chore Cycle]
+    DONE([Ticket DONE])
 
     START --> INTAKE
     INTAKE --> LEGACY_GATE
@@ -30,7 +35,15 @@ flowchart TD
     LEGACY_GATE -->|no| AT_GATE
     LEGACY_CYCLE --> AT_GATE
     AT_GATE -->|yes| AT_CYCLE
-    AT_GATE -->|no — task/chore with no behavioral change| DONE
+    AT_GATE -->|no| TYPE_GATE
+    TYPE_GATE -->|chore| CHORE_CYCLE
+    TYPE_GATE -->|system-api-task| SYSTEM_API_TASK_CYCLE
+    TYPE_GATE -->|system-ui-task| SYSTEM_UI_TASK_CYCLE
+    TYPE_GATE -->|external-api-task| EXTERNAL_API_TASK_CYCLE
+    CHORE_CYCLE --> DONE
+    SYSTEM_API_TASK_CYCLE --> DONE
+    SYSTEM_UI_TASK_CYCLE --> DONE
+    EXTERNAL_API_TASK_CYCLE --> DONE
     AT_CYCLE -->|External System Driver Interface Changed = yes| CT_SUBPROCESS
     CT_SUBPROCESS -->|return to AT cycle| AT_CYCLE
     AT_CYCLE -->|AT - GREEN - SYSTEM complete| DONE
@@ -44,7 +57,9 @@ flowchart TD
     CLASSIFY{Ticket type classified by atdd-manager}
     STORY[atdd-story — change-driven AC scenarios, one per acceptance criterion; optional legacy-coverage AC if the ticket has a Legacy Coverage section]
     BUG[atdd-bug — change-driven AC scenarios, one per distinct reproduction path; optional legacy-coverage AC if the ticket has a Legacy Coverage section]
-    TASK[atdd-task — interface change at the system boundary, structural change; optional legacy-coverage AC if the ticket has a Legacy Coverage section]
+    TASK_SYS_API[atdd-task-system-api — System API redesign, structural change; optional legacy-coverage AC if the ticket has a Legacy Coverage section]
+    TASK_SYS_UI[atdd-task-system-ui — System UI redesign, structural change; optional legacy-coverage AC if the ticket has a Legacy Coverage section]
+    TASK_EXT_API[atdd-task-external-api — External System API change, structural change; optional legacy-coverage AC if the ticket has a Legacy Coverage section]
     CHORE[atdd-chore — internal-only change, structural change; optional legacy-coverage AC if the ticket has a Legacy Coverage section]
     STOP_INTAKE[STOP - HUMAN REVIEW — ticket classification approval]
     TO_GATES[Proceed to cycle-routing gates — see § Overview]
@@ -52,11 +67,15 @@ flowchart TD
     TICKET --> CLASSIFY
     CLASSIFY -->|story| STORY
     CLASSIFY -->|bug| BUG
-    CLASSIFY -->|task| TASK
+    CLASSIFY -->|system-api-task| TASK_SYS_API
+    CLASSIFY -->|system-ui-task| TASK_SYS_UI
+    CLASSIFY -->|external-api-task| TASK_EXT_API
     CLASSIFY -->|chore| CHORE
     STORY --> STOP_INTAKE
     BUG --> STOP_INTAKE
-    TASK --> STOP_INTAKE
+    TASK_SYS_API --> STOP_INTAKE
+    TASK_SYS_UI --> STOP_INTAKE
+    TASK_EXT_API --> STOP_INTAKE
     CHORE --> STOP_INTAKE
     STOP_INTAKE --> TO_GATES
 
@@ -79,7 +98,8 @@ flowchart TD
     SYS_CHANGED{System Driver Interface Changed?}
     AT_RED_SYSTEM_DRIVER[AT - RED - SYSTEM DRIVER]
     AT_GREEN_SYSTEM[AT - GREEN - SYSTEM]
-    DONE([Ticket complete])
+    MARK_DONE[Mark Ticket DONE]
+    DONE([Ticket DONE])
 
     TRIGGER --> AT_RED_TEST
     AT_RED_TEST --> DSL_CHANGED
@@ -92,7 +112,130 @@ flowchart TD
     SYS_CHANGED -->|No| AT_GREEN_SYSTEM
     SYS_CHANGED -->|Yes| AT_RED_SYSTEM_DRIVER
     AT_RED_SYSTEM_DRIVER --> AT_GREEN_SYSTEM
-    AT_GREEN_SYSTEM --> DONE
+    AT_GREEN_SYSTEM --> MARK_DONE
+    MARK_DONE --> DONE
+```
+
+## System API Task Cycle
+
+```mermaid
+flowchart TD
+    TRIGGER([Triggered: ticket type = system-api-task])
+    UPDATE_DRIVER[Update System API Driver - interface + impl]
+    STOP_REVIEW[STOP - HUMAN REVIEW — present driver changes for approval]
+    COMMIT["COMMIT: &lt;Ticket&gt; | SYSTEM API REDESIGN"]
+    WAIT_PIPELINE[Wait for Pipeline - Acceptance Stage]
+    PIPELINE_PASS{Acceptance Stage passes?}
+    FIX[Fix breakage]
+    TICK_CHECKLIST[Tick checklist items; if all ticked move issue to DONE]
+    MARK_DONE[Mark Ticket DONE]
+    DONE([Ticket DONE])
+
+    TRIGGER --> UPDATE_DRIVER
+    UPDATE_DRIVER --> STOP_REVIEW
+    STOP_REVIEW --> COMMIT
+    COMMIT --> WAIT_PIPELINE
+    WAIT_PIPELINE --> PIPELINE_PASS
+    PIPELINE_PASS -->|Yes| TICK_CHECKLIST
+    TICK_CHECKLIST --> MARK_DONE
+    PIPELINE_PASS -->|No| FIX
+    MARK_DONE --> DONE
+    FIX --> WAIT_PIPELINE
+
+    classDef effortNode fill:#004085,stroke:#002752,stroke-width:2px,color:#fff
+    class UPDATE_DRIVER,FIX effortNode
+    classDef humanReviewNode fill:#ffeb3b,stroke:#fbc02d,stroke-width:2px,color:#000
+    class STOP_REVIEW humanReviewNode
+```
+
+## System UI Task Cycle
+
+```mermaid
+flowchart TD
+    TRIGGER([Triggered: ticket type = system-ui-task])
+    UPDATE_DRIVER[Update System UI Driver - interface + impl]
+    STOP_REVIEW[STOP - HUMAN REVIEW — present driver changes for approval]
+    COMMIT["COMMIT: &lt;Ticket&gt; | SYSTEM UI REDESIGN"]
+    WAIT_PIPELINE[Wait for Pipeline - Acceptance Stage]
+    PIPELINE_PASS{Acceptance Stage passes?}
+    FIX[Fix breakage]
+    TICK_CHECKLIST[Tick checklist items; if all ticked move issue to DONE]
+    MARK_DONE[Mark Ticket DONE]
+    DONE([Ticket DONE])
+
+    TRIGGER --> UPDATE_DRIVER
+    UPDATE_DRIVER --> STOP_REVIEW
+    STOP_REVIEW --> COMMIT
+    COMMIT --> WAIT_PIPELINE
+    WAIT_PIPELINE --> PIPELINE_PASS
+    PIPELINE_PASS -->|Yes| TICK_CHECKLIST
+    TICK_CHECKLIST --> MARK_DONE
+    PIPELINE_PASS -->|No| FIX
+    MARK_DONE --> DONE
+    FIX --> WAIT_PIPELINE
+
+    classDef effortNode fill:#004085,stroke:#002752,stroke-width:2px,color:#fff
+    class UPDATE_DRIVER,FIX effortNode
+    classDef humanReviewNode fill:#ffeb3b,stroke:#fbc02d,stroke-width:2px,color:#000
+    class STOP_REVIEW humanReviewNode
+```
+
+## External API Task Cycle
+
+```mermaid
+flowchart TD
+    TRIGGER([Triggered: ticket type = external-api-task])
+    CT_SUBPROCESS[Contract Test Sub-Process - see § Contract Test Sub-Process]
+    WAIT_PIPELINE[Wait for Pipeline - Acceptance Stage]
+    PIPELINE_PASS{Acceptance Stage passes?}
+    FIX[Fix breakage]
+    TICK_CHECKLIST[Tick checklist items; if all ticked move issue to DONE]
+    MARK_DONE[Mark Ticket DONE]
+    DONE([Ticket DONE])
+
+    TRIGGER --> CT_SUBPROCESS
+    CT_SUBPROCESS --> WAIT_PIPELINE
+    WAIT_PIPELINE --> PIPELINE_PASS
+    PIPELINE_PASS -->|Yes| TICK_CHECKLIST
+    TICK_CHECKLIST --> MARK_DONE
+    PIPELINE_PASS -->|No| FIX
+    MARK_DONE --> DONE
+    FIX --> WAIT_PIPELINE
+
+    classDef effortNode fill:#004085,stroke:#002752,stroke-width:2px,color:#fff
+    class FIX effortNode
+```
+
+## Chore Cycle
+
+```mermaid
+flowchart TD
+    TRIGGER([Triggered: ticket type = chore])
+    IMPLEMENT[Implement chore - refactor / upgrade / rename / etc.]
+    STOP_REVIEW[STOP - HUMAN REVIEW — present implementation for approval]
+    COMMIT["COMMIT: &lt;Ticket&gt; | CHORE"]
+    WAIT_PIPELINE[Wait for Pipeline - Acceptance Stage]
+    PIPELINE_PASS{Acceptance Stage passes?}
+    FIX[Fix breakage]
+    TICK_CHECKLIST[Tick checklist items; if all ticked move issue to DONE]
+    MARK_DONE[Mark Ticket DONE]
+    DONE([Ticket DONE])
+
+    TRIGGER --> IMPLEMENT
+    IMPLEMENT --> STOP_REVIEW
+    STOP_REVIEW --> COMMIT
+    COMMIT --> WAIT_PIPELINE
+    WAIT_PIPELINE --> PIPELINE_PASS
+    PIPELINE_PASS -->|Yes| TICK_CHECKLIST
+    TICK_CHECKLIST --> MARK_DONE
+    PIPELINE_PASS -->|No| FIX
+    MARK_DONE --> DONE
+    FIX --> WAIT_PIPELINE
+
+    classDef effortNode fill:#004085,stroke:#002752,stroke-width:2px,color:#fff
+    class IMPLEMENT,FIX effortNode
+    classDef humanReviewNode fill:#ffeb3b,stroke:#fbc02d,stroke-width:2px,color:#000
+    class STOP_REVIEW humanReviewNode
 ```
 
 ## Contract Test Sub-Process
