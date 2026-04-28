@@ -136,7 +136,8 @@ flowchart TD
     CHECK_EXT[Set flag: External System Driver Interface Changed = yes/no]
     CHECK_SYS[Set flag: System Driver Interface Changed = yes/no]
     STOP_WRITE[STOP - HUMAN REVIEW — present DSL, Driver changes, both flags for approval]
-    IMPL_DRIVERS_STUB[Implement Drivers by throwing 'TODO: Driver']
+    DRIVER_CHANGED{Any Driver Interface Changed?}
+    IMPL_DRIVERS_STUB["Implement Drivers by throwing 'TODO: Driver'"]
     RUN_RUNTIME[Run tests; verify runtime failure]
     DISABLE["DISABLE TESTS: &lt;Scenario&gt; | AT - RED - DSL"]
     NO_TEST_FILES[Ensure no test files in changed files list]
@@ -147,9 +148,12 @@ flowchart TD
     ENABLE --> IMPL_DSL
     IMPL_DSL --> UPDATE_DRIVER_IFACE
     UPDATE_DRIVER_IFACE --> CHECK_EXT
-    CHECK_EXT --> CHECK_SYS
+    UPDATE_DRIVER_IFACE --> CHECK_SYS
+    CHECK_EXT --> STOP_WRITE
     CHECK_SYS --> STOP_WRITE
-    STOP_WRITE --> IMPL_DRIVERS_STUB
+    STOP_WRITE --> DRIVER_CHANGED
+    DRIVER_CHANGED -->|No| DISABLE
+    DRIVER_CHANGED -->|Yes| IMPL_DRIVERS_STUB
     IMPL_DRIVERS_STUB --> RUN_RUNTIME
     RUN_RUNTIME --> DISABLE
     DISABLE --> NO_TEST_FILES
