@@ -51,7 +51,9 @@ The four possible per-ticket flows:
 
 From AT - RED - TEST onward the AT Cycle pipeline is identical regardless of which behavioral intake variant produced the scenarios. The Legacy Coverage Cycle's internal phases are TBD; see `glossary.md`.
 
-## AT Cycle (per scenario)
+## AT Cycle (per ticket)
+
+The unit of work in the AT Cycle is the **ticket** — all change-driven AC scenarios for the ticket are batched through each phase together. AT - RED - TEST writes all scenarios at once; AT - RED - DSL, AT - RED - SYSTEM DRIVER, and AT - GREEN - SYSTEM each operate over the full set. There is no per-scenario inner loop.
 
 ```
 AT - RED - TEST
@@ -79,9 +81,9 @@ AT - GREEN - SYSTEM
 
 ### Decision criteria
 
-- **DSL Interface Changed?** — Did AT - RED - TEST - COMMIT add any "TODO: DSL" stubs to DSL interfaces? If no new DSL methods were needed, the answer is No.
-- **External System Driver Interface Changed?** — Did AT - RED - DSL add or modify interfaces under `external/` (e.g. `driver-port/.../external/clock`, `driver-port/.../external/erp`)? See `glossary.md` for the definition of *interface change*.
-- **System Driver Interface Changed?** — Did AT - RED - DSL add or modify interfaces under `shop/` (e.g. `driver-port/.../shop/api`, `driver-port/.../shop/ui`)? If no new driver methods were needed in shop/, the answer is No.
+- **DSL Interface Changed?** — Did AT - RED - TEST need to extend the DSL with new methods (and therefore add `"TODO: DSL"` prototypes)? Determined by compile failure during AT - RED - TEST - COMMIT. If no new DSL methods were needed, the answer is No.
+- **External System Driver Interface Changed?** — Did AT - RED - DSL add or modify any external-system Driver interface? See `glossary.md` for the definition of *interface change*. Set as an explicit flag at the end of AT - RED - DSL - WRITE.
+- **System Driver Interface Changed?** — Did AT - RED - DSL add or modify any system Driver interface? Set as an explicit flag at the end of AT - RED - DSL - WRITE.
 
 ---
 
@@ -112,16 +114,6 @@ After the contract test sub-process completes, return to the AT cycle and contin
 
 ---
 
-## Scenario Loop
-
-The AT cycle repeats for each scenario in the ticket:
-
-1. Run the AT cycle for the first scenario (or the first scenario that needs new DSL).
-2. After AT - GREEN - SYSTEM, if there are remaining `// TODO:` scenarios in the test file, loop back to AT - RED - TEST for the next scenario.
-3. Continue until all scenarios are GREEN.
-
----
-
 ## Phase-to-Agent Mapping
 
 | Phase | Agent | Notes |
@@ -130,21 +122,18 @@ The AT cycle repeats for each scenario in the ticket:
 | Intake (bug) | atdd-bug | Behavioral. Change-driven AC: one scenario per distinct reproduction path (default: one). Optional legacy-coverage AC if the ticket has a Legacy Coverage section. STOP for approval. Routes to AT Cycle (always); Legacy Coverage Cycle first if the ticket has a Legacy Coverage section. |
 | Intake (task) | atdd-task | Structural. Interface change at the system boundary; no change-driven AC. Optional legacy-coverage AC if the ticket has a Legacy Coverage section. STOP for approval. Routes to Legacy Coverage Cycle if the ticket has a Legacy Coverage section; otherwise no cycle (existing AC must stay green). |
 | Intake (chore) | atdd-chore | Structural. Internal-only change; no change-driven AC. Optional legacy-coverage AC if the ticket has a Legacy Coverage section. STOP for approval. Routes to Legacy Coverage Cycle if the ticket has a Legacy Coverage section; otherwise no cycle (existing AC must stay green). |
-| AT - RED - TEST | test-agent | WRITE = STOP, COMMIT = commit + push |
-| AT - RED - DSL | dsl-agent | WRITE = STOP, COMMIT = commit + push |
-| AT - RED - SYSTEM DRIVER | driver-agent | WRITE = STOP, COMMIT = commit + push. Only `shop/` drivers. |
-| AT - GREEN - SYSTEM | backend-agent + frontend-agent + release-agent | Backend first, then frontend, then release commit |
+| AT - RED - TEST | test-agent | All scenarios for the ticket batched. WRITE = STOP (review tests). COMMIT = compile, conditional DSL-prototype STOP, run, disable, commit. |
+| AT - RED - DSL | dsl-agent | WRITE = STOP (review DSL + Driver-interface-changed flags). COMMIT = conditional Driver-prototype impl, commit. |
+| AT - RED - SYSTEM DRIVER | driver-agent | System Drivers only. WRITE = STOP, COMMIT = commit. |
+| AT - GREEN - SYSTEM | system-agent | Single agent, full-stack (backend + frontend). One COMMIT covering all implementation. |
 | CT - RED - TEST | test-agent | WRITE = STOP, COMMIT = commit + push |
 | CT - RED - DSL | dsl-agent | WRITE = STOP, COMMIT = commit + push |
-| CT - RED - EXTERNAL DRIVER | driver-agent | WRITE = STOP, COMMIT = commit + push. Only `external/` drivers. |
-| CT - GREEN - STUB | backend-agent + release-agent | Implement stubs, then release commit |
+| CT - RED - EXTERNAL DRIVER | driver-agent | External Drivers only. WRITE = STOP, COMMIT = commit + push. |
+| CT - GREEN - STUB | stub-agent | Implement External System Stubs; commit. |
 
 ## STOP Behaviour
 
-Every WRITE phase ends with **STOP** — present results to the user and wait for approval before proceeding to COMMIT.
-
-- **Normal mode:** Wait for explicit human approval.
-- **Autonomous mode (`--autonomous`):** Auto-approve and proceed immediately.
+Every WRITE phase ends with **STOP** — present results to the user and wait for explicit approval before proceeding to COMMIT. The orchestrator does not auto-approve; phase progression always requires a human decision at every STOP.
 
 ## Resume Detection
 
@@ -152,13 +141,13 @@ Scan for `@Disabled` annotations to determine where to resume:
 
 | Marker | Resume at |
 |--------|-----------|
-| `AT - RED - TEST` | Check for TODO: DSL stubs → if found, AT - RED - DSL; if not, AT - GREEN - SYSTEM |
-| `AT - RED - DSL` | Check for TODO: Driver stubs → if found in `shop/`, AT - RED - SYSTEM DRIVER; if not, AT - GREEN - SYSTEM |
+| `AT - RED - TEST` | Check for `"TODO: DSL"` prototypes → if found, AT - RED - DSL; if not, AT - GREEN - SYSTEM |
+| `AT - RED - DSL` | Check for `"TODO: Driver"` prototypes → if found in system drivers, AT - RED - SYSTEM DRIVER; if found in external drivers, Contract Test sub-process; otherwise AT - GREEN - SYSTEM |
 | `AT - RED - SYSTEM DRIVER` | AT - GREEN - SYSTEM |
-| `CT - RED - TEST` | Check for TODO: DSL stubs → if found, CT - RED - DSL; if not, CT - GREEN - STUB |
-| `CT - RED - DSL` | Check for TODO: Driver stubs in `external/` → if found, CT - RED - EXTERNAL DRIVER; if not, CT - GREEN - STUB |
+| `CT - RED - TEST` | Check for `"TODO: DSL"` prototypes → if found, CT - RED - DSL; if not, CT - GREEN - STUB |
+| `CT - RED - DSL` | Check for `"TODO: Driver"` prototypes in external drivers → if found, CT - RED - EXTERNAL DRIVER; if not, CT - GREEN - STUB |
 | `CT - RED - EXTERNAL DRIVER` | CT - GREEN - STUB |
 
 ## Escalation
 
-If any agent reports it cannot proceed (stuck, unexpected pattern, test failure it cannot explain), STOP and present the blocker to the user — **even in autonomous mode**.
+If any agent reports it cannot proceed (stuck, unexpected pattern, test failure it cannot explain), STOP and present the blocker to the user.

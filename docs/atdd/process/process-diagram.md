@@ -20,8 +20,7 @@ flowchart TD
     AT_CYCLE[AT Cycle — see § AT Cycle]
     LEGACY_CYCLE[Legacy Coverage Cycle — see § Legacy Coverage Cycle]
     CT_SUBPROCESS[Contract Test Sub-Process — see § Contract Test Sub-Process]
-    SCENARIO_LOOP[Scenario Loop — see § Scenario Loop]
-    DONE([All scenarios GREEN])
+    DONE([Ticket complete])
 
     START --> INTAKE
     INTAKE --> LEGACY_GATE
@@ -32,9 +31,7 @@ flowchart TD
     AT_GATE -->|no — task/chore with no behavioral change| DONE
     AT_CYCLE -->|External System Driver Interface Changed = yes| CT_SUBPROCESS
     CT_SUBPROCESS -->|return to AT cycle| AT_CYCLE
-    AT_CYCLE -->|AT - GREEN - SYSTEM complete| SCENARIO_LOOP
-    SCENARIO_LOOP -->|remaining // TODO: scenarios| AT_CYCLE
-    SCENARIO_LOOP -->|all scenarios GREEN| DONE
+    AT_CYCLE -->|AT - GREEN - SYSTEM complete| DONE
 ```
 
 ## Intake
@@ -77,7 +74,7 @@ flowchart TD
     SYS_CHANGED{System Driver Interface Changed?}
     AT_RED_SYSTEM_DRIVER[AT - RED - SYSTEM DRIVER]
     AT_GREEN_SYSTEM[AT - GREEN - SYSTEM]
-    LOOP[To Scenario Loop — see § Scenario Loop]
+    DONE([Ticket complete])
 
     AT_RED_TEST --> DSL_CHANGED
     DSL_CHANGED -->|No| AT_GREEN_SYSTEM
@@ -89,7 +86,7 @@ flowchart TD
     SYS_CHANGED -->|No| AT_GREEN_SYSTEM
     SYS_CHANGED -->|Yes| AT_RED_SYSTEM_DRIVER
     AT_RED_SYSTEM_DRIVER --> AT_GREEN_SYSTEM
-    AT_GREEN_SYSTEM --> LOOP
+    AT_GREEN_SYSTEM --> DONE
 ```
 
 ## AT - RED - TEST Phase Detail
@@ -179,9 +176,9 @@ flowchart TD
     IMPL[Implement System Drivers - replace 'TODO: Driver' prototype]
     RUN[Run tests; verify runtime failure]
     STOP_WRITE[STOP - HUMAN REVIEW — present Driver implementation for approval]
-    DISABLE["DISABLE TESTS: &lt;Scenario&gt; | AT - RED - SYSTEM DRIVER"]
+    DISABLE["DISABLE TESTS: &lt;Ticket&gt; | AT - RED - SYSTEM DRIVER"]
     NO_TEST_FILES["Ensure no test files (accidentally) in changed files list"]
-    COMMIT["COMMIT: &lt;Scenario&gt; | AT - RED - SYSTEM DRIVER"]
+    COMMIT["COMMIT: &lt;Ticket&gt; | AT - RED - SYSTEM DRIVER"]
     STOP_END[STOP - ORCHESTRATOR — phase progression]
 
     ENABLE --> IMPL
@@ -318,7 +315,7 @@ flowchart TD
     UPDATE_DRIVER_IFACE[Update Driver interfaces as needed]
     CHECK_EXT[Set flag: External System Driver Interface Changed = yes/no - no recursive triggering]
     STOP_WRITE[STOP - HUMAN REVIEW — present DSL, Driver changes, flag for approval]
-    IMPL_DRIVERS_PROTOTYPE[Implement Driver prototypes (throw 'TODO: Driver')]
+    IMPL_DRIVERS_PROTOTYPE["Implement Driver prototypes (throw 'TODO: Driver')"]
     RUN_RUNTIME[Run tests against suite-contract-stub; verify runtime failure]
     DISABLE["DISABLE TESTS: &lt;Scenario&gt; | CT - RED - DSL"]
     COMMIT["COMMIT: &lt;Scenario&gt; | CT - RED - DSL"]
@@ -400,21 +397,6 @@ flowchart TD
     class STOP_WRITE humanReviewNode
 ```
 
-## Scenario Loop
-
-```mermaid
-flowchart TD
-    FIRST[Run AT cycle for first scenario - or first scenario that needs new DSL]
-    AFTER_GREEN{After AT - GREEN - SYSTEM: remaining // TODO: scenarios?}
-    NEXT[Loop back to AT - RED - TEST for next scenario - see § AT Cycle]
-    DONE([All scenarios GREEN])
-
-    FIRST --> AFTER_GREEN
-    AFTER_GREEN -->|Yes| NEXT
-    NEXT --> AFTER_GREEN
-    AFTER_GREEN -->|No| DONE
-```
-
 ## Legacy Coverage Cycle
 
 ```mermaid
@@ -431,4 +413,3 @@ flowchart TD
 
 - `orchestrator.md` shows the AT cycle's external-driver branch as `External System Driver Interface Changed? — Yes → Contract Test Sub-Process → (then continue ↓)` returning into the System Driver Interface check. The AT Cycle diagram routes the CT return edge into the `System Driver Interface Changed?` decision to match this prose; the No branch from `External System Driver Interface Changed?` flows into the same decision.
 - `contract-tests.md` step 2 in CT - RED - TEST says "If they don't pass, ask the user for support. STOP." for the Real run, but for the Stub run only states "Verify that they fail" without an explicit branch for the unexpected case (Stub tests passing). The CT - RED - TEST detail diagram routes that anomaly to `ASK_USER` for completeness; this is an inferred edge.
-- The Scenario Loop's "first scenario that needs new DSL" wording is taken verbatim from `orchestrator.md`. `acceptance-tests.md` orders scenarios as Legacy Coverage → existing-DSL → new-DSL, which is structurally consistent but uses different wording.

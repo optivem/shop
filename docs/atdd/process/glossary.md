@@ -2,7 +2,7 @@
 
 ## Behavioral Change
 
-A **behavioral change** is a change defined by **change-driven acceptance criteria** — the new (or restored) behavior IS specified by the AC scenarios produced from the ticket. Stories (`atdd-story`, new behavior) and bugs (`atdd-bug`, restored behavior) are behavioral; their change-driven AC route to the **AT Cycle** (test-first / ATDD), where the produced list drives per-scenario iteration (one scenario per AT Cycle pass; see the Scenario Loop).
+A **behavioral change** is a change defined by **change-driven acceptance criteria** — the new (or restored) behavior IS specified by the AC scenarios produced from the ticket. Stories (`atdd-story`, new behavior) and bugs (`atdd-bug`, restored behavior) are behavioral; their change-driven AC route to the **AT Cycle** (test-first / ATDD). The unit of work in the AT Cycle is the **ticket** — all change-driven scenarios for the ticket are batched through each phase together, with no per-scenario inner loop.
 
 Note: a behavioral-change ticket may *also* include a Legacy Coverage section; that's orthogonal — see [Legacy Coverage](#legacy-coverage) below.
 
