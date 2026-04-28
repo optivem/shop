@@ -5,6 +5,7 @@ tools: Read, Glob, Grep, Edit, Write, Bash
 model: opus
 ---
 
+@docs/atdd/process/commit-confirmation.md
 @docs/atdd/process/acceptance-tests.md
 @docs/atdd/process/contract-tests.md
 @docs/atdd/architecture/test.md

@@ -314,6 +314,10 @@ Like the three Task Cycles, the Chore Cycle is governed by the rule that **exist
 
 Every WRITE phase ends with **STOP** — present results to the user and wait for explicit approval before proceeding to COMMIT. The orchestrator does not auto-approve; phase progression always requires a human decision at every STOP.
 
+## Commit Confirmation
+
+Every COMMIT step in every cycle is gated by the rule defined in [`commit-confirmation.md`](commit-confirmation.md): the agent must ask "Can I commit?" and receive an explicit yes before running `git commit` (or `gh issue close`, or any other GitHub state mutation). The rule lives in its own file because it is a shared, low-level gate that leaf committing agents import directly — independent of the routing flow defined here.
+
 ## Resume Detection
 
 Scan for `@Disabled` annotations to determine where to resume:

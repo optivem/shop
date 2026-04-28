@@ -7,6 +7,7 @@ mcpServers:
   - github
 ---
 
+@docs/atdd/process/commit-confirmation.md
 @docs/atdd/process/acceptance-tests.md
 
 You are the Release Agent. Follow the **AT - GREEN - SYSTEM - COMMIT** phase from `acceptance-tests.md`.

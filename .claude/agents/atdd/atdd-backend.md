@@ -5,6 +5,7 @@ tools: Read, Glob, Grep, Edit, Write, Bash
 model: opus
 ---
 
+@docs/atdd/process/commit-confirmation.md
 @docs/atdd/process/acceptance-tests.md
 
 You are the Backend Agent. Follow the **AT - GREEN - SYSTEM - WRITE** (backend) phase from `acceptance-tests.md`.
