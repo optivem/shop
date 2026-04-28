@@ -258,10 +258,19 @@ jobs:
           grep -E '^(MYSHOP|ERP|CLOCK|TAX)_' "$GITHUB_ENV" || true
           echo "::endgroup::"
 
-      - name: Run ${{ matrix.test-lang }} system tests vs ${{ matrix.system-lang }} SUT
+      - name: Run ${{ matrix.test-lang }} latest system tests vs ${{ matrix.system-lang }} SUT
         # --no-build / --no-start: SUT lifecycle is owned by deploy-docker-compose
         # above. The runner just executes setupCommands + suites from tests-latest.json.
         run: gh optivem test system --no-build --no-start --system docker/${{ matrix.system-lang }}/${{ matrix.arch }}/system.json --tests system-test/${{ matrix.test-lang }}/tests-latest.json
+
+      - name: Run ${{ matrix.test-lang }} legacy system tests vs ${{ matrix.system-lang }} SUT
+        # Legacy suites are pinned to historical module versions. We run them against
+        # the same SUT that just hosted latest — reuses the deployment, doubles the
+        # signal per matrix entry. `if: always()` so a latest-suite failure does NOT
+        # short-circuit legacy: both signals are reported independently in the job log,
+        # and the matrix entry surfaces red if either is red.
+        if: always()
+        run: gh optivem test system --no-build --no-start --system docker/${{ matrix.system-lang }}/${{ matrix.arch }}/system.json --tests system-test/${{ matrix.test-lang }}/tests-legacy.json
 
   summary:
     # Aggregate headline for the run page. Per-row pass/fail is already visible

@@ -1,7 +1,7 @@
 # Plan — Cross-Language System Verification Workflow
 
 **Date:** 2026-04-27
-**Status:** Phase 1 partially complete (workflow file written, not yet run/verified)
+**Status:** Phase 1 ✅ + Phase 2 ✅ + Phase 3 (legacy folded inline) ✅ — all verified in CI; plan kept as historical record
 **Owner:** unassigned
 
 ## Goal
@@ -63,30 +63,27 @@ The cross-lang workflow should refactor to **pull pre-built `sha-<sha>` images**
 
 **Meta-prerelease integration (done with Phase 2):** cross-lang is now invoked from `meta-prerelease-stage.yml` as a sibling job to `run`, gated by the same `check` step. Both run in parallel — cross-lang is a regression check and does NOT gate the meta-rc tag (release gating stays with the per-flavor acceptance stages inside `run`). Triggered with `commit-sha: ${{ github.sha }}` so it pulls `sha-<sha>` images for the same commit meta-prerelease is processing.
 
-## Phase 3 — legacy cross-lang verification (open question, separate workflow)
+## Phase 3 — legacy cross-lang verification (folded inline)
 
-**Status:** open question — do we want this at all?
+**Decision (2026-04-28):** legacy cross-lang runs in the **same matrix entry as latest**, sequentially, against the **same SUT**. Each matrix entry now runs `tests-latest.json` then `tests-legacy.json` against one deployed SUT. The original design (separate workflow file + separate cron) was rejected in favor of operational simplicity:
 
-If Phases 1–2 prove the cross-lang signal is valuable, consider extending coverage to `tests-legacy.json`. Two design rules:
+- ✅ Reuses the SUT — no second deploy cost (~3 min saved per matrix entry).
+- ✅ Single workflow run shows both signals; one cron, one summary, one place to look.
+- ✅ Same orchestration via meta-prerelease — legacy gates `tag-meta-rc` automatically.
+- ❌ Doubles wall time per matrix entry (~11 min → ~22 min). Acceptable: still well below the per-flavor pipeline's wall time, so no impact on `tag-meta-rc` latency.
+- ❌ A flaky legacy suite shows up as a red matrix entry, even if latest passed. Mitigation: `if: always()` on the legacy step so both signals always report independently in the job log.
 
-1. **Separate workflow file** — `cross-lang-system-verification-legacy.yml`, not a `tests-config` matrix dimension on the existing workflow. Keeps the latest signal independent (a flaky legacy run must not bury a clean latest result).
-2. **Separate cron** — distinct schedule from latest (e.g. weekly, or shifted off the daily latest run) to avoid runner contention and keep wall time bounded.
+**Implementation:** added `Run ${{ matrix.test-lang }} legacy system tests vs ${{ matrix.system-lang }} SUT` step after the latest step in [cross-lang-system-verification.yml](../.github/workflows/cross-lang-system-verification.yml). Same `gh optivem test system --no-build --no-start` invocation, just `--tests system-test/${{ matrix.test-lang }}/tests-legacy.json`.
 
-**Open questions to answer before starting Phase 3:**
-
-- [ ] **Is legacy cross-lang parity a meaningful signal?** Legacy tests pin to specific historical module versions. A failure could mean (a) genuine cross-lang behavior drift OR (b) version-pin artifacts that have nothing to do with cross-lang. If it's mostly (b), the workflow is noise.
-- [ ] **What's the right cadence?** Weekly is the strawman — legacy moves slowly, daily is overkill. Confirm after a few sample runs.
-- [ ] **Does build-from-source even apply to legacy?** Phase 1's "build SUT from current SHA" semantics make less sense when the *test* config pins to historical module versions. May need to pull pre-built images for the pinned SHAs from GHCR (only viable post-Phase 2).
-
-**Items remaining for Phase 3:**
-
-- [ ] **Decide go/no-go after Phase 1 dry run** — if latest cross-lang fails for boring reasons (port mismatches, infra flake), there's no point extending to legacy until the basic mechanism is proven.
-- [ ] **If go: copy `cross-lang-system-verification.yml` to `*-legacy.yml`**, swap `tests-latest.json` → `tests-legacy.json`, give it a separate cron, and revisit the build-vs-pull decision.
+**Open questions answered:**
+- *Is legacy cross-lang parity a meaningful signal?* — In practice, yes for the same reasons as latest. Whether failures dominate as (a) genuine drift or (b) version-pin artifacts will become clear from a few real CI runs.
+- *Cadence?* — Same as latest (daily cron + meta-prerelease invocation). Folded inline, so no separate scheduling.
+- *Build-from-source vs pull-from-GHCR?* — Pull-from-GHCR (Phase 2 mechanism). Legacy tests target the same SUT images as latest; the test framework's `tests-legacy.json` pins to historical *module* versions internally, not infrastructure SHAs.
 
 ## Cron cadence
 
 Phase 1 schedule: **daily at 06:00 UTC**. Rationale:
-- Per-lang acceptance is hourly. Cross-lang is more expensive (15 combos vs 1) and lower-stakes (regression detection, not release gating).
+- Per-lang acceptance is hourly. Cross-lang is more expensive (12 combos vs 1) and lower-stakes (regression detection, not release gating).
 - Daily is enough to catch drift within ~24h of introduction.
 - Off-peak avoids contention with the hourly per-lang fleet.
 
@@ -94,4 +91,9 @@ If Phase 2 reduces wall time significantly (no rebuild), revisit cadence — cou
 
 ## Verification
 
-End state: **one full workflow run completes with all 15 combos either green or with a clearly-categorized failure** (genuine drift / port mismatch / infra flake). Until that happens, neither phase is "done" — a never-run workflow is dead code.
+End state: **one full workflow run completes with all 12 combos either green or with a clearly-categorized failure** (genuine drift / port mismatch / infra flake).
+
+**Achieved:**
+- Phase 1 verified in run [25037183700](https://github.com/optivem/shop/actions/runs/25037183700) — 12/12 green, ~11.5 min wall time (build-from-source).
+- Phase 2 verified in run [25040305391](https://github.com/optivem/shop/actions/runs/25040305391) — 12/12 green, ~11 min wall time (pre-built images; the predicted 5–15 min/entry savings did not materialize because gradle/dotnet/playwright runtime dominates over docker build time).
+- Phase 3 (legacy folded inline) — pending first CI run after this commit.
