@@ -62,27 +62,61 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Get Latest Commit Timestamp
-        id: commit
+      - name: Resolve Last Meta Release Tag
+        id: last-release
         shell: bash
         run: |
           set -euo pipefail
-          ts=$(git log -1 --format=%cI HEAD)
-          echo "Latest commit timestamp: $ts"
-          echo "timestamp=$ts" >> "$GITHUB_OUTPUT"
+          # Find the most recent final meta release tag (excluding -rc.* prereleases).
+          # If none exists (bootstrap), leave the output empty and let the next step run.
+          if last=$(git describe --tags --abbrev=0 --match='meta-v*' --exclude='*-rc.*' 2>/dev/null); then
+            echo "Last meta release tag: $last"
+            echo "tag=$last" >> "$GITHUB_OUTPUT"
+          else
+            echo "No prior meta-v* release tag found — bootstrap mode, will run."
+            echo "tag=" >> "$GITHUB_OUTPUT"
+          fi
 
-      - name: Get Last Workflow Run
-        id: last-run
-        uses: optivem/actions/get-last-workflow-run@v1
-        with:
-          workflow-name: ${{ github.workflow }}
+      - name: Detect Real Source Changes Since Last Release
+        id: real-changes
+        shell: bash
+        env:
+          LAST_RELEASE: ${{ steps.last-release.outputs.tag }}
+        run: |
+          set -euo pipefail
+          # Bootstrap: no prior release means we always run.
+          if [[ -z "$LAST_RELEASE" ]]; then
+            echo "has-real-changes=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
 
-      - name: Check for New Commits Since Last Run
-        id: should-run
-        uses: optivem/actions/check-timestamp-newer@v1
-        with:
-          latest: ${{ steps.commit.outputs.timestamp }}
-          since: ${{ steps.last-run.outputs.timestamp }}
+          # List unique paths changed since the last release. The empty
+          # `--pretty=format:` strips per-commit headers so we get a flat list.
+          changed=$(git log --name-only --pretty=format: "$LAST_RELEASE..HEAD" \
+            | sort -u | grep -v '^$' || true)
+
+          if [[ -z "$changed" ]]; then
+            echo "No file changes since $LAST_RELEASE."
+            echo "has-real-changes=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "Files changed since $LAST_RELEASE:"
+          echo "$changed" | sed 's/^/  /'
+          echo
+
+          # Anything whose basename is exactly "VERSION" is a bump-loop artifact
+          # produced by auto-bump-patch — ignore it. Anything else is real.
+          non_version=$(echo "$changed" | grep -v -E '(^|/)VERSION$' || true)
+
+          if [[ -z "$non_version" ]]; then
+            echo "All changes are VERSION-file bumps — no real source changes."
+            echo "has-real-changes=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Real (non-VERSION) source changes detected:"
+            echo "$non_version" | sed 's/^/  /'
+            echo "has-real-changes=true" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Evaluate Run Gate
         id: gate
@@ -90,7 +124,7 @@ jobs:
         with:
           skip-conditions: |
             [
-              {"when": ${{ steps.trigger.outputs.name == 'gated-3h' && steps.should-run.outputs.newer != 'true' }}, "reason": "Gated 3-hour run skipped — no new commits since the last run. Weekly heartbeat will still fire."}
+              {"when": ${{ steps.trigger.outputs.name == 'gated-3h' && steps.real-changes.outputs.has-real-changes != 'true' }}, "reason": "Gated 3-hour run skipped — only VERSION-file bumps (or no changes) since the last meta release. Weekly heartbeat will still fire."}
             ]
 
   run:

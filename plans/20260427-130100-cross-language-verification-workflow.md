@@ -44,7 +44,6 @@ This is purely a **regression check**. It does NOT tag images, publish git tags,
 
 **Items remaining for Phase 1:**
 
-- [ ] **Decide whether `gh optivem run system` (which docker-compose-builds implicitly) is sufficient or if `gh optivem build system` should be split out as its own workflow step** — current plan calls both; potentially redundant. Confirm during dry run.
 - [ ] **Add summary step** — a final `if: always()` step that posts a matrix-result table to `$GITHUB_STEP_SUMMARY` so a failed combo is obvious without clicking in. Use `optivem/actions/render-system-stage-summary@v1` or a small inline bash that reads `needs.*.result`.
 
 ## Phase 2 — switch to pre-built images (depends on [fix-deploy-sha-pinning](20260427-130000-fix-deploy-sha-pinning.md))
