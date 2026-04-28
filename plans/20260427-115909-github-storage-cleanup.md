@@ -1,12 +1,12 @@
 # Plan — GitHub Storage / Hygiene Cleanup
 
 **Date:** 2026-04-27
-**Context:** Follow-on items after adding the `cleanup-orphan-manifests` action and wiring `container-packages` into [shop/.github/workflows/cleanup.yml](../.github/workflows/cleanup.yml). The list below covers other GitHub surfaces that accumulate over time and were not addressed by that change.
+**Context:** Follow-on items after adding the `cleanup-ghcr-orphan-manifests` action and wiring `container-packages` into [shop/.github/workflows/cleanup.yml](../.github/workflows/cleanup.yml). The list below covers other GitHub surfaces that accumulate over time and were not addressed by that change.
 **Scope:** Highest-ROI items first. Each item is self-contained — apply, leave for later, or drop independently.
 
 ## Out of scope
 
-- Items already shipped: tag/release/Docker-image-tag/orphan-manifest cleanup (covered by [actions/cleanup-prereleases](../../actions/cleanup-prereleases/action.yml) + [actions/cleanup-orphan-manifests](../../actions/cleanup-orphan-manifests/action.yml) + [shop/.github/workflows/cleanup.yml](../.github/workflows/cleanup.yml)).
+- Items already shipped: tag/release/Docker-image-tag/orphan-manifest cleanup (covered by [actions/cleanup-prereleases](../../actions/cleanup-prereleases/action.yml) + [actions/cleanup-ghcr-orphan-manifests](../../actions/cleanup-ghcr-orphan-manifests/action.yml) + [shop/.github/workflows/cleanup.yml](../.github/workflows/cleanup.yml)).
 - Deployments cleanup (already handled by [actions/cleanup-deployments](../../actions/cleanup-deployments/action.yml)).
 - Production-release pruning. Final `vX.Y.Z` releases are the historical record; not auto-deleted.
 

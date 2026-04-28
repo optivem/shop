@@ -56,7 +56,7 @@ jobs:
       # Run after cleanup-prereleases so newly-orphaned manifests (left behind
       # when prerelease Docker tags were deleted) are caught in the same pass.
       - name: Cleanup Orphan Manifests
-        uses: optivem/actions/cleanup-orphan-manifests@v1
+        uses: optivem/actions/cleanup-ghcr-orphan-manifests@v1
         with:
           retention-days: ${{ inputs.retention-days || '1' }}
           container-packages: shop/monolith-system-java,shop/monolith-system-dotnet,shop/monolith-system-typescript,shop/multitier-backend-java,shop/multitier-backend-dotnet,shop/multitier-backend-typescript,shop/multitier-frontend-react

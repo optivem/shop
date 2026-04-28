@@ -278,7 +278,7 @@ jobs:
 
       - name: Generate Release Notes
         id: release-notes
-        uses: optivem/actions/generate-release-notes@v1
+        uses: optivem/actions/generate-prod-release-notes@v1
         with:
           prerelease-version: ${{ needs.check.outputs.version }}
           release-version: ${{ steps.promote.outputs.version }}
