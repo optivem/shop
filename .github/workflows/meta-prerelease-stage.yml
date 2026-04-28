@@ -140,3 +140,19 @@ jobs:
       is-release-run: true
       fail-fast: ${{ inputs.fail-fast || false }}
       pipeline-timeout-seconds: ${{ inputs.pipeline-timeout-seconds || '14400' }}
+
+  cross-lang:
+    # Cross-language behavior-parity regression check. Runs in parallel with the
+    # per-flavor pipeline above — independent signal, does not gate the release.
+    # Pinned to the same SHA meta-prerelease is processing so the cross-lang
+    # check reads the workflow files / system.json / tests config from the same
+    # commit (image resolution looks for `sha-<sha>` images, falling back behavior
+    # is owned by resolve-docker-image-digests). Failures surface backend drift
+    # between language implementations but do NOT block the meta-rc tag —
+    # release gating is owned by the per-flavor acceptance stages inside `run`.
+    needs: check
+    if: needs.check.outputs.should-run == 'true'
+    uses: ./.github/workflows/cross-lang-system-verification.yml
+    secrets: inherit
+    with:
+      commit-sha: ${{ github.sha }}

@@ -45,6 +45,7 @@ jobs:
       skip-reason: ${{ steps.gate.outputs.skip-reason }}
       image-digest-urls: ${{ steps.find-latest.outputs.image-digest-urls }}
       latest-updated-at: ${{ steps.find-latest.outputs.latest-updated-at }}
+      last-run-at: ${{ steps.last-run.outputs.timestamp }}
     steps:
       - name: Ensure Environment Variables Defined
         uses: optivem/actions/validate-env-vars-defined@v1
@@ -103,17 +104,27 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/monolith-system-java
           tag: ${{ inputs.commit-sha && format('sha-{0}', inputs.commit-sha) || 'latest' }}
 
-      - name: Detect Source Changes Since Last RC
-        id: changes
+      - name: Get Last Workflow Run
+        id: last-run
+        uses: optivem/actions/get-last-workflow-run@v1
+        with:
+          workflow-name: ${{ github.workflow }}
+
+      - name: Check for New Artifacts Since Last Run
+        id: artifacts-changed
+        uses: optivem/actions/check-timestamp-newer@v1
+        with:
+          latest: ${{ steps.find-latest.outputs.latest-updated-at }}
+          since: ${{ steps.last-run.outputs.timestamp }}
+
+      - name: Detect Test Changes Since Last RC
+        id: test-changes
         uses: optivem/actions/check-changes-since-tag@v1
         with:
           tag-patterns: monolith-java-v*-rc.*
           paths: |
-            system/monolith/java
             system-test/java
-            docker/java/monolith
             .github/workflows/monolith-java-acceptance-stage.yml
-            .github/workflows/monolith-java-commit-stage.yml
 
       - name: Evaluate Run Gate
         id: gate
@@ -122,7 +133,7 @@ jobs:
           skip-conditions: |
             [
               {"when": ${{ steps.check-tag.outputs.exists == 'true' }}, "reason": "Release in progress — version already tagged, awaiting post-release VERSION bump."},
-              {"when": ${{ steps.changes.outputs.changed != 'true' }}, "reason": "No source changes since last RC tag (only VERSION bumps or unchanged)."}
+              {"when": ${{ steps.artifacts-changed.outputs.newer != 'true' && steps.test-changes.outputs.changed != 'true' }}, "reason": "No new artifacts since last run AND no test/workflow changes since last RC tag." }
             ]
 
   run:
@@ -349,3 +360,4 @@ jobs:
         skipped-reason: ${{ needs.preflight.outputs.skip-reason || needs.check.outputs.skip-reason }}
         latest-artifact-ids: ${{ needs.check.outputs.image-digest-urls }}
         latest-updated-at: ${{ needs.check.outputs.latest-updated-at }}
+        last-run-at: ${{ needs.check.outputs.last-run-at }}

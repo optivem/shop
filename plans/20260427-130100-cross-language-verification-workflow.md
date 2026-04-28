@@ -42,23 +42,26 @@ This is purely a **regression check**. It does NOT tag images, publish git tags,
 
 **Items remaining for Phase 1:** _(none — Phase 1 complete pending verification CI run)_
 
-## Phase 2 — switch to pre-built images (depends on [fix-deploy-sha-pinning](20260427-130000-fix-deploy-sha-pinning.md))
+## Phase 2 — switch to pre-built images
 
-Once `deploy-docker-compose` honors the resolved digest and the pipeline compose files accept `${SYSTEM_IMAGE:-…}`, the cross-lang workflow should refactor to **pull pre-built `sha-<sha>` images** instead of building from source. This:
+**Status (2026-04-28):** unblocked. The SHA-pinning prerequisite landed in `b638b6a5` — `deploy-docker-compose` honors the resolved digest and pipeline compose files accept `${SYSTEM_IMAGE:-…}`. Phase 2 can begin.
+
+The cross-lang workflow should refactor to **pull pre-built `sha-<sha>` images** instead of building from source. This:
 
 - ✅ Saves ~5–15 min per matrix entry (no rebuild)
 - ✅ Tests the actual artifact that will be released, not a parallel source build
 - ✅ Reuses the now-correct SHA-pinning machinery
 
-**Refactor steps:**
+**Refactor steps:** _(none — Phase 2 complete pending verification CI run)_
 
-- [ ] **Replace `gh optivem build system` + `gh optivem run system` with `optivem/actions/resolve-docker-image-digests@v1` + `optivem/actions/deploy-docker-compose@v1`** — same pattern the per-lang acceptance stages use today. Point at `docker-compose.pipeline.real.yml` (post-fix) instead of the `.local.` variant.
-- [ ] **Add a preflight step** — call `check-ghcr-packages-exist` for the matrix entry's system-lang × arch image set. Skip the combo if images don't exist yet (e.g. for a freshly-scaffolded system that has not yet run commit-stage). Use `continue-on-error` or a per-combo gate, not a workflow-level abort.
-- [ ] **Add GHCR / Docker Hub login** — copy the `Wandalen/wretry.action@v3` block from [monolith-java-acceptance-stage.yml](../.github/workflows/monolith-java-acceptance-stage.yml#L78-L97).
-- [ ] **Keep `gh optivem test system` for the test-execution step only** — do not let it own SUT lifecycle (compose up/down) when we're using `deploy-docker-compose`. Verify the runner can be invoked in test-only mode (skim [gh-optivem/internal/runner](../../gh-optivem/internal/runner/) to confirm — currently `test system` reads `system.json` only for setup metadata, not for compose lifecycle).
+**Decisions made during Phase 2 implementation:**
+- **Preflight `check-ghcr-packages-exist` deliberately omitted.** Cross-lang is intended to be invoked from `meta-prerelease-stage.yml` after per-(arch, lang) commit + acceptance stages have already produced the images. Missing images are a real error, not a "skip" condition — failing hard surfaces orchestration bugs immediately. Aligns with the project rule "GitHub Actions — `check-*` actions must NOT swallow errors": a `false` `exists` output would conflate "absent" with "couldn't tell" and bury misconfiguration.
+- **Test execution uses `gh optivem test system --no-build --no-start`.** SUT lifecycle is owned by `deploy-docker-compose`; the runner just executes `setupCommands` + suites from `tests-latest.json`. Confirmed safe in [tests.go prepareSystem](../../gh-optivem/internal/runner/tests.go) — when `--no-start` is set, the runner probes `system.json` URLs to verify the system is up, then runs tests.
 
 **Risk specific to Phase 2:**
 - Cross-lang testing pre-built images means failures could indicate (a) genuine cross-lang behavior drift OR (b) drift between source HEAD and the published image. Minor confusion, manageable via good error messaging in the test summary.
+
+**Meta-prerelease integration (done with Phase 2):** cross-lang is now invoked from `meta-prerelease-stage.yml` as a sibling job to `run`, gated by the same `check` step. Both run in parallel — cross-lang is a regression check and does NOT gate the meta-rc tag (release gating stays with the per-flavor acceptance stages inside `run`). Triggered with `commit-sha: ${{ github.sha }}` so it pulls `sha-<sha>` images for the same commit meta-prerelease is processing.
 
 ## Phase 3 — legacy cross-lang verification (open question, separate workflow)
 

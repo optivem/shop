@@ -42,10 +42,11 @@ jobs:
       contents: read
       packages: read
     outputs:
-      should-run: ${{ steps.changes.outputs.changed }}
-      skip-reason: ${{ steps.changes.outputs.changed != 'true' && 'No source changes since last RC tag (only VERSION bumps or unchanged).' || '' }}
+      should-run: ${{ steps.artifacts-changed.outputs.newer == 'true' || steps.test-changes.outputs.changed == 'true' }}
+      skip-reason: ${{ (steps.artifacts-changed.outputs.newer != 'true' && steps.test-changes.outputs.changed != 'true') && 'No new artifacts since last run AND no test/workflow changes since last RC tag.' || '' }}
       image-digest-urls: ${{ steps.find-latest.outputs.image-digest-urls }}
       latest-updated-at: ${{ steps.find-latest.outputs.latest-updated-at }}
+      last-run-at: ${{ steps.last-run.outputs.timestamp }}
     steps:
       - name: Ensure Environment Variables Defined
         uses: optivem/actions/validate-env-vars-defined@v1
@@ -93,21 +94,27 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-backend-dotnet
           tag: ${{ inputs.commit-sha && format('sha-{0}', inputs.commit-sha) || 'latest' }}
 
-      - name: Detect Source Changes Since Last RC
-        id: changes
+      - name: Get Last Workflow Run
+        id: last-run
+        uses: optivem/actions/get-last-workflow-run@v1
+        with:
+          workflow-name: ${{ github.workflow }}
+
+      - name: Check for New Artifacts Since Last Run
+        id: artifacts-changed
+        uses: optivem/actions/check-timestamp-newer@v1
+        with:
+          latest: ${{ steps.find-latest.outputs.latest-updated-at }}
+          since: ${{ steps.last-run.outputs.timestamp }}
+
+      - name: Detect Test Changes Since Last RC
+        id: test-changes
         uses: optivem/actions/check-changes-since-tag@v1
         with:
           tag-patterns: multitier-dotnet-v*-rc.*
           paths: |
-            system/multitier/backend-dotnet
-            system/multitier/frontend-react
             system-test/dotnet
-            docker/dotnet/multitier
             .github/workflows/multitier-dotnet-acceptance-stage-legacy.yml
-            .github/workflows/multitier-backend-dotnet-commit-stage.yml
-            .github/workflows/multitier-frontend-react-commit-stage.yml
-            :(exclude)system/multitier/backend-dotnet/VERSION
-            :(exclude)system/multitier/frontend-react/VERSION
 
   run:
     needs: check
@@ -429,3 +436,4 @@ jobs:
         skipped-reason: ${{ needs.preflight.outputs.skip-reason || needs.check.outputs.skip-reason }}
         latest-artifact-ids: ${{ needs.check.outputs.image-digest-urls }}
         latest-updated-at: ${{ needs.check.outputs.latest-updated-at }}
+        last-run-at: ${{ needs.check.outputs.last-run-at }}

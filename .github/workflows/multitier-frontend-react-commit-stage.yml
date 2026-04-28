@@ -5,11 +5,13 @@ on:
     branches: [ "main" ]
     paths:
         - 'system/multitier/frontend-react/**'
+        - '!system/multitier/frontend-react/VERSION'
         - '.github/workflows/multitier-frontend-react-commit-stage.yml'
   pull_request:
     branches: [ "main" ]
     paths:
         - 'system/multitier/frontend-react/**'
+        - '!system/multitier/frontend-react/VERSION'
         - '.github/workflows/multitier-frontend-react-commit-stage.yml'
   workflow_dispatch:
     inputs:
