@@ -10,18 +10,18 @@ name: cross-lang-system-verification
 # publish git tags, or trigger downstream prerelease pipelines. Failures
 # here surface backend-behavior drift but do not block any release.
 #
-# SHA pinning is structurally tighter than the per-lang acceptance stages:
-# `checkout @ <sha>` atomically pins source code, docker-compose files,
-# system.json, and tests config to one commit. Images are built from source
-# at that SHA — no GHCR lookups, no digest resolution.
+# Pulls pre-built `sha-<sha>` images from GHCR (same artifacts the per-lang
+# acceptance stages publish). Assumes commit stages have already run and
+# images are published — missing images are an error, not a skip. Intended
+# to run after meta-prerelease has greenlit the per-lang flavors.
 
 on:
   schedule:
-    - cron: '0 6 * * *'  # Daily at 06:00 UTC (off-peak; per-lang stages run hourly)
+    - cron: '0 6 * * *'  # Daily at 06:00 UTC — fallback safety net
   workflow_dispatch:
     inputs:
       commit-sha:
-        description: 'Git SHA to test (leave empty for HEAD of default branch)'
+        description: 'Git SHA to test (leave empty for latest image)'
         required: false
         type: string
 
@@ -38,6 +38,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      packages: read
     strategy:
       # Independent regression signals — one failing combo must not mask the others.
       fail-fast: false
@@ -50,7 +51,64 @@ jobs:
           - { test-lang: java,       system-lang: java }
           - { test-lang: dotnet,     system-lang: dotnet }
           - { test-lang: typescript, system-lang: typescript }
+        include:
+          # Per (arch, system-lang) image set + compose service names.
+          # Mirrors the per-(arch, lang)-acceptance-stage.yml deployments.
+          - arch: monolith
+            system-lang: java
+            sut-base-image-urls: |
+              ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/monolith-system-java
+            sut-service-names: |
+              system
+          - arch: monolith
+            system-lang: dotnet
+            sut-base-image-urls: |
+              ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/monolith-system-dotnet
+            sut-service-names: |
+              system
+          - arch: monolith
+            system-lang: typescript
+            sut-base-image-urls: |
+              ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/monolith-system-typescript
+            sut-service-names: |
+              system
+          - arch: multitier
+            system-lang: java
+            sut-base-image-urls: |
+              ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-frontend-react
+              ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-backend-java
+            sut-service-names: |
+              frontend
+              backend
+          - arch: multitier
+            system-lang: dotnet
+            sut-base-image-urls: |
+              ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-frontend-react
+              ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-backend-dotnet
+            sut-service-names: |
+              frontend
+              backend
+          - arch: multitier
+            system-lang: typescript
+            sut-base-image-urls: |
+              ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-frontend-react
+              ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-backend-typescript
+            sut-service-names: |
+              frontend
+              backend
     steps:
+      - name: Ensure Environment Variables Defined
+        uses: optivem/actions/validate-env-vars-defined@v1
+        with:
+          names: |
+            DOCKERHUB_USERNAME
+            DOCKERHUB_TOKEN
+            GHCR_TOKEN
+        env:
+          DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+
       - name: Checkout Repository
         uses: actions/checkout@v6
         with:
@@ -85,11 +143,85 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh extension install optivem/gh-optivem
 
-      - name: Build SUT (${{ matrix.system-lang }} ${{ matrix.arch }})
-        run: gh optivem build system --system docker/${{ matrix.system-lang }}/${{ matrix.arch }}/system.json
+      - name: Log in to Docker Hub
+        uses: Wandalen/wretry.action@v3
+        with:
+          action: docker/login-action@v4
+          attempt_limit: 3
+          attempt_delay: 10000
+          with: |
+            username: ${{ vars.DOCKERHUB_USERNAME }}
+            password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Start SUT (${{ matrix.system-lang }} ${{ matrix.arch }})
-        run: gh optivem run system --system docker/${{ matrix.system-lang }}/${{ matrix.arch }}/system.json
+      - name: Log in to GHCR
+        uses: Wandalen/wretry.action@v3
+        with:
+          action: docker/login-action@v4
+          attempt_limit: 3
+          attempt_delay: 10000
+          with: |
+            registry: ghcr.io
+            username: ${{ github.repository_owner }}
+            password: ${{ secrets.GHCR_TOKEN }}
+
+      - name: Resolve Docker Image Digests
+        id: digests
+        uses: optivem/actions/resolve-docker-image-digests@v1
+        with:
+          base-image-urls: ${{ matrix.sut-base-image-urls }}
+          tag: ${{ inputs.commit-sha && format('sha-{0}', inputs.commit-sha) || 'latest' }}
+
+      - name: Compute Endpoint Lists from system.json
+        id: endpoints
+        # system.json's components + externalSystems already have {name, url}
+        # in the shape wait-for-endpoints expects. Extract per stub/real label
+        # so each compose deployment is verified against its own URL set.
+        run: |
+          SYSTEM_JSON=docker/${{ matrix.system-lang }}/${{ matrix.arch }}/system.json
+          REAL_JSON=$(jq -c '.systems[] | select(.label == "real") | [(.components + .externalSystems)[] | {name, url}]' "$SYSTEM_JSON")
+          STUB_JSON=$(jq -c '.systems[] | select(.label == "stub") | [(.components + .externalSystems)[] | {name, url}]' "$SYSTEM_JSON")
+          {
+            echo "real<<EOF"
+            echo "$REAL_JSON"
+            echo "EOF"
+            echo "stub<<EOF"
+            echo "$STUB_JSON"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Deploy SUT (Real External Systems)
+        uses: optivem/actions/deploy-docker-compose@v1
+        with:
+          environment: cross-lang
+          version: ${{ env.COMMIT_SHA }}
+          image-urls: ${{ steps.digests.outputs.image-digest-urls }}
+          service-names: ${{ matrix.sut-service-names }}
+          compose-file: docker-compose.pipeline.real.yml
+          working-directory: docker/${{ matrix.system-lang }}/${{ matrix.arch }}
+
+      - name: Wait for SUT (Real External Systems)
+        uses: optivem/actions/wait-for-endpoints@v1
+        with:
+          endpoints: ${{ steps.endpoints.outputs.real }}
+          compose-file: docker-compose.pipeline.real.yml
+          working-directory: docker/${{ matrix.system-lang }}/${{ matrix.arch }}
+
+      - name: Deploy SUT (Stub External Systems)
+        uses: optivem/actions/deploy-docker-compose@v1
+        with:
+          environment: cross-lang
+          version: ${{ env.COMMIT_SHA }}
+          image-urls: ${{ steps.digests.outputs.image-digest-urls }}
+          service-names: ${{ matrix.sut-service-names }}
+          compose-file: docker-compose.pipeline.stub.yml
+          working-directory: docker/${{ matrix.system-lang }}/${{ matrix.arch }}
+
+      - name: Wait for SUT (Stub External Systems)
+        uses: optivem/actions/wait-for-endpoints@v1
+        with:
+          endpoints: ${{ steps.endpoints.outputs.stub }}
+          compose-file: docker-compose.pipeline.stub.yml
+          working-directory: docker/${{ matrix.system-lang }}/${{ matrix.arch }}
 
       - name: Export SUT URL env vars from system.json
         # Test code defaults to its own language's port set (3[1|2|3]xx). For cross-lang
@@ -119,11 +251,9 @@ jobs:
           echo "::endgroup::"
 
       - name: Run ${{ matrix.test-lang }} system tests vs ${{ matrix.system-lang }} SUT
-        run: gh optivem test system --system docker/${{ matrix.system-lang }}/${{ matrix.arch }}/system.json --tests system-test/${{ matrix.test-lang }}/tests-latest.json
-
-      - name: Stop SUT
-        if: always()
-        run: gh optivem stop system --system docker/${{ matrix.system-lang }}/${{ matrix.arch }}/system.json
+        # --no-build / --no-start: SUT lifecycle is owned by deploy-docker-compose
+        # above. The runner just executes setupCommands + suites from tests-latest.json.
+        run: gh optivem test system --no-build --no-start --system docker/${{ matrix.system-lang }}/${{ matrix.arch }}/system.json --tests system-test/${{ matrix.test-lang }}/tests-latest.json
 
   summary:
     # Aggregate headline for the run page. Per-row pass/fail is already visible
