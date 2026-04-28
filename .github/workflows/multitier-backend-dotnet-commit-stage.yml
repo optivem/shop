@@ -5,11 +5,13 @@ on:
     branches: [ "main" ]
     paths:
         - 'system/multitier/backend-dotnet/**'
+        - '!system/multitier/backend-dotnet/VERSION'
         - '.github/workflows/multitier-backend-dotnet-commit-stage.yml'
   pull_request:
     branches: [ "main" ]
     paths:
         - 'system/multitier/backend-dotnet/**'
+        - '!system/multitier/backend-dotnet/VERSION'
         - '.github/workflows/multitier-backend-dotnet-commit-stage.yml'
   workflow_dispatch:
     inputs:

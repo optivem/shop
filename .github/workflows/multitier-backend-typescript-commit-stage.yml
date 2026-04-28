@@ -5,11 +5,13 @@ on:
     branches: [ "main" ]
     paths:
         - 'system/multitier/backend-typescript/**'
+        - '!system/multitier/backend-typescript/VERSION'
         - '.github/workflows/multitier-backend-typescript-commit-stage.yml'
   pull_request:
     branches: [ "main" ]
     paths:
         - 'system/multitier/backend-typescript/**'
+        - '!system/multitier/backend-typescript/VERSION'
         - '.github/workflows/multitier-backend-typescript-commit-stage.yml'
   workflow_dispatch:
     inputs:
