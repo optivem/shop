@@ -37,16 +37,28 @@ You MUST NOT read any file outside the two globs (with their exclusions) above, 
 1. **Discover and read.** Run the two `Glob` calls described in *Inputs and outputs* above, apply the documented exclusions, and `Read` every remaining match in full. Do not summarise from headings alone — names of components, ports, adapters, phases, decisions, and transitions all live in body text.
 2. **Enumerate before drawing.** Per the project consistency-check rule, list every architectural element (port, adapter, DSL core, test, external system, etc.) and every collaboration the architecture prose describes. Separately, list every phase, every decision diamond, and every transition the process prose describes (AT cycle and CT sub-process).
 3. **Draw the architecture diagram.** A Mermaid `flowchart` (or `graph`) showing components as nodes and collaborations / dependencies as labelled edges. Use the names exactly as the docs name them. Do not invent ports, adapters, or layers that no doc mentions.
-4. **Draw the process diagram.** A Mermaid `flowchart` showing phases as nodes and transitions / decisions as labelled edges. Preserve phase-name casing and spacing exactly. Decision diamonds use `{...}` syntax and **both** Yes and No branches must be drawn (no dangling branches). If the prose describes both an AT cycle and a CT sub-process as distinct views, render them as two separate `mermaid` blocks under two `## ` subheadings in the same file.
+4. **Draw the process diagram(s).** The process is too large for a single readable diagram. Decompose it into one **overview** diagram plus one **detail** diagram per subprocess, each as its own `mermaid` block under its own `## ` heading in `process-diagram.md`. Apply these rules:
+
+   - **Identify subprocesses from the prose.** A subprocess is any cluster of phases the prose treats as a coherent unit — e.g., intake/classification, the AT cycle, the CT sub-process, individual RED/GREEN phases that have internal branching the prose describes, etc. Do not invent subprocesses that no doc names; do not collapse subprocesses the prose treats separately.
+   - **Overview diagram first.** The first `mermaid` block (under `## Overview`) shows the subprocesses as single boxes with the transitions between them — no internal phases, no decision diamonds beyond the top-level routing. Its purpose is "where does each subprocess sit and how do they connect."
+   - **One detail diagram per subprocess.** Each subsequent `mermaid` block (under `## <Subprocess Name>`) expands one subprocess in full: its phases, decision diamonds, STOP gates, etc.
+   - **Size budget per diagram: ~12–15 nodes max.** If a subprocess detail diagram would exceed this, split it further into sub-subprocesses, each with its own `## ` heading and `mermaid` block.
+   - **Cross-subprocess references stay as single nodes.** Inside a detail diagram, when flow leaves to another subprocess, render it as one labelled node like `CT_SUBPROCESS[Contract Test Sub-Process — see § Contract Test Sub-Process]`, not as an inlined expansion. The reader follows the heading link.
+   - **Preserve phase-name casing and spacing exactly** (e.g. `AT - RED - TEST`, not `AT-RED-TEST`).
+   - **Both branches drawn at every decision diamond** — no dangling branches, in every diagram.
 5. **Write** both output files in full using the format below.
-6. **Print** one chat line per file with the path and the node/edge count, e.g.:
+6. **Print** one chat line per file with the total node/edge count summed across all `mermaid` blocks in that file, plus a parenthetical breakdown when there is more than one block, e.g.:
 
    ```
    Wrote docs/atdd/architecture/architecture-diagram.md (12 nodes, 18 edges)
-   Wrote docs/atdd/process/process-diagram.md (15 nodes, 22 edges)
+   Wrote docs/atdd/process/process-diagram.md (38 nodes, 51 edges across 4 diagrams: Overview 6/6, AT Cycle 11/14, CT Sub-Process 14/19, Intake 7/12)
    ```
 
-## Output format (both files share this skeleton)
+## Output format
+
+Both files share the same header skeleton; they differ in the diagram body.
+
+**Common header (both files):**
 
 ```markdown
 # <Architecture | Process> Diagram
@@ -57,14 +69,47 @@ You MUST NOT read any file outside the two globs (with their exclusions) above, 
 
 - `docs/atdd/<...>/<file>.md`
 - ...
+```
 
+**Architecture diagram body (single block):**
+
+```markdown
 ## Diagram
 
 \`\`\`mermaid
 flowchart TD
     ...
 \`\`\`
+```
 
+**Process diagram body (multi-block: overview + one detail diagram per subprocess):**
+
+```markdown
+## Overview
+
+\`\`\`mermaid
+flowchart TD
+    ...
+\`\`\`
+
+## <Subprocess Name 1>
+
+\`\`\`mermaid
+flowchart TD
+    ...
+\`\`\`
+
+## <Subprocess Name 2>
+
+\`\`\`mermaid
+flowchart TD
+    ...
+\`\`\`
+```
+
+**Common footer (both files, optional):**
+
+```markdown
 ## Notes
 
 (Optional. Use only when the source docs are ambiguous or contradict each other on a specific edge — name the docs and quote the conflicting lines. Omit the section entirely if there are no notes.)
@@ -78,7 +123,8 @@ flowchart TD
 - **Short readable IDs, prose labels in brackets:** `DRIVER_PORT[Driver Port]`, `AT_RED_TEST[AT - RED - TEST]`.
 - **Both branches drawn at every decision diamond** — no dangling `if no, …`.
 - **No explanatory prose** beyond the brief generated-by line and the source-docs list. The diagram is the deliverable; the source docs explain.
-- **One concept per file.** If the architecture prose implies multiple views (component dependency vs. runtime call flow), render the most central view and mention the omitted view under `## Notes` rather than silently merging.
+- **Architecture file: one concept per file.** If the architecture prose implies multiple views (component dependency vs. runtime call flow), render the most central view and mention the omitted view under `## Notes` rather than silently merging.
+- **Process file: one concept per diagram, multiple diagrams per file.** Each `mermaid` block within `process-diagram.md` shows exactly one subprocess (or the overview); never merge subprocesses into one block to "save space." Splitting is the whole point — a 30-node diagram is unreadable, three 10-node diagrams are not.
 
 ## Empty case
 
