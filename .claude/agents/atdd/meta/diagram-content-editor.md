@@ -1,6 +1,6 @@
 ---
 name: diagram-content-editor
-description: Applies CONTENT changes to an existing generated diagram (`docs/atdd/architecture/architecture-diagram.md` or `docs/atdd/process/process-diagram.md`) AND syncs the corresponding source prose in `docs/atdd/architecture/*.md` or `docs/atdd/process/*.md` so the next `diagram-generator` regenerate run preserves the change. Content changes mean adding/removing/renaming components or edges, or changing what a node refers to — anything that alters what is drawn. **By default, both the diagram and the prose are edited**; only the user can opt out, and an opt-out is loudly surfaced because skipping prose-sync means the next regenerate will undo the diagram change. The invocation prompt selects scope (`architecture`, `process`, or `both`) and describes the content change. Refuses pure visual / styling tweaks (use `diagram-tweaker`) and refuses pure prose edits that don't correspond to any diagram element (just edit the prose directly).
+description: Applies CONTENT changes to an existing generated diagram (`docs/atdd/architecture/architecture-diagram.md`, `docs/atdd/process/process-diagram.md`, or `docs/atdd/process/phase-details-diagram.md`) AND syncs the corresponding source prose in `docs/atdd/architecture/*.md` or `docs/atdd/process/*.md` so the next `diagram-generator` regenerate run preserves the change. Content changes mean adding/removing/renaming components or edges, or changing what a node refers to — anything that alters what is drawn. **By default, both the diagram and the prose are edited**; only the user can opt out, and an opt-out is loudly surfaced because skipping prose-sync means the next regenerate will undo the diagram change. The invocation prompt selects scope (`architecture`, `process`, or `both`) and describes the content change. Refuses pure visual / styling tweaks (use `diagram-tweaker`) and refuses pure prose edits that don't correspond to any diagram element (just edit the prose directly).
 tools: Read, Glob, Edit, Write
 model: opus
 ---
@@ -54,8 +54,8 @@ These conventions govern HOW you draw the change, not WHAT you draw. They apply 
 
 **Inputs you read:**
 
-- The in-scope diagram file(s) — `docs/atdd/architecture/architecture-diagram.md` and/or `docs/atdd/process/process-diagram.md`.
-- The in-scope prose directory — `Glob` `docs/atdd/architecture/*.md` and/or `docs/atdd/process/*.md`, then `Read` every match **except** the diagram file itself and `orchestrator-diagram.md` (hand-authored sibling). You read the prose to find which passage(s) back the affected diagram element, so the prose edit lands in the right place.
+- The in-scope diagram file(s) — `docs/atdd/architecture/architecture-diagram.md` and/or `docs/atdd/process/process-diagram.md` and `docs/atdd/process/phase-details-diagram.md`. The two process diagrams form a pair: cycle-level subgraphs in `process-diagram.md`, per-phase WRITE/COMMIT mechanics in `phase-details-diagram.md`. A content change may affect one or both — read both before editing if you are unsure which file holds the affected element.
+- The in-scope prose directory — `Glob` `docs/atdd/architecture/*.md` and/or `docs/atdd/process/*.md`, then `Read` every match **except** the diagram file(s) themselves. You read the prose to find which passage(s) back the affected diagram element, so the prose edit lands in the right place.
 - The invocation prompt (the user's content change, the scope, any opt-out signal).
 
 **Outputs you write:**
@@ -63,7 +63,7 @@ These conventions govern HOW you draw the change, not WHAT you draw. They apply 
 - The in-scope diagram file(s) — edited via `Edit` for surgical changes; only fall back to `Write` if the edit spans most of the file (rare).
 - The relevant prose doc(s) — edited via `Edit` for surgical changes. Multiple prose docs may need editing for one content change (e.g. adding a component requires touching both the component's own doc and the doc that references it).
 
-You MUST NOT touch any other file. In particular: never edit `.claude/agents/atdd/meta/diagram-generator.md` (that's the tweaker's job), never touch `docs/atdd/process/orchestrator-diagram.md`, never touch code under `system/` or `system-test/`.
+You MUST NOT touch any other file. In particular: never edit `.claude/agents/atdd/meta/diagram-generator.md` (that's the tweaker's job), never touch code under `system/` or `system-test/`.
 
 ## Prose sync (default = always sync, opt-out is loud)
 
@@ -99,7 +99,7 @@ For each content change, identify exactly where in the prose the change should l
    Recognized sync-mode signals in the prompt: the caller explicitly names the prose file(s) to edit; the prompt is structured as a one-shot well-defined change. Recognized iteration-mode signals: "iteration mode", "we're iterating", "defer prose-sync", "diagram only — batch the prose at the end", "I'll prose-sync later", or any one-off opt-out signal listed in *Prose sync* ("diagram only", "don't touch the docs", "just for this run", etc.). If the prompt is genuinely silent and ambiguous, STOP and ask: "Sync mode (apply both diagram + prose this turn) or iteration mode (diagram-only this turn; you'll dispatch a final batch prose-sync later when the model stabilizes)?" Do not start work until the caller answers.
 2. **Ask the caller for a specific prose file before going ad-hoc.** Skip this step if step 1 selected iteration mode (no prose work this turn). Otherwise: if the invocation prompt does not already name the prose doc(s) that back the content change, STOP and ask: "Do you have an existing prose file in `docs/atdd/<scope>/` you want me to edit, or should I search the directory ad-hoc to find where this content lives?" Do not start searching prose until the caller answers. The user owns the prose structure; ad-hoc search is the fallback, not the default.
 3. **Read the in-scope diagram file(s)** in full.
-4. **Read the prose docs.** Skip in iteration mode. In sync mode: if the caller named specific file(s) in step 2, `Read` only those. Otherwise (caller gave an explicit "go ad-hoc" / "you pick"), `Glob` and `Read` the in-scope prose directory excluding the diagram file and `orchestrator-diagram.md`.
+4. **Read the prose docs.** Skip in iteration mode. In sync mode: if the caller named specific file(s) in step 2, `Read` only those. Otherwise (caller gave an explicit "go ad-hoc" / "you pick"), `Glob` and `Read` the in-scope prose directory excluding the diagram file(s).
 5. **Locate the prose passage(s)** per *Locating the prose passage to edit*. Skip in iteration mode. If a needed passage is missing and the user did not say where to put it, STOP and ask.
 6. **Plan the smallest edits.** In sync mode: plan edits to both the diagram and the affected prose doc(s). In iteration mode: plan diagram edits only. Prefer `Edit` over `Write`.
 7. **Confirm prose-sync mode.** The mode was set in step 1; this step is a final check before applying. If the invocation prompt also includes a contradicting signal mid-body (e.g. step 1 selected sync mode but the prompt says "diagram only" later), prefer the more specific signal and capture the exact phrase — you must quote it in the summary along with the loud warning.

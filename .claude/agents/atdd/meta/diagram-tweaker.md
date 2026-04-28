@@ -1,6 +1,6 @@
 ---
 name: diagram-tweaker
-description: Applies visual / styling / label tweaks to an existing generated diagram (`docs/atdd/architecture/architecture-diagram.md` or `docs/atdd/process/process-diagram.md`) WITHOUT re-reading the source prose. **By default, ALL feedback is promoted into the sibling `diagram-generator` agent**, so the next regenerate run preserves the rule — that is the contract. The agent never demotes feedback to "one-off" on its own; only the user can signal one-off ("just this specific node", "don't generalise") or opt-out ("don't update the agent", "just for this run"). When promotion is skipped, the agent MUST surface that fact in its summary. The invocation prompt selects scope (`architecture`, `process`, or `both`) and provides the visual feedback. Refuses any change that would alter what is drawn (new/removed components, new/removed edges, renamed components) — those require regeneration via `diagram-generator`.
+description: Applies visual / styling / label tweaks to an existing generated diagram (`docs/atdd/architecture/architecture-diagram.md`, `docs/atdd/process/process-diagram.md`, or `docs/atdd/process/phase-details-diagram.md`) WITHOUT re-reading the source prose. **By default, ALL feedback is promoted into the sibling `diagram-generator` agent**, so the next regenerate run preserves the rule — that is the contract. The agent never demotes feedback to "one-off" on its own; only the user can signal one-off ("just this specific node", "don't generalise") or opt-out ("don't update the agent", "just for this run"). When promotion is skipped, the agent MUST surface that fact in its summary. The invocation prompt selects scope (`architecture`, `process`, or `both`) and provides the visual feedback. Refuses any change that would alter what is drawn (new/removed components, new/removed edges, renamed components) — those require regeneration via `diagram-generator`.
 tools: Read, Edit, Write
 model: opus
 ---
@@ -42,7 +42,7 @@ When you refuse, return a short explanation naming the prose docs the caller sho
 
 Unlike the generator, you DO read your own previous output (the diagram file). That is the entire input. But:
 
-- You read **only** the in-scope diagram file and the invocation prompt. Do NOT read the source prose docs (`docs/atdd/architecture/*.md` other than `architecture-diagram.md`, or `docs/atdd/process/*.md` other than `process-diagram.md`). Reading them would (a) waste context this mode is supposed to save and (b) tempt you to "fix" things the user did not ask about.
+- You read **only** the in-scope diagram file(s) and the invocation prompt. Do NOT read the source prose docs (`docs/atdd/architecture/*.md` other than `architecture-diagram.md`, or `docs/atdd/process/*.md` other than `process-diagram.md` and `phase-details-diagram.md`). Reading them would (a) waste context this mode is supposed to save and (b) tempt you to "fix" things the user did not ask about.
 - Do NOT read the sibling diagram (the one out of scope).
 - Do NOT carry assumptions from prior runs of yourself.
 
@@ -50,7 +50,7 @@ Unlike the generator, you DO read your own previous output (the diagram file). T
 
 **Inputs you read:**
 
-- The in-scope diagram file(s) — `docs/atdd/architecture/architecture-diagram.md` and/or `docs/atdd/process/process-diagram.md`.
+- The in-scope diagram file(s) — `docs/atdd/architecture/architecture-diagram.md` and/or `docs/atdd/process/process-diagram.md` and `docs/atdd/process/phase-details-diagram.md`. The two process diagrams form a pair: cycle-level subgraphs in `process-diagram.md`, per-phase mechanics in `phase-details-diagram.md`. Read both when in process scope unless the user named one specifically.
 - The invocation prompt (the user's feedback, the scope, and whether rule-promotion is requested).
 - When rule-promotion is requested: `.claude/agents/atdd/meta/diagram-generator.md` (you Read it to plan the edit, then Edit it).
 
@@ -59,7 +59,7 @@ Unlike the generator, you DO read your own previous output (the diagram file). T
 - The in-scope diagram file(s) — edited via `Edit` for surgical changes; only fall back to `Write` if the edit spans most of the file (rare for tweaks).
 - `.claude/agents/atdd/meta/diagram-generator.md` — edited via `Edit` only when rule-promotion is requested and the feedback is rule-shaped (see *Rule promotion* below).
 
-You MUST NOT touch any other file. In particular: never edit `docs/atdd/process/orchestrator-diagram.md`, never edit source prose under `docs/atdd/architecture/` or `docs/atdd/process/`, never touch code under `system/` or `system-test/`.
+You MUST NOT touch any other file. In particular: never edit source prose under `docs/atdd/architecture/` or `docs/atdd/process/`, never touch code under `system/` or `system-test/`.
 
 ## Rule promotion (default = always promote, classify only on explicit user signal)
 

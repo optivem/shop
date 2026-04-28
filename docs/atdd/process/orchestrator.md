@@ -53,6 +53,8 @@ From AT - RED - TEST onward the AT Cycle pipeline is identical regardless of whi
 
 ## AT Cycle (per ticket)
 
+_Triggered when the ticket produces change-driven AC (i.e. **change-driven AC = yes** — story or bug). Task/chore tickets do not enter the AT Cycle; see the Intake gates above._
+
 The unit of work in the AT Cycle is the **ticket** — all change-driven AC scenarios for the ticket are batched through each phase together. AT - RED - TEST writes all scenarios at once; AT - RED - DSL, AT - RED - SYSTEM DRIVER, and AT - GREEN - SYSTEM each operate over the full set. There is no per-scenario inner loop.
 
 ```
@@ -91,7 +93,12 @@ AT - GREEN - SYSTEM
 
 _Triggered when the AT cycle detects external driver interface changes._
 
+Before entering CT - RED - TEST, the orchestrator runs the **External System Onboarding Sub-Process** (see below) as a prerequisite to ensure an External System Driver and an accessible Test Instance exist for the system being integrated. If the Driver already exists, Onboarding returns immediately; otherwise it provisions a dockerized stand-in, defines a minimal Driver interface and implementation, and proves it works with a single Smoke Test before CT - RED - TEST begins.
+
 ```
+External System Onboarding Sub-Process (see below)
+    │
+    ▼
 CT - RED - TEST
     │
     ├── DSL Interface Changed? ──── No ──→ CT - GREEN - STUB
@@ -111,6 +118,34 @@ CT - GREEN - STUB
 ```
 
 After the contract test sub-process completes, return to the AT cycle and continue with the system driver check.
+
+---
+
+## External System Onboarding Sub-Process
+
+_Triggered when the orchestrator is about to enter the Contract Test Sub-Process and needs to ensure an External System Driver and Test Instance exist for the system being integrated._
+
+This is a one-time-per-external-system sub-process that handles the prerequisites for contract testing. It separates two orthogonal concerns from the per-scenario CT loop:
+
+1. **Code question** — do we already have an External System Driver (interface + impl) for this system?
+2. **Environment question** — do we have an accessible Test Instance to talk to (real sandbox or dockerized stand-in)?
+
+These are independent: a Driver may exist without an accessible Test Instance, or vice versa. The sub-process resolves both before per-scenario contract testing starts.
+
+### Steps
+
+1. **Check whether an External System Driver exists** for the system being integrated (interface + impl under `external/`). If yes → return immediately to the Contract Test Sub-Process; skip the rest of onboarding.
+2. **Check whether an External System Test Instance is accessible** (real sandbox or already-running dockerized stand-in). If yes → skip step 3.
+3. **Provision a dockerized stand-in** following the json-server pattern established in `system/external-real-sim` (Node.js + json-server-based mock, runs in docker, mounted at a known port; the existing `external-real-sim` already emulates ERP, Tax, and Clock subsystems and is the reference shape for new stand-ins).
+4. **Define a minimal External System Driver interface** — only the methods needed to support a single Smoke Test for this external system. Resist the urge to flesh out the full surface area; per-scenario interface growth happens in the CT loop.
+5. **Implement the Driver impl just enough for one Smoke Test** to compile and run against either the real Test Instance or the dockerized stand-in.
+6. **Write a single Smoke Test** for this External System.
+7. **Run the Smoke Test and verify it passes.** If it fails, ask the user for support and STOP. Do NOT continue.
+8. **STOP — HUMAN REVIEW.** Present the dockerized stand-in (if newly provisioned), the minimal Driver interface, the Driver impl, and the Smoke Test for approval. Do NOT continue.
+9. **COMMIT** with message `External System Onboarding | <External System Name>`.
+10. **Return to the Contract Test Sub-Process** at CT - RED - TEST.
+
+The Onboarding sub-process internally handles the "Driver already exists" early return, so the Contract Test Sub-Process can refer to it unconditionally; no per-entry diamond is needed at the CT layer.
 
 ---
 
