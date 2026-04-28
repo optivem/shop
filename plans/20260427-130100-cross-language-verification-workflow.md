@@ -1,7 +1,5 @@
 # Plan — Cross-Language System Verification Workflow
 
-🤖 **Picked up by agent** — `Valentina_Desk` at `2026-04-27T18:38:02Z`
-
 **Date:** 2026-04-27
 **Status:** Phase 1 partially complete (workflow file written, not yet run/verified)
 **Owner:** unassigned

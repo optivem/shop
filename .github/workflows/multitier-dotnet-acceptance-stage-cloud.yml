@@ -40,11 +40,10 @@ jobs:
       contents: read
       packages: read
     outputs:
-      should-run: ${{ steps.should-run.outputs.newer }}
-      skip-reason: ${{ steps.should-run.outputs.newer != 'true' && 'No new artifacts since the last run.' || '' }}
+      should-run: ${{ steps.changes.outputs.changed }}
+      skip-reason: ${{ steps.changes.outputs.changed != 'true' && 'No source changes since last RC tag (only VERSION bumps or unchanged).' || '' }}
       image-digest-urls: ${{ steps.find-latest.outputs.image-digest-urls }}
       latest-updated-at: ${{ steps.find-latest.outputs.latest-updated-at }}
-      last-run-at: ${{ steps.last-run.outputs.timestamp }}
     steps:
       - name: Ensure Environment Variables Defined
         uses: optivem/actions/validate-env-vars-defined@v1
@@ -102,42 +101,20 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-backend-dotnet
           tag: ${{ inputs.commit-sha && format('sha-{0}', inputs.commit-sha) || 'latest' }}
 
-      - name: Resolve Latest Updated At
-        id: latest
-        shell: bash
-        env:
-          IMAGE_TS: ${{ steps.find-latest.outputs.latest-updated-at }}
-        run: |
-          set -euo pipefail
-          # Take max of image push time and commit time. Tests live in this
-          # repo, so using the commit timestamp makes the gate fire on
-          # test-only changes as well as on image rebuilds.
-          commit_ts=$(git log -1 --format=%cI "$COMMIT_SHA")
-          image_epoch=$(date -d "$IMAGE_TS" +%s)
-          commit_epoch=$(date -d "$commit_ts" +%s)
-          if [ "$image_epoch" -ge "$commit_epoch" ]; then
-            max_epoch=$image_epoch
-          else
-            max_epoch=$commit_epoch
-          fi
-          latest=$(date -d "@$max_epoch" -u +%Y-%m-%dT%H:%M:%SZ)
-          echo "Image timestamp:  $IMAGE_TS"
-          echo "Commit timestamp: $commit_ts"
-          echo "Latest:           $latest"
-          echo "latest-updated-at=$latest" >> "$GITHUB_OUTPUT"
-
-      - name: Get Last Workflow Run
-        id: last-run
-        uses: optivem/actions/get-last-workflow-run@v1
+      - name: Detect Source Changes Since Last RC
+        id: changes
+        uses: optivem/actions/check-changes-since-tag@v1
         with:
-          workflow-name: ${{ github.workflow }}
-
-      - name: Check for Docker Image Updates Since Last Run
-        id: should-run
-        uses: optivem/actions/check-timestamp-newer@v1
-        with:
-          latest: ${{ steps.latest.outputs.latest-updated-at }}
-          since: ${{ steps.last-run.outputs.timestamp }}
+          tag-patterns: multitier-dotnet-cloud-v*-rc.*
+          paths: |
+            system/multitier/backend-dotnet
+            system/multitier/frontend-react
+            system-test/dotnet
+            .github/workflows/multitier-dotnet-acceptance-stage-cloud.yml
+            .github/workflows/multitier-backend-dotnet-commit-stage.yml
+            .github/workflows/multitier-frontend-react-commit-stage.yml
+            :(exclude)system/multitier/backend-dotnet/VERSION
+            :(exclude)system/multitier/frontend-react/VERSION
 
   deploy-frontend:
     needs: check
@@ -832,4 +809,3 @@ jobs:
         skipped-reason: ${{ needs.preflight.outputs.skip-reason || needs.check.outputs.skip-reason }}
         latest-artifact-ids: ${{ needs.check.outputs.image-digest-urls }}
         latest-updated-at: ${{ needs.check.outputs.latest-updated-at }}
-        last-run-at: ${{ needs.check.outputs.last-run-at }}
