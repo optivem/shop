@@ -5,7 +5,7 @@ import com.mycompany.myshop.testkit.driver.adapter.shared.client.playwright.Page
 import java.util.regex.Pattern;
 
 public class NewOrderPage extends BasePage {
-    private static final String SKU_INPUT_SELECTOR = "[aria-label=\"SKU\"]";
+    private static final String SKU_INPUT_SELECTOR = "[aria-label=\"Product SKU\"]";
     private static final String QUANTITY_INPUT_SELECTOR = "[aria-label=\"Quantity\"]";
     private static final String COUNTRY_INPUT_SELECTOR = "[aria-label=\"Country\"]";
     private static final String COUPON_CODE_INPUT_SELECTOR = "[aria-label=\"Coupon Code\"]";
