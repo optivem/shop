@@ -6,6 +6,7 @@ import com.mycompany.myshop.testkit.driver.port.dtos.OrderStatus;
 import com.optivem.testing.Channel;
 import com.optivem.testing.DataSource;
 import org.junit.jupiter.api.TestTemplate;
+import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 
 class CancelOrderNegativeTest extends BaseAcceptanceTest {
     @TestTemplate
@@ -40,5 +41,26 @@ class CancelOrderNegativeTest extends BaseAcceptanceTest {
                     .withOrderNumber("non-existent-order-12345")
                 .then().shouldFail()
                     .errorMessage("Order non-existent-order-12345 does not exist.");
+    }
+
+    @EnabledIfEnvironmentVariable(named = "GH_OPTIVEM_RUN_WIP_TESTS", matches = "1", disabledReason = "Work-in-progress test; set GH_OPTIVEM_RUN_WIP_TESTS=1 to run")
+    @TestTemplate
+    @Channel({ChannelType.UI, ChannelType.API})
+    void cannotCancelAnOrderAt2245OnDecember31st() {
+        scenario
+                .given().product()
+                    .withSku("DELL-XPS")
+                    .withUnitPrice(1299.99)
+                .and().order()
+                    .withSku("DELL-XPS")
+                    .withQuantity(1)
+                    .withStatus(OrderStatus.PLACED)
+                .and().clock()
+                    .withTime("2025-12-31T22:45:00Z")
+                .when().cancelOrder()
+                .then().shouldFail()
+                    .errorMessage("Order cancellation is not allowed on December 31st between 22:00 and 23:00")
+                .and().order()
+                    .hasStatus(OrderStatus.PLACED);
     }
 }
