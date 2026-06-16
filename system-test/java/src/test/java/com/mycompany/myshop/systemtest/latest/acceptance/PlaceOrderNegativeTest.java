@@ -5,10 +5,27 @@ import com.mycompany.myshop.systemtest.latest.acceptance.base.BaseAcceptanceTest
 import com.mycompany.myshop.testkit.channel.ChannelType;
 import com.optivem.testing.Channel;
 import org.junit.jupiter.api.TestTemplate;
+import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class PlaceOrderNegativeTest extends BaseAcceptanceTest {
+    @EnabledIfEnvironmentVariable(named = "GH_OPTIVEM_RUN_WIP_TESTS", matches = "1", disabledReason = "Work-in-progress test; set GH_OPTIVEM_RUN_WIP_TESTS=1 to run")
+    @TestTemplate
+    @Channel({ChannelType.UI, ChannelType.API})
+    void shouldRejectOrderWithLineQuantityOf100() {
+        scenario
+                .given().product()
+                    .withSku("DELL-XPS")
+                    .withUnitPrice(1299.99)
+                .when().placeOrder()
+                    .withSku("DELL-XPS")
+                    .withQuantity(100)
+                .then().shouldFail()
+                    .errorMessage("The request contains one or more validation errors")
+                    .fieldErrorMessage("quantity", "Quantity must be less than 100");
+    }
+
     @TestTemplate
     @Channel({ChannelType.UI, ChannelType.API})
     void shouldRejectOrderWithInvalidQuantity() {
