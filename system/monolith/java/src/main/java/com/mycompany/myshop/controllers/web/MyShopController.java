@@ -46,6 +46,10 @@ public class MyShopController {
                 return redirectWithError(redirectAttributes, "Quantity must be positive", sku, quantity, country, couponCode);
             }
 
+            if (request.getQuantity() >= 100) {
+                return redirectWithError(redirectAttributes, "Quantity must be less than 100", sku, quantity, country, couponCode);
+            }
+
             if (request.getSku() == null || request.getSku().isBlank()) {
                 return redirectWithError(redirectAttributes, "SKU must not be empty", sku, quantity, country, couponCode);
             }
