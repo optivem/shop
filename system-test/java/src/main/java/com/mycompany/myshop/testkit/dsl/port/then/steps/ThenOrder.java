@@ -45,4 +45,6 @@ public interface ThenOrder extends ThenStep<ThenOrder> {
     ThenOrder hasTaxRate(String expectedTaxRate);
 
     ThenOrder hasTaxAmount(String expectedTaxAmount);
+
+    ThenOrder isGiftWrapped();
 }

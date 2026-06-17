@@ -16,4 +16,6 @@ public interface WhenPlaceOrder extends WhenStep {
     WhenPlaceOrder withCouponCode(String couponCode);
 
     WhenPlaceOrder withCouponCode();
+
+    WhenPlaceOrder withGiftWrap();
 }

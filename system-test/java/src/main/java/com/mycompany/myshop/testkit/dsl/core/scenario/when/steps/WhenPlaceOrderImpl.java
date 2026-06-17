@@ -60,6 +60,10 @@ public class WhenPlaceOrderImpl extends BaseWhenStep<PlaceOrderResponse, PlaceOr
         return withCouponCode(DEFAULT_COUPON_CODE);
     }
 
+    public WhenPlaceOrderImpl withGiftWrap() {
+        throw new RuntimeException("TODO: DSL");
+    }
+
     @Override
     protected ExecutionResult<PlaceOrderResponse, PlaceOrderVerification> execute(UseCaseDsl app) {
         var result = app.myShop(ChannelMode.DYNAMIC).placeOrder()

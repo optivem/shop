@@ -136,6 +136,10 @@ public class ThenOrderImpl<TSuccessResponse, TSuccessVerification extends Respon
         return hasAppliedCoupon(expectedCouponCode);
     }
 
+    public ThenOrderImpl<TSuccessResponse, TSuccessVerification> isGiftWrapped() {
+        throw new RuntimeException("TODO: DSL");
+    }
+
     @Override
     public ThenOrderImpl<TSuccessResponse, TSuccessVerification> and() {
         return this;
