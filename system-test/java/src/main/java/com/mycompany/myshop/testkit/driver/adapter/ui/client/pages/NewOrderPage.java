@@ -9,6 +9,7 @@ public class NewOrderPage extends BasePage {
     private static final String QUANTITY_INPUT_SELECTOR = "[aria-label=\"Quantity\"]";
     private static final String COUNTRY_INPUT_SELECTOR = "[aria-label=\"Country\"]";
     private static final String COUPON_CODE_INPUT_SELECTOR = "[aria-label=\"Coupon Code\"]";
+    private static final String GIFT_WRAP_CHECKBOX_SELECTOR = "[aria-label=\"Gift Wrap\"]";
     private static final String PLACE_ORDER_BUTTONG_SELECTOR = "[aria-label=\"Place Order\"]";
     private static final String ORDER_NUMBER_REGEX = "Success! Order has been created with Order Number ([\\w-]+)";
     private static final int ORDER_NUMBER_MATCHER_GROUP = 1;
@@ -32,6 +33,12 @@ public class NewOrderPage extends BasePage {
 
     public void inputCouponCode(String couponCode) {
         pageClient.fill(COUPON_CODE_INPUT_SELECTOR, couponCode);
+    }
+
+    public void inputGiftWrap(Boolean giftWrap) {
+        if (Boolean.TRUE.equals(giftWrap)) {
+            pageClient.click(GIFT_WRAP_CHECKBOX_SELECTOR);
+        }
     }
 
     public void clickPlaceOrder() {

@@ -23,6 +23,7 @@ public class OrderDetailsPage extends BasePage {
     private static final String TOTAL_PRICE_OUTPUT_SELECTOR = "[aria-label='Display Total Price']";
     private static final String STATUS_OUTPUT_SELECTOR = "[aria-label='Display Status']";
     private static final String APPLIED_COUPON_OUTPUT_SELECTOR = "[aria-label='Display Applied Coupon']";
+    private static final String GIFT_WRAPPED_OUTPUT_SELECTOR = "[aria-label='Display Gift Wrapped']";
     private static final String CANCEL_ORDER_SELECTOR = "[aria-label='Cancel Order']";
     private static final String DELIVER_ORDER_SELECTOR = "[aria-label='Deliver Order']";
     private static final String TEXT_NONE = "None";
@@ -99,6 +100,11 @@ public class OrderDetailsPage extends BasePage {
     public String getAppliedCoupon() {
         var coupon = pageClient.readTextContent(APPLIED_COUPON_OUTPUT_SELECTOR);
         return TEXT_NONE.equals(coupon) ? null : coupon;
+    }
+
+    public Boolean getGiftWrapped() {
+        var textContent = pageClient.readTextContent(GIFT_WRAPPED_OUTPUT_SELECTOR);
+        return "Yes".equals(textContent);
     }
 
     public void clickCancelOrder() {

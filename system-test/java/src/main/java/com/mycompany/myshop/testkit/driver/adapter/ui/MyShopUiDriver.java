@@ -56,6 +56,7 @@ public class MyShopUiDriver implements MyShopDriver {
         var quantity = request.getQuantity();
         var country = request.getCountry();
         var couponCode = request.getCouponCode();
+        var giftWrap = request.getGiftWrap();
 
         ensureOnNewOrderPage();
         newOrderPage.inputSku(sku);
@@ -64,6 +65,7 @@ public class MyShopUiDriver implements MyShopDriver {
         if (couponCode != null && !couponCode.isBlank()) {
             newOrderPage.inputCouponCode(couponCode);
         }
+        newOrderPage.inputGiftWrap(giftWrap);
         newOrderPage.clickPlaceOrder();
 
         var result = newOrderPage.getResult();
@@ -144,6 +146,7 @@ public class MyShopUiDriver implements MyShopDriver {
         var totalPrice = orderDetailsPage.getTotalPrice();
         var status = orderDetailsPage.getStatus();
         var appliedCoupon = orderDetailsPage.getAppliedCoupon();
+        var giftWrapped = orderDetailsPage.getGiftWrapped();
 
         var response = ViewOrderResponse.builder()
                 .orderNumber(displayOrderNumber)
@@ -161,6 +164,7 @@ public class MyShopUiDriver implements MyShopDriver {
                 .totalPrice(totalPrice)
                 .status(status)
                 .appliedCouponCode(appliedCoupon)
+                .giftWrapped(giftWrapped)
                 .build();
 
         return success(response);
