@@ -28,7 +28,8 @@ public class ThenProductImpl extends BaseThenStep<Void, VoidVerification> implem
 
     @Override
     public ThenProductImpl hasWeight(double weight) {
-        throw new RuntimeException("TODO: DSL");
+        verification.weight(weight);
+        return this;
     }
 
     @Override

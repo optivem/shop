@@ -7,15 +7,18 @@ import com.mycompany.myshop.testkit.dsl.port.given.steps.GivenProduct;
 
 import static com.mycompany.myshop.testkit.dsl.core.scenario.ScenarioDefaults.DEFAULT_SKU;
 import static com.mycompany.myshop.testkit.dsl.core.scenario.ScenarioDefaults.DEFAULT_UNIT_PRICE;
+import static com.mycompany.myshop.testkit.dsl.core.scenario.ScenarioDefaults.DEFAULT_WEIGHT;
 
 public class GivenProductImpl extends BaseGivenStep implements GivenProduct {
     private String sku;
     private String unitPrice;
+    private String weight;
 
     public GivenProductImpl(GivenImpl given) {
         super(given);
         withSku(DEFAULT_SKU);
         withUnitPrice(DEFAULT_UNIT_PRICE);
+        this.weight = DEFAULT_WEIGHT;
     }
 
     public GivenProductImpl withSku(String sku) {
@@ -35,7 +38,8 @@ public class GivenProductImpl extends BaseGivenStep implements GivenProduct {
 
     @Override
     public GivenProductImpl withWeight(double weight) {
-        throw new RuntimeException("TODO: DSL");
+        this.weight = Converter.fromDouble(weight);
+        return this;
     }
 
     @Override
@@ -43,6 +47,7 @@ public class GivenProductImpl extends BaseGivenStep implements GivenProduct {
         app.erp().returnsProduct()
                 .sku(sku)
                 .unitPrice(unitPrice)
+                .weight(weight)
                 .execute()
                 .shouldSucceed();
     }

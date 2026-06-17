@@ -20,6 +20,7 @@ public class OrderDetailsPage extends BasePage {
     private static final String DISCOUNT_AMOUNT_OUTPUT_SELECTOR = "[aria-label='Display Discount Amount']";
     private static final String TAX_RATE_OUTPUT_SELECTOR = "[aria-label='Display Tax Rate']";
     private static final String TAX_AMOUNT_OUTPUT_SELECTOR = "[aria-label='Display Tax Amount']";
+    private static final String SHIPPING_FEE_OUTPUT_SELECTOR = "[aria-label='Display Shipping Fee']";
     private static final String TOTAL_PRICE_OUTPUT_SELECTOR = "[aria-label='Display Total Price']";
     private static final String STATUS_OUTPUT_SELECTOR = "[aria-label='Display Status']";
     private static final String APPLIED_COUPON_OUTPUT_SELECTOR = "[aria-label='Display Applied Coupon']";
@@ -85,6 +86,13 @@ public class OrderDetailsPage extends BasePage {
 
     public BigDecimal getTaxAmount() {
         return readTextMoney(TAX_AMOUNT_OUTPUT_SELECTOR);
+    }
+
+    public BigDecimal getShippingFee() {
+        if (!pageClient.isVisible(SHIPPING_FEE_OUTPUT_SELECTOR)) {
+            return null;
+        }
+        return readTextMoney(SHIPPING_FEE_OUTPUT_SELECTOR);
     }
 
     public BigDecimal getTotalPrice() {

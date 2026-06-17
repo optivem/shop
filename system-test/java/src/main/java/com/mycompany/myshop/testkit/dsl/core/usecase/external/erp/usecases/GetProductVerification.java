@@ -38,4 +38,16 @@ public class GetProductVerification extends ResponseVerification<GetProductRespo
     public GetProductVerification price(String expectedPrice) {
         return price(Converter.toBigDecimal(expectedPrice));
     }
+
+    public GetProductVerification weight(BigDecimal expectedWeight) {
+        var actualWeight = getResponse().getWeight();
+        assertThat(actualWeight)
+                .withFailMessage("Expected weight to be %s, but was %s", expectedWeight, actualWeight)
+                .isEqualByComparingTo(expectedWeight);
+        return this;
+    }
+
+    public GetProductVerification weight(double expectedWeight) {
+        return weight(Converter.toBigDecimal(expectedWeight));
+    }
 }

@@ -175,6 +175,18 @@ public class ViewOrderVerification extends ResponseVerification<ViewOrderRespons
         return taxAmount(Converter.toBigDecimal(expectedTaxAmount));
     }
 
+    public ViewOrderVerification shippingFee(BigDecimal expectedShippingFee) {
+        var actualShippingFee = getResponse().getShippingFee();
+        assertThat(actualShippingFee)
+                .withFailMessage("Expected shipping fee to be %s, but was %s", expectedShippingFee, actualShippingFee)
+                .isEqualByComparingTo(expectedShippingFee);
+        return this;
+    }
+
+    public ViewOrderVerification shippingFee(double expectedShippingFee) {
+        return shippingFee(Converter.toBigDecimal(expectedShippingFee));
+    }
+
     public ViewOrderVerification discountRate(BigDecimal expectedDiscountRate) {
         var actualDiscountRate = getResponse().getDiscountRate();
         assertThat(actualDiscountRate)

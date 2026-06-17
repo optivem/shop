@@ -18,4 +18,5 @@ public class ExtProductDetailsResponse {
     private BigDecimal price;
     private String category;
     private String brand;
+    private BigDecimal weight;
 }

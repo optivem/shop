@@ -25,6 +25,7 @@ public class ViewOrderResponse {
     private BigDecimal subtotalPrice;
     private BigDecimal taxRate;
     private BigDecimal taxAmount;
+    private BigDecimal shippingFee;
     private BigDecimal totalPrice;
     private OrderStatus status;
     private String appliedCouponCode;

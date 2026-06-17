@@ -12,6 +12,7 @@ import com.mycompany.myshop.testkit.driver.port.dtos.error.SystemError;
 public class ReturnsProduct extends BaseErpUseCase<Void, VoidVerification> {
     private String skuParamAlias;
     private String unitPrice;
+    private String weight;
 
     public ReturnsProduct(ErpDriver driver, UseCaseContext context) {
         super(driver, context);
@@ -31,6 +32,15 @@ public class ReturnsProduct extends BaseErpUseCase<Void, VoidVerification> {
         return unitPrice(Converter.fromDouble(unitPrice));
     }
 
+    public ReturnsProduct weight(String weight) {
+        this.weight = weight;
+        return this;
+    }
+
+    public ReturnsProduct weight(double weight) {
+        return weight(Converter.fromDouble(weight));
+    }
+
     @Override
     public UseCaseResult<Void, VoidVerification> execute() {
         var sku = context.getParamValue(skuParamAlias);
@@ -38,6 +48,7 @@ public class ReturnsProduct extends BaseErpUseCase<Void, VoidVerification> {
         var request = ReturnsProductRequest.builder()
                 .sku(sku)
                 .price(unitPrice)
+                .weight(weight)
                 .build();
 
         var result = driver.returnsProduct(request);

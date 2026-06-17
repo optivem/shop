@@ -141,6 +141,7 @@ public class MyShopUiDriver implements MyShopDriver {
         var subtotalPrice = orderDetailsPage.getSubtotalPrice();
         var taxRate = orderDetailsPage.getTaxRate();
         var taxAmount = orderDetailsPage.getTaxAmount();
+        var shippingFee = orderDetailsPage.getShippingFee();
         var totalPrice = orderDetailsPage.getTotalPrice();
         var status = orderDetailsPage.getStatus();
         var appliedCoupon = orderDetailsPage.getAppliedCoupon();
@@ -158,6 +159,7 @@ public class MyShopUiDriver implements MyShopDriver {
                 .subtotalPrice(subtotalPrice)
                 .taxRate(taxRate)
                 .taxAmount(taxAmount)
+                .shippingFee(shippingFee)
                 .totalPrice(totalPrice)
                 .status(status)
                 .appliedCouponCode(appliedCoupon)

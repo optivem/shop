@@ -33,6 +33,7 @@ public abstract class BaseErpDriver<TClient extends BaseErpClient> implements Er
                 .map(productDetails -> GetProductResponse.builder()
                         .sku(productDetails.getId())
                         .price(productDetails.getPrice())
+                        .weight(productDetails.getWeight())
                         .build())
                 .mapError(ext -> new ErpErrorResponse(ext.getMessage()));
     }

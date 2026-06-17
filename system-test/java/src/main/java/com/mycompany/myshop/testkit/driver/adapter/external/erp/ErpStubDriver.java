@@ -33,6 +33,7 @@ public class ErpStubDriver extends BaseErpDriver<ErpStubClient> {
                 .price(Converter.toBigDecimal(request.getPrice()))
                 .category("")
                 .brand("")
+                .weight(Converter.toBigDecimal(request.getWeight()))
                 .build();
 
         return client.configureGetProduct(extProductDetailsResponse)
