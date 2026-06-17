@@ -137,7 +137,8 @@ public class ThenOrderImpl<TSuccessResponse, TSuccessVerification extends Respon
     }
 
     public ThenOrderImpl<TSuccessResponse, TSuccessVerification> isGiftWrapped() {
-        throw new RuntimeException("TODO: DSL");
+        orderVerification.giftWrapped();
+        return this;
     }
 
     @Override

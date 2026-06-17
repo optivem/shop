@@ -17,6 +17,7 @@ public class WhenPlaceOrderImpl extends BaseWhenStep<PlaceOrderResponse, PlaceOr
     private String quantity;
     private String country;
     private String couponCode;
+    private boolean giftWrap;
 
     public WhenPlaceOrderImpl(UseCaseDsl app) {
         super(app);
@@ -61,7 +62,8 @@ public class WhenPlaceOrderImpl extends BaseWhenStep<PlaceOrderResponse, PlaceOr
     }
 
     public WhenPlaceOrderImpl withGiftWrap() {
-        throw new RuntimeException("TODO: DSL");
+        this.giftWrap = true;
+        return this;
     }
 
     @Override
@@ -72,6 +74,7 @@ public class WhenPlaceOrderImpl extends BaseWhenStep<PlaceOrderResponse, PlaceOr
                 .quantity(quantity)
                 .country(country)
                 .couponCode(couponCode)
+                .giftWrap(giftWrap)
                 .execute();
 
         return new ExecutionResultBuilder<>(result)

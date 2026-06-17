@@ -28,4 +28,5 @@ public class ViewOrderResponse {
     private BigDecimal totalPrice;
     private OrderStatus status;
     private String appliedCouponCode;
+    private Boolean giftWrapped;
 }

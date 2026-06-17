@@ -14,4 +14,5 @@ public class PlaceOrderRequest {
     private String quantity;
     private String country;
     private String couponCode;
+    private Boolean giftWrap;
 }

@@ -196,6 +196,14 @@ public class ViewOrderVerification extends ResponseVerification<ViewOrderRespons
         return this;
     }
 
+    public ViewOrderVerification giftWrapped() {
+        var actualGiftWrapped = getResponse().getGiftWrapped();
+        assertThat(actualGiftWrapped)
+                .withFailMessage("Expected order to be gift wrapped, but giftWrapped was: %s", actualGiftWrapped)
+                .isEqualTo(Boolean.TRUE);
+        return this;
+    }
+
     public void orderNumberHasPrefix(String expectedPrefix) {
         var actualOrderNumber = getResponse().getOrderNumber();
         assertThat(actualOrderNumber)

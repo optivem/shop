@@ -13,6 +13,7 @@ public class PlaceOrder extends BaseMyShopUseCase<PlaceOrderResponse, PlaceOrder
     private String quantity;
     private String countryAlias;
     private String couponCodeAlias;
+    private boolean giftWrap;
 
     public PlaceOrder(MyShopDriver driver, UseCaseContext context) {
         super(driver, context);
@@ -47,6 +48,11 @@ public class PlaceOrder extends BaseMyShopUseCase<PlaceOrderResponse, PlaceOrder
         return this;
     }
 
+    public PlaceOrder giftWrap(boolean giftWrap) {
+        this.giftWrap = giftWrap;
+        return this;
+    }
+
     @Override
     public UseCaseResult<PlaceOrderResponse, PlaceOrderVerification> execute() {
         var sku = context.getParamValue(skuParamAlias);
@@ -58,6 +64,7 @@ public class PlaceOrder extends BaseMyShopUseCase<PlaceOrderResponse, PlaceOrder
                 .quantity(quantity)
                 .country(country)
                 .couponCode(couponCode)
+                .giftWrap(giftWrap)
                 .build();
 
         var result = driver.placeOrder(request);
