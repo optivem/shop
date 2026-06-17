@@ -34,6 +34,11 @@ public class GivenProductImpl extends BaseGivenStep implements GivenProduct {
     }
 
     @Override
+    public GivenProductImpl withWeight(double weight) {
+        throw new RuntimeException("TODO: DSL");
+    }
+
+    @Override
     public void execute(UseCaseDsl app) {
         app.erp().returnsProduct()
                 .sku(sku)

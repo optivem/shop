@@ -137,6 +137,11 @@ public class ThenOrderImpl<TSuccessResponse, TSuccessVerification extends Respon
     }
 
     @Override
+    public ThenOrderImpl<TSuccessResponse, TSuccessVerification> hasShippingFee(double expectedShippingFee) {
+        throw new RuntimeException("TODO: DSL");
+    }
+
+    @Override
     public ThenOrderImpl<TSuccessResponse, TSuccessVerification> and() {
         return this;
     }
