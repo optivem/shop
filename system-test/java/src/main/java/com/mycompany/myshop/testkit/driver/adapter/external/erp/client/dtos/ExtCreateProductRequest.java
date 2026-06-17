@@ -10,6 +10,7 @@ public class ExtCreateProductRequest {
     private String title;
     private String description;
     private String price;
+    private String weight;
     private String category;
     private String brand;
 }

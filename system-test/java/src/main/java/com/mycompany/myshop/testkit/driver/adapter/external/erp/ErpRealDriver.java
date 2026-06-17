@@ -31,6 +31,7 @@ public class ErpRealDriver extends BaseErpDriver<ErpRealClient> {
                 .category(DEFAULT_CATEGORY)
                 .brand(DEFAULT_BRAND)
                 .price(request.getPrice())
+                .weight(request.getWeight())
                 .build();
 
         return client.createProduct(createProductRequest)
