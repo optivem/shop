@@ -4,6 +4,7 @@ import com.mycompany.myshop.core.dtos.BrowseOrderHistoryResponse;
 import com.mycompany.myshop.core.dtos.PlaceOrderRequest;
 import com.mycompany.myshop.core.dtos.PlaceOrderResponse;
 import com.mycompany.myshop.core.dtos.ViewOrderDetailsResponse;
+import com.mycompany.myshop.core.dtos.external.ProductDetailsResponse;
 import com.mycompany.myshop.core.entities.Order;
 import com.mycompany.myshop.core.entities.OrderStatus;
 import com.mycompany.myshop.core.exceptions.NotExistValidationException;
@@ -27,6 +28,8 @@ public class OrderService {
 
     private static final MonthDay YEAR_END_RESTRICTED_MONTH_DAY = MonthDay.of(12, 31);
     private static final LocalTime YEAR_END_RESTRICTED_TIME_START = LocalTime.of(23, 59);
+
+    private static final BigDecimal SHIPPING_FEE_PER_UNIT_WEIGHT = new BigDecimal("0.10");
 
     private final OrderRepository orderRepository;
     private final ErpGateway erpGateway;
@@ -61,7 +64,10 @@ public class OrderService {
             }
         }
 
-        var unitPrice = getUnitPrice(sku);
+        var productDetails = getProductDetails(sku);
+        var unitPrice = productDetails.getPrice();
+        var weight = productDetails.getWeight();
+
         var promotion = erpGateway.getPromotionDetails();
         var promotionFactor = promotion.isPromotionActive() ? promotion.getDiscount() : BigDecimal.ONE;
         var basePrice = unitPrice.multiply(BigDecimal.valueOf(quantity));
@@ -73,7 +79,10 @@ public class OrderService {
 
         var taxRate = getTaxRate(country);
         var taxAmount = subtotalPrice.multiply(taxRate);
-        var totalPrice = subtotalPrice.add(taxAmount);
+
+        var shippingFee = weight.multiply(BigDecimal.valueOf(quantity)).multiply(SHIPPING_FEE_PER_UNIT_WEIGHT);
+
+        var totalPrice = subtotalPrice.add(taxAmount).add(shippingFee);
 
         var appliedCouponCode = discountRate.compareTo(BigDecimal.ZERO) > 0 ? couponCode : null;
 
@@ -82,7 +91,7 @@ public class OrderService {
         var order = new Order(orderNumber, orderTimestamp, country,
                 sku, quantity, unitPrice, basePrice,
                 discountRate, discountAmount, subtotalPrice,
-                taxRate, taxAmount, totalPrice, OrderStatus.PLACED,
+                taxRate, taxAmount, shippingFee, totalPrice, OrderStatus.PLACED,
                 appliedCouponCode);
 
         orderRepository.save(order);
@@ -96,13 +105,13 @@ public class OrderService {
         return response;
     }
 
-    private BigDecimal getUnitPrice(String sku) {
+    private ProductDetailsResponse getProductDetails(String sku) {
         var productDetails = erpGateway.getProductDetails(sku);
         if (productDetails.isEmpty()) {
             throw new ValidationException("sku", "Product does not exist for SKU: " + sku);
         }
 
-        return productDetails.get().getPrice();
+        return productDetails.get();
     }
 
     private BigDecimal getTaxRate(String country) {
@@ -214,6 +223,7 @@ public class OrderService {
         response.setSubtotalPrice(order.getSubtotalPrice());
         response.setTaxRate(order.getTaxRate());
         response.setTaxAmount(order.getTaxAmount());
+        response.setShippingFee(order.getShippingFee());
         response.setTotalPrice(order.getTotalPrice());
         response.setStatus(order.getStatus());
         response.setCountry(order.getCountry());

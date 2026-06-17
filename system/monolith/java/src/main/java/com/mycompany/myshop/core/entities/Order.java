@@ -68,6 +68,10 @@ public class Order {
     @ColumnDefault("0")
     private BigDecimal taxAmount;
 
+    @Column(name = "shipping_fee", nullable = false, precision = 10, scale = 2)
+    @ColumnDefault("0")
+    private BigDecimal shippingFee;
+
     @Column(name = "total_price", nullable = false, precision = 10, scale = 2)
     private BigDecimal totalPrice;
 
@@ -81,7 +85,7 @@ public class Order {
     public Order(String orderNumber, Instant orderTimestamp, String country,
                  String sku, int quantity, BigDecimal unitPrice, BigDecimal basePrice,
                  BigDecimal discountRate, BigDecimal discountAmount, BigDecimal subtotalPrice,
-                 BigDecimal taxRate, BigDecimal taxAmount, BigDecimal totalPrice, OrderStatus status,
+                 BigDecimal taxRate, BigDecimal taxAmount, BigDecimal shippingFee, BigDecimal totalPrice, OrderStatus status,
                  String appliedCouponCode) {
         if (orderTimestamp == null) {
             throw new IllegalArgumentException("orderTimestamp cannot be null");
@@ -113,6 +117,9 @@ public class Order {
         if (taxAmount == null) {
             throw new IllegalArgumentException("taxAmount cannot be null");
         }
+        if (shippingFee == null) {
+            throw new IllegalArgumentException("shippingFee cannot be null");
+        }
         if (totalPrice == null) {
             throw new IllegalArgumentException("totalPrice cannot be null");
         }
@@ -132,6 +139,7 @@ public class Order {
         this.subtotalPrice = subtotalPrice;
         this.taxRate = taxRate;
         this.taxAmount = taxAmount;
+        this.shippingFee = shippingFee;
         this.totalPrice = totalPrice;
         this.status = status;
         this.appliedCouponCode = appliedCouponCode;

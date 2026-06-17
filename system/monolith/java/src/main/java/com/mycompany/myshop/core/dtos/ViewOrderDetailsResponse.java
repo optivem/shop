@@ -19,6 +19,7 @@ public class ViewOrderDetailsResponse {
     private BigDecimal subtotalPrice;
     private BigDecimal taxRate;
     private BigDecimal taxAmount;
+    private BigDecimal shippingFee;
     private BigDecimal totalPrice;
     private OrderStatus status;
     private String country;
