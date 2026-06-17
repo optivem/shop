@@ -94,6 +94,10 @@
                         <strong>Applied Coupon:</strong>
                         <p aria-label="Display Applied Coupon" id="detailAppliedCouponCode"></p>
                     </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Gift Wrapped:</strong>
+                        <p aria-label="Display Gift Wrapped" id="detailGiftWrapped"></p>
+                    </div>
                 </div>
                 <div class="mt-4 d-flex gap-2">
                     <button id="cancelOrderBtn" class="btn btn-danger" aria-label="Cancel Order">Cancel Order</button>
@@ -163,6 +167,7 @@
                 document.getElementById('detailTaxAmount').textContent = '$' + order.taxAmount.toFixed(2);
                 document.getElementById('detailTotalPrice').textContent = '$' + order.totalPrice.toFixed(2);
                 document.getElementById('detailAppliedCouponCode').textContent = order.appliedCouponCode || 'None';
+                document.getElementById('detailGiftWrapped').textContent = order.giftWrapped ? 'Yes' : 'No';
 
                 var isTerminal = order.status === 'CANCELLED' || order.status === 'DELIVERED';
                 if (isTerminal) {

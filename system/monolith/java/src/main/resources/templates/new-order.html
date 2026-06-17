@@ -46,6 +46,10 @@
                             <input type="text" class="form-control" id="couponCode"
                                    placeholder="Enter coupon code" aria-label="Coupon Code">
                         </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="giftWrap" aria-label="Gift Wrap">
+                            <label for="giftWrap" class="form-check-label">Gift Wrap</label>
+                        </div>
                         <div class="d-grid">
                             <button type="submit" class="btn btn-primary btn-lg" id="submitBtn" aria-label="Place Order">
                                 Place Order
@@ -69,6 +73,7 @@
             var quantityValue = document.getElementById('quantity').value;
             var country = document.getElementById('country').value;
             var couponCode = document.getElementById('couponCode').value;
+            var giftWrap = document.getElementById('giftWrap').checked;
 
             window._notificationCounter++;
             var nid = window._notificationCounter;
@@ -91,6 +96,7 @@
                 }
                 if (country !== '') body.country = country;
                 if (couponCode !== '') body.couponCode = couponCode;
+                if (giftWrap) body.giftWrap = true;
 
                 var response = await fetch('/api/orders', {
                     method: 'POST',
