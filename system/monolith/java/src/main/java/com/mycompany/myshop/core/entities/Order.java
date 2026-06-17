@@ -78,11 +78,15 @@ public class Order {
     @Column(name = "applied_coupon_code", nullable = true)
     private String appliedCouponCode;
 
+    @Column(name = "gift_wrapped", nullable = false)
+    @ColumnDefault("false")
+    private boolean giftWrapped;
+
     public Order(String orderNumber, Instant orderTimestamp, String country,
                  String sku, int quantity, BigDecimal unitPrice, BigDecimal basePrice,
                  BigDecimal discountRate, BigDecimal discountAmount, BigDecimal subtotalPrice,
                  BigDecimal taxRate, BigDecimal taxAmount, BigDecimal totalPrice, OrderStatus status,
-                 String appliedCouponCode) {
+                 String appliedCouponCode, boolean giftWrapped) {
         if (orderTimestamp == null) {
             throw new IllegalArgumentException("orderTimestamp cannot be null");
         }
@@ -135,5 +139,6 @@ public class Order {
         this.totalPrice = totalPrice;
         this.status = status;
         this.appliedCouponCode = appliedCouponCode;
+        this.giftWrapped = giftWrapped;
     }
 }

@@ -20,4 +20,6 @@ public class PlaceOrderRequest {
     private String country;
 
     private String couponCode;
+
+    private Boolean giftWrap;
 }

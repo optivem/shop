@@ -1,0 +1,2 @@
+ALTER TABLE orders
+  ADD COLUMN gift_wrapped BOOLEAN NOT NULL DEFAULT false;

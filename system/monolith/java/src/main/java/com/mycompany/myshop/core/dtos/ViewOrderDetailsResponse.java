@@ -23,4 +23,5 @@ public class ViewOrderDetailsResponse {
     private OrderStatus status;
     private String country;
     private String appliedCouponCode;
+    private Boolean giftWrapped;
 }

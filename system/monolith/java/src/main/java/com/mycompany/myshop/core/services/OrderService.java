@@ -28,6 +28,8 @@ public class OrderService {
     private static final MonthDay YEAR_END_RESTRICTED_MONTH_DAY = MonthDay.of(12, 31);
     private static final LocalTime YEAR_END_RESTRICTED_TIME_START = LocalTime.of(23, 59);
 
+    private static final BigDecimal GIFT_WRAP_FEE = new BigDecimal("5.00");
+
     private final OrderRepository orderRepository;
     private final ErpGateway erpGateway;
     private final TaxGateway taxGateway;
@@ -47,6 +49,7 @@ public class OrderService {
         var quantity = request.getQuantity();
         var country = request.getCountry();
         var couponCode = request.getCouponCode();
+        var giftWrapped = Boolean.TRUE.equals(request.getGiftWrap());
 
         var orderTimestamp = clockGateway.getCurrentTime();
 
@@ -73,7 +76,8 @@ public class OrderService {
 
         var taxRate = getTaxRate(country);
         var taxAmount = subtotalPrice.multiply(taxRate);
-        var totalPrice = subtotalPrice.add(taxAmount);
+        var giftWrapFee = giftWrapped ? GIFT_WRAP_FEE : BigDecimal.ZERO;
+        var totalPrice = subtotalPrice.add(taxAmount).add(giftWrapFee);
 
         var appliedCouponCode = discountRate.compareTo(BigDecimal.ZERO) > 0 ? couponCode : null;
 
@@ -83,7 +87,7 @@ public class OrderService {
                 sku, quantity, unitPrice, basePrice,
                 discountRate, discountAmount, subtotalPrice,
                 taxRate, taxAmount, totalPrice, OrderStatus.PLACED,
-                appliedCouponCode);
+                appliedCouponCode, giftWrapped);
 
         orderRepository.save(order);
 
@@ -218,6 +222,7 @@ public class OrderService {
         response.setStatus(order.getStatus());
         response.setCountry(order.getCountry());
         response.setAppliedCouponCode(order.getAppliedCouponCode());
+        response.setGiftWrapped(order.isGiftWrapped());
 
         return response;
     }
