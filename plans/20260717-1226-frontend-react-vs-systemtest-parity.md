@@ -157,4 +157,5 @@ tests. `npx tsc --noEmit` clean.
 ## Related
 
 - `plans/20260717-1020-orderhistory-systemtest-dsl-parity.md` — the deferred system-test track.
-- `plans/20260717-1015-component-stub-contract-mirror.md` — external-stub contract work (separate).
+- `plans/deferred/20260717-1015-component-stub-contract-beyond.md` — deferred PASS-2 follow-up to the
+  external-stub contract work (PASS 1 "mirror" completed; separate track).
