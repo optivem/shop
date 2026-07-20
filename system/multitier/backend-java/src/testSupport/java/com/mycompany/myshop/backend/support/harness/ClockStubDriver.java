@@ -1,5 +1,6 @@
 package com.mycompany.myshop.backend.support.harness;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
@@ -21,5 +22,10 @@ public class ClockStubDriver {
     public void stubTime(String isoInstant) {
         wireMock.register(get(urlEqualTo("/api/time"))
             .willReturn(okJson("{\"time\":\"" + isoInstant + "\"}")));
+    }
+
+    public void stubTimeError(int status, String body) {
+        wireMock.register(get(urlEqualTo("/api/time"))
+            .willReturn(aResponse().withStatus(status).withBody(body)));
     }
 }

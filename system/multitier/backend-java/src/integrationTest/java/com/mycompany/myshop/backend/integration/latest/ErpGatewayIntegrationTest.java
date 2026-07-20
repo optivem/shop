@@ -1,61 +1,32 @@
 package com.mycompany.myshop.backend.integration.latest;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.github.tomakehurst.wiremock.WireMockServer;
-import com.github.tomakehurst.wiremock.client.WireMock;
 import com.mycompany.myshop.backend.core.services.external.ErpGateway;
-import com.mycompany.myshop.backend.support.harness.ErpStubDriver;
+import com.mycompany.myshop.backend.integration.latest.base.AbstractGatewayIntegrationTest;
 import com.mycompany.myshop.backend.support.core.usecase.external.erp.ErpDsl;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.util.ReflectionTestUtils;
 
 /**
  * "After" of the external-systems contract-tests refactor at the narrow-integration layer: identical
  * scenarios to the {@code legacy/} twin, but the ERP happy/404 stubs are declared through the shared
  * use case DSL under {@code support/} — the same {@link ErpDsl} the component {@code latest/} tests
  * reach as {@code app.erp()}. A narrow-integration test drives one gateway, not a scenario, so it
- * uses the use case layer directly and never sees the scenario DSL above it. Uses the same in-process
- * {@link WireMockServer} mechanism (no Docker). The 500/503 error-injection cases have no DSL
- * vocabulary and stay raw, matching the {@code legacy/} twin.
+ * uses the use case layer directly and never sees the scenario DSL above it. Every stub — including
+ * the 500/503 error-injection cases — is programmed through the DSL; no raw WireMock survives here,
+ * which is the whole point of the "after".
+ *
+ * <p>The harness (in-process WireMock, stub-side DSL, SUT-side gateway) comes from
+ * {@link AbstractGatewayIntegrationTest}, so what remains below is the scenarios themselves.
  */
-class ErpGatewayIntegrationTest {
+class ErpGatewayIntegrationTest extends AbstractGatewayIntegrationTest {
 
-    static final WireMockServer WIRE_MOCK = new WireMockServer(options().dynamicPort());
-
-    private ErpDsl erp;
-    private ErpGateway erpGateway;
-
-    @BeforeAll
-    static void startWireMock() {
-        WIRE_MOCK.start();
-    }
-
-    @AfterAll
-    static void stopWireMock() {
-        WIRE_MOCK.stop();
-    }
-
-    @BeforeEach
-    void setUp() {
-        WIRE_MOCK.resetAll();
-
-        erp = new ErpDsl(new ErpStubDriver(new WireMock("localhost", WIRE_MOCK.port())));
-
-        erpGateway = new ErpGateway();
-        ReflectionTestUtils.setField(erpGateway, "erpUrl", WIRE_MOCK.baseUrl());
-    }
+    private final ErpGateway erpGateway = erpGateway();
 
     @Test
     void getProductDetailsReturnsDetailsWhenFound() {
-        erp.returnsProduct().sku("BOOK-123").unitPrice("10.00").execute();
+        erp().returnsProduct().sku("BOOK-123").unitPrice("10.00").execute();
 
         var result = erpGateway.getProductDetails("BOOK-123");
 
@@ -66,15 +37,14 @@ class ErpGatewayIntegrationTest {
 
     @Test
     void getProductDetailsReturnsEmptyWhenNotFound() {
-        erp.returnsNoProduct().sku("UNKNOWN").execute();
+        erp().returnsNoProduct().sku("UNKNOWN").execute();
 
         assertThat(erpGateway.getProductDetails("UNKNOWN")).isEmpty();
     }
 
     @Test
     void getProductDetailsThrowsOnServerError() {
-        WIRE_MOCK.stubFor(get("/api/products/BAD-SKU")
-            .willReturn(aResponse().withStatus(500).withBody("Internal Server Error")));
+        erp().failsForProduct().sku("BAD-SKU").status(500).body("Internal Server Error").execute();
 
         assertThatThrownBy(() -> erpGateway.getProductDetails("BAD-SKU"))
             .isInstanceOf(IllegalStateException.class)
@@ -83,7 +53,7 @@ class ErpGatewayIntegrationTest {
 
     @Test
     void getPromotionDetailsReturnsPromotion() {
-        erp.returnsPromotion().active(true).discount("0.15").execute();
+        erp().returnsPromotion().active(true).discount("0.15").execute();
 
         var result = erpGateway.getPromotionDetails();
 
@@ -93,8 +63,7 @@ class ErpGatewayIntegrationTest {
 
     @Test
     void getPromotionDetailsThrowsOnServerError() {
-        WIRE_MOCK.stubFor(get("/api/promotion")
-            .willReturn(aResponse().withStatus(503).withBody("Service Unavailable")));
+        erp().failsForPromotion().status(503).body("Service Unavailable").execute();
 
         assertThatThrownBy(() -> erpGateway.getPromotionDetails())
             .isInstanceOf(IllegalStateException.class)

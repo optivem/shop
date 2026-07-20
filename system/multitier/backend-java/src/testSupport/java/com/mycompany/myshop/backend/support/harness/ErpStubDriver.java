@@ -36,4 +36,14 @@ public class ErpStubDriver {
         wireMock.register(get(urlEqualTo("/api/promotion"))
             .willReturn(okJson("{\"promotionActive\":" + active + ",\"discount\":" + discount + "}")));
     }
+
+    public void stubProductError(String sku, int status, String body) {
+        wireMock.register(get(urlEqualTo("/api/products/" + sku))
+            .willReturn(aResponse().withStatus(status).withBody(body)));
+    }
+
+    public void stubPromotionError(int status, String body) {
+        wireMock.register(get(urlEqualTo("/api/promotion"))
+            .willReturn(aResponse().withStatus(status).withBody(body)));
+    }
 }

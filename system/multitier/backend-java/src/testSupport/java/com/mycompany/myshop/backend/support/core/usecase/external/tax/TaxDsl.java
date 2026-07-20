@@ -1,6 +1,7 @@
 package com.mycompany.myshop.backend.support.core.usecase.external.tax;
 
 import com.mycompany.myshop.backend.support.harness.TaxStubDriver;
+import com.mycompany.myshop.backend.support.core.usecase.external.tax.usecases.FailsForCountry;
 import com.mycompany.myshop.backend.support.core.usecase.external.tax.usecases.ReturnsNoTaxRate;
 import com.mycompany.myshop.backend.support.core.usecase.external.tax.usecases.ReturnsTaxRate;
 
@@ -9,6 +10,8 @@ import com.mycompany.myshop.backend.support.core.usecase.external.tax.usecases.R
  *
  * <pre>{@code
  * app.tax().returnsTaxRate().country("US").taxRate("0.10").execute();
+ * app.tax().returnsNoTaxRate().country("ZZ").execute();
+ * app.tax().failsForCountry().country("US").status(500).body("Internal Server Error").execute();
  * }</pre>
  *
  * <p>Rates are passed as {@code String} so the stubbed JSON is byte-identical to the raw WireMock
@@ -28,5 +31,9 @@ public class TaxDsl {
 
     public ReturnsNoTaxRate returnsNoTaxRate() {
         return new ReturnsNoTaxRate(driver);
+    }
+
+    public FailsForCountry failsForCountry() {
+        return new FailsForCountry(driver);
     }
 }

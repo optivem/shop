@@ -4,19 +4,17 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
-import com.github.tomakehurst.wiremock.client.WireMock;
 import com.mycompany.myshop.backend.core.repositories.CouponRepository;
 import com.mycompany.myshop.backend.core.repositories.OrderRepository;
 import com.mycompany.myshop.backend.core.services.external.ClockGateway;
 import com.mycompany.myshop.backend.core.services.external.ErpGateway;
 import com.mycompany.myshop.backend.core.services.external.TaxGateway;
 import com.mycompany.myshop.backend.support.harness.BackendDriver;
-import com.mycompany.myshop.backend.support.harness.ClockStubDriver;
-import com.mycompany.myshop.backend.support.harness.ErpStubDriver;
+import com.mycompany.myshop.backend.support.harness.ExternalSystemMode;
+import com.mycompany.myshop.backend.support.harness.StubDrivers;
 import com.mycompany.myshop.backend.support.harness.SutClockReader;
 import com.mycompany.myshop.backend.support.harness.SutErpReader;
 import com.mycompany.myshop.backend.support.harness.SutTaxReader;
-import com.mycompany.myshop.backend.support.harness.TaxStubDriver;
 import com.mycompany.myshop.backend.support.core.ScenarioDslImpl;
 import com.mycompany.myshop.backend.support.core.usecase.UseCaseDsl;
 import org.junit.jupiter.api.BeforeEach;
@@ -65,7 +63,7 @@ public abstract class AbstractComponentTest {
     @DynamicPropertySource
     static void externalSystemProperties(DynamicPropertyRegistry registry) {
         // Drive the ClockGateway through HTTP (rather than Instant.now()) so time is controllable.
-        registry.add("external.system-mode", () -> "stub");
+        registry.add("external.system-mode", ExternalSystemMode.STUB::propertyValue);
         registry.add("erp.url", ERP::baseUrl);
         registry.add("tax.url", TAX::baseUrl);
         registry.add("clock.url", CLOCK::baseUrl);
@@ -132,9 +130,9 @@ public abstract class AbstractComponentTest {
         app = new UseCaseDsl(
             new BackendDriver(restTemplate),
             objectMapper,
-            new ErpStubDriver(new WireMock("localhost", ERP.port())),
-            new TaxStubDriver(new WireMock("localhost", TAX.port())),
-            new ClockStubDriver(new WireMock("localhost", CLOCK.port())),
+            StubDrivers.erp(ERP),
+            StubDrivers.tax(TAX),
+            StubDrivers.clock(CLOCK),
             new SutErpReader(erpGateway),
             new SutTaxReader(taxGateway),
             new SutClockReader(clockGateway));

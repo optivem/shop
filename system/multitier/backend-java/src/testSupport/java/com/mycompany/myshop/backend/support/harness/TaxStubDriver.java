@@ -31,4 +31,9 @@ public class TaxStubDriver {
         wireMock.register(get(urlEqualTo("/api/countries/" + country))
             .willReturn(aResponse().withStatus(404)));
     }
+
+    public void stubTaxError(String country, int status, String body) {
+        wireMock.register(get(urlEqualTo("/api/countries/" + country))
+            .willReturn(aResponse().withStatus(status).withBody(body)));
+    }
 }
