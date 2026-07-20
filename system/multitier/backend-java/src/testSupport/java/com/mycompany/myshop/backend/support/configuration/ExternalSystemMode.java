@@ -1,4 +1,4 @@
-package com.mycompany.myshop.backend.support.harness;
+package com.mycompany.myshop.backend.support.configuration;
 
 /**
  * Typed form of the {@code external.system-mode} property the SUT reads — the mode the *system under
@@ -11,7 +11,9 @@ package com.mycompany.myshop.backend.support.harness;
  * silently lands in the gateway's unknown-mode branch rather than failing to compile.
  *
  * <p>Lives in {@code testSupport} so the component, contract, and narrow-integration layers share one
- * definition — the same reason the stub drivers and use case DSL live here.
+ * definition — the same reason the stub drivers and use case DSL live here. Sits under
+ * {@code configuration/} rather than {@code harness/}: it configures how a layer is wired, it is not
+ * itself a driver.
  */
 public enum ExternalSystemMode {
 

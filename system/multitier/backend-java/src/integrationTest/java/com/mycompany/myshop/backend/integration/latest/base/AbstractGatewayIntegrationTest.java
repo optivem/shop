@@ -9,8 +9,8 @@ import com.mycompany.myshop.backend.core.services.external.TaxGateway;
 import com.mycompany.myshop.backend.support.core.usecase.external.clock.ClockDsl;
 import com.mycompany.myshop.backend.support.core.usecase.external.erp.ErpDsl;
 import com.mycompany.myshop.backend.support.core.usecase.external.tax.TaxDsl;
-import com.mycompany.myshop.backend.support.harness.ExternalSystemMode;
-import com.mycompany.myshop.backend.support.harness.StubDrivers;
+import com.mycompany.myshop.backend.support.configuration.ExternalSystemMode;
+import com.mycompany.myshop.backend.support.configuration.StubDrivers;
 import org.junit.jupiter.api.BeforeEach;
 
 /**

@@ -7,7 +7,7 @@ import static org.assertj.core.api.Assertions.within;
 import com.mycompany.myshop.backend.core.services.external.ClockGateway;
 import com.mycompany.myshop.backend.integration.latest.base.AbstractGatewayIntegrationTest;
 import com.mycompany.myshop.backend.support.core.usecase.external.clock.ClockDsl;
-import com.mycompany.myshop.backend.support.harness.ExternalSystemMode;
+import com.mycompany.myshop.backend.support.configuration.ExternalSystemMode;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import org.junit.jupiter.api.Test;
