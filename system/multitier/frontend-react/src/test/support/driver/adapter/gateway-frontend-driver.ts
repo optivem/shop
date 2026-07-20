@@ -3,20 +3,18 @@
 // Used by the integration/latest specs. It reads the same DSL lines as the UI
 // driver; only the realization differs — screen text there, a Result here.
 import { expect } from 'vitest';
-import { OrderGateway } from '../../services/order-service';
-import { browseCoupons, createCoupon } from '../../services/coupon-service';
-import { routeApiTo } from '../test-utils';
-import type { Result } from '../../types/result.types';
+import { OrderGateway } from '../../../../services/order-service';
+import { browseCoupons, createCoupon } from '../../../../services/coupon-service';
+import { routeApiTo } from '../../../test-utils';
+import type { Result } from '../../../../types/result.types';
 import type {
   PlaceOrderResponse,
   BrowseOrderHistoryResponse,
   BrowseCouponsResponse,
-} from '../../types/api.types';
-import type {
-  FrontendDriver,
-  OrderHistoryRowExpectation,
-  PlaceOrderGesture,
-} from './frontend-dsl';
+} from '../../../../types/api.types';
+import type { FrontendDriver } from '../port/frontend-driver';
+import type { PlaceOrderGesture } from '../port/dtos/PlaceOrderGesture';
+import type { OrderHistoryRowExpectation } from '../port/dtos/OrderHistoryRowExpectation';
 
 export class GatewayFrontendDriver implements FrontendDriver {
   private baseUrl = '';

@@ -47,11 +47,15 @@ candidate, but the choice is open), such that:
 - The `dead address` behaviour (`UNREACHABLE_BACKEND`, `http://127.0.0.1:1`) has a sensible
   equivalent, so a spec that stages nothing still fails loudly if the frontend calls out.
 
-> **Prerequisite (added 2026-07-20):** the `BackendStubDriver` port is currently typed in Pact's
-> own vocabulary — `stub(interaction: V3Interaction)`, imported from `@pact-foundation/pact/src/v3/types`.
-> A non-Pact adapter cannot implement it without depending on Pact. See
-> `plans/20260720-1319-frontend-react-driver-port-adapter-split.md`, which extracts the port/adapter
-> split and the neutral-type question as independent work.
+> **Prerequisite (added 2026-07-20, updated after the port/adapter split landed):** the
+> `BackendStubDriver` port is still typed in Pact's own vocabulary — `stub(interaction: V3Interaction)`.
+> A non-Pact adapter cannot implement it without depending on Pact.
+>
+> The port/adapter layout half of this has landed (the port now lives in
+> `src/test/support/driver/port/backend-stub-driver.ts`, and the import moved off the deep internal
+> `/src/v3/types` path to the package root). The **type leak is not fixed** and remains the real
+> blocker — tracked in `plans/20260720-1410-frontend-react-neutral-backend-interaction-type.md`.
+> That plan, not the layout one, is this plan's prerequisite.
 
 ## Open questions (not yet answered)
 

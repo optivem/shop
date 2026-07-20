@@ -10,11 +10,12 @@
 // directly. That choice of driver is the ONLY difference between the two levels —
 // the same DSL lines run over both.
 import { beforeEach, afterEach, vi } from 'vitest';
-import { PactBackendStubDriver } from './pact-backend-stub-driver';
+import { PactBackendStubDriver } from './driver/adapter/pact-backend-stub-driver';
 import { BackendStubDsl } from './backend-stub-dsl';
-import { FrontendDsl, type FrontendDriver } from './frontend-dsl';
-import { UiFrontendDriver } from './ui-frontend-driver';
-import { GatewayFrontendDriver } from './gateway-frontend-driver';
+import { FrontendDsl } from './frontend-dsl';
+import type { FrontendDriver } from './driver/port/frontend-driver';
+import { UiFrontendDriver } from './driver/adapter/ui-frontend-driver';
+import { GatewayFrontendDriver } from './driver/adapter/gateway-frontend-driver';
 
 export interface Harness {
   backend: BackendStubDsl;

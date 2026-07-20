@@ -1,5 +1,5 @@
 import { MatchersV3 } from '@pact-foundation/pact';
-import type { V3Interaction } from '@pact-foundation/pact/src/v3/types';
+import type { V3Interaction } from '@pact-foundation/pact';
 
 const { like, eachLike, integer, decimal } = MatchersV3;
 

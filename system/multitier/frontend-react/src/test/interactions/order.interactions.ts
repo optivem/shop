@@ -10,7 +10,7 @@
 // with two conflicting versions of one interaction. That coupling is precisely the cost these
 // builders exist to remove, and the legacy suite is the one still paying it.
 import { MatchersV3 } from '@pact-foundation/pact';
-import type { V3Interaction } from '@pact-foundation/pact/src/v3/types';
+import type { V3Interaction } from '@pact-foundation/pact';
 import { OrderStatus } from '../../types/api.types';
 
 const { like, eachLike, integer, decimal } = MatchersV3;

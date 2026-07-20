@@ -5,10 +5,11 @@
 // anyone assembling a non-standard level.
 export { componentHarness, integrationHarness } from './component-harness';
 export type { Harness } from './component-harness';
-export { PactBackendStubDriver } from './pact-backend-stub-driver';
-export type { BackendStubDriver } from './pact-backend-stub-driver';
+export { PactBackendStubDriver } from './driver/adapter/pact-backend-stub-driver';
+export type { BackendStubDriver } from './driver/port/backend-stub-driver';
 export { BackendStubDsl } from './backend-stub-dsl';
 export { FrontendDsl } from './frontend-dsl';
-export type { FrontendDriver, PlaceOrderGesture } from './frontend-dsl';
-export { UiFrontendDriver } from './ui-frontend-driver';
-export { GatewayFrontendDriver } from './gateway-frontend-driver';
+export type { FrontendDriver } from './driver/port/frontend-driver';
+export type { PlaceOrderGesture } from './driver/port/dtos/PlaceOrderGesture';
+export { UiFrontendDriver } from './driver/adapter/ui-frontend-driver';
+export { GatewayFrontendDriver } from './driver/adapter/gateway-frontend-driver';

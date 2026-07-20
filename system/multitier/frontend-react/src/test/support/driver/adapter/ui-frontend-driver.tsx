@@ -4,17 +4,15 @@
 import { fireEvent, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { expect } from 'vitest';
-import { NewOrder } from '../../pages/NewOrder';
-import { OrderHistory } from '../../pages/OrderHistory';
-import { OrderDetails } from '../../pages/OrderDetails';
-import { AdminCoupons } from '../../pages/AdminCoupons';
-import { renderWithProviders, routeApiTo } from '../test-utils';
-import type {
-  FrontendDriver,
-  OrderDetailExpectation,
-  OrderHistoryRowExpectation,
-  PlaceOrderGesture,
-} from './frontend-dsl';
+import { NewOrder } from '../../../../pages/NewOrder';
+import { OrderHistory } from '../../../../pages/OrderHistory';
+import { OrderDetails } from '../../../../pages/OrderDetails';
+import { AdminCoupons } from '../../../../pages/AdminCoupons';
+import { renderWithProviders, routeApiTo } from '../../../test-utils';
+import type { FrontendDriver } from '../port/frontend-driver';
+import type { PlaceOrderGesture } from '../port/dtos/PlaceOrderGesture';
+import type { OrderDetailExpectation } from '../port/dtos/OrderDetailExpectation';
+import type { OrderHistoryRowExpectation } from '../port/dtos/OrderHistoryRowExpectation';
 
 export class UiFrontendDriver implements FrontendDriver {
   private readonly user = userEvent.setup();

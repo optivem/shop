@@ -16,18 +16,8 @@
 // failure still fails the owning test.
 import path from 'node:path';
 import { PactV3 } from '@pact-foundation/pact';
-import type { V3Interaction } from '@pact-foundation/pact/src/v3/types';
-
-// The seam the test-kit depends on: the Backend Stub DSL stages interactions with
-// stub(); the harness owns the lifecycle (reset/backendUrl/finish). A Component
-// Test's in-process stub could implement the same surface without Pact — here it's
-// Pact-backed.
-export interface BackendStubDriver {
-  stub(interaction: V3Interaction): void;
-  backendUrl(): Promise<string>;
-  finish(): Promise<void>;
-  reset(): void;
-}
+import type { V3Interaction } from '@pact-foundation/pact';
+import type { BackendStubDriver } from '../port/backend-stub-driver';
 
 export class PactBackendStubDriver implements BackendStubDriver {
   private provider = newProvider();

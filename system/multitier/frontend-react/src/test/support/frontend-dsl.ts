@@ -13,84 +13,9 @@
 // backend.* (arrange) to frontend.* (act) with no mock-server URL in sight — the
 // backend can't boot until the arrange phase is done staging, so first-gesture is
 // exactly the right moment.
-
-// quantity is `number | string` because the user types free text: "3.5" and "lala" are
-// gestures a real person can make, and the frontend has its own rules about them.
-export interface PlaceOrderGesture {
-  sku: string;
-  quantity: number | string;
-  country: string;
-  couponCode?: string;
-}
-
-// Expected fields on the order-details screen. showsOrderDetails is a UI-only assertion (the gateway
-// level does not render a screen), so these are the UI-formatted strings the screen shows — '$22.00',
-// '10.00%' — mirroring the existing total-price style. Only the fields a spec names are asserted.
-export interface OrderDetailExpectation {
-  status?: string;
-  sku?: string;
-  country?: string;
-  quantity?: string;
-  unitPrice?: string;
-  basePrice?: string;
-  discountRate?: string;
-  discountAmount?: string;
-  subtotalPrice?: string;
-  taxRate?: string;
-  taxAmount?: string;
-  totalPrice?: string;
-  appliedCoupon?: string;
-}
-
-// Expected fields on an order-history row. showsOrder runs at BOTH the UI and gateway levels, so this
-// is SEMANTIC: totalPrice is the number the backend returns — the UI driver formats it to '$22.00',
-// the gateway compares it numerically. Only the fields a spec names are asserted.
-export interface OrderHistoryRowExpectation {
-  totalPrice?: number;
-  status?: string;
-}
-
-// The seam both drivers implement. Gestures drive; the matching query methods
-// assert the outcome. useBackend points the driver at the stubbed backend — the
-// harness calls it, never a spec (routeApiTo for the UI, base URL for the gateway).
-// Some interactions only exist at one level — order details, its status-gated
-// actions, and cancelling from that screen are UI-only — so the driver that can't
-// realize a verb throws a clearly-labelled error. The latest specs never call an
-// unsupported verb, so those throws stay dormant and simply document the level
-// boundary.
-export interface FrontendDriver {
-  useBackend(baseUrl: string): void;
-
-  // place order (both levels)
-  placeOrder(gesture: PlaceOrderGesture): Promise<void>;
-  hasConfirmation(orderNumber: string): Promise<void>;
-  hasError(message: string): Promise<void>;
-  hasFieldError(field: string, message: string): Promise<void>;
-
-  // browse order history (both levels)
-  browseOrderHistory(): Promise<void>;
-  showsOrder(orderNumber: string, expected?: OrderHistoryRowExpectation): Promise<void>;
-
-  // browse coupons (both levels)
-  browseCoupons(): Promise<void>;
-  showsCoupon(code: string): Promise<void>;
-
-  // view order details (UI only — asserts on the rendered screen)
-  viewOrderDetails(orderNumber: string): Promise<void>;
-  showsOrderDetails(orderNumber: string, expected: OrderDetailExpectation): Promise<void>;
-  showsCancelAndDeliverActions(): Promise<void>;
-  hidesCancelAndDeliverActions(): Promise<void>;
-  showsNotFound(): Promise<void>;
-
-  // cancel order — reached from the order-details screen, so UI only
-  cancelOrder(orderNumber: string): Promise<void>;
-  wasCancelled(): Promise<void>;
-  cancelWasRejected(message: string): Promise<void>;
-
-  // publish coupon (both levels)
-  publishCoupon(code: string, discountRate: number): Promise<void>;
-  succeeded(): Promise<void>;
-}
+import type { FrontendDriver } from './driver/port/frontend-driver';
+import type { OrderDetailExpectation } from './driver/port/dtos/OrderDetailExpectation';
+import type { OrderHistoryRowExpectation } from './driver/port/dtos/OrderHistoryRowExpectation';
 
 // Resolved on the first gesture, memoized for the rest of the test, dropped by reset().
 type DriverHandle = () => Promise<FrontendDriver>;

@@ -15,14 +15,16 @@ owns the eventual .NET / TypeScript rollout. This plan is **Java-only**.
 
 **Why:** The two Java test DSLs disagree about how a money or rate assertion is written — `String` in
 the component layer, `double` in system-test — so the same assertion reads differently depending on
-which layer you are in, and four step types offer an overload the other lacks. Underneath that
-cosmetic split, the survey found genuine precision defects: one true `double == double` money
-comparison, two `String` paths that round-trip through `double` and lose exactness, and one
-scale-sensitive `isEqualTo`.
+which layer you are in, and four step types offer an overload the other lacks.
 
-**End result:** Every money/rate assertion in both Java DSLs accepts both `String` and `double`, with
-`String` canonical (exact `BigDecimal` comparison) and `double` a delegating convenience. Nothing is
-deleted, so all 37 existing call sites keep compiling untouched.
+**End result:** Every money/rate assertion in both Java DSLs accepts both `String` and `double`, both
+delegating to a canonical `BigDecimal` comparison. Nothing is deleted, so all 37 existing call sites
+keep compiling untouched.
+
+> **Precision defects moved out.** The four correctness issues this plan originally carried as Item 3
+> are now `plans/20260720-1420-system-test-java-bigdecimal-canonical-conformance.md`. They change
+> assertion semantics; this plan is purely additive. **Execute that plan first** — it settles the
+> canonical type that these overloads delegate to.
 
 ## The premise correction
 
@@ -45,8 +47,29 @@ than the whole convergence. Items 1–2 are parity work, and should be argued as
 
 ## Target state
 
-`String` canonical, `double` delegating via `BigDecimal.valueOf(x).toPlainString()` — the pattern
-`backend-java` already uses at `ThenOrderImpl.java:71,82`.
+**Corrected 2026-07-20 after enumerating `system-test/java`.** This plan originally targeted `String`
+canonical with `double` delegating via `BigDecimal.valueOf(x).toPlainString()` — the pattern
+`backend-java` inlines at seven sites. That was the wrong end to converge on.
+
+`system-test/java`'s verification layer is **`BigDecimal`-canonical**: 9 of its 11 money/rate methods
+assert on `BigDecimal` with `isEqualByComparingTo`, and both `String` and `double` are thin overloads
+funnelling through the shared `Converter.toBigDecimal(...)`. No string round-trip anywhere.
+
+Converging on `String` would have *added* a `double → BigDecimal → String → BigDecimal` round-trip to
+nine methods that currently don't have one. **Target is `BigDecimal` canonical, both `String` and
+`double` delegating through a shared converter.**
+
+Two consequences for the items below:
+
+- The `BigDecimal.valueOf(x).toPlainString()` helper the plan wanted to extract in `backend-java` is
+  the wrong helper. `backend-java` has its own verification layer (`ViewOrderVerification`,
+  `BrowseCouponsVerification`, `PlaceOrderVerification`) that these DSL methods can delegate to, the
+  way `system-test/java`'s DSL already does — rather than converting inline in the DSL at all.
+- Item 2's framing ("system-test layer gains `String` forms") is still right, but the new overloads
+  delegate to the existing `BigDecimal` methods, not to `double` ones.
+
+**These items have not yet been rewritten against the corrected target.** Do that before executing —
+see the resume block.
 
 **Current state — `ThenOrder` (component | system-test):**
 
@@ -76,32 +99,22 @@ none.
 
 ## ▶ Next executable step (resume here)
 
-**Execute Item 3 first, not Item 1.** It is the only item with a correctness payload, it is the
-smallest, and it is independent of the parity work. Doing it first means that if this plan stalls, the
-part that actually matters has landed.
+**The next move is planning, not editing.** The target state was corrected after this plan's items
+were written, and Items 1–2 below still describe the superseded `String`-canonical approach. Run
+`/refine-plan` on this file to rewrite them against `BigDecimal`-canonical — specifically, decide
+whether `backend-java`'s DSL should delegate to its existing verification layer (matching
+`system-test/java`'s layering) instead of converting inline, which is a larger change than the
+original plan budgeted and may collide with the parent plan's settled decision that production types
+in the component DSL port are correct there.
 
-Verification for every item: `./gradlew build` in `system/multitier/backend-java`, and
-`./gradlew build` in `system-test/java` (compile + unit level). Item 3 changes assertion *semantics*,
-so it additionally needs a system-test run to confirm no existing assertion starts failing —
-**ask before running it.**
+Do that only after
+`plans/20260720-1420-system-test-java-bigdecimal-canonical-conformance.md` has landed — it settles the
+canonical type these overloads delegate to.
+
+Verification for every item once rewritten: `./gradlew build` in `system/multitier/backend-java` and
+in `system-test/java`. These items are additive, so compilation is sufficient evidence.
 
 ## Items
-
-### Item 3 — Precision defects (do this first)
-
-Four pre-existing defects, all in `system-test/java`, none introduced by this plan:
-
-- [ ] `ViewOrderVerification.java:59` — `unitPrice(String)` round-trips through
-      `Converter.toDouble(...)` before comparing. Parse straight to `BigDecimal` instead.
-- [ ] `ViewOrderVerification.java:111` — `subtotalPrice(String)` has the same lossy round-trip. Same fix.
-- [ ] `GetTaxVerification.java:30` — `taxRate(BigDecimal)` uses `isEqualTo`, which is **scale-sensitive**
-      (`0.10` ≠ `0.1`). Change to `isEqualByComparingTo`, matching every sibling verification.
-- [ ] `common/Converter.java:28` — `fromDouble(double)` uses `.toString()`, which can emit scientific
-      notation for extreme magnitudes. Change to `.toPlainString()`. Currently unused by the assertion
-      path, so this is pre-emptive — fix it before Items 1–2 start routing through it.
-
-**These change assertion behaviour** (strictly: they make assertions stricter or more correct), unlike
-Items 1–2. That is why they need the system-test run and why they are listed separately.
 
 ### Item 1 — Component layer gains `double` sugar
 
@@ -109,11 +122,17 @@ Items 1–2. That is why they need the system-test run and why they are listed s
       `hasBasePrice`, `hasSubtotalPrice`, `hasTotalPrice`, `hasDiscountAmount`, `hasTaxAmount`.
 - [ ] Add a `String` overload to `ThenProduct.hasPrice` and `ThenCountry.hasTaxRate`.
 
+> ⚠️ **Superseded — rewrite before executing.** The paragraph below assumed `String`-canonical.
+> Under the corrected target the new overloads should delegate to a canonical `BigDecimal` form, not
+> to a `String` one. The extraction advice is likewise superseded: the right move is probably for the
+> DSL to stop converting at all and delegate to `backend-java`'s verification layer, as
+> `system-test/java`'s DSL does.
+
 Each new `double` overload is a one-liner delegating to the `String` form via
 `BigDecimal.valueOf(x).toPlainString()`. **Consider extracting that to a shared helper** — the literal
-expression is currently inlined at six sites (`ThenOrderImpl:71,82`, `WhenPublishCouponImpl:39`,
-`GivenCountryImpl:35`, `GivenCouponImpl:45`, `GivenProductImpl:35`, `GivenPromotionImpl:32`) and this
-item would add six more.
+expression is currently inlined at **seven** sites (`ThenOrderImpl:71,82`, `WhenPublishCouponImpl:39`,
+`GivenCountryImpl:35`, `GivenCouponImpl:45`, `GivenProductImpl:35`, `GivenPromotionImpl:32` — the
+plan originally said six) and this item would add six more.
 
 `ThenProductImpl` / `ThenCountryImpl` assert inline against DTO `BigDecimal` getters with no
 verification object, so their `String` overloads are DSL-local — no verification-layer change.
