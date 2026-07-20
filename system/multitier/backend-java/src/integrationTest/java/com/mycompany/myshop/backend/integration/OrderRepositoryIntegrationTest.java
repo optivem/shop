@@ -14,6 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
+// No ERP stub -> no DSL refactor -> no latest/legacy twin. This test drives the real database
+// through JPA and stubs nothing at all.
 @SpringBootTest
 @ActiveProfiles("test")
 class OrderRepositoryIntegrationTest extends AbstractIntegrationTest {
