@@ -1,6 +1,6 @@
 # 2026-07-20 10:35:10 UTC — backend-java testkit ↔ system-test alignment: follow-ups
 
-**Status:** 🟡 For discussion (2026-07-20). Nothing here is agreed. Raised while restructuring
+**Status:** 🟢 Refined 2026-07-20 — all six items decided (see `## Resolved decisions`). Raised while restructuring
 `backend-java` test support to mirror `system-test/java` (commits `03798adf`, `6397c3b1`). The
 restructure itself is **done and merged**; this plan is only the residue it surfaced.
 
@@ -11,30 +11,53 @@ restructure itself is **done and merged**; this plan is only the residue it surf
 
 ## TL;DR
 
-**Why:** Restructuring `backend-java`'s test support to mirror `system-test/java` surfaced five
-residual divergences. One is a defect introduced by the restructure itself; one was investigated and
-rejected; the rest need a decision rather than a refactor. Without writing them down they get
-re-discovered and re-argued.
+**Why:** Restructuring `backend-java`'s test support to mirror `system-test/java` surfaced six
+residual divergences. One was investigated and rejected; one turned out to be a real correctness
+question hiding behind a cosmetic one; the rest needed a decision rather than a refactor. Without
+writing them down they get re-discovered and re-argued.
 
-**End result:** Each divergence is either fixed, explicitly rejected with its reasoning recorded, or
-handed to the plan/repo that owns it — and no one re-opens the rejected one.
+**End result:** Every divergence is now decided. Exactly **one** is executable in this plan (the Item 1
+rename); everything else is either closed with its reasoning recorded, or routed to a file that owns
+it. Nothing is left as an open question.
 
-## Outcomes
+## Target state
 
-- The `testkit` driver ports speak one vocabulary end to end: the port method a use case calls has
-  the same name as the DSL method that calls it.
-- The "production types leak into the test port" question is settled **in writing** as a non-issue,
-  with the reasoning, so it is not raised a fourth time.
-- The backend-side `WhenCancelOrder` gap is either scheduled or explicitly declined — and the
-  system-test-side order-history gap stays owned by the plan that already owns it.
-- Whether `system-test`'s one-scenario-per-test guard actually fires is known, not suspected.
-- Commit `6397c3b1`'s inaccurate message is either corrected or knowingly left.
+**What actually changes here:** the ten stub-programming methods on `ErpDriver` / `TaxDriver` /
+`ClockDriver` are renamed to match their DSL callers (`stubProduct` → `returnsProduct`,
+`stubTaxError` → `failsForCountry`, …). After it, a backend use case no longer translates a name
+between the DSL verb and the port method it calls — the two read identically, the way `goToErp()`
+already does. Java only; three suites stay green (27 / 54 / 30).
+
+**What is decided but deliberately not executed here:**
+
+| Item | Decision | Lands in |
+|---|---|---|
+| 1 (mirror) | `returns*` rename ported to .NET/TS | `plans/deferred/20260720-1055-…-cross-language-mirror.md` Step 2 |
+| 3 | Order cancellation **is** in scope for the backend component layer | Its own plan/item (not yet written) |
+| 4 | Verify the guard before routing a fix | Throwaway two-scenario test in `system-test/java` |
+| 5 | Additive convergence on `String`-canonical money assertions | Own plan (Java) + deferred mirror Step 3 |
+
+**What is closed, with reasoning recorded so it is not re-raised:**
+
+- **Item 2** — production types in the DSL port are *fine* here: `backend-java/testSupport` shares a
+  build unit with production and asserting against the real contract is the point. `system-test`'s
+  copies are a workaround for being a separate Gradle project, not a design principle to imitate.
+- **Item 6** — commit `6397c3b1`'s message says `checkReachable()`; the real methods are `goToErp()` /
+  `goToTax()` / `goToClock()`. Left unamended; this plan is the correction of record.
+
+**What is explicitly unchanged:** no production code, no test *behaviour*, no assertions deleted, no
+history rewritten, and no `.NET` / `TypeScript` file touched by this plan. The Item 5 work, whenever it
+runs, is purely additive — existing call sites keep compiling.
+
+**The one reversal worth flagging:** Item 5 was written as "likely skip — cost far above benefit." A
+survey during refinement showed the divergence is narrower than assumed (four step types already agree)
+*and* that `backend-java`'s `String`-canonical model is the sounder one, because `system-test` compares
+money as raw `double`. It is now a scheduled additive fix with a correctness rationale, not a
+cosmetic-parity nice-to-have.
 
 ## ▶ Next executable step (resume here)
 
-**Discussion, not edits.** No item below is agreed yet — this plan should be walked with the user
-(`/refine-plan`) before any code is touched. If the user has already green-lit Item 1 in conversation,
-that one *is* mechanically executable: rename the 10 `stub*` methods on the three ports in
+**Refined 2026-07-20 — Item 1 is green-lit and is the only executable item.** Rename the 10 `stub*` methods on the three ports in
 `system/multitier/backend-java/src/testSupport/java/com/mycompany/myshop/backend/testkit/driver/port/external/`
 to match their DSL callers (table in Item 1), update the three adapters under `driver/adapter/external/`
 and the ~10 use-case call sites under `dsl/core/usecase/external/*/usecases/`, then verify with
@@ -98,8 +121,8 @@ order to fix a problem this layer does not have.
 
 ### Item 3 — Step-tree feature gaps — **needs a product decision, partly owned elsewhere**
 
-- [ ] Decide whether the backend component layer should cover order cancellation
-      (`WhenCancelOrder` + `ThenOrder` status assertions).
+- [x] Decided 2026-07-20: **in scope** for the backend component layer, but scheduled as its own
+      plan/item — see Resolved decisions. Not executed here.
 
 Gaps run both directions:
 - **backend-java has no `WhenCancelOrder`** — system-test has both the port and the impl. This half is
@@ -124,18 +147,52 @@ Caveats: this came from a static reading, not an observed failure. It concerns *
 backend-java**, so any fix lands in that layer and inherits its cross-language mirror obligation
 (.NET + TypeScript).
 
-### Item 5 — `double` vs `String` assertion vocabulary — **likely skip**
+### Item 5 — `double` vs `String` assertion vocabulary — **surveyed 2026-07-20, converge additively**
 
-- [ ] Confirm "skip" and close, or scope it.
+- [x] Surveyed. **Decision: additive convergence on `String`-canonical, scoped as its own plan.**
 
-`system-test` prefers `hasUnitPrice(double)`; `backend-java` prefers `String`, keeping `double`
-overloads only for `hasDiscountRate` / `hasTaxRate`. Systematic rather than a one-off, so a fix is a
-broad signature sweep across both codebases and all three languages. Cost looks far above the benefit;
-the concrete symptom is only that assertions do not copy-paste between the two layers.
+The original framing ("`system-test` prefers `double`, `backend-java` prefers `String`, fixing it is a
+broad signature sweep") was too coarse. The actual state:
+
+**`ThenOrder` — money amounts**
+
+| Method | `system-test/java` | `backend-java` |
+|---|---|---|
+| `hasUnitPrice` | `double` only | `String` only |
+| `hasTotalPrice` | `double` + `String` | `String` only |
+| `hasBasePrice` | `double` + `String` | `String` only |
+| `hasSubtotalPrice` | `double` + `String` | `String` only |
+| `hasDiscountAmount` | `double` + `String` | `String` only |
+| `hasTaxAmount` | `String` | `String` ✅ |
+
+**Rates**
+
+| Method | `system-test/java` | `backend-java` |
+|---|---|---|
+| `ThenOrder.hasTaxRate` | `double` + `String` | `String` + `double` ✅ |
+| `ThenOrder.hasDiscountRate` | `double` only | `String` + `double` |
+| `ThenCountry.hasTaxRate` | `double` | `double` ✅ |
+| `ThenCoupon.hasDiscountRate` | `double` | `String` ❌ |
+| `ThenProduct.hasPrice` | `double` | `double` ✅ |
+
+Two corrections this forces:
+
+1. **It is not "String vs double" — it is "which overloads exist."** `system-test` offers *both* on
+   most money amounts; `backend-java` offers only `String`. Four step types already agree exactly.
+2. **`backend-java`'s model is deliberate and sounder.** Its `double` overloads do not assert on
+   doubles — they convert and delegate
+   (`ThenOrderImpl.java:71`: `hasDiscountRate(BigDecimal.valueOf(expectedDiscountRate).toPlainString())`).
+   `String` is canonical (exact decimal comparison), `double` is sugar. That sidesteps float equality
+   on money. `system-test` passing `double` straight through to `orderVerification.totalPrice(double)`
+   is the weaker end — so there is a genuine correctness argument here, and it points at `system-test`
+   adopting `backend`'s model rather than the reverse.
+
+Because the fix is **additive**, it is not the signature sweep originally feared: add delegating
+one-liner overloads, delete nothing, so no existing call site changes.
 
 ### Item 6 — Stale commit message on `6397c3b1`
 
-- [ ] Decide: leave the inaccuracy noted here, or amend + force-push.
+- [x] Decided 2026-07-20: **leave it**; this plan carries the correction. No history rewrite.
 
 The message describes the concurrently-landed liveness work as adding `checkReachable()` to the three
 external driver ports. The actual method is `goToErp()` / `goToTax()` / `goToClock()` — it had been
@@ -143,16 +200,56 @@ renamed before the commit was made and the message was not re-checked. Everythin
 is accurate. `6397c3b1` is already pushed, so correcting it rewrites published history for a one-word
 error; recommendation is to leave it and let this plan carry the correction.
 
-## Open questions
+## Resolved decisions
 
-- **Item 1:** rename the ports to match the DSL (proposed), or the reverse — rename the DSL down to
-  `stub*`? The table above assumes the former, on the grounds that `system-test` proves `returns*`
-  works on a port with a real implementation.
-- **Item 1 scope:** does this rename need mirroring in `backend-dotnet` / `backend-typescript`, or are
-  their harnesses structurally different enough that it does not apply? *Not yet surveyed — the whole
-  restructure was Java-only, and .NET/TypeScript have not been looked at once.*
-- **Item 3:** is order cancellation in scope for the backend component layer at all, or deliberately a
-  system-test-only concern?
-- **Item 4:** who owns a system-test fix, given the .NET + TypeScript mirror obligation?
-- **Cross-cutting:** the .NET and TypeScript harnesses are now further out of sync with Java than
-  before the restructure. Is closing that a plan of its own?
+- **Item 1 direction — rename the ports up to `returns*` / `failsFor*`** (2026-07-20). The table in
+  Item 1 stands as written. Rationale: `returns*` describes observable behaviour, which stays true for
+  a real implementor — `system-test`'s `ErpDriver` already uses it on a port that `ErpRealDriver`
+  implements. `stub*` bakes an implementation choice into an interface name and duplicates what the
+  adapter name (`ErpStubDriver`) already carries, and `goToErp()` in the same port already follows the
+  DSL-matching convention.
+
+- **Item 1 scope — Java now, .NET/TypeScript mirroring deferred** (2026-07-20). The rename is executed
+  in `backend-java` on its own; it is not blocked on surveying the other two harnesses. The mirror
+  obligation is not dropped — it moves to
+  `plans/deferred/20260720-1055-backend-testkit-alignment-cross-language-mirror.md` (Step 2), which
+  owns the survey.
+
+- **Item 3 — order cancellation is in scope for the backend component layer, scheduled separately**
+  (2026-07-20). `WhenCancelOrder` + `ThenOrder` status assertions belong at the component layer: it is
+  a real backend state transition, assertable in-process and cheaply, and `ThenOrder` already carries
+  the `OrderStatus` vocabulary. But it is a feature addition, not a refactor, so it does **not** ride
+  along with the Item 1 rename — it gets its own plan/item. The system-test-side
+  `WhenBrowseOrderHistory` / `ThenOrderHistory` half remains owned by
+  `plans/20260717-1020-orderhistory-systemtest-dsl-parity.md`.
+
+- **Item 4 — verify before routing** (2026-07-20). Ownership is not decided yet, deliberately: the
+  suspicion is a static reading, not an observed failure. Step one is the throwaway two-scenario test
+  in `system-test/java` (Java only, no mirror obligation, minutes of work). If the guard throws, Item 4
+  closes with no fix and the ownership question never arises. Only if it is genuinely inert does it
+  become a three-language `system-test` item, and ownership is decided then.
+
+- **Item 5 — additive convergence on `String`-canonical, scoped as its own plan** (2026-07-20).
+  Reverses the plan's original "likely skip" after an actual survey (table in Item 5). Target: every
+  money/rate assertion accepts both forms, with `String` canonical and `double` a delegating
+  convenience that converts via `BigDecimal.toPlainString()`. Concretely — `backend-java` gains
+  `double` sugar on the five `ThenOrder` amount methods; `system-test` gains `String` on
+  `hasUnitPrice` / `hasDiscountRate` and routes its `double` money comparisons through exact decimal
+  comparison; `ThenCoupon.hasDiscountRate` is aligned. **Nothing is deleted**, so no existing call site
+  changes. Java lands first as its own plan; the .NET/TypeScript rollout is deferred to
+  `plans/deferred/20260720-1055-backend-testkit-alignment-cross-language-mirror.md` (Step 3). Not
+  executed here.
+
+- **Item 6 — leave `6397c3b1`'s message as-is** (2026-07-20). Not worth rewriting published history
+  for a one-word error. The correction of record: the commit message says the liveness work added
+  `checkReachable()` to the three external driver ports; the actual methods are `goToErp()` /
+  `goToTax()` / `goToClock()`. Everything else in that message is accurate.
+
+- **Cross-cutting — split out to `plans/deferred/`, survey first** (2026-07-20). The .NET/TypeScript
+  harness drift is now
+  **`plans/deferred/20260720-1055-backend-testkit-alignment-cross-language-mirror.md`**. Deferred
+  because it is blocked on the Java shape settling, and its **first deliverable is a survey** of both
+  harnesses against the restructured Java one — they have not been looked at once, so committing to
+  full convergence now would be committing blind. That file is also the home for the two pieces of
+  scope deferred above: Item 1's `returns*` rename mirror (its Step 2), and Item 5's three-language
+  additive overload rollout (its Step 3).
