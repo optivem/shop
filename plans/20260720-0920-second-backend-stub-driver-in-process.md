@@ -3,6 +3,11 @@
 **Status:** 🔵 Proposed (2026-07-20). Raised from the substack side while verifying the
 `PAID-TDD-maintainable-contract-tests-*` series against this repo. Not yet scoped or sized.
 
+## TL;DR
+
+**Why:** `BackendStubDriver` in `frontend-react` has exactly one implementation (`PactBackendStubDriver`), so the "one DSL, many drivers" seam is unproven by construction — nothing has ever swapped the driver. This forced five passages in a paid article to retreat from claiming a second driver exists.
+**End result:** A second, in-process (likely MSW) `BackendStubDriver` lets a Frontend Component Test run with no Pact mock server, driven by the *unchanged* Backend Stub DSL and unchanged specs — demonstrating the abstraction and letting the softened article passages revert to the stronger claim.
+
 ## Why this exists
 
 `BackendStubDriver` (`system/multitier/frontend-react/src/test/support/pact-backend-stub-driver.ts`)
@@ -41,6 +46,12 @@ candidate, but the choice is open), such that:
   no provider-state coupling — while a Contract Test runs the same DSL lines over Pact.
 - The `dead address` behaviour (`UNREACHABLE_BACKEND`, `http://127.0.0.1:1`) has a sensible
   equivalent, so a spec that stages nothing still fails loudly if the frontend calls out.
+
+> **Prerequisite (added 2026-07-20):** the `BackendStubDriver` port is currently typed in Pact's
+> own vocabulary — `stub(interaction: V3Interaction)`, imported from `@pact-foundation/pact/src/v3/types`.
+> A non-Pact adapter cannot implement it without depending on Pact. See
+> `plans/20260720-1319-frontend-react-driver-port-adapter-split.md`, which extracts the port/adapter
+> split and the neutral-type question as independent work.
 
 ## Open questions (not yet answered)
 
