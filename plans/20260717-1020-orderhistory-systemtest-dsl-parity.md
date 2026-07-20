@@ -1,16 +1,22 @@
 # orderHistory in the **system-test** DSL — parity (DECIDED; DEFERRED)
 
+## TL;DR
+
+**Why:** The component scenario DSL has a browse-order-history path (`when().browseOrderHistory()` / `then().orderHistory().containsOrder()`) that the system-test DSL completely lacks, and `GET /api/orders` is only exercised by a single *legacy* UI e2e test — the system-test API driver has no list method at all, so the API channel cannot even reach the endpoint.
+
+**End result:** The system-test layer gains a matching `browseOrderHistory` / `orderHistory().containsOrder()` scenario step wired multi-channel (UI + API via `ChannelMode.DYNAMIC`), a `MyShopApiDriver` list method for `GET /api/orders`, a place-order when-step that reads the SUT-generated order number back off the response instead of echoing `DEFAULT-ORDER`, and a new `latest` test browsing order history across both channels — in Java, .NET, and TypeScript.
+
 **Scope:** the **system-test** layer only (Java canonical; .NET + TypeScript mirror). This is the
 "bring system-test up to the component layer" track. The parallel **frontend-react** parity work is a
 separate plan — see Related.
 
 **Status:** Decisions made (Q1–Q4 resolved 2026-07-17), but **DEFERRED — not being worked now.** The
-active track is `plans/20260717-1226-frontend-react-vs-systemtest-parity.md`; per that decision we only
-touch frontend-react for now and leave the system-test layer (and backend-dotnet / backend-typescript
-components) as-is. Keep this plan as the record of the agreed system-test end-state for when it is picked
-up later.
+frontend-react parity track that preceded this one completed on 2026-07-17 (render-and-wire parity: only
+the ViewOrder detail-breakdown and order-history row assertions landed; its plan file was deleted per the
+plan-processing rule). Per that decision we touched frontend-react only and left the system-test layer
+(and backend-dotnet / backend-typescript components) as-is. Keep this plan as the record of the agreed
+system-test end-state for when it is picked up later.
 **Related:**
-- `plans/20260717-1226-frontend-react-vs-systemtest-parity.md` (the active frontend-react parity track).
 - `plans/20260717-1015-component-stub-contract-mirror.md` (external-stub contract work — separate;
   `orderHistory` is deliberately out of that scope because it involves no external stub).
 

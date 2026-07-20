@@ -7,7 +7,8 @@ restructure itself is **done and merged**; this plan is only the residue it surf
 **Related:**
 - `plans/20260717-1020-orderhistory-systemtest-dsl-parity.md` — owns the system-test half of Item 3
   (`WhenBrowseOrderHistory` / `ThenOrderHistory`). DECIDED + DEFERRED. **Do not re-decide it here.**
-- `plans/20260717-1226-frontend-react-vs-systemtest-parity.md` — the currently active parity track.
+- frontend-react vs system-test parity — COMPLETED 2026-07-17 (render-and-wire depth; plan file deleted
+  per the plan-processing rule).
 
 ## TL;DR
 
