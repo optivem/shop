@@ -1,7 +1,7 @@
-package com.mycompany.myshop.backend.support.core.usecase.external.erp.usecases;
+package com.mycompany.myshop.backend.testkit.dsl.core.usecase.external.erp.usecases;
 
-import com.mycompany.myshop.backend.support.harness.ErpStubDriver;
-import com.mycompany.myshop.backend.support.core.usecase.external.erp.usecases.base.BaseErpUseCase;
+import com.mycompany.myshop.backend.testkit.driver.port.external.erp.ErpDriver;
+import com.mycompany.myshop.backend.testkit.dsl.core.usecase.external.erp.usecases.base.BaseErpUseCase;
 
 /**
  * The ERP is broken for this SKU — a {@code 5xx} rather than an answer. Distinct from
@@ -14,7 +14,7 @@ public class FailsForProduct extends BaseErpUseCase {
     private int status;
     private String body;
 
-    public FailsForProduct(ErpStubDriver driver) {
+    public FailsForProduct(ErpDriver driver) {
         super(driver);
     }
 

@@ -1,10 +1,10 @@
-package com.mycompany.myshop.backend.support.core.scenario.when.steps;
+package com.mycompany.myshop.backend.testkit.dsl.core.scenario.when.steps;
 
-import com.mycompany.myshop.backend.support.core.ScenarioDslImpl;
-import com.mycompany.myshop.backend.support.core.scenario.ExecutionResult;
-import com.mycompany.myshop.backend.support.core.scenario.then.ThenResultImpl;
-import com.mycompany.myshop.backend.support.core.shared.ResponseVerification;
-import com.mycompany.myshop.backend.support.core.usecase.UseCaseDsl;
+import com.mycompany.myshop.backend.testkit.dsl.core.ScenarioDslImpl;
+import com.mycompany.myshop.backend.testkit.dsl.core.scenario.ExecutionResult;
+import com.mycompany.myshop.backend.testkit.dsl.core.scenario.then.ThenResultImpl;
+import com.mycompany.myshop.backend.testkit.dsl.core.shared.ResponseVerification;
+import com.mycompany.myshop.backend.testkit.dsl.core.usecase.UseCaseDsl;
 
 /**
  * {@code then()} is where the action actually runs. The outcome is captured into an {@link

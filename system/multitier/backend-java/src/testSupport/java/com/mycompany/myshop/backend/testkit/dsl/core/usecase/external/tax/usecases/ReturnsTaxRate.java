@@ -1,14 +1,14 @@
-package com.mycompany.myshop.backend.support.core.usecase.external.tax.usecases;
+package com.mycompany.myshop.backend.testkit.dsl.core.usecase.external.tax.usecases;
 
-import com.mycompany.myshop.backend.support.harness.TaxStubDriver;
-import com.mycompany.myshop.backend.support.core.usecase.external.tax.usecases.base.BaseTaxUseCase;
+import com.mycompany.myshop.backend.testkit.driver.port.external.tax.TaxDriver;
+import com.mycompany.myshop.backend.testkit.dsl.core.usecase.external.tax.usecases.base.BaseTaxUseCase;
 
 public class ReturnsTaxRate extends BaseTaxUseCase {
 
     private String country;
     private String taxRate;
 
-    public ReturnsTaxRate(TaxStubDriver driver) {
+    public ReturnsTaxRate(TaxDriver driver) {
         super(driver);
     }
 

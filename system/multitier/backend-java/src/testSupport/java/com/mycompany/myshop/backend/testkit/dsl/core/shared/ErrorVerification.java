@@ -1,4 +1,4 @@
-package com.mycompany.myshop.backend.support.core.shared;
+package com.mycompany.myshop.backend.testkit.dsl.core.shared;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

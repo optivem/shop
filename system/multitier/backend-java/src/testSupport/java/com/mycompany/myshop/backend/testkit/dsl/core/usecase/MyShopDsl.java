@@ -1,13 +1,13 @@
-package com.mycompany.myshop.backend.support.core.usecase;
+package com.mycompany.myshop.backend.testkit.dsl.core.usecase;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mycompany.myshop.backend.support.harness.BackendDriver;
-import com.mycompany.myshop.backend.support.core.usecase.usecases.BrowseCoupons;
-import com.mycompany.myshop.backend.support.core.usecase.usecases.BrowseOrderHistory;
-import com.mycompany.myshop.backend.support.core.usecase.usecases.GoToMyShop;
-import com.mycompany.myshop.backend.support.core.usecase.usecases.PlaceOrder;
-import com.mycompany.myshop.backend.support.core.usecase.usecases.PublishCoupon;
-import com.mycompany.myshop.backend.support.core.usecase.usecases.ViewOrder;
+import com.mycompany.myshop.backend.testkit.driver.port.MyShopDriver;
+import com.mycompany.myshop.backend.testkit.dsl.core.usecase.usecases.BrowseCoupons;
+import com.mycompany.myshop.backend.testkit.dsl.core.usecase.usecases.BrowseOrderHistory;
+import com.mycompany.myshop.backend.testkit.dsl.core.usecase.usecases.GoToMyShop;
+import com.mycompany.myshop.backend.testkit.dsl.core.usecase.usecases.PlaceOrder;
+import com.mycompany.myshop.backend.testkit.dsl.core.usecase.usecases.PublishCoupon;
+import com.mycompany.myshop.backend.testkit.dsl.core.usecase.usecases.ViewOrder;
 
 /**
  * The system under test, one class per use case. Every call produces an outcome the caller states an
@@ -17,10 +17,10 @@ import com.mycompany.myshop.backend.support.core.usecase.usecases.ViewOrder;
  */
 public class MyShopDsl {
 
-    private final BackendDriver driver;
+    private final MyShopDriver driver;
     private final ObjectMapper objectMapper;
 
-    public MyShopDsl(BackendDriver driver, ObjectMapper objectMapper) {
+    public MyShopDsl(MyShopDriver driver, ObjectMapper objectMapper) {
         this.driver = driver;
         this.objectMapper = objectMapper;
     }

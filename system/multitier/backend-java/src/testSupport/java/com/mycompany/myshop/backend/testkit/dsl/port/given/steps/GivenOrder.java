@@ -1,6 +1,6 @@
-package com.mycompany.myshop.backend.support.port.given.steps;
+package com.mycompany.myshop.backend.testkit.dsl.port.given.steps;
 
-import com.mycompany.myshop.backend.support.port.given.steps.base.GivenStep;
+import com.mycompany.myshop.backend.testkit.dsl.port.given.steps.base.GivenStep;
 
 /**
  * An order that was already placed before the scenario's own {@code when()} — a real {@code POST

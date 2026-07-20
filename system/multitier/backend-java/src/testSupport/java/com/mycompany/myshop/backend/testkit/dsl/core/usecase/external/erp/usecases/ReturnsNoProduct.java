@@ -1,14 +1,14 @@
-package com.mycompany.myshop.backend.support.core.usecase.external.erp.usecases;
+package com.mycompany.myshop.backend.testkit.dsl.core.usecase.external.erp.usecases;
 
-import com.mycompany.myshop.backend.support.harness.ErpStubDriver;
-import com.mycompany.myshop.backend.support.core.usecase.external.erp.usecases.base.BaseErpUseCase;
+import com.mycompany.myshop.backend.testkit.driver.port.external.erp.ErpDriver;
+import com.mycompany.myshop.backend.testkit.dsl.core.usecase.external.erp.usecases.base.BaseErpUseCase;
 
 /** The ERP answers {@code 404} for this SKU — an unknown product, programmed as deliberately as a known one. */
 public class ReturnsNoProduct extends BaseErpUseCase {
 
     private String sku;
 
-    public ReturnsNoProduct(ErpStubDriver driver) {
+    public ReturnsNoProduct(ErpDriver driver) {
         super(driver);
     }
 

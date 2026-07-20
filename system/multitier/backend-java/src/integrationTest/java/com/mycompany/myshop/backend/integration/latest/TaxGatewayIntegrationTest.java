@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.mycompany.myshop.backend.core.exceptions.TaxGatewayException;
 import com.mycompany.myshop.backend.core.services.external.TaxGateway;
 import com.mycompany.myshop.backend.integration.latest.base.AbstractGatewayIntegrationTest;
-import com.mycompany.myshop.backend.support.core.usecase.external.tax.TaxDsl;
+import com.mycompany.myshop.backend.testkit.dsl.core.usecase.external.tax.TaxDsl;
 import org.junit.jupiter.api.Test;
 
 /**

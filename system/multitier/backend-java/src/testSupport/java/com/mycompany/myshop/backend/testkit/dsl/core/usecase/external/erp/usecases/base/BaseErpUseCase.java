@@ -1,11 +1,11 @@
-package com.mycompany.myshop.backend.support.core.usecase.external.erp.usecases.base;
+package com.mycompany.myshop.backend.testkit.dsl.core.usecase.external.erp.usecases.base;
 
-import com.mycompany.myshop.backend.support.harness.ErpStubDriver;
-import com.mycompany.myshop.backend.support.core.shared.BaseStubUseCase;
+import com.mycompany.myshop.backend.testkit.driver.port.external.erp.ErpDriver;
+import com.mycompany.myshop.backend.testkit.dsl.core.shared.BaseStubUseCase;
 
-public abstract class BaseErpUseCase extends BaseStubUseCase<ErpStubDriver> {
+public abstract class BaseErpUseCase extends BaseStubUseCase<ErpDriver> {
 
-    protected BaseErpUseCase(ErpStubDriver driver) {
+    protected BaseErpUseCase(ErpDriver driver) {
         super(driver);
     }
 }

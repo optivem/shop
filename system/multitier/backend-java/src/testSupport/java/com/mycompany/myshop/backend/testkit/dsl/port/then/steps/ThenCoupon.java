@@ -1,6 +1,6 @@
-package com.mycompany.myshop.backend.support.port.then.steps;
+package com.mycompany.myshop.backend.testkit.dsl.port.then.steps;
 
-import com.mycompany.myshop.backend.support.port.then.steps.base.ThenStep;
+import com.mycompany.myshop.backend.testkit.dsl.port.then.steps.base.ThenStep;
 
 /**
  * A published coupon, read back through {@code GET /api/coupons}. Reaching the step at all asserts

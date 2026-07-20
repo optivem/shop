@@ -1,8 +1,8 @@
-package com.mycompany.myshop.backend.support.port;
+package com.mycompany.myshop.backend.testkit.dsl.port;
 
-import com.mycompany.myshop.backend.support.port.assume.AssumeStage;
-import com.mycompany.myshop.backend.support.port.given.GivenStage;
-import com.mycompany.myshop.backend.support.port.when.WhenStage;
+import com.mycompany.myshop.backend.testkit.dsl.port.assume.AssumeStage;
+import com.mycompany.myshop.backend.testkit.dsl.port.given.GivenStage;
+import com.mycompany.myshop.backend.testkit.dsl.port.when.WhenStage;
 
 /**
  * Entry point of the component-test scenario DSL: {@code assume() / given() / when()}.

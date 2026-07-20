@@ -1,10 +1,10 @@
-package com.mycompany.myshop.backend.support.core.usecase.usecases;
+package com.mycompany.myshop.backend.testkit.dsl.core.usecase.usecases;
 
 import com.mycompany.myshop.backend.core.dtos.PublishCouponRequest;
-import com.mycompany.myshop.backend.support.harness.BackendDriver;
-import com.mycompany.myshop.backend.support.core.shared.UseCaseResult;
-import com.mycompany.myshop.backend.support.core.shared.VoidVerification;
-import com.mycompany.myshop.backend.support.core.usecase.usecases.base.BaseMyShopUseCase;
+import com.mycompany.myshop.backend.testkit.driver.port.MyShopDriver;
+import com.mycompany.myshop.backend.testkit.dsl.core.shared.UseCaseResult;
+import com.mycompany.myshop.backend.testkit.dsl.core.shared.VoidVerification;
+import com.mycompany.myshop.backend.testkit.dsl.core.usecase.usecases.base.BaseMyShopUseCase;
 import java.math.BigDecimal;
 import java.time.Instant;
 import org.springframework.http.HttpStatus;
@@ -12,7 +12,7 @@ import org.springframework.http.HttpStatus;
 /**
  * {@code POST /api/coupons} — {@code 204 No Content}, no body to parse.
  *
- * <p>No rejection contract is declared: {@code BackendDriver} binds the response to {@code Void}, so
+ * <p>No rejection contract is declared: {@code MyShopDriver} binds the response to {@code Void}, so
  * a {@code ProblemDetail} body would be discarded before the DSL could assert it. {@code
  * shouldFail()} on a publish therefore fails loudly rather than asserting nothing. No component test
  * exercises a rejected publish today; the day one does, the driver returns the body as {@code
@@ -26,7 +26,7 @@ public class PublishCoupon extends BaseMyShopUseCase<Void, VoidVerification> {
     private String validTo;
     private Integer usageLimit;
 
-    public PublishCoupon(BackendDriver driver) {
+    public PublishCoupon(MyShopDriver driver) {
         super(driver);
     }
 

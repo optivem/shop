@@ -1,15 +1,15 @@
-package com.mycompany.myshop.backend.support.core.scenario.then;
+package com.mycompany.myshop.backend.testkit.dsl.core.scenario.then;
 
-import com.mycompany.myshop.backend.support.core.scenario.ExecutionResultContext;
-import com.mycompany.myshop.backend.support.core.scenario.then.steps.ThenClockImpl;
-import com.mycompany.myshop.backend.support.core.scenario.then.steps.ThenCountryImpl;
-import com.mycompany.myshop.backend.support.core.scenario.then.steps.ThenCouponImpl;
-import com.mycompany.myshop.backend.support.core.scenario.then.steps.ThenOrderHistoryImpl;
-import com.mycompany.myshop.backend.support.core.scenario.then.steps.ThenOrderImpl;
-import com.mycompany.myshop.backend.support.core.scenario.then.steps.ThenProductImpl;
-import com.mycompany.myshop.backend.support.core.shared.VoidVerification;
-import com.mycompany.myshop.backend.support.core.usecase.UseCaseDsl;
-import com.mycompany.myshop.backend.support.port.then.ThenStage;
+import com.mycompany.myshop.backend.testkit.dsl.core.scenario.ExecutionResultContext;
+import com.mycompany.myshop.backend.testkit.dsl.core.scenario.then.steps.ThenClockImpl;
+import com.mycompany.myshop.backend.testkit.dsl.core.scenario.then.steps.ThenCountryImpl;
+import com.mycompany.myshop.backend.testkit.dsl.core.scenario.then.steps.ThenCouponImpl;
+import com.mycompany.myshop.backend.testkit.dsl.core.scenario.then.steps.ThenOrderHistoryImpl;
+import com.mycompany.myshop.backend.testkit.dsl.core.scenario.then.steps.ThenOrderImpl;
+import com.mycompany.myshop.backend.testkit.dsl.core.scenario.then.steps.ThenProductImpl;
+import com.mycompany.myshop.backend.testkit.dsl.core.shared.VoidVerification;
+import com.mycompany.myshop.backend.testkit.dsl.core.usecase.UseCaseDsl;
+import com.mycompany.myshop.backend.testkit.dsl.port.then.ThenStage;
 
 /**
  * Assertions available without an action having run — reached from {@code given().then()}. Every

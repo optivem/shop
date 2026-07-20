@@ -1,7 +1,7 @@
-package com.mycompany.myshop.backend.support.port.then.steps;
+package com.mycompany.myshop.backend.testkit.dsl.port.then.steps;
 
 import com.mycompany.myshop.backend.core.entities.OrderStatus;
-import com.mycompany.myshop.backend.support.port.then.steps.base.ThenStep;
+import com.mycompany.myshop.backend.testkit.dsl.port.then.steps.base.ThenStep;
 
 /** The persisted order, read back through {@code GET /api/orders/{orderNumber}}. */
 public interface ThenOrder extends ThenStep<ThenOrder> {

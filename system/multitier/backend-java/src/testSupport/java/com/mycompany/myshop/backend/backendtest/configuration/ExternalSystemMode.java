@@ -1,4 +1,4 @@
-package com.mycompany.myshop.backend.support.configuration;
+package com.mycompany.myshop.backend.backendtest.configuration;
 
 /**
  * Typed form of the {@code external.system-mode} property the SUT reads — the mode the *system under

@@ -1,12 +1,12 @@
-package com.mycompany.myshop.backend.support.core.scenario.then.steps;
+package com.mycompany.myshop.backend.testkit.dsl.core.scenario.then.steps;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.mycompany.myshop.backend.core.dtos.external.TaxDetailsResponse;
-import com.mycompany.myshop.backend.support.core.scenario.ExecutionResultContext;
-import com.mycompany.myshop.backend.support.core.shared.ResponseVerification;
-import com.mycompany.myshop.backend.support.core.usecase.UseCaseDsl;
-import com.mycompany.myshop.backend.support.port.then.steps.ThenCountry;
+import com.mycompany.myshop.backend.testkit.dsl.core.scenario.ExecutionResultContext;
+import com.mycompany.myshop.backend.testkit.dsl.core.shared.ResponseVerification;
+import com.mycompany.myshop.backend.testkit.dsl.core.usecase.UseCaseDsl;
+import com.mycompany.myshop.backend.testkit.dsl.port.then.steps.ThenCountry;
 import java.math.BigDecimal;
 import java.util.Optional;
 

@@ -1,7 +1,7 @@
-package com.mycompany.myshop.backend.support.core.usecase.external.tax.usecases;
+package com.mycompany.myshop.backend.testkit.dsl.core.usecase.external.tax.usecases;
 
-import com.mycompany.myshop.backend.support.harness.TaxStubDriver;
-import com.mycompany.myshop.backend.support.core.usecase.external.tax.usecases.base.BaseTaxUseCase;
+import com.mycompany.myshop.backend.testkit.driver.port.external.tax.TaxDriver;
+import com.mycompany.myshop.backend.testkit.dsl.core.usecase.external.tax.usecases.base.BaseTaxUseCase;
 
 /**
  * The Tax system is broken for this country — a {@code 5xx} rather than an answer. Distinct from
@@ -14,7 +14,7 @@ public class FailsForCountry extends BaseTaxUseCase {
     private int status;
     private String body;
 
-    public FailsForCountry(TaxStubDriver driver) {
+    public FailsForCountry(TaxDriver driver) {
         super(driver);
     }
 

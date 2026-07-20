@@ -1,10 +1,10 @@
-package com.mycompany.myshop.backend.support.core.usecase.usecases;
+package com.mycompany.myshop.backend.testkit.dsl.core.usecase.usecases;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.mycompany.myshop.backend.core.dtos.ViewOrderDetailsResponse;
 import com.mycompany.myshop.backend.core.entities.OrderStatus;
-import com.mycompany.myshop.backend.support.core.shared.ResponseVerification;
+import com.mycompany.myshop.backend.testkit.dsl.core.shared.ResponseVerification;
 
 /**
  * The persisted order. Money is asserted with {@code isEqualByComparingTo} against a {@code String}

@@ -1,12 +1,12 @@
-package com.mycompany.myshop.backend.support.core.scenario.when.steps;
+package com.mycompany.myshop.backend.testkit.dsl.core.scenario.when.steps;
 
 import com.mycompany.myshop.backend.core.dtos.BrowseOrderHistoryResponse;
-import com.mycompany.myshop.backend.support.core.ScenarioDslImpl;
-import com.mycompany.myshop.backend.support.core.scenario.ExecutionResult;
-import com.mycompany.myshop.backend.support.core.scenario.ExecutionResultBuilder;
-import com.mycompany.myshop.backend.support.core.usecase.UseCaseDsl;
-import com.mycompany.myshop.backend.support.core.usecase.usecases.BrowseOrderHistoryVerification;
-import com.mycompany.myshop.backend.support.port.when.steps.WhenBrowseOrderHistory;
+import com.mycompany.myshop.backend.testkit.dsl.core.ScenarioDslImpl;
+import com.mycompany.myshop.backend.testkit.dsl.core.scenario.ExecutionResult;
+import com.mycompany.myshop.backend.testkit.dsl.core.scenario.ExecutionResultBuilder;
+import com.mycompany.myshop.backend.testkit.dsl.core.usecase.UseCaseDsl;
+import com.mycompany.myshop.backend.testkit.dsl.core.usecase.usecases.BrowseOrderHistoryVerification;
+import com.mycompany.myshop.backend.testkit.dsl.port.when.steps.WhenBrowseOrderHistory;
 
 public class WhenBrowseOrderHistoryImpl
         extends BaseWhenStep<BrowseOrderHistoryResponse, BrowseOrderHistoryVerification>

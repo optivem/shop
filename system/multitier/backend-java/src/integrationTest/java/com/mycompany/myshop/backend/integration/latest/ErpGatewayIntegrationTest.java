@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.mycompany.myshop.backend.core.services.external.ErpGateway;
 import com.mycompany.myshop.backend.integration.latest.base.AbstractGatewayIntegrationTest;
-import com.mycompany.myshop.backend.support.core.usecase.external.erp.ErpDsl;
+import com.mycompany.myshop.backend.testkit.dsl.core.usecase.external.erp.ErpDsl;
 import org.junit.jupiter.api.Test;
 
 /**

@@ -1,6 +1,6 @@
-package com.mycompany.myshop.backend.support.port.then.steps;
+package com.mycompany.myshop.backend.testkit.dsl.port.then.steps;
 
-import com.mycompany.myshop.backend.support.port.then.steps.base.ThenStep;
+import com.mycompany.myshop.backend.testkit.dsl.port.then.steps.base.ThenStep;
 
 /**
  * A rejected action, with one expectation per rejection shape. The backend raises validation

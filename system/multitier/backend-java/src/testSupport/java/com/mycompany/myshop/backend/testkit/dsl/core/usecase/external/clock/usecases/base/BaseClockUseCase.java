@@ -1,11 +1,11 @@
-package com.mycompany.myshop.backend.support.core.usecase.external.clock.usecases.base;
+package com.mycompany.myshop.backend.testkit.dsl.core.usecase.external.clock.usecases.base;
 
-import com.mycompany.myshop.backend.support.harness.ClockStubDriver;
-import com.mycompany.myshop.backend.support.core.shared.BaseStubUseCase;
+import com.mycompany.myshop.backend.testkit.driver.port.external.clock.ClockDriver;
+import com.mycompany.myshop.backend.testkit.dsl.core.shared.BaseStubUseCase;
 
-public abstract class BaseClockUseCase extends BaseStubUseCase<ClockStubDriver> {
+public abstract class BaseClockUseCase extends BaseStubUseCase<ClockDriver> {
 
-    protected BaseClockUseCase(ClockStubDriver driver) {
+    protected BaseClockUseCase(ClockDriver driver) {
         super(driver);
     }
 }

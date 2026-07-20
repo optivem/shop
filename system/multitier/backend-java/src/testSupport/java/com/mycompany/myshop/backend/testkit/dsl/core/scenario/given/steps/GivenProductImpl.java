@@ -1,9 +1,9 @@
-package com.mycompany.myshop.backend.support.core.scenario.given.steps;
+package com.mycompany.myshop.backend.testkit.dsl.core.scenario.given.steps;
 
-import com.mycompany.myshop.backend.support.core.scenario.ScenarioDefaults;
-import com.mycompany.myshop.backend.support.core.scenario.given.GivenImpl;
-import com.mycompany.myshop.backend.support.core.usecase.UseCaseDsl;
-import com.mycompany.myshop.backend.support.port.given.steps.GivenProduct;
+import com.mycompany.myshop.backend.testkit.dsl.core.scenario.ScenarioDefaults;
+import com.mycompany.myshop.backend.testkit.dsl.core.scenario.given.GivenImpl;
+import com.mycompany.myshop.backend.testkit.dsl.core.usecase.UseCaseDsl;
+import com.mycompany.myshop.backend.testkit.dsl.port.given.steps.GivenProduct;
 import java.math.BigDecimal;
 
 public class GivenProductImpl extends BaseGivenStep implements GivenProduct {

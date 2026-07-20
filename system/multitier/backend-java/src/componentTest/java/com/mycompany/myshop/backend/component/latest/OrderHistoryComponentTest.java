@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 
 /**
  * "After" of the component-test refactor: identical scenarios to the {@code legacy/} twin, written
- * on the scenario DSL ({@link com.mycompany.myshop.backend.support.core.ScenarioDslImpl}).
+ * on the scenario DSL ({@link com.mycompany.myshop.backend.testkit.dsl.core.ScenarioDslImpl}).
  *
  * <p>{@link #browseReturnsPlacedOrders()} says the whole story as one scenario — place, then assert
  * the order shows up in the history — rather than arranging an order imperatively and browsing as a

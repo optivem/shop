@@ -1,7 +1,7 @@
-package com.mycompany.myshop.backend.support.core.usecase.external.erp.usecases;
+package com.mycompany.myshop.backend.testkit.dsl.core.usecase.external.erp.usecases;
 
-import com.mycompany.myshop.backend.support.harness.ErpStubDriver;
-import com.mycompany.myshop.backend.support.core.usecase.external.erp.usecases.base.BaseErpUseCase;
+import com.mycompany.myshop.backend.testkit.driver.port.external.erp.ErpDriver;
+import com.mycompany.myshop.backend.testkit.dsl.core.usecase.external.erp.usecases.base.BaseErpUseCase;
 
 /** The ERP is broken for the promotion lookup — a {@code 5xx} rather than an answer. */
 public class FailsForPromotion extends BaseErpUseCase {
@@ -9,7 +9,7 @@ public class FailsForPromotion extends BaseErpUseCase {
     private int status;
     private String body;
 
-    public FailsForPromotion(ErpStubDriver driver) {
+    public FailsForPromotion(ErpDriver driver) {
         super(driver);
     }
 

@@ -1,10 +1,10 @@
-package com.mycompany.myshop.backend.support.core;
+package com.mycompany.myshop.backend.testkit.dsl.core;
 
-import com.mycompany.myshop.backend.support.core.scenario.assume.AssumeImpl;
-import com.mycompany.myshop.backend.support.core.scenario.given.GivenImpl;
-import com.mycompany.myshop.backend.support.core.scenario.when.WhenImpl;
-import com.mycompany.myshop.backend.support.core.usecase.UseCaseDsl;
-import com.mycompany.myshop.backend.support.port.ScenarioDsl;
+import com.mycompany.myshop.backend.testkit.dsl.core.scenario.assume.AssumeImpl;
+import com.mycompany.myshop.backend.testkit.dsl.core.scenario.given.GivenImpl;
+import com.mycompany.myshop.backend.testkit.dsl.core.scenario.when.WhenImpl;
+import com.mycompany.myshop.backend.testkit.dsl.core.usecase.UseCaseDsl;
+import com.mycompany.myshop.backend.testkit.dsl.port.ScenarioDsl;
 
 /**
  * The scenario DSL, built on the use case layer ({@link UseCaseDsl}).

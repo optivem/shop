@@ -1,4 +1,4 @@
-package com.mycompany.myshop.backend.support.harness;
+package com.mycompany.myshop.backend.testkit.driver.adapter.external.tax;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
@@ -6,17 +6,23 @@ import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
+import com.mycompany.myshop.backend.testkit.driver.port.external.tax.TaxDriver;
 
 /**
  * Low-level Tax stub driver. Registers mappings against a supplied {@link WireMock} client; the URL
  * and JSON body are byte-identical to {@code AbstractComponentTest#stubTax}.
  */
-public class TaxStubDriver {
+public class TaxStubDriver implements TaxDriver {
 
     private final WireMock wireMock;
 
     public TaxStubDriver(WireMock wireMock) {
         this.wireMock = wireMock;
+    }
+
+    /** See {@code ErpStubDriver#goToErp}. */
+    public void goToTax() {
+        wireMock.allStubMappings();
     }
 
     public void stubTax(String country, String rate) {

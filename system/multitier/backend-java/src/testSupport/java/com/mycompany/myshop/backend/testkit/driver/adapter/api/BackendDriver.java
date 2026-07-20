@@ -1,6 +1,7 @@
-package com.mycompany.myshop.backend.support.harness;
+package com.mycompany.myshop.backend.testkit.driver.adapter.api;
 
 import com.mycompany.myshop.backend.core.dtos.BrowseCouponsResponse;
+import com.mycompany.myshop.backend.testkit.driver.port.MyShopDriver;
 import com.mycompany.myshop.backend.core.dtos.BrowseOrderHistoryResponse;
 import com.mycompany.myshop.backend.core.dtos.PlaceOrderRequest;
 import com.mycompany.myshop.backend.core.dtos.PublishCouponRequest;
@@ -30,7 +31,7 @@ import org.springframework.http.ResponseEntity;
  * the parse, picking the success DTO or the {@code ProblemDetail} once the test has said which
  * outcome it expects.
  */
-public class BackendDriver {
+public class BackendDriver implements MyShopDriver {
 
     private final TestRestTemplate restTemplate;
 

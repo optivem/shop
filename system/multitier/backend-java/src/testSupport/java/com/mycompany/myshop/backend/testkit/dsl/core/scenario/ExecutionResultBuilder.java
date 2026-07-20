@@ -1,7 +1,7 @@
-package com.mycompany.myshop.backend.support.core.scenario;
+package com.mycompany.myshop.backend.testkit.dsl.core.scenario;
 
-import com.mycompany.myshop.backend.support.core.shared.ResponseVerification;
-import com.mycompany.myshop.backend.support.core.shared.UseCaseResult;
+import com.mycompany.myshop.backend.testkit.dsl.core.shared.ResponseVerification;
+import com.mycompany.myshop.backend.testkit.dsl.core.shared.UseCaseResult;
 
 public class ExecutionResultBuilder<R, V extends ResponseVerification<R>> {
 

@@ -1,10 +1,10 @@
-package com.mycompany.myshop.backend.support.core.scenario.given.steps;
+package com.mycompany.myshop.backend.testkit.dsl.core.scenario.given.steps;
 
-import com.mycompany.myshop.backend.support.core.scenario.given.GivenImpl;
-import com.mycompany.myshop.backend.support.core.scenario.then.ThenImpl;
-import com.mycompany.myshop.backend.support.core.scenario.when.WhenImpl;
-import com.mycompany.myshop.backend.support.core.usecase.UseCaseDsl;
-import com.mycompany.myshop.backend.support.port.given.steps.base.GivenStep;
+import com.mycompany.myshop.backend.testkit.dsl.core.scenario.given.GivenImpl;
+import com.mycompany.myshop.backend.testkit.dsl.core.scenario.then.ThenImpl;
+import com.mycompany.myshop.backend.testkit.dsl.core.scenario.when.WhenImpl;
+import com.mycompany.myshop.backend.testkit.dsl.core.usecase.UseCaseDsl;
+import com.mycompany.myshop.backend.testkit.dsl.port.given.steps.base.GivenStep;
 
 public abstract class BaseGivenStep implements GivenStep {
 

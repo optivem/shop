@@ -1,4 +1,4 @@
-package com.mycompany.myshop.backend.support.core.scenario;
+package com.mycompany.myshop.backend.testkit.dsl.core.scenario;
 
 /**
  * What the action left behind for {@code then()} to resolve against: the order number the SUT

@@ -1,10 +1,10 @@
-package com.mycompany.myshop.backend.support.core.scenario.then.steps;
+package com.mycompany.myshop.backend.testkit.dsl.core.scenario.then.steps;
 
-import com.mycompany.myshop.backend.support.core.scenario.ExecutionResultContext;
-import com.mycompany.myshop.backend.support.core.shared.ResponseVerification;
-import com.mycompany.myshop.backend.support.core.usecase.UseCaseDsl;
-import com.mycompany.myshop.backend.support.core.usecase.usecases.BrowseCouponsVerification;
-import com.mycompany.myshop.backend.support.port.then.steps.ThenCoupon;
+import com.mycompany.myshop.backend.testkit.dsl.core.scenario.ExecutionResultContext;
+import com.mycompany.myshop.backend.testkit.dsl.core.shared.ResponseVerification;
+import com.mycompany.myshop.backend.testkit.dsl.core.usecase.UseCaseDsl;
+import com.mycompany.myshop.backend.testkit.dsl.core.usecase.usecases.BrowseCouponsVerification;
+import com.mycompany.myshop.backend.testkit.dsl.port.then.steps.ThenCoupon;
 
 /** Reads the coupons back through {@code GET /api/coupons}; constructing the step asserts the coupon is there. */
 public class ThenCouponImpl<R, V extends ResponseVerification<R>> extends BaseThenStep<R, V>

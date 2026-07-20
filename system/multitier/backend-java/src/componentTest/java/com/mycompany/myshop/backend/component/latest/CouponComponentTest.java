@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 
 /**
  * "After" of the component-test refactor: the publish + browse coupon flow written on the scenario
- * DSL ({@link com.mycompany.myshop.backend.support.core.ScenarioDslImpl}) instead of raw {@code
+ * DSL ({@link com.mycompany.myshop.backend.testkit.dsl.core.ScenarioDslImpl}) instead of raw {@code
  * restTemplate} calls. Same scenario as the {@code legacy/} twin.
  *
  * <p>Coupon touches no external systems, so — unlike the order twins, which additionally swap raw

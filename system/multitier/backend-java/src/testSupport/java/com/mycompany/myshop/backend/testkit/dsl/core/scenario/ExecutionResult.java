@@ -1,7 +1,7 @@
-package com.mycompany.myshop.backend.support.core.scenario;
+package com.mycompany.myshop.backend.testkit.dsl.core.scenario;
 
-import com.mycompany.myshop.backend.support.core.shared.ResponseVerification;
-import com.mycompany.myshop.backend.support.core.shared.UseCaseResult;
+import com.mycompany.myshop.backend.testkit.dsl.core.shared.ResponseVerification;
+import com.mycompany.myshop.backend.testkit.dsl.core.shared.UseCaseResult;
 
 /** The outcome of the scenario's action, plus what it left behind for {@code then()}. */
 public class ExecutionResult<R, V extends ResponseVerification<R>> {

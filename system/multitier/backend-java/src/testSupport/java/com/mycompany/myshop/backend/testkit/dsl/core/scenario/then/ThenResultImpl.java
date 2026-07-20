@@ -1,11 +1,11 @@
-package com.mycompany.myshop.backend.support.core.scenario.then;
+package com.mycompany.myshop.backend.testkit.dsl.core.scenario.then;
 
-import com.mycompany.myshop.backend.support.core.scenario.ExecutionResult;
-import com.mycompany.myshop.backend.support.core.scenario.then.steps.ThenFailureImpl;
-import com.mycompany.myshop.backend.support.core.scenario.then.steps.ThenSuccessImpl;
-import com.mycompany.myshop.backend.support.core.shared.ResponseVerification;
-import com.mycompany.myshop.backend.support.core.usecase.UseCaseDsl;
-import com.mycompany.myshop.backend.support.port.then.ThenResultStage;
+import com.mycompany.myshop.backend.testkit.dsl.core.scenario.ExecutionResult;
+import com.mycompany.myshop.backend.testkit.dsl.core.scenario.then.steps.ThenFailureImpl;
+import com.mycompany.myshop.backend.testkit.dsl.core.scenario.then.steps.ThenSuccessImpl;
+import com.mycompany.myshop.backend.testkit.dsl.core.shared.ResponseVerification;
+import com.mycompany.myshop.backend.testkit.dsl.core.usecase.UseCaseDsl;
+import com.mycompany.myshop.backend.testkit.dsl.port.then.ThenResultStage;
 
 /**
  * The outcome of the action the scenario ran. A test must commit to one side —

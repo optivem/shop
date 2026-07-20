@@ -1,10 +1,10 @@
-package com.mycompany.myshop.backend.support.configuration;
+package com.mycompany.myshop.backend.backendtest.configuration;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
-import com.mycompany.myshop.backend.support.harness.ClockStubDriver;
-import com.mycompany.myshop.backend.support.harness.ErpStubDriver;
-import com.mycompany.myshop.backend.support.harness.TaxStubDriver;
+import com.mycompany.myshop.backend.testkit.driver.adapter.external.clock.ClockStubDriver;
+import com.mycompany.myshop.backend.testkit.driver.adapter.external.erp.ErpStubDriver;
+import com.mycompany.myshop.backend.testkit.driver.adapter.external.tax.TaxStubDriver;
 
 /**
  * Builds the external-system stub drivers from a running {@link WireMockServer}.

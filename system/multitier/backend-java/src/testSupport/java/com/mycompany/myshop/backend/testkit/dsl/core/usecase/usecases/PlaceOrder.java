@@ -1,12 +1,12 @@
-package com.mycompany.myshop.backend.support.core.usecase.usecases;
+package com.mycompany.myshop.backend.testkit.dsl.core.usecase.usecases;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mycompany.myshop.backend.core.dtos.PlaceOrderRequest;
 import com.mycompany.myshop.backend.core.dtos.PlaceOrderResponse;
-import com.mycompany.myshop.backend.support.harness.BackendDriver;
-import com.mycompany.myshop.backend.support.core.shared.ResponseParser;
-import com.mycompany.myshop.backend.support.core.shared.UseCaseResult;
-import com.mycompany.myshop.backend.support.core.usecase.usecases.base.BaseMyShopUseCase;
+import com.mycompany.myshop.backend.testkit.driver.port.MyShopDriver;
+import com.mycompany.myshop.backend.testkit.dsl.core.shared.ResponseParser;
+import com.mycompany.myshop.backend.testkit.dsl.core.shared.UseCaseResult;
+import com.mycompany.myshop.backend.testkit.dsl.core.usecase.usecases.base.BaseMyShopUseCase;
 import org.springframework.http.HttpStatus;
 
 /**
@@ -24,7 +24,7 @@ public class PlaceOrder extends BaseMyShopUseCase<PlaceOrderResponse, PlaceOrder
     private String rawQuantity;
     private boolean quantityIsRaw;
 
-    public PlaceOrder(BackendDriver driver, ObjectMapper objectMapper) {
+    public PlaceOrder(MyShopDriver driver, ObjectMapper objectMapper) {
         super(driver);
         this.objectMapper = objectMapper;
     }

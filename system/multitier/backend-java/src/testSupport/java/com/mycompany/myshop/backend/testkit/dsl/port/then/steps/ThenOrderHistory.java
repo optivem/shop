@@ -1,6 +1,6 @@
-package com.mycompany.myshop.backend.support.port.then.steps;
+package com.mycompany.myshop.backend.testkit.dsl.port.then.steps;
 
-import com.mycompany.myshop.backend.support.port.then.steps.base.ThenStep;
+import com.mycompany.myshop.backend.testkit.dsl.port.then.steps.base.ThenStep;
 
 /** Order history, read back through {@code GET /api/orders}. */
 public interface ThenOrderHistory extends ThenStep<ThenOrderHistory> {

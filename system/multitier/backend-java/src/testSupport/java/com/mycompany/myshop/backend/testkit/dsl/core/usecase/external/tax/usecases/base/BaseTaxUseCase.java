@@ -1,11 +1,11 @@
-package com.mycompany.myshop.backend.support.core.usecase.external.tax.usecases.base;
+package com.mycompany.myshop.backend.testkit.dsl.core.usecase.external.tax.usecases.base;
 
-import com.mycompany.myshop.backend.support.harness.TaxStubDriver;
-import com.mycompany.myshop.backend.support.core.shared.BaseStubUseCase;
+import com.mycompany.myshop.backend.testkit.driver.port.external.tax.TaxDriver;
+import com.mycompany.myshop.backend.testkit.dsl.core.shared.BaseStubUseCase;
 
-public abstract class BaseTaxUseCase extends BaseStubUseCase<TaxStubDriver> {
+public abstract class BaseTaxUseCase extends BaseStubUseCase<TaxDriver> {
 
-    protected BaseTaxUseCase(TaxStubDriver driver) {
+    protected BaseTaxUseCase(TaxDriver driver) {
         super(driver);
     }
 }

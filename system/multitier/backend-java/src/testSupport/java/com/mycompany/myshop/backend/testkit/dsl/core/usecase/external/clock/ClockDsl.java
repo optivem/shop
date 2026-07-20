@@ -1,8 +1,9 @@
-package com.mycompany.myshop.backend.support.core.usecase.external.clock;
+package com.mycompany.myshop.backend.testkit.dsl.core.usecase.external.clock;
 
-import com.mycompany.myshop.backend.support.harness.ClockStubDriver;
-import com.mycompany.myshop.backend.support.core.usecase.external.clock.usecases.FailsForTime;
-import com.mycompany.myshop.backend.support.core.usecase.external.clock.usecases.ReturnsTime;
+import com.mycompany.myshop.backend.testkit.driver.port.external.clock.ClockDriver;
+import com.mycompany.myshop.backend.testkit.dsl.core.usecase.external.clock.usecases.FailsForTime;
+import com.mycompany.myshop.backend.testkit.dsl.core.usecase.external.clock.usecases.GoToClock;
+import com.mycompany.myshop.backend.testkit.dsl.core.usecase.external.clock.usecases.ReturnsTime;
 
 /**
  * The Clock, as the component test sees it — the reason time is controllable at all.
@@ -14,10 +15,14 @@ import com.mycompany.myshop.backend.support.core.usecase.external.clock.usecases
  */
 public class ClockDsl {
 
-    private final ClockStubDriver driver;
+    private final ClockDriver driver;
 
-    public ClockDsl(ClockStubDriver driver) {
+    public ClockDsl(ClockDriver driver) {
         this.driver = driver;
+    }
+
+    public GoToClock goToClock() {
+        return new GoToClock(driver);
     }
 
     public ReturnsTime returnsTime() {

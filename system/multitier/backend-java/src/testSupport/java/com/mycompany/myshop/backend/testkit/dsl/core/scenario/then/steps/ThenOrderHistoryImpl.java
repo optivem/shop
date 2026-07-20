@@ -1,10 +1,10 @@
-package com.mycompany.myshop.backend.support.core.scenario.then.steps;
+package com.mycompany.myshop.backend.testkit.dsl.core.scenario.then.steps;
 
-import com.mycompany.myshop.backend.support.core.scenario.ExecutionResultContext;
-import com.mycompany.myshop.backend.support.core.shared.ResponseVerification;
-import com.mycompany.myshop.backend.support.core.usecase.UseCaseDsl;
-import com.mycompany.myshop.backend.support.core.usecase.usecases.BrowseOrderHistoryVerification;
-import com.mycompany.myshop.backend.support.port.then.steps.ThenOrderHistory;
+import com.mycompany.myshop.backend.testkit.dsl.core.scenario.ExecutionResultContext;
+import com.mycompany.myshop.backend.testkit.dsl.core.shared.ResponseVerification;
+import com.mycompany.myshop.backend.testkit.dsl.core.usecase.UseCaseDsl;
+import com.mycompany.myshop.backend.testkit.dsl.core.usecase.usecases.BrowseOrderHistoryVerification;
+import com.mycompany.myshop.backend.testkit.dsl.port.then.steps.ThenOrderHistory;
 
 /**
  * Order history. When the action <em>was</em> a browse, its response is asserted directly; otherwise

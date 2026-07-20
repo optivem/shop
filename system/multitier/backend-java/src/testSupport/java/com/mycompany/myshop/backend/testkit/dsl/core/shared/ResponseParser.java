@@ -1,4 +1,4 @@
-package com.mycompany.myshop.backend.support.core.shared;
+package com.mycompany.myshop.backend.testkit.dsl.core.shared;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -11,7 +11,7 @@ import org.springframework.http.ResponseEntity;
  * once the test has said which outcome it expects.
  *
  * <p>The endpoints that can answer either way — place order, view order — are fetched as raw {@code
- * String} by {@code BackendDriver}: binding them to the success type would discard the {@code
+ * String} by {@code MyShopDriver}: binding them to the success type would discard the {@code
  * ProblemDetail} body on a 4xx (Jackson would quietly map it onto a null-filled success DTO),
  * leaving nothing to assert a rejection message against.
  */

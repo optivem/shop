@@ -1,14 +1,14 @@
-package com.mycompany.myshop.backend.support.core.scenario.when;
+package com.mycompany.myshop.backend.testkit.dsl.core.scenario.when;
 
-import com.mycompany.myshop.backend.support.core.ScenarioDslImpl;
-import com.mycompany.myshop.backend.support.core.scenario.ScenarioDefaults;
-import com.mycompany.myshop.backend.support.core.scenario.when.steps.WhenBrowseCouponsImpl;
-import com.mycompany.myshop.backend.support.core.scenario.when.steps.WhenBrowseOrderHistoryImpl;
-import com.mycompany.myshop.backend.support.core.scenario.when.steps.WhenPlaceOrderImpl;
-import com.mycompany.myshop.backend.support.core.scenario.when.steps.WhenPublishCouponImpl;
-import com.mycompany.myshop.backend.support.core.scenario.when.steps.WhenViewOrderImpl;
-import com.mycompany.myshop.backend.support.core.usecase.UseCaseDsl;
-import com.mycompany.myshop.backend.support.port.when.WhenStage;
+import com.mycompany.myshop.backend.testkit.dsl.core.ScenarioDslImpl;
+import com.mycompany.myshop.backend.testkit.dsl.core.scenario.ScenarioDefaults;
+import com.mycompany.myshop.backend.testkit.dsl.core.scenario.when.steps.WhenBrowseCouponsImpl;
+import com.mycompany.myshop.backend.testkit.dsl.core.scenario.when.steps.WhenBrowseOrderHistoryImpl;
+import com.mycompany.myshop.backend.testkit.dsl.core.scenario.when.steps.WhenPlaceOrderImpl;
+import com.mycompany.myshop.backend.testkit.dsl.core.scenario.when.steps.WhenPublishCouponImpl;
+import com.mycompany.myshop.backend.testkit.dsl.core.scenario.when.steps.WhenViewOrderImpl;
+import com.mycompany.myshop.backend.testkit.dsl.core.usecase.UseCaseDsl;
+import com.mycompany.myshop.backend.testkit.dsl.port.when.WhenStage;
 
 /**
  * The scenario's action. Before any order-touching action runs, {@code ensureDefaults()} programs

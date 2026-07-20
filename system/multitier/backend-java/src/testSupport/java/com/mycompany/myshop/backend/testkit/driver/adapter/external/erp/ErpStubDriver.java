@@ -1,4 +1,4 @@
-package com.mycompany.myshop.backend.support.harness;
+package com.mycompany.myshop.backend.testkit.driver.adapter.external.erp;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
@@ -6,6 +6,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
+import com.mycompany.myshop.backend.testkit.driver.port.external.erp.ErpDriver;
 
 /**
  * Low-level ERP stub driver: registers WireMock mappings against a supplied {@link WireMock} client.
@@ -14,12 +15,21 @@ import com.github.tomakehurst.wiremock.client.WireMock;
  * bodies are byte-identical to {@code AbstractComponentTest}'s {@code stub*} helpers, so switching a
  * test to the DSL is behaviour-neutral.
  */
-public class ErpStubDriver {
+public class ErpStubDriver implements ErpDriver {
 
     private final WireMock wireMock;
 
     public ErpStubDriver(WireMock wireMock) {
         this.wireMock = wireMock;
+    }
+
+    /**
+     * A read-only admin call: it lists the mappings currently registered, and throws if the client
+     * cannot reach a server at all. Deliberately does not assert on the result — an empty mapping
+     * list is the normal state right after {@code resetAll()}.
+     */
+    public void goToErp() {
+        wireMock.allStubMappings();
     }
 
     public void stubProduct(String sku, String price) {

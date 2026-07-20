@@ -1,6 +1,6 @@
-package com.mycompany.myshop.backend.support.port.when.steps.base;
+package com.mycompany.myshop.backend.testkit.dsl.port.when.steps.base;
 
-import com.mycompany.myshop.backend.support.port.then.ThenResultStage;
+import com.mycompany.myshop.backend.testkit.dsl.port.then.ThenResultStage;
 
 /**
  * Every when-step ends in {@code then()}, which is what actually executes the action — the step

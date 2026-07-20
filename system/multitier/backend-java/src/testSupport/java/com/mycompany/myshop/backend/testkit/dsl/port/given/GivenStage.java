@@ -1,13 +1,13 @@
-package com.mycompany.myshop.backend.support.port.given;
+package com.mycompany.myshop.backend.testkit.dsl.port.given;
 
-import com.mycompany.myshop.backend.support.port.given.steps.GivenClock;
-import com.mycompany.myshop.backend.support.port.given.steps.GivenCoupon;
-import com.mycompany.myshop.backend.support.port.given.steps.GivenCountry;
-import com.mycompany.myshop.backend.support.port.given.steps.GivenOrder;
-import com.mycompany.myshop.backend.support.port.given.steps.GivenProduct;
-import com.mycompany.myshop.backend.support.port.given.steps.GivenPromotion;
-import com.mycompany.myshop.backend.support.port.then.ThenStage;
-import com.mycompany.myshop.backend.support.port.when.WhenStage;
+import com.mycompany.myshop.backend.testkit.dsl.port.given.steps.GivenClock;
+import com.mycompany.myshop.backend.testkit.dsl.port.given.steps.GivenCoupon;
+import com.mycompany.myshop.backend.testkit.dsl.port.given.steps.GivenCountry;
+import com.mycompany.myshop.backend.testkit.dsl.port.given.steps.GivenOrder;
+import com.mycompany.myshop.backend.testkit.dsl.port.given.steps.GivenProduct;
+import com.mycompany.myshop.backend.testkit.dsl.port.given.steps.GivenPromotion;
+import com.mycompany.myshop.backend.testkit.dsl.port.then.ThenStage;
+import com.mycompany.myshop.backend.testkit.dsl.port.when.WhenStage;
 
 /**
  * The world the scenario runs in. Each step is translated into use case calls — the ERP / Tax /

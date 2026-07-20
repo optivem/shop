@@ -6,11 +6,11 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import com.mycompany.myshop.backend.core.services.external.ClockGateway;
 import com.mycompany.myshop.backend.core.services.external.ErpGateway;
 import com.mycompany.myshop.backend.core.services.external.TaxGateway;
-import com.mycompany.myshop.backend.support.core.usecase.external.clock.ClockDsl;
-import com.mycompany.myshop.backend.support.core.usecase.external.erp.ErpDsl;
-import com.mycompany.myshop.backend.support.core.usecase.external.tax.TaxDsl;
-import com.mycompany.myshop.backend.support.configuration.ExternalSystemMode;
-import com.mycompany.myshop.backend.support.configuration.StubDrivers;
+import com.mycompany.myshop.backend.testkit.dsl.core.usecase.external.clock.ClockDsl;
+import com.mycompany.myshop.backend.testkit.dsl.core.usecase.external.erp.ErpDsl;
+import com.mycompany.myshop.backend.testkit.dsl.core.usecase.external.tax.TaxDsl;
+import com.mycompany.myshop.backend.backendtest.configuration.ExternalSystemMode;
+import com.mycompany.myshop.backend.backendtest.configuration.StubDrivers;
 import org.junit.jupiter.api.BeforeEach;
 
 /**

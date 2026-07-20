@@ -1,9 +1,9 @@
-package com.mycompany.myshop.backend.support.core.scenario.given.steps;
+package com.mycompany.myshop.backend.testkit.dsl.core.scenario.given.steps;
 
-import com.mycompany.myshop.backend.support.core.scenario.ScenarioDefaults;
-import com.mycompany.myshop.backend.support.core.scenario.given.GivenImpl;
-import com.mycompany.myshop.backend.support.core.usecase.UseCaseDsl;
-import com.mycompany.myshop.backend.support.port.given.steps.GivenPromotion;
+import com.mycompany.myshop.backend.testkit.dsl.core.scenario.ScenarioDefaults;
+import com.mycompany.myshop.backend.testkit.dsl.core.scenario.given.GivenImpl;
+import com.mycompany.myshop.backend.testkit.dsl.core.usecase.UseCaseDsl;
+import com.mycompany.myshop.backend.testkit.dsl.port.given.steps.GivenPromotion;
 import java.math.BigDecimal;
 
 public class GivenPromotionImpl extends BaseGivenStep implements GivenPromotion {

@@ -1,11 +1,11 @@
-package com.mycompany.myshop.backend.support.port.then;
+package com.mycompany.myshop.backend.testkit.dsl.port.then;
 
-import com.mycompany.myshop.backend.support.port.then.steps.ThenClock;
-import com.mycompany.myshop.backend.support.port.then.steps.ThenCoupon;
-import com.mycompany.myshop.backend.support.port.then.steps.ThenCountry;
-import com.mycompany.myshop.backend.support.port.then.steps.ThenOrder;
-import com.mycompany.myshop.backend.support.port.then.steps.ThenOrderHistory;
-import com.mycompany.myshop.backend.support.port.then.steps.ThenProduct;
+import com.mycompany.myshop.backend.testkit.dsl.port.then.steps.ThenClock;
+import com.mycompany.myshop.backend.testkit.dsl.port.then.steps.ThenCoupon;
+import com.mycompany.myshop.backend.testkit.dsl.port.then.steps.ThenCountry;
+import com.mycompany.myshop.backend.testkit.dsl.port.then.steps.ThenOrder;
+import com.mycompany.myshop.backend.testkit.dsl.port.then.steps.ThenOrderHistory;
+import com.mycompany.myshop.backend.testkit.dsl.port.then.steps.ThenProduct;
 
 /**
  * State the scenario can assert without having executed an action — reached from {@code

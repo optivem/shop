@@ -1,4 +1,4 @@
-package com.mycompany.myshop.backend.support.core.shared;
+package com.mycompany.myshop.backend.testkit.dsl.core.shared;
 
 /**
  * A use case against an external-system stub: programming a WireMock mapping in the test's own

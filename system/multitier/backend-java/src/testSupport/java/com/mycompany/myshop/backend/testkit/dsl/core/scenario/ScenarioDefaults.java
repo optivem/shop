@@ -1,4 +1,4 @@
-package com.mycompany.myshop.backend.support.core.scenario;
+package com.mycompany.myshop.backend.testkit.dsl.core.scenario;
 
 /**
  * What the scenario DSL fills in when a test stays silent, so a test states only what it actually

@@ -1,9 +1,10 @@
-package com.mycompany.myshop.backend.support.core.usecase.external.tax;
+package com.mycompany.myshop.backend.testkit.dsl.core.usecase.external.tax;
 
-import com.mycompany.myshop.backend.support.harness.TaxStubDriver;
-import com.mycompany.myshop.backend.support.core.usecase.external.tax.usecases.FailsForCountry;
-import com.mycompany.myshop.backend.support.core.usecase.external.tax.usecases.ReturnsNoTaxRate;
-import com.mycompany.myshop.backend.support.core.usecase.external.tax.usecases.ReturnsTaxRate;
+import com.mycompany.myshop.backend.testkit.driver.port.external.tax.TaxDriver;
+import com.mycompany.myshop.backend.testkit.dsl.core.usecase.external.tax.usecases.FailsForCountry;
+import com.mycompany.myshop.backend.testkit.dsl.core.usecase.external.tax.usecases.GoToTax;
+import com.mycompany.myshop.backend.testkit.dsl.core.usecase.external.tax.usecases.ReturnsNoTaxRate;
+import com.mycompany.myshop.backend.testkit.dsl.core.usecase.external.tax.usecases.ReturnsTaxRate;
 
 /**
  * The Tax system, as the component test sees it.
@@ -19,10 +20,14 @@ import com.mycompany.myshop.backend.support.core.usecase.external.tax.usecases.R
  */
 public class TaxDsl {
 
-    private final TaxStubDriver driver;
+    private final TaxDriver driver;
 
-    public TaxDsl(TaxStubDriver driver) {
+    public TaxDsl(TaxDriver driver) {
         this.driver = driver;
+    }
+
+    public GoToTax goToTax() {
+        return new GoToTax(driver);
     }
 
     public ReturnsTaxRate returnsTaxRate() {

@@ -1,6 +1,6 @@
-package com.mycompany.myshop.backend.support.port.given.steps;
+package com.mycompany.myshop.backend.testkit.dsl.port.given.steps;
 
-import com.mycompany.myshop.backend.support.port.given.steps.base.GivenStep;
+import com.mycompany.myshop.backend.testkit.dsl.port.given.steps.base.GivenStep;
 
 /**
  * A product the ERP knows about — or, via {@link #doesNotExist()}, one it explicitly does not.

@@ -1,17 +1,17 @@
-package com.mycompany.myshop.backend.support.core.scenario.given;
+package com.mycompany.myshop.backend.testkit.dsl.core.scenario.given;
 
-import com.mycompany.myshop.backend.support.core.ScenarioDslImpl;
-import com.mycompany.myshop.backend.support.core.scenario.ScenarioDefaults;
-import com.mycompany.myshop.backend.support.core.scenario.given.steps.GivenClockImpl;
-import com.mycompany.myshop.backend.support.core.scenario.given.steps.GivenCouponImpl;
-import com.mycompany.myshop.backend.support.core.scenario.given.steps.GivenCountryImpl;
-import com.mycompany.myshop.backend.support.core.scenario.given.steps.GivenOrderImpl;
-import com.mycompany.myshop.backend.support.core.scenario.given.steps.GivenProductImpl;
-import com.mycompany.myshop.backend.support.core.scenario.given.steps.GivenPromotionImpl;
-import com.mycompany.myshop.backend.support.core.scenario.then.ThenImpl;
-import com.mycompany.myshop.backend.support.core.scenario.when.WhenImpl;
-import com.mycompany.myshop.backend.support.core.usecase.UseCaseDsl;
-import com.mycompany.myshop.backend.support.port.given.GivenStage;
+import com.mycompany.myshop.backend.testkit.dsl.core.ScenarioDslImpl;
+import com.mycompany.myshop.backend.testkit.dsl.core.scenario.ScenarioDefaults;
+import com.mycompany.myshop.backend.testkit.dsl.core.scenario.given.steps.GivenClockImpl;
+import com.mycompany.myshop.backend.testkit.dsl.core.scenario.given.steps.GivenCouponImpl;
+import com.mycompany.myshop.backend.testkit.dsl.core.scenario.given.steps.GivenCountryImpl;
+import com.mycompany.myshop.backend.testkit.dsl.core.scenario.given.steps.GivenOrderImpl;
+import com.mycompany.myshop.backend.testkit.dsl.core.scenario.given.steps.GivenProductImpl;
+import com.mycompany.myshop.backend.testkit.dsl.core.scenario.given.steps.GivenPromotionImpl;
+import com.mycompany.myshop.backend.testkit.dsl.core.scenario.then.ThenImpl;
+import com.mycompany.myshop.backend.testkit.dsl.core.scenario.when.WhenImpl;
+import com.mycompany.myshop.backend.testkit.dsl.core.usecase.UseCaseDsl;
+import com.mycompany.myshop.backend.testkit.dsl.port.given.GivenStage;
 import java.util.ArrayList;
 import java.util.List;
 

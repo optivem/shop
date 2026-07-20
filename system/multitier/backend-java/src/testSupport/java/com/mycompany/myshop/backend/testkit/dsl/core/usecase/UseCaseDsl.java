@@ -1,16 +1,16 @@
-package com.mycompany.myshop.backend.support.core.usecase;
+package com.mycompany.myshop.backend.testkit.dsl.core.usecase;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mycompany.myshop.backend.support.harness.BackendDriver;
-import com.mycompany.myshop.backend.support.harness.ClockStubDriver;
-import com.mycompany.myshop.backend.support.harness.ErpStubDriver;
-import com.mycompany.myshop.backend.support.harness.SutClockReader;
-import com.mycompany.myshop.backend.support.harness.SutErpReader;
-import com.mycompany.myshop.backend.support.harness.SutTaxReader;
-import com.mycompany.myshop.backend.support.harness.TaxStubDriver;
-import com.mycompany.myshop.backend.support.core.usecase.external.clock.ClockDsl;
-import com.mycompany.myshop.backend.support.core.usecase.external.erp.ErpDsl;
-import com.mycompany.myshop.backend.support.core.usecase.external.tax.TaxDsl;
+import com.mycompany.myshop.backend.testkit.driver.port.MyShopDriver;
+import com.mycompany.myshop.backend.testkit.driver.port.external.clock.ClockDriver;
+import com.mycompany.myshop.backend.testkit.driver.port.external.erp.ErpDriver;
+import com.mycompany.myshop.backend.testkit.driver.adapter.sut.SutClockReader;
+import com.mycompany.myshop.backend.testkit.driver.adapter.sut.SutErpReader;
+import com.mycompany.myshop.backend.testkit.driver.adapter.sut.SutTaxReader;
+import com.mycompany.myshop.backend.testkit.driver.port.external.tax.TaxDriver;
+import com.mycompany.myshop.backend.testkit.dsl.core.usecase.external.clock.ClockDsl;
+import com.mycompany.myshop.backend.testkit.dsl.core.usecase.external.erp.ErpDsl;
+import com.mycompany.myshop.backend.testkit.dsl.core.usecase.external.tax.TaxDsl;
 
 /**
  * Root of the use case layer: one entry per actor in a component test — the system under test
@@ -31,11 +31,11 @@ public class UseCaseDsl {
     private final SutClockReader sutClock;
 
     public UseCaseDsl(
-            BackendDriver backendDriver,
+            MyShopDriver backendDriver,
             ObjectMapper objectMapper,
-            ErpStubDriver erpStubDriver,
-            TaxStubDriver taxStubDriver,
-            ClockStubDriver clockStubDriver,
+            ErpDriver erpStubDriver,
+            TaxDriver taxStubDriver,
+            ClockDriver clockStubDriver,
             SutErpReader sutErp,
             SutTaxReader sutTax,
             SutClockReader sutClock) {

@@ -3,7 +3,7 @@ package com.mycompany.myshop.backend.integration.latest.base;
 import com.mycompany.myshop.backend.core.services.external.ClockGateway;
 import com.mycompany.myshop.backend.core.services.external.ErpGateway;
 import com.mycompany.myshop.backend.core.services.external.TaxGateway;
-import com.mycompany.myshop.backend.support.configuration.ExternalSystemMode;
+import com.mycompany.myshop.backend.backendtest.configuration.ExternalSystemMode;
 import org.springframework.test.util.ReflectionTestUtils;
 
 /**
