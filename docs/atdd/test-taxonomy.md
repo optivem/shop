@@ -13,7 +13,7 @@ For the full commit-stage pyramid and CI wiring see
 | # | Layer (suite `id`) | Frontend | Backend (Java / .NET / TS) |
 |---|---|---|---|
 | 1 | **Unit** (`unit`) | Real in-memory domain logic: mappers, validation, formatting. `1+1` is used only as a placeholder where a component has no pure logic. | Real in-memory domain logic: `Order` constructor validation, pricing / discount / tax calculations. `1+1` placeholder only. |
-| 2 | **Narrow integration** (`integration`) | One adapter (`orderService`) against the Pact mock server. No React render. | `OrderRepository` against Testcontainers-Postgres **and** `TaxGateway`/`ErpGateway` against WireMock-in-Testcontainers. No app boot. |
+| 2 | **Narrow integration** (`integration`) | One adapter (`orderService`) against the Pact mock server. No React render. | One adapter, **inbound or outbound**. Outbound: `OrderRepository` against Testcontainers-Postgres, `TaxGateway`/`ErpGateway` against WireMock. Inbound: `OrderController` sliced via `@WebMvcTest` with `OrderService` faked. No app boot. |
 | 3 | **Component** (`component`) | Full UI render against the Pact mock server. | Full service boot, hit the REST API. Postgres real (Testcontainers) + ERP/Tax mocked (WireMock-in-Testcontainers). |
 | 4 | **Provider verification** (`provider-verification`) | **None** — the frontend is consumer-only. Contract emission lives in suites 2 + 3. | Verify the backend satisfies the frontend consumer's `.pact` (`BackendPactVerificationTest`). |
 
@@ -28,6 +28,11 @@ For the full commit-stage pyramid and CI wiring see
 The mocking stack — Pact mock server, WireMock, Testcontainers — is **orthogonal**
 to this line. Both middle layers use mock servers; the mock server alone cannot tell
 you which layer a test belongs to.
+
+"One adapter" means either direction. An outbound adapter (`ErpGateway`) driven against
+a faked external system and an inbound adapter (`OrderController`) driven with its
+service faked are the same shape — one adapter, real framework wiring, collaborator
+faked — and both are layer 2.
 
 ---
 
