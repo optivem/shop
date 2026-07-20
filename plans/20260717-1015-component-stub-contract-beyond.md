@@ -20,18 +20,6 @@ checks. The items here are the honest-but-extra things the design discussion sur
 
 ## Deferred items
 
-### 1. Negative / missing-resource contract tests
-System-test has **no** `doesNotExist` on `given` or `then` for the contract DSL; it expresses
-"missing" implicitly (unregistered SKU) and only end-to-end (place-order rejection). Adding, at
-component level:
-- `then().product().doesNotExist()` — pins `ErpGateway.getProductDetails` `404 → Optional.empty()`.
-- `then().country().doesNotExist()` — pins `TaxGateway.getTaxDetails` `404 → Optional.empty()`
-  (`TaxStubDriver.stubTaxMissing` already exists on the given side).
-- New `doesNotExist()` verb on the `Then*` steps — DSL surface system-test deliberately never had.
-
-**Value:** these adapter 404 branches are only exercised implicitly today. **Cost:** new assertion
-verbs beyond system-test. **If built,** add matching negative contract tests to system-test too.
-
 ### 2. ERP promotion contract test
 System-test's `BaseErpContractTest` covers only `getProduct`, not `getPromotionDetails`. The SUT has
 `ErpGateway.getPromotionDetails()` (parses `{"promotionActive","discount"}`) and the component
@@ -115,9 +103,36 @@ gives no assurance against an actual vendor — closing that would mean a live v
 which conflicts with the zero-infra/$0 default-path constraint.
 
 ### 5. System-test symmetry back-fill
-If items 1–2 are deemed worth having, the cleanest end state adds the same negative/promotion
-contract coverage to **system-test** too, so "component DSL mirrors system-test" stays true rather
-than the component being strictly richer.
+If item 2 is deemed worth having, the cleanest end state adds the same promotion contract coverage to
+**system-test** too, so "component DSL mirrors system-test" stays true rather than the component being
+strictly richer.
+
+## Decided against
+
+### Negative / missing-resource contract tests (was item 1) — dropped 2026-07-20
+Proposed `then().product().doesNotExist()` / `then().country().doesNotExist()` at component level to
+pin the `404 → Optional.empty()` branches of `ErpGateway.getProductDetails` / `TaxGateway.getTaxDetails`.
+
+**Dropped because the coverage now exists one layer down, cheaper.** `TaxGatewayIntegrationTest` and
+`ErpGatewayIntegrationTest` (added in `e05c16df`) pin those exact branches at the narrow-integration
+layer — same stub drivers, same production gateways, but no Spring context and no Testcontainers
+Postgres. The item's stated value ("these adapter 404 branches are only exercised implicitly today")
+is no longer true.
+
+A 404-to-empty mapping is adapter behaviour, which is what the narrow-integration layer exists to
+pin. Component tests should stay scenario-shaped: *unknown SKU → order rejected*, which needs only
+the **given** side (`returnsNoProduct`, already present) and asserts on the rejection.
+
+The follow-on cost was the deciding factor: the item required matching negative tests in system-test,
+whose contract DSL must run identically in STUB and REAL mode (`ErpStubContractTest` /
+`ErpRealContractTest` share one base). Every verb needs both adapters — `returnsProduct` survives only
+because `ErpRealDriver` POSTs to the simulator's create API. A `doesNotExist` real adapter would need
+a delete/absence capability that does not exist on the port today. Buildable (the "real" ERP is the
+in-repo simulator, not a vendor system — see item 4), but it is real design work to duplicate coverage
+that is already green.
+
+**Do not re-defer this.** If it resurfaces, the question to ask is whether the *component DSL's
+expressiveness* is wanted for its own sake — the coverage argument is settled.
 
 ## Notes
 - None of these block PASS 1; PASS 1 stands alone as a faithful mirror.
