@@ -9,9 +9,9 @@ public interface TaxDriver {
     /** Liveness probe behind {@code assume().tax().shouldBeRunning()}. See {@code ErpDriver}. */
     void goToTax();
 
-    void stubTax(String country, String rate);
+    void returnsTaxRate(String country, String rate);
 
-    void stubTaxMissing(String country);
+    void returnsNoTaxRate(String country);
 
-    void stubTaxError(String country, int status, String body);
+    void failsForCountry(String country, int status, String body);
 }

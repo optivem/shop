@@ -25,6 +25,6 @@ public class FailsForPromotion extends BaseErpUseCase {
 
     @Override
     public void execute() {
-        driver.stubPromotionError(status, body);
+        driver.failsForPromotion(status, body);
     }
 }

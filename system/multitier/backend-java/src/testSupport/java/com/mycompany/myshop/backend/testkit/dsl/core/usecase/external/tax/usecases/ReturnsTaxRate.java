@@ -24,6 +24,6 @@ public class ReturnsTaxRate extends BaseTaxUseCase {
 
     @Override
     public void execute() {
-        driver.stubTax(country, taxRate);
+        driver.returnsTaxRate(country, taxRate);
     }
 }

@@ -18,6 +18,6 @@ public class ReturnsNoTaxRate extends BaseTaxUseCase {
 
     @Override
     public void execute() {
-        driver.stubTaxMissing(country);
+        driver.returnsNoTaxRate(country);
     }
 }

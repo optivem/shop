@@ -19,13 +19,13 @@ public interface ErpDriver {
      */
     void goToErp();
 
-    void stubProduct(String sku, String price);
+    void returnsProduct(String sku, String price);
 
-    void stubProductMissing(String sku);
+    void returnsNoProduct(String sku);
 
-    void stubPromotion(boolean active, String discount);
+    void returnsPromotion(boolean active, String discount);
 
-    void stubProductError(String sku, int status, String body);
+    void failsForProduct(String sku, int status, String body);
 
-    void stubPromotionError(int status, String body);
+    void failsForPromotion(int status, String body);
 }

@@ -19,6 +19,6 @@ public class ReturnsNoProduct extends BaseErpUseCase {
 
     @Override
     public void execute() {
-        driver.stubProductMissing(sku);
+        driver.returnsNoProduct(sku);
     }
 }

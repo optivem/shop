@@ -24,6 +24,6 @@ public class ReturnsProduct extends BaseErpUseCase {
 
     @Override
     public void execute() {
-        driver.stubProduct(sku, unitPrice);
+        driver.returnsProduct(sku, unitPrice);
     }
 }

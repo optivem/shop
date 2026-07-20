@@ -22,11 +22,11 @@ it. Nothing is left as an open question.
 
 ## Target state
 
-**What actually changes here:** the ten stub-programming methods on `ErpDriver` / `TaxDriver` /
-`ClockDriver` are renamed to match their DSL callers (`stubProduct` → `returnsProduct`,
-`stubTaxError` → `failsForCountry`, …). After it, a backend use case no longer translates a name
-between the DSL verb and the port method it calls — the two read identically, the way `goToErp()`
-already does. Java only; three suites stay green (27 / 54 / 30).
+**Item 1 is done** (2026-07-20): the ten stub-programming methods on `ErpDriver` / `TaxDriver` /
+`ClockDriver` were renamed to match their DSL callers (`stubProduct` → `returnsProduct`,
+`stubTaxError` → `failsForCountry`, …). A backend use case no longer translates a name between the
+DSL verb and the port method it calls — the two read identically, the way `goToErp()` already does.
+Java only; suites green (component 54 / integration 26 / contract 30, 0 failures).
 
 **What is decided but deliberately not executed here:**
 
@@ -57,45 +57,14 @@ cosmetic-parity nice-to-have.
 
 ## ▶ Next executable step (resume here)
 
-**Refined 2026-07-20 — Item 1 is green-lit and is the only executable item.** Rename the 10 `stub*` methods on the three ports in
-`system/multitier/backend-java/src/testSupport/java/com/mycompany/myshop/backend/testkit/driver/port/external/`
-to match their DSL callers (table in Item 1), update the three adapters under `driver/adapter/external/`
-and the ~10 use-case call sites under `dsl/core/usecase/external/*/usecases/`, then verify with
-`./gradlew compileTestSupportJava componentTest integrationTest contractTest checkstyleAll` from
-`system/multitier/backend-java`. Gate: all three suites green (27 / 54 / 30 at time of writing).
+**Item 1 landed 2026-07-20; Item 4 is the only remaining executable unit — and it is a verification,
+not a fix.** In `system-test/java`, write a throwaway test that runs two scenarios in one test method
+and observe whether `ScenarioDslImpl`'s `executed` guard throws. If it throws, the guard is reachable:
+delete the throwaway, close Item 4, nothing else to do. Only if it does **not** throw does this become
+a real (three-language, `system-test`-owned) fix, and ownership is decided at that point. Requires a
+local test run — ask the user before starting it.
 
 ## Items
-
-### Item 1 — Port and DSL disagree on vocabulary — **recommended fix**
-
-- [ ] Rename the stub-programming methods on `ErpDriver`, `TaxDriver`, `ClockDriver` to match their
-      DSL callers.
-
-Introduced by the restructure: the port methods were lifted verbatim off the old concrete
-`ErpStubDriver` when the interface was extracted, so every use case now translates a name:
-
-| DSL method | Port method today | Port method proposed |
-|---|---|---|
-| `returnsProduct()` | `stubProduct` | `returnsProduct` |
-| `returnsNoProduct()` | `stubProductMissing` | `returnsNoProduct` |
-| `returnsPromotion()` | `stubPromotion` | `returnsPromotion` |
-| `failsForProduct()` | `stubProductError` | `failsForProduct` |
-| `failsForPromotion()` | `stubPromotionError` | `failsForPromotion` |
-| `returnsTaxRate()` | `stubTax` | `returnsTaxRate` |
-| `returnsNoTaxRate()` | `stubTaxMissing` | `returnsNoTaxRate` |
-| `failsForCountry()` | `stubTaxError` | `failsForCountry` |
-| `returnsTime()` | `stubTime` | `returnsTime` |
-| `failsForTime()` | `stubTimeError` | `failsForTime` |
-
-Supporting evidence:
-- `goToErp()` already sits in the same port and *does* match its DSL method — the port is half
-  consistent already, which is what makes the other five read as accidental.
-- `system-test`'s `ErpDriver` uses `returnsProduct(...)` on a port that a **real** driver implements
-  (`ErpRealDriver`), so `returns*` is not stub-specific language.
-- `stub*` carries no information the adapter name (`ErpStubDriver`) does not already carry.
-
-Also worth settling while here: backend currently has **three** words for "absent" — `ReturnsNoX`
-(use case), `stubXMissing` (port), `doesNotExist()` (given-step). The rename collapses two of them.
 
 ### Item 2 — Production types in the DSL port — **investigated, rejected, do not re-open**
 
@@ -202,16 +171,9 @@ error; recommendation is to leave it and let this plan carry the correction.
 
 ## Resolved decisions
 
-- **Item 1 direction — rename the ports up to `returns*` / `failsFor*`** (2026-07-20). The table in
-  Item 1 stands as written. Rationale: `returns*` describes observable behaviour, which stays true for
-  a real implementor — `system-test`'s `ErpDriver` already uses it on a port that `ErpRealDriver`
-  implements. `stub*` bakes an implementation choice into an interface name and duplicates what the
-  adapter name (`ErpStubDriver`) already carries, and `goToErp()` in the same port already follows the
-  DSL-matching convention.
-
-- **Item 1 scope — Java now, .NET/TypeScript mirroring deferred** (2026-07-20). The rename is executed
-  in `backend-java` on its own; it is not blocked on surveying the other two harnesses. The mirror
-  obligation is not dropped — it moves to
+- **Item 1 — done in Java 2026-07-20; .NET/TypeScript mirroring deferred.** The rename shipped in
+  `backend-java` alone; it was not blocked on surveying the other two harnesses. The mirror obligation
+  is not dropped — it lives in
   `plans/deferred/20260720-1055-backend-testkit-alignment-cross-language-mirror.md` (Step 2), which
   owns the survey.
 

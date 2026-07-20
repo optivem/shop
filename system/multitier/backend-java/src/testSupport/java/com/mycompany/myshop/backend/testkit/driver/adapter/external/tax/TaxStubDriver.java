@@ -9,8 +9,9 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import com.mycompany.myshop.backend.testkit.driver.port.external.tax.TaxDriver;
 
 /**
- * Low-level Tax stub driver. Registers mappings against a supplied {@link WireMock} client; the URL
- * and JSON body are byte-identical to {@code AbstractComponentTest#stubTax}.
+ * Low-level Tax stub driver. Registers mappings against a supplied {@link WireMock} client; that the
+ * URL and JSON body match what the SUT actually consumes is guarded by
+ * {@code TaxStubContractComponentTest}.
  */
 public class TaxStubDriver implements TaxDriver {
 
@@ -25,7 +26,7 @@ public class TaxStubDriver implements TaxDriver {
         wireMock.allStubMappings();
     }
 
-    public void stubTax(String country, String rate) {
+    public void returnsTaxRate(String country, String rate) {
         wireMock.register(get(urlEqualTo("/api/countries/" + country))
             .willReturn(okJson("{\"id\":\"" + country + "\",\"countryName\":\"" + country
                 + "\",\"taxRate\":" + rate + "}")));
@@ -33,12 +34,12 @@ public class TaxStubDriver implements TaxDriver {
 
     /** A 404 from Tax is what makes {@code taxGateway.getTaxDetails} empty — the trigger for
      * "Country does not exist". */
-    public void stubTaxMissing(String country) {
+    public void returnsNoTaxRate(String country) {
         wireMock.register(get(urlEqualTo("/api/countries/" + country))
             .willReturn(aResponse().withStatus(404)));
     }
 
-    public void stubTaxError(String country, int status, String body) {
+    public void failsForCountry(String country, int status, String body) {
         wireMock.register(get(urlEqualTo("/api/countries/" + country))
             .willReturn(aResponse().withStatus(status).withBody(body)));
     }

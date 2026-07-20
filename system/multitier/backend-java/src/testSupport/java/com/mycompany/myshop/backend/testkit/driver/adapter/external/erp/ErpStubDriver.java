@@ -32,27 +32,27 @@ public class ErpStubDriver implements ErpDriver {
         wireMock.allStubMappings();
     }
 
-    public void stubProduct(String sku, String price) {
+    public void returnsProduct(String sku, String price) {
         wireMock.register(get(urlEqualTo("/api/products/" + sku))
             .willReturn(okJson("{\"id\":\"" + sku + "\",\"price\":" + price + "}")));
     }
 
-    public void stubProductMissing(String sku) {
+    public void returnsNoProduct(String sku) {
         wireMock.register(get(urlEqualTo("/api/products/" + sku))
             .willReturn(aResponse().withStatus(404)));
     }
 
-    public void stubPromotion(boolean active, String discount) {
+    public void returnsPromotion(boolean active, String discount) {
         wireMock.register(get(urlEqualTo("/api/promotion"))
             .willReturn(okJson("{\"promotionActive\":" + active + ",\"discount\":" + discount + "}")));
     }
 
-    public void stubProductError(String sku, int status, String body) {
+    public void failsForProduct(String sku, int status, String body) {
         wireMock.register(get(urlEqualTo("/api/products/" + sku))
             .willReturn(aResponse().withStatus(status).withBody(body)));
     }
 
-    public void stubPromotionError(int status, String body) {
+    public void failsForPromotion(int status, String body) {
         wireMock.register(get(urlEqualTo("/api/promotion"))
             .willReturn(aResponse().withStatus(status).withBody(body)));
     }

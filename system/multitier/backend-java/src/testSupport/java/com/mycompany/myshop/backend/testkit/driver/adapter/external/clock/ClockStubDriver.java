@@ -25,12 +25,12 @@ public class ClockStubDriver implements ClockDriver {
         wireMock.allStubMappings();
     }
 
-    public void stubTime(String isoInstant) {
+    public void returnsTime(String isoInstant) {
         wireMock.register(get(urlEqualTo("/api/time"))
             .willReturn(okJson("{\"time\":\"" + isoInstant + "\"}")));
     }
 
-    public void stubTimeError(int status, String body) {
+    public void failsForTime(int status, String body) {
         wireMock.register(get(urlEqualTo("/api/time"))
             .willReturn(aResponse().withStatus(status).withBody(body)));
     }

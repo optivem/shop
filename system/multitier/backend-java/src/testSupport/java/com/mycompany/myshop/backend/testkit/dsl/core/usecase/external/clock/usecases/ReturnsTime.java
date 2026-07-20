@@ -18,6 +18,6 @@ public class ReturnsTime extends BaseClockUseCase {
 
     @Override
     public void execute() {
-        driver.stubTime(time);
+        driver.returnsTime(time);
     }
 }

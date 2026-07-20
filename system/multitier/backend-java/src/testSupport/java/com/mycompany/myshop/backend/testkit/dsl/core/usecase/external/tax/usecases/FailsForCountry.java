@@ -35,6 +35,6 @@ public class FailsForCountry extends BaseTaxUseCase {
 
     @Override
     public void execute() {
-        driver.stubTaxError(country, status, body);
+        driver.failsForCountry(country, status, body);
     }
 }

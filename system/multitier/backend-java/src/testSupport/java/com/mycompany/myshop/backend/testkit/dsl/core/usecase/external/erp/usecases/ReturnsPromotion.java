@@ -24,6 +24,6 @@ public class ReturnsPromotion extends BaseErpUseCase {
 
     @Override
     public void execute() {
-        driver.stubPromotion(active, discount);
+        driver.returnsPromotion(active, discount);
     }
 }

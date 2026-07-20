@@ -35,6 +35,6 @@ public class FailsForProduct extends BaseErpUseCase {
 
     @Override
     public void execute() {
-        driver.stubProductError(sku, status, body);
+        driver.failsForProduct(sku, status, body);
     }
 }

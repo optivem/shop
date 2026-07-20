@@ -9,7 +9,7 @@ public interface ClockDriver {
     /** Liveness probe behind {@code assume().clock().shouldBeRunning()}. See {@code ErpDriver}. */
     void goToClock();
 
-    void stubTime(String isoInstant);
+    void returnsTime(String isoInstant);
 
-    void stubTimeError(int status, String body);
+    void failsForTime(int status, String body);
 }

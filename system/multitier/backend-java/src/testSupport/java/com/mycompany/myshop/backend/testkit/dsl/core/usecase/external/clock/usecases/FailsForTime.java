@@ -25,6 +25,6 @@ public class FailsForTime extends BaseClockUseCase {
 
     @Override
     public void execute() {
-        driver.stubTimeError(status, body);
+        driver.failsForTime(status, body);
     }
 }
