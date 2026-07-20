@@ -1,6 +1,11 @@
 # Component stub-contract tests — beyond system-test
 
 **Source plan:** `plans/20260717-1015-component-stub-contract-mirror.md` (PASS 1 = mirror only).
+**Scope (this file):** `system/multitier/backend-java` + `system/multitier/frontend-react` only.
+Porting to `backend-dotnet` / `backend-typescript` is deliberately **out of scope** — see
+`plans/deferred/20260720-1118-component-stub-contract-cross-language-mirror.md`. This mirrors the
+scoping of `plans/deferred/20260616-0830-component-pact-layer-other-multitier-backends.md`: prove the
+shape in java/react first, port once it stops moving.
 **Status:** Active — **not yet approved to build. Discuss before executing any item.** Each item goes
 **past what system-test's contract DSL currently has**, so it was intentionally excluded from PASS 1
 to keep the component DSL a faithful mirror. Prefer adding any item to **both** layers so component
@@ -109,12 +114,7 @@ where `returnsProduct` genuinely POSTs to the simulator. So this item is viable 
 gives no assurance against an actual vendor — closing that would mean a live vendor dependency in CI,
 which conflicts with the zero-infra/$0 default-path constraint.
 
-### 5. Cross-language mirror
-Port PASS 1 (and any of the above that ship) to the **.NET** and **TypeScript** multitier backends,
-which have the equivalent component/stub structure. Keep the three languages' component contract
-tests in lockstep.
-
-### 6. System-test symmetry back-fill
+### 5. System-test symmetry back-fill
 If items 1–2 are deemed worth having, the cleanest end state adds the same negative/promotion
 contract coverage to **system-test** too, so "component DSL mirrors system-test" stays true rather
 than the component being strictly richer.
@@ -124,3 +124,5 @@ than the component being strictly richer.
 - Item 4 was raised independently of items 1–3 and can be decided on its own.
 - Moved out of `plans/deferred/` on 2026-07-20. Still requires a build decision per item — being
   active means "on the table for discussion", not "approved".
+- The cross-language mirror was split out to `plans/deferred/20260720-1118-component-stub-contract-cross-language-mirror.md`
+  on 2026-07-20 to keep this file's scope to java/react. Whatever ships here defines that file's payload.
