@@ -1,6 +1,7 @@
 # Component stub-contract tests — beyond system-test
 
-**Source plan:** `plans/20260717-1015-component-stub-contract-mirror.md` (PASS 1 = mirror only).
+**Source plan:** `plans/20260717-1015-component-stub-contract-mirror.md` (PASS 1 = mirror only) —
+completed and deleted; kept here only as provenance.
 **Scope (this file):** `system/multitier/backend-java` + `system/multitier/frontend-react` only.
 Porting to `backend-dotnet` / `backend-typescript` is deliberately **out of scope** — see
 `plans/deferred/20260720-1118-component-stub-contract-cross-language-mirror.md`. This mirrors the
@@ -19,13 +20,6 @@ System-test's contract DSL is positive-only, product-only (no promotion), and ha
 checks. The items here are the honest-but-extra things the design discussion surfaced.
 
 ## Deferred items
-
-### 2. ERP promotion contract test
-System-test's `BaseErpContractTest` covers only `getProduct`, not `getPromotionDetails`. The SUT has
-`ErpGateway.getPromotionDetails()` (parses `{"promotionActive","discount"}`) and the component
-`ErpStubDriver.stubPromotion` already programs it. A `then().promotion().isActive(...).hasDiscount(...)`
-stub-contract test would pin that parse. Requires a new `SutErpReader.readPromotion()` +
-`ThenPromotion` step. Add to system-test as well for symmetry.
 
 ### 3. ERP interaction verification (different concern)
 Not a read-back at all: verify the SUT *made the expected outbound call* to the ERP —
@@ -84,10 +78,23 @@ Meanwhile the two backings **already disagree on field set** and nothing catches
 - stub mapping `external-systems/stubs/mappings/erp-products-hp15.json` → `{id, price}`
 - simulator `mock-server.js` products → `{id, title, description, price, category, brand}`
 
-**Proposal:** widen the shared body to assert every field the SUT's `ProductDetailsResponse` actually
-binds, **and** enrich the stub mappings to match — as one change, since widening alone turns
-`contract-stub` red immediately. Six test files (three languages × latest/legacy) share one body per
-language; the `Real`/`Stub` subclasses stay 5-line mode overrides.
+**The original proposal does not work.** It was "widen the shared body to assert every field the SUT's
+`ProductDetailsResponse` actually binds, and enrich the stub mappings to match". But all three SUTs
+bind exactly `{id, price}` and nothing else — Java `ProductDetailsResponse` is two fields plus
+`@JsonIgnoreProperties(ignoreUnknown = true)`; .NET and TypeScript are the same two fields. The
+shared body **already** asserts both (`hasSku` + `hasPrice`). So widening to the bound field set adds
+zero assertions and could never turn `contract-stub` red. The divergence is invisible by
+construction: the SUT ignores every field the two backings disagree on.
+
+**Revised open question:** do we want the stub mappings and the simulator payloads to match for
+their own sake — fidelity, and teaching value about what a stub is meant to represent — accepting
+that no test can detect the difference? That is a much weaker case than the original framing, and it
+is the only one left. Decide on that basis or drop the item.
+
+If it is pursued, note the test-file shapes differ per language: Java and .NET use one shared base
+per version (latest/legacy) with 5-line `Real`/`Stub` subclass mode overrides; TypeScript uses
+`erp-stub-contract-test.spec.ts` / `erp-real-contract-test.spec.ts` spec files around a shared
+`BaseErpContractTest.ts`.
 
 **Constraint that bounds this — the real-driver no-op convention.** In REAL mode the `returns*`
 seeding steps are deliberately no-ops, because a real external system cannot be configured:
@@ -96,18 +103,31 @@ seeding steps are deliberately no-ops, because a real external system cannot be 
 pattern. This is what lets one scenario script run in both modes — **do not "fix" these no-ops.**
 Consequence: real mode can only assert what the backing happens to serve, except for ERP *products*,
 where `returnsProduct` genuinely POSTs to the simulator. So this item is viable for products and
-**not** for promotion (see item 2) or clock/tax.
+**not** for promotion or clock/tax.
 
 **Also note:** "real" here is the in-repo simulator, not a vendor ERP. Even a green `contract-real`
 gives no assurance against an actual vendor — closing that would mean a live vendor dependency in CI,
 which conflicts with the zero-infra/$0 default-path constraint.
 
-### 5. System-test symmetry back-fill
-If item 2 is deemed worth having, the cleanest end state adds the same promotion contract coverage to
-**system-test** too, so "component DSL mirrors system-test" stays true rather than the component being
-strictly richer.
-
 ## Decided against
+
+### ERP promotion contract test (was item 2) — dropped 2026-07-20
+Proposed a component stub-contract test pinning `ErpGateway.getPromotionDetails()`'s parse of
+`{"promotionActive","discount"}`, via a new `SutErpReader.readPromotion()` + `ThenPromotion` step,
+plus a matching system-test back-fill for symmetry (was item 5).
+
+**Dropped for the same reason as the negative-contract item below: the coverage already exists one
+layer down.** `ErpGatewayIntegrationTest.getPromotionDetailsReturnsPromotion` programs
+`returnsPromotion().active(true).discount("0.15")` and asserts `isPromotionActive()` /
+`getDiscount()` through the production gateway — no Spring context, no Testcontainers. That is
+exactly the parse the component test would have pinned.
+
+The system-test half was independently non-viable: item 4's real-driver no-op constraint means
+`ErpRealDriver.returnsPromotion` is a deliberate no-op, so a promotion contract test cannot run in
+REAL mode at all.
+
+As with the item below, if this resurfaces the question is whether the *component DSL's
+expressiveness* is wanted for its own sake — the coverage argument is settled.
 
 ### Negative / missing-resource contract tests (was item 1) — dropped 2026-07-20
 Proposed `then().product().doesNotExist()` / `then().country().doesNotExist()` at component level to
@@ -136,7 +156,7 @@ expressiveness* is wanted for its own sake — the coverage argument is settled.
 
 ## Notes
 - None of these block PASS 1; PASS 1 stands alone as a faithful mirror.
-- Item 4 was raised independently of items 1–3 and can be decided on its own.
+- Item 4 was raised independently of the others and can be decided on its own.
 - Moved out of `plans/deferred/` on 2026-07-20. Still requires a build decision per item — being
   active means "on the table for discussion", not "approved".
 - The cross-language mirror was split out to `plans/deferred/20260720-1118-component-stub-contract-cross-language-mirror.md`
