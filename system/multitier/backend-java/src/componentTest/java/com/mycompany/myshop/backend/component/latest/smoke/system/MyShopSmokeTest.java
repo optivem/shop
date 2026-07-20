@@ -1,4 +1,4 @@
-package com.mycompany.myshop.backend.component.latest.harness;
+package com.mycompany.myshop.backend.component.latest.smoke.system;
 
 import com.mycompany.myshop.backend.AbstractComponentTest;
 import org.junit.jupiter.api.Test;
@@ -14,10 +14,10 @@ import org.junit.jupiter.api.Test;
  * so the canary depends only on the harness being up, not on any feature endpoint. The {@code
  * legacy/} restTemplate twin remains the dependency-light canary.
  */
-class HarnessSmokeTest extends AbstractComponentTest {
+class MyShopSmokeTest extends AbstractComponentTest {
 
     @Test
-    void bootsInProcessAndServesHttp() {
+    void shouldBeAbleToGoToMyShop() {
         scenario.assume().myShop().shouldBeRunning();
     }
 }

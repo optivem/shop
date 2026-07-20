@@ -1,4 +1,4 @@
-package com.mycompany.myshop.backend.component.latest.harness.external;
+package com.mycompany.myshop.backend.component.latest.smoke.external;
 
 import com.mycompany.myshop.backend.AbstractComponentTest;
 import org.junit.jupiter.api.Test;

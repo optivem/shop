@@ -1,4 +1,4 @@
-package com.mycompany.myshop.backend.component.legacy.harness;
+package com.mycompany.myshop.backend.component.legacy.smoke.system;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -20,7 +20,7 @@ import org.springframework.http.HttpStatus;
  * the DSL. The same harness is reused by the Pact provider-verification test, so this also guards
  * that foundation.
  */
-class HarnessSmokeTest extends AbstractComponentTest {
+class MyShopSmokeTest extends AbstractComponentTest {
 
     @Test
     void bootsInProcessAndServesHttp() {
