@@ -1,6 +1,6 @@
 package com.mycompany.myshop.backend.support.core.usecase.external.erp;
 
-import com.mycompany.myshop.backend.support.ErpStubDriver;
+import com.mycompany.myshop.backend.support.harness.ErpStubDriver;
 import com.mycompany.myshop.backend.support.core.usecase.external.erp.usecases.ReturnsNoProduct;
 import com.mycompany.myshop.backend.support.core.usecase.external.erp.usecases.ReturnsProduct;
 import com.mycompany.myshop.backend.support.core.usecase.external.erp.usecases.ReturnsPromotion;

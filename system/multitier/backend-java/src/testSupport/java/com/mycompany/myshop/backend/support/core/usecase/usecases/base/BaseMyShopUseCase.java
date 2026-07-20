@@ -1,6 +1,6 @@
 package com.mycompany.myshop.backend.support.core.usecase.usecases.base;
 
-import com.mycompany.myshop.backend.support.BackendDriver;
+import com.mycompany.myshop.backend.support.harness.BackendDriver;
 import com.mycompany.myshop.backend.support.core.shared.BaseUseCase;
 import com.mycompany.myshop.backend.support.core.shared.ResponseVerification;
 

@@ -1,7 +1,7 @@
 package com.mycompany.myshop.backend.support.core.usecase;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mycompany.myshop.backend.support.BackendDriver;
+import com.mycompany.myshop.backend.support.harness.BackendDriver;
 import com.mycompany.myshop.backend.support.core.usecase.usecases.BrowseCoupons;
 import com.mycompany.myshop.backend.support.core.usecase.usecases.BrowseOrderHistory;
 import com.mycompany.myshop.backend.support.core.usecase.usecases.GoToMyShop;

@@ -2,7 +2,7 @@ package com.mycompany.myshop.backend.support.core.usecase.usecases;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mycompany.myshop.backend.core.dtos.ViewOrderDetailsResponse;
-import com.mycompany.myshop.backend.support.BackendDriver;
+import com.mycompany.myshop.backend.support.harness.BackendDriver;
 import com.mycompany.myshop.backend.support.core.shared.ResponseParser;
 import com.mycompany.myshop.backend.support.core.shared.UseCaseResult;
 import com.mycompany.myshop.backend.support.core.usecase.usecases.base.BaseMyShopUseCase;

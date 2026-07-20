@@ -2,7 +2,7 @@ package com.mycompany.myshop.backend.support.core.usecase.usecases;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.mycompany.myshop.backend.support.BackendDriver;
+import com.mycompany.myshop.backend.support.harness.BackendDriver;
 import com.mycompany.myshop.backend.support.core.shared.UseCaseResult;
 import com.mycompany.myshop.backend.support.core.shared.VoidVerification;
 import com.mycompany.myshop.backend.support.core.usecase.usecases.base.BaseMyShopUseCase;

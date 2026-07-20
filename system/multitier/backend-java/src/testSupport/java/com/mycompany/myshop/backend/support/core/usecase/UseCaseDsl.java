@@ -1,13 +1,13 @@
 package com.mycompany.myshop.backend.support.core.usecase;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mycompany.myshop.backend.support.BackendDriver;
-import com.mycompany.myshop.backend.support.ClockStubDriver;
-import com.mycompany.myshop.backend.support.ErpStubDriver;
-import com.mycompany.myshop.backend.support.SutClockReader;
-import com.mycompany.myshop.backend.support.SutErpReader;
-import com.mycompany.myshop.backend.support.SutTaxReader;
-import com.mycompany.myshop.backend.support.TaxStubDriver;
+import com.mycompany.myshop.backend.support.harness.BackendDriver;
+import com.mycompany.myshop.backend.support.harness.ClockStubDriver;
+import com.mycompany.myshop.backend.support.harness.ErpStubDriver;
+import com.mycompany.myshop.backend.support.harness.SutClockReader;
+import com.mycompany.myshop.backend.support.harness.SutErpReader;
+import com.mycompany.myshop.backend.support.harness.SutTaxReader;
+import com.mycompany.myshop.backend.support.harness.TaxStubDriver;
 import com.mycompany.myshop.backend.support.core.usecase.external.clock.ClockDsl;
 import com.mycompany.myshop.backend.support.core.usecase.external.erp.ErpDsl;
 import com.mycompany.myshop.backend.support.core.usecase.external.tax.TaxDsl;

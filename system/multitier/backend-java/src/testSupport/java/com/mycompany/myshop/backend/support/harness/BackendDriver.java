@@ -1,4 +1,4 @@
-package com.mycompany.myshop.backend.support;
+package com.mycompany.myshop.backend.support.harness;
 
 import com.mycompany.myshop.backend.core.dtos.BrowseCouponsResponse;
 import com.mycompany.myshop.backend.core.dtos.BrowseOrderHistoryResponse;

@@ -1,4 +1,4 @@
-package com.mycompany.myshop.backend.support;
+package com.mycompany.myshop.backend.support.harness;
 
 import com.mycompany.myshop.backend.core.dtos.external.ProductDetailsResponse;
 import com.mycompany.myshop.backend.core.services.external.ErpGateway;

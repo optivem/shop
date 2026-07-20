@@ -1,4 +1,4 @@
-package com.mycompany.myshop.backend.support;
+package com.mycompany.myshop.backend.support.harness;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;

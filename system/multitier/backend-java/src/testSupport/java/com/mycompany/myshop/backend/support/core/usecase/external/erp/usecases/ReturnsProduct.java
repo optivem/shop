@@ -1,6 +1,6 @@
 package com.mycompany.myshop.backend.support.core.usecase.external.erp.usecases;
 
-import com.mycompany.myshop.backend.support.ErpStubDriver;
+import com.mycompany.myshop.backend.support.harness.ErpStubDriver;
 import com.mycompany.myshop.backend.support.core.usecase.external.erp.usecases.base.BaseErpUseCase;
 
 public class ReturnsProduct extends BaseErpUseCase {

@@ -1,6 +1,6 @@
 package com.mycompany.myshop.backend.support.core.usecase.external.tax.usecases;
 
-import com.mycompany.myshop.backend.support.TaxStubDriver;
+import com.mycompany.myshop.backend.support.harness.TaxStubDriver;
 import com.mycompany.myshop.backend.support.core.usecase.external.tax.usecases.base.BaseTaxUseCase;
 
 public class ReturnsTaxRate extends BaseTaxUseCase {
