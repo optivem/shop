@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import path from 'node:path';
-import { PactV3 } from '@pact-foundation/pact';
+import { PactV3, MatchersV3 } from '@pact-foundation/pact';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { NewOrder } from '../../../pages/NewOrder';
@@ -8,13 +8,8 @@ import { OrderHistory } from '../../../pages/OrderHistory';
 import { OrderDetails } from '../../../pages/OrderDetails';
 import { renderWithProviders, routeApiTo } from '../../test-utils';
 import { OrderStatus } from '../../../types/api.types';
-import {
-  placeOrderInteraction,
-  placeOrderBlackoutInteraction,
-  browseOrderHistoryInteraction,
-  viewOrderDetailsInteraction,
-  viewMissingOrderInteraction,
-} from '../../interactions/order.interactions';
+
+const { like, eachLike, integer, decimal } = MatchersV3;
 
 const provider = new PactV3({
   consumer: 'frontend',
@@ -28,7 +23,21 @@ afterEach(() => {
 
 describe('NewOrder — places an order', () => {
   it('shows success message when order is accepted', async () => {
-    provider.addInteraction(placeOrderInteraction({ sku: 'BOOK-123', quantity: 2, country: 'US', orderNumber: 'ORD-1' }));
+    provider.addInteraction({
+      states: [{ description: 'product BOOK-123 exists and US is taxable' }],
+      uponReceiving: 'a place-order request for BOOK-123 qty 2 from US',
+      withRequest: {
+        method: 'POST',
+        path: '/api/orders',
+        headers: { 'Content-Type': 'application/json' },
+        body: { sku: 'BOOK-123', quantity: 2, country: 'US' },
+      },
+      willRespondWith: {
+        status: 201,
+        headers: { 'Content-Type': 'application/json' },
+        body: { orderNumber: like('ORD-1') },
+      },
+    });
 
     await provider.executeTest(async (mockserver) => {
       routeApiTo(mockserver.url);
@@ -44,7 +53,21 @@ describe('NewOrder — places an order', () => {
   });
 
   it('shows error message when order is rejected by the backend', async () => {
-    provider.addInteraction(placeOrderBlackoutInteraction());
+    provider.addInteraction({
+      states: [{ description: 'order placement is blocked by the New Year blackout' }],
+      uponReceiving: 'a place-order request during the blackout',
+      withRequest: {
+        method: 'POST',
+        path: '/api/orders',
+        headers: { 'Content-Type': 'application/json' },
+        body: { sku: 'BOOK-123', quantity: 2, country: 'US' },
+      },
+      willRespondWith: {
+        status: 422,
+        headers: { 'Content-Type': 'application/problem+json' },
+        body: { status: 422, detail: like('Orders cannot be placed on December 31') },
+      },
+    });
 
     await provider.executeTest(async (mockserver) => {
       routeApiTo(mockserver.url);
@@ -99,7 +122,30 @@ describe('OrderHistory', () => {
   });
 
   it('shows order history when orders are returned', async () => {
-    provider.addInteraction(browseOrderHistoryInteraction());
+    provider.addInteraction({
+      states: [{ description: 'at least one order exists' }],
+      uponReceiving: 'a browse-order-history request',
+      withRequest: {
+        method: 'GET',
+        path: '/api/orders',
+      },
+      willRespondWith: {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+        body: {
+          orders: eachLike({
+            orderNumber: like('ORD-1'),
+            orderTimestamp: like('2026-03-10T12:00:00Z'),
+            country: like('US'),
+            sku: like('BOOK-123'),
+            quantity: integer(2),
+            totalPrice: decimal(22),
+            appliedCouponCode: null,
+            status: like('PLACED'),
+          }),
+        },
+      },
+    });
 
     await provider.executeTest(async (mockserver) => {
       routeApiTo(mockserver.url);
@@ -112,7 +158,32 @@ describe('OrderHistory', () => {
 
 describe('OrderDetails', () => {
   it('shows order details for an existing order', async () => {
-    provider.addInteraction(viewOrderDetailsInteraction('ORD-1'));
+    provider.addInteraction({
+      states: [{ description: 'order ORD-1 is placed' }],
+      uponReceiving: 'a view-order-details request for ORD-1 (placed)',
+      withRequest: { method: 'GET', path: '/api/orders/ORD-1' },
+      willRespondWith: {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+        body: {
+          orderNumber: 'ORD-1',
+          orderTimestamp: like('2026-03-10T12:00:00Z'),
+          country: like('US'),
+          sku: like('BOOK-123'),
+          quantity: integer(2),
+          unitPrice: decimal(10),
+          basePrice: decimal(20),
+          discountRate: decimal(0),
+          discountAmount: decimal(0),
+          subtotalPrice: decimal(20),
+          taxRate: decimal(0.1),
+          taxAmount: decimal(2),
+          totalPrice: decimal(22),
+          appliedCouponCode: null,
+          status: OrderStatus.PLACED,
+        },
+      },
+    });
 
     await provider.executeTest(async (mockserver) => {
       routeApiTo(mockserver.url);
@@ -127,7 +198,16 @@ describe('OrderDetails', () => {
   });
 
   it('shows not-found error for a missing order', async () => {
-    provider.addInteraction(viewMissingOrderInteraction('UNKNOWN'));
+    provider.addInteraction({
+      states: [{ description: 'no order UNKNOWN exists' }],
+      uponReceiving: 'a view-order-details request for a missing order',
+      withRequest: { method: 'GET', path: '/api/orders/UNKNOWN' },
+      willRespondWith: {
+        status: 404,
+        headers: { 'Content-Type': 'application/problem+json' },
+        body: { status: 404, detail: like('Order not found') },
+      },
+    });
 
     await provider.executeTest(async (mockserver) => {
       routeApiTo(mockserver.url);
@@ -154,7 +234,32 @@ function renderOrderDetails() {
 
 describe('OrderDetails — status gates the Cancel/Deliver actions', () => {
   it('shows Cancel Order and Deliver Order for a PLACED order', async () => {
-    provider.addInteraction(viewOrderDetailsInteraction('ORD-1', OrderStatus.PLACED));
+    provider.addInteraction({
+      states: [{ description: 'order ORD-1 is placed' }],
+      uponReceiving: 'a view-order-details request for ORD-1 (placed)',
+      withRequest: { method: 'GET', path: '/api/orders/ORD-1' },
+      willRespondWith: {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+        body: {
+          orderNumber: 'ORD-1',
+          orderTimestamp: like('2026-03-10T12:00:00Z'),
+          country: like('US'),
+          sku: like('BOOK-123'),
+          quantity: integer(2),
+          unitPrice: decimal(10),
+          basePrice: decimal(20),
+          discountRate: decimal(0),
+          discountAmount: decimal(0),
+          subtotalPrice: decimal(20),
+          taxRate: decimal(0.1),
+          taxAmount: decimal(2),
+          totalPrice: decimal(22),
+          appliedCouponCode: null,
+          status: OrderStatus.PLACED,
+        },
+      },
+    });
 
     await provider.executeTest(async (mockserver) => {
       routeApiTo(mockserver.url);
@@ -167,7 +272,32 @@ describe('OrderDetails — status gates the Cancel/Deliver actions', () => {
   });
 
   it('hides Cancel Order and Deliver Order for a CANCELLED order', async () => {
-    provider.addInteraction(viewOrderDetailsInteraction('ORD-1', OrderStatus.CANCELLED));
+    provider.addInteraction({
+      states: [{ description: 'order ORD-1 is cancelled' }],
+      uponReceiving: 'a view-order-details request for ORD-1 (cancelled)',
+      withRequest: { method: 'GET', path: '/api/orders/ORD-1' },
+      willRespondWith: {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+        body: {
+          orderNumber: 'ORD-1',
+          orderTimestamp: like('2026-03-10T12:00:00Z'),
+          country: like('US'),
+          sku: like('BOOK-123'),
+          quantity: integer(2),
+          unitPrice: decimal(10),
+          basePrice: decimal(20),
+          discountRate: decimal(0),
+          discountAmount: decimal(0),
+          subtotalPrice: decimal(20),
+          taxRate: decimal(0.1),
+          taxAmount: decimal(2),
+          totalPrice: decimal(22),
+          appliedCouponCode: null,
+          status: OrderStatus.CANCELLED,
+        },
+      },
+    });
 
     await provider.executeTest(async (mockserver) => {
       routeApiTo(mockserver.url);
@@ -180,7 +310,32 @@ describe('OrderDetails — status gates the Cancel/Deliver actions', () => {
   });
 
   it('hides Cancel Order and Deliver Order for a DELIVERED order', async () => {
-    provider.addInteraction(viewOrderDetailsInteraction('ORD-1', OrderStatus.DELIVERED));
+    provider.addInteraction({
+      states: [{ description: 'order ORD-1 is delivered' }],
+      uponReceiving: 'a view-order-details request for ORD-1 (delivered)',
+      withRequest: { method: 'GET', path: '/api/orders/ORD-1' },
+      willRespondWith: {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+        body: {
+          orderNumber: 'ORD-1',
+          orderTimestamp: like('2026-03-10T12:00:00Z'),
+          country: like('US'),
+          sku: like('BOOK-123'),
+          quantity: integer(2),
+          unitPrice: decimal(10),
+          basePrice: decimal(20),
+          discountRate: decimal(0),
+          discountAmount: decimal(0),
+          subtotalPrice: decimal(20),
+          taxRate: decimal(0.1),
+          taxAmount: decimal(2),
+          totalPrice: decimal(22),
+          appliedCouponCode: null,
+          status: OrderStatus.DELIVERED,
+        },
+      },
+    });
 
     await provider.executeTest(async (mockserver) => {
       routeApiTo(mockserver.url);
