@@ -2,6 +2,7 @@ package com.mycompany.myshop.testkit.dsl.core.scenario.when.steps;
 
 import static com.mycompany.myshop.testkit.dsl.core.scenario.ScenarioDefaults.DEFAULT_ORDER_NUMBER;
 
+import com.mycompany.myshop.testkit.dsl.core.ScenarioDslImpl;
 import com.mycompany.myshop.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.ExecutionResult;
 import com.mycompany.myshop.testkit.dsl.core.scenario.ExecutionResultBuilder;
@@ -12,8 +13,8 @@ import com.mycompany.myshop.testkit.dsl.port.when.steps.WhenCancelOrder;
 public class WhenCancelOrderImpl extends BaseWhenStep<Void, VoidVerification> implements WhenCancelOrder {
     private String orderNumber;
 
-    public WhenCancelOrderImpl(UseCaseDsl app) {
-        super(app);
+    public WhenCancelOrderImpl(UseCaseDsl app, ScenarioDslImpl scenario) {
+        super(app, scenario);
         withOrderNumber(DEFAULT_ORDER_NUMBER);
     }
 

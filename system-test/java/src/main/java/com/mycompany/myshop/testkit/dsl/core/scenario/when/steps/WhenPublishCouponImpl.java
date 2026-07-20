@@ -3,6 +3,7 @@ package com.mycompany.myshop.testkit.dsl.core.scenario.when.steps;
 import com.mycompany.myshop.testkit.common.Converter;
 import com.mycompany.myshop.testkit.dsl.core.scenario.ExecutionResult;
 import com.mycompany.myshop.testkit.dsl.core.scenario.ExecutionResultBuilder;
+import com.mycompany.myshop.testkit.dsl.core.ScenarioDslImpl;
 import com.mycompany.myshop.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.testkit.dsl.core.shared.VoidVerification;
 import com.mycompany.myshop.testkit.dsl.port.when.steps.WhenPublishCoupon;
@@ -16,8 +17,8 @@ public class WhenPublishCouponImpl extends BaseWhenStep<Void, VoidVerification> 
     private String validTo;
     private String usageLimit;
 
-    public WhenPublishCouponImpl(UseCaseDsl app) {
-        super(app);
+    public WhenPublishCouponImpl(UseCaseDsl app, ScenarioDslImpl scenario) {
+        super(app, scenario);
         withCouponCode(DEFAULT_COUPON_CODE);
         withDiscountRate(DEFAULT_DISCOUNT_RATE);
     }

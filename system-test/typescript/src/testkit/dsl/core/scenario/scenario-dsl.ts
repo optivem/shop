@@ -18,12 +18,12 @@ export class ScenarioDsl {
 
   given(): GivenStage {
     this.ensureNotExecuted();
-    return new GivenStage(this.app, new ScenarioContext(), this.useCaseContext);
+    return new GivenStage(this.app, new ScenarioContext(() => this.markAsExecuted()), this.useCaseContext);
   }
 
   when(): WhenStage {
     this.ensureNotExecuted();
-    return new WhenStage(this.app, new ScenarioContext(), this.useCaseContext);
+    return new WhenStage(this.app, new ScenarioContext(() => this.markAsExecuted()), this.useCaseContext);
   }
 
   markAsExecuted(): void {

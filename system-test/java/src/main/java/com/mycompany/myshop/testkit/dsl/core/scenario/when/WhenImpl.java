@@ -1,5 +1,6 @@
 package com.mycompany.myshop.testkit.dsl.core.scenario.when;
 
+import com.mycompany.myshop.testkit.dsl.core.ScenarioDslImpl;
 import com.mycompany.myshop.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.when.steps.WhenBrowseCouponsImpl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.when.steps.WhenCancelOrderImpl;
@@ -12,19 +13,21 @@ import static com.mycompany.myshop.testkit.dsl.core.scenario.ScenarioDefaults.*;
 
 public class WhenImpl implements WhenStage {
     private final UseCaseDsl app;
+    private final ScenarioDslImpl scenario;
     private boolean hasProduct;
     private boolean hasTaxRate;
     private boolean hasPromotion;
 
-    public WhenImpl(UseCaseDsl app, boolean hasProduct, boolean hasTaxRate, boolean hasPromotion) {
+    public WhenImpl(UseCaseDsl app, ScenarioDslImpl scenario, boolean hasProduct, boolean hasTaxRate, boolean hasPromotion) {
         this.app = app;
+        this.scenario = scenario;
         this.hasProduct = hasProduct;
         this.hasTaxRate = hasTaxRate;
         this.hasPromotion = hasPromotion;
     }
 
-    public WhenImpl(UseCaseDsl app) {
-        this(app, false, false, false);
+    public WhenImpl(UseCaseDsl app, ScenarioDslImpl scenario) {
+        this(app, scenario, false, false, false);
     }
 
     private void ensureDefaults() {
@@ -58,25 +61,25 @@ public class WhenImpl implements WhenStage {
 
     public WhenPlaceOrderImpl placeOrder() {
         ensureDefaults();
-        return new WhenPlaceOrderImpl(app);
+        return new WhenPlaceOrderImpl(app, scenario);
     }
 
     public WhenCancelOrderImpl cancelOrder() {
         ensureDefaults();
-        return new WhenCancelOrderImpl(app);
+        return new WhenCancelOrderImpl(app, scenario);
     }
 
     public WhenViewOrderImpl viewOrder() {
         ensureDefaults();
-        return new WhenViewOrderImpl(app);
+        return new WhenViewOrderImpl(app, scenario);
     }
 
     public WhenPublishCouponImpl publishCoupon() {
-        return new WhenPublishCouponImpl(app);
+        return new WhenPublishCouponImpl(app, scenario);
     }
 
     public WhenBrowseCouponsImpl browseCoupons() {
-        return new WhenBrowseCouponsImpl(app);
+        return new WhenBrowseCouponsImpl(app, scenario);
     }
 
 }

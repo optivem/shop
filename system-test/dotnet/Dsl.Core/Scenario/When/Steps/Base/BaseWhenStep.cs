@@ -24,6 +24,7 @@ public abstract class BaseWhen<TSuccessResponse, TSuccessVerification>
 
     public ThenStage<TSuccessResponse, TSuccessVerification> Then()
     {
+        _scenario.MarkAsExecuted();
         return new ThenStage<TSuccessResponse, TSuccessVerification>(Channel, _app, async () =>
         {
             await _ensureGiven();

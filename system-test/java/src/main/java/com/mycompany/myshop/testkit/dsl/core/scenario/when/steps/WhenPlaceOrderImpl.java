@@ -3,6 +3,7 @@ package com.mycompany.myshop.testkit.dsl.core.scenario.when.steps;
 import static com.mycompany.myshop.testkit.dsl.core.scenario.ScenarioDefaults.*;
 
 import com.mycompany.myshop.testkit.common.Converter;
+import com.mycompany.myshop.testkit.dsl.core.ScenarioDslImpl;
 import com.mycompany.myshop.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.ExecutionResult;
 import com.mycompany.myshop.testkit.dsl.core.scenario.ExecutionResultBuilder;
@@ -18,8 +19,8 @@ public class WhenPlaceOrderImpl extends BaseWhenStep<PlaceOrderResponse, PlaceOr
     private String country;
     private String couponCode;
 
-    public WhenPlaceOrderImpl(UseCaseDsl app) {
-        super(app);
+    public WhenPlaceOrderImpl(UseCaseDsl app, ScenarioDslImpl scenario) {
+        super(app, scenario);
         withOrderNumber(DEFAULT_ORDER_NUMBER);
         withSku(DEFAULT_SKU);
         withQuantity(DEFAULT_QUANTITY);

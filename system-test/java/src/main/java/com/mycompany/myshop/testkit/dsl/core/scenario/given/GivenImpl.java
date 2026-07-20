@@ -1,5 +1,6 @@
 package com.mycompany.myshop.testkit.dsl.core.scenario.given;
 
+import com.mycompany.myshop.testkit.dsl.core.ScenarioDslImpl;
 import com.mycompany.myshop.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.then.ThenImpl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.given.steps.GivenClockImpl;
@@ -17,6 +18,7 @@ import java.util.List;
 
 public class GivenImpl implements GivenStage {
     private final UseCaseDsl app;
+    private final ScenarioDslImpl scenario;
     private GivenClockImpl clock;
     private GivenPromotionImpl promotion;
     private final List<GivenProductImpl> products;
@@ -24,8 +26,9 @@ public class GivenImpl implements GivenStage {
     private final List<GivenCountryImpl> countries;
     private final List<GivenCouponImpl> coupons;
 
-    public GivenImpl(UseCaseDsl app) {
+    public GivenImpl(UseCaseDsl app, ScenarioDslImpl scenario) {
         this.app = app;
+        this.scenario = scenario;
         this.clock = null;
         this.promotion = new GivenPromotionImpl(this);
         this.products = new ArrayList<>();
@@ -71,7 +74,7 @@ public class GivenImpl implements GivenStage {
 
     public WhenImpl when() {
         setup();
-        return new WhenImpl(app, !products.isEmpty(), !countries.isEmpty(), true);
+        return new WhenImpl(app, scenario, !products.isEmpty(), !countries.isEmpty(), true);
     }
 
     public ThenStage then() {

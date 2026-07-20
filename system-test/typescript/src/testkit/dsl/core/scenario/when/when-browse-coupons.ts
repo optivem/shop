@@ -11,6 +11,7 @@ export class WhenBrowseCoupons {
   ) {}
 
   then(): ThenBrowseCouponsResultStage {
+    this.ctx.markExecuted();
     return new ThenBrowseCouponsResultStage(this.app, this.ctx, this.useCaseContext);
   }
 }

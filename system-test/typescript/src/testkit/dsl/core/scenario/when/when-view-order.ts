@@ -19,6 +19,7 @@ export class WhenViewOrder {
   }
 
   then(): ThenViewOrderResultStage {
+    this.ctx.markExecuted();
     return new ThenViewOrderResultStage(this.app, this.ctx, this.useCaseContext, this.orderNumber);
   }
 }

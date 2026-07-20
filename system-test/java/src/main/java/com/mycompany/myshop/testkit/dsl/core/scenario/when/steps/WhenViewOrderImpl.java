@@ -2,6 +2,7 @@ package com.mycompany.myshop.testkit.dsl.core.scenario.when.steps;
 
 import static com.mycompany.myshop.testkit.dsl.core.scenario.ScenarioDefaults.DEFAULT_ORDER_NUMBER;
 
+import com.mycompany.myshop.testkit.dsl.core.ScenarioDslImpl;
 import com.mycompany.myshop.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.ExecutionResult;
 import com.mycompany.myshop.testkit.dsl.core.scenario.ExecutionResultBuilder;
@@ -13,8 +14,8 @@ import com.mycompany.myshop.testkit.dsl.core.usecase.usecases.ViewOrderVerificat
 public class WhenViewOrderImpl extends BaseWhenStep<ViewOrderResponse, ViewOrderVerification> implements WhenViewOrder {
     private String orderNumber;
 
-    public WhenViewOrderImpl(UseCaseDsl app) {
-        super(app);
+    public WhenViewOrderImpl(UseCaseDsl app, ScenarioDslImpl scenario) {
+        super(app, scenario);
         withOrderNumber(DEFAULT_ORDER_NUMBER);
     }
 

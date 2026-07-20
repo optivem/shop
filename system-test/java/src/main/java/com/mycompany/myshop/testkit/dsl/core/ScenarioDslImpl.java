@@ -20,12 +20,12 @@ public class ScenarioDslImpl implements ScenarioDsl {
 
     public GivenImpl given() {
         ensureNotExecuted();
-        return new GivenImpl(app);
+        return new GivenImpl(app, this);
     }
 
     public WhenImpl when() {
         ensureNotExecuted();
-        return new WhenImpl(app);
+        return new WhenImpl(app, this);
     }
 
     public void markAsExecuted() {

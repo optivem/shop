@@ -41,6 +41,7 @@ export class WhenPlaceOrder {
   }
 
   then(): ThenResultStage {
+    this.ctx.markExecuted();
     return new ThenResultStage(this.app, this.ctx, this.useCaseContext, this.sku, this.quantity, this.country, this.couponCode);
   }
 }

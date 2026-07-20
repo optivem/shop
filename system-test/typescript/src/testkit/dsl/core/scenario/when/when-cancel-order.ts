@@ -19,6 +19,7 @@ export class WhenCancelOrder {
   }
 
   then(): ThenCancelOrderResultStage {
+    this.ctx.markExecuted();
     return new ThenCancelOrderResultStage(this.app, this.ctx, this.useCaseContext, this.orderNumber);
   }
 }

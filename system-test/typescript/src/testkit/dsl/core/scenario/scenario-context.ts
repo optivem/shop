@@ -50,4 +50,11 @@ export class ScenarioContext {
   hasExplicitProduct = false;
   promotionConfig: PromotionConfig = { promotionActive: DEFAULTS.PROMOTION_ACTIVE, discount: DEFAULTS.PROMOTION_DISCOUNT };
   hasExplicitPromotion = false;
+
+  constructor(private readonly onExecuted?: () => void) {}
+
+  /** Signals that the scenario's action has been initiated (called from each When-step's `then()`). */
+  markExecuted(): void {
+    this.onExecuted?.();
+  }
 }

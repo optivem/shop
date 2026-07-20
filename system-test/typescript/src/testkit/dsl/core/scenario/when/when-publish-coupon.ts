@@ -46,6 +46,7 @@ export class WhenPublishCoupon {
   }
 
   then(): ThenPublishCouponResultStage {
+    this.ctx.markExecuted();
     return new ThenPublishCouponResultStage(this.app, this.ctx, this.useCaseContext, this.code, this.discountRate, this.validFrom, this.validTo, this.usageLimit);
   }
 }
