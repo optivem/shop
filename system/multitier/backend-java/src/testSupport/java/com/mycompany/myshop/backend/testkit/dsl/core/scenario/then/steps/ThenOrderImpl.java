@@ -1,12 +1,12 @@
 package com.mycompany.myshop.backend.testkit.dsl.core.scenario.then.steps;
 
 import com.mycompany.myshop.backend.core.entities.OrderStatus;
+import com.mycompany.myshop.backend.testkit.common.Converter;
 import com.mycompany.myshop.backend.testkit.dsl.core.scenario.ExecutionResultContext;
 import com.mycompany.myshop.backend.testkit.dsl.core.shared.ResponseVerification;
 import com.mycompany.myshop.backend.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.backend.testkit.dsl.core.usecase.usecases.ViewOrderVerification;
 import com.mycompany.myshop.backend.testkit.dsl.port.then.steps.ThenOrder;
-import java.math.BigDecimal;
 
 /**
  * The persisted order. When the action <em>was</em> a view-order, its response is asserted directly;
@@ -55,9 +55,19 @@ public class ThenOrderImpl<R, V extends ResponseVerification<R>> extends BaseThe
     }
 
     @Override
+    public ThenOrderImpl<R, V> hasUnitPrice(double expectedUnitPrice) {
+        return hasUnitPrice(Converter.fromDouble(expectedUnitPrice));
+    }
+
+    @Override
     public ThenOrderImpl<R, V> hasBasePrice(String expectedBasePrice) {
         orderVerification.basePrice(expectedBasePrice);
         return this;
+    }
+
+    @Override
+    public ThenOrderImpl<R, V> hasBasePrice(double expectedBasePrice) {
+        return hasBasePrice(Converter.fromDouble(expectedBasePrice));
     }
 
     @Override
@@ -68,7 +78,7 @@ public class ThenOrderImpl<R, V extends ResponseVerification<R>> extends BaseThe
 
     @Override
     public ThenOrderImpl<R, V> hasDiscountRate(double expectedDiscountRate) {
-        return hasDiscountRate(BigDecimal.valueOf(expectedDiscountRate).toPlainString());
+        return hasDiscountRate(Converter.fromDouble(expectedDiscountRate));
     }
 
     @Override
@@ -79,7 +89,7 @@ public class ThenOrderImpl<R, V extends ResponseVerification<R>> extends BaseThe
 
     @Override
     public ThenOrderImpl<R, V> hasTaxRate(double expectedTaxRate) {
-        return hasTaxRate(BigDecimal.valueOf(expectedTaxRate).toPlainString());
+        return hasTaxRate(Converter.fromDouble(expectedTaxRate));
     }
 
     @Override
@@ -95,9 +105,19 @@ public class ThenOrderImpl<R, V extends ResponseVerification<R>> extends BaseThe
     }
 
     @Override
+    public ThenOrderImpl<R, V> hasDiscountAmount(double expectedDiscountAmount) {
+        return hasDiscountAmount(Converter.fromDouble(expectedDiscountAmount));
+    }
+
+    @Override
     public ThenOrderImpl<R, V> hasSubtotalPrice(String expectedSubtotalPrice) {
         orderVerification.subtotalPrice(expectedSubtotalPrice);
         return this;
+    }
+
+    @Override
+    public ThenOrderImpl<R, V> hasSubtotalPrice(double expectedSubtotalPrice) {
+        return hasSubtotalPrice(Converter.fromDouble(expectedSubtotalPrice));
     }
 
     @Override
@@ -107,9 +127,19 @@ public class ThenOrderImpl<R, V extends ResponseVerification<R>> extends BaseThe
     }
 
     @Override
+    public ThenOrderImpl<R, V> hasTaxAmount(double expectedTaxAmount) {
+        return hasTaxAmount(Converter.fromDouble(expectedTaxAmount));
+    }
+
+    @Override
     public ThenOrderImpl<R, V> hasTotalPrice(String expectedTotalPrice) {
         orderVerification.totalPrice(expectedTotalPrice);
         return this;
+    }
+
+    @Override
+    public ThenOrderImpl<R, V> hasTotalPrice(double expectedTotalPrice) {
+        return hasTotalPrice(Converter.fromDouble(expectedTotalPrice));
     }
 
     @Override

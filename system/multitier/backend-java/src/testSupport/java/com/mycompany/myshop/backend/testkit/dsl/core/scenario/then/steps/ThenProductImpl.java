@@ -41,8 +41,17 @@ public class ThenProductImpl<R, V extends ResponseVerification<R>> extends BaseT
 
     @Override
     public ThenProductImpl<R, V> hasPrice(double expectedPrice) {
+        return hasPrice(BigDecimal.valueOf(expectedPrice));
+    }
+
+    @Override
+    public ThenProductImpl<R, V> hasPrice(String expectedPrice) {
+        return hasPrice(new BigDecimal(expectedPrice));
+    }
+
+    private ThenProductImpl<R, V> hasPrice(BigDecimal expectedPrice) {
         assertThat(product).as("product %s as parsed by the SUT's ErpGateway", sku).isPresent();
-        assertThat(product.get().getPrice()).isEqualByComparingTo(BigDecimal.valueOf(expectedPrice));
+        assertThat(product.get().getPrice()).isEqualByComparingTo(expectedPrice);
         return this;
     }
 

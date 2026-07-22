@@ -13,6 +13,11 @@ public class Converter {
         throw new IllegalStateException("Utility class");
     }
 
+    /**
+     * Null-safe but <strong>not</strong> empty-safe: routes through {@link #from}, which only
+     * null-checks, so {@code ""} reaches {@code new BigDecimal("")} and throws. Callers reading
+     * possibly-blank text (e.g. scraped table cells) must guard for empty themselves.
+     */
     public static BigDecimal toBigDecimal(String value) {
         return from(value, BigDecimal::new);
     }
@@ -25,6 +30,13 @@ public class Converter {
         return from(value, BigDecimal::toString);
     }
 
+    /**
+     * Formats a {@code double} as decimal text for the request DTOs, which are String-typed by design
+     * (see {@code PublishCouponRequest}).
+     *
+     * <p>{@code toPlainString()}, never {@code toString()}: the latter emits scientific notation for
+     * small magnitudes (e.g. {@code 1.0E-7}), which the domain's decimal parsing rejects.
+     */
     public static String fromDouble(double value) {
         return BigDecimal.valueOf(value).toPlainString();
     }

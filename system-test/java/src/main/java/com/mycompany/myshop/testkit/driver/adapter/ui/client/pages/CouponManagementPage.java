@@ -139,6 +139,16 @@ public class CouponManagementPage extends BasePage {
         return dateOnly + TIME_END_OF_DAY;
     }
 
+    /**
+     * Percent text scraped from the table (e.g. {@code "15"}) to a rate ({@code 0.15}).
+     *
+     * <p>{@code movePointLeft(2)} rather than {@code divide(...)}: division without a MathContext
+     * throws on a non-terminating result, whereas a scale shift is exact and total. The empty guard
+     * is required because {@code Converter.toBigDecimal} does not handle {@code ""}.
+     *
+     * <p>Known limitation: returns ZERO for unreadable text, conflating "no discount" with "could not
+     * scrape the cell". Pre-existing behaviour, left as-is.
+     */
     private BigDecimal parseDiscountRate(String text) {
         if(text == null || text.isEmpty()) {
             return BigDecimal.ZERO;

@@ -1,10 +1,10 @@
 package com.mycompany.myshop.backend.testkit.dsl.core.scenario.given.steps;
 
+import com.mycompany.myshop.backend.testkit.common.Converter;
 import com.mycompany.myshop.backend.testkit.dsl.core.scenario.ScenarioDefaults;
 import com.mycompany.myshop.backend.testkit.dsl.core.scenario.given.GivenImpl;
 import com.mycompany.myshop.backend.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.backend.testkit.dsl.port.given.steps.GivenCountry;
-import java.math.BigDecimal;
 
 public class GivenCountryImpl extends BaseGivenStep implements GivenCountry {
 
@@ -32,7 +32,7 @@ public class GivenCountryImpl extends BaseGivenStep implements GivenCountry {
 
     @Override
     public GivenCountryImpl withTaxRate(double taxRate) {
-        return withTaxRate(BigDecimal.valueOf(taxRate).toPlainString());
+        return withTaxRate(Converter.fromDouble(taxRate));
     }
 
     @Override

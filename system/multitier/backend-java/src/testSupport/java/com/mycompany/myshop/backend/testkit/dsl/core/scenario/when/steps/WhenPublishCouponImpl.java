@@ -1,5 +1,6 @@
 package com.mycompany.myshop.backend.testkit.dsl.core.scenario.when.steps;
 
+import com.mycompany.myshop.backend.testkit.common.Converter;
 import com.mycompany.myshop.backend.testkit.dsl.core.ScenarioDslImpl;
 import com.mycompany.myshop.backend.testkit.dsl.core.scenario.ExecutionResult;
 import com.mycompany.myshop.backend.testkit.dsl.core.scenario.ExecutionResultBuilder;
@@ -7,7 +8,6 @@ import com.mycompany.myshop.backend.testkit.dsl.core.scenario.ScenarioDefaults;
 import com.mycompany.myshop.backend.testkit.dsl.core.shared.VoidVerification;
 import com.mycompany.myshop.backend.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.backend.testkit.dsl.port.when.steps.WhenPublishCoupon;
-import java.math.BigDecimal;
 
 public class WhenPublishCouponImpl extends BaseWhenStep<Void, VoidVerification>
         implements WhenPublishCoupon {
@@ -36,7 +36,7 @@ public class WhenPublishCouponImpl extends BaseWhenStep<Void, VoidVerification>
 
     @Override
     public WhenPublishCouponImpl withDiscountRate(double discountRate) {
-        return withDiscountRate(BigDecimal.valueOf(discountRate).toPlainString());
+        return withDiscountRate(Converter.fromDouble(discountRate));
     }
 
     @Override

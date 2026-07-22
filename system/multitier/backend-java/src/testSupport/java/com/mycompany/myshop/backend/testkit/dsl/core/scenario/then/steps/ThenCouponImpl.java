@@ -1,5 +1,6 @@
 package com.mycompany.myshop.backend.testkit.dsl.core.scenario.then.steps;
 
+import com.mycompany.myshop.backend.testkit.common.Converter;
 import com.mycompany.myshop.backend.testkit.dsl.core.scenario.ExecutionResultContext;
 import com.mycompany.myshop.backend.testkit.dsl.core.shared.ResponseVerification;
 import com.mycompany.myshop.backend.testkit.dsl.core.usecase.UseCaseDsl;
@@ -28,6 +29,11 @@ public class ThenCouponImpl<R, V extends ResponseVerification<R>> extends BaseTh
     public ThenCouponImpl<R, V> hasDiscountRate(String expectedDiscountRate) {
         verification.couponHasDiscountRate(couponCode, expectedDiscountRate);
         return this;
+    }
+
+    @Override
+    public ThenCouponImpl<R, V> hasDiscountRate(double expectedDiscountRate) {
+        return hasDiscountRate(Converter.fromDouble(expectedDiscountRate));
     }
 
     @Override

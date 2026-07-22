@@ -33,8 +33,17 @@ public class ThenCountryImpl<R, V extends ResponseVerification<R>> extends BaseT
 
     @Override
     public ThenCountryImpl<R, V> hasTaxRate(double expectedTaxRate) {
+        return hasTaxRate(BigDecimal.valueOf(expectedTaxRate));
+    }
+
+    @Override
+    public ThenCountryImpl<R, V> hasTaxRate(String expectedTaxRate) {
+        return hasTaxRate(new BigDecimal(expectedTaxRate));
+    }
+
+    private ThenCountryImpl<R, V> hasTaxRate(BigDecimal expectedTaxRate) {
         assertThat(country).as("country %s as parsed by the SUT's TaxGateway", code).isPresent();
-        assertThat(country.get().getTaxRate()).isEqualByComparingTo(BigDecimal.valueOf(expectedTaxRate));
+        assertThat(country.get().getTaxRate()).isEqualByComparingTo(expectedTaxRate);
         return this;
     }
 

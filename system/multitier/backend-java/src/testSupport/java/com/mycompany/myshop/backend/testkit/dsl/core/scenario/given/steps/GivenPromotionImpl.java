@@ -1,10 +1,10 @@
 package com.mycompany.myshop.backend.testkit.dsl.core.scenario.given.steps;
 
+import com.mycompany.myshop.backend.testkit.common.Converter;
 import com.mycompany.myshop.backend.testkit.dsl.core.scenario.ScenarioDefaults;
 import com.mycompany.myshop.backend.testkit.dsl.core.scenario.given.GivenImpl;
 import com.mycompany.myshop.backend.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.backend.testkit.dsl.port.given.steps.GivenPromotion;
-import java.math.BigDecimal;
 
 public class GivenPromotionImpl extends BaseGivenStep implements GivenPromotion {
 
@@ -29,7 +29,7 @@ public class GivenPromotionImpl extends BaseGivenStep implements GivenPromotion 
 
     @Override
     public GivenPromotionImpl withDiscount(double discount) {
-        return withDiscount(BigDecimal.valueOf(discount).toPlainString());
+        return withDiscount(Converter.fromDouble(discount));
     }
 
     @Override

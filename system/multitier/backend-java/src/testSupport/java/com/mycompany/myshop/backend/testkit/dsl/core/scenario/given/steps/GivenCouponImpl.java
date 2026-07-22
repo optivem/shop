@@ -1,10 +1,10 @@
 package com.mycompany.myshop.backend.testkit.dsl.core.scenario.given.steps;
 
+import com.mycompany.myshop.backend.testkit.common.Converter;
 import com.mycompany.myshop.backend.testkit.dsl.core.scenario.ScenarioDefaults;
 import com.mycompany.myshop.backend.testkit.dsl.core.scenario.given.GivenImpl;
 import com.mycompany.myshop.backend.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.backend.testkit.dsl.port.given.steps.GivenCoupon;
-import java.math.BigDecimal;
 
 /**
  * A coupon that already exists. Seeded through the SUT's own {@code POST /api/coupons} rather than
@@ -42,7 +42,7 @@ public class GivenCouponImpl extends BaseGivenStep implements GivenCoupon {
 
     @Override
     public GivenCouponImpl withDiscountRate(double discountRate) {
-        return withDiscountRate(BigDecimal.valueOf(discountRate).toPlainString());
+        return withDiscountRate(Converter.fromDouble(discountRate));
     }
 
     @Override

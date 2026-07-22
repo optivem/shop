@@ -1,10 +1,10 @@
 package com.mycompany.myshop.backend.testkit.dsl.core.scenario.given.steps;
 
+import com.mycompany.myshop.backend.testkit.common.Converter;
 import com.mycompany.myshop.backend.testkit.dsl.core.scenario.ScenarioDefaults;
 import com.mycompany.myshop.backend.testkit.dsl.core.scenario.given.GivenImpl;
 import com.mycompany.myshop.backend.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.backend.testkit.dsl.port.given.steps.GivenProduct;
-import java.math.BigDecimal;
 
 public class GivenProductImpl extends BaseGivenStep implements GivenProduct {
 
@@ -32,7 +32,7 @@ public class GivenProductImpl extends BaseGivenStep implements GivenProduct {
 
     @Override
     public GivenProductImpl withUnitPrice(double unitPrice) {
-        return withUnitPrice(BigDecimal.valueOf(unitPrice).toPlainString());
+        return withUnitPrice(Converter.fromDouble(unitPrice));
     }
 
     @Override
