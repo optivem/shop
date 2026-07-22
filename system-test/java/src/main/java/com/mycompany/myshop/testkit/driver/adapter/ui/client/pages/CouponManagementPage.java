@@ -4,6 +4,7 @@ import com.mycompany.myshop.testkit.driver.adapter.shared.client.playwright.Page
 import com.mycompany.myshop.testkit.common.Converter;
 import com.mycompany.myshop.testkit.driver.port.dtos.BrowseCouponsResponse;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -138,13 +139,13 @@ public class CouponManagementPage extends BasePage {
         return dateOnly + TIME_END_OF_DAY;
     }
 
-    private double parseDiscountRate(String text) {
+    private BigDecimal parseDiscountRate(String text) {
         if(text == null || text.isEmpty()) {
-            return 0.00;
+            return BigDecimal.ZERO;
         }
 
-        var value = Converter.toDouble(text);
-        return value == null ? 0.00 : value / 100.0;
+        var value = Converter.toBigDecimal(text);
+        return value == null ? BigDecimal.ZERO : value.movePointLeft(2);
     }
 
     private Instant toInstant(String text) {

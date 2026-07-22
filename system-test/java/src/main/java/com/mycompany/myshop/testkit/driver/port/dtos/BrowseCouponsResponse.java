@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
@@ -21,7 +22,7 @@ public class BrowseCouponsResponse {
     @AllArgsConstructor
     public static class CouponDto {
         private String code;
-        private double discountRate;
+        private BigDecimal discountRate;
         private Instant validFrom;
         private Instant validTo;
         private Integer usageLimit;

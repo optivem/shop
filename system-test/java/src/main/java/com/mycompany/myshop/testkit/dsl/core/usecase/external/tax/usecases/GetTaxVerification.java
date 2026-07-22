@@ -27,7 +27,7 @@ public class GetTaxVerification extends ResponseVerification<GetTaxResponse> {
         var actualTaxRate = getResponse().getTaxRate();
         assertThat(actualTaxRate)
                 .withFailMessage("Expected tax rate to be %s, but was %s", expectedTaxRate, actualTaxRate)
-                .isEqualTo(expectedTaxRate);
+                .isEqualByComparingTo(expectedTaxRate);
         return this;
     }
 

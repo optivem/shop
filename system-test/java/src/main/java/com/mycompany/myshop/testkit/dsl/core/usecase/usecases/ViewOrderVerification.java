@@ -108,7 +108,7 @@ public class ViewOrderVerification extends ResponseVerification<ViewOrderRespons
     }
 
     public ViewOrderVerification subtotalPrice(String expectedSubtotalPrice) {
-        return subtotalPrice(Converter.toDouble(expectedSubtotalPrice));
+        return subtotalPrice(Converter.toBigDecimal(expectedSubtotalPrice));
     }
 
     public ViewOrderVerification basePrice(BigDecimal expectedBasePrice) {

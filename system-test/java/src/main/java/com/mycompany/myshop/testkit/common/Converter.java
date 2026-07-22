@@ -26,7 +26,7 @@ public class Converter {
     }
 
     public static String fromDouble(double value) {
-        return BigDecimal.valueOf(value).toString();
+        return BigDecimal.valueOf(value).toPlainString();
     }
 
     public static Integer toInteger(String value) {

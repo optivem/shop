@@ -21,10 +21,20 @@ which layer you are in, and four step types offer an overload the other lacks.
 delegating to a canonical `BigDecimal` comparison. Nothing is deleted, so all 37 existing call sites
 keep compiling untouched.
 
-> **Precision defects moved out.** The four correctness issues this plan originally carried as Item 3
-> are now `plans/20260720-1420-system-test-java-bigdecimal-canonical-conformance.md`. They change
-> assertion semantics; this plan is purely additive. **Execute that plan first** — it settles the
-> canonical type that these overloads delegate to.
+> **✅ Precision defects landed 2026-07-22.** The correctness issues this plan originally carried as
+> Item 3 were split into `20260720-1420-system-test-java-bigdecimal-canonical-conformance.md`,
+> executed, verified against `gh-optivem-multitier-java.yaml`, and that plan deleted. The canonical
+> type is now settled: **`BigDecimal` canonical, `String`/`double` delegating via
+> `Converter.toBigDecimal(...)`, comparison always `isEqualByComparingTo`.** What landed:
+>
+> - `GetTaxVerification.taxRate` — `isEqualTo` → `isEqualByComparingTo` (was scale-sensitive: `0.10`
+>   failed against `0.1`)
+> - `BrowseCouponsResponse.CouponDto.discountRate` — `double` → `BigDecimal`
+> - `CouponManagementPage.parseDiscountRate` — returns `BigDecimal`, `movePointLeft(2)` replaces
+>   `/ 100.0`
+> - `BrowseCouponsVerification.couponHasDiscountRate` — `BigDecimal` canonical + `double` overload
+> - `ViewOrderVerification.subtotalPrice(String)` — `toDouble` → `toBigDecimal`
+> - `Converter.fromDouble` — `toString()` → `toPlainString()`
 
 ## The premise correction
 
@@ -34,11 +44,11 @@ end."* **That is true of exactly one method, not the layer.** The survey found:
 - **`system-test` overwhelmingly already converts to `BigDecimal`** before comparing —
   `Converter.toBigDecimal(double)` is `BigDecimal.valueOf`, and the verifications use
   `isEqualByComparingTo`. Passing a `double` is *not* generally a float-equality bug.
-- **Exactly one true raw-double comparison exists:** `ThenCoupon.hasDiscountRate(double)` →
-  `BrowseCouponsVerification.couponHasDiscountRate(String, double)` →
-  `assertThat(coupon.getDiscountRate()).isEqualTo(expected)`, where
-  `BrowseCouponsResponse.CouponDto.discountRate` is a **primitive `double`**
-  (`driver/port/dtos/BrowseCouponsResponse.java:24`). Exactness is capped by the DTO here, not the DSL.
+- ~~**Exactly one true raw-double comparison exists:** `ThenCoupon.hasDiscountRate(double)` →
+  `BrowseCouponsVerification.couponHasDiscountRate(String, double)`, where
+  `CouponDto.discountRate` is a **primitive `double`**.~~ **Fixed 2026-07-22** — the DTO field is now
+  `BigDecimal` and the comparison is `isEqualByComparingTo`. There is no raw-double money comparison
+  left in `system-test/java`.
 - **`backend-java` has no raw double comparison anywhere** — every path terminates in
   `isEqualByComparingTo` against a `String` or `BigDecimal`. That part of the premise held.
 
@@ -107,9 +117,8 @@ whether `backend-java`'s DSL should delegate to its existing verification layer 
 original plan budgeted and may collide with the parent plan's settled decision that production types
 in the component DSL port are correct there.
 
-Do that only after
-`plans/20260720-1420-system-test-java-bigdecimal-canonical-conformance.md` has landed — it settles the
-canonical type these overloads delegate to.
+The blocking dependency is cleared: the canonical type is settled (`BigDecimal`) and landed
+2026-07-22.
 
 Verification for every item once rewritten: `./gradlew build` in `system/multitier/backend-java` and
 in `system-test/java`. These items are additive, so compilation is sufficient evidence.
@@ -146,19 +155,58 @@ verification object, so their `String` overloads are DSL-local — no verificati
 - [ ] `ThenProduct.hasPrice(String)` and `ThenCountry.hasTaxRate(String)` — both verifications already
       carry a `String` overload (`GetProductVerification:38`, `GetTaxVerification:38`); DSL-only.
 - [ ] `ThenCoupon.hasDiscountRate(String)` — **requires a new**
-      `BrowseCouponsVerification.couponHasDiscountRate(String, String)`.
+      `BrowseCouponsVerification.couponHasDiscountRate(String, String)` delegating via
+      `Converter.toBigDecimal(...)`.
 
-On that last one: the DTO field is a primitive `double`, so a `String` overload improves the *call-site
-vocabulary* but cannot make the comparison exact. **Do not present it as a precision fix.** Making it
-genuinely exact means changing `BrowseCouponsResponse.CouponDto.discountRate` to `BigDecimal`, which
-touches the driver DTO contract and is deliberately **out of scope** — note it, do not do it here.
+**Updated 2026-07-22.** This bullet previously carried a warning that the DTO field was a primitive
+`double`, so a `String` overload would improve call-site vocabulary without making the comparison
+exact. That no longer applies — the field is `BigDecimal` and the comparison is exact, so a `String`
+overload here is now a legitimate addition rather than cosmetic. It was deliberately *not* added when
+the DTO changed, because no caller wants one; add it only when a test does.
+
+### Item 3 — `ViewOrder.unitPrice` is `double`-canonical (consistency only)
+
+`ViewOrderVerification.java:49-60`. The only `ViewOrder` money method with no `BigDecimal` overload:
+`unitPrice(double)` holds the assertion body, `unitPrice(String)` reaches it via `Converter.toDouble`.
+
+Carried over from the 1420 plan, which deliberately left it undone. **This is not a precision fix** —
+the `String → double → BigDecimal` hop is not lossy for any value these tests carry (`Double.toString`
+emits the shortest round-tripping representation, exact to 15 significant digits), and the existing
+body already uses `isEqualByComparingTo`. It is purely so a reader of the file sees one pattern rather
+than two. It belongs here because it is the same *kind* of change as Items 1–2.
+
+- [ ] Add `unitPrice(BigDecimal)` carrying the assertion body, same fail-message wording as siblings.
+- [ ] Reduce `unitPrice(double)` and repoint `unitPrice(String)` to delegate via
+      `Converter.toBigDecimal`.
+
+## Notes carried over from the 1420 plan (do not re-derive these)
+
+- **The `String → double → BigDecimal` hop is *not* lossy.** `Converter.toDouble("19.99")` gives the
+  nearest `double`; `BigDecimal.valueOf(d)` formats via `Double.toString`, which emits the shortest
+  round-tripping representation — numerically identical to `new BigDecimal("19.99")`. Holds to 15
+  significant digits, i.e. every money value these tests carry. The 1420 plan was originally drafted
+  on the belief that this hop lost precision; it does not. Overload work here is **parity, not
+  bug-fixing**.
+- **Do not make the request DTOs `BigDecimal`.** `PublishCouponRequest.discountRate` is a `String`
+  deliberately: `PublishCouponNegativeTest:15-35` is parameterized over `String` so it can send
+  `"abc"` / `"-0.5"` / `"1.5"` and assert the backend's validation messages. A typed field makes those
+  tests unwritable. String-canonical on the *request* side is correct design; only `BigDecimal` on the
+  *assertion* side is.
+- **`CouponManagementPage.parseDiscountRate` returns `ZERO` for missing text**, conflating "no
+  discount" with "couldn't scrape the cell." Pre-existing; deliberately not widened into the 1420
+  change. Still open if anyone wants it.
+- **Use `movePointLeft(2)`, not `divide(...)`**, for percent → rate. `divide` without a `MathContext`
+  throws on non-terminating results; `movePointLeft` is a total, exact scale shift.
+- **`Converter.toBigDecimal(String)` does not guard empty strings** — it routes through `from(...)`,
+  which only null-checks, unlike `to(...)`. `new BigDecimal("")` throws. Keep call-site empty guards.
 
 ## Non-goals
 
 - **Nothing is deleted.** No `double` overload is removed, no call site is rewritten. If an item seems
   to require touching a test file, that item has been misread.
 - **No .NET / TypeScript** — deferred to the cross-language mirror plan, Step 3.
-- **No DTO contract changes** — see the `ThenCoupon` note above.
+- **No further DTO contract changes.** `CouponDto.discountRate` was changed to `BigDecimal` on
+  2026-07-22 (test-side driver DTO only, invisible outside `system-test/java`). No others are in scope.
 - **No convergence of the two layers' *structure*.** Only the assertion vocabulary is in scope; the
   layers keep their own verification objects and their own port types (settled as Item 2 of the parent
   plan: production types in the component DSL port are correct there).

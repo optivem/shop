@@ -5,6 +5,8 @@ import com.mycompany.myshop.testkit.dsl.core.shared.UseCaseContext;
 import com.mycompany.myshop.testkit.common.Converter;
 import com.mycompany.myshop.testkit.driver.port.dtos.BrowseCouponsResponse;
 
+import java.math.BigDecimal;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class BrowseCouponsVerification extends ResponseVerification<BrowseCouponsResponse> {
@@ -17,12 +19,16 @@ public class BrowseCouponsVerification extends ResponseVerification<BrowseCoupon
         return this;
     }
 
-    public BrowseCouponsVerification couponHasDiscountRate(String couponCodeAlias, double expectedDiscountRate) {
+    public BrowseCouponsVerification couponHasDiscountRate(String couponCodeAlias, BigDecimal expectedDiscountRate) {
         var coupon = findCouponByCode(couponCodeAlias);
         assertThat(coupon.getDiscountRate())
                 .as("Discount rate for coupon '%s'", couponCodeAlias)
-                .isEqualTo(expectedDiscountRate);
+                .isEqualByComparingTo(expectedDiscountRate);
         return this;
+    }
+
+    public BrowseCouponsVerification couponHasDiscountRate(String couponCodeAlias, double expectedDiscountRate) {
+        return couponHasDiscountRate(couponCodeAlias, Converter.toBigDecimal(expectedDiscountRate));
     }
 
     public BrowseCouponsVerification couponHasValidFrom(String couponCodeAlias, String expectedValidFrom) {
