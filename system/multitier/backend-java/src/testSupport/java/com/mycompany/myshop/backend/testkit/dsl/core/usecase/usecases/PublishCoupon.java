@@ -2,11 +2,13 @@ package com.mycompany.myshop.backend.testkit.dsl.core.usecase.usecases;
 
 import com.mycompany.myshop.backend.core.dtos.PublishCouponRequest;
 import com.mycompany.myshop.backend.testkit.driver.port.MyShopDriver;
+import com.mycompany.myshop.backend.testkit.dsl.core.shared.UseCaseContext;
 import com.mycompany.myshop.backend.testkit.dsl.core.shared.UseCaseResult;
 import com.mycompany.myshop.backend.testkit.dsl.core.shared.VoidVerification;
 import com.mycompany.myshop.backend.testkit.dsl.core.usecase.usecases.base.BaseMyShopUseCase;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.Set;
 import org.springframework.http.HttpStatus;
 
 /**
@@ -26,8 +28,8 @@ public class PublishCoupon extends BaseMyShopUseCase<Void, VoidVerification> {
     private String validTo;
     private Integer usageLimit;
 
-    public PublishCoupon(MyShopDriver driver) {
-        super(driver);
+    public PublishCoupon(MyShopDriver driver, UseCaseContext context) {
+        super(driver, context);
     }
 
     public PublishCoupon couponCode(String couponCode) {
@@ -69,7 +71,7 @@ public class PublishCoupon extends BaseMyShopUseCase<Void, VoidVerification> {
         return new UseCaseResult<>(
             response.getStatusCode(),
             HttpStatus.NO_CONTENT,
-            null,
+            Set.of(),
             () -> null,
             null,
             VoidVerification::new);

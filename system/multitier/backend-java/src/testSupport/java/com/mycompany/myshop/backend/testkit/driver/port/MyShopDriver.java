@@ -25,6 +25,13 @@ public interface MyShopDriver {
 
     ResponseEntity<String> viewOrder(String orderNumber);
 
+    /**
+     * {@code String} rather than {@code Void}: cancellation is rejected by the year-end blackout and
+     * by an already-cancelled order, and both surface as a {@code ProblemDetail} body. Binding to
+     * {@code Void} would discard exactly what those scenarios assert on.
+     */
+    ResponseEntity<String> cancelOrder(String orderNumber);
+
     ResponseEntity<BrowseOrderHistoryResponse> browseOrderHistory();
 
     ResponseEntity<Void> publishCoupon(PublishCouponRequest request);

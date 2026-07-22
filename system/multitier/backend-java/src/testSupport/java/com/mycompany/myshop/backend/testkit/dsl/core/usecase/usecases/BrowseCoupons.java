@@ -2,15 +2,17 @@ package com.mycompany.myshop.backend.testkit.dsl.core.usecase.usecases;
 
 import com.mycompany.myshop.backend.core.dtos.BrowseCouponsResponse;
 import com.mycompany.myshop.backend.testkit.driver.port.MyShopDriver;
+import com.mycompany.myshop.backend.testkit.dsl.core.shared.UseCaseContext;
 import com.mycompany.myshop.backend.testkit.dsl.core.shared.UseCaseResult;
 import com.mycompany.myshop.backend.testkit.dsl.core.usecase.usecases.base.BaseMyShopUseCase;
+import java.util.Set;
 import org.springframework.http.HttpStatus;
 
 /** {@code GET /api/coupons} — always {@code 200 OK}; there is no rejection path to state. */
 public class BrowseCoupons extends BaseMyShopUseCase<BrowseCouponsResponse, BrowseCouponsVerification> {
 
-    public BrowseCoupons(MyShopDriver driver) {
-        super(driver);
+    public BrowseCoupons(MyShopDriver driver, UseCaseContext context) {
+        super(driver, context);
     }
 
     @Override
@@ -20,7 +22,7 @@ public class BrowseCoupons extends BaseMyShopUseCase<BrowseCouponsResponse, Brow
         return new UseCaseResult<>(
             response.getStatusCode(),
             HttpStatus.OK,
-            null,
+            Set.of(),
             response::getBody,
             null,
             BrowseCouponsVerification::new);

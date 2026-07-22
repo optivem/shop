@@ -53,8 +53,10 @@ port nor the interaction builders import anything from `@pact-foundation/pact`.
 `driver/adapter/pact-backend-stub-driver.ts` gains a mapper that walks the interaction and turns
 each intent into its `MatchersV3` call (`type`→`like`, `integer`→`integer`, `decimal`→`decimal`,
 `eachLike`→`eachLike`, untagged→the literal). An in-process stub can implement the same port by
-ignoring intents entirely and serving the examples — the port's CAVEAT comment is deleted because
-it is no longer true.
+ignoring intents entirely and serving the examples.
+
+(Note: this section describes where the plan *would* land if executed. It is currently declined —
+and the CAVEAT comment it planned to delete is already gone, removed when the plan was declined.)
 
 **What the developer sees:** `*.interactions.ts` looks almost unchanged — same object literals,
 same nesting, `like(x)` simply became `type(x)` and the Pact import is gone. There is still exactly
@@ -68,8 +70,9 @@ fluent/builder construction API is added.
 
 ## Problem
 
-`driver/port/backend-stub-driver.ts` carries an explicit CAVEAT comment recording this gap. The
-leak is not just the type name — it is the **matcher policy**. The interaction builders in
+`driver/port/backend-stub-driver.ts` used to carry an explicit CAVEAT comment framing this as a
+gap; that wording was replaced when the plan was declined, since the leak is now held to be
+intentional. The leak is not just the type name — it is the **matcher policy**. The interaction builders in
 `src/test/interactions/*.interactions.ts` construct Pact objects using `MatchersV3` (`like`,
 `eachLike`, `integer`, `decimal`), and that matcher vocabulary is genuinely Pact-shaped: "this
 field is an integer but I don't care which" has no meaning to an in-process stub, which needs a
@@ -99,7 +102,9 @@ with two conflicting versions of one interaction.
    — mechanically, `like(x)` → `type(x)` and drop the `@pact-foundation/pact` imports. Covers
    `order.interactions.ts` and `coupon.interactions.ts`.
 3. **Add the mapping layer** in `driver/adapter/pact-backend-stub-driver.ts`.
-4. **Drop the CAVEAT comment** from the port once it no longer applies.
+4. ~~**Drop the CAVEAT comment** from the port once it no longer applies.~~ Already done — the
+   CAVEAT wording was replaced in `driver/port/backend-stub-driver.ts` when this plan was declined.
+   The comment there now states the type leak is intentional and points at the reopen criterion.
 5. **Verify byte-identical pact output.** Snapshot `contracts/frontend-backend.json` before the
    change, run `npm run test:latest && npm run test:legacy && npm run test:pact`, and diff. Any
    difference is a bug in the mapping, not an acceptable variation.

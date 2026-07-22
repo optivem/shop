@@ -78,9 +78,18 @@ public class GivenImpl implements GivenStage {
         return coupon;
     }
 
+    /**
+     * The first order a scenario states is the one it means when a later step names none — {@code
+     * when().cancelOrder()} with no order number cancels it. Further unnamed orders are background
+     * (exhausting a coupon's usage limit, say) and stay unregistered, so they neither collide with
+     * the default alias nor shadow it. An order a test does name always registers.
+     */
     @Override
     public GivenOrderImpl order() {
         var order = new GivenOrderImpl(this);
+        if (orders.isEmpty()) {
+            order.withOrderNumber(ScenarioDefaults.DEFAULT_ORDER_NUMBER);
+        }
         orders.add(order);
         return order;
     }

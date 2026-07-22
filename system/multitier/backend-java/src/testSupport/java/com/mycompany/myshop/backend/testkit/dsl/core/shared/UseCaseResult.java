@@ -2,6 +2,7 @@ package com.mycompany.myshop.backend.testkit.dsl.core.shared;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import org.springframework.http.HttpStatus;
@@ -23,21 +24,28 @@ public class UseCaseResult<R, V extends ResponseVerification<R>> {
 
     private final HttpStatusCode actualStatus;
     private final HttpStatus successStatus;
-    private final HttpStatus rejectionStatus;
+    private final Set<HttpStatus> rejectionStatuses;
     private final Supplier<R> successBody;
     private final Supplier<ErrorVerification> rejectionBody;
     private final Function<R, V> successVerificationFactory;
 
+    /**
+     * {@code rejectionStatuses} is a set rather than a single status because an endpoint can reject
+     * for more than one reason. Cancelling an order is the case in point: the year-end blackout and
+     * an already-cancelled order are both {@code 422}, but an unknown order number is {@code 404}.
+     * Declaring one and asserting it would make the other scenario unwritable. Pass {@code Set.of()}
+     * for an endpoint with no rejection contract.
+     */
     public UseCaseResult(
             HttpStatusCode actualStatus,
             HttpStatus successStatus,
-            HttpStatus rejectionStatus,
+            Set<HttpStatus> rejectionStatuses,
             Supplier<R> successBody,
             Supplier<ErrorVerification> rejectionBody,
             Function<R, V> successVerificationFactory) {
         this.actualStatus = actualStatus;
         this.successStatus = successStatus;
-        this.rejectionStatus = rejectionStatus;
+        this.rejectionStatuses = rejectionStatuses;
         this.successBody = successBody;
         this.rejectionBody = rejectionBody;
         this.successVerificationFactory = successVerificationFactory;
@@ -53,13 +61,13 @@ public class UseCaseResult<R, V extends ResponseVerification<R>> {
     }
 
     public ErrorVerification shouldFail() {
-        if (rejectionStatus == null) {
+        if (rejectionStatuses.isEmpty()) {
             throw new IllegalStateException(
                 "This use case has no rejection contract in the component-test DSL, so shouldFail() "
                     + "cannot assert anything. Drive it through the use case layer if you need to "
                     + "inspect the raw response.");
         }
-        assertThat(actualStatus).as("rejection status").isEqualTo(rejectionStatus);
+        assertThat(actualStatus).as("rejection status").isIn(rejectionStatuses);
         return rejectionBody.get();
     }
 

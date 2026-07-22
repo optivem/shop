@@ -59,6 +59,10 @@ public class BackendDriver implements MyShopDriver {
         return restTemplate.getForEntity("/api/orders/" + orderNumber, String.class);
     }
 
+    public ResponseEntity<String> cancelOrder(String orderNumber) {
+        return restTemplate.postForEntity("/api/orders/" + orderNumber + "/cancel", null, String.class);
+    }
+
     public ResponseEntity<BrowseOrderHistoryResponse> browseOrderHistory() {
         return restTemplate.getForEntity("/api/orders", BrowseOrderHistoryResponse.class);
     }

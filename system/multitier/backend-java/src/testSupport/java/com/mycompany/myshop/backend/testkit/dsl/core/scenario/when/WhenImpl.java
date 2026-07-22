@@ -4,6 +4,7 @@ import com.mycompany.myshop.backend.testkit.dsl.core.ScenarioDslImpl;
 import com.mycompany.myshop.backend.testkit.dsl.core.scenario.ScenarioDefaults;
 import com.mycompany.myshop.backend.testkit.dsl.core.scenario.when.steps.WhenBrowseCouponsImpl;
 import com.mycompany.myshop.backend.testkit.dsl.core.scenario.when.steps.WhenBrowseOrderHistoryImpl;
+import com.mycompany.myshop.backend.testkit.dsl.core.scenario.when.steps.WhenCancelOrderImpl;
 import com.mycompany.myshop.backend.testkit.dsl.core.scenario.when.steps.WhenPlaceOrderImpl;
 import com.mycompany.myshop.backend.testkit.dsl.core.scenario.when.steps.WhenPublishCouponImpl;
 import com.mycompany.myshop.backend.testkit.dsl.core.scenario.when.steps.WhenViewOrderImpl;
@@ -53,6 +54,14 @@ public class WhenImpl implements WhenStage {
     public WhenPlaceOrderImpl placeOrder() {
         ensureDefaults();
         return new WhenPlaceOrderImpl(app, scenario);
+    }
+
+    // Defaults apply: cancelling reads the clock to evaluate the year-end blackout, so an unstated
+    // clock would 404 the SUT's time lookup rather than quietly giving it "now".
+    @Override
+    public WhenCancelOrderImpl cancelOrder() {
+        ensureDefaults();
+        return new WhenCancelOrderImpl(app, scenario);
     }
 
     @Override

@@ -5,8 +5,10 @@ import com.mycompany.myshop.backend.core.dtos.PlaceOrderRequest;
 import com.mycompany.myshop.backend.core.dtos.PlaceOrderResponse;
 import com.mycompany.myshop.backend.testkit.driver.port.MyShopDriver;
 import com.mycompany.myshop.backend.testkit.dsl.core.shared.ResponseParser;
+import com.mycompany.myshop.backend.testkit.dsl.core.shared.UseCaseContext;
 import com.mycompany.myshop.backend.testkit.dsl.core.shared.UseCaseResult;
 import com.mycompany.myshop.backend.testkit.dsl.core.usecase.usecases.base.BaseMyShopUseCase;
+import java.util.Set;
 import org.springframework.http.HttpStatus;
 
 /**
@@ -23,10 +25,22 @@ public class PlaceOrder extends BaseMyShopUseCase<PlaceOrderResponse, PlaceOrder
     private String couponCode;
     private String rawQuantity;
     private boolean quantityIsRaw;
+    private String orderNumberResultAlias;
 
-    public PlaceOrder(MyShopDriver driver, ObjectMapper objectMapper) {
-        super(driver);
+    public PlaceOrder(MyShopDriver driver, UseCaseContext context, ObjectMapper objectMapper) {
+        super(driver, context);
         this.objectMapper = objectMapper;
+    }
+
+    /**
+     * Names the order this call is about to create, so a later step can refer to it without knowing
+     * the number the SUT will mint. Left unset, the order is simply not registered — which is what
+     * {@code when().placeOrder()} wants, since {@code then()} reads the number straight off the
+     * response.
+     */
+    public PlaceOrder orderNumber(String orderNumberResultAlias) {
+        this.orderNumberResultAlias = orderNumberResultAlias;
+        return this;
     }
 
     public PlaceOrder sku(String sku) {
@@ -64,13 +78,31 @@ public class PlaceOrder extends BaseMyShopUseCase<PlaceOrderResponse, PlaceOrder
     public UseCaseResult<PlaceOrderResponse, PlaceOrderVerification> execute() {
         var response = quantityIsRaw ? driver.placeOrderRaw(rawBody()) : driver.placeOrder(typedBody());
 
-        return new UseCaseResult<>(
+        var result = new UseCaseResult<PlaceOrderResponse, PlaceOrderVerification>(
             response.getStatusCode(),
             HttpStatus.CREATED,
-            HttpStatus.UNPROCESSABLE_ENTITY,
+            Set.of(HttpStatus.UNPROCESSABLE_ENTITY),
             () -> ResponseParser.parseSuccess(response, PlaceOrderResponse.class, objectMapper),
             () -> ResponseParser.parseRejection(response, objectMapper),
             PlaceOrderVerification::new);
+
+        registerOrderNumber(result);
+
+        return result;
+    }
+
+    // Only an accepted placement has an order number to register. A rejected one leaves the alias
+    // unregistered, so a later step resolving it gets the alias back and fails against the SUT rather
+    // than here — the failure a test wants to see is "no such order", not a DSL error.
+    private void registerOrderNumber(UseCaseResult<PlaceOrderResponse, PlaceOrderVerification> result) {
+        if (orderNumberResultAlias == null) {
+            return;
+        }
+
+        var placed = result.responseOrNull();
+        if (placed != null) {
+            context.setResultEntry(orderNumberResultAlias, placed.getOrderNumber());
+        }
     }
 
     private PlaceOrderRequest typedBody() {
