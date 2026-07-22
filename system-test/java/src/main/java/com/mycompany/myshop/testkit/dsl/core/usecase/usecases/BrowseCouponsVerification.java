@@ -31,6 +31,10 @@ public class BrowseCouponsVerification extends ResponseVerification<BrowseCoupon
         return couponHasDiscountRate(couponCodeAlias, Converter.toBigDecimal(expectedDiscountRate));
     }
 
+    public BrowseCouponsVerification couponHasDiscountRate(String couponCodeAlias, String expectedDiscountRate) {
+        return couponHasDiscountRate(couponCodeAlias, Converter.toBigDecimal(expectedDiscountRate));
+    }
+
     public BrowseCouponsVerification couponHasValidFrom(String couponCodeAlias, String expectedValidFrom) {
         var coupon = findCouponByCode(couponCodeAlias);
         var expectedInstant = Converter.toInstant(expectedValidFrom);

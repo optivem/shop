@@ -42,6 +42,11 @@ public class ThenOrderImpl<R, V extends ResponseVerification<R>>
         return this;
     }
 
+    public ThenOrderImpl<R, V> hasUnitPrice(String expectedUnitPrice) {
+        orderVerification.unitPrice(expectedUnitPrice);
+        return this;
+    }
+
     public ThenOrderImpl<R, V> hasTotalPrice(double expectedTotalPrice) {
         orderVerification.totalPrice(expectedTotalPrice);
         return this;
@@ -127,7 +132,17 @@ public class ThenOrderImpl<R, V extends ResponseVerification<R>>
         return this;
     }
 
+    public ThenOrderImpl<R, V> hasTaxAmount(double expectedTaxAmount) {
+        orderVerification.taxAmount(expectedTaxAmount);
+        return this;
+    }
+
     public ThenOrderImpl<R, V> hasDiscountRate(double expectedDiscountRate) {
+        orderVerification.discountRate(expectedDiscountRate);
+        return this;
+    }
+
+    public ThenOrderImpl<R, V> hasDiscountRate(String expectedDiscountRate) {
         orderVerification.discountRate(expectedDiscountRate);
         return this;
     }

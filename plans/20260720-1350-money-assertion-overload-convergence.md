@@ -146,38 +146,17 @@ plan originally said six) and this item would add six more.
 `ThenProductImpl` / `ThenCountryImpl` assert inline against DTO `BigDecimal` getters with no
 verification object, so their `String` overloads are DSL-local — no verification-layer change.
 
-### Item 2 — System-test layer gains `String` forms
+### ~~Item 2 — System-test layer gains `String` forms~~ ✅ Done 2026-07-22
 
-- [ ] `ThenOrder.hasUnitPrice(String)` — verification already has the overload; DSL-only change.
-- [ ] `ThenOrder.hasTaxAmount(double)` — delegates to the existing `taxAmount(double)`; DSL-only.
-- [ ] `ThenOrder.hasDiscountRate(String)` — **requires a new** `ViewOrderVerification.discountRate(String)`
-      (currently only `BigDecimal` + `double`, line 178/186).
-- [ ] `ThenProduct.hasPrice(String)` and `ThenCountry.hasTaxRate(String)` — both verifications already
-      carry a `String` overload (`GetProductVerification:38`, `GetTaxVerification:38`); DSL-only.
-- [ ] `ThenCoupon.hasDiscountRate(String)` — **requires a new**
-      `BrowseCouponsVerification.couponHasDiscountRate(String, String)` delegating via
-      `Converter.toBigDecimal(...)`.
+### ~~Item 3 — `ViewOrder.unitPrice` is `double`-canonical~~ ✅ Done 2026-07-22
 
-**Updated 2026-07-22.** This bullet previously carried a warning that the DTO field was a primitive
-`double`, so a `String` overload would improve call-site vocabulary without making the comparison
-exact. That no longer applies — the field is `BigDecimal` and the comparison is exact, so a `String`
-overload here is now a legitimate addition rather than cosmetic. It was deliberately *not* added when
-the DTO changed, because no caller wants one; add it only when a test does.
+Both landed. `system-test/java` is now fully `BigDecimal`-canonical with `String` + `double` overloads
+on every money/rate step. New verification overloads: `ViewOrderVerification.unitPrice(BigDecimal)`,
+`discountRate(String)`, `BrowseCouponsVerification.couponHasDiscountRate(String, String)`. New DSL
+vocabulary: `ThenOrder.hasUnitPrice(String)` / `hasTaxAmount(double)` / `hasDiscountRate(String)`,
+`ThenProduct.hasPrice(String)`, `ThenCountry.hasTaxRate(String)`, `ThenCoupon.hasDiscountRate(String)`.
 
-### Item 3 — `ViewOrder.unitPrice` is `double`-canonical (consistency only)
-
-`ViewOrderVerification.java:49-60`. The only `ViewOrder` money method with no `BigDecimal` overload:
-`unitPrice(double)` holds the assertion body, `unitPrice(String)` reaches it via `Converter.toDouble`.
-
-Carried over from the 1420 plan, which deliberately left it undone. **This is not a precision fix** —
-the `String → double → BigDecimal` hop is not lossy for any value these tests carry (`Double.toString`
-emits the shortest round-tripping representation, exact to 15 significant digits), and the existing
-body already uses `isEqualByComparingTo`. It is purely so a reader of the file sees one pattern rather
-than two. It belongs here because it is the same *kind* of change as Items 1–2.
-
-- [ ] Add `unitPrice(BigDecimal)` carrying the assertion body, same fail-message wording as siblings.
-- [ ] Reduce `unitPrice(double)` and repoint `unitPrice(String)` to delegate via
-      `Converter.toBigDecimal`.
+**Only Item 1 (`backend-java`) remains.**
 
 ## Notes carried over from the 1420 plan (do not re-derive these)
 

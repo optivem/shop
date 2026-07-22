@@ -46,17 +46,20 @@ public class ViewOrderVerification extends ResponseVerification<ViewOrderRespons
         return quantity(Converter.toInteger(expectedQuantity));
     }
 
-    public ViewOrderVerification unitPrice(double expectedUnitPrice) {
-        var expectedPrice = Converter.toBigDecimal(expectedUnitPrice);
+    public ViewOrderVerification unitPrice(BigDecimal expectedUnitPrice) {
         var actualPrice = getResponse().getUnitPrice();
         assertThat(actualPrice)
-                .withFailMessage("Expected unit price to be %s, but was %s", expectedPrice, actualPrice)
-                .isEqualByComparingTo(expectedPrice);
+                .withFailMessage("Expected unit price to be %s, but was %s", expectedUnitPrice, actualPrice)
+                .isEqualByComparingTo(expectedUnitPrice);
         return this;
     }
 
+    public ViewOrderVerification unitPrice(double expectedUnitPrice) {
+        return unitPrice(Converter.toBigDecimal(expectedUnitPrice));
+    }
+
     public ViewOrderVerification unitPrice(String expectedUnitPrice) {
-        return unitPrice(Converter.toDouble(expectedUnitPrice));
+        return unitPrice(Converter.toBigDecimal(expectedUnitPrice));
     }
 
     public ViewOrderVerification status(OrderStatus expectedStatus) {
@@ -181,6 +184,10 @@ public class ViewOrderVerification extends ResponseVerification<ViewOrderRespons
                 .withFailMessage("Expected discount rate to be %s, but was %s", expectedDiscountRate, actualDiscountRate)
                 .isEqualByComparingTo(expectedDiscountRate);
         return this;
+    }
+
+    public ViewOrderVerification discountRate(String expectedDiscountRate) {
+        return discountRate(Converter.toBigDecimal(expectedDiscountRate));
     }
 
     public ViewOrderVerification discountRate(double expectedDiscountRate) {

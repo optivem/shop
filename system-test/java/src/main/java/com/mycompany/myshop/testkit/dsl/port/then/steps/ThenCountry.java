@@ -7,5 +7,7 @@ public interface ThenCountry extends ThenStep<ThenCountry> {
 
     ThenCountry hasTaxRate(double taxRate);
 
+    ThenCountry hasTaxRate(String taxRate);
+
     ThenCountry hasTaxRateIsPositive();
 }
