@@ -175,6 +175,15 @@ against the frontend's committed `.pact`.
 For the detailed backend pyramid description and CI wiring see
 [docs/pipeline/commit-stage.md](../pipeline/commit-stage.md).
 
+Narrow-integration's outbound adapters are stub-only by default (against WireMock), but
+`ErpGateway`'s product read has a manual, opt-in `Real`-mode twin —
+`integration/contract/erp/ErpRealContractTest`, run against the ERP simulator
+(`external-systems/simulators`) instead of WireMock, alongside its `Stub` twin
+(`ErpStubContractIntegrationTest`, which *is* part of the default `integrationTest` run).
+It proves the stub is still an honest guess about the real thing, not just internally
+consistent with the production gateway. Not wired into CI yet — see `shop/plans/` for
+the deferred item.
+
 ---
 
 ## Contract location
