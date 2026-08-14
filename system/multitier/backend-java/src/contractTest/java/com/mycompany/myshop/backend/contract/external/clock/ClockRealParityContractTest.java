@@ -3,8 +3,6 @@ package com.mycompany.myshop.backend.contract.external.clock;
 import com.mycompany.myshop.backend.backendtest.configuration.ExternalSystemMode;
 import com.mycompany.myshop.backend.contract.external.ExternalSystemSimulator;
 import com.mycompany.myshop.backend.core.services.external.ClockGateway;
-import org.junit.jupiter.api.BeforeEach;
-import org.springframework.test.util.ReflectionTestUtils;
 
 /**
  * The {@code Real} side of the clock time contract: the same scenario as
@@ -23,14 +21,8 @@ class ClockRealParityContractTest extends BaseClockTimeParityContractTest {
 
     private static final String BASE_URL = ExternalSystemSimulator.baseUrl("/clock");
 
-    private ClockGateway clockGateway;
-
-    @BeforeEach
-    void setUp() {
-        clockGateway = new ClockGateway();
-        ReflectionTestUtils.setField(clockGateway, "clockUrl", BASE_URL);
-        ReflectionTestUtils.setField(clockGateway, "externalSystemMode", ExternalSystemMode.STUB.propertyValue());
-    }
+    private final ClockGateway clockGateway =
+            new ClockGateway(ExternalSystemMode.STUB.propertyValue(), BASE_URL);
 
     @Override
     protected ClockGateway clockGateway() {

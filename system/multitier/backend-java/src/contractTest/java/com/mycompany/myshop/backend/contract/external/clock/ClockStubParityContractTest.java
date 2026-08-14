@@ -10,7 +10,6 @@ import com.mycompany.myshop.backend.testkit.driver.adapter.external.clock.ClockS
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.springframework.test.util.ReflectionTestUtils;
 
 /**
  * The {@code Stub} side of the clock time contract. Arranges through the real
@@ -41,9 +40,7 @@ class ClockStubParityContractTest extends BaseClockTimeParityContractTest {
         WIRE_MOCK.resetAll();
         new ClockStubDriver(new WireMock(WIRE_MOCK.port())).returnsTime(PINNED_TIME);
 
-        clockGateway = new ClockGateway();
-        ReflectionTestUtils.setField(clockGateway, "clockUrl", WIRE_MOCK.baseUrl());
-        ReflectionTestUtils.setField(clockGateway, "externalSystemMode", ExternalSystemMode.STUB.propertyValue());
+        clockGateway = new ClockGateway(ExternalSystemMode.STUB.propertyValue(), WIRE_MOCK.baseUrl());
     }
 
     @Override

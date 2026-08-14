@@ -14,7 +14,6 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.util.ReflectionTestUtils;
 
 /**
  * "Before" of the external-systems contract-tests refactor at the narrow-integration layer: the
@@ -23,7 +22,7 @@ import org.springframework.test.util.ReflectionTestUtils;
  *
  * <p>Read this alongside {@code legacy/ErpGatewayIntegrationTest}: the WireMock lifecycle below —
  * static server, {@code @BeforeAll} start, {@code @AfterAll} stop, {@code resetAll} per test, plus
- * the reflective URL injection — is copied verbatim from it, and copied again in
+ * the hand-wired gateway URL — is copied verbatim from it, and copied again in
  * {@code legacy/ClockGatewayIntegrationTest}. Three near-identical harnesses is the duplication the
  * {@code latest/} twins delete by inheriting {@code BaseGatewayIntegrationTest}, and it is the
  * clearest thing this file is here to show.
@@ -54,8 +53,7 @@ class TaxGatewayIntegrationTest {
     void setUp() {
         WIRE_MOCK.resetAll();
 
-        taxGateway = new TaxGateway();
-        ReflectionTestUtils.setField(taxGateway, "taxUrl", WIRE_MOCK.baseUrl());
+        taxGateway = new TaxGateway(WIRE_MOCK.baseUrl());
     }
 
     @Test

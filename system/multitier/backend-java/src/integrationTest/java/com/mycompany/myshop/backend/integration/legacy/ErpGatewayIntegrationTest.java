@@ -13,7 +13,6 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.util.ReflectionTestUtils;
 
 /**
  * "Before" of the external-systems contract-tests refactor at the narrow-integration layer: the
@@ -42,8 +41,7 @@ class ErpGatewayIntegrationTest {
     void setUp() {
         WIRE_MOCK.resetAll();
 
-        erpGateway = new ErpGateway();
-        ReflectionTestUtils.setField(erpGateway, "erpUrl", WIRE_MOCK.baseUrl());
+        erpGateway = new ErpGateway(WIRE_MOCK.baseUrl());
     }
 
     @Test

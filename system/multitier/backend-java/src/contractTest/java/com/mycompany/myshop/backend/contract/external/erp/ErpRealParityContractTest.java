@@ -3,8 +3,6 @@ package com.mycompany.myshop.backend.contract.external.erp;
 import com.mycompany.myshop.backend.contract.external.ExternalSystemSimulator;
 import com.mycompany.myshop.backend.core.services.external.ErpGateway;
 import com.mycompany.myshop.backend.testkit.driver.adapter.external.erp.client.SimulatorErpProductClient;
-import org.junit.jupiter.api.BeforeEach;
-import org.springframework.test.util.ReflectionTestUtils;
 
 /**
  * The {@code Real} side of the ERP product contract: same two scenarios as
@@ -28,13 +26,7 @@ class ErpRealParityContractTest extends BaseErpProductParityContractTest {
 
     private final SimulatorErpProductClient client = new SimulatorErpProductClient(BASE_URL);
 
-    private ErpGateway erpGateway;
-
-    @BeforeEach
-    void setUp() {
-        erpGateway = new ErpGateway();
-        ReflectionTestUtils.setField(erpGateway, "erpUrl", BASE_URL);
-    }
+    private final ErpGateway erpGateway = new ErpGateway(BASE_URL);
 
     @Override
     protected void arrangeProduct(String sku, String price) {

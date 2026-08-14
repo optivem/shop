@@ -18,8 +18,11 @@ public class ErpGateway {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    @Value("${erp.url}")
-    private String erpUrl;
+    private final String erpUrl;
+
+    public ErpGateway(@Value("${erp.url}") String erpUrl) {
+        this.erpUrl = erpUrl;
+    }
 
     public GetPromotionResponse getPromotionDetails() {
         var url = erpUrl + "/api/promotion";

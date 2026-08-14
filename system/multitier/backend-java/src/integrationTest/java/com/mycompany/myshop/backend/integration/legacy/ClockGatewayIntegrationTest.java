@@ -16,7 +16,6 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.util.ReflectionTestUtils;
 
 /**
  * "Before" of the external-systems contract-tests refactor at the narrow-integration layer: the
@@ -61,10 +60,7 @@ class ClockGatewayIntegrationTest {
      * across the scenarios below, and it is fixed at construction.
      */
     private ClockGateway clockGateway(String rawMode) {
-        var gateway = new ClockGateway();
-        ReflectionTestUtils.setField(gateway, "clockUrl", WIRE_MOCK.baseUrl());
-        ReflectionTestUtils.setField(gateway, "externalSystemMode", rawMode);
-        return gateway;
+        return new ClockGateway(rawMode, WIRE_MOCK.baseUrl());
     }
 
     @Test

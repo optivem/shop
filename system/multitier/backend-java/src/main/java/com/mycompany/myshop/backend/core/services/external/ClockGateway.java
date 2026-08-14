@@ -18,11 +18,15 @@ public class ClockGateway {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
             .registerModule(new JavaTimeModule());
 
-    @Value("${external.system-mode}")
-    private String externalSystemMode;
+    private final String externalSystemMode;
+    private final String clockUrl;
 
-    @Value("${clock.url}")
-    private String clockUrl;
+    public ClockGateway(
+            @Value("${external.system-mode}") String externalSystemMode,
+            @Value("${clock.url}") String clockUrl) {
+        this.externalSystemMode = externalSystemMode;
+        this.clockUrl = clockUrl;
+    }
 
     public Instant getCurrentTime() {
         if ("real".equals(externalSystemMode)) {

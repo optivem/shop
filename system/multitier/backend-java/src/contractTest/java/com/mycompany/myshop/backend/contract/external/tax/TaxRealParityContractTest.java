@@ -3,8 +3,6 @@ package com.mycompany.myshop.backend.contract.external.tax;
 import com.mycompany.myshop.backend.contract.external.ExternalSystemSimulator;
 import com.mycompany.myshop.backend.core.services.external.TaxGateway;
 import com.mycompany.myshop.backend.testkit.driver.adapter.external.tax.client.SimulatorTaxCountryClient;
-import org.junit.jupiter.api.BeforeEach;
-import org.springframework.test.util.ReflectionTestUtils;
 
 /**
  * The {@code Real} side of the tax country contract: same two scenarios as
@@ -22,13 +20,7 @@ class TaxRealParityContractTest extends BaseTaxCountryParityContractTest {
 
     private final SimulatorTaxCountryClient client = new SimulatorTaxCountryClient(BASE_URL);
 
-    private TaxGateway taxGateway;
-
-    @BeforeEach
-    void setUp() {
-        taxGateway = new TaxGateway();
-        ReflectionTestUtils.setField(taxGateway, "taxUrl", BASE_URL);
-    }
+    private final TaxGateway taxGateway = new TaxGateway(BASE_URL);
 
     @Override
     protected void arrangeCountry(String code, String taxRate) {

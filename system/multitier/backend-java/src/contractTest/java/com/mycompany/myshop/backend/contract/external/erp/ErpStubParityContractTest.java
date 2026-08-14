@@ -9,7 +9,6 @@ import com.mycompany.myshop.backend.core.services.external.ErpGateway;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.springframework.test.util.ReflectionTestUtils;
 
 /**
  * The {@code Stub} side of the ERP product contract: raw, inlined WireMock, same shape as
@@ -38,8 +37,7 @@ class ErpStubParityContractTest extends BaseErpProductParityContractTest {
     void setUp() {
         WIRE_MOCK.resetAll();
 
-        erpGateway = new ErpGateway();
-        ReflectionTestUtils.setField(erpGateway, "erpUrl", WIRE_MOCK.baseUrl());
+        erpGateway = new ErpGateway(WIRE_MOCK.baseUrl());
     }
 
     @Override

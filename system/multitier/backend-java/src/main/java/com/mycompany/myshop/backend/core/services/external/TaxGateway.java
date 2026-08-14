@@ -21,8 +21,11 @@ public class TaxGateway {
     private static final Logger log = LoggerFactory.getLogger(TaxGateway.class);
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    @Value("${tax.url}")
-    private String taxUrl;
+    private final String taxUrl;
+
+    public TaxGateway(@Value("${tax.url}") String taxUrl) {
+        this.taxUrl = taxUrl;
+    }
 
     public Optional<TaxDetailsResponse> getTaxDetails(String country) {
         var url = taxUrl + "/api/countries/" + country;

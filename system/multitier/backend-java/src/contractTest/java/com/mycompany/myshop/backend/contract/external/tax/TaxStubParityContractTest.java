@@ -9,7 +9,6 @@ import com.mycompany.myshop.backend.testkit.driver.adapter.external.tax.TaxStubD
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.springframework.test.util.ReflectionTestUtils;
 
 /**
  * The {@code Stub} side of the tax country contract. Unlike {@code ErpStubParityContractTest}, which
@@ -40,8 +39,7 @@ class TaxStubParityContractTest extends BaseTaxCountryParityContractTest {
     void setUp() {
         WIRE_MOCK.resetAll();
 
-        taxGateway = new TaxGateway();
-        ReflectionTestUtils.setField(taxGateway, "taxUrl", WIRE_MOCK.baseUrl());
+        taxGateway = new TaxGateway(WIRE_MOCK.baseUrl());
     }
 
     @Override
