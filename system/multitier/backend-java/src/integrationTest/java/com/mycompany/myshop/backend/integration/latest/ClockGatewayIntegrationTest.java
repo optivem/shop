@@ -25,14 +25,11 @@ import org.junit.jupiter.api.Test;
  * gateway in an explicit mode instead — which lets the {@code real} and unknown-mode branches be
  * pinned. The {@code real} branch is what production runs on and is otherwise never exercised.
  *
- * <p>There is no {@code legacy/} counterpart, and that is a subset choice rather than an
- * impossibility — a raw-WireMock "before" for this gateway would be easy to write. It is skipped
- * because {@code legacy/} carries one twin per distinct contrast, not one per class (see
- * {@code component/legacy/CouponComponentTest}, whose twin exists to isolate the SUT-side contrast).
- * At this layer the sole contrast is inlined {@code WIRE_MOCK.stubFor} + JSON literal versus the
- * stub DSL, and {@code legacy/ErpGatewayIntegrationTest} already demonstrates it; a Clock twin would
- * repeat it verbatim against a different URL. Note this is a weaker claim than the one guarding
- * {@code contract/external/}, where a "before" would be genuinely circular.
+ * <p>The {@code legacy/} counterpart runs the same four scenarios against raw, inlined WireMock. It
+ * carries the mode contrast rather than the stub contrast: there the mode is set reflectively from a
+ * {@code "real"} / {@code "bogus"} string literal, here {@link ExternalSystemMode#REAL} is typed and
+ * only the unknown-mode escape hatch stays a raw string. Every gateway at this layer has a twin —
+ * unlike {@code contract/external/}, where a "before" would be circular and none exists.
  */
 class ClockGatewayIntegrationTest extends BaseGatewayIntegrationTest {
 
