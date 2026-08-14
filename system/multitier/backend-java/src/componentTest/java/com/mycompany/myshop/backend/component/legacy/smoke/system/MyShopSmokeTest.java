@@ -2,7 +2,7 @@ package com.mycompany.myshop.backend.component.legacy.smoke.system;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.mycompany.myshop.backend.AbstractComponentTest;
+import com.mycompany.myshop.backend.BaseComponentTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 
@@ -20,7 +20,7 @@ import org.springframework.http.HttpStatus;
  * the DSL. The same harness is reused by the Pact provider-verification test, so this also guards
  * that foundation.
  */
-class MyShopSmokeTest extends AbstractComponentTest {
+class MyShopSmokeTest extends BaseComponentTest {
 
     @Test
     void bootsInProcessAndServesHttp() {

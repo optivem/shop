@@ -11,7 +11,7 @@ import com.mycompany.myshop.backend.testkit.driver.port.external.tax.TaxDriver;
 /**
  * Low-level Tax stub driver. Registers mappings against a supplied {@link WireMock} client; that the
  * URL and JSON body match what the SUT actually consumes is guarded by
- * {@code TaxStubContractComponentTest}.
+ * {@code TaxStubConsumabilityContractTest}.
  */
 public class TaxStubDriver implements TaxDriver {
 

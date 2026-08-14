@@ -1,4 +1,4 @@
-package com.mycompany.myshop.backend.integration.contract.erp;
+package com.mycompany.myshop.backend.contract.latest.external.erp;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -7,9 +7,9 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Shared shape for the ERP product contract: does the production {@link ErpGateway}'s parse still
- * agree with whatever is answering at {@link #erpGateway()}'s URL? {@link ErpStubContractIntegrationTest}
+ * agree with whatever is answering at {@link #erpGateway()}'s URL? {@link ErpStubParityContractTest}
  * answers that question against the hand-written WireMock stub (same question as
- * {@code legacy/ErpGatewayIntegrationTest}); {@link ErpRealContractTest} answers it against the real
+ * {@code legacy/ErpGatewayIntegrationTest}); {@link ErpRealParityContractTest} answers it against the real
  * ERP simulator. Both provision-and-pin the same exact values, so the assertions below don't need to
  * know which mode is running.
  *
@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test;
  * cannot be provoked on demand, so a real-mode twin for those isn't buildable — see
  * {@code shop/plans/20260717-1015-component-stub-contract-beyond.md} item 4.
  */
-abstract class BaseErpProductContractIntegrationTest {
+abstract class BaseErpProductParityContractTest {
 
     protected abstract void arrangeProduct(String sku, String price);
 

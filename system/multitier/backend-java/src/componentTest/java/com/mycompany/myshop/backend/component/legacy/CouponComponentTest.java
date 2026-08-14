@@ -2,7 +2,7 @@ package com.mycompany.myshop.backend.component.legacy;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.mycompany.myshop.backend.AbstractComponentTest;
+import com.mycompany.myshop.backend.BaseComponentTest;
 import com.mycompany.myshop.backend.core.dtos.BrowseCouponsResponse;
 import com.mycompany.myshop.backend.core.dtos.PublishCouponRequest;
 import java.math.BigDecimal;
@@ -20,7 +20,7 @@ import org.springframework.http.HttpStatus;
  * and the reason the frontend consumer pact's publish-coupon interaction (which expects 201 +
  * {code}) is excluded from provider verification pending a frontend fix.
  */
-class CouponComponentTest extends AbstractComponentTest {
+class CouponComponentTest extends BaseComponentTest {
 
     @Test
     void publishReturnsNoContentThenBrowseListsCoupon() {

@@ -1,4 +1,4 @@
-package com.mycompany.myshop.backend.contract.latest;
+package com.mycompany.myshop.backend.contract.latest.internal.frontend;
 
 import au.com.dius.pact.provider.junit5.HttpTestTarget;
 import au.com.dius.pact.provider.junit5.PactVerificationContext;
@@ -6,7 +6,7 @@ import au.com.dius.pact.provider.junit5.PactVerificationInvocationContextProvide
 import au.com.dius.pact.provider.junitsupport.Provider;
 import au.com.dius.pact.provider.junitsupport.State;
 import au.com.dius.pact.provider.junitsupport.loader.PactFolder;
-import com.mycompany.myshop.backend.AbstractComponentTest;
+import com.mycompany.myshop.backend.BaseComponentTest;
 import com.mycompany.myshop.backend.core.entities.Coupon;
 import com.mycompany.myshop.backend.core.entities.Order;
 import com.mycompany.myshop.backend.core.entities.OrderStatus;
@@ -26,7 +26,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
  */
 @Provider("backend")
 @PactFolder("../../../contracts")
-class BackendPactVerificationTest extends AbstractComponentTest {
+class BackendPactVerificationTest extends BaseComponentTest {
 
     @BeforeEach
     void setTarget(PactVerificationContext context) {

@@ -1,13 +1,13 @@
 package com.mycompany.myshop.backend.component.latest;
 
-import com.mycompany.myshop.backend.AbstractComponentTest;
+import com.mycompany.myshop.backend.BaseComponentTest;
 import com.mycompany.myshop.backend.core.entities.OrderStatus;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 /** The fast twin of the {@code CancelOrderNegative*Test} system tests. */
-class CancelOrderNegativeComponentTest extends AbstractComponentTest {
+class CancelOrderNegativeComponentTest extends BaseComponentTest {
 
     /**
      * No {@code given().order()}, so the name resolves to no registered alias and reaches the SUT as

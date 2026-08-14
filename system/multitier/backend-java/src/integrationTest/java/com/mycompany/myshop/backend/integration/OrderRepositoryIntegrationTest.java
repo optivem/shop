@@ -2,7 +2,7 @@ package com.mycompany.myshop.backend.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.mycompany.myshop.backend.AbstractIntegrationTest;
+import com.mycompany.myshop.backend.backendtest.configuration.TestcontainersConfiguration;
 import com.mycompany.myshop.backend.core.entities.Order;
 import com.mycompany.myshop.backend.core.entities.OrderStatus;
 import com.mycompany.myshop.backend.core.repositories.OrderRepository;
@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
 // No ERP stub -> no DSL refactor -> no latest/legacy twin. This test drives the real database
@@ -20,13 +21,14 @@ import org.springframework.test.context.ActiveProfiles;
 //
 // @DataJpaTest rather than @SpringBootTest: layer 2 is one adapter, so booting the whole context
 // would let an unrelated bean (e.g. an ERP gateway misconfiguration) redden a repository test.
-// replace = NONE keeps the Testcontainers Postgres from AbstractIntegrationTest instead of
-// substituting an embedded database -- the schema is Flyway-built and ddl-auto is `validate`,
-// so this test is only meaningful against real Postgres.
+// replace = NONE keeps the Testcontainers Postgres supplied by @Import(TestcontainersConfiguration)
+// instead of substituting an embedded database -- the schema is Flyway-built and ddl-auto is
+// `validate`, so this test is only meaningful against real Postgres.
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @ActiveProfiles("test")
-class OrderRepositoryIntegrationTest extends AbstractIntegrationTest {
+@Import(TestcontainersConfiguration.class)
+class OrderRepositoryIntegrationTest {
 
     @Autowired
     private OrderRepository orderRepository;

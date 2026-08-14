@@ -1,15 +1,15 @@
-package com.mycompany.myshop.backend.component.latest.contract;
+package com.mycompany.myshop.backend.contract.latest.external.clock;
 
-import com.mycompany.myshop.backend.AbstractComponentTest;
+import com.mycompany.myshop.backend.BaseComponentTest;
 import org.junit.jupiter.api.Test;
 
 /**
- * Pins that the component layer's Clock WireMock stub is CONSUMABLE BY THE SUT. The read-back goes
+ * Pins that the component harness's Clock WireMock stub is CONSUMABLE BY THE SUT. The read-back goes
  * through the SUT's production {@code ClockGateway} (real HTTP + real {@code GetTimeResponse} parse),
  * so a field drift in {@code ClockStubDriver} fails this test rather than silently mis-reading the
- * time. See {@link ErpStubContractComponentTest} for the full rationale.
+ * time. See {@code ErpStubConsumabilityContractTest} for the full rationale.
  */
-class ClockStubContractComponentTest extends AbstractComponentTest {
+class ClockStubConsumabilityContractTest extends BaseComponentTest {
 
     @Test
     void stubTimeIsConsumableBySut() {

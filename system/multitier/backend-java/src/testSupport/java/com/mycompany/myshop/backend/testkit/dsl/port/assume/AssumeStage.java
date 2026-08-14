@@ -13,7 +13,7 @@ import com.mycompany.myshop.backend.testkit.dsl.port.assume.steps.AssumeRunning;
  * driver pointed at the <em>wrong live</em> stub (e.g. {@code StubDrivers.erp(TAX)}), because
  * liveness is a predicate on one endpoint and that bug is a mismatch between two. Nor can they
  * report a stub that failed to start at all — the servers are started in {@code
- * AbstractComponentTest}'s static initializer, so that failure takes down every component test
+ * BaseComponentTest}'s static initializer, so that failure takes down every component test
  * including these.
  *
  * <p>Both of those gaps are covered by {@code component/latest/contract/*StubContractComponentTest},

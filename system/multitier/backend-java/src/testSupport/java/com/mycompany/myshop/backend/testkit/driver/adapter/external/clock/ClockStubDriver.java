@@ -10,7 +10,7 @@ import com.mycompany.myshop.backend.testkit.driver.port.external.clock.ClockDriv
 
 /**
  * Low-level Clock stub driver. Registers the mapping against a supplied {@link WireMock} client; the
- * URL and JSON body are byte-identical to {@code AbstractComponentTest#stubClock}.
+ * URL and JSON body are byte-identical to {@code BaseComponentTest#stubClock}.
  */
 public class ClockStubDriver implements ClockDriver {
 

@@ -5,7 +5,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.mycompany.myshop.backend.AbstractComponentTest;
+import com.mycompany.myshop.backend.BaseComponentTest;
 import com.mycompany.myshop.backend.core.dtos.BrowseOrderHistoryResponse;
 import com.mycompany.myshop.backend.core.dtos.PlaceOrderRequest;
 import com.mycompany.myshop.backend.core.dtos.PlaceOrderResponse;
@@ -17,7 +17,7 @@ import org.springframework.http.HttpStatus;
  * flows with the ERP / Tax / Clock externals stubbed by raw, inlined WireMock. The {@code latest/}
  * twin drives the identical scenarios through the shared stub DSL.
  */
-class OrderHistoryComponentTest extends AbstractComponentTest {
+class OrderHistoryComponentTest extends BaseComponentTest {
 
     @Test
     void browseReturnsPlacedOrders() {

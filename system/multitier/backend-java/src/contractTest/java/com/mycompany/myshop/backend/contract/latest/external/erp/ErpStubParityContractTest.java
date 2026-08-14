@@ -1,4 +1,4 @@
-package com.mycompany.myshop.backend.integration.contract.erp;
+package com.mycompany.myshop.backend.contract.latest.external.erp;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
@@ -13,10 +13,12 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 /**
  * The {@code Stub} side of the ERP product contract: raw, inlined WireMock, same shape as
- * {@code legacy/ErpGatewayIntegrationTest}. No Docker beyond what {@code integrationTest} already
- * needs for other classes in this task.
+ * {@code integration/legacy/ErpGatewayIntegrationTest}. Needs no Docker of its own — the gateway is
+ * driven directly, with no Spring context and no container, so the only reason this class sits in
+ * the Docker-requiring {@code external-contract} suite is that the stub-consumability tests it runs
+ * alongside boot the full SUT.
  */
-class ErpStubContractIntegrationTest extends BaseErpProductContractIntegrationTest {
+class ErpStubParityContractTest extends BaseErpProductParityContractTest {
 
     private static final WireMockServer WIRE_MOCK = new WireMockServer(options().dynamicPort());
 

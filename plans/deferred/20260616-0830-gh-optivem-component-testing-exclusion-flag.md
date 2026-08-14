@@ -16,7 +16,7 @@ The one residue a flag would remove: a generated frontend's `npm install` pulls 
 - **`--no-component-testing`** (≡ `--no-component-tests`) — omit the entire layer (component + Pact) from the generated project.
 - **`--no-contract-tests`** — omit only the Pact files; keep the component tests.
 
-**Dependency to encode:** the provider Pact test extends the component harness (`BackendPactVerificationTest extends AbstractComponentTest`), so excluding component tests must cascade to excluding contract tests; the reverse is independent.
+**Dependency to encode:** the provider Pact test extends the component harness (`BackendPactVerificationTest extends BaseComponentTest`), so excluding component tests must cascade to excluding contract tests; the reverse is independent.
 
 ## Steps (if built)
 

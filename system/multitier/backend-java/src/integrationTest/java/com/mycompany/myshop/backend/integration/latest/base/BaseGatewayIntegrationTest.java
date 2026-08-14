@@ -30,7 +30,7 @@ import org.junit.jupiter.api.BeforeEach;
  * server on the second subclass. Starting once also leaves the module with a single WireMock lifecycle
  * rule across the component and narrow-integration layers instead of two competing ones.
  */
-public abstract class AbstractGatewayIntegrationTest {
+public abstract class BaseGatewayIntegrationTest {
 
     protected static final WireMockServer WIRE_MOCK = new WireMockServer(options().dynamicPort());
 

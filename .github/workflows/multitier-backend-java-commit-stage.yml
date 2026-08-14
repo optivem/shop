@@ -124,6 +124,9 @@ jobs:
       - name: Run Provider Verification (Pact)
         run: gh optivem component-test run --component backend --suite provider-verification
 
+      - name: Run External System Contract Tests
+        run: gh optivem component-test run --component backend --suite external-contract
+
       # === Run Linter ===
       - name: Run Linter
         run: ./gradlew checkstyleAll

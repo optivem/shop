@@ -39,7 +39,7 @@ sourceSets {
 		runtimeClasspath += sourceSets.main.output + sourceSets.testSupport.output
 	}
 	contractTest {
-		// componentTest.output because the Pact verifier reuses AbstractComponentTest's harness.
+		// componentTest.output because the Pact verifier reuses BaseComponentTest's harness.
 		compileClasspath += sourceSets.componentTest.output + sourceSets.testSupport.output + sourceSets.main.output
 		runtimeClasspath += sourceSets.componentTest.output + sourceSets.testSupport.output + sourceSets.main.output
 	}

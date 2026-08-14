@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.within;
 
 import com.mycompany.myshop.backend.core.services.external.ClockGateway;
-import com.mycompany.myshop.backend.integration.latest.base.AbstractGatewayIntegrationTest;
+import com.mycompany.myshop.backend.integration.latest.base.BaseGatewayIntegrationTest;
 import com.mycompany.myshop.backend.testkit.dsl.core.usecase.external.clock.ClockDsl;
 import com.mycompany.myshop.backend.backendtest.configuration.ExternalSystemMode;
 import java.time.Instant;
@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
 /**
  * Narrow-integration coverage for {@link ClockGateway}, the sibling of
  * {@link ErpGatewayIntegrationTest} and {@link TaxGatewayIntegrationTest}. Same shape: one gateway
- * driven directly against the in-process WireMock supplied by {@link AbstractGatewayIntegrationTest},
+ * driven directly against the in-process WireMock supplied by {@link BaseGatewayIntegrationTest},
  * every stub declared through the shared {@link ClockDsl} the component tests reach as
  * {@code app.clock()}.
  *
@@ -28,7 +28,7 @@ import org.junit.jupiter.api.Test;
  * <p>Unlike the ERP twin there is no {@code legacy/} counterpart — this gateway had no narrow-
  * integration test before, so there is no "before" to preserve.
  */
-class ClockGatewayIntegrationTest extends AbstractGatewayIntegrationTest {
+class ClockGatewayIntegrationTest extends BaseGatewayIntegrationTest {
 
     @Test
     void getCurrentTimeReturnsStubbedTimeInStubMode() {

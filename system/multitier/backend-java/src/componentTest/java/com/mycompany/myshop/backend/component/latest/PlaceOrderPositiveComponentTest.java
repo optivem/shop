@@ -1,6 +1,6 @@
 package com.mycompany.myshop.backend.component.latest;
 
-import com.mycompany.myshop.backend.AbstractComponentTest;
+import com.mycompany.myshop.backend.BaseComponentTest;
 import com.mycompany.myshop.backend.core.entities.OrderStatus;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -16,7 +16,7 @@ import org.junit.jupiter.params.provider.CsvSource;
  * price 20.00, quantity 1, country US, tax 0.07, no promotion) — so a scenario states only the
  * quantity or rate it is actually about, and the rest is filled in.
  */
-class PlaceOrderPositiveComponentTest extends AbstractComponentTest {
+class PlaceOrderPositiveComponentTest extends BaseComponentTest {
 
     @Test
     void shouldBeAbleToPlaceOrderForValidInput() {

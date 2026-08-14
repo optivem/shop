@@ -49,7 +49,7 @@ import org.springframework.test.context.DynamicPropertySource;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 @Import(TestcontainersConfiguration.class)
-public abstract class AbstractComponentTest {
+public abstract class BaseComponentTest {
 
     protected static final WireMockServer ERP = new WireMockServer(options().dynamicPort());
     protected static final WireMockServer TAX = new WireMockServer(options().dynamicPort());

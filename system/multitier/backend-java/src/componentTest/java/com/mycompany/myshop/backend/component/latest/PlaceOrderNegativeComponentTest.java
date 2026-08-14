@@ -1,6 +1,6 @@
 package com.mycompany.myshop.backend.component.latest;
 
-import com.mycompany.myshop.backend.AbstractComponentTest;
+import com.mycompany.myshop.backend.BaseComponentTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -20,7 +20,7 @@ import org.junit.jupiter.params.provider.ValueSource;
  * withQuantity(String)} posts the body a form-backed client really sends, so Jackson's type-level
  * rejection is exercised rather than bypassed.
  */
-class PlaceOrderNegativeComponentTest extends AbstractComponentTest {
+class PlaceOrderNegativeComponentTest extends BaseComponentTest {
 
     private static final String VALIDATION_FAILED = "The request contains one or more validation errors";
 

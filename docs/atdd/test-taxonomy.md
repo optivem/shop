@@ -1,25 +1,35 @@
-# Test Taxonomy: Symmetric 4-Layer Model
+# Test Taxonomy: Scope Layers + Contract Counterparties
 
-Every component in this repo — frontend or backend — shares the same four-layer
-test taxonomy. The layers differ by **scope**, not by mocking technology.
+This taxonomy has two axes, and each governs a different part of the suite list.
+
+- **Scope** governs suites 1–3, shared by every component in the repo, frontend or
+  backend. These layers differ by how much of the system a test runs, not by mocking
+  technology.
+- **Counterparty** governs the contract suites, 4 and 5. Once a test's job is "do the
+  two sides still agree about the interface between them?", scope stops being the
+  useful question — who the far side is, and whether they will run our verification,
+  is what determines how the test must be built.
 
 For the full commit-stage pyramid and CI wiring see
 [docs/pipeline/commit-stage.md](../pipeline/commit-stage.md).
 
 ---
 
-## The four layers
+## The five suites
 
-| # | Layer (suite `id`) | Frontend | Backend (Java / .NET / TS) |
+| # | Suite (`id`) | Frontend | Backend (Java / .NET / TS) |
 |---|---|---|---|
 | 1 | **Unit** (`unit`) | Real in-memory domain logic: mappers, validation, formatting. `1+1` is used only as a placeholder where a component has no pure logic. | Real in-memory domain logic: `Order` constructor validation, pricing / discount / tax calculations. `1+1` placeholder only. |
 | 2 | **Narrow integration** (`integration`) | One adapter (`orderService`) against the Pact mock server. No React render. | One adapter, **inbound or outbound**. Outbound: `OrderRepository` against Testcontainers-Postgres, `TaxGateway`/`ErpGateway` against WireMock. Inbound: `OrderController` sliced via `@WebMvcTest` with `OrderService` faked. No app boot. |
 | 3 | **Component** (`component`) | Full UI render against the Pact mock server. | Full service boot, hit the REST API. Postgres real (Testcontainers) + ERP/Tax mocked (WireMock-in-Testcontainers). |
-| 4 | **Provider verification** (`provider-verification`) | **None** — the frontend is consumer-only. Contract emission lives in suites 2 + 3. | Verify the backend satisfies the frontend consumer's `.pact` (`BackendPactVerificationTest`). |
+| 4 | **Provider verification** (`provider-verification`) | **None** — the frontend is consumer-only. Contract emission lives in suites 2 + 3. | Counterparty = the frontend, an **internal** one we control. Verify the backend satisfies its `.pact` (`BackendPactVerificationTest`). |
+| 5 | **External system contract** (`external-contract`) | **None** — the frontend talks to no external system directly. | Counterparty = an **external** system that will not run our verification (ERP, tax, clock). Agreement is pinned by stub-vs-real parity pairs and stub-consumability tests. Backend-java only so far. |
 
 ---
 
-## The one discriminator
+## The two discriminators
+
+### Scope — which of suites 1–3 a non-contract test belongs to
 
 > **Does the test boot or render the real component?**
 > - Yes → **component** (layer 3)
@@ -33,6 +43,41 @@ you which layer a test belongs to.
 a faked external system and an inbound adapter (`OrderController`) driven with its
 service faked are the same shape — one adapter, real framework wiring, collaborator
 faked — and both are layer 2.
+
+### Counterparty — which of suites 4–5 a contract test belongs to
+
+> **Will the far side run our verification?**
+> - Yes, we control both ends → **internal**, suite 4 (`provider-verification`)
+> - No, the far side is someone else's system → **external**, suite 5 (`external-contract`)
+
+This is a deliberate exception to the scope axis: a suite-5 test may be a bare gateway
+call with no Spring context (`ErpStubParityContractTest`) or a full SUT boot
+(`ErpStubConsumabilityContractTest`), and both live in the same folder anyway. Scope is
+what a contract test costs; counterparty is what it can prove, and for these tests the
+latter is what has to drive placement — you cannot use Pact against a system that will
+never replay your pact file.
+
+---
+
+## Contract binding mechanisms
+
+"Contract" names three different things in the backend. They are distinguishable by
+class name, and each is forced by the counterparty:
+
+| Where | What it proves | Binding mechanism | Name marker |
+|---|---|---|---|
+| `contract/{latest,legacy}/internal/frontend/` | Pact provider verification — we are the provider to the frontend | Derivation: the consumer's stub *is* the pact | `*PactVerificationTest` |
+| `contract/latest/external/{clock,erp,tax}/` | Stub consumability — does our own stub's JSON parse through the production gateway | Boot-and-read-back through the SUT | `*StubConsumabilityContractTest` |
+| `contract/latest/external/{clock,erp,tax}/` | Stub-vs-real parity — does the gateway's parse agree with the real system | Twin tests sharing one set of assertions | `*StubParityContractTest` / `*RealParityContractTest` |
+
+Pact is available only where we control both ends. For ERP, tax and clock we do not, so
+parity is pinned by running the same assertions twice — once against our stub, once
+against the real simulator — from a shared base class.
+
+The `Stub` / `Real` marker is load-bearing, not decorative: `component-tests.yaml`'s
+`external-contract` suite selects on it (`--tests '*StubParityContractTest' --tests
+'*StubConsumabilityContractTest'`), which is what keeps the `Real` twins — they need a
+live simulator — out of the commit stage.
 
 ---
 
@@ -166,23 +211,43 @@ emits the interaction.
 
 ---
 
-## Backend: four-suite instantiation
+## Backend: five-suite instantiation
 
-The backend exposes all four suites. The narrow-integration and component suites
-require Docker. Provider verification (`provider-verification`) verifies the backend
-against the frontend's committed `.pact`.
+The backend exposes all five suites; every one except `unit` requires Docker.
+Suites 4 and 5 both run on the Gradle `contractTest` task and are separated by
+package (`contract.*.internal.*` vs `contract.*.external.*`), not by task.
 
 For the detailed backend pyramid description and CI wiring see
 [docs/pipeline/commit-stage.md](../pipeline/commit-stage.md).
 
-Narrow-integration's outbound adapters are stub-only by default (against WireMock), but
 `ErpGateway`'s product read has a manual, opt-in `Real`-mode twin —
-`integration/contract/erp/ErpRealContractTest`, run against the ERP simulator
+`contract/latest/external/erp/ErpRealParityContractTest`, run against the ERP simulator
 (`external-systems/simulators`) instead of WireMock, alongside its `Stub` twin
-(`ErpStubContractIntegrationTest`, which *is* part of the default `integrationTest` run).
+(`ErpStubParityContractTest`, which *is* part of the default `external-contract` run).
 It proves the stub is still an honest guess about the real thing, not just internally
-consistent with the production gateway. Not wired into CI yet — see `shop/plans/` for
-the deferred item.
+consistent with the production gateway. Not wired into CI yet — see
+`plans/20260812-1600-erp-real-contract-ci-wiring.md`.
+
+Parity is scoped to products only: the simulator's promotion endpoint is hardcoded and
+its error responses cannot be provoked on demand, so real-mode twins for those are not
+buildable — see `plans/20260717-1015-component-stub-contract-beyond.md` item 4.
+
+`external-contract` is currently **backend-java only**. `backend-dotnet` and
+`backend-typescript` still keep their stub-consumability tests inside the `component`
+suite; porting them is a follow-up, not a gap in the model.
+
+### Known gap: the static stub mappings are unverified
+
+`external-systems/stubs/mappings/erp-products-*.json` is bind-mounted into the WireMock
+container by all twelve `docker-compose.*.stub.yml` files, so it is what every stub-mode
+*deployment* serves — but no test loads it. All three ERP stub definitions (the static
+mappings, `ErpStubDriver`'s runtime registration, and `ErpStubParityContractTest`'s
+inline stub) currently agree — same `{id, price}` shape, same 404-on-unknown — but the
+agreement is hand-maintained: renaming `price` in the JSON turns nothing red.
+
+This is drift risk, not a live defect. Closing it would mean having the parity test
+arrange through `ErpStubDriver` so one artifact serves both roles, the way the pact does
+structurally on the frontend side.
 
 ---
 
@@ -209,3 +274,9 @@ The `contract` suite `id` in `component-tests.yaml` is being renamed to
 `provider-verification` across all components (cross-cutting rename, tracked separately)
 to name it by what it does — and to be clear that the **frontend has no
 provider-verification suite**.
+
+The same motive produced suite 5's name. Once `external-contract` split off,
+`provider-verification` could be narrowed to what it actually is — Pact against a
+counterparty we control — instead of standing for "everything on the `contractTest`
+task". Neither suite is called plain `contract`, because that word alone never
+identified which of the three binding mechanisms above was in play.

@@ -75,7 +75,7 @@ class StubServer {
  * In-process component-test harness: boots the Nest app on a random port (real HTTP over a real
  * socket), backs it with a Testcontainers-managed Postgres (real dialect/numeric semantics) and
  * stubs the ERP / Tax / Clock external HTTP systems with in-process stub servers on 127.0.0.1.
- * No docker compose, no deployment. Mirrors the Java `AbstractComponentTest` and is shared by both
+ * No docker compose, no deployment. Mirrors the Java `BaseComponentTest` and is shared by both
  * the Component suite and the Pact provider-verification test.
  */
 export class ComponentHarness {

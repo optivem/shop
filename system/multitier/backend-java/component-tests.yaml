@@ -22,8 +22,20 @@ suites:
     requiresDocker: true
   - id: provider-verification
     name: Provider Verification (Pact)
-    command: .\gradlew.bat contractTest --tests 'com.mycompany.myshop.backend.contract.*'
+    # internal/ only: the counterparty is the frontend, whose consumer stub *is* the pact, so we
+    # verify against a .pact file. Narrowed from `contract.*` when the external-system contract
+    # tests moved into the same Gradle task — see docs/atdd/test-taxonomy.md.
+    command: .\gradlew.bat contractTest --tests 'com.mycompany.myshop.backend.contract.*.internal.*'
     sampleTest: "verify"
     requiresDocker: true
+  - id: external-contract
+    name: External System Contract
+    # external/ only: counterparties that will not run our verification (ERP, tax, clock), so
+    # agreement is pinned by stub-vs-real parity pairs and stub-consumability tests instead.
+    # Stub side only — the *Real* twins need the ERP simulator up and stay opt-in until
+    # plans/20260812-1600-erp-real-contract-ci-wiring.md lands.
+    command: .\gradlew.bat contractTest --tests '*StubParityContractTest' --tests '*StubConsumabilityContractTest'
+    sampleTest: "getProductDetailsReturnsDetailsWhenFound"
+    requiresDocker: true
 suiteGroups:
-  all: [unit, integration, component, provider-verification]
+  all: [unit, integration, component, provider-verification, external-contract]

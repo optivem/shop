@@ -1,17 +1,17 @@
-package com.mycompany.myshop.backend.component.latest.contract;
+package com.mycompany.myshop.backend.contract.latest.external.erp;
 
-import com.mycompany.myshop.backend.AbstractComponentTest;
+import com.mycompany.myshop.backend.BaseComponentTest;
 import org.junit.jupiter.api.Test;
 
 /**
- * Pins that the component layer's ERP WireMock stub is CONSUMABLE BY THE SUT. The stub's JSON is
+ * Pins that the component harness's ERP WireMock stub is CONSUMABLE BY THE SUT. The stub's JSON is
  * hand-written in {@code ErpStubDriver} and shares no source with system-test's typed DTO, so
  * system-test's own {@code ErpStubContractTest} does not transitively prove this stub parses. The
  * read-back goes through the SUT's production {@code ErpGateway} (real HTTP + real
  * {@code ProductDetailsResponse} parse), so a field-name drift in the stub (e.g. {@code price}→
  * {@code cost}) fails this test instead of silently yielding null.
  */
-class ErpStubContractComponentTest extends AbstractComponentTest {
+class ErpStubConsumabilityContractTest extends BaseComponentTest {
 
     @Test
     void stubProductIsConsumableBySut() {

@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.mycompany.myshop.backend.core.services.external.ErpGateway;
-import com.mycompany.myshop.backend.integration.latest.base.AbstractGatewayIntegrationTest;
+import com.mycompany.myshop.backend.integration.latest.base.BaseGatewayIntegrationTest;
 import com.mycompany.myshop.backend.testkit.dsl.core.usecase.external.erp.ErpDsl;
 import org.junit.jupiter.api.Test;
 
@@ -18,9 +18,9 @@ import org.junit.jupiter.api.Test;
  * which is the whole point of the "after".
  *
  * <p>The harness (in-process WireMock, stub-side DSL, SUT-side gateway) comes from
- * {@link AbstractGatewayIntegrationTest}, so what remains below is the scenarios themselves.
+ * {@link BaseGatewayIntegrationTest}, so what remains below is the scenarios themselves.
  */
-class ErpGatewayIntegrationTest extends AbstractGatewayIntegrationTest {
+class ErpGatewayIntegrationTest extends BaseGatewayIntegrationTest {
 
     private final ErpGateway erpGateway = erpGateway();
 

@@ -1,6 +1,6 @@
 package com.mycompany.myshop.backend.component.latest;
 
-import com.mycompany.myshop.backend.AbstractComponentTest;
+import com.mycompany.myshop.backend.BaseComponentTest;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test;
  * then reads the coupon back through {@code GET /api/coupons}, so reaching the step at all is the
  * "browse lists it" assertion.
  */
-class CouponComponentTest extends AbstractComponentTest {
+class CouponComponentTest extends BaseComponentTest {
 
     @Test
     void publishReturnsNoContentThenBrowseListsCoupon() {

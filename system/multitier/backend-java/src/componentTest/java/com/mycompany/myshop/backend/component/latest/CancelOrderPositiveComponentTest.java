@@ -1,6 +1,6 @@
 package com.mycompany.myshop.backend.component.latest;
 
-import com.mycompany.myshop.backend.AbstractComponentTest;
+import com.mycompany.myshop.backend.BaseComponentTest;
 import com.mycompany.myshop.backend.core.entities.OrderStatus;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -14,7 +14,7 @@ import org.junit.jupiter.params.provider.ValueSource;
  * Here the clock is a per-test WireMock stub, so the same scenarios run in parallel with everything
  * else and need no stack at all.
  */
-class CancelOrderPositiveComponentTest extends AbstractComponentTest {
+class CancelOrderPositiveComponentTest extends BaseComponentTest {
 
     @Test
     void cancelledOrderHasCancelledStatus() {

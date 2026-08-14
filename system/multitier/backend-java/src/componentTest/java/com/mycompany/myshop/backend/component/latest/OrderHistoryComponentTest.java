@@ -1,6 +1,6 @@
 package com.mycompany.myshop.backend.component.latest;
 
-import com.mycompany.myshop.backend.AbstractComponentTest;
+import com.mycompany.myshop.backend.BaseComponentTest;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
  * second act. {@code orderHistory()} reads {@code GET /api/orders} back, and {@code containsOrder()}
  * resolves the order number the SUT generated, so the test never has to hold it.
  */
-class OrderHistoryComponentTest extends AbstractComponentTest {
+class OrderHistoryComponentTest extends BaseComponentTest {
 
     @Test
     void browseReturnsPlacedOrders() {

@@ -5,14 +5,14 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.mycompany.myshop.backend.core.exceptions.TaxGatewayException;
 import com.mycompany.myshop.backend.core.services.external.TaxGateway;
-import com.mycompany.myshop.backend.integration.latest.base.AbstractGatewayIntegrationTest;
+import com.mycompany.myshop.backend.integration.latest.base.BaseGatewayIntegrationTest;
 import com.mycompany.myshop.backend.testkit.dsl.core.usecase.external.tax.TaxDsl;
 import org.junit.jupiter.api.Test;
 
 /**
  * Narrow-integration coverage for {@link TaxGateway}, the sibling of
  * {@link ErpGatewayIntegrationTest}. Same shape: one gateway driven directly against the in-process
- * WireMock supplied by {@link AbstractGatewayIntegrationTest}, with every stub declared through the
+ * WireMock supplied by {@link BaseGatewayIntegrationTest}, with every stub declared through the
  * shared {@link TaxDsl} the component tests reach as {@code app.tax()}.
  *
  * <p>The 404 and 5xx cases are the ones worth pinning: {@code getTaxDetails} deliberately treats them
@@ -23,7 +23,7 @@ import org.junit.jupiter.api.Test;
  * <p>Unlike the ERP twin there is no {@code legacy/} counterpart — this gateway had no narrow-
  * integration test before, so there is no "before" to preserve.
  */
-class TaxGatewayIntegrationTest extends AbstractGatewayIntegrationTest {
+class TaxGatewayIntegrationTest extends BaseGatewayIntegrationTest {
 
     private final TaxGateway taxGateway = taxGateway();
 

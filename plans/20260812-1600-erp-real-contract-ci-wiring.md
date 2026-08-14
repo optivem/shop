@@ -1,24 +1,24 @@
-# Wire ErpRealContractTest into CI
+# Wire ErpRealParityContractTest into CI
 
 **Status:** Deferred — **not yet approved to build. Discuss before executing.**
 
 ## Context
 
-`system/multitier/backend-java/src/integrationTest/java/.../integration/contract/erp/` now has a
-`Stub`/`Real` pair for the ERP product read (`ErpStubContractIntegrationTest`,
-`ErpRealContractTest`), mirroring `shop/system-test/java`'s `mod11/contract/erp` `Base`/`Real`/`Stub`
-pattern but scoped to products only and without touching `ErpDriver`/`ErpDsl` (see
-`docs/atdd/test-taxonomy.md`, "Backend: four-suite instantiation", for why).
+`system/multitier/backend-java/src/contractTest/java/.../contract/latest/external/erp/` has a
+`Stub`/`Real` pair for the ERP product read (`ErpStubParityContractTest`,
+`ErpRealParityContractTest`), mirroring `shop/system-test/java`'s `mod11/contract/erp`
+`Base`/`Real`/`Stub` pattern but scoped to products only and without touching `ErpDriver`/`ErpDsl`
+(see `docs/atdd/test-taxonomy.md`, "Backend: five-suite instantiation", for why).
 
-`ErpStubContractIntegrationTest` is already part of the default `integrationTest` task (matches
-`component-tests.yaml`'s `integration` suite: `--tests '*IntegrationTest'`) and runs in commit-stage
-today. `ErpRealContractTest` is deliberately named without the `IntegrationTest` suffix so that same
-wildcard skips it — it needs the ERP simulator (`external-systems/simulators`) running at
+`ErpStubParityContractTest` is already part of `component-tests.yaml`'s `external-contract` suite
+(`--tests '*StubParityContractTest' --tests '*StubConsumabilityContractTest'`) and runs in
+commit-stage today. `ErpRealParityContractTest` carries the `Real` role marker rather than `Stub`, so
+that same filter skips it — it needs the ERP simulator (`external-systems/simulators`) running at
 `ERP_REAL_BASE_URL` (default `http://localhost:9111/erp`) and is currently **manual-only**:
 
 ```
 docker compose -f docker/java/multitier/docker-compose.local.real.yml up external-system-simulators
-./gradlew.bat integrationTest --tests '*ErpRealContractTest'
+./gradlew.bat contractTest --tests '*ErpRealParityContractTest'
 ```
 
 ## Deferred item: CI wiring
@@ -26,9 +26,9 @@ docker compose -f docker/java/multitier/docker-compose.local.real.yml up externa
 Add a new suite to `system/multitier/backend-java/component-tests.yaml`, e.g.:
 
 ```yaml
-- id: integration-real
-  name: Narrow Integration (Real ERP)
-  command: .\gradlew.bat integrationTest --tests '*ErpRealContractTest'
+- id: external-contract-real
+  name: External System Contract (Real ERP)
+  command: .\gradlew.bat contractTest --tests '*RealParityContractTest'
   sampleTest: "getProductDetailsReturnsDetailsWhenFound"
   requiresDocker: true
 ```
@@ -44,9 +44,9 @@ Open questions to resolve before building this:
    `optivem/actions/deploy-docker-compose@v1` for system-test's use. Reusing that deployment (rather
    than a second, backend-java-only container start) avoids running the simulator twice per pipeline
    run, but couples this Gradle suite's timing to when that deployment step runs.
-3. **Not `unit`/`integration`/`component`/`provider-verification`.** Add `integration-real` to
-   `suiteGroups` only if/when a stage is meant to run it by default — otherwise leave it named but
-   unlisted, runnable only via explicit `--suite integration-real`.
+3. **Not one of the five default suites.** Add `external-contract-real` to `suiteGroups` only if/when
+   a stage is meant to run it by default — otherwise leave it named but unlisted, runnable only via
+   explicit `--suite external-contract-real`.
 4. **Fixture idempotency in CI.** `SimulatorErpProductClient.createProduct` already handles the
    duplicate-id case locally (POST, fall back to PUT on conflict) — confirm this still holds if CI runs
    against a simulator instance that isn't torn down between pipeline runs (i.e. state can accumulate

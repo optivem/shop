@@ -1,4 +1,4 @@
-// Component-test harness — the TS twin of backend-java's AbstractComponentTest.
+// Component-test harness — the TS twin of backend-java's BaseComponentTest.
 //
 // It owns everything a spec shouldn't see: the stubbed backend's lifecycle (boot on
 // first gesture, verify-and-tear-down at teardown), the driver wiring, and the
