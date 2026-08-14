@@ -1,4 +1,4 @@
-package com.mycompany.myshop.backend.contract.latest.external.erp;
+package com.mycompany.myshop.backend.contract.external.erp;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

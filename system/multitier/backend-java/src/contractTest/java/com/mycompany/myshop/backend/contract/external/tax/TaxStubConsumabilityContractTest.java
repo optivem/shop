@@ -1,4 +1,4 @@
-package com.mycompany.myshop.backend.contract.latest.external.tax;
+package com.mycompany.myshop.backend.contract.external.tax;
 
 import com.mycompany.myshop.backend.BaseComponentTest;
 import org.junit.jupiter.api.Test;

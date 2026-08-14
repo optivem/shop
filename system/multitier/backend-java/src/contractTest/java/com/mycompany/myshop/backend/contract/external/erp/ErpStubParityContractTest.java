@@ -1,4 +1,4 @@
-package com.mycompany.myshop.backend.contract.latest.external.erp;
+package com.mycompany.myshop.backend.contract.external.erp;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;

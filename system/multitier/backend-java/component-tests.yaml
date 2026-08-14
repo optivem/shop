@@ -23,18 +23,31 @@ suites:
   - id: provider-verification
     name: Provider Verification (Pact)
     # internal/ only: the counterparty is the frontend, whose consumer stub *is* the pact, so we
-    # verify against a .pact file. Narrowed from `contract.*` when the external-system contract
-    # tests moved into the same Gradle task — see docs/atdd/test-taxonomy.md.
-    command: .\gradlew.bat contractTest --tests 'com.mycompany.myshop.backend.contract.*.internal.*'
+    # verify against a .pact file. Covers both the latest/ and legacy/ twins beneath it — see
+    # docs/atdd/test-taxonomy.md.
+    command: .\gradlew.bat contractTest --tests 'com.mycompany.myshop.backend.contract.internal.*'
     sampleTest: "verify"
     requiresDocker: true
   - id: external-contract
     name: External System Contract
     # external/ only: counterparties that will not run our verification (ERP, tax, clock), so
     # agreement is pinned by stub-vs-real parity pairs and stub-consumability tests instead.
-    # Stub side only — the *Real* twins need the ERP simulator up and stay opt-in until
-    # plans/20260812-1600-erp-real-contract-ci-wiring.md lands.
+    # Stub side only — the *Real* half runs as the `external-contract-real` suite below.
     command: .\gradlew.bat contractTest --tests '*StubParityContractTest' --tests '*StubConsumabilityContractTest'
+    sampleTest: "getProductDetailsReturnsDetailsWhenFound"
+    requiresDocker: true
+  - id: external-contract-real
+    name: External System Contract (Real)
+    # The `Real` half of the parity pairs above: same scenarios, run against the actual external-system
+    # simulator instead of the WireMock stand-in, so a stub that has drifted from the real system is
+    # caught in the same stage as the component suite that asserts against that stub. Covers ERP, tax
+    # and clock. Testcontainers supplies one simulator container for all three on a random port (fresh
+    # per run, no fixed 9111, no compose), so `externalSimulatorImage` must build the image first —
+    # see docs/atdd/test-taxonomy.md and plans/20260812-1600-erp-real-contract-ci-wiring.md.
+    #
+    # Deliberately absent from suiteGroups.all: it is opt-in via explicit `--suite external-contract-real`,
+    # which also keeps it clear of the prerelease pipeline's pre-`system start` component-test block.
+    command: .\gradlew.bat externalSimulatorImage contractTest --tests '*RealParityContractTest'
     sampleTest: "getProductDetailsReturnsDetailsWhenFound"
     requiresDocker: true
 suiteGroups:

@@ -20,8 +20,14 @@ import org.junit.jupiter.api.Test;
  * any other non-200 is Tax failing to answer and yields a {@link TaxGatewayException}. Collapsing the
  * two would turn an outage into a silent "country does not exist".
  *
- * <p>Unlike the ERP twin there is no {@code legacy/} counterpart — this gateway had no narrow-
- * integration test before, so there is no "before" to preserve.
+ * <p>There is no {@code legacy/} counterpart, and that is a subset choice rather than an
+ * impossibility — a raw-WireMock "before" for this gateway would be easy to write. It is skipped
+ * because {@code legacy/} carries one twin per distinct contrast, not one per class (see
+ * {@code component/legacy/CouponComponentTest}, whose twin exists to isolate the SUT-side contrast).
+ * At this layer the sole contrast is inlined {@code WIRE_MOCK.stubFor} + JSON literal versus the
+ * stub DSL, and {@code legacy/ErpGatewayIntegrationTest} already demonstrates it; a Tax twin would
+ * repeat it verbatim against a different URL. Note this is a weaker claim than the one guarding
+ * {@code contract/external/}, where a "before" would be genuinely circular.
  */
 class TaxGatewayIntegrationTest extends BaseGatewayIntegrationTest {
 

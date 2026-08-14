@@ -1,4 +1,4 @@
-package com.mycompany.myshop.backend.contract.legacy.internal.frontend;
+package com.mycompany.myshop.backend.contract.internal.frontend.legacy;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;

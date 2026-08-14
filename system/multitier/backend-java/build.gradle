@@ -143,6 +143,21 @@ tasks.register('integrationTest', Test) {
 	shouldRunAfter tasks.named('test')
 }
 
+// Builds the external-system simulator image that the `*RealParityContractTest` classes run via
+// Testcontainers. Kept a plain `docker build` rather than Testcontainers' ImageFromDockerfile
+// because the simulator's Dockerfile uses BuildKit-only syntax (`RUN --mount=type=cache`) and
+// ImageFromDockerfile drives docker-java's classic builder, which rejects it. Deliberately NOT a
+// dependsOn of `contractTest`: the other contract suites (provider-verification, external-contract)
+// don't need the image and shouldn't pay for the build — the `external-contract-real` suite in
+// component-tests.yaml names this task explicitly alongside `contractTest`.
+tasks.register('externalSimulatorImage', Exec) {
+	description = 'Builds the external-system simulator Docker image used by the real-mode parity contract tests.'
+	group = 'verification'
+	workingDir = file("${rootDir}/../../..")
+	commandLine 'docker', 'build', '-t', 'myshop/external-system-simulators:contract-test', 'external-systems/simulators'
+	environment 'DOCKER_BUILDKIT', '1'
+}
+
 // Lints every source set, including the opt-in ones kept off `build`. CI calls this instead of
 // naming individual checkstyle tasks, so a new source set is linted the moment it is added —
 // scaffolded projects run the full `check`, and anything shop skips here fails downstream instead.

@@ -127,6 +127,14 @@ jobs:
       - name: Run External System Contract Tests
         run: gh optivem component-test run --component backend --suite external-contract
 
+      # The `Real` half of the parity pair. Blocking, and here rather than in a later stage on
+      # purpose: it is what establishes that the stub is trustworthy enough for the component suite
+      # above to assert against, and a test guarding a suite's validity must not run later than the
+      # suite it guards. Testcontainers supplies the simulator on a random port, so this adds no
+      # compose stack and no fixed-port dependency to commit stage.
+      - name: Run External System Contract Tests (Real ERP)
+        run: gh optivem component-test run --component backend --suite external-contract-real
+
       # === Run Linter ===
       - name: Run Linter
         run: ./gradlew checkstyleAll

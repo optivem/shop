@@ -66,9 +66,9 @@ class name, and each is forced by the counterparty:
 
 | Where | What it proves | Binding mechanism | Name marker |
 |---|---|---|---|
-| `contract/{latest,legacy}/internal/frontend/` | Pact provider verification — we are the provider to the frontend | Derivation: the consumer's stub *is* the pact | `*PactVerificationTest` |
-| `contract/latest/external/{clock,erp,tax}/` | Stub consumability — does our own stub's JSON parse through the production gateway | Boot-and-read-back through the SUT | `*StubConsumabilityContractTest` |
-| `contract/latest/external/{clock,erp,tax}/` | Stub-vs-real parity — does the gateway's parse agree with the real system | Twin tests sharing one set of assertions | `*StubParityContractTest` / `*RealParityContractTest` |
+| `contract/internal/frontend/{latest,legacy}/` | Pact provider verification — we are the provider to the frontend | Derivation: the consumer's stub *is* the pact | `*PactVerificationTest` |
+| `contract/external/{clock,erp,tax}/` | Stub consumability — does our own stub's JSON parse through the production gateway | Boot-and-read-back through the SUT | `*StubConsumabilityContractTest` |
+| `contract/external/{clock,erp,tax}/` | Stub-vs-real parity — does the gateway's parse agree with the real system | Twin tests sharing one set of assertions | `*StubParityContractTest` / `*RealParityContractTest` |
 
 Pact is available only where we control both ends. For ERP, tax and clock we do not, so
 parity is pinned by running the same assertions twice — once against our stub, once
@@ -78,6 +78,42 @@ The `Stub` / `Real` marker is load-bearing, not decorative: `component-tests.yam
 `external-contract` suite selects on it (`--tests '*StubParityContractTest' --tests
 '*StubConsumabilityContractTest'`), which is what keeps the `Real` twins — they need a
 live simulator — out of the commit stage.
+
+### Why counterparty comes first in the path, and why `external/` has no twin
+
+Everywhere else in the suite the folder leads with `latest/` or `legacy/` — the "after" and
+"before" of the stub-DSL refactor. `contract/` leads with the counterparty instead, and the
+twin axis appears only under `internal/`. That is not an inconsistency to tidy up; it
+records a real difference.
+
+**The `internal/` twin is genuine.** `BackendPactVerificationTest` predates the stub DSL, so
+there is an actual prior shape to recover. It is also where the lesson lands hardest: 14
+state handlers, and the same four-line ERP+Tax+Clock stub block re-typed verbatim three
+times. Because pact-jvm replays every interaction and fails on a missing state handler, the
+twin cannot be a representative subset the way `component/legacy/` can — the duplication is
+demonstrated at full scale.
+
+**The `external/` tests have no "before" by construction.** They did not exist pre-DSL and
+could not have: they are the *price* of the refactor, not a subject of it. The chain is —
+the DSL moves stub JSON out of test bodies into `ErpStubDriver`; that file can now drift
+from what the production gateway parses; the consumability test is what catches the drift.
+Before the DSL the stub JSON sat three lines above the assertion, so there was no second
+artifact and nothing to check. (History bears this out: the DSL landed in `5c82b1e0`
+2026-07-08, the stub-consumability tests in `139ed581` nine days later, whose message reads
+"Verified: a price->cost drift makes the ERP test fail".)
+
+Writing a `legacy/external/` twin therefore means inventing a test that never existed and
+that nobody would have written. It reads as circular — a JSON literal asserted against a
+parse a few lines below it — because that is exactly what it is.
+
+**Parity is the subtler case.** "Does our stub resemble the real ERP?" is a live question
+with or without a DSL — it comes from hand-writing a double for a system we do not control.
+What the DSL changes is whether the answer is worth having: pre-DSL the stub JSON is
+scattered across N test bodies, so pinning one of them proves nothing about the other N−1.
+Post-DSL every arrangement funnels through `ErpStubDriver`, so pinning that single artifact
+covers every test that uses it. The DSL does not create the parity question; it creates the
+choke point that makes it answerable once instead of N times — which is a better argument
+for the DSL than duplication-removal alone.
 
 ---
 
@@ -215,18 +251,32 @@ emits the interaction.
 
 The backend exposes all five suites; every one except `unit` requires Docker.
 Suites 4 and 5 both run on the Gradle `contractTest` task and are separated by
-package (`contract.*.internal.*` vs `contract.*.external.*`), not by task.
+package (`contract.internal.*` vs `contract.external.*`), not by task.
 
 For the detailed backend pyramid description and CI wiring see
 [docs/pipeline/commit-stage.md](../pipeline/commit-stage.md).
 
-`ErpGateway`'s product read has a manual, opt-in `Real`-mode twin —
-`contract/latest/external/erp/ErpRealParityContractTest`, run against the ERP simulator
+`ErpGateway`'s product read has a `Real`-mode twin —
+`contract/external/erp/ErpRealParityContractTest`, run against the ERP simulator
 (`external-systems/simulators`) instead of WireMock, alongside its `Stub` twin
-(`ErpStubParityContractTest`, which *is* part of the default `external-contract` run).
-It proves the stub is still an honest guess about the real thing, not just internally
-consistent with the production gateway. Not wired into CI yet — see
-`plans/20260812-1600-erp-real-contract-ci-wiring.md`.
+(`ErpStubParityContractTest`). It proves the stub is still an honest guess about the real
+thing, not just internally consistent with the production gateway.
+
+Suite 5 therefore executes as **two** commit-stage steps rather than one: `external-contract`
+(the stub half) and `external-contract-real` (the real half). The split is a runner concern,
+not a taxonomy one — the real half needs a simulator image built and a container started, so
+it carries its own suite id and is kept out of `suiteGroups.all`, runnable only via explicit
+`--suite external-contract-real`.
+
+Both halves are blocking, and both run in **commit stage**. That placement is deliberate: a
+parity test establishes that the stub is trustworthy enough for the `component` suite to
+assert against, and a test guarding a suite's validity must not run later than the suite it
+guards — otherwise a green commit stage can ship on a stub already known-wrong downstream. A
+red `external-contract-real` beside a green `component` means the stub is lying and every
+component test leaning on it is currently proving nothing; the fix is the pair. The simulator
+comes from Testcontainers on a random port (no compose stack, no fixed `9111`, fresh per run),
+so this does not loosen commit stage's self-provisioning contract. See
+`plans/20260812-1600-erp-real-contract-ci-wiring.md` for the full rationale.
 
 Parity is scoped to products only: the simulator's promotion endpoint is hardcoded and
 its error responses cannot be provoked on demand, so real-mode twins for those are not

@@ -134,7 +134,7 @@ server.use('/tax/api', taxRouter);
 // Clock API - returns fixed timestamp
 server.get('/clock/api/time', (req, res) => {
   res.status(200).json({
-    time: '2024-01-15T10:30:00.000Z'
+    time: '2029-09-09T09:09:09.000Z'
   });
 });
 

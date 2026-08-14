@@ -1,4 +1,4 @@
-package com.mycompany.myshop.backend.contract.latest.internal.frontend;
+package com.mycompany.myshop.backend.contract.internal.frontend.latest;
 
 import au.com.dius.pact.provider.junit5.HttpTestTarget;
 import au.com.dius.pact.provider.junit5.PactVerificationContext;
