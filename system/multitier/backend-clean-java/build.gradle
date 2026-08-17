@@ -30,10 +30,12 @@ java {
 
 // Opt-in test layers, kept off the default `test`/`build` so the template's build stays fast and Docker-light.
 //
-// Only `testSupport` + `componentTest` are carried over from backend-java. The contract and
-// integration layers are deliberately absent: their subject is an adapter (gateway, repository,
-// controller), and adapters are exactly what this variant rewrites, so they do not port. Add them
-// back per-variant once the clean-architecture design has settled.
+// All four layers are now carried over from backend-java. The contract and integration layers were
+// initially absent because their subject is an adapter (gateway, repository, controller) and
+// adapters are exactly what this variant rewrites — so they were written per-variant once the
+// clean-architecture design had settled, against the adapters that design produced:
+// `infrastructure/external/**` for contract, `infrastructure/persistence/adapters/**` for
+// narrow integration.
 sourceSets {
 	// Shared stub drivers/DSLs (support/), consumed by every opt-in test layer. Its own source set
 	// so contract/integration tests depend only on the helpers, not on the whole componentTest suite.
@@ -45,6 +47,16 @@ sourceSets {
 		compileClasspath += sourceSets.main.output + sourceSets.testSupport.output
 		runtimeClasspath += sourceSets.main.output + sourceSets.testSupport.output
 	}
+	contractTest {
+		// componentTest.output because the Pact verifier reuses BaseComponentTest's harness.
+		compileClasspath += sourceSets.componentTest.output + sourceSets.testSupport.output + sourceSets.main.output
+		runtimeClasspath += sourceSets.componentTest.output + sourceSets.testSupport.output + sourceSets.main.output
+	}
+	integrationTest {
+		// testSupport.output so integration `latest/` tests can import the shared stub DSL in support/.
+		compileClasspath += sourceSets.main.output + sourceSets.testSupport.output
+		runtimeClasspath += sourceSets.main.output + sourceSets.testSupport.output
+	}
 }
 
 configurations {
@@ -52,6 +64,10 @@ configurations {
 	testSupportRuntimeOnly.extendsFrom testRuntimeOnly
 	componentTestImplementation.extendsFrom testSupportImplementation
 	componentTestRuntimeOnly.extendsFrom testSupportRuntimeOnly
+	contractTestImplementation.extendsFrom componentTestImplementation
+	contractTestRuntimeOnly.extendsFrom componentTestRuntimeOnly
+	integrationTestImplementation.extendsFrom testSupportImplementation
+	integrationTestRuntimeOnly.extendsFrom testSupportRuntimeOnly
 }
 
 repositories {
@@ -84,8 +100,12 @@ dependencies {
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
 	// Shared stub helpers (support/) need WireMock; declared once here and inherited by the
-	// component layer via the testSupportImplementation extendsFrom chain.
+	// component, contract, and integration layers via the testSupportImplementation extendsFrom chain.
 	testSupportImplementation 'org.wiremock:wiremock-standalone:3.9.2'
+
+	// Pact contract layer only (inherits the testSupport + test deps above). No broker and no
+	// account: @PactFolder reads the consumer's pact out of the repo-owned shop/contracts/ folder.
+	componentTestImplementation 'au.com.dius.pact.provider:junit5spring:4.6.14'
 }
 
 tasks.named('test') {
@@ -116,6 +136,43 @@ tasks.register('componentTest', Test) {
 	classpath = sourceSets.componentTest.runtimeClasspath
 	useJUnitPlatform()
 	shouldRunAfter tasks.named('test')
+}
+
+tasks.register('contractTest', Test) {
+	description = 'Runs Pact provider-verification contract tests (requires Docker). Opt-in; not part of `build`.'
+	group = 'verification'
+	testClassesDirs = sourceSets.contractTest.output.classesDirs
+	classpath = sourceSets.contractTest.runtimeClasspath
+	useJUnitPlatform()
+	shouldRunAfter tasks.named('componentTest')
+}
+
+tasks.register('integrationTest', Test) {
+	description = 'Runs narrow-integration tests against real Postgres via Testcontainers (requires Docker). Opt-in; not part of `build`.'
+	group = 'verification'
+	testClassesDirs = sourceSets.integrationTest.output.classesDirs
+	classpath = sourceSets.integrationTest.runtimeClasspath
+	useJUnitPlatform()
+	shouldRunAfter tasks.named('test')
+}
+
+// Builds the external-system simulator image that the `*RealParityContractTest` classes run via
+// Testcontainers. Kept a plain `docker build` rather than Testcontainers' ImageFromDockerfile
+// because the simulator's Dockerfile uses BuildKit-only syntax (`RUN --mount=type=cache`) and
+// ImageFromDockerfile drives docker-java's classic builder, which rejects it. Deliberately NOT a
+// dependsOn of `contractTest`: the provider-verification and stub-side contract suites don't need
+// the image and shouldn't pay for the build — the commit-stage workflow names this task explicitly
+// alongside the real-parity run.
+//
+// Unlike backend-java's copy of this task, the "../../.." depth here is not coupled to gh-optivem's
+// scaffolder: this variant is never scaffolded, so the path is just shop's own monorepo depth
+// (system/multitier/backend-clean-java -> shop root).
+tasks.register('externalSimulatorImage', Exec) {
+	description = 'Builds the external-system simulator Docker image used by the real-mode parity contract tests.'
+	group = 'verification'
+	workingDir = file("${rootDir}/../../..")
+	commandLine 'docker', 'build', '-t', 'myshop/external-system-simulators:contract-test', 'external-systems/simulators'
+	environment 'DOCKER_BUILDKIT', '1'
 }
 
 // Lints every source set, including the opt-in ones kept off `build`. CI calls this instead of

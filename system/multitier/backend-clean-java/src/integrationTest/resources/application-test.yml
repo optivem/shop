@@ -1,0 +1,31 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  flyway:
+    enabled: true
+    locations: filesystem:../../db/migrations
+
+allowed:
+  origins: http://localhost
+
+external:
+  system-mode: real
+
+erp:
+  url: http://localhost:9999/erp
+clock:
+  url: http://localhost:9999/clock
+tax:
+  url: http://localhost:9999/tax
+
+error:
+  types:
+    base-url: https://api.my-company.example/errors
+    validation-error: ${error.types.base-url}/validation-error
+    resource-not-found: ${error.types.base-url}/resource-not-found
+    bad-request: ${error.types.base-url}/bad-request
+    internal-server-error: ${error.types.base-url}/internal-server-error

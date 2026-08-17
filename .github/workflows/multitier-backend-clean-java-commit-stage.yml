@@ -3,7 +3,7 @@
 # Deliberately much thinner than multitier-backend-java-commit-stage.yml: this variant is not
 # deployed, not released and not system-tested, so there is no VERSION read, no Docker image build
 # or push, no SonarCloud analysis, and no downstream pipeline trigger. It compiles, lints, and runs
-# the unit + component suites — that is the whole gate.
+# the unit, component, narrow-integration and contract suites — that is the whole gate.
 #
 # It also calls Gradle directly rather than going through `gh optivem component-test`. That CLI is
 # driven by a gh-optivem-*.yaml at the repo root, and adding one would pull the variant into the
@@ -90,7 +90,9 @@ jobs:
           command: cd system/multitier/backend-clean-java && ./gradlew --version
 
       - name: Compile Code
-        run: ./gradlew compileJava compileTestJava compileComponentTestJava
+        run: >-
+          ./gradlew compileJava compileTestJava compileComponentTestJava
+          compileContractTestJava compileIntegrationTestJava
 
       # === Run Test Pyramid ===
       - name: Log in to Docker Hub
@@ -106,6 +108,28 @@ jobs:
       # implementation satisfies the identical behavioural spec — the reason this variant exists.
       - name: Run Component Tests
         run: ./gradlew componentTest --tests 'com.mycompany.myshop.backend.component.*'
+
+      # Narrow integration: one adapter at a time. The persistence tests need the Testcontainers
+      # Postgres; the gateway tests are in-process WireMock and need no container of their own.
+      - name: Run Integration Tests
+        run: ./gradlew integrationTest
+
+      # Contract, in two halves because only the second needs the simulator image built:
+      #   - provider verification (the frontend's pact from shop/contracts/) + the stub-side parity
+      #     and stub-consumability suites, which run against WireMock;
+      #   - the *RealParityContractTest classes, which run against the real external-system
+      #     simulator and are what make the stubs above trustworthy.
+      - name: Run Contract Tests
+        run: >-
+          ./gradlew contractTest
+          --tests 'com.mycompany.myshop.backend.contract.internal.*'
+          --tests 'com.mycompany.myshop.backend.contract.external.*.*Stub*'
+
+      - name: Build External System Simulator Image
+        run: ./gradlew externalSimulatorImage
+
+      - name: Run Real-Mode Contract Tests
+        run: ./gradlew contractTest --tests 'com.mycompany.myshop.backend.contract.external.*.*RealParity*'
 
       # === Run Linter ===
       - name: Run Linter
