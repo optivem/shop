@@ -1,13 +1,58 @@
 # 2026-08-17 14:48 UTC — error-handling strategy for `backend-clean-java`: exceptions vs result objects
 
-**Status:** 🔵 **Open — nothing decided.** Every question below is pending. No code changes are
-authorised by this plan yet; the *Items* section is deliberately empty until the open questions are
-resolved.
+**Status:** 🔴 **Blocked — contradicts `20260817-1449`.** Every question below is pending, and the
+headline one is answered the other way by a sibling plan (see *Contradiction* below). No code changes
+are authorised by this plan; the *Items* section is deliberately empty until the conflict and the
+open questions are resolved.
 
 **Origin:** Raised by the user during the clean-architecture refactor of `backend-clean-java`
 (commits `093efb09` → `33884122`), while `Guard`, `UsageQuota`, and `ValidityPeriod` were being
 introduced. The question was "should we throw exceptions or use result objects?" — the discussion
 established a framework but took no decisions.
+
+## ⛔ Contradiction — this plan conflicts with `20260817-1449`
+
+`plans/20260817-1449-use-case-signature-command-pattern.md` was written one minute after this plan,
+from a different source (the `PAID-CLEAN-use-case-signature` article), and **answers this plan's
+headline question in the opposite direction**. Both were committed together in `1b3aafc1`. They
+cannot both be executed.
+
+| Question | This plan (`1448`) | `1449` |
+|---|---|---|
+| **OQ1 — use case failure signalling** | **Recommends exceptions.** Java has no `?` and no must-use; a dropped result fails silently; 7 signatures + controllers + future twins churn | **Decides results.** All 7 use cases become `UseCase<TRequest, TResponse>` returning `Result<TResponse, UseCaseError>` |
+| **OQ3 — domain exception taxonomy** | Reshape it: `NotFoundException` as a *sibling* of `ValidationException`, split field-scoped from request-scoped | Moot under `1449` — the domain exception taxonomy shrinks to infrastructure only, and `ValidationException` / `NotExistValidationException` handlers are deleted (Step 5) |
+| **OQ8 — cross-language parity** | Treats it as a **gate**: "a decision that only works in Java is not a decision", to be settled before the .NET/TS clean twins exist | Explicit **non-goal**: `backend-clean-java` is the clean-architecture reference and the twins are deliberately not clean-architecture, so they stay untouched |
+
+**Not actually in conflict**, despite appearances:
+
+- **OQ2 (sealing + exhaustive `switch`).** Both plans want the compiler to enforce handler coverage.
+  They differ only in what carries the cases — this plan seals the *exception* hierarchy, `1449`
+  seals `UseCaseError`. Same goal, same mechanism, different carrier. Whichever plan wins, the
+  enforcement idea survives.
+- **OQ4 (per-rule types vs messages).** This plan recommends messages; `1449`'s `UseCaseError` has
+  three generic cases (`NotFound` / `Invalid` / `Conflict`), which is the same answer.
+- **OQ5 / OQ6 (infrastructure failures, catch-all handler).** `1449` keeps gateway failures as
+  exceptions routed to `handleGeneralException`, which is compatible with this plan's tier 3.
+
+**Gaps `1449` does not cover** — these survive regardless of which plan wins, and are the part of
+this plan worth keeping even if OQ1 goes to `1449`:
+
+- **Defect 2** — `HttpClockGateway` and `HttpErpGateway` throw bare `IllegalStateException` (10
+  sites) where `HttpTaxGateway` throws a dedicated `TaxGatewayException` (3 sites), for the same
+  failure class. `1449` mentions `TaxGatewayException` in an open question but never addresses the
+  inconsistency.
+- **Defect 3** — the `NotExistValidationException extends ValidationException` / 404-vs-422
+  mismatch. `1449` deletes both types rather than fixing the modelling, which resolves it by
+  demolition; if `1449` is *not* executed, the defect stands.
+- **Defect 4** — the stale `Integer.MAX_VALUE` workaround in `PublishCoupon:33-36`. Confirmed still
+  present as of `1b3aafc1`. Neither plan's item list covers it.
+- **OQ6's response-body leak** — `handleGeneralException` puts `ex.getMessage()` *and* the root
+  cause message into the 500 body. `1449` Step 5 keeps that handler unchanged.
+
+**Resolution: not taken.** The likely shape is to fold this plan's census, defect list, and the four
+gaps above into `1449` as its supporting analysis, then close this plan — `1449` is the one with
+executable steps. But that presumes OQ1 goes to results, which is exactly what has not been decided.
+**Do not execute either plan until this is resolved.**
 
 > ⚠️ **Sequence before the .NET / TypeScript clean twins exist.** `system/multitier/` currently has
 > `backend-clean-java` only — there is no `backend-clean-dotnet` or `backend-clean-typescript` yet.
@@ -209,15 +254,13 @@ practitioners genuinely differ.
   that only works in Java is not a decision** — see the `feedback_component_pact_layer_opt_in`
   precedent on keeping the three implementations honest twins.
 
-### OQ9 — Is this in scope for the current refactor at all?
+### OQ9 — Is this in scope for the current refactor at all? ✅ Resolved
 
-- [ ] **Pending.** The working tree already has uncommitted changes across `Coupon`, `Order`,
-      `Product`, `TaxRate`, `OrderPricing`, `CouponMapper`, `BrowseCoupons`, `PublishCoupon`, plus
-      new `Guard`, `UsageQuota`, `ValidityPeriod`.
-
-  **Recommendation: no — land the current refactor first**, then take this as a separate change with
-  its own test run. Mixing an error-model change into an in-flight refactor makes both harder to
-  review and muddies what a system-test failure would be telling us.
+- [x] **Resolved 2026-08-17 by events.** The recommendation was "land the current refactor first",
+      and it has landed: the surrogate-key removal from `Coupon` / `Order` plus the adapter and
+      mapper changes were committed in `1b3aafc1`, with `./gradlew build` green. The working tree is
+      clean, so an error-model change now starts from a committed baseline and any system-test
+      failure it causes is unambiguously its own.
 
 ## Items
 

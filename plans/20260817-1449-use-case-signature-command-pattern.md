@@ -3,6 +3,54 @@
 **Source:** `optivem/academy/substack/articles/reviewed/PAID-CLEAN-use-case-signature.md`
 ("Clean Architecture: One Class Per Use Case Is NOT Enough")
 
+**Status:** 🔴 **Blocked — contradicts `20260817-1448`.** This plan's premise is a decision that a
+sibling plan holds open and recommends the other way. Do not start Step 1 until that is resolved.
+
+## ⛔ Contradiction — this plan conflicts with `20260817-1448`
+
+`plans/20260817-1448-error-handling-strategy-clean-java.md` was written one minute before this plan,
+from a different origin (a design discussion with the user rather than the article), and treats
+"exceptions or result objects at the use case boundary?" as **an open question — its OQ1 — with a
+recommendation to keep exceptions**. This plan takes results as settled and builds seven steps on
+top. Both were committed together in `1b3aafc1`. They cannot both be executed.
+
+| Question | This plan (`1449`) | `1448` |
+|---|---|---|
+| **Use case failure signalling** | **Decides results.** All 7 use cases become `UseCase<TRequest, TResponse>` returning `Result<TResponse, UseCaseError>` | **Recommends exceptions.** Java has no `?` and no must-use, so a dropped `Result` fails *silently* — worse than an unhandled exception; 7 signatures + controllers + future twins churn |
+| **Domain exception taxonomy** | Shrinks it to infrastructure; deletes `handleValidationException` and `handleNotExistValidationException` (Step 5) | Reshapes it instead: `NotFoundException` as a *sibling* of `ValidationException` (the current `extends` asserts an is-a that the 404-vs-422 mapping contradicts) |
+| **Cross-language parity** | Explicit **non-goal** — `backend-clean-java` is the clean-architecture reference; the twins are deliberately not clean-architecture | Treats it as a **gate**: "a decision that only works in Java is not a decision", to be settled *before* `backend-clean-dotnet` / `backend-clean-typescript` exist |
+
+**Not actually in conflict**, despite appearances:
+
+- **Compiler-enforced exhaustiveness.** Both plans want the compiler to fail the build when a
+  failure case is unhandled. They differ only in what carries the cases — this plan seals
+  `UseCaseError`, `1448` seals the *exception* hierarchy and switches over it in a single handler.
+  Same goal, same mechanism, different carrier. **This idea survives either way** and is the single
+  highest-value item in both plans.
+- **Generic vs per-rule failure cases.** `UseCaseError`'s three cases (`NotFound` / `Invalid` /
+  `Conflict`) are the same answer `1448` OQ4 recommends (messages, not a type per business rule).
+- **Infrastructure failures stay exceptions.** This plan's third open question and `1448`'s tier 3
+  agree.
+
+**Gaps this plan does not cover** — carried over from `1448`, and worth folding in if this plan wins:
+
+- **Gateway inconsistency.** `HttpClockGateway` and `HttpErpGateway` throw bare
+  `IllegalStateException` (10 sites) where `HttpTaxGateway` throws a dedicated `TaxGatewayException`
+  (3 sites), for the same failure class — non-2xx status, IO failure, interrupt. This plan's open
+  question mentions `TaxGatewayException` but never addresses the split. `IllegalStateException` is
+  the JDK's *programmer-error* signal, so using it for a network timeout conflates tiers.
+- **`handleGeneralException` leaks internals.** It puts `ex.getMessage()` *and* the root cause
+  message into the 500 response body. Step 5 keeps the handler unchanged; check whether a system
+  test asserts on that body before altering it.
+- **Stale `Integer.MAX_VALUE` workaround** in `PublishCoupon:33-36` — converts a null `usageLimit`
+  to `Integer.MAX_VALUE` although `UsageQuota` now models unlimited as `null`. Confirmed still
+  present as of `1b3aafc1`. Independent of this plan, but inside Step 3's blast radius.
+
+**Resolution: not taken.** The likely shape is to fold `1448`'s census, defect list, and the gaps
+above into this plan as supporting analysis, then close `1448` — this plan is the one with executable
+steps. But that presumes the headline question goes to results, which is exactly what has not been
+decided. **Do not execute either plan until this is resolved.**
+
 ## TL;DR
 
 **Why:** `backend-clean-java` already has one class per use case, but nothing constrains what those
