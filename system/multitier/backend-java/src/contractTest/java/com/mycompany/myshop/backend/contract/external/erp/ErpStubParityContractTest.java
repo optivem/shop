@@ -6,6 +6,7 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.mycompany.myshop.backend.core.services.external.ErpGateway;
 import com.mycompany.myshop.backend.testkit.driver.adapter.external.erp.ErpStubDriver;
+import com.mycompany.myshop.backend.testkit.dsl.core.usecase.external.erp.ErpDsl;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,7 +44,8 @@ class ErpStubParityContractTest extends BaseErpProductParityContractTest {
 
     @Override
     protected void arrangeProduct(String sku, String price) {
-        new ErpStubDriver(new WireMock(WIRE_MOCK.port())).returnsProduct(sku, price);
+        new ErpDsl(new ErpStubDriver(new WireMock(WIRE_MOCK.port())))
+            .returnsProduct().sku(sku).unitPrice(price).execute();
     }
 
     @Override

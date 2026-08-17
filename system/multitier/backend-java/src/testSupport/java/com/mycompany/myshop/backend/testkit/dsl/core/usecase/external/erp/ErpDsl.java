@@ -9,7 +9,9 @@ import com.mycompany.myshop.backend.testkit.dsl.core.usecase.external.erp.usecas
 import com.mycompany.myshop.backend.testkit.dsl.core.usecase.external.erp.usecases.ReturnsPromotion;
 
 /**
- * The ERP, as the component test sees it: a WireMock server whose answers the test programs.
+ * The ERP, as arranged through whichever {@link ErpDriver} is supplied — {@code ErpStubDriver} for the
+ * {@code component} suite (permanently stub-only there), {@code ErpRealDriver} for the real-mode parity
+ * contract tests.
  *
  * <pre>{@code
  * app.erp().returnsProduct().sku("BOOK-123").unitPrice("10.00").execute();

@@ -3,6 +3,7 @@ package com.mycompany.myshop.backend.contract.external.erp;
 import com.mycompany.myshop.backend.contract.external.ExternalSystemReal;
 import com.mycompany.myshop.backend.core.services.external.ErpGateway;
 import com.mycompany.myshop.backend.testkit.driver.adapter.external.erp.ErpRealDriver;
+import com.mycompany.myshop.backend.testkit.dsl.core.usecase.external.erp.ErpDsl;
 
 /**
  * The {@code Real} side of the ERP product contract: same two scenarios as
@@ -24,13 +25,13 @@ class ErpRealParityContractTest extends BaseErpProductParityContractTest {
 
     private static final String BASE_URL = ExternalSystemReal.baseUrl("/erp");
 
-    private final ErpRealDriver driver = new ErpRealDriver(BASE_URL);
+    private final ErpDsl erp = new ErpDsl(new ErpRealDriver(BASE_URL));
 
     private final ErpGateway erpGateway = new ErpGateway(BASE_URL);
 
     @Override
     protected void arrangeProduct(String sku, String price) {
-        driver.returnsProduct(sku, price);
+        erp.returnsProduct().sku(sku).unitPrice(price).execute();
     }
 
     @Override
