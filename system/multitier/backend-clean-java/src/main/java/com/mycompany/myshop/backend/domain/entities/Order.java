@@ -29,6 +29,7 @@ public class Order {
 
     public Order(String orderNumber, Instant orderTimestamp, String country, String sku,
                  OrderPricing pricing, OrderStatus status, String appliedCouponCode) {
+        Guard.notNull(orderNumber, "orderNumber");
         Guard.notNull(orderTimestamp, "orderTimestamp");
         Guard.notNull(country, "country");
         Guard.notNull(sku, "sku");

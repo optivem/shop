@@ -3,7 +3,7 @@ package com.mycompany.myshop.backend.usecases.order;
 import com.mycompany.myshop.backend.domain.entities.Order;
 import com.mycompany.myshop.backend.domain.entities.OrderStatus;
 import com.mycompany.myshop.backend.domain.entities.Product;
-import com.mycompany.myshop.backend.domain.entities.Promotion;
+import com.mycompany.myshop.backend.domain.values.Promotion;
 import com.mycompany.myshop.backend.domain.entities.TaxRate;
 import com.mycompany.myshop.backend.domain.exceptions.ValidationException;
 import com.mycompany.myshop.backend.domain.gateways.ClockGateway;

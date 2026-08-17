@@ -1,7 +1,7 @@
 package com.mycompany.myshop.backend.domain.gateways;
 
 import com.mycompany.myshop.backend.domain.entities.Product;
-import com.mycompany.myshop.backend.domain.entities.Promotion;
+import com.mycompany.myshop.backend.domain.values.Promotion;
 
 import java.util.Optional;
 

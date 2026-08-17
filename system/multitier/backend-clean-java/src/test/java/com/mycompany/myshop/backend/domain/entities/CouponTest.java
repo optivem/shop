@@ -138,30 +138,20 @@ class CouponTest {
         assertThatCode(() -> couponWithRate(Rate.ONE)).doesNotThrowAnyException();
     }
 
+    /**
+     * The window and the quota police their own construction — see {@code ValidityPeriodTest} and
+     * {@code UsageQuotaTest}. What belongs here is only what a coupon adds: its own two rules, and
+     * which reason it reports when more than one applies.
+     */
     @Test
-    void rejectsAWindowThatClosesBeforeItOpens() {
-        var thrown = catchThrowable(() -> coupon(VALID_TO, VALID_FROM, 100, 0));
-
-        assertThat(thrown).isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("validTo must be after validFrom");
-    }
-
-    @Test
-    void rejectsANegativeUsageLimit() {
-        var thrown = catchThrowable(() -> coupon(VALID_FROM, VALID_TO, -1, 0));
-
-        assertThat(thrown).isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("usageLimit must be non-negative");
-    }
-
-    @Test
-    void rejectsAMissingOrNegativeUsedCount() {
-        assertThat(catchThrowable(() -> coupon(VALID_FROM, VALID_TO, 100, null)))
+    void rejectsAValidityPeriodOrQuotaItWasNotGiven() {
+        assertThat(catchThrowable(() -> new Coupon(CODE, TEN_PERCENT, null, UsageQuota.of(100, 0))))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("usedCount cannot be null");
-        assertThat(catchThrowable(() -> coupon(VALID_FROM, VALID_TO, 100, -1)))
+                .hasMessage("validity cannot be null");
+        assertThat(catchThrowable(() -> new Coupon(CODE, TEN_PERCENT,
+                new ValidityPeriod(VALID_FROM, VALID_TO), null)))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("usedCount must be non-negative");
+                .hasMessage("quota cannot be null");
     }
 
     private static Coupon coupon(Instant validFrom, Instant validTo, Integer usageLimit,

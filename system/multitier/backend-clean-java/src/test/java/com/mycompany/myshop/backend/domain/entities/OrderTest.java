@@ -80,6 +80,19 @@ class OrderTest {
         assertThat(order.getStatus()).isEqualTo(OrderStatus.CANCELLED);
     }
 
+    /**
+     * The order number is generated before construction, never assigned afterwards — see
+     * {@code PlaceOrder.generateOrderNumber}. It is guarded like the rest of the required fields.
+     */
+    @Test
+    void rejectsConstructionWithoutAnOrderNumber() {
+        var thrown = catchThrowable(() -> new Order(null, PLACED_AT, "US", "BOOK-123", pricing(),
+                OrderStatus.PLACED, null));
+
+        assertThat(thrown).isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("orderNumber cannot be null");
+    }
+
     @Test
     void rejectsConstructionWithoutAPricing() {
         var thrown = catchThrowable(() -> new Order("ORD-001", PLACED_AT, "US", "BOOK-123", null,

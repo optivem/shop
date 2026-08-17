@@ -2,8 +2,8 @@ package com.mycompany.myshop.backend.infrastructure.external.erp;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mycompany.myshop.backend.domain.entities.Product;
-import com.mycompany.myshop.backend.domain.entities.Promotion;
 import com.mycompany.myshop.backend.domain.values.Money;
+import com.mycompany.myshop.backend.domain.values.Promotion;
 import com.mycompany.myshop.backend.domain.values.Rate;
 import com.mycompany.myshop.backend.domain.gateways.ErpGateway;
 import org.springframework.beans.factory.annotation.Value;
