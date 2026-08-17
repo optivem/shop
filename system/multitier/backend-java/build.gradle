@@ -153,6 +153,11 @@ tasks.register('integrationTest', Test) {
 tasks.register('externalSimulatorImage', Exec) {
 	description = 'Builds the external-system simulator Docker image used by the real-mode parity contract tests.'
 	group = 'verification'
+	// Depth-coupled to gh-optivem's scaffolder: the "../../.." here is shop's own
+	// monorepo depth (system/multitier/backend-java -> shop root). gh-optivem's
+	// simulatorContextPathReplacements rewrites this literal to "..", matching the
+	// scaffold's flattened backend/ layout. If this depth changes, mirror the
+	// rewrite in gh-optivem's internal/scaffolding/steps/apply_template.go.
 	workingDir = file("${rootDir}/../../..")
 	commandLine 'docker', 'build', '-t', 'myshop/external-system-simulators:contract-test', 'external-systems/simulators'
 	environment 'DOCKER_BUILDKIT', '1'
