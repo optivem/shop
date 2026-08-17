@@ -7,13 +7,11 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 
 /**
- * Provisions a product fixture directly against the real ERP simulator ({@code external-systems/simulators/mock-server.js}),
- * the same way system-test's {@code ErpRealClient} does (same {@code client} sub-package convention).
- * Sits alongside, not inside, {@code driver/adapter/external/erp}: it does not implement
- * {@link com.mycompany.myshop.backend.testkit.driver.port.external.erp.ErpDriver} — that port's vocabulary
- * is stub-programming only (see its Javadoc) and is shared with {@code componentTest}, which is permanently
- * stub-only by design — this class only needs to write one thing (a product) to a real backing, not honor
- * the full stub-programming contract.
+ * Talks directly to the real ERP simulator ({@code external-systems/simulators/mock-server.js}) over
+ * HTTP — no WireMock, no stubbing. Wrapped by
+ * {@link com.mycompany.myshop.backend.testkit.driver.adapter.external.erp.ErpRealDriver}, the same way
+ * system-test's own {@code ErpRealClient} is wrapped by its {@code ErpRealDriver} (same {@code client}
+ * sub-package convention).
  */
 public class ErpRealClient {
 
@@ -57,6 +55,18 @@ public class ErpRealClient {
             throw new IllegalStateException("Failed to provision product " + sku + " on the ERP simulator. "
                 + "POST status: " + created.statusCode() + " (" + created.body() + "); "
                 + "PUT fallback status: " + updated.statusCode() + " (" + updated.body() + ")");
+        }
+    }
+
+    public void checkHealth() {
+        var response = send(HttpRequest.newBuilder()
+            .uri(URI.create(baseUrl + "/health"))
+            .timeout(Duration.ofSeconds(10))
+            .GET());
+
+        if (response.statusCode() / 100 != 2) {
+            throw new IllegalStateException("ERP simulator health check failed at " + baseUrl + "/health"
+                + " — status " + response.statusCode() + " (" + response.body() + ")");
         }
     }
 

@@ -2,7 +2,7 @@ package com.mycompany.myshop.backend.contract.external.erp;
 
 import com.mycompany.myshop.backend.contract.external.ExternalSystemReal;
 import com.mycompany.myshop.backend.core.services.external.ErpGateway;
-import com.mycompany.myshop.backend.testkit.driver.adapter.external.erp.client.ErpRealClient;
+import com.mycompany.myshop.backend.testkit.driver.adapter.external.erp.ErpRealDriver;
 
 /**
  * The {@code Real} side of the ERP product contract: same two scenarios as
@@ -24,13 +24,13 @@ class ErpRealParityContractTest extends BaseErpProductParityContractTest {
 
     private static final String BASE_URL = ExternalSystemReal.baseUrl("/erp");
 
-    private final ErpRealClient client = new ErpRealClient(BASE_URL);
+    private final ErpRealDriver driver = new ErpRealDriver(BASE_URL);
 
     private final ErpGateway erpGateway = new ErpGateway(BASE_URL);
 
     @Override
     protected void arrangeProduct(String sku, String price) {
-        client.createProduct(sku, price);
+        driver.returnsProduct(sku, price);
     }
 
     @Override
