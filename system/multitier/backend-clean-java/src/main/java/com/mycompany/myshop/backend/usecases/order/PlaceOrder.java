@@ -11,6 +11,7 @@ import com.mycompany.myshop.backend.domain.policies.YearEndBlackoutPolicy;
 import com.mycompany.myshop.backend.domain.pricing.OrderPricing;
 import com.mycompany.myshop.backend.domain.repositories.CouponRepository;
 import com.mycompany.myshop.backend.domain.repositories.OrderRepository;
+import com.mycompany.myshop.backend.domain.values.Country;
 import com.mycompany.myshop.backend.domain.values.CouponCode;
 import com.mycompany.myshop.backend.domain.values.Money;
 import com.mycompany.myshop.backend.domain.values.Rate;
@@ -58,7 +59,8 @@ public class PlaceOrder {
         var discountRate = coupon
                 .map(applicable -> applicable.discountAt(orderTimestamp))
                 .orElse(Rate.ZERO);
-        var taxRate = taxRateOf(request.getCountry());
+        var country = Country.of(request.getCountry());
+        var taxRate = taxRateOf(country);
 
         var pricing = OrderPricing.price(unitPrice, request.getQuantity(), promotionFactor,
                 discountRate, taxRate);
@@ -66,7 +68,7 @@ public class PlaceOrder {
         var appliedCouponCode = discountRate.isPositive() ? couponCode.orElse(null) : null;
         var orderNumber = generateOrderNumber();
 
-        var order = new Order(orderNumber, orderTimestamp, request.getCountry(), request.getSku(),
+        var order = new Order(orderNumber, orderTimestamp, country, request.getSku(),
                 pricing, OrderStatus.PLACED, appliedCouponCode);
 
         orderRepository.save(order);
@@ -110,7 +112,7 @@ public class PlaceOrder {
         return product.get().getPrice();
     }
 
-    private Rate taxRateOf(String country) {
+    private Rate taxRateOf(Country country) {
         var taxRate = taxGateway.getTaxDetails(country);
         if (taxRate.isEmpty()) {
             throw new ValidationException("country", "Country does not exist: " + country);

@@ -1,6 +1,7 @@
 package com.mycompany.myshop.backend.domain.entities;
 
 import com.mycompany.myshop.backend.domain.Guard;
+import com.mycompany.myshop.backend.domain.values.Country;
 import com.mycompany.myshop.backend.domain.values.Rate;
 
 /**
@@ -10,10 +11,10 @@ import com.mycompany.myshop.backend.domain.values.Rate;
 public class TaxRate {
 
     private final String id;
-    private final String countryName;
+    private final Country countryName;
     private final Rate rate;
 
-    public TaxRate(String id, String countryName, Rate rate) {
+    public TaxRate(String id, Country countryName, Rate rate) {
         Guard.notNull(rate, "rate");
         this.id = id;
         this.countryName = countryName;
@@ -24,7 +25,7 @@ public class TaxRate {
         return id;
     }
 
-    public String getCountryName() {
+    public Country getCountryName() {
         return countryName;
     }
 

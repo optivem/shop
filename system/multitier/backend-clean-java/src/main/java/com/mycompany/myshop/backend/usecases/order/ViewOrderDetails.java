@@ -37,7 +37,7 @@ public class ViewOrderDetails {
         response.setTaxAmount(order.getTaxAmount().amount());
         response.setTotalPrice(order.getTotalPrice().amount());
         response.setStatus(order.getStatus());
-        response.setCountry(order.getCountry());
+        response.setCountry(order.getCountry().value());
         response.setAppliedCouponCode(CouponCode.valueOrNull(order.getAppliedCouponCode()));
 
         return response;

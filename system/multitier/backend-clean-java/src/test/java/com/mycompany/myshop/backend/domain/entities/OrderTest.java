@@ -2,6 +2,7 @@ package com.mycompany.myshop.backend.domain.entities;
 
 import com.mycompany.myshop.backend.domain.exceptions.ValidationException;
 import com.mycompany.myshop.backend.domain.pricing.OrderPricing;
+import com.mycompany.myshop.backend.domain.values.Country;
 import com.mycompany.myshop.backend.domain.values.Money;
 import com.mycompany.myshop.backend.domain.values.Rate;
 import org.junit.jupiter.api.Test;
@@ -86,7 +87,7 @@ class OrderTest {
      */
     @Test
     void rejectsConstructionWithoutAnOrderNumber() {
-        var thrown = catchThrowable(() -> new Order(null, PLACED_AT, "US", "BOOK-123", pricing(),
+        var thrown = catchThrowable(() -> new Order(null, PLACED_AT, Country.of("US"), "BOOK-123", pricing(),
                 OrderStatus.PLACED, null));
 
         assertThat(thrown).isInstanceOf(IllegalArgumentException.class)
@@ -95,7 +96,7 @@ class OrderTest {
 
     @Test
     void rejectsConstructionWithoutAPricing() {
-        var thrown = catchThrowable(() -> new Order("ORD-001", PLACED_AT, "US", "BOOK-123", null,
+        var thrown = catchThrowable(() -> new Order("ORD-001", PLACED_AT, Country.of("US"), "BOOK-123", null,
                 OrderStatus.PLACED, null));
 
         assertThat(thrown).isInstanceOf(IllegalArgumentException.class)
@@ -104,7 +105,7 @@ class OrderTest {
 
     @Test
     void rejectsConstructionWithoutAStatus() {
-        var thrown = catchThrowable(() -> new Order("ORD-001", PLACED_AT, "US", "BOOK-123",
+        var thrown = catchThrowable(() -> new Order("ORD-001", PLACED_AT, Country.of("US"), "BOOK-123",
                 pricing(), null, null));
 
         assertThat(thrown).isInstanceOf(IllegalArgumentException.class)
@@ -136,7 +137,7 @@ class OrderTest {
     }
 
     private static Order orderWith(OrderStatus status) {
-        return new Order("ORD-001", PLACED_AT, "US", "BOOK-123", pricing(), status, null);
+        return new Order("ORD-001", PLACED_AT, Country.of("US"), "BOOK-123", pricing(), status, null);
     }
 
     private static OrderPricing pricing() {

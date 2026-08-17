@@ -5,6 +5,7 @@ import com.mycompany.myshop.backend.domain.entities.OrderStatus;
 import com.mycompany.myshop.backend.domain.exceptions.NotExistValidationException;
 import com.mycompany.myshop.backend.domain.exceptions.ValidationException;
 import com.mycompany.myshop.backend.domain.pricing.OrderPricing;
+import com.mycompany.myshop.backend.domain.values.Country;
 import com.mycompany.myshop.backend.domain.repositories.OrderRepository;
 import com.mycompany.myshop.backend.domain.values.Money;
 import com.mycompany.myshop.backend.domain.values.Rate;
@@ -66,6 +67,6 @@ class DeliverOrderTest {
 
     private Order orderWith(OrderStatus status) {
         var pricing = OrderPricing.price(Money.of("10.00"), 1, Rate.ONE, Rate.ZERO, Rate.of("0.10"));
-        return new Order("ORD-001", NORMAL_TIME, "US", "BOOK-123", pricing, status, null);
+        return new Order("ORD-001", NORMAL_TIME, Country.of("US"), "BOOK-123", pricing, status, null);
     }
 }

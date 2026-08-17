@@ -3,6 +3,7 @@ package com.mycompany.myshop.backend.domain.entities;
 import com.mycompany.myshop.backend.domain.Guard;
 import com.mycompany.myshop.backend.domain.exceptions.ValidationException;
 import com.mycompany.myshop.backend.domain.pricing.OrderPricing;
+import com.mycompany.myshop.backend.domain.values.Country;
 import com.mycompany.myshop.backend.domain.values.CouponCode;
 import com.mycompany.myshop.backend.domain.values.Money;
 import com.mycompany.myshop.backend.domain.values.Rate;
@@ -22,13 +23,13 @@ public class Order {
     private Long id;
     private final String orderNumber;
     private final Instant orderTimestamp;
-    private final String country;
+    private final Country country;
     private final String sku;
     private final OrderPricing pricing;
     private OrderStatus status;
     private final CouponCode appliedCouponCode;
 
-    public Order(String orderNumber, Instant orderTimestamp, String country, String sku,
+    public Order(String orderNumber, Instant orderTimestamp, Country country, String sku,
                  OrderPricing pricing, OrderStatus status, CouponCode appliedCouponCode) {
         Guard.notNull(orderNumber, "orderNumber");
         Guard.notNull(orderTimestamp, "orderTimestamp");
@@ -79,7 +80,7 @@ public class Order {
         return orderTimestamp;
     }
 
-    public String getCountry() {
+    public Country getCountry() {
         return country;
     }
 

@@ -11,6 +11,7 @@ import com.mycompany.myshop.backend.domain.gateways.ErpGateway;
 import com.mycompany.myshop.backend.domain.gateways.TaxGateway;
 import com.mycompany.myshop.backend.domain.repositories.CouponRepository;
 import com.mycompany.myshop.backend.domain.repositories.OrderRepository;
+import com.mycompany.myshop.backend.domain.values.Country;
 import com.mycompany.myshop.backend.domain.values.Money;
 import com.mycompany.myshop.backend.domain.values.Rate;
 import com.mycompany.myshop.backend.usecases.dtos.PlaceOrderRequest;
@@ -90,7 +91,7 @@ class PlaceOrderTest {
         givenNormalTime();
         givenProductExists("BOOK-123", Money.of("10.00"));
         givenNoPromotion();
-        when(taxGateway.getTaxDetails("XX")).thenReturn(Optional.empty());
+        when(taxGateway.getTaxDetails(Country.of("XX"))).thenReturn(Optional.empty());
 
         var thrown = catchThrowable(() -> placeOrder.execute(buildRequest("BOOK-123", 1, "XX")));
 
@@ -111,7 +112,8 @@ class PlaceOrderTest {
     }
 
     private void givenTaxRate(String country, Rate rate) {
-        when(taxGateway.getTaxDetails(country)).thenReturn(Optional.of(new TaxRate(country, country, rate)));
+        when(taxGateway.getTaxDetails(Country.of(country)))
+                .thenReturn(Optional.of(new TaxRate(country, Country.of(country), rate)));
     }
 
     private PlaceOrderRequest buildRequest(String sku, int quantity, String country) {
@@ -127,7 +129,7 @@ class PlaceOrderTest {
         assertThat(saved.getOrderTimestamp()).isEqualTo(NORMAL_TIME);
         assertThat(saved.getSku()).isEqualTo("BOOK-123");
         assertThat(saved.getQuantity()).isEqualTo(2);
-        assertThat(saved.getCountry()).isEqualTo("US");
+        assertThat(saved.getCountry()).isEqualTo(Country.of("US"));
         assertThat(saved.getUnitPrice()).isEqualTo(Money.of("10.00"));
         assertThat(saved.getBasePrice()).isEqualTo(Money.of("20.00"));
         assertThat(saved.getDiscountRate()).isEqualTo(Rate.ZERO);

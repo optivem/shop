@@ -8,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
+import com.mycompany.myshop.backend.domain.values.Country;
 import com.mycompany.myshop.backend.domain.exceptions.TaxGatewayException;
 import com.mycompany.myshop.backend.domain.gateways.TaxGateway;
 import com.mycompany.myshop.backend.domain.values.Rate;
@@ -63,7 +64,7 @@ class TaxGatewayIntegrationTest {
         WIRE_MOCK.stubFor(get("/api/countries/US")
             .willReturn(okJson("{\"id\":\"US\",\"countryName\":\"US\",\"taxRate\":0.10}")));
 
-        var result = taxGateway.getTaxDetails("US");
+        var result = taxGateway.getTaxDetails(Country.of("US"));
 
         assertThat(result).isPresent();
         assertThat(result.get().getId()).isEqualTo("US");
@@ -75,7 +76,7 @@ class TaxGatewayIntegrationTest {
         WIRE_MOCK.stubFor(get("/api/countries/ZZ")
             .willReturn(aResponse().withStatus(404)));
 
-        assertThat(taxGateway.getTaxDetails("ZZ")).isEmpty();
+        assertThat(taxGateway.getTaxDetails(Country.of("ZZ"))).isEmpty();
     }
 
     @Test
@@ -83,7 +84,7 @@ class TaxGatewayIntegrationTest {
         WIRE_MOCK.stubFor(get("/api/countries/US")
             .willReturn(aResponse().withStatus(500).withBody("Internal Server Error")));
 
-        assertThatThrownBy(() -> taxGateway.getTaxDetails("US"))
+        assertThatThrownBy(() -> taxGateway.getTaxDetails(Country.of("US")))
             .isInstanceOf(TaxGatewayException.class)
             .hasMessageContaining("500");
     }
@@ -93,7 +94,7 @@ class TaxGatewayIntegrationTest {
         WIRE_MOCK.stubFor(get("/api/countries/US")
             .willReturn(aResponse().withStatus(503).withBody("Service Unavailable")));
 
-        assertThatThrownBy(() -> taxGateway.getTaxDetails("US"))
+        assertThatThrownBy(() -> taxGateway.getTaxDetails(Country.of("US")))
             .isInstanceOf(TaxGatewayException.class)
             .hasMessageContaining("503");
     }

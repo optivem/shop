@@ -2,6 +2,7 @@ package com.mycompany.myshop.backend.infrastructure.persistence.mappers;
 
 import com.mycompany.myshop.backend.domain.entities.Order;
 import com.mycompany.myshop.backend.domain.pricing.OrderPricing;
+import com.mycompany.myshop.backend.domain.values.Country;
 import com.mycompany.myshop.backend.domain.values.CouponCode;
 import com.mycompany.myshop.backend.domain.values.Money;
 import com.mycompany.myshop.backend.domain.values.Rate;
@@ -35,7 +36,7 @@ public final class OrderMapper {
         var order = new Order(
                 entity.getOrderNumber(),
                 entity.getOrderTimestamp(),
-                entity.getCountry(),
+                Country.of(entity.getCountry()),
                 entity.getSku(),
                 pricing,
                 entity.getStatus(),
@@ -50,7 +51,7 @@ public final class OrderMapper {
         entity.setId(order.getId());
         entity.setOrderNumber(order.getOrderNumber());
         entity.setOrderTimestamp(order.getOrderTimestamp());
-        entity.setCountry(order.getCountry());
+        entity.setCountry(order.getCountry().value());
         entity.setSku(order.getSku());
         entity.setQuantity(order.getQuantity());
         entity.setUnitPrice(order.getUnitPrice().amount());

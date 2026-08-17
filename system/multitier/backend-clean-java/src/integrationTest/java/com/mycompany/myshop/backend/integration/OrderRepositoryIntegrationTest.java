@@ -7,6 +7,7 @@ import com.mycompany.myshop.backend.domain.entities.Order;
 import com.mycompany.myshop.backend.domain.entities.OrderStatus;
 import com.mycompany.myshop.backend.domain.pricing.OrderPricing;
 import com.mycompany.myshop.backend.domain.repositories.OrderRepository;
+import com.mycompany.myshop.backend.domain.values.Country;
 import com.mycompany.myshop.backend.domain.values.CouponCode;
 import com.mycompany.myshop.backend.domain.values.Money;
 import com.mycompany.myshop.backend.domain.values.Rate;
@@ -58,7 +59,7 @@ class OrderRepositoryIntegrationTest {
         var order = new Order(
             "ORD-001",
             Instant.parse("2026-01-01T00:00:00Z"),
-            "US",
+            Country.of("US"),
             "BOOK-123",
             pricing,
             OrderStatus.PLACED,
@@ -91,7 +92,7 @@ class OrderRepositoryIntegrationTest {
         orderRepository.save(new Order(
             "ORD-002",
             Instant.parse("2026-01-02T00:00:00Z"),
-            "DE",
+            Country.of("DE"),
             "BOOK-456",
             pricing,
             OrderStatus.PLACED,
@@ -102,7 +103,7 @@ class OrderRepositoryIntegrationTest {
         var found = orderRepository.findByOrderNumber("ORD-002");
         assertThat(found).isPresent();
         assertThat(found.get().getPricing()).isEqualTo(pricing);
-        assertThat(found.get().getCountry()).isEqualTo("DE");
+        assertThat(found.get().getCountry()).isEqualTo(Country.of("DE"));
         assertThat(found.get().getAppliedCouponCode()).isEqualTo(CouponCode.of("SAVE10"));
         assertThat(found.get().getOrderTimestamp())
             .isEqualTo(Instant.parse("2026-01-02T00:00:00Z"));

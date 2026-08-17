@@ -40,7 +40,7 @@ public class BrowseOrderHistory {
         item.setOrderNumber(order.getOrderNumber());
         item.setOrderTimestamp(order.getOrderTimestamp());
         item.setSku(order.getSku());
-        item.setCountry(order.getCountry());
+        item.setCountry(order.getCountry().value());
         item.setQuantity(order.getQuantity());
         item.setTotalPrice(order.getTotalPrice().amount());
         item.setStatus(order.getStatus());
