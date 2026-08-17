@@ -3,6 +3,7 @@ package com.mycompany.myshop.backend.domain.entities;
 import com.mycompany.myshop.backend.domain.Guard;
 import com.mycompany.myshop.backend.domain.exceptions.ValidationException;
 import com.mycompany.myshop.backend.domain.pricing.OrderPricing;
+import com.mycompany.myshop.backend.domain.values.CouponCode;
 import com.mycompany.myshop.backend.domain.values.Money;
 import com.mycompany.myshop.backend.domain.values.Rate;
 
@@ -25,10 +26,10 @@ public class Order {
     private final String sku;
     private final OrderPricing pricing;
     private OrderStatus status;
-    private final String appliedCouponCode;
+    private final CouponCode appliedCouponCode;
 
     public Order(String orderNumber, Instant orderTimestamp, String country, String sku,
-                 OrderPricing pricing, OrderStatus status, String appliedCouponCode) {
+                 OrderPricing pricing, OrderStatus status, CouponCode appliedCouponCode) {
         Guard.notNull(orderNumber, "orderNumber");
         Guard.notNull(orderTimestamp, "orderTimestamp");
         Guard.notNull(country, "country");
@@ -94,7 +95,8 @@ public class Order {
         return status;
     }
 
-    public String getAppliedCouponCode() {
+    /** The coupon this order was placed with, or null when it was placed without one. */
+    public CouponCode getAppliedCouponCode() {
         return appliedCouponCode;
     }
 

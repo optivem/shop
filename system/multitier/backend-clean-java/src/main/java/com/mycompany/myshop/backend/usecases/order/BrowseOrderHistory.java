@@ -1,5 +1,6 @@
 package com.mycompany.myshop.backend.usecases.order;
 
+import com.mycompany.myshop.backend.domain.values.CouponCode;
 import com.mycompany.myshop.backend.domain.entities.Order;
 import com.mycompany.myshop.backend.domain.repositories.OrderRepository;
 import com.mycompany.myshop.backend.usecases.dtos.BrowseOrderHistoryResponse;
@@ -43,7 +44,7 @@ public class BrowseOrderHistory {
         item.setQuantity(order.getQuantity());
         item.setTotalPrice(order.getTotalPrice().amount());
         item.setStatus(order.getStatus());
-        item.setAppliedCouponCode(order.getAppliedCouponCode());
+        item.setAppliedCouponCode(CouponCode.valueOrNull(order.getAppliedCouponCode()));
         return item;
     }
 }

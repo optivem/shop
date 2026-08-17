@@ -29,7 +29,7 @@ public class BrowseCoupons {
 
     private static BrowseCouponsResponse.BrowseCouponsItemResponse toItem(Coupon coupon) {
         var item = new BrowseCouponsResponse.BrowseCouponsItemResponse();
-        item.setCode(coupon.getCode());
+        item.setCode(coupon.getCode().value());
         item.setDiscountRate(coupon.getDiscountRate().value());
         item.setValidFrom(coupon.getValidity().validFrom());
         item.setValidTo(coupon.getValidity().validTo());

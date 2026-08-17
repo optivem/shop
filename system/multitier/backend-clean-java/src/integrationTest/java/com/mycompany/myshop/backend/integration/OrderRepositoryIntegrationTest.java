@@ -7,6 +7,7 @@ import com.mycompany.myshop.backend.domain.entities.Order;
 import com.mycompany.myshop.backend.domain.entities.OrderStatus;
 import com.mycompany.myshop.backend.domain.pricing.OrderPricing;
 import com.mycompany.myshop.backend.domain.repositories.OrderRepository;
+import com.mycompany.myshop.backend.domain.values.CouponCode;
 import com.mycompany.myshop.backend.domain.values.Money;
 import com.mycompany.myshop.backend.domain.values.Rate;
 import com.mycompany.myshop.backend.infrastructure.persistence.adapters.OrderRepositoryAdapter;
@@ -94,7 +95,7 @@ class OrderRepositoryIntegrationTest {
             "BOOK-456",
             pricing,
             OrderStatus.PLACED,
-            "SAVE10"
+            CouponCode.of("SAVE10")
         ));
         forceDatabaseRoundTrip();
 
@@ -102,7 +103,7 @@ class OrderRepositoryIntegrationTest {
         assertThat(found).isPresent();
         assertThat(found.get().getPricing()).isEqualTo(pricing);
         assertThat(found.get().getCountry()).isEqualTo("DE");
-        assertThat(found.get().getAppliedCouponCode()).isEqualTo("SAVE10");
+        assertThat(found.get().getAppliedCouponCode()).isEqualTo(CouponCode.of("SAVE10"));
         assertThat(found.get().getOrderTimestamp())
             .isEqualTo(Instant.parse("2026-01-02T00:00:00Z"));
     }

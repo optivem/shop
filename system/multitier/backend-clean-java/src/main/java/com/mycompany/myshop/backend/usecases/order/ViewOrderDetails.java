@@ -1,5 +1,6 @@
 package com.mycompany.myshop.backend.usecases.order;
 
+import com.mycompany.myshop.backend.domain.values.CouponCode;
 import com.mycompany.myshop.backend.domain.exceptions.NotExistValidationException;
 import com.mycompany.myshop.backend.domain.repositories.OrderRepository;
 import com.mycompany.myshop.backend.usecases.dtos.ViewOrderDetailsResponse;
@@ -37,7 +38,7 @@ public class ViewOrderDetails {
         response.setTotalPrice(order.getTotalPrice().amount());
         response.setStatus(order.getStatus());
         response.setCountry(order.getCountry());
-        response.setAppliedCouponCode(order.getAppliedCouponCode());
+        response.setAppliedCouponCode(CouponCode.valueOrNull(order.getAppliedCouponCode()));
 
         return response;
     }

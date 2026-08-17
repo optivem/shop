@@ -13,6 +13,7 @@ import com.mycompany.myshop.backend.domain.entities.OrderStatus;
 import com.mycompany.myshop.backend.domain.pricing.OrderPricing;
 import com.mycompany.myshop.backend.domain.repositories.CouponRepository;
 import com.mycompany.myshop.backend.domain.repositories.OrderRepository;
+import com.mycompany.myshop.backend.domain.values.CouponCode;
 import com.mycompany.myshop.backend.domain.values.Money;
 import com.mycompany.myshop.backend.domain.values.Rate;
 import com.mycompany.myshop.backend.domain.values.UsageQuota;
@@ -166,7 +167,7 @@ class BackendPactVerificationTest extends BaseComponentTest {
     }
 
     private Coupon sampleCoupon() {
-        return new Coupon("SAVE10", Rate.of("0.20"), ValidityPeriod.ALWAYS, UsageQuota.of(100, 0));
+        return new Coupon(CouponCode.of("SAVE10"), Rate.of("0.20"), ValidityPeriod.ALWAYS, UsageQuota.of(100, 0));
     }
 
     private Order sampleOrder(String orderNumber) {

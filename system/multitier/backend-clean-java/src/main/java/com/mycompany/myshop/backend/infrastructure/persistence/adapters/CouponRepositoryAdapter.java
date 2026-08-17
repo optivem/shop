@@ -2,6 +2,7 @@ package com.mycompany.myshop.backend.infrastructure.persistence.adapters;
 
 import com.mycompany.myshop.backend.domain.entities.Coupon;
 import com.mycompany.myshop.backend.domain.repositories.CouponRepository;
+import com.mycompany.myshop.backend.domain.values.CouponCode;
 import com.mycompany.myshop.backend.infrastructure.persistence.mappers.CouponMapper;
 import com.mycompany.myshop.backend.infrastructure.persistence.repositories.CouponJpaRepository;
 import org.springframework.stereotype.Component;
@@ -29,8 +30,8 @@ public class CouponRepositoryAdapter implements CouponRepository {
     }
 
     @Override
-    public Optional<Coupon> findByCode(String code) {
-        return jpaRepository.findByCode(code).map(CouponMapper::toDomain);
+    public Optional<Coupon> findByCode(CouponCode code) {
+        return jpaRepository.findByCode(code.value()).map(CouponMapper::toDomain);
     }
 
     @Override

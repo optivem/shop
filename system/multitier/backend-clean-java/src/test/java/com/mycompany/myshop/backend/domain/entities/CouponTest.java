@@ -1,6 +1,7 @@
 package com.mycompany.myshop.backend.domain.entities;
 
 import com.mycompany.myshop.backend.domain.exceptions.ValidationException;
+import com.mycompany.myshop.backend.domain.values.CouponCode;
 import com.mycompany.myshop.backend.domain.values.Rate;
 import com.mycompany.myshop.backend.domain.values.UsageQuota;
 import com.mycompany.myshop.backend.domain.values.ValidityPeriod;
@@ -18,7 +19,7 @@ import static org.assertj.core.api.Assertions.catchThrowable;
  */
 class CouponTest {
 
-    private static final String CODE = "SAVE10";
+    private static final CouponCode CODE = CouponCode.of("SAVE10");
     private static final Rate TEN_PERCENT = Rate.of("0.10");
 
     private static final Instant VALID_FROM = Instant.parse("2025-01-01T00:00:00Z");
@@ -119,15 +120,6 @@ class CouponTest {
     }
 
     @Test
-    void rejectsAnEmptyCode() {
-        var thrown = catchThrowable(() -> new Coupon("  ", TEN_PERCENT,
-                new ValidityPeriod(VALID_FROM, VALID_TO), UsageQuota.of(100, 0)));
-
-        assertThat(thrown).isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("code cannot be null or empty");
-    }
-
-    @Test
     void rejectsADiscountRateOutsideZeroToOne() {
         assertThat(catchThrowable(() -> couponWithRate(Rate.ZERO)))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -139,12 +131,17 @@ class CouponTest {
     }
 
     /**
-     * The window and the quota police their own construction — see {@code ValidityPeriodTest} and
-     * {@code UsageQuotaTest}. What belongs here is only what a coupon adds: its own two rules, and
-     * which reason it reports when more than one applies.
+     * The code, the window and the quota each police their own construction — see
+     * {@code CouponCodeTest}, {@code ValidityPeriodTest} and {@code UsageQuotaTest}. What belongs
+     * here is only what a coupon adds: that it refuses to be built without them, its own discount
+     * rule, and which reason it reports when more than one applies.
      */
     @Test
-    void rejectsAValidityPeriodOrQuotaItWasNotGiven() {
+    void rejectsAnyOfItsPartsBeingMissing() {
+        assertThat(catchThrowable(() -> new Coupon(null, TEN_PERCENT,
+                new ValidityPeriod(VALID_FROM, VALID_TO), UsageQuota.of(100, 0))))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("code cannot be null");
         assertThat(catchThrowable(() -> new Coupon(CODE, TEN_PERCENT, null, UsageQuota.of(100, 0))))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("validity cannot be null");

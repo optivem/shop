@@ -3,6 +3,7 @@ package com.mycompany.myshop.backend.usecases.coupon;
 import com.mycompany.myshop.backend.domain.entities.Coupon;
 import com.mycompany.myshop.backend.domain.exceptions.ValidationException;
 import com.mycompany.myshop.backend.domain.repositories.CouponRepository;
+import com.mycompany.myshop.backend.domain.values.CouponCode;
 import com.mycompany.myshop.backend.domain.values.Rate;
 import com.mycompany.myshop.backend.domain.values.UsageQuota;
 import com.mycompany.myshop.backend.domain.values.ValidityPeriod;
@@ -13,7 +14,6 @@ import com.mycompany.myshop.backend.usecases.dtos.PublishCouponRequest;
  */
 public class PublishCoupon {
 
-    private static final String FIELD_COUPON_CODE = "couponCode";
     private static final String MSG_COUPON_CODE_ALREADY_EXISTS = "Coupon code %s already exists";
 
     private final CouponRepository couponRepository;
@@ -23,10 +23,10 @@ public class PublishCoupon {
     }
 
     public void execute(PublishCouponRequest request) {
-        var couponCode = request.getCode();
+        var couponCode = CouponCode.of(request.getCode());
 
         if (couponRepository.findByCode(couponCode).isPresent()) {
-            throw new ValidationException(FIELD_COUPON_CODE,
+            throw new ValidationException(CouponCode.FIELD_NAME,
                     String.format(MSG_COUPON_CODE_ALREADY_EXISTS, couponCode));
         }
 

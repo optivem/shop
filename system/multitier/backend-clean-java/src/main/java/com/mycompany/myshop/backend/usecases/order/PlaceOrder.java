@@ -11,6 +11,7 @@ import com.mycompany.myshop.backend.domain.policies.YearEndBlackoutPolicy;
 import com.mycompany.myshop.backend.domain.pricing.OrderPricing;
 import com.mycompany.myshop.backend.domain.repositories.CouponRepository;
 import com.mycompany.myshop.backend.domain.repositories.OrderRepository;
+import com.mycompany.myshop.backend.domain.values.CouponCode;
 import com.mycompany.myshop.backend.domain.values.Money;
 import com.mycompany.myshop.backend.domain.values.Rate;
 import com.mycompany.myshop.backend.usecases.dtos.PlaceOrderRequest;
@@ -28,7 +29,6 @@ import java.util.UUID;
  */
 public class PlaceOrder {
 
-    private static final String FIELD_COUPON_CODE = "couponCode";
     private static final String MSG_COUPON_DOES_NOT_EXIST = "Coupon code %s does not exist";
 
     private final OrderRepository orderRepository;
@@ -47,7 +47,7 @@ public class PlaceOrder {
     }
 
     public PlaceOrderResponse execute(PlaceOrderRequest request) {
-        var couponCode = request.getCouponCode();
+        var couponCode = CouponCode.requested(request.getCouponCode());
         var orderTimestamp = clockGateway.getCurrentTime();
 
         YearEndBlackoutPolicy.requirePlacementAllowed(orderTimestamp);
@@ -63,7 +63,7 @@ public class PlaceOrder {
         var pricing = OrderPricing.price(unitPrice, request.getQuantity(), promotionFactor,
                 discountRate, taxRate);
 
-        var appliedCouponCode = discountRate.isPositive() ? couponCode : null;
+        var appliedCouponCode = discountRate.isPositive() ? couponCode.orElse(null) : null;
         var orderNumber = generateOrderNumber();
 
         var order = new Order(orderNumber, orderTimestamp, request.getCountry(), request.getSku(),
@@ -83,16 +83,19 @@ public class PlaceOrder {
         return response;
     }
 
-    /** Empty when no coupon was asked for; a coupon that exists otherwise. */
-    private Optional<Coupon> findCoupon(String couponCode) {
-        if (couponCode == null || couponCode.trim().isEmpty()) {
+    /**
+     * Empty when no coupon was asked for; a coupon that exists otherwise. Whether one was asked for
+     * is {@link CouponCode#requested} 's decision, made before this is called.
+     */
+    private Optional<Coupon> findCoupon(Optional<CouponCode> couponCode) {
+        if (couponCode.isEmpty()) {
             return Optional.empty();
         }
 
-        var coupon = couponRepository.findByCode(couponCode);
+        var coupon = couponRepository.findByCode(couponCode.get());
         if (coupon.isEmpty()) {
-            throw new ValidationException(FIELD_COUPON_CODE,
-                    String.format(MSG_COUPON_DOES_NOT_EXIST, couponCode));
+            throw new ValidationException(CouponCode.FIELD_NAME,
+                    String.format(MSG_COUPON_DOES_NOT_EXIST, couponCode.get()));
         }
 
         return coupon;

@@ -18,6 +18,7 @@ import com.mycompany.myshop.backend.domain.entities.OrderStatus;
 import com.mycompany.myshop.backend.domain.pricing.OrderPricing;
 import com.mycompany.myshop.backend.domain.repositories.CouponRepository;
 import com.mycompany.myshop.backend.domain.repositories.OrderRepository;
+import com.mycompany.myshop.backend.domain.values.CouponCode;
 import com.mycompany.myshop.backend.domain.values.Money;
 import com.mycompany.myshop.backend.domain.values.Rate;
 import com.mycompany.myshop.backend.domain.values.UsageQuota;
@@ -176,12 +177,12 @@ class BackendPactVerificationTest extends BaseComponentTest {
 
     @State("at least one coupon exists")
     void atLeastOneCouponExists() {
-        coupons.save(new Coupon("SAVE10", Rate.of("0.20"), ValidityPeriod.ALWAYS, UsageQuota.of(100, 0)));
+        coupons.save(new Coupon(CouponCode.of("SAVE10"), Rate.of("0.20"), ValidityPeriod.ALWAYS, UsageQuota.of(100, 0)));
     }
 
     @State("coupon SAVE10 exists")
     void couponSave10Exists() {
-        coupons.save(new Coupon("SAVE10", Rate.of("0.20"), ValidityPeriod.ALWAYS, UsageQuota.of(100, 0)));
+        coupons.save(new Coupon(CouponCode.of("SAVE10"), Rate.of("0.20"), ValidityPeriod.ALWAYS, UsageQuota.of(100, 0)));
     }
 
     @State("no coupon SAVE10 exists yet")

@@ -2,6 +2,7 @@ package com.mycompany.myshop.backend.infrastructure.persistence.mappers;
 
 import com.mycompany.myshop.backend.domain.entities.Order;
 import com.mycompany.myshop.backend.domain.pricing.OrderPricing;
+import com.mycompany.myshop.backend.domain.values.CouponCode;
 import com.mycompany.myshop.backend.domain.values.Money;
 import com.mycompany.myshop.backend.domain.values.Rate;
 import com.mycompany.myshop.backend.infrastructure.persistence.entities.OrderJpaEntity;
@@ -38,7 +39,8 @@ public final class OrderMapper {
                 entity.getSku(),
                 pricing,
                 entity.getStatus(),
-                entity.getAppliedCouponCode());
+                // Nullable column: an order placed without a coupon has none.
+                CouponCode.requested(entity.getAppliedCouponCode()).orElse(null));
         order.setId(entity.getId());
         return order;
     }
@@ -60,7 +62,8 @@ public final class OrderMapper {
         entity.setTaxAmount(order.getTaxAmount().amount());
         entity.setTotalPrice(order.getTotalPrice().amount());
         entity.setStatus(order.getStatus());
-        entity.setAppliedCouponCode(order.getAppliedCouponCode());
+        var appliedCouponCode = order.getAppliedCouponCode();
+        entity.setAppliedCouponCode(appliedCouponCode == null ? null : appliedCouponCode.value());
         return entity;
     }
 }
