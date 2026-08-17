@@ -20,7 +20,6 @@ import java.time.Instant;
  */
 public class Order {
 
-    private Long id;
     private final String orderNumber;
     private final Instant orderTimestamp;
     private final Country country;
@@ -63,15 +62,7 @@ public class Order {
         status = OrderStatus.CANCELLED;
     }
 
-    public Long getId() {
-        return id;
-    }
-
-    /** Set by the repository adapter once storage has assigned the row its identity. */
-    public void setId(Long id) {
-        this.id = id;
-    }
-
+    /** This order's identity. The surrogate key the table happens to use stays in persistence. */
     public String getOrderNumber() {
         return orderNumber;
     }

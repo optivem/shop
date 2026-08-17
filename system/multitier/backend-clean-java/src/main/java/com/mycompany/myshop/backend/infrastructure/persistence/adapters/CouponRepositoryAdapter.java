@@ -22,11 +22,13 @@ public class CouponRepositoryAdapter implements CouponRepository {
         this.jpaRepository = jpaRepository;
     }
 
+    /** Resolves the row's generated key from the coupon's {@code code} — see {@link OrderRepositoryAdapter#save}. */
     @Override
     public Coupon save(Coupon coupon) {
-        var saved = jpaRepository.save(CouponMapper.toEntity(coupon));
-        coupon.setId(saved.getId());
-        return CouponMapper.toDomain(saved);
+        var entity = CouponMapper.toEntity(coupon);
+        jpaRepository.findByCode(coupon.getCode().value())
+                .ifPresent(existing -> entity.setId(existing.getId()));
+        return CouponMapper.toDomain(jpaRepository.save(entity));
     }
 
     @Override

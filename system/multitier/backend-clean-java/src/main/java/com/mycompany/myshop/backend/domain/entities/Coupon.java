@@ -25,7 +25,6 @@ public class Coupon {
     private static final String MSG_COUPON_EXPIRED = "Coupon code %s has expired";
     private static final String MSG_COUPON_USAGE_LIMIT_REACHED = "Coupon code %s has exceeded its usage limit";
 
-    private Long id;
     private final CouponCode code;
     private final Rate discountRate;
     private final ValidityPeriod validity;
@@ -78,15 +77,7 @@ public class Coupon {
         return new ValidationException(CouponCode.FIELD_NAME, String.format(messageFormat, code));
     }
 
-    public Long getId() {
-        return id;
-    }
-
-    /** Set by the repository adapter once storage has assigned the row its identity. */
-    public void setId(Long id) {
-        this.id = id;
-    }
-
+    /** This coupon's identity. The surrogate key the table happens to use stays in persistence. */
     public CouponCode getCode() {
         return code;
     }

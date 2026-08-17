@@ -9,7 +9,7 @@ import com.mycompany.myshop.backend.infrastructure.persistence.entities.CouponJp
 
 /**
  * Maps between the domain {@link Coupon} and its persisted shape. See {@link OrderMapper} for why
- * the surrogate {@code id} travels with the domain object.
+ * the surrogate {@code id} does not cross.
  */
 public final class CouponMapper {
 
@@ -17,18 +17,15 @@ public final class CouponMapper {
     }
 
     public static Coupon toDomain(CouponJpaEntity entity) {
-        var coupon = new Coupon(
+        return new Coupon(
                 CouponCode.of(entity.getCode()),
                 Rate.of(entity.getDiscountRate()),
                 new ValidityPeriod(entity.getValidFrom(), entity.getValidTo()),
                 UsageQuota.of(entity.getUsageLimit(), entity.getUsedCount()));
-        coupon.setId(entity.getId());
-        return coupon;
     }
 
     public static CouponJpaEntity toEntity(Coupon coupon) {
         var entity = new CouponJpaEntity();
-        entity.setId(coupon.getId());
         entity.setCode(coupon.getCode().value());
         entity.setDiscountRate(coupon.getDiscountRate().value());
         entity.setValidFrom(coupon.getValidity().validFrom());

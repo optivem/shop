@@ -22,11 +22,17 @@ public class OrderRepositoryAdapter implements OrderRepository {
         this.jpaRepository = jpaRepository;
     }
 
+    /**
+     * The domain knows an order by its {@code orderNumber}; the table knows it by a generated
+     * {@code id}. Resolving one to the other is this adapter's job, so a re-save of an order the
+     * domain never learned a key for still updates its row instead of inserting a second one.
+     */
     @Override
     public Order save(Order order) {
-        var saved = jpaRepository.save(OrderMapper.toEntity(order));
-        order.setId(saved.getId());
-        return OrderMapper.toDomain(saved);
+        var entity = OrderMapper.toEntity(order);
+        jpaRepository.findByOrderNumber(order.getOrderNumber())
+                .ifPresent(existing -> entity.setId(existing.getId()));
+        return OrderMapper.toDomain(jpaRepository.save(entity));
     }
 
     @Override

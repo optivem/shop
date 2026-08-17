@@ -9,9 +9,10 @@ import com.mycompany.myshop.backend.domain.values.Rate;
 import com.mycompany.myshop.backend.infrastructure.persistence.entities.OrderJpaEntity;
 
 /**
- * Maps between the domain {@link Order} and its persisted shape. The surrogate {@code id} travels
- * with the domain object so that a re-save of an order read back from storage updates the existing
- * row rather than inserting a new one.
+ * Maps between the domain {@link Order} and its persisted shape. The surrogate {@code id} does not
+ * cross: the domain identifies an order by its {@code orderNumber}, and
+ * {@code OrderRepositoryAdapter} looks the row's key up by that when it needs to update rather than
+ * insert.
  *
  * <p>This is also where the domain's {@code Money}/{@code Rate} meet the columns' plain
  * {@code BigDecimal}: the typed values stop at the edge of the ORM, which knows nothing about them.
@@ -33,7 +34,7 @@ public final class OrderMapper {
                 Money.of(entity.getTaxAmount()),
                 Money.of(entity.getTotalPrice()));
 
-        var order = new Order(
+        return new Order(
                 entity.getOrderNumber(),
                 entity.getOrderTimestamp(),
                 Country.of(entity.getCountry()),
@@ -42,13 +43,10 @@ public final class OrderMapper {
                 entity.getStatus(),
                 // Nullable column: an order placed without a coupon has none.
                 CouponCode.requested(entity.getAppliedCouponCode()).orElse(null));
-        order.setId(entity.getId());
-        return order;
     }
 
     public static OrderJpaEntity toEntity(Order order) {
         var entity = new OrderJpaEntity();
-        entity.setId(order.getId());
         entity.setOrderNumber(order.getOrderNumber());
         entity.setOrderTimestamp(order.getOrderTimestamp());
         entity.setCountry(order.getCountry().value());
