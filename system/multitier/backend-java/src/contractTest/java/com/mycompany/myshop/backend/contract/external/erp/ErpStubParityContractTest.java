@@ -1,20 +1,21 @@
 package com.mycompany.myshop.backend.contract.external.erp;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.client.WireMock;
 import com.mycompany.myshop.backend.core.services.external.ErpGateway;
+import com.mycompany.myshop.backend.testkit.driver.adapter.external.erp.ErpStubDriver;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 
 /**
- * The {@code Stub} side of the ERP product contract: raw, inlined WireMock, same shape as
- * {@code integration/legacy/ErpGatewayIntegrationTest}. Needs no Docker of its own — the gateway is
- * driven directly, with no Spring context and no container, so the only reason this class sits in
- * the Docker-requiring {@code external-contract} suite is that the stub-consumability tests it runs
+ * The {@code Stub} side of the ERP product contract. Arranges through the real {@link ErpStubDriver},
+ * so what {@link ErpRealParityContractTest} holds against the simulator is the driver's own JSON — the
+ * artifact the parity pair exists to guard. Needs no Docker of its own — the gateway is driven
+ * directly, with no Spring context and no container, so the only reason this class sits in the
+ * Docker-requiring {@code external-contract} suite is that the stub-consumability tests it runs
  * alongside boot the full SUT.
  */
 class ErpStubParityContractTest extends BaseErpProductParityContractTest {
@@ -42,8 +43,7 @@ class ErpStubParityContractTest extends BaseErpProductParityContractTest {
 
     @Override
     protected void arrangeProduct(String sku, String price) {
-        WIRE_MOCK.stubFor(get("/api/products/" + sku)
-            .willReturn(okJson("{\"id\":\"" + sku + "\",\"price\":" + price + "}")));
+        new ErpStubDriver(new WireMock(WIRE_MOCK.port())).returnsProduct(sku, price);
     }
 
     @Override
