@@ -6,6 +6,8 @@ import com.mycompany.myshop.backend.backendtest.configuration.TestcontainersConf
 import com.mycompany.myshop.backend.domain.entities.Coupon;
 import com.mycompany.myshop.backend.domain.repositories.CouponRepository;
 import com.mycompany.myshop.backend.domain.values.Rate;
+import com.mycompany.myshop.backend.domain.values.UsageQuota;
+import com.mycompany.myshop.backend.domain.values.ValidityPeriod;
 import com.mycompany.myshop.backend.infrastructure.persistence.adapters.CouponRepositoryAdapter;
 import jakarta.persistence.EntityManager;
 import java.time.Instant;
@@ -40,10 +42,10 @@ class CouponRepositoryIntegrationTest {
         var coupon = new Coupon(
             "SAVE20",
             Rate.of("0.2000"),
-            Instant.parse("2026-01-01T00:00:00Z"),
-            Instant.parse("2026-12-31T23:59:59Z"),
-            100,
-            7);
+            new ValidityPeriod(
+                Instant.parse("2026-01-01T00:00:00Z"),
+                Instant.parse("2026-12-31T23:59:59Z")),
+            UsageQuota.of(100, 7));
 
         couponRepository.save(coupon);
         forceDatabaseRoundTrip();
@@ -51,24 +53,24 @@ class CouponRepositoryIntegrationTest {
         var found = couponRepository.findByCode("SAVE20");
         assertThat(found).isPresent();
         assertThat(found.get().getDiscountRate()).isEqualTo(Rate.of("0.2000"));
-        assertThat(found.get().getValidFrom()).isEqualTo(Instant.parse("2026-01-01T00:00:00Z"));
-        assertThat(found.get().getValidTo()).isEqualTo(Instant.parse("2026-12-31T23:59:59Z"));
-        assertThat(found.get().getUsageLimit()).isEqualTo(100);
-        assertThat(found.get().getUsedCount()).isEqualTo(7);
+        assertThat(found.get().getValidity()).isEqualTo(new ValidityPeriod(
+            Instant.parse("2026-01-01T00:00:00Z"),
+            Instant.parse("2026-12-31T23:59:59Z")));
+        assertThat(found.get().getQuota()).isEqualTo(UsageQuota.of(100, 7));
     }
 
     /** An open-ended, unlimited coupon: three nullable columns come back null and stay legal. */
     @Test
     void savesAndReadsBackOpenEndedCoupon() {
-        couponRepository.save(new Coupon("FOREVER", Rate.of("0.1000"), null, null, null, 0));
+        couponRepository.save(new Coupon("FOREVER", Rate.of("0.1000"),
+            ValidityPeriod.ALWAYS, UsageQuota.of(null, 0)));
         forceDatabaseRoundTrip();
 
         var found = couponRepository.findByCode("FOREVER");
         assertThat(found).isPresent();
-        assertThat(found.get().getValidFrom()).isNull();
-        assertThat(found.get().getValidTo()).isNull();
-        assertThat(found.get().getUsageLimit()).isNull();
-        assertThat(found.get().getUsedCount()).isZero();
+        assertThat(found.get().getValidity()).isEqualTo(ValidityPeriod.ALWAYS);
+        assertThat(found.get().getQuota().limit()).isNull();
+        assertThat(found.get().getQuota().used()).isZero();
     }
 
     /**
@@ -77,7 +79,8 @@ class CouponRepositoryIntegrationTest {
      */
     @Test
     void redemptionUpdatesTheSameRow() {
-        var coupon = couponRepository.save(new Coupon("ONCE", Rate.of("0.5000"), null, null, 1, 0));
+        var coupon = couponRepository.save(new Coupon("ONCE", Rate.of("0.5000"),
+            ValidityPeriod.ALWAYS, UsageQuota.of(1, 0)));
 
         coupon.redeem();
         couponRepository.save(coupon);
@@ -85,7 +88,7 @@ class CouponRepositoryIntegrationTest {
 
         assertThat(couponRepository.findAll()).hasSize(1);
         assertThat(couponRepository.findByCode("ONCE")).get()
-            .extracting(Coupon::getUsedCount).isEqualTo(1);
+            .extracting(reread -> reread.getQuota().used()).isEqualTo(1);
     }
 
     /** See {@code OrderRepositoryIntegrationTest#forceDatabaseRoundTrip} for why this is needed. */

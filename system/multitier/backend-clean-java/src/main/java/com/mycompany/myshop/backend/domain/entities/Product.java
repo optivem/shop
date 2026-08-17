@@ -1,5 +1,6 @@
 package com.mycompany.myshop.backend.domain.entities;
 
+import com.mycompany.myshop.backend.domain.Guard;
 import com.mycompany.myshop.backend.domain.values.Money;
 
 /**
@@ -13,9 +14,7 @@ public class Product {
     private final Money price;
 
     public Product(String id, Money price) {
-        if (price == null) {
-            throw new IllegalArgumentException("price cannot be null");
-        }
+        Guard.notNull(price, "price");
         this.id = id;
         this.price = price;
     }

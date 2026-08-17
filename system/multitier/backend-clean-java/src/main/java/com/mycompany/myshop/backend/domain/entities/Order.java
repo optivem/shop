@@ -1,5 +1,6 @@
 package com.mycompany.myshop.backend.domain.entities;
 
+import com.mycompany.myshop.backend.domain.Guard;
 import com.mycompany.myshop.backend.domain.exceptions.ValidationException;
 import com.mycompany.myshop.backend.domain.pricing.OrderPricing;
 import com.mycompany.myshop.backend.domain.values.Money;
@@ -28,11 +29,11 @@ public class Order {
 
     public Order(String orderNumber, Instant orderTimestamp, String country, String sku,
                  OrderPricing pricing, OrderStatus status, String appliedCouponCode) {
-        requireNotNull(orderTimestamp, "orderTimestamp");
-        requireNotNull(country, "country");
-        requireNotNull(sku, "sku");
-        requireNotNull(pricing, "pricing");
-        requireNotNull(status, "status");
+        Guard.notNull(orderTimestamp, "orderTimestamp");
+        Guard.notNull(country, "country");
+        Guard.notNull(sku, "sku");
+        Guard.notNull(pricing, "pricing");
+        Guard.notNull(status, "status");
 
         this.orderNumber = orderNumber;
         this.orderTimestamp = orderTimestamp;
@@ -41,12 +42,6 @@ public class Order {
         this.pricing = pricing;
         this.status = status;
         this.appliedCouponCode = appliedCouponCode;
-    }
-
-    private static void requireNotNull(Object value, String name) {
-        if (value == null) {
-            throw new IllegalArgumentException(name + " cannot be null");
-        }
     }
 
     /** Only a placed order can be delivered. */

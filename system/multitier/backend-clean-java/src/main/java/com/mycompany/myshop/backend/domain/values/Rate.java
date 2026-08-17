@@ -1,5 +1,7 @@
 package com.mycompany.myshop.backend.domain.values;
 
+import com.mycompany.myshop.backend.domain.Guard;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Objects;
@@ -26,9 +28,7 @@ public final class Rate {
     }
 
     public static Rate of(BigDecimal value) {
-        if (value == null) {
-            throw new IllegalArgumentException("rate cannot be null");
-        }
+        Guard.notNull(value, "rate");
         return new Rate(value);
     }
 

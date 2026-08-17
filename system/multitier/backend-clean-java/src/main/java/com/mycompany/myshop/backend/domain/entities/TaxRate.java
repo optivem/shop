@@ -1,5 +1,6 @@
 package com.mycompany.myshop.backend.domain.entities;
 
+import com.mycompany.myshop.backend.domain.Guard;
 import com.mycompany.myshop.backend.domain.values.Rate;
 
 /**
@@ -13,9 +14,7 @@ public class TaxRate {
     private final Rate rate;
 
     public TaxRate(String id, String countryName, Rate rate) {
-        if (rate == null) {
-            throw new IllegalArgumentException("rate cannot be null");
-        }
+        Guard.notNull(rate, "rate");
         this.id = id;
         this.countryName = countryName;
         this.rate = rate;

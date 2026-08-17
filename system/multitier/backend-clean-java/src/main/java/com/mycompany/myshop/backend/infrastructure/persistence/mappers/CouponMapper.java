@@ -2,6 +2,8 @@ package com.mycompany.myshop.backend.infrastructure.persistence.mappers;
 
 import com.mycompany.myshop.backend.domain.entities.Coupon;
 import com.mycompany.myshop.backend.domain.values.Rate;
+import com.mycompany.myshop.backend.domain.values.UsageQuota;
+import com.mycompany.myshop.backend.domain.values.ValidityPeriod;
 import com.mycompany.myshop.backend.infrastructure.persistence.entities.CouponJpaEntity;
 
 /**
@@ -17,10 +19,8 @@ public final class CouponMapper {
         var coupon = new Coupon(
                 entity.getCode(),
                 Rate.of(entity.getDiscountRate()),
-                entity.getValidFrom(),
-                entity.getValidTo(),
-                entity.getUsageLimit(),
-                entity.getUsedCount());
+                new ValidityPeriod(entity.getValidFrom(), entity.getValidTo()),
+                UsageQuota.of(entity.getUsageLimit(), entity.getUsedCount()));
         coupon.setId(entity.getId());
         return coupon;
     }
@@ -30,10 +30,10 @@ public final class CouponMapper {
         entity.setId(coupon.getId());
         entity.setCode(coupon.getCode());
         entity.setDiscountRate(coupon.getDiscountRate().value());
-        entity.setValidFrom(coupon.getValidFrom());
-        entity.setValidTo(coupon.getValidTo());
-        entity.setUsageLimit(coupon.getUsageLimit());
-        entity.setUsedCount(coupon.getUsedCount());
+        entity.setValidFrom(coupon.getValidity().validFrom());
+        entity.setValidTo(coupon.getValidity().validTo());
+        entity.setUsageLimit(coupon.getQuota().limit());
+        entity.setUsedCount(coupon.getQuota().used());
         return entity;
     }
 }

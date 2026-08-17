@@ -1,7 +1,10 @@
 package com.mycompany.myshop.backend.domain.entities;
 
+import com.mycompany.myshop.backend.domain.Guard;
 import com.mycompany.myshop.backend.domain.exceptions.ValidationException;
 import com.mycompany.myshop.backend.domain.values.Rate;
+import com.mycompany.myshop.backend.domain.values.UsageQuota;
+import com.mycompany.myshop.backend.domain.values.ValidityPeriod;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -10,9 +13,10 @@ import java.time.Instant;
  * A coupon. A plain object: no ORM annotations, no Spring, no Lombok — the persisted shape lives in
  * {@code infrastructure.persistence.entities.CouponJpaEntity}.
  *
- * <p>It decides for itself whether it can be redeemed. {@link #discountAt(Instant)} holds the
- * validity window and the usage limit that used to be four {@code if} branches in the coupon
- * service, and {@link #redeem()} is the only way the used count moves.
+ * <p>It decides for itself whether it can be redeemed. {@link #discountAt(Instant)} asks its
+ * {@link ValidityPeriod} and its {@link UsageQuota} — the four {@code if} branches that used to be in
+ * the coupon service, and then the four nullable fields that used to be here — and {@link #redeem()}
+ * is the only way the used count moves.
  */
 public class Coupon {
 
@@ -24,44 +28,25 @@ public class Coupon {
     private Long id;
     private final String code;
     private final Rate discountRate;
-    private final Instant validFrom;
-    private final Instant validTo;
-    private final Integer usageLimit;
-    private int usedCount;
+    private final ValidityPeriod validity;
+    private UsageQuota quota;
 
-    public Coupon(String code, Rate discountRate, Instant validFrom, Instant validTo,
-                  Integer usageLimit, Integer usedCount) {
-        if (code == null || code.trim().isEmpty()) {
-            throw new IllegalArgumentException("code cannot be null or empty");
-        }
-        if (discountRate == null) {
-            throw new IllegalArgumentException("discountRate cannot be null");
-        }
+    public Coupon(String code, Rate discountRate, ValidityPeriod validity, UsageQuota quota) {
+        Guard.notNullOrEmpty(code, "code");
+        Guard.notNull(discountRate, "discountRate");
+        Guard.notNull(validity, "validity");
+        Guard.notNull(quota, "quota");
+        // A coupon's own rule, not a general one about rates: a tax rate of zero is legal, a coupon
+        // that discounts nothing is not.
         if (discountRate.value().compareTo(BigDecimal.ZERO) <= 0
                 || discountRate.value().compareTo(BigDecimal.ONE) > 0) {
             throw new IllegalArgumentException("discountRate must be greater than 0 and at most 1");
         }
-        // Only validate date order if both dates are provided
-        if (validFrom != null && validTo != null && validTo.isBefore(validFrom)) {
-            throw new IllegalArgumentException("validTo must be after validFrom");
-        }
-        // usageLimit is optional - null means unlimited
-        if (usageLimit != null && usageLimit < 0) {
-            throw new IllegalArgumentException("usageLimit must be non-negative");
-        }
-        if (usedCount == null) {
-            throw new IllegalArgumentException("usedCount cannot be null");
-        }
-        if (usedCount < 0) {
-            throw new IllegalArgumentException("usedCount must be non-negative");
-        }
 
         this.code = code;
         this.discountRate = discountRate;
-        this.validFrom = validFrom;
-        this.validTo = validTo;
-        this.usageLimit = usageLimit;
-        this.usedCount = usedCount;
+        this.validity = validity;
+        this.quota = quota;
     }
 
     /**
@@ -71,13 +56,13 @@ public class Coupon {
      *                             as often as it may be.
      */
     public Rate discountAt(Instant at) {
-        if (validFrom != null && at.isBefore(validFrom)) {
+        if (validity.notYetValidAt(at)) {
             throw reject(MSG_COUPON_NOT_YET_VALID);
         }
-        if (validTo != null && at.isAfter(validTo)) {
+        if (validity.expiredAt(at)) {
             throw reject(MSG_COUPON_EXPIRED);
         }
-        if (usageLimit != null && usedCount >= usageLimit) {
+        if (quota.exhausted()) {
             throw reject(MSG_COUPON_USAGE_LIMIT_REACHED);
         }
 
@@ -86,7 +71,7 @@ public class Coupon {
 
     /** Records one use of this coupon. */
     public void redeem() {
-        usedCount++;
+        quota = quota.recordUse();
     }
 
     private ValidationException reject(String messageFormat) {
@@ -110,19 +95,11 @@ public class Coupon {
         return discountRate;
     }
 
-    public Instant getValidFrom() {
-        return validFrom;
+    public ValidityPeriod getValidity() {
+        return validity;
     }
 
-    public Instant getValidTo() {
-        return validTo;
-    }
-
-    public Integer getUsageLimit() {
-        return usageLimit;
-    }
-
-    public int getUsedCount() {
-        return usedCount;
+    public UsageQuota getQuota() {
+        return quota;
     }
 }

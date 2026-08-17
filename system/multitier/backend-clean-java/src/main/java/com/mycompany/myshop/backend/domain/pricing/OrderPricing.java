@@ -1,5 +1,6 @@
 package com.mycompany.myshop.backend.domain.pricing;
 
+import com.mycompany.myshop.backend.domain.Guard;
 import com.mycompany.myshop.backend.domain.values.Money;
 import com.mycompany.myshop.backend.domain.values.Rate;
 
@@ -24,14 +25,14 @@ public record OrderPricing(
         Money totalPrice) {
 
     public OrderPricing {
-        requireNotNull(unitPrice, "unitPrice");
-        requireNotNull(basePrice, "basePrice");
-        requireNotNull(discountRate, "discountRate");
-        requireNotNull(discountAmount, "discountAmount");
-        requireNotNull(subtotalPrice, "subtotalPrice");
-        requireNotNull(taxRate, "taxRate");
-        requireNotNull(taxAmount, "taxAmount");
-        requireNotNull(totalPrice, "totalPrice");
+        Guard.notNull(unitPrice, "unitPrice");
+        Guard.notNull(basePrice, "basePrice");
+        Guard.notNull(discountRate, "discountRate");
+        Guard.notNull(discountAmount, "discountAmount");
+        Guard.notNull(subtotalPrice, "subtotalPrice");
+        Guard.notNull(taxRate, "taxRate");
+        Guard.notNull(taxAmount, "taxAmount");
+        Guard.notNull(totalPrice, "totalPrice");
 
         unitPrice = unitPrice.rounded();
         basePrice = basePrice.rounded();
@@ -58,11 +59,5 @@ public record OrderPricing(
 
         return new OrderPricing(unitPrice, quantity, basePrice, discountRate, discountAmount,
                 subtotalPrice, taxRate, taxAmount, totalPrice);
-    }
-
-    private static void requireNotNull(Object value, String name) {
-        if (value == null) {
-            throw new IllegalArgumentException(name + " cannot be null");
-        }
     }
 }

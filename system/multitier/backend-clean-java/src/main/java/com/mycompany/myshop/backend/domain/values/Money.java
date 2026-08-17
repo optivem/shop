@@ -1,5 +1,7 @@
 package com.mycompany.myshop.backend.domain.values;
 
+import com.mycompany.myshop.backend.domain.Guard;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Objects;
@@ -31,9 +33,7 @@ public final class Money {
     }
 
     public static Money of(BigDecimal amount) {
-        if (amount == null) {
-            throw new IllegalArgumentException("amount cannot be null");
-        }
+        Guard.notNull(amount, "amount");
         return new Money(amount);
     }
 

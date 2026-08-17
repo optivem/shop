@@ -2,6 +2,8 @@ package com.mycompany.myshop.backend.domain.entities;
 
 import com.mycompany.myshop.backend.domain.exceptions.ValidationException;
 import com.mycompany.myshop.backend.domain.values.Rate;
+import com.mycompany.myshop.backend.domain.values.UsageQuota;
+import com.mycompany.myshop.backend.domain.values.ValidityPeriod;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
@@ -89,7 +91,7 @@ class CouponTest {
 
         coupon.redeem();
 
-        assertThat(coupon.getUsedCount()).isEqualTo(5);
+        assertThat(coupon.getQuota().used()).isEqualTo(5);
     }
 
     /** {@code redeem} is what eventually closes the coupon — the limit is enforced against it. */
@@ -118,7 +120,8 @@ class CouponTest {
 
     @Test
     void rejectsAnEmptyCode() {
-        var thrown = catchThrowable(() -> new Coupon("  ", TEN_PERCENT, VALID_FROM, VALID_TO, 100, 0));
+        var thrown = catchThrowable(() -> new Coupon("  ", TEN_PERCENT,
+                new ValidityPeriod(VALID_FROM, VALID_TO), UsageQuota.of(100, 0)));
 
         assertThat(thrown).isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("code cannot be null or empty");
@@ -163,10 +166,12 @@ class CouponTest {
 
     private static Coupon coupon(Instant validFrom, Instant validTo, Integer usageLimit,
                                  Integer usedCount) {
-        return new Coupon(CODE, TEN_PERCENT, validFrom, validTo, usageLimit, usedCount);
+        return new Coupon(CODE, TEN_PERCENT, new ValidityPeriod(validFrom, validTo),
+                UsageQuota.of(usageLimit, usedCount));
     }
 
     private static Coupon couponWithRate(Rate discountRate) {
-        return new Coupon(CODE, discountRate, VALID_FROM, VALID_TO, 100, 0);
+        return new Coupon(CODE, discountRate, new ValidityPeriod(VALID_FROM, VALID_TO),
+                UsageQuota.of(100, 0));
     }
 }

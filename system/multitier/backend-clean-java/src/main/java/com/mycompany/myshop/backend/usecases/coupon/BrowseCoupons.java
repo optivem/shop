@@ -31,10 +31,10 @@ public class BrowseCoupons {
         var item = new BrowseCouponsResponse.BrowseCouponsItemResponse();
         item.setCode(coupon.getCode());
         item.setDiscountRate(coupon.getDiscountRate().value());
-        item.setValidFrom(coupon.getValidFrom());
-        item.setValidTo(coupon.getValidTo());
-        item.setUsageLimit(coupon.getUsageLimit());
-        item.setUsedCount(coupon.getUsedCount());
+        item.setValidFrom(coupon.getValidity().validFrom());
+        item.setValidTo(coupon.getValidity().validTo());
+        item.setUsageLimit(coupon.getQuota().limit());
+        item.setUsedCount(coupon.getQuota().used());
         return item;
     }
 }
