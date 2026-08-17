@@ -2,8 +2,8 @@ package com.mycompany.myshop.backend.testkit.dsl.core.usecase.usecases;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.mycompany.myshop.backend.core.dtos.ViewOrderDetailsResponse;
-import com.mycompany.myshop.backend.core.entities.OrderStatus;
+import com.mycompany.myshop.backend.usecases.dtos.ViewOrderDetailsResponse;
+import com.mycompany.myshop.backend.domain.entities.OrderStatus;
 import com.mycompany.myshop.backend.testkit.dsl.core.shared.ResponseVerification;
 
 /**

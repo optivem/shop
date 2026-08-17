@@ -1,6 +1,6 @@
 package com.mycompany.myshop.backend.testkit.dsl.core.scenario;
 
-import com.mycompany.myshop.backend.core.entities.OrderStatus;
+import com.mycompany.myshop.backend.domain.entities.OrderStatus;
 
 /**
  * What the scenario DSL fills in when a test stays silent, so a test states only what it actually

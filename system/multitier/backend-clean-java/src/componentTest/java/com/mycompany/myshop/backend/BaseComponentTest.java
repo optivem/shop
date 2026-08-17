@@ -5,11 +5,11 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.mycompany.myshop.backend.backendtest.configuration.TestcontainersConfiguration;
-import com.mycompany.myshop.backend.core.repositories.CouponRepository;
-import com.mycompany.myshop.backend.core.repositories.OrderRepository;
-import com.mycompany.myshop.backend.core.services.external.ClockGateway;
-import com.mycompany.myshop.backend.core.services.external.ErpGateway;
-import com.mycompany.myshop.backend.core.services.external.TaxGateway;
+import com.mycompany.myshop.backend.infrastructure.persistence.repositories.CouponJpaRepository;
+import com.mycompany.myshop.backend.infrastructure.persistence.repositories.OrderJpaRepository;
+import com.mycompany.myshop.backend.domain.gateways.ClockGateway;
+import com.mycompany.myshop.backend.infrastructure.external.erp.HttpErpGateway;
+import com.mycompany.myshop.backend.infrastructure.external.tax.HttpTaxGateway;
 import com.mycompany.myshop.backend.testkit.driver.adapter.api.BackendDriver;
 import com.mycompany.myshop.backend.backendtest.configuration.ExternalSystemMode;
 import com.mycompany.myshop.backend.backendtest.configuration.StubDrivers;
@@ -85,10 +85,10 @@ public abstract class BaseComponentTest {
     protected ObjectMapper objectMapper;
 
     @Autowired
-    protected OrderRepository orderRepository;
+    protected OrderJpaRepository orderRepository;
 
     @Autowired
-    protected CouponRepository couponRepository;
+    protected CouponJpaRepository couponRepository;
 
     /**
      * The SUT's production gateways to the external systems. The stub-contract tests read them back
@@ -96,10 +96,10 @@ public abstract class BaseComponentTest {
      * stub's bytes travel through the SUT's real HTTP call + real parse, not a test-side client.
      */
     @Autowired
-    protected ErpGateway erpGateway;
+    protected HttpErpGateway erpGateway;
 
     @Autowired
-    protected TaxGateway taxGateway;
+    protected HttpTaxGateway taxGateway;
 
     @Autowired
     protected ClockGateway clockGateway;

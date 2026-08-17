@@ -2,7 +2,7 @@ package com.mycompany.myshop.backend.testkit.dsl.core.scenario.then.steps;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.mycompany.myshop.backend.core.dtos.external.ProductDetailsResponse;
+import com.mycompany.myshop.backend.infrastructure.external.erp.ProductDetailsResponse;
 import com.mycompany.myshop.backend.testkit.dsl.core.scenario.ExecutionResultContext;
 import com.mycompany.myshop.backend.testkit.dsl.core.shared.ResponseVerification;
 import com.mycompany.myshop.backend.testkit.dsl.core.usecase.UseCaseDsl;

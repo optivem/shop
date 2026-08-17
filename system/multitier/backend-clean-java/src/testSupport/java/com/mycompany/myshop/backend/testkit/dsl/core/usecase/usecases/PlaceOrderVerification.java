@@ -2,7 +2,7 @@ package com.mycompany.myshop.backend.testkit.dsl.core.usecase.usecases;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.mycompany.myshop.backend.core.dtos.PlaceOrderResponse;
+import com.mycompany.myshop.backend.usecases.dtos.PlaceOrderResponse;
 import com.mycompany.myshop.backend.testkit.dsl.core.shared.ResponseVerification;
 
 /** What a successful place-order answers with: the order number, and nothing else. */

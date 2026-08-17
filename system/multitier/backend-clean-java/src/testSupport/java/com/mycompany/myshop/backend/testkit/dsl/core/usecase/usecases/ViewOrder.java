@@ -1,7 +1,7 @@
 package com.mycompany.myshop.backend.testkit.dsl.core.usecase.usecases;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mycompany.myshop.backend.core.dtos.ViewOrderDetailsResponse;
+import com.mycompany.myshop.backend.usecases.dtos.ViewOrderDetailsResponse;
 import com.mycompany.myshop.backend.testkit.driver.port.MyShopDriver;
 import com.mycompany.myshop.backend.testkit.dsl.core.shared.ResponseParser;
 import com.mycompany.myshop.backend.testkit.dsl.core.shared.UseCaseContext;

@@ -1,7 +1,7 @@
 package com.mycompany.myshop.backend.component.latest;
 
 import com.mycompany.myshop.backend.BaseComponentTest;
-import com.mycompany.myshop.backend.core.entities.OrderStatus;
+import com.mycompany.myshop.backend.domain.entities.OrderStatus;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;

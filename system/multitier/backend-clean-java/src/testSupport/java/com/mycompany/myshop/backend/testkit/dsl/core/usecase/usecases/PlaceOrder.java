@@ -1,8 +1,8 @@
 package com.mycompany.myshop.backend.testkit.dsl.core.usecase.usecases;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mycompany.myshop.backend.core.dtos.PlaceOrderRequest;
-import com.mycompany.myshop.backend.core.dtos.PlaceOrderResponse;
+import com.mycompany.myshop.backend.usecases.dtos.PlaceOrderRequest;
+import com.mycompany.myshop.backend.usecases.dtos.PlaceOrderResponse;
 import com.mycompany.myshop.backend.testkit.driver.port.MyShopDriver;
 import com.mycompany.myshop.backend.testkit.dsl.core.shared.ResponseParser;
 import com.mycompany.myshop.backend.testkit.dsl.core.shared.UseCaseContext;

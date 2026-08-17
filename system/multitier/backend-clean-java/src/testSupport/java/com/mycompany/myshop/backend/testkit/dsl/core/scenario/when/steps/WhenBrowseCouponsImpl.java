@@ -1,6 +1,6 @@
 package com.mycompany.myshop.backend.testkit.dsl.core.scenario.when.steps;
 
-import com.mycompany.myshop.backend.core.dtos.BrowseCouponsResponse;
+import com.mycompany.myshop.backend.usecases.dtos.BrowseCouponsResponse;
 import com.mycompany.myshop.backend.testkit.dsl.core.ScenarioDslImpl;
 import com.mycompany.myshop.backend.testkit.dsl.core.scenario.ExecutionResult;
 import com.mycompany.myshop.backend.testkit.dsl.core.scenario.ExecutionResultBuilder;

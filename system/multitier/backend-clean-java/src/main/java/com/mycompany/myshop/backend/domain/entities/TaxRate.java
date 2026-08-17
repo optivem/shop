@@ -1,0 +1,35 @@
+package com.mycompany.myshop.backend.domain.entities;
+
+import java.math.BigDecimal;
+
+/**
+ * A country's tax rate as the domain understands it. The tax system's wire representation lives in
+ * {@code infrastructure.external.tax} and is mapped to this by the gateway adapter.
+ */
+public class TaxRate {
+
+    private final String id;
+    private final String countryName;
+    private final BigDecimal rate;
+
+    public TaxRate(String id, String countryName, BigDecimal rate) {
+        if (rate == null) {
+            throw new IllegalArgumentException("rate cannot be null");
+        }
+        this.id = id;
+        this.countryName = countryName;
+        this.rate = rate;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public String getCountryName() {
+        return countryName;
+    }
+
+    public BigDecimal getRate() {
+        return rate;
+    }
+}

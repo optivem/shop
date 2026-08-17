@@ -3,8 +3,8 @@ package com.mycompany.myshop.backend.component.legacy;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.mycompany.myshop.backend.BaseComponentTest;
-import com.mycompany.myshop.backend.core.dtos.BrowseCouponsResponse;
-import com.mycompany.myshop.backend.core.dtos.PublishCouponRequest;
+import com.mycompany.myshop.backend.usecases.dtos.BrowseCouponsResponse;
+import com.mycompany.myshop.backend.usecases.dtos.PublishCouponRequest;
 import java.math.BigDecimal;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;

@@ -73,6 +73,9 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok'
 
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	// Makes the dependency rule executable rather than aspirational: ArchitectureTest fails the
+	// build when a framework import reaches the domain, or a package points the wrong way.
+	testImplementation 'com.tngtech.archunit:archunit-junit5:1.3.0'
 	testImplementation 'org.springframework.boot:spring-boot-testcontainers'
 	testImplementation 'org.testcontainers:junit-jupiter'
 	testImplementation 'org.testcontainers:postgresql'

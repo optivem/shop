@@ -1,6 +1,6 @@
 package com.mycompany.myshop.backend.testkit.driver.adapter.sut;
 
-import com.mycompany.myshop.backend.core.services.external.ClockGateway;
+import com.mycompany.myshop.backend.domain.gateways.ClockGateway;
 import java.time.Instant;
 
 /**

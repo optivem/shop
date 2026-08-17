@@ -1,5 +1,7 @@
 # 2026-08-17 09:40:29 UTC — Refactor backend-clean-java to clean architecture
 
+🤖 **Picked up by agent** — `Valentina_Desk` at `2026-08-17T10:11:11Z`
+
 ## TL;DR
 
 **Why:** `system/multitier/backend-clean-java/src/main` is currently a verbatim copy of `backend-java`'s CRUD/layered implementation — Spring/JPA/Jakarta annotations reach all the way into `core`, business logic lives in two fat `@Service` transaction scripts, and `core.dtos` doubles as both the HTTP wire contract and the service-layer boundary. The variant exists to demonstrate the *other* way of arranging the same behaviour.
@@ -26,39 +28,53 @@ What we get out of this — the goals and deliverables:
 - **The README's open measurement is answered.** After the refactor, diff `src/testSupport` + `src/componentTest` against `backend-java`: near-zero fork means the boundary types were right and the copies can be replaced with borrowed source roots.
 - **Fast domain unit tests become possible** — `src/test` can exercise pricing, coupon validity and the order state machine with no Spring context and no Docker.
 
+## Baseline (Step 1 — captured 2026-08-17)
+
+`./gradlew build componentTest` on `Valentina_Desk`, Docker Engine 29.5.2 — **BUILD SUCCESSFUL in 41s**:
+
+| Task | Tests | Passed | Failed | Skipped |
+|---|---|---|---|---|
+| `test` (unit — `OrderServiceTest`) | 10 | 10 | 0 | 0 |
+| `componentTest` | 62 | 62 | 0 | 0 |
+
+These two counts are the invariant. Every later step must reproduce **10 + 62, all green**, exactly.
+
+## Test-side fork, measured (early answer to Step 12)
+
+Steps 3–5 forced the D3 revision below, and the resulting delta across `src/testSupport` +
+`src/componentTest` is **31 files, 60 insertions, 60 deletions — and every single one is mechanical**:
+
+| Kind of change | Count | Where |
+|---|---|---|
+| Import lines re-pointed at the new packages | 49 | 29 files |
+| Injected field types (`OrderJpaRepository`, `CouponJpaRepository`, `HttpErpGateway`, `HttpTaxGateway`) | 4 | `BaseComponentTest` |
+| Constructor param + delegate call (`fetchProductDetails` / `fetchTaxDetails`) | 6 | `SutErpReader`, `SutTaxReader` |
+| Javadoc `{@link}` targets following the rename | 2 | `SutErpReader`, `SutTaxReader` |
+| **Assertions / scenarios / expectations** | **0** | — |
+
+Verified with `git diff -U0 src/testSupport src/componentTest | grep -v '^[+-]import'` — the full
+non-import delta is 12 lines. So the answer Step 12 was going to look for is **the fork is
+near-zero and purely mechanical**: the boundary types were right. Two caveats for Step 12 to
+settle: the harness names four production internals it would not need if it went through the HTTP
+contract alone, and `Sut*Reader` deliberately reaches for the concrete adapter to keep reading the
+wire DTO.
+
 ## ▶ Next executable step (resume here)
 
-Step 1 — capture the green baseline. In `system/multitier/backend-clean-java`, run `./gradlew build` and `./gradlew componentTest`; record the passing counts in this plan under Step 1. No code change, no commit. That number is the invariant every later step is measured against, and Step 3's restructure is only "done" when it reproduces it exactly.
+Step 6 — split the two grab-bag services into one class per use case. `usecases/order/OrderService`
+becomes `PlaceOrder`, `CancelOrder`, `DeliverOrder`, `ViewOrderDetails`, `BrowseOrderHistory`;
+`usecases/coupon/CouponService` becomes `PublishCoupon`, `BrowseCoupons`. `getDiscount` and
+`incrementUsageCount` are *not* use cases — leave them where they are, Step 8 moves them onto
+`Coupon`. Then Step 7 points the controllers at the new classes.
 
-All design questions are settled (see **Decisions**) — nothing blocks execution from here.
+Gate for every step from here: `./gradlew build componentTest` must stay at **18 unit tests
+(16 passed, 2 ArchIgnored) + 62 component tests, all green**, and the non-import delta in
+`src/testSupport` / `src/componentTest` must stay at zero new lines.
+
+All design questions are settled (see **Decisions**).
 
 ## Steps
 
-- [ ] **Step 1 — Baseline.** Run `./gradlew build` + `./gradlew componentTest` in `system/multitier/backend-clean-java`; record the passing counts here. No code change. This is the safety net the whole refactor leans on.
-- [ ] **Step 2 — Make the rule executable.** Add an ArchUnit dependency-rule test to `src/test` encoding the target shape: `domain` depends on no framework at all; `usecases` depends only on `domain`, **plus one explicitly-named exception for `jakarta.validation` on the request DTOs** (per Q9 — allowed by name, so it reads as a decision rather than an oversight); `presentation` depends on `usecases` + `domain`; Spring, `jakarta.persistence` and Jackson are confined to `infrastructure` and `presentation`. Start it scoped to the packages that already comply and widen it as each step lands — the test is the definition of done, not a review checklist.
-- [ ] **Step 3 — Carve the four packages (move, don't change).** Pure restructure into `presentation` / `usecases` / `domain` / `infrastructure`. Package declarations and imports only, zero logic edits. `Order`/`Coupon` still carry their JPA annotations and `ErpGateway` is still a concrete HTTP class at the end of this step — Steps 4 and 5 fix that. The shape becomes visible immediately, and the component suite must reproduce Step 1's counts exactly.
-
-  <details><summary>Target package map</summary>
-
-  ```
-  com.mycompany.myshop.backend
-  ├── BackendApplication
-  ├── presentation/     controller/{Order,Coupon,Health}Controller · exception/GlobalExceptionHandler · config/{Cors,OpenApi}Config
-  ├── usecases/         order/{PlaceOrder,CancelOrder,DeliverOrder,ViewOrderDetails,BrowseOrderHistory}
-  │                     coupon/{PublishCoupon,BrowseCoupons} · dtos/*Request, *Response
-  ├── domain/           entities/{Order,Coupon,OrderStatus,Product,Promotion,TaxRate}  (POJOs)
-  │                     values/{Money,Rate}                    (Step 8)
-  │                     repositories/{Order,Coupon}Repository   (plain interfaces)
-  │                     gateways/{Erp,Tax,Clock}Gateway         (plain interfaces, domain return types)
-  │                     exceptions/{Validation,NotExistValidation,TaxGateway}Exception
-  └── infrastructure/   persistence/{entities/*JpaEntity, repositories/*JpaRepository, adapters/*RepositoryAdapter, mappers/*}
-                        external/{erp,tax,clock}/{Http*Gateway + wire DTOs}
-                        config/  (bean wiring for the use cases)
-  ```
-  </details>
-
-- [ ] **Step 4 — Split the gateway interfaces from their HTTP implementations.** `ErpGateway` / `TaxGateway` / `ClockGateway` become plain interfaces in `domain/gateways` returning **domain types** — `Optional<Product>`, `Promotion`, `Optional<TaxRate>`, `Instant`. The current `@Service` HTTP classes become `HttpErpGateway` / `HttpTaxGateway` / `HttpClockGateway` in `infrastructure/external`, keeping the wire DTOs from `core/dtos/external` and mapping wire → domain. Watch the `Optional.empty()`-means-404 convention in `getProductDetails` / `getTaxDetails`: it currently encodes "absent" as an HTTP status check, and that translation belongs in the adapter now.
-- [ ] **Step 5 — Split the domain entities from the JPA entities.** `domain/entities/Order` and `Coupon` become POJOs with no `jakarta.persistence` and no Lombok; `infrastructure/persistence/entities/{Order,Coupon}JpaEntity` carry the ORM mapping; `*JpaRepository` stay Spring Data; `*RepositoryAdapter` implement the plain `domain/repositories` interfaces by mapping between the two. Table and column names are untouched — the schema is a fixed point.
 - [ ] **Step 6 — One class per use case.** Split `OrderService` into `PlaceOrder`, `CancelOrder`, `DeliverOrder`, `ViewOrderDetails`, `BrowseOrderHistory`; split `CouponService` into `PublishCoupon`, `BrowseCoupons`. `getDiscount` / `incrementUsageCount` are not use cases — they are coupon behaviour called by `PlaceOrder`, and Step 8 moves them onto the `Coupon` entity. Each use case takes and returns its own DTO from `usecases/dtos`.
 - [ ] **Step 7 — Point the controllers at the use cases.** `OrderController` / `CouponController` inject use case classes instead of services, and the response-shaping loops currently split across `CouponController.browseCoupons` (in the controller) and `OrderService.browseOrderHistory` (in the service) both move into their use case — since D9 puts the response DTOs in `usecases`, that is where domain → DTO mapping belongs, and the inconsistency disappears. JSON field names, paths and status codes must not shift by a byte.
 - [ ] **Step 8 — Push behaviour into the domain.** Four moves, each removing a block of logic from a use case:
@@ -79,7 +95,24 @@ every import line, and a later reader will want the *why*, not just the shape.
 
 - **D1 — Package vocabulary:** `presentation` / `usecases` / `domain` / `infrastructure`.
 - **D2 — Where the interfaces live:** in `domain` — repository interfaces and gateway interfaces both, as plain Java interfaces.
-- **D3 — Component tests are hard off-limits.** Not one line of `src/testSupport` or `src/componentTest` changes, for the whole refactor. `git diff --stat src/testSupport src/componentTest` must come back empty at every commit. An edit that seems necessary is evidence the refactor broke an observable contract — fix the production code, not the test.
+- **D3 — Component test *behaviour* is hard off-limits; *plumbing* may move.** *(Revised 2026-08-17
+  during execution — the original "not one line changes" was found to be unsatisfiable: 33 import
+  lines across 22 files in `testSupport`/`componentTest` bind to `src/main` types by package name, so
+  Step 3's carve breaks them before any logic changes, and D8 removes the wire DTOs that
+  `SutErpReader`/`SutTaxReader` hand to their assertions.)*
+
+  - **Frozen:** no scenario, no expectation, no assertion semantics. The counts stay **10 + 62, all
+    green**, at every commit. A change to what a test *asserts* is still evidence the refactor broke
+    an observable contract — fix the production code, not the test.
+  - **Permitted:** import lines, and the constructor/field types at the five points where the harness
+    names a production internal (`BaseComponentTest`'s repository + gateway injections, the three
+    `Sut*Reader` constructors). These bind to internals, not to the HTTP contract.
+  - **Consequence for D8:** the `Sut*Reader`s take the concrete `Http*Gateway` from
+    `infrastructure/external` — which still returns the wire DTOs — rather than the domain gateway
+    interface. This preserves their design intent exactly ("the stub's bytes travel through the SUT's
+    real HTTP call + real parse") and keeps `ThenProductImpl`/`ThenCountryImpl` assertions
+    byte-identical.
+  - The resulting delta *is* the answer to Step 12's measurement question, gathered early.
 - **D4 — Domain entity vs JPA entity: full split.** Domain entities are POJOs; JPA entities live in `infrastructure/persistence` and the repository adapters map across.
 - **D5 — `Money` + `Rate` value objects land at Step 8.** The pricing chain becomes typed arithmetic owning its own rounding, replacing eight loose `BigDecimal` locals in `placeOrder`. Persisted precision is unchanged — `Money` maps to the same `DECIMAL(10,2)`. *(The collision flagged during drafting wasn't real: `plans/20260722-1216-string-only-money-surface.md` governs how **test DSLs** write money literals, not production types.)*
 - **D6 — The variant stays commit-stage-only.** No VERSION, no Dockerfile, no docker-compose service, no `gh-optivem-*.yaml` entry, no release tag, no SonarCloud project — as the README documents today. The plan ends at Step 13; deployability is a non-goal, not a deferred item.

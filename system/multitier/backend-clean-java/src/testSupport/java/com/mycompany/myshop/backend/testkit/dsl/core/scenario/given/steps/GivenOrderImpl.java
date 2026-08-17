@@ -1,6 +1,6 @@
 package com.mycompany.myshop.backend.testkit.dsl.core.scenario.given.steps;
 
-import com.mycompany.myshop.backend.core.entities.OrderStatus;
+import com.mycompany.myshop.backend.domain.entities.OrderStatus;
 import com.mycompany.myshop.backend.testkit.dsl.core.scenario.ScenarioDefaults;
 import com.mycompany.myshop.backend.testkit.dsl.core.scenario.given.GivenImpl;
 import com.mycompany.myshop.backend.testkit.dsl.core.usecase.UseCaseDsl;

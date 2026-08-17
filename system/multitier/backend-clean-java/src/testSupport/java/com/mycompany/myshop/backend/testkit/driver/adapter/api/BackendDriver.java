@@ -1,10 +1,10 @@
 package com.mycompany.myshop.backend.testkit.driver.adapter.api;
 
-import com.mycompany.myshop.backend.core.dtos.BrowseCouponsResponse;
+import com.mycompany.myshop.backend.usecases.dtos.BrowseCouponsResponse;
 import com.mycompany.myshop.backend.testkit.driver.port.MyShopDriver;
-import com.mycompany.myshop.backend.core.dtos.BrowseOrderHistoryResponse;
-import com.mycompany.myshop.backend.core.dtos.PlaceOrderRequest;
-import com.mycompany.myshop.backend.core.dtos.PublishCouponRequest;
+import com.mycompany.myshop.backend.usecases.dtos.BrowseOrderHistoryResponse;
+import com.mycompany.myshop.backend.usecases.dtos.PlaceOrderRequest;
+import com.mycompany.myshop.backend.usecases.dtos.PublishCouponRequest;
 import java.util.Map;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
