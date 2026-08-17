@@ -1,0 +1,112 @@
+# Commit stage for the clean-architecture backend variant.
+#
+# Deliberately much thinner than multitier-backend-java-commit-stage.yml: this variant is not
+# deployed, not released and not system-tested, so there is no VERSION read, no Docker image build
+# or push, no SonarCloud analysis, and no downstream pipeline trigger. It compiles, lints, and runs
+# the unit + component suites — that is the whole gate.
+#
+# It also calls Gradle directly rather than going through `gh optivem component-test`. That CLI is
+# driven by a gh-optivem-*.yaml at the repo root, and adding one would pull the variant into the
+# config matrix that compile-all.sh, validate-all-gh-optivem-config.sh and the system-test stages
+# all iterate over — which is exactly the activation we are avoiding.
+name: multitier-backend-clean-java-commit-stage
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+        - 'system/multitier/backend-clean-java/**'
+        - '.github/workflows/multitier-backend-clean-java-commit-stage.yml'
+  pull_request:
+    branches: [ "main" ]
+    paths:
+        - 'system/multitier/backend-clean-java/**'
+        - '.github/workflows/multitier-backend-clean-java-commit-stage.yml'
+  workflow_dispatch:
+    inputs:
+      commit-sha:
+        description: 'Git SHA to build (leave empty for HEAD)'
+        required: false
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}-${{ github.event_name }}-${{ inputs.commit-sha || '' }}
+  cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' }}
+
+env:
+  COMMIT_SHA: ${{ inputs.commit-sha || github.sha }}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      # The component suite pulls Postgres via Testcontainers; an authenticated Docker Hub pull
+      # keeps it clear of the anonymous rate limit.
+      - name: Ensure Environment Variables Defined
+        uses: optivem/actions/validate-env-vars-defined@v1
+        with:
+          names: |
+            DOCKERHUB_USERNAME
+            DOCKERHUB_TOKEN
+        env:
+          DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+
+  run:
+    needs: check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: system/multitier/backend-clean-java
+    steps:
+      # === Checkout Code ===
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ env.COMMIT_SHA }}
+          fetch-depth: 0
+
+      # === Compile Code ===
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          java-version: 21
+          distribution: temurin
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Pre-warm Gradle Wrapper (retry transient CDN flakes)
+        uses: nick-fields/retry@v4
+        with:
+          timeout_minutes: 5
+          max_attempts: 3
+          command: cd system/multitier/backend-clean-java && ./gradlew --version
+
+      - name: Compile Code
+        run: ./gradlew compileJava compileTestJava compileComponentTestJava
+
+      # === Run Test Pyramid ===
+      - name: Log in to Docker Hub
+        uses: optivem/actions/docker-login@v1
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Run Unit Tests
+        run: ./gradlew test
+
+      # Same 13 component-test classes as backend-java. Green here means the clean-architecture
+      # implementation satisfies the identical behavioural spec — the reason this variant exists.
+      - name: Run Component Tests
+        run: ./gradlew componentTest --tests 'com.mycompany.myshop.backend.component.*'
+
+      # === Run Linter ===
+      - name: Run Linter
+        run: ./gradlew checkstyleAll

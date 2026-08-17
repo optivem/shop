@@ -10,6 +10,7 @@
 #   system/monolith/typescript
 #   system/monolith/dotnet
 #   system/multitier/backend-java
+#   system/multitier/backend-clean-java
 #   system/multitier/backend-typescript
 #   system/multitier/backend-dotnet
 #   system/multitier/frontend-react
@@ -51,6 +52,7 @@ PROJECTS=(
     "system/monolith/typescript|^system/monolith/typescript/"
     "system/monolith/dotnet|^system/monolith/dotnet/"
     "system/multitier/backend-java|^system/multitier/backend-java/"
+    "system/multitier/backend-clean-java|^system/multitier/backend-clean-java/"
     "system/multitier/backend-typescript|^system/multitier/backend-typescript/"
     "system/multitier/backend-dotnet|^system/multitier/backend-dotnet/"
     "system/multitier/frontend-react|^system/multitier/frontend-react/"

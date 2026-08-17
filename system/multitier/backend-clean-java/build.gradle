@@ -1,0 +1,132 @@
+// Clean-architecture variant of system/multitier/backend-java. Same HTTP contract, same DB schema,
+// same component-test suite — only the inside differs. Not deployed and not system-tested: no
+// VERSION, no Dockerfile, no SonarCloud project, no release tags. See README.md.
+plugins {
+	id 'java'
+	id 'checkstyle'
+	id 'jacoco'
+	id 'org.springframework.boot' version '3.5.6'
+	id 'io.spring.dependency-management' version '1.1.7'
+}
+
+checkstyle {
+	toolVersion = '10.21.4'
+	configFile = file("${rootDir}/config/checkstyle/checkstyle.xml")
+}
+
+// Override Spring Boot's managed Testcontainers version: 1.21.3 fails to talk to Docker Engine
+// 29.x (docker-java returns HTTP 400 on the daemon handshake); 1.21.4 fixes it.
+ext['testcontainers.version'] = '1.21.4'
+
+group = 'com.mycompany.myshop.backend'
+version = '0.0.1-SNAPSHOT'
+description = 'MyShop - Backend (Clean Architecture)'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+}
+
+// Opt-in test layers, kept off the default `test`/`build` so the template's build stays fast and Docker-light.
+//
+// Only `testSupport` + `componentTest` are carried over from backend-java. The contract and
+// integration layers are deliberately absent: their subject is an adapter (gateway, repository,
+// controller), and adapters are exactly what this variant rewrites, so they do not port. Add them
+// back per-variant once the clean-architecture design has settled.
+sourceSets {
+	// Shared stub drivers/DSLs (support/), consumed by every opt-in test layer. Its own source set
+	// so contract/integration tests depend only on the helpers, not on the whole componentTest suite.
+	testSupport {
+		compileClasspath += sourceSets.main.output
+		runtimeClasspath += sourceSets.main.output
+	}
+	componentTest {
+		compileClasspath += sourceSets.main.output + sourceSets.testSupport.output
+		runtimeClasspath += sourceSets.main.output + sourceSets.testSupport.output
+	}
+}
+
+configurations {
+	testSupportImplementation.extendsFrom testImplementation
+	testSupportRuntimeOnly.extendsFrom testRuntimeOnly
+	componentTestImplementation.extendsFrom testSupportImplementation
+	componentTestRuntimeOnly.extendsFrom testSupportRuntimeOnly
+}
+
+repositories {
+	mavenCentral()
+	// Fallback mirror in case Maven Central has a transient outage (502/503).
+	maven { url 'https://maven-central.storage-download.googleapis.com/maven2/' }
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
+
+	runtimeOnly 'org.postgresql:postgresql'
+
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+	testImplementation 'org.testcontainers:junit-jupiter'
+	testImplementation 'org.testcontainers:postgresql'
+	testImplementation 'org.flywaydb:flyway-core'
+	testImplementation 'org.flywaydb:flyway-database-postgresql'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+	// Shared stub helpers (support/) need WireMock; declared once here and inherited by the
+	// component layer via the testSupportImplementation extendsFrom chain.
+	testSupportImplementation 'org.wiremock:wiremock-standalone:3.9.2'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+	finalizedBy jacocoTestReport
+}
+
+tasks.withType(Test).configureEach {
+	// Default Gradle mechanisms so test names + counts show in the console
+	// (Gradle is otherwise silent on success). Applies to test + componentTest.
+	testLogging {
+		events 'passed', 'skipped', 'failed'
+		exceptionFormat 'full'
+	}
+	afterSuite { desc, result ->
+		if (desc.parent == null) {  // root suite only
+			println "Test results: ${result.testCount} tests, " +
+				"${result.successfulTestCount} passed, " +
+				"${result.failedTestCount} failed, ${result.skippedTestCount} skipped"
+		}
+	}
+}
+
+tasks.register('componentTest', Test) {
+	description = 'Runs in-process component tests (requires Docker). Opt-in; not part of `build`.'
+	group = 'verification'
+	testClassesDirs = sourceSets.componentTest.output.classesDirs
+	classpath = sourceSets.componentTest.runtimeClasspath
+	useJUnitPlatform()
+	shouldRunAfter tasks.named('test')
+}
+
+// Lints every source set, including the opt-in ones kept off `build`. CI calls this instead of
+// naming individual checkstyle tasks, so a new source set is linted the moment it is added —
+// scaffolded projects run the full `check`, and anything shop skips here fails downstream instead.
+tasks.register('checkstyleAll') {
+	description = 'Runs checkstyle on all source sets (main, test, and the opt-in test layers).'
+	group = 'verification'
+	dependsOn tasks.withType(Checkstyle)
+}
+
+jacocoTestReport {
+	dependsOn test
+	reports {
+		xml.required = true
+	}
+}
