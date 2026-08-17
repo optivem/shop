@@ -84,6 +84,7 @@ public class Order {
         return country;
     }
 
+    /** A {@code String}, not a type — see {@link Product} for why this one did not become one. */
     public String getSku() {
         return sku;
     }
