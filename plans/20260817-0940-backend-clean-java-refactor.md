@@ -1,6 +1,6 @@
 # 2026-08-17 09:40:29 UTC — Refactor backend-clean-java to clean architecture
 
-🤖 **Picked up by agent** — `Valentina_Desk` at `2026-08-17T10:59:03Z`
+🤖 **Picked up by agent** — `Valentina_Desk` at `2026-08-17T12:09:00Z`
 
 ## TL;DR
 
@@ -37,7 +37,9 @@ What we get out of this — the goals and deliverables:
 | `test` (unit — `OrderServiceTest`) | 10 | 10 | 0 | 0 |
 | `componentTest` | 62 | 62 | 0 | 0 |
 
-These two counts are the invariant. Every later step must reproduce **10 + 62, all green**, exactly.
+**62 component tests, all green** is the invariant — that count may never move. The unit count is a
+floor, not a fixed point: it only grows as the refactor makes the centre testable (Step 9 took it to
+18, Step 10 to 58). See the resume block for the current gate.
 
 ## Test-side fork, measured (early answer to Step 12)
 
@@ -61,23 +63,21 @@ wire DTO.
 
 ## ▶ Next executable step (resume here)
 
-Step 10 — the domain unit tests the CRUD variant structurally cannot have. Step 8 left four
-framework-free targets in `src/test`: `OrderPricing.price` (the promotion → discount → tax chain and
-its late rounding), `Coupon.discountAt` / `redeem` (validity window, usage limit), `Order.cancel` /
-`deliver` (the state machine, currently only reached through the use case tests), and
-`YearEndBlackoutPolicy` (both December-31st windows, including the asymmetry between the
-cancellation window's 22:30 bound and its "23:00" message). No Spring context, no Docker.
+Step 11 — the per-variant contract + narrow-integration source sets. `build.gradle` already carries
+the `testSupport` + `componentTest` opt-in wiring (source sets, `extendsFrom` chain, a `Test` task
+off `build`, `checkstyleAll`); mirror it for `contractTest` and `integrationTest` against
+`backend-java`'s equivalents. The subjects that now exist and did not before: the four
+`infrastructure/external/**` `Http*Gateway` adapters (contract) and the two
+`infrastructure/persistence/adapters/*RepositoryAdapter` + their mappers (narrow integration).
 
-Gate for every step from here: `./gradlew build componentTest` must stay at **18 unit tests, all
-passed** — Step 9 retired the two `@ArchIgnore`s, so the old *16 passed + 2 skipped* line is now
-*18 passed + 0 skipped* — **plus 62 component tests, all green**, and the non-import delta in
-`src/testSupport` / `src/componentTest` must stay at zero new lines.
+Gate for every step from here: `./gradlew build componentTest` must stay at **58 unit tests, all
+passed** — Step 10 added 40 domain tests to the 18 that Step 9 left — **plus 62 component tests, all
+green**, and the delta in `src/testSupport` / `src/componentTest` must stay at zero lines.
 
 All design questions are settled (see **Decisions**).
 
 ## Steps
 
-- [ ] **Step 10 — Domain unit tests.** Add fast, Spring-free tests in `src/test` for pricing, coupon validity, the order state machine and the blackout policy. These are the tests the CRUD variant structurally cannot have.
 - [ ] **Step 11 — Per-variant contract + narrow-integration layers.** The README defers these precisely because their subject is an adapter; now that the adapters exist, add `contractTest` / `integrationTest` source sets for `Http*` gateway adapters and the persistence adapters, mirroring `backend-java`'s opt-in wiring in `build.gradle`.
 - [ ] **Step 12 — Answer the sharing question.** Diff `src/testSupport` and `src/componentTest` against `backend-java`. If the fork is near-zero, replace the copies with borrowed source roots per the snippet already in the README; if it is not, record *what* forked and why — that is the more interesting finding.
 - [ ] **Step 13 — Update the README.** Replace the "Status: verbatim CRUD copy" section with the realised architecture, a package-map table, and the measured answer from Step 12.
@@ -95,7 +95,7 @@ every import line, and a later reader will want the *why*, not just the shape.
   Step 3's carve breaks them before any logic changes, and D8 removes the wire DTOs that
   `SutErpReader`/`SutTaxReader` hand to their assertions.)*
 
-  - **Frozen:** no scenario, no expectation, no assertion semantics. The counts stay **10 + 62, all
+  - **Frozen:** no scenario, no expectation, no assertion semantics. The count stays **62, all
     green**, at every commit. A change to what a test *asserts* is still evidence the refactor broke
     an observable contract — fix the production code, not the test.
   - **Permitted:** import lines, and the constructor/field types at the five points where the harness
