@@ -1,8 +1,8 @@
 package com.mycompany.myshop.backend.contract.external.tax;
 
-import com.mycompany.myshop.backend.contract.external.ExternalSystemSimulator;
+import com.mycompany.myshop.backend.contract.external.ExternalSystemReal;
 import com.mycompany.myshop.backend.core.services.external.TaxGateway;
-import com.mycompany.myshop.backend.testkit.driver.adapter.external.tax.client.SimulatorTaxCountryClient;
+import com.mycompany.myshop.backend.testkit.driver.adapter.external.tax.client.TaxRealClient;
 
 /**
  * The {@code Real} side of the tax country contract: same two scenarios as
@@ -11,14 +11,14 @@ import com.mycompany.myshop.backend.testkit.driver.adapter.external.tax.client.S
  * through the production gateway) but never held against the real system, so a field rename on the
  * tax side would have gone unnoticed until a deployed-system test caught it.
  *
- * <p>The simulator comes from {@link ExternalSystemSimulator} — see there for how it is started and
+ * <p>The simulator comes from {@link ExternalSystemReal} — see there for how it is started and
  * how to point this at an already-running instance instead.
  */
 class TaxRealParityContractTest extends BaseTaxCountryParityContractTest {
 
-    private static final String BASE_URL = ExternalSystemSimulator.baseUrl("/tax");
+    private static final String BASE_URL = ExternalSystemReal.baseUrl("/tax");
 
-    private final SimulatorTaxCountryClient client = new SimulatorTaxCountryClient(BASE_URL);
+    private final TaxRealClient client = new TaxRealClient(BASE_URL);
 
     private final TaxGateway taxGateway = new TaxGateway(BASE_URL);
 

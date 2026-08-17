@@ -9,21 +9,21 @@ import java.time.Duration;
 /**
  * Provisions a country fixture directly against the real tax simulator
  * ({@code external-systems/simulators/mock-server.js}), the tax counterpart of
- * {@code SimulatorErpProductClient} and following the same {@code client} sub-package convention.
+ * {@code ErpRealClient} and following the same {@code client} sub-package convention.
  *
  * <p>Sits alongside, not inside, {@code driver/adapter/external/tax}: it does not implement
  * {@link com.mycompany.myshop.backend.testkit.driver.port.external.tax.TaxDriver} — that port's
  * vocabulary is stub-programming only and is shared with {@code componentTest}, which is permanently
  * stub-only by design. This class only needs to write one thing (a country) to a real backing.
  */
-public class SimulatorTaxCountryClient {
+public class TaxRealClient {
 
     private final String baseUrl;
     private final HttpClient httpClient = HttpClient.newBuilder()
         .connectTimeout(Duration.ofSeconds(10))
         .build();
 
-    public SimulatorTaxCountryClient(String baseUrl) {
+    public TaxRealClient(String baseUrl) {
         this.baseUrl = baseUrl;
     }
 
@@ -32,7 +32,7 @@ public class SimulatorTaxCountryClient {
      * handful of countries and its {@code countries} resource does not upsert on {@code POST} — a
      * {@code POST} for an existing {@code id} fails — so a rejected create falls back to {@code PUT}
      * against that {@code id}, which the simulator treats as a replace. Mirrors
-     * {@code SimulatorErpProductClient#createProduct}.
+     * {@code ErpRealClient#createProduct}.
      */
     public void createCountry(String code, String taxRate) {
         var body = "{\"id\":\"" + code + "\",\"countryName\":\"" + code

@@ -1,7 +1,7 @@
 package com.mycompany.myshop.backend.contract.external.clock;
 
 import com.mycompany.myshop.backend.backendtest.configuration.ExternalSystemMode;
-import com.mycompany.myshop.backend.contract.external.ExternalSystemSimulator;
+import com.mycompany.myshop.backend.contract.external.ExternalSystemReal;
 import com.mycompany.myshop.backend.core.services.external.ClockGateway;
 
 /**
@@ -14,12 +14,12 @@ import com.mycompany.myshop.backend.core.services.external.ClockGateway;
  * HTTP at all — in {@code REAL} mode {@code ClockGateway} short-circuits to {@code Instant.now()} and
  * never calls the clock service, so there would be no wire format to pin.
  *
- * <p>The simulator comes from {@link ExternalSystemSimulator} — see there for how it is started and
+ * <p>The simulator comes from {@link ExternalSystemReal} — see there for how it is started and
  * how to point this at an already-running instance instead.
  */
 class ClockRealParityContractTest extends BaseClockTimeParityContractTest {
 
-    private static final String BASE_URL = ExternalSystemSimulator.baseUrl("/clock");
+    private static final String BASE_URL = ExternalSystemReal.baseUrl("/clock");
 
     private final ClockGateway clockGateway =
             new ClockGateway(ExternalSystemMode.STUB.propertyValue(), BASE_URL);

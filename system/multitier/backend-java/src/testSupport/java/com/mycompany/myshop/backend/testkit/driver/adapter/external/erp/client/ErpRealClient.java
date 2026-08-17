@@ -15,14 +15,14 @@ import java.time.Duration;
  * stub-only by design — this class only needs to write one thing (a product) to a real backing, not honor
  * the full stub-programming contract.
  */
-public class SimulatorErpProductClient {
+public class ErpRealClient {
 
     private final String baseUrl;
     private final HttpClient httpClient = HttpClient.newBuilder()
         .connectTimeout(Duration.ofSeconds(10))
         .build();
 
-    public SimulatorErpProductClient(String baseUrl) {
+    public ErpRealClient(String baseUrl) {
         this.baseUrl = baseUrl;
     }
 

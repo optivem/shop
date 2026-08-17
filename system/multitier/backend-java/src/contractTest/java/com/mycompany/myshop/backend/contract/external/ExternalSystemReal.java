@@ -23,7 +23,7 @@ import org.testcontainers.utility.DockerImageName;
  * compose-based local workflow:
  * {@code docker compose -f docker/java/multitier/docker-compose.local.real.yml up external-system-simulators}
  */
-public final class ExternalSystemSimulator {
+public final class ExternalSystemReal {
 
     private static final int PORT = 9000;
 
@@ -38,7 +38,7 @@ public final class ExternalSystemSimulator {
 
     private static final String ROOT_URL = resolveRootUrl();
 
-    private ExternalSystemSimulator() {
+    private ExternalSystemReal() {
     }
 
     /**
@@ -59,12 +59,12 @@ public final class ExternalSystemSimulator {
     }
 
     private static String start() {
-        var simulator = new GenericContainer<>(IMAGE)
+        var container = new GenericContainer<>(IMAGE)
             .withExposedPorts(PORT)
             .waitingFor(Wait.forHttp("/erp/health").forPort(PORT).forStatusCode(200));
 
         try {
-            simulator.start();
+            container.start();
         } catch (RuntimeException e) {
             throw new IllegalStateException("Could not start the external-system simulator from image "
                 + IMAGE + ". Build it first with `./gradlew externalSimulatorImage` — the "
@@ -73,6 +73,6 @@ public final class ExternalSystemSimulator {
                 + "to its root URL.", e);
         }
 
-        return "http://" + simulator.getHost() + ":" + simulator.getMappedPort(PORT);
+        return "http://" + container.getHost() + ":" + container.getMappedPort(PORT);
     }
 }

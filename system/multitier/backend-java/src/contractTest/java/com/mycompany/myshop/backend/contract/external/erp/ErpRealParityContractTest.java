@@ -1,8 +1,8 @@
 package com.mycompany.myshop.backend.contract.external.erp;
 
-import com.mycompany.myshop.backend.contract.external.ExternalSystemSimulator;
+import com.mycompany.myshop.backend.contract.external.ExternalSystemReal;
 import com.mycompany.myshop.backend.core.services.external.ErpGateway;
-import com.mycompany.myshop.backend.testkit.driver.adapter.external.erp.client.SimulatorErpProductClient;
+import com.mycompany.myshop.backend.testkit.driver.adapter.external.erp.client.ErpRealClient;
 
 /**
  * The {@code Real} side of the ERP product contract: same two scenarios as
@@ -17,14 +17,14 @@ import com.mycompany.myshop.backend.testkit.driver.adapter.external.erp.client.S
  * green component run means the stub is lying and every component test leaning on it is currently
  * proving nothing; the fix is the pair, stub and component expectations together.
  *
- * <p>The simulator comes from {@link ExternalSystemSimulator} — see there for how it is started and
+ * <p>The simulator comes from {@link ExternalSystemReal} — see there for how it is started and
  * how to point this at an already-running instance instead.
  */
 class ErpRealParityContractTest extends BaseErpProductParityContractTest {
 
-    private static final String BASE_URL = ExternalSystemSimulator.baseUrl("/erp");
+    private static final String BASE_URL = ExternalSystemReal.baseUrl("/erp");
 
-    private final SimulatorErpProductClient client = new SimulatorErpProductClient(BASE_URL);
+    private final ErpRealClient client = new ErpRealClient(BASE_URL);
 
     private final ErpGateway erpGateway = new ErpGateway(BASE_URL);
 
