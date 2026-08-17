@@ -1,6 +1,7 @@
 package com.mycompany.myshop.backend.presentation.controller;
 
-import com.mycompany.myshop.backend.usecases.coupon.CouponService;
+import com.mycompany.myshop.backend.usecases.coupon.BrowseCoupons;
+import com.mycompany.myshop.backend.usecases.coupon.PublishCoupon;
 import com.mycompany.myshop.backend.usecases.dtos.BrowseCouponsResponse;
 import com.mycompany.myshop.backend.usecases.dtos.PublishCouponRequest;
 import jakarta.validation.Valid;
@@ -12,45 +13,30 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Binds HTTP to use cases and nothing else — the coupon → response mapping that used to sit in
+ * {@code browseCoupons} now lives in {@link BrowseCoupons}, alongside the DTO it fills in.
+ */
 @RestController
 @RequestMapping("/api/coupons")
 public class CouponController {
 
-    private final CouponService couponService;
+    private final PublishCoupon publishCoupon;
+    private final BrowseCoupons browseCoupons;
 
-    public CouponController(CouponService couponService) {
-        this.couponService = couponService;
+    public CouponController(PublishCoupon publishCoupon, BrowseCoupons browseCoupons) {
+        this.publishCoupon = publishCoupon;
+        this.browseCoupons = browseCoupons;
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void createCoupon(@Valid @RequestBody PublishCouponRequest request) {
-        couponService.createCoupon(
-                request.getCode(),
-                request.getDiscountRate(),
-                request.getValidFrom(),
-                request.getValidTo(),
-                request.getUsageLimit()
-        );
+        publishCoupon.execute(request);
     }
 
     @GetMapping
     public BrowseCouponsResponse browseCoupons() {
-        var items = couponService.getAllCoupons().stream()
-                .map(coupon -> {
-                    var response = new BrowseCouponsResponse.BrowseCouponsItemResponse();
-                    response.setCode(coupon.getCode());
-                    response.setDiscountRate(coupon.getDiscountRate());
-                    response.setValidFrom(coupon.getValidFrom());
-                    response.setValidTo(coupon.getValidTo());
-                    response.setUsageLimit(coupon.getUsageLimit());
-                    response.setUsedCount(coupon.getUsedCount());
-                    return response;
-                })
-                .toList();
-
-        var result = new BrowseCouponsResponse();
-        result.setCoupons(items);
-        return result;
+        return browseCoupons.execute();
     }
 }

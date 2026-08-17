@@ -1,0 +1,40 @@
+package com.mycompany.myshop.backend.usecases.coupon;
+
+import com.mycompany.myshop.backend.domain.entities.Coupon;
+import com.mycompany.myshop.backend.domain.exceptions.ValidationException;
+import com.mycompany.myshop.backend.domain.repositories.CouponRepository;
+import com.mycompany.myshop.backend.domain.values.Rate;
+import com.mycompany.myshop.backend.usecases.dtos.PublishCouponRequest;
+
+/**
+ * Publishes a new coupon.
+ */
+public class PublishCoupon {
+
+    private static final String FIELD_COUPON_CODE = "couponCode";
+    private static final String MSG_COUPON_CODE_ALREADY_EXISTS = "Coupon code %s already exists";
+
+    private final CouponRepository couponRepository;
+
+    public PublishCoupon(CouponRepository couponRepository) {
+        this.couponRepository = couponRepository;
+    }
+
+    public void execute(PublishCouponRequest request) {
+        var couponCode = request.getCode();
+
+        if (couponRepository.findByCode(couponCode).isPresent()) {
+            throw new ValidationException(FIELD_COUPON_CODE,
+                    String.format(MSG_COUPON_CODE_ALREADY_EXISTS, couponCode));
+        }
+
+        // If usageLimit is null, set to unlimited (Integer.MAX_VALUE)
+        var usageLimit = request.getUsageLimit();
+        int limit = usageLimit != null ? usageLimit : Integer.MAX_VALUE;
+
+        var coupon = new Coupon(couponCode, Rate.of(request.getDiscountRate()),
+                request.getValidFrom(), request.getValidTo(), limit, 0);
+
+        couponRepository.save(coupon);
+    }
+}

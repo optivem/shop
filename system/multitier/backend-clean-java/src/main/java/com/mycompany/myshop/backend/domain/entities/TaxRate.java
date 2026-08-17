@@ -1,6 +1,6 @@
 package com.mycompany.myshop.backend.domain.entities;
 
-import java.math.BigDecimal;
+import com.mycompany.myshop.backend.domain.values.Rate;
 
 /**
  * A country's tax rate as the domain understands it. The tax system's wire representation lives in
@@ -10,9 +10,9 @@ public class TaxRate {
 
     private final String id;
     private final String countryName;
-    private final BigDecimal rate;
+    private final Rate rate;
 
-    public TaxRate(String id, String countryName, BigDecimal rate) {
+    public TaxRate(String id, String countryName, Rate rate) {
         if (rate == null) {
             throw new IllegalArgumentException("rate cannot be null");
         }
@@ -29,7 +29,7 @@ public class TaxRate {
         return countryName;
     }
 
-    public BigDecimal getRate() {
+    public Rate getRate() {
         return rate;
     }
 }

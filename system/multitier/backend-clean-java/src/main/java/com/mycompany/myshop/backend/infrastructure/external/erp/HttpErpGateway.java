@@ -3,6 +3,8 @@ package com.mycompany.myshop.backend.infrastructure.external.erp;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mycompany.myshop.backend.domain.entities.Product;
 import com.mycompany.myshop.backend.domain.entities.Promotion;
+import com.mycompany.myshop.backend.domain.values.Money;
+import com.mycompany.myshop.backend.domain.values.Rate;
 import com.mycompany.myshop.backend.domain.gateways.ErpGateway;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -33,13 +35,13 @@ public class HttpErpGateway implements ErpGateway {
     @Override
     public Promotion getPromotionDetails() {
         var wire = fetchPromotionDetails();
-        return new Promotion(wire.isPromotionActive(), wire.getDiscount());
+        return new Promotion(wire.isPromotionActive(), Rate.of(wire.getDiscount()));
     }
 
     @Override
     public Optional<Product> getProductDetails(String sku) {
         return fetchProductDetails(sku)
-                .map(wire -> new Product(wire.getId(), wire.getPrice()));
+                .map(wire -> new Product(wire.getId(), Money.of(wire.getPrice())));
     }
 
     /**

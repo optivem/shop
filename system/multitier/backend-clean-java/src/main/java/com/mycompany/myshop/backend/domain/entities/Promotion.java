@@ -1,6 +1,6 @@
 package com.mycompany.myshop.backend.domain.entities;
 
-import java.math.BigDecimal;
+import com.mycompany.myshop.backend.domain.values.Rate;
 
 /**
  * A promotion as the domain understands it. {@code discount} is the multiplicative factor applied
@@ -9,29 +9,29 @@ import java.math.BigDecimal;
 public class Promotion {
 
     private final boolean active;
-    private final BigDecimal discount;
+    private final Rate discount;
 
-    public Promotion(boolean active, BigDecimal discount) {
+    public Promotion(boolean active, Rate discount) {
         this.active = active;
         this.discount = discount;
     }
 
     public static Promotion inactive() {
-        return new Promotion(false, BigDecimal.ONE);
+        return new Promotion(false, Rate.ONE);
     }
 
     public boolean isActive() {
         return active;
     }
 
-    public BigDecimal getDiscount() {
+    public Rate getDiscount() {
         return discount;
     }
 
     /**
      * The factor to multiply the base price by: the promotion's discount when active, otherwise 1.
      */
-    public BigDecimal factor() {
-        return active ? discount : BigDecimal.ONE;
+    public Rate factor() {
+        return active ? discount : Rate.ONE;
     }
 }

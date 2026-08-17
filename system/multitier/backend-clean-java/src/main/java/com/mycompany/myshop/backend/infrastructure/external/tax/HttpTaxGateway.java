@@ -2,6 +2,7 @@ package com.mycompany.myshop.backend.infrastructure.external.tax;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mycompany.myshop.backend.domain.entities.TaxRate;
+import com.mycompany.myshop.backend.domain.values.Rate;
 import com.mycompany.myshop.backend.domain.exceptions.TaxGatewayException;
 import com.mycompany.myshop.backend.domain.gateways.TaxGateway;
 import org.slf4j.Logger;
@@ -36,7 +37,7 @@ public class HttpTaxGateway implements TaxGateway {
     @Override
     public Optional<TaxRate> getTaxDetails(String country) {
         return fetchTaxDetails(country)
-                .map(wire -> new TaxRate(wire.getId(), wire.getCountryName(), wire.getTaxRate()));
+                .map(wire -> new TaxRate(wire.getId(), wire.getCountryName(), Rate.of(wire.getTaxRate())));
     }
 
     /**

@@ -1,0 +1,57 @@
+package com.mycompany.myshop.backend.domain.policies;
+
+import com.mycompany.myshop.backend.domain.exceptions.ValidationException;
+
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.Month;
+import java.time.MonthDay;
+import java.time.ZoneId;
+import java.util.Optional;
+
+/**
+ * The two December 31st windows in which the shop refuses to act. Both used to be duplicated
+ * {@code MonthDay}/{@code LocalTime} blocks — one in {@code placeOrder}, one in {@code cancelOrder} —
+ * which is how they drifted apart: the placement window runs to midnight, the cancellation window
+ * is half an hour long, and its message says 23:00 while its bound is 22:30.
+ *
+ * <p>Both quirks are preserved verbatim; the point of gathering them here is that the next reader
+ * can see them side by side and decide, rather than discovering them one method at a time.
+ */
+public final class YearEndBlackoutPolicy {
+
+    private static final ZoneId ZONE = ZoneId.of("UTC");
+    private static final MonthDay YEAR_END = MonthDay.of(Month.DECEMBER, 31);
+
+    private static final LocalTime PLACEMENT_BLOCKED_FROM = LocalTime.of(23, 59);
+    private static final LocalTime CANCELLATION_BLOCKED_FROM = LocalTime.of(22, 0);
+    private static final LocalTime CANCELLATION_BLOCKED_TO = LocalTime.of(22, 30);
+
+    private YearEndBlackoutPolicy() {
+    }
+
+    public static void requirePlacementAllowed(Instant at) {
+        yearEndTimeOf(at).ifPresent(time -> {
+            if (!time.isBefore(PLACEMENT_BLOCKED_FROM)) {
+                throw new ValidationException("Orders cannot be placed between 23:59 and 00:00 on December 31st");
+            }
+        });
+    }
+
+    public static void requireCancellationAllowed(Instant at) {
+        yearEndTimeOf(at).ifPresent(time -> {
+            if (!time.isBefore(CANCELLATION_BLOCKED_FROM) && !time.isAfter(CANCELLATION_BLOCKED_TO)) {
+                throw new ValidationException("Order cancellation is not allowed on December 31st between 22:00 and 23:00");
+            }
+        });
+    }
+
+    /** The time of day at {@code at}, if {@code at} falls on December 31st; otherwise empty. */
+    private static Optional<LocalTime> yearEndTimeOf(Instant at) {
+        var local = LocalDateTime.ofInstant(at, ZONE);
+        return MonthDay.from(local).equals(YEAR_END)
+                ? Optional.of(local.toLocalTime())
+                : Optional.empty();
+    }
+}

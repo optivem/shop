@@ -5,13 +5,15 @@ import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
-import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 
-@Data
+/**
+ * What publishing a coupon needs. See {@link PlaceOrderRequest} on the validation annotations.
+ */
 public class PublishCouponRequest {
+
     @NotBlank(message = "Coupon code must not be blank")
     private String code;
 
@@ -26,4 +28,44 @@ public class PublishCouponRequest {
 
     @Positive(message = "Usage limit must be positive")
     private Integer usageLimit;
+
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
+    }
+
+    public BigDecimal getDiscountRate() {
+        return discountRate;
+    }
+
+    public void setDiscountRate(BigDecimal discountRate) {
+        this.discountRate = discountRate;
+    }
+
+    public Instant getValidFrom() {
+        return validFrom;
+    }
+
+    public void setValidFrom(Instant validFrom) {
+        this.validFrom = validFrom;
+    }
+
+    public Instant getValidTo() {
+        return validTo;
+    }
+
+    public void setValidTo(Instant validTo) {
+        this.validTo = validTo;
+    }
+
+    public Integer getUsageLimit() {
+        return usageLimit;
+    }
+
+    public void setUsageLimit(Integer usageLimit) {
+        this.usageLimit = usageLimit;
+    }
 }

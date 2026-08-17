@@ -1,5 +1,8 @@
 package com.mycompany.myshop.backend.domain.entities;
 
+import com.mycompany.myshop.backend.domain.exceptions.ValidationException;
+import com.mycompany.myshop.backend.domain.values.Rate;
+
 import java.math.BigDecimal;
 import java.time.Instant;
 
@@ -7,23 +10,26 @@ import java.time.Instant;
  * A coupon. A plain object: no ORM annotations, no Spring, no Lombok — the persisted shape lives in
  * {@code infrastructure.persistence.entities.CouponJpaEntity}.
  *
- * <p>Validity and redemption are still decided in {@code CouponService}; Step 8 of the refactor plan
- * moves them onto this class.
+ * <p>It decides for itself whether it can be redeemed. {@link #discountAt(Instant)} holds the
+ * validity window and the usage limit that used to be four {@code if} branches in the coupon
+ * service, and {@link #redeem()} is the only way the used count moves.
  */
 public class Coupon {
 
+    private static final String FIELD_COUPON_CODE = "couponCode";
+    private static final String MSG_COUPON_NOT_YET_VALID = "Coupon code %s is not yet valid";
+    private static final String MSG_COUPON_EXPIRED = "Coupon code %s has expired";
+    private static final String MSG_COUPON_USAGE_LIMIT_REACHED = "Coupon code %s has exceeded its usage limit";
+
     private Long id;
-    private String code;
-    private BigDecimal discountRate;
-    private Instant validFrom;
-    private Instant validTo;
-    private Integer usageLimit;
-    private Integer usedCount;
+    private final String code;
+    private final Rate discountRate;
+    private final Instant validFrom;
+    private final Instant validTo;
+    private final Integer usageLimit;
+    private int usedCount;
 
-    public Coupon() {
-    }
-
-    public Coupon(String code, BigDecimal discountRate, Instant validFrom, Instant validTo,
+    public Coupon(String code, Rate discountRate, Instant validFrom, Instant validTo,
                   Integer usageLimit, Integer usedCount) {
         if (code == null || code.trim().isEmpty()) {
             throw new IllegalArgumentException("code cannot be null or empty");
@@ -31,7 +37,8 @@ public class Coupon {
         if (discountRate == null) {
             throw new IllegalArgumentException("discountRate cannot be null");
         }
-        if (discountRate.compareTo(BigDecimal.ZERO) <= 0 || discountRate.compareTo(BigDecimal.ONE) > 0) {
+        if (discountRate.value().compareTo(BigDecimal.ZERO) <= 0
+                || discountRate.value().compareTo(BigDecimal.ONE) > 0) {
             throw new IllegalArgumentException("discountRate must be greater than 0 and at most 1");
         }
         // Only validate date order if both dates are provided
@@ -57,10 +64,40 @@ public class Coupon {
         this.usedCount = usedCount;
     }
 
+    /**
+     * The discount this coupon grants at {@code at}.
+     *
+     * @throws ValidationException when the coupon is not yet valid, has expired, or has been used
+     *                             as often as it may be.
+     */
+    public Rate discountAt(Instant at) {
+        if (validFrom != null && at.isBefore(validFrom)) {
+            throw reject(MSG_COUPON_NOT_YET_VALID);
+        }
+        if (validTo != null && at.isAfter(validTo)) {
+            throw reject(MSG_COUPON_EXPIRED);
+        }
+        if (usageLimit != null && usedCount >= usageLimit) {
+            throw reject(MSG_COUPON_USAGE_LIMIT_REACHED);
+        }
+
+        return discountRate;
+    }
+
+    /** Records one use of this coupon. */
+    public void redeem() {
+        usedCount++;
+    }
+
+    private ValidationException reject(String messageFormat) {
+        return new ValidationException(FIELD_COUPON_CODE, String.format(messageFormat, code));
+    }
+
     public Long getId() {
         return id;
     }
 
+    /** Set by the repository adapter once storage has assigned the row its identity. */
     public void setId(Long id) {
         this.id = id;
     }
@@ -69,47 +106,23 @@ public class Coupon {
         return code;
     }
 
-    public void setCode(String code) {
-        this.code = code;
-    }
-
-    public BigDecimal getDiscountRate() {
+    public Rate getDiscountRate() {
         return discountRate;
-    }
-
-    public void setDiscountRate(BigDecimal discountRate) {
-        this.discountRate = discountRate;
     }
 
     public Instant getValidFrom() {
         return validFrom;
     }
 
-    public void setValidFrom(Instant validFrom) {
-        this.validFrom = validFrom;
-    }
-
     public Instant getValidTo() {
         return validTo;
-    }
-
-    public void setValidTo(Instant validTo) {
-        this.validTo = validTo;
     }
 
     public Integer getUsageLimit() {
         return usageLimit;
     }
 
-    public void setUsageLimit(Integer usageLimit) {
-        this.usageLimit = usageLimit;
-    }
-
-    public Integer getUsedCount() {
+    public int getUsedCount() {
         return usedCount;
-    }
-
-    public void setUsedCount(Integer usedCount) {
-        this.usedCount = usedCount;
     }
 }

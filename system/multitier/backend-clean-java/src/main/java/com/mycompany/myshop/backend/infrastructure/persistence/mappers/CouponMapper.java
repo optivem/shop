@@ -1,6 +1,7 @@
 package com.mycompany.myshop.backend.infrastructure.persistence.mappers;
 
 import com.mycompany.myshop.backend.domain.entities.Coupon;
+import com.mycompany.myshop.backend.domain.values.Rate;
 import com.mycompany.myshop.backend.infrastructure.persistence.entities.CouponJpaEntity;
 
 /**
@@ -15,7 +16,7 @@ public final class CouponMapper {
     public static Coupon toDomain(CouponJpaEntity entity) {
         var coupon = new Coupon(
                 entity.getCode(),
-                entity.getDiscountRate(),
+                Rate.of(entity.getDiscountRate()),
                 entity.getValidFrom(),
                 entity.getValidTo(),
                 entity.getUsageLimit(),
@@ -28,7 +29,7 @@ public final class CouponMapper {
         var entity = new CouponJpaEntity();
         entity.setId(coupon.getId());
         entity.setCode(coupon.getCode());
-        entity.setDiscountRate(coupon.getDiscountRate());
+        entity.setDiscountRate(coupon.getDiscountRate().value());
         entity.setValidFrom(coupon.getValidFrom());
         entity.setValidTo(coupon.getValidTo());
         entity.setUsageLimit(coupon.getUsageLimit());

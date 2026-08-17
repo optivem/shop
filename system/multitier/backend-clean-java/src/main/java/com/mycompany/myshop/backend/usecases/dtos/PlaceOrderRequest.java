@@ -3,10 +3,14 @@ package com.mycompany.myshop.backend.usecases.dtos;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
-import lombok.Data;
 
-@Data
+/**
+ * What placing an order needs. Carries its {@code jakarta.validation} constraints: per D9 that is
+ * the one framework import the use case layer keeps, because a parallel set of near-identical web
+ * request classes would cost more than it buys.
+ */
 public class PlaceOrderRequest {
+
     @NotBlank(message = "SKU must not be empty")
     private String sku;
 
@@ -19,4 +23,36 @@ public class PlaceOrderRequest {
     private String country;
 
     private String couponCode;
+
+    public String getSku() {
+        return sku;
+    }
+
+    public void setSku(String sku) {
+        this.sku = sku;
+    }
+
+    public Integer getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(Integer quantity) {
+        this.quantity = quantity;
+    }
+
+    public String getCountry() {
+        return country;
+    }
+
+    public void setCountry(String country) {
+        this.country = country;
+    }
+
+    public String getCouponCode() {
+        return couponCode;
+    }
+
+    public void setCouponCode(String couponCode) {
+        this.couponCode = couponCode;
+    }
 }

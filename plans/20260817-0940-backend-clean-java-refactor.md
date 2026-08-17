@@ -1,6 +1,6 @@
 # 2026-08-17 09:40:29 UTC — Refactor backend-clean-java to clean architecture
 
-🤖 **Picked up by agent** — `Valentina_Desk` at `2026-08-17T10:11:11Z`
+🤖 **Picked up by agent** — `Valentina_Desk` at `2026-08-17T10:59:03Z`
 
 ## TL;DR
 
@@ -61,28 +61,22 @@ wire DTO.
 
 ## ▶ Next executable step (resume here)
 
-Step 6 — split the two grab-bag services into one class per use case. `usecases/order/OrderService`
-becomes `PlaceOrder`, `CancelOrder`, `DeliverOrder`, `ViewOrderDetails`, `BrowseOrderHistory`;
-`usecases/coupon/CouponService` becomes `PublishCoupon`, `BrowseCoupons`. `getDiscount` and
-`incrementUsageCount` are *not* use cases — leave them where they are, Step 8 moves them onto
-`Coupon`. Then Step 7 points the controllers at the new classes.
+Step 10 — the domain unit tests the CRUD variant structurally cannot have. Step 8 left four
+framework-free targets in `src/test`: `OrderPricing.price` (the promotion → discount → tax chain and
+its late rounding), `Coupon.discountAt` / `redeem` (validity window, usage limit), `Order.cancel` /
+`deliver` (the state machine, currently only reached through the use case tests), and
+`YearEndBlackoutPolicy` (both December-31st windows, including the asymmetry between the
+cancellation window's 22:30 bound and its "23:00" message). No Spring context, no Docker.
 
-Gate for every step from here: `./gradlew build componentTest` must stay at **18 unit tests
-(16 passed, 2 ArchIgnored) + 62 component tests, all green**, and the non-import delta in
+Gate for every step from here: `./gradlew build componentTest` must stay at **18 unit tests, all
+passed** — Step 9 retired the two `@ArchIgnore`s, so the old *16 passed + 2 skipped* line is now
+*18 passed + 0 skipped* — **plus 62 component tests, all green**, and the non-import delta in
 `src/testSupport` / `src/componentTest` must stay at zero new lines.
 
 All design questions are settled (see **Decisions**).
 
 ## Steps
 
-- [ ] **Step 6 — One class per use case.** Split `OrderService` into `PlaceOrder`, `CancelOrder`, `DeliverOrder`, `ViewOrderDetails`, `BrowseOrderHistory`; split `CouponService` into `PublishCoupon`, `BrowseCoupons`. `getDiscount` / `incrementUsageCount` are not use cases — they are coupon behaviour called by `PlaceOrder`, and Step 8 moves them onto the `Coupon` entity. Each use case takes and returns its own DTO from `usecases/dtos`.
-- [ ] **Step 7 — Point the controllers at the use cases.** `OrderController` / `CouponController` inject use case classes instead of services, and the response-shaping loops currently split across `CouponController.browseCoupons` (in the controller) and `OrderService.browseOrderHistory` (in the service) both move into their use case — since D9 puts the response DTOs in `usecases`, that is where domain → DTO mapping belongs, and the inconsistency disappears. JSON field names, paths and status codes must not shift by a byte.
-- [ ] **Step 8 — Push behaviour into the domain.** Four moves, each removing a block of logic from a use case:
-  - **`Order.cancel()` / `Order.deliver()`** enforce the status transitions currently written as `if (order.getStatus() != …) throw` in `OrderService`.
-  - **`Coupon`** owns its validity window, usage limit and `redeem()` — absorbing `CouponService.getDiscount`'s four validation branches and `incrementUsageCount`.
-  - **`Money` + `Rate` value objects** own the rounding and the arithmetic: `base.applyRate(…)`, `promoted.minus(discount)`, `subtotal.plus(tax)` replace eight loose `BigDecimal` locals. Same persisted `DECIMAL(10,2)` / `DECIMAL(5,4)` precision as today.
-  - **A calendar policy** for the two December-31st blackout windows (the 23:59 placement block and the 22:00–22:30 cancellation block), which are currently duplicated `MonthDay`/`LocalTime` blocks in two methods.
-- [ ] **Step 9 — De-frameworkify the inside.** Remove Lombok and Spring stereotypes from `domain` and `usecases`; wire the use case classes as explicit beans in `infrastructure/config` instead of `@Service`-scanning them. Widen the Step 2 ArchUnit rule to its full form — it must now pass unscoped.
 - [ ] **Step 10 — Domain unit tests.** Add fast, Spring-free tests in `src/test` for pricing, coupon validity, the order state machine and the blackout policy. These are the tests the CRUD variant structurally cannot have.
 - [ ] **Step 11 — Per-variant contract + narrow-integration layers.** The README defers these precisely because their subject is an adapter; now that the adapters exist, add `contractTest` / `integrationTest` source sets for `Http*` gateway adapters and the persistence adapters, mirroring `backend-java`'s opt-in wiring in `build.gradle`.
 - [ ] **Step 12 — Answer the sharing question.** Diff `src/testSupport` and `src/componentTest` against `backend-java`. If the fork is near-zero, replace the copies with borrowed source roots per the snippet already in the README; if it is not, record *what* forked and why — that is the more interesting finding.

@@ -1,6 +1,6 @@
 package com.mycompany.myshop.backend.domain.entities;
 
-import java.math.BigDecimal;
+import com.mycompany.myshop.backend.domain.values.Money;
 
 /**
  * A product as the domain understands it: an identifier and a unit price. The ERP's wire
@@ -10,9 +10,9 @@ import java.math.BigDecimal;
 public class Product {
 
     private final String id;
-    private final BigDecimal price;
+    private final Money price;
 
-    public Product(String id, BigDecimal price) {
+    public Product(String id, Money price) {
         if (price == null) {
             throw new IllegalArgumentException("price cannot be null");
         }
@@ -24,7 +24,7 @@ public class Product {
         return id;
     }
 
-    public BigDecimal getPrice() {
+    public Money getPrice() {
         return price;
     }
 }
