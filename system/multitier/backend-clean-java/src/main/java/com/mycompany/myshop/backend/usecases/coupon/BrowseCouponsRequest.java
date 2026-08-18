@@ -1,4 +1,4 @@
-package com.mycompany.myshop.backend.usecases.dtos;
+package com.mycompany.myshop.backend.usecases.coupon;
 
 /**
  * What browsing coupons needs: nothing. It exists so that {@code BrowseCoupons} has the same shape

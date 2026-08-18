@@ -5,7 +5,6 @@ import com.mycompany.myshop.backend.domain.repositories.OrderRepository;
 import com.mycompany.myshop.backend.usecases.Result;
 import com.mycompany.myshop.backend.usecases.UseCase;
 import com.mycompany.myshop.backend.usecases.UseCaseError;
-import com.mycompany.myshop.backend.usecases.dtos.DeliverOrderRequest;
 
 /**
  * Marks an order as delivered. Whether this order may be delivered is the order's own decision.

@@ -7,7 +7,6 @@ import com.mycompany.myshop.backend.domain.repositories.OrderRepository;
 import com.mycompany.myshop.backend.usecases.Result;
 import com.mycompany.myshop.backend.usecases.UseCase;
 import com.mycompany.myshop.backend.usecases.UseCaseError;
-import com.mycompany.myshop.backend.usecases.dtos.CancelOrderRequest;
 
 /**
  * Cancels an order. Whether cancellation is open is the calendar policy's decision and whether this

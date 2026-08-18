@@ -2,6 +2,7 @@ package com.mycompany.myshop.backend;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
+import static com.tngtech.archunit.core.domain.JavaClass.Predicates.simpleNameEndingWith;
 
 import com.mycompany.myshop.backend.usecases.UseCase;
 import com.tngtech.archunit.core.importer.ImportOption;
@@ -24,6 +25,7 @@ class ArchitectureTest {
 
     private static final String DOMAIN = "..domain..";
     private static final String USECASES = "..usecases..";
+    private static final String[] USECASE_PACKAGES = {"..usecases.order..", "..usecases.coupon.."};
     private static final String PRESENTATION = "..presentation..";
     private static final String INFRASTRUCTURE = "..infrastructure..";
 
@@ -100,9 +102,23 @@ class ArchitectureTest {
      */
     @ArchTest
     static final ArchRule USECASES_IMPLEMENT_THE_USECASE_INTERFACE = classes()
-            .that().resideInAnyPackage("..usecases.order..", "..usecases.coupon..")
+            .that().resideInAnyPackage(USECASE_PACKAGES)
+            .and().haveSimpleNameNotEndingWith("Request")
+            .and().haveSimpleNameNotEndingWith("Response")
             .should().implement(UseCase.class)
             .because("every use case has the same signature: one request in, one declared Result out");
+
+    /**
+     * A use case is its package: the class, its request, its response. Splitting the DTOs into a
+     * shared {@code dtos} package puts a use case's own vocabulary somewhere other than the use
+     * case, and lets unrelated use cases share a request by accident — this rule keeps them together.
+     */
+    @ArchTest
+    static final ArchRule REQUESTS_AND_RESPONSES_LIVE_WITH_THEIR_USECASE = classes()
+            .that().resideInAPackage(USECASES)
+            .and(simpleNameEndingWith("Request").or(simpleNameEndingWith("Response")))
+            .should().resideInAnyPackage(USECASE_PACKAGES)
+            .because("a request or response belongs to one use case, so it lives beside it");
 
     /** Jackson is a wire concern: it belongs to the adapters and the web layer, never to the centre. */
     @ArchTest

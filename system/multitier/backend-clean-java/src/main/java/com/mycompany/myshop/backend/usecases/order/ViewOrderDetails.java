@@ -5,8 +5,6 @@ import com.mycompany.myshop.backend.domain.values.CouponCode;
 import com.mycompany.myshop.backend.usecases.Result;
 import com.mycompany.myshop.backend.usecases.UseCase;
 import com.mycompany.myshop.backend.usecases.UseCaseError;
-import com.mycompany.myshop.backend.usecases.dtos.ViewOrderDetailsRequest;
-import com.mycompany.myshop.backend.usecases.dtos.ViewOrderDetailsResponse;
 
 /**
  * Returns the full detail of one order. The domain → response mapping lives here rather than in the

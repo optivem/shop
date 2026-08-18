@@ -6,9 +6,9 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.mycompany.myshop.backend.BaseComponentTest;
-import com.mycompany.myshop.backend.usecases.dtos.BrowseOrderHistoryResponse;
-import com.mycompany.myshop.backend.usecases.dtos.PlaceOrderRequest;
-import com.mycompany.myshop.backend.usecases.dtos.PlaceOrderResponse;
+import com.mycompany.myshop.backend.usecases.order.BrowseOrderHistoryResponse;
+import com.mycompany.myshop.backend.usecases.order.PlaceOrderRequest;
+import com.mycompany.myshop.backend.usecases.order.PlaceOrderResponse;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 

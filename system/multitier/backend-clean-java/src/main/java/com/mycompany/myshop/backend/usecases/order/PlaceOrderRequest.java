@@ -1,4 +1,6 @@
-package com.mycompany.myshop.backend.usecases.dtos;
+package com.mycompany.myshop.backend.usecases.order;
+
+import com.mycompany.myshop.backend.usecases.TypeValidationMessage;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

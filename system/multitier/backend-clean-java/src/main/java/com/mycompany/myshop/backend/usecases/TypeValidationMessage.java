@@ -1,4 +1,4 @@
-package com.mycompany.myshop.backend.usecases.dtos;
+package com.mycompany.myshop.backend.usecases;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

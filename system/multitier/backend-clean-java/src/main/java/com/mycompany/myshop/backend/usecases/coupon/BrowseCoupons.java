@@ -5,8 +5,6 @@ import com.mycompany.myshop.backend.domain.repositories.CouponRepository;
 import com.mycompany.myshop.backend.usecases.Result;
 import com.mycompany.myshop.backend.usecases.UseCase;
 import com.mycompany.myshop.backend.usecases.UseCaseError;
-import com.mycompany.myshop.backend.usecases.dtos.BrowseCouponsRequest;
-import com.mycompany.myshop.backend.usecases.dtos.BrowseCouponsResponse;
 
 /**
  * Lists every published coupon. The domain → response mapping used to sit in the controller while

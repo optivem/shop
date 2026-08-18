@@ -1,4 +1,4 @@
-package com.mycompany.myshop.backend.usecases.dtos;
+package com.mycompany.myshop.backend.usecases.coupon;
 
 import java.math.BigDecimal;
 import java.time.Instant;

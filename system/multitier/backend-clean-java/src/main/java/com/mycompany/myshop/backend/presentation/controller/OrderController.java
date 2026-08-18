@@ -1,11 +1,11 @@
 package com.mycompany.myshop.backend.presentation.controller;
 
 import com.mycompany.myshop.backend.presentation.UseCaseResponder;
-import com.mycompany.myshop.backend.usecases.dtos.BrowseOrderHistoryRequest;
-import com.mycompany.myshop.backend.usecases.dtos.CancelOrderRequest;
-import com.mycompany.myshop.backend.usecases.dtos.DeliverOrderRequest;
-import com.mycompany.myshop.backend.usecases.dtos.PlaceOrderRequest;
-import com.mycompany.myshop.backend.usecases.dtos.ViewOrderDetailsRequest;
+import com.mycompany.myshop.backend.usecases.order.BrowseOrderHistoryRequest;
+import com.mycompany.myshop.backend.usecases.order.CancelOrderRequest;
+import com.mycompany.myshop.backend.usecases.order.DeliverOrderRequest;
+import com.mycompany.myshop.backend.usecases.order.PlaceOrderRequest;
+import com.mycompany.myshop.backend.usecases.order.ViewOrderDetailsRequest;
 import com.mycompany.myshop.backend.usecases.order.BrowseOrderHistory;
 import com.mycompany.myshop.backend.usecases.order.CancelOrder;
 import com.mycompany.myshop.backend.usecases.order.DeliverOrder;

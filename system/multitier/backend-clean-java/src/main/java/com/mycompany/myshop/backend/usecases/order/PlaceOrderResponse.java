@@ -1,4 +1,4 @@
-package com.mycompany.myshop.backend.usecases.dtos;
+package com.mycompany.myshop.backend.usecases.order;
 
 /**
  * What placing an order returns. No Jackson annotation: serialization is an outer-ring concern, and

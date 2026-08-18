@@ -2,7 +2,7 @@ package com.mycompany.myshop.backend.testkit.dsl.core.usecase.usecases;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.mycompany.myshop.backend.usecases.dtos.BrowseCouponsResponse;
+import com.mycompany.myshop.backend.usecases.coupon.BrowseCouponsResponse;
 import com.mycompany.myshop.backend.testkit.dsl.core.shared.ResponseVerification;
 
 public class BrowseCouponsVerification extends ResponseVerification<BrowseCouponsResponse> {

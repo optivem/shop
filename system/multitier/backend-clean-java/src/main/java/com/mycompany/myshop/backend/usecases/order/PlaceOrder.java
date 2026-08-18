@@ -18,8 +18,6 @@ import com.mycompany.myshop.backend.domain.values.Rate;
 import com.mycompany.myshop.backend.usecases.Result;
 import com.mycompany.myshop.backend.usecases.UseCase;
 import com.mycompany.myshop.backend.usecases.UseCaseError;
-import com.mycompany.myshop.backend.usecases.dtos.PlaceOrderRequest;
-import com.mycompany.myshop.backend.usecases.dtos.PlaceOrderResponse;
 
 import java.util.Optional;
 import java.util.UUID;
