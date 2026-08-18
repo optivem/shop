@@ -11,6 +11,7 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import com.mycompany.myshop.backend.domain.gateways.ErpGateway;
 import com.mycompany.myshop.backend.domain.values.Money;
 import com.mycompany.myshop.backend.domain.values.Rate;
+import com.mycompany.myshop.backend.infrastructure.external.ErpGatewayException;
 import com.mycompany.myshop.backend.infrastructure.external.erp.HttpErpGateway;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -73,7 +74,7 @@ class ErpGatewayIntegrationTest {
             .willReturn(aResponse().withStatus(500).withBody("Internal Server Error")));
 
         assertThatThrownBy(() -> erpGateway.getProductDetails("BAD-SKU"))
-            .isInstanceOf(IllegalStateException.class)
+            .isInstanceOf(ErpGatewayException.class)
             .hasMessageContaining("500");
     }
 
@@ -94,7 +95,7 @@ class ErpGatewayIntegrationTest {
             .willReturn(aResponse().withStatus(503).withBody("Service Unavailable")));
 
         assertThatThrownBy(() -> erpGateway.getPromotionDetails())
-            .isInstanceOf(IllegalStateException.class)
+            .isInstanceOf(ErpGatewayException.class)
             .hasMessageContaining("503");
     }
 }

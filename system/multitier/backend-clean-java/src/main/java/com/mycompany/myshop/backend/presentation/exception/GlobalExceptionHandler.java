@@ -38,6 +38,8 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     private static final String VALIDATION_DETAIL = "The request contains one or more validation errors";
     private static final String VALIDATION_TITLE = "Validation Error";
     private static final String PROP_TIMESTAMP = "timestamp";
+    private static final String GENERAL_ERROR_DETAIL =
+            "An unexpected error occurred. Please try again later.";
     private static final String PROP_ERRORS = "errors";
     private static final String PROP_FIELD = "field";
     private static final String PROP_MESSAGE = "message";
@@ -164,30 +166,19 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ProblemDetail> handleGeneralException(Exception ex) {
+        // The stack trace carries the message and every cause. None of that goes in the response:
+        // an unhandled exception is by definition something we did not mean to expose, and its
+        // message routinely names internal classes, SQL, and host addresses.
         log.error("Unexpected error occurred", ex);
-
-        var rootCauseMessage = getRootCauseMessage(ex);
-        var fullMessage = "Internal server error: " + ex.getMessage();
-        if (rootCauseMessage != null && !rootCauseMessage.equals(ex.getMessage())) {
-            fullMessage += " | Root cause: " + rootCauseMessage;
-        }
 
         var problemDetail = ProblemDetail.forStatusAndDetail(
                 HttpStatus.INTERNAL_SERVER_ERROR,
-                fullMessage
+                GENERAL_ERROR_DETAIL
         );
         problemDetail.setType(URI.create(internalServerErrorTypeUri));
         problemDetail.setTitle("Internal Server Error");
         problemDetail.setProperty(PROP_TIMESTAMP, Instant.now());
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(problemDetail);
-    }
-
-    private String getRootCauseMessage(Throwable ex) {
-        var cause = ex;
-        while (cause.getCause() != null) {
-            cause = cause.getCause();
-        }
-        return cause.getMessage();
     }
 }

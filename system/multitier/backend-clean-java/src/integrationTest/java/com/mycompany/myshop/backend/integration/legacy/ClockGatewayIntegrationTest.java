@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.within;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.mycompany.myshop.backend.domain.gateways.ClockGateway;
+import com.mycompany.myshop.backend.infrastructure.external.ClockGatewayException;
 import com.mycompany.myshop.backend.infrastructure.external.clock.HttpClockGateway;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -79,7 +80,7 @@ class ClockGatewayIntegrationTest {
             .willReturn(aResponse().withStatus(500).withBody("Internal Server Error")));
 
         assertThatThrownBy(() -> clockGateway("stub").getCurrentTime())
-            .isInstanceOf(IllegalStateException.class)
+            .isInstanceOf(ClockGatewayException.class)
             .hasMessageContaining("500");
     }
 

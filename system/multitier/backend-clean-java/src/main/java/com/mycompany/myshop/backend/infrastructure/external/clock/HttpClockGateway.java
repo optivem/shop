@@ -3,9 +3,11 @@ package com.mycompany.myshop.backend.infrastructure.external.clock;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.mycompany.myshop.backend.domain.gateways.ClockGateway;
+import com.mycompany.myshop.backend.infrastructure.external.ClockGatewayException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -41,6 +43,8 @@ public class HttpClockGateway implements ClockGateway {
         } else if ("stub".equals(externalSystemMode)) {
             return getStubTime();
         } else {
+            // Misconfiguration, not a gateway failure: IllegalStateException is the right signal
+            // here precisely because ClockGatewayException is not. Do not "unify" this one.
             throw new IllegalStateException("Unknown external system mode: " + externalSystemMode);
         }
     }
@@ -61,7 +65,7 @@ public class HttpClockGateway implements ClockGateway {
             var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() != 200) {
-                throw new IllegalStateException("Clock API returned status " + response.statusCode() +
+                throw new ClockGatewayException("Clock API returned status " + response.statusCode() +
                         ". URL: " + url + ". Response: " + response.body());
             }
 
@@ -69,10 +73,9 @@ public class HttpClockGateway implements ClockGateway {
             return clockResponse.getTime();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new IllegalStateException("Failed to fetch current time from URL: " + clockUrl +
-                    ". Error: " + e.getClass().getSimpleName() + ": " + e.getMessage(), e);
-        } catch (Exception e) {
-            throw new IllegalStateException("Failed to fetch current time from URL: " + clockUrl +
+            throw new ClockGatewayException("Interrupted while fetching current time from URL: " + clockUrl, e);
+        } catch (IOException e) {
+            throw new ClockGatewayException("Failed to fetch current time from URL: " + clockUrl +
                     ". Error: " + e.getClass().getSimpleName() + ": " + e.getMessage(), e);
         }
     }

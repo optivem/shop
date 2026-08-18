@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.within;
 
 import com.mycompany.myshop.backend.backendtest.configuration.ExternalSystemMode;
 import com.mycompany.myshop.backend.domain.gateways.ClockGateway;
+import com.mycompany.myshop.backend.infrastructure.external.ClockGatewayException;
 import com.mycompany.myshop.backend.integration.latest.base.BaseGatewayIntegrationTest;
 import com.mycompany.myshop.backend.testkit.dsl.core.usecase.external.clock.ClockDsl;
 import java.time.Instant;
@@ -47,7 +48,7 @@ class ClockGatewayIntegrationTest extends BaseGatewayIntegrationTest {
         clock().failsForTime().status(500).body("Internal Server Error").execute();
 
         assertThatThrownBy(() -> clockGateway().getCurrentTime())
-            .isInstanceOf(IllegalStateException.class)
+            .isInstanceOf(ClockGatewayException.class)
             .hasMessageContaining("500");
     }
 

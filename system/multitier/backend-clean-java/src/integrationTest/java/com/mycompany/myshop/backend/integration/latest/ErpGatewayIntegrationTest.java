@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.mycompany.myshop.backend.domain.gateways.ErpGateway;
 import com.mycompany.myshop.backend.domain.values.Money;
 import com.mycompany.myshop.backend.domain.values.Rate;
+import com.mycompany.myshop.backend.infrastructure.external.ErpGatewayException;
 import com.mycompany.myshop.backend.integration.latest.base.BaseGatewayIntegrationTest;
 import com.mycompany.myshop.backend.testkit.dsl.core.usecase.external.erp.ErpDsl;
 import org.junit.jupiter.api.Test;
@@ -54,7 +55,7 @@ class ErpGatewayIntegrationTest extends BaseGatewayIntegrationTest {
         erp().failsForProduct().sku("BAD-SKU").status(500).body("Internal Server Error").execute();
 
         assertThatThrownBy(() -> erpGateway.getProductDetails("BAD-SKU"))
-            .isInstanceOf(IllegalStateException.class)
+            .isInstanceOf(ErpGatewayException.class)
             .hasMessageContaining("500");
     }
 
@@ -73,7 +74,7 @@ class ErpGatewayIntegrationTest extends BaseGatewayIntegrationTest {
         erp().failsForPromotion().status(503).body("Service Unavailable").execute();
 
         assertThatThrownBy(() -> erpGateway.getPromotionDetails())
-            .isInstanceOf(IllegalStateException.class)
+            .isInstanceOf(ErpGatewayException.class)
             .hasMessageContaining("503");
     }
 }

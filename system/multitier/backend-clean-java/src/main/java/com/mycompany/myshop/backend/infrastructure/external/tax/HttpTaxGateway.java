@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mycompany.myshop.backend.domain.entities.TaxRate;
 import com.mycompany.myshop.backend.domain.values.Country;
 import com.mycompany.myshop.backend.domain.values.Rate;
-import com.mycompany.myshop.backend.domain.exceptions.TaxGatewayException;
+import com.mycompany.myshop.backend.infrastructure.external.TaxGatewayException;
 import com.mycompany.myshop.backend.domain.gateways.TaxGateway;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

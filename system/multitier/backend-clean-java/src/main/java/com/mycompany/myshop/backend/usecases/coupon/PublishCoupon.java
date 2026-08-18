@@ -33,14 +33,11 @@ public class PublishCoupon implements UseCase<PublishCouponRequest, Void> {
                     String.format(MSG_COUPON_CODE_ALREADY_EXISTS, couponCode)));
         }
 
-        // If usageLimit is null, set to unlimited (Integer.MAX_VALUE). UsageQuota would take the null
-        // directly, but the published row records MAX_VALUE and callers read it back — left as is.
-        var usageLimit = request.getUsageLimit();
-        int limit = usageLimit != null ? usageLimit : Integer.MAX_VALUE;
-
+        // An absent usage limit is unlimited, and UsageQuota already says that with null. The
+        // MAX_VALUE sentinel this used to write is what the legacy services still do.
         var coupon = new Coupon(couponCode, Rate.of(request.getDiscountRate()),
                 new ValidityPeriod(request.getValidFrom(), request.getValidTo()),
-                UsageQuota.of(limit, 0));
+                UsageQuota.of(request.getUsageLimit(), 0));
 
         couponRepository.save(coupon);
         return Result.ok(null);
