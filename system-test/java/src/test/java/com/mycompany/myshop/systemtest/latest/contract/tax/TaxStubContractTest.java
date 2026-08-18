@@ -1,6 +1,6 @@
 package com.mycompany.myshop.systemtest.latest.contract.tax;
 
-import com.mycompany.myshop.systemtest.configuration.ExternalSystemMode;
+import com.mycompany.myshop.testkit.dsl.port.ExternalSystemMode;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;

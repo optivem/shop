@@ -1,6 +1,6 @@
 package com.mycompany.myshop.systemtest.latest.contract.clock;
 
-import com.mycompany.myshop.systemtest.configuration.ExternalSystemMode;
+import com.mycompany.myshop.testkit.dsl.port.ExternalSystemMode;
 
 class ClockStubContractTest extends BaseClockContractTest {
     @Override

@@ -1,6 +1,6 @@
 package com.mycompany.myshop.systemtest.legacy.mod11.contract.clock;
 
-import com.mycompany.myshop.systemtest.configuration.ExternalSystemMode;
+import com.mycompany.myshop.testkit.dsl.port.ExternalSystemMode;
 import com.mycompany.myshop.systemtest.legacy.mod11.contract.base.BaseExternalSystemContractTest;
 import com.optivem.testing.Isolated;
 import org.junit.jupiter.api.Test;

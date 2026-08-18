@@ -1,6 +1,6 @@
 package com.mycompany.myshop.systemtest.latest.contract.erp;
 
-import com.mycompany.myshop.systemtest.configuration.ExternalSystemMode;
+import com.mycompany.myshop.testkit.dsl.port.ExternalSystemMode;
 
 class ErpRealContractTest extends BaseErpContractTest {
     @Override

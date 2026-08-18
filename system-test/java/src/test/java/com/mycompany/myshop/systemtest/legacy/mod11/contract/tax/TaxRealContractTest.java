@@ -1,6 +1,6 @@
 package com.mycompany.myshop.systemtest.legacy.mod11.contract.tax;
 
-import com.mycompany.myshop.systemtest.configuration.ExternalSystemMode;
+import com.mycompany.myshop.testkit.dsl.port.ExternalSystemMode;
 
 class TaxRealContractTest extends BaseTaxContractTest {
     @Override

@@ -1,6 +1,6 @@
 package com.mycompany.myshop.systemtest.legacy.mod04.e2e.base;
 
-import com.mycompany.myshop.systemtest.configuration.ExternalSystemMode;
+import com.mycompany.myshop.testkit.dsl.port.ExternalSystemMode;
 import com.mycompany.myshop.systemtest.legacy.mod04.base.BaseClientTest;
 
 import org.junit.jupiter.api.BeforeEach;

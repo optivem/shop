@@ -6,6 +6,7 @@ import com.mycompany.myshop.testkit.driver.port.external.erp.ErpDriver;
 import com.mycompany.myshop.testkit.driver.port.external.tax.TaxDriver;
 import com.mycompany.myshop.testkit.channel.ChannelType;
 import com.mycompany.myshop.testkit.dsl.port.ChannelMode;
+import com.mycompany.myshop.testkit.dsl.port.ExternalSystemMode;
 import com.mycompany.myshop.testkit.driver.port.MyShopDriver;
 import com.mycompany.myshop.testkit.driver.adapter.external.clock.ClockRealDriver;
 import com.mycompany.myshop.testkit.driver.adapter.external.clock.ClockStubDriver;
@@ -41,11 +42,8 @@ public abstract class BaseConfigurableTest {
     }
 
     protected UseCaseDsl createUseCaseDsl(Configuration configuration) {
-        var externalSystemMode = com.mycompany.myshop.testkit.dsl.port.ExternalSystemMode.valueOf(
-                configuration.getExternalSystemMode().name());
-
         return new UseCaseDsl(
-                externalSystemMode,
+                configuration.getExternalSystemMode(),
                 configuration.getChannelMode(),
                 channel -> createMyShopDriverForChannel(configuration, channel),
                 () -> createErpDriver(configuration),
