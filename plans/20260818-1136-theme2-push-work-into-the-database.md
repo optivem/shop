@@ -29,6 +29,7 @@ That is the spine of every item below: **keep the port, change what it says.**
 | Atomic read-modify-write | In memory, and **it is a lost update** | `PlaceOrder:96-99` + `UsageQuota.recordUse()` |
 | Aggregation and joins | No report exists; written naively it is `findAll()` + Java streams | Chunk B creates it |
 | Filtering, sorting, limiting | Partly pushed down; **unbounded** and fully hydrated | `BrowseCoupons`, `BrowseOrderHistory` |
+| Projecting only the columns asked for | **Never** — every read builds the full domain model, then unwraps it | `BrowseCoupons`, `BrowseOrderHistory`, `ViewOrderDetails` — Chunk R |
 | Enforcing invariants transactionally | **No `@Transactional` anywhere in `src/main`** | verified by grep, zero hits |
 
 ## TL;DR
@@ -39,7 +40,7 @@ orders on the same coupon both read `used=4` and both write `used=5`, so the usa
 hold. The demo has nothing to show for the theme the course frames as the hardest — and one place
 that demonstrates the anti-pattern.
 
-**End result:** Four demonstrations in `backend-clean-java`, each one a capability the database has
+**End result:** Five demonstrations in `backend-clean-java`, each one a capability the database has
 and the application layer was doing instead — with measured before/after numbers, not assertions.
 The schema keeps its exact current shape; only indexes are added.
 
@@ -69,6 +70,12 @@ The schema keeps its exact current shape; only indexes are added.
   `infrastructure/persistence/queries/JpaSalesReportQuery`. Not `domain/repositories/`: putting it
   there would assert the report *is* domain, which is the claim the demo refutes.
   `USECASES_DEPEND_ONLY_INWARD` and `SPRING_DATA_IS_CONFINED_TO_INFRASTRUCTURE` both stay satisfied.
+
+  **Extended 2026-08-18 to the reads that already exist — this is Chunk R.** The same placement rule
+  governs `OrderQuery` / `CouponQuery`. Note that the placement is not what bypasses the domain model;
+  the projection return type is. Placement is what makes the code *admit* it: a port in
+  `domain/repositories/` claims the domain needs it, and the domain never calls this one. Checked: no
+  existing ArchUnit rule pins a port to the domain package.
 
 - **HTTP surface → bulk endpoints and a report endpoint; no reports UI.**
   `POST /api/admin/recall/{sku}`, `POST /api/admin/orders/sweep-deliveries`, `GET /api/reports/*`.
@@ -113,8 +120,8 @@ Concretely: write `system/db/seed/demo-volume.sql` (a `generate_series` insert, 
 capture baseline timings and `EXPLAIN (ANALYZE, BUFFERS)` for today's in-memory behaviour, before a
 single production line changes.
 
-Then Chunks A → B → C, in that order, one per `/clear`-ed session. They are independent; the order
-is by how directly each answers the thesis.
+Then Chunks A → R → B → C, one per `/clear`-ed session. All independent except item C2, which
+depends on Chunk R; the order is by how directly each answers the thesis.
 
 ## Chunk 0 — measure first
 
@@ -168,6 +175,69 @@ is by how directly each answers the thesis.
       `POST /api/admin/orders/sweep-deliveries`, per the decided HTTP surface. Index `idx_orders_sku_status ON orders (sku, status)` folded
       into the single migration (item C4).
 
+## Chunk R — light CQRS: the read path stops going through the domain
+
+**The census (2026-08-18, verified against `UseCaseConfig:30-63`).** All seven use cases split
+cleanly, with no borderline case:
+
+| | Use case | Verdict |
+|---|---|---|
+| **Commands** | `PlaceOrder`, `CancelOrder`, `DeliverOrder`, `PublishCoupon` | stay on the domain path — each asks an entity to decide something |
+| **Queries** | `BrowseCoupons`, `BrowseOrderHistory`, `ViewOrderDetails` | every response field is a stored column; the domain model is built and immediately unwrapped |
+
+The test that produced that split, and the one to apply to any future use case: **does the response
+hold a field the database does not already hold?** If yes it is not a pure query and the domain
+stays in the loop. If the coupon list ever gained a `redeemableNow` flag, that is `Coupon.discountAt`
+semantics (validity ∧ quota) and `BrowseCoupons` leaves this chunk — the same tension A3 flags for
+`UsageQuota.exhausted()`.
+
+**Demo `ViewOrderDetails` first — it is the sharpest of the three.** Fifteen response fields
+(`ViewOrderDetailsResponse:15-29`), every one a column in `orders`, reached by constructing seven
+`Money`, two `Rate`, a `Country` and a `CouponCode` and then calling `.amount()` / `.value()` on each
+(`ViewOrderDetails:36-50`). Nothing built on that path survives to the wire.
+
+**The second argument is stronger than performance.** `Coupon`'s constructor rejects a
+`discountRate` of zero (`Coupon.java:44-47`), so one bad row makes the whole *list* endpoint 500. A
+read path must not be able to fail on a write-side invariant — that is the CQRS case stated as a bug
+rather than a preference, and it is what makes this chunk more than a micro-optimisation.
+
+**What is given up, and it goes in the javadoc rather than being resolved away:** the read model can
+now drift from the domain's idea of a coupon, because nothing forces the two to agree. Speed and
+failure-isolation are bought by surrendering the guarantee that what is displayed was validated by
+the rules that wrote it.
+
+- [ ] **R1. The read-side ports.** `usecases/queries/OrderQuery` and `usecases/queries/CouponQuery`,
+      implemented by `infrastructure/persistence/queries/JpaOrderQuery` / `JpaCouponQuery`. Flat
+      records, `BigDecimal` money fields, **no value objects and no `Guard`** — same rule as B1, and
+      the javadoc says why. `usecases/queries/` and not `domain/repositories/`: a port in the domain
+      claims the domain needs it, and the domain never calls this one — see the read-side port
+      decision above.
+- [ ] **R2. `BrowseCoupons`.** Projection record `CouponListItem` over the six `coupons` columns; the
+      use case copies primitives into `BrowseCouponsResponse`. A dedicated record rather than
+      projecting SQL straight into the response item, because `ArchitectureTest:117` pins
+      `Request`/`Response` to `usecases.order` / `usecases.coupon`, and keeping the wire contract out
+      of the JPQL means a field rename does not edit a query string.
+- [ ] **R3. `BrowseOrderHistory`.** One port method taking the optional order-number filter, so the
+      `if` at `BrowseOrderHistory:29-33` collapses to a single call and the `LIKE` stays in SQL.
+- [ ] **R4. `ViewOrderDetails`.** Returns `Optional<OrderDetail>`; empty still becomes
+      `UseCaseError.NotFound` (`ViewOrderDetails:29-31`), so the error contract does not move.
+- [ ] **R5. Delete the orphaned port methods — but not all of them.** `CouponRepository.findAll()`
+      and `OrderRepository:18,20` have exactly one caller each, all three in R2/R3, so they are
+      **deleted, not renamed**. **`OrderRepository.findByOrderNumber` stays**, because `CancelOrder:37`
+      and `DeliverOrder:29` need the real entity to call `cancel()` / `deliver()`; `ViewOrderDetails`
+      gets a projection twin on the query port instead. The same question gets two answers — an entity
+      for the command, a projection for the query — and saying that out loud is the chunk's best aside.
+      End state: `CouponRepository{save, findByCode}`, `OrderRepository{save, findByOrderNumber}`.
+      `CouponRepositoryIntegrationTest:90` uses `findAll()` incidentally; switch it to `findByCode`.
+- [ ] **R6. An ArchUnit rule that states the claim.** `READ_USECASES_DO_NOT_TOUCH_THE_DOMAIN` — no
+      class in `usecases.queries..`, and neither of the three query use cases, may depend on
+      `..domain..`. Today `BrowseCoupons:3-4` imports `Coupon` and `CouponRepository`; after R2 it
+      imports neither, and the rule is the light-CQRS claim made executable. Nothing blocks it: none
+      of the ten existing rules pins a port to the domain package.
+- [ ] **R7. Numbers.** Reuse the Chunk 0 harness. Here the measurement is objects-not-constructed as
+      much as wall time: over the 100k seed, `BrowseOrderHistory` builds 100k `Order` aggregates plus
+      their value objects today and none after R3.
+
 ## Chunk B — aggregation and joins (a read model with no domain entity)
 
 - [ ] **B1. The read-side port.** `usecases/queries/SalesReportQuery`, implemented by
@@ -202,14 +272,17 @@ is by how directly each answers the thesis.
       **The cursor's tiebreaker is `order_number`, not the surrogate `id`** — clean-java deliberately
       keeps `Long id` out of the domain (`OrderRepositoryAdapter#save` resolves it). Textbook keyset
       pagination reaches for `id`; this constraint forces the honest version, and it is a good aside.
-- [ ] **C2. Rename the leaked port methods.** `domain/repositories/OrderRepository:18,20` declares
-      `findAllByOrderByOrderTimestampDesc()` and
-      `findByOrderNumberContainingIgnoreCaseOrderByOrderTimestampDesc(String)` — Spring Data's
-      query-derivation DSL spelled into a port whose own javadoc claims *"no Spring Data, no JPA"*.
-      **This is the thesis in miniature: the port names a mechanism, so the caller can only loop.**
-      Rename to `findRecentFirst(PageRequest)` and `searchByOrderNumber(String, PageRequest)`; the
-      Spring Data naming stays inside `infrastructure/persistence/repositories/`. Same for
-      `CouponRepository.findAll()` → `findAll(PageRequest)`.
+- [ ] **C2. Paging lands on the read side, not on the repositories.** **Depends on Chunk R** — the
+      plan's only cross-chunk dependency. R5 deletes the three mechanism-named read methods
+      (`CouponRepository.findAll()`, `OrderRepository:18,20`) from the domain repositories outright,
+      so there is nothing left here to rename: `PageRequest` is threaded onto the `usecases/queries/`
+      ports instead, which after Chunk R is where every unbounded read lives.
+      **The original point survives and gets sharper.** Those names —
+      `findAllByOrderByOrderTimestampDesc` and
+      `findByOrderNumberContainingIgnoreCaseOrderByOrderTimestampDesc` — are Spring Data's
+      query-derivation DSL spelled into a port whose own javadoc claims *"no Spring Data, no JPA"*,
+      and because the port named a mechanism the caller could only loop. Show them as the
+      before-picture in the live git diff; the after is that they do not exist at all.
 - [ ] **C3. Keyset, not `OFFSET`.** Row-value comparison —
       `(o.orderTimestamp, o.orderNumber) < (:ts, :num) ORDER BY … DESC LIMIT :size`. `OFFSET 10000`
       makes Postgres walk 10,000 rows to discard them; with 100k seeded rows the `EXPLAIN` contrast is
@@ -239,6 +312,10 @@ than change three codebases later.
   a where-guard. Both return a count that must be checked.
 - **Read-model port separate from the repository.** .NET `ISalesReportQuery`, TS `SalesReportQuery` —
   owned by the use case layer, not the domain.
+- **Pure queries bypass the domain model entirely.** Not just the new report — any use case whose
+  response holds nothing the database does not already hold (Chunk R's census test). .NET projects
+  with `Select` into a record plus `AsNoTracking`; TypeScript with a Prisma `select` clause. Neither
+  materialises an entity, and neither read path can fail on a write-side invariant.
 - **Transaction boundary as a port.** .NET over `IDbContextTransaction`; TS over Prisma `$transaction`.
 - **Domain-owned paging.** Never `IQueryable`/EF `Skip`/`Take` or Prisma `take`/`cursor` in a port.
 
