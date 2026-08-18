@@ -57,6 +57,15 @@ sourceSets {
 		compileClasspath += sourceSets.main.output + sourceSets.testSupport.output
 		runtimeClasspath += sourceSets.main.output + sourceSets.testSupport.output
 	}
+	// Theme-2 measurement harness. Not a test layer: nothing in it asserts, so it can never redden
+	// the build. It boots the real application against a Testcontainers Postgres loaded with
+	// system/db/seed/demo-volume.sql and times what the application does today, so the theme-2
+	// before/after numbers are measured rather than asserted. testSupport.output for
+	// TestcontainersConfiguration.
+	benchmark {
+		compileClasspath += sourceSets.main.output + sourceSets.testSupport.output
+		runtimeClasspath += sourceSets.main.output + sourceSets.testSupport.output
+	}
 }
 
 configurations {
@@ -68,6 +77,8 @@ configurations {
 	contractTestRuntimeOnly.extendsFrom componentTestRuntimeOnly
 	integrationTestImplementation.extendsFrom testSupportImplementation
 	integrationTestRuntimeOnly.extendsFrom testSupportRuntimeOnly
+	benchmarkImplementation.extendsFrom testSupportImplementation
+	benchmarkRuntimeOnly.extendsFrom testSupportRuntimeOnly
 }
 
 repositories {
@@ -154,6 +165,33 @@ tasks.register('integrationTest', Test) {
 	classpath = sourceSets.integrationTest.runtimeClasspath
 	useJUnitPlatform()
 	shouldRunAfter tasks.named('test')
+}
+
+// The theme-2 measurement harness. Opt-in and never part of `build` or `check`: it takes minutes,
+// needs Docker, and its output is numbers rather than a verdict.
+//
+//   ./gradlew benchmark
+//
+// Writes build/benchmark/theme2-baseline.md and echoes the same table to the console. The curated
+// write-up of a run lives in docs/atdd/code/theme2-measurements.md — this task is what makes the
+// after-numbers comparable to the before-numbers, because both are taken by the same code over the
+// same deterministic seed.
+tasks.register('benchmark', Test) {
+	description = 'Measures what the application does today for each theme-2 capability (requires Docker). Opt-in; not part of `build`.'
+	group = 'verification'
+	testClassesDirs = sourceSets.benchmark.output.classesDirs
+	classpath = sourceSets.benchmark.runtimeClasspath
+	useJUnitPlatform()
+	// A measurement is never up to date: the point is to take it again.
+	outputs.upToDateWhen { false }
+	// Fixed heap so the retained-heap column means the same thing on every machine, and large
+	// enough to hold 100k hydrated Orders plus the JPA entities they were mapped from.
+	maxHeapSize = '2g'
+	// The harness prints its own report; Gradle's per-test logging would interleave with it.
+	testLogging {
+		events 'failed'
+		showStandardStreams = true
+	}
 }
 
 // Builds the external-system simulator image that the `*RealParityContractTest` classes run via

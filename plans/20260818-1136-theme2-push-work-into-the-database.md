@@ -1,11 +1,14 @@
 # 2026-08-18 11:36 UTC — theme 2: the database is barred from the work it does best (`backend-clean-java`)
 
 **Scope: `system/multitier/backend-clean-java` only.** No other backend, no frontend, no legacy
-project, no other plan. Three files fall outside the backend directory by necessity and nothing else
-does: the additive index migration (C4) and the demo seed script (0.1), both of which must live in the
-shared `system/db/` tree the Flyway sidecar owns, and `docs/atdd/code/language-equivalents.md`, where
-the cross-language gate records decisions for the clean .NET and TypeScript backends that do not exist
-yet. None of the three changes behaviour in another project.
+project, no other plan. A short list of files falls outside the backend directory by necessity and
+nothing else does: the demo seed script and its README under `system/db/seed/` and the additive index
+migration (C4) under `system/db/migrations/`, both of which must live in the shared `system/db/` tree
+the Flyway sidecar owns; `docs/atdd/code/theme2-measurements.md`, where the before/after numbers are
+recorded; and `docs/atdd/code/language-equivalents.md`, where the cross-language gate records
+decisions for the clean .NET and TypeScript backends that do not exist yet. None of them changes
+behaviour in another project — `system/db/seed/` in particular is outside every `db-migrate` mount,
+which names `system/db/migrations` explicitly.
 
 ## The thesis
 
@@ -122,27 +125,21 @@ newest-first ordering, but they matter if the ordering is ever changed.
 
 ## ▶ Next executable step (resume here)
 
-**Chunk 0 — the measurement harness.** It comes first on purpose: the claim is *"the system pays for
-it in performance"*, and a demo that cannot show the before-numbers is asserting, not demonstrating.
-Concretely: write `system/db/seed/demo-volume.sql` (a `generate_series` insert, see item 0.1), then
-capture baseline timings and `EXPLAIN (ANALYZE, BUFFERS)` for today's in-memory behaviour, before a
-single production line changes.
+**Chunk A — set-based writes (the headline).** Chunk 0 is done: `system/db/seed/demo-volume.sql`
+exists, `./gradlew benchmark` in `backend-clean-java` re-takes the numbers the same way every time,
+and the before-slide is written up in `docs/atdd/code/theme2-measurements.md`. So there is now a
+baseline to beat, and everything below can be measured rather than asserted.
 
-Then Chunks A → R → B → C, one per `/clear`-ed session. All independent except item C2, which
-depends on Chunk R; the order is by how directly each answers the thesis.
+Concretely, and in this order: write **A4** first (the concurrency test that fails today) so the lost
+update is real before A3 fixes it; then **A1** (`RecallSku` + `cancelOutstandingForSku` on
+`OrderRepository`), **A2** (the delivery sweep), **A3** (`tryRedeem`), **A5** (the `TransactionRunner`
+port), **A6** (the two admin endpoints; its index folds into C4's single migration, which is *not*
+written in this chunk). Then re-run `./gradlew benchmark` and append the after-table to
+`docs/atdd/code/theme2-measurements.md` — the harness already prints the recall's before-numbers
+(9,093 ms, 6,001 JDBC statements to change 2,000 rows) for A1 to be compared against.
 
-## Chunk 0 — measure first
-
-- [ ] **0.1 Seed script.** `system/db/seed/demo-volume.sql` — **not** a Flyway migration (it must
-      never run in CI or production). One `INSERT … SELECT … FROM generate_series(1, 100000)`
-      producing 100k orders across a spread of SKUs, countries, statuses and timestamps, plus a few
-      hundred coupons with orders referencing them. Postgres generates this in seconds.
-- [ ] **0.2 Baseline numbers.** With the seed loaded, record for each of the four capabilities: wall
-      time, row count returned, and `EXPLAIN (ANALYZE, BUFFERS)`. These are the talk's "before"
-      slide. Capture them into `docs/atdd/code/theme2-measurements.md` so the numbers survive the
-      session.
-- [ ] **0.3 A repeatable way to re-run it.** A Gradle task or a shell script — whatever is cheapest —
-      so the after-numbers are measured the same way as the before-numbers rather than by hand.
+Then Chunks R → B → C, one per `/clear`-ed session. All independent except item C2, which depends on
+Chunk R; the order is by how directly each answers the thesis.
 
 ## Chunk A — set-based writes (the headline)
 
