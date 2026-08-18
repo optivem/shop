@@ -6,12 +6,6 @@ import com.mycompany.myshop.backend.usecases.Result;
 import com.mycompany.myshop.backend.usecases.UseCase;
 import com.mycompany.myshop.backend.usecases.UseCaseError;
 
-/**
- * Returns the full detail of one order. The domain → response mapping lives here rather than in the
- * controller: the response DTO belongs to this use case, so this is the layer that knows how to
- * fill it in — including unwrapping the domain's {@code Money} and {@code Rate} back to the plain
- * numbers the wire contract asks for.
- */
 public class ViewOrderDetails implements UseCase<ViewOrderDetailsRequest, ViewOrderDetailsResponse> {
 
     private static final String ORDER_ENTITY = "Order";

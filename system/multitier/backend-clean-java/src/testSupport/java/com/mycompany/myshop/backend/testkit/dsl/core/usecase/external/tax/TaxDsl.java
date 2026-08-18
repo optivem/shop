@@ -6,18 +6,6 @@ import com.mycompany.myshop.backend.testkit.dsl.core.usecase.external.tax.usecas
 import com.mycompany.myshop.backend.testkit.dsl.core.usecase.external.tax.usecases.ReturnsNoTaxRate;
 import com.mycompany.myshop.backend.testkit.dsl.core.usecase.external.tax.usecases.ReturnsTaxRate;
 
-/**
- * The Tax system, as the component test sees it.
- *
- * <pre>{@code
- * app.tax().returnsTaxRate().country("US").taxRate("0.10").execute();
- * app.tax().returnsNoTaxRate().country("ZZ").execute();
- * app.tax().failsForCountry().country("US").status(500).body("Internal Server Error").execute();
- * }</pre>
- *
- * <p>Rates are passed as {@code String} so the stubbed JSON is byte-identical to the raw WireMock
- * the {@code legacy/} tests inline.
- */
 public class TaxDsl {
 
     private final TaxDriver driver;

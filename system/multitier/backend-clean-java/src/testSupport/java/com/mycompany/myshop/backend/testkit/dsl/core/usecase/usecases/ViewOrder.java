@@ -10,10 +10,6 @@ import com.mycompany.myshop.backend.testkit.dsl.core.usecase.usecases.base.BaseM
 import java.util.Set;
 import org.springframework.http.HttpStatus;
 
-/**
- * {@code GET /api/orders/{orderNumber}} — {@code 200 OK} with the persisted details, or {@code 404
- * NOT_FOUND} with a {@code ProblemDetail} when no such order exists.
- */
 public class ViewOrder extends BaseMyShopUseCase<ViewOrderDetailsResponse, ViewOrderVerification> {
 
     private final ObjectMapper objectMapper;
@@ -24,11 +20,6 @@ public class ViewOrder extends BaseMyShopUseCase<ViewOrderDetailsResponse, ViewO
         this.objectMapper = objectMapper;
     }
 
-    /**
-     * An alias registered by an earlier step, or a literal order number. Unregistered strings pass
-     * through unchanged, which is what makes {@code withOrderNumber("UNKNOWN")} still name an order
-     * that does not exist.
-     */
     public ViewOrder orderNumber(String orderNumberResultAlias) {
         this.orderNumberResultAlias = orderNumberResultAlias;
         return this;

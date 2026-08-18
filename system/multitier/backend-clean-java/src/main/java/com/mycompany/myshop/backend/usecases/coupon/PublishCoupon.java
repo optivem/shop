@@ -10,9 +10,6 @@ import com.mycompany.myshop.backend.usecases.Result;
 import com.mycompany.myshop.backend.usecases.UseCase;
 import com.mycompany.myshop.backend.usecases.UseCaseError;
 
-/**
- * Publishes a new coupon.
- */
 public class PublishCoupon implements UseCase<PublishCouponRequest, Void> {
 
     private static final String MSG_COUPON_CODE_ALREADY_EXISTS = "Coupon code %s already exists";

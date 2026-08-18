@@ -8,7 +8,6 @@ import com.mycompany.myshop.backend.testkit.dsl.core.usecase.usecases.base.BaseM
 import java.util.Set;
 import org.springframework.http.HttpStatus;
 
-/** {@code GET /api/coupons} — always {@code 200 OK}; there is no rejection path to state. */
 public class BrowseCoupons extends BaseMyShopUseCase<BrowseCouponsResponse, BrowseCouponsVerification> {
 
     public BrowseCoupons(MyShopDriver driver, UseCaseContext context) {

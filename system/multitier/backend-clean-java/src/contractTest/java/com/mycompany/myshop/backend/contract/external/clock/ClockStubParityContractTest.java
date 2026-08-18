@@ -12,15 +12,6 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 
-/**
- * The {@code Stub} side of the clock time contract. Arranges through the real
- * {@link ClockStubDriver}, so what {@link ClockRealParityContractTest} holds against the simulator is
- * the driver's own JSON — the artifact the parity pair exists to guard.
- *
- * <p>Needs no Docker of its own: the gateway is driven directly, with no Spring context and no
- * container — so {@link HttpClockGateway} is constructed by hand with both of its {@code @Value}
- * arguments supplied by the test.
- */
 class ClockStubParityContractTest extends BaseClockTimeParityContractTest {
 
     private static final WireMockServer WIRE_MOCK = new WireMockServer(options().dynamicPort());

@@ -6,11 +6,6 @@ import com.mycompany.myshop.backend.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.backend.testkit.dsl.core.usecase.usecases.BrowseOrderHistoryVerification;
 import com.mycompany.myshop.backend.testkit.dsl.port.then.steps.ThenOrderHistory;
 
-/**
- * Order history. When the action <em>was</em> a browse, its response is asserted directly; otherwise
- * the history is read back through {@code GET /api/orders} — so {@code when().placeOrder().then()
- * .shouldSucceed().and().orderHistory().containsOrder()} states the whole story as one scenario.
- */
 public class ThenOrderHistoryImpl<R, V extends ResponseVerification<R>> extends BaseThenStep<R, V>
         implements ThenOrderHistory {
 

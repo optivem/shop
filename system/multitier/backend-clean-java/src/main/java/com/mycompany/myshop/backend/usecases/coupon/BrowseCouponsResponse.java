@@ -4,9 +4,6 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
-/**
- * The coupon list, as the wire contract states it.
- */
 public class BrowseCouponsResponse {
 
     private List<BrowseCouponsItemResponse> coupons;

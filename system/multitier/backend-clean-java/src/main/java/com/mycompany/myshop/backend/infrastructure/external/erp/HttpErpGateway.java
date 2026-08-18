@@ -18,11 +18,6 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.Optional;
 
-/**
- * Talks HTTP to the ERP and maps its wire shapes to domain types. The "absent means 404" convention
- * is translated here — {@link #getProductDetails} returns an empty {@code Optional} for a 404 and
- * throws for any other non-200, so the domain never sees a status code.
- */
 @Service
 public class HttpErpGateway implements ErpGateway {
 
@@ -46,11 +41,6 @@ public class HttpErpGateway implements ErpGateway {
                 .map(wire -> new Product(wire.getId(), Money.of(wire.getPrice())));
     }
 
-    /**
-     * The raw ERP call and parse, before the mapping to {@link Promotion}. Exposed on the adapter
-     * (rather than on the {@link ErpGateway} port) so the stub-contract component tests can read the
-     * stub's bytes back through the SUT's real HTTP call and real Jackson parse.
-     */
     public GetPromotionResponse fetchPromotionDetails() {
         var url = erpUrl + "/api/promotion";
 
@@ -82,10 +72,6 @@ public class HttpErpGateway implements ErpGateway {
         }
     }
 
-    /**
-     * The raw ERP call and parse, before the mapping to {@link Product}. See
-     * {@link #fetchPromotionDetails} for why this is public on the adapter.
-     */
     public Optional<ProductDetailsResponse> fetchProductDetails(String sku) {
         var url = erpUrl + "/api/products/" + sku;
 

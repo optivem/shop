@@ -1,6 +1,6 @@
 package com.mycompany.myshop.backend.infrastructure.persistence.entities;
 
-import com.mycompany.myshop.backend.domain.entities.OrderStatus;
+import com.mycompany.myshop.backend.domain.values.OrderStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -16,11 +16,6 @@ import org.hibernate.annotations.ColumnDefault;
 import java.math.BigDecimal;
 import java.time.Instant;
 
-/**
- * The persisted shape of an order. Carries every ORM concern the domain {@code Order} must not:
- * table and column names, precision, defaults, the identity strategy. Table and column names are a
- * fixed point of the clean-architecture refactor — the schema is byte-identical to {@code backend-java}.
- */
 @Entity
 @Table(name = "orders")
 @Data

@@ -8,11 +8,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.mycompany.myshop.backend.testkit.driver.port.external.tax.TaxDriver;
 
-/**
- * Low-level Tax stub driver. Registers mappings against a supplied {@link WireMock} client; that the
- * URL and JSON body match what the SUT actually consumes is guarded by
- * {@code TaxStubConsumabilityContractTest}.
- */
 public class TaxStubDriver implements TaxDriver {
 
     private final WireMock wireMock;
@@ -21,7 +16,6 @@ public class TaxStubDriver implements TaxDriver {
         this.wireMock = wireMock;
     }
 
-    /** See {@code ErpStubDriver#goToErp}. */
     public void goToTax() {
         wireMock.allStubMappings();
     }
@@ -32,8 +26,6 @@ public class TaxStubDriver implements TaxDriver {
                 + "\",\"taxRate\":" + rate + "}")));
     }
 
-    /** A 404 from Tax is what makes {@code taxGateway.getTaxDetails} empty — the trigger for
-     * "Country does not exist". */
     public void returnsNoTaxRate(String country) {
         wireMock.register(get(urlEqualTo("/api/countries/" + country))
             .willReturn(aResponse().withStatus(404)));

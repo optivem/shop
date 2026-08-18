@@ -8,13 +8,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.mycompany.myshop.backend.testkit.driver.port.external.erp.ErpDriver;
 
-/**
- * Low-level ERP stub driver: registers WireMock mappings against a supplied {@link WireMock} client.
- * Wrapping a client (rather than a {@code WireMockServer}) lets one driver type point at either the
- * in-process component-test server or the in-process narrow-integration server. The URLs and JSON
- * bodies are byte-identical to {@code BaseComponentTest}'s {@code stub*} helpers, so switching a
- * test to the DSL is behaviour-neutral.
- */
 public class ErpStubDriver implements ErpDriver {
 
     private final WireMock wireMock;
@@ -23,11 +16,6 @@ public class ErpStubDriver implements ErpDriver {
         this.wireMock = wireMock;
     }
 
-    /**
-     * A read-only admin call: it lists the mappings currently registered, and throws if the client
-     * cannot reach a server at all. Deliberately does not assert on the result — an empty mapping
-     * list is the normal state right after {@code resetAll()}.
-     */
     public void goToErp() {
         wireMock.allStubMappings();
     }

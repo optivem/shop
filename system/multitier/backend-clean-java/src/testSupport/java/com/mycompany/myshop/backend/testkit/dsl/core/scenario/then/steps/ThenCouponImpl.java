@@ -7,7 +7,6 @@ import com.mycompany.myshop.backend.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.backend.testkit.dsl.core.usecase.usecases.BrowseCouponsVerification;
 import com.mycompany.myshop.backend.testkit.dsl.port.then.steps.ThenCoupon;
 
-/** Reads the coupons back through {@code GET /api/coupons}; constructing the step asserts the coupon is there. */
 public class ThenCouponImpl<R, V extends ResponseVerification<R>> extends BaseThenStep<R, V>
         implements ThenCoupon {
 

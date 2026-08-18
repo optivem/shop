@@ -11,17 +11,6 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 
-/**
- * The {@code Stub} side of the ERP product contract: raw, inlined WireMock, same shape as
- * {@code integration/legacy/ErpGatewayIntegrationTest}. Needs no Docker of its own — the gateway is
- * driven directly, with no Spring context and no container, so the only reason this class sits in
- * the Docker-requiring {@code external-contract} suite is that the stub-consumability tests it runs
- * alongside boot the full SUT.
- *
- * <p>{@link HttpErpGateway} is constructed by hand rather than autowired: no Spring context runs
- * here, so nothing resolves its {@code @Value("${erp.url}")} argument and the test supplies the URL
- * itself.
- */
 class ErpStubParityContractTest extends BaseErpProductParityContractTest {
 
     private static final WireMockServer WIRE_MOCK = new WireMockServer(options().dynamicPort());

@@ -3,11 +3,6 @@ package com.mycompany.myshop.backend.testkit.dsl.core.usecase.external.tax.useca
 import com.mycompany.myshop.backend.testkit.driver.port.external.tax.TaxDriver;
 import com.mycompany.myshop.backend.testkit.dsl.core.usecase.external.tax.usecases.base.BaseTaxUseCase;
 
-/**
- * The Tax system is broken for this country — a {@code 5xx} rather than an answer. Distinct from
- * {@link ReturnsNoTaxRate}: a 404 is Tax correctly reporting an unknown country (and yields an empty
- * {@code Optional}), this is Tax failing to answer at all (and yields a {@code TaxGatewayException}).
- */
 public class FailsForCountry extends BaseTaxUseCase {
 
     private String country;

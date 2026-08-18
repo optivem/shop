@@ -8,11 +8,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
-/**
- * The validity window on its own terms. {@code CouponTest} covers what a coupon does with the
- * answers — the reasons it reports, and in what order; these are the answers themselves, including
- * the bounds and the open-ended cases a coupon test would have to construct a whole coupon to reach.
- */
 class ValidityPeriodTest {
 
     private static final Instant FROM = Instant.parse("2025-01-01T00:00:00Z");
@@ -29,7 +24,6 @@ class ValidityPeriodTest {
         assertThat(period.expiredAt(WITHIN)).isFalse();
     }
 
-    /** Both bounds are inclusive: the opening and closing instants are themselves usable. */
     @Test
     void treatsBothBoundsAsUsable() {
         var period = new ValidityPeriod(FROM, TO);
@@ -60,7 +54,6 @@ class ValidityPeriodTest {
         assertThat(ValidityPeriod.ALWAYS.expiredAt(AFTER)).isFalse();
     }
 
-    /** An absent bound is open-ended in that direction, and the two are independent. */
     @Test
     void treatsAnAbsentBoundAsOpenEndedInThatDirectionOnly() {
         var noStart = new ValidityPeriod(null, TO);
@@ -80,7 +73,6 @@ class ValidityPeriodTest {
                 .hasMessage("validTo must be after validFrom");
     }
 
-    /** A window that opens and closes on the same instant is legal — one usable instant. */
     @Test
     void acceptsAWindowThatOpensAndClosesAtTheSameInstant() {
         assertThatCode(() -> new ValidityPeriod(FROM, FROM)).doesNotThrowAnyException();

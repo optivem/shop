@@ -8,7 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.mycompany.myshop.backend.domain.entities.OrderStatus;
+import com.mycompany.myshop.backend.domain.values.OrderStatus;
 import com.mycompany.myshop.backend.presentation.UseCaseResponder;
 import com.mycompany.myshop.backend.presentation.controller.OrderController;
 import com.mycompany.myshop.backend.usecases.Result;

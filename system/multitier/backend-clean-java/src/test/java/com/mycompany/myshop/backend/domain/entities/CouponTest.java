@@ -13,10 +13,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
-/**
- * A coupon deciding for itself whether it may be redeemed — the four {@code if} branches that used
- * to sit inside the coupon service, reachable now without a repository or a Spring context.
- */
 class CouponTest {
 
     private static final CouponCode CODE = CouponCode.of("SAVE10");
@@ -35,7 +31,6 @@ class CouponTest {
         assertThat(coupon.discountAt(WITHIN_WINDOW)).isEqualTo(TEN_PERCENT);
     }
 
-    /** Both bounds are inclusive: {@code validFrom} and {@code validTo} are usable instants. */
     @Test
     void grantsItsDiscountOnBothBoundsOfTheWindow() {
         var coupon = coupon(VALID_FROM, VALID_TO, 100, 0);
@@ -77,7 +72,6 @@ class CouponTest {
         assertThat(((ValidationException) thrown).getFieldName()).isEqualTo("couponCode");
     }
 
-    /** An open-ended coupon: no {@code validFrom}, no {@code validTo}, no limit. */
     @Test
     void treatsAbsentBoundsAsNoRestrictionAtAll() {
         var coupon = coupon(null, null, null, 9_999);
@@ -95,7 +89,6 @@ class CouponTest {
         assertThat(coupon.getQuota().used()).isEqualTo(5);
     }
 
-    /** {@code redeem} is what eventually closes the coupon — the limit is enforced against it. */
     @Test
     void redeemingUpToTheLimitExhaustsTheCoupon() {
         var coupon = coupon(VALID_FROM, VALID_TO, 2, 0);
@@ -110,7 +103,6 @@ class CouponTest {
                 .hasMessage("Coupon code SAVE10 has exceeded its usage limit");
     }
 
-    /** When a coupon is both exhausted and out of window, the window is the reason reported. */
     @Test
     void reportsTheWindowBeforeTheUsageLimit() {
         var coupon = coupon(VALID_FROM, VALID_TO, 1, 1);
@@ -130,12 +122,6 @@ class CouponTest {
         assertThatCode(() -> couponWithRate(Rate.ONE)).doesNotThrowAnyException();
     }
 
-    /**
-     * The code, the window and the quota each police their own construction — see
-     * {@code CouponCodeTest}, {@code ValidityPeriodTest} and {@code UsageQuotaTest}. What belongs
-     * here is only what a coupon adds: that it refuses to be built without them, its own discount
-     * rule, and which reason it reports when more than one applies.
-     */
     @Test
     void rejectsAnyOfItsPartsBeingMissing() {
         assertThat(catchThrowable(() -> new Coupon(null, TEN_PERCENT,

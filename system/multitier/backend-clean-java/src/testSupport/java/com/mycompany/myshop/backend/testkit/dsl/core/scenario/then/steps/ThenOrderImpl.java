@@ -1,6 +1,6 @@
 package com.mycompany.myshop.backend.testkit.dsl.core.scenario.then.steps;
 
-import com.mycompany.myshop.backend.domain.entities.OrderStatus;
+import com.mycompany.myshop.backend.domain.values.OrderStatus;
 import com.mycompany.myshop.backend.testkit.common.Converter;
 import com.mycompany.myshop.backend.testkit.dsl.core.scenario.ExecutionResultContext;
 import com.mycompany.myshop.backend.testkit.dsl.core.shared.ResponseVerification;
@@ -8,12 +8,6 @@ import com.mycompany.myshop.backend.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.backend.testkit.dsl.core.usecase.usecases.ViewOrderVerification;
 import com.mycompany.myshop.backend.testkit.dsl.port.then.steps.ThenOrder;
 
-/**
- * The persisted order. When the action <em>was</em> a view-order, its response is asserted directly;
- * otherwise the order is read back through {@code GET /api/orders/{orderNumber}} — which is what
- * makes {@code when().placeOrder().then().shouldSucceed().and().order().hasTotalPrice(...)} check
- * what the system actually stored, not what the place-order response happened to echo.
- */
 public class ThenOrderImpl<R, V extends ResponseVerification<R>> extends BaseThenStep<R, V>
         implements ThenOrder {
 

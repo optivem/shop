@@ -4,11 +4,6 @@ import com.mycompany.myshop.backend.testkit.dsl.core.scenario.ExecutionResultCon
 import com.mycompany.myshop.backend.testkit.dsl.core.shared.ResponseVerification;
 import com.mycompany.myshop.backend.testkit.dsl.core.usecase.UseCaseDsl;
 
-/**
- * The navigation shared by every then-step: hop to another entity and keep asserting. Each entity
- * step reads its own state back through the SUT's API — the order via {@code GET /api/orders/{n}},
- * the coupons via {@code GET /api/coupons}, the history via {@code GET /api/orders}.
- */
 public abstract class BaseThenStep<R, V extends ResponseVerification<R>> {
 
     protected final UseCaseDsl app;

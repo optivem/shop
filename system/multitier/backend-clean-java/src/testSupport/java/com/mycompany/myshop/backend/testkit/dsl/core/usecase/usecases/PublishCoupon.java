@@ -11,15 +11,6 @@ import java.time.Instant;
 import java.util.Set;
 import org.springframework.http.HttpStatus;
 
-/**
- * {@code POST /api/coupons} — {@code 204 No Content}, no body to parse.
- *
- * <p>No rejection contract is declared: {@code MyShopDriver} binds the response to {@code Void}, so
- * a {@code ProblemDetail} body would be discarded before the DSL could assert it. {@code
- * shouldFail()} on a publish therefore fails loudly rather than asserting nothing. No component test
- * exercises a rejected publish today; the day one does, the driver returns the body as {@code
- * String} and the contract is declared here.
- */
 public class PublishCoupon extends BaseMyShopUseCase<Void, VoidVerification> {
 
     private String couponCode;

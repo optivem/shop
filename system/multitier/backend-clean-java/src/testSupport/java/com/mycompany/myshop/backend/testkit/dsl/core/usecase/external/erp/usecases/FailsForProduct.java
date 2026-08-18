@@ -3,11 +3,6 @@ package com.mycompany.myshop.backend.testkit.dsl.core.usecase.external.erp.useca
 import com.mycompany.myshop.backend.testkit.driver.port.external.erp.ErpDriver;
 import com.mycompany.myshop.backend.testkit.dsl.core.usecase.external.erp.usecases.base.BaseErpUseCase;
 
-/**
- * The ERP is broken for this SKU — a {@code 5xx} rather than an answer. Distinct from
- * {@link ReturnsNoProduct}: a 404 is the ERP correctly reporting absence, this is the ERP failing to
- * report anything.
- */
 public class FailsForProduct extends BaseErpUseCase {
 
     private String sku;

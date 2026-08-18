@@ -18,24 +18,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-/**
- * "Before" of the external-systems contract-tests refactor at the narrow-integration layer: the
- * {@link TaxGateway} exercised against Tax stubbed by raw, inlined WireMock. The {@code latest/}
- * twin drives the identical four scenarios through the shared stub DSL.
- *
- * <p>Read this alongside {@code legacy/ErpGatewayIntegrationTest}: the WireMock lifecycle below —
- * static server, {@code @BeforeAll} start, {@code @AfterAll} stop, {@code resetAll} per test, plus
- * the hand-wired gateway URL — is copied verbatim from it, and copied again in
- * {@code legacy/ClockGatewayIntegrationTest}. Three near-identical harnesses is the duplication the
- * {@code latest/} twins delete by inheriting {@code BaseGatewayIntegrationTest}, and it is the
- * clearest thing this file is here to show.
- *
- * <p>The second thing it shows is specific to Tax: the 404 and 5xx stubs are three lines of raw
- * status-code plumbing each, so the distinction that actually matters — 404 means "no such country"
- * and yields an empty {@code Optional}, any other non-200 means Tax failed to answer and yields a
- * {@link TaxGatewayException} — has to be reconstructed by the reader from HTTP codes. The
- * {@code latest/} twin names it: {@code returnsNoTaxRate()} versus {@code failsForCountry()}.
- */
 class TaxGatewayIntegrationTest {
 
     static final WireMockServer WIRE_MOCK = new WireMockServer(options().dynamicPort());

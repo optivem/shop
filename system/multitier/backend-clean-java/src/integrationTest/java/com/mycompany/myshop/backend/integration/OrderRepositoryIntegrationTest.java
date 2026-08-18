@@ -4,12 +4,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.mycompany.myshop.backend.backendtest.configuration.TestcontainersConfiguration;
 import com.mycompany.myshop.backend.domain.entities.Order;
-import com.mycompany.myshop.backend.domain.entities.OrderStatus;
-import com.mycompany.myshop.backend.domain.pricing.OrderPricing;
 import com.mycompany.myshop.backend.domain.repositories.OrderRepository;
 import com.mycompany.myshop.backend.domain.values.Country;
 import com.mycompany.myshop.backend.domain.values.CouponCode;
 import com.mycompany.myshop.backend.domain.values.Money;
+import com.mycompany.myshop.backend.domain.values.OrderPricing;
+import com.mycompany.myshop.backend.domain.values.OrderStatus;
 import com.mycompany.myshop.backend.domain.values.Rate;
 import com.mycompany.myshop.backend.infrastructure.persistence.adapters.OrderRepositoryAdapter;
 import jakarta.persistence.EntityManager;
@@ -76,12 +76,6 @@ class OrderRepositoryIntegrationTest {
         assertThat(found.get().getStatus()).isEqualTo(OrderStatus.PLACED);
     }
 
-    /**
-     * Every priced field survives the round trip, not just the total. The mapper writes nine
-     * {@code Money}/{@code Rate} values into plain {@code DECIMAL} columns and reads them back, so a
-     * transposed pair (say {@code discountAmount} into the {@code taxAmount} column) would leave the
-     * total correct and the breakdown wrong — which the assertion above alone would not catch.
-     */
     @Test
     void savesAndReadsBackEveryPricedField() {
         var pricing = new OrderPricing(
@@ -109,15 +103,6 @@ class OrderRepositoryIntegrationTest {
             .isEqualTo(Instant.parse("2026-01-02T00:00:00Z"));
     }
 
-    /**
-     * Pushes pending writes to the database and detaches everything, so the next read is a real
-     * round trip. Needed because {@code @DataJpaTest} wraps each test in a transaction: without it a
-     * read-back is served from Hibernate's first-level cache and hands back the very object just
-     * saved, passing even if the entity-to-table mapping were broken.
-     *
-     * <p>Only round-trip tests (write, then read back through the repository) need this. A read-only
-     * test over seeded data has nothing pending to flush.
-     */
     private void forceDatabaseRoundTrip() {
         entityManager.flush();
         entityManager.clear();

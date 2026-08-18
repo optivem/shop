@@ -1,4 +1,4 @@
-package com.mycompany.myshop.backend.domain.policies;
+package com.mycompany.myshop.backend.domain.services;
 
 import com.mycompany.myshop.backend.domain.exceptions.ValidationException;
 
@@ -10,15 +10,6 @@ import java.time.MonthDay;
 import java.time.ZoneId;
 import java.util.Optional;
 
-/**
- * The two December 31st windows in which the shop refuses to act. Both used to be duplicated
- * {@code MonthDay}/{@code LocalTime} blocks — one in {@code placeOrder}, one in {@code cancelOrder} —
- * which is how they drifted apart: the placement window runs to midnight, the cancellation window
- * is half an hour long, and its message says 23:00 while its bound is 22:30.
- *
- * <p>Both quirks are preserved verbatim; the point of gathering them here is that the next reader
- * can see them side by side and decide, rather than discovering them one method at a time.
- */
 public final class YearEndBlackoutPolicy {
 
     private static final ZoneId ZONE = ZoneId.of("UTC");
@@ -47,7 +38,6 @@ public final class YearEndBlackoutPolicy {
         });
     }
 
-    /** The time of day at {@code at}, if {@code at} falls on December 31st; otherwise empty. */
     private static Optional<LocalTime> yearEndTimeOf(Instant at) {
         var local = LocalDateTime.ofInstant(at, ZONE);
         return MonthDay.from(local).equals(YEAR_END)

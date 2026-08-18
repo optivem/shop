@@ -11,10 +11,6 @@ import com.mycompany.myshop.backend.testkit.dsl.core.shared.VoidVerification;
 import com.mycompany.myshop.backend.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.backend.testkit.dsl.port.then.ThenStage;
 
-/**
- * Assertions available without an action having run — reached from {@code given().then()}. Every
- * entity has to be named explicitly here, because there is no execution result to resolve it from.
- */
 public class ThenImpl implements ThenStage {
 
     protected final UseCaseDsl app;

@@ -4,11 +4,6 @@ import com.mycompany.myshop.backend.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.backend.testkit.dsl.port.assume.AssumeStage;
 import com.mycompany.myshop.backend.testkit.dsl.port.assume.steps.AssumeRunning;
 
-/**
- * {@code assume().myShop().shouldBeRunning()} resolves to the {@code GET /health} liveness probe;
- * the external probes resolve to a read-only admin call against each stub. See {@link AssumeStage}
- * for what they cover.
- */
 public class AssumeImpl implements AssumeStage {
 
     private final UseCaseDsl app;

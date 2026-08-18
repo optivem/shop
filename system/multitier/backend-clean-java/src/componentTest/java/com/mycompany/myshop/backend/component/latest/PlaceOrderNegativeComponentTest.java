@@ -5,21 +5,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-/**
- * The component-level twin of the system test's {@code latest/acceptance/PlaceOrderNegativeTest} —
- * scenario for scenario, name for name, message for message.
- *
- * <p>Two kinds of rejection live here, and the difference matters. The shape rules (empty / null /
- * negative / non-integer) are bean validation on {@code PlaceOrderRequest}, decided before a single
- * gateway is called. The existence rules (unknown SKU, unknown country, unknown or exhausted coupon)
- * are decided by {@code OrderService} only after ERP / Tax / the coupon table have answered — which
- * is exactly why they need a booted component and cannot be reached by a unit test.
- *
- * <p>A quantity that is not an integer can only arrive as raw JSON: the DTO's field is an {@code
- * Integer}, so {@code "3.5"} and {@code "lala"} would not survive being put into it. {@code
- * withQuantity(String)} posts the body a form-backed client really sends, so Jackson's type-level
- * rejection is exercised rather than bypassed.
- */
 class PlaceOrderNegativeComponentTest extends BaseComponentTest {
 
     private static final String VALIDATION_FAILED = "The request contains one or more validation errors";

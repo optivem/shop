@@ -6,11 +6,6 @@ import com.mycompany.myshop.backend.testkit.dsl.core.scenario.given.GivenImpl;
 import com.mycompany.myshop.backend.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.backend.testkit.dsl.port.given.steps.GivenCoupon;
 
-/**
- * A coupon that already exists. Seeded through the SUT's own {@code POST /api/coupons} rather than
- * by writing to {@code CouponRepository} directly: the coupon then exists the way a real one would,
- * and the given step stays on the same use case layer as every other step.
- */
 public class GivenCouponImpl extends BaseGivenStep implements GivenCoupon {
 
     private String couponCode;

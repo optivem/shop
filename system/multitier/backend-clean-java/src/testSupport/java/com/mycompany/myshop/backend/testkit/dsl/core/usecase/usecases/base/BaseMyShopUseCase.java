@@ -8,11 +8,6 @@ import com.mycompany.myshop.backend.testkit.dsl.core.shared.UseCaseContext;
 public abstract class BaseMyShopUseCase<R, V extends ResponseVerification<R>>
         extends BaseUseCase<MyShopDriver, R, V> {
 
-    /**
-     * Scenario-scoped scratch space, so a use case that produces an identifier can register it under
-     * an alias and a later use case can resolve that alias. The external stub use cases have no
-     * equivalent — they never produce a value another step refers to.
-     */
     protected final UseCaseContext context;
 
     protected BaseMyShopUseCase(MyShopDriver driver, UseCaseContext context) {

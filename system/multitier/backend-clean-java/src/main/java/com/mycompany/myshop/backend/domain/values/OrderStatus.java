@@ -1,4 +1,4 @@
-package com.mycompany.myshop.backend.domain.entities;
+package com.mycompany.myshop.backend.domain.values;
 
 public enum OrderStatus {
     PLACED,

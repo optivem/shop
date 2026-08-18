@@ -7,22 +7,6 @@ import com.mycompany.myshop.backend.domain.values.Country;
 import com.mycompany.myshop.backend.domain.values.Rate;
 import org.junit.jupiter.api.Test;
 
-/**
- * Shared shape for the tax country contract: does the production {@link TaxGateway} adapter's parse
- * still agree with whatever is answering at {@link #taxGateway()}'s URL?
- * {@link TaxStubParityContractTest} answers that against our own stub;
- * {@link TaxRealParityContractTest} answers it against the real tax simulator. Both
- * provision-and-pin the same exact values, so the assertions below don't need to know which mode is
- * running.
- *
- * <p>The ERP twin ({@code BaseErpProductParityContractTest}) is the model for this; see its Javadoc
- * for why the pair exists at all, and for why this is typed against the domain port rather than the
- * {@code HttpTaxGateway} adapter.
- *
- * <p>Arranges a country code the simulator does not seed, rather than reusing one of its built-in
- * rows: the point is to pin what {@code TaxStubDriver} writes against what the real system accepts
- * and returns, which is only meaningful if both sides provision the same value.
- */
 abstract class BaseTaxCountryParityContractTest {
 
     protected static final String ARRANGED_COUNTRY = "ZZ";

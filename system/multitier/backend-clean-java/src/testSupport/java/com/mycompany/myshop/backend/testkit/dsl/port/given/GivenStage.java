@@ -9,13 +9,6 @@ import com.mycompany.myshop.backend.testkit.dsl.port.given.steps.GivenPromotion;
 import com.mycompany.myshop.backend.testkit.dsl.port.then.ThenStage;
 import com.mycompany.myshop.backend.testkit.dsl.port.when.WhenStage;
 
-/**
- * The world the scenario runs in. Each step is translated into use case calls — the ERP / Tax /
- * Clock steps program the WireMock stubs, {@code coupon()} publishes through the SUT's own API.
- *
- * <p>Unstated values are filled from {@code ScenarioDefaults}, so a scenario states only what it
- * actually depends on.
- */
 public interface GivenStage {
     GivenClock clock();
 

@@ -10,11 +10,6 @@ import com.mycompany.myshop.backend.testkit.dsl.port.then.steps.ThenCountry;
 import java.math.BigDecimal;
 import java.util.Optional;
 
-/**
- * The country's tax details AS THE SUT SEES THEM: reads through the SUT's production {@code
- * TaxGateway} in the constructor. See {@link ThenProductImpl} for why the read goes through the
- * production gateway rather than the stub client.
- */
 public class ThenCountryImpl<R, V extends ResponseVerification<R>> extends BaseThenStep<R, V>
         implements ThenCountry {
 

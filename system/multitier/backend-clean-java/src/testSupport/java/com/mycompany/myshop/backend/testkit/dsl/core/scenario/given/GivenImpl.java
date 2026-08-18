@@ -15,18 +15,6 @@ import com.mycompany.myshop.backend.testkit.dsl.port.given.GivenStage;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Collects the given steps and, on the hop into {@code when()} or {@code then()}, executes them
- * against the use case layer — the ERP / Tax / Clock steps program their WireMock stubs, {@code
- * coupon()} publishes through the SUT's own {@code POST /api/coupons}.
- *
- * <p>{@code promotion()} is always executed, defaulting to inactive: a scenario that does not care
- * about promotions stays silent about them, and the default keeps the ERP stub answering
- * consistently rather than 404-ing the promotion lookup.
- *
- * <p>What is <em>not</em> stated here is filled by {@link WhenImpl} at action time — see its {@code
- * ensureDefaults()}.
- */
 public class GivenImpl implements GivenStage {
 
     private final UseCaseDsl app;
@@ -78,12 +66,6 @@ public class GivenImpl implements GivenStage {
         return coupon;
     }
 
-    /**
-     * The first order a scenario states is the one it means when a later step names none — {@code
-     * when().cancelOrder()} with no order number cancels it. Further unnamed orders are background
-     * (exhausting a coupon's usage limit, say) and stay unregistered, so they neither collide with
-     * the default alias nor shadow it. An order a test does name always registers.
-     */
     @Override
     public GivenOrderImpl order() {
         var order = new GivenOrderImpl(this);

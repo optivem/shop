@@ -28,24 +28,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
-/**
- * In-process component-test harness: boots the Spring app on a random port (real HTTP over a real
- * socket), backs it with a Testcontainers-managed Postgres (real dialect, Flyway-migrated) and
- * stubs the ERP / Tax / Clock external HTTP systems with in-process WireMock. No docker compose,
- * no deployment. The same harness is reused by the Pact provider-verification test.
- *
- * <p>Postgres is supplied by a {@code @ServiceConnection} bean ({@link TestcontainersConfiguration},
- * shared with the narrow-integration layer): the container's lifecycle is tied to the Spring
- * context, which is cached and shared across every subclass and the Pact verifier, so it stays up
- * for as long as any test can reach it. WireMock uses the singleton-container pattern instead
- * (started once in a static initializer, never stopped by JUnit) rather than {@code @Container}/
- * {@code @Testcontainers}: it is not a Spring bean, so a per-class server that JUnit stopped after
- * the first class would leave the reused, cached context pointing at a dead port.
- *
- * <p>Tests reach the harness through two layers: {@link #scenario} — {@code given() / when() /
- * then()}, what {@code latest/} tests are written on — and {@link #app}, the use case layer
- * underneath it, for a test that needs surgical control.
- */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 @Import(TestcontainersConfiguration.class)
@@ -76,11 +58,6 @@ public abstract class BaseComponentTest {
     @Autowired
     protected TestRestTemplate restTemplate;
 
-    /**
-     * The application's own Jackson mapper, handed to the use case layer so it parses responses
-     * exactly the way the app serializes them — including the {@code ProblemDetail} support Spring
-     * Boot registers, which the DSL needs to read a rejection's {@code detail} / {@code errors[]}.
-     */
     @Autowired
     protected ObjectMapper objectMapper;
 
@@ -90,11 +67,6 @@ public abstract class BaseComponentTest {
     @Autowired
     protected CouponJpaRepository couponRepository;
 
-    /**
-     * The SUT's production gateways to the external systems. The stub-contract tests read them back
-     * through {@link SutErpReader} / {@link SutTaxReader} / {@link SutClockReader} so the WireMock
-     * stub's bytes travel through the SUT's real HTTP call + real parse, not a test-side client.
-     */
     @Autowired
     protected HttpErpGateway erpGateway;
 
@@ -104,18 +76,8 @@ public abstract class BaseComponentTest {
     @Autowired
     protected ClockGateway clockGateway;
 
-    /**
-     * The use case layer: one entry per actor — {@code app.myShop()} for the system under test,
-     * {@code app.erp()} / {@code app.tax()} / {@code app.clock()} for the external stubs. The
-     * {@link #scenario} DSL is built on it, and it stays exposed for tests that need to drive an
-     * actor directly rather than through a scenario.
-     */
     protected UseCaseDsl app;
 
-    /**
-     * The scenario layer: {@code scenario.given()…when()…then()}. Fresh per test — the
-     * one-scenario-per-test guard lives on the instance, so a new test starts with a clean slate.
-     */
     protected ScenarioDslImpl scenario;
 
     @BeforeEach

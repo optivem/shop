@@ -6,15 +6,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.ResponseEntity;
 
-/**
- * Parses a raw response body into either the success DTO or the RFC 7807 {@code ProblemDetail},
- * once the test has said which outcome it expects.
- *
- * <p>The endpoints that can answer either way — place order, view order — are fetched as raw {@code
- * String} by {@code MyShopDriver}: binding them to the success type would discard the {@code
- * ProblemDetail} body on a 4xx (Jackson would quietly map it onto a null-filled success DTO),
- * leaving nothing to assert a rejection message against.
- */
 public final class ResponseParser {
 
     private ResponseParser() {

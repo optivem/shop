@@ -19,10 +19,6 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.Optional;
 
-/**
- * Talks HTTP to the tax system and maps its wire shape to {@link TaxRate}. A 404 becomes an empty
- * {@code Optional}; the domain never sees a status code.
- */
 @Service
 public class HttpTaxGateway implements TaxGateway {
 
@@ -42,14 +38,6 @@ public class HttpTaxGateway implements TaxGateway {
                         Rate.of(wire.getTaxRate())));
     }
 
-    /**
-     * The raw tax-system call and parse, before the mapping to {@link TaxRate}. Exposed on the
-     * adapter (rather than on the {@link TaxGateway} port) so the stub-contract component tests can
-     * read the stub's bytes back through the SUT's real HTTP call and real Jackson parse.
-     *
-     * <p>Takes the plain string the URL is built from, not a {@link Country}: the typed value stops
-     * at the edge of the wire, the same way {@code Money} and {@code Rate} stop at the edge of the ORM.
-     */
     public Optional<TaxDetailsResponse> fetchTaxDetails(String country) {
         var url = taxUrl + "/api/countries/" + country;
         if (log.isInfoEnabled()) {

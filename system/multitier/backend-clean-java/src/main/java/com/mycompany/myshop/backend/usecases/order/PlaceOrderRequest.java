@@ -6,11 +6,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
-/**
- * What placing an order needs. Carries its {@code jakarta.validation} constraints: per D9 that is
- * the one framework import the use case layer keeps, because a parallel set of near-identical web
- * request classes would cost more than it buys.
- */
 public class PlaceOrderRequest {
 
     @NotBlank(message = "SKU must not be empty")

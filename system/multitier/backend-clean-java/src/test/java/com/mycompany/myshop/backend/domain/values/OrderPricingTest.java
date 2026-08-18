@@ -1,7 +1,5 @@
-package com.mycompany.myshop.backend.domain.pricing;
+package com.mycompany.myshop.backend.domain.values;
 
-import com.mycompany.myshop.backend.domain.values.Money;
-import com.mycompany.myshop.backend.domain.values.Rate;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -9,11 +7,6 @@ import java.math.BigDecimal;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
-/**
- * The pricing chain, exercised directly. No Spring context, no Docker, no repository — the whole
- * point of moving this arithmetic out of {@code placeOrder} is that it can now be pinned down at
- * this speed.
- */
 class OrderPricingTest {
 
     private static final Rate NO_PROMOTION = Rate.ONE;
@@ -31,10 +24,6 @@ class OrderPricingTest {
         assertThat(pricing.totalPrice()).isEqualTo(Money.of("30.00"));
     }
 
-    /**
-     * The order the chain runs in is observable: the coupon discounts the *promoted* price, not the
-     * base price, and the tax lands on the *discounted* subtotal, not on the promoted price.
-     */
     @Test
     void appliesThePromotionThenTheDiscountThenTheTax() {
         var pricing = OrderPricing.price(Money.of("100.00"), 1, Rate.of("0.50"), Rate.of("0.10"),
@@ -48,7 +37,6 @@ class OrderPricingTest {
         assertThat(pricing.totalPrice()).isEqualTo(Money.of("54.00"));
     }
 
-    /** Matches the schema: {@code base_price} is what the line cost before the promotion. */
     @Test
     void recordsTheBasePriceBeforeThePromotionIsApplied() {
         var pricing = OrderPricing.price(Money.of("100.00"), 2, Rate.of("0.50"), NO_DISCOUNT, NO_TAX);
@@ -57,14 +45,6 @@ class OrderPricingTest {
         assertThat(pricing.subtotalPrice()).isEqualTo(Money.of("100.00"));
     }
 
-    /**
-     * The rounding contract. Intermediates are carried exactly and each recorded component is
-     * rounded once, from the exact value — not from an already-rounded input.
-     *
-     * <p>29.97 × 0.85 = 25.4745 exactly. Rounding that promoted price to 25.47 first would give a
-     * tax of 4.58 and a total of 27.50; carrying it exactly gives 4.59 and 27.51. The second is what
-     * the CRUD variant produced, because there each column rounded independently on write.
-     */
     @Test
     void roundsEachComponentOnceFromExactIntermediates() {
         var pricing = OrderPricing.price(Money.of("9.99"), 3, Rate.of("0.85"), Rate.of("0.10"),
@@ -77,11 +57,6 @@ class OrderPricingTest {
         assertThat(pricing.totalPrice()).isEqualTo(Money.of("27.51"));
     }
 
-    /**
-     * The consequence of rounding each component independently, stated out loud so nobody
-     * "corrects" it: the recorded subtotal plus the recorded tax need not equal the recorded total.
-     * 22.93 + 4.59 is 27.52; the total is 27.51, because it was rounded from 27.51246.
-     */
     @Test
     void recordsComponentsThatNeedNotAddUpToTheRecordedTotal() {
         var pricing = OrderPricing.price(Money.of("9.99"), 3, Rate.of("0.85"), Rate.of("0.10"),

@@ -6,18 +6,6 @@ import com.mycompany.myshop.backend.testkit.driver.adapter.external.clock.ClockS
 import com.mycompany.myshop.backend.testkit.driver.adapter.external.erp.ErpStubDriver;
 import com.mycompany.myshop.backend.testkit.driver.adapter.external.tax.TaxStubDriver;
 
-/**
- * Builds the external-system stub drivers from a running {@link WireMockServer}.
- *
- * <p>The drivers wrap a {@link WireMock} client rather than a server (see {@link ErpStubDriver}), so
- * every construction site repeated the same {@code new XStubDriver(new WireMock("localhost",
- * server.port()))} incantation — three times in the component harness and once per narrow-integration
- * test. This is that incantation, written once.
- *
- * <p>Serves both topologies: the component harness passes three separate servers (one per external
- * system, so a test can assert against each independently), a narrow-integration test passes the same
- * single server for whichever gateway it drives.
- */
 public final class StubDrivers {
 
     private StubDrivers() {

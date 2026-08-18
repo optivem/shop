@@ -2,22 +2,15 @@ package com.mycompany.myshop.backend.domain.entities;
 
 import com.mycompany.myshop.backend.domain.Guard;
 import com.mycompany.myshop.backend.domain.exceptions.ValidationException;
-import com.mycompany.myshop.backend.domain.pricing.OrderPricing;
 import com.mycompany.myshop.backend.domain.values.Country;
 import com.mycompany.myshop.backend.domain.values.CouponCode;
 import com.mycompany.myshop.backend.domain.values.Money;
+import com.mycompany.myshop.backend.domain.values.OrderPricing;
+import com.mycompany.myshop.backend.domain.values.OrderStatus;
 import com.mycompany.myshop.backend.domain.values.Rate;
 
 import java.time.Instant;
 
-/**
- * An order. A plain object: no ORM annotations, no Spring, no Lombok — the persisted shape lives in
- * {@code infrastructure.persistence.entities.OrderJpaEntity} and the repository adapter maps across.
- *
- * <p>It owns its own status transitions. {@link #cancel()} and {@link #deliver()} are the only ways
- * the status moves, so the rule about what may follow what is stated once here rather than as an
- * {@code if} block in each use case that happens to need it.
- */
 public class Order {
 
     private final String orderNumber;
@@ -46,7 +39,6 @@ public class Order {
         this.appliedCouponCode = appliedCouponCode;
     }
 
-    /** Only a placed order can be delivered. */
     public void deliver() {
         if (status != OrderStatus.PLACED) {
             throw new ValidationException("Order cannot be delivered in its current status");
@@ -54,7 +46,6 @@ public class Order {
         status = OrderStatus.DELIVERED;
     }
 
-    /** An order can be cancelled from any status but cancelled. */
     public void cancel() {
         if (status == OrderStatus.CANCELLED) {
             throw new ValidationException("Order has already been cancelled");
@@ -62,7 +53,6 @@ public class Order {
         status = OrderStatus.CANCELLED;
     }
 
-    /** This order's identity. The surrogate key the table happens to use stays in persistence. */
     public String getOrderNumber() {
         return orderNumber;
     }
@@ -75,7 +65,6 @@ public class Order {
         return country;
     }
 
-    /** A {@code String}, not a type — see {@link Product} for why this one did not become one. */
     public String getSku() {
         return sku;
     }
@@ -88,7 +77,6 @@ public class Order {
         return status;
     }
 
-    /** The coupon this order was placed with, or null when it was placed without one. */
     public CouponCode getAppliedCouponCode() {
         return appliedCouponCode;
     }

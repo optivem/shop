@@ -7,10 +7,6 @@ import com.mycompany.myshop.backend.domain.values.UsageQuota;
 import com.mycompany.myshop.backend.domain.values.ValidityPeriod;
 import com.mycompany.myshop.backend.infrastructure.persistence.entities.CouponJpaEntity;
 
-/**
- * Maps between the domain {@link Coupon} and its persisted shape. See {@link OrderMapper} for why
- * the surrogate {@code id} does not cross.
- */
 public final class CouponMapper {
 
     private CouponMapper() {

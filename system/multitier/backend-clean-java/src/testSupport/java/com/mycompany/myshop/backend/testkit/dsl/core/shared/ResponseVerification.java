@@ -1,6 +1,5 @@
 package com.mycompany.myshop.backend.testkit.dsl.core.shared;
 
-/** Base for the per-use-case verifications: holds the parsed success payload to assert against. */
 public class ResponseVerification<R> {
 
     private final R response;

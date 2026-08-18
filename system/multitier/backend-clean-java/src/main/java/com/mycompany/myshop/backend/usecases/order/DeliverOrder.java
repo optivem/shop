@@ -6,9 +6,6 @@ import com.mycompany.myshop.backend.usecases.Result;
 import com.mycompany.myshop.backend.usecases.UseCase;
 import com.mycompany.myshop.backend.usecases.UseCaseError;
 
-/**
- * Marks an order as delivered. Whether this order may be delivered is the order's own decision.
- */
 public class DeliverOrder implements UseCase<DeliverOrderRequest, Void> {
 
     private static final String ORDER_ENTITY = "Order";

@@ -10,12 +10,6 @@ import com.mycompany.myshop.backend.testkit.dsl.port.then.steps.ThenProduct;
 import java.math.BigDecimal;
 import java.util.Optional;
 
-/**
- * The product AS THE SUT SEES IT: reads through the SUT's production {@code ErpGateway} in the
- * constructor — real HTTP to the ERP stub + real {@code ProductDetailsResponse} parse — so the stub's
- * bytes actually travel the SUT's consumption path. A field-name drift in the component stub
- * (e.g. {@code price}→{@code cost}) then makes the assertion fail, rather than silently yielding null.
- */
 public class ThenProductImpl<R, V extends ResponseVerification<R>> extends BaseThenStep<R, V>
         implements ThenProduct {
 

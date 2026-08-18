@@ -9,9 +9,6 @@ import com.mycompany.myshop.backend.usecases.UseCaseError;
 
 import java.util.List;
 
-/**
- * Lists orders newest-first, optionally narrowed to those whose order number contains a filter.
- */
 public class BrowseOrderHistory implements UseCase<BrowseOrderHistoryRequest, BrowseOrderHistoryResponse> {
 
     private final OrderRepository orderRepository;

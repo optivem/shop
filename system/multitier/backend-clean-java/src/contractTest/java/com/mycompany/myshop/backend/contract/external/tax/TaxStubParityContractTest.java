@@ -11,15 +11,6 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 
-/**
- * The {@code Stub} side of the tax country contract. Unlike {@code ErpStubParityContractTest}, which
- * inlines its WireMock mapping, this arranges through the real {@link TaxStubDriver} — so what gets
- * held against the simulator by {@link TaxRealParityContractTest} is the driver's own JSON, which is
- * the artifact the parity pair exists to guard.
- *
- * <p>Needs no Docker of its own: the gateway is driven directly, with no Spring context and no
- * container — so {@link HttpTaxGateway} is constructed by hand with the URL the test owns.
- */
 class TaxStubParityContractTest extends BaseTaxCountryParityContractTest {
 
     private static final WireMockServer WIRE_MOCK = new WireMockServer(options().dynamicPort());

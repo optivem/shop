@@ -11,11 +11,6 @@ import com.mycompany.myshop.backend.testkit.dsl.core.usecase.usecases.base.BaseM
 import java.util.Set;
 import org.springframework.http.HttpStatus;
 
-/**
- * {@code POST /api/orders} — accepted with {@code 201 CREATED} carrying the order number, rejected
- * with {@code 422 UNPROCESSABLE_ENTITY} carrying a {@code ProblemDetail}. Placing returns only the
- * order number; to inspect the persisted totals, read the order back with {@link ViewOrder}.
- */
 public class PlaceOrder extends BaseMyShopUseCase<PlaceOrderResponse, PlaceOrderVerification> {
 
     private final ObjectMapper objectMapper;
@@ -32,12 +27,6 @@ public class PlaceOrder extends BaseMyShopUseCase<PlaceOrderResponse, PlaceOrder
         this.objectMapper = objectMapper;
     }
 
-    /**
-     * Names the order this call is about to create, so a later step can refer to it without knowing
-     * the number the SUT will mint. Left unset, the order is simply not registered — which is what
-     * {@code when().placeOrder()} wants, since {@code then()} reads the number straight off the
-     * response.
-     */
     public PlaceOrder orderNumber(String orderNumberResultAlias) {
         this.orderNumberResultAlias = orderNumberResultAlias;
         return this;
@@ -54,10 +43,6 @@ public class PlaceOrder extends BaseMyShopUseCase<PlaceOrderResponse, PlaceOrder
         return this;
     }
 
-    /**
-     * A quantity the DTO's {@code Integer} cannot hold — {@code "3.5"}, {@code "lala"}, {@code "  "},
-     * or {@code null}. Forces the raw-JSON body, so the controller sees what the API channel sends.
-     */
     public PlaceOrder rawQuantity(String rawQuantity) {
         this.rawQuantity = rawQuantity;
         this.quantityIsRaw = true;

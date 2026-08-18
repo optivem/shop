@@ -11,22 +11,11 @@ import com.mycompany.myshop.backend.testkit.dsl.core.usecase.usecases.PlaceOrder
 import com.mycompany.myshop.backend.testkit.dsl.core.usecase.usecases.PublishCoupon;
 import com.mycompany.myshop.backend.testkit.dsl.core.usecase.usecases.ViewOrder;
 
-/**
- * The system under test, one class per use case. Every call produces an outcome the caller states an
- * expectation on ({@code .execute().shouldSucceed()} / {@code .shouldFail()}) — unlike the external
- * stub DSLs, whose {@code execute()} is fire-and-forget because programming an in-process WireMock
- * cannot fail.
- */
 public class MyShopDsl {
 
     private final MyShopDriver driver;
     private final ObjectMapper objectMapper;
 
-    /**
-     * Shared by every use case below, so one can register what the SUT minted and a later one can
-     * resolve it. Owned here rather than passed in: the whole use case layer is rebuilt per test, so
-     * this is already scenario-scoped.
-     */
     private final UseCaseContext context = new UseCaseContext();
 
     public MyShopDsl(MyShopDriver driver, ObjectMapper objectMapper) {

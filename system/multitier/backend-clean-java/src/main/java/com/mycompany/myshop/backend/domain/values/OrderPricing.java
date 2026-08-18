@@ -1,18 +1,7 @@
-package com.mycompany.myshop.backend.domain.pricing;
+package com.mycompany.myshop.backend.domain.values;
 
 import com.mycompany.myshop.backend.domain.Guard;
-import com.mycompany.myshop.backend.domain.values.Money;
-import com.mycompany.myshop.backend.domain.values.Rate;
 
-/**
- * What an order costs and how it got there. {@link #price} is the whole pricing chain — the eight
- * loose {@code BigDecimal} locals that used to live in {@code placeOrder}, expressed once as typed
- * arithmetic.
- *
- * <p>Every component is rounded to its recorded scale here, in the canonical constructor, from
- * exact intermediates — so the promoted price feeding the discount, and the discounted subtotal
- * feeding the tax, are never pre-rounded. See {@link Money#rounded()}.
- */
 public record OrderPricing(
         Money unitPrice,
         int quantity,
@@ -44,10 +33,6 @@ public record OrderPricing(
         totalPrice = totalPrice.rounded();
     }
 
-    /**
-     * Prices a line: quantity at the unit price, reduced by the promotion, then by the coupon, then
-     * taxed. The base price is recorded before the promotion is applied, matching the schema.
-     */
     public static OrderPricing price(Money unitPrice, int quantity, Rate promotionFactor,
                                      Rate discountRate, Rate taxRate) {
         var basePrice = unitPrice.times(quantity);

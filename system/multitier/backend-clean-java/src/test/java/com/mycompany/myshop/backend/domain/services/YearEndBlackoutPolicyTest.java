@@ -1,4 +1,4 @@
-package com.mycompany.myshop.backend.domain.policies;
+package com.mycompany.myshop.backend.domain.services;
 
 import com.mycompany.myshop.backend.domain.exceptions.ValidationException;
 import org.junit.jupiter.api.Test;
@@ -9,12 +9,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
-/**
- * Both December 31st windows, pinned to the minute. Gathering them in one policy was what made the
- * drift between them visible; this is where the drift is written down so a later reader can see it
- * is deliberate — the placement window runs to midnight, the cancellation window is half an hour
- * long, and its message says 23:00 while its bound is 22:30.
- */
 class YearEndBlackoutPolicyTest {
 
     private static final String PLACEMENT_MESSAGE =
@@ -50,7 +44,6 @@ class YearEndBlackoutPolicyTest {
                 .doesNotThrowAnyException();
     }
 
-    /** Both bounds are inclusive: 22:00:00 and 22:30:00 are inside the window. */
     @Test
     void blocksCancellationThroughoutTheHalfHourWindowOnDecember31() {
         assertThat(catchThrowable(() -> YearEndBlackoutPolicy.requireCancellationAllowed(at("2025-12-31T22:00:00Z"))))
@@ -70,10 +63,6 @@ class YearEndBlackoutPolicyTest {
                 .doesNotThrowAnyException();
     }
 
-    /**
-     * The asymmetry, asserted rather than described: the message announces a window that ends at
-     * 23:00, but the bound is 22:30, so cancellation at 22:45 on December 31st goes through.
-     */
     @Test
     void allowsCancellationAfterTheWindowClosesEvenThoughItsMessageClaims2300() {
         assertThatCode(() -> YearEndBlackoutPolicy.requireCancellationAllowed(at("2025-12-31T22:30:01Z")))
@@ -84,7 +73,6 @@ class YearEndBlackoutPolicyTest {
                 .doesNotThrowAnyException();
     }
 
-    /** Placement and cancellation windows do not overlap: 22:15 blocks one and not the other. */
     @Test
     void appliesTheTwoWindowsIndependently() {
         assertThatCode(() -> YearEndBlackoutPolicy.requirePlacementAllowed(at("2025-12-31T22:15:00Z")))
@@ -93,10 +81,6 @@ class YearEndBlackoutPolicyTest {
                 .doesNotThrowAnyException();
     }
 
-    /**
-     * The date is read in UTC, not in the caller's zone. 04:59Z on January 1st is 23:59 on
-     * December 31st in New York, and is allowed.
-     */
     @Test
     void judgesTheDateInUtc() {
         assertThatCode(() -> YearEndBlackoutPolicy.requirePlacementAllowed(at("2026-01-01T04:59:00Z")))

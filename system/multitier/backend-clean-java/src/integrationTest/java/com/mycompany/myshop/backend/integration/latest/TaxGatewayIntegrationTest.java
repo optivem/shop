@@ -8,27 +8,8 @@ import com.mycompany.myshop.backend.infrastructure.external.TaxGatewayException;
 import com.mycompany.myshop.backend.domain.gateways.TaxGateway;
 import com.mycompany.myshop.backend.domain.values.Rate;
 import com.mycompany.myshop.backend.integration.latest.base.BaseGatewayIntegrationTest;
-import com.mycompany.myshop.backend.testkit.dsl.core.usecase.external.tax.TaxDsl;
 import org.junit.jupiter.api.Test;
 
-/**
- * Narrow-integration coverage for {@link TaxGateway}, the sibling of
- * {@link ErpGatewayIntegrationTest}. Same shape: one gateway driven directly against the in-process
- * WireMock supplied by {@link BaseGatewayIntegrationTest}, with every stub declared through the
- * shared {@link TaxDsl} the component tests reach as {@code app.tax()}.
- *
- * <p>The 404 and 5xx cases are the ones worth pinning: {@code getTaxDetails} deliberately treats them
- * differently — a 404 is Tax answering "no such country" and yields an empty {@code Optional}, while
- * any other non-200 is Tax failing to answer and yields a {@link TaxGatewayException}. Collapsing the
- * two would turn an outage into a silent "country does not exist". That distinction is the adapter's
- * to make, and the domain never sees a status code: {@link TaxGatewayException} is declared in
- * {@code domain/exceptions} precisely so the translation lands on the inside's vocabulary.
- *
- * <p>The {@code legacy/} counterpart runs the same four scenarios against raw, inlined WireMock,
- * where that 404-versus-5xx distinction survives only as bare status codes; here it is named by
- * {@code returnsNoTaxRate()} versus {@code failsForCountry()}. Every gateway at this layer has a
- * twin — unlike {@code contract/external/}, where a "before" would be circular and none exists.
- */
 class TaxGatewayIntegrationTest extends BaseGatewayIntegrationTest {
 
     private final TaxGateway taxGateway = taxGateway();

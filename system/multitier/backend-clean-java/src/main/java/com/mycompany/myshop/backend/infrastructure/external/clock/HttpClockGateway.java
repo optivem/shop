@@ -15,11 +15,6 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.time.Instant;
 
-/**
- * Supplies the current time: the real system clock in {@code real} mode, or an HTTP call to the
- * controllable clock stub in {@code stub} mode. Which of the two is an infrastructure concern — the
- * domain sees only an {@link Instant}.
- */
 @Service
 public class HttpClockGateway implements ClockGateway {
 

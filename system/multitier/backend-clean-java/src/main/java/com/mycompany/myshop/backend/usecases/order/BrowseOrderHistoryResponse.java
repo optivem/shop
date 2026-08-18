@@ -1,14 +1,11 @@
 package com.mycompany.myshop.backend.usecases.order;
 
-import com.mycompany.myshop.backend.domain.entities.OrderStatus;
+import com.mycompany.myshop.backend.domain.values.OrderStatus;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
-/**
- * The order list, as the wire contract states it.
- */
 public class BrowseOrderHistoryResponse {
 
     private List<BrowseOrderHistoryItemResponse> orders;

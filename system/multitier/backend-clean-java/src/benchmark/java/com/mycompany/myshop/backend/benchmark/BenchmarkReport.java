@@ -9,30 +9,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Collects what {@link Theme2Baseline} measured and renders it as markdown.
- *
- * <p>Deliberately dumb: it holds rows and prints them. Keeping the rendering here rather than in the
- * measurement class is what lets the after-run produce a file the before-run's file can be diffed
- * against — same columns, same order, same units.
- */
 final class BenchmarkReport {
 
-    /**
-     * One measured operation.
-     *
-     * @param capability     the row of the plan's capability table this belongs to
-     * @param operation      what the application actually did, in its own vocabulary
-     * @param millis         wall time
-     * @param rows           rows the database returned or wrote
-     * @param domainObjects  domain objects constructed on the way to the response — see
-     *                       {@link Theme2Baseline} for how the per-row constants are derived
-     * @param statements     JDBC statements prepared, counted by Hibernate rather than estimated
-     * @param retainedHeapMb heap the returned value still holds once the operation is over, to the
-     *                       nearest MB. Approximate, and deliberately not "heap allocated": the
-     *                       gap between this and the domain-object count is the point — the
-     *                       objects were built and then thrown away.
-     */
     record Row(String capability, String operation, long millis, long rows,
                long domainObjects, long statements, long retainedHeapMb) { }
 

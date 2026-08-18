@@ -15,16 +15,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-/**
- * Turns a use case's {@link Result} into an HTTP response: the caller supplies what success looks
- * like, this class owns what every failure looks like.
- *
- * <p>The {@code switch} over {@link UseCaseError} has no {@code default} branch, and that is the
- * whole point of the sealed error type — add a case to {@code UseCaseError} and this class stops
- * compiling until it says what that case means over HTTP. The failures used to be reassembled here
- * from exceptions in {@code GlobalExceptionHandler}, which had grown a case per use case and could
- * silently miss a new one.
- */
 @Component
 public class UseCaseResponder {
 
@@ -41,10 +31,6 @@ public class UseCaseResponder {
     @Value("${error.types.resource-not-found}")
     private String resourceNotFoundTypeUri;
 
-    /**
-     * @param onSuccess what the success value becomes — the status code and headers the contract
-     *                  asks for. Called only when the result is {@code Ok}.
-     */
     public <T> ResponseEntity<Object> respond(Result<T, UseCaseError> result,
                                               Function<T, ResponseEntity<Object>> onSuccess) {
         if (result.isOk()) {
@@ -73,11 +59,6 @@ public class UseCaseResponder {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problemDetail);
     }
 
-    /**
-     * Two renderings, exactly as the exception handler used to produce them: a rule about one named
-     * input carries an {@code errors[]} array, a rule about the request as a whole puts its message
-     * straight in {@code detail}.
-     */
     private ResponseEntity<Object> invalid(UseCaseError.Invalid error) {
         if (error.field() == null) {
             var problemDetail = ProblemDetail.forStatusAndDetail(

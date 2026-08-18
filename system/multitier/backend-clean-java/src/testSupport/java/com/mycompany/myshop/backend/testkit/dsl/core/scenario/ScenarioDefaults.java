@@ -1,15 +1,7 @@
 package com.mycompany.myshop.backend.testkit.dsl.core.scenario;
 
-import com.mycompany.myshop.backend.domain.entities.OrderStatus;
+import com.mycompany.myshop.backend.domain.values.OrderStatus;
 
-/**
- * What the scenario DSL fills in when a test stays silent, so a test states only what it actually
- * depends on: {@code scenario.when().placeOrder().then().shouldSucceed()} works with no {@code
- * given()} at all.
- *
- * <p>{@link #DEFAULT_TIME} sits well clear of the New Year blackout window, so a scenario that never
- * mentions the clock is never rejected by it.
- */
 public final class ScenarioDefaults {
 
     // Product
@@ -20,14 +12,8 @@ public final class ScenarioDefaults {
     public static final int DEFAULT_QUANTITY = 1;
     public static final String DEFAULT_COUNTRY = "US";
 
-    /**
-     * The alias a {@code given().order()} registers itself under, and the one {@code
-     * when().cancelOrder()} resolves when the test names no other. It is a key, never an order number
-     * — the SUT mints those.
-     */
     public static final String DEFAULT_ORDER_NUMBER = "DEFAULT-ORDER";
 
-    /** A {@code given().order()} that says nothing about status is simply a placed order. */
     public static final OrderStatus DEFAULT_ORDER_STATUS = OrderStatus.PLACED;
 
     // Promotion

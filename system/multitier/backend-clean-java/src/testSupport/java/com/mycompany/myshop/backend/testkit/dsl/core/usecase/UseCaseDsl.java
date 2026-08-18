@@ -12,14 +12,6 @@ import com.mycompany.myshop.backend.testkit.dsl.core.usecase.external.clock.Cloc
 import com.mycompany.myshop.backend.testkit.dsl.core.usecase.external.erp.ErpDsl;
 import com.mycompany.myshop.backend.testkit.dsl.core.usecase.external.tax.TaxDsl;
 
-/**
- * Root of the use case layer: one entry per actor in a component test — the system under test
- * ({@link #myShop()}) and the three external systems it talks to ({@link #erp()}, {@link #tax()},
- * {@link #clock()}).
- *
- * <p>This is the layer the scenario DSL is built on, and it stays exposed: a test that needs
- * surgical control can drop to it directly instead of bending a scenario around an edge case.
- */
 public class UseCaseDsl {
 
     private final MyShopDsl myShop;
@@ -64,21 +56,14 @@ public class UseCaseDsl {
         return clock;
     }
 
-    /**
-     * Reads a product through the SUT's production {@code ErpGateway} — the SUT's own view of the ERP
-     * stub. Backs {@code then().product(...)} in the stub-contract tests, deliberately not the stub
-     * client (a test-side read of the stub would be a tautology).
-     */
     public SutErpReader sutErp() {
         return sutErp;
     }
 
-    /** Reads a country through the SUT's production {@code TaxGateway}. See {@link #sutErp()}. */
     public SutTaxReader sutTax() {
         return sutTax;
     }
 
-    /** Reads the current time through the SUT's production {@code ClockGateway}. See {@link #sutErp()}. */
     public SutClockReader sutClock() {
         return sutClock;
     }

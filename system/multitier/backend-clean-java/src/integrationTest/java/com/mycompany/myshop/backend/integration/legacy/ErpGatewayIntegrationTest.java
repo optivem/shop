@@ -18,13 +18,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-/**
- * "Before" of the external-systems contract-tests refactor at the narrow-integration layer: the
- * {@link ErpGateway} exercised against ERP stubbed by raw, inlined WireMock. Uses an in-process
- * {@link WireMockServer} (same mechanism as the component tests) rather than a Testcontainers
- * WireMock container, so the layer needs no Docker. The {@code latest/} twin drives the happy/404
- * shapes through the shared stub DSL; the 500/503 error-injection cases stay raw in both twins.
- */
 class ErpGatewayIntegrationTest {
 
     static final WireMockServer WIRE_MOCK = new WireMockServer(options().dynamicPort());

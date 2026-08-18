@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.mycompany.myshop.backend.usecases.order.PlaceOrderResponse;
 import com.mycompany.myshop.backend.testkit.dsl.core.shared.ResponseVerification;
 
-/** What a successful place-order answers with: the order number, and nothing else. */
 public class PlaceOrderVerification extends ResponseVerification<PlaceOrderResponse> {
 
     public PlaceOrderVerification(PlaceOrderResponse response) {

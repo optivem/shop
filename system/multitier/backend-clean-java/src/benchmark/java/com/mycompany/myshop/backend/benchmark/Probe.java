@@ -13,15 +13,6 @@ import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.function.Supplier;
 
-/**
- * The measurement mechanics, kept apart from what is being measured.
- *
- * <p>Two of the three numbers here are exact and one is not, and the difference matters when the
- * results are read out loud. Wall time and the JDBC statement count are exact — the statement count
- * comes from Hibernate's own {@code Statistics}, not from an estimate of how many round trips a loop
- * "should" make. Retained heap is a {@code Runtime} delta after a GC hint, which is indicative and
- * nothing more; it is reported to the nearest megabyte for exactly that reason.
- */
 final class Probe {
 
     private static final int GC_HINTS = 3;
@@ -36,14 +27,8 @@ final class Probe {
         this.statistics.setStatisticsEnabled(true);
     }
 
-    /** What one timed operation produced. The value is held so the heap reading includes it. */
     record Timed<T>(T value, long millis, long statements, long retainedHeapMb) { }
 
-    /**
-     * Runs {@code operation} and reports what it cost. The result is kept referenced across the
-     * closing heap reading on purpose: the question is what the response still holds on to, not what
-     * survives after it has been thrown away.
-     */
     <T> Timed<T> measure(Supplier<T> operation) {
         var heapBefore = settledHeapBytes();
         statistics.clear();
@@ -59,18 +44,10 @@ final class Probe {
         return new Timed<>(value, millis, statements, Math.max(retained, 0));
     }
 
-    /**
-     * The plan Postgres actually used, with real row counts and buffer accounting. {@code ANALYZE}
-     * executes the statement, so this is only ever handed a read.
-     */
     String explainAnalyze(String sql) {
         return explain("EXPLAIN (ANALYZE, BUFFERS) " + sql);
     }
 
-    /**
-     * The plan Postgres would use, without running the statement. For writes, where running it
-     * would change the data the next measurement is taken over.
-     */
     String explainOnly(String sql) {
         return explain("EXPLAIN " + sql);
     }
@@ -89,7 +66,6 @@ final class Probe {
         }
     }
 
-    /** Executes a whole SQL script — the seed — as one multi-statement command. */
     void runScript(Path script) {
         String sql;
         try {

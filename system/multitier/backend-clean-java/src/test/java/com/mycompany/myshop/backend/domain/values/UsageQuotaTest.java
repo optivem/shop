@@ -5,11 +5,6 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
-/**
- * The usage quota on its own terms. The immutability matters beyond this class: {@code Coupon.redeem}
- * reassigns the quota rather than mutating it, so {@link UsageQuota#recordUse()} returning a new
- * value is load-bearing, not a style choice.
- */
 class UsageQuotaTest {
 
     @Test
@@ -22,20 +17,17 @@ class UsageQuotaTest {
         assertThat(UsageQuota.of(3, 3).exhausted()).isTrue();
     }
 
-    /** Defensive: a count already past the limit is still exhausted, not wrapped back to usable. */
     @Test
     void isExhaustedBeyondTheLimit() {
         assertThat(UsageQuota.of(3, 5).exhausted()).isTrue();
     }
 
-    /** An absent limit means unlimited — no count exhausts it. */
     @Test
     void isNeverExhaustedWithoutALimit() {
         assertThat(UsageQuota.of(null, 0).exhausted()).isFalse();
         assertThat(UsageQuota.of(null, 1_000_000).exhausted()).isFalse();
     }
 
-    /** A zero limit is exhausted from the outset: legal to express, impossible to use. */
     @Test
     void isExhaustedImmediatelyWithAZeroLimit() {
         assertThat(UsageQuota.of(0, 0).exhausted()).isTrue();

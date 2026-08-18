@@ -3,14 +3,9 @@ package com.mycompany.myshop.backend.testkit.dsl.core.usecase.usecases;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.mycompany.myshop.backend.usecases.order.ViewOrderDetailsResponse;
-import com.mycompany.myshop.backend.domain.entities.OrderStatus;
+import com.mycompany.myshop.backend.domain.values.OrderStatus;
 import com.mycompany.myshop.backend.testkit.dsl.core.shared.ResponseVerification;
 
-/**
- * The persisted order. Money is asserted with {@code isEqualByComparingTo} against a {@code String}
- * literal, so {@code "20.00"} and {@code 20.0} are the same amount and the test states the figure
- * the way the domain writes it.
- */
 public class ViewOrderVerification extends ResponseVerification<ViewOrderDetailsResponse> {
 
     public ViewOrderVerification(ViewOrderDetailsResponse response) {

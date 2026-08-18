@@ -6,15 +6,6 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 
-/**
- * Provisions a product fixture directly against the real ERP simulator ({@code external-systems/simulators/mock-server.js}),
- * the same way system-test's {@code ErpRealClient} does (same {@code client} sub-package convention).
- * Sits alongside, not inside, {@code driver/adapter/external/erp}: it does not implement
- * {@link com.mycompany.myshop.backend.testkit.driver.port.external.erp.ErpDriver} — that port's vocabulary
- * is stub-programming only (see its Javadoc) and is shared with {@code componentTest}, which is permanently
- * stub-only by design — this class only needs to write one thing (a product) to a real backing, not honor
- * the full stub-programming contract.
- */
 public class SimulatorErpProductClient {
 
     private final String baseUrl;
@@ -26,12 +17,6 @@ public class SimulatorErpProductClient {
         this.baseUrl = baseUrl;
     }
 
-    /**
-     * Creates a product fixture, or updates it in place if a previous run already created it. The
-     * simulator's {@code products} resource does not upsert on {@code POST} — a second {@code POST} for
-     * the same {@code id} fails with {@code 500 Insert failed, duplicate id} — so a rejected create falls
-     * back to {@code PUT} against that {@code id}, which the simulator treats as a replace.
-     */
     public void createProduct(String sku, String price) {
         var body = "{\"id\":\"" + sku + "\",\"title\":\"Test Product Title\","
             + "\"description\":\"Test Product Description\",\"category\":\"Test Category\","

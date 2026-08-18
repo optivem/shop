@@ -1,15 +1,10 @@
 package com.mycompany.myshop.backend.usecases.order;
 
-import com.mycompany.myshop.backend.domain.entities.OrderStatus;
+import com.mycompany.myshop.backend.domain.values.OrderStatus;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 
-/**
- * The full detail of one order, as the wire contract states it. Prices and rates are plain
- * {@code BigDecimal} here on purpose — the domain's {@code Money}/{@code Rate} are for reasoning,
- * not for serializing, and {@code ViewOrderDetails} unwraps them.
- */
 public class ViewOrderDetailsResponse {
 
     private String orderNumber;

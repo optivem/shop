@@ -20,12 +20,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Framework-level failures only: a body Jackson cannot read, a bean-validation rejection, and the
- * catch-all. Business outcomes are not here — a use case returns those as {@code UseCaseError} and
- * {@code UseCaseResponder} renders them, so they are declared in the signature that produces them
- * instead of being reassembled in a handler that had grown a case per use case.
- */
 @RestControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
@@ -99,14 +93,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body((Object) problemDetail);
     }
 
-    /**
-     * A value Jackson could not coerce into the property type is a validation failure about a field
-     * we know, not an unreadable body. Both the target class and the property name are read off the
-     * exception path itself — no package name is written down here, so moving a request DTO cannot
-     * silently disarm this. Returns null when the mismatch cannot be tied to a field carrying
-     * {@link com.mycompany.myshop.backend.usecases.TypeValidationMessage}, leaving the 400
-     * unreadable-body branch to answer.
-     */
     private ProblemDetail tryBuildTypeMismatchError(Throwable ex) {
         var mismatch = findMismatchedInput(ex);
         if (mismatch == null) {
@@ -162,10 +148,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return null;
     }
 
-    /**
-     * {@code Reference.getFrom()} is whatever was being bound when the mismatch happened — usually
-     * the partially-built DTO instance, but Jackson may hand back the {@code Class} itself.
-     */
     private Class<?> resolveOwnerClass(Object from) {
         if (from == null) {
             return null;

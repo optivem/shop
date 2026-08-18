@@ -22,11 +22,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
 
-/**
- * Binds HTTP to use cases and nothing else: no branching, no mapping, no arithmetic. Every method
- * is one call plus the status code the contract asks for — what a refusal looks like is
- * {@link UseCaseResponder}'s job, uniformly, for every use case here.
- */
 @RestController
 public class OrderController {
 

@@ -60,7 +60,6 @@ class CouponRepositoryIntegrationTest {
         assertThat(found.get().getQuota()).isEqualTo(UsageQuota.of(100, 7));
     }
 
-    /** An open-ended, unlimited coupon: three nullable columns come back null and stay legal. */
     @Test
     void savesAndReadsBackOpenEndedCoupon() {
         couponRepository.save(new Coupon(CouponCode.of("FOREVER"), Rate.of("0.1000"),
@@ -74,10 +73,6 @@ class CouponRepositoryIntegrationTest {
         assertThat(found.get().getQuota().used()).isZero();
     }
 
-    /**
-     * A redemption re-saved through the port updates the existing row rather than inserting a second
-     * one — the behaviour {@code CouponMapper} carries the surrogate id for.
-     */
     @Test
     void redemptionUpdatesTheSameRow() {
         var coupon = couponRepository.save(new Coupon(CouponCode.of("ONCE"), Rate.of("0.5000"),
@@ -92,7 +87,6 @@ class CouponRepositoryIntegrationTest {
             .extracting(reread -> reread.getQuota().used()).isEqualTo(1);
     }
 
-    /** See {@code OrderRepositoryIntegrationTest#forceDatabaseRoundTrip} for why this is needed. */
     private void forceDatabaseRoundTrip() {
         entityManager.flush();
         entityManager.clear();

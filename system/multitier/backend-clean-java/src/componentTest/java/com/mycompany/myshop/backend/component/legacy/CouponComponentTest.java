@@ -9,17 +9,6 @@ import java.math.BigDecimal;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 
-/**
- * "Before" of the SUT-side driver refactor: the publish + browse coupon flow driven by raw, inlined
- * {@code restTemplate} calls. The {@code latest/} twin drives the identical scenario through the
- * scenario DSL. Coupon touches no external systems, so this pair's only contrast is SUT-side (raw
- * {@code restTemplate} here vs the scenario DSL there); the order twins, which have externals,
- * additionally vary the external-stub style.
- *
- * <p>Publish returns 204 No Content with no body — this is the real contract the system tests verify,
- * and the reason the frontend consumer pact's publish-coupon interaction (which expects 201 +
- * {code}) is excluded from provider verification pending a frontend fix.
- */
 class CouponComponentTest extends BaseComponentTest {
 
     @Test

@@ -13,11 +13,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/**
- * Binds HTTP to use cases and nothing else — the coupon → response mapping that used to sit in
- * {@code browseCoupons} now lives in {@link BrowseCoupons}, alongside the DTO it fills in, and what
- * a refusal looks like lives in {@link UseCaseResponder}.
- */
 @RestController
 @RequestMapping("/api/coupons")
 public class CouponController {

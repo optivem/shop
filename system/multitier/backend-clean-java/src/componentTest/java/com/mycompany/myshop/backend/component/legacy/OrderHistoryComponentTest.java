@@ -12,11 +12,6 @@ import com.mycompany.myshop.backend.usecases.order.PlaceOrderResponse;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 
-/**
- * "Before" of the external-systems contract-tests refactor: browse order history and view-details
- * flows with the ERP / Tax / Clock externals stubbed by raw, inlined WireMock. The {@code latest/}
- * twin drives the identical scenarios through the shared stub DSL.
- */
 class OrderHistoryComponentTest extends BaseComponentTest {
 
     @Test

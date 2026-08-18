@@ -19,25 +19,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-/**
- * "Before" of the external-systems contract-tests refactor at the narrow-integration layer: the
- * {@link ClockGateway} exercised against Clock stubbed by raw, inlined WireMock. The {@code latest/}
- * twin drives the identical four scenarios through the shared stub DSL.
- *
- * <p>The WireMock lifecycle below is copied verbatim from {@code legacy/ErpGatewayIntegrationTest}
- * and again in {@code legacy/TaxGatewayIntegrationTest} — see the note there. What this file adds is
- * the {@code external.system-mode} branch, which is the sharper half of the contrast: the mode is
- * fixed at construction, and this twin spells it as a bare string literal at every call site. Both
- * {@code "real"} and {@code "bogus"} below are load-bearing strings that nothing checks at compile
- * time, and {@code "stub"} is re-typed in two more places.
- *
- * <p>The {@code latest/} twin closes half that gap and deliberately leaves the other half open: it
- * passes {@code ExternalSystemMode.REAL} through {@code clockGateway(mode)}, so the supported modes
- * are typed, but keeps {@code clockGatewayWithRawMode("bogus")} taking a raw string — typing that
- * argument would make the SUT's unknown-mode branch unreachable from a test. It also moves the
- * hand-wired construction into {@code Gateways}, so a change to {@link HttpClockGateway}'s
- * constructor breaks one call site instead of three.
- */
 class ClockGatewayIntegrationTest {
 
     static final WireMockServer WIRE_MOCK = new WireMockServer(options().dynamicPort());
@@ -57,10 +38,6 @@ class ClockGatewayIntegrationTest {
         WIRE_MOCK.resetAll();
     }
 
-    /**
-     * Built per test rather than in {@code setUp}: unlike the ERP and Tax twins, the mode varies
-     * across the scenarios below, and it is fixed at construction.
-     */
     private ClockGateway clockGateway(String rawMode) {
         return new HttpClockGateway(rawMode, WIRE_MOCK.baseUrl());
     }

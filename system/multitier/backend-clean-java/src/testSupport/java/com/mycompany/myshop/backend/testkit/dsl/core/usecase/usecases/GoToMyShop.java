@@ -10,11 +10,6 @@ import com.mycompany.myshop.backend.testkit.dsl.core.usecase.usecases.base.BaseM
 import java.util.Set;
 import org.springframework.http.HttpStatus;
 
-/**
- * The liveness probe behind {@code assume().myShop().shouldBeRunning()}: {@code GET /health} must
- * answer {@code 200 OK} with {@code status: UP}. Both halves of that contract are asserted by
- * {@code shouldSucceed()} — the status by {@link UseCaseResult}, the body here.
- */
 public class GoToMyShop extends BaseMyShopUseCase<Void, VoidVerification> {
 
     public GoToMyShop(MyShopDriver driver, UseCaseContext context) {

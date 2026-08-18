@@ -1,9 +1,10 @@
 package com.mycompany.myshop.backend.domain.entities;
 
 import com.mycompany.myshop.backend.domain.exceptions.ValidationException;
-import com.mycompany.myshop.backend.domain.pricing.OrderPricing;
 import com.mycompany.myshop.backend.domain.values.Country;
 import com.mycompany.myshop.backend.domain.values.Money;
+import com.mycompany.myshop.backend.domain.values.OrderPricing;
+import com.mycompany.myshop.backend.domain.values.OrderStatus;
 import com.mycompany.myshop.backend.domain.values.Rate;
 import org.junit.jupiter.api.Test;
 
@@ -12,10 +13,6 @@ import java.time.Instant;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
-/**
- * The order state machine on its own. The use case tests reach these transitions through a
- * repository and a clock; here every edge — including the ones no use case exercises — is one call.
- */
 class OrderTest {
 
     private static final Instant PLACED_AT = Instant.parse("2025-06-15T10:00:00Z");
@@ -60,7 +57,6 @@ class OrderTest {
         assertThat(order.getStatus()).isEqualTo(OrderStatus.CANCELLED);
     }
 
-    /** Cancellation is allowed from any status but cancelled — a delivered order included. */
     @Test
     void cancelMovesADeliveredOrderToCancelled() {
         var order = orderWith(OrderStatus.DELIVERED);
@@ -81,10 +77,6 @@ class OrderTest {
         assertThat(order.getStatus()).isEqualTo(OrderStatus.CANCELLED);
     }
 
-    /**
-     * The order number is generated before construction, never assigned afterwards — see
-     * {@code PlaceOrder.generateOrderNumber}. It is guarded like the rest of the required fields.
-     */
     @Test
     void rejectsConstructionWithoutAnOrderNumber() {
         var thrown = catchThrowable(() -> new Order(null, PLACED_AT, Country.of("US"), "BOOK-123", pricing(),
@@ -112,7 +104,6 @@ class OrderTest {
                 .hasMessage("status cannot be null");
     }
 
-    /** An order placed without a coupon carries none — the field is deliberately optional. */
     @Test
     void acceptsAnOrderPlacedWithoutACoupon() {
         var order = orderWith(OrderStatus.PLACED);
@@ -120,7 +111,6 @@ class OrderTest {
         assertThat(order.getAppliedCouponCode()).isNull();
     }
 
-    /** The pricing accessors are pass-throughs; the numbers live on {@link OrderPricing}. */
     @Test
     void exposesTheComponentsOfItsPricing() {
         var order = orderWith(OrderStatus.PLACED);

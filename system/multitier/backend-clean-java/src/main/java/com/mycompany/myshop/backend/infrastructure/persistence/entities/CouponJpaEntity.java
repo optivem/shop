@@ -13,10 +13,6 @@ import org.hibernate.annotations.ColumnDefault;
 import java.math.BigDecimal;
 import java.time.Instant;
 
-/**
- * The persisted shape of a coupon. See {@link OrderJpaEntity} — the schema is a fixed point of the
- * refactor.
- */
 @Entity
 @Table(name = "coupons")
 @Data

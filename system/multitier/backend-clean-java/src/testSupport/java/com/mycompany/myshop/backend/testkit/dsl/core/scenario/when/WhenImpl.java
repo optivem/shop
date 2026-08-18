@@ -11,17 +11,6 @@ import com.mycompany.myshop.backend.testkit.dsl.core.scenario.when.steps.WhenVie
 import com.mycompany.myshop.backend.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.backend.testkit.dsl.port.when.WhenStage;
 
-/**
- * The scenario's action. Before any order-touching action runs, {@code ensureDefaults()} programs
- * whatever external the scenario left unstated, so {@code scenario.when().placeOrder().then()
- * .shouldSucceed()} works with no {@code given()} at all.
- *
- * <p>The clock is defaulted here too: it is a WireMock server with no mapping until someone
- * registers one, so an unstated clock would 404 the SUT's time lookup rather than quietly giving it
- * "now".
- *
- * <p>Coupon actions skip the defaults: publishing and browsing coupons touch no external system.
- */
 public class WhenImpl implements WhenStage {
 
     private final UseCaseDsl app;

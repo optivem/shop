@@ -5,9 +5,6 @@ import lombok.Data;
 
 import java.time.Instant;
 
-/**
- * The clock system's wire shape. Lives in the adapter, never crosses into the domain.
- */
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class GetTimeResponse {

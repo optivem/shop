@@ -1,21 +1,11 @@
 package com.mycompany.myshop.backend.component.latest;
 
 import com.mycompany.myshop.backend.BaseComponentTest;
-import com.mycompany.myshop.backend.domain.entities.OrderStatus;
+import com.mycompany.myshop.backend.domain.values.OrderStatus;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
-/**
- * The component-level twin of the system test's {@code latest/acceptance/PlaceOrderPositiveTest} —
- * scenario for scenario, name for name. Everything asserted here is priced, taxed and stored by the
- * backend alone, so the backend is where it can be pinned down: same rules, no browser, no deployed
- * stack, seconds instead of minutes.
- *
- * <p>The figures match the system test's because the defaults line up ({@code ScenarioDefaults}: unit
- * price 20.00, quantity 1, country US, tax 0.07, no promotion) — so a scenario states only the
- * quantity or rate it is actually about, and the rest is filled in.
- */
 class PlaceOrderPositiveComponentTest extends BaseComponentTest {
 
     @Test

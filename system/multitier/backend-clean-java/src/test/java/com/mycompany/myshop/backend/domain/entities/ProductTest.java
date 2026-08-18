@@ -6,10 +6,6 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
-/**
- * A product is mapped from ERP wire data by the gateway adapter, so both of its fields are guarded at
- * the boundary rather than trusted.
- */
 class ProductTest {
 
     @Test

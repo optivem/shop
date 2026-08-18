@@ -2,16 +2,12 @@ package com.mycompany.myshop.backend.usecases.order;
 
 import com.mycompany.myshop.backend.domain.exceptions.ValidationException;
 import com.mycompany.myshop.backend.domain.gateways.ClockGateway;
-import com.mycompany.myshop.backend.domain.policies.YearEndBlackoutPolicy;
 import com.mycompany.myshop.backend.domain.repositories.OrderRepository;
+import com.mycompany.myshop.backend.domain.services.YearEndBlackoutPolicy;
 import com.mycompany.myshop.backend.usecases.Result;
 import com.mycompany.myshop.backend.usecases.UseCase;
 import com.mycompany.myshop.backend.usecases.UseCaseError;
 
-/**
- * Cancels an order. Whether cancellation is open is the calendar policy's decision and whether this
- * order may still be cancelled is the order's own.
- */
 public class CancelOrder implements UseCase<CancelOrderRequest, Void> {
 
     private static final String ORDER_ENTITY = "Order";

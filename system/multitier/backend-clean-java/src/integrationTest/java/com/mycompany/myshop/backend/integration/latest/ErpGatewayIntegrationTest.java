@@ -8,26 +8,8 @@ import com.mycompany.myshop.backend.domain.values.Money;
 import com.mycompany.myshop.backend.domain.values.Rate;
 import com.mycompany.myshop.backend.infrastructure.external.ErpGatewayException;
 import com.mycompany.myshop.backend.integration.latest.base.BaseGatewayIntegrationTest;
-import com.mycompany.myshop.backend.testkit.dsl.core.usecase.external.erp.ErpDsl;
 import org.junit.jupiter.api.Test;
 
-/**
- * "After" of the external-systems contract-tests refactor at the narrow-integration layer: identical
- * scenarios to the {@code legacy/} twin, but the ERP happy/404 stubs are declared through the shared
- * use case DSL under {@code support/} — the same {@link ErpDsl} the component {@code latest/} tests
- * reach as {@code app.erp()}. A narrow-integration test drives one gateway, not a scenario, so it
- * uses the use case layer directly and never sees the scenario DSL above it. Every stub — including
- * the 500/503 error-injection cases — is programmed through the DSL; no raw WireMock survives here,
- * which is the whole point of the "after".
- *
- * <p>The harness (in-process WireMock, stub-side DSL, SUT-side gateway) comes from
- * {@link BaseGatewayIntegrationTest}, so what remains below is the scenarios themselves.
- *
- * <p>The assertions read the domain types the {@link ErpGateway} port promises — {@link Money} and
- * {@link Rate}, not the {@code BigDecimal}s of the ERP's wire shape. So this pins the adapter's
- * mapping as well as its parse: a wire field the adapter stopped reading shows up here as a wrong
- * {@code Money}, not as a silently absent JSON property.
- */
 class ErpGatewayIntegrationTest extends BaseGatewayIntegrationTest {
 
     private final ErpGateway erpGateway = erpGateway();

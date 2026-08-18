@@ -5,12 +5,6 @@ import com.mycompany.myshop.backend.usecases.TypeValidationMessage;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Exception-handler plumbing: reads the {@link TypeValidationMessage} hints off a request DTO so a
- * Jackson type-mismatch can be reported as a field validation error rather than a parse failure.
- * Lives in presentation because the exception handler is its only caller; the annotation itself
- * lives in {@code usecases} alongside the request DTOs it annotates.
- */
 public class TypeValidationMessageExtractor {
 
     private TypeValidationMessageExtractor() {

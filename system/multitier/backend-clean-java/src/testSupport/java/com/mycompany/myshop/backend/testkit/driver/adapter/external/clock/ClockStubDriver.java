@@ -8,10 +8,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.mycompany.myshop.backend.testkit.driver.port.external.clock.ClockDriver;
 
-/**
- * Low-level Clock stub driver. Registers the mapping against a supplied {@link WireMock} client; the
- * URL and JSON body are byte-identical to {@code BaseComponentTest#stubClock}.
- */
 public class ClockStubDriver implements ClockDriver {
 
     private final WireMock wireMock;
@@ -20,7 +16,6 @@ public class ClockStubDriver implements ClockDriver {
         this.wireMock = wireMock;
     }
 
-    /** See {@code ErpStubDriver#goToErp}. */
     public void goToClock() {
         wireMock.allStubMappings();
     }

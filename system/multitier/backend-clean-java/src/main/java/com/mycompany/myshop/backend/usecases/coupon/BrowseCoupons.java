@@ -6,11 +6,6 @@ import com.mycompany.myshop.backend.usecases.Result;
 import com.mycompany.myshop.backend.usecases.UseCase;
 import com.mycompany.myshop.backend.usecases.UseCaseError;
 
-/**
- * Lists every published coupon. The domain → response mapping used to sit in the controller while
- * the order-history equivalent sat in the service; both now live in their use case, which is where
- * the response DTO is declared.
- */
 public class BrowseCoupons implements UseCase<BrowseCouponsRequest, BrowseCouponsResponse> {
 
     private final CouponRepository couponRepository;

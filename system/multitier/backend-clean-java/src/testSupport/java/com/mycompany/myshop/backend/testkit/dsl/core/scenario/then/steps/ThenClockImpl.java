@@ -8,11 +8,6 @@ import com.mycompany.myshop.backend.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.backend.testkit.dsl.port.then.steps.ThenClock;
 import java.time.Instant;
 
-/**
- * The current time AS THE SUT SEES IT: reads through the SUT's production {@code ClockGateway} in the
- * constructor. See {@link ThenProductImpl} for why the read goes through the production gateway
- * rather than the stub client.
- */
 public class ThenClockImpl<R, V extends ResponseVerification<R>> extends BaseThenStep<R, V>
         implements ThenClock {
 

@@ -29,6 +29,5 @@ public abstract class BaseGivenStep implements GivenStep {
         return given.then();
     }
 
-    /** Translates this step into use case calls. Run by {@link GivenImpl} on the hop into when/then. */
     public abstract void execute(UseCaseDsl app);
 }

@@ -8,12 +8,6 @@ import com.mycompany.myshop.backend.testkit.dsl.core.shared.VoidVerification;
 import com.mycompany.myshop.backend.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.backend.testkit.dsl.port.then.steps.ThenFailure;
 
-/**
- * A rejected action. The two rejection shapes stay apart — {@link #errorMessage(String)} reads
- * {@code ProblemDetail.detail}, {@link #fieldErrorMessage(String, String)} reads {@code errors[]} —
- * so a test cannot assert the wrong one and pass against the generic validation string. See
- * {@link ErrorVerification}.
- */
 public class ThenFailureImpl<R, V extends ResponseVerification<R>>
         extends BaseThenStep<Void, VoidVerification> implements ThenFailure {
 

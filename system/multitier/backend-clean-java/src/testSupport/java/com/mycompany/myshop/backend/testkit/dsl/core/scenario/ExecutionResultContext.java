@@ -1,10 +1,5 @@
 package com.mycompany.myshop.backend.testkit.dsl.core.scenario;
 
-/**
- * What the action left behind for {@code then()} to resolve against: the order number the SUT
- * generated, and the coupon code the action carried. This is what lets {@code then().order()} and
- * {@code then().coupon()} take no argument.
- */
 public class ExecutionResultContext {
 
     private static final ExecutionResultContext EMPTY = new ExecutionResultContext(null, null);

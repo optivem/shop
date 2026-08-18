@@ -9,9 +9,6 @@ import jakarta.validation.constraints.Positive;
 import java.math.BigDecimal;
 import java.time.Instant;
 
-/**
- * What publishing a coupon needs. See {@link PlaceOrderRequest} on the validation annotations.
- */
 public class PublishCouponRequest {
 
     @NotBlank(message = "Coupon code must not be blank")

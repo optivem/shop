@@ -1,12 +1,12 @@
 package com.mycompany.myshop.backend.usecases.order;
 
 import com.mycompany.myshop.backend.domain.entities.Order;
-import com.mycompany.myshop.backend.domain.entities.OrderStatus;
 import com.mycompany.myshop.backend.domain.gateways.ClockGateway;
-import com.mycompany.myshop.backend.domain.pricing.OrderPricing;
 import com.mycompany.myshop.backend.domain.repositories.OrderRepository;
 import com.mycompany.myshop.backend.domain.values.Country;
 import com.mycompany.myshop.backend.domain.values.Money;
+import com.mycompany.myshop.backend.domain.values.OrderPricing;
+import com.mycompany.myshop.backend.domain.values.OrderStatus;
 import com.mycompany.myshop.backend.domain.values.Rate;
 import com.mycompany.myshop.backend.usecases.UseCaseError;
 import org.junit.jupiter.api.Test;

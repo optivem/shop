@@ -1,9 +1,8 @@
 package com.mycompany.myshop.backend.testkit.dsl.port.then.steps;
 
-import com.mycompany.myshop.backend.domain.entities.OrderStatus;
+import com.mycompany.myshop.backend.domain.values.OrderStatus;
 import com.mycompany.myshop.backend.testkit.dsl.port.then.steps.base.ThenStep;
 
-/** The persisted order, read back through {@code GET /api/orders/{orderNumber}}. */
 public interface ThenOrder extends ThenStep<ThenOrder> {
     ThenOrder hasSku(String expectedSku);
 
@@ -47,7 +46,6 @@ public interface ThenOrder extends ThenStep<ThenOrder> {
 
     ThenOrder hasAppliedCoupon(String expectedCouponCode);
 
-    /** Asserts the coupon the action carried was the one applied. */
     ThenOrder hasAppliedCoupon();
 
     ThenOrder hasNoAppliedCoupon();

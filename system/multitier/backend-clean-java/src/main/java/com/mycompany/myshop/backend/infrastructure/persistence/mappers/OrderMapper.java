@@ -1,22 +1,13 @@
 package com.mycompany.myshop.backend.infrastructure.persistence.mappers;
 
 import com.mycompany.myshop.backend.domain.entities.Order;
-import com.mycompany.myshop.backend.domain.pricing.OrderPricing;
 import com.mycompany.myshop.backend.domain.values.Country;
 import com.mycompany.myshop.backend.domain.values.CouponCode;
 import com.mycompany.myshop.backend.domain.values.Money;
+import com.mycompany.myshop.backend.domain.values.OrderPricing;
 import com.mycompany.myshop.backend.domain.values.Rate;
 import com.mycompany.myshop.backend.infrastructure.persistence.entities.OrderJpaEntity;
 
-/**
- * Maps between the domain {@link Order} and its persisted shape. The surrogate {@code id} does not
- * cross: the domain identifies an order by its {@code orderNumber}, and
- * {@code OrderRepositoryAdapter} looks the row's key up by that when it needs to update rather than
- * insert.
- *
- * <p>This is also where the domain's {@code Money}/{@code Rate} meet the columns' plain
- * {@code BigDecimal}: the typed values stop at the edge of the ORM, which knows nothing about them.
- */
 public final class OrderMapper {
 
     private OrderMapper() {
