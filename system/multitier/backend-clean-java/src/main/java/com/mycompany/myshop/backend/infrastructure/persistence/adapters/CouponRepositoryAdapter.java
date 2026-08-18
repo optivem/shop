@@ -8,7 +8,6 @@ import com.mycompany.myshop.backend.infrastructure.persistence.repositories.Coup
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -31,13 +30,6 @@ public class CouponRepositoryAdapter implements CouponRepository {
     @Override
     public Optional<Coupon> findByCode(CouponCode code) {
         return jpaRepository.findByCode(code.value()).map(CouponMapper::toDomain);
-    }
-
-    @Override
-    public List<Coupon> findAll() {
-        return jpaRepository.findAll().stream()
-                .map(CouponMapper::toDomain)
-                .toList();
     }
 
     @Transactional

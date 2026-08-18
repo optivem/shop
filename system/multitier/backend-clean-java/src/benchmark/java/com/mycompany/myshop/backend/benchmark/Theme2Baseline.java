@@ -1,11 +1,16 @@
 package com.mycompany.myshop.backend.benchmark;
 
 import com.mycompany.myshop.backend.backendtest.configuration.TestcontainersConfiguration;
+import com.mycompany.myshop.backend.domain.entities.Coupon;
 import com.mycompany.myshop.backend.domain.entities.Order;
 import com.mycompany.myshop.backend.domain.values.OrderStatus;
 import com.mycompany.myshop.backend.domain.repositories.CouponRepository;
 import com.mycompany.myshop.backend.domain.repositories.OrderRepository;
 import com.mycompany.myshop.backend.domain.values.CouponCode;
+import com.mycompany.myshop.backend.infrastructure.persistence.mappers.CouponMapper;
+import com.mycompany.myshop.backend.infrastructure.persistence.mappers.OrderMapper;
+import com.mycompany.myshop.backend.infrastructure.persistence.repositories.CouponJpaRepository;
+import com.mycompany.myshop.backend.infrastructure.persistence.repositories.OrderJpaRepository;
 import com.mycompany.myshop.backend.usecases.coupon.BrowseCoupons;
 import com.mycompany.myshop.backend.usecases.coupon.BrowseCouponsRequest;
 import com.mycompany.myshop.backend.usecases.order.BrowseOrderHistory;
@@ -33,6 +38,12 @@ import java.util.stream.Collectors;
 @ActiveProfiles("benchmark")
 @Import(TestcontainersConfiguration.class)
 class Theme2Baseline {
+
+    // Chunk R took the read path off the domain model, so the three browse/view rows below now build
+    // nothing at all. The two per-row counts are still what a hydrating path costs, and the rows that
+    // still hydrate -- the in-memory aggregation and the loop-and-save recall, both of them the
+    // before-picture Chunks B and C replace -- still pay it.
+    private static final long NO_DOMAIN_OBJECTS = 0;
 
     private static final long ORDER_OBJECTS_PER_ROW = 11;
 
@@ -71,6 +82,16 @@ class Theme2Baseline {
     @Autowired
     private CouponRepository couponRepository;
 
+    // The before-picture needs findAll()-shaped reads, and after Chunk R the domain repositories no
+    // longer offer them -- deliberately: a port that names a mechanism is what forced the loop into
+    // the application layer in the first place. Reaching past the port to the JPA repository here is
+    // how the harness keeps measuring the code the demo replaced.
+    @Autowired
+    private OrderJpaRepository orderJpaRepository;
+
+    @Autowired
+    private CouponJpaRepository couponJpaRepository;
+
     @Autowired
     private BrowseOrderHistory browseOrderHistory;
 
@@ -91,6 +112,9 @@ class Theme2Baseline {
         report.addFact("`" + SEED + "`, deterministic — no `random()` anywhere in it.");
         report.addFact(probe.countRows("orders") + " rows in `orders`, "
                 + probe.countRows("coupons") + " rows in `coupons`.");
+        report.addFact("\"Domain objects\" counts what the operation constructs on the way to its answer. "
+                + "After Chunk R the three read paths construct none: they project the columns the "
+                + "response holds and never build an `Order` or a `Coupon`.");
     }
 
     @Test
@@ -126,22 +150,18 @@ class Theme2Baseline {
     private void measureBrowseOrderHistory() {
         var timed = probe.measure(() -> browseOrderHistory.execute(new BrowseOrderHistoryRequest(null)));
         var items = timed.value().value().getOrders();
-        var withCoupon = items.stream().filter(item -> item.getAppliedCouponCode() != null).count();
         report.add(new BenchmarkReport.Row(CAP_FILTER,
                 "`BrowseOrderHistory` with no filter",
-                timed.millis(), items.size(),
-                items.size() * ORDER_OBJECTS_PER_ROW + withCoupon,
+                timed.millis(), items.size(), NO_DOMAIN_OBJECTS,
                 timed.statements(), timed.retainedHeapMb()));
     }
 
     private void measureBrowseOrderHistoryFiltered() {
         var timed = probe.measure(() -> browseOrderHistory.execute(new BrowseOrderHistoryRequest(ORDER_FILTER)));
         var items = timed.value().value().getOrders();
-        var withCoupon = items.stream().filter(item -> item.getAppliedCouponCode() != null).count();
         report.add(new BenchmarkReport.Row(CAP_FILTER,
                 "`BrowseOrderHistory` filtered on `" + ORDER_FILTER + "`",
-                timed.millis(), items.size(),
-                items.size() * ORDER_OBJECTS_PER_ROW + withCoupon,
+                timed.millis(), items.size(), NO_DOMAIN_OBJECTS,
                 timed.statements(), timed.retainedHeapMb()));
     }
 
@@ -150,7 +170,7 @@ class Theme2Baseline {
         var items = timed.value().value().getCoupons();
         report.add(new BenchmarkReport.Row(CAP_FILTER,
                 "`BrowseCoupons`",
-                timed.millis(), items.size(), items.size() * COUPON_OBJECTS_PER_ROW,
+                timed.millis(), items.size(), NO_DOMAIN_OBJECTS,
                 timed.statements(), timed.retainedHeapMb()));
     }
 
@@ -164,15 +184,14 @@ class Theme2Baseline {
         });
         report.add(new BenchmarkReport.Row(CAP_PROJECT,
                 "`ViewOrderDetails` × " + SINGLE_ROW_REPETITIONS,
-                timed.millis(), SINGLE_ROW_REPETITIONS,
-                SINGLE_ROW_REPETITIONS * (ORDER_OBJECTS_PER_ROW + 1),
+                timed.millis(), SINGLE_ROW_REPETITIONS, NO_DOMAIN_OBJECTS,
                 timed.statements(), timed.retainedHeapMb()));
     }
 
     private void measureInMemoryAggregation() {
         var timed = probe.measure(() -> {
-            var orders = orderRepository.findAllByOrderByOrderTimestampDesc();
-            var coupons = couponRepository.findAll();
+            var orders = hydratedOrders();
+            var coupons = hydratedCoupons();
 
             var revenueByCountryMonth = orders.stream()
                     .filter(order -> order.getStatus() != OrderStatus.CANCELLED)
@@ -255,7 +274,7 @@ class Theme2Baseline {
     private void measureBulkRecall() {
         var timed = probe.measure(() -> {
             var cancelled = 0L;
-            for (var order : orderRepository.findAllByOrderByOrderTimestampDesc()) {
+            for (var order : hydratedOrders()) {
                 if (RECALLED_SKU.equals(order.getSku()) && order.getStatus() != OrderStatus.CANCELLED) {
                     order.cancel();
                     orderRepository.save(order);
@@ -298,6 +317,15 @@ class Theme2Baseline {
         report.addPlan("What the set-based recall issues instead (planned, not executed)",
                 probe.explainOnly("UPDATE orders SET status = 'CANCELLED' "
                         + "WHERE sku = '" + RECALLED_SKU + "' AND status <> 'CANCELLED'"));
+    }
+
+    // What findAll() + map-to-domain cost, kept measurable now that no port offers it.
+    private List<Order> hydratedOrders() {
+        return orderJpaRepository.findAll().stream().map(OrderMapper::toDomain).toList();
+    }
+
+    private List<Coupon> hydratedCoupons() {
+        return couponJpaRepository.findAll().stream().map(CouponMapper::toDomain).toList();
     }
 
     private static String month(Order order) {

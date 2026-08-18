@@ -82,7 +82,10 @@ class CouponRepositoryIntegrationTest {
         couponRepository.save(coupon);
         forceDatabaseRoundTrip();
 
-        assertThat(couponRepository.findAll()).hasSize(1);
+        // Counted straight off the table rather than through the port: findAll() was deleted with
+        // Chunk R, and "the same row" is a claim about rows, not about the domain model.
+        assertThat(entityManager.createQuery("SELECT COUNT(c) FROM CouponJpaEntity c", Long.class)
+            .getSingleResult()).isEqualTo(1L);
         assertThat(couponRepository.findByCode(CouponCode.of("ONCE"))).get()
             .extracting(reread -> reread.getQuota().used()).isEqualTo(1);
     }

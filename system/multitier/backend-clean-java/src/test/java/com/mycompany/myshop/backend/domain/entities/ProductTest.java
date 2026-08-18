@@ -12,7 +12,7 @@ class ProductTest {
     void carriesItsIdentifierAndPrice() {
         var product = new Product("BOOK-123", Money.of("10.00"));
 
-        assertThat(product.getId()).isEqualTo("BOOK-123");
+        assertThat(product.getSku()).isEqualTo("BOOK-123");
         assertThat(product.getPrice()).isEqualTo(Money.of("10.00"));
     }
 

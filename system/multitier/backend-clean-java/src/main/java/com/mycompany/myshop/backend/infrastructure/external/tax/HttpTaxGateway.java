@@ -34,8 +34,7 @@ public class HttpTaxGateway implements TaxGateway {
     @Override
     public Optional<TaxRate> getTaxDetails(Country country) {
         return fetchTaxDetails(country.value())
-                .map(wire -> new TaxRate(wire.getId(), Country.of(wire.getCountryName()),
-                        Rate.of(wire.getTaxRate())));
+                .map(wire -> new TaxRate(Country.of(wire.getCountryName()), Rate.of(wire.getTaxRate())));
     }
 
     public Optional<TaxDetailsResponse> fetchTaxDetails(String country) {

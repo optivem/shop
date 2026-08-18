@@ -1,7 +1,5 @@
 package com.mycompany.myshop.backend.usecases.order;
 
-import com.mycompany.myshop.backend.domain.values.OrderStatus;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
@@ -26,7 +24,7 @@ public class BrowseOrderHistoryResponse {
         private String country;
         private int quantity;
         private BigDecimal totalPrice;
-        private OrderStatus status;
+        private String status;
         private String appliedCouponCode;
 
         public String getOrderNumber() {
@@ -77,11 +75,11 @@ public class BrowseOrderHistoryResponse {
             this.totalPrice = totalPrice;
         }
 
-        public OrderStatus getStatus() {
+        public String getStatus() {
             return status;
         }
 
-        public void setStatus(OrderStatus status) {
+        public void setStatus(String status) {
             this.status = status;
         }
 

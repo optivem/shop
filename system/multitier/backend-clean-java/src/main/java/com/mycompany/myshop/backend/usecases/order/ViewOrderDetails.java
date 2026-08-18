@@ -1,48 +1,54 @@
 package com.mycompany.myshop.backend.usecases.order;
 
-import com.mycompany.myshop.backend.domain.repositories.OrderRepository;
-import com.mycompany.myshop.backend.domain.values.CouponCode;
 import com.mycompany.myshop.backend.usecases.Result;
 import com.mycompany.myshop.backend.usecases.UseCase;
 import com.mycompany.myshop.backend.usecases.UseCaseError;
+import com.mycompany.myshop.backend.usecases.queries.OrderDetail;
+import com.mycompany.myshop.backend.usecases.queries.OrderQuery;
 
+/**
+ * A pure query: every field of the response is a column in {@code orders}, so the domain model is
+ * not built at all. The error contract does not move -- an absent row is still
+ * {@link UseCaseError.NotFound}.
+ */
 public class ViewOrderDetails implements UseCase<ViewOrderDetailsRequest, ViewOrderDetailsResponse> {
 
     private static final String ORDER_ENTITY = "Order";
 
-    private final OrderRepository orderRepository;
+    private final OrderQuery orderQuery;
 
-    public ViewOrderDetails(OrderRepository orderRepository) {
-        this.orderRepository = orderRepository;
+    public ViewOrderDetails(OrderQuery orderQuery) {
+        this.orderQuery = orderQuery;
     }
 
     @Override
     public Result<ViewOrderDetailsResponse, UseCaseError> execute(ViewOrderDetailsRequest request) {
         var orderNumber = request.orderNumber();
-        var found = orderRepository.findByOrderNumber(orderNumber);
+        var found = orderQuery.findOrderDetail(orderNumber);
         if (found.isEmpty()) {
             return Result.err(new UseCaseError.NotFound(ORDER_ENTITY, orderNumber));
         }
 
-        var order = found.get();
+        return Result.ok(toResponse(found.get()));
+    }
 
+    private static ViewOrderDetailsResponse toResponse(OrderDetail detail) {
         var response = new ViewOrderDetailsResponse();
-        response.setOrderNumber(orderNumber);
-        response.setOrderTimestamp(order.getOrderTimestamp());
-        response.setSku(order.getSku());
-        response.setQuantity(order.getQuantity());
-        response.setUnitPrice(order.getUnitPrice().amount());
-        response.setBasePrice(order.getBasePrice().amount());
-        response.setDiscountRate(order.getDiscountRate().value());
-        response.setDiscountAmount(order.getDiscountAmount().amount());
-        response.setSubtotalPrice(order.getSubtotalPrice().amount());
-        response.setTaxRate(order.getTaxRate().value());
-        response.setTaxAmount(order.getTaxAmount().amount());
-        response.setTotalPrice(order.getTotalPrice().amount());
-        response.setStatus(order.getStatus());
-        response.setCountry(order.getCountry().value());
-        response.setAppliedCouponCode(CouponCode.valueOrNull(order.getAppliedCouponCode()));
-
-        return Result.ok(response);
+        response.setOrderNumber(detail.orderNumber());
+        response.setOrderTimestamp(detail.orderTimestamp());
+        response.setSku(detail.sku());
+        response.setQuantity(detail.quantity());
+        response.setUnitPrice(detail.unitPrice());
+        response.setBasePrice(detail.basePrice());
+        response.setDiscountRate(detail.discountRate());
+        response.setDiscountAmount(detail.discountAmount());
+        response.setSubtotalPrice(detail.subtotalPrice());
+        response.setTaxRate(detail.taxRate());
+        response.setTaxAmount(detail.taxAmount());
+        response.setTotalPrice(detail.totalPrice());
+        response.setStatus(detail.status());
+        response.setCountry(detail.country());
+        response.setAppliedCouponCode(detail.appliedCouponCode());
+        return response;
     }
 }

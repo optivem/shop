@@ -9,7 +9,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -32,20 +31,6 @@ public class OrderRepositoryAdapter implements OrderRepository {
     @Override
     public Optional<Order> findByOrderNumber(String orderNumber) {
         return jpaRepository.findByOrderNumber(orderNumber).map(OrderMapper::toDomain);
-    }
-
-    @Override
-    public List<Order> findAllByOrderByOrderTimestampDesc() {
-        return jpaRepository.findAllByOrderByOrderTimestampDesc().stream()
-                .map(OrderMapper::toDomain)
-                .toList();
-    }
-
-    @Override
-    public List<Order> findByOrderNumberContainingIgnoreCaseOrderByOrderTimestampDesc(String orderNumber) {
-        return jpaRepository.findByOrderNumberContainingIgnoreCaseOrderByOrderTimestampDesc(orderNumber).stream()
-                .map(OrderMapper::toDomain)
-                .toList();
     }
 
     @Transactional

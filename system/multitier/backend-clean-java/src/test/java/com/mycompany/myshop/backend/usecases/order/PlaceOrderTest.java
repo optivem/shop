@@ -122,7 +122,7 @@ class PlaceOrderTest {
 
     private void givenTaxRate(String country, Rate rate) {
         when(taxGateway.getTaxDetails(Country.of(country)))
-                .thenReturn(Optional.of(new TaxRate(country, Country.of(country), rate)));
+                .thenReturn(Optional.of(new TaxRate(Country.of(country), rate)));
     }
 
     private PlaceOrderRequest buildRequest(String sku, int quantity, String country) {

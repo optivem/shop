@@ -21,7 +21,7 @@ class TaxGatewayIntegrationTest extends BaseGatewayIntegrationTest {
         var result = taxGateway.getTaxDetails(Country.of("US"));
 
         assertThat(result).isPresent();
-        assertThat(result.get().getId()).isEqualTo("US");
+        assertThat(result.get().getCountryName()).isEqualTo(Country.of("US"));
         assertThat(result.get().getRate()).isEqualTo(Rate.of("0.10"));
     }
 

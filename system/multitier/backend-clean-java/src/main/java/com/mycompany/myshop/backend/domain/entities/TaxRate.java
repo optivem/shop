@@ -6,19 +6,13 @@ import com.mycompany.myshop.backend.domain.values.Rate;
 
 public class TaxRate {
 
-    private final String id;
     private final Country countryName;
     private final Rate rate;
 
-    public TaxRate(String id, Country countryName, Rate rate) {
+    public TaxRate(Country countryName, Rate rate) {
         Guard.notNull(rate, "rate");
-        this.id = id;
         this.countryName = countryName;
         this.rate = rate;
-    }
-
-    public String getId() {
-        return id;
     }
 
     public Country getCountryName() {

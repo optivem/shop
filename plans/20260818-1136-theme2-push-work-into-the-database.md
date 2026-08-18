@@ -1,7 +1,5 @@
 # 2026-08-18 11:36 UTC — theme 2: the database is barred from the work it does best (`backend-clean-java`)
 
-> 🤖 **Picked up by agent** — `Valentina_Desk` at `2026-08-18T14:28:24Z`
-
 **Scope: `system/multitier/backend-clean-java` only.** No other backend, no frontend, no legacy
 project, no other plan. A short list of files falls outside the backend directory by necessity and
 nothing else does: the demo seed script and its README under `system/db/seed/` and the additive index
@@ -32,7 +30,7 @@ That is the spine of every item below: **keep the port, change what it says.**
 
 ## What the database does best, and where this codebase forbids it
 
-The three rows Chunk A answered are struck through; the rest are still the before-picture.
+The rows Chunks A and R answered are struck through; the rest are still the before-picture.
 
 | The database is good at | `backend-clean-java` does it | Where |
 |---|---|---|
@@ -40,7 +38,7 @@ The three rows Chunk A answered are struck through; the rest are still the befor
 | ~~Atomic read-modify-write~~ | **Done (A3, A4).** One conditional `UPDATE`; the lost update is pinned by `CouponRedemptionConcurrencyIntegrationTest` | `CouponRepository.tryRedeem` |
 | Aggregation and joins | No report exists; written naively it is `findAll()` + Java streams | Chunk B creates it |
 | Filtering, sorting, limiting | Partly pushed down; **unbounded** and fully hydrated | `BrowseCoupons`, `BrowseOrderHistory` |
-| Projecting only the columns asked for | **Never** — every read builds the full domain model, then unwraps it | `BrowseCoupons`, `BrowseOrderHistory`, `ViewOrderDetails` — Chunk R |
+| ~~Projecting only the columns asked for~~ | **Done (R1–R6).** The three query use cases read flat projections off `usecases/queries/`; `READ_USECASES_DO_NOT_TOUCH_THE_DOMAIN` keeps them there | `usecases/queries/`, `infrastructure/persistence/queries/` |
 | ~~Enforcing invariants transactionally~~ | **Done (A5).** The order and its redemption are one unit, declared by a port rather than an annotation | `usecases/TransactionRunner` |
 
 ## TL;DR
@@ -129,30 +127,28 @@ newest-first ordering, but they matter if the ordering is ever changed.
 
 ## ▶ Next executable step (resume here)
 
-**Chunk R — light CQRS: the read path stops going through the domain.** Chunks 0 and A are done.
-`system/db/seed/demo-volume.sql` and `./gradlew benchmark` give a repeatable baseline, and
-`src/main` now carries all five set-based demonstrations: `RecallSku` and `SweepDeliveries` over
-`OrderRepository.cancelOutstandingForSku` / `deliverPlacedOlderThan`, the conditional
-`CouponRepository.tryRedeem` that replaced the lost update at `PlaceOrder`, the `TransactionRunner`
-port that makes the order and its redemption one unit, and `AdminController`. The lost update is
-pinned by `CouponRedemptionConcurrencyIntegrationTest`, whose first test keeps the before-picture
-green forever.
+**R7 — take the after-numbers, then Chunk B.** Chunks 0, A and R1–R6 are done. The read path no
+longer goes through the domain: `usecases/queries/{OrderQuery, CouponQuery}` return flat projections
+(`OrderListItem`, `OrderDetail`, `CouponListItem`) built by
+`infrastructure/persistence/queries/{JpaOrderQuery, JpaCouponQuery}`, the three query use cases copy
+primitives into their responses, the four mechanism-named read methods are gone from the domain
+repositories (`CouponRepository{save, findByCode, tryRedeem}`,
+`OrderRepository{save, findByOrderNumber, cancelOutstandingForSku, deliverPlacedOlderThan}`), and
+`READ_USECASES_DO_NOT_TOUCH_THE_DOMAIN` makes the claim executable — verified to fail when a
+`usecases.queries` class names a domain type.
 
-Concretely, and in this order: **R1** (the two `usecases/queries/` ports plus their `Jpa*Query`
-adapters), then **R4** (`ViewOrderDetails` — demo it first, it is the sharpest), **R2**
-(`BrowseCoupons`), **R3** (`BrowseOrderHistory`), then **R5** (delete
-`CouponRepository.findAll()` and `OrderRepository:18,20`, keep `findByOrderNumber`, and switch
-`CouponRepositoryIntegrationTest:90` to `findByCode`), **R6** (the
-`READ_USECASES_DO_NOT_TOUCH_THE_DOMAIN` ArchUnit rule), and **R7** (re-run `./gradlew benchmark`
-and append the numbers). Note R5 also has to drop the two `findAll`-shaped reads from
-`Theme2Baseline`'s in-memory aggregation, which is written against them today.
-
-Then Chunks B → C, one per `/clear`-ed session. C2 depends on Chunk R; nothing else is ordered.
+R7 needs Docker and takes minutes: start the stack, run `./gradlew benchmark` in
+`system/multitier/backend-clean-java`, and append the table it writes to
+`build/benchmark/theme2-baseline.md` into `docs/atdd/code/theme2-measurements.md` beside the Chunk 0
+baseline. After that, Chunk B (aggregation and joins), then Chunk C (volume) — one per `/clear`-ed
+session. C2 depends on Chunk R, which is now satisfied; nothing else is ordered.
 
 ## Chunk R — light CQRS: the read path stops going through the domain
 
-**The census (2026-08-18, verified against `UseCaseConfig:30-63`).** All seven use cases split
-cleanly, with no borderline case:
+R1–R6 are done; only the measurement is left. The reasoning below is kept because it is the demo's
+script and the test any future use case has to pass.
+
+**The census.** All seven use cases split cleanly, with no borderline case:
 
 | | Use case | Verdict |
 |---|---|---|
@@ -165,10 +161,10 @@ stays in the loop. If the coupon list ever gained a `redeemableNow` flag, that i
 semantics (validity ∧ quota) and `BrowseCoupons` leaves this chunk — the same tension A3 flags for
 `UsageQuota.exhausted()`.
 
-**Demo `ViewOrderDetails` first — it is the sharpest of the three.** Fifteen response fields
-(`ViewOrderDetailsResponse:15-29`), every one a column in `orders`, reached by constructing seven
-`Money`, two `Rate`, a `Country` and a `CouponCode` and then calling `.amount()` / `.value()` on each
-(`ViewOrderDetails:36-50`). Nothing built on that path survives to the wire.
+**Demo `ViewOrderDetails` first — it is the sharpest of the three.** Fifteen response fields, every
+one a column in `orders`, reached on the old path by constructing seven `Money`, two `Rate`, a
+`Country` and a `CouponCode` and then calling `.amount()` / `.value()` on each. Nothing built on that
+path survived to the wire; the git diff of `ViewOrderDetails` is the whole argument in one screen.
 
 **The second argument is stronger than performance.** `Coupon`'s constructor rejects a
 `discountRate` of zero (`Coupon.java:44-47`), so one bad row makes the whole *list* endpoint 500. A
@@ -180,37 +176,13 @@ now drift from the domain's idea of a coupon, because nothing forces the two to 
 failure-isolation are bought by surrendering the guarantee that what is displayed was validated by
 the rules that wrote it.
 
-- [ ] **R1. The read-side ports.** `usecases/queries/OrderQuery` and `usecases/queries/CouponQuery`,
-      implemented by `infrastructure/persistence/queries/JpaOrderQuery` / `JpaCouponQuery`. Flat
-      records, `BigDecimal` money fields, **no value objects and no `Guard`** — same rule as B1, and
-      the javadoc says why. `usecases/queries/` and not `domain/repositories/`: a port in the domain
-      claims the domain needs it, and the domain never calls this one — see the read-side port
-      decision above.
-- [ ] **R2. `BrowseCoupons`.** Projection record `CouponListItem` over the six `coupons` columns; the
-      use case copies primitives into `BrowseCouponsResponse`. A dedicated record rather than
-      projecting SQL straight into the response item, because `ArchitectureTest:117` pins
-      `Request`/`Response` to `usecases.order` / `usecases.coupon`, and keeping the wire contract out
-      of the JPQL means a field rename does not edit a query string.
-- [ ] **R3. `BrowseOrderHistory`.** One port method taking the optional order-number filter, so the
-      `if` at `BrowseOrderHistory:29-33` collapses to a single call and the `LIKE` stays in SQL.
-- [ ] **R4. `ViewOrderDetails`.** Returns `Optional<OrderDetail>`; empty still becomes
-      `UseCaseError.NotFound` (`ViewOrderDetails:29-31`), so the error contract does not move.
-- [ ] **R5. Delete the orphaned port methods — but not all of them.** `CouponRepository.findAll()`
-      and `OrderRepository:18,20` have exactly one caller each, all three in R2/R3, so they are
-      **deleted, not renamed**. **`OrderRepository.findByOrderNumber` stays**, because `CancelOrder:37`
-      and `DeliverOrder:29` need the real entity to call `cancel()` / `deliver()`; `ViewOrderDetails`
-      gets a projection twin on the query port instead. The same question gets two answers — an entity
-      for the command, a projection for the query — and saying that out loud is the chunk's best aside.
-      End state: `CouponRepository{save, findByCode}`, `OrderRepository{save, findByOrderNumber}`.
-      `CouponRepositoryIntegrationTest:90` uses `findAll()` incidentally; switch it to `findByCode`.
-- [ ] **R6. An ArchUnit rule that states the claim.** `READ_USECASES_DO_NOT_TOUCH_THE_DOMAIN` — no
-      class in `usecases.queries..`, and neither of the three query use cases, may depend on
-      `..domain..`. Today `BrowseCoupons:3-4` imports `Coupon` and `CouponRepository`; after R2 it
-      imports neither, and the rule is the light-CQRS claim made executable. Nothing blocks it: none
-      of the ten existing rules pins a port to the domain package.
-- [ ] **R7. Numbers.** Reuse the Chunk 0 harness. Here the measurement is objects-not-constructed as
-      much as wall time: over the 100k seed, `BrowseOrderHistory` builds 100k `Order` aggregates plus
-      their value objects today and none after R3.
+- [ ] **R7. Numbers.** The harness is already updated: `Theme2Baseline` reads the before-picture
+      straight off the JPA repositories (the domain ports no longer offer `findAll`), and the three
+      browse/view rows now report zero domain objects. What is left is to run `./gradlew benchmark`
+      against the 100k seed and append the after-numbers to `docs/atdd/code/theme2-measurements.md`
+      beside the Chunk 0 baseline. The headline is objects-not-constructed as much as wall time:
+      `BrowseOrderHistory` built 100k `Order` aggregates plus their value objects before R3 and
+      builds none after it.
 
 ## Chunk B — aggregation and joins (a read model with no domain entity)
 

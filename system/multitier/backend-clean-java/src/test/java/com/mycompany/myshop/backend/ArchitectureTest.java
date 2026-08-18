@@ -5,6 +5,9 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.core.domain.JavaClass.Predicates.simpleNameEndingWith;
 
 import com.mycompany.myshop.backend.usecases.UseCase;
+import com.mycompany.myshop.backend.usecases.coupon.BrowseCoupons;
+import com.mycompany.myshop.backend.usecases.order.BrowseOrderHistory;
+import com.mycompany.myshop.backend.usecases.order.ViewOrderDetails;
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
@@ -18,6 +21,7 @@ class ArchitectureTest {
     private static final String DOMAIN = "..domain..";
     private static final String USECASES = "..usecases..";
     private static final String[] USECASE_PACKAGES = {"..usecases.order..", "..usecases.coupon.."};
+    private static final String QUERIES = "..usecases.queries..";
     private static final String PRESENTATION = "..presentation..";
     private static final String INFRASTRUCTURE = "..infrastructure..";
 
@@ -85,6 +89,19 @@ class ArchitectureTest {
             .and(simpleNameEndingWith("Request").or(simpleNameEndingWith("Response")))
             .should().resideInAnyPackage(USECASE_PACKAGES)
             .because("a request or response belongs to one use case, so it lives beside it");
+
+    // Light CQRS, made executable. A pure query -- one whose response holds no field the database
+    // does not already hold -- answers with stored columns, so it never builds the domain model and
+    // therefore can never fail on a write-side invariant. Before this rule, BrowseCoupons imported
+    // Coupon and CouponRepository and one row with a zero discount rate failed the whole list.
+    @ArchTest
+    static final ArchRule READ_USECASES_DO_NOT_TOUCH_THE_DOMAIN = noClasses()
+            .that().resideInAPackage(QUERIES)
+            .or().haveFullyQualifiedName(BrowseCoupons.class.getName())
+            .or().haveFullyQualifiedName(BrowseOrderHistory.class.getName())
+            .or().haveFullyQualifiedName(ViewOrderDetails.class.getName())
+            .should().dependOnClassesThat().resideInAPackage(DOMAIN)
+            .because("a pure query reports what is stored; it does not re-run the rules that wrote it");
 
     @ArchTest
     static final ArchRule JACKSON_IS_CONFINED_TO_THE_OUTSIDE = noClasses()

@@ -9,17 +9,11 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
-import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, Long> {
     Optional<OrderJpaEntity> findByOrderNumber(String orderNumber);
-
-    List<OrderJpaEntity> findAllByOrderByOrderTimestampDesc();
-
-    @Query("SELECT o FROM OrderJpaEntity o WHERE LOWER(o.orderNumber) LIKE LOWER(CONCAT('%', :orderNumber, '%')) ORDER BY o.orderTimestamp DESC")
-    List<OrderJpaEntity> findByOrderNumberContainingIgnoreCaseOrderByOrderTimestampDesc(@Param("orderNumber") String orderNumber);
 
     // One statement for the whole recall. The status <> :cancelled guard is what makes it idempotent
     // and what makes the returned count mean "orders this recall cancelled", not "orders matching the

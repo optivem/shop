@@ -8,7 +8,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.mycompany.myshop.backend.domain.values.OrderStatus;
 import com.mycompany.myshop.backend.presentation.UseCaseResponder;
 import com.mycompany.myshop.backend.presentation.controller.OrderController;
 import com.mycompany.myshop.backend.usecases.Result;
@@ -118,7 +117,7 @@ class OrderControllerIntegrationTest {
         response.setTaxRate(new BigDecimal("0.10"));
         response.setTaxAmount(new BigDecimal("2.00"));
         response.setTotalPrice(new BigDecimal("22.00"));
-        response.setStatus(OrderStatus.PLACED);
+        response.setStatus("PLACED");
         response.setCountry("US");
         when(viewOrderDetails.execute(new ViewOrderDetailsRequest("ORD-001"))).thenReturn(Result.ok(response));
 

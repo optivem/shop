@@ -5,19 +5,19 @@ import com.mycompany.myshop.backend.domain.values.Money;
 
 public class Product {
 
-    private final String id;
+    private final String sku;
     private final Money price;
 
-    public Product(String id, Money price) {
+    public Product(String sku, Money price) {
         // notNull rather than notNullOrEmpty, matching how Order guards the same concept as its sku.
-        Guard.notNull(id, "id");
+        Guard.notNull(sku, "sku");
         Guard.notNull(price, "price");
-        this.id = id;
+        this.sku = sku;
         this.price = price;
     }
 
-    public String getId() {
-        return id;
+    public String getSku() {
+        return sku;
     }
 
     public Money getPrice() {

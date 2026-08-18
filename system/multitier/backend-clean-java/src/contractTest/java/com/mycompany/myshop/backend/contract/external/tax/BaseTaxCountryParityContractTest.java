@@ -24,7 +24,7 @@ abstract class BaseTaxCountryParityContractTest {
         var result = taxGateway().getTaxDetails(Country.of(ARRANGED_COUNTRY));
 
         assertThat(result).isPresent();
-        assertThat(result.get().getId()).isEqualTo(ARRANGED_COUNTRY);
+        assertThat(result.get().getCountryName()).isEqualTo(Country.of(ARRANGED_COUNTRY));
         assertThat(result.get().getRate()).isEqualTo(Rate.of(ARRANGED_RATE));
     }
 

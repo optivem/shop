@@ -21,7 +21,7 @@ class ErpGatewayIntegrationTest extends BaseGatewayIntegrationTest {
         var result = erpGateway.getProductDetails("BOOK-123");
 
         assertThat(result).isPresent();
-        assertThat(result.get().getId()).isEqualTo("BOOK-123");
+        assertThat(result.get().getSku()).isEqualTo("BOOK-123");
         assertThat(result.get().getPrice()).isEqualTo(Money.of("10.00"));
     }
 
