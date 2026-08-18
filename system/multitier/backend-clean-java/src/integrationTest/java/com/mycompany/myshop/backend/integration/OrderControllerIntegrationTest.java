@@ -9,10 +9,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.mycompany.myshop.backend.domain.entities.OrderStatus;
-import com.mycompany.myshop.backend.domain.exceptions.NotExistValidationException;
+import com.mycompany.myshop.backend.presentation.UseCaseResponder;
 import com.mycompany.myshop.backend.presentation.controller.OrderController;
+import com.mycompany.myshop.backend.usecases.Result;
+import com.mycompany.myshop.backend.usecases.UseCaseError;
+import com.mycompany.myshop.backend.usecases.dtos.BrowseOrderHistoryRequest;
 import com.mycompany.myshop.backend.usecases.dtos.BrowseOrderHistoryResponse;
+import com.mycompany.myshop.backend.usecases.dtos.CancelOrderRequest;
+import com.mycompany.myshop.backend.usecases.dtos.DeliverOrderRequest;
 import com.mycompany.myshop.backend.usecases.dtos.PlaceOrderResponse;
+import com.mycompany.myshop.backend.usecases.dtos.ViewOrderDetailsRequest;
 import com.mycompany.myshop.backend.usecases.dtos.ViewOrderDetailsResponse;
 import com.mycompany.myshop.backend.usecases.order.BrowseOrderHistory;
 import com.mycompany.myshop.backend.usecases.order.CancelOrder;
@@ -25,6 +31,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -33,12 +40,17 @@ import org.springframework.test.web.servlet.MockMvc;
 // Mockito, an internal seam, not an external system.
 //
 // The subject is the presentation adapter: routing, status codes, the Location header, request
-// validation and the exception handler's mapping onto HTTP. In backend-java the one collaborator to
+// validation and the mapping of use case outcomes onto HTTP. In backend-java the one collaborator to
 // mock was OrderService; here it is five use case classes, which is the visible shape of the
 // refactor at this boundary -- and mocking them one by one is what pins that the controller does
 // nothing but delegate. The response DTOs it serializes still carry BigDecimal, unchanged: the wire
 // is a fixed point of the refactor.
+//
+// UseCaseResponder is imported rather than mocked: it is not a collaborator the controller decides
+// anything with, it *is* the failure half of the wire contract under test. @WebMvcTest only scans
+// controller-ish beans, so a plain @Component needs saying explicitly.
 @WebMvcTest(OrderController.class)
+@Import(UseCaseResponder.class)
 class OrderControllerIntegrationTest {
 
     @Autowired
@@ -63,7 +75,7 @@ class OrderControllerIntegrationTest {
     void placeOrderReturnsCreated() throws Exception {
         var response = new PlaceOrderResponse();
         response.setOrderNumber("ORD-001");
-        when(placeOrder.execute(any())).thenReturn(response);
+        when(placeOrder.execute(any())).thenReturn(Result.ok(response));
 
         mockMvc.perform(post("/api/orders")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -85,7 +97,7 @@ class OrderControllerIntegrationTest {
     void browseOrderHistoryReturnsOk() throws Exception {
         var response = new BrowseOrderHistoryResponse();
         response.setOrders(List.of());
-        when(browseOrderHistory.execute(null)).thenReturn(response);
+        when(browseOrderHistory.execute(new BrowseOrderHistoryRequest(null))).thenReturn(Result.ok(response));
 
         mockMvc.perform(get("/api/orders"))
             .andExpect(status().isOk());
@@ -108,7 +120,7 @@ class OrderControllerIntegrationTest {
         response.setTotalPrice(new BigDecimal("22.00"));
         response.setStatus(OrderStatus.PLACED);
         response.setCountry("US");
-        when(viewOrderDetails.execute("ORD-001")).thenReturn(response);
+        when(viewOrderDetails.execute(new ViewOrderDetailsRequest("ORD-001"))).thenReturn(Result.ok(response));
 
         mockMvc.perform(get("/api/orders/ORD-001"))
             .andExpect(status().isOk())
@@ -117,21 +129,37 @@ class OrderControllerIntegrationTest {
 
     @Test
     void getOrderNotFoundReturnsNotFound() throws Exception {
-        when(viewOrderDetails.execute("UNKNOWN"))
-            .thenThrow(new NotExistValidationException("Order UNKNOWN not found"));
+        when(viewOrderDetails.execute(new ViewOrderDetailsRequest("UNKNOWN")))
+            .thenReturn(Result.err(new UseCaseError.NotFound("Order", "UNKNOWN")));
 
         mockMvc.perform(get("/api/orders/UNKNOWN"))
-            .andExpect(status().isNotFound());
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.detail").value("Order UNKNOWN does not exist."));
+    }
+
+    @Test
+    void getOrderInvalidReturnsUnprocessableEntityWithFieldErrors() throws Exception {
+        when(viewOrderDetails.execute(new ViewOrderDetailsRequest("ORD-001")))
+            .thenReturn(Result.err(new UseCaseError.Invalid("orderNumber", "Order number must not be empty")));
+
+        mockMvc.perform(get("/api/orders/ORD-001"))
+            .andExpect(status().isUnprocessableEntity())
+            .andExpect(jsonPath("$.errors[0].field").value("orderNumber"))
+            .andExpect(jsonPath("$.errors[0].message").value("Order number must not be empty"));
     }
 
     @Test
     void cancelOrderReturnsNoContent() throws Exception {
+        when(cancelOrder.execute(new CancelOrderRequest("ORD-001"))).thenReturn(Result.ok(null));
+
         mockMvc.perform(post("/api/orders/ORD-001/cancel"))
             .andExpect(status().isNoContent());
     }
 
     @Test
     void deliverOrderReturnsNoContent() throws Exception {
+        when(deliverOrder.execute(new DeliverOrderRequest("ORD-001"))).thenReturn(Result.ok(null));
+
         mockMvc.perform(post("/api/orders/ORD-001/deliver"))
             .andExpect(status().isNoContent());
     }

@@ -1,7 +1,5 @@
 package com.mycompany.myshop.backend.presentation.exception;
 
-import com.mycompany.myshop.backend.domain.exceptions.NotExistValidationException;
-import com.mycompany.myshop.backend.domain.exceptions.ValidationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,6 +20,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+/**
+ * Framework-level failures only: a body Jackson cannot read, a bean-validation rejection, and the
+ * catch-all. Business outcomes are not here — a use case returns those as {@code UseCaseError} and
+ * {@code UseCaseResponder} renders them, so they are declared in the signature that produces them
+ * instead of being reassembled in a handler that had grown a case per use case.
+ */
 @RestControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
@@ -41,59 +45,11 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @Value("${error.types.validation-error}")
     private String validationErrorTypeUri;
 
-    @Value("${error.types.resource-not-found}")
-    private String resourceNotFoundTypeUri;
-
     @Value("${error.types.bad-request}")
     private String badRequestTypeUri;
 
     @Value("${error.types.internal-server-error}")
     private String internalServerErrorTypeUri;
-
-    @ExceptionHandler(ValidationException.class)
-    public ResponseEntity<ProblemDetail> handleValidationException(ValidationException ex) {
-        if (ex.getFieldName() != null) {
-            var problemDetail = ProblemDetail.forStatusAndDetail(
-                    HttpStatus.UNPROCESSABLE_ENTITY,
-                    VALIDATION_DETAIL
-            );
-            problemDetail.setType(URI.create(validationErrorTypeUri));
-            problemDetail.setTitle(VALIDATION_TITLE);
-            problemDetail.setProperty(PROP_TIMESTAMP, Instant.now());
-
-            var errors = new ArrayList<Map<String, Object>>();
-            var errorDetail = new HashMap<String, Object>();
-            errorDetail.put(PROP_FIELD, ex.getFieldName());
-            errorDetail.put(PROP_MESSAGE, ex.getMessage());
-            errors.add(errorDetail);
-            problemDetail.setProperty(PROP_ERRORS, errors);
-
-            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(problemDetail);
-        } else {
-            var problemDetail = ProblemDetail.forStatusAndDetail(
-                    HttpStatus.UNPROCESSABLE_ENTITY,
-                    ex.getMessage()
-            );
-            problemDetail.setType(URI.create(validationErrorTypeUri));
-            problemDetail.setTitle(VALIDATION_TITLE);
-            problemDetail.setProperty(PROP_TIMESTAMP, Instant.now());
-
-            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(problemDetail);
-        }
-    }
-
-    @ExceptionHandler(NotExistValidationException.class)
-    public ResponseEntity<ProblemDetail> handleNotExistValidationException(NotExistValidationException ex) {
-        var problemDetail = ProblemDetail.forStatusAndDetail(
-                HttpStatus.NOT_FOUND,
-                ex.getMessage()
-        );
-        problemDetail.setType(URI.create(resourceNotFoundTypeUri));
-        problemDetail.setTitle("Resource Not Found");
-        problemDetail.setProperty(PROP_TIMESTAMP, Instant.now());
-
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problemDetail);
-    }
 
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,

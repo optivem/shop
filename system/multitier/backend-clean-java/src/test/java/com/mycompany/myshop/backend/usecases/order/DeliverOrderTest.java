@@ -2,13 +2,13 @@ package com.mycompany.myshop.backend.usecases.order;
 
 import com.mycompany.myshop.backend.domain.entities.Order;
 import com.mycompany.myshop.backend.domain.entities.OrderStatus;
-import com.mycompany.myshop.backend.domain.exceptions.NotExistValidationException;
-import com.mycompany.myshop.backend.domain.exceptions.ValidationException;
 import com.mycompany.myshop.backend.domain.pricing.OrderPricing;
-import com.mycompany.myshop.backend.domain.values.Country;
 import com.mycompany.myshop.backend.domain.repositories.OrderRepository;
+import com.mycompany.myshop.backend.domain.values.Country;
 import com.mycompany.myshop.backend.domain.values.Money;
 import com.mycompany.myshop.backend.domain.values.Rate;
+import com.mycompany.myshop.backend.usecases.UseCaseError;
+import com.mycompany.myshop.backend.usecases.dtos.DeliverOrderRequest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -19,7 +19,6 @@ import java.time.Instant;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -39,30 +38,31 @@ class DeliverOrderTest {
         var order = orderWith(OrderStatus.PLACED);
         when(orderRepository.findByOrderNumber("ORD-001")).thenReturn(Optional.of(order));
 
-        deliverOrder.execute("ORD-001");
+        var result = deliverOrder.execute(new DeliverOrderRequest("ORD-001"));
 
+        assertThat(result.isOk()).isTrue();
         assertThat(order.getStatus()).isEqualTo(OrderStatus.DELIVERED);
         verify(orderRepository).save(order);
     }
 
     @Test
-    void deliverOrderThrowsWhenOrderNotFound() {
+    void deliverOrderReportsNotFoundWhenOrderDoesNotExist() {
         when(orderRepository.findByOrderNumber("ORD-999")).thenReturn(Optional.empty());
 
-        var thrown = catchThrowable(() -> deliverOrder.execute("ORD-999"));
+        var result = deliverOrder.execute(new DeliverOrderRequest("ORD-999"));
 
-        assertThat(thrown).isInstanceOf(NotExistValidationException.class);
+        assertThat(result.error()).isEqualTo(new UseCaseError.NotFound("Order", "ORD-999"));
     }
 
     @Test
-    void deliverOrderThrowsWhenOrderAlreadyDelivered() {
+    void deliverOrderReportsInvalidWhenOrderAlreadyDelivered() {
         var order = orderWith(OrderStatus.DELIVERED);
         when(orderRepository.findByOrderNumber("ORD-001")).thenReturn(Optional.of(order));
 
-        var thrown = catchThrowable(() -> deliverOrder.execute("ORD-001"));
+        var result = deliverOrder.execute(new DeliverOrderRequest("ORD-001"));
 
-        assertThat(thrown).isInstanceOf(ValidationException.class)
-                .hasMessageContaining("cannot be delivered");
+        assertThat(result.error()).isInstanceOfSatisfying(UseCaseError.Invalid.class,
+                invalid -> assertThat(invalid.message()).contains("cannot be delivered"));
     }
 
     private Order orderWith(OrderStatus status) {

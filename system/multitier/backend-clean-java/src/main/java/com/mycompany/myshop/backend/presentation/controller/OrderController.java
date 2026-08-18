@@ -1,9 +1,11 @@
 package com.mycompany.myshop.backend.presentation.controller;
 
-import com.mycompany.myshop.backend.usecases.dtos.BrowseOrderHistoryResponse;
+import com.mycompany.myshop.backend.presentation.UseCaseResponder;
+import com.mycompany.myshop.backend.usecases.dtos.BrowseOrderHistoryRequest;
+import com.mycompany.myshop.backend.usecases.dtos.CancelOrderRequest;
+import com.mycompany.myshop.backend.usecases.dtos.DeliverOrderRequest;
 import com.mycompany.myshop.backend.usecases.dtos.PlaceOrderRequest;
-import com.mycompany.myshop.backend.usecases.dtos.PlaceOrderResponse;
-import com.mycompany.myshop.backend.usecases.dtos.ViewOrderDetailsResponse;
+import com.mycompany.myshop.backend.usecases.dtos.ViewOrderDetailsRequest;
 import com.mycompany.myshop.backend.usecases.order.BrowseOrderHistory;
 import com.mycompany.myshop.backend.usecases.order.CancelOrder;
 import com.mycompany.myshop.backend.usecases.order.DeliverOrder;
@@ -22,7 +24,8 @@ import java.net.URI;
 
 /**
  * Binds HTTP to use cases and nothing else: no branching, no mapping, no arithmetic. Every method
- * is one call plus the status code the contract asks for.
+ * is one call plus the status code the contract asks for — what a refusal looks like is
+ * {@link UseCaseResponder}'s job, uniformly, for every use case here.
  */
 @RestController
 public class OrderController {
@@ -32,45 +35,48 @@ public class OrderController {
     private final ViewOrderDetails viewOrderDetails;
     private final CancelOrder cancelOrder;
     private final DeliverOrder deliverOrder;
+    private final UseCaseResponder responder;
 
     public OrderController(BrowseOrderHistory browseOrderHistory, PlaceOrder placeOrder,
                            ViewOrderDetails viewOrderDetails, CancelOrder cancelOrder,
-                           DeliverOrder deliverOrder) {
+                           DeliverOrder deliverOrder, UseCaseResponder responder) {
         this.browseOrderHistory = browseOrderHistory;
         this.placeOrder = placeOrder;
         this.viewOrderDetails = viewOrderDetails;
         this.cancelOrder = cancelOrder;
         this.deliverOrder = deliverOrder;
+        this.responder = responder;
     }
 
     @GetMapping("/api/orders")
-    public ResponseEntity<BrowseOrderHistoryResponse> browseOrderHistory(@RequestParam(required = false) String orderNumber) {
-        var response = browseOrderHistory.execute(orderNumber);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<Object> browseOrderHistory(@RequestParam(required = false) String orderNumber) {
+        var result = browseOrderHistory.execute(new BrowseOrderHistoryRequest(orderNumber));
+        return responder.respond(result, ResponseEntity::ok);
     }
 
     @PostMapping("/api/orders")
-    public ResponseEntity<PlaceOrderResponse> placeOrder(@Valid @RequestBody PlaceOrderRequest request) {
-        var response = placeOrder.execute(request);
-        var location = URI.create("/api/orders/" + response.getOrderNumber());
-        return ResponseEntity.created(location).body(response);
+    public ResponseEntity<Object> placeOrder(@Valid @RequestBody PlaceOrderRequest request) {
+        var result = placeOrder.execute(request);
+        return responder.respond(result, response -> ResponseEntity
+                .created(URI.create("/api/orders/" + response.getOrderNumber()))
+                .body(response));
     }
 
     @GetMapping("/api/orders/{orderNumber}")
-    public ResponseEntity<ViewOrderDetailsResponse> getOrder(@PathVariable String orderNumber) {
-        var response = viewOrderDetails.execute(orderNumber);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<Object> getOrder(@PathVariable String orderNumber) {
+        var result = viewOrderDetails.execute(new ViewOrderDetailsRequest(orderNumber));
+        return responder.respond(result, ResponseEntity::ok);
     }
 
     @PostMapping("/api/orders/{orderNumber}/cancel")
-    public ResponseEntity<Void> cancelOrder(@PathVariable String orderNumber) {
-        cancelOrder.execute(orderNumber);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<Object> cancelOrder(@PathVariable String orderNumber) {
+        var result = cancelOrder.execute(new CancelOrderRequest(orderNumber));
+        return responder.respond(result, ignored -> ResponseEntity.noContent().build());
     }
 
     @PostMapping("/api/orders/{orderNumber}/deliver")
-    public ResponseEntity<Void> deliverOrder(@PathVariable String orderNumber) {
-        deliverOrder.execute(orderNumber);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<Object> deliverOrder(@PathVariable String orderNumber) {
+        var result = deliverOrder.execute(new DeliverOrderRequest(orderNumber));
+        return responder.respond(result, ignored -> ResponseEntity.noContent().build());
     }
 }

@@ -1,13 +1,18 @@
 package com.mycompany.myshop.backend.usecases.order;
 
-import com.mycompany.myshop.backend.domain.exceptions.NotExistValidationException;
 import com.mycompany.myshop.backend.domain.exceptions.ValidationException;
 import com.mycompany.myshop.backend.domain.repositories.OrderRepository;
+import com.mycompany.myshop.backend.usecases.Result;
+import com.mycompany.myshop.backend.usecases.UseCase;
+import com.mycompany.myshop.backend.usecases.UseCaseError;
+import com.mycompany.myshop.backend.usecases.dtos.DeliverOrderRequest;
 
 /**
  * Marks an order as delivered. Whether this order may be delivered is the order's own decision.
  */
-public class DeliverOrder {
+public class DeliverOrder implements UseCase<DeliverOrderRequest, Void> {
+
+    private static final String ORDER_ENTITY = "Order";
 
     private final OrderRepository orderRepository;
 
@@ -15,15 +20,25 @@ public class DeliverOrder {
         this.orderRepository = orderRepository;
     }
 
-    public void execute(String orderNumber) {
+    @Override
+    public Result<Void, UseCaseError> execute(DeliverOrderRequest request) {
+        var orderNumber = request.orderNumber();
         if (orderNumber == null || orderNumber.trim().isEmpty()) {
-            throw new ValidationException("Order number must not be empty");
+            return Result.err(new UseCaseError.Invalid(null, "Order number must not be empty"));
         }
 
-        var order = orderRepository.findByOrderNumber(orderNumber)
-                .orElseThrow(() -> new NotExistValidationException("Order " + orderNumber + " does not exist."));
+        var order = orderRepository.findByOrderNumber(orderNumber);
+        if (order.isEmpty()) {
+            return Result.err(new UseCaseError.NotFound(ORDER_ENTITY, orderNumber));
+        }
 
-        order.deliver();
-        orderRepository.save(order);
+        try {
+            order.get().deliver();
+        } catch (ValidationException e) {
+            return Result.err(UseCaseError.from(e));
+        }
+
+        orderRepository.save(order.get());
+        return Result.ok(null);
     }
 }

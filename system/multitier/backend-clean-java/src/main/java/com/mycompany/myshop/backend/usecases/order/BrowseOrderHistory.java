@@ -1,8 +1,12 @@
 package com.mycompany.myshop.backend.usecases.order;
 
-import com.mycompany.myshop.backend.domain.values.CouponCode;
 import com.mycompany.myshop.backend.domain.entities.Order;
 import com.mycompany.myshop.backend.domain.repositories.OrderRepository;
+import com.mycompany.myshop.backend.domain.values.CouponCode;
+import com.mycompany.myshop.backend.usecases.Result;
+import com.mycompany.myshop.backend.usecases.UseCase;
+import com.mycompany.myshop.backend.usecases.UseCaseError;
+import com.mycompany.myshop.backend.usecases.dtos.BrowseOrderHistoryRequest;
 import com.mycompany.myshop.backend.usecases.dtos.BrowseOrderHistoryResponse;
 
 import java.util.List;
@@ -10,7 +14,7 @@ import java.util.List;
 /**
  * Lists orders newest-first, optionally narrowed to those whose order number contains a filter.
  */
-public class BrowseOrderHistory {
+public class BrowseOrderHistory implements UseCase<BrowseOrderHistoryRequest, BrowseOrderHistoryResponse> {
 
     private final OrderRepository orderRepository;
 
@@ -18,7 +22,10 @@ public class BrowseOrderHistory {
         this.orderRepository = orderRepository;
     }
 
-    public BrowseOrderHistoryResponse execute(String orderNumberFilter) {
+    @Override
+    public Result<BrowseOrderHistoryResponse, UseCaseError> execute(BrowseOrderHistoryRequest request) {
+        var orderNumberFilter = request.orderNumberFilter();
+
         List<Order> orders;
         if (orderNumberFilter == null || orderNumberFilter.trim().isEmpty()) {
             orders = orderRepository.findAllByOrderByOrderTimestampDesc();
@@ -30,9 +37,9 @@ public class BrowseOrderHistory {
                 .map(BrowseOrderHistory::toItem)
                 .toList();
 
-        var result = new BrowseOrderHistoryResponse();
-        result.setOrders(items);
-        return result;
+        var response = new BrowseOrderHistoryResponse();
+        response.setOrders(items);
+        return Result.ok(response);
     }
 
     private static BrowseOrderHistoryResponse.BrowseOrderHistoryItemResponse toItem(Order order) {

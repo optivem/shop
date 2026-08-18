@@ -2,6 +2,10 @@ package com.mycompany.myshop.backend.usecases.coupon;
 
 import com.mycompany.myshop.backend.domain.entities.Coupon;
 import com.mycompany.myshop.backend.domain.repositories.CouponRepository;
+import com.mycompany.myshop.backend.usecases.Result;
+import com.mycompany.myshop.backend.usecases.UseCase;
+import com.mycompany.myshop.backend.usecases.UseCaseError;
+import com.mycompany.myshop.backend.usecases.dtos.BrowseCouponsRequest;
 import com.mycompany.myshop.backend.usecases.dtos.BrowseCouponsResponse;
 
 /**
@@ -9,7 +13,7 @@ import com.mycompany.myshop.backend.usecases.dtos.BrowseCouponsResponse;
  * the order-history equivalent sat in the service; both now live in their use case, which is where
  * the response DTO is declared.
  */
-public class BrowseCoupons {
+public class BrowseCoupons implements UseCase<BrowseCouponsRequest, BrowseCouponsResponse> {
 
     private final CouponRepository couponRepository;
 
@@ -17,14 +21,15 @@ public class BrowseCoupons {
         this.couponRepository = couponRepository;
     }
 
-    public BrowseCouponsResponse execute() {
+    @Override
+    public Result<BrowseCouponsResponse, UseCaseError> execute(BrowseCouponsRequest request) {
         var items = couponRepository.findAll().stream()
                 .map(BrowseCoupons::toItem)
                 .toList();
 
-        var result = new BrowseCouponsResponse();
-        result.setCoupons(items);
-        return result;
+        var response = new BrowseCouponsResponse();
+        response.setCoupons(items);
+        return Result.ok(response);
     }
 
     private static BrowseCouponsResponse.BrowseCouponsItemResponse toItem(Coupon coupon) {

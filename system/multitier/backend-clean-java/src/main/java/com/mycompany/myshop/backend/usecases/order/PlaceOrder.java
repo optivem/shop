@@ -15,6 +15,9 @@ import com.mycompany.myshop.backend.domain.values.Country;
 import com.mycompany.myshop.backend.domain.values.CouponCode;
 import com.mycompany.myshop.backend.domain.values.Money;
 import com.mycompany.myshop.backend.domain.values.Rate;
+import com.mycompany.myshop.backend.usecases.Result;
+import com.mycompany.myshop.backend.usecases.UseCase;
+import com.mycompany.myshop.backend.usecases.UseCaseError;
 import com.mycompany.myshop.backend.usecases.dtos.PlaceOrderRequest;
 import com.mycompany.myshop.backend.usecases.dtos.PlaceOrderResponse;
 
@@ -28,7 +31,7 @@ import java.util.UUID;
  * what it costs is {@code OrderPricing}'s, and whether the coupon may be used is the coupon's — this
  * class fetches, sequences and saves.
  */
-public class PlaceOrder {
+public class PlaceOrder implements UseCase<PlaceOrderRequest, PlaceOrderResponse> {
 
     private static final String MSG_COUPON_DOES_NOT_EXIST = "Coupon code %s does not exist";
 
@@ -47,7 +50,23 @@ public class PlaceOrder {
         this.clockGateway = clockGateway;
     }
 
-    public PlaceOrderResponse execute(PlaceOrderRequest request) {
+    /**
+     * The seam. Placement has six ways to be refused — blackout window, unknown SKU, unknown coupon,
+     * coupon not yet valid, expired, or used up — and five of them are the domain's own judgement,
+     * raised from inside {@code Coupon} and {@code YearEndBlackoutPolicy}. Translating once here
+     * keeps {@link #place} in the order the pricing depends on; returning each refusal inline would
+     * mean re-deriving that order, and the order is what decides which refusal a caller sees first.
+     */
+    @Override
+    public Result<PlaceOrderResponse, UseCaseError> execute(PlaceOrderRequest request) {
+        try {
+            return Result.ok(place(request));
+        } catch (ValidationException e) {
+            return Result.err(UseCaseError.from(e));
+        }
+    }
+
+    private PlaceOrderResponse place(PlaceOrderRequest request) {
         var couponCode = CouponCode.requested(request.getCouponCode());
         var orderTimestamp = clockGateway.getCurrentTime();
 

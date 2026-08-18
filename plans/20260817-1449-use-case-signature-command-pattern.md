@@ -89,8 +89,10 @@ component, contract, and system tests.
   validation, and the catch-all 500.
 - **The rule is enforced, not documented.** A new ArchUnit rule in `ArchitectureTest` fails the
   build if a class under `usecases.order` / `usecases.coupon` doesn't implement `UseCase`.
-- **No behaviour change.** All existing tests pass unmodified except the use case unit tests, whose
-  assertions move from `assertThrows` to `Result` inspection.
+- **No behaviour change.** The only tests that change are the ones that speak to the seam directly:
+  the three use case unit tests (assertions move from `catchThrowable` to `Result` inspection) and
+  `OrderControllerIntegrationTest` (mocks now return a `Result`). Every component, contract and
+  system test passes unmodified.
 
 ## Non-goals
 
@@ -110,101 +112,56 @@ component, contract, and system tests.
 
 ## ▶ Next executable step (resume here)
 
-**Step 1 — land the vocabulary types, no use case touched yet.** Create three new files under
-`system/multitier/backend-clean-java/src/main/java/com/mycompany/myshop/backend/usecases/`:
+**Step 8 — sync the article.** Steps 1–7 are landed and committed. The full local check is green
+across every layer:
 
-- `UseCase.java` — `public interface UseCase<TRequest, TResponse> { Result<TResponse, UseCaseError> execute(TRequest request); }`
-- `UseCaseError.java` — `public sealed interface UseCaseError` with records `NotFound(String entityType, String id)`, `Invalid(String field, String message)`, `Conflict(String message)`
-- `Result.java` — hand-rolled sealed `Result<T, E>` with `Ok(T value)` / `Err(E error)` records plus `isOk()`, `value()`, `error()`, `map`, `flatMap`. No new dependency (no Vavr, no third-party Either).
+```bash
+cd system/multitier/backend-clean-java
+./gradlew build checkstyleAll componentTest integrationTest contractTest
+```
 
-Java 21 (`build.gradle` `JavaLanguageVersion.of(21)`) gives sealed interfaces and pattern-matching
-switch, so no preview flags are needed. Gate: `./gradlew build` in
-`system/multitier/backend-clean-java` passes with the three new files unused. Unblocks Steps 2–5.
-
-Note the ArchUnit constraints these files must satisfy (from `ArchitectureTest`):
-`USECASES_DEPEND_ONLY_INWARD` and
-`USECASES_ARE_FRAMEWORK_FREE_EXCEPT_JAKARTA_VALIDATION` — so all three are plain Java, no Spring,
-no Lombok, no Jackson.
+238 tests — 94 unit (including the new `USECASES_IMPLEMENT_THE_USECASE_INTERFACE` rule), 62
+component, 39 narrow-integration, 43 Pact contract — all passing, with the component, contract and
+integration suites unchanged apart from `OrderControllerIntegrationTest`'s mocks. Behaviour is
+proven unchanged; what remains is the article, which still describes a "before" state the repo has
+moved past.
 
 ## Steps
 
-- [ ] **Step 1: Add the vocabulary.** `UseCase`, `UseCaseError`, `Result` under `usecases/`
-      (details in the resume block above). Nothing else changes; build stays green.
+- [x] **Steps 1–7 landed 2026-08-17, verified 2026-08-18.** `UseCase` / `UseCaseError` / `Result` under
+      `usecases/`; five request records in `usecases/dtos/`; all seven use cases converted; the
+      exhaustive `Result` → HTTP mapping in `presentation/UseCaseResponder`; both controllers on it;
+      `GlobalExceptionHandler` reduced to framework failures; `USECASES_IMPLEMENT_THE_USECASE_INTERFACE`
+      live in `ArchitectureTest`. All four layers green: 94 unit, 62 component, 39 narrow-integration,
+      43 Pact contract.
 
-- [ ] **Step 2: Add the five missing request DTOs.** In `usecases/dtos/`:
-      `ViewOrderDetailsRequest(String orderNumber)`,
-      `BrowseOrderHistoryRequest(String orderNumberFilter)`,
-      `CancelOrderRequest(String orderNumber)`,
-      `DeliverOrderRequest(String orderNumber)`,
-      `BrowseCouponsRequest()`. Match the shape of the existing `PlaceOrderRequest` /
-      `PublishCouponRequest` (which are mutable classes with Jakarta validation annotations, not
-      records — check before choosing a form: the two existing ones are deserialized by Jackson
-      from the HTTP body, the five new ones are built in the controller from path/query params and
-      have no Jackson involvement, so records are appropriate for the new five).
-
-- [ ] **Step 3: Convert use cases one at a time, simplest first.** Recommended order:
-      `DeliverOrder` → `CancelOrder` → `ViewOrderDetails` → `BrowseOrderHistory` →
-      `BrowseCoupons` → `PublishCoupon` → `PlaceOrder`. For each:
-      1. `implements UseCase<XRequest, XResponse>` (`Void` where the use case returns nothing:
-         `CancelOrder`, `DeliverOrder`, `PublishCoupon`).
-      2. Replace `throw new NotExistValidationException(...)` with
-         `Result.err(new UseCaseError.NotFound("Order", orderNumber))`, preserving the exact
-         message text so the `ProblemDetail.detail` field is unchanged.
-      3. Replace `throw new ValidationException(...)` raised *by the use case itself* with
-         `Result.err(new UseCaseError.Invalid(field, message))`, again preserving message text and
-         field name (`ValidationException` carries an optional `fieldName` that drives whether the
-         handler emits an `errors[]` array — this distinction must survive the translation).
-      4. Where a *domain* constructor throws `ValidationException` (`CouponCode`, `Rate`,
-         `ValidityPeriod`, `UsageQuota`, `Country`, `Order.cancel()`, `Order.deliver()`), catch it
-         at the use case boundary and translate to `UseCaseError`. The domain stays
-         exception-based; the use case is the seam.
-      5. Update that use case's unit test in `src/test/.../usecases/` from `assertThrows` to
-         `Result` inspection. Note only `PlaceOrderTest`, `CancelOrderTest`, `DeliverOrderTest`
-         exist today — the other four use cases have no unit test, and this plan does not add one.
-      6. Update the calling controller method for that use case (Step 4's mapper must exist first,
-         so do Step 4 before or alongside the first conversion).
-      Keep the build green after each use case. Do **not** keep the old method as a wrapper — the
-      article suggests that for codebases with external callers; here every caller is in this
-      repo and visible.
-
-- [ ] **Step 4: Map `Result` to HTTP in the presentation layer.** Add a package-private helper in
-      `presentation/` that turns `Result<T, UseCaseError>` into `ResponseEntity`, with an
-      exhaustive `switch` over `UseCaseError` and **no `default` branch** — that exhaustiveness is
-      the whole point. It must reproduce today's responses exactly:
-      `NotFound` → 404 + `resource-not-found` type URI + title `"Resource Not Found"`;
-      `Invalid` with a field → 422 + `validation-error` type URI + title `"Validation Error"` +
-      detail `"The request contains one or more validation errors"` + `errors[]` array;
-      `Invalid` without a field → 422 with the message as `detail` and no `errors[]`;
-      `Conflict` → decide during execution (no current use case produces a 409; if none is needed,
-      drop `Conflict` from `UseCaseError` rather than inventing a mapping).
-      Every response also carries the `timestamp` property. Cross-check against
-      `GlobalExceptionHandler:53-96` line by line.
-
-- [ ] **Step 5: Shrink `GlobalExceptionHandler`.** Delete `handleValidationException` and
-      `handleNotExistValidationException` once no use case throws them. Keep
-      `handleMethodArgumentNotValid`, `handleHttpMessageNotReadable` (+ `tryParseFieldError` /
-      `TypeValidationMessageExtractor`), and `handleGeneralException`. If domain code still throws
-      `ValidationException` on a path that reaches the controller un-caught, that's a bug in
-      Step 3.4 — don't leave the handler as a safety net, because that reintroduces the very
-      "reassembled somewhere else entirely" problem the change removes.
-
-- [ ] **Step 6: Enforce the shape in `ArchitectureTest`.** Add
-      `USECASES_IMPLEMENT_THE_USECASE_INTERFACE`: all classes in
-      `..usecases.order..` / `..usecases.coupon..` must implement `UseCase`. Follow the existing
-      rule style in that file (static `ArchRule` field + explanatory javadoc naming the regression
-      it prevents).
-
-- [ ] **Step 7: Verify.** `./gradlew build` in `system/multitier/backend-clean-java`, then the full
-      `./compile-all.sh` from the repo root. Then — **only with explicit user approval** — the
-      `--sample` system-test run for Java per `CLAUDE.md`, plus the `componentTest`,
-      `contractTest`, and `integrationTest` source sets for this project. The component and Pact
-      contract tests are the real proof that HTTP behaviour is unchanged.
+      Three things landed differently from the plan above, each with a reason:
+      - **`NotExistValidationException` is deleted, not just unhandled.** Only the three converted
+        use cases ever threw it; its whole purpose was to signal 404 to the handler, which is now
+        `UseCaseError.NotFound`. Leaving the class behind would leave a trap: a future thrower would
+        get silently caught by a use case's `catch (ValidationException)` and rendered as a 422.
+      - **`Result` has no `map`/`flatMap`.** Nothing needs them — the responder pattern-matches and
+        the tests use `isOk()` / `value()` / `error()`. Dead API in a teaching codebase is worse than
+        absent API; add them when a caller wants one.
+      - **`PlaceOrder` translates at its boundary rather than returning each refusal inline.**
+        Its six refusal paths are interleaved with the pricing sequence, and which refusal a caller
+        sees first depends on that order. `execute` is a try/catch seam over an unchanged private
+        `place`, so the ordering is preserved by construction rather than by re-derivation. The
+        other six use cases return `Result.err` inline.
 
 - [ ] **Step 8: Sync the article.** The article's opening "before" snippet describes a state
       `backend-clean-java` has already partly moved past (method names already all `execute`,
       `BrowseCoupons` already returns a response DTO, `PublishCoupon` already takes a request).
       Decide whether the article's example stays illustrative-only or is realigned to what the
       repo actually shows — and whether the repo now becomes the article's linked reference.
+
+- [ ] **Step 9 (optional): restore the OpenAPI response schemas.** Controller methods now return
+      `ResponseEntity<Object>` so a failure can carry a `ProblemDetail`, which costs springdoc the
+      per-endpoint success schema it used to infer from `ResponseEntity<PlaceOrderResponse>`.
+      Nothing consumes the generated spec today (no committed `openapi.json`, no contract test
+      reads it — the Swagger UI is the only consumer), so this is cosmetic. The fix, if wanted, is
+      an `@ApiResponse(responseCode = "...", content = @Content(schema = @Schema(implementation = X.class)))`
+      per method.
 
 ## Decisions (settled 2026-08-17)
 
@@ -216,7 +173,7 @@ no Lombok, no Jackson.
   so the repo and the article agree. Revisit only if `Result.ok(null)` proves noisy.
 - **Gateway failures stay exceptions.** `TaxGatewayException` and friends are infrastructure
   failures — by the article's own rule they stay thrown and reach `handleGeneralException`.
-  Verify during Step 7 that no component test asserts a non-500 status for a gateway failure.
+  Verified 2026-08-18: no component test asserts a non-500 status for a gateway failure.
 - **`Result` lives in `usecases/`.** It is a use-case-layer vocabulary type, the domain must not
   depend on it, and a new top-level package would need its own ArchUnit dependency rule to stay
   honest.

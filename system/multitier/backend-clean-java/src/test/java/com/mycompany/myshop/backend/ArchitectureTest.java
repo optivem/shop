@@ -1,7 +1,9 @@
 package com.mycompany.myshop.backend;
 
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
+import com.mycompany.myshop.backend.usecases.UseCase;
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
@@ -89,6 +91,18 @@ class ArchitectureTest {
             .that().resideInAPackage(USECASES)
             .should().dependOnClassesThat().resideInAnyPackage(SPRING, LOMBOK)
             .because("only jakarta.validation is an accepted framework import in the use case layer (D9)");
+
+    /**
+     * One class per use case is not enough on its own: it fixes dependencies and naming, and says
+     * nothing about what those classes look like from outside. This is what says it — a new use case
+     * that takes three loose parameters, or throws its expected outcomes instead of returning them,
+     * does not compile past this rule.
+     */
+    @ArchTest
+    static final ArchRule USECASES_IMPLEMENT_THE_USECASE_INTERFACE = classes()
+            .that().resideInAnyPackage("..usecases.order..", "..usecases.coupon..")
+            .should().implement(UseCase.class)
+            .because("every use case has the same signature: one request in, one declared Result out");
 
     /** Jackson is a wire concern: it belongs to the adapters and the web layer, never to the centre. */
     @ArchTest

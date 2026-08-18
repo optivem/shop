@@ -5,7 +5,6 @@ import com.mycompany.myshop.backend.domain.entities.OrderStatus;
 import com.mycompany.myshop.backend.domain.entities.Product;
 import com.mycompany.myshop.backend.domain.values.Promotion;
 import com.mycompany.myshop.backend.domain.entities.TaxRate;
-import com.mycompany.myshop.backend.domain.exceptions.ValidationException;
 import com.mycompany.myshop.backend.domain.gateways.ClockGateway;
 import com.mycompany.myshop.backend.domain.gateways.ErpGateway;
 import com.mycompany.myshop.backend.domain.gateways.TaxGateway;
@@ -14,6 +13,7 @@ import com.mycompany.myshop.backend.domain.repositories.OrderRepository;
 import com.mycompany.myshop.backend.domain.values.Country;
 import com.mycompany.myshop.backend.domain.values.Money;
 import com.mycompany.myshop.backend.domain.values.Rate;
+import com.mycompany.myshop.backend.usecases.UseCaseError;
 import com.mycompany.myshop.backend.usecases.dtos.PlaceOrderRequest;
 import com.mycompany.myshop.backend.usecases.dtos.PlaceOrderResponse;
 import org.junit.jupiter.api.Test;
@@ -27,7 +27,6 @@ import java.time.Instant;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -58,45 +57,45 @@ class PlaceOrderTest {
         givenNoPromotion();
         givenTaxRate("US", Rate.of("0.10"));
 
-        var response = placeOrder.execute(buildRequest("BOOK-123", 2, "US"));
+        var result = placeOrder.execute(buildRequest("BOOK-123", 2, "US"));
 
         var captor = ArgumentCaptor.forClass(Order.class);
         verify(orderRepository).save(captor.capture());
-        assertSavedOrder(captor.getValue(), response);
+        assertSavedOrder(captor.getValue(), result.value());
     }
 
     @Test
-    void placeOrderThrowsWhenOrderedOnYearEndBlackout() {
+    void placeOrderReportsInvalidWhenOrderedOnYearEndBlackout() {
         when(clockGateway.getCurrentTime()).thenReturn(DEC_31_YEAR_END_BLACKOUT);
 
-        var thrown = catchThrowable(() -> placeOrder.execute(buildRequest("BOOK-123", 1, "US")));
+        var result = placeOrder.execute(buildRequest("BOOK-123", 1, "US"));
 
-        assertThat(thrown).isInstanceOf(ValidationException.class)
-                .hasMessageContaining("December 31");
+        assertThat(result.error()).isInstanceOfSatisfying(UseCaseError.Invalid.class,
+                invalid -> assertThat(invalid.message()).contains("December 31"));
     }
 
     @Test
-    void placeOrderThrowsWhenSkuUnknown() {
+    void placeOrderReportsInvalidWhenSkuUnknown() {
         givenNormalTime();
         when(erpGateway.getProductDetails("UNKNOWN")).thenReturn(Optional.empty());
 
-        var thrown = catchThrowable(() -> placeOrder.execute(buildRequest("UNKNOWN", 1, "US")));
+        var result = placeOrder.execute(buildRequest("UNKNOWN", 1, "US"));
 
-        assertThat(thrown).isInstanceOf(ValidationException.class);
-        assertThat(((ValidationException) thrown).getFieldName()).isEqualTo("sku");
+        assertThat(result.error()).isInstanceOfSatisfying(UseCaseError.Invalid.class,
+                invalid -> assertThat(invalid.field()).isEqualTo("sku"));
     }
 
     @Test
-    void placeOrderThrowsWhenCountryUnknown() {
+    void placeOrderReportsInvalidWhenCountryUnknown() {
         givenNormalTime();
         givenProductExists("BOOK-123", Money.of("10.00"));
         givenNoPromotion();
         when(taxGateway.getTaxDetails(Country.of("XX"))).thenReturn(Optional.empty());
 
-        var thrown = catchThrowable(() -> placeOrder.execute(buildRequest("BOOK-123", 1, "XX")));
+        var result = placeOrder.execute(buildRequest("BOOK-123", 1, "XX"));
 
-        assertThat(thrown).isInstanceOf(ValidationException.class);
-        assertThat(((ValidationException) thrown).getFieldName()).isEqualTo("country");
+        assertThat(result.error()).isInstanceOfSatisfying(UseCaseError.Invalid.class,
+                invalid -> assertThat(invalid.field()).isEqualTo("country"));
     }
 
     private void givenNormalTime() {
