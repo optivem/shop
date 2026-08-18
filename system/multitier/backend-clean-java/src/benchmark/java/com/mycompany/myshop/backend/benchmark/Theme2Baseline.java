@@ -2,7 +2,7 @@ package com.mycompany.myshop.backend.benchmark;
 
 import com.mycompany.myshop.backend.backendtest.configuration.TestcontainersConfiguration;
 import com.mycompany.myshop.backend.domain.entities.Order;
-import com.mycompany.myshop.backend.domain.entities.OrderStatus;
+import com.mycompany.myshop.backend.domain.values.OrderStatus;
 import com.mycompany.myshop.backend.domain.repositories.CouponRepository;
 import com.mycompany.myshop.backend.domain.repositories.OrderRepository;
 import com.mycompany.myshop.backend.domain.values.CouponCode;
@@ -29,56 +29,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-/**
- * The theme-2 measurement harness: what the application does today, for each capability the plan
- * says the database is barred from.
- *
- * <p><strong>This is not a test.</strong> It asserts nothing and can fail only by throwing, which is
- * why it sits in its own source set rather than in {@code integrationTest}. Its output is a number,
- * not a verdict, and a number that moved is not a regression.
- *
- * <p>It runs the <em>real</em> use cases against a real Postgres, through the real ports and the
- * real adapters — not a hand-written imitation of them. That is the whole reason it exists: the
- * claim "the loop is in the application layer" is only worth measuring if the thing measured is the
- * loop the application actually runs.
- *
- * <p>Where a capability has no call site yet — a bulk recall, an aggregate report — the harness
- * writes the honest in-memory alternative here, using only what the ports offer today. That code is
- * the "before" picture, and it lives here rather than in {@code src/main} because nobody should ship
- * it.
- *
- * <p>Order matters: every non-mutating measurement is taken first, over pristine seed data, and the
- * two mutating ones run last. Re-running the task re-seeds from scratch, so a run is repeatable
- * regardless.
- */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @ActiveProfiles("benchmark")
 @Import(TestcontainersConfiguration.class)
 class Theme2Baseline {
 
-    /**
-     * Domain objects {@code OrderMapper.toDomain} constructs for one row: six {@code Money}
-     * (unit, base, discount, subtotal, tax, total), two {@code Rate} (discount, tax), one
-     * {@code OrderPricing}, one {@code Country} and the {@code Order} itself. A row that carries a
-     * coupon constructs a {@code CouponCode} as well, counted separately because only 30% of the
-     * seed does.
-     */
     private static final long ORDER_OBJECTS_PER_ROW = 11;
 
-    /**
-     * Domain objects {@code CouponMapper.toDomain} constructs for one row: {@code CouponCode},
-     * {@code Rate}, {@code ValidityPeriod}, {@code UsageQuota}, and the {@code Coupon}.
-     */
     private static final long COUPON_OBJECTS_PER_ROW = 5;
 
-    /** Enough repetitions that a single-row read is timed rather than rounded to zero. */
     private static final int SINGLE_ROW_REPETITIONS = 1000;
 
-    /** How many coupons the read-modify-write measurement redeems. */
     private static final int REDEMPTIONS = 100;
 
-    /** The SKU the bulk-recall measurement withdraws. The seed spreads 100k orders over 50 SKUs. */
     private static final String RECALLED_SKU = "SKU-007";
+
+    private static final String SET_BASED_RECALLED_SKU = "SKU-008";
+
+    private static final int FIRST_CONDITIONAL_COUPON = REDEMPTIONS + 1;
 
     private static final String ORDER_UNDER_TEST = "DEMO-ORD-050000";
     private static final String ORDER_FILTER = "DEMO-ORD-0500";
@@ -137,7 +105,9 @@ class Theme2Baseline {
 
         // Mutating from here down.
         measureCouponRedemption();
+        measureConditionalRedemption();
         measureBulkRecall();
+        measureSetBasedRecall();
 
         var path = Path.of(REPORT);
         report.writeTo(path);
@@ -145,15 +115,6 @@ class Theme2Baseline {
         System.out.println("Written to " + path.toAbsolutePath());
     }
 
-    /**
-     * Runs every read path once, untimed, before anything is measured.
-     *
-     * <p>Without this the first measurement on each path pays for Hibernate's query plan cache, the
-     * connection pool filling, and the JIT — the first run of {@code BrowseCoupons} took 866 ms for
-     * 300 rows whose plan executes in 0.03 ms. That number is real but it is not the number the
-     * demo is about, and quoting it would be quoting a warm-up as if it were a cost. The mutating
-     * measurements are warmed by proxy: they run last, on paths these reads have already opened.
-     */
     private void warmUp() {
         browseOrderHistory.execute(new BrowseOrderHistoryRequest(null));
         browseOrderHistory.execute(new BrowseOrderHistoryRequest(ORDER_FILTER));
@@ -162,10 +123,6 @@ class Theme2Baseline {
         couponRepository.findByCode(CouponCode.of("DEMO-CPN-0001"));
     }
 
-    /**
-     * The unbounded list read. Every row in the table is hydrated into an {@code Order}, unwrapped
-     * into a response item, and the {@code Order} is then unreachable.
-     */
     private void measureBrowseOrderHistory() {
         var timed = probe.measure(() -> browseOrderHistory.execute(new BrowseOrderHistoryRequest(null)));
         var items = timed.value().value().getOrders();
@@ -177,7 +134,6 @@ class Theme2Baseline {
                 timed.statements(), timed.retainedHeapMb()));
     }
 
-    /** The same read narrowed by a substring filter — pushed down to SQL, but still unbounded. */
     private void measureBrowseOrderHistoryFiltered() {
         var timed = probe.measure(() -> browseOrderHistory.execute(new BrowseOrderHistoryRequest(ORDER_FILTER)));
         var items = timed.value().value().getOrders();
@@ -189,7 +145,6 @@ class Theme2Baseline {
                 timed.statements(), timed.retainedHeapMb()));
     }
 
-    /** The other unbounded list read, over a table the demo keeps small on purpose. */
     private void measureBrowseCoupons() {
         var timed = probe.measure(() -> browseCoupons.execute(new BrowseCouponsRequest()));
         var items = timed.value().value().getCoupons();
@@ -199,10 +154,6 @@ class Theme2Baseline {
                 timed.statements(), timed.retainedHeapMb()));
     }
 
-    /**
-     * The sharpest projection case: fifteen response fields, every one a column, reached by building
-     * a whole {@code Order} and immediately calling {@code .amount()} / {@code .value()} on it.
-     */
     private void measureViewOrderDetails() {
         var timed = probe.measure(() -> {
             var request = new ViewOrderDetailsRequest(ORDER_UNDER_TEST);
@@ -218,12 +169,6 @@ class Theme2Baseline {
                 timed.statements(), timed.retainedHeapMb()));
     }
 
-    /**
-     * The report Chunk B will push into one statement, written the only way today's ports allow:
-     * load both tables and group them in Java. Nothing in {@code src/main} does this yet — this is
-     * the alternative the plan says a naive implementation would reach for, measured rather than
-     * assumed.
-     */
     private void measureInMemoryAggregation() {
         var timed = probe.measure(() -> {
             var orders = orderRepository.findAllByOrderByOrderTimestampDesc();
@@ -268,11 +213,6 @@ class Theme2Baseline {
                 timed.statements(), timed.retainedHeapMb()));
     }
 
-    /**
-     * Coupon redemption as {@code PlaceOrder} does it: read the coupon, increment in memory, write
-     * it back. The cost measured here is round trips. The correctness problem is separate and is
-     * what Chunk A4's concurrency test exists to prove — two of these interleaved lose an increment.
-     */
     private void measureCouponRedemption() {
         var timed = probe.measure(() -> {
             var redeemed = 0L;
@@ -293,12 +233,25 @@ class Theme2Baseline {
                 timed.statements(), timed.retainedHeapMb()));
     }
 
-    /**
-     * A bulk SKU recall, written with the vocabulary the port offers today. {@code OrderRepository}
-     * can only say "give me all the rows", so the filter is a Java {@code filter} and the write is
-     * one {@code save} per order. This is the shape Chunk A replaces with a single
-     * {@code UPDATE … WHERE}, and the statement count in this row is the argument.
-     */
+    private void measureConditionalRedemption() {
+        var timed = probe.measure(() -> {
+            var redeemed = 0L;
+            for (var i = FIRST_CONDITIONAL_COUPON; i < FIRST_CONDITIONAL_COUPON + REDEMPTIONS; i++) {
+                if (couponRepository.tryRedeem(CouponCode.of(String.format("DEMO-CPN-%04d", i)))) {
+                    redeemed++;
+                }
+            }
+            return redeemed;
+        });
+        report.addFact("Conditional redemption: " + timed.value() + " of " + REDEMPTIONS
+                + " attempts were accepted; the rest were coupons already at their usage limit, "
+                + "which the read-modify-write loop above incremented anyway.");
+        report.add(new BenchmarkReport.Row(CAP_ATOMIC,
+                "`tryRedeem`, " + REDEMPTIONS + " coupons",
+                timed.millis(), timed.value(), 0,
+                timed.statements(), timed.retainedHeapMb()));
+    }
+
     private void measureBulkRecall() {
         var timed = probe.measure(() -> {
             var cancelled = 0L;
@@ -318,7 +271,15 @@ class Theme2Baseline {
                 timed.statements(), timed.retainedHeapMb()));
     }
 
-    /** The plans behind the numbers. Reads are analyzed; the one write is planned but not run. */
+    private void measureSetBasedRecall() {
+        var timed = probe.measure(() ->
+                (long) orderRepository.cancelOutstandingForSku(SET_BASED_RECALLED_SKU));
+        report.add(new BenchmarkReport.Row(CAP_SET_WRITE,
+                "Recall `" + SET_BASED_RECALLED_SKU + "`: one `UPDATE … WHERE`",
+                timed.millis(), timed.value(), 0,
+                timed.statements(), timed.retainedHeapMb()));
+    }
+
     private void capturePlans() {
         report.addPlan("`BrowseOrderHistory`, unfiltered",
                 probe.explainAnalyze("SELECT * FROM orders ORDER BY order_timestamp DESC"));
@@ -334,7 +295,7 @@ class Theme2Baseline {
                 probe.explainAnalyze("SELECT * FROM coupons WHERE code = 'DEMO-CPN-0001'"));
         report.addPlan("The rows a recall of `" + RECALLED_SKU + "` has to find",
                 probe.explainAnalyze("SELECT * FROM orders WHERE sku = '" + RECALLED_SKU + "'"));
-        report.addPlan("What Chunk A will issue instead (planned, not executed)",
+        report.addPlan("What the set-based recall issues instead (planned, not executed)",
                 probe.explainOnly("UPDATE orders SET status = 'CANCELLED' "
                         + "WHERE sku = '" + RECALLED_SKU + "' AND status <> 'CANCELLED'"));
     }

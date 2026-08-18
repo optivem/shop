@@ -6,10 +6,6 @@ import com.mycompany.myshop.backend.domain.values.CouponCode;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * The port to coupon storage. A plain interface — no Spring Data, no JPA. Implemented by
- * {@code infrastructure.persistence.adapters.CouponRepositoryAdapter}.
- */
 public interface CouponRepository {
 
     Coupon save(Coupon coupon);
@@ -17,4 +13,6 @@ public interface CouponRepository {
     Optional<Coupon> findByCode(CouponCode code);
 
     List<Coupon> findAll();
+
+    boolean tryRedeem(CouponCode code);
 }

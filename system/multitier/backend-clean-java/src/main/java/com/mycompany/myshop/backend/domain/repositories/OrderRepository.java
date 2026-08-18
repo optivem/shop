@@ -2,13 +2,10 @@ package com.mycompany.myshop.backend.domain.repositories;
 
 import com.mycompany.myshop.backend.domain.entities.Order;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * The port to order storage. A plain interface — no Spring Data, no JPA. Implemented by
- * {@code infrastructure.persistence.adapters.OrderRepositoryAdapter}.
- */
 public interface OrderRepository {
 
     Order save(Order order);
@@ -18,4 +15,8 @@ public interface OrderRepository {
     List<Order> findAllByOrderByOrderTimestampDesc();
 
     List<Order> findByOrderNumberContainingIgnoreCaseOrderByOrderTimestampDesc(String orderNumber);
+
+    int cancelOutstandingForSku(String sku);
+
+    int deliverPlacedOlderThan(Instant cutoff);
 }

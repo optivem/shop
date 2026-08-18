@@ -6,13 +6,11 @@ import com.mycompany.myshop.backend.domain.values.CouponCode;
 import com.mycompany.myshop.backend.infrastructure.persistence.mappers.CouponMapper;
 import com.mycompany.myshop.backend.infrastructure.persistence.repositories.CouponJpaRepository;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Implements the domain's {@link CouponRepository} port with Spring Data JPA.
- */
 @Component
 public class CouponRepositoryAdapter implements CouponRepository {
 
@@ -22,7 +20,6 @@ public class CouponRepositoryAdapter implements CouponRepository {
         this.jpaRepository = jpaRepository;
     }
 
-    /** Resolves the row's generated key from the coupon's {@code code} — see {@link OrderRepositoryAdapter#save}. */
     @Override
     public Coupon save(Coupon coupon) {
         var entity = CouponMapper.toEntity(coupon);
@@ -41,5 +38,11 @@ public class CouponRepositoryAdapter implements CouponRepository {
         return jpaRepository.findAll().stream()
                 .map(CouponMapper::toDomain)
                 .toList();
+    }
+
+    @Transactional
+    @Override
+    public boolean tryRedeem(CouponCode code) {
+        return jpaRepository.redeemIfAvailable(code.value()) == 1;
     }
 }

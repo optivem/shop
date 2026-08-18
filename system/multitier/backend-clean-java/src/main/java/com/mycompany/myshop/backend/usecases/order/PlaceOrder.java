@@ -2,33 +2,27 @@ package com.mycompany.myshop.backend.usecases.order;
 
 import com.mycompany.myshop.backend.domain.entities.Coupon;
 import com.mycompany.myshop.backend.domain.entities.Order;
-import com.mycompany.myshop.backend.domain.entities.OrderStatus;
 import com.mycompany.myshop.backend.domain.exceptions.ValidationException;
 import com.mycompany.myshop.backend.domain.gateways.ClockGateway;
 import com.mycompany.myshop.backend.domain.gateways.ErpGateway;
 import com.mycompany.myshop.backend.domain.gateways.TaxGateway;
-import com.mycompany.myshop.backend.domain.policies.YearEndBlackoutPolicy;
-import com.mycompany.myshop.backend.domain.pricing.OrderPricing;
 import com.mycompany.myshop.backend.domain.repositories.CouponRepository;
 import com.mycompany.myshop.backend.domain.repositories.OrderRepository;
+import com.mycompany.myshop.backend.domain.services.YearEndBlackoutPolicy;
 import com.mycompany.myshop.backend.domain.values.Country;
 import com.mycompany.myshop.backend.domain.values.CouponCode;
 import com.mycompany.myshop.backend.domain.values.Money;
+import com.mycompany.myshop.backend.domain.values.OrderPricing;
+import com.mycompany.myshop.backend.domain.values.OrderStatus;
 import com.mycompany.myshop.backend.domain.values.Rate;
 import com.mycompany.myshop.backend.usecases.Result;
+import com.mycompany.myshop.backend.usecases.TransactionRunner;
 import com.mycompany.myshop.backend.usecases.UseCase;
 import com.mycompany.myshop.backend.usecases.UseCaseError;
 
 import java.util.Optional;
 import java.util.UUID;
 
-/**
- * Places an order: prices it, records it, and redeems the coupon it was placed with.
- *
- * <p>Orchestration only. When the order may be placed is {@code YearEndBlackoutPolicy}'s decision,
- * what it costs is {@code OrderPricing}'s, and whether the coupon may be used is the coupon's — this
- * class fetches, sequences and saves.
- */
 public class PlaceOrder implements UseCase<PlaceOrderRequest, PlaceOrderResponse> {
 
     private static final String MSG_COUPON_DOES_NOT_EXIST = "Coupon code %s does not exist";
@@ -38,27 +32,23 @@ public class PlaceOrder implements UseCase<PlaceOrderRequest, PlaceOrderResponse
     private final ErpGateway erpGateway;
     private final TaxGateway taxGateway;
     private final ClockGateway clockGateway;
+    private final TransactionRunner transactionRunner;
 
     public PlaceOrder(OrderRepository orderRepository, CouponRepository couponRepository,
-                      ErpGateway erpGateway, TaxGateway taxGateway, ClockGateway clockGateway) {
+                      ErpGateway erpGateway, TaxGateway taxGateway, ClockGateway clockGateway,
+                      TransactionRunner transactionRunner) {
         this.orderRepository = orderRepository;
         this.couponRepository = couponRepository;
         this.erpGateway = erpGateway;
         this.taxGateway = taxGateway;
         this.clockGateway = clockGateway;
+        this.transactionRunner = transactionRunner;
     }
 
-    /**
-     * The seam. Placement has six ways to be refused — blackout window, unknown SKU, unknown coupon,
-     * coupon not yet valid, expired, or used up — and five of them are the domain's own judgement,
-     * raised from inside {@code Coupon} and {@code YearEndBlackoutPolicy}. Translating once here
-     * keeps {@link #place} in the order the pricing depends on; returning each refusal inline would
-     * mean re-deriving that order, and the order is what decides which refusal a caller sees first.
-     */
     @Override
     public Result<PlaceOrderResponse, UseCaseError> execute(PlaceOrderRequest request) {
         try {
-            return Result.ok(place(request));
+            return Result.ok(transactionRunner.inTransaction(() -> place(request)));
         } catch (ValidationException e) {
             return Result.err(UseCaseError.from(e));
         }
@@ -89,23 +79,23 @@ public class PlaceOrder implements UseCase<PlaceOrderRequest, PlaceOrderResponse
                 pricing, OrderStatus.PLACED, appliedCouponCode);
 
         orderRepository.save(order);
-
-        if (appliedCouponCode != null) {
-            coupon.ifPresent(redeemed -> {
-                redeemed.redeem();
-                couponRepository.save(redeemed);
-            });
-        }
+        redeem(appliedCouponCode);
 
         var response = new PlaceOrderResponse();
         response.setOrderNumber(orderNumber);
         return response;
     }
 
-    /**
-     * Empty when no coupon was asked for; a coupon that exists otherwise. Whether one was asked for
-     * is {@link CouponCode#requested} 's decision, made before this is called.
-     */
+    private void redeem(CouponCode appliedCouponCode) {
+        if (appliedCouponCode == null) {
+            return;
+        }
+        if (!couponRepository.tryRedeem(appliedCouponCode)) {
+            // Rolls the order back with it: that is what the transaction boundary is for.
+            throw Coupon.usageLimitReached(appliedCouponCode);
+        }
+    }
+
     private Optional<Coupon> findCoupon(Optional<CouponCode> couponCode) {
         if (couponCode.isEmpty()) {
             return Optional.empty();

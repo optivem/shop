@@ -7,18 +7,8 @@ import com.mycompany.myshop.backend.domain.values.Rate;
 import com.mycompany.myshop.backend.domain.values.UsageQuota;
 import com.mycompany.myshop.backend.domain.values.ValidityPeriod;
 
-import java.math.BigDecimal;
 import java.time.Instant;
 
-/**
- * A coupon. A plain object: no ORM annotations, no Spring, no Lombok — the persisted shape lives in
- * {@code infrastructure.persistence.entities.CouponJpaEntity}.
- *
- * <p>It decides for itself whether it can be redeemed. {@link #discountAt(Instant)} asks its
- * {@link ValidityPeriod} and its {@link UsageQuota} — the four {@code if} branches that used to be in
- * the coupon service, and then the four nullable fields that used to be here — and {@link #redeem()}
- * is the only way the used count moves.
- */
 public class Coupon {
 
     private static final String MSG_COUPON_NOT_YET_VALID = "Coupon code %s is not yet valid";
@@ -37,8 +27,7 @@ public class Coupon {
         Guard.notNull(quota, "quota");
         // A coupon's own rule, not a general one about rates: a tax rate of zero is legal, a coupon
         // that discounts nothing is not.
-        if (discountRate.value().compareTo(BigDecimal.ZERO) <= 0
-                || discountRate.value().compareTo(BigDecimal.ONE) > 0) {
+        if (!discountRate.isPositive() || discountRate.isGreaterThan(Rate.ONE)) {
             throw new IllegalArgumentException("discountRate must be greater than 0 and at most 1");
         }
 
@@ -48,12 +37,6 @@ public class Coupon {
         this.quota = quota;
     }
 
-    /**
-     * The discount this coupon grants at {@code at}.
-     *
-     * @throws ValidationException when the coupon is not yet valid, has expired, or has been used
-     *                             as often as it may be.
-     */
     public Rate discountAt(Instant at) {
         if (validity.notYetValidAt(at)) {
             throw reject(MSG_COUPON_NOT_YET_VALID);
@@ -62,13 +45,22 @@ public class Coupon {
             throw reject(MSG_COUPON_EXPIRED);
         }
         if (quota.exhausted()) {
-            throw reject(MSG_COUPON_USAGE_LIMIT_REACHED);
+            throw usageLimitReached(code);
         }
 
         return discountRate;
     }
 
-    /** Records one use of this coupon. */
+    // Static and public because the usage-limit rule is checked twice on purpose: here in memory on
+    // the read path, so discountAt fails fast with a good message before anything is priced, and again
+    // in storage as the WHERE clause of a conditional update (CouponRepository#tryRedeem), because
+    // between the read and the write another request can take the last unit. The database is
+    // authoritative, memory is the fast path — two checks, one wording.
+    public static ValidationException usageLimitReached(CouponCode code) {
+        return new ValidationException(CouponCode.FIELD_NAME,
+                String.format(MSG_COUPON_USAGE_LIMIT_REACHED, code));
+    }
+
     public void redeem() {
         quota = quota.recordUse();
     }
@@ -77,7 +69,6 @@ public class Coupon {
         return new ValidationException(CouponCode.FIELD_NAME, String.format(messageFormat, code));
     }
 
-    /** This coupon's identity. The surrogate key the table happens to use stays in persistence. */
     public CouponCode getCode() {
         return code;
     }

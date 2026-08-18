@@ -1,5 +1,7 @@
 # 2026-08-18 11:36 UTC — theme 2: the database is barred from the work it does best (`backend-clean-java`)
 
+> 🤖 **Picked up by agent** — `Valentina_Desk` at `2026-08-18T13:59:58Z`
+
 **Scope: `system/multitier/backend-clean-java` only.** No other backend, no frontend, no legacy
 project, no other plan. A short list of files falls outside the backend directory by necessity and
 nothing else does: the demo seed script and its README under `system/db/seed/` and the additive index
@@ -30,14 +32,16 @@ That is the spine of every item below: **keep the port, change what it says.**
 
 ## What the database does best, and where this codebase forbids it
 
+The three rows Chunk A answered are struck through; the rest are still the before-picture.
+
 | The database is good at | `backend-clean-java` does it | Where |
 |---|---|---|
-| Set-based writes (`UPDATE … WHERE`) | Nothing bulk exists; any multi-row write would be N round trips | no call site yet — Chunk A creates the honest one |
-| Atomic read-modify-write | In memory, and **it is a lost update** | `PlaceOrder:96-99` + `UsageQuota.recordUse()` |
+| ~~Set-based writes (`UPDATE … WHERE`)~~ | **Done (A1, A2).** `RecallSku` and `SweepDeliveries` over `OrderRepository.cancelOutstandingForSku` / `deliverPlacedOlderThan` | `usecases/order/`, `POST /api/admin/*` |
+| ~~Atomic read-modify-write~~ | **Done (A3, A4).** One conditional `UPDATE`; the lost update is pinned by `CouponRedemptionConcurrencyIntegrationTest` | `CouponRepository.tryRedeem` |
 | Aggregation and joins | No report exists; written naively it is `findAll()` + Java streams | Chunk B creates it |
 | Filtering, sorting, limiting | Partly pushed down; **unbounded** and fully hydrated | `BrowseCoupons`, `BrowseOrderHistory` |
 | Projecting only the columns asked for | **Never** — every read builds the full domain model, then unwraps it | `BrowseCoupons`, `BrowseOrderHistory`, `ViewOrderDetails` — Chunk R |
-| Enforcing invariants transactionally | **No `@Transactional` anywhere in `src/main`** | verified by grep, zero hits |
+| ~~Enforcing invariants transactionally~~ | **Done (A5).** The order and its redemption are one unit, declared by a port rather than an annotation | `usecases/TransactionRunner` |
 
 ## TL;DR
 
@@ -125,60 +129,25 @@ newest-first ordering, but they matter if the ordering is ever changed.
 
 ## ▶ Next executable step (resume here)
 
-**Chunk A — set-based writes (the headline).** Chunk 0 is done: `system/db/seed/demo-volume.sql`
-exists, `./gradlew benchmark` in `backend-clean-java` re-takes the numbers the same way every time,
-and the before-slide is written up in `docs/atdd/code/theme2-measurements.md`. So there is now a
-baseline to beat, and everything below can be measured rather than asserted.
+**Chunk R — light CQRS: the read path stops going through the domain.** Chunks 0 and A are done.
+`system/db/seed/demo-volume.sql` and `./gradlew benchmark` give a repeatable baseline, and
+`src/main` now carries all five set-based demonstrations: `RecallSku` and `SweepDeliveries` over
+`OrderRepository.cancelOutstandingForSku` / `deliverPlacedOlderThan`, the conditional
+`CouponRepository.tryRedeem` that replaced the lost update at `PlaceOrder`, the `TransactionRunner`
+port that makes the order and its redemption one unit, and `AdminController`. The lost update is
+pinned by `CouponRedemptionConcurrencyIntegrationTest`, whose first test keeps the before-picture
+green forever.
 
-Concretely, and in this order: write **A4** first (the concurrency test that fails today) so the lost
-update is real before A3 fixes it; then **A1** (`RecallSku` + `cancelOutstandingForSku` on
-`OrderRepository`), **A2** (the delivery sweep), **A3** (`tryRedeem`), **A5** (the `TransactionRunner`
-port), **A6** (the two admin endpoints; its index folds into C4's single migration, which is *not*
-written in this chunk). Then re-run `./gradlew benchmark` and append the after-table to
-`docs/atdd/code/theme2-measurements.md` — the harness already prints the recall's before-numbers
-(9,093 ms, 6,001 JDBC statements to change 2,000 rows) for A1 to be compared against.
+Concretely, and in this order: **R1** (the two `usecases/queries/` ports plus their `Jpa*Query`
+adapters), then **R4** (`ViewOrderDetails` — demo it first, it is the sharpest), **R2**
+(`BrowseCoupons`), **R3** (`BrowseOrderHistory`), then **R5** (delete
+`CouponRepository.findAll()` and `OrderRepository:18,20`, keep `findByOrderNumber`, and switch
+`CouponRepositoryIntegrationTest:90` to `findByCode`), **R6** (the
+`READ_USECASES_DO_NOT_TOUCH_THE_DOMAIN` ArchUnit rule), and **R7** (re-run `./gradlew benchmark`
+and append the numbers). Note R5 also has to drop the two `findAll`-shaped reads from
+`Theme2Baseline`'s in-memory aggregation, which is written against them today.
 
-Then Chunks R → B → C, one per `/clear`-ed session. All independent except item C2, which depends on
-Chunk R; the order is by how directly each answers the thesis.
-
-## Chunk A — set-based writes (the headline)
-
-- [ ] **A1. Bulk SKU recall.** The ERP reports a product withdrawn, so every outstanding order for
-      that SKU is cancelled. New `usecases/order/RecallSku`; port method
-      `int cancelOutstandingForSku(String sku)` on `OrderRepository` — **an intent, not a mechanism**.
-      Adapter implements it as one `UPDATE orders SET status = 'CANCELLED' WHERE sku = :sku AND
-      status <> 'CANCELLED'` returning rows-affected, against the in-memory alternative of 1 + N
-      selects and N updates.
-      **Write the trade-off into the class javadoc.** `Order.cancel()` (`Order.java:58`) owns the rule
-      *"cancellable from any status but cancelled"*, and the set-based write restates that invariant
-      as its `WHERE` clause instead of routing through the entity. What is lost (per-entity domain
-      events, the rule stated once) and what is bought (atomicity, one round trip) is the discussion —
-      it belongs where the next reader trips over it, not only in the talk.
-- [ ] **A2. Nightly delivery sweep.** The second flavour of set-based write, near-free once A1 lands:
-      mark every `PLACED` order older than N days `DELIVERED`. `Order.deliver()` (`Order.java:50`)
-      already says *"only from PLACED"*, which maps to `WHERE status = 'PLACED'` exactly. This is the
-      batch case where N round trips genuinely hurt, and the mapping from entity rule to `WHERE`
-      clause is cleaner than A1's — worth showing both.
-- [ ] **A3. Atomic coupon redemption.** The sharpest item, because the in-memory version is not merely
-      slow, it is **wrong**. Replace the read-modify-write at `PlaceOrder:96-99` with a conditional
-      update: `boolean tryRedeem(CouponCode)` on the port, implemented as
-      `UPDATE coupons SET used_count = used_count + 1 WHERE code = :code AND (usage_limit IS NULL OR
-      used_count < usage_limit)` with a rows-affected check. `false` means the coupon was exhausted
-      concurrently and becomes a `UseCaseError`.
-      **Surface the tension rather than resolving it away:** `UsageQuota.exhausted()` stays, because
-      `Coupon.discountAt` uses it to fail fast with a good message on the read path. The rule now
-      lives in two places *on purpose* — the database is authoritative, memory is the fast path.
-      Saying which is which, out loud, is the answer to "application layer or database?"
-- [ ] **A4. A concurrency test that fails today.** Two threads redeeming the last unit of one coupon;
-      assert exactly one succeeds. Write it before A3 and watch it fail — that is what makes the lost
-      update real rather than theoretical.
-- [ ] **A5. Transaction boundary.** `PlaceOrder` writes the order and the redemption as two unrelated
-      statements; if the second fails the order exists un-redeemed. Use the decided `TransactionRunner`
-      port, because `USECASES_ARE_FRAMEWORK_FREE_EXCEPT_JAKARTA_VALIDATION` forbids annotating the
-      use case, and a transaction is precisely an infrastructure mechanism the use case must control.
-- [ ] **A6. Endpoints + index.** `POST /api/admin/recall/{sku}` and
-      `POST /api/admin/orders/sweep-deliveries`, per the decided HTTP surface. Index `idx_orders_sku_status ON orders (sku, status)` folded
-      into the single migration (item C4).
+Then Chunks B → C, one per `/clear`-ed session. C2 depends on Chunk R; nothing else is ordered.
 
 ## Chunk R — light CQRS: the read path stops going through the domain
 

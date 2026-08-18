@@ -11,26 +11,22 @@ import com.mycompany.myshop.backend.usecases.order.BrowseOrderHistory;
 import com.mycompany.myshop.backend.usecases.order.CancelOrder;
 import com.mycompany.myshop.backend.usecases.order.DeliverOrder;
 import com.mycompany.myshop.backend.usecases.order.PlaceOrder;
+import com.mycompany.myshop.backend.usecases.order.RecallSku;
+import com.mycompany.myshop.backend.usecases.order.SweepDeliveries;
 import com.mycompany.myshop.backend.usecases.order.ViewOrderDetails;
+import com.mycompany.myshop.backend.usecases.TransactionRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/**
- * Wires the use cases. They are plain classes with constructors — Spring finds them here rather than
- * by scanning for a {@code @Service} annotation on them, which is what keeps the container out of
- * the inside: the use case layer does not know it is being wired, and its tests construct it with
- * {@code new}.
- *
- * <p>The cost is this file. The benefit is that the dependency arrow points the right way, and
- * {@code ArchitectureTest} can say so unconditionally.
- */
 @Configuration
 public class UseCaseConfig {
 
     @Bean
     PlaceOrder placeOrder(OrderRepository orderRepository, CouponRepository couponRepository,
-                          ErpGateway erpGateway, TaxGateway taxGateway, ClockGateway clockGateway) {
-        return new PlaceOrder(orderRepository, couponRepository, erpGateway, taxGateway, clockGateway);
+                          ErpGateway erpGateway, TaxGateway taxGateway, ClockGateway clockGateway,
+                          TransactionRunner transactionRunner) {
+        return new PlaceOrder(orderRepository, couponRepository, erpGateway, taxGateway, clockGateway,
+                transactionRunner);
     }
 
     @Bean
@@ -51,6 +47,16 @@ public class UseCaseConfig {
     @Bean
     BrowseOrderHistory browseOrderHistory(OrderRepository orderRepository) {
         return new BrowseOrderHistory(orderRepository);
+    }
+
+    @Bean
+    RecallSku recallSku(OrderRepository orderRepository) {
+        return new RecallSku(orderRepository);
+    }
+
+    @Bean
+    SweepDeliveries sweepDeliveries(OrderRepository orderRepository, ClockGateway clockGateway) {
+        return new SweepDeliveries(orderRepository, clockGateway);
     }
 
     @Bean
