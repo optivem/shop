@@ -1,0 +1,30 @@
+# The clean-architecture Java backend, declared as what it actually is: a
+# component, not a system.
+#
+# Every other gh-optivem-*.yaml in this repo is `kind: system` — it describes a
+# whole SUT (architecture, tiers, system tests, channels, external systems).
+# This variant has none of that. Its commit-stage workflow runs `test`,
+# `componentTest`, `integrationTest`, `contractTest`, and `checkstyleAll` and
+# stops; there is no system tier, no compose stack, and no acceptance suite
+# driving it. `kind: component` is the honest config for that shape, and this
+# is its first real user.
+#
+# compile-all.sh picks it up through the existing `gh-optivem-!(*-legacy).yaml`
+# glob with no change to the script — which is the script's stated contract
+# ("drop a new yaml — no changes to this script").
+#
+# What applies here: `gh optivem compile`, `gh optivem component-test
+# compile/setup/run`, `gh optivem test`. What does not: the `system` and
+# `system-test` verbs, `init`, and `implement` — they need a system under test,
+# and they refuse this config by name rather than failing deep inside a runner.
+kind: component
+
+project:
+  provider: github
+  url: https://github.com/orgs/optivem/projects/20
+
+component:
+  name: backend-clean-java
+  path: system/multitier/backend-clean-java
+  repo: optivem/shop
+  lang: java
