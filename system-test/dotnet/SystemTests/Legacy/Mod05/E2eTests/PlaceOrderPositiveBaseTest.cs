@@ -1,7 +1,7 @@
 using Common;
 using Driver.Port.External.Erp.Dtos;
 using Driver.Port.Dtos;
-using DomainValueTypes;
+using Common.Domain;
 using SystemTests.Commons.Constants;
 using SystemTests.Legacy.Mod05.E2eTests.Base;
 using Shouldly;

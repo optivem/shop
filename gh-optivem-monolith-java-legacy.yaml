@@ -24,7 +24,7 @@ system-test:
         system-driver-adapter: system-test/java/src/main/java/com/mycompany/myshop/testkit/driver/adapter
         system-driver-adapter-shared: system-test/java/src/main/java/com/mycompany/myshop/testkit/driver/adapter/shared
         common: system-test/java/src/main/java/com/mycompany/myshop/testkit/common
-        domain-value-types: system-test/java/src/main/java/com/mycompany/myshop/testkit/domainvaluetypes
+        common-domain: system-test/java/src/main/java/com/mycompany/myshop/testkit/common/domain
         external-system-driver-port: system-test/java/src/main/java/com/mycompany/myshop/testkit/driver/port/external
         external-system-driver-adapter: system-test/java/src/main/java/com/mycompany/myshop/testkit/driver/adapter/external
         at-test: system-test/java/src/test/java/com/mycompany/myshop/systemtest/latest/acceptance

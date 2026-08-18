@@ -3,7 +3,7 @@ package com.mycompany.myshop.systemtest.legacy.mod04.e2e;
 import com.mycompany.myshop.systemtest.legacy.mod04.e2e.base.BaseE2eTest;
 import com.mycompany.myshop.testkit.driver.adapter.external.erp.client.dtos.ExtCreateProductRequest;
 import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.NewOrderPage;
-import com.mycompany.myshop.testkit.domainvaluetypes.OrderStatus;
+import com.mycompany.myshop.testkit.common.domain.OrderStatus;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;

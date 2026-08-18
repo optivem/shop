@@ -1,7 +1,7 @@
 package com.mycompany.myshop.testkit.dsl.core.usecase.usecases;
 
 import com.mycompany.myshop.testkit.driver.port.dtos.ViewOrderResponse;
-import com.mycompany.myshop.testkit.domainvaluetypes.OrderStatus;
+import com.mycompany.myshop.testkit.common.domain.OrderStatus;
 import com.mycompany.myshop.testkit.dsl.core.shared.ResponseVerification;
 import com.mycompany.myshop.testkit.dsl.core.shared.UseCaseContext;
 import com.mycompany.myshop.testkit.common.Converter;

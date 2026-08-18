@@ -52,7 +52,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Driver.Port", "Driver.Port\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dsl.Port", "Dsl.Port\Dsl.Port.csproj", "{84D339E5-F008-49CF-83DB-C3DF83AABDA7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DomainValueTypes", "DomainValueTypes\DomainValueTypes.csproj", "{6134CC62-E471-4989-8791-2C9A4A23FA50}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -184,18 +183,6 @@ Global
 		{84D339E5-F008-49CF-83DB-C3DF83AABDA7}.Release|x64.Build.0 = Release|Any CPU
 		{84D339E5-F008-49CF-83DB-C3DF83AABDA7}.Release|x86.ActiveCfg = Release|Any CPU
 		{84D339E5-F008-49CF-83DB-C3DF83AABDA7}.Release|x86.Build.0 = Release|Any CPU
-		{6134CC62-E471-4989-8791-2C9A4A23FA50}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6134CC62-E471-4989-8791-2C9A4A23FA50}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6134CC62-E471-4989-8791-2C9A4A23FA50}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{6134CC62-E471-4989-8791-2C9A4A23FA50}.Debug|x64.Build.0 = Debug|Any CPU
-		{6134CC62-E471-4989-8791-2C9A4A23FA50}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{6134CC62-E471-4989-8791-2C9A4A23FA50}.Debug|x86.Build.0 = Debug|Any CPU
-		{6134CC62-E471-4989-8791-2C9A4A23FA50}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6134CC62-E471-4989-8791-2C9A4A23FA50}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6134CC62-E471-4989-8791-2C9A4A23FA50}.Release|x64.ActiveCfg = Release|Any CPU
-		{6134CC62-E471-4989-8791-2C9A4A23FA50}.Release|x64.Build.0 = Release|Any CPU
-		{6134CC62-E471-4989-8791-2C9A4A23FA50}.Release|x86.ActiveCfg = Release|Any CPU
-		{6134CC62-E471-4989-8791-2C9A4A23FA50}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

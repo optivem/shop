@@ -1,4 +1,4 @@
-import { OrderStatus } from '../../../domainvaluetypes/OrderStatus.js';
+import { OrderStatus } from '../../../common/domain/OrderStatus.js';
 
 export const DEFAULTS = {
   SKU: 'DEFAULT-SKU',

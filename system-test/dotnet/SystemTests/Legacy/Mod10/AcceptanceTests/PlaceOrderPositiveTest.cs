@@ -1,7 +1,7 @@
 using SystemTests.Legacy.Mod10.AcceptanceTests.Base;
 using Dsl.Core.UseCase;
 using Driver.Port.Dtos;
-using DomainValueTypes;
+using Common.Domain;
 using Optivem.Testing;
 using Xunit;
 

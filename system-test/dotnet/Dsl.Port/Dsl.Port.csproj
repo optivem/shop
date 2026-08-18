@@ -10,7 +10,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Driver.Port\Driver.Port.csproj" />
-    <ProjectReference Include="..\DomainValueTypes\DomainValueTypes.csproj" />
+    <ProjectReference Include="..\Common\Common.csproj" />
     <Compile Remove="**\bin\**\*.cs" />
     <Compile Remove="**\obj\**\*.cs" />
   </ItemGroup>

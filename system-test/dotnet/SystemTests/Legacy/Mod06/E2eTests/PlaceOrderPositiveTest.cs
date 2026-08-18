@@ -1,7 +1,7 @@
 using Common;
 using Dsl.Core.UseCase;
 using Driver.Port.Dtos;
-using DomainValueTypes;
+using Common.Domain;
 using Driver.Port.External.Erp.Dtos;
 using SystemTests.Commons.Constants;
 using SystemTests.Legacy.Mod06.E2eTests.Base;

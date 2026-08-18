@@ -1,7 +1,7 @@
 package com.mycompany.myshop.systemtest.legacy.mod05.e2e;
 
 import com.mycompany.myshop.testkit.driver.port.external.erp.dtos.ReturnsProductRequest;
-import com.mycompany.myshop.testkit.domainvaluetypes.OrderStatus;
+import com.mycompany.myshop.testkit.common.domain.OrderStatus;
 import com.mycompany.myshop.testkit.driver.port.dtos.PlaceOrderRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.ViewOrderRequest;
 import com.mycompany.myshop.systemtest.legacy.mod05.e2e.base.BaseE2eTest;

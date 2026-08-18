@@ -1,6 +1,6 @@
 package com.mycompany.myshop.testkit.driver.port.dtos;
 
-import com.mycompany.myshop.testkit.domainvaluetypes.OrderStatus;
+import com.mycompany.myshop.testkit.common.domain.OrderStatus;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

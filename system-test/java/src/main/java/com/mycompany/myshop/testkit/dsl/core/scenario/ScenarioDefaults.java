@@ -1,6 +1,6 @@
 package com.mycompany.myshop.testkit.dsl.core.scenario;
 
-import com.mycompany.myshop.testkit.domainvaluetypes.OrderStatus;
+import com.mycompany.myshop.testkit.common.domain.OrderStatus;
 
 /**
  * Default values for Gherkin test steps.

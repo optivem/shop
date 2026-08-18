@@ -4,7 +4,7 @@ import com.mycompany.myshop.testkit.dsl.core.shared.ResponseVerification;
 import com.mycompany.myshop.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.ExecutionResultContext;
 import com.mycompany.myshop.testkit.dsl.port.then.steps.ThenOrder;
-import com.mycompany.myshop.testkit.domainvaluetypes.OrderStatus;
+import com.mycompany.myshop.testkit.common.domain.OrderStatus;
 import com.mycompany.myshop.testkit.dsl.core.usecase.usecases.PlaceOrderVerification;
 import com.mycompany.myshop.testkit.dsl.core.usecase.usecases.ViewOrderVerification;
 

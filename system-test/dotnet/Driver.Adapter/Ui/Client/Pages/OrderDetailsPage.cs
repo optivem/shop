@@ -1,6 +1,6 @@
 using Driver.Adapter.Shared.Client.Playwright;
 using Driver.Port.Dtos;
-using DomainValueTypes;
+using Common.Domain;
 
 namespace Driver.Adapter.Ui.Client.Pages;
 

@@ -34,7 +34,6 @@
     <ProjectReference Include="..\Dsl.Core\Dsl.Core.csproj" />
     <ProjectReference Include="..\Driver.Adapter\Driver.Adapter.csproj" />
     <ProjectReference Include="..\Common\Common.csproj" />
-    <ProjectReference Include="..\DomainValueTypes\DomainValueTypes.csproj" />
   </ItemGroup>
 
   <ItemGroup>

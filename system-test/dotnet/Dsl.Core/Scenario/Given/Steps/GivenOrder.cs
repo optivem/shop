@@ -2,7 +2,7 @@ using Common;
 using Dsl.Port.Given.Steps;
 using Dsl.Core.Scenario.Given;
 using Driver.Port.Dtos;
-using DomainValueTypes;
+using Common.Domain;
 using static Dsl.Core.Scenario.ScenarioDefaults;
 
 namespace Dsl.Core.Scenario.Given;

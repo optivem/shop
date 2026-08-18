@@ -1,7 +1,7 @@
 package com.mycompany.myshop.testkit.driver.adapter.ui.client.pages;
 
 import com.mycompany.myshop.testkit.common.Converter;
-import com.mycompany.myshop.testkit.domainvaluetypes.OrderStatus;
+import com.mycompany.myshop.testkit.common.domain.OrderStatus;
 import com.mycompany.myshop.testkit.driver.adapter.shared.client.playwright.PageClient;
 
 import java.math.BigDecimal;

@@ -1,4 +1,4 @@
-package com.mycompany.myshop.testkit.domainvaluetypes;
+package com.mycompany.myshop.testkit.common.domain;
 
 public enum OrderStatus {
     PLACED,

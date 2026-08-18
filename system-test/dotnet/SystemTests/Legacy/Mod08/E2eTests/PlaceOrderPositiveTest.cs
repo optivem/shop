@@ -1,6 +1,6 @@
 using Dsl.Core.UseCase;
 using Driver.Port.Dtos;
-using DomainValueTypes;
+using Common.Domain;
 using SystemTests.Legacy.Mod08.E2eTests.Base;
 using Optivem.Testing;
 using Xunit;

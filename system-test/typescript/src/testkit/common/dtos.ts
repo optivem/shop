@@ -5,7 +5,7 @@
 export type { PlaceOrderRequest } from '../driver/port/dtos/PlaceOrderRequest.js';
 export type { PlaceOrderResponse } from '../driver/port/dtos/PlaceOrderResponse.js';
 export type { ViewOrderResponse } from '../driver/port/dtos/ViewOrderResponse.js';
-export { OrderStatus } from '../domainvaluetypes/OrderStatus.js';
+export { OrderStatus } from './domain/OrderStatus.js';
 export type { PublishCouponRequest } from '../driver/port/dtos/PublishCouponRequest.js';
 export type { BrowseCouponItem, BrowseCouponsResponse } from '../driver/port/dtos/BrowseCouponsResponse.js';
 export type { SystemError, FieldError } from '../driver/port/dtos/errors/SystemError.js';
