@@ -57,6 +57,54 @@ The schema keeps its exact current shape; only indexes are added.
 - **Ports keep their abstraction.** No `Pageable`, no `EntityManager`, no SQL string in any port.
   Every item changes what a port *says*, never whether it exists.
 
+## Decisions — all open questions resolved 2026-08-18
+
+- **Transaction boundary → a `usecases/TransactionRunner` port** (`<T> T inTransaction(Supplier<T>)`)
+  over Spring's `TransactionTemplate`, injected by `UseCaseConfig`. Annotating the use case is banned
+  by `USECASES_ARE_FRAMEWORK_FREE_EXCEPT_JAKARTA_VALIDATION`; annotating the controller is the wrong
+  layer. A transaction is an infrastructure mechanism the use case must nonetheless control, which is
+  exactly what a port is for — and is itself course material.
+
+- **Read-side port → `usecases/queries/SalesReportQuery`**, implemented by
+  `infrastructure/persistence/queries/JpaSalesReportQuery`. Not `domain/repositories/`: putting it
+  there would assert the report *is* domain, which is the claim the demo refutes.
+  `USECASES_DEPEND_ONLY_INWARD` and `SPRING_DATA_IS_CONFINED_TO_INFRASTRUCTURE` both stay satisfied.
+
+- **HTTP surface → bulk endpoints and a report endpoint; no reports UI.**
+  `POST /api/admin/recall/{sku}`, `POST /api/admin/orders/sweep-deliveries`, `GET /api/reports/*`.
+  All demoable live and coverable by API-channel system tests. A React reports page adds front-end
+  work and nothing architectural. Pagination still touches the existing coupon and order tables for
+  "Load more".
+
+- **List ordering under pagination → orders newest-first; coupons `ORDER BY id DESC` in the adapter.**
+  Default page size 50, `size` + `cursor` query params, "Load more" on the React tables.
+
+### Why the ordering decision is what makes the suite safe
+
+The original worry — "is a default of 50 big enough?" — was the wrong question. `BrowseCouponsVerification.FindCouponByCode`
+(`system-test/dotnet/Dsl.Core/UseCase/UseCases/BrowseCouponsVerification.cs:58-70`) does
+`Response.Coupons.FirstOrDefault(c => c.Code == couponCode)` — it searches **only the returned
+list**, which under pagination is page 1. So the real question is *"is the coupon under test on page
+one?"*, and the answer must hold no matter how many rows have accumulated.
+
+- **Orders**: sort `order_timestamp DESC, order_number DESC`. Each test's own order is the newest, so
+  it is always on page 1. Safe by construction, and it is the ordering the endpoint should have
+  anyway.
+- **Coupons**: the table has **no timestamp column** (`id, code, discount_rate, valid_from, valid_to,
+  usage_limit, used_count`), so "newest" has to come from the surrogate `id`. `ORDER BY id DESC`
+  **inside the adapter** gives newest-published-first; the `id` never leaves `infrastructure`, so the
+  domain rule (no `Long id` in domain entities) still holds. The keyset cursor is `code`, which is
+  `UNIQUE` and domain-visible, so no tiebreaker is needed.
+  Rejected: `ORDER BY code` — architecturally cleaner as a keyset key, but it puts each test's coupon
+  at an arbitrary page and forces the .NET DSL and the UI page-object to page until found. Rejected:
+  adding `created_at` — it would break this plan's no-schema-change promise.
+
+Also found while checking: the TypeScript `ThenBrowseCoupons` assertions are effectively no-ops
+(`errorMessage`/`fieldErrorMessage` just `return this`), so only the .NET DSL and the UI channel
+actually assert on list contents. And no database truncation is visible between tests anywhere under
+`system-test/{typescript/src,dotnet,java}` — rows accumulate across a run. Both facts are moot given
+newest-first ordering, but they matter if the ordering is ever changed.
+
 ## ▶ Next executable step (resume here)
 
 **Chunk 0 — the measurement harness.** It comes first on purpose: the claim is *"the system pays for
@@ -113,15 +161,16 @@ is by how directly each answers the thesis.
       assert exactly one succeeds. Write it before A3 and watch it fail — that is what makes the lost
       update real rather than theoretical.
 - [ ] **A5. Transaction boundary.** `PlaceOrder` writes the order and the redemption as two unrelated
-      statements; if the second fails the order exists un-redeemed. See Q1 — a `TransactionRunner`
+      statements; if the second fails the order exists un-redeemed. Use the decided `TransactionRunner`
       port, because `USECASES_ARE_FRAMEWORK_FREE_EXCEPT_JAKARTA_VALIDATION` forbids annotating the
       use case, and a transaction is precisely an infrastructure mechanism the use case must control.
-- [ ] **A6. Endpoints + index.** Per Q2. Index `idx_orders_sku_status ON orders (sku, status)` folded
+- [ ] **A6. Endpoints + index.** `POST /api/admin/recall/{sku}` and
+      `POST /api/admin/orders/sweep-deliveries`, per the decided HTTP surface. Index `idx_orders_sku_status ON orders (sku, status)` folded
       into the single migration (item C4).
 
 ## Chunk B — aggregation and joins (a read model with no domain entity)
 
-- [ ] **B1. The read-side port.** Per Q3: `usecases/queries/SalesReportQuery`, implemented by
+- [ ] **B1. The read-side port.** `usecases/queries/SalesReportQuery`, implemented by
       `infrastructure/persistence/queries/JpaSalesReportQuery`. Flat records —
       `RevenueByCountryMonth`, `TopSkuByRevenue`, `CouponEffectiveness` — `BigDecimal` money fields,
       **no value objects and no `Guard`**. State that absence in the javadoc: these are projections,
@@ -175,38 +224,8 @@ is by how directly each answers the thesis.
       is a good aside in its own right.
 - [ ] **C5. Thread paging through use cases, DTOs, controllers, frontend.** Requests gain size +
       cursor; responses gain `nextCursor` + `hasMore`. The wire cursor is an opaque base64 token
-      encoded in `presentation`; the domain carries the typed `OrderCursor`. Frontend per Q4.
-
-## Open questions
-
-- [ ] **Q1. Transaction boundary shape.** **Recommendation: a `usecases/TransactionRunner` port**
-      (`<T> T inTransaction(Supplier<T>)`) over Spring's `TransactionTemplate`, injected by
-      `UseCaseConfig`. The alternatives — annotating the use case (banned by ArchUnit) or the
-      controller (wrong layer) — are both worse.
-- [ ] **Q2. Do the bulk operations get HTTP endpoints, or are they ops/scheduled tasks?**
-      **Recommendation: endpoints.** `POST /api/admin/recall/{sku}` and
-      `POST /api/admin/orders/sweep-deliveries`. Demoable live, testable by the system-test suite, and
-      a scheduler can be added later without changing the use case.
-- [ ] **Q3. Where does the read-side port live?** **Recommendation: `usecases/queries/`.** The report
-      is deliberately not a domain repository — putting it in `domain/repositories/` would assert it
-      *is* domain, which is the claim the demo refutes. `USECASES_DEPEND_ONLY_INWARD` and
-      `SPRING_DATA_IS_CONFINED_TO_INFRASTRUCTURE` both stay satisfied.
-- [ ] **Q4. Pagination default page size, and does the React table get "Load more"?**
-      **Recommendation: default 50, `size` + `cursor` params, "Load more" on the tables.**
-      Partially verified 2026-08-18, with one caveat to close first:
-      - Per test the counts are small — the busiest spec (`place-order-positive-test.spec.ts`) has 28
-        `placeOrder()` mentions across *all* its tests combined.
-      - **But no database truncation is visible between tests** — no `TRUNCATE`/reset helper anywhere
-        under `system-test/{typescript/src,dotnet,java}` outside build artifacts — so rows accumulate
-        across a full run and 50 could be exceeded by the end of one.
-      - Whether that breaks anything is still unknown: there is no `browseOrderHistory` call in
-        `system-test/typescript/tests/latest/acceptance` at all, so order history may only be
-        exercised through the UI channel.
-      **Close it by checking how the order-history and coupon-list assertions select rows.** If they
-      assert on a specific order number, cumulative growth is harmless. If any asserts "the list has
-      exactly N", pagination breaks it regardless of the default.
-- [ ] **Q5. Does the sales report get a UI page?** **Recommendation: API-only**, covered by a system
-      test on the API channel. A reports page adds front-end work and nothing architectural.
+      encoded in `presentation`; the domain carries the typed `OrderCursor`. Default page size 50, and
+      "Load more" on the React coupon and order tables.
 
 ## Cross-language gate
 
