@@ -1,7 +1,11 @@
 # 2026-08-18 11:36 UTC — theme 2: the database is barred from the work it does best (`backend-clean-java`)
 
-**Scope: `system/multitier/backend-clean-java` only.** Nothing in this plan touches another project,
-another plan, or the legacy backends.
+**Scope: `system/multitier/backend-clean-java` only.** No other backend, no frontend, no legacy
+project, no other plan. Three files fall outside the backend directory by necessity and nothing else
+does: the additive index migration (C4) and the demo seed script (0.1), both of which must live in the
+shared `system/db/` tree the Flyway sidecar owns, and `docs/atdd/code/language-equivalents.md`, where
+the cross-language gate records decisions for the clean .NET and TypeScript backends that do not exist
+yet. None of the three changes behaviour in another project.
 
 ## The thesis
 
@@ -53,6 +57,10 @@ The schema keeps its exact current shape; only indexes are added.
   indexes).
 - **`V20260514085249__init.sql` is never edited.** Flyway checksums applied migrations; editing it
   breaks every existing database. Indexes land in one new additive file.
+- **No frontend change, ever.** `system/multitier/frontend-react` is a single shared project — every
+  `gh-optivem-multitier-*.yaml` (java, dotnet, typescript × latest, legacy) points at the same path,
+  and none of them points at `backend-clean-java`. Touching it would change a component owned by six
+  other SUTs to consume a wire shape only this backend returns. Paging is demonstrated over the API.
 - **Clean variant only.** The legacy backends and monoliths are the frozen before-picture. The
   "before" is shown live as a git diff during the talk, not built twice.
 - **Ports keep their abstraction.** No `Pageable`, no `EntityManager`, no SQL string in any port.
@@ -77,14 +85,14 @@ The schema keeps its exact current shape; only indexes are added.
   `domain/repositories/` claims the domain needs it, and the domain never calls this one. Checked: no
   existing ArchUnit rule pins a port to the domain package.
 
-- **HTTP surface → bulk endpoints and a report endpoint; no reports UI.**
+- **HTTP surface → bulk endpoints and a report endpoint; no UI of any kind.**
   `POST /api/admin/recall/{sku}`, `POST /api/admin/orders/sweep-deliveries`, `GET /api/reports/*`.
-  All demoable live and coverable by API-channel system tests. A React reports page adds front-end
-  work and nothing architectural. Pagination still touches the existing coupon and order tables for
-  "Load more".
+  All demoable live and coverable by API-channel system tests. Nothing here adds front-end work: the
+  demonstrations are architectural and the API is the whole surface.
 
 - **List ordering under pagination → orders newest-first; coupons `ORDER BY id DESC` in the adapter.**
-  Default page size 50, `size` + `cursor` query params, "Load more" on the React tables.
+  Default page size 50, `size` + `cursor` query params. Paging stops at the API boundary — no consumer
+  of it is built.
 
 ### Why the ordering decision is what makes the suite safe
 
@@ -295,10 +303,10 @@ the rules that wrote it.
       and the partial `idx_orders_applied_coupon (applied_coupon_code) WHERE applied_coupon_code IS NOT NULL`
       — most orders carry no coupon, so indexing only the rows that do is both smaller and faster, and
       is a good aside in its own right.
-- [ ] **C5. Thread paging through use cases, DTOs, controllers, frontend.** Requests gain size +
-      cursor; responses gain `nextCursor` + `hasMore`. The wire cursor is an opaque base64 token
-      encoded in `presentation`; the domain carries the typed `OrderCursor`. Default page size 50, and
-      "Load more" on the React coupon and order tables.
+- [ ] **C5. Thread paging through use cases, DTOs, controllers.** Requests gain size + cursor;
+      responses gain `nextCursor` + `hasMore`. The wire cursor is an opaque base64 token encoded in
+      `presentation`; the domain carries the typed `OrderCursor`. Default page size 50. The chain
+      stops at the controller — no frontend change.
 
 ## Cross-language gate
 

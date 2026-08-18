@@ -1,5 +1,6 @@
 package com.mycompany.myshop.backend.presentation.exception;
 
+import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,7 +19,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 /**
  * Framework-level failures only: a body Jackson cannot read, a bean-validation rejection, and the
@@ -30,10 +30,6 @@ import java.util.regex.Pattern;
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
-
-    // Must track wherever the request DTOs live: Jackson names the target class in its parse-failure
-    // message, and this is how a type mismatch is turned back into a 422 field error.
-    private static final Pattern CLASS_NAME_PATTERN = Pattern.compile("(com\\.mycompany\\.myshop\\.backend\\.usecases\\.dtos\\.[^\\[\\]\"\\s\\)]+)");
 
     private static final String VALIDATION_DETAIL = "The request contains one or more validation errors";
     private static final String VALIDATION_TITLE = "Validation Error";
@@ -87,16 +83,9 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                                                                    org.springframework.web.context.request.WebRequest request) {
         log.error("HttpMessageNotReadableException: {}", ex.getMessage(), ex);
 
-        var problemDetail = tryParseFieldError(ex.getMessage());
+        var problemDetail = tryBuildTypeMismatchError(ex);
         if (problemDetail != null) {
             return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body((Object) problemDetail);
-        }
-
-        if (ex.getCause() != null) {
-            problemDetail = tryParseFieldError(ex.getCause().getMessage());
-            if (problemDetail != null) {
-                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body((Object) problemDetail);
-            }
         }
 
         problemDetail = ProblemDetail.forStatusAndDetail(
@@ -110,58 +99,78 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body((Object) problemDetail);
     }
 
-    private ProblemDetail tryParseFieldError(String message) {
-        if (message == null) {
+    /**
+     * A value Jackson could not coerce into the property type is a validation failure about a field
+     * we know, not an unreadable body. Both the target class and the property name are read off the
+     * exception path itself — no package name is written down here, so moving a request DTO cannot
+     * silently disarm this. Returns null when the mismatch cannot be tied to a field carrying
+     * {@link com.mycompany.myshop.backend.usecases.TypeValidationMessage}, leaving the 400
+     * unreadable-body branch to answer.
+     */
+    private ProblemDetail tryBuildTypeMismatchError(Throwable ex) {
+        var mismatch = findMismatchedInput(ex);
+        if (mismatch == null) {
             return null;
         }
 
-        var dtoClass = extractDtoClass(message);
-        if (dtoClass == null) {
+        var path = mismatch.getPath();
+        if (path == null || path.isEmpty()) {
             return null;
         }
 
-        var fieldErrorPatterns = TypeValidationMessageExtractor.extractFieldMessages(dtoClass);
-        var lowerMessage = message.toLowerCase();
+        var reference = path.get(path.size() - 1);
+        var fieldName = reference.getFieldName();
+        var owner = resolveOwnerClass(reference.getFrom());
+        if (fieldName == null || owner == null) {
+            return null;
+        }
 
-        return fieldErrorPatterns.entrySet().stream()
-                .filter(entry -> lowerMessage.contains(entry.getKey()))
-                .findFirst()
-                .map(entry -> {
-                    var fieldName = entry.getKey();
-                    var fieldMessage = entry.getValue();
+        var fieldMessage = TypeValidationMessageExtractor.extractFieldMessages(owner)
+                .get(fieldName.toLowerCase());
+        if (fieldMessage == null) {
+            return null;
+        }
 
-                    var pd = ProblemDetail.forStatusAndDetail(
-                            HttpStatus.UNPROCESSABLE_ENTITY,
-                            VALIDATION_DETAIL
-                    );
-                    pd.setType(URI.create(validationErrorTypeUri));
-                    pd.setTitle(VALIDATION_TITLE);
-                    pd.setProperty(PROP_TIMESTAMP, Instant.now());
+        var problemDetail = ProblemDetail.forStatusAndDetail(
+                HttpStatus.UNPROCESSABLE_ENTITY,
+                VALIDATION_DETAIL
+        );
+        problemDetail.setType(URI.create(validationErrorTypeUri));
+        problemDetail.setTitle(VALIDATION_TITLE);
+        problemDetail.setProperty(PROP_TIMESTAMP, Instant.now());
 
-                    var errors = new ArrayList<Map<String, Object>>();
-                    var errorDetail = new HashMap<String, Object>();
-                    errorDetail.put(PROP_FIELD, fieldName);
-                    errorDetail.put(PROP_MESSAGE, fieldMessage);
-                    errorDetail.put("code", "TYPE_MISMATCH");
-                    errors.add(errorDetail);
-                    pd.setProperty(PROP_ERRORS, errors);
+        var errors = new ArrayList<Map<String, Object>>();
+        var errorDetail = new HashMap<String, Object>();
+        errorDetail.put(PROP_FIELD, fieldName.toLowerCase());
+        errorDetail.put(PROP_MESSAGE, fieldMessage);
+        errorDetail.put("code", "TYPE_MISMATCH");
+        errors.add(errorDetail);
+        problemDetail.setProperty(PROP_ERRORS, errors);
 
-                    return pd;
-                })
-                .orElse(null);
+        return problemDetail;
     }
 
-    private Class<?> extractDtoClass(String message) {
-        var matcher = CLASS_NAME_PATTERN.matcher(message);
-        if (matcher.find()) {
-            var className = matcher.group(1);
-            try {
-                return Class.forName(className);
-            } catch (ClassNotFoundException e) {
-                log.debug("Could not load class: {}", className);
+    private MismatchedInputException findMismatchedInput(Throwable ex) {
+        for (var cause = ex; cause != null; cause = cause.getCause()) {
+            if (cause instanceof MismatchedInputException mismatch) {
+                return mismatch;
+            }
+            if (cause.getCause() == cause) {
+                break;
             }
         }
         return null;
+    }
+
+    /**
+     * {@code Reference.getFrom()} is whatever was being bound when the mismatch happened — usually
+     * the partially-built DTO instance, but Jackson may hand back the {@code Class} itself.
+     */
+    private Class<?> resolveOwnerClass(Object from) {
+        if (from == null) {
+            return null;
+        }
+        return from instanceof Class<?> clazz ? clazz : from.getClass();
     }
 
     @ExceptionHandler(Exception.class)

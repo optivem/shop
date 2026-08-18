@@ -1,5 +1,8 @@
 # 2026-08-18 12:16:44 UTC — Restore the 422 type-mismatch response in backend-clean-java by removing the DTO package regex
 
+🤖 **Picked up by agent** — `Valentina_Desk` at `2026-08-18T12:33:30Z`
+
+
 ## TL;DR
 
 **Why:** Commit `caa5cb61` moved the use case request DTOs out of `usecases.dtos` into their use case packages, but `GlobalExceptionHandler` still identifies the target DTO by regex-matching the old package name out of Jackson's parse-failure message. The match now fails, so a non-integer quantity falls through to a generic `400 Bad Request` instead of the `422` field error, and three component tests fail on `main`.
@@ -50,27 +53,20 @@ Note that the `400 "Invalid request format"` branch is not an alternative to the
 
 ## ▶ Next executable step (resume here)
 
-Rewrite the type-mismatch detection in `system/multitier/backend-clean-java/src/main/java/com/mycompany/myshop/backend/presentation/exception/GlobalExceptionHandler.java` to read the DTO class and field from the exception instead of its message:
+The code fix is done and verified locally; only the commit-and-confirm step is left.
 
-- In `handleHttpMessageNotReadable` (line 84), walk `ex.getCause()` looking for a `com.fasterxml.jackson.databind.exc.MismatchedInputException` (`InvalidFormatException` is a subclass).
-- From it, take the last entry of `getPath()`: `Reference.getFrom()` gives the owning object or class (normalise to a `Class<?>` — `getFrom()` returns `Object`, so handle both the instance and `Class` cases), and `getFieldName()` gives the JSON property.
-- Feed that class to the existing `TypeValidationMessageExtractor.extractFieldMessages(Class<?>)` and look the field up by name (the extractor lower-cases its keys — match accordingly). Only produce the `422` when a `@TypeValidationMessage` exists for that field.
-- Keep the emitted `422` ProblemDetail byte-identical in shape: type `validationErrorTypeUri`, title `"Validation Error"`, detail `VALIDATION_DETAIL`, `timestamp`, and `errors` = one entry with `field`, `message`, `code: "TYPE_MISMATCH"`.
-- Keep the existing `400 "Invalid request format"` branch for everything else — an unparseable body names no property, so there is no field error to build.
-- Delete `CLASS_NAME_PATTERN` (line 36), `extractDtoClass` (lines 154–165), the now-unused `java.util.regex.Pattern` import, and the stale lines 34–35 comment. Replace it with a short comment noting the class and field come from the exception itself, so no package name needs keeping in sync.
+- Ask the user for the commit gate, then commit `system/multitier/backend-clean-java/src/main/java/com/mycompany/myshop/backend/presentation/exception/GlobalExceptionHandler.java` (plus this plan file's deletion) via `gh optivem commit`.
+- After the push, watch `multitier-backend-clean-java-commit-stage` and confirm it now reaches the stages this failure blocked: Integration Tests, Contract Tests, Build External System Simulator Image, Real-Mode Contract Tests, Linter.
 
-Then run `./gradlew componentTest` in `system/multitier/backend-clean-java` and confirm 62/62.
+Already verified locally: `./gradlew componentTest` → 62/62, `./gradlew build` → 95/95 (including `REQUESTS_AND_RESPONSES_LIVE_WITH_THEIR_USECASE` and `JACKSON_IS_CONFINED_TO_THE_OUTSIDE`), `./compile-all.sh` → all six variants clean.
 
 ## Steps
 
-- [ ] Step 1: Replace the message-regex lookup in `GlobalExceptionHandler` with `MismatchedInputException.getPath()`-based extraction of the DTO class and field, as detailed in the resume block above. Preserve the `422` ProblemDetail shape and the `400` unreadable-body branch exactly.
-- [ ] Step 2: Delete the dead machinery — `CLASS_NAME_PATTERN`, `extractDtoClass`, the `java.util.regex.Pattern` import — and replace the stale "must track wherever the request DTOs live" comment with one explaining the new, coupling-free mechanism.
-- [ ] Step 3: Run `./gradlew componentTest` in `system/multitier/backend-clean-java` — all 62 component tests pass, including the three that failed.
-- [ ] Step 4: Run `./gradlew build` in `system/multitier/backend-clean-java` — unit tests, integration tests, and `ArchitectureTest` (including `REQUESTS_AND_RESPONSES_LIVE_WITH_THEIR_USECASE`) pass.
-- [ ] Step 5: Run `./compile-all.sh` from the repo root — every system and system-test project across all three languages still compiles.
 - [ ] Step 6: Commit (ask first, per the repo's commit gate) and confirm the `multitier-backend-clean-java-commit-stage` re-run reaches the stages this failure blocked: Integration Tests, Contract Tests, Build External System Simulator Image, Real-Mode Contract Tests, Linter.
 
 ## Open questions
 
-- `Reference.getFrom()` returns `Object` — for a failure while binding a top-level request body it is normally the partially-built DTO instance, but it can be a `Class` (or a `Map`/collection for nested structures). Step 1 should handle instance and `Class` uniformly and simply fall through to the `400` when the owner cannot be resolved to a class carrying `@TypeValidationMessage`; confirm during implementation that the `PlaceOrderRequest` case resolves as expected.
-- Nothing currently pins this behaviour at the unit level — the regression was caught only by a booted component test. Worth deciding whether a small unit test on `GlobalExceptionHandler` (feed it a synthetic `HttpMessageNotReadableException` wrapping an `InvalidFormatException`, assert `422` + field message) earns its place, or whether the component test is the right and sufficient guard.
+None — all resolved before execution.
+
+- `Reference.getFrom()` resolution: confirmed during implementation. `resolveOwnerClass` normalises instance-or-`Class` and falls through to the `400` when unresolvable; the `PlaceOrderRequest` case resolves as expected (the three previously-failing tests now pass).
+- A unit test on `GlobalExceptionHandler`: decided **no**. The class and field now come off the exception object, so there is no string constant left to drift — the component test is the right and sufficient guard.
