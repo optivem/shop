@@ -4,14 +4,17 @@
 
 **Why:** `compile-all.sh` fans out over the `gh-optivem-*.yaml` configs in the repo root, and no config references `system/multitier/backend-clean-java`. The sweep therefore reports "All variants compiled cleanly" while never compiling that project — and `CLAUDE.md` tells every contributor and agent that the sweep "compiles every system and system-test project across all three languages", which is no longer true.
 
-**End result:** `compile-all.sh` covers `backend-clean-java`, and it fails loudly if any future project directory under `system/` or `system-test/` is covered by neither a config nor an explicit declaration — so the next standalone project cannot be silently skipped. `CLAUDE.md` says what the script actually does.
+**End result:** `compile-all.sh` covers `backend-clean-java` — via an honest `kind: component` config that its existing glob picks up, with no change to the script's fan-out logic — and it fails loudly if any future project directory under `system/` or `system-test/` is covered by no config at all, so the next standalone project cannot be silently skipped. `CLAUDE.md` says what the script actually does.
+
+> **⛔ Blocked on `gh-optivem`.** This plan depends on `kind: component` existing in the CLI — see `gh-optivem/plans/20260818-1351-kind-component-config-discriminator.md` (its Step 11 is the `shop`-side config addition that unblocks this plan). Do not start here until that has landed; the coverage check below would turn `compile-all.sh` red on `backend-clean-java` until the config exists to claim it.
 
 ## Outcomes
 
 What we get out of this — the goals and deliverables:
 
 - A green `./compile-all.sh` means every project in the repo compiled, `backend-clean-java` included. Today a green run is compatible with that project being entirely broken.
-- The gap closes **by construction**, not by one more path being written down: a coverage check enumerates the project directories and fails on anything nothing claims. This is the same failure mode as the `GlobalExceptionHandler` regex — a fact recorded in one place drifting from a fact living in another, invisible to every tool — and it gets the same kind of answer.
+- The gap closes **by construction**, not by one more path being written down: a coverage check enumerates the project directories and fails on anything no config claims. This is the same failure mode as the `GlobalExceptionHandler` regex — a fact recorded in one place drifting from a fact living in another, invisible to every tool — and it gets the same kind of answer.
+- There stays **one** registration mechanism, not two. A project is covered because a `gh-optivem-*.yaml` declares it; the script's own contract ("drop a new yaml — no changes to this script") remains literally true, rather than being contradicted by a second in-script list of exceptions.
 - `CLAUDE.md`'s "Pre-Commit Verification" section describes real coverage, so an agent following it doesn't skip a compile it believes it ran.
 - `backend-clean-java` is the reference implementation for the theme-1/theme-2 talk work — it is the project under most active change and had the *least* local pre-commit coverage. That inverts.
 
@@ -41,35 +44,30 @@ The reason no config covers it is structural, not an oversight: a `gh-optivem-*.
 
 This was found while executing `plans/20260818-1216-clean-java-type-mismatch-422.md`: Step 5 ran `./compile-all.sh` expecting it to cover the file just edited. It did not. The change was independently verified by a direct `./gradlew build`, so nothing broken shipped — but the verification step the plan relied on was hollow.
 
-**Alternative considered and rejected:** adding a `gh-optivem-multitier-clean-java.yaml` so the existing glob picks it up with no script change. It is the smallest diff and honours the script's stated contract, but a config file is a declaration that a *full SUT* exists — `system.config`, `system-test.path`, the channel and driver path map. For `backend-clean-java` every one of those fields would have to be either invented or copied from the legacy sibling, i.e. wrong. `gh optivem compile` might well ignore the wrong fields, but `gh optivem system start` and `gh optivem system-test run` read the same file, so the repo would gain a config that is true for one command and a lie for the rest. Rejected: it trades a missing-coverage bug for a wrong-configuration bug.
+**Alternative originally rejected — and now the chosen route.** The first draft of this plan considered adding a `gh-optivem-multitier-clean-java.yaml` so the existing glob picks it up with no script change, and rejected it on the grounds that a config file is a declaration that a *full SUT* exists — `system.config`, `system-test.path`, the channel and driver path map — every field of which would have to be invented or copied from the legacy sibling, i.e. wrong. The repo would gain a config true for `gh optivem compile` and a lie for `system start` and `system-test run`.
+
+That reasoning was correct **about the CLI as it stood**, and wrong about where the defect was. The real problem is in `gh-optivem`: `system.architecture` doubles as the "is this a whole SUT?" discriminator, so a component-only project cannot be declared at all. Fixing that — a top-level `kind: system | component` — makes a seven-line config for `backend-clean-java` *honest*: it declares exactly what exists and claims nothing it does not have. See `gh-optivem/plans/20260818-1351-kind-component-config-discriminator.md`.
+
+So the config route is adopted, and the counter-proposal that replaced it here — a `STANDALONE_PROJECTS` array declared inside `compile-all.sh` — is dropped. It would have been a second registration mechanism competing with the config glob, which is the very drift this plan exists to stop. What survives from it is the coverage check: still worth having, and now with one thing to check against instead of two.
 
 ## ▶ Next executable step (resume here)
 
-Extend `compile-all.sh` with a second, explicitly-declared pass for standalone projects, plus a coverage assertion — in this order:
+**Blocked — nothing here is executable yet.** The first move belongs to the other repo: land `kind: component` via `gh-optivem/plans/20260818-1351-kind-component-config-discriminator.md`, whose Step 11 adds `gh-optivem-multitier-clean-java.yaml` to this repo. That single file is what makes `backend-clean-java` claimed, and it is what the coverage check below needs in place before it can pass.
 
-1. Add a `STANDALONE_PROJECTS` array near the top of the script declaring `system/multitier/backend-clean-java|java`, with a comment saying why it is not a config (no SUT: no `docker/**/systems.yaml`, no system-test project) and pointing at the workflow that owns it in CI.
-2. After the config loop, iterate that array and compile each entry with the language's compile command (`./gradlew compileJava compileTestJava` for java — match what `gh optivem compile` invokes so the two passes mean the same thing). Feed results into the same `RESULTS` array so standalone rows appear in the SUMMARY table and count toward the exit code.
-3. Add a coverage check that runs **before** compiling: enumerate directories under `system/monolith/*`, `system/multitier/*`, `system-test/*`, and `external-systems/*` that look like projects (contain a `build.gradle`, `package.json`, or `*.csproj`/`*.sln` — this is what excludes the `VERSION`-only marker dirs without hardcoding their names), and fail with a specific message naming any that is referenced by neither a `gh-optivem-*.yaml` nor `STANDALONE_PROJECTS`.
-4. Update the script docstring: the "drop a new yaml, no changes to this script" contract still holds for full SUTs, and a standalone project is added to `STANDALONE_PROJECTS` instead. The coverage check enforces that one of the two happened.
-
-Then update the **Pre-Commit Verification** section of `CLAUDE.md` so the sentence matches: the sweep covers every config variant plus the declared standalone projects, and it fails if a project is covered by neither.
-
-Verify by running `./compile-all.sh` (expect a `backend-clean-java` row in the summary), then by temporarily renaming a config or adding a scratch project directory to confirm the coverage check fails loudly rather than passing green.
+Once that config exists here, Step 1 is the coverage check in `compile-all.sh`: before the config loop, enumerate directories under `system/monolith/*`, `system/multitier/*`, `system-test/*`, and `external-systems/*` that look like projects (contain a `build.gradle`, `package.json`, or `*.csproj`/`*.sln` — this is what excludes the `VERSION`-only marker dirs without hardcoding their names), resolve every path referenced by every `gh-optivem-*.yaml` (including `*-legacy`, which are excluded from compiling but still declare coverage), and fail naming any project directory no config claims, with the fix spelled out: add it to an existing config, or give it its own `kind: component` config.
 
 ## Steps
 
-- [ ] Step 1: Add the `STANDALONE_PROJECTS` declaration and the standalone compile pass to `compile-all.sh`, wiring results into the existing `RESULTS`/SUMMARY/exit-code machinery.
-- [ ] Step 2: Add the pre-flight coverage check that fails when a project directory is claimed by neither a config nor `STANDALONE_PROJECTS`, naming the offending path and both ways to fix it.
-- [ ] Step 3: Update the `compile-all.sh` docstring to describe both registration paths and the check that enforces them.
-- [ ] Step 4: Update the **Pre-Commit Verification** section of `CLAUDE.md` to state what the sweep actually covers.
-- [ ] Step 5: Run `./compile-all.sh` — all six config variants plus a `system/multitier/backend-clean-java` row, all PASSED.
+- [ ] Step 1: Add the pre-flight coverage check to `compile-all.sh` — fail when a project directory is claimed by no `gh-optivem-*.yaml`, naming the offending path and how to fix it.
+- [ ] Step 2: Extend the same enumeration pass to assert the reverse direction — a config referencing a path that no longer exists is the same class of silent drift, and the comparison is already in hand. (Resolved: yes, do it — see Decisions.)
+- [ ] Step 3: Update the `compile-all.sh` docstring — the "drop a new yaml, no changes to this script" contract still holds and is now *enforced* by the coverage check; note that a project with no SUT registers via a `kind: component` config rather than being exempt.
+- [ ] Step 4: Update the **Pre-Commit Verification** section of `CLAUDE.md` to state what the sweep actually covers, and add the note that `test-all.sh` deliberately does *not* cover `backend-clean-java` (see Decisions).
+- [ ] Step 5: Run `./compile-all.sh` — expect seven config rows including `gh-optivem-multitier-clean-java.yaml`, all PASSED.
 - [ ] Step 6: Prove the check bites — create a scratch project directory (or temporarily move a config aside), confirm the run fails with the specific message, then undo.
 - [ ] Step 7: Commit (ask first, per the repo's commit gate).
 
-## Open questions
+## Decisions taken (resolved before execution)
 
-1. **Should `test-all.sh` get the same treatment?** It is arch × language driven (`monolith|multitier` × `dotnet,java,typescript`) and equally blind to `backend-clean-java`. **Recommendation: no, not in this plan.** `test-all.sh` runs *system* tests, which need a booted docker stack, and `backend-clean-java` has no `docker/**/systems.yaml` to boot — covering it there means standing up a whole SUT, which is a much larger piece of work with its own design questions. This plan should fix the compile sweep and leave a note; if the clean variant ever gets a system stack, that is the moment to revisit.
-
-2. **Should the coverage check also assert the reverse — a config referencing a path that no longer exists?** **Recommendation: yes, it is nearly free.** The same enumeration pass can compare in both directions, and a config pointing at a deleted or renamed project is the same class of silent drift. Cheap to add while the code is open; say no if you would rather keep the check to one job.
-
-3. **Is `./gradlew compileJava compileTestJava` the right depth for the standalone pass, or should it be `./gradlew build`?** **Recommendation: `compileJava compileTestJava`.** It matches what `gh optivem compile` does for the config variants, so every row in the summary means the same thing, and it keeps the sweep fast — `CLAUDE.md` already directs contributors to run the project's own tests separately. Using `build` here would make one row silently much slower and much stronger than the others.
+1. **Should `test-all.sh` get the same treatment?** — **No, not in this plan.** It runs *system* tests, which need a booted docker stack, and `backend-clean-java` has no `docker/**/systems.yaml` to boot; covering it there means standing up a whole SUT, a much larger piece of work with its own design questions. Step 4 records the gap as a note in `CLAUDE.md`. Revisit if the clean variant ever gets a system stack.
+2. **Should the coverage check also assert the reverse — a config referencing a path that no longer exists?** — **Yes.** The same enumeration pass compares in both directions for nearly no extra code, and a config pointing at a deleted or renamed project is the same class of silent drift. Now Step 2.
+3. **What depth should the standalone compile pass use?** — **Moot.** There is no standalone pass any more; `gh optivem compile` drives the `kind: component` config exactly as it drives the other six, so every row in the summary means the same thing by construction rather than by matching commands by hand.
