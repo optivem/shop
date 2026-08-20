@@ -5,7 +5,7 @@ import com.mycompany.myshop.backend.usecases.coupon.BrowseCouponsResponse;
 
 import java.util.List;
 
-/** See {@link BrowseOrderHistoryPageResponse}. The coupon cursor is a code, encoded the same way. */
+// See BrowseOrderHistoryPageResponse. The coupon cursor is a code, encoded the same way.
 public record BrowseCouponsPageResponse(
         List<BrowseCouponsResponse.BrowseCouponsItemResponse> coupons,
         String nextCursor,

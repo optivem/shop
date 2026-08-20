@@ -8,14 +8,12 @@ import com.mycompany.myshop.backend.usecases.queries.OrderListItem;
 import com.mycompany.myshop.backend.usecases.queries.OrderQuery;
 import com.mycompany.myshop.backend.usecases.queries.PageSpec;
 
-/**
- * A pure query. The optional order-number filter and the page both go to the port instead of
- * branching here, so the {@code LIKE} and the {@code LIMIT} stay in SQL and this use case has
- * nothing left to decide but how big a page it is willing to ask for.
- *
- * <p>That bound is the use case's to enforce and nobody else's: the adapter would honour any number
- * it is handed, and the controller is the layer that has just been told a number by a stranger.
- */
+// A pure query. The optional order-number filter and the page both go to the port instead of
+// branching here, so the LIKE and the LIMIT stay in SQL and this use case has
+// nothing left to decide but how big a page it is willing to ask for.
+//
+// That bound is the use case's to enforce and nobody else's: the adapter would honour any number
+// it is handed, and the controller is the layer that has just been told a number by a stranger.
 public class BrowseOrderHistory implements UseCase<BrowseOrderHistoryRequest, BrowseOrderHistoryResponse> {
 
     private static final String FIELD_SIZE = "size";

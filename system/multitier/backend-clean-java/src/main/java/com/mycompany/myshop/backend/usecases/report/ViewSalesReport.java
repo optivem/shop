@@ -10,15 +10,13 @@ import com.mycompany.myshop.backend.usecases.queries.TopSkuByRevenue;
 
 import java.util.List;
 
-/**
- * A pure query, and the one that makes the theme's point most plainly: three aggregates and no
- * domain object anywhere. Written the way the rest of the codebase reads, this use case would have
- * pulled every order and every coupon into memory and folded them with streams -- the report is not
- * a domain concept, so there was never an entity to ask.
- *
- * <p>All this class does is validate a limit and copy primitives onto the wire contract. The
- * aggregation is the adapter's, and that is the argument.
- */
+// A pure query, and the one that makes the theme's point most plainly: three aggregates and no
+// domain object anywhere. Written the way the rest of the codebase reads, this use case would have
+// pulled every order and every coupon into memory and folded them with streams -- the report is not
+// a domain concept, so there was never an entity to ask.
+//
+// All this class does is validate a limit and copy primitives onto the wire contract. The
+// aggregation is the adapter's, and that is the argument.
 public class ViewSalesReport implements UseCase<ViewSalesReportRequest, ViewSalesReportResponse> {
 
     private static final String FIELD_TOP_SKU_LIMIT = "topSkuLimit";

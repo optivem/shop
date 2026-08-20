@@ -2,14 +2,12 @@ package com.mycompany.myshop.backend.usecases.queries;
 
 import java.math.BigDecimal;
 
-/**
- * One SKU's contribution to revenue. Same rule as {@link RevenueByCountryMonth}: no value objects,
- * no {@code Guard}.
- *
- * <p>There is no {@code Product} here either. The domain has one, but it holds a SKU and a price and
- * knows nothing about what was sold -- so the report would have to load every order anyway to build
- * the number, which is the loop this replaces.
- */
+// One SKU's contribution to revenue. Same rule as RevenueByCountryMonth: no value objects,
+// no Guard.
+//
+// There is no Product here either. The domain has one, but it holds a SKU and a price and
+// knows nothing about what was sold -- so the report would have to load every order anyway to build
+// the number, which is the loop this replaces.
 public record TopSkuByRevenue(
         String sku,
         long orderCount,

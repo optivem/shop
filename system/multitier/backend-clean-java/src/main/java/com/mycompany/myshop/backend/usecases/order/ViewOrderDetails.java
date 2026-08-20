@@ -6,11 +6,9 @@ import com.mycompany.myshop.backend.usecases.UseCaseError;
 import com.mycompany.myshop.backend.usecases.queries.OrderDetail;
 import com.mycompany.myshop.backend.usecases.queries.OrderQuery;
 
-/**
- * A pure query: every field of the response is a column in {@code orders}, so the domain model is
- * not built at all. The error contract does not move -- an absent row is still
- * {@link UseCaseError.NotFound}.
- */
+// A pure query: every field of the response is a column in orders, so the domain model is
+// not built at all. The error contract does not move -- an absent row is still
+// UseCaseError.NotFound.
 public class ViewOrderDetails implements UseCase<ViewOrderDetailsRequest, ViewOrderDetailsResponse> {
 
     private static final String ORDER_ENTITY = "Order";

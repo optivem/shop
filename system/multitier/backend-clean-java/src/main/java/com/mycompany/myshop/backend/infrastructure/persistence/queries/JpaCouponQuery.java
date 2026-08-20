@@ -14,13 +14,11 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.List;
 
-/**
- * See {@link JpaOrderQuery} for why the read side looks like this. The one thing specific to coupons
- * is the key it sorts and pages on: the table has no timestamp column, so "newest published first"
- * has to come from the surrogate {@code id} -- which is exactly why the sort lives here and not in
- * the port. The id never leaves infrastructure, and the domain's rule that a {@code Coupon} has no
- * {@code Long id} still holds.
- */
+// See JpaOrderQuery for why the read side looks like this. The one thing specific to coupons
+// is the key it sorts and pages on: the table has no timestamp column, so "newest published first"
+// has to come from the surrogate id -- which is exactly why the sort lives here and not in
+// the port. The id never leaves infrastructure, and the domain's rule that a Coupon has no
+// Long id still holds.
 @Component
 public class JpaCouponQuery implements CouponQuery {
 

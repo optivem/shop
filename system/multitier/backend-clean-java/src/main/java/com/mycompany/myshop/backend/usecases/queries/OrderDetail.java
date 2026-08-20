@@ -3,15 +3,13 @@ package com.mycompany.myshop.backend.usecases.queries;
 import java.math.BigDecimal;
 import java.time.Instant;
 
-/**
- * One order, every field of it a column in {@code orders}.
- *
- * <p>The sharpest of the three: fifteen fields, and the domain path reached them by constructing
- * seven {@code Money}, two {@code Rate}, a {@code Country} and a {@code CouponCode} and then
- * unwrapping every one of them. Nothing built on that path survived to the wire.
- *
- * <p>Same rule as {@link OrderListItem}: no value objects, no {@code Guard}.
- */
+// One order, every field of it a column in orders.
+//
+// The sharpest of the three: fifteen fields, and the domain path reached them by constructing
+// seven Money, two Rate, a Country and a CouponCode and then
+// unwrapping every one of them. Nothing built on that path survived to the wire.
+//
+// Same rule as OrderListItem: no value objects, no Guard.
 public record OrderDetail(
         String orderNumber,
         Instant orderTimestamp,

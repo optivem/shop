@@ -8,18 +8,16 @@ import java.time.Instant;
 import java.time.format.DateTimeParseException;
 import java.util.Base64;
 
-/**
- * Turns a page cursor into an opaque token and back.
- *
- * <p>Opaque on purpose. A cursor is the sort key of the last row on a page -- for orders, a
- * timestamp and an order number -- and a client that can read a sort key will eventually build one
- * by hand, at which point the sort key can never change again without breaking that client. Base64
- * does not make the cursor secret; it makes it obviously not the client's to construct.
- *
- * <p>Encoding lives in presentation because it is a wire format, and the wire is this layer's
- * business. The use case hands out and receives the typed cursor and cannot tell which encoding was
- * chosen here.
- */
+// Turns a page cursor into an opaque token and back.
+//
+// Opaque on purpose. A cursor is the sort key of the last row on a page -- for orders, a
+// timestamp and an order number -- and a client that can read a sort key will eventually build one
+// by hand, at which point the sort key can never change again without breaking that client. Base64
+// does not make the cursor secret; it makes it obviously not the client's to construct.
+//
+// Encoding lives in presentation because it is a wire format, and the wire is this layer's
+// business. The use case hands out and receives the typed cursor and cannot tell which encoding was
+// chosen here.
 @Component
 public class CursorCodec {
 

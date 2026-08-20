@@ -2,25 +2,23 @@ package com.mycompany.myshop.backend.usecases.queries;
 
 import java.util.List;
 
-/**
- * The read side of the sales report: three questions the database answers by aggregating, and the
- * application layer answered by loading every row and looping.
- *
- * <p>Every method names the question, not the mechanism. There is no {@code findAll} here for a
- * caller to fold over, which is the whole point -- an intent-named port leaves the adapter free to
- * reply with one {@code GROUP BY}, and the loop has nowhere left to live.
- *
- * <p>This is the port the demo is about: nothing it returns is a domain concept, and the domain
- * never asks any of these questions. See the package javadoc for why it is not a domain repository.
- */
+// The read side of the sales report: three questions the database answers by aggregating, and the
+// application layer answered by loading every row and looping.
+//
+// Every method names the question, not the mechanism. There is no findAll here for a
+// caller to fold over, which is the whole point -- an intent-named port leaves the adapter free to
+// reply with one GROUP BY, and the loop has nowhere left to live.
+//
+// This is the port the demo is about: nothing it returns is a domain concept, and the domain
+// never asks any of these questions. See the package javadoc for why it is not a domain repository.
 public interface SalesReportQuery {
 
-    /** Newest month first. Cancelled orders are excluded -- they are not revenue. */
+    // Newest month first. Cancelled orders are excluded -- they are not revenue.
     List<RevenueByCountryMonth> revenueByCountryAndMonth();
 
-    /** Highest revenue first, at most {@code limit} rows. The limit reaches the database, not a stream. */
+    // Highest revenue first, at most limit rows. The limit reaches the database, not a stream.
     List<TopSkuByRevenue> topSkusByRevenue(int limit);
 
-    /** One row per coupon, including coupons no order ever used. */
+    // One row per coupon, including coupons no order ever used.
     List<CouponEffectiveness> couponEffectiveness();
 }
