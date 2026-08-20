@@ -19,9 +19,9 @@ What we get out of this — the goals and deliverables:
 
 ## ▶ Next executable step (resume here)
 
-**Confirm the fix landed in shop CI.** Everything actionable is done: gh-optivem `v1.6.72` is published and `Latest` (2026-08-20T13:15:14Z), and the shop-side provenance guard is committed. What remains is observation, not editing.
+**Nothing to edit — this plan is observation-only now.** gh-optivem `v1.6.72` is published and `Latest` (2026-08-20T13:15:14Z); the shop-side provenance guard is committed (`5df0a180`); and the fix was verified directly by downloading the released `v1.6.72` binary and running `config validate` with it against all 13 configs — every one `VALID`, including `gh-optivem-multitier-clean-java.yaml`, which is the exact check that failed run 32369796566.
 
-Watch for a `meta-prerelease-stage` run that actually reaches the gate:
+All that remains is watching the real pipeline confirm it:
 
 ```bash
 gh run list --repo optivem/shop --workflow meta-prerelease-stage.yml --limit 5 \
@@ -29,13 +29,13 @@ gh run list --repo optivem/shop --workflow meta-prerelease-stage.yml --limit 5 \
 gh run view <id> --repo optivem/shop     # must list "Validate all gh-optivem configs" as ✓
 ```
 
-A run that stops at *Decide whether to run* proves nothing — it never installs the CLI. Wait for one with meaningful changes, or re-run 32369796566 (which continues into the full ~4h pipeline, so only do that deliberately).
+A run that stops at *Decide whether to run* proves nothing — it never installs the CLI. Wait for one with meaningful changes (cron is `0 */3 * * *`).
 
-If the gate passes, delete this plan file — the work is complete. Keep only the skipped-acceptance watch item if you still want it tracked.
+Once a run clears the gate, delete this plan file.
 
 ## Steps
 
-- [ ] **Step 1 — Confirm shop CI is green.** gh-optivem `v1.6.72` published 2026-08-20T13:15:14Z and is `Latest`, so CI now installs a CLI that understands `kind: component`. Confirm the next `meta-prerelease-stage` run gets past *Validate all gh-optivem configs* to *Read VERSION values*. The gate only executes when *Decide whether to run* finds meaningful changes, so a short-circuiting run proves nothing either way — wait for one that reaches the step, or re-run the failed run 32369796566 (note this continues into the full pipeline, not just the gate).
+- [ ] **Step 1 — Confirm shop CI is green** *(observation only)*. gh-optivem `v1.6.72` is `Latest` and its released binary validates all 13 configs locally, so the gate is expected to pass. Confirm a `meta-prerelease-stage` run reaches *Read VERSION values*. A run that short-circuits at *Decide whether to run* proves nothing — it never installs the CLI.
 
 - [ ] **Step 2 — Watch for fallout from the skipped acceptance matrix** *(added because tests were bypassed)*. `f3f003d0` is ~1500 lines across 19 files and rewrites config parsing for all 13 configs plus adds `kind` refusal guards, but no end-to-end shop run has ever exercised it — the released v1.6.72 is unit-tested only. The first `meta-prerelease-stage` and language commit-stage runs after publication are the de-facto acceptance test. If a `kind: system` config starts being refused, or a command that used to work now errors on kind, suspect `kind_guards.go` and consider dispatching a real `gh-acceptance-stage` retroactively.
 
