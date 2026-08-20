@@ -14,9 +14,11 @@ import com.mycompany.myshop.backend.domain.repositories.OrderRepository;
 import com.mycompany.myshop.backend.domain.values.Country;
 import com.mycompany.myshop.backend.domain.values.CouponCode;
 import com.mycompany.myshop.backend.domain.values.Money;
+import com.mycompany.myshop.backend.domain.values.OrderNumber;
 import com.mycompany.myshop.backend.domain.values.OrderPricing;
 import com.mycompany.myshop.backend.domain.values.OrderStatus;
 import com.mycompany.myshop.backend.domain.values.Rate;
+import com.mycompany.myshop.backend.domain.values.Sku;
 import com.mycompany.myshop.backend.domain.values.UsageQuota;
 import com.mycompany.myshop.backend.domain.values.ValidityPeriod;
 import java.time.Instant;
@@ -145,7 +147,7 @@ class BackendPactVerificationTest extends BaseComponentTest {
             Rate.of("0.10"), Money.of("2.00"), Money.of("22.00"));
 
         return new Order(
-            orderNumber, Instant.parse("2026-03-10T12:00:00Z"), Country.of("US"),
-            "BOOK-123", pricing, status, null);
+            OrderNumber.of(orderNumber), Instant.parse("2026-03-10T12:00:00Z"), Country.of("US"),
+            Sku.of("BOOK-123"), pricing, status, null);
     }
 }

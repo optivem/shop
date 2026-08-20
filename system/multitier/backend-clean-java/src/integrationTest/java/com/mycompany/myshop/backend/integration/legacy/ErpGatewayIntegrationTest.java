@@ -11,6 +11,7 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import com.mycompany.myshop.backend.domain.gateways.ErpGateway;
 import com.mycompany.myshop.backend.domain.values.Money;
 import com.mycompany.myshop.backend.domain.values.Rate;
+import com.mycompany.myshop.backend.domain.values.Sku;
 import com.mycompany.myshop.backend.infrastructure.external.ErpGatewayException;
 import com.mycompany.myshop.backend.infrastructure.external.erp.HttpErpGateway;
 import org.junit.jupiter.api.AfterAll;
@@ -46,10 +47,10 @@ class ErpGatewayIntegrationTest {
         WIRE_MOCK.stubFor(get("/api/products/BOOK-123")
             .willReturn(okJson("{\"id\":\"BOOK-123\",\"price\":10.00}")));
 
-        var result = erpGateway.getProductDetails("BOOK-123");
+        var result = erpGateway.getProductDetails(Sku.of("BOOK-123"));
 
         assertThat(result).isPresent();
-        assertThat(result.get().getSku()).isEqualTo("BOOK-123");
+        assertThat(result.get().getSku()).isEqualTo(Sku.of("BOOK-123"));
         assertThat(result.get().getPrice()).isEqualTo(Money.of("10.00"));
     }
 
@@ -58,7 +59,7 @@ class ErpGatewayIntegrationTest {
         WIRE_MOCK.stubFor(get("/api/products/UNKNOWN")
             .willReturn(aResponse().withStatus(404)));
 
-        assertThat(erpGateway.getProductDetails("UNKNOWN")).isEmpty();
+        assertThat(erpGateway.getProductDetails(Sku.of("UNKNOWN"))).isEmpty();
     }
 
     @Test
@@ -66,7 +67,7 @@ class ErpGatewayIntegrationTest {
         WIRE_MOCK.stubFor(get("/api/products/BAD-SKU")
             .willReturn(aResponse().withStatus(500).withBody("Internal Server Error")));
 
-        assertThatThrownBy(() -> erpGateway.getProductDetails("BAD-SKU"))
+        assertThatThrownBy(() -> erpGateway.getProductDetails(Sku.of("BAD-SKU")))
             .isInstanceOf(ErpGatewayException.class)
             .hasMessageContaining("500");
     }

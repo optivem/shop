@@ -4,8 +4,10 @@ import com.mycompany.myshop.backend.domain.entities.Order;
 import com.mycompany.myshop.backend.domain.values.Country;
 import com.mycompany.myshop.backend.domain.values.CouponCode;
 import com.mycompany.myshop.backend.domain.values.Money;
+import com.mycompany.myshop.backend.domain.values.OrderNumber;
 import com.mycompany.myshop.backend.domain.values.OrderPricing;
 import com.mycompany.myshop.backend.domain.values.Rate;
+import com.mycompany.myshop.backend.domain.values.Sku;
 import com.mycompany.myshop.backend.infrastructure.persistence.entities.OrderJpaEntity;
 
 public final class OrderMapper {
@@ -26,10 +28,10 @@ public final class OrderMapper {
                 Money.of(entity.getTotalPrice()));
 
         return new Order(
-                entity.getOrderNumber(),
+                OrderNumber.of(entity.getOrderNumber()),
                 entity.getOrderTimestamp(),
                 Country.of(entity.getCountry()),
-                entity.getSku(),
+                Sku.of(entity.getSku()),
                 pricing,
                 entity.getStatus(),
                 // Nullable column: an order placed without a coupon has none.
@@ -37,20 +39,22 @@ public final class OrderMapper {
     }
 
     public static OrderJpaEntity toEntity(Order order) {
+        var pricing = order.getPricing();
+
         var entity = new OrderJpaEntity();
-        entity.setOrderNumber(order.getOrderNumber());
+        entity.setOrderNumber(order.getOrderNumber().value());
         entity.setOrderTimestamp(order.getOrderTimestamp());
         entity.setCountry(order.getCountry().value());
-        entity.setSku(order.getSku());
-        entity.setQuantity(order.getQuantity());
-        entity.setUnitPrice(order.getUnitPrice().amount());
-        entity.setBasePrice(order.getBasePrice().amount());
-        entity.setDiscountRate(order.getDiscountRate().value());
-        entity.setDiscountAmount(order.getDiscountAmount().amount());
-        entity.setSubtotalPrice(order.getSubtotalPrice().amount());
-        entity.setTaxRate(order.getTaxRate().value());
-        entity.setTaxAmount(order.getTaxAmount().amount());
-        entity.setTotalPrice(order.getTotalPrice().amount());
+        entity.setSku(order.getSku().value());
+        entity.setQuantity(pricing.quantity());
+        entity.setUnitPrice(pricing.unitPrice().amount());
+        entity.setBasePrice(pricing.basePrice().amount());
+        entity.setDiscountRate(pricing.discountRate().value());
+        entity.setDiscountAmount(pricing.discountAmount().amount());
+        entity.setSubtotalPrice(pricing.subtotalPrice().amount());
+        entity.setTaxRate(pricing.taxRate().value());
+        entity.setTaxAmount(pricing.taxAmount().amount());
+        entity.setTotalPrice(pricing.totalPrice().amount());
         entity.setStatus(order.getStatus());
         var appliedCouponCode = order.getAppliedCouponCode();
         entity.setAppliedCouponCode(appliedCouponCode == null ? null : appliedCouponCode.value());

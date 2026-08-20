@@ -12,16 +12,17 @@ import com.mycompany.myshop.backend.domain.services.YearEndBlackoutPolicy;
 import com.mycompany.myshop.backend.domain.values.Country;
 import com.mycompany.myshop.backend.domain.values.CouponCode;
 import com.mycompany.myshop.backend.domain.values.Money;
+import com.mycompany.myshop.backend.domain.values.OrderNumber;
 import com.mycompany.myshop.backend.domain.values.OrderPricing;
 import com.mycompany.myshop.backend.domain.values.OrderStatus;
 import com.mycompany.myshop.backend.domain.values.Rate;
+import com.mycompany.myshop.backend.domain.values.Sku;
 import com.mycompany.myshop.backend.usecases.Result;
 import com.mycompany.myshop.backend.usecases.TransactionRunner;
 import com.mycompany.myshop.backend.usecases.UseCase;
 import com.mycompany.myshop.backend.usecases.UseCaseError;
 
 import java.util.Optional;
-import java.util.UUID;
 
 public class PlaceOrder implements UseCase<PlaceOrderRequest, PlaceOrderResponse> {
 
@@ -60,7 +61,8 @@ public class PlaceOrder implements UseCase<PlaceOrderRequest, PlaceOrderResponse
 
         YearEndBlackoutPolicy.requirePlacementAllowed(orderTimestamp);
 
-        var unitPrice = unitPriceOf(request.getSku());
+        var sku = Sku.of(request.getSku());
+        var unitPrice = unitPriceOf(sku);
         var promotionFactor = erpGateway.getPromotionDetails().factor();
         var coupon = findCoupon(couponCode);
         var discountRate = coupon
@@ -73,16 +75,16 @@ public class PlaceOrder implements UseCase<PlaceOrderRequest, PlaceOrderResponse
                 discountRate, taxRate);
 
         var appliedCouponCode = discountRate.isPositive() ? couponCode.orElse(null) : null;
-        var orderNumber = generateOrderNumber();
+        var orderNumber = OrderNumber.generate();
 
-        var order = new Order(orderNumber, orderTimestamp, country, request.getSku(),
+        var order = new Order(orderNumber, orderTimestamp, country, sku,
                 pricing, OrderStatus.PLACED, appliedCouponCode);
 
         orderRepository.save(order);
         redeem(appliedCouponCode);
 
         var response = new PlaceOrderResponse();
-        response.setOrderNumber(orderNumber);
+        response.setOrderNumber(orderNumber.value());
         return response;
     }
 
@@ -110,10 +112,10 @@ public class PlaceOrder implements UseCase<PlaceOrderRequest, PlaceOrderResponse
         return coupon;
     }
 
-    private Money unitPriceOf(String sku) {
+    private Money unitPriceOf(Sku sku) {
         var product = erpGateway.getProductDetails(sku);
         if (product.isEmpty()) {
-            throw new ValidationException("sku", "Product does not exist for SKU: " + sku);
+            throw new ValidationException(Sku.FIELD_NAME, "Product does not exist for SKU: " + sku);
         }
 
         return product.get().getPrice();
@@ -128,8 +130,4 @@ public class PlaceOrder implements UseCase<PlaceOrderRequest, PlaceOrderResponse
         return taxRate.get().getRate();
     }
 
-    private String generateOrderNumber() {
-        var uuid = UUID.randomUUID().toString().toUpperCase();
-        return "ORD-" + uuid;
-    }
 }

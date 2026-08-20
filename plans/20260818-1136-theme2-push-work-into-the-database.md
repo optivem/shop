@@ -1,5 +1,7 @@
 # 2026-08-18 11:36 UTC — theme 2: the database is barred from the work it does best (`backend-clean-java`)
 
+> 🤖 **Picked up by agent** — `Valentina_Desk` at `2026-08-18T14:56:49Z`
+
 **Scope: `system/multitier/backend-clean-java` only.** No other backend, no frontend, no legacy
 project, no other plan. A short list of files falls outside the backend directory by necessity and
 nothing else does: the demo seed script and its README under `system/db/seed/` and the additive index
@@ -36,7 +38,7 @@ The rows Chunks A and R answered are struck through; the rest are still the befo
 |---|---|---|
 | ~~Set-based writes (`UPDATE … WHERE`)~~ | **Done (A1, A2).** `RecallSku` and `SweepDeliveries` over `OrderRepository.cancelOutstandingForSku` / `deliverPlacedOlderThan` | `usecases/order/`, `POST /api/admin/*` |
 | ~~Atomic read-modify-write~~ | **Done (A3, A4).** One conditional `UPDATE`; the lost update is pinned by `CouponRedemptionConcurrencyIntegrationTest` | `CouponRepository.tryRedeem` |
-| Aggregation and joins | No report exists; written naively it is `findAll()` + Java streams | Chunk B creates it |
+| ~~Aggregation and joins~~ | **Done (B1–B5).** `SalesReportQuery` answers three questions with three `GROUP BY`s; `GET /api/reports/sales` | `usecases/queries/`, `usecases/report/`, `infrastructure/persistence/queries/` |
 | Filtering, sorting, limiting | Partly pushed down; **unbounded** and fully hydrated | `BrowseCoupons`, `BrowseOrderHistory` |
 | ~~Projecting only the columns asked for~~ | **Done (R1–R6).** The three query use cases read flat projections off `usecases/queries/`; `READ_USECASES_DO_NOT_TOUCH_THE_DOMAIN` keeps them there | `usecases/queries/`, `infrastructure/persistence/queries/` |
 | ~~Enforcing invariants transactionally~~ | **Done (A5).** The order and its redemption are one unit, declared by a port rather than an annotation | `usecases/TransactionRunner` |
@@ -127,21 +129,19 @@ newest-first ordering, but they matter if the ordering is ever changed.
 
 ## ▶ Next executable step (resume here)
 
-**R7 — take the after-numbers, then Chunk B.** Chunks 0, A and R1–R6 are done. The read path no
-longer goes through the domain: `usecases/queries/{OrderQuery, CouponQuery}` return flat projections
-(`OrderListItem`, `OrderDetail`, `CouponListItem`) built by
-`infrastructure/persistence/queries/{JpaOrderQuery, JpaCouponQuery}`, the three query use cases copy
-primitives into their responses, the four mechanism-named read methods are gone from the domain
-repositories (`CouponRepository{save, findByCode, tryRedeem}`,
-`OrderRepository{save, findByOrderNumber, cancelOutstandingForSku, deliverPlacedOlderThan}`), and
-`READ_USECASES_DO_NOT_TOUCH_THE_DOMAIN` makes the claim executable — verified to fail when a
-`usecases.queries` class names a domain type.
+**R7 — take the after-numbers.** Chunks 0, A, R1–R6 and B are done. The report exists:
+`usecases/queries/SalesReportQuery` answers three questions — revenue by country and month, top SKUs
+by revenue, coupon effectiveness — and `infrastructure/persistence/queries/JpaSalesReportQuery`
+answers each with one native `GROUP BY`; `usecases/report/ViewSalesReport` validates a limit and
+copies primitives; `GET /api/reports/sales?topSkuLimit=n` is the surface. `USECASE_PACKAGES` in
+`ArchitectureTest` now includes `..usecases.report..`, so both use-case-shape rules cover the report,
+and `READ_USECASES_DO_NOT_TOUCH_THE_DOMAIN` names `ViewSalesReport` — all 11 rules pass.
 
 R7 needs Docker and takes minutes: start the stack, run `./gradlew benchmark` in
 `system/multitier/backend-clean-java`, and append the table it writes to
 `build/benchmark/theme2-baseline.md` into `docs/atdd/code/theme2-measurements.md` beside the Chunk 0
-baseline. After that, Chunk B (aggregation and joins), then Chunk C (volume) — one per `/clear`-ed
-session. C2 depends on Chunk R, which is now satisfied; nothing else is ordered.
+baseline. After that, Chunk C (volume) — its own `/clear`-ed session. C2 depended on Chunk R, which
+is satisfied; nothing else is ordered.
 
 ## Chunk R — light CQRS: the read path stops going through the domain
 
@@ -183,32 +183,6 @@ the rules that wrote it.
       beside the Chunk 0 baseline. The headline is objects-not-constructed as much as wall time:
       `BrowseOrderHistory` built 100k `Order` aggregates plus their value objects before R3 and
       builds none after it.
-
-## Chunk B — aggregation and joins (a read model with no domain entity)
-
-- [ ] **B1. The read-side port.** `usecases/queries/SalesReportQuery`, implemented by
-      `infrastructure/persistence/queries/JpaSalesReportQuery`. Flat records —
-      `RevenueByCountryMonth`, `TopSkuByRevenue`, `CouponEffectiveness` — `BigDecimal` money fields,
-      **no value objects and no `Guard`**. State that absence in the javadoc: these are projections,
-      and running 100k rows through `Money`/`Country`/`Guard` to produce numbers that go straight to
-      JSON is the cost the demo exists to avoid.
-- [ ] **B2. Revenue by country and month.**
-      `SELECT country, date_trunc('month', order_timestamp) AS month, COUNT(*), SUM(quantity),
-      SUM(subtotal_price), SUM(tax_amount), SUM(total_price) FROM orders WHERE status <> 'CANCELLED'
-      GROUP BY country, month ORDER BY month DESC` — native (`date_trunc` is Postgres-specific), which
-      is fine: it lives in `infrastructure`, and dialect coupling *there* is what the layer is for.
-- [ ] **B3. Top SKUs by revenue.** `GROUP BY sku ORDER BY SUM(total_price) DESC LIMIT :n`. Takes a
-      plain limit — deliberately **not** coupled to Chunk C's page vocabulary, so the chunks stay
-      independent.
-- [ ] **B4. Coupon effectiveness.** The strongest single case, because in memory it is two
-      `findAll()`s and a hand-rolled join:
-      `SELECT c.code, c.usage_limit, c.used_count, COUNT(o.id), COALESCE(SUM(o.discount_amount), 0)
-      FROM coupons c LEFT JOIN orders o ON o.applied_coupon_code = c.code AND o.status <> 'CANCELLED'
-      GROUP BY c.code, c.usage_limit, c.used_count`.
-- [ ] **B5. Use case + endpoint.** `usecases/report/ViewSalesReport` implementing
-      `UseCase<ViewSalesReportRequest, ViewSalesReportResponse>` — the
-      `USECASES_IMPLEMENT_THE_USECASE_INTERFACE` ArchUnit rule requires it — and
-      `presentation/controller/ReportController` matching the existing controllers' OpenAPI style.
 
 ## Chunk C — volume (stop loading the table)
 

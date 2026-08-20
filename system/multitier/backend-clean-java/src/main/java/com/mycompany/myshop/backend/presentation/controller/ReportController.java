@@ -1,0 +1,29 @@
+package com.mycompany.myshop.backend.presentation.controller;
+
+import com.mycompany.myshop.backend.presentation.UseCaseResponder;
+import com.mycompany.myshop.backend.usecases.report.ViewSalesReport;
+import com.mycompany.myshop.backend.usecases.report.ViewSalesReportRequest;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/api/reports")
+public class ReportController {
+
+    private final ViewSalesReport viewSalesReport;
+    private final UseCaseResponder responder;
+
+    public ReportController(ViewSalesReport viewSalesReport, UseCaseResponder responder) {
+        this.viewSalesReport = viewSalesReport;
+        this.responder = responder;
+    }
+
+    @GetMapping("/sales")
+    public ResponseEntity<Object> salesReport(@RequestParam(required = false) Integer topSkuLimit) {
+        var result = viewSalesReport.execute(new ViewSalesReportRequest(topSkuLimit));
+        return responder.respond(result, ResponseEntity::ok);
+    }
+}

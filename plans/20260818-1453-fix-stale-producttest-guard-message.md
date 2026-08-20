@@ -1,5 +1,7 @@
 # 2026-08-18 14:53:00 UTC — Fix stale ProductTest guard-message assertion (backend-clean-java)
 
+🤖 **Picked up by agent** — `Valentina_Desk` at `2026-08-18T15:00:24Z`
+
 ## TL;DR
 
 **Why:** `main` is red. Run [32150581071](https://github.com/optivem/shop/actions/runs/32150581071) of `multitier-backend-clean-java-commit-stage` fails at **Run Unit Tests** (`./gradlew test`): `ProductTest > rejectsConstructionWithoutAnIdentifier()` expects `"id cannot be null"` but the guard now says `"sku cannot be null"`. Commit `e351e75b` (Chunk R) renamed `Product.id` → `Product.sku` and updated only the accessor call site in the test, leaving the assertion string and two test method names stale.
@@ -24,17 +26,26 @@
 
 ## ▶ Next executable step (resume here)
 
-Apply Step 1: in `system/multitier/backend-clean-java/src/test/java/com/mycompany/myshop/backend/domain/entities/ProductTest.java`, rename `carriesItsIdentifierAndPrice` → `carriesItsSkuAndPrice`, rename `rejectsConstructionWithoutAnIdentifier` → `rejectsConstructionWithoutASku`, and change the expected message on line 24 from `"id cannot be null"` to `"sku cannot be null"`. **This exact 3-line change may already be sitting uncommitted in the working tree** — check `git diff` on that file first and, if it is there, verify it matches this description rather than re-authoring it. Then run `./gradlew test` in that project (Step 2) before committing.
+**Step 5 only — confirm CI.** Steps 1–4 and 6 are done and committed: `ProductTest` matches the
+guard, `./gradlew build` is green (96 unit tests, 0 failures), the repo-root sweep ran, and the
+`CLAUDE.md` sentence is in. What is left is watching
+`multitier-backend-clean-java-commit-stage` on `main` — in particular the steps that never ran in
+the red run (Component, Integration, Contract, Real-Mode Contract tests, Linter).
 
 ## Steps
 
-- [ ] Step 1: Bring `ProductTest.java` in line with the renamed guard — `carriesItsIdentifierAndPrice` → `carriesItsSkuAndPrice`, `rejectsConstructionWithoutAnIdentifier` → `rejectsConstructionWithoutASku`, and `.hasMessage("id cannot be null")` → `.hasMessage("sku cannot be null")`. If the working tree already carries this diff, verify it and move on. Touch no other file — `Product.java` is correct.
-- [ ] Step 2: Run `./gradlew test` in `system/multitier/backend-clean-java`. Expect `BUILD SUCCESSFUL`, 14/14 domain tests.
-- [ ] Step 3: Run `./compile-all.sh` from the repo root — confirm no other project regressed.
-- [ ] Step 4: Commit the fix (ask before committing, per the standing rule) and push.
 - [ ] Step 5: Confirm `multitier-backend-clean-java-commit-stage` goes green on `main`, including the steps that were skipped in the failing run (Component, Integration, Contract, Real-Mode Contract tests, Linter).
-- [ ] Step 6 (prevention): Reinforce in `CLAUDE.md` → **Pre-Commit Verification** that a Java-only change runs `./gradlew build` (which runs tests), not just a compile — `e351e75b` passed a compile-only check and shipped a failing test. Keep the edit to a sentence; do not restructure the section.
 
-## Open questions
+## Found during execution (not part of this plan)
 
-- Step 6 is a `CLAUDE.md` wording tweak; the section already says `./gradlew build`, so this may be a no-op on reading. Confirm at execution time whether the existing wording is already sufficient and drop the step if so.
+- The commit also carried the uncommitted Chunk B / value-object work (`Sku`, `OrderNumber`, the
+  sales report). That pass had missed the `contractTest` source set entirely — four compile errors
+  in `BaseErpProductParityContractTest` and both `BackendPactVerificationTest`s — and left three
+  assertions comparing a value object to a raw `String` (`getSku()).isEqualTo("BOOK-123")`), which
+  compile but fail at runtime. All seven were fixed before committing.
+- `./compile-all.sh` reports `gh-optivem-multitier-clean-java.yaml FAILED` in 00:00 with
+  `field kind not found in type projectconfig.Config`. This is **not** a compile failure: the
+  locally installed `gh optivem` binary predates the `kind:`/`component:` schema that `3a904ab1`
+  introduced. Upgrading the local `gh-optivem` install is the fix — it also blocks plan
+  `20260818-1659-component-tests-yaml-for-backend-clean-java.md`, whose every verification step
+  shells out to `gh optivem component-test`.

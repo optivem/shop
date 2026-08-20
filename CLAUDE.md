@@ -26,6 +26,8 @@ If you only touched a single project, you can run that project's compile command
 - **TypeScript** (monolith / multitier backend / frontend-react): `npx tsc --noEmit` in the project directory
 - **.NET** (monolith/multitier): `dotnet build` in the project directory
 
+Note that `./gradlew build` and `dotnet build` run the unit tests, not just the compile — that test run is the gate, so never substitute a compile-only task for it (a rename can compile cleanly and still leave a stale test assertion behind).
+
 ### System Test Verification
 
 After compilation passes, run system tests with `--sample` for each affected language before committing. From the repo root, substituting `<language>` ∈ {java, dotnet, typescript}:

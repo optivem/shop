@@ -22,6 +22,12 @@ public record OrderPricing(
         Guard.notNull(taxRate, "taxRate");
         Guard.notNull(taxAmount, "taxAmount");
         Guard.notNull(totalPrice, "totalPrice");
+        Guard.positive(quantity, "quantity");
+        // Money is non-negative by construction, so only the amounts that must be strictly
+        // positive need saying here.
+        if (!unitPrice.isPositive()) {
+            throw new IllegalArgumentException("unitPrice must be positive");
+        }
 
         unitPrice = unitPrice.rounded();
         basePrice = basePrice.rounded();

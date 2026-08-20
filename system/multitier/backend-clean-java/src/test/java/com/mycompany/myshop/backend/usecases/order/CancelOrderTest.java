@@ -5,9 +5,11 @@ import com.mycompany.myshop.backend.domain.gateways.ClockGateway;
 import com.mycompany.myshop.backend.domain.repositories.OrderRepository;
 import com.mycompany.myshop.backend.domain.values.Country;
 import com.mycompany.myshop.backend.domain.values.Money;
+import com.mycompany.myshop.backend.domain.values.OrderNumber;
 import com.mycompany.myshop.backend.domain.values.OrderPricing;
 import com.mycompany.myshop.backend.domain.values.OrderStatus;
 import com.mycompany.myshop.backend.domain.values.Rate;
+import com.mycompany.myshop.backend.domain.values.Sku;
 import com.mycompany.myshop.backend.usecases.UseCaseError;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -40,7 +42,7 @@ class CancelOrderTest {
     void cancelOrderTransitionsStatusToCancelled() {
         givenNormalTime();
         var order = orderWith(OrderStatus.PLACED);
-        when(orderRepository.findByOrderNumber("ORD-001")).thenReturn(Optional.of(order));
+        when(orderRepository.findByOrderNumber(OrderNumber.of("ORD-001"))).thenReturn(Optional.of(order));
 
         var result = cancelOrder.execute(new CancelOrderRequest("ORD-001"));
 
@@ -63,7 +65,7 @@ class CancelOrderTest {
     void cancelOrderReportsInvalidWhenOrderAlreadyCancelled() {
         givenNormalTime();
         var order = orderWith(OrderStatus.CANCELLED);
-        when(orderRepository.findByOrderNumber("ORD-001")).thenReturn(Optional.of(order));
+        when(orderRepository.findByOrderNumber(OrderNumber.of("ORD-001"))).thenReturn(Optional.of(order));
 
         var result = cancelOrder.execute(new CancelOrderRequest("ORD-001"));
 
@@ -74,7 +76,7 @@ class CancelOrderTest {
     @Test
     void cancelOrderReportsNotFoundWhenOrderDoesNotExist() {
         givenNormalTime();
-        when(orderRepository.findByOrderNumber("ORD-999")).thenReturn(Optional.empty());
+        when(orderRepository.findByOrderNumber(OrderNumber.of("ORD-999"))).thenReturn(Optional.empty());
 
         var result = cancelOrder.execute(new CancelOrderRequest("ORD-999"));
 
@@ -87,6 +89,7 @@ class CancelOrderTest {
 
     private Order orderWith(OrderStatus status) {
         var pricing = OrderPricing.price(Money.of("10.00"), 1, Rate.ONE, Rate.ZERO, Rate.of("0.10"));
-        return new Order("ORD-001", NORMAL_TIME, Country.of("US"), "BOOK-123", pricing, status, null);
+        return new Order(OrderNumber.of("ORD-001"), NORMAL_TIME, Country.of("US"), Sku.of("BOOK-123"),
+                pricing, status, null);
     }
 }

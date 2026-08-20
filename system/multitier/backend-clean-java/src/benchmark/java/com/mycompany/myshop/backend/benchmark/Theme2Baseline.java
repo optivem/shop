@@ -4,6 +4,7 @@ import com.mycompany.myshop.backend.backendtest.configuration.TestcontainersConf
 import com.mycompany.myshop.backend.domain.entities.Coupon;
 import com.mycompany.myshop.backend.domain.entities.Order;
 import com.mycompany.myshop.backend.domain.values.OrderStatus;
+import com.mycompany.myshop.backend.domain.values.Sku;
 import com.mycompany.myshop.backend.domain.repositories.CouponRepository;
 import com.mycompany.myshop.backend.domain.repositories.OrderRepository;
 import com.mycompany.myshop.backend.domain.values.CouponCode;
@@ -198,13 +199,13 @@ class Theme2Baseline {
                     .collect(Collectors.groupingBy(
                             order -> order.getCountry().value() + "/" + month(order),
                             Collectors.reducing(BigDecimal.ZERO,
-                                    order -> order.getTotalPrice().amount(), BigDecimal::add)));
+                                    order -> order.getPricing().totalPrice().amount(), BigDecimal::add)));
 
             var revenueBySku = orders.stream()
                     .filter(order -> order.getStatus() != OrderStatus.CANCELLED)
-                    .collect(Collectors.groupingBy(Order::getSku,
+                    .collect(Collectors.groupingBy(order -> order.getSku().value(),
                             Collectors.reducing(BigDecimal.ZERO,
-                                    order -> order.getTotalPrice().amount(), BigDecimal::add)));
+                                    order -> order.getPricing().totalPrice().amount(), BigDecimal::add)));
 
             // The hand-rolled join the plan calls out: two findAll()s and a lookup per coupon.
             var discountByCoupon = orders.stream()
@@ -213,7 +214,7 @@ class Theme2Baseline {
                     .collect(Collectors.groupingBy(
                             order -> order.getAppliedCouponCode().value(),
                             Collectors.reducing(BigDecimal.ZERO,
-                                    order -> order.getDiscountAmount().amount(), BigDecimal::add)));
+                                    order -> order.getPricing().discountAmount().amount(), BigDecimal::add)));
             var effectiveness = coupons.stream()
                     .collect(Collectors.toMap(
                             coupon -> coupon.getCode().value(),
@@ -292,7 +293,7 @@ class Theme2Baseline {
 
     private void measureSetBasedRecall() {
         var timed = probe.measure(() ->
-                (long) orderRepository.cancelOutstandingForSku(SET_BASED_RECALLED_SKU));
+                (long) orderRepository.cancelOutstandingForSku(Sku.of(SET_BASED_RECALLED_SKU)));
         report.add(new BenchmarkReport.Row(CAP_SET_WRITE,
                 "Recall `" + SET_BASED_RECALLED_SKU + "`: one `UPDATE … WHERE`",
                 timed.millis(), timed.value(), 0,

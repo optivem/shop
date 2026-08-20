@@ -17,6 +17,12 @@ public final class Guard {
         }
     }
 
+    public static void positive(int value, String name) {
+        if (value <= 0) {
+            throw new IllegalArgumentException(name + " must be positive");
+        }
+    }
+
     public static void notNegative(Integer value, String name) {
         if (value != null && value < 0) {
             throw new IllegalArgumentException(name + " must be non-negative");

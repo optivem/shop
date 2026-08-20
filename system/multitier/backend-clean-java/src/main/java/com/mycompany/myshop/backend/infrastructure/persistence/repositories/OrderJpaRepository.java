@@ -15,15 +15,16 @@ import java.util.Optional;
 public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, Long> {
     Optional<OrderJpaEntity> findByOrderNumber(String orderNumber);
 
-    // One statement for the whole recall. The status <> :cancelled guard is what makes it idempotent
-    // and what makes the returned count mean "orders this recall cancelled", not "orders matching the
-    // SKU". flushAutomatically so a pending insert in the same transaction is visible to the update;
-    // clearAutomatically so no entity already in the persistence context keeps reporting the status it
-    // had before the update ran behind its back.
+    // One statement for the whole recall. The status = :placed guard mirrors Order.cancel(): only a
+    // placed order can be cancelled, so the returned count means "placed orders this recall
+    // cancelled", and re-running the recall is a no-op. flushAutomatically so a pending insert in the
+    // same transaction is visible to the update; clearAutomatically so no entity already in the
+    // persistence context keeps reporting the status it had before the update ran behind its back.
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE OrderJpaEntity o SET o.status = :cancelled "
-            + "WHERE o.sku = :sku AND o.status <> :cancelled")
+            + "WHERE o.sku = :sku AND o.status = :placed")
     int cancelOutstandingForSku(@Param("sku") String sku,
+                                @Param("placed") OrderStatus placed,
                                 @Param("cancelled") OrderStatus cancelled);
 
     // Same shape as cancelOutstandingForSku, over a time window instead of a SKU.

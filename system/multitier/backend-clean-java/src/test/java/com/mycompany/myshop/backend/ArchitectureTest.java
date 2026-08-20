@@ -8,6 +8,7 @@ import com.mycompany.myshop.backend.usecases.UseCase;
 import com.mycompany.myshop.backend.usecases.coupon.BrowseCoupons;
 import com.mycompany.myshop.backend.usecases.order.BrowseOrderHistory;
 import com.mycompany.myshop.backend.usecases.order.ViewOrderDetails;
+import com.mycompany.myshop.backend.usecases.report.ViewSalesReport;
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
@@ -20,7 +21,8 @@ class ArchitectureTest {
 
     private static final String DOMAIN = "..domain..";
     private static final String USECASES = "..usecases..";
-    private static final String[] USECASE_PACKAGES = {"..usecases.order..", "..usecases.coupon.."};
+    private static final String[] USECASE_PACKAGES =
+            {"..usecases.order..", "..usecases.coupon..", "..usecases.report.."};
     private static final String QUERIES = "..usecases.queries..";
     private static final String PRESENTATION = "..presentation..";
     private static final String INFRASTRUCTURE = "..infrastructure..";
@@ -100,6 +102,7 @@ class ArchitectureTest {
             .or().haveFullyQualifiedName(BrowseCoupons.class.getName())
             .or().haveFullyQualifiedName(BrowseOrderHistory.class.getName())
             .or().haveFullyQualifiedName(ViewOrderDetails.class.getName())
+            .or().haveFullyQualifiedName(ViewSalesReport.class.getName())
             .should().dependOnClassesThat().resideInAPackage(DOMAIN)
             .because("a pure query reports what is stored; it does not re-run the rules that wrote it");
 

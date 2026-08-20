@@ -13,6 +13,7 @@ import com.mycompany.myshop.backend.domain.repositories.OrderRepository;
 import com.mycompany.myshop.backend.domain.values.Country;
 import com.mycompany.myshop.backend.domain.values.Money;
 import com.mycompany.myshop.backend.domain.values.Rate;
+import com.mycompany.myshop.backend.domain.values.Sku;
 import com.mycompany.myshop.backend.usecases.TransactionRunner;
 import com.mycompany.myshop.backend.usecases.UseCaseError;
 import org.junit.jupiter.api.BeforeEach;
@@ -87,7 +88,7 @@ class PlaceOrderTest {
     @Test
     void placeOrderReportsInvalidWhenSkuUnknown() {
         givenNormalTime();
-        when(erpGateway.getProductDetails("UNKNOWN")).thenReturn(Optional.empty());
+        when(erpGateway.getProductDetails(Sku.of("UNKNOWN"))).thenReturn(Optional.empty());
 
         var result = placeOrder.execute(buildRequest("UNKNOWN", 1, "US"));
 
@@ -113,7 +114,8 @@ class PlaceOrderTest {
     }
 
     private void givenProductExists(String sku, Money price) {
-        when(erpGateway.getProductDetails(sku)).thenReturn(Optional.of(new Product(sku, price)));
+        when(erpGateway.getProductDetails(Sku.of(sku)))
+                .thenReturn(Optional.of(new Product(Sku.of(sku), price)));
     }
 
     private void givenNoPromotion() {
@@ -134,19 +136,21 @@ class PlaceOrderTest {
     }
 
     private void assertSavedOrder(Order saved, PlaceOrderResponse response) {
-        assertThat(saved.getOrderNumber()).startsWith("ORD-").isEqualTo(response.getOrderNumber());
+        var pricing = saved.getPricing();
+
+        assertThat(saved.getOrderNumber().value()).startsWith("ORD-").isEqualTo(response.getOrderNumber());
         assertThat(saved.getOrderTimestamp()).isEqualTo(NORMAL_TIME);
-        assertThat(saved.getSku()).isEqualTo("BOOK-123");
-        assertThat(saved.getQuantity()).isEqualTo(2);
+        assertThat(saved.getSku()).isEqualTo(Sku.of("BOOK-123"));
         assertThat(saved.getCountry()).isEqualTo(Country.of("US"));
-        assertThat(saved.getUnitPrice()).isEqualTo(Money.of("10.00"));
-        assertThat(saved.getBasePrice()).isEqualTo(Money.of("20.00"));
-        assertThat(saved.getDiscountRate()).isEqualTo(Rate.ZERO);
-        assertThat(saved.getDiscountAmount()).isEqualTo(Money.ZERO);
-        assertThat(saved.getSubtotalPrice()).isEqualTo(Money.of("20.00"));
-        assertThat(saved.getTaxRate()).isEqualTo(Rate.of("0.10"));
-        assertThat(saved.getTaxAmount()).isEqualTo(Money.of("2.00"));
-        assertThat(saved.getTotalPrice()).isEqualTo(Money.of("22.00"));
+        assertThat(pricing.quantity()).isEqualTo(2);
+        assertThat(pricing.unitPrice()).isEqualTo(Money.of("10.00"));
+        assertThat(pricing.basePrice()).isEqualTo(Money.of("20.00"));
+        assertThat(pricing.discountRate()).isEqualTo(Rate.ZERO);
+        assertThat(pricing.discountAmount()).isEqualTo(Money.ZERO);
+        assertThat(pricing.subtotalPrice()).isEqualTo(Money.of("20.00"));
+        assertThat(pricing.taxRate()).isEqualTo(Rate.of("0.10"));
+        assertThat(pricing.taxAmount()).isEqualTo(Money.of("2.00"));
+        assertThat(pricing.totalPrice()).isEqualTo(Money.of("22.00"));
         assertThat(saved.getStatus()).isEqualTo(OrderStatus.PLACED);
         assertThat(saved.getAppliedCouponCode()).isNull();
     }

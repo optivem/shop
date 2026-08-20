@@ -5,6 +5,7 @@ import com.mycompany.myshop.backend.domain.entities.Product;
 import com.mycompany.myshop.backend.domain.values.Money;
 import com.mycompany.myshop.backend.domain.values.Promotion;
 import com.mycompany.myshop.backend.domain.values.Rate;
+import com.mycompany.myshop.backend.domain.values.Sku;
 import com.mycompany.myshop.backend.domain.gateways.ErpGateway;
 import com.mycompany.myshop.backend.infrastructure.external.ErpGatewayException;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,9 +37,9 @@ public class HttpErpGateway implements ErpGateway {
     }
 
     @Override
-    public Optional<Product> getProductDetails(String sku) {
-        return fetchProductDetails(sku)
-                .map(wire -> new Product(wire.getId(), Money.of(wire.getPrice())));
+    public Optional<Product> getProductDetails(Sku sku) {
+        return fetchProductDetails(sku.value())
+                .map(wire -> new Product(Sku.of(wire.getId()), Money.of(wire.getPrice())));
     }
 
     public GetPromotionResponse fetchPromotionDetails() {

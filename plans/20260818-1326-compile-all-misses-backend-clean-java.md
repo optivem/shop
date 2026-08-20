@@ -6,7 +6,9 @@
 
 **End result:** `compile-all.sh` covers `backend-clean-java` — via an honest `kind: component` config that its existing glob picks up, with no change to the script's fan-out logic — and it fails loudly if any future project directory under `system/` or `system-test/` is covered by no config at all, so the next standalone project cannot be silently skipped. `CLAUDE.md` says what the script actually does.
 
-> **⛔ Blocked on `gh-optivem`.** This plan depends on `kind: component` existing in the CLI — see `gh-optivem/plans/20260818-1351-kind-component-config-discriminator.md` (its Step 11 is the `shop`-side config addition that unblocks this plan). Do not start here until that has landed; the coverage check below would turn `compile-all.sh` red on `backend-clean-java` until the config exists to claim it.
+> ✅ **UNBLOCKED as of 2026-08-18.** The `gh-optivem` dependency has landed: `kind: component` shipped in commit `f3f003d0`, and its Step 11 added `gh-optivem-multitier-clean-java.yaml` to this repo (commit `3a904ab1`). `backend-clean-java` is therefore claimed by a config, so the coverage check below finds full coverage rather than turning `compile-all.sh` red. Every step here is now executable.
+>
+> *(Previously blocked on `gh-optivem/plans/20260818-1351-kind-component-config-discriminator.md`, now executed and deleted — the config route it describes is the one that was taken.)*
 
 ## Outcomes
 
@@ -52,9 +54,16 @@ So the config route is adopted, and the counter-proposal that replaced it here �
 
 ## ▶ Next executable step (resume here)
 
-**Blocked — nothing here is executable yet.** The first move belongs to the other repo: land `kind: component` via `gh-optivem/plans/20260818-1351-kind-component-config-discriminator.md`, whose Step 11 adds `gh-optivem-multitier-clean-java.yaml` to this repo. That single file is what makes `backend-clean-java` claimed, and it is what the coverage check below needs in place before it can pass.
+**Unblocked — start at Step 1.** The `gh-optivem` dependency has landed and `gh-optivem-multitier-clean-java.yaml` is committed here, so `backend-clean-java` is claimed and the coverage check can pass on a clean tree.
 
-Once that config exists here, Step 1 is the coverage check in `compile-all.sh`: before the config loop, enumerate directories under `system/monolith/*`, `system/multitier/*`, `system-test/*`, and `external-systems/*` that look like projects (contain a `build.gradle`, `package.json`, or `*.csproj`/`*.sln` — this is what excludes the `VERSION`-only marker dirs without hardcoding their names), resolve every path referenced by every `gh-optivem-*.yaml` (including `*-legacy`, which are excluded from compiling but still declare coverage), and fail naming any project directory no config claims, with the fix spelled out: add it to an existing config, or give it its own `kind: component` config.
+Step 1 is the coverage check in `compile-all.sh`: before the config loop, enumerate directories under `system/monolith/*`, `system/multitier/*`, `system-test/*`, and `external-systems/*` that look like projects (contain a `build.gradle`, `package.json`, or `*.csproj`/`*.sln` — this is what excludes the `VERSION`-only marker dirs without hardcoding their names), resolve every path referenced by every `gh-optivem-*.yaml` (including `*-legacy`, which are excluded from compiling but still declare coverage), and fail naming any project directory no config claims, with the fix spelled out: add it to an existing config, or give it its own `kind: component` config.
+
+## Related
+
+- `plans/20260818-1659-component-tests-yaml-for-backend-clean-java.md` — the other half of the
+  same defect class. This plan stops `compile-all.sh` reporting green over a project it never
+  compiled; that one stops `gh optivem component-test run` reporting green over a component whose
+  suites it never ran. Independent — either order.
 
 ## Steps
 

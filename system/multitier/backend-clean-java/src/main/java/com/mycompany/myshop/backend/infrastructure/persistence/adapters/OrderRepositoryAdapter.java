@@ -1,7 +1,9 @@
 package com.mycompany.myshop.backend.infrastructure.persistence.adapters;
 
 import com.mycompany.myshop.backend.domain.entities.Order;
+import com.mycompany.myshop.backend.domain.values.OrderNumber;
 import com.mycompany.myshop.backend.domain.values.OrderStatus;
+import com.mycompany.myshop.backend.domain.values.Sku;
 import com.mycompany.myshop.backend.domain.repositories.OrderRepository;
 import com.mycompany.myshop.backend.infrastructure.persistence.mappers.OrderMapper;
 import com.mycompany.myshop.backend.infrastructure.persistence.repositories.OrderJpaRepository;
@@ -23,20 +25,20 @@ public class OrderRepositoryAdapter implements OrderRepository {
     @Override
     public Order save(Order order) {
         var entity = OrderMapper.toEntity(order);
-        jpaRepository.findByOrderNumber(order.getOrderNumber())
+        jpaRepository.findByOrderNumber(order.getOrderNumber().value())
                 .ifPresent(existing -> entity.setId(existing.getId()));
         return OrderMapper.toDomain(jpaRepository.save(entity));
     }
 
     @Override
-    public Optional<Order> findByOrderNumber(String orderNumber) {
-        return jpaRepository.findByOrderNumber(orderNumber).map(OrderMapper::toDomain);
+    public Optional<Order> findByOrderNumber(OrderNumber orderNumber) {
+        return jpaRepository.findByOrderNumber(orderNumber.value()).map(OrderMapper::toDomain);
     }
 
     @Transactional
     @Override
-    public int cancelOutstandingForSku(String sku) {
-        return jpaRepository.cancelOutstandingForSku(sku, OrderStatus.CANCELLED);
+    public int cancelOutstandingForSku(Sku sku) {
+        return jpaRepository.cancelOutstandingForSku(sku.value(), OrderStatus.PLACED, OrderStatus.CANCELLED);
     }
 
     @Transactional

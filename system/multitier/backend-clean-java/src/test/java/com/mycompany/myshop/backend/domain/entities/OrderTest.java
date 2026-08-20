@@ -3,9 +3,11 @@ package com.mycompany.myshop.backend.domain.entities;
 import com.mycompany.myshop.backend.domain.exceptions.ValidationException;
 import com.mycompany.myshop.backend.domain.values.Country;
 import com.mycompany.myshop.backend.domain.values.Money;
+import com.mycompany.myshop.backend.domain.values.OrderNumber;
 import com.mycompany.myshop.backend.domain.values.OrderPricing;
 import com.mycompany.myshop.backend.domain.values.OrderStatus;
 import com.mycompany.myshop.backend.domain.values.Rate;
+import com.mycompany.myshop.backend.domain.values.Sku;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
@@ -58,12 +60,14 @@ class OrderTest {
     }
 
     @Test
-    void cancelMovesADeliveredOrderToCancelled() {
+    void cancelRejectsADeliveredOrder() {
         var order = orderWith(OrderStatus.DELIVERED);
 
-        order.cancel();
+        var thrown = catchThrowable(order::cancel);
 
-        assertThat(order.getStatus()).isEqualTo(OrderStatus.CANCELLED);
+        assertThat(thrown).isInstanceOf(ValidationException.class)
+                .hasMessage("Order cannot be cancelled in its current status");
+        assertThat(order.getStatus()).isEqualTo(OrderStatus.DELIVERED);
     }
 
     @Test
@@ -79,7 +83,7 @@ class OrderTest {
 
     @Test
     void rejectsConstructionWithoutAnOrderNumber() {
-        var thrown = catchThrowable(() -> new Order(null, PLACED_AT, Country.of("US"), "BOOK-123", pricing(),
+        var thrown = catchThrowable(() -> new Order(null, PLACED_AT, Country.of("US"), Sku.of("BOOK-123"), pricing(),
                 OrderStatus.PLACED, null));
 
         assertThat(thrown).isInstanceOf(IllegalArgumentException.class)
@@ -88,7 +92,7 @@ class OrderTest {
 
     @Test
     void rejectsConstructionWithoutAPricing() {
-        var thrown = catchThrowable(() -> new Order("ORD-001", PLACED_AT, Country.of("US"), "BOOK-123", null,
+        var thrown = catchThrowable(() -> new Order(OrderNumber.of("ORD-001"), PLACED_AT, Country.of("US"), Sku.of("BOOK-123"), null,
                 OrderStatus.PLACED, null));
 
         assertThat(thrown).isInstanceOf(IllegalArgumentException.class)
@@ -97,7 +101,7 @@ class OrderTest {
 
     @Test
     void rejectsConstructionWithoutAStatus() {
-        var thrown = catchThrowable(() -> new Order("ORD-001", PLACED_AT, Country.of("US"), "BOOK-123",
+        var thrown = catchThrowable(() -> new Order(OrderNumber.of("ORD-001"), PLACED_AT, Country.of("US"), Sku.of("BOOK-123"),
                 pricing(), null, null));
 
         assertThat(thrown).isInstanceOf(IllegalArgumentException.class)
@@ -113,21 +117,22 @@ class OrderTest {
 
     @Test
     void exposesTheComponentsOfItsPricing() {
-        var order = orderWith(OrderStatus.PLACED);
+        var pricing = orderWith(OrderStatus.PLACED).getPricing();
 
-        assertThat(order.getQuantity()).isEqualTo(2);
-        assertThat(order.getUnitPrice()).isEqualTo(Money.of("10.00"));
-        assertThat(order.getBasePrice()).isEqualTo(Money.of("20.00"));
-        assertThat(order.getDiscountRate()).isEqualTo(Rate.ZERO);
-        assertThat(order.getDiscountAmount()).isEqualTo(Money.ZERO);
-        assertThat(order.getSubtotalPrice()).isEqualTo(Money.of("20.00"));
-        assertThat(order.getTaxRate()).isEqualTo(Rate.of("0.10"));
-        assertThat(order.getTaxAmount()).isEqualTo(Money.of("2.00"));
-        assertThat(order.getTotalPrice()).isEqualTo(Money.of("22.00"));
+        assertThat(pricing.quantity()).isEqualTo(2);
+        assertThat(pricing.unitPrice()).isEqualTo(Money.of("10.00"));
+        assertThat(pricing.basePrice()).isEqualTo(Money.of("20.00"));
+        assertThat(pricing.discountRate()).isEqualTo(Rate.ZERO);
+        assertThat(pricing.discountAmount()).isEqualTo(Money.ZERO);
+        assertThat(pricing.subtotalPrice()).isEqualTo(Money.of("20.00"));
+        assertThat(pricing.taxRate()).isEqualTo(Rate.of("0.10"));
+        assertThat(pricing.taxAmount()).isEqualTo(Money.of("2.00"));
+        assertThat(pricing.totalPrice()).isEqualTo(Money.of("22.00"));
     }
 
     private static Order orderWith(OrderStatus status) {
-        return new Order("ORD-001", PLACED_AT, Country.of("US"), "BOOK-123", pricing(), status, null);
+        return new Order(OrderNumber.of("ORD-001"), PLACED_AT, Country.of("US"), Sku.of("BOOK-123"),
+                pricing(), status, null);
     }
 
     private static OrderPricing pricing() {

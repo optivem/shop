@@ -16,7 +16,12 @@ public final class Money {
 
     private final BigDecimal amount;
 
+    // Every factory and every operation routes through here, so no Money can hold a negative
+    // amount -- including a result of minus(), which is therefore a partial operation.
     private Money(BigDecimal amount) {
+        if (amount.signum() < 0) {
+            throw new IllegalArgumentException("amount must not be negative");
+        }
         this.amount = amount;
     }
 
@@ -47,6 +52,10 @@ public final class Money {
 
     public Money rounded() {
         return new Money(amount.setScale(SCALE, ROUNDING));
+    }
+
+    public boolean isPositive() {
+        return amount.signum() > 0;
     }
 
     public BigDecimal amount() {

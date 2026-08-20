@@ -8,9 +8,11 @@ import com.mycompany.myshop.backend.domain.repositories.OrderRepository;
 import com.mycompany.myshop.backend.domain.values.Country;
 import com.mycompany.myshop.backend.domain.values.CouponCode;
 import com.mycompany.myshop.backend.domain.values.Money;
+import com.mycompany.myshop.backend.domain.values.OrderNumber;
 import com.mycompany.myshop.backend.domain.values.OrderPricing;
 import com.mycompany.myshop.backend.domain.values.OrderStatus;
 import com.mycompany.myshop.backend.domain.values.Rate;
+import com.mycompany.myshop.backend.domain.values.Sku;
 import com.mycompany.myshop.backend.infrastructure.persistence.adapters.OrderRepositoryAdapter;
 import jakarta.persistence.EntityManager;
 import java.time.Instant;
@@ -57,10 +59,10 @@ class OrderRepositoryIntegrationTest {
             Rate.of("0.1000"), Money.of("2.00"), Money.of("22.00"));
 
         var order = new Order(
-            "ORD-001",
+            OrderNumber.of("ORD-001"),
             Instant.parse("2026-01-01T00:00:00Z"),
             Country.of("US"),
-            "BOOK-123",
+            Sku.of("BOOK-123"),
             pricing,
             OrderStatus.PLACED,
             null
@@ -69,10 +71,10 @@ class OrderRepositoryIntegrationTest {
         orderRepository.save(order);
         forceDatabaseRoundTrip();
 
-        var found = orderRepository.findByOrderNumber("ORD-001");
+        var found = orderRepository.findByOrderNumber(OrderNumber.of("ORD-001"));
         assertThat(found).isPresent();
-        assertThat(found.get().getSku()).isEqualTo("BOOK-123");
-        assertThat(found.get().getTotalPrice()).isEqualTo(Money.of("22.00"));
+        assertThat(found.get().getSku()).isEqualTo(Sku.of("BOOK-123"));
+        assertThat(found.get().getPricing().totalPrice()).isEqualTo(Money.of("22.00"));
         assertThat(found.get().getStatus()).isEqualTo(OrderStatus.PLACED);
     }
 
@@ -84,17 +86,17 @@ class OrderRepositoryIntegrationTest {
             Rate.of("0.2000"), Money.of("5.40"), Money.of("32.40"));
 
         orderRepository.save(new Order(
-            "ORD-002",
+            OrderNumber.of("ORD-002"),
             Instant.parse("2026-01-02T00:00:00Z"),
             Country.of("DE"),
-            "BOOK-456",
+            Sku.of("BOOK-456"),
             pricing,
             OrderStatus.PLACED,
             CouponCode.of("SAVE10")
         ));
         forceDatabaseRoundTrip();
 
-        var found = orderRepository.findByOrderNumber("ORD-002");
+        var found = orderRepository.findByOrderNumber(OrderNumber.of("ORD-002"));
         assertThat(found).isPresent();
         assertThat(found.get().getPricing()).isEqualTo(pricing);
         assertThat(found.get().getCountry()).isEqualTo(Country.of("DE"));

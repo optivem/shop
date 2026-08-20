@@ -14,9 +14,11 @@ import com.mycompany.myshop.backend.usecases.order.PlaceOrder;
 import com.mycompany.myshop.backend.usecases.order.RecallSku;
 import com.mycompany.myshop.backend.usecases.order.SweepDeliveries;
 import com.mycompany.myshop.backend.usecases.order.ViewOrderDetails;
+import com.mycompany.myshop.backend.usecases.report.ViewSalesReport;
 import com.mycompany.myshop.backend.usecases.TransactionRunner;
 import com.mycompany.myshop.backend.usecases.queries.CouponQuery;
 import com.mycompany.myshop.backend.usecases.queries.OrderQuery;
+import com.mycompany.myshop.backend.usecases.queries.SalesReportQuery;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -69,5 +71,10 @@ public class UseCaseConfig {
     @Bean
     BrowseCoupons browseCoupons(CouponQuery couponQuery) {
         return new BrowseCoupons(couponQuery);
+    }
+
+    @Bean
+    ViewSalesReport viewSalesReport(SalesReportQuery salesReportQuery) {
+        return new ViewSalesReport(salesReportQuery);
     }
 }
