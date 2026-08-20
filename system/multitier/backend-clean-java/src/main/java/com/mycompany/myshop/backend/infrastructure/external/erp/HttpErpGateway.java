@@ -7,7 +7,7 @@ import com.mycompany.myshop.backend.domain.values.Promotion;
 import com.mycompany.myshop.backend.domain.values.Rate;
 import com.mycompany.myshop.backend.domain.values.Sku;
 import com.mycompany.myshop.backend.domain.gateways.ErpGateway;
-import com.mycompany.myshop.backend.infrastructure.external.ErpGatewayException;
+import com.mycompany.myshop.backend.domain.gateways.ErpGatewayException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 

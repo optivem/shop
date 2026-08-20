@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.within;
 
 import com.mycompany.myshop.backend.backendtest.configuration.ExternalSystemMode;
-import com.mycompany.myshop.backend.infrastructure.external.ClockGatewayException;
+import com.mycompany.myshop.backend.domain.gateways.ClockGatewayException;
 import com.mycompany.myshop.backend.integration.latest.base.BaseGatewayIntegrationTest;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;

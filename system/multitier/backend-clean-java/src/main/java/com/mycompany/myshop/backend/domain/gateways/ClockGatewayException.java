@@ -1,4 +1,4 @@
-package com.mycompany.myshop.backend.infrastructure.external;
+package com.mycompany.myshop.backend.domain.gateways;
 
 public class ClockGatewayException extends GatewayException {
 

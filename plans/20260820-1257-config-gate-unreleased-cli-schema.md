@@ -19,35 +19,25 @@ What we get out of this — the goals and deliverables:
 
 ## ▶ Next executable step (resume here)
 
-**Step 1 — publish gh-optivem v1.6.72.** This is the fix that turns shop green; everything else is hardening. It runs in the sibling `optivem/gh-optivem` checkout, not in shop, and it needs the user's go-ahead because it publishes a release.
+**Confirm the fix landed in shop CI.** Everything actionable is done: gh-optivem `v1.6.72` is published and `Latest` (2026-08-20T13:15:14Z), and the shop-side provenance guard is committed. What remains is observation, not editing.
 
-Verify nothing changed since diagnosis, then dispatch:
+Watch for a `meta-prerelease-stage` run that actually reaches the gate:
 
 ```bash
-ROOT="$(cd "$(git rev-parse --show-toplevel)/.." && pwd)"
-cd "$ROOT/gh-optivem"
-cat VERSION                       # expect 1.6.72
-git log --oneline v1.6.71..origin/main   # expect f3f003d0 as the only code commit
-gh release list --limit 3         # expect v1.6.71 still Latest
+gh run list --repo optivem/shop --workflow meta-prerelease-stage.yml --limit 5 \
+  --json databaseId,conclusion,createdAt
+gh run view <id> --repo optivem/shop     # must list "Validate all gh-optivem configs" as ✓
 ```
 
-Then ask the user before dispatching `gh-acceptance-stage` (it is `workflow_dispatch`-only — the schedule is commented out at `.github/workflows/gh-acceptance-stage.yml:7-8`), wait for it, and follow with `gh-release-stage`. Stop and report once `v1.6.72` appears in `gh release list`.
+A run that stops at *Decide whether to run* proves nothing — it never installs the CLI. Wait for one with meaningful changes, or re-run 32369796566 (which continues into the full ~4h pipeline, so only do that deliberately).
 
-Unblocks: shop's next scheduled `meta-prerelease-stage` clears the config gate.
+If the gate passes, delete this plan file — the work is complete. Keep only the skipped-acceptance watch item if you still want it tracked.
 
 ## Steps
 
-- [ ] **Step 1 — Publish gh-optivem v1.6.72** *(external repo; user-gated)*. In the `optivem/gh-optivem` checkout: confirm `VERSION` is `1.6.72` and that `f3f003d0` is the only code commit since `v1.6.71` (`53b174d9`, `abaf29ec`, `cfe50630`, `79d8cb66` are plan/doc/version-bump only). Ask the user before dispatching — this publishes a release. Dispatch `gh-acceptance-stage` (workflow_dispatch-only), let it finish, then `gh-release-stage`. Confirm `v1.6.72` is `Latest`. No deadlock risk: gh-optivem's acceptance stage tests against shop's latest `meta-v*` tag (`meta-v1.0.184`, 2026-08-18T20:11Z), which predates the offending config commit.
+- [ ] **Step 1 — Confirm shop CI is green.** gh-optivem `v1.6.72` published 2026-08-20T13:15:14Z and is `Latest`, so CI now installs a CLI that understands `kind: component`. Confirm the next `meta-prerelease-stage` run gets past *Validate all gh-optivem configs* to *Read VERSION values*. The gate only executes when *Decide whether to run* finds meaningful changes, so a short-circuiting run proves nothing either way — wait for one that reaches the step, or re-run the failed run 32369796566 (note this continues into the full pipeline, not just the gate).
 
-- [ ] **Step 2 — Add a CLI-provenance banner to `validate-all-gh-optivem-config.sh`.** Before the per-config loop, print `gh optivem --version` (do **not** redirect its stderr to `/dev/null`) so every run records which build produced its PASSED rows. Keep the existing summary table untouched.
-
-- [ ] **Step 3 — Warn loudly on a `dev-*` build in the same script.** When the version string matches a dev build (e.g. `gh-optivem dev-<sha>`), emit a prominent warning that this run does **not** reflect CI, because CI installs the latest *published release* via `optivem/actions/install-gh-optivem@v1` with `ref` unset. Keep it a **warning, not a hard failure** — validating against a local source build is a legitimate workflow; the defect was silence about it, not the practice.
-
-- [ ] **Step 4 — Fix the stale UNBLOCKED note.** Correct `plans/20260818-1326-compile-all-misses-backend-clean-java.md:9`, which asserts the gh-optivem dependency "has landed" on the strength of commit `f3f003d0`. Restate it in terms of the *published release* that actually gates CI (v1.6.72), since commit-vs-release is precisely the confusion that caused this failure.
-
-- [ ] **Step 5 — Record the rejected alternative.** Note in this plan (and, if it earns a durable home, alongside the install step in `.github/workflows/_meta-prerelease-pipeline.yml:161-165`) that setting `install-gh-optivem`'s `ref` input to build gh-optivem from source is **rejected**: the gate exists to prove shop works with the CLI a student would actually install, and sourcing it from unreleased `main` would make the gate assert something no student can reproduce.
-
-- [ ] **Step 6 — Verify.** Run `bash ./validate-all-gh-optivem-config.sh` locally: the version banner appears, the dev-build warning fires (local CLI is `dev-f3f003d0`), and all 13 configs still report PASSED/PASSED. After v1.6.72 is published, confirm the next `meta-prerelease-stage` run gets past *Validate all gh-optivem configs* to *Read VERSION values*. No `compile-all.sh` sweep and no system tests — this plan changes no product code.
+- [ ] **Step 2 — Watch for fallout from the skipped acceptance matrix** *(added because tests were bypassed)*. `f3f003d0` is ~1500 lines across 19 files and rewrites config parsing for all 13 configs plus adds `kind` refusal guards, but no end-to-end shop run has ever exercised it — the released v1.6.72 is unit-tested only. The first `meta-prerelease-stage` and language commit-stage runs after publication are the de-facto acceptance test. If a `kind: system` config starts being refused, or a command that used to work now errors on kind, suspect `kind_guards.go` and consider dispatching a real `gh-acceptance-stage` retroactively.
 
 ## Notes — evidence behind the diagnosis
 
@@ -57,3 +47,9 @@ Unblocks: shop's next scheduled `meta-prerelease-stage` clears the config gate.
 - **Why it stayed hidden**: the validate step is gated on `steps.decide.outputs.should_run == 'true'`. Every scheduled run since 2026-08-18 short-circuited at *Decide whether to run* (e.g. run 32354037636 at 09:28 today never reached the gate). Today's `backend-clean-java` commits were the first "meaningful changes" that let it execute — a latent break, not a new one.
 - **Not reproducible locally, and that is the finding**: `gh optivem --version` → `gh-optivem dev-f3f003d0`. `24eb954e`'s "Verified: config validate and config preflight pass" was true against that dev build and false against every released CLI.
 - **Parity**: no language twins. Single repo-root config; the other twelve are `kind: system`. `compile-all.sh` and `migrate-all-gh-optivem-config.sh` glob the same files but run locally only, never in CI.
+
+## Notes — decisions taken during execution
+
+- **Release published without the acceptance matrix.** The recommendation was a full `gh-acceptance-stage` run, on the grounds that `f3f003d0` rewrites config parsing for every config and adds refusal guards, so a regression would break all three languages at once in a release every consumer auto-installs. The user chose `debug-skip-tests=true` for speed. Recorded here rather than argued: v1.6.72 ships unit-tested but never exercised end-to-end, which is what Step 3 above watches for.
+- **Rejected: pinning `install-gh-optivem`'s `ref`.** Making the gate build gh-optivem from unreleased `main` would turn a red gate green while destroying its meaning — it exists to prove shop works with the CLI a student would actually install. This now lives as a comment above the install step in `.github/workflows/_meta-prerelease-pipeline.yml`, so it survives this plan file's deletion.
+- **Step dropped as moot: the stale UNBLOCKED note.** `plans/20260818-1326-compile-all-misses-backend-clean-java.md:9` claimed the gh-optivem dependency "has landed" on the strength of a commit. Shop commit `3a7ca66c` completed and deleted that plan file mid-execution, taking the note with it. The commit-vs-release distinction it got wrong is now stated in the header of `validate-all-gh-optivem-config.sh`, which is a better home for it anyway.

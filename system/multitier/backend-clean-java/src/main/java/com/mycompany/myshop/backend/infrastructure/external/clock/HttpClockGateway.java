@@ -3,7 +3,7 @@ package com.mycompany.myshop.backend.infrastructure.external.clock;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.mycompany.myshop.backend.domain.gateways.ClockGateway;
-import com.mycompany.myshop.backend.infrastructure.external.ClockGatewayException;
+import com.mycompany.myshop.backend.domain.gateways.ClockGatewayException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 

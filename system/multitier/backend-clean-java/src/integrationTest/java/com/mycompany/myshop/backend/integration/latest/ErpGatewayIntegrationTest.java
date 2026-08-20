@@ -7,7 +7,7 @@ import com.mycompany.myshop.backend.domain.gateways.ErpGateway;
 import com.mycompany.myshop.backend.domain.values.Money;
 import com.mycompany.myshop.backend.domain.values.Rate;
 import com.mycompany.myshop.backend.domain.values.Sku;
-import com.mycompany.myshop.backend.infrastructure.external.ErpGatewayException;
+import com.mycompany.myshop.backend.domain.gateways.ErpGatewayException;
 import com.mycompany.myshop.backend.integration.latest.base.BaseGatewayIntegrationTest;
 import org.junit.jupiter.api.Test;
 

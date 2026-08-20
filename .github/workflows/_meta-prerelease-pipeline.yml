@@ -158,6 +158,15 @@ jobs:
       # repo root. Catches broken configs here, before Phase 0/1 burns ~30 min
       # only to fail on the same yaml at acceptance time. Cheap (~30s) and
       # pure-local — no docker, no network beyond the gh extension install.
+      # `ref` is deliberately left unset so this installs the latest *published
+      # release* — the CLI a student would actually get. Do not set it to a
+      # branch to make a red gate go green: building from unreleased main would
+      # have the gate assert something no student can reproduce, and it would
+      # hide exactly the failure it is here to catch. When a config depends on
+      # an unreleased gh-optivem feature, the fix is to publish gh-optivem, not
+      # to move this pin. (Precedent: run 32369796566, where
+      # gh-optivem-multitier-clean-java.yaml's `kind: component` parsed on a dev
+      # build and was rejected by every release.)
       - name: Install gh-optivem CLI extension
         if: ${{ steps.decide.outputs.should_run == 'true' }}
         uses: optivem/actions/install-gh-optivem@v1

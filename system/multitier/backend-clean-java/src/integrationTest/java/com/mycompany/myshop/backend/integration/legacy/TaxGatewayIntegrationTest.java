@@ -9,7 +9,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.mycompany.myshop.backend.domain.values.Country;
-import com.mycompany.myshop.backend.infrastructure.external.TaxGatewayException;
+import com.mycompany.myshop.backend.domain.gateways.TaxGatewayException;
 import com.mycompany.myshop.backend.domain.gateways.TaxGateway;
 import com.mycompany.myshop.backend.domain.values.Rate;
 import com.mycompany.myshop.backend.infrastructure.external.tax.HttpTaxGateway;

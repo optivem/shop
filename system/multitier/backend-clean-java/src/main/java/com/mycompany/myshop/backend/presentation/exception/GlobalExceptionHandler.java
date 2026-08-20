@@ -155,6 +155,28 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return from instanceof Class<?> clazz ? clazz : from.getClass();
     }
 
+    // 502 rather than 500: the request was fine and this server is fine, but an upstream system we do
+    // not control failed to answer. 502 covers all three ways it can fail us -- unreachable, an error
+    // status, a body we could not read -- where 503 would promise the caller that retrying soon helps,
+    // which we cannot know. The distinction matters to whoever is paged: a 500 says look at our code,
+    // a 502 says look at theirs.
+    @ExceptionHandler(GatewayException.class)
+    public ResponseEntity<ProblemDetail> handleGatewayException(GatewayException ex) {
+        // The message names the upstream URL and its response body. That is exactly what the log needs
+        // and exactly what the response must not carry.
+        log.error("External system did not answer", ex);
+
+        var problemDetail = ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_GATEWAY,
+                GATEWAY_ERROR_DETAIL
+        );
+        problemDetail.setType(URI.create(badGatewayTypeUri));
+        problemDetail.setTitle("Bad Gateway");
+        problemDetail.setProperty(PROP_TIMESTAMP, Instant.now());
+
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(problemDetail);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ProblemDetail> handleGeneralException(Exception ex) {
         // The stack trace carries the message and every cause. None of that goes in the response:
