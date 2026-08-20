@@ -11,8 +11,8 @@ class ProductTest {
     void carriesItsSkuAndPrice() {
         var product = new Product(Sku.of("BOOK-123"), Money.of("10.00"));
 
-        assertThat(product.getSku()).isEqualTo(Sku.of("BOOK-123"));
-        assertThat(product.getPrice()).isEqualTo(Money.of("10.00"));
+        assertThat(product.sku()).isEqualTo(Sku.of("BOOK-123"));
+        assertThat(product.price()).isEqualTo(Money.of("10.00"));
     }
 
     @Test

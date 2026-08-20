@@ -20,8 +20,8 @@ abstract class BaseErpProductParityContractTest {
         var result = erpGateway().getProductDetails(Sku.of("BOOK-123"));
 
         assertThat(result).isPresent();
-        assertThat(result.get().getSku()).isEqualTo(Sku.of("BOOK-123"));
-        assertThat(result.get().getPrice()).isEqualTo(Money.of("10.00"));
+        assertThat(result.get().sku()).isEqualTo(Sku.of("BOOK-123"));
+        assertThat(result.get().price()).isEqualTo(Money.of("10.00"));
     }
 
     @Test

@@ -2,27 +2,17 @@ package com.mycompany.myshop.backend.domain.values;
 
 import com.mycompany.myshop.backend.domain.Guard;
 
-public class Promotion {
+// The ERP's current promotion. A record for the same reason as Product and TaxRate, and it keeps its
+// behaviour: factor() is what callers actually want, because an inactive promotion and a promotion
+// that discounts nothing multiply the price identically.
+public record Promotion(boolean active, Rate discount) {
 
-    private final boolean active;
-    private final Rate discount;
-
-    public Promotion(boolean active, Rate discount) {
+    public Promotion {
         Guard.notNull(discount, "discount");
-        this.active = active;
-        this.discount = discount;
     }
 
     public static Promotion inactive() {
         return new Promotion(false, Rate.ONE);
-    }
-
-    public boolean isActive() {
-        return active;
-    }
-
-    public Rate getDiscount() {
-        return discount;
     }
 
     public Rate factor() {

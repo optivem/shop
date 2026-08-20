@@ -52,7 +52,10 @@ The shape worth noticing:
 - **Only what MyShop owns is an entity.** `domain/entities` holds `Order` and `Coupon` — the two
   things with identity, lifecycle and state transitions here. `Product`, `TaxRate` and `Promotion` are
   immutable snapshots of records the ERP and the tax service own, so they are values, and they live in
-  `domain/values` together. The gateway ports therefore traffic in values, never in aggregates.
+  `domain/values` together — as `record`s, like everything else in that package, so two readings of
+  the same product compare equal. (`Money` and `Rate` are hand-written classes rather than records,
+  but they define `equals` too: `BigDecimal` equality is scale-sensitive, so they cannot inherit it.)
+  The gateway ports therefore traffic in values, never in aggregates.
 - **Ports live in `domain`, and that is a choice.** Repository and gateway interfaces sit beside the
   model (the DDD placement) rather than in `usecases` (the placement Uncle Bob's interactor implies).
   Both are defensible; this variant picked one and applied it everywhere. The dependency rule is

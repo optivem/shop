@@ -120,7 +120,7 @@ public class PlaceOrder implements UseCase<PlaceOrderRequest, PlaceOrderResponse
             throw new ValidationException(Sku.FIELD_NAME, "Product does not exist for SKU: " + sku);
         }
 
-        return product.get().getPrice();
+        return product.get().price();
     }
 
     private Rate taxRateOf(Country country) {
@@ -129,7 +129,7 @@ public class PlaceOrder implements UseCase<PlaceOrderRequest, PlaceOrderResponse
             throw new ValidationException("country", "Country does not exist: " + country);
         }
 
-        return taxRate.get().getRate();
+        return taxRate.get().rate();
     }
 
 }

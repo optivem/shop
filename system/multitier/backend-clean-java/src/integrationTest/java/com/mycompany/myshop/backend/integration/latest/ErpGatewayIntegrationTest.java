@@ -25,8 +25,8 @@ class ErpGatewayIntegrationTest extends BaseGatewayIntegrationTest {
         var result = erpGateway.getProductDetails(Sku.of("BOOK-123"));
 
         assertThat(result).isPresent();
-        assertThat(result.get().getSku()).isEqualTo(Sku.of("BOOK-123"));
-        assertThat(result.get().getPrice()).isEqualTo(Money.of("10.00"));
+        assertThat(result.get().sku()).isEqualTo(Sku.of("BOOK-123"));
+        assertThat(result.get().price()).isEqualTo(Money.of("10.00"));
     }
 
     @Test
@@ -51,8 +51,8 @@ class ErpGatewayIntegrationTest extends BaseGatewayIntegrationTest {
 
         var result = erpGateway.getPromotionDetails();
 
-        assertThat(result.isActive()).isTrue();
-        assertThat(result.getDiscount()).isEqualTo(Rate.of("0.15"));
+        assertThat(result.active()).isTrue();
+        assertThat(result.discount()).isEqualTo(Rate.of("0.15"));
     }
 
     // The supplier adding a field is not an event we get told about, so it is stubbed raw rather than
@@ -70,8 +70,8 @@ class ErpGatewayIntegrationTest extends BaseGatewayIntegrationTest {
 
         var result = erpGateway.getPromotionDetails();
 
-        assertThat(result.isActive()).isTrue();
-        assertThat(result.getDiscount()).isEqualTo(Rate.of("0.15"));
+        assertThat(result.active()).isTrue();
+        assertThat(result.discount()).isEqualTo(Rate.of("0.15"));
     }
 
     @Test

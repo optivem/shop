@@ -2,22 +2,11 @@ package com.mycompany.myshop.backend.domain.values;
 
 import com.mycompany.myshop.backend.domain.Guard;
 
-public class TaxRate {
+// The tax service's answer for one country. countryName is deliberately not guarded: the gateway
+// echoes back whatever the service named, and the parity tests assert on that echo.
+public record TaxRate(Country countryName, Rate rate) {
 
-    private final Country countryName;
-    private final Rate rate;
-
-    public TaxRate(Country countryName, Rate rate) {
+    public TaxRate {
         Guard.notNull(rate, "rate");
-        this.countryName = countryName;
-        this.rate = rate;
-    }
-
-    public Country getCountryName() {
-        return countryName;
-    }
-
-    public Rate getRate() {
-        return rate;
     }
 }
