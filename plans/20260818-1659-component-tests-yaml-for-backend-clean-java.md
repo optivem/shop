@@ -77,6 +77,10 @@ an additive field. This plan turns a silent skip into real coverage.
 
 ## ▶ Next executable step (resume here)
 
+**Step 0 first — it is a hard blocker.** The locally installed `gh optivem` binary predates the
+`kind:`/`component:` schema, so every verification step in this plan errors out until it is
+upgraded. Once it is:
+
 Start at Step 1: author
 `system/multitier/backend-clean-java/component-tests.yaml`, modelled on
 `system/multitier/backend-java/component-tests.yaml`, transcribing the commit
@@ -90,6 +94,12 @@ by selecting nothing.
 
 ## Steps
 
+- [ ] Step 0 (blocker): Upgrade the locally installed `gh optivem` binary. The installed build
+  predates the `kind:`/`component:` config schema introduced in `3a904ab1`, so it fails with
+  `field kind not found in type projectconfig.Config` — `./compile-all.sh` reports
+  `gh-optivem-multitier-clean-java.yaml FAILED` in 00:00 for this reason (not a compile failure).
+  Every verification step below shells out to `gh optivem component-test`, so none of them can run
+  until this is done.
 - [ ] Step 1: Author `system/multitier/backend-clean-java/component-tests.yaml` — `setupCommands` (pre-warm Gradle), `compileCommands` (the five `compile*Java` tasks the commit stage lists), `testFilter`, and the six suites described above. Mirror `backend-java`'s file for field shape, command style (`.\gradlew.bat`), `requiresDocker` flags, and the `suiteGroups.all` exclusion of `external-contract-real`.
 - [ ] Step 2: Verify each suite selects a non-empty test set — run `gh optivem component-test run --suite <id>` per suite and confirm each reports executed tests, not a vacuous pass. Pay particular attention to the `provider-verification` / `external-contract` split (Step 1 divides one commit-stage invocation into two suites) and confirm the two together select exactly what the single workflow step selects.
 - [ ] Step 3: Set each suite's `sampleTest` to a real test name from that suite's output, and verify `gh optivem component-test run --suite <id> --sample` runs it. Do not copy `backend-java`'s sample names — the clean variant's classes differ.
