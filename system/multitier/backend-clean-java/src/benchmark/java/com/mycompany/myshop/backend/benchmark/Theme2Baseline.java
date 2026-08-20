@@ -270,7 +270,7 @@ class Theme2Baseline {
                 var coupon = couponRepository.findByCode(code);
                 if (coupon.isPresent()) {
                     coupon.get().redeem();
-                    couponRepository.save(coupon.get());
+                    couponRepository.update(coupon.get());
                     redeemed++;
                 }
             }
@@ -307,14 +307,14 @@ class Theme2Baseline {
             for (var order : hydratedOrders()) {
                 if (RECALLED_SKU.equals(order.getSku().value()) && order.getStatus() != OrderStatus.CANCELLED) {
                     order.cancel();
-                    orderRepository.save(order);
+                    orderRepository.update(order);
                     cancelled++;
                 }
             }
             return cancelled;
         });
         report.add(new BenchmarkReport.Row(CAP_SET_WRITE,
-                "Recall `" + RECALLED_SKU + "`: `findAll()` + filter + one `save` per order",
+                "Recall `" + RECALLED_SKU + "`: `findAll()` + filter + one `update` per order",
                 timed.millis(), timed.value(),
                 probe.countRows("orders") * ORDER_OBJECTS_PER_ROW,
                 timed.statements(), timed.retainedHeapMb()));

@@ -58,7 +58,7 @@ class OrderRepositoryIntegrationTest {
             Rate.ZERO, Money.ZERO, Money.of("20.00"),
             Rate.of("0.1000"), Money.of("2.00"), Money.of("22.00"));
 
-        var order = new Order(
+        var order = Order.restore(
             OrderNumber.of("ORD-001"),
             Instant.parse("2026-01-01T00:00:00Z"),
             Country.of("US"),
@@ -68,7 +68,7 @@ class OrderRepositoryIntegrationTest {
             null
         );
 
-        orderRepository.save(order);
+        orderRepository.add(order);
         forceDatabaseRoundTrip();
 
         var found = orderRepository.findByOrderNumber(OrderNumber.of("ORD-001"));
@@ -85,7 +85,7 @@ class OrderRepositoryIntegrationTest {
             Rate.of("0.1000"), Money.of("3.00"), Money.of("27.00"),
             Rate.of("0.2000"), Money.of("5.40"), Money.of("32.40"));
 
-        orderRepository.save(new Order(
+        orderRepository.add(Order.restore(
             OrderNumber.of("ORD-002"),
             Instant.parse("2026-01-02T00:00:00Z"),
             Country.of("DE"),

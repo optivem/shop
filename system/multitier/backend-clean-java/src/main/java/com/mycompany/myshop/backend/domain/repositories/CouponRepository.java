@@ -7,7 +7,13 @@ import java.util.Optional;
 
 public interface CouponRepository {
 
-    Coupon save(Coupon coupon);
+    // See OrderRepository for why this is not one `save`.
+    void add(Coupon coupon);
+
+    // Last-writer-wins on the count it is given, which is exactly why it is not how a redemption is
+    // recorded: tryRedeem is. Kept because the read-modify-write path is worth being able to
+    // demonstrate losing an update.
+    void update(Coupon coupon);
 
     Optional<Coupon> findByCode(CouponCode code);
 

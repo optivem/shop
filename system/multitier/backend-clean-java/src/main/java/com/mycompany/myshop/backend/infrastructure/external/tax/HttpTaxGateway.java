@@ -1,7 +1,7 @@
 package com.mycompany.myshop.backend.infrastructure.external.tax;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mycompany.myshop.backend.domain.entities.TaxRate;
+import com.mycompany.myshop.backend.domain.values.TaxRate;
 import com.mycompany.myshop.backend.domain.values.Country;
 import com.mycompany.myshop.backend.domain.values.Rate;
 import com.mycompany.myshop.backend.domain.gateways.TaxGatewayException;

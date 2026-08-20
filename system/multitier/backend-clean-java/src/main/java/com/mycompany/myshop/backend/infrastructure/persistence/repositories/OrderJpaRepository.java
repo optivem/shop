@@ -15,6 +15,14 @@ import java.util.Optional;
 public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, Long> {
     Optional<OrderJpaEntity> findByOrderNumber(String orderNumber);
 
+    // An existing Order can differ from the stored row in exactly one column, because status is the
+    // only field on the entity that is not final -- so updating an order is updating its status, and
+    // this can be one statement keyed on the natural key instead of a SELECT to recover the surrogate
+    // id followed by a merge. If Order ever gains a second mutable field, this has to grow with it.
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("UPDATE OrderJpaEntity o SET o.status = :status WHERE o.orderNumber = :orderNumber")
+    int updateStatus(@Param("orderNumber") String orderNumber, @Param("status") OrderStatus status);
+
     // One statement for the whole recall. The status = :placed guard mirrors Order.cancel(): only a
     // placed order can be cancelled, so the returned count means "placed orders this recall
     // cancelled", and re-running the recall is a no-op. flushAutomatically so a pending insert in the

@@ -46,7 +46,7 @@ class CouponRedemptionConcurrencyIntegrationTest {
             // Both racers have now read, and neither has written. This is the window, held open.
             awaitPeers(barrier);
             coupon.redeem();
-            couponRepository.save(coupon);
+            couponRepository.update(coupon);
             return true;
         });
 
@@ -70,7 +70,7 @@ class CouponRedemptionConcurrencyIntegrationTest {
 
     private CouponCode givenCouponWithOneUnitLeft(String value) {
         var code = CouponCode.of(value);
-        couponRepository.save(new Coupon(code, Rate.of("0.5000"), ValidityPeriod.ALWAYS,
+        couponRepository.add(new Coupon(code, Rate.of("0.5000"), ValidityPeriod.ALWAYS,
                 UsageQuota.of(1, 0)));
         return code;
     }

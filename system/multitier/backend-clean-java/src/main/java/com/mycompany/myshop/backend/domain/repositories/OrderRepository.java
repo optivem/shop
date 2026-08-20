@@ -9,7 +9,13 @@ import java.util.Optional;
 
 public interface OrderRepository {
 
-    Order save(Order order);
+    // `add` and `update` rather than one `save`, because no caller has ever been unsure which it
+    // meant: PlaceOrder has just minted an order number that cannot already exist, and CancelOrder
+    // and DeliverOrder are holding a row they just read. A single `save` threw that knowledge away
+    // and paid the database to work it out again -- one wasted SELECT per write, on the hot path.
+    void add(Order order);
+
+    void update(Order order);
 
     Optional<Order> findByOrderNumber(OrderNumber orderNumber);
 

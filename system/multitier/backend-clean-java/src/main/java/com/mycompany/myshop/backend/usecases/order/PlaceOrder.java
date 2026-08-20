@@ -14,7 +14,6 @@ import com.mycompany.myshop.backend.domain.values.CouponCode;
 import com.mycompany.myshop.backend.domain.values.Money;
 import com.mycompany.myshop.backend.domain.values.OrderNumber;
 import com.mycompany.myshop.backend.domain.values.OrderPricing;
-import com.mycompany.myshop.backend.domain.values.OrderStatus;
 import com.mycompany.myshop.backend.domain.values.Rate;
 import com.mycompany.myshop.backend.domain.values.Sku;
 import com.mycompany.myshop.backend.usecases.Result;
@@ -74,13 +73,16 @@ public class PlaceOrder implements UseCase<PlaceOrderRequest, PlaceOrderResponse
         var pricing = OrderPricing.price(unitPrice, request.getQuantity(), promotionFactor,
                 discountRate, taxRate);
 
-        var appliedCouponCode = discountRate.isPositive() ? couponCode.orElse(null) : null;
+        // The order records the code of the coupon that was applied, and there is no other case: a
+        // Coupon cannot exist with a non-positive rate (its own constructor forbids it), so asking
+        // whether the discount was positive was asking Coupon's invariant a second time, in a second
+        // place. One owner, one expression.
+        var appliedCouponCode = coupon.map(Coupon::getCode).orElse(null);
         var orderNumber = OrderNumber.generate();
 
-        var order = new Order(orderNumber, orderTimestamp, country, sku,
-                pricing, OrderStatus.PLACED, appliedCouponCode);
+        var order = Order.place(orderNumber, orderTimestamp, country, sku, pricing, appliedCouponCode);
 
-        orderRepository.save(order);
+        orderRepository.add(order);
         redeem(appliedCouponCode);
 
         var response = new PlaceOrderResponse();

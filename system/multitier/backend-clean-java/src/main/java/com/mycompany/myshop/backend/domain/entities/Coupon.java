@@ -11,6 +11,8 @@ import java.time.Instant;
 
 public class Coupon {
 
+    private static final String FIELD_DISCOUNT_RATE = "discountRate";
+
     private static final String MSG_COUPON_NOT_YET_VALID = "Coupon code %s is not yet valid";
     private static final String MSG_COUPON_EXPIRED = "Coupon code %s has expired";
     private static final String MSG_COUPON_USAGE_LIMIT_REACHED = "Coupon code %s has exceeded its usage limit";
@@ -26,9 +28,13 @@ public class Coupon {
         Guard.notNull(validity, "validity");
         Guard.notNull(quota, "quota");
         // A coupon's own rule, not a general one about rates: a tax rate of zero is legal, a coupon
-        // that discounts nothing is not.
+        // that discounts nothing is not. A ValidationException and not an IllegalArgumentException,
+        // because this rejects a value a caller supplied rather than catching a programming error --
+        // and only ValidationException is translated at the use case boundary. Guard keeps throwing
+        // IllegalArgumentException for the null checks above, where a 500 is the honest answer.
         if (!discountRate.isPositive() || discountRate.isGreaterThan(Rate.ONE)) {
-            throw new IllegalArgumentException("discountRate must be greater than 0 and at most 1");
+            throw new ValidationException(FIELD_DISCOUNT_RATE,
+                    "discountRate must be greater than 0 and at most 1");
         }
 
         this.code = code;

@@ -20,6 +20,14 @@ class OrderTest {
     private static final Instant PLACED_AT = Instant.parse("2025-06-15T10:00:00Z");
 
     @Test
+    void placeStartsAnOrderInThePlacedStatus() {
+        var order = Order.place(OrderNumber.of("ORD-001"), PLACED_AT, Country.of("US"),
+                Sku.of("BOOK-123"), pricing(), null);
+
+        assertThat(order.getStatus()).isEqualTo(OrderStatus.PLACED);
+    }
+
+    @Test
     void deliverMovesAPlacedOrderToDelivered() {
         var order = orderWith(OrderStatus.PLACED);
 
@@ -83,7 +91,7 @@ class OrderTest {
 
     @Test
     void rejectsConstructionWithoutAnOrderNumber() {
-        var thrown = catchThrowable(() -> new Order(null, PLACED_AT, Country.of("US"), Sku.of("BOOK-123"), pricing(),
+        var thrown = catchThrowable(() -> Order.restore(null, PLACED_AT, Country.of("US"), Sku.of("BOOK-123"), pricing(),
                 OrderStatus.PLACED, null));
 
         assertThat(thrown).isInstanceOf(IllegalArgumentException.class)
@@ -92,7 +100,7 @@ class OrderTest {
 
     @Test
     void rejectsConstructionWithoutAPricing() {
-        var thrown = catchThrowable(() -> new Order(OrderNumber.of("ORD-001"), PLACED_AT, Country.of("US"), Sku.of("BOOK-123"), null,
+        var thrown = catchThrowable(() -> Order.restore(OrderNumber.of("ORD-001"), PLACED_AT, Country.of("US"), Sku.of("BOOK-123"), null,
                 OrderStatus.PLACED, null));
 
         assertThat(thrown).isInstanceOf(IllegalArgumentException.class)
@@ -101,7 +109,7 @@ class OrderTest {
 
     @Test
     void rejectsConstructionWithoutAStatus() {
-        var thrown = catchThrowable(() -> new Order(OrderNumber.of("ORD-001"), PLACED_AT, Country.of("US"), Sku.of("BOOK-123"),
+        var thrown = catchThrowable(() -> Order.restore(OrderNumber.of("ORD-001"), PLACED_AT, Country.of("US"), Sku.of("BOOK-123"),
                 pricing(), null, null));
 
         assertThat(thrown).isInstanceOf(IllegalArgumentException.class)
@@ -131,7 +139,7 @@ class OrderTest {
     }
 
     private static Order orderWith(OrderStatus status) {
-        return new Order(OrderNumber.of("ORD-001"), PLACED_AT, Country.of("US"), Sku.of("BOOK-123"),
+        return Order.restore(OrderNumber.of("ORD-001"), PLACED_AT, Country.of("US"), Sku.of("BOOK-123"),
                 pricing(), status, null);
     }
 

@@ -22,12 +22,18 @@ public class OrderRepositoryAdapter implements OrderRepository {
         this.jpaRepository = jpaRepository;
     }
 
+    // A mapped entity carries no id, so Spring Data sees a new instance and persists it: one INSERT,
+    // no SELECT. The old `save` looked the order up first to find out whether it already had a row --
+    // for an order number PlaceOrder had just generated from a UUID, so the answer was always no.
     @Override
-    public Order save(Order order) {
-        var entity = OrderMapper.toEntity(order);
-        jpaRepository.findByOrderNumber(order.getOrderNumber().value())
-                .ifPresent(existing -> entity.setId(existing.getId()));
-        return OrderMapper.toDomain(jpaRepository.save(entity));
+    public void add(Order order) {
+        jpaRepository.save(OrderMapper.toEntity(order));
+    }
+
+    @Transactional
+    @Override
+    public void update(Order order) {
+        jpaRepository.updateStatus(order.getOrderNumber().value(), order.getStatus());
     }
 
     @Override

@@ -14,9 +14,9 @@ accommodate any of it: **62 component tests, the same 62, green at every commit.
 
 | Suite | Tests | Needs Docker |
 |---|---|---|
-| `test` (unit — domain, use cases, ArchUnit) | 58 | no |
+| `test` (unit — domain, use cases, ArchUnit) | 97 | no |
 | `componentTest` | 62 | yes (Postgres) |
-| `integrationTest` | 38 | yes (Postgres; the gateway half is in-process) |
+| `integrationTest` | 51 | yes (Postgres; the gateway half is in-process) |
 | `contractTest` | 43 | yes (Postgres + the simulator image for real-parity) |
 
 ## Package map
@@ -27,7 +27,7 @@ Four top-level packages under `com.mycompany.myshop.backend`, dependencies point
 |---|---|---|
 | `presentation` | REST controllers, the global exception handler, web config | `usecases`, `domain` |
 | `usecases` | one class per use case, plus the request/response DTOs they take and return | `domain` |
-| `domain` | entities as POJOs (no ORM annotations), plain repository interfaces (no Spring Data), gateway interfaces, `Money`/`Rate` value objects, domain exceptions | nothing |
+| `domain` | entities as POJOs (no ORM annotations), plain repository interfaces (no Spring Data), gateway interfaces, value objects (`Money`, `Rate`, and the external snapshots `Product`/`TaxRate`/`Promotion`), domain exceptions | nothing |
 | `infrastructure` | JPA entities, Spring Data repositories, repository adapters, gateway adapters + their wire DTOs, bean wiring | all of the above |
 
 The shape worth noticing:
@@ -44,9 +44,33 @@ The shape worth noticing:
   `domain/gateways` beside the ports, not beside the adapters that throw them — a port declares both
   what it answers with and how it says it could not answer. That is what lets `presentation` map the
   whole family to one **502**, without depending on `infrastructure` to name the type.
-- **The domain has behaviour.** `Order` owns its own state machine (`cancel()`, `deliver()`),
-  `Coupon` owns validity and redemption, and the pricing chain is typed arithmetic in
-  `OrderPricing` — instead of all of it sitting inline in `OrderService.placeOrder`.
+- **The domain has behaviour.** `Order` owns its own state machine (`place()`, `deliver()`,
+  `cancel()`), `Coupon` owns validity and redemption, and the pricing chain is typed arithmetic in
+  `OrderPricing` — instead of all of it sitting inline in `OrderService.placeOrder`. `Order`'s
+  constructor is private: an order is either **placed** or **restored**, and only the mapper restores
+  one. That is what keeps "a new order starts PLACED" a rule rather than an argument the caller passes.
+- **Only what MyShop owns is an entity.** `domain/entities` holds `Order` and `Coupon` — the two
+  things with identity, lifecycle and state transitions here. `Product`, `TaxRate` and `Promotion` are
+  immutable snapshots of records the ERP and the tax service own, so they are values, and they live in
+  `domain/values` together. The gateway ports therefore traffic in values, never in aggregates.
+- **Ports live in `domain`, and that is a choice.** Repository and gateway interfaces sit beside the
+  model (the DDD placement) rather than in `usecases` (the placement Uncle Bob's interactor implies).
+  Both are defensible; this variant picked one and applied it everywhere. The dependency rule is
+  unaffected either way — what matters is that the implementations live outside, which
+  `ArchitectureTest` enforces.
+- **The domain throws, the use case returns.** A domain object states its rules by throwing
+  `ValidationException` — `order.cancel()`, `coupon.discountAt()`, `YearEndBlackoutPolicy` — and the
+  use case catches it at its own boundary and turns it into `Result.err(UseCaseError.from(e))`. Where
+  the *use case* is the one rejecting (missing field, not found, code already taken) it returns
+  `Result.err` directly, with no exception involved. The split is deliberate: a domain method
+  returning `Result` would drag the use case's vocabulary into the centre. `Guard` is the exception
+  that proves it — its null checks throw `IllegalArgumentException` and nothing translates them,
+  because `Guard.notNull(pricing)` failing is a programming error and a 500 is the honest answer.
+- **`add` and `update`, not `save`.** No caller was ever unsure which it meant, so the port says
+  which: `PlaceOrder` has just minted an order number that cannot exist yet, `CancelOrder` is holding
+  a row it just read. A single `save` discarded that and paid the database to work it out again —
+  a guaranteed-empty `SELECT` before every insert, and a re-read of the row the caller was already
+  holding before every update. Placement is now one `INSERT`.
 - **One scoped exception, by decision rather than by omission.** `usecases` request DTOs keep their
   `jakarta.validation` annotations so the controller can bind them with `@Valid @RequestBody`. The
   ArchUnit rule allows that import **by name**; a parallel set of near-identical web request classes

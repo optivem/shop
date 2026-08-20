@@ -14,6 +14,15 @@ public interface CouponJpaRepository extends JpaRepository<CouponJpaEntity, Long
     // Find coupon by code (business identifier)
     Optional<CouponJpaEntity> findByCode(String code);
 
+    // The mutable half of a stored Coupon is its used count, so an update is that one column, keyed
+    // on the code. Note what it is not: it writes the absolute count the caller read a moment ago,
+    // so two callers who read the same value both write it and one redemption is lost. That is the
+    // point of redeemIfAvailable below, and CouponRedemptionConcurrencyIntegrationTest demonstrates
+    // the difference by using both.
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("UPDATE CouponJpaEntity c SET c.usedCount = :usedCount WHERE c.code = :code")
+    int updateUsedCount(@Param("code") String code, @Param("usedCount") int usedCount);
+
     // The other half of the check in Coupon#usageLimitReached: the check and the increment as one
     // statement, so nothing can happen between them. used_count = used_count + 1 reads the column
     // inside the write rather than trusting a value the application read earlier, and the WHERE clause

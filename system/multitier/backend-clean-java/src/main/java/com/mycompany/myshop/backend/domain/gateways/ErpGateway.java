@@ -1,6 +1,6 @@
 package com.mycompany.myshop.backend.domain.gateways;
 
-import com.mycompany.myshop.backend.domain.entities.Product;
+import com.mycompany.myshop.backend.domain.values.Product;
 import com.mycompany.myshop.backend.domain.values.Promotion;
 import com.mycompany.myshop.backend.domain.values.Sku;
 

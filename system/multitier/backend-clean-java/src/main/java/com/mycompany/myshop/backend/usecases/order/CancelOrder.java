@@ -45,7 +45,7 @@ public class CancelOrder implements UseCase<CancelOrderRequest, Void> {
             return Result.err(UseCaseError.from(e));
         }
 
-        orderRepository.save(order.get());
+        orderRepository.update(order.get());
         return Result.ok(null);
     }
 }

@@ -35,7 +35,7 @@ public class DeliverOrder implements UseCase<DeliverOrderRequest, Void> {
             return Result.err(UseCaseError.from(e));
         }
 
-        orderRepository.save(order.get());
+        orderRepository.update(order.get());
         return Result.ok(null);
     }
 }

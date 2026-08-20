@@ -48,7 +48,7 @@ class CouponRepositoryIntegrationTest {
                 Instant.parse("2026-12-31T23:59:59Z")),
             UsageQuota.of(100, 7));
 
-        couponRepository.save(coupon);
+        couponRepository.add(coupon);
         forceDatabaseRoundTrip();
 
         var found = couponRepository.findByCode(CouponCode.of("SAVE20"));
@@ -62,7 +62,7 @@ class CouponRepositoryIntegrationTest {
 
     @Test
     void savesAndReadsBackOpenEndedCoupon() {
-        couponRepository.save(new Coupon(CouponCode.of("FOREVER"), Rate.of("0.1000"),
+        couponRepository.add(new Coupon(CouponCode.of("FOREVER"), Rate.of("0.1000"),
             ValidityPeriod.ALWAYS, UsageQuota.of(null, 0)));
         forceDatabaseRoundTrip();
 
@@ -75,11 +75,12 @@ class CouponRepositoryIntegrationTest {
 
     @Test
     void redemptionUpdatesTheSameRow() {
-        var coupon = couponRepository.save(new Coupon(CouponCode.of("ONCE"), Rate.of("0.5000"),
-            ValidityPeriod.ALWAYS, UsageQuota.of(1, 0)));
+        var coupon = new Coupon(CouponCode.of("ONCE"), Rate.of("0.5000"),
+            ValidityPeriod.ALWAYS, UsageQuota.of(1, 0));
+        couponRepository.add(coupon);
 
         coupon.redeem();
-        couponRepository.save(coupon);
+        couponRepository.update(coupon);
         forceDatabaseRoundTrip();
 
         // Counted straight off the table rather than through the port: findAll() was deleted with

@@ -19,12 +19,17 @@ public class CouponRepositoryAdapter implements CouponRepository {
         this.jpaRepository = jpaRepository;
     }
 
+    // See OrderRepositoryAdapter#add: no id on the mapped entity means one INSERT and no lookup. The
+    // caller that publishes a coupon has already established the code is free, one line earlier.
     @Override
-    public Coupon save(Coupon coupon) {
-        var entity = CouponMapper.toEntity(coupon);
-        jpaRepository.findByCode(coupon.getCode().value())
-                .ifPresent(existing -> entity.setId(existing.getId()));
-        return CouponMapper.toDomain(jpaRepository.save(entity));
+    public void add(Coupon coupon) {
+        jpaRepository.save(CouponMapper.toEntity(coupon));
+    }
+
+    @Transactional
+    @Override
+    public void update(Coupon coupon) {
+        jpaRepository.updateUsedCount(coupon.getCode().value(), coupon.getQuota().used());
     }
 
     @Override

@@ -27,7 +27,7 @@ public final class OrderMapper {
                 Money.of(entity.getTaxAmount()),
                 Money.of(entity.getTotalPrice()));
 
-        return new Order(
+        return Order.restore(
                 OrderNumber.of(entity.getOrderNumber()),
                 entity.getOrderTimestamp(),
                 Country.of(entity.getCountry()),

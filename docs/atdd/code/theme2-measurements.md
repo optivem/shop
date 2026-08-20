@@ -305,3 +305,60 @@ It is recorded here rather than quietly fixed because it is the failure mode thi
 guard against: the harness asserts nothing, so it can only fail by throwing, and a probe that
 measures nothing throws nothing. The check that caught it was arithmetic, not tooling — 2,000 rows
 cannot be updated by a loop that issues one `save` per row and one statement in total.
+
+## Re-measured — 2026-08-20, after `save` split into `add` and `update`
+
+The two sections above are left exactly as they were taken: each was accurate for the code that
+produced it. This one supersedes the pair ratios, because the before-picture itself got cheaper.
+
+`OrderRepository` and `CouponRepository` no longer expose a single `save`. They expose `add` and
+`update`, because no caller was ever unsure which it meant — `PlaceOrder` has just minted an order
+number that cannot already exist, `CancelOrder` is holding a row it read a moment ago. `save` threw
+that knowledge away and paid the database to recover it: an adapter-level lookup by natural key
+before every write, purely to learn the surrogate id. Removing it takes **one statement off every
+write in the application**, including both in-memory loops this document measures.
+
+| Capability | Operation | Wall ms | Rows | Domain objects | JDBC statements | Retained heap MB |
+|---|---|---:|---:|---:|---:|---:|
+| Filtering, sorting, limiting | `BrowseOrderHistory` with no filter, first page | 5 | 50 | 0 | 1 | 0 |
+| Filtering, sorting, limiting | `BrowseOrderHistory` filtered on `DEMO-ORD-0500`, first page | 35 | 50 | 0 | 1 | 0 |
+| Filtering, sorting, limiting | `BrowseCoupons`, first page | 5 | 50 | 0 | 1 | 0 |
+| Projecting only the columns asked for | `ViewOrderDetails` × 1000 | 1176 | 1000 | 0 | 1000 | 0 |
+| Aggregation and joins | Three reports, in Java, over two `findAll()`s | 876 | 529 | 1101500 | 2 | 0 |
+| Aggregation and joins | Three reports, three `GROUP BY`s | 130 | 529 | 0 | 3 | 0 |
+| Atomic read-modify-write | Read-modify-write, 100 coupons | 468 | 100 | 500 | 200 | 0 |
+| Atomic read-modify-write | `tryRedeem`, 100 coupons | 220 | 80 | 0 | 100 | 0 |
+| Set-based writes | Recall `SKU-007`: `findAll()` + filter + one `update` per order | 3638 | 2000 | 1100000 | 2001 | 0 |
+| Set-based writes | Recall `SKU-008`: one `UPDATE … WHERE` | 31 | 2000 | 0 | 1 | 0 |
+
+### The pairs, restated
+
+| Capability | The application layer's way | The database's way | Wall | Statements | Domain objects |
+|---|---|---|---|---|---|
+| Set-based writes | `findAll()` + filter + `update` per order | one `UPDATE … WHERE` | 3638 ms → 31 ms (**117×**) | 2001 → 1 | 1100000 → 0 |
+| Aggregation and joins | two `findAll()`s + three stream folds | three `GROUP BY`s | 876 ms → 130 ms (**7×**) | 2 → 3 | 1101500 → 0 |
+| Atomic read-modify-write | read, mutate, write back | one conditional `UPDATE` | 468 ms → 220 ms (**2×**) | 200 → 100 | 500 → 0 |
+
+The arithmetic that changed, stated plainly so the earlier sections can be read against it:
+
+- **Bulk recall is two statements per order, not three.** `findByOrderNumber`, the merge's `SELECT`
+  and the `UPDATE` become the `UPDATE` alone plus the loop's own read: 6,001 statements to 2,001.
+- **Coupon redemption is two statements per redemption, not four.** `findByCode` and one `UPDATE`,
+  where it was `findByCode`, the adapter's key lookup, the merge's `SELECT` and the `UPDATE`: 400
+  statements to 200.
+- **The set-based ratio fell from 230× to 117×, and the aggregation and atomic ratios moved with
+  it.** Nothing regressed; the loop got faster.
+
+**A shrinking ratio is the honest outcome, and it is worth saying why rather than quoting the older,
+larger number.** The comparison was never "the database versus Java" — it was always "the database
+versus the best loop you would actually write". A loop that re-reads every row before writing it is
+not that loop; it is a loop with a bug in its repository, and half of the 230× was measuring the bug
+rather than the architecture. 117× is what the argument is actually worth, and it survives at that
+size: 2,000 statements are still 2,000 network round trips that one `UPDATE … WHERE` does not make,
+and 1.1 million domain objects are still constructed to answer a question that needs none.
+
+The lesson runs the other way too, and it belongs in the talk. The before-picture is code, and code
+can be wrong in ways that flatter the after-picture. Any number in this document that gets larger
+because the naive path is badly written is a number that will shrink the moment someone writes the
+naive path properly — so the durable claims are the ones in the statement and object columns, which
+are structural, rather than the wall-clock ratios, which are not.

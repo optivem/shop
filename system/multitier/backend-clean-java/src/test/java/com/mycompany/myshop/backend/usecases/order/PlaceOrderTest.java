@@ -2,9 +2,9 @@ package com.mycompany.myshop.backend.usecases.order;
 
 import com.mycompany.myshop.backend.domain.entities.Order;
 import com.mycompany.myshop.backend.domain.values.OrderStatus;
-import com.mycompany.myshop.backend.domain.entities.Product;
+import com.mycompany.myshop.backend.domain.values.Product;
 import com.mycompany.myshop.backend.domain.values.Promotion;
-import com.mycompany.myshop.backend.domain.entities.TaxRate;
+import com.mycompany.myshop.backend.domain.values.TaxRate;
 import com.mycompany.myshop.backend.domain.gateways.ClockGateway;
 import com.mycompany.myshop.backend.domain.gateways.ErpGateway;
 import com.mycompany.myshop.backend.domain.gateways.TaxGateway;
@@ -71,7 +71,7 @@ class PlaceOrderTest {
         var result = placeOrder.execute(buildRequest("BOOK-123", 2, "US"));
 
         var captor = ArgumentCaptor.forClass(Order.class);
-        verify(orderRepository).save(captor.capture());
+        verify(orderRepository).add(captor.capture());
         assertSavedOrder(captor.getValue(), result.value());
     }
 

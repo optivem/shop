@@ -1,8 +1,6 @@
-package com.mycompany.myshop.backend.domain.entities;
+package com.mycompany.myshop.backend.domain.values;
 
 import com.mycompany.myshop.backend.domain.Guard;
-import com.mycompany.myshop.backend.domain.values.Money;
-import com.mycompany.myshop.backend.domain.values.Sku;
 
 public class Product {
 

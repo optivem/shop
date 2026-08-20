@@ -86,28 +86,28 @@ class BackendPactVerificationTest extends BaseComponentTest {
     @State("order cancellation is blocked by the New Year blackout")
     void orderCancellationBlackout() {
         app.clock().returnsTime().time("2026-12-31T22:15:00Z").execute();
-        orders.save(sampleOrder("ORD-1"));
+        orders.add(sampleOrder("ORD-1"));
     }
 
     @State("at least one order exists")
     void atLeastOneOrderExists() {
-        orders.save(sampleOrder("ORD-HIST-1"));
+        orders.add(sampleOrder("ORD-HIST-1"));
     }
 
     @State("order ORD-1 is placed")
     void orderOrd1Placed() {
         app.clock().returnsTime().time("2026-03-10T12:00:00Z").execute();
-        orders.save(sampleOrder("ORD-1"));
+        orders.add(sampleOrder("ORD-1"));
     }
 
     @State("order ORD-1 is cancelled")
     void orderOrd1Cancelled() {
-        orders.save(sampleOrder("ORD-1", OrderStatus.CANCELLED));
+        orders.add(sampleOrder("ORD-1", OrderStatus.CANCELLED));
     }
 
     @State("order ORD-1 is delivered")
     void orderOrd1Delivered() {
-        orders.save(sampleOrder("ORD-1", OrderStatus.DELIVERED));
+        orders.add(sampleOrder("ORD-1", OrderStatus.DELIVERED));
     }
 
     @State("no order UNKNOWN exists")
@@ -117,12 +117,12 @@ class BackendPactVerificationTest extends BaseComponentTest {
 
     @State("at least one coupon exists")
     void atLeastOneCouponExists() {
-        coupons.save(sampleCoupon());
+        coupons.add(sampleCoupon());
     }
 
     @State("coupon SAVE10 exists")
     void couponSave10Exists() {
-        coupons.save(sampleCoupon());
+        coupons.add(sampleCoupon());
     }
 
     @State("no coupon SAVE10 exists yet")
@@ -146,7 +146,7 @@ class BackendPactVerificationTest extends BaseComponentTest {
             Rate.ZERO, Money.ZERO, Money.of("20.00"),
             Rate.of("0.10"), Money.of("2.00"), Money.of("22.00"));
 
-        return new Order(
+        return Order.restore(
             OrderNumber.of(orderNumber), Instant.parse("2026-03-10T12:00:00Z"), Country.of("US"),
             Sku.of("BOOK-123"), pricing, status, null);
     }

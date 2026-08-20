@@ -48,7 +48,7 @@ class CancelOrderTest {
 
         assertThat(result.isOk()).isTrue();
         assertThat(order.getStatus()).isEqualTo(OrderStatus.CANCELLED);
-        verify(orderRepository).save(order);
+        verify(orderRepository).update(order);
     }
 
     @Test
@@ -89,7 +89,7 @@ class CancelOrderTest {
 
     private Order orderWith(OrderStatus status) {
         var pricing = OrderPricing.price(Money.of("10.00"), 1, Rate.ONE, Rate.ZERO, Rate.of("0.10"));
-        return new Order(OrderNumber.of("ORD-001"), NORMAL_TIME, Country.of("US"), Sku.of("BOOK-123"),
+        return Order.restore(OrderNumber.of("ORD-001"), NORMAL_TIME, Country.of("US"), Sku.of("BOOK-123"),
                 pricing, status, null);
     }
 }

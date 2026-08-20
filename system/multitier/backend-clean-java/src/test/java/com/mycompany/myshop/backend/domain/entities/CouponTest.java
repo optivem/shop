@@ -111,13 +111,16 @@ class CouponTest {
                 .hasMessage("Coupon code SAVE10 is not yet valid");
     }
 
+    // A ValidationException, not an IllegalArgumentException: this rejects a value a caller supplied,
+    // so it has to be the type the use case boundary knows how to turn into a reported error. The
+    // null checks below stay IllegalArgumentException -- those are programming errors.
     @Test
     void rejectsADiscountRateOutsideZeroToOne() {
         assertThat(catchThrowable(() -> couponWithRate(Rate.ZERO)))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(ValidationException.class)
                 .hasMessage("discountRate must be greater than 0 and at most 1");
         assertThat(catchThrowable(() -> couponWithRate(Rate.of("1.01"))))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(ValidationException.class)
                 .hasMessage("discountRate must be greater than 0 and at most 1");
         assertThatCode(() -> couponWithRate(Rate.ONE)).doesNotThrowAnyException();
     }
