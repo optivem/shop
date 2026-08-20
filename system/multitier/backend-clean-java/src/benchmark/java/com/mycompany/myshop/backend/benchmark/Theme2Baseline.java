@@ -141,36 +141,40 @@ class Theme2Baseline {
     }
 
     private void warmUp() {
-        browseOrderHistory.execute(new BrowseOrderHistoryRequest(null));
-        browseOrderHistory.execute(new BrowseOrderHistoryRequest(ORDER_FILTER));
-        browseCoupons.execute(new BrowseCouponsRequest());
+        browseOrderHistory.execute(new BrowseOrderHistoryRequest(null, null, null));
+        browseOrderHistory.execute(new BrowseOrderHistoryRequest(ORDER_FILTER, null, null));
+        browseCoupons.execute(new BrowseCouponsRequest(null, null));
         viewOrderDetails.execute(new ViewOrderDetailsRequest(ORDER_UNDER_TEST));
         couponRepository.findByCode(CouponCode.of("DEMO-CPN-0001"));
     }
 
+    // A null size and a null cursor mean "the first page, at the default size". After Chunk C that
+    // is all these three use cases will answer with -- the unbounded read they used to do is not a
+    // request that can be expressed any more. The row counts below are therefore page sizes, and the
+    // comparison against the pre-Chunk-C numbers is the demonstration rather than a discrepancy.
     private void measureBrowseOrderHistory() {
-        var timed = probe.measure(() -> browseOrderHistory.execute(new BrowseOrderHistoryRequest(null)));
+        var timed = probe.measure(() -> browseOrderHistory.execute(new BrowseOrderHistoryRequest(null, null, null)));
         var items = timed.value().value().getOrders();
         report.add(new BenchmarkReport.Row(CAP_FILTER,
-                "`BrowseOrderHistory` with no filter",
+                "`BrowseOrderHistory` with no filter, first page",
                 timed.millis(), items.size(), NO_DOMAIN_OBJECTS,
                 timed.statements(), timed.retainedHeapMb()));
     }
 
     private void measureBrowseOrderHistoryFiltered() {
-        var timed = probe.measure(() -> browseOrderHistory.execute(new BrowseOrderHistoryRequest(ORDER_FILTER)));
+        var timed = probe.measure(() -> browseOrderHistory.execute(new BrowseOrderHistoryRequest(ORDER_FILTER, null, null)));
         var items = timed.value().value().getOrders();
         report.add(new BenchmarkReport.Row(CAP_FILTER,
-                "`BrowseOrderHistory` filtered on `" + ORDER_FILTER + "`",
+                "`BrowseOrderHistory` filtered on `" + ORDER_FILTER + "`, first page",
                 timed.millis(), items.size(), NO_DOMAIN_OBJECTS,
                 timed.statements(), timed.retainedHeapMb()));
     }
 
     private void measureBrowseCoupons() {
-        var timed = probe.measure(() -> browseCoupons.execute(new BrowseCouponsRequest()));
+        var timed = probe.measure(() -> browseCoupons.execute(new BrowseCouponsRequest(null, null)));
         var items = timed.value().value().getCoupons();
         report.add(new BenchmarkReport.Row(CAP_FILTER,
-                "`BrowseCoupons`",
+                "`BrowseCoupons`, first page",
                 timed.millis(), items.size(), NO_DOMAIN_OBJECTS,
                 timed.statements(), timed.retainedHeapMb()));
     }
@@ -307,7 +311,7 @@ class Theme2Baseline {
                 probe.explainAnalyze("SELECT * FROM orders "
                         + "WHERE lower(order_number) LIKE lower('%" + ORDER_FILTER + "%') "
                         + "ORDER BY order_timestamp DESC"));
-        report.addPlan("`BrowseCoupons`",
+        report.addPlan("`BrowseCoupons`, first page",
                 probe.explainAnalyze("SELECT * FROM coupons"));
         report.addPlan("`ViewOrderDetails`",
                 probe.explainAnalyze("SELECT * FROM orders WHERE order_number = '" + ORDER_UNDER_TEST + "'"));

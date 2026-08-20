@@ -1,6 +1,6 @@
 # 2026-08-18 11:36 UTC — theme 2: the database is barred from the work it does best (`backend-clean-java`)
 
-> 🤖 **Picked up by agent** — `Valentina_Desk` at `2026-08-18T14:56:49Z`
+> 🤖 **Picked up by agent** — `Valentina_Desk` at `2026-08-20T11:33:30Z`
 
 **Scope: `system/multitier/backend-clean-java` only.** No other backend, no frontend, no legacy
 project, no other plan. A short list of files falls outside the backend directory by necessity and
@@ -39,7 +39,7 @@ The rows Chunks A and R answered are struck through; the rest are still the befo
 | ~~Set-based writes (`UPDATE … WHERE`)~~ | **Done (A1, A2).** `RecallSku` and `SweepDeliveries` over `OrderRepository.cancelOutstandingForSku` / `deliverPlacedOlderThan` | `usecases/order/`, `POST /api/admin/*` |
 | ~~Atomic read-modify-write~~ | **Done (A3, A4).** One conditional `UPDATE`; the lost update is pinned by `CouponRedemptionConcurrencyIntegrationTest` | `CouponRepository.tryRedeem` |
 | ~~Aggregation and joins~~ | **Done (B1–B5).** `SalesReportQuery` answers three questions with three `GROUP BY`s; `GET /api/reports/sales` | `usecases/queries/`, `usecases/report/`, `infrastructure/persistence/queries/` |
-| Filtering, sorting, limiting | Partly pushed down; **unbounded** and fully hydrated | `BrowseCoupons`, `BrowseOrderHistory` |
+| ~~Filtering, sorting, limiting~~ | **Done (C1–C5).** Keyset pages over `usecases/queries/PageSpec` + `Page<T>`; `size` + opaque `cursor` on `GET /api/orders` and `GET /api/coupons`; four indexes in one additive migration | `usecases/queries/`, `infrastructure/persistence/queries/`, `presentation/` |
 | ~~Projecting only the columns asked for~~ | **Done (R1–R6).** The three query use cases read flat projections off `usecases/queries/`; `READ_USECASES_DO_NOT_TOUCH_THE_DOMAIN` keeps them there | `usecases/queries/`, `infrastructure/persistence/queries/` |
 | ~~Enforcing invariants transactionally~~ | **Done (A5).** The order and its redemption are one unit, declared by a port rather than an annotation | `usecases/TransactionRunner` |
 
@@ -129,19 +129,25 @@ newest-first ordering, but they matter if the ordering is ever changed.
 
 ## ▶ Next executable step (resume here)
 
-**R7 — take the after-numbers.** Chunks 0, A, R1–R6 and B are done. The report exists:
-`usecases/queries/SalesReportQuery` answers three questions — revenue by country and month, top SKUs
-by revenue, coupon effectiveness — and `infrastructure/persistence/queries/JpaSalesReportQuery`
-answers each with one native `GROUP BY`; `usecases/report/ViewSalesReport` validates a limit and
-copies primitives; `GET /api/reports/sales?topSkuLimit=n` is the surface. `USECASE_PACKAGES` in
-`ArchitectureTest` now includes `..usecases.report..`, so both use-case-shape rules cover the report,
-and `READ_USECASES_DO_NOT_TOUCH_THE_DOMAIN` names `ViewSalesReport` — all 11 rules pass.
+**R7 — take the after-numbers. It is the only item left in this plan.** Chunks 0, A, R1–R6, B and C
+are done. Chunk C landed the read side's page vocabulary in `usecases/queries/` (`PageSpec<C>`,
+`Page<T>`, `OrderCursor`) rather than in `domain/queries/` as C1 originally said —
+`READ_USECASES_DO_NOT_TOUCH_THE_DOMAIN`, added by Chunk R after C1 was drafted, forbids a query port
+from naming a domain type, and paging is a read-side concern in any case. `JpaOrderQuery` pages on
+the row-value comparison `(order_timestamp, order_number) < (:ts, :num)` and `JpaCouponQuery` on
+`id < (SELECT id FROM coupons WHERE code = :cursorCode)`, both native and both `LIMIT size + 1` so
+`hasMore` costs no second query. `presentation/CursorCodec` is the only place that knows the token is
+base64.
 
 R7 needs Docker and takes minutes: start the stack, run `./gradlew benchmark` in
 `system/multitier/backend-clean-java`, and append the table it writes to
 `build/benchmark/theme2-baseline.md` into `docs/atdd/code/theme2-measurements.md` beside the Chunk 0
-baseline. After that, Chunk C (volume) — its own `/clear`-ed session. C2 depended on Chunk R, which
-is satisfied; nothing else is ordered.
+baseline.
+
+**Run `./gradlew integrationTest` in the same Docker session, before or after the benchmark.** Chunk
+C's keyset SQL is native and was written without a database to run it against;
+`KeysetPagingIntegrationTest` is the test that proves it walks every row exactly once, and it has
+never been executed.
 
 ## Chunk R — light CQRS: the read path stops going through the domain
 
@@ -183,42 +189,10 @@ the rules that wrote it.
       beside the Chunk 0 baseline. The headline is objects-not-constructed as much as wall time:
       `BrowseOrderHistory` built 100k `Order` aggregates plus their value objects before R3 and
       builds none after it.
-
-## Chunk C — volume (stop loading the table)
-
-- [ ] **C1. Domain-owned page vocabulary.** `domain/queries/PageRequest`, `Page<T>`,
-      `OrderCursor(Instant orderTimestamp, String orderNumber)`. Spring's `Pageable`/`Page` must not
-      appear in any port.
-      **The cursor's tiebreaker is `order_number`, not the surrogate `id`** — clean-java deliberately
-      keeps `Long id` out of the domain (`OrderRepositoryAdapter#save` resolves it). Textbook keyset
-      pagination reaches for `id`; this constraint forces the honest version, and it is a good aside.
-- [ ] **C2. Paging lands on the read side, not on the repositories.** **Depends on Chunk R** — the
-      plan's only cross-chunk dependency. R5 deletes the three mechanism-named read methods
-      (`CouponRepository.findAll()`, `OrderRepository:18,20`) from the domain repositories outright,
-      so there is nothing left here to rename: `PageRequest` is threaded onto the `usecases/queries/`
-      ports instead, which after Chunk R is where every unbounded read lives.
-      **The original point survives and gets sharper.** Those names —
-      `findAllByOrderByOrderTimestampDesc` and
-      `findByOrderNumberContainingIgnoreCaseOrderByOrderTimestampDesc` — are Spring Data's
-      query-derivation DSL spelled into a port whose own javadoc claims *"no Spring Data, no JPA"*,
-      and because the port named a mechanism the caller could only loop. Show them as the
-      before-picture in the live git diff; the after is that they do not exist at all.
-- [ ] **C3. Keyset, not `OFFSET`.** Row-value comparison —
-      `(o.orderTimestamp, o.orderNumber) < (:ts, :num) ORDER BY … DESC LIMIT :size`. `OFFSET 10000`
-      makes Postgres walk 10,000 rows to discard them; with 100k seeded rows the `EXPLAIN` contrast is
-      the demo.
-- [ ] **C4. The one migration.** `system/db/migrations/V20260818113600__add_theme2_indexes.sql`,
-      additive, all four indexes together:
-      `idx_orders_recent (order_timestamp DESC, order_number DESC)`,
-      `idx_orders_sku_status (sku, status)`,
-      `idx_orders_status_country_ts (status, country, order_timestamp)`,
-      and the partial `idx_orders_applied_coupon (applied_coupon_code) WHERE applied_coupon_code IS NOT NULL`
-      — most orders carry no coupon, so indexing only the rows that do is both smaller and faster, and
-      is a good aside in its own right.
-- [ ] **C5. Thread paging through use cases, DTOs, controllers.** Requests gain size + cursor;
-      responses gain `nextCursor` + `hasMore`. The wire cursor is an opaque base64 token encoded in
-      `presentation`; the domain carries the typed `OrderCursor`. Default page size 50. The chain
-      stops at the controller — no frontend change.
+      **Chunk C changed what these three probes measure and the write-up must say so**: they now
+      report the first page at the default size of 50, because after C2 the unbounded read is not a
+      request the port can express. Comparing "100k rows" against "50 rows" is the demonstration, not
+      a discrepancy — the harness labels the rows "first page" for exactly that reason.
 
 ## Cross-language gate
 
@@ -237,7 +211,12 @@ than change three codebases later.
   with `Select` into a record plus `AsNoTracking`; TypeScript with a Prisma `select` clause. Neither
   materialises an entity, and neither read path can fail on a write-side invariant.
 - **Transaction boundary as a port.** .NET over `IDbContextTransaction`; TS over Prisma `$transaction`.
-- **Domain-owned paging.** Never `IQueryable`/EF `Skip`/`Take` or Prisma `take`/`cursor` in a port.
+- **Read-side-owned paging.** The page vocabulary belongs beside the query ports, not in the domain:
+  nothing on the command side pages, and in Java `READ_USECASES_DO_NOT_TOUCH_THE_DOMAIN` makes a
+  domain placement fail the build outright. Never `IQueryable`/EF `Skip`/`Take` or Prisma
+  `take`/`cursor` in a port, and never a framework's own `PageRequest`. Keyset, never `OFFSET`; the
+  cursor reaches the wire base64-encoded and is decoded in the presentation layer, so no client ever
+  learns the sort key.
 
 ## Non-goals
 

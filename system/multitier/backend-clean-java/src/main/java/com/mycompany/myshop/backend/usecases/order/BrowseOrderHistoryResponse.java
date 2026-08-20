@@ -1,5 +1,7 @@
 package com.mycompany.myshop.backend.usecases.order;
 
+import com.mycompany.myshop.backend.usecases.queries.OrderCursor;
+
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
@@ -7,6 +9,8 @@ import java.util.List;
 public class BrowseOrderHistoryResponse {
 
     private List<BrowseOrderHistoryItemResponse> orders;
+    private OrderCursor nextCursor;
+    private boolean hasMore;
 
     public List<BrowseOrderHistoryItemResponse> getOrders() {
         return orders;
@@ -14,6 +18,24 @@ public class BrowseOrderHistoryResponse {
 
     public void setOrders(List<BrowseOrderHistoryItemResponse> orders) {
         this.orders = orders;
+    }
+
+    // Typed, not encoded. This response is mapped by presentation before it reaches the wire, which
+    // is where the cursor becomes an opaque token.
+    public OrderCursor getNextCursor() {
+        return nextCursor;
+    }
+
+    public void setNextCursor(OrderCursor nextCursor) {
+        this.nextCursor = nextCursor;
+    }
+
+    public boolean isHasMore() {
+        return hasMore;
+    }
+
+    public void setHasMore(boolean hasMore) {
+        this.hasMore = hasMore;
     }
 
     public static class BrowseOrderHistoryItemResponse {

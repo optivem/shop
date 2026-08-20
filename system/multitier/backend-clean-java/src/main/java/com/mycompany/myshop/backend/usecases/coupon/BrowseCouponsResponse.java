@@ -7,6 +7,8 @@ import java.util.List;
 public class BrowseCouponsResponse {
 
     private List<BrowseCouponsItemResponse> coupons;
+    private String nextCursor;
+    private boolean hasMore;
 
     public List<BrowseCouponsItemResponse> getCoupons() {
         return coupons;
@@ -14,6 +16,23 @@ public class BrowseCouponsResponse {
 
     public void setCoupons(List<BrowseCouponsItemResponse> coupons) {
         this.coupons = coupons;
+    }
+
+    // The code of the last coupon on this page. Presentation turns it into an opaque token.
+    public String getNextCursor() {
+        return nextCursor;
+    }
+
+    public void setNextCursor(String nextCursor) {
+        this.nextCursor = nextCursor;
+    }
+
+    public boolean isHasMore() {
+        return hasMore;
+    }
+
+    public void setHasMore(boolean hasMore) {
+        this.hasMore = hasMore;
     }
 
     public static class BrowseCouponsItemResponse {

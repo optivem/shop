@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.mycompany.myshop.backend.presentation.CursorCodec;
 import com.mycompany.myshop.backend.presentation.UseCaseResponder;
 import com.mycompany.myshop.backend.presentation.controller.OrderController;
 import com.mycompany.myshop.backend.usecases.Result;
@@ -24,6 +25,7 @@ import com.mycompany.myshop.backend.usecases.order.CancelOrder;
 import com.mycompany.myshop.backend.usecases.order.DeliverOrder;
 import com.mycompany.myshop.backend.usecases.order.PlaceOrder;
 import com.mycompany.myshop.backend.usecases.order.ViewOrderDetails;
+import com.mycompany.myshop.backend.usecases.queries.OrderCursor;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
@@ -49,7 +51,7 @@ import org.springframework.test.web.servlet.MockMvc;
 // anything with, it *is* the failure half of the wire contract under test. @WebMvcTest only scans
 // controller-ish beans, so a plain @Component needs saying explicitly.
 @WebMvcTest(OrderController.class)
-@Import(UseCaseResponder.class)
+@Import({UseCaseResponder.class, CursorCodec.class})
 class OrderControllerIntegrationTest {
 
     @Autowired
@@ -96,10 +98,53 @@ class OrderControllerIntegrationTest {
     void browseOrderHistoryReturnsOk() throws Exception {
         var response = new BrowseOrderHistoryResponse();
         response.setOrders(List.of());
-        when(browseOrderHistory.execute(new BrowseOrderHistoryRequest(null))).thenReturn(Result.ok(response));
+        when(browseOrderHistory.execute(new BrowseOrderHistoryRequest(null, null, null)))
+            .thenReturn(Result.ok(response));
 
         mockMvc.perform(get("/api/orders"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.hasMore").value(false))
+            .andExpect(jsonPath("$.nextCursor").isEmpty());
+    }
+
+    // The cursor reaching the wire as one opaque string is the contract, so the expected token is
+    // spelled out rather than re-derived with the codec: a test that encodes the value it asserts on
+    // would pass whatever the format silently became.
+    @Test
+    void browseOrderHistoryEncodesTheNextCursor() throws Exception {
+        var response = new BrowseOrderHistoryResponse();
+        response.setOrders(List.of());
+        response.setHasMore(true);
+        response.setNextCursor(new OrderCursor(Instant.parse("2026-03-10T12:00:00Z"), "ORD-001"));
+        when(browseOrderHistory.execute(any(BrowseOrderHistoryRequest.class)))
+            .thenReturn(Result.ok(response));
+
+        mockMvc.perform(get("/api/orders").param("size", "1"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.hasMore").value(true))
+            .andExpect(jsonPath("$.nextCursor").value("MjAyNi0wMy0xMFQxMjowMDowMFp8T1JELTAwMQ"));
+    }
+
+    @Test
+    void browseOrderHistoryDecodesTheCursorItHandedOut() throws Exception {
+        var response = new BrowseOrderHistoryResponse();
+        response.setOrders(List.of());
+        when(browseOrderHistory.execute(
+                new BrowseOrderHistoryRequest(
+                    null, null, new OrderCursor(Instant.parse("2026-03-10T12:00:00Z"), "ORD-001"))))
+            .thenReturn(Result.ok(response));
+
+        mockMvc.perform(get("/api/orders")
+                .param("cursor", "MjAyNi0wMy0xMFQxMjowMDowMFp8T1JELTAwMQ"))
             .andExpect(status().isOk());
+    }
+
+    // 400 rather than 422: a cursor is not a field the caller filled in wrong, it is a token the
+    // caller was never meant to author.
+    @Test
+    void browseOrderHistoryRejectsAMalformedCursor() throws Exception {
+        mockMvc.perform(get("/api/orders").param("cursor", "not a cursor"))
+            .andExpect(status().isBadRequest());
     }
 
     @Test
