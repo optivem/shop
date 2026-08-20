@@ -19,21 +19,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * The read side, in SQL. The SELECT list is the projection: these queries fetch the columns the
- * response holds and nothing else, and no {@code OrderJpaEntity} is ever materialised -- so nothing
- * enters the persistence context, nothing is dirty-checked, and no domain constructor runs.
- *
- * <p>The list query is native rather than JPQL, for the same reason {@link JpaSalesReportQuery} is:
- * its keyset predicate is a row-value comparison, and an adapter is the layer whose job it is to
- * know which database it is talking to. The detail query stays JPQL -- one predicate on a unique
- * column has nothing to gain.
- *
- * <p>Rows come back as {@code Object[]} rather than through a {@code SELECT new ...} constructor
- * expression because the projection records are not allowed to name a domain type: {@code status}
- * leaves this class as a plain string. The mapping is one place, directly under the SELECT list it
- * mirrors.
- */
+// The read side, in SQL. The SELECT list is the projection: these queries fetch the columns the
+// response holds and nothing else, and no OrderJpaEntity is ever materialised -- so nothing enters
+// the persistence context, nothing is dirty-checked, and no domain constructor runs.
+//
+// The list query is native rather than JPQL, for the same reason JpaSalesReportQuery is: its keyset
+// predicate is a row-value comparison, and an adapter is the layer whose job it is to know which
+// database it is talking to. The detail query stays JPQL -- one predicate on a unique column has
+// nothing to gain.
+//
+// Rows come back as Object[] rather than through a SELECT new ... constructor expression because the
+// projection records are not allowed to name a domain type: status leaves this class as a plain
+// string. The mapping is one place, directly under the SELECT list it mirrors.
 @Component
 public class JpaOrderQuery implements OrderQuery {
 

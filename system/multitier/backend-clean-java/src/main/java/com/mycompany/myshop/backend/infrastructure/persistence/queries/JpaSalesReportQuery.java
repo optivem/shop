@@ -14,19 +14,17 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.List;
 
-/**
- * The report, in SQL. Three statements, no entity, no loop: the aggregation happens where the rows
- * already are.
- *
- * <p>Native rather than JPQL, and deliberately so. {@code date_trunc} is Postgres-specific, and
- * that is fine here in a way it would never be one layer up: an adapter is the layer whose job is to
- * know which database it is talking to. Decoupling the application from the database's dialect is
- * not the same as refusing the database's set operations -- confusing the two is what pushed this
- * work into memory in the first place.
- *
- * <p>{@code CANCELLED} appears as a string because {@code status} is stored as the enum name and
- * native SQL never sees the enum. It is spelled once, as a constant.
- */
+// The report, in SQL. Three statements, no entity, no loop: the aggregation happens where the rows
+// already are.
+//
+// Native rather than JPQL, and deliberately so. date_trunc is Postgres-specific, and that is fine
+// here in a way it would never be one layer up: an adapter is the layer whose job is to know which
+// database it is talking to. Decoupling the application from the database's dialect is not the same
+// as refusing the database's set operations -- confusing the two is what pushed this work into
+// memory in the first place.
+//
+// CANCELLED appears as a string because status is stored as the enum name and native SQL never sees
+// the enum. It is spelled once, as a constant.
 @Component
 public class JpaSalesReportQuery implements SalesReportQuery {
 

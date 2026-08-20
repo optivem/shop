@@ -4,15 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.mycompany.myshop.backend.domain.gateways.ClockGateway;
 import com.mycompany.myshop.backend.domain.gateways.ClockGatewayException;
+import com.mycompany.myshop.backend.infrastructure.external.GatewayHttpClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.time.Duration;
 import java.time.Instant;
 
 @Service
@@ -46,18 +42,8 @@ public class HttpClockGateway implements ClockGateway {
 
     private Instant getStubTime() {
         try {
-            var httpClient = HttpClient.newBuilder()
-                    .connectTimeout(Duration.ofSeconds(10))
-                    .build();
-
             var url = clockUrl + "/api/time";
-            var request = HttpRequest.newBuilder()
-                    .uri(URI.create(url))
-                    .timeout(Duration.ofSeconds(10))
-                    .GET()
-                    .build();
-
-            var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            var response = GatewayHttpClient.get(url);
 
             if (response.statusCode() != 200) {
                 throw new ClockGatewayException("Clock API returned status " + response.statusCode() +

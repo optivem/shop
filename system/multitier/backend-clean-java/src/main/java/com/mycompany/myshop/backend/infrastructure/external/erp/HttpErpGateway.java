@@ -8,15 +8,11 @@ import com.mycompany.myshop.backend.domain.values.Rate;
 import com.mycompany.myshop.backend.domain.values.Sku;
 import com.mycompany.myshop.backend.domain.gateways.ErpGateway;
 import com.mycompany.myshop.backend.domain.gateways.ErpGatewayException;
+import com.mycompany.myshop.backend.infrastructure.external.GatewayHttpClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.time.Duration;
 import java.util.Optional;
 
 @Service
@@ -46,17 +42,7 @@ public class HttpErpGateway implements ErpGateway {
         var url = erpUrl + "/api/promotion";
 
         try {
-            var httpClient = HttpClient.newBuilder()
-                    .connectTimeout(Duration.ofSeconds(10))
-                    .build();
-
-            var request = HttpRequest.newBuilder()
-                    .uri(URI.create(url))
-                    .timeout(Duration.ofSeconds(10))
-                    .GET()
-                    .build();
-
-            var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            var response = GatewayHttpClient.get(url);
 
             if (response.statusCode() != 200) {
                 throw new ErpGatewayException("ERP API returned status " + response.statusCode()
@@ -77,17 +63,7 @@ public class HttpErpGateway implements ErpGateway {
         var url = erpUrl + "/api/products/" + sku;
 
         try {
-            var httpClient = HttpClient.newBuilder()
-                    .connectTimeout(Duration.ofSeconds(10))
-                    .build();
-
-            var request = HttpRequest.newBuilder()
-                    .uri(URI.create(url))
-                    .timeout(Duration.ofSeconds(10))
-                    .GET()
-                    .build();
-
-            var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            var response = GatewayHttpClient.get(url);
 
             if (response.statusCode() == 404) {
                 return Optional.empty();

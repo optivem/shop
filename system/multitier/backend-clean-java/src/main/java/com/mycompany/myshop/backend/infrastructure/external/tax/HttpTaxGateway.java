@@ -6,17 +6,13 @@ import com.mycompany.myshop.backend.domain.values.Country;
 import com.mycompany.myshop.backend.domain.values.Rate;
 import com.mycompany.myshop.backend.domain.gateways.TaxGatewayException;
 import com.mycompany.myshop.backend.domain.gateways.TaxGateway;
+import com.mycompany.myshop.backend.infrastructure.external.GatewayHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.time.Duration;
 import java.util.Optional;
 
 @Service
@@ -44,17 +40,7 @@ public class HttpTaxGateway implements TaxGateway {
         }
 
         try {
-            var httpClient = HttpClient.newBuilder()
-                    .connectTimeout(Duration.ofSeconds(10))
-                    .build();
-
-            var request = HttpRequest.newBuilder()
-                    .uri(URI.create(url))
-                    .timeout(Duration.ofSeconds(10))
-                    .GET()
-                    .build();
-
-            var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            var response = GatewayHttpClient.get(url);
 
             log.info("getTaxDetails - status code was: {}", response.statusCode());
 
