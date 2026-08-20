@@ -1,6 +1,7 @@
 package com.mycompany.myshop.backend.presentation.exception;
 
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
+import com.mycompany.myshop.backend.domain.gateways.GatewayException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,6 +31,8 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     private static final String PROP_TIMESTAMP = "timestamp";
     private static final String GENERAL_ERROR_DETAIL =
             "An unexpected error occurred. Please try again later.";
+    private static final String GATEWAY_ERROR_DETAIL =
+            "An external system did not answer. Please try again later.";
     private static final String PROP_ERRORS = "errors";
     private static final String PROP_FIELD = "field";
     private static final String PROP_MESSAGE = "message";
@@ -42,6 +45,9 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @Value("${error.types.internal-server-error}")
     private String internalServerErrorTypeUri;
+
+    @Value("${error.types.bad-gateway}")
+    private String badGatewayTypeUri;
 
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,

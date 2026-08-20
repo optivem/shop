@@ -1,5 +1,8 @@
 package com.mycompany.myshop.backend.integration.latest;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -45,6 +48,25 @@ class ErpGatewayIntegrationTest extends BaseGatewayIntegrationTest {
     @Test
     void getPromotionDetailsReturnsPromotion() {
         erp().returnsPromotion().active(true).discount("0.15").execute();
+
+        var result = erpGateway.getPromotionDetails();
+
+        assertThat(result.isActive()).isTrue();
+        assertThat(result.getDiscount()).isEqualTo(Rate.of("0.15"));
+    }
+
+    // The supplier adding a field is not an event we get told about, so it is stubbed raw rather than
+    // through the DSL: the DSL only knows how to send the shape we already agreed on, and the whole
+    // question here is what happens to a shape we did not. Without ignoreUnknown this is a parse
+    // failure that reaches the caller as a failed order -- an external system changing something we
+    // do not read, and breaking us anyway.
+    @Test
+    void getPromotionDetailsIgnoresFieldsTheErpAddedThatWeDoNotRead() {
+        WIRE_MOCK.stubFor(get(urlEqualTo("/api/promotion"))
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody("{\"promotionActive\":true,\"discount\":0.15,\"campaignName\":\"SUMMER\"}")));
 
         var result = erpGateway.getPromotionDetails();
 

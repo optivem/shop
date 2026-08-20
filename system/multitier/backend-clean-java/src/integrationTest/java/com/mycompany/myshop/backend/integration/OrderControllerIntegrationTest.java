@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.mycompany.myshop.backend.domain.gateways.ErpGatewayException;
 import com.mycompany.myshop.backend.presentation.CursorCodec;
 import com.mycompany.myshop.backend.presentation.UseCaseResponder;
 import com.mycompany.myshop.backend.presentation.controller.OrderController;
@@ -84,6 +85,23 @@ class OrderControllerIntegrationTest {
             .andExpect(status().isCreated())
             .andExpect(header().string("Location", "/api/orders/ORD-001"))
             .andExpect(jsonPath("$.orderNumber").value("ORD-001"));
+    }
+
+    // The other half of the gateway contract. ErpGatewayIntegrationTest pins that the adapter throws
+    // this when the ERP fails it; this pins what the caller is then told: 502, not the catch-all 500,
+    // and a body that repeats none of the exception's message -- which in production names the
+    // upstream URL and whatever it sent back.
+    @Test
+    void placeOrderReturnsBadGatewayWhenAnExternalSystemDoesNotAnswer() throws Exception {
+        when(placeOrder.execute(any()))
+            .thenThrow(new ErpGatewayException("ERP API returned status 503 for SKU: BOOK-123. "
+                    + "URL: http://erp.internal:9001/api/products/BOOK-123"));
+
+        mockMvc.perform(post("/api/orders")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"sku\":\"BOOK-123\",\"quantity\":2,\"country\":\"US\"}"))
+            .andExpect(status().isBadGateway())
+            .andExpect(jsonPath("$.detail").value("An external system did not answer. Please try again later."));
     }
 
     @Test

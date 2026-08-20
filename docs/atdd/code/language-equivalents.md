@@ -12,7 +12,10 @@ takes in each language.
 
 **Rule.** An external system failing to answer — a non-2xx it was not supposed to return, an IO
 failure, a timeout, an interrupt — is its own failure class with its own exception type per gateway,
-all under one base type, living in the infrastructure package next to the adapters that throw them.
+all under one base type, living in the **domain package beside the gateway ports** — not beside the
+adapters that throw them. A port declares both halves of its contract: what it answers with, and how
+it says it could not answer. While the base type lived in infrastructure, no layer permitted to catch
+it was permitted to name it, so "the ERP is down" could only surface as the catch-all 500.
 
 It is **never** signalled with the language's built-in "programmer error" exception. That type stays
 reserved for genuine bugs and misconfiguration, and the distinction is the whole point: a network
@@ -25,7 +28,7 @@ re-wraps the adapter's own gateway exception in a second one and buries the orig
 |---|---|---|---|
 | Base type | `abstract class GatewayException extends RuntimeException` | `abstract class GatewayException : Exception` | `abstract class GatewayException extends Error` |
 | Per-gateway types | `TaxGatewayException`, `ClockGatewayException`, `ErpGatewayException` | same names | same names |
-| Location | `infrastructure/external/` | `Infrastructure/External/` | `infrastructure/external/` |
+| Location | `domain/gateways/` | `Domain/Gateways/` | `domain/gateways/` |
 | **Not** this | `IllegalStateException` | `InvalidOperationException` | bare `Error` / `TypeError` |
 | Narrow the catch to | `IOException`, `InterruptedException` | `HttpRequestException`, `TaskCanceledException`, `JsonException` | `TypeError` from `fetch`, `SyntaxError` from `json()` |
 
@@ -33,9 +36,15 @@ re-wraps the adapter's own gateway exception in a second one and buries the orig
 configuration value, so it keeps the programmer-error type (`IllegalStateException` /
 `InvalidOperationException` / `Error`). Do not fold it into the gateway family.
 
-**HTTP status.** All gateway failures currently fall through to the catch-all 500. A dedicated
-502/503 mapping is arguably more correct but is a behaviour change visible to the system tests; it is
-deliberately deferred so it can be introduced and tested on its own.
+**HTTP status → 502.** `GatewayException` maps to **502 Bad Gateway**, one handler for the whole
+family, sitting above the catch-all so it wins. 502 rather than 503 because the base type covers all
+three ways an upstream can fail us — unreachable, an error status, a body we could not read — and 503
+would promise the caller that retrying soon helps, which we do not know. The response body is a fixed
+string on the same rule as the 500 below: the exception message names the upstream URL and its
+response body, and that belongs in the log only.
+
+The distinction is the point of the whole family: a 500 tells whoever is paged to look at our code, a
+502 tells them to look at the upstream's.
 
 ## The catch-all 500 response body
 

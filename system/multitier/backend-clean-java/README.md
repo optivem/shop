@@ -38,8 +38,12 @@ The shape worth noticing:
   `CouponRepository`, `ErpGateway`, `TaxGateway` and `ClockGateway` are plain interfaces in `domain`;
   the Spring Data repositories, JPA entities and HTTP clients implement them from `infrastructure`.
 - **Gateways return domain types.** `ErpGateway` hands back `Optional<Product>` / `Promotion`, not
-  the ERP's JSON shape. The wire DTOs stay in `infrastructure/external`, so a supplier renaming a
-  field cannot reach the centre.
+  the ERP's JSON shape. The wire DTOs stay in `infrastructure/external`, and every one of them sets
+  `ignoreUnknown = true`, so a supplier renaming or adding a field cannot reach the centre.
+- **The ports own their failures too.** `GatewayException` and its three per-system subtypes sit in
+  `domain/gateways` beside the ports, not beside the adapters that throw them — a port declares both
+  what it answers with and how it says it could not answer. That is what lets `presentation` map the
+  whole family to one **502**, without depending on `infrastructure` to name the type.
 - **The domain has behaviour.** `Order` owns its own state machine (`cancel()`, `deliver()`),
   `Coupon` owns validity and redemption, and the pricing chain is typed arithmetic in
   `OrderPricing` — instead of all of it sitting inline in `OrderService.placeOrder`.
