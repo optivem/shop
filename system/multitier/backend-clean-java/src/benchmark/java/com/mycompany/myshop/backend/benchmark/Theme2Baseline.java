@@ -18,6 +18,8 @@ import com.mycompany.myshop.backend.usecases.order.BrowseOrderHistory;
 import com.mycompany.myshop.backend.usecases.order.BrowseOrderHistoryRequest;
 import com.mycompany.myshop.backend.usecases.order.ViewOrderDetails;
 import com.mycompany.myshop.backend.usecases.order.ViewOrderDetailsRequest;
+import com.mycompany.myshop.backend.usecases.report.ViewSalesReport;
+import com.mycompany.myshop.backend.usecases.report.ViewSalesReportRequest;
 import jakarta.persistence.EntityManagerFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -53,6 +55,8 @@ class Theme2Baseline {
     private static final int SINGLE_ROW_REPETITIONS = 1000;
 
     private static final int REDEMPTIONS = 100;
+
+    private static final int MAX_TOP_SKU_LIMIT = 100;
 
     private static final String RECALLED_SKU = "SKU-007";
 
@@ -102,6 +106,9 @@ class Theme2Baseline {
     @Autowired
     private ViewOrderDetails viewOrderDetails;
 
+    @Autowired
+    private ViewSalesReport viewSalesReport;
+
     private Probe probe;
     private BenchmarkReport report;
 
@@ -126,6 +133,7 @@ class Theme2Baseline {
         measureBrowseCoupons();
         measureViewOrderDetails();
         measureInMemoryAggregation();
+        measureSetBasedAggregation();
         capturePlans();
 
         // Mutating from here down.
@@ -237,6 +245,23 @@ class Theme2Baseline {
                 timed.statements(), timed.retainedHeapMb()));
     }
 
+    // The same three answers as the probe above, asked of the database instead. The top-SKU limit is
+    // pinned to the whole catalogue so both rows count the same groups; the in-memory version has no
+    // limit to give.
+    private void measureSetBasedAggregation() {
+        var timed = probe.measure(() -> {
+            var result = viewSalesReport.execute(new ViewSalesReportRequest(MAX_TOP_SKU_LIMIT));
+            var response = result.value();
+            return (long) response.getRevenueByCountryMonth().size()
+                    + response.getTopSkus().size()
+                    + response.getCouponEffectiveness().size();
+        });
+        report.add(new BenchmarkReport.Row(CAP_AGGREGATE,
+                "Three reports, three `GROUP BY`s",
+                timed.millis(), timed.value(), NO_DOMAIN_OBJECTS,
+                timed.statements(), timed.retainedHeapMb()));
+    }
+
     private void measureCouponRedemption() {
         var timed = probe.measure(() -> {
             var redeemed = 0L;
@@ -280,7 +305,7 @@ class Theme2Baseline {
         var timed = probe.measure(() -> {
             var cancelled = 0L;
             for (var order : hydratedOrders()) {
-                if (RECALLED_SKU.equals(order.getSku()) && order.getStatus() != OrderStatus.CANCELLED) {
+                if (RECALLED_SKU.equals(order.getSku().value()) && order.getStatus() != OrderStatus.CANCELLED) {
                     order.cancel();
                     orderRepository.save(order);
                     cancelled++;

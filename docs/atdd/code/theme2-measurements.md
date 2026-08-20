@@ -186,3 +186,122 @@ Update on orders  (cost=0.00..3285.00 rows=0 width=0)
   ->  Seq Scan on orders  (cost=0.00..3285.00 rows=1805 width=124)
         Filter: (((status)::text <> 'CANCELLED'::text) AND ((sku)::text = 'SKU-007'::text))
 ```
+
+## After — 2026-08-20, Chunks A, R, B and C landed
+
+Same task, same seed, same machine, same harness — `./gradlew benchmark` after `POST /api/admin/*`
+(A1, A2), `tryRedeem` (A3, A4), the projection read paths (R1–R6), `SalesReportQuery` (B1–B5) and
+keyset paging (C1–C5) were all in `src/main`.
+
+`./gradlew integrationTest` was run first, in the same Docker session: 49 tests, all passing,
+including the five cases of `KeysetPagingIntegrationTest`, which had never been executed before.
+Chunk C's keyset SQL is hand-written and native, so the first-page numbers below would be worth
+nothing if nobody had proved the cursor walks every row exactly once.
+
+| Capability | Operation | Wall ms | Rows | Domain objects | JDBC statements | Retained heap MB |
+|---|---|---:|---:|---:|---:|---:|
+| Filtering, sorting, limiting | `BrowseOrderHistory` with no filter, first page | 5 | 50 | 0 | 1 | 0 |
+| Filtering, sorting, limiting | `BrowseOrderHistory` filtered on `DEMO-ORD-0500`, first page | 38 | 50 | 0 | 1 | 0 |
+| Filtering, sorting, limiting | `BrowseCoupons`, first page | 19 | 50 | 0 | 1 | 0 |
+| Projecting only the columns asked for | `ViewOrderDetails` × 1000 | 1243 | 1000 | 0 | 1000 | 0 |
+| Aggregation and joins | Three reports, in Java, over two `findAll()`s | 1330 | 529 | 1101500 | 2 | 0 |
+| Aggregation and joins | Three reports, three `GROUP BY`s | 165 | 529 | 0 | 3 | 0 |
+| Atomic read-modify-write | Read-modify-write, 100 coupons | 853 | 100 | 500 | 400 | 0 |
+| Atomic read-modify-write | `tryRedeem`, 100 coupons | 278 | 80 | 0 | 100 | 0 |
+| Set-based writes | Recall `SKU-007`: `findAll()` + filter + one `save` per order | 8041 | 2000 | 1100000 | 6001 | 0 |
+| Set-based writes | Recall `SKU-008`: one `UPDATE … WHERE` | 35 | 2000 | 0 | 1 | 0 |
+
+Rows that appear twice are a pair: the before-picture is re-measured **in the same process, on the
+same seed, in the same run** as the after, so the comparison never spans two machines or two JVMs.
+The in-memory halves live in `src/benchmark` precisely because they must not ship.
+
+### The three read rows changed what they measure, and that is the demonstration
+
+Before C2, `BrowseOrderHistory` had no way to ask for less than everything; after it, the unbounded
+read is not a request the port can express. So the three read rows now report the **first page at the
+default size of 50** where the baseline reported the whole table:
+
+| | Baseline | After | |
+|---|---:|---:|---|
+| `BrowseOrderHistory`, unfiltered | 1158 ms, 100000 rows, 1130000 objects | 5 ms, 50 rows, 0 objects | first page vs whole table |
+| `BrowseCoupons` | 9 ms, 300 rows, 1500 objects | 19 ms, 50 rows, 0 objects | 300 rows fit in one page before |
+| `ViewOrderDetails` × 1000 | 2559 ms, 12000 objects | 1243 ms, 0 objects | same work, 2.1× |
+
+Comparing "100k rows" against "50 rows" is not a discrepancy to apologise for — it is the point, and
+the harness labels the rows "first page" so nobody reads it as like-for-like. Two rows need saying
+out loud rather than glossing:
+
+- **`BrowseCoupons` got slower in wall time** — 9 ms to 19 ms — because at 300 rows there was never a
+  paging problem to solve, and the keyset query pays for a subselect on `code` that the unbounded
+  scan did not. Nothing was won here on time; the 1500 domain objects that are now 0 are this row's
+  whole improvement, and the endpoint can no longer be handed a million coupons later.
+- **The filtered read is unindexed and stays that way.** `lower(order_number) LIKE '%demo-ord-0500%'`
+  has a leading wildcard, so no B-tree helps it; the plan is still a sequential scan removing 99,900
+  rows, and 38 ms is the cost of that scan, not of the paging. C4 deliberately did not add a trigram
+  index — substring search is not one of the six capabilities this theme is about.
+
+`ViewOrderDetails` is the clean row: identical work, identical statement count, and 12,000 fewer
+domain objects for a 2.1× wall-time drop. Fifteen fields that were reached by constructing seven
+`Money`, two `Rate`, a `Country` and a `CouponCode` are now read as the columns they always were.
+
+### The pairs, where before and after are the same question
+
+| Capability | The application layer's way | The database's way | Wall | Statements | Domain objects |
+|---|---|---|---|---|---|
+| Set-based writes | `findAll()` + filter + `save` per order | one `UPDATE … WHERE` | 8041 ms → 35 ms (**230×**) | 6001 → 1 | 1100000 → 0 |
+| Aggregation and joins | two `findAll()`s + three stream folds | three `GROUP BY`s | 1330 ms → 165 ms (**8×**) | 2 → 3 | 1101500 → 0 |
+| Atomic read-modify-write | read, mutate, write back | one conditional `UPDATE` | 853 ms → 278 ms (**3×**) | 400 → 100 | 500 → 0 |
+
+Both aggregation rows return exactly **529 groups** — 219 country/month pairs, 10 SKUs, 300 coupons —
+because the probe pins the top-SKU limit to the whole catalogue. Same answer, one twentieth of the
+memory traffic, and the extra statement is the honest cost: three questions are three `GROUP BY`s,
+not two `findAll()`s.
+
+The atomic row is the one where wall time is the least interesting column. 400 statements become 100
+because the read half of every read-modify-write is gone, but the reason `tryRedeem` exists is that
+the 400-statement version is *wrong* under concurrency — two orders on the same coupon both read
+`used=4` and both write `used=5`. `CouponRedemptionConcurrencyIntegrationTest` is where that is
+pinned; no number in this table can show it. Note also that the before-row accepts 100 of 100
+attempts and the after-row 80 of 100: the extra 20 are coupons already at their usage limit, which
+the read-modify-write loop incremented anyway. That gap is not a performance figure, it is the bug.
+
+### The query plans moved too
+
+The plan probes issue the same ad-hoc SQL as the baseline did, so they stay comparable — the
+endpoints themselves no longer issue an unbounded `SELECT` at all.
+
+**The unbounded sort no longer spills to disk.** Baseline: `Sort Method: external merge  Disk:
+12048kB`, 48.4 ms, `temp read=1506 written=1510`. After C4:
+
+```
+Index Scan using idx_orders_recent on orders  (cost=0.42..9193.92 rows=100000 width=111) (actual time=0.037..21.347 rows=100000 loops=1)
+  Buffers: shared hit=2672
+Planning Time: 0.071 ms
+Execution Time: 27.689 ms
+```
+
+No sort node, no temp files — the index supplies the order. 12 MB of writes per page load, gone.
+
+**The recall's rows are found by index rather than by scanning the table.** Baseline: `Seq Scan on
+orders`, 7.76 ms, 98,000 rows removed by filter. After C4:
+
+```
+Bitmap Heap Scan on orders  (cost=28.18..1926.02 rows=2050 width=111) (actual time=0.308..1.265 rows=2000 loops=1)
+  Recheck Cond: ((sku)::text = 'SKU-007'::text)
+  ->  Bitmap Index Scan on idx_orders_sku_status  (cost=0.00..27.67 rows=2050 width=0) (actual time=0.169..0.169 rows=2000 loops=1)
+```
+
+5.8× on the read, and the `UPDATE … WHERE` the recall actually issues uses the same index.
+
+### A number that was wrong until it was checked
+
+The first run of this benchmark reported the old-path recall at **438 ms, 0 rows, 1 statement** — a
+21× "win" that would have gone into this document as fact. It was a harness bug: `Theme2Baseline`
+compared `RECALLED_SKU.equals(order.getSku())`, and `Order.getSku()` returns the `Sku` value object
+introduced after the baseline was taken, so a `String` was being compared to a record and the filter
+matched nothing. The probe hydrated 100,000 orders, cancelled none, and timed an empty loop.
+
+It is recorded here rather than quietly fixed because it is the failure mode this document exists to
+guard against: the harness asserts nothing, so it can only fail by throwing, and a probe that
+measures nothing throws nothing. The check that caught it was arithmetic, not tooling — 2,000 rows
+cannot be updated by a loop that issues one `save` per row and one statement in total.
