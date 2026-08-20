@@ -8,8 +8,8 @@ import com.mycompany.myshop.backend.backendtest.configuration.TestcontainersConf
 import com.mycompany.myshop.backend.infrastructure.persistence.repositories.CouponJpaRepository;
 import com.mycompany.myshop.backend.infrastructure.persistence.repositories.OrderJpaRepository;
 import com.mycompany.myshop.backend.domain.gateways.ClockGateway;
-import com.mycompany.myshop.backend.infrastructure.external.erp.HttpErpGateway;
-import com.mycompany.myshop.backend.infrastructure.external.tax.HttpTaxGateway;
+import com.mycompany.myshop.backend.domain.gateways.ErpGateway;
+import com.mycompany.myshop.backend.domain.gateways.TaxGateway;
 import com.mycompany.myshop.backend.testkit.driver.adapter.api.BackendDriver;
 import com.mycompany.myshop.backend.backendtest.configuration.ExternalSystemMode;
 import com.mycompany.myshop.backend.backendtest.configuration.StubDrivers;
@@ -68,10 +68,10 @@ public abstract class BaseComponentTest {
     protected CouponJpaRepository couponRepository;
 
     @Autowired
-    protected HttpErpGateway erpGateway;
+    protected ErpGateway erpGateway;
 
     @Autowired
-    protected HttpTaxGateway taxGateway;
+    protected TaxGateway taxGateway;
 
     @Autowired
     protected ClockGateway clockGateway;

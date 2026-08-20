@@ -2,7 +2,7 @@ package com.mycompany.myshop.backend.testkit.dsl.core.scenario.then.steps;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.mycompany.myshop.backend.infrastructure.external.erp.ProductDetailsResponse;
+import com.mycompany.myshop.backend.domain.values.Product;
 import com.mycompany.myshop.backend.testkit.dsl.core.scenario.ExecutionResultContext;
 import com.mycompany.myshop.backend.testkit.dsl.core.shared.ResponseVerification;
 import com.mycompany.myshop.backend.testkit.dsl.core.usecase.UseCaseDsl;
@@ -14,7 +14,7 @@ public class ThenProductImpl<R, V extends ResponseVerification<R>> extends BaseT
         implements ThenProduct {
 
     private final String sku;
-    private final Optional<ProductDetailsResponse> product;
+    private final Optional<Product> product;
 
     public ThenProductImpl(
             UseCaseDsl app,
@@ -29,7 +29,7 @@ public class ThenProductImpl<R, V extends ResponseVerification<R>> extends BaseT
     @Override
     public ThenProductImpl<R, V> hasSku(String expectedSku) {
         assertThat(product).as("product %s as parsed by the SUT's ErpGateway", sku).isPresent();
-        assertThat(product.get().getId()).isEqualTo(expectedSku);
+        assertThat(product.get().sku().value()).isEqualTo(expectedSku);
         return this;
     }
 
@@ -45,7 +45,7 @@ public class ThenProductImpl<R, V extends ResponseVerification<R>> extends BaseT
 
     private ThenProductImpl<R, V> hasPrice(BigDecimal expectedPrice) {
         assertThat(product).as("product %s as parsed by the SUT's ErpGateway", sku).isPresent();
-        assertThat(product.get().getPrice()).isEqualByComparingTo(expectedPrice);
+        assertThat(product.get().price().amount()).isEqualByComparingTo(expectedPrice);
         return this;
     }
 

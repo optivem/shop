@@ -2,7 +2,7 @@ package com.mycompany.myshop.backend.testkit.dsl.core.scenario.then.steps;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.mycompany.myshop.backend.infrastructure.external.tax.TaxDetailsResponse;
+import com.mycompany.myshop.backend.domain.values.TaxRate;
 import com.mycompany.myshop.backend.testkit.dsl.core.scenario.ExecutionResultContext;
 import com.mycompany.myshop.backend.testkit.dsl.core.shared.ResponseVerification;
 import com.mycompany.myshop.backend.testkit.dsl.core.usecase.UseCaseDsl;
@@ -14,7 +14,7 @@ public class ThenCountryImpl<R, V extends ResponseVerification<R>> extends BaseT
         implements ThenCountry {
 
     private final String code;
-    private final Optional<TaxDetailsResponse> country;
+    private final Optional<TaxRate> country;
 
     public ThenCountryImpl(
             UseCaseDsl app,
@@ -38,7 +38,7 @@ public class ThenCountryImpl<R, V extends ResponseVerification<R>> extends BaseT
 
     private ThenCountryImpl<R, V> hasTaxRate(BigDecimal expectedTaxRate) {
         assertThat(country).as("country %s as parsed by the SUT's TaxGateway", code).isPresent();
-        assertThat(country.get().getTaxRate()).isEqualByComparingTo(expectedTaxRate);
+        assertThat(country.get().rate().value()).isEqualByComparingTo(expectedTaxRate);
         return this;
     }
 

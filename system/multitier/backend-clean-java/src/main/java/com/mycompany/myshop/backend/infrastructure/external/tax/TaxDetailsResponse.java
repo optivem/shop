@@ -10,7 +10,7 @@ import java.math.BigDecimal;
 // the boundary to break a request that never needed the new field.
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class TaxDetailsResponse {
+class TaxDetailsResponse {
     private String id;
     private String countryName;
     private BigDecimal taxRate;

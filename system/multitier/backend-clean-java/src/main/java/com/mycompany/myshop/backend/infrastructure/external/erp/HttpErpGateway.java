@@ -38,7 +38,12 @@ public class HttpErpGateway implements ErpGateway {
                 .map(wire -> new Product(Sku.of(wire.getId()), Money.of(wire.getPrice())));
     }
 
-    public GetPromotionResponse fetchPromotionDetails() {
+    // Private, and that is the whole point of the class. The two methods above are the boundary: they
+    // are the only code that ever holds the ERP's JSON shape, and what they hand on is a domain value.
+    // A wire DTO on a public signature -- even here in infrastructure, even "just for a test" -- makes
+    // the supplier's field names reachable from somewhere else, and reachable is how they end up in
+    // the centre. Anything that wants the raw response goes to the ERP itself, not through this class.
+    private GetPromotionResponse fetchPromotionDetails() {
         var url = erpUrl + "/api/promotion";
 
         try {
@@ -59,7 +64,7 @@ public class HttpErpGateway implements ErpGateway {
         }
     }
 
-    public Optional<ProductDetailsResponse> fetchProductDetails(String sku) {
+    private Optional<ProductDetailsResponse> fetchProductDetails(String sku) {
         var url = erpUrl + "/api/products/" + sku;
 
         try {

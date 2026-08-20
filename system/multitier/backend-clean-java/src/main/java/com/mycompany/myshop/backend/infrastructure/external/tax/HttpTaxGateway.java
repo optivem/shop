@@ -33,7 +33,9 @@ public class HttpTaxGateway implements TaxGateway {
                 .map(wire -> new TaxRate(Country.of(wire.getCountryName()), Rate.of(wire.getTaxRate())));
     }
 
-    public Optional<TaxDetailsResponse> fetchTaxDetails(String country) {
+    // Private for the same reason as HttpErpGateway's and HttpClockGateway's: TaxDetailsResponse is
+    // the tax service's shape, so getTaxDetails above is the only place allowed to hold one.
+    private Optional<TaxDetailsResponse> fetchTaxDetails(String country) {
         var url = taxUrl + "/api/countries/" + country;
         if (log.isInfoEnabled()) {
             log.info("getTaxDetails - url: {}", url.replaceAll("[\r\n]", "_"));

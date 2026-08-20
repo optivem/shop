@@ -37,9 +37,16 @@ The shape worth noticing:
 - **Interfaces are owned by the inside, implementations by the outside.** `OrderRepository`,
   `CouponRepository`, `ErpGateway`, `TaxGateway` and `ClockGateway` are plain interfaces in `domain`;
   the Spring Data repositories, JPA entities and HTTP clients implement them from `infrastructure`.
-- **Gateways return domain types.** `ErpGateway` hands back `Optional<Product>` / `Promotion`, not
-  the ERP's JSON shape. The wire DTOs stay in `infrastructure/external`, and every one of them sets
-  `ignoreUnknown = true`, so a supplier renaming or adding a field cannot reach the centre.
+- **Gateways return domain types, and the wire DTOs are package-private.** `ErpGateway` hands back
+  `Optional<Product>` / `Promotion`, not the ERP's JSON shape. `ProductDetailsResponse`,
+  `GetPromotionResponse`, `TaxDetailsResponse` and `GetTimeResponse` are package-private classes
+  reached only by private methods, so the supplier's field names cannot be *named* outside the one
+  package that parses them — the compiler enforces the boundary, not the convention. Every one of
+  them sets `ignoreUnknown = true` on top of that, so a supplier renaming or adding a field cannot
+  reach the centre either.
+  Test support obeys the same rule: `SutErpReader` and `SutTaxReader` read through `ErpGateway` /
+  `TaxGateway` and assert on `Product` / `TaxRate`, exactly as `SutClockReader` always did. "Just for
+  a test" is how a wire type becomes public, and a public wire type is how it reaches the domain.
 - **The ports own their failures too.** `GatewayException` and its three per-system subtypes sit in
   `domain/gateways` beside the ports, not beside the adapters that throw them — a port declares both
   what it answers with and how it says it could not answer. That is what lets `presentation` map the
