@@ -74,7 +74,9 @@ public class ViewOrderVerification extends ResponseVerification<ViewOrderDetails
     }
 
     public ViewOrderVerification status(OrderStatus expectedStatus) {
-        assertThat(getResponse().getStatus()).as("status").isEqualTo(expectedStatus);
+        // The read DTO carries status as a String since Chunk R — compare on the enum name, not
+        // the enum, or the Object overload silently compares across types and never matches.
+        assertThat(getResponse().getStatus()).as("status").isEqualTo(expectedStatus.name());
         return this;
     }
 
