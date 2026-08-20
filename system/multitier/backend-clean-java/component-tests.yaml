@@ -1,0 +1,61 @@
+setupCommands:
+  - name: Pre-warm Gradle
+    command: .\gradlew.bat --version
+compileCommands:
+  - name: Compile production + test source sets
+    command: .\gradlew.bat compileJava compileTestJava compileComponentTestJava compileContractTestJava compileIntegrationTestJava
+testFilter: --tests '*.<test>'
+suites:
+  - id: unit
+    name: Unit
+    command: .\gradlew.bat test
+    sampleTest: "carriesItsValue"
+  - id: integration
+    name: Narrow Integration
+    # Unfiltered, exactly as the commit stage runs it: the persistence tests need the
+    # Testcontainers Postgres, the gateway tests are in-process WireMock. No `--tests` pattern
+    # here, so a future integration test that does not end in `IntegrationTest` cannot slip
+    # past the local gate while still running in CI.
+    command: .\gradlew.bat integrationTest
+    sampleTest: "getCurrentTimeReturnsStubbedTimeInStubMode"
+    requiresDocker: true
+  - id: component
+    name: Component
+    # The same 13 component-test classes as backend-java: green here means the
+    # clean-architecture implementation satisfies the identical behavioural spec.
+    command: .\gradlew.bat componentTest --tests 'com.mycompany.myshop.backend.component.*'
+    sampleTest: "shouldBeAbleToGoToMyShop"
+    requiresDocker: true
+  - id: provider-verification
+    name: Provider Verification (Pact)
+    # internal/ only: the counterparty is the frontend, whose consumer stub *is* the pact, so we
+    # verify against a .pact file. Covers both the latest/ and legacy/ twins beneath it — see
+    # docs/atdd/test-taxonomy.md.
+    command: .\gradlew.bat contractTest --tests 'com.mycompany.myshop.backend.contract.internal.*'
+    sampleTest: "verify"
+    requiresDocker: true
+  - id: external-contract
+    name: External System Contract
+    # external/ only: counterparties that will not run our verification (ERP, tax, clock), so
+    # agreement is pinned by stub-vs-real parity pairs and stub-consumability tests instead.
+    # Stub side only — the *Real* half runs as the `external-contract-real` suite below.
+    # This suite plus `provider-verification` together select exactly what the commit stage's
+    # single "Run Contract Tests" step selects (internal.* + external.*.*Stub*).
+    command: .\gradlew.bat contractTest --tests '*StubParityContractTest' --tests '*StubConsumabilityContractTest'
+    sampleTest: "getProductDetailsReturnsDetailsWhenFound"
+    requiresDocker: true
+  - id: external-contract-real
+    name: External System Contract (Real)
+    # The `Real` half of the parity pairs above: same scenarios, run against the actual external-system
+    # simulator instead of the WireMock stand-in, so a stub that has drifted from the real system is
+    # caught in the same stage as the component suite that asserts against that stub. Covers ERP, tax
+    # and clock. Testcontainers supplies one simulator container for all three on a random port, so
+    # `externalSimulatorImage` must build the image first.
+    #
+    # Deliberately absent from suiteGroups.all: it is opt-in via explicit `--suite external-contract-real`,
+    # matching backend-java.
+    command: .\gradlew.bat externalSimulatorImage contractTest --tests '*RealParityContractTest'
+    sampleTest: "getProductDetailsReturnsDetailsWhenFound"
+    requiresDocker: true
+suiteGroups:
+  all: [unit, integration, component, provider-verification, external-contract]

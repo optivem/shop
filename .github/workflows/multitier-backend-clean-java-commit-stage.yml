@@ -5,10 +5,17 @@
 # or push, no SonarCloud analysis, and no downstream pipeline trigger. It compiles, lints, and runs
 # the unit, component, narrow-integration and contract suites — that is the whole gate.
 #
-# It also calls Gradle directly rather than going through `gh optivem component-test`. That CLI is
-# driven by a gh-optivem-*.yaml at the repo root, and adding one would pull the variant into the
-# config matrix that compile-all.sh, validate-all-gh-optivem-config.sh and the system-test stages
-# all iterate over — which is exactly the activation we are avoiding.
+# The variant is declared in gh-optivem-multitier-clean-java.yaml as `kind: component`, which is
+# what gives it `gh optivem compile` and `gh optivem component-test` coverage without any system
+# activation: the `system` and `system-test` verbs refuse a component config by name. The suites
+# below are mirrored in system/multitier/backend-clean-java/component-tests.yaml, so
+# `gh optivem component-test run --suite all` reproduces this gate locally.
+#
+# This workflow nevertheless still calls Gradle directly rather than going through the CLI. That is
+# a deliberate current state, not an oversight: switching CI to invoke the CLI is a behaviour change
+# with its own blast radius (CLI availability on the runner, exit-code and log-format differences,
+# and the externalSimulatorImage ordering the real-mode contract step depends on). Keep the two in
+# step by hand until that switch is made on its own terms.
 name: multitier-backend-clean-java-commit-stage
 
 on:
