@@ -18,7 +18,9 @@ If you find yourself proposing a `pages.yml` workflow, a `build_type=workflow` P
 
 ## Pre-Commit Verification
 
-Before committing any code changes, always verify compilation locally. The default is to run `./compile-all.sh` from the repo root — it compiles every system and system-test project across all three languages and prints a pass/fail summary. Never commit code that does not compile.
+Before committing any code changes, always verify compilation locally. The default is to run `./compile-all.sh` from the repo root — it fans out over the `gh-optivem-*.yaml` configs in the repo root and compiles every project those configs declare, across all three languages, then prints a pass/fail summary. Never commit code that does not compile.
+
+Coverage is enforced, not assumed: before compiling anything, the script enumerates the project directories under `system/`, `system-test/`, and `external-systems/` and fails if any of them is claimed by no config — and fails equally if a config declares a path that no longer exists. So a green run really does mean every project in the repo compiled. A project with no system under test is not exempt: it registers with its own `kind: component` config (see `gh-optivem-multitier-clean-java.yaml` for `system/multitier/backend-clean-java`), which the script's glob picks up like any other.
 
 If you only touched a single project, you can run that project's compile command directly instead of the full sweep:
 
@@ -43,6 +45,8 @@ gh optivem system stop
 This runs one sample test per suite across all test categories (smoke, acceptance, contract, e2e) to catch regressions without running the full suite. All sample tests must pass before committing.
 
 For full-suite runs across all three languages (latest + legacy), use `./test-all.sh` from the repo root — see [CONTRIBUTING.md](CONTRIBUTING.md#running-system-tests).
+
+Note that `test-all.sh` deliberately does **not** cover `system/multitier/backend-clean-java`. System tests need a booted docker stack and the clean variant has no `docker/**/systems.yaml` to boot; it is exercised by its own commit-stage workflow (`test`, `componentTest`, `integrationTest`, `contractTest`, `checkstyleAll`) and locally via `gh optivem component-test run -c gh-optivem-multitier-clean-java.yaml`. Revisit if the clean variant ever gets a system stack.
 
 ## Fixing Failing Workflows
 
