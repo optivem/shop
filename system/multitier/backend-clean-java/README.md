@@ -108,34 +108,23 @@ Two of them are worth calling out:
   this variant's whole claim: the identical consumer contract, satisfied by a completely rearranged
   inside.
 
-## Shared vs duplicated — the measurement
+## Shared vs duplicated
 
 `src/testSupport` and `src/componentTest` are duplicated from `backend-java`. The duplication was
 deliberate and was supposed to be temporary: copying first turns "these files should port unchanged"
-from an assumption into a measurement. Here is the measurement, taken after the refactor.
+from an assumption into a finding.
 
-The two trees are **identical file-for-file** — no file was added, removed or renamed on either side.
-Of ~130 files, 31 differ at all:
-
-| Kind of change | Lines | Where |
-|---|---|---|
-| Import lines re-pointed at the new packages | 48 | 27 files |
-| Injected field types in `BaseComponentTest` | 4 | 1 file |
-| Field type, constructor param and delegate call in `Sut*Reader` | 6 | 2 files |
-| Javadoc `{@link}` targets following the rename | 2 | 2 files |
-| **Assertions, scenarios, expectations** | **0** | — |
-
-**So the fork is semantically zero and structurally total, and that combination is the finding.** Not
-one line of what a test *asserts* had to change — the boundary types were right. But 31 files still
-differ, because a Java import binds to a package name and rearranging the packages is exactly what
-this variant is.
+The finding is that **the fork is semantically zero and structurally total, and that combination is
+the point.** Not one line of what a test *asserts* had to change — the boundary types were right.
+But most of the tree still differs anyway, because a Java import binds to a package name and
+rearranging the packages is exactly what this variant is.
 
 That makes the borrowed-source-roots plan this README used to propose **not viable**, and it is worth
 being precise about why, because the reason is not the one you would guess. The snippet anticipated
-two exclusions (`**/testkit/driver/adapter/sut/**` and `BaseComponentTest.java`). The measurement
-finds 31 files needing exclusion, not 4. Excluding them means maintaining forked copies of them
-anyway, plus a fragile exclude list that goes stale silently — strictly worse than the honest copy
-that exists today.
+two exclusions (`**/testkit/driver/adapter/sut/**` and `BaseComponentTest.java`). In practice the
+exclusion list would have to cover most of the duplicated tree, not a handful of files. Excluding
+them means maintaining forked copies of them anyway, plus a fragile exclude list that goes stale
+silently — strictly worse than the honest copy that exists today.
 
 Real sharing would require the two variants to **agree on the package names of the boundary types** —
 the request/response DTOs, `OrderStatus`, and the driver's view of the gateways — which means
