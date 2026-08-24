@@ -86,21 +86,6 @@ The shape worth noticing:
   ArchUnit rule allows that import **by name**; a parallel set of near-identical web request classes
   was judged worse than the import.
 
-## Design notes
-
-Three walkthroughs of this variant against `backend-java`, written to be read (or presented) on
-their own:
-
-- [Decoupling the Domain from the ORM](docs/decoupling-domain-from-orm.md) — what belongs in the
-  domain, and how the JPA entity, mapper and adapter split up the job the CRUD `@Entity` was doing
-  alone.
-- [Designing for Performance](docs/designing-for-performance.md) — where business logic lives when
-  the database is a set-processing engine rather than a bucket: keyset paging, bulk statements,
-  atomic check-and-set, projections instead of hydration.
-- [Decoupling from External Systems](docs/decoupling-from-external-systems.md) — the six ways the
-  ERP and the tax service leak in, only one of which is I/O, and how the parity contract tests
-  prove the stub is honest.
-
 ## Test layers
 
 | Layer | Subject | Present |
