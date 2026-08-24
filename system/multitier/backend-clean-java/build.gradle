@@ -173,7 +173,7 @@ tasks.register('integrationTest', Test) {
 //   ./gradlew benchmark
 //
 // Writes build/benchmark/theme2-baseline.md and echoes the same table to the console. The curated
-// write-up of a run lives in docs/atdd/code/theme2-measurements.md — this task is what makes the
+// write-up of a run lives in docs/theme2-measurements.md — this task is what makes the
 // after-numbers comparable to the before-numbers, because both are taken by the same code over the
 // same deterministic seed.
 tasks.register('benchmark', Test) {

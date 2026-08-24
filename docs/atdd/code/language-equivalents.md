@@ -86,7 +86,7 @@ decision below keeps the port and changes only what it *says* — no `Pageable`,
 
 These were settled in `backend-clean-java` (Chunks A, R, B and C, 2026-08-18/20) and are recorded
 here because `backend-clean-dotnet` and `backend-clean-typescript` do not exist yet. The measured
-result of each is in [`theme2-measurements.md`](theme2-measurements.md).
+result of each is in [`theme2-measurements.md`](../../../system/multitier/backend-clean-java/docs/theme2-measurements.md).
 
 ### Intent-named ports, never mechanism-named ones
 
