@@ -20,7 +20,7 @@
     "my-company"
   ],
   "author": "Optivem",
-  "license": "CC0-1.0",
+  "license": "MIT-0",
   "devDependencies": {
     "@playwright/test": "^1.41.0",
     "@types/node": "^20.11.5",

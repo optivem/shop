@@ -4,7 +4,7 @@
   "description": "MyShop - Backend Service",
   "author": "Optivem",
   "private": true,
-  "license": "CC0-1.0",
+  "license": "MIT-0",
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
