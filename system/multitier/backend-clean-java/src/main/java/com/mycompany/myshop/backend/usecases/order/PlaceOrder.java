@@ -17,7 +17,6 @@ import com.mycompany.myshop.backend.domain.values.OrderPricing;
 import com.mycompany.myshop.backend.domain.values.Rate;
 import com.mycompany.myshop.backend.domain.values.Sku;
 import com.mycompany.myshop.backend.common.Result;
-import com.mycompany.myshop.backend.usecases.TransactionRunner;
 import com.mycompany.myshop.backend.usecases.UseCase;
 import com.mycompany.myshop.backend.usecases.UseCaseError;
 
@@ -32,23 +31,20 @@ public class PlaceOrder implements UseCase<PlaceOrderRequest, PlaceOrderResponse
     private final ErpGateway erpGateway;
     private final TaxGateway taxGateway;
     private final ClockGateway clockGateway;
-    private final TransactionRunner transactionRunner;
 
     public PlaceOrder(OrderRepository orderRepository, CouponRepository couponRepository,
-                      ErpGateway erpGateway, TaxGateway taxGateway, ClockGateway clockGateway,
-                      TransactionRunner transactionRunner) {
+                      ErpGateway erpGateway, TaxGateway taxGateway, ClockGateway clockGateway) {
         this.orderRepository = orderRepository;
         this.couponRepository = couponRepository;
         this.erpGateway = erpGateway;
         this.taxGateway = taxGateway;
         this.clockGateway = clockGateway;
-        this.transactionRunner = transactionRunner;
     }
 
     @Override
     public Result<PlaceOrderResponse, UseCaseError> execute(PlaceOrderRequest request) {
         try {
-            return Result.ok(transactionRunner.inTransaction(() -> place(request)));
+            return Result.ok(place(request));
         } catch (ValidationException e) {
             return Result.err(UseCaseError.from(e));
         }

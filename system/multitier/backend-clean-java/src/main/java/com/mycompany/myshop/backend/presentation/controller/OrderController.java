@@ -3,16 +3,12 @@ package com.mycompany.myshop.backend.presentation.controller;
 import com.mycompany.myshop.backend.presentation.CursorCodec;
 import com.mycompany.myshop.backend.presentation.InvalidCursorException;
 import com.mycompany.myshop.backend.presentation.UseCaseResponder;
+import com.mycompany.myshop.backend.usecases.UseCase;
 import com.mycompany.myshop.backend.usecases.order.BrowseOrderHistoryRequest;
 import com.mycompany.myshop.backend.usecases.order.CancelOrderRequest;
 import com.mycompany.myshop.backend.usecases.order.DeliverOrderRequest;
 import com.mycompany.myshop.backend.usecases.order.PlaceOrderRequest;
 import com.mycompany.myshop.backend.usecases.order.ViewOrderDetailsRequest;
-import com.mycompany.myshop.backend.usecases.order.BrowseOrderHistory;
-import com.mycompany.myshop.backend.usecases.order.CancelOrder;
-import com.mycompany.myshop.backend.usecases.order.DeliverOrder;
-import com.mycompany.myshop.backend.usecases.order.PlaceOrder;
-import com.mycompany.myshop.backend.usecases.order.ViewOrderDetails;
 import com.mycompany.myshop.backend.usecases.queries.OrderCursor;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -24,21 +20,24 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
+import com.mycompany.myshop.backend.usecases.order.ViewOrderDetailsResponse;
+import com.mycompany.myshop.backend.usecases.order.PlaceOrderResponse;
+import com.mycompany.myshop.backend.usecases.order.BrowseOrderHistoryResponse;
 
 @RestController
 public class OrderController {
 
-    private final BrowseOrderHistory browseOrderHistory;
-    private final PlaceOrder placeOrder;
-    private final ViewOrderDetails viewOrderDetails;
-    private final CancelOrder cancelOrder;
-    private final DeliverOrder deliverOrder;
+    private final UseCase<BrowseOrderHistoryRequest, BrowseOrderHistoryResponse> browseOrderHistory;
+    private final UseCase<PlaceOrderRequest, PlaceOrderResponse> placeOrder;
+    private final UseCase<ViewOrderDetailsRequest, ViewOrderDetailsResponse> viewOrderDetails;
+    private final UseCase<CancelOrderRequest, Void> cancelOrder;
+    private final UseCase<DeliverOrderRequest, Void> deliverOrder;
     private final CursorCodec cursorCodec;
     private final UseCaseResponder responder;
 
-    public OrderController(BrowseOrderHistory browseOrderHistory, PlaceOrder placeOrder,
-                           ViewOrderDetails viewOrderDetails, CancelOrder cancelOrder,
-                           DeliverOrder deliverOrder, CursorCodec cursorCodec,
+    public OrderController(UseCase<BrowseOrderHistoryRequest, BrowseOrderHistoryResponse> browseOrderHistory, UseCase<PlaceOrderRequest, PlaceOrderResponse> placeOrder,
+                           UseCase<ViewOrderDetailsRequest, ViewOrderDetailsResponse> viewOrderDetails, UseCase<CancelOrderRequest, Void> cancelOrder,
+                           UseCase<DeliverOrderRequest, Void> deliverOrder, CursorCodec cursorCodec,
                            UseCaseResponder responder) {
         this.browseOrderHistory = browseOrderHistory;
         this.placeOrder = placeOrder;

@@ -3,8 +3,7 @@ package com.mycompany.myshop.backend.presentation.controller;
 import com.mycompany.myshop.backend.presentation.CursorCodec;
 import com.mycompany.myshop.backend.presentation.InvalidCursorException;
 import com.mycompany.myshop.backend.presentation.UseCaseResponder;
-import com.mycompany.myshop.backend.usecases.coupon.BrowseCoupons;
-import com.mycompany.myshop.backend.usecases.coupon.PublishCoupon;
+import com.mycompany.myshop.backend.usecases.UseCase;
 import com.mycompany.myshop.backend.usecases.coupon.BrowseCouponsRequest;
 import com.mycompany.myshop.backend.usecases.coupon.PublishCouponRequest;
 import jakarta.validation.Valid;
@@ -15,17 +14,18 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import com.mycompany.myshop.backend.usecases.coupon.BrowseCouponsResponse;
 
 @RestController
 @RequestMapping("/api/coupons")
 public class CouponController {
 
-    private final PublishCoupon publishCoupon;
-    private final BrowseCoupons browseCoupons;
+    private final UseCase<PublishCouponRequest, Void> publishCoupon;
+    private final UseCase<BrowseCouponsRequest, BrowseCouponsResponse> browseCoupons;
     private final CursorCodec cursorCodec;
     private final UseCaseResponder responder;
 
-    public CouponController(PublishCoupon publishCoupon, BrowseCoupons browseCoupons,
+    public CouponController(UseCase<PublishCouponRequest, Void> publishCoupon, UseCase<BrowseCouponsRequest, BrowseCouponsResponse> browseCoupons,
                             CursorCodec cursorCodec, UseCaseResponder responder) {
         this.publishCoupon = publishCoupon;
         this.browseCoupons = browseCoupons;

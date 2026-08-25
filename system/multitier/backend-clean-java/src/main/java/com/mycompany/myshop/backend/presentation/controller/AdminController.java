@@ -1,9 +1,8 @@
 package com.mycompany.myshop.backend.presentation.controller;
 
 import com.mycompany.myshop.backend.presentation.UseCaseResponder;
-import com.mycompany.myshop.backend.usecases.order.RecallSku;
+import com.mycompany.myshop.backend.usecases.UseCase;
 import com.mycompany.myshop.backend.usecases.order.RecallSkuRequest;
-import com.mycompany.myshop.backend.usecases.order.SweepDeliveries;
 import com.mycompany.myshop.backend.usecases.order.SweepDeliveriesRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -11,16 +10,18 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import com.mycompany.myshop.backend.usecases.order.SweepDeliveriesResponse;
+import com.mycompany.myshop.backend.usecases.order.RecallSkuResponse;
 
 @RestController
 @RequestMapping("/api/admin")
 public class AdminController {
 
-    private final RecallSku recallSku;
-    private final SweepDeliveries sweepDeliveries;
+    private final UseCase<RecallSkuRequest, RecallSkuResponse> recallSku;
+    private final UseCase<SweepDeliveriesRequest, SweepDeliveriesResponse> sweepDeliveries;
     private final UseCaseResponder responder;
 
-    public AdminController(RecallSku recallSku, SweepDeliveries sweepDeliveries,
+    public AdminController(UseCase<RecallSkuRequest, RecallSkuResponse> recallSku, UseCase<SweepDeliveriesRequest, SweepDeliveriesResponse> sweepDeliveries,
                            UseCaseResponder responder) {
         this.recallSku = recallSku;
         this.sweepDeliveries = sweepDeliveries;

@@ -14,9 +14,7 @@ import com.mycompany.myshop.backend.domain.values.Country;
 import com.mycompany.myshop.backend.domain.values.Money;
 import com.mycompany.myshop.backend.domain.values.Rate;
 import com.mycompany.myshop.backend.domain.values.Sku;
-import com.mycompany.myshop.backend.usecases.TransactionRunner;
 import com.mycompany.myshop.backend.usecases.UseCaseError;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -26,10 +24,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
 import java.util.Optional;
-import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -46,20 +42,12 @@ class PlaceOrderTest {
     private TaxGateway taxGateway;
     @Mock
     private ClockGateway clockGateway;
-    @Mock
-    private TransactionRunner transactionRunner;
 
     @InjectMocks
     private PlaceOrder placeOrder;
 
     private static final Instant NORMAL_TIME = Instant.parse("2025-06-15T10:00:00Z");
     private static final Instant DEC_31_YEAR_END_BLACKOUT = Instant.parse("2025-12-31T23:59:00Z");
-
-    @BeforeEach
-    void runTransactionsInline() {
-        when(transactionRunner.inTransaction(any()))
-                .thenAnswer(invocation -> invocation.<Supplier<?>>getArgument(0).get());
-    }
 
     @Test
     void placeOrderReturnsOrderNumberStartingWithOrd() {
