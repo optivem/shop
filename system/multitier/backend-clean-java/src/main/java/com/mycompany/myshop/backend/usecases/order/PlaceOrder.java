@@ -41,16 +41,17 @@ public class PlaceOrder implements UseCase<PlaceOrderRequest, PlaceOrderResponse
         this.clockGateway = clockGateway;
     }
 
+    // No try and no catch. Every step below can refuse, and each one says so by throwing; the
+    // translation into a returned error happens once, in RefusalTranslatingUseCase, for this use
+    // case and every other. What is left here is the business sequence and nothing else -- six
+    // fallible steps read top to bottom, with no step unwrapping the one before it.
+    //
+    // This is the case that decides the rule. Written with a returned Result, the six steps become
+    // six unwrap-and-return blocks around four values that all have to be in scope at once for the
+    // single call to OrderPricing.price -- a fan-in, not a chain, which is the shape Java's lack of
+    // a `?` operator punishes hardest.
     @Override
     public Result<PlaceOrderResponse, UseCaseError> execute(PlaceOrderRequest request) {
-        try {
-            return Result.ok(place(request));
-        } catch (ValidationException e) {
-            return Result.err(UseCaseError.from(e));
-        }
-    }
-
-    private PlaceOrderResponse place(PlaceOrderRequest request) {
         var couponCode = CouponCode.ofNullable(request.getCouponCode());
         var orderTimestamp = clockGateway.getCurrentTime();
 
@@ -83,7 +84,7 @@ public class PlaceOrder implements UseCase<PlaceOrderRequest, PlaceOrderResponse
 
         var response = new PlaceOrderResponse();
         response.setOrderNumber(orderNumber.value());
-        return response;
+        return Result.ok(response);
     }
 
     private void redeem(CouponCode appliedCouponCode) {

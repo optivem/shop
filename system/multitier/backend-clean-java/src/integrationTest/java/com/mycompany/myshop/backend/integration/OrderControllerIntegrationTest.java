@@ -9,7 +9,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.mycompany.myshop.backend.domain.gateways.ErpGatewayException;
-import com.mycompany.myshop.backend.presentation.CursorCodec;
 import com.mycompany.myshop.backend.presentation.UseCaseResponder;
 import com.mycompany.myshop.backend.presentation.controller.OrderController;
 import com.mycompany.myshop.backend.common.Result;
@@ -26,7 +25,6 @@ import com.mycompany.myshop.backend.usecases.order.CancelOrder;
 import com.mycompany.myshop.backend.usecases.order.DeliverOrder;
 import com.mycompany.myshop.backend.usecases.order.PlaceOrder;
 import com.mycompany.myshop.backend.usecases.order.ViewOrderDetails;
-import com.mycompany.myshop.backend.usecases.queries.OrderCursor;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
@@ -52,7 +50,7 @@ import org.springframework.test.web.servlet.MockMvc;
 // anything with, it *is* the failure half of the wire contract under test. @WebMvcTest only scans
 // controller-ish beans, so a plain @Component needs saying explicitly.
 @WebMvcTest(OrderController.class)
-@Import({UseCaseResponder.class, CursorCodec.class})
+@Import(UseCaseResponder.class)
 class OrderControllerIntegrationTest {
 
     @Autowired
@@ -112,57 +110,55 @@ class OrderControllerIntegrationTest {
             .andExpect(status().isUnprocessableEntity());
     }
 
+    // No page and no size means the first page at the default size, and the response says so rather
+    // than leaving the client to assume it: the numbers it echoes are the ones that were honoured.
     @Test
     void browseOrderHistoryReturnsOk() throws Exception {
         var response = new BrowseOrderHistoryResponse();
         response.setOrders(List.of());
+        response.setPage(1);
+        response.setSize(50);
         when(browseOrderHistory.execute(new BrowseOrderHistoryRequest(null, null, null)))
             .thenReturn(Result.ok(response));
 
         mockMvc.perform(get("/api/orders"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.hasMore").value(false))
-            .andExpect(jsonPath("$.nextCursor").isEmpty());
+            .andExpect(jsonPath("$.page").value(1))
+            .andExpect(jsonPath("$.size").value(50))
+            .andExpect(jsonPath("$.totalElements").value(0))
+            .andExpect(jsonPath("$.totalPages").value(0));
     }
 
-    // The cursor reaching the wire as one opaque string is the contract, so the expected token is
-    // spelled out rather than re-derived with the codec: a test that encodes the value it asserts on
-    // would pass whatever the format silently became.
+    // The four paging numbers are the half of the contract a numbered-page UI is built from, so they
+    // are asserted on the wire rather than trusted to the mapper.
     @Test
-    void browseOrderHistoryEncodesTheNextCursor() throws Exception {
+    void browseOrderHistoryReportsTheTotals() throws Exception {
         var response = new BrowseOrderHistoryResponse();
         response.setOrders(List.of());
-        response.setHasMore(true);
-        response.setNextCursor(new OrderCursor(Instant.parse("2026-03-10T12:00:00Z"), "ORD-001"));
+        response.setPage(3);
+        response.setSize(10);
+        response.setTotalElements(26);
+        response.setTotalPages(3);
         when(browseOrderHistory.execute(any(BrowseOrderHistoryRequest.class)))
             .thenReturn(Result.ok(response));
 
-        mockMvc.perform(get("/api/orders").param("size", "1"))
+        mockMvc.perform(get("/api/orders").param("page", "3").param("size", "10"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.hasMore").value(true))
-            .andExpect(jsonPath("$.nextCursor").value("MjAyNi0wMy0xMFQxMjowMDowMFp8T1JELTAwMQ"));
+            .andExpect(jsonPath("$.page").value(3))
+            .andExpect(jsonPath("$.size").value(10))
+            .andExpect(jsonPath("$.totalElements").value(26))
+            .andExpect(jsonPath("$.totalPages").value(3));
     }
 
     @Test
-    void browseOrderHistoryDecodesTheCursorItHandedOut() throws Exception {
+    void browseOrderHistoryPassesThePageThrough() throws Exception {
         var response = new BrowseOrderHistoryResponse();
         response.setOrders(List.of());
-        when(browseOrderHistory.execute(
-                new BrowseOrderHistoryRequest(
-                    null, null, new OrderCursor(Instant.parse("2026-03-10T12:00:00Z"), "ORD-001"))))
+        when(browseOrderHistory.execute(new BrowseOrderHistoryRequest(null, 2, 25)))
             .thenReturn(Result.ok(response));
 
-        mockMvc.perform(get("/api/orders")
-                .param("cursor", "MjAyNi0wMy0xMFQxMjowMDowMFp8T1JELTAwMQ"))
+        mockMvc.perform(get("/api/orders").param("page", "2").param("size", "25"))
             .andExpect(status().isOk());
-    }
-
-    // 400 rather than 422: a cursor is not a field the caller filled in wrong, it is a token the
-    // caller was never meant to author.
-    @Test
-    void browseOrderHistoryRejectsAMalformedCursor() throws Exception {
-        mockMvc.perform(get("/api/orders").param("cursor", "not a cursor"))
-            .andExpect(status().isBadRequest());
     }
 
     @Test

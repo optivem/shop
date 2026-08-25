@@ -31,9 +31,6 @@ public class UseCaseResponder {
     @Value("${error.types.resource-not-found}")
     private String resourceNotFoundTypeUri;
 
-    @Value("${error.types.bad-request}")
-    private String badRequestTypeUri;
-
     public <T> ResponseEntity<Object> respond(Result<T, UseCaseError> result,
                                               Function<T, ResponseEntity<Object>> onSuccess) {
         if (result.isOk()) {
@@ -41,18 +38,6 @@ public class UseCaseResponder {
         }
 
         return toProblem(result.error());
-    }
-
-    // For input the web layer rejects before a use case ever sees it -- a malformed page cursor is
-    // the only one today. Not a UseCaseError: the use case has no opinion about a token it does not
-    // know the format of.
-    public ResponseEntity<Object> badRequest(String detail) {
-        var problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, detail);
-        problemDetail.setType(URI.create(badRequestTypeUri));
-        problemDetail.setTitle("Bad Request");
-        problemDetail.setProperty(PROP_TIMESTAMP, Instant.now());
-
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(problemDetail);
     }
 
     private ResponseEntity<Object> toProblem(UseCaseError error) {

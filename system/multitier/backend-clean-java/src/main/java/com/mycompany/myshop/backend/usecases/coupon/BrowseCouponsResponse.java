@@ -7,8 +7,10 @@ import java.util.List;
 public class BrowseCouponsResponse {
 
     private List<BrowseCouponsItemResponse> coupons;
-    private String nextCursor;
-    private boolean hasMore;
+    private int page;
+    private int size;
+    private long totalElements;
+    private int totalPages;
 
     public List<BrowseCouponsItemResponse> getCoupons() {
         return coupons;
@@ -18,21 +20,38 @@ public class BrowseCouponsResponse {
         this.coupons = coupons;
     }
 
-    // The code of the last coupon on this page. Presentation turns it into an opaque token.
-    public String getNextCursor() {
-        return nextCursor;
+    // See com.mycompany.myshop.backend.usecases.order.BrowseOrderHistoryResponse for what these
+    // four are and why totalPages is carried rather than derived.
+    public int getPage() {
+        return page;
     }
 
-    public void setNextCursor(String nextCursor) {
-        this.nextCursor = nextCursor;
+    public void setPage(int page) {
+        this.page = page;
     }
 
-    public boolean isHasMore() {
-        return hasMore;
+    public int getSize() {
+        return size;
     }
 
-    public void setHasMore(boolean hasMore) {
-        this.hasMore = hasMore;
+    public void setSize(int size) {
+        this.size = size;
+    }
+
+    public long getTotalElements() {
+        return totalElements;
+    }
+
+    public void setTotalElements(long totalElements) {
+        this.totalElements = totalElements;
+    }
+
+    public int getTotalPages() {
+        return totalPages;
+    }
+
+    public void setTotalPages(int totalPages) {
+        this.totalPages = totalPages;
     }
 
     public static class BrowseCouponsItemResponse {

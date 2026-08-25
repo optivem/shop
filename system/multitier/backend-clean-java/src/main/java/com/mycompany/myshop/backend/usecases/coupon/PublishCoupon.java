@@ -1,7 +1,6 @@
 package com.mycompany.myshop.backend.usecases.coupon;
 
 import com.mycompany.myshop.backend.domain.entities.Coupon;
-import com.mycompany.myshop.backend.domain.exceptions.ValidationException;
 import com.mycompany.myshop.backend.domain.repositories.CouponRepository;
 import com.mycompany.myshop.backend.domain.values.CouponCode;
 import com.mycompany.myshop.backend.domain.values.Rate;
@@ -30,22 +29,18 @@ public class PublishCoupon implements UseCase<PublishCouponRequest, Void> {
                     String.format(MSG_COUPON_CODE_ALREADY_EXISTS, couponCode)));
         }
 
-        // The catch is the same boundary every other use case has: the domain states its rules by
-        // throwing, and this is where a throw becomes a returned error. Without it, Coupon rejecting
-        // a discount rate outside (0, 1] would leave here as an unhandled exception and be answered
-        // with a 500 -- masked today only because PublishCouponRequest repeats the same bound as a
-        // bean-validation annotation one layer out.
-        try {
-            // An absent usage limit is unlimited, and UsageQuota already says that with null. The
-            // MAX_VALUE sentinel this used to write is what the legacy services still do.
-            var coupon = new Coupon(couponCode, Rate.of(request.getDiscountRate()),
-                    new ValidityPeriod(request.getValidFrom(), request.getValidTo()),
-                    UsageQuota.of(request.getUsageLimit(), 0));
+        // Coupon rejects a discount rate outside (0, 1] by throwing, and nothing here catches it:
+        // RefusalTranslatingUseCase answers it with a 422 the same way it answers every other
+        // refusal. The try/catch this use case used to carry was a second copy of that boundary,
+        // and the kind of thing a seventh use case forgets to write.
+        //
+        // An absent usage limit is unlimited, and UsageQuota already says that with null. The
+        // MAX_VALUE sentinel this used to write is what the legacy services still do.
+        var coupon = new Coupon(couponCode, Rate.of(request.getDiscountRate()),
+                new ValidityPeriod(request.getValidFrom(), request.getValidTo()),
+                UsageQuota.of(request.getUsageLimit(), 0));
 
-            couponRepository.add(coupon);
-        } catch (ValidationException e) {
-            return Result.err(UseCaseError.from(e));
-        }
+        couponRepository.add(coupon);
 
         return Result.ok();
     }

@@ -1,7 +1,5 @@
 package com.mycompany.myshop.backend.usecases.order;
 
-import com.mycompany.myshop.backend.usecases.queries.OrderCursor;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
@@ -9,8 +7,10 @@ import java.util.List;
 public class BrowseOrderHistoryResponse {
 
     private List<BrowseOrderHistoryItemResponse> orders;
-    private OrderCursor nextCursor;
-    private boolean hasMore;
+    private int page;
+    private int size;
+    private long totalElements;
+    private int totalPages;
 
     public List<BrowseOrderHistoryItemResponse> getOrders() {
         return orders;
@@ -20,22 +20,41 @@ public class BrowseOrderHistoryResponse {
         this.orders = orders;
     }
 
-    // Typed, not encoded. This response is mapped by presentation before it reaches the wire, which
-    // is where the cursor becomes an opaque token.
-    public OrderCursor getNextCursor() {
-        return nextCursor;
+    // The page that was served, not the page that was asked for. They differ when the request left
+    // it out.
+    public int getPage() {
+        return page;
     }
 
-    public void setNextCursor(OrderCursor nextCursor) {
-        this.nextCursor = nextCursor;
+    public void setPage(int page) {
+        this.page = page;
     }
 
-    public boolean isHasMore() {
-        return hasMore;
+    public int getSize() {
+        return size;
     }
 
-    public void setHasMore(boolean hasMore) {
-        this.hasMore = hasMore;
+    public void setSize(int size) {
+        this.size = size;
+    }
+
+    // The two numbers a paged UI is built from: how many rows match, and therefore how many buttons
+    // to draw. totalPages is carried rather than left to the client to divide, so that every client
+    // rounds the same way.
+    public long getTotalElements() {
+        return totalElements;
+    }
+
+    public void setTotalElements(long totalElements) {
+        this.totalElements = totalElements;
+    }
+
+    public int getTotalPages() {
+        return totalPages;
+    }
+
+    public void setTotalPages(int totalPages) {
+        this.totalPages = totalPages;
     }
 
     public static class BrowseOrderHistoryItemResponse {

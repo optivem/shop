@@ -1,7 +1,6 @@
 package com.mycompany.myshop.backend.usecases.order;
 
 import com.mycompany.myshop.backend.common.Result;
-import com.mycompany.myshop.backend.domain.entities.CancelOutcome;
 import com.mycompany.myshop.backend.domain.gateways.ClockGateway;
 import com.mycompany.myshop.backend.domain.repositories.OrderRepository;
 import com.mycompany.myshop.backend.domain.services.YearEndBlackoutPolicy;
@@ -25,13 +24,12 @@ public class CancelOrder implements UseCase<CancelOrderRequest, Void> {
     public Result<Void, UseCaseError> execute(CancelOrderRequest request) {
         // Before the lookup, as it always was: during the blackout window the answer is the same
         // whether or not the order exists.
-        var allowed = YearEndBlackoutPolicy.cancellationAllowed(clockGateway.getCurrentTime());
-        if (!allowed.isOk()) {
-            return Result.err(UseCaseError.from(allowed.error()));
-        }
+        YearEndBlackoutPolicy.requireCancellationAllowed(clockGateway.getCurrentTime());
 
         // A missing order number is reported the same way as an unknown one: this use case has never
-        // distinguished them, so it discards the violation rather than reporting it.
+        // distinguished them, so it discards the violation rather than reporting it. This is the
+        // disagreement with DeliverOrder that keeps OrderNumber.parse returning a Result instead of
+        // throwing like the rest -- one refusal, two callers who answer it differently.
         var found = OrderNumber.parse(request.orderNumber())
                 .toOptional()
                 .flatMap(orderRepository::findByOrderNumber);
@@ -40,16 +38,9 @@ public class CancelOrder implements UseCase<CancelOrderRequest, Void> {
         }
         var order = found.get();
 
-        // The compiler will not let a new CancelOutcome be added without this switch being revisited.
-        return switch (order.cancel()) {
-            case CancelOutcome.Cancelled ignored -> {
-                orderRepository.update(order);
-                yield Result.ok();
-            }
-            case CancelOutcome.AlreadyCancelled alreadyCancelled ->
-                    Result.err(UseCaseError.from(alreadyCancelled.violation()));
-            case CancelOutcome.NotCancellable notCancellable ->
-                    Result.err(UseCaseError.from(notCancellable.violation()));
-        };
+        order.cancel();
+
+        orderRepository.update(order);
+        return Result.ok();
     }
 }

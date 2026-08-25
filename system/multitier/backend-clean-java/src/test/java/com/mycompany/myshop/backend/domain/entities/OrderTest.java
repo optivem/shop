@@ -1,5 +1,7 @@
 package com.mycompany.myshop.backend.domain.entities;
 
+import com.mycompany.myshop.backend.domain.exceptions.ValidationException;
+import com.mycompany.myshop.backend.domain.rules.RuleViolation;
 import com.mycompany.myshop.backend.domain.values.Country;
 import com.mycompany.myshop.backend.domain.values.Money;
 import com.mycompany.myshop.backend.domain.values.OrderNumber;
@@ -7,6 +9,7 @@ import com.mycompany.myshop.backend.domain.values.OrderPricing;
 import com.mycompany.myshop.backend.domain.values.OrderStatus;
 import com.mycompany.myshop.backend.domain.values.Rate;
 import com.mycompany.myshop.backend.domain.values.Sku;
+import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
@@ -30,9 +33,8 @@ class OrderTest {
     void deliverMovesAPlacedOrderToDelivered() {
         var order = orderWith(OrderStatus.PLACED);
 
-        var result = order.deliver();
+        order.deliver();
 
-        assertThat(result.isOk()).isTrue();
         assertThat(order.getStatus()).isEqualTo(OrderStatus.DELIVERED);
     }
 
@@ -40,10 +42,7 @@ class OrderTest {
     void deliverRejectsAnOrderThatIsAlreadyDelivered() {
         var order = orderWith(OrderStatus.DELIVERED);
 
-        var result = order.deliver();
-
-        assertThat(result.isOk()).isFalse();
-        assertThat(result.error().message()).isEqualTo("Order cannot be delivered in its current status");
+        assertRefusal(order::deliver, "Order cannot be delivered in its current status");
         assertThat(order.getStatus()).isEqualTo(OrderStatus.DELIVERED);
     }
 
@@ -51,10 +50,7 @@ class OrderTest {
     void deliverRejectsACancelledOrder() {
         var order = orderWith(OrderStatus.CANCELLED);
 
-        var result = order.deliver();
-
-        assertThat(result.isOk()).isFalse();
-        assertThat(result.error().message()).isEqualTo("Order cannot be delivered in its current status");
+        assertRefusal(order::deliver, "Order cannot be delivered in its current status");
         assertThat(order.getStatus()).isEqualTo(OrderStatus.CANCELLED);
     }
 
@@ -62,9 +58,8 @@ class OrderTest {
     void cancelMovesAPlacedOrderToCancelled() {
         var order = orderWith(OrderStatus.PLACED);
 
-        var outcome = order.cancel();
+        order.cancel();
 
-        assertThat(outcome).isInstanceOf(CancelOutcome.Cancelled.class);
         assertThat(order.getStatus()).isEqualTo(OrderStatus.CANCELLED);
     }
 
@@ -72,11 +67,7 @@ class OrderTest {
     void cancelRejectsADeliveredOrder() {
         var order = orderWith(OrderStatus.DELIVERED);
 
-        var outcome = order.cancel();
-
-        assertThat(outcome).isInstanceOfSatisfying(CancelOutcome.NotCancellable.class, notCancellable ->
-                assertThat(notCancellable.violation().message())
-                        .isEqualTo("Order cannot be cancelled in its current status"));
+        assertRefusal(order::cancel, "Order cannot be cancelled in its current status");
         assertThat(order.getStatus()).isEqualTo(OrderStatus.DELIVERED);
     }
 
@@ -84,12 +75,18 @@ class OrderTest {
     void cancelRejectsAnOrderThatIsAlreadyCancelled() {
         var order = orderWith(OrderStatus.CANCELLED);
 
-        var outcome = order.cancel();
-
-        assertThat(outcome).isInstanceOfSatisfying(CancelOutcome.AlreadyCancelled.class, alreadyCancelled ->
-                assertThat(alreadyCancelled.violation().message())
-                        .isEqualTo("Order has already been cancelled"));
+        assertRefusal(order::cancel, "Order has already been cancelled");
         assertThat(order.getStatus()).isEqualTo(OrderStatus.CANCELLED);
+    }
+
+    // A refused transition is a RuleViolation.NotInStatus riding a ValidationException, and both
+    // halves matter: the boundary switches over the violation type and renders its message.
+    private static void assertRefusal(ThrowingCallable transition, String message) {
+        assertThat(catchThrowable(transition))
+                .isInstanceOfSatisfying(ValidationException.class, thrown ->
+                        assertThat(thrown.violation())
+                                .isInstanceOf(RuleViolation.NotInStatus.class)
+                                .extracting(RuleViolation::message).isEqualTo(message));
     }
 
     @Test

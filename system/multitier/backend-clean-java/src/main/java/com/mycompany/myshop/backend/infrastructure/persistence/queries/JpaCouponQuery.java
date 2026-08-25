@@ -15,7 +15,7 @@ import java.time.OffsetDateTime;
 import java.util.List;
 
 // See JpaOrderQuery for why the read side looks like this. The one thing specific to coupons
-// is the key it sorts and pages on: the table has no timestamp column, so "newest published first"
+// is the key it sorts on: the table has no timestamp column, so "newest published first"
 // has to come from the surrogate id -- which is exactly why the sort lives here and not in
 // the port. The id never leaves infrastructure, and the domain's rule that a Coupon has no
 // Long id still holds.
@@ -27,24 +27,21 @@ public class JpaCouponQuery implements CouponQuery {
             FROM coupons c
             """;
 
-    // The cursor a client holds is a code, but the sort key is the id, so the code has to be
-    // resolved back to an id before it can be compared. That subquery is what it costs to keep the
-    // surrogate key inside this package, and it is cheap: `code` is UNIQUE, so it is one index
-    // lookup. An unknown code makes the subquery NULL and the comparison unknown, so the page comes
-    // back empty rather than silently restarting from the top -- which is the right answer to a
-    // cursor that names a coupon that no longer exists.
-    private static final String KEYSET_PREDICATE =
-            "WHERE c.id < (SELECT previous.id FROM coupons previous WHERE previous.code = :cursorCode)\n";
-
-    // LIMIT is bound to size + 1 for the same reason as in JpaOrderQuery: the row that does not fit
-    // is how hasMore is answered.
-    private static final String LIST_ORDER = """
-            ORDER BY c.id DESC
-            LIMIT :limit
+    private static final String COUNT_SELECT = """
+            SELECT COUNT(*)
+            FROM coupons c
             """;
 
-    private static final String CURSOR_CODE = "cursorCode";
+    // See JpaOrderQuery#LIST_ORDER for what OFFSET costs. Coupons are the list where it costs least:
+    // there are few of them, and unlike orders they are not appended to while an admin reads them,
+    // so the page boundaries do not drift under the reader.
+    private static final String LIST_ORDER = """
+            ORDER BY c.id DESC
+            LIMIT :limit OFFSET :offset
+            """;
+
     private static final String LIMIT = "limit";
+    private static final String OFFSET = "offset";
 
     private final EntityManager entityManager;
 
@@ -53,22 +50,16 @@ public class JpaCouponQuery implements CouponQuery {
     }
 
     @Override
-    public Page<CouponListItem> listCoupons(PageSpec<String> page) {
-        var cursor = page.cursor();
-        var keyset = cursor != null && !cursor.isBlank();
+    public Page<CouponListItem> listCoupons(PageSpec page) {
+        var query = entityManager.createNativeQuery(LIST_SELECT + LIST_ORDER, Object[].class)
+                .setParameter(LIMIT, page.size())
+                .setParameter(OFFSET, page.offset());
 
-        var query = entityManager.createNativeQuery(
-                        LIST_SELECT + (keyset ? KEYSET_PREDICATE : "") + LIST_ORDER, Object[].class)
-                .setParameter(LIMIT, page.size() + 1);
-        if (keyset) {
-            query.setParameter(CURSOR_CODE, cursor);
-        }
+        var items = rows(query).stream().map(JpaCouponQuery::toListItem).toList();
+        var totalElements = ((Number) entityManager.createNativeQuery(COUNT_SELECT)
+                .getSingleResult()).longValue();
 
-        var rows = rows(query);
-        var hasMore = rows.size() > page.size();
-        var onThisPage = hasMore ? rows.subList(0, page.size()) : rows;
-
-        return new Page<>(onThisPage.stream().map(JpaCouponQuery::toListItem).toList(), hasMore);
+        return new Page<>(items, page.page(), page.size(), totalElements);
     }
 
     @SuppressWarnings("unchecked")

@@ -6,6 +6,7 @@ import com.mycompany.myshop.backend.domain.gateways.TaxGateway;
 import com.mycompany.myshop.backend.domain.repositories.CouponRepository;
 import com.mycompany.myshop.backend.domain.repositories.OrderRepository;
 import com.mycompany.myshop.backend.usecases.LoggingUseCase;
+import com.mycompany.myshop.backend.usecases.RefusalTranslatingUseCase;
 import com.mycompany.myshop.backend.usecases.TransactionRunner;
 import com.mycompany.myshop.backend.usecases.TransactionalUseCase;
 import com.mycompany.myshop.backend.usecases.UseCase;
@@ -105,8 +106,16 @@ public class UseCaseConfig {
         return observed("ViewSalesReport", new ViewSalesReport(salesReportQuery));
     }
 
+    // Every use case gets the refusal translator, which is the point of putting it here: the
+    // guarantee "a refusal always reaches the caller as an error" is made once, by construction,
+    // instead of being re-made by each use case remembering to catch.
+    //
+    // The order is not arbitrary. Translating sits INSIDE logging so the log sees one uniform thing
+    // -- a Result -- for every outcome a caller can be given, and OUTSIDE the transaction so a
+    // thrown refusal passes the transaction boundary, and rolls it back, while it is still an
+    // exception. Translate first and the rollback would have nothing to see.
     private static <Q, S> UseCase<Q, S> observed(String name, UseCase<Q, S> useCase) {
-        return new LoggingUseCase<>(name, useCase);
+        return new LoggingUseCase<>(name, new RefusalTranslatingUseCase<>(useCase));
     }
 
     // Only PlaceOrder needs one today: it is the use case that writes two aggregates, so it is the

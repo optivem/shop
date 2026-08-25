@@ -1,6 +1,7 @@
 package com.mycompany.myshop.backend.usecases.order;
 
 import com.mycompany.myshop.backend.domain.entities.Order;
+import com.mycompany.myshop.backend.domain.exceptions.ValidationException;
 import com.mycompany.myshop.backend.domain.gateways.ClockGateway;
 import com.mycompany.myshop.backend.domain.repositories.OrderRepository;
 import com.mycompany.myshop.backend.domain.values.Country;
@@ -21,7 +22,11 @@ import java.time.Instant;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -51,26 +56,39 @@ class CancelOrderTest {
         verify(orderRepository).update(order);
     }
 
+    // Refused before the lookup, so the repository is never asked at all -- which is the point of
+    // the policy being the first line of the use case.
     @Test
-    void cancelOrderReportsInvalidDuringDecember31CancellationBlackout() {
+    void cancelOrderRefusesDuringDecember31CancellationBlackout() {
         when(clockGateway.getCurrentTime()).thenReturn(DEC_31_CANCEL_BLACKOUT);
 
-        var result = cancelOrder.execute(new CancelOrderRequest("ORD-001"));
-
-        assertThat(result.error()).isInstanceOfSatisfying(UseCaseError.Invalid.class,
-                invalid -> assertThat(invalid.message()).contains("December 31"));
+        assertThatThrownBy(() -> cancelOrder.execute(new CancelOrderRequest("ORD-001")))
+                .isInstanceOf(ValidationException.class)
+                .hasMessageContaining("December 31");
+        verifyNoInteractions(orderRepository);
     }
 
     @Test
-    void cancelOrderReportsInvalidWhenOrderAlreadyCancelled() {
+    void cancelOrderRefusesAnOrderThatIsAlreadyCancelled() {
         givenNormalTime();
         var order = orderWith(OrderStatus.CANCELLED);
         when(orderRepository.findByOrderNumber(OrderNumber.of("ORD-001"))).thenReturn(Optional.of(order));
 
-        var result = cancelOrder.execute(new CancelOrderRequest("ORD-001"));
+        assertThatThrownBy(() -> cancelOrder.execute(new CancelOrderRequest("ORD-001")))
+                .isInstanceOf(ValidationException.class)
+                .hasMessageContaining("already been cancelled");
+        verify(orderRepository, never()).update(any());
+    }
 
-        assertThat(result.error()).isInstanceOfSatisfying(UseCaseError.Invalid.class,
-                invalid -> assertThat(invalid.message()).contains("already been cancelled"));
+    // The disagreement that keeps OrderNumber.parse returning a Result: DeliverOrder answers a
+    // malformed number with "malformed", this use case answers it with "no such order".
+    @Test
+    void cancelOrderReportsNotFoundWhenOrderNumberIsMalformed() {
+        givenNormalTime();
+
+        var result = cancelOrder.execute(new CancelOrderRequest(" "));
+
+        assertThat(result.error()).isEqualTo(new UseCaseError.NotFound("Order", " "));
     }
 
     @Test

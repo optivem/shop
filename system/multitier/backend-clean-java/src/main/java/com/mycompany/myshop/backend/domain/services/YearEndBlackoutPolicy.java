@@ -1,6 +1,5 @@
 package com.mycompany.myshop.backend.domain.services;
 
-import com.mycompany.myshop.backend.common.Result;
 import com.mycompany.myshop.backend.domain.exceptions.ValidationException;
 import com.mycompany.myshop.backend.domain.rules.RuleViolation;
 
@@ -24,6 +23,9 @@ public final class YearEndBlackoutPolicy {
     private YearEndBlackoutPolicy() {
     }
 
+    // Both windows are asked the same way, and the name says what the caller gets: nothing, or a
+    // stop. Neither caller inspects the refusal -- each one only stops -- so neither is made to
+    // unwrap a value to discover that.
     public static void requirePlacementAllowed(Instant at) {
         yearEndTimeOf(at).ifPresent(time -> {
             if (!time.isBefore(PLACEMENT_BLOCKED_FROM)) {
@@ -32,18 +34,14 @@ public final class YearEndBlackoutPolicy {
         });
     }
 
-    // Returned rather than thrown, because CancelOrder asks this one question on its own and acts on
-    // the answer. requirePlacementAllowed above still throws: it is one step inside PlaceOrder's
-    // pipeline, where a returned value would have to be unwrapped by every step that follows it.
-    public static Result<Void, RuleViolation> cancellationAllowed(Instant at) {
+    public static void requireCancellationAllowed(Instant at) {
         var time = yearEndTimeOf(at);
         if (time.isPresent()
                 && !time.get().isBefore(CANCELLATION_BLOCKED_FROM)
                 && !time.get().isAfter(CANCELLATION_BLOCKED_TO)) {
-            return Result.err(new RuleViolation.NotAllowed(
+            throw new ValidationException(new RuleViolation.NotAllowed(
                     "Order cancellation is not allowed on December 31st between 22:00 and 23:00"));
         }
-        return Result.ok();
     }
 
     private static Optional<LocalTime> yearEndTimeOf(Instant at) {

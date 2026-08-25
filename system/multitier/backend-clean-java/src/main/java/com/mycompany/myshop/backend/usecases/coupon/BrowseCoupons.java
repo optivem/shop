@@ -15,11 +15,12 @@ import com.mycompany.myshop.backend.usecases.queries.PageSpec;
 // REQUESTS_AND_RESPONSES_LIVE_WITH_THEIR_USECASE pins the wire contract to this package --
 // and keeping it out of the query means renaming a response field does not edit a query string.
 //
-// The page size is validated here for the reason given on
+// The page and size are validated here for the reason given on
 // com.mycompany.myshop.backend.usecases.order.BrowseOrderHistory: it is the use case that
 // owns how much work one request may cost.
 public class BrowseCoupons implements UseCase<BrowseCouponsRequest, BrowseCouponsResponse> {
 
+    private static final String FIELD_PAGE = "page";
     private static final String FIELD_SIZE = "size";
 
     private final CouponQuery couponQuery;
@@ -30,20 +31,24 @@ public class BrowseCoupons implements UseCase<BrowseCouponsRequest, BrowseCoupon
 
     @Override
     public Result<BrowseCouponsResponse, UseCaseError> execute(BrowseCouponsRequest request) {
+        if (!PageSpec.isValidPage(request.page())) {
+            return Result.err(new UseCaseError.Invalid(FIELD_PAGE,
+                    "Page must be " + PageSpec.FIRST_PAGE + " or greater"));
+        }
         if (!PageSpec.isValidSize(request.size())) {
             return Result.err(new UseCaseError.Invalid(FIELD_SIZE,
                     "Page size must be between 1 and " + PageSpec.MAX_SIZE));
         }
 
         var page = couponQuery.listCoupons(
-                new PageSpec<>(PageSpec.sizeOrDefault(request.size()), request.cursor()));
+                new PageSpec(PageSpec.pageOrFirst(request.page()), PageSpec.sizeOrDefault(request.size())));
 
         var response = new BrowseCouponsResponse();
         response.setCoupons(page.items().stream().map(BrowseCoupons::toItem).toList());
-        response.setHasMore(page.hasMore());
-        response.setNextCursor(page.hasMore()
-                ? page.last().map(CouponListItem::code).orElse(null)
-                : null);
+        response.setPage(page.page());
+        response.setSize(page.size());
+        response.setTotalElements(page.totalElements());
+        response.setTotalPages(page.totalPages());
         return Result.ok(response);
     }
 

@@ -5,7 +5,8 @@ import java.util.function.Supplier;
 
 public interface TransactionRunner {
 
-    // The predicate decides commit or rollback, because a use case that answers with an error has
-    // already caught whatever went wrong: there is no exception left for the transaction to see.
+    // A thrown refusal rolls back the ordinary way, by propagating. The predicate is for the other
+    // shape: a use case that answers with a returned error, where there is no exception for the
+    // transaction to see.
     <T> T inTransaction(Supplier<T> work, Predicate<T> commitWhen);
 }

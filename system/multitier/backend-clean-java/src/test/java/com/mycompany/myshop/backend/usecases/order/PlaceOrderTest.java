@@ -1,6 +1,7 @@
 package com.mycompany.myshop.backend.usecases.order;
 
 import com.mycompany.myshop.backend.domain.entities.Order;
+import com.mycompany.myshop.backend.domain.exceptions.ValidationException;
 import com.mycompany.myshop.backend.domain.values.OrderStatus;
 import com.mycompany.myshop.backend.domain.values.Product;
 import com.mycompany.myshop.backend.domain.values.Promotion;
@@ -14,7 +15,6 @@ import com.mycompany.myshop.backend.domain.values.Country;
 import com.mycompany.myshop.backend.domain.values.Money;
 import com.mycompany.myshop.backend.domain.values.Rate;
 import com.mycompany.myshop.backend.domain.values.Sku;
-import com.mycompany.myshop.backend.usecases.UseCaseError;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -26,7 +26,9 @@ import java.time.Instant;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -63,38 +65,41 @@ class PlaceOrderTest {
         assertSavedOrder(captor.getValue(), result.value());
     }
 
+    // Each of these refusals is thrown by a different step of the pipeline and none of them is
+    // caught here -- that is what lets the method above read as the business sequence. The 422 the
+    // caller ends up with is RefusalTranslatingUseCase's doing, and is tested there.
     @Test
-    void placeOrderReportsInvalidWhenOrderedOnYearEndBlackout() {
+    void placeOrderRefusesWhenOrderedOnYearEndBlackout() {
         when(clockGateway.getCurrentTime()).thenReturn(DEC_31_YEAR_END_BLACKOUT);
 
-        var result = placeOrder.execute(buildRequest("BOOK-123", 1, "US"));
-
-        assertThat(result.error()).isInstanceOfSatisfying(UseCaseError.Invalid.class,
-                invalid -> assertThat(invalid.message()).contains("December 31"));
+        assertRefusal(buildRequest("BOOK-123", 1, "US"), null, "December 31");
     }
 
     @Test
-    void placeOrderReportsInvalidWhenSkuUnknown() {
+    void placeOrderRefusesWhenSkuUnknown() {
         givenNormalTime();
         when(erpGateway.getProductDetails(Sku.of("UNKNOWN"))).thenReturn(Optional.empty());
 
-        var result = placeOrder.execute(buildRequest("UNKNOWN", 1, "US"));
-
-        assertThat(result.error()).isInstanceOfSatisfying(UseCaseError.Invalid.class,
-                invalid -> assertThat(invalid.field()).isEqualTo("sku"));
+        assertRefusal(buildRequest("UNKNOWN", 1, "US"), "sku", "Product does not exist");
     }
 
     @Test
-    void placeOrderReportsInvalidWhenCountryUnknown() {
+    void placeOrderRefusesWhenCountryUnknown() {
         givenNormalTime();
         givenProductExists("BOOK-123", Money.of("10.00"));
         givenNoPromotion();
         when(taxGateway.getTaxDetails(Country.of("XX"))).thenReturn(Optional.empty());
 
-        var result = placeOrder.execute(buildRequest("BOOK-123", 1, "XX"));
+        assertRefusal(buildRequest("BOOK-123", 1, "XX"), "country", "Country does not exist");
+    }
 
-        assertThat(result.error()).isInstanceOfSatisfying(UseCaseError.Invalid.class,
-                invalid -> assertThat(invalid.field()).isEqualTo("country"));
+    private void assertRefusal(PlaceOrderRequest request, String field, String message) {
+        assertThat(catchThrowable(() -> placeOrder.execute(request)))
+                .isInstanceOfSatisfying(ValidationException.class, thrown -> {
+                    assertThat(thrown.violation().field()).isEqualTo(field);
+                    assertThat(thrown.violation().message()).contains(message);
+                });
+        verifyNoInteractions(orderRepository);
     }
 
     private void givenNormalTime() {

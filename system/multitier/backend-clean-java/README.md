@@ -6,6 +6,36 @@ the clean-architecture way instead of the CRUD/layered way.
 **Same HTTP contract. Same database schema. Same component tests.** Only `src/main` differs — and
 that is the whole point: the acceptance-level specs do not change when the inside is rearranged.
 
+## Running the tests
+
+All commands run from this directory (`system/multitier/backend-clean-java`).
+
+```bash
+./gradlew build             # compile + 106 unit tests + checkstyle on main/test — no Docker
+./gradlew componentTest     # 62 in-process component tests                      — Docker
+./gradlew integrationTest   # 51 narrow-integration tests (real Postgres)        — Docker
+./gradlew contractTest      # 43 Pact provider-verification tests                — Docker
+./gradlew checkstyleAll     # lints every source set, including the opt-in ones
+```
+
+The whole commit-stage gate, which is what CI runs and what to run before committing:
+
+```bash
+./gradlew test componentTest integrationTest contractTest checkstyleAll
+```
+
+- Docker only has to be **running** — the suites start their own Postgres via Testcontainers. There
+  is no stack to bring up or tear down, and no `gh optivem system start`.
+- The three Docker suites are opt-in by design and are **not** part of `build`.
+- The `*RealParityContractTest` classes also need the external-system simulator image, which is
+  deliberately not a `dependsOn` (the other contract tests shouldn't pay for the build):
+  `./gradlew externalSimulatorImage contractTest`.
+- From the repo root, `gh optivem component-test run -c gh-optivem-multitier-clean-java.yaml` runs
+  the component layer the way CI does. This variant has no `docker/**/systems.yaml`, so it has no
+  system-test stack and is not covered by the repo-root `test-all.sh`.
+- `./gradlew benchmark` is a measurement harness, not a verdict: minutes to run, Docker required,
+  never part of `build`. See [`docs/theme2-measurements.md`](docs/theme2-measurements.md).
+
 ## Status
 
 The refactor is complete. `src/main` is organised by the dependency rule rather than by technical
@@ -14,7 +44,7 @@ accommodate any of it: **62 component tests, the same 62, green at every commit.
 
 | Suite | Tests | Needs Docker |
 |---|---|---|
-| `test` (unit — domain, use cases, ArchUnit) | 97 | no |
+| `test` (unit — domain, use cases, ArchUnit) | 106 | no |
 | `componentTest` | 62 | yes (Postgres) |
 | `integrationTest` | 51 | yes (Postgres; the gateway half is in-process) |
 | `contractTest` | 43 | yes (Postgres + the simulator image for real-parity) |
@@ -68,14 +98,20 @@ The shape worth noticing:
   Both are defensible; this variant picked one and applied it everywhere. The dependency rule is
   unaffected either way — what matters is that the implementations live outside, which
   `ArchitectureTest` enforces.
-- **The domain throws, the use case returns.** A domain object states its rules by throwing
-  `ValidationException` — `order.cancel()`, `coupon.discountAt()`, `YearEndBlackoutPolicy` — and the
-  use case catches it at its own boundary and turns it into `Result.err(UseCaseError.from(e))`. Where
-  the *use case* is the one rejecting (missing field, not found, code already taken) it returns
-  `Result.err` directly, with no exception involved. The split is deliberate: a domain method
-  returning `Result` would drag the use case's vocabulary into the centre. `Guard` is the exception
-  that proves it — its null checks throw `IllegalArgumentException` and nothing translates them,
-  because `Guard.notNull(pricing)` failing is a programming error and a 500 is the honest answer.
+- **The domain throws, and exactly one place catches.** A domain object states its rules by throwing
+  `ValidationException` carrying a sealed `RuleViolation` — `order.deliver()`, `order.cancel()`,
+  `coupon.discountAt()`, `YearEndBlackoutPolicy`. No use case catches it. `RefusalTranslatingUseCase`
+  wraps every use case in `UseCaseConfig` and turns the throw into `Result.err(UseCaseError.from(e))`
+  in one place, for all of them. The transport is chosen by the *caller*, not the callee: nobody
+  branches on which refusal came back — every one ends as the same 422 — so handing it back as a
+  value would only make each frame re-implement stack unwinding to reach where the throw already
+  lands. `OrderNumber.parse` is the one refusal that stays a returned `Result`, because its two
+  callers genuinely disagree: `DeliverOrder` answers a malformed number with "malformed",
+  `CancelOrder` with "no such order". That is the bar — a branch someone actually takes.
+  Where the *use case* is the one rejecting (missing field, not found, code already taken) it returns
+  `Result.err` directly, with no exception involved. `Guard` is the other exception that proves the
+  rule — its null checks throw `IllegalArgumentException` and nothing translates them, because
+  `Guard.notNull(pricing)` failing is a programming error and a 500 is the honest answer.
 - **`add` and `update`, not `save`.** No caller was ever unsure which it meant, so the port says
   which: `PlaceOrder` has just minted an order number that cannot exist yet, `CancelOrder` is holding
   a row it just read. A single `save` discarded that and paid the database to work it out again —

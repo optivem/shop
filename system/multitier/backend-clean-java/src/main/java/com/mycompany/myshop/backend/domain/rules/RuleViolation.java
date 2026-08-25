@@ -1,10 +1,21 @@
 package com.mycompany.myshop.backend.domain.rules;
 
-// The domain's one way of saying "no, and here is why". It travels by two transports and the choice
-// is made by shape, not by taste: a method that makes a single decision RETURNS it, so the caller
-// cannot fail to see it; a method that is a pipeline of several fallible steps THROWS it wrapped in
-// ValidationException, because a return value would turn the pipeline into a staircase of unwrapping.
-// Either way the vocabulary is the same, so the use case layer has exactly one translation to write.
+// The domain's one way of saying "no, and here is why".
+//
+// It travels one way: THROWN, wrapped in ValidationException, and caught exactly once, in
+// RefusalTranslatingUseCase. The rule that picks the transport is about the caller, not the callee
+// -- not "is this method one decision or a pipeline?" but "does anyone act differently on which
+// refusal came back?". In this domain almost nobody does: every refusal ends as a 422 carrying a
+// field and a message. Handing it back as a value would make every frame between the rule and that
+// 422 re-implement stack unwinding by hand, to arrive where a throw arrives on its own.
+//
+// The narrow exception is OrderNumber.parse, which returns a Result because its two callers really
+// do disagree -- DeliverOrder answers a malformed number with "malformed", CancelOrder with "no such
+// order". That is the bar: a branch someone actually takes, not one someone might.
+//
+// Being a sealed type is what makes the single catch safe. The boundary translates by switching over
+// this interface, so a new kind of refusal is a compile error there rather than a string nobody
+// matched. Thrown, but not untyped.
 public sealed interface RuleViolation {
 
     // Nullable: some rules are about the request as a whole rather than one field, and the response

@@ -6,6 +6,17 @@ The "before" numbers for theme 2, *the database is barred from the work it does 
 They exist because the theme's claim is that *the system pays for it in performance*, and a
 demonstration that cannot show the before-numbers is asserting rather than demonstrating.
 
+> **Superseded, 2026-08-25 — Chunk C's paging mechanism.** The read side no longer pages by keyset
+> cursor. `PageSpec`/`Page` now carry a page number and a total, the adapters use
+> `LIMIT … OFFSET …` plus a `COUNT(*)`, and `CursorCodec`, `OrderCursor` and
+> `KeysetPagingIntegrationTest` are gone — replaced by `OffsetPagingIntegrationTest`. The reason is
+> not performance: numbered pages with a total are the paging convention readers already know, and
+> "page 3 of 26" cannot be built from a resume token. Everything else in this document stands, and
+> the Chunk C numbers below stand as measured — they record what keyset paging cost on the day it
+> ran, which is precisely what makes the trade visible. What changed is the answer to *is that the
+> paging this application should ship*, not the arithmetic. Read every "keyset" below as the
+> mechanism that was measured, not the one in `src/main` today.
+
 ## How to reproduce
 
 ```bash
@@ -196,7 +207,9 @@ keyset paging (C1–C5) were all in `src/main`.
 `./gradlew integrationTest` was run first, in the same Docker session: 49 tests, all passing,
 including the five cases of `KeysetPagingIntegrationTest`, which had never been executed before.
 Chunk C's keyset SQL is hand-written and native, so the first-page numbers below would be worth
-nothing if nobody had proved the cursor walks every row exactly once.
+nothing if nobody had proved the cursor walks every row exactly once. (That test no longer exists —
+see the superseded note at the top. Its successor, `OffsetPagingIntegrationTest`, proves the same
+property about the paging that replaced it.)
 
 | Capability | Operation | Wall ms | Rows | Domain objects | JDBC statements | Retained heap MB |
 |---|---|---:|---:|---:|---:|---:|

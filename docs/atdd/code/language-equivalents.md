@@ -168,29 +168,37 @@ annotating the controller puts the boundary in the wrong layer. That is precisel
 |---|---|---|
 | `<T> T inTransaction(Supplier<T> work)` over `TransactionTemplate` | `Task<T> InTransactionAsync<T>(Func<Task<T>>)` over `IDbContextTransaction` | `inTransaction<T>(work: () => Promise<T>): Promise<T>` over Prisma `$transaction` |
 
-### Paging belongs to the read side, and is always keyset
+### Paging belongs to the read side, and is numbered
 
 **Rule.** The page vocabulary lives beside the query ports, not in the domain — nothing on the
-command side pages, and in Java a domain placement fails the build outright. Keyset, never `OFFSET`:
-an offset re-scans and skips, and it drops or repeats rows when the table is written to underneath a
-paging client.
+command side pages, and in Java a domain placement fails the build outright. Numbered pages with a
+total, because that is the paging a reader of the URL already understands and the only kind a
+"page 3 of 26" control can be built from.
 
 | | Java (settled) | .NET | TypeScript |
 |---|---|---|---|
-| Vocabulary | `usecases/queries/` — `PageSpec<C>`, `Page<T>`, `OrderCursor` | `UseCases/Queries/` — same three | `usecases/queries/` — same three |
-| Defaults | `DEFAULT_SIZE = 50`, `MAX_SIZE = 200` | same values | same values |
-| Fetch | `LIMIT size + 1`, so `hasMore` costs no second query | same | same |
-| Wire | `size` + an opaque base64 `cursor`; decoded in `presentation/CursorCodec` | same, decoded in the presentation layer | same, decoded in the presentation layer |
+| Vocabulary | `usecases/queries/` — `PageSpec`, `Page<T>` | `UseCases/Queries/` — same two | `usecases/queries/` — same two |
+| Defaults | `FIRST_PAGE = 1`, `DEFAULT_SIZE = 50`, `MAX_SIZE = 200` | same values | same values |
+| Fetch | `LIMIT size OFFSET (page - 1) * size`, plus a `COUNT(*)` over the same `WHERE` | same | same |
+| Wire | `page` + `size` in, `page` / `size` / `totalElements` / `totalPages` out | same | same |
 | **Not** this | Spring `Pageable` / `PageRequest` in a port | `IQueryable`, EF `Skip`/`Take` in a port | Prisma `take`/`cursor` in a port |
 
-**The sort key never reaches the client.** The cursor is base64-encoded at the presentation boundary
-and decoded there, so no consumer learns that orders key on `(order_timestamp, order_number)` or that
-coupons key on the surrogate `id`. That is what makes the ordering changeable later.
+**Pages are numbered from one.** Spring Data numbers from zero, and every team using it eventually
+ships the off-by-one where page 1 of the UI asks for page 1 of the API and skips the first rows.
+`page=1` is the first page because that is what the person reading the URL already believes it says.
+
+**Know what OFFSET costs.** The database reads and discards every row before the window, so page 200
+is slower than page 1, and a row inserted while a client pages shifts the boundaries under it. That
+is the price of the page numbers and the total, and it is accepted deliberately — a resume-token
+scheme is cheaper and drift-free but can only offer *next*, which is not the control this UI has.
+`idx_orders_recent` keeps the scan indexed rather than sorted, which bounds the cost without making
+it constant.
 
 **Order newest-first, and know why.** Orders sort `order_timestamp DESC, order_number DESC`, so a
-test's own order is always on page 1. Coupons have no timestamp column, so newest-published-first
-comes from `ORDER BY id DESC` **inside the adapter** — the surrogate `id` never leaves infrastructure,
-and the keyset cursor is the `UNIQUE`, domain-visible `code`. This matters more than it looks: the
+test's own order is always on page 1. The tiebreaker is not decoration: without it the sort is not
+total, and under `OFFSET` two rows sharing an instant can appear on two pages or on none. Coupons
+have no timestamp column, so newest-published-first comes from `ORDER BY id DESC` **inside the
+adapter** — the surrogate `id` never leaves infrastructure. This matters more than it looks: the
 system-test DSLs search only the returned list, so an ordering that puts the row under test on an
 arbitrary page turns every list assertion into a paging loop.
 

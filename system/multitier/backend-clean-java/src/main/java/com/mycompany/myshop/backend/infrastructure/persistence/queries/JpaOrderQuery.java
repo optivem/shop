@@ -1,7 +1,6 @@
 package com.mycompany.myshop.backend.infrastructure.persistence.queries;
 
 import com.mycompany.myshop.backend.domain.values.OrderStatus;
-import com.mycompany.myshop.backend.usecases.queries.OrderCursor;
 import com.mycompany.myshop.backend.usecases.queries.OrderDetail;
 import com.mycompany.myshop.backend.usecases.queries.OrderListItem;
 import com.mycompany.myshop.backend.usecases.queries.OrderQuery;
@@ -15,7 +14,6 @@ import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,10 +21,10 @@ import java.util.Optional;
 // response holds and nothing else, and no OrderJpaEntity is ever materialised -- so nothing enters
 // the persistence context, nothing is dirty-checked, and no domain constructor runs.
 //
-// The list query is native rather than JPQL, for the same reason JpaSalesReportQuery is: its keyset
-// predicate is a row-value comparison, and an adapter is the layer whose job it is to know which
-// database it is talking to. The detail query stays JPQL -- one predicate on a unique column has
-// nothing to gain.
+// The list query is native rather than JPQL, for the same reason JpaSalesReportQuery is: JPQL has
+// no OFFSET of its own, only setFirstResult on the query object, and an adapter is the layer whose
+// job it is to know which database it is talking to. The detail query stays JPQL -- one predicate
+// on a unique column has nothing to gain.
 //
 // Rows come back as Object[] rather than through a SELECT new ... constructor expression because the
 // projection records are not allowed to name a domain type: status leaves this class as a plain
@@ -40,24 +38,28 @@ public class JpaOrderQuery implements OrderQuery {
             FROM orders o
             """;
 
+    private static final String COUNT_SELECT = """
+            SELECT COUNT(*)
+            FROM orders o
+            """;
+
     private static final String FILTER_PREDICATE =
             "LOWER(o.order_number) LIKE LOWER('%' || :orderNumber || '%')";
 
-    // Row-value comparison, and not OFFSET. `(a, b) < (x, y)` is one comparison Postgres can satisfy
-    // by descending idx_orders_recent straight to the resume point; `OFFSET 10000` makes it read ten
-    // thousand rows in order to throw them away, and that cost grows with the page number while this
-    // one does not. The columns and their order have to match the ORDER BY exactly or the index does
-    // not apply -- which is why the tuple is spelled as a tuple rather than expanded into
-    // `ts < :ts OR (ts = :ts AND num < :num)`, a form that means the same thing and plans worse.
-    private static final String KEYSET_PREDICATE =
-            "(o.order_timestamp, o.order_number) < (:cursorTimestamp, :cursorOrderNumber)";
-
     // order_number is the tiebreaker rather than the surrogate id, because the id is not allowed out
-    // of this package. LIMIT is bound to size + 1: the row that does not fit on the page is how
-    // hasMore gets answered without a second query.
+    // of this package -- and without a tiebreaker the sort is not total: two orders sharing an
+    // instant could come back in either order, which under OFFSET means one of them appears on two
+    // pages and the other on none.
+    //
+    // OFFSET is what page numbers cost. Postgres still reads and discards every row before the
+    // window, so page 200 is slower than page 1 and the difference grows with the page number.
+    // idx_orders_recent keeps it an index scan rather than a sort of the whole table, which is what
+    // makes the cost linear rather than ruinous; it does not make it constant. That is the trade
+    // accepted in exchange for "page 3 of 26" and a row of numbered buttons, neither of which a
+    // resume-token scheme can offer.
     private static final String LIST_ORDER = """
             ORDER BY o.order_timestamp DESC, o.order_number DESC
-            LIMIT :limit
+            LIMIT :limit OFFSET :offset
             """;
 
     private static final String DETAIL_SELECT = """
@@ -70,9 +72,8 @@ public class JpaOrderQuery implements OrderQuery {
             """;
 
     private static final String ORDER_NUMBER = "orderNumber";
-    private static final String CURSOR_TIMESTAMP = "cursorTimestamp";
-    private static final String CURSOR_ORDER_NUMBER = "cursorOrderNumber";
     private static final String LIMIT = "limit";
+    private static final String OFFSET = "offset";
 
     private final EntityManager entityManager;
 
@@ -80,36 +81,29 @@ public class JpaOrderQuery implements OrderQuery {
         this.entityManager = entityManager;
     }
 
+    // Two statements, not one: the page of rows, and the count of all the rows it was taken from.
+    // The count is what pays for the page numbers, and it is deliberately run against the same WHERE
+    // as the SELECT -- a total that ignored the filter would number pages that the filtered list
+    // does not have.
     @Override
-    public Page<OrderListItem> listOrders(String orderNumberFilter, PageSpec<OrderCursor> page) {
+    public Page<OrderListItem> listOrders(String orderNumberFilter, PageSpec page) {
         var filter = orderNumberFilter == null ? null : orderNumberFilter.trim();
         var filtered = filter != null && !filter.isEmpty();
-        var cursor = page.cursor();
-
-        var predicates = new ArrayList<String>();
-        if (filtered) {
-            predicates.add(FILTER_PREDICATE);
-        }
-        if (cursor != null) {
-            predicates.add(KEYSET_PREDICATE);
-        }
-        var where = predicates.isEmpty() ? "" : "WHERE " + String.join(" AND ", predicates) + "\n";
+        var where = filtered ? "WHERE " + FILTER_PREDICATE + "\n" : "";
 
         var query = entityManager.createNativeQuery(LIST_SELECT + where + LIST_ORDER, Object[].class)
-                .setParameter(LIMIT, page.size() + 1);
+                .setParameter(LIMIT, page.size())
+                .setParameter(OFFSET, page.offset());
+        var countQuery = entityManager.createNativeQuery(COUNT_SELECT + where);
         if (filtered) {
             query.setParameter(ORDER_NUMBER, filter);
-        }
-        if (cursor != null) {
-            query.setParameter(CURSOR_TIMESTAMP, cursor.orderTimestamp());
-            query.setParameter(CURSOR_ORDER_NUMBER, cursor.orderNumber());
+            countQuery.setParameter(ORDER_NUMBER, filter);
         }
 
-        var rows = rows(query);
-        var hasMore = rows.size() > page.size();
-        var onThisPage = hasMore ? rows.subList(0, page.size()) : rows;
+        var items = rows(query).stream().map(JpaOrderQuery::toListItem).toList();
+        var totalElements = ((Number) countQuery.getSingleResult()).longValue();
 
-        return new Page<>(onThisPage.stream().map(JpaOrderQuery::toListItem).toList(), hasMore);
+        return new Page<>(items, page.page(), page.size(), totalElements);
     }
 
     @Override

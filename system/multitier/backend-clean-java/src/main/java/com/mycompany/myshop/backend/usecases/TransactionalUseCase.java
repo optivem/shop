@@ -5,10 +5,13 @@ import com.mycompany.myshop.backend.common.Result;
 // Transaction demarcation is invisible to the caller too, so it composes at the edge rather than
 // being a collaborator the use case has to remember to call.
 //
-// The subtlety that makes this work: PlaceOrder catches its own pipeline's ValidationException and
-// answers with an error, so by the time control reaches here there is no exception left to trigger a
-// rollback. Committing on that would leave the order inserted and the coupon unredeemed. Hence the
-// rule this decorator enforces instead, which is the stronger one anyway: a use case that answers
+// It sits INSIDE RefusalTranslatingUseCase, which is what makes a thrown refusal roll back for free:
+// the exception is still an exception when it crosses this boundary, and only becomes a returned
+// error one layer out. Translate first and the rollback would have nothing to see.
+//
+// The commit predicate covers the other way a use case can answer badly -- returning an error rather
+// than throwing, as ViewOrderDetails and CancelOrder do for a missing order. None of them write
+// before doing so today, but the rule costs nothing and is the stronger one: a use case that answers
 // with an error commits nothing.
 public class TransactionalUseCase<TRequest, TResponse> implements UseCase<TRequest, TResponse> {
 

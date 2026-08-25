@@ -6,8 +6,12 @@ import org.slf4j.LoggerFactory;
 
 // A cross-cutting concern belongs in a decorator when it is invisible to the caller: it does not
 // change the answer, so nothing about it needs to appear in a use case's signature. Logging, timing,
-// metrics and correlation ids are all that shape. A business refusal is NOT -- it is the answer, so
-// it travels as a returned value instead and this class only observes it going past.
+// metrics and correlation ids are all that shape.
+//
+// This is the outermost decorator, wrapping RefusalTranslatingUseCase rather than the other way
+// round, so that by the time an outcome is logged every answer a caller can be given looks the same
+// -- a Result. Inside the translator a refusal is still an exception, and logging it there would
+// file a 422 under the same heading as a defect.
 public class LoggingUseCase<TRequest, TResponse> implements UseCase<TRequest, TResponse> {
 
     private static final Logger log = LoggerFactory.getLogger(LoggingUseCase.class);

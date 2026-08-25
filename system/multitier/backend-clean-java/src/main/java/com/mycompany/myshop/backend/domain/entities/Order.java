@@ -1,7 +1,7 @@
 package com.mycompany.myshop.backend.domain.entities;
 
-import com.mycompany.myshop.backend.common.Result;
 import com.mycompany.myshop.backend.domain.Guard;
+import com.mycompany.myshop.backend.domain.exceptions.ValidationException;
 import com.mycompany.myshop.backend.domain.rules.RuleViolation;
 import com.mycompany.myshop.backend.domain.values.Country;
 import com.mycompany.myshop.backend.domain.values.CouponCode;
@@ -56,32 +56,40 @@ public class Order {
         this.appliedCouponCode = appliedCouponCode;
     }
 
-    // One decision, so the answer is the return type: being asked to deliver an order that is not
-    // PLACED is an ordinary outcome of a duplicated request, not an exceptional one. Returning it
-    // means no caller can forget to handle it and no use case has to catch anything.
-    public Result<Void, RuleViolation> deliver() {
+    // A refusal is thrown, not returned, because no caller does anything with it but stop: every
+    // one of them answers a refused transition with the same 422 carrying the same message. A
+    // returned Result would make each caller write out that "stop" by hand, at every call site, to
+    // arrive where the throw arrives on its own -- see RefusalTranslatingUseCase for where it lands.
+    //
+    // The wording stays here, in the object that owns the rule. What travels is a RuleViolation, so
+    // the single translation at the boundary is a total switch over a sealed type rather than a
+    // string being sniffed.
+    public void deliver() {
         if (status != OrderStatus.PLACED) {
-            return Result.err(new RuleViolation.NotInStatus(
-                    "Order cannot be delivered in its current status"));
+            throw new ValidationException(
+                    new RuleViolation.NotInStatus("Order cannot be delivered in its current status"));
         }
         status = OrderStatus.DELIVERED;
-        return Result.ok();
     }
 
-    // Three branches the caller treats differently, so a sealed outcome rather than a Result: an
-    // already-cancelled order is a retry and the use case answers it with success. Already-cancelled
-    // keeps its own message: it is the one negative case the acceptance suite pins by wording.
-    public CancelOutcome cancel() {
+    // Two refusals, and CancelOrder treats them identically -- both become a 422 carrying this
+    // wording. That is why they are thrown rather than handed back as a sealed CancelOutcome the
+    // caller pattern-matches: a branch nobody takes is a branch that costs a type, a switch and a
+    // reader's attention to describe a difference that never shows up in behaviour.
+    //
+    // Already-cancelled keeps its own message: it is the one negative case the acceptance suite pins
+    // by wording. If it ever needs to become an idempotent success, that is the day it earns a
+    // distinct type -- and RuleViolation.NotInStatus already carries enough for the caller to tell.
+    public void cancel() {
         if (status == OrderStatus.CANCELLED) {
-            return new CancelOutcome.AlreadyCancelled(
+            throw new ValidationException(
                     new RuleViolation.NotInStatus("Order has already been cancelled"));
         }
         if (status != OrderStatus.PLACED) {
-            return new CancelOutcome.NotCancellable(
+            throw new ValidationException(
                     new RuleViolation.NotInStatus("Order cannot be cancelled in its current status"));
         }
         status = OrderStatus.CANCELLED;
-        return new CancelOutcome.Cancelled();
     }
 
     public OrderNumber getOrderNumber() {

@@ -10,10 +10,8 @@ import com.mycompany.myshop.backend.infrastructure.persistence.queries.JpaCoupon
 import com.mycompany.myshop.backend.infrastructure.persistence.queries.JpaOrderQuery;
 import com.mycompany.myshop.backend.usecases.queries.CouponListItem;
 import com.mycompany.myshop.backend.usecases.queries.CouponQuery;
-import com.mycompany.myshop.backend.usecases.queries.OrderCursor;
 import com.mycompany.myshop.backend.usecases.queries.OrderListItem;
 import com.mycompany.myshop.backend.usecases.queries.OrderQuery;
-import com.mycompany.myshop.backend.usecases.queries.Page;
 import com.mycompany.myshop.backend.usecases.queries.PageSpec;
 import jakarta.persistence.EntityManager;
 import java.math.BigDecimal;
@@ -27,14 +25,15 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
-// The keyset pagination in JpaOrderQuery and JpaCouponQuery is native SQL: a row-value comparison in
-// one, a code-to-id subquery in the other. Neither is something the compiler can check and neither
-// behaves the same on an in-memory database, so this test drives real Postgres.
+// The paging in JpaOrderQuery and JpaCouponQuery is native SQL -- LIMIT/OFFSET plus a COUNT over the
+// same predicate -- and neither the offset arithmetic nor the agreement between the two statements
+// is something the compiler can check. So this test drives real Postgres.
 //
-// What it pins is the property that makes paging correct rather than merely bounded: walking the
-// pages must visit every row exactly once. A cursor that is off by one row skips or repeats at the
-// page boundary and nothing else in the suite would notice -- the pages would still be the right
-// size and still be in the right order.
+// What it pins is the property that makes numbered pages correct rather than merely bounded:
+// walking pages 1..totalPages must visit every row exactly once, and the total the client counts its
+// buttons with must be the total of rows the filter actually matches. An off-by-one in the offset
+// skips or repeats a row at a page boundary, and a count that disagrees with the filter draws
+// buttons for pages that come back empty -- nothing else in the suite would notice either.
 //
 // @DataJpaTest for the reason OrderRepositoryIntegrationTest gives: the subject is one adapter, and
 // it is transactional, so each test's rows roll back. The query classes are plain @Component beans,
@@ -43,11 +42,11 @@ import org.springframework.test.context.ActiveProfiles;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @ActiveProfiles("test")
 @Import({TestcontainersConfiguration.class, JpaOrderQuery.class, JpaCouponQuery.class})
-class KeysetPagingIntegrationTest {
+class OffsetPagingIntegrationTest {
 
     // Every order this test writes carries this in its number, so the query's own filter scopes the
     // assertions to them. Rows are never truncated between tests anywhere in this suite.
-    private static final String SCOPE = "KEYSET";
+    private static final String SCOPE = "OFFSET";
 
     private static final Instant BASE = Instant.parse("2026-03-10T12:00:00Z");
 
@@ -73,8 +72,9 @@ class KeysetPagingIntegrationTest {
             SCOPE + "-5", SCOPE + "-4", SCOPE + "-3", SCOPE + "-2", SCOPE + "-1");
     }
 
-    // The case the tiebreaker exists for. order_timestamp is not unique, so a cursor holding only
-    // the timestamp would either re-read the row it just returned or step over its neighbour.
+    // The case the tiebreaker exists for. order_timestamp is not unique, so an ORDER BY on the
+    // timestamp alone leaves the order of the tied rows up to the plan -- and under OFFSET a row
+    // that moves between two executions is a row served twice on one page and never on the next.
     @Test
     void doesNotSkipOrRepeatWhenTimestampsCollide() {
         persistOrder(SCOPE + "-A", BASE);
@@ -87,18 +87,48 @@ class KeysetPagingIntegrationTest {
         assertThat(visited).containsExactly(SCOPE + "-C", SCOPE + "-B", SCOPE + "-A");
     }
 
+    // The total is what the page buttons are drawn from, so it has to count the rows the filter
+    // matches -- not the rows on this page, and not every order in the table.
     @Test
-    void reportsHasMoreOnlyWhileRowsRemain() {
-        persistOrder(SCOPE + "-1", BASE);
-        persistOrder(SCOPE + "-2", BASE.plusSeconds(1));
+    void countsTheRowsTheFilterMatchesRatherThanThePage() {
+        for (var i = 1; i <= 5; i++) {
+            persistOrder(SCOPE + "-" + i, BASE.plusSeconds(i));
+        }
         entityManager.flush();
 
-        var first = orderQuery.listOrders(SCOPE, new PageSpec<>(1, null));
-        assertThat(first.hasMore()).isTrue();
+        var page = orderQuery.listOrders(SCOPE, new PageSpec(1, 2));
 
-        var second = orderQuery.listOrders(SCOPE, cursorAfter(first, 1));
-        assertThat(second.hasMore()).isFalse();
-        assertThat(second.items()).hasSize(1);
+        assertThat(page.items()).hasSize(2);
+        assertThat(page.totalElements()).isEqualTo(5);
+        assertThat(page.totalPages()).isEqualTo(3);
+    }
+
+    // The last page is a partial one, which is where ceiling division earns its keep: five rows at
+    // two per page is three pages, not two.
+    @Test
+    void servesAPartialLastPage() {
+        for (var i = 1; i <= 5; i++) {
+            persistOrder(SCOPE + "-" + i, BASE.plusSeconds(i));
+        }
+        entityManager.flush();
+
+        var page = orderQuery.listOrders(SCOPE, new PageSpec(3, 2));
+
+        assertThat(page.items()).hasSize(1);
+        assertThat(page.totalPages()).isEqualTo(3);
+    }
+
+    // A page past the end is an empty list rather than an error: a client that walks off the end
+    // should see the end. The total still says how many pages there really were.
+    @Test
+    void returnsAnEmptyPagePastTheEnd() {
+        persistOrder(SCOPE + "-1", BASE);
+        entityManager.flush();
+
+        var page = orderQuery.listOrders(SCOPE, new PageSpec(99, 10));
+
+        assertThat(page.items()).isEmpty();
+        assertThat(page.totalElements()).isEqualTo(1);
     }
 
     @Test
@@ -109,46 +139,34 @@ class KeysetPagingIntegrationTest {
         entityManager.flush();
 
         var visited = new ArrayList<String>();
-        var page = couponQuery.listCoupons(new PageSpec<>(2, null));
-        visited.addAll(page.items().stream().map(CouponListItem::code).toList());
-        while (page.hasMore()) {
-            page = couponQuery.listCoupons(
-                new PageSpec<>(2, page.last().map(CouponListItem::code).orElseThrow()));
-            visited.addAll(page.items().stream().map(CouponListItem::code).toList());
+        var first = couponQuery.listCoupons(new PageSpec(PageSpec.FIRST_PAGE, 2));
+        visited.addAll(codes(first.items()));
+        for (var pageNumber = PageSpec.FIRST_PAGE + 1; pageNumber <= first.totalPages(); pageNumber++) {
+            visited.addAll(codes(couponQuery.listCoupons(new PageSpec(pageNumber, 2)).items()));
         }
 
         // Newest published first, so the coupons this test wrote lead the list in reverse insertion
         // order. Anything the container already held sorts after them.
         assertThat(visited).startsWith(SCOPE + "-CPN-3", SCOPE + "-CPN-2", SCOPE + "-CPN-1");
-    }
-
-    // A cursor naming a coupon that no longer exists makes the subquery NULL, and a comparison
-    // against NULL is unknown rather than true -- so the page is empty instead of silently
-    // restarting from the newest coupon, which would loop a paging client forever.
-    @Test
-    void returnsNothingForACouponCursorThatNoLongerExists() {
-        persistCoupon(SCOPE + "-CPN-1");
-        entityManager.flush();
-
-        var page = couponQuery.listCoupons(new PageSpec<>(10, SCOPE + "-CPN-GONE"));
-
-        assertThat(page.items()).isEmpty();
-        assertThat(page.hasMore()).isFalse();
+        assertThat(visited).hasSize((int) first.totalElements());
     }
 
     private List<String> walkOrders(int size) {
         var visited = new ArrayList<String>();
-        var page = orderQuery.listOrders(SCOPE, new PageSpec<>(size, null));
-        visited.addAll(page.items().stream().map(OrderListItem::orderNumber).toList());
-        while (page.hasMore()) {
-            page = orderQuery.listOrders(SCOPE, cursorAfter(page, size));
-            visited.addAll(page.items().stream().map(OrderListItem::orderNumber).toList());
+        var first = orderQuery.listOrders(SCOPE, new PageSpec(PageSpec.FIRST_PAGE, size));
+        visited.addAll(orderNumbers(first.items()));
+        for (var pageNumber = PageSpec.FIRST_PAGE + 1; pageNumber <= first.totalPages(); pageNumber++) {
+            visited.addAll(orderNumbers(orderQuery.listOrders(SCOPE, new PageSpec(pageNumber, size)).items()));
         }
         return visited;
     }
 
-    private static PageSpec<OrderCursor> cursorAfter(Page<OrderListItem> page, int size) {
-        return new PageSpec<>(size, page.last().map(OrderCursor::after).orElseThrow());
+    private static List<String> orderNumbers(List<OrderListItem> items) {
+        return items.stream().map(OrderListItem::orderNumber).toList();
+    }
+
+    private static List<String> codes(List<CouponListItem> items) {
+        return items.stream().map(CouponListItem::code).toList();
     }
 
     private void persistOrder(String orderNumber, Instant orderTimestamp) {

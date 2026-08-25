@@ -26,8 +26,13 @@ public record OrderNumber(String value) {
     // say "untrusted string in". It names that, and not where the string came from: an order number
     // off a queue or a CSV import is no more trusted than one off an HTTP request, and a name like
     // `requested` would invite a third door for every new caller instead of reusing this one.
-    // The wording of the answer belongs here rather than in each use case, and callers that would
-    // rather report "no such order" than "malformed" still can -- see CancelOrder.
+    //
+    // This is the one refusal in the domain that is returned rather than thrown, and it is returned
+    // for the only reason that earns it: its callers disagree about what it means. DeliverOrder
+    // reports a malformed number as malformed; CancelOrder reports it as "no such order", because it
+    // has never distinguished a number that cannot exist from one that does not. A thrown refusal
+    // gives them one answer between them, so this one stays a value -- see RuleViolation for the
+    // rule, of which this is the exception.
     public static Result<OrderNumber, RuleViolation> parse(String value) {
         if (value == null || value.trim().isEmpty()) {
             return Result.err(new RuleViolation.Malformed(FIELD_NAME, "Order number must not be empty"));

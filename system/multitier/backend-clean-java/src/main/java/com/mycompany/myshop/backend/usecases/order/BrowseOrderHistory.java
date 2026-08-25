@@ -3,19 +3,21 @@ package com.mycompany.myshop.backend.usecases.order;
 import com.mycompany.myshop.backend.common.Result;
 import com.mycompany.myshop.backend.usecases.UseCase;
 import com.mycompany.myshop.backend.usecases.UseCaseError;
-import com.mycompany.myshop.backend.usecases.queries.OrderCursor;
 import com.mycompany.myshop.backend.usecases.queries.OrderListItem;
 import com.mycompany.myshop.backend.usecases.queries.OrderQuery;
 import com.mycompany.myshop.backend.usecases.queries.PageSpec;
 
 // A pure query. The optional order-number filter and the page both go to the port instead of
-// branching here, so the LIKE and the LIMIT stay in SQL and this use case has
-// nothing left to decide but how big a page it is willing to ask for.
+// branching here, so the LIKE and the OFFSET stay in SQL and this use case has
+// nothing left to decide but which pages it is willing to ask for.
 //
-// That bound is the use case's to enforce and nobody else's: the adapter would honour any number
-// it is handed, and the controller is the layer that has just been told a number by a stranger.
+// Those bounds are the use case's to enforce and nobody else's: the adapter would honour any
+// numbers it is handed, and the controller is the layer that has just been told two numbers by a
+// stranger. A page below the first is rejected; a page past the last is not, because "page 900 of
+// 26" is an empty list rather than a mistake, and a client walking off the end should see the end.
 public class BrowseOrderHistory implements UseCase<BrowseOrderHistoryRequest, BrowseOrderHistoryResponse> {
 
+    private static final String FIELD_PAGE = "page";
     private static final String FIELD_SIZE = "size";
 
     private final OrderQuery orderQuery;
@@ -26,6 +28,10 @@ public class BrowseOrderHistory implements UseCase<BrowseOrderHistoryRequest, Br
 
     @Override
     public Result<BrowseOrderHistoryResponse, UseCaseError> execute(BrowseOrderHistoryRequest request) {
+        if (!PageSpec.isValidPage(request.page())) {
+            return Result.err(new UseCaseError.Invalid(FIELD_PAGE,
+                    "Page must be " + PageSpec.FIRST_PAGE + " or greater"));
+        }
         if (!PageSpec.isValidSize(request.size())) {
             return Result.err(new UseCaseError.Invalid(FIELD_SIZE,
                     "Page size must be between 1 and " + PageSpec.MAX_SIZE));
@@ -33,16 +39,14 @@ public class BrowseOrderHistory implements UseCase<BrowseOrderHistoryRequest, Br
 
         var page = orderQuery.listOrders(
                 request.orderNumberFilter(),
-                new PageSpec<>(PageSpec.sizeOrDefault(request.size()), request.cursor()));
+                new PageSpec(PageSpec.pageOrFirst(request.page()), PageSpec.sizeOrDefault(request.size())));
 
         var response = new BrowseOrderHistoryResponse();
         response.setOrders(page.items().stream().map(BrowseOrderHistory::toItem).toList());
-        response.setHasMore(page.hasMore());
-        // No more rows means no next page, so there is nothing to resume from. Handing back a cursor
-        // anyway would invite a client to ask for a page that is known to be empty.
-        response.setNextCursor(page.hasMore()
-                ? page.last().map(OrderCursor::after).orElse(null)
-                : null);
+        response.setPage(page.page());
+        response.setSize(page.size());
+        response.setTotalElements(page.totalElements());
+        response.setTotalPages(page.totalPages());
         return Result.ok(response);
     }
 

@@ -305,7 +305,11 @@ class Theme2Baseline {
         var timed = probe.measure(() -> {
             var cancelled = 0L;
             for (var order : hydratedOrders()) {
-                if (RECALLED_SKU.equals(order.getSku().value()) && order.getStatus() != OrderStatus.CANCELLED) {
+                // PLACED, not "anything but CANCELLED": this loop is the naive equivalent of
+                // cancelOutstandingForSku, whose WHERE clause is status = PLACED. The looser guard
+                // counted DELIVERED orders as cancelled and wrote them back unchanged, which both
+                // inflated the count and charged the loop statements the query never issues.
+                if (RECALLED_SKU.equals(order.getSku().value()) && order.getStatus() == OrderStatus.PLACED) {
                     order.cancel();
                     orderRepository.update(order);
                     cancelled++;

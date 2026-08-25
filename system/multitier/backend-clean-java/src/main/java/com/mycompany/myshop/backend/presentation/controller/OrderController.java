@@ -1,7 +1,5 @@
 package com.mycompany.myshop.backend.presentation.controller;
 
-import com.mycompany.myshop.backend.presentation.CursorCodec;
-import com.mycompany.myshop.backend.presentation.InvalidCursorException;
 import com.mycompany.myshop.backend.presentation.UseCaseResponder;
 import com.mycompany.myshop.backend.usecases.UseCase;
 import com.mycompany.myshop.backend.usecases.order.BrowseOrderHistoryRequest;
@@ -9,7 +7,6 @@ import com.mycompany.myshop.backend.usecases.order.CancelOrderRequest;
 import com.mycompany.myshop.backend.usecases.order.DeliverOrderRequest;
 import com.mycompany.myshop.backend.usecases.order.PlaceOrderRequest;
 import com.mycompany.myshop.backend.usecases.order.ViewOrderDetailsRequest;
-import com.mycompany.myshop.backend.usecases.queries.OrderCursor;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -32,37 +29,28 @@ public class OrderController {
     private final UseCase<ViewOrderDetailsRequest, ViewOrderDetailsResponse> viewOrderDetails;
     private final UseCase<CancelOrderRequest, Void> cancelOrder;
     private final UseCase<DeliverOrderRequest, Void> deliverOrder;
-    private final CursorCodec cursorCodec;
     private final UseCaseResponder responder;
 
     public OrderController(UseCase<BrowseOrderHistoryRequest, BrowseOrderHistoryResponse> browseOrderHistory, UseCase<PlaceOrderRequest, PlaceOrderResponse> placeOrder,
                            UseCase<ViewOrderDetailsRequest, ViewOrderDetailsResponse> viewOrderDetails, UseCase<CancelOrderRequest, Void> cancelOrder,
-                           UseCase<DeliverOrderRequest, Void> deliverOrder, CursorCodec cursorCodec,
+                           UseCase<DeliverOrderRequest, Void> deliverOrder,
                            UseCaseResponder responder) {
         this.browseOrderHistory = browseOrderHistory;
         this.placeOrder = placeOrder;
         this.viewOrderDetails = viewOrderDetails;
         this.cancelOrder = cancelOrder;
         this.deliverOrder = deliverOrder;
-        this.cursorCodec = cursorCodec;
         this.responder = responder;
     }
 
     @GetMapping("/api/orders")
     public ResponseEntity<Object> browseOrderHistory(@RequestParam(required = false) String orderNumber,
-                                                     @RequestParam(required = false) Integer size,
-                                                     @RequestParam(required = false) String cursor) {
-        OrderCursor decodedCursor;
-        try {
-            decodedCursor = cursorCodec.decodeOrder(cursor);
-        } catch (InvalidCursorException e) {
-            return responder.badRequest(e.getMessage());
-        }
-
+                                                     @RequestParam(required = false) Integer page,
+                                                     @RequestParam(required = false) Integer size) {
         var result = browseOrderHistory.execute(
-                new BrowseOrderHistoryRequest(orderNumber, size, decodedCursor));
+                new BrowseOrderHistoryRequest(orderNumber, page, size));
         return responder.respond(result, response ->
-                ResponseEntity.ok(BrowseOrderHistoryPageResponse.of(response, cursorCodec)));
+                ResponseEntity.ok(BrowseOrderHistoryPageResponse.of(response)));
     }
 
     @PostMapping("/api/orders")

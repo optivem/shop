@@ -1,6 +1,7 @@
 package com.mycompany.myshop.backend.usecases.order;
 
 import com.mycompany.myshop.backend.domain.entities.Order;
+import com.mycompany.myshop.backend.domain.exceptions.ValidationException;
 import com.mycompany.myshop.backend.domain.repositories.OrderRepository;
 import com.mycompany.myshop.backend.domain.values.Country;
 import com.mycompany.myshop.backend.domain.values.Money;
@@ -20,6 +21,9 @@ import java.time.Instant;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -55,15 +59,26 @@ class DeliverOrderTest {
         assertThat(result.error()).isEqualTo(new UseCaseError.NotFound("Order", "ORD-999"));
     }
 
+    // The refusal leaves as an exception, because this use case no longer catches one: turning it
+    // into the 422 the caller sees is RefusalTranslatingUseCase's job, and is tested there. What is
+    // this use case's job, and is tested here, is that the refusal stops the write.
     @Test
-    void deliverOrderReportsInvalidWhenOrderAlreadyDelivered() {
+    void deliverOrderRefusesAnOrderThatIsAlreadyDelivered() {
         var order = orderWith(OrderStatus.DELIVERED);
         when(orderRepository.findByOrderNumber(OrderNumber.of("ORD-001"))).thenReturn(Optional.of(order));
 
-        var result = deliverOrder.execute(new DeliverOrderRequest("ORD-001"));
+        assertThatThrownBy(() -> deliverOrder.execute(new DeliverOrderRequest("ORD-001")))
+                .isInstanceOf(ValidationException.class)
+                .hasMessageContaining("cannot be delivered");
+        verify(orderRepository, never()).update(any());
+    }
 
-        assertThat(result.error()).isInstanceOfSatisfying(UseCaseError.Invalid.class,
-                invalid -> assertThat(invalid.message()).contains("cannot be delivered"));
+    @Test
+    void deliverOrderReportsInvalidWhenOrderNumberIsMalformed() {
+        var result = deliverOrder.execute(new DeliverOrderRequest(" "));
+
+        assertThat(result.error()).isEqualTo(
+                new UseCaseError.Invalid("orderNumber", "Order number must not be empty"));
     }
 
     private Order orderWith(OrderStatus status) {

@@ -16,8 +16,14 @@ public class DeliverOrder implements UseCase<DeliverOrderRequest, Void> {
         this.orderRepository = orderRepository;
     }
 
-    // No try, no catch, and nothing a future edit can forget: every way this can be refused arrives
-    // as a value that the compiler will not let the next line ignore.
+    // Two things are still returned here, and neither is a domain refusal. `parse` returns because
+    // its two callers genuinely disagree about what a malformed order number means -- this one
+    // reports it as malformed, CancelOrder reports it as not-found -- which is the test that earns a
+    // Result. `findByOrderNumber` returns an Optional because a missing row is an absent value, not
+    // a rule saying no.
+    //
+    // The refusal, `deliver`, is the one that throws, and this method is where that pays: the line
+    // that delivers the order is the line that delivers the order.
     @Override
     public Result<Void, UseCaseError> execute(DeliverOrderRequest request) {
         var parsed = OrderNumber.parse(request.orderNumber());
@@ -32,10 +38,7 @@ public class DeliverOrder implements UseCase<DeliverOrderRequest, Void> {
         }
         var order = found.get();
 
-        var delivered = order.deliver();
-        if (!delivered.isOk()) {
-            return Result.err(UseCaseError.from(delivered.error()));
-        }
+        order.deliver();
 
         orderRepository.update(order);
         return Result.ok();

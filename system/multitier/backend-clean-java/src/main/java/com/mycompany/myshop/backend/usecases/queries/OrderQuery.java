@@ -6,8 +6,7 @@ import java.util.Optional;
 //
 // Both methods name an intent, not a mechanism. listOrders takes the optional filter and
 // the page, so the LIKE and the LIMIT both stay in SQL instead of becoming an
-// if and a subList in the use case, and the adapter stays free to answer with one
-// statement.
+// if and a subList in the use case.
 //
 // The before-picture is worth keeping in mind: this port used to be
 // findAllByOrderByOrderTimestampDesc() on the domain repository -- Spring Data's
@@ -22,9 +21,9 @@ import java.util.Optional;
 public interface OrderQuery {
 
     // Newest first, one page at a time. A blank or null filter means "no filter"; anything
-    // else is matched case-insensitively as a substring of the order number. A null cursor
-    // on the page means "start at the newest".
-    Page<OrderListItem> listOrders(String orderNumberFilter, PageSpec<OrderCursor> page);
+    // else is matched case-insensitively as a substring of the order number. The returned page
+    // carries the total row count matching the filter, not just the rows on this page.
+    Page<OrderListItem> listOrders(String orderNumberFilter, PageSpec page);
 
     Optional<OrderDetail> findOrderDetail(String orderNumber);
 }

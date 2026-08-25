@@ -1,20 +1,23 @@
 package com.mycompany.myshop.backend.presentation.controller;
 
-import com.mycompany.myshop.backend.presentation.CursorCodec;
 import com.mycompany.myshop.backend.usecases.coupon.BrowseCouponsResponse;
 
 import java.util.List;
 
-// See BrowseOrderHistoryPageResponse. The coupon cursor is a code, encoded the same way.
+// See BrowseOrderHistoryPageResponse. Coupons page the same way.
 public record BrowseCouponsPageResponse(
         List<BrowseCouponsResponse.BrowseCouponsItemResponse> coupons,
-        String nextCursor,
-        boolean hasMore) {
+        int page,
+        int size,
+        long totalElements,
+        int totalPages) {
 
-    static BrowseCouponsPageResponse of(BrowseCouponsResponse response, CursorCodec codec) {
+    static BrowseCouponsPageResponse of(BrowseCouponsResponse response) {
         return new BrowseCouponsPageResponse(
                 response.getCoupons(),
-                codec.encodeCoupon(response.getNextCursor()),
-                response.isHasMore());
+                response.getPage(),
+                response.getSize(),
+                response.getTotalElements(),
+                response.getTotalPages());
     }
 }
