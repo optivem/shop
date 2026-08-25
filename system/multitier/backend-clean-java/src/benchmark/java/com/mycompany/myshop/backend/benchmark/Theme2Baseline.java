@@ -12,14 +12,15 @@ import com.mycompany.myshop.backend.infrastructure.persistence.mappers.CouponMap
 import com.mycompany.myshop.backend.infrastructure.persistence.mappers.OrderMapper;
 import com.mycompany.myshop.backend.infrastructure.persistence.repositories.CouponJpaRepository;
 import com.mycompany.myshop.backend.infrastructure.persistence.repositories.OrderJpaRepository;
-import com.mycompany.myshop.backend.usecases.coupon.BrowseCoupons;
+import com.mycompany.myshop.backend.usecases.UseCase;
 import com.mycompany.myshop.backend.usecases.coupon.BrowseCouponsRequest;
-import com.mycompany.myshop.backend.usecases.order.BrowseOrderHistory;
+import com.mycompany.myshop.backend.usecases.coupon.BrowseCouponsResponse;
 import com.mycompany.myshop.backend.usecases.order.BrowseOrderHistoryRequest;
-import com.mycompany.myshop.backend.usecases.order.ViewOrderDetails;
+import com.mycompany.myshop.backend.usecases.order.BrowseOrderHistoryResponse;
 import com.mycompany.myshop.backend.usecases.order.ViewOrderDetailsRequest;
-import com.mycompany.myshop.backend.usecases.report.ViewSalesReport;
+import com.mycompany.myshop.backend.usecases.order.ViewOrderDetailsResponse;
 import com.mycompany.myshop.backend.usecases.report.ViewSalesReportRequest;
+import com.mycompany.myshop.backend.usecases.report.ViewSalesReportResponse;
 import jakarta.persistence.EntityManagerFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -97,17 +98,22 @@ class Theme2Baseline {
     @Autowired
     private CouponJpaRepository couponJpaRepository;
 
+    // Injected as the port, not as the concrete class, because UseCaseConfig publishes every use
+    // case already wrapped -- logging outside, refusal translation inside -- and no bean of the
+    // concrete type exists to autowire. Asking for the wrapped bean is also the more honest
+    // measurement: it is the object the controller calls, so the decorators' cost is inside the
+    // numbers rather than excluded from them.
     @Autowired
-    private BrowseOrderHistory browseOrderHistory;
+    private UseCase<BrowseOrderHistoryRequest, BrowseOrderHistoryResponse> browseOrderHistory;
 
     @Autowired
-    private BrowseCoupons browseCoupons;
+    private UseCase<BrowseCouponsRequest, BrowseCouponsResponse> browseCoupons;
 
     @Autowired
-    private ViewOrderDetails viewOrderDetails;
+    private UseCase<ViewOrderDetailsRequest, ViewOrderDetailsResponse> viewOrderDetails;
 
     @Autowired
-    private ViewSalesReport viewSalesReport;
+    private UseCase<ViewSalesReportRequest, ViewSalesReportResponse> viewSalesReport;
 
     private Probe probe;
     private BenchmarkReport report;
