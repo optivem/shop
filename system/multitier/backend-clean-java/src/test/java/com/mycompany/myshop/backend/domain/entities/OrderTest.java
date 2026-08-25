@@ -1,6 +1,5 @@
 package com.mycompany.myshop.backend.domain.entities;
 
-import com.mycompany.myshop.backend.domain.exceptions.ValidationException;
 import com.mycompany.myshop.backend.domain.values.Country;
 import com.mycompany.myshop.backend.domain.values.Money;
 import com.mycompany.myshop.backend.domain.values.OrderNumber;
@@ -31,8 +30,9 @@ class OrderTest {
     void deliverMovesAPlacedOrderToDelivered() {
         var order = orderWith(OrderStatus.PLACED);
 
-        order.deliver();
+        var result = order.deliver();
 
+        assertThat(result.isOk()).isTrue();
         assertThat(order.getStatus()).isEqualTo(OrderStatus.DELIVERED);
     }
 
@@ -40,10 +40,10 @@ class OrderTest {
     void deliverRejectsAnOrderThatIsAlreadyDelivered() {
         var order = orderWith(OrderStatus.DELIVERED);
 
-        var thrown = catchThrowable(order::deliver);
+        var result = order.deliver();
 
-        assertThat(thrown).isInstanceOf(ValidationException.class)
-                .hasMessage("Order cannot be delivered in its current status");
+        assertThat(result.isOk()).isFalse();
+        assertThat(result.error().message()).isEqualTo("Order cannot be delivered in its current status");
         assertThat(order.getStatus()).isEqualTo(OrderStatus.DELIVERED);
     }
 
@@ -51,10 +51,10 @@ class OrderTest {
     void deliverRejectsACancelledOrder() {
         var order = orderWith(OrderStatus.CANCELLED);
 
-        var thrown = catchThrowable(order::deliver);
+        var result = order.deliver();
 
-        assertThat(thrown).isInstanceOf(ValidationException.class)
-                .hasMessage("Order cannot be delivered in its current status");
+        assertThat(result.isOk()).isFalse();
+        assertThat(result.error().message()).isEqualTo("Order cannot be delivered in its current status");
         assertThat(order.getStatus()).isEqualTo(OrderStatus.CANCELLED);
     }
 
@@ -62,8 +62,9 @@ class OrderTest {
     void cancelMovesAPlacedOrderToCancelled() {
         var order = orderWith(OrderStatus.PLACED);
 
-        order.cancel();
+        var outcome = order.cancel();
 
+        assertThat(outcome).isInstanceOf(CancelOutcome.Cancelled.class);
         assertThat(order.getStatus()).isEqualTo(OrderStatus.CANCELLED);
     }
 
@@ -71,10 +72,11 @@ class OrderTest {
     void cancelRejectsADeliveredOrder() {
         var order = orderWith(OrderStatus.DELIVERED);
 
-        var thrown = catchThrowable(order::cancel);
+        var outcome = order.cancel();
 
-        assertThat(thrown).isInstanceOf(ValidationException.class)
-                .hasMessage("Order cannot be cancelled in its current status");
+        assertThat(outcome).isInstanceOfSatisfying(CancelOutcome.NotCancellable.class, notCancellable ->
+                assertThat(notCancellable.violation().message())
+                        .isEqualTo("Order cannot be cancelled in its current status"));
         assertThat(order.getStatus()).isEqualTo(OrderStatus.DELIVERED);
     }
 
@@ -82,10 +84,11 @@ class OrderTest {
     void cancelRejectsAnOrderThatIsAlreadyCancelled() {
         var order = orderWith(OrderStatus.CANCELLED);
 
-        var thrown = catchThrowable(order::cancel);
+        var outcome = order.cancel();
 
-        assertThat(thrown).isInstanceOf(ValidationException.class)
-                .hasMessage("Order has already been cancelled");
+        assertThat(outcome).isInstanceOfSatisfying(CancelOutcome.AlreadyCancelled.class, alreadyCancelled ->
+                assertThat(alreadyCancelled.violation().message())
+                        .isEqualTo("Order has already been cancelled"));
         assertThat(order.getStatus()).isEqualTo(OrderStatus.CANCELLED);
     }
 

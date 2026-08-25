@@ -1,7 +1,8 @@
 package com.mycompany.myshop.backend.domain.entities;
 
+import com.mycompany.myshop.backend.common.Result;
 import com.mycompany.myshop.backend.domain.Guard;
-import com.mycompany.myshop.backend.domain.exceptions.ValidationException;
+import com.mycompany.myshop.backend.domain.rules.RuleViolation;
 import com.mycompany.myshop.backend.domain.values.Country;
 import com.mycompany.myshop.backend.domain.values.CouponCode;
 import com.mycompany.myshop.backend.domain.values.OrderNumber;
@@ -55,23 +56,32 @@ public class Order {
         this.appliedCouponCode = appliedCouponCode;
     }
 
-    public void deliver() {
+    // One decision, so the answer is the return type: being asked to deliver an order that is not
+    // PLACED is an ordinary outcome of a duplicated request, not an exceptional one. Returning it
+    // means no caller can forget to handle it and no use case has to catch anything.
+    public Result<Void, RuleViolation> deliver() {
         if (status != OrderStatus.PLACED) {
-            throw new ValidationException("Order cannot be delivered in its current status");
+            return Result.err(new RuleViolation.NotInStatus(null,
+                    "Order cannot be delivered in its current status"));
         }
         status = OrderStatus.DELIVERED;
+        return Result.ok(null);
     }
 
-    public void cancel() {
-        // Already-cancelled keeps its own message: it is the one negative case the acceptance suite
-        // pins by wording.
+    // Three branches the caller treats differently, so a sealed outcome rather than a Result: an
+    // already-cancelled order is a retry and the use case answers it with success. Already-cancelled
+    // keeps its own message: it is the one negative case the acceptance suite pins by wording.
+    public CancelOutcome cancel() {
         if (status == OrderStatus.CANCELLED) {
-            throw new ValidationException("Order has already been cancelled");
+            return new CancelOutcome.AlreadyCancelled(
+                    new RuleViolation.NotInStatus(null, "Order has already been cancelled"));
         }
         if (status != OrderStatus.PLACED) {
-            throw new ValidationException("Order cannot be cancelled in its current status");
+            return new CancelOutcome.NotCancellable(
+                    new RuleViolation.NotInStatus(null, "Order cannot be cancelled in its current status"));
         }
         status = OrderStatus.CANCELLED;
+        return new CancelOutcome.Cancelled();
     }
 
     public OrderNumber getOrderNumber() {

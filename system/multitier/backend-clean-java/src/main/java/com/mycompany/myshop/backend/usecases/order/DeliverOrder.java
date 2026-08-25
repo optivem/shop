@@ -1,9 +1,8 @@
 package com.mycompany.myshop.backend.usecases.order;
 
-import com.mycompany.myshop.backend.domain.exceptions.ValidationException;
+import com.mycompany.myshop.backend.common.Result;
 import com.mycompany.myshop.backend.domain.repositories.OrderRepository;
 import com.mycompany.myshop.backend.domain.values.OrderNumber;
-import com.mycompany.myshop.backend.usecases.Result;
 import com.mycompany.myshop.backend.usecases.UseCase;
 import com.mycompany.myshop.backend.usecases.UseCaseError;
 
@@ -17,22 +16,23 @@ public class DeliverOrder implements UseCase<DeliverOrderRequest, Void> {
         this.orderRepository = orderRepository;
     }
 
+    // No try, no catch, and nothing a future edit can forget: every way this can be refused arrives
+    // as a value that the compiler will not let the next line ignore.
     @Override
     public Result<Void, UseCaseError> execute(DeliverOrderRequest request) {
         var orderNumber = OrderNumber.requested(request.orderNumber());
-        if (orderNumber.isEmpty()) {
-            return Result.err(new UseCaseError.Invalid(null, "Order number must not be empty"));
+        if (!orderNumber.isOk()) {
+            return Result.err(UseCaseError.from(orderNumber.error()));
         }
 
-        var order = orderRepository.findByOrderNumber(orderNumber.get());
+        var order = orderRepository.findByOrderNumber(orderNumber.value());
         if (order.isEmpty()) {
-            return Result.err(new UseCaseError.NotFound(ORDER_ENTITY, orderNumber.get().value()));
+            return Result.err(new UseCaseError.NotFound(ORDER_ENTITY, orderNumber.value().value()));
         }
 
-        try {
-            order.get().deliver();
-        } catch (ValidationException e) {
-            return Result.err(UseCaseError.from(e));
+        var delivered = order.get().deliver();
+        if (!delivered.isOk()) {
+            return Result.err(UseCaseError.from(delivered.error()));
         }
 
         orderRepository.update(order.get());

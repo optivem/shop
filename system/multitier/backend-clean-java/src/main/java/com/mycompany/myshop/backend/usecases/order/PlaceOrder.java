@@ -16,7 +16,7 @@ import com.mycompany.myshop.backend.domain.values.OrderNumber;
 import com.mycompany.myshop.backend.domain.values.OrderPricing;
 import com.mycompany.myshop.backend.domain.values.Rate;
 import com.mycompany.myshop.backend.domain.values.Sku;
-import com.mycompany.myshop.backend.usecases.Result;
+import com.mycompany.myshop.backend.common.Result;
 import com.mycompany.myshop.backend.usecases.TransactionRunner;
 import com.mycompany.myshop.backend.usecases.UseCase;
 import com.mycompany.myshop.backend.usecases.UseCaseError;

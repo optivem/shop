@@ -7,7 +7,7 @@ import com.mycompany.myshop.backend.domain.values.CouponCode;
 import com.mycompany.myshop.backend.domain.values.Rate;
 import com.mycompany.myshop.backend.domain.values.UsageQuota;
 import com.mycompany.myshop.backend.domain.values.ValidityPeriod;
-import com.mycompany.myshop.backend.usecases.Result;
+import com.mycompany.myshop.backend.common.Result;
 import com.mycompany.myshop.backend.usecases.UseCase;
 import com.mycompany.myshop.backend.usecases.UseCaseError;
 

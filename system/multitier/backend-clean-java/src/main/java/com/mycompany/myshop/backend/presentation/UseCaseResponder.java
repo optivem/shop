@@ -1,6 +1,6 @@
 package com.mycompany.myshop.backend.presentation;
 
-import com.mycompany.myshop.backend.usecases.Result;
+import com.mycompany.myshop.backend.common.Result;
 import com.mycompany.myshop.backend.usecases.UseCaseError;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;

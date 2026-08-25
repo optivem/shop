@@ -2,7 +2,7 @@ package com.mycompany.myshop.backend.usecases.order;
 
 import com.mycompany.myshop.backend.domain.gateways.ClockGateway;
 import com.mycompany.myshop.backend.domain.repositories.OrderRepository;
-import com.mycompany.myshop.backend.usecases.Result;
+import com.mycompany.myshop.backend.common.Result;
 import com.mycompany.myshop.backend.usecases.UseCase;
 import com.mycompany.myshop.backend.usecases.UseCaseError;
 

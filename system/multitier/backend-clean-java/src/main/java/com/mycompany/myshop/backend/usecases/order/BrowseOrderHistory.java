@@ -1,6 +1,6 @@
 package com.mycompany.myshop.backend.usecases.order;
 
-import com.mycompany.myshop.backend.usecases.Result;
+import com.mycompany.myshop.backend.common.Result;
 import com.mycompany.myshop.backend.usecases.UseCase;
 import com.mycompany.myshop.backend.usecases.UseCaseError;
 import com.mycompany.myshop.backend.usecases.queries.OrderCursor;

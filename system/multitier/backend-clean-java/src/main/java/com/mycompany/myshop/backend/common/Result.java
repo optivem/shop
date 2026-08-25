@@ -1,4 +1,6 @@
-package com.mycompany.myshop.backend.usecases;
+package com.mycompany.myshop.backend.common;
+
+import java.util.Optional;
 
 public sealed interface Result<T, E> {
 
@@ -40,5 +42,10 @@ public sealed interface Result<T, E> {
 
     static <T, E> Result<T, E> err(E error) {
         return new Err<>(error);
+    }
+
+    // For a caller that has its own answer for the failed case and does not need the error.
+    default Optional<T> toOptional() {
+        return isOk() ? Optional.of(value()) : Optional.empty();
     }
 }

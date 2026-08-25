@@ -12,7 +12,7 @@ import com.mycompany.myshop.backend.domain.gateways.ErpGatewayException;
 import com.mycompany.myshop.backend.presentation.CursorCodec;
 import com.mycompany.myshop.backend.presentation.UseCaseResponder;
 import com.mycompany.myshop.backend.presentation.controller.OrderController;
-import com.mycompany.myshop.backend.usecases.Result;
+import com.mycompany.myshop.backend.common.Result;
 import com.mycompany.myshop.backend.usecases.UseCaseError;
 import com.mycompany.myshop.backend.usecases.order.BrowseOrderHistoryRequest;
 import com.mycompany.myshop.backend.usecases.order.BrowseOrderHistoryResponse;

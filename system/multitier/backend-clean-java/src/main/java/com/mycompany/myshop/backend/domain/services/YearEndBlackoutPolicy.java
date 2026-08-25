@@ -1,6 +1,8 @@
 package com.mycompany.myshop.backend.domain.services;
 
+import com.mycompany.myshop.backend.common.Result;
 import com.mycompany.myshop.backend.domain.exceptions.ValidationException;
+import com.mycompany.myshop.backend.domain.rules.RuleViolation;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -30,12 +32,18 @@ public final class YearEndBlackoutPolicy {
         });
     }
 
-    public static void requireCancellationAllowed(Instant at) {
-        yearEndTimeOf(at).ifPresent(time -> {
-            if (!time.isBefore(CANCELLATION_BLOCKED_FROM) && !time.isAfter(CANCELLATION_BLOCKED_TO)) {
-                throw new ValidationException("Order cancellation is not allowed on December 31st between 22:00 and 23:00");
-            }
-        });
+    // Returned rather than thrown, because CancelOrder asks this one question on its own and acts on
+    // the answer. requirePlacementAllowed above still throws: it is one step inside PlaceOrder's
+    // pipeline, where a returned value would have to be unwrapped by every step that follows it.
+    public static Result<Void, RuleViolation> cancellationAllowed(Instant at) {
+        var time = yearEndTimeOf(at);
+        if (time.isPresent()
+                && !time.get().isBefore(CANCELLATION_BLOCKED_FROM)
+                && !time.get().isAfter(CANCELLATION_BLOCKED_TO)) {
+            return Result.err(new RuleViolation.NotAllowed(null,
+                    "Order cancellation is not allowed on December 31st between 22:00 and 23:00"));
+        }
+        return Result.ok(null);
     }
 
     private static Optional<LocalTime> yearEndTimeOf(Instant at) {
