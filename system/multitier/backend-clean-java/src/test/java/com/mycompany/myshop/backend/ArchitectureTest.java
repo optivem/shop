@@ -1,9 +1,11 @@
 package com.mycompany.myshop.backend;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.fields;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.core.domain.JavaClass.Predicates.simpleNameEndingWith;
 
+import com.mycompany.myshop.backend.domain.entities.Order;
 import com.mycompany.myshop.backend.usecases.UseCase;
 import com.mycompany.myshop.backend.usecases.coupon.BrowseCoupons;
 import com.mycompany.myshop.backend.usecases.order.BrowseOrderHistory;
@@ -111,4 +113,17 @@ class ArchitectureTest {
             .that().resideInAnyPackage(DOMAIN, USECASES)
             .should().dependOnClassesThat().resideInAPackage("com.fasterxml.jackson..")
             .because("serialization is an outer-ring concern");
+
+    // OrderJpaRepository.updateStatus writes one column, because status is the only field an existing
+    // Order can differ from its stored row in. That is a comment over there and an assumption here,
+    // and nothing else would notice it breaking: give Order a second mutable field and the code still
+    // compiles, the tests still pass, and every write of that field is silently dropped. This rule is
+    // what notices. If it fails, the fix is not to relax it -- it is to widen the UPDATE to match.
+    @ArchTest
+    static final ArchRule STATUS_IS_THE_ONLY_MUTABLE_FIELD_ON_ORDER = fields()
+            .that().areDeclaredIn(Order.class)
+            .and().areNotStatic()
+            .and().haveNameNotMatching("status")
+            .should().beFinal()
+            .because("updating an order is updating its status, and the UPDATE statement says so");
 }

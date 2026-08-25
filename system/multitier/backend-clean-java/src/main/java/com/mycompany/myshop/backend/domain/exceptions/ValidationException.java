@@ -15,7 +15,7 @@ public class ValidationException extends RuntimeException {
     }
 
     public ValidationException(String message) {
-        this(new RuleViolation.NotAllowed(null, message));
+        this(new RuleViolation.NotAllowed(message));
     }
 
     public ValidationException(String fieldName, String message) {

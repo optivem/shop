@@ -47,6 +47,6 @@ public class PublishCoupon implements UseCase<PublishCouponRequest, Void> {
             return Result.err(UseCaseError.from(e));
         }
 
-        return Result.ok(null);
+        return Result.ok();
     }
 }

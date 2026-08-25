@@ -40,6 +40,11 @@ public sealed interface Result<T, E> {
         return new Ok<>(value);
     }
 
+    // A Result<Void, E> has nothing to carry, so success says so by taking no argument.
+    static <E> Result<Void, E> ok() {
+        return new Ok<>(null);
+    }
+
     static <T, E> Result<T, E> err(E error) {
         return new Err<>(error);
     }

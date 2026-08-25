@@ -20,22 +20,24 @@ public class DeliverOrder implements UseCase<DeliverOrderRequest, Void> {
     // as a value that the compiler will not let the next line ignore.
     @Override
     public Result<Void, UseCaseError> execute(DeliverOrderRequest request) {
-        var orderNumber = OrderNumber.requested(request.orderNumber());
-        if (!orderNumber.isOk()) {
-            return Result.err(UseCaseError.from(orderNumber.error()));
+        var parsed = OrderNumber.parse(request.orderNumber());
+        if (!parsed.isOk()) {
+            return Result.err(UseCaseError.from(parsed.error()));
         }
+        var orderNumber = parsed.value();
 
-        var order = orderRepository.findByOrderNumber(orderNumber.value());
-        if (order.isEmpty()) {
-            return Result.err(new UseCaseError.NotFound(ORDER_ENTITY, orderNumber.value().value()));
+        var found = orderRepository.findByOrderNumber(orderNumber);
+        if (found.isEmpty()) {
+            return Result.err(new UseCaseError.NotFound(ORDER_ENTITY, orderNumber.value()));
         }
+        var order = found.get();
 
-        var delivered = order.get().deliver();
+        var delivered = order.deliver();
         if (!delivered.isOk()) {
             return Result.err(UseCaseError.from(delivered.error()));
         }
 
-        orderRepository.update(order.get());
-        return Result.ok(null);
+        orderRepository.update(order);
+        return Result.ok();
     }
 }

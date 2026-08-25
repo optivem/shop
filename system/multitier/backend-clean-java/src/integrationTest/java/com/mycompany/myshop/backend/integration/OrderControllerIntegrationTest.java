@@ -212,7 +212,7 @@ class OrderControllerIntegrationTest {
 
     @Test
     void cancelOrderReturnsNoContent() throws Exception {
-        when(cancelOrder.execute(new CancelOrderRequest("ORD-001"))).thenReturn(Result.ok(null));
+        when(cancelOrder.execute(new CancelOrderRequest("ORD-001"))).thenReturn(Result.ok());
 
         mockMvc.perform(post("/api/orders/ORD-001/cancel"))
             .andExpect(status().isNoContent());
@@ -220,7 +220,7 @@ class OrderControllerIntegrationTest {
 
     @Test
     void deliverOrderReturnsNoContent() throws Exception {
-        when(deliverOrder.execute(new DeliverOrderRequest("ORD-001"))).thenReturn(Result.ok(null));
+        when(deliverOrder.execute(new DeliverOrderRequest("ORD-001"))).thenReturn(Result.ok());
 
         mockMvc.perform(post("/api/orders/ORD-001/deliver"))
             .andExpect(status().isNoContent());

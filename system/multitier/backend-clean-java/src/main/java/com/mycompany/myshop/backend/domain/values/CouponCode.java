@@ -16,7 +16,10 @@ public record CouponCode(String value) {
         return new CouponCode(value);
     }
 
-    public static Optional<CouponCode> requested(String value) {
+    // Beside `of`, for a value that is allowed to be absent: a coupon code is an optional field, so
+    // nothing supplied is a legal answer rather than a violation. Named for Optional.ofNullable, whose
+    // contract this is, with one addition -- blank counts as absent, not as a malformed code.
+    public static Optional<CouponCode> ofNullable(String value) {
         if (value == null || value.trim().isEmpty()) {
             return Optional.empty();
         }

@@ -61,11 +61,11 @@ public class Order {
     // means no caller can forget to handle it and no use case has to catch anything.
     public Result<Void, RuleViolation> deliver() {
         if (status != OrderStatus.PLACED) {
-            return Result.err(new RuleViolation.NotInStatus(null,
+            return Result.err(new RuleViolation.NotInStatus(
                     "Order cannot be delivered in its current status"));
         }
         status = OrderStatus.DELIVERED;
-        return Result.ok(null);
+        return Result.ok();
     }
 
     // Three branches the caller treats differently, so a sealed outcome rather than a Result: an
@@ -74,11 +74,11 @@ public class Order {
     public CancelOutcome cancel() {
         if (status == OrderStatus.CANCELLED) {
             return new CancelOutcome.AlreadyCancelled(
-                    new RuleViolation.NotInStatus(null, "Order has already been cancelled"));
+                    new RuleViolation.NotInStatus("Order has already been cancelled"));
         }
         if (status != OrderStatus.PLACED) {
             return new CancelOutcome.NotCancellable(
-                    new RuleViolation.NotInStatus(null, "Order cannot be cancelled in its current status"));
+                    new RuleViolation.NotInStatus("Order cannot be cancelled in its current status"));
         }
         status = OrderStatus.CANCELLED;
         return new CancelOutcome.Cancelled();

@@ -37,15 +37,15 @@ class CouponCodeTest {
     }
 
     @Test
-    void readsAnAbsentOrBlankRequestAsNoCouponAsked() {
-        assertThat(CouponCode.requested(null)).isEmpty();
-        assertThat(CouponCode.requested("")).isEmpty();
-        assertThat(CouponCode.requested("   ")).isEmpty();
+    void readsAnAbsentOrBlankValueAsNoCoupon() {
+        assertThat(CouponCode.ofNullable(null)).isEmpty();
+        assertThat(CouponCode.ofNullable("")).isEmpty();
+        assertThat(CouponCode.ofNullable("   ")).isEmpty();
     }
 
     @Test
-    void readsAPresentRequestAsTheCodeAsked() {
-        assertThat(CouponCode.requested("SAVE10")).contains(CouponCode.of("SAVE10"));
+    void readsAPresentValueAsTheCode() {
+        assertThat(CouponCode.ofNullable("SAVE10")).contains(CouponCode.of("SAVE10"));
     }
 
     @Test

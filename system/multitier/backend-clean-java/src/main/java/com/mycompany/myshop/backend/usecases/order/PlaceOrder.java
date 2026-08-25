@@ -51,7 +51,7 @@ public class PlaceOrder implements UseCase<PlaceOrderRequest, PlaceOrderResponse
     }
 
     private PlaceOrderResponse place(PlaceOrderRequest request) {
-        var couponCode = CouponCode.requested(request.getCouponCode());
+        var couponCode = CouponCode.ofNullable(request.getCouponCode());
         var orderTimestamp = clockGateway.getCurrentTime();
 
         YearEndBlackoutPolicy.requirePlacementAllowed(orderTimestamp);
@@ -96,15 +96,16 @@ public class PlaceOrder implements UseCase<PlaceOrderRequest, PlaceOrderResponse
         }
     }
 
-    private Optional<Coupon> findCoupon(Optional<CouponCode> couponCode) {
-        if (couponCode.isEmpty()) {
+    private Optional<Coupon> findCoupon(Optional<CouponCode> requestedCode) {
+        if (requestedCode.isEmpty()) {
             return Optional.empty();
         }
+        var couponCode = requestedCode.get();
 
-        var coupon = couponRepository.findByCode(couponCode.get());
+        var coupon = couponRepository.findByCode(couponCode);
         if (coupon.isEmpty()) {
             throw new ValidationException(CouponCode.FIELD_NAME,
-                    String.format(MSG_COUPON_DOES_NOT_EXIST, couponCode.get()));
+                    String.format(MSG_COUPON_DOES_NOT_EXIST, couponCode));
         }
 
         return coupon;

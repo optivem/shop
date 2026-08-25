@@ -32,18 +32,19 @@ public class CancelOrder implements UseCase<CancelOrderRequest, Void> {
 
         // A missing order number is reported the same way as an unknown one: this use case has never
         // distinguished them, so it discards the violation rather than reporting it.
-        var order = OrderNumber.requested(request.orderNumber())
+        var found = OrderNumber.parse(request.orderNumber())
                 .toOptional()
                 .flatMap(orderRepository::findByOrderNumber);
-        if (order.isEmpty()) {
+        if (found.isEmpty()) {
             return Result.err(new UseCaseError.NotFound(ORDER_ENTITY, request.orderNumber()));
         }
+        var order = found.get();
 
         // The compiler will not let a new CancelOutcome be added without this switch being revisited.
-        return switch (order.get().cancel()) {
+        return switch (order.cancel()) {
             case CancelOutcome.Cancelled ignored -> {
-                orderRepository.update(order.get());
-                yield Result.ok(null);
+                orderRepository.update(order);
+                yield Result.ok();
             }
             case CancelOutcome.AlreadyCancelled alreadyCancelled ->
                     Result.err(UseCaseError.from(alreadyCancelled.violation()));

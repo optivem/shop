@@ -35,7 +35,7 @@ public final class OrderMapper {
                 pricing,
                 entity.getStatus(),
                 // Nullable column: an order placed without a coupon has none.
-                CouponCode.requested(entity.getAppliedCouponCode()).orElse(null));
+                CouponCode.ofNullable(entity.getAppliedCouponCode()).orElse(null));
     }
 
     public static OrderJpaEntity toEntity(Order order) {
