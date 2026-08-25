@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
  * hand-written in {@code ErpStubDriver} and shares no source with system-test's typed DTO, so
  * system-test's own {@code ErpStubContractTest} does not transitively prove this stub parses. The
  * read-back goes through the SUT's production {@code ErpGateway} (real HTTP + real
- * {@code ProductDetailsResponse} parse), so a field-name drift in the stub (e.g. {@code price}→
+ * {@code ErpProductDetailsResponse} parse), so a field-name drift in the stub (e.g. {@code price}→
  * {@code cost}) fails this test instead of silently yielding null.
  */
 class ErpStubConsumabilityContractTest extends BaseComponentTest {

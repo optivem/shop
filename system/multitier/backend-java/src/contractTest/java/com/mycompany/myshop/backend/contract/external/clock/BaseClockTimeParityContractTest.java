@@ -18,7 +18,7 @@ import org.junit.jupiter.api.Test;
  * side is required to announce the same thing. That still catches the drift the pair exists for (a
  * renamed field, a changed timestamp format, a changed value); it just cannot vary the fixture.
  *
- * <p>{@code GetTimeResponse} carries {@code @JsonIgnoreProperties(ignoreUnknown = true)}, so an
+ * <p>{@code ClockGetTimeResponse} carries {@code @JsonIgnoreProperties(ignoreUnknown = true)}, so an
  * additive change on the clock side is tolerated by design and will not fail this test — only a
  * change to {@code time} itself will.
  */

@@ -2,7 +2,7 @@ package com.mycompany.myshop.backend.testkit.dsl.core.scenario.then.steps;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.mycompany.myshop.backend.core.dtos.external.ProductDetailsResponse;
+import com.mycompany.myshop.backend.core.dtos.external.ErpProductDetailsResponse;
 import com.mycompany.myshop.backend.testkit.dsl.core.scenario.ExecutionResultContext;
 import com.mycompany.myshop.backend.testkit.dsl.core.shared.ResponseVerification;
 import com.mycompany.myshop.backend.testkit.dsl.core.usecase.UseCaseDsl;
@@ -12,7 +12,7 @@ import java.util.Optional;
 
 /**
  * The product AS THE SUT SEES IT: reads through the SUT's production {@code ErpGateway} in the
- * constructor — real HTTP to the ERP stub + real {@code ProductDetailsResponse} parse — so the stub's
+ * constructor — real HTTP to the ERP stub + real {@code ErpProductDetailsResponse} parse — so the stub's
  * bytes actually travel the SUT's consumption path. A field-name drift in the component stub
  * (e.g. {@code price}→{@code cost}) then makes the assertion fail, rather than silently yielding null.
  */
@@ -20,7 +20,7 @@ public class ThenProductImpl<R, V extends ResponseVerification<R>> extends BaseT
         implements ThenProduct {
 
     private final String sku;
-    private final Optional<ProductDetailsResponse> product;
+    private final Optional<ErpProductDetailsResponse> product;
 
     public ThenProductImpl(
             UseCaseDsl app,

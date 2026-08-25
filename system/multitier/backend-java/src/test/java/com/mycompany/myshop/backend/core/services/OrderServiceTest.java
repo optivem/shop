@@ -2,8 +2,8 @@ package com.mycompany.myshop.backend.core.services;
 
 import com.mycompany.myshop.backend.core.dtos.PlaceOrderRequest;
 import com.mycompany.myshop.backend.core.dtos.PlaceOrderResponse;
-import com.mycompany.myshop.backend.core.dtos.external.GetPromotionResponse;
-import com.mycompany.myshop.backend.core.dtos.external.ProductDetailsResponse;
+import com.mycompany.myshop.backend.core.dtos.external.ErpGetPromotionResponse;
+import com.mycompany.myshop.backend.core.dtos.external.ErpProductDetailsResponse;
 import com.mycompany.myshop.backend.core.dtos.external.TaxDetailsResponse;
 import com.mycompany.myshop.backend.core.entities.Order;
 import com.mycompany.myshop.backend.core.entities.OrderStatus;
@@ -172,13 +172,13 @@ class OrderServiceTest {
     }
 
     private void givenProductExists(String sku, BigDecimal price) {
-        var product = new ProductDetailsResponse();
+        var product = new ErpProductDetailsResponse();
         product.setPrice(price);
         when(erpGateway.getProductDetails(sku)).thenReturn(Optional.of(product));
     }
 
     private void givenNoPromotion() {
-        var promotion = new GetPromotionResponse();
+        var promotion = new ErpGetPromotionResponse();
         promotion.setPromotionActive(false);
         promotion.setDiscount(BigDecimal.ONE);
         when(erpGateway.getPromotionDetails()).thenReturn(promotion);

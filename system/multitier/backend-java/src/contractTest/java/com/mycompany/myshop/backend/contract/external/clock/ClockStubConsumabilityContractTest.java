@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Pins that the component harness's Clock WireMock stub is CONSUMABLE BY THE SUT. The read-back goes
- * through the SUT's production {@code ClockGateway} (real HTTP + real {@code GetTimeResponse} parse),
+ * through the SUT's production {@code ClockGateway} (real HTTP + real {@code ClockGetTimeResponse} parse),
  * so a field drift in {@code ClockStubDriver} fails this test rather than silently mis-reading the
  * time. See {@code ErpStubConsumabilityContractTest} for the full rationale.
  */

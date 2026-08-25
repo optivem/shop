@@ -1,8 +1,8 @@
 package com.mycompany.myshop.backend.core.services.external;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mycompany.myshop.backend.core.dtos.external.GetPromotionResponse;
-import com.mycompany.myshop.backend.core.dtos.external.ProductDetailsResponse;
+import com.mycompany.myshop.backend.core.dtos.external.ErpGetPromotionResponse;
+import com.mycompany.myshop.backend.core.dtos.external.ErpProductDetailsResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -24,7 +24,7 @@ public class ErpGateway {
         this.erpUrl = erpUrl;
     }
 
-    public GetPromotionResponse getPromotionDetails() {
+    public ErpGetPromotionResponse getPromotionDetails() {
         var url = erpUrl + "/api/promotion";
 
         try {
@@ -45,7 +45,7 @@ public class ErpGateway {
                         + " for promotion. URL: " + url + ". Response: " + response.body());
             }
 
-            return OBJECT_MAPPER.readValue(response.body(), GetPromotionResponse.class);
+            return OBJECT_MAPPER.readValue(response.body(), ErpGetPromotionResponse.class);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new IllegalStateException("Failed to fetch promotion details from URL: " + url
@@ -56,7 +56,7 @@ public class ErpGateway {
         }
     }
 
-    public Optional<ProductDetailsResponse> getProductDetails(String sku) {
+    public Optional<ErpProductDetailsResponse> getProductDetails(String sku) {
         var url = erpUrl + "/api/products/" + sku;
 
         try {
@@ -81,7 +81,7 @@ public class ErpGateway {
                         " for SKU: " + sku + ". URL: " + url + ". Response: " + response.body());
             }
 
-            var result = OBJECT_MAPPER.readValue(response.body(), ProductDetailsResponse.class);
+            var result = OBJECT_MAPPER.readValue(response.body(), ErpProductDetailsResponse.class);
             return Optional.of(result);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
