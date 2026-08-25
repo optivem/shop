@@ -306,9 +306,15 @@ class Theme2Baseline {
             var cancelled = 0L;
             for (var order : hydratedOrders()) {
                 // PLACED, not "anything but CANCELLED": this loop is the naive equivalent of
-                // cancelOutstandingForSku, whose WHERE clause is status = PLACED. The looser guard
-                // counted DELIVERED orders as cancelled and wrote them back unchanged, which both
-                // inflated the count and charged the loop statements the query never issues.
+                // cancelOutstandingForSku, whose WHERE clause is status = PLACED.
+                //
+                // On this seed the two guards select the same 2,000 rows, so no measurement moves:
+                // SKU-007 means n % 50 == 6, which forces n % 10 == 6, which the seed maps to
+                // PLACED -- there is no DELIVERED SKU-007 order to disagree about. The guard is
+                // tightened because the looser one was only accidentally right. It would count a
+                // DELIVERED order as cancelled if the seed ever changed, and now that Order.cancel()
+                // refuses a non-PLACED order by throwing, it would fail the run rather than quietly
+                // miscount -- which is the better failure, but only if the guard states the rule.
                 if (RECALLED_SKU.equals(order.getSku().value()) && order.getStatus() == OrderStatus.PLACED) {
                     order.cancel();
                     orderRepository.update(order);
@@ -348,9 +354,12 @@ class Theme2Baseline {
                 probe.explainAnalyze("SELECT * FROM coupons WHERE code = 'DEMO-CPN-0001'"));
         report.addPlan("The rows a recall of `" + RECALLED_SKU + "` has to find",
                 probe.explainAnalyze("SELECT * FROM orders WHERE sku = '" + RECALLED_SKU + "'"));
+        // status = 'PLACED', matching cancelOutstandingForSku's actual WHERE clause. This plan
+        // claims to show what the set-based recall issues, so it has to be the clause it issues --
+        // the `<> 'CANCELLED'` this used to explain was never a query the code ran.
         report.addPlan("What the set-based recall issues instead (planned, not executed)",
                 probe.explainOnly("UPDATE orders SET status = 'CANCELLED' "
-                        + "WHERE sku = '" + RECALLED_SKU + "' AND status <> 'CANCELLED'"));
+                        + "WHERE sku = '" + RECALLED_SKU + "' AND status = 'PLACED'"));
     }
 
     // What findAll() + map-to-domain cost, kept measurable now that no port offers it.
