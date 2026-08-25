@@ -15,7 +15,8 @@ demonstration that cannot show the before-numbers is asserting rather than demon
 > the Chunk C numbers below stand as measured — they record what keyset paging cost on the day it
 > ran, which is precisely what makes the trade visible. What changed is the answer to *is that the
 > paging this application should ship*, not the arithmetic. Read every "keyset" below as the
-> mechanism that was measured, not the one in `src/main` today.
+> mechanism that was measured, not the one in `src/main` today — and see the 2026-08-25 section
+> at the foot of this document for the same operations measured on numbered pages.
 
 ## How to reproduce
 
@@ -401,3 +402,67 @@ asserts nothing about its own plans, so a `WHERE` clause that drifts from the co
 fails silently and reads as evidence. The tightened guard now also fails loudly if the seed ever
 changes — `Order.cancel()` refuses a non-`PLACED` order by throwing, so a `DELIVERED` row in the
 recall set would end the run instead of being counted as cancelled.
+
+## Re-measured — 2026-08-25, after numbered paging, and after the harness could run again
+
+The sections above are left exactly as they were taken. This one supersedes their read rows, for two
+reasons that arrived together.
+
+**The harness had been dead for five days.** `Theme2Baseline` autowired `BrowseOrderHistory`,
+`BrowseCoupons`, `ViewOrderDetails` and `ViewSalesReport` by their concrete types. Once
+`UseCaseConfig` began publishing every use case wrapped — logging outside, refusal translation
+inside — no bean of those types existed, the Spring context failed to build, and `./gradlew
+benchmark` never reached a measurement. So `build/benchmark/theme2-baseline.md` sat at its
+2026-08-20 contents while three chunks of `src/main` moved underneath it, and every number quoted
+from it in the interim was quoting code that had already changed. A benchmark nobody runs is a
+benchmark nobody notices is broken.
+
+The fix asks for the port — `UseCase<Request, Response>` — which is what the container holds and what
+the controller calls. The decorators' cost is therefore **inside** these numbers now, where it was
+outside them before. That is the honest place for it: nothing in production calls a naked use case
+either.
+
+**Paging changed mechanism.** Keyset cursors became numbered pages, so a page now costs two
+statements rather than one — the page itself, and the `COUNT(*)` that a page number cannot be
+computed without. That is the one difference below that is structural rather than machine noise, and
+it is the price of the total; see the superseded note at the top of this document.
+
+| Capability | Operation | Wall ms | Rows | Domain objects | JDBC statements | Retained heap MB |
+|---|---|---:|---:|---:|---:|---:|
+| Filtering, sorting, limiting | `BrowseOrderHistory` with no filter, first page | 12 | 50 | 0 | 2 | 0 |
+| Filtering, sorting, limiting | `BrowseOrderHistory` filtered on `DEMO-ORD-0500`, first page | 73 | 50 | 0 | 2 | 0 |
+| Filtering, sorting, limiting | `BrowseCoupons`, first page | 15 | 50 | 0 | 2 | 0 |
+| Projecting only the columns asked for | `ViewOrderDetails` × 1000 | 1353 | 1000 | 0 | 1000 | 0 |
+| Aggregation and joins | Three reports, in Java, over two `findAll()`s | 1236 | 529 | 1101500 | 2 | 0 |
+| Aggregation and joins | Three reports, three `GROUP BY`s | 176 | 529 | 0 | 3 | 0 |
+| Atomic read-modify-write | Read-modify-write, 100 coupons | 574 | 100 | 500 | 200 | 0 |
+| Atomic read-modify-write | `tryRedeem`, 100 coupons | 280 | 80 | 0 | 100 | 0 |
+| Set-based writes | Recall `SKU-007`: `findAll()` + filter + one `update` per order | 3621 | 2000 | 1100000 | 2001 | 0 |
+| Set-based writes | Recall `SKU-008`: one `UPDATE … WHERE` | 31 | 2000 | 0 | 1 | 0 |
+
+### The pairs, restated
+
+| Capability | The application layer's way | The database's way | Wall | Statements | Domain objects |
+|---|---|---|---|---|---|
+| Set-based writes | `findAll()` + filter + `update` per order | one `UPDATE … WHERE` | 3621 ms → 31 ms (**117×**) | 2001 → 1 | 1100000 → 0 |
+| Aggregation and joins | two `findAll()`s + three stream folds | three `GROUP BY`s | 1236 ms → 176 ms (**7×**) | 2 → 3 | 1101500 → 0 |
+| Atomic read-modify-write | read, mutate, write back | one conditional `UPDATE` | 574 ms → 280 ms (**2×**) | 200 → 100 | 500 → 0 |
+
+### Read the ratios, not the absolutes
+
+Every wall-clock figure in this run is up roughly a fifth against 2026-08-20 — the aggregation
+before-row moved 876 ms to 1236 ms, `ViewOrderDetails` 1176 ms to 1353 ms — on the same seed, the
+same statements and the same object counts. Whatever that is, it is not the code: no change between
+the two runs touched the recall loop or the report folds. It is the machine, the container, the JIT,
+or all three.
+
+The three pair ratios are unmoved at **117×**, **7×** and **2×**, and the statement and object
+columns are identical to the row. That is the whole argument for reading this document by its
+structural columns: 2001 statements to 1 is a fact about the architecture, and 3621 ms is a fact
+about a laptop on a Tuesday.
+
+Two read rows are the exception, and both are explained rather than noise: `BrowseOrderHistory` and
+`BrowseCoupons` each went from one statement to two, which is numbered paging asking for its total.
+`BrowseCoupons` moved 5 ms to 15 ms, and at 300 rows a `COUNT(*)` is most of that — the smallest
+table pays the highest proportional price for a page number, which is worth knowing before this
+vocabulary is copied onto a list that never needed paging at all.
