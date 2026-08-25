@@ -25,6 +25,10 @@ import java.time.ZoneId;
 @Service
 public class OrderService {
 
+    private static final int FIRST_PAGE = 1;
+    private static final int DEFAULT_PAGE_SIZE = 50;
+    private static final int MAX_PAGE_SIZE = 200;
+
     private static final MonthDay YEAR_END_RESTRICTED_MONTH_DAY = MonthDay.of(Month.DECEMBER, 31);
     private static final LocalTime YEAR_END_RESTRICTED_TIME_START = LocalTime.of(23, 59);
 
@@ -187,7 +191,16 @@ public class OrderService {
         orderRepository.save(order);
     }
 
-    public BrowseOrderHistoryResponse browseOrderHistory(String orderNumberFilter) {
+    public BrowseOrderHistoryResponse browseOrderHistory(String orderNumberFilter, Integer page, Integer size) {
+        if (page != null && page < FIRST_PAGE) {
+            throw new ValidationException("page", "Page must be " + FIRST_PAGE + " or greater");
+        }
+        if (size != null && (size < 1 || size > MAX_PAGE_SIZE)) {
+            throw new ValidationException("size", "Page size must be between 1 and " + MAX_PAGE_SIZE);
+        }
+        var requestedPage = page == null ? FIRST_PAGE : page;
+        var requestedSize = size == null ? DEFAULT_PAGE_SIZE : size;
+
         java.util.List<Order> orders;
         if (orderNumberFilter == null || orderNumberFilter.trim().isEmpty()) {
             orders = orderRepository.findAllByOrderByOrderTimestampDesc();
@@ -195,7 +208,14 @@ public class OrderService {
             orders = orderRepository.findByOrderNumberContainingIgnoreCaseOrderByOrderTimestampDesc(orderNumberFilter.trim());
         }
 
-        var items = orders.stream()
+        // The client asked for one page. The repository has no method that takes one, so every
+        // matching row was already read, sorted and hydrated above, and the window is cut here.
+        var totalElements = orders.size();
+        var from = Math.min((long) (requestedPage - FIRST_PAGE) * requestedSize, totalElements);
+        var to = Math.min(from + requestedSize, totalElements);
+        var window = orders.subList((int) from, (int) to);
+
+        var items = window.stream()
                 .map(order -> {
                     var item = new BrowseOrderHistoryResponse.BrowseOrderHistoryItemResponse();
                     item.setOrderNumber(order.getOrderNumber());
@@ -212,6 +232,10 @@ public class OrderService {
 
         var result = new BrowseOrderHistoryResponse();
         result.setOrders(items);
+        result.setPage(requestedPage);
+        result.setSize(requestedSize);
+        result.setTotalElements(totalElements);
+        result.setTotalPages((int) Math.ceil((double) totalElements / requestedSize));
         return result;
     }
 

@@ -10,6 +10,10 @@ import java.util.List;
 @Data
 public class BrowseOrderHistoryResponse {
     private List<BrowseOrderHistoryItemResponse> orders;
+    private int page;
+    private int size;
+    private long totalElements;
+    private int totalPages;
 
     @Data
     public static class BrowseOrderHistoryItemResponse {

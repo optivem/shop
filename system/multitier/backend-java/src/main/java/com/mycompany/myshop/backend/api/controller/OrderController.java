@@ -26,8 +26,10 @@ public class OrderController {
     }
 
     @GetMapping("/api/orders")
-    public ResponseEntity<BrowseOrderHistoryResponse> browseOrderHistory(@RequestParam(required = false) String orderNumber) {
-        var response = orderService.browseOrderHistory(orderNumber);
+    public ResponseEntity<BrowseOrderHistoryResponse> browseOrderHistory(@RequestParam(required = false) String orderNumber,
+                                                                        @RequestParam(required = false) Integer page,
+                                                                        @RequestParam(required = false) Integer size) {
+        var response = orderService.browseOrderHistory(orderNumber, page, size);
         return ResponseEntity.ok(response);
     }
 
