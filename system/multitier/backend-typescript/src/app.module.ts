@@ -6,6 +6,7 @@ import { AppService } from './app.service';
 import { HealthController } from './api/controller/health.controller';
 import { OrderController } from './api/controller/order.controller';
 import { CouponController } from './api/controller/coupon.controller';
+import { AdminController } from './api/controller/admin.controller';
 import { OrderService } from './core/services/order.service';
 import { CouponService } from './core/services/coupon.service';
 import { ErpGateway } from './core/services/external/erp.gateway';
@@ -51,6 +52,7 @@ import { Coupon } from './core/entities/coupon.entity';
     HealthController,
     OrderController,
     CouponController,
+    AdminController,
   ],
   providers: [
     AppService,

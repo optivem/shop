@@ -137,6 +137,35 @@ public class OrderService
         await _dbContext.SaveChangesAsync();
     }
 
+    public async Task<RecallSkuResponse> RecallSkuAsync(string sku)
+    {
+        if (string.IsNullOrWhiteSpace(sku))
+        {
+            throw new ValidationException("sku", "SKU must not be empty");
+        }
+
+        var orders = await _dbContext.Orders
+            .Where(o => o.Sku == sku)
+            .ToListAsync();
+
+        var cancelledCount = 0;
+        foreach (var order in orders)
+        {
+            if (order.Status == OrderStatus.PLACED)
+            {
+                order.Status = OrderStatus.CANCELLED;
+                await _dbContext.SaveChangesAsync();
+                cancelledCount++;
+            }
+        }
+
+        return new RecallSkuResponse
+        {
+            Sku = sku,
+            CancelledCount = cancelledCount
+        };
+    }
+
     public async Task CancelOrderAsync(string orderNumber)
     {
         var now = (await _clockGateway.GetCurrentTimeAsync()).ToUniversalTime();

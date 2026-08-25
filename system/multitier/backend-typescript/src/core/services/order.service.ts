@@ -12,6 +12,7 @@ import {
   BrowseOrderHistoryItemResponse,
 } from '../dtos/browse-order-history-response.dto';
 import { ViewOrderDetailsResponse } from '../dtos/view-order-details-response.dto';
+import { RecallSkuResponse } from '../dtos/recall-sku-response.dto';
 import { ValidationException } from '../exceptions/validation.exception';
 import { NotExistValidationException } from '../exceptions/not-exist-validation.exception';
 import { ErpGateway } from './external/erp.gateway';
@@ -159,6 +160,28 @@ export class OrderService {
 
     order.status = OrderStatus.DELIVERED;
     await this.orderRepository.save(order);
+  }
+
+  async recallSku(sku: string): Promise<RecallSkuResponse> {
+    if (!sku || sku.trim() === '') {
+      throw new ValidationException('sku', 'SKU must not be empty');
+    }
+
+    const orders = await this.orderRepository.find({ where: { sku } });
+
+    let cancelledCount = 0;
+    for (const order of orders) {
+      if (order.status === OrderStatus.PLACED) {
+        order.status = OrderStatus.CANCELLED;
+        await this.orderRepository.save(order);
+        cancelledCount++;
+      }
+    }
+
+    const response = new RecallSkuResponse();
+    response.sku = sku;
+    response.cancelledCount = cancelledCount;
+    return response;
   }
 
   async cancelOrder(orderNumber: string): Promise<void> {

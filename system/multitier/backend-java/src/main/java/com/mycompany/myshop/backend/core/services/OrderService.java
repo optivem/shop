@@ -4,6 +4,7 @@ import com.mycompany.myshop.backend.core.dtos.BrowseOrderHistoryResponse;
 import com.mycompany.myshop.backend.core.dtos.ViewOrderDetailsResponse;
 import com.mycompany.myshop.backend.core.dtos.PlaceOrderRequest;
 import com.mycompany.myshop.backend.core.dtos.PlaceOrderResponse;
+import com.mycompany.myshop.backend.core.dtos.RecallSkuResponse;
 import com.mycompany.myshop.backend.core.entities.Order;
 import com.mycompany.myshop.backend.core.entities.OrderStatus;
 import com.mycompany.myshop.backend.core.exceptions.NotExistValidationException;
@@ -132,6 +133,28 @@ public class OrderService {
 
         order.setStatus(OrderStatus.DELIVERED);
         orderRepository.save(order);
+    }
+
+    public RecallSkuResponse recallSku(String sku) {
+        if (sku == null || sku.trim().isEmpty()) {
+            throw new ValidationException("sku", "SKU must not be empty");
+        }
+
+        var orders = orderRepository.findBySku(sku);
+
+        var cancelledCount = 0;
+        for (var order : orders) {
+            if (order.getStatus() == OrderStatus.PLACED) {
+                order.setStatus(OrderStatus.CANCELLED);
+                orderRepository.save(order);
+                cancelledCount++;
+            }
+        }
+
+        var response = new RecallSkuResponse();
+        response.setSku(sku);
+        response.setCancelledCount(cancelledCount);
+        return response;
     }
 
     public void cancelOrder(String orderNumber) {
