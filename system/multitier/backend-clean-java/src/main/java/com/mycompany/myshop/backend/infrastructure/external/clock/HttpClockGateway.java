@@ -50,7 +50,7 @@ public class HttpClockGateway implements ClockGateway {
                         ". URL: " + url + ". Response: " + response.body());
             }
 
-            var clockResponse = OBJECT_MAPPER.readValue(response.body(), GetTimeResponse.class);
+            var clockResponse = OBJECT_MAPPER.readValue(response.body(), ClockGetTimeResponse.class);
             return clockResponse.getTime();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();

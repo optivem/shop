@@ -43,7 +43,7 @@ public class HttpErpGateway implements ErpGateway {
     // A wire DTO on a public signature -- even here in infrastructure, even "just for a test" -- makes
     // the supplier's field names reachable from somewhere else, and reachable is how they end up in
     // the centre. Anything that wants the raw response goes to the ERP itself, not through this class.
-    private GetPromotionResponse fetchPromotionDetails() {
+    private ErpGetPromotionResponse fetchPromotionDetails() {
         var url = erpUrl + "/api/promotion";
 
         try {
@@ -54,7 +54,7 @@ public class HttpErpGateway implements ErpGateway {
                         + " for promotion. URL: " + url + ". Response: " + response.body());
             }
 
-            return OBJECT_MAPPER.readValue(response.body(), GetPromotionResponse.class);
+            return OBJECT_MAPPER.readValue(response.body(), ErpGetPromotionResponse.class);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new ErpGatewayException("Interrupted while fetching promotion details from URL: " + url, e);
@@ -64,7 +64,7 @@ public class HttpErpGateway implements ErpGateway {
         }
     }
 
-    private Optional<ProductDetailsResponse> fetchProductDetails(String sku) {
+    private Optional<ErpProductDetailsResponse> fetchProductDetails(String sku) {
         var url = erpUrl + "/api/products/" + sku;
 
         try {
@@ -79,7 +79,7 @@ public class HttpErpGateway implements ErpGateway {
                         " for SKU: " + sku + ". URL: " + url + ". Response: " + response.body());
             }
 
-            var result = OBJECT_MAPPER.readValue(response.body(), ProductDetailsResponse.class);
+            var result = OBJECT_MAPPER.readValue(response.body(), ErpProductDetailsResponse.class);
             return Optional.of(result);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();

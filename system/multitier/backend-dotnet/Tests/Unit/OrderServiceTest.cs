@@ -78,7 +78,7 @@ public class OrderServiceTest : IDisposable
     public async Task PlaceOrder_ThrowsWhenSkuUnknown()
     {
         GivenNormalTime();
-        _erpMock.Setup(g => g.GetProductDetailsAsync("UNKNOWN")).ReturnsAsync((ProductDetailsResponse?)null);
+        _erpMock.Setup(g => g.GetProductDetailsAsync("UNKNOWN")).ReturnsAsync((ErpProductDetailsResponse?)null);
 
         var ex = await Assert.ThrowsAsync<ValidationException>(
             () => _service.PlaceOrderAsync(BuildRequest("UNKNOWN", 1, "US")));
@@ -170,11 +170,11 @@ public class OrderServiceTest : IDisposable
 
     private void GivenProductExists(string sku, decimal price) =>
         _erpMock.Setup(g => g.GetProductDetailsAsync(sku))
-            .ReturnsAsync(new ProductDetailsResponse { Price = price });
+            .ReturnsAsync(new ErpProductDetailsResponse { Price = price });
 
     private void GivenNoPromotion() =>
         _erpMock.Setup(g => g.GetPromotionDetailsAsync())
-            .ReturnsAsync(new GetPromotionResponse { PromotionActive = false, Discount = 1m });
+            .ReturnsAsync(new ErpGetPromotionResponse { PromotionActive = false, Discount = 1m });
 
     private void GivenNoDiscount() =>
         _couponMock.Setup(s => s.GetDiscountAsync(null)).ReturnsAsync(0m);

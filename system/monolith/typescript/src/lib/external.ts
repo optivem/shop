@@ -24,17 +24,17 @@ async function getStubTime(): Promise<Date> {
   return new Date(data.time);
 }
 
-export interface ProductDetails {
+export interface ErpProductDetails {
   id: string;
   price: number;
 }
 
-export interface PromotionDetails {
+export interface ErpPromotionDetails {
   promotionActive: boolean;
   discount: number;
 }
 
-export async function getPromotionDetails(): Promise<PromotionDetails> {
+export async function getPromotionDetails(): Promise<ErpPromotionDetails> {
   const url = `${ERP_API_URL()}/api/promotion`;
   const response = await fetch(url, { cache: 'no-store', signal: AbortSignal.timeout(10000) });
   if (!response.ok) {
@@ -44,7 +44,7 @@ export async function getPromotionDetails(): Promise<PromotionDetails> {
   return { promotionActive: data.promotionActive, discount: data.discount };
 }
 
-export async function getProductDetails(sku: string): Promise<ProductDetails | null> {
+export async function getProductDetails(sku: string): Promise<ErpProductDetails | null> {
   const url = `${ERP_API_URL()}/api/products/${encodeURIComponent(sku)}`;
   const response = await fetch(url, { cache: 'no-store', signal: AbortSignal.timeout(10000) });
   if (response.status === 404) {

@@ -19,7 +19,7 @@ public class ErpGateway
         _erpUrl = Environment.GetEnvironmentVariable("ERP_API_URL") ?? configuration["Erp:Url"] ?? "http://localhost:9001/erp";
     }
 
-    public async Task<ProductDetailsResponse?> GetProductDetailsAsync(string sku)
+    public async Task<ErpProductDetailsResponse?> GetProductDetailsAsync(string sku)
     {
         var url = $"{_erpUrl}/api/products/{Uri.EscapeDataString(sku)}";
 
@@ -39,7 +39,7 @@ public class ErpGateway
             }
 
             var content = await response.Content.ReadAsStringAsync();
-            return JsonSerializer.Deserialize<ProductDetailsResponse>(content, JsonOptions);
+            return JsonSerializer.Deserialize<ErpProductDetailsResponse>(content, JsonOptions);
         }
         catch (HttpRequestException e)
         {
@@ -47,7 +47,7 @@ public class ErpGateway
         }
     }
 
-    public async Task<GetPromotionResponse> GetPromotionDetailsAsync()
+    public async Task<ErpGetPromotionResponse> GetPromotionDetailsAsync()
     {
         var url = $"{_erpUrl}/api/promotion";
 
@@ -62,7 +62,7 @@ public class ErpGateway
             }
 
             var content = await response.Content.ReadAsStringAsync();
-            return JsonSerializer.Deserialize<GetPromotionResponse>(content, JsonOptions)!;
+            return JsonSerializer.Deserialize<ErpGetPromotionResponse>(content, JsonOptions)!;
         }
         catch (HttpRequestException e)
         {

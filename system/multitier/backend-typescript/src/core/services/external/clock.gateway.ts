@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { GetTimeResponse } from '../../dtos/external/get-time-response.dto';
+import { ClockGetTimeResponse } from '../../dtos/external/clock-get-time-response.dto';
 
 @Injectable()
 export class ClockGateway {
@@ -45,7 +45,7 @@ export class ClockGateway {
         );
       }
 
-      const clockResponse = (await response.json()) as GetTimeResponse;
+      const clockResponse = (await response.json()) as ClockGetTimeResponse;
       return new Date(clockResponse.time);
     } catch (e) {
       if (e instanceof Error && e.message.startsWith('Clock API returned')) {

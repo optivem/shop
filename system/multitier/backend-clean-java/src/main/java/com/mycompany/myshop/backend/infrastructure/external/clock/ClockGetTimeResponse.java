@@ -7,6 +7,6 @@ import java.time.Instant;
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
-class GetTimeResponse {
+class ClockGetTimeResponse {
     private Instant time;
 }

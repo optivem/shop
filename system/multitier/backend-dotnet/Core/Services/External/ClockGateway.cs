@@ -50,7 +50,7 @@ public class ClockGateway
             }
 
             var content = await response.Content.ReadAsStringAsync();
-            var clockResponse = JsonSerializer.Deserialize<GetTimeResponse>(content, JsonOptions);
+            var clockResponse = JsonSerializer.Deserialize<ClockGetTimeResponse>(content, JsonOptions);
             return DateTime.SpecifyKind(clockResponse!.Time, DateTimeKind.Utc);
         }
         catch (HttpRequestException e)

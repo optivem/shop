@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 // supplier adding one is a non-event rather than an outage.
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
-class GetPromotionResponse {
+class ErpGetPromotionResponse {
     private boolean promotionActive;
     private BigDecimal discount;
 }

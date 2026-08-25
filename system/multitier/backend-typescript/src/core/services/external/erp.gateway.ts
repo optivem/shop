@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { ProductDetailsResponse } from '../../dtos/external/product-details-response.dto';
-import { PromotionDetailsResponse } from '../../dtos/external/promotion-details-response.dto';
+import { ErpProductDetailsResponse } from '../../dtos/external/erp-product-details-response.dto';
+import { ErpGetPromotionResponse } from '../../dtos/external/erp-get-promotion-response.dto';
 
 @Injectable()
 export class ErpGateway {
@@ -14,7 +14,7 @@ export class ErpGateway {
     );
   }
 
-  async getProductDetails(sku: string): Promise<ProductDetailsResponse | null> {
+  async getProductDetails(sku: string): Promise<ErpProductDetailsResponse | null> {
     const url = `${this.erpUrl}/api/products/${sku}`;
 
     try {
@@ -33,7 +33,7 @@ export class ErpGateway {
         );
       }
 
-      return (await response.json()) as ProductDetailsResponse;
+      return (await response.json()) as ErpProductDetailsResponse;
     } catch (e) {
       if (e instanceof Error && e.message.startsWith('ERP API returned')) {
         throw e;
@@ -45,7 +45,7 @@ export class ErpGateway {
     }
   }
 
-  async getPromotionDetails(): Promise<PromotionDetailsResponse> {
+  async getPromotionDetails(): Promise<ErpGetPromotionResponse> {
     const url = `${this.erpUrl}/api/promotion`;
 
     try {
@@ -60,7 +60,7 @@ export class ErpGateway {
         );
       }
 
-      return (await response.json()) as PromotionDetailsResponse;
+      return (await response.json()) as ErpGetPromotionResponse;
     } catch (e) {
       if (e instanceof Error && e.message.startsWith('ERP API returned')) {
         throw e;
