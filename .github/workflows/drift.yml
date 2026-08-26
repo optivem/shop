@@ -31,6 +31,16 @@ name: drift
 # the cross-lang pattern. Standalone / scheduled runs fall back to
 # `:latest`, which is what the per-stack commit stages tag for each fresh
 # build.
+#
+# Concurrency: the group is keyed on the resolved tag, so pinned and unpinned
+# runs never share a queue. Scheduled / unpinned runs (`drift-<ref>-latest`)
+# cancel in progress — a backlogged hourly canary tests the same `:latest`
+# images the next firing will test, so running it costs a 45-minute job slot
+# for zero information, and a hosted-runner shortage would otherwise turn one
+# dropped run into a cascade of red ones. Pinned runs (`drift-<ref>-<sha>`)
+# keep `cancel-in-progress: false`: `commit-sha` is `required: true` on
+# `workflow_call`, so a pipeline invocation can never be cancelled by a
+# concurrent scheduled run.
 
 on:
   schedule:
@@ -51,8 +61,12 @@ on:
 permissions: {}
 
 concurrency:
-  group: drift-${{ github.ref }}
-  cancel-in-progress: false
+  # Scheduled/unpinned runs test `:latest` and are superseded by the next hourly
+  # firing — collapse the backlog so a queue delay costs one run, not a cascade.
+  # Pinned runs (workflow_call from _meta-prerelease-pipeline.yml, or a dispatch
+  # with commit-sha) land in their own per-SHA group and are never cancelled.
+  group: drift-${{ github.ref }}-${{ inputs.commit-sha || 'latest' }}
+  cancel-in-progress: ${{ !inputs.commit-sha }}
 
 env:
   # When provided (workflow_call from pipeline, or explicit dispatch),

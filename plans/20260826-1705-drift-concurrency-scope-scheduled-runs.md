@@ -37,37 +37,23 @@ The originating failure is **not** a shop defect. Evidence:
 
 ## ▶ Next executable step (resume here)
 
-Edit `.github/workflows/drift.yml:53-55`, replacing the concurrency block
+**Observation only — no edits remain.** The workflow change is committed. What is left is
+confirming it behaves as intended in CI; there is nothing to edit, so do not go hunting
+for code changes.
 
-```yaml
-concurrency:
-  group: drift-${{ github.ref }}
-  cancel-in-progress: false
-```
+Run `gh run list --repo optivem/shop --workflow drift.yml --limit 5` and confirm the two
+scheduled `drift` runs following the commit completed green. Separately, the next time
+`_meta-prerelease-pipeline.yml` invokes `drift` via `workflow_call`, confirm that run was
+**not** cancelled by a concurrent scheduled run — that is the one behaviour the group
+separation (`drift-<ref>-<sha>` vs `drift-<ref>-latest`) exists to protect.
 
-with
-
-```yaml
-concurrency:
-  # Scheduled/unpinned runs test `:latest` and are superseded by the next hourly
-  # firing — collapse the backlog so a queue delay costs one run, not a cascade.
-  # Pinned runs (workflow_call from _meta-prerelease-pipeline.yml, or a dispatch
-  # with commit-sha) land in their own per-SHA group and are never cancelled.
-  group: drift-${{ github.ref }}-${{ inputs.commit-sha || 'latest' }}
-  cancel-in-progress: ${{ !inputs.commit-sha }}
-```
-
-Then proceed to Step 2 (header comment). Gate: `actionlint` must pass — no source code is touched, so **do not** run `compile-all.sh` or `gh optivem system-test run --sample`.
+If both hold, delete this plan file. If a pipeline-invoked run *was* cancelled, the
+`required: true` guarantee on `workflow_call`'s `commit-sha` has been broken — reopen
+and revisit the concurrency expression.
 
 ## Steps
 
-- [ ] **Step 1: Rewrite the concurrency block** at `.github/workflows/drift.yml:53-55` exactly as shown in the resume block above.
-- [ ] **Step 2: Extend the workflow header comment** (the block at the top of `drift.yml` that currently documents the leg sequence and image resolution) with a short paragraph explaining the scheduled-vs-pinned concurrency scoping, mirroring the style of the existing `Image resolution:` paragraph — so the intent survives a future edit.
-- [ ] **Step 3: Verify the `inputs` context assumption holds.** Confirm `drift.yml` already reads `inputs.commit-sha` at workflow level in the `env:` block (`RESOLVED_TAG`, ~line 65). That is the in-file proof the `inputs` context resolves for `schedule` events (where it is null) — if that env block has changed, re-check before relying on `${{ !inputs.commit-sha }}`.
-- [ ] **Step 4: Confirm `commit-sha` is still `required: true` on the `workflow_call` trigger** in `drift.yml`. The entire safety argument rests on pipeline-invoked runs always having a non-empty `commit-sha`, which puts them in a different concurrency group from scheduled runs. If it ever becomes optional, the group separation collapses and this change must be revisited.
-- [ ] **Step 5: Lint.** Run the repo's workflow linter (`lint-workflows.yml` / `actionlint`) over the changed file. This is the only pre-commit gate — the change is YAML-only.
-- [ ] **Step 6: Commit** the single-file change (ask first, per the repo's ask-before-commit rule; use `/commit`).
-- [ ] **Step 7: Post-merge observation.** Watch the next two scheduled `drift` runs complete green. Separately, the next time `_meta-prerelease-pipeline.yml` invokes `drift` via `workflow_call`, confirm it is **not** cancelled by a concurrent scheduled run.
+- [ ] **Step 7: Post-merge observation.** ⏳ Deferred: cannot run in the authoring session — requires scheduled `drift` runs that fire *after* the commit lands. Watch the next two scheduled `drift` runs complete green, and confirm the next `workflow_call` invocation from `_meta-prerelease-pipeline.yml` is not cancelled by a concurrent scheduled run.
 
 ## Notes — precedent already in the repo
 
