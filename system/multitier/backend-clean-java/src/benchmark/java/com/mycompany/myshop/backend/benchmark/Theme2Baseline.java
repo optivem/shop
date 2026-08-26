@@ -13,14 +13,14 @@ import com.mycompany.myshop.backend.infrastructure.persistence.mappers.OrderMapp
 import com.mycompany.myshop.backend.infrastructure.persistence.repositories.CouponJpaRepository;
 import com.mycompany.myshop.backend.infrastructure.persistence.repositories.OrderJpaRepository;
 import com.mycompany.myshop.backend.usecases.UseCase;
-import com.mycompany.myshop.backend.usecases.coupon.BrowseCouponsRequest;
-import com.mycompany.myshop.backend.usecases.coupon.BrowseCouponsResponse;
-import com.mycompany.myshop.backend.usecases.order.BrowseOrderHistoryRequest;
-import com.mycompany.myshop.backend.usecases.order.BrowseOrderHistoryResponse;
-import com.mycompany.myshop.backend.usecases.order.ViewOrderDetailsRequest;
-import com.mycompany.myshop.backend.usecases.order.ViewOrderDetailsResponse;
-import com.mycompany.myshop.backend.usecases.report.ViewSalesReportRequest;
-import com.mycompany.myshop.backend.usecases.report.ViewSalesReportResponse;
+import com.mycompany.myshop.backend.usecases.queries.coupon.BrowseCouponsRequest;
+import com.mycompany.myshop.backend.usecases.queries.coupon.BrowseCouponsResponse;
+import com.mycompany.myshop.backend.usecases.queries.order.BrowseOrderHistoryRequest;
+import com.mycompany.myshop.backend.usecases.queries.order.BrowseOrderHistoryResponse;
+import com.mycompany.myshop.backend.usecases.queries.order.ViewOrderDetailsRequest;
+import com.mycompany.myshop.backend.usecases.queries.order.ViewOrderDetailsResponse;
+import com.mycompany.myshop.backend.usecases.queries.report.ViewSalesReportRequest;
+import com.mycompany.myshop.backend.usecases.queries.report.ViewSalesReportResponse;
 import jakarta.persistence.EntityManagerFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -168,7 +168,7 @@ class Theme2Baseline {
     // comparison against the pre-Chunk-C numbers is the demonstration rather than a discrepancy.
     private void measureBrowseOrderHistory() {
         var timed = probe.measure(() -> browseOrderHistory.execute(new BrowseOrderHistoryRequest(null, null, null)));
-        var items = timed.value().value().getOrders();
+        var items = timed.value().value().orders();
         report.add(new BenchmarkReport.Row(CAP_FILTER,
                 "`BrowseOrderHistory` with no filter, first page",
                 timed.millis(), items.size(), NO_DOMAIN_OBJECTS,
@@ -177,7 +177,7 @@ class Theme2Baseline {
 
     private void measureBrowseOrderHistoryFiltered() {
         var timed = probe.measure(() -> browseOrderHistory.execute(new BrowseOrderHistoryRequest(ORDER_FILTER, null, null)));
-        var items = timed.value().value().getOrders();
+        var items = timed.value().value().orders();
         report.add(new BenchmarkReport.Row(CAP_FILTER,
                 "`BrowseOrderHistory` filtered on `" + ORDER_FILTER + "`, first page",
                 timed.millis(), items.size(), NO_DOMAIN_OBJECTS,
@@ -186,7 +186,7 @@ class Theme2Baseline {
 
     private void measureBrowseCoupons() {
         var timed = probe.measure(() -> browseCoupons.execute(new BrowseCouponsRequest(null, null)));
-        var items = timed.value().value().getCoupons();
+        var items = timed.value().value().coupons();
         report.add(new BenchmarkReport.Row(CAP_FILTER,
                 "`BrowseCoupons`, first page",
                 timed.millis(), items.size(), NO_DOMAIN_OBJECTS,
@@ -258,9 +258,9 @@ class Theme2Baseline {
         var timed = probe.measure(() -> {
             var result = viewSalesReport.execute(new ViewSalesReportRequest(MAX_TOP_SKU_LIMIT));
             var response = result.value();
-            return (long) response.getRevenueByCountryMonth().size()
-                    + response.getTopSkus().size()
-                    + response.getCouponEffectiveness().size();
+            return (long) response.revenueByCountryMonth().size()
+                    + response.topSkus().size()
+                    + response.couponEffectiveness().size();
         });
         report.add(new BenchmarkReport.Row(CAP_AGGREGATE,
                 "Three reports, three `GROUP BY`s",

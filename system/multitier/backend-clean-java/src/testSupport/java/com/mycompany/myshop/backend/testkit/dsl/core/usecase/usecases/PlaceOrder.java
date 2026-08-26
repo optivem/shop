@@ -1,8 +1,8 @@
 package com.mycompany.myshop.backend.testkit.dsl.core.usecase.usecases;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mycompany.myshop.backend.usecases.order.PlaceOrderRequest;
-import com.mycompany.myshop.backend.usecases.order.PlaceOrderResponse;
+import com.mycompany.myshop.backend.usecases.commands.order.PlaceOrderRequest;
+import com.mycompany.myshop.backend.usecases.commands.order.PlaceOrderResponse;
 import com.mycompany.myshop.backend.testkit.driver.port.MyShopDriver;
 import com.mycompany.myshop.backend.testkit.dsl.core.shared.ResponseParser;
 import com.mycompany.myshop.backend.testkit.dsl.core.shared.UseCaseContext;
@@ -86,7 +86,7 @@ public class PlaceOrder extends BaseMyShopUseCase<PlaceOrderResponse, PlaceOrder
 
         var placed = result.responseOrNull();
         if (placed != null) {
-            context.setResultEntry(orderNumberResultAlias, placed.getOrderNumber());
+            context.setResultEntry(orderNumberResultAlias, placed.orderNumber());
         }
     }
 

@@ -2,7 +2,8 @@ package com.mycompany.myshop.backend.testkit.dsl.core.usecase.usecases;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.mycompany.myshop.backend.usecases.order.BrowseOrderHistoryResponse;
+import com.mycompany.myshop.backend.usecases.queries.order.BrowseOrderHistoryItemResponse;
+import com.mycompany.myshop.backend.usecases.queries.order.BrowseOrderHistoryResponse;
 import com.mycompany.myshop.backend.testkit.dsl.core.shared.ResponseVerification;
 
 public class BrowseOrderHistoryVerification
@@ -13,9 +14,9 @@ public class BrowseOrderHistoryVerification
     }
 
     public BrowseOrderHistoryVerification hasOrderWithNumber(String expectedOrderNumber) {
-        assertThat(getResponse().getOrders())
+        assertThat(getResponse().orders())
             .as("order history")
-            .extracting(BrowseOrderHistoryResponse.BrowseOrderHistoryItemResponse::getOrderNumber)
+            .extracting(BrowseOrderHistoryItemResponse::orderNumber)
             .contains(expectedOrderNumber);
         return this;
     }

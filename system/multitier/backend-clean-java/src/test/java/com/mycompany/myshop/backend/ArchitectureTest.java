@@ -7,10 +7,6 @@ import static com.tngtech.archunit.core.domain.JavaClass.Predicates.simpleNameEn
 
 import com.mycompany.myshop.backend.domain.entities.Order;
 import com.mycompany.myshop.backend.usecases.UseCase;
-import com.mycompany.myshop.backend.usecases.coupon.BrowseCoupons;
-import com.mycompany.myshop.backend.usecases.order.BrowseOrderHistory;
-import com.mycompany.myshop.backend.usecases.order.ViewOrderDetails;
-import com.mycompany.myshop.backend.usecases.report.ViewSalesReport;
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
@@ -23,8 +19,19 @@ class ArchitectureTest {
 
     private static final String DOMAIN = "..domain..";
     private static final String USECASES = "..usecases..";
-    private static final String[] USECASE_PACKAGES =
-            {"..usecases.order..", "..usecases.coupon..", "..usecases.report.."};
+    // The five packages that hold a use case. On the read side a package also holds its query port
+    // and the projections that port returns -- everything about reading orders is in one place.
+    // The projections are named for the response they are (BrowseOrderHistoryItemResponse), so the
+    // Request/Response exclusions below already cover them; only the ports need excluding by kind.
+    // Page and PageSpec are read-side vocabulary belonging to no use case, so they sit in
+    // ..usecases.queries.common.. and are deliberately not listed here.
+    private static final String[] USECASE_PACKAGES = {
+            "..usecases.commands.coupon..",
+            "..usecases.commands.order..",
+            "..usecases.queries.coupon..",
+            "..usecases.queries.order..",
+            "..usecases.queries.report..",
+    };
     private static final String QUERIES = "..usecases.queries..";
     private static final String PRESENTATION = "..presentation..";
     private static final String INFRASTRUCTURE = "..infrastructure..";
@@ -84,6 +91,7 @@ class ArchitectureTest {
             .that().resideInAnyPackage(USECASE_PACKAGES)
             .and().haveSimpleNameNotEndingWith("Request")
             .and().haveSimpleNameNotEndingWith("Response")
+            .and().areNotInterfaces()
             .should().implement(UseCase.class)
             .because("every use case has the same signature: one request in, one declared Result out");
 
@@ -94,17 +102,15 @@ class ArchitectureTest {
             .should().resideInAnyPackage(USECASE_PACKAGES)
             .because("a request or response belongs to one use case, so it lives beside it");
 
-    // Light CQRS, made executable. A pure query -- one whose response holds no field the database
+    // Light CQRS, made executable, and the reason the read side is a package rather than a list of
+    // class names: membership is now the folder a file sits in. A pure query -- one whose response
+    // holds no field the database
     // does not already hold -- answers with stored columns, so it never builds the domain model and
     // therefore can never fail on a write-side invariant. Before this rule, BrowseCoupons imported
     // Coupon and CouponRepository and one row with a zero discount rate failed the whole list.
     @ArchTest
     static final ArchRule READ_USECASES_DO_NOT_TOUCH_THE_DOMAIN = noClasses()
             .that().resideInAPackage(QUERIES)
-            .or().haveFullyQualifiedName(BrowseCoupons.class.getName())
-            .or().haveFullyQualifiedName(BrowseOrderHistory.class.getName())
-            .or().haveFullyQualifiedName(ViewOrderDetails.class.getName())
-            .or().haveFullyQualifiedName(ViewSalesReport.class.getName())
             .should().dependOnClassesThat().resideInAPackage(DOMAIN)
             .because("a pure query reports what is stored; it does not re-run the rules that wrote it");
 

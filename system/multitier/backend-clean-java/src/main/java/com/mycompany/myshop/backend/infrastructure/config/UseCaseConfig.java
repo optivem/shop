@@ -5,41 +5,41 @@ import com.mycompany.myshop.backend.domain.gateways.ErpGateway;
 import com.mycompany.myshop.backend.domain.gateways.TaxGateway;
 import com.mycompany.myshop.backend.domain.repositories.CouponRepository;
 import com.mycompany.myshop.backend.domain.repositories.OrderRepository;
-import com.mycompany.myshop.backend.usecases.LoggingUseCase;
-import com.mycompany.myshop.backend.usecases.RefusalTranslatingUseCase;
-import com.mycompany.myshop.backend.usecases.TransactionRunner;
-import com.mycompany.myshop.backend.usecases.TransactionalUseCase;
+import com.mycompany.myshop.backend.usecases.decorators.LoggingUseCase;
+import com.mycompany.myshop.backend.usecases.decorators.RefusalTranslatingUseCase;
+import com.mycompany.myshop.backend.usecases.decorators.TransactionRunner;
+import com.mycompany.myshop.backend.usecases.decorators.TransactionalUseCase;
 import com.mycompany.myshop.backend.usecases.UseCase;
-import com.mycompany.myshop.backend.usecases.coupon.BrowseCoupons;
-import com.mycompany.myshop.backend.usecases.coupon.BrowseCouponsRequest;
-import com.mycompany.myshop.backend.usecases.coupon.BrowseCouponsResponse;
-import com.mycompany.myshop.backend.usecases.coupon.PublishCoupon;
-import com.mycompany.myshop.backend.usecases.coupon.PublishCouponRequest;
-import com.mycompany.myshop.backend.usecases.order.BrowseOrderHistory;
-import com.mycompany.myshop.backend.usecases.order.BrowseOrderHistoryRequest;
-import com.mycompany.myshop.backend.usecases.order.BrowseOrderHistoryResponse;
-import com.mycompany.myshop.backend.usecases.order.CancelOrder;
-import com.mycompany.myshop.backend.usecases.order.CancelOrderRequest;
-import com.mycompany.myshop.backend.usecases.order.DeliverOrder;
-import com.mycompany.myshop.backend.usecases.order.DeliverOrderRequest;
-import com.mycompany.myshop.backend.usecases.order.PlaceOrder;
-import com.mycompany.myshop.backend.usecases.order.PlaceOrderRequest;
-import com.mycompany.myshop.backend.usecases.order.PlaceOrderResponse;
-import com.mycompany.myshop.backend.usecases.order.RecallSku;
-import com.mycompany.myshop.backend.usecases.order.RecallSkuRequest;
-import com.mycompany.myshop.backend.usecases.order.RecallSkuResponse;
-import com.mycompany.myshop.backend.usecases.order.SweepDeliveries;
-import com.mycompany.myshop.backend.usecases.order.SweepDeliveriesRequest;
-import com.mycompany.myshop.backend.usecases.order.SweepDeliveriesResponse;
-import com.mycompany.myshop.backend.usecases.order.ViewOrderDetails;
-import com.mycompany.myshop.backend.usecases.order.ViewOrderDetailsRequest;
-import com.mycompany.myshop.backend.usecases.order.ViewOrderDetailsResponse;
-import com.mycompany.myshop.backend.usecases.queries.CouponQuery;
-import com.mycompany.myshop.backend.usecases.queries.OrderQuery;
-import com.mycompany.myshop.backend.usecases.queries.SalesReportQuery;
-import com.mycompany.myshop.backend.usecases.report.ViewSalesReport;
-import com.mycompany.myshop.backend.usecases.report.ViewSalesReportRequest;
-import com.mycompany.myshop.backend.usecases.report.ViewSalesReportResponse;
+import com.mycompany.myshop.backend.usecases.queries.coupon.BrowseCoupons;
+import com.mycompany.myshop.backend.usecases.queries.coupon.BrowseCouponsRequest;
+import com.mycompany.myshop.backend.usecases.queries.coupon.BrowseCouponsResponse;
+import com.mycompany.myshop.backend.usecases.commands.coupon.PublishCoupon;
+import com.mycompany.myshop.backend.usecases.commands.coupon.PublishCouponRequest;
+import com.mycompany.myshop.backend.usecases.queries.order.BrowseOrderHistory;
+import com.mycompany.myshop.backend.usecases.queries.order.BrowseOrderHistoryRequest;
+import com.mycompany.myshop.backend.usecases.queries.order.BrowseOrderHistoryResponse;
+import com.mycompany.myshop.backend.usecases.commands.order.CancelOrder;
+import com.mycompany.myshop.backend.usecases.commands.order.CancelOrderRequest;
+import com.mycompany.myshop.backend.usecases.commands.order.DeliverOrder;
+import com.mycompany.myshop.backend.usecases.commands.order.DeliverOrderRequest;
+import com.mycompany.myshop.backend.usecases.commands.order.PlaceOrder;
+import com.mycompany.myshop.backend.usecases.commands.order.PlaceOrderRequest;
+import com.mycompany.myshop.backend.usecases.commands.order.PlaceOrderResponse;
+import com.mycompany.myshop.backend.usecases.commands.order.RecallSku;
+import com.mycompany.myshop.backend.usecases.commands.order.RecallSkuRequest;
+import com.mycompany.myshop.backend.usecases.commands.order.RecallSkuResponse;
+import com.mycompany.myshop.backend.usecases.commands.order.SweepDeliveries;
+import com.mycompany.myshop.backend.usecases.commands.order.SweepDeliveriesRequest;
+import com.mycompany.myshop.backend.usecases.commands.order.SweepDeliveriesResponse;
+import com.mycompany.myshop.backend.usecases.queries.order.ViewOrderDetails;
+import com.mycompany.myshop.backend.usecases.queries.order.ViewOrderDetailsRequest;
+import com.mycompany.myshop.backend.usecases.queries.order.ViewOrderDetailsResponse;
+import com.mycompany.myshop.backend.usecases.queries.coupon.ports.CouponReader;
+import com.mycompany.myshop.backend.usecases.queries.order.ports.OrderReader;
+import com.mycompany.myshop.backend.usecases.queries.report.ports.SalesReportReader;
+import com.mycompany.myshop.backend.usecases.queries.report.ViewSalesReport;
+import com.mycompany.myshop.backend.usecases.queries.report.ViewSalesReportRequest;
+import com.mycompany.myshop.backend.usecases.queries.report.ViewSalesReportResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -71,13 +71,13 @@ public class UseCaseConfig {
     }
 
     @Bean
-    UseCase<ViewOrderDetailsRequest, ViewOrderDetailsResponse> viewOrderDetails(OrderQuery orderQuery) {
-        return observed("ViewOrderDetails", new ViewOrderDetails(orderQuery));
+    UseCase<ViewOrderDetailsRequest, ViewOrderDetailsResponse> viewOrderDetails(OrderReader orderReader) {
+        return observed("ViewOrderDetails", new ViewOrderDetails(orderReader));
     }
 
     @Bean
-    UseCase<BrowseOrderHistoryRequest, BrowseOrderHistoryResponse> browseOrderHistory(OrderQuery orderQuery) {
-        return observed("BrowseOrderHistory", new BrowseOrderHistory(orderQuery));
+    UseCase<BrowseOrderHistoryRequest, BrowseOrderHistoryResponse> browseOrderHistory(OrderReader orderReader) {
+        return observed("BrowseOrderHistory", new BrowseOrderHistory(orderReader));
     }
 
     @Bean
@@ -97,13 +97,13 @@ public class UseCaseConfig {
     }
 
     @Bean
-    UseCase<BrowseCouponsRequest, BrowseCouponsResponse> browseCoupons(CouponQuery couponQuery) {
-        return observed("BrowseCoupons", new BrowseCoupons(couponQuery));
+    UseCase<BrowseCouponsRequest, BrowseCouponsResponse> browseCoupons(CouponReader couponReader) {
+        return observed("BrowseCoupons", new BrowseCoupons(couponReader));
     }
 
     @Bean
-    UseCase<ViewSalesReportRequest, ViewSalesReportResponse> viewSalesReport(SalesReportQuery salesReportQuery) {
-        return observed("ViewSalesReport", new ViewSalesReport(salesReportQuery));
+    UseCase<ViewSalesReportRequest, ViewSalesReportResponse> viewSalesReport(SalesReportReader salesReportReader) {
+        return observed("ViewSalesReport", new ViewSalesReport(salesReportReader));
     }
 
     // Every use case gets the refusal translator, which is the point of putting it here: the

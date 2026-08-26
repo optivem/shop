@@ -1,9 +1,9 @@
 package com.mycompany.myshop.backend.testkit.driver.port;
 
-import com.mycompany.myshop.backend.usecases.coupon.BrowseCouponsResponse;
-import com.mycompany.myshop.backend.usecases.order.BrowseOrderHistoryResponse;
-import com.mycompany.myshop.backend.usecases.order.PlaceOrderRequest;
-import com.mycompany.myshop.backend.usecases.coupon.PublishCouponRequest;
+import com.mycompany.myshop.backend.usecases.queries.coupon.BrowseCouponsResponse;
+import com.mycompany.myshop.backend.usecases.queries.order.BrowseOrderHistoryResponse;
+import com.mycompany.myshop.backend.usecases.commands.order.PlaceOrderRequest;
+import com.mycompany.myshop.backend.usecases.commands.coupon.PublishCouponRequest;
 import java.util.Map;
 import org.springframework.http.ResponseEntity;
 

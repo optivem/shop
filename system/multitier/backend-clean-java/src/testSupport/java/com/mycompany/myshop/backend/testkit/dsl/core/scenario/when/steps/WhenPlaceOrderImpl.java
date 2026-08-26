@@ -1,6 +1,6 @@
 package com.mycompany.myshop.backend.testkit.dsl.core.scenario.when.steps;
 
-import com.mycompany.myshop.backend.usecases.order.PlaceOrderResponse;
+import com.mycompany.myshop.backend.usecases.commands.order.PlaceOrderResponse;
 import com.mycompany.myshop.backend.testkit.dsl.core.ScenarioDslImpl;
 import com.mycompany.myshop.backend.testkit.dsl.core.scenario.ExecutionResult;
 import com.mycompany.myshop.backend.testkit.dsl.core.scenario.ExecutionResultBuilder;
@@ -74,7 +74,7 @@ public class WhenPlaceOrderImpl extends BaseWhenStep<PlaceOrderResponse, PlaceOr
         var placed = result.responseOrNull();
 
         return new ExecutionResultBuilder<>(result)
-            .orderNumber(placed == null ? null : placed.getOrderNumber())
+            .orderNumber(placed == null ? null : placed.orderNumber())
             .couponCode(couponCode)
             .build();
     }

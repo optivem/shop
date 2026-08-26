@@ -10,21 +10,21 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.mycompany.myshop.backend.domain.gateways.ErpGatewayException;
 import com.mycompany.myshop.backend.presentation.UseCaseResponder;
-import com.mycompany.myshop.backend.presentation.controller.OrderController;
+import com.mycompany.myshop.backend.presentation.controllers.OrderController;
 import com.mycompany.myshop.backend.common.Result;
 import com.mycompany.myshop.backend.usecases.UseCaseError;
-import com.mycompany.myshop.backend.usecases.order.BrowseOrderHistoryRequest;
-import com.mycompany.myshop.backend.usecases.order.BrowseOrderHistoryResponse;
-import com.mycompany.myshop.backend.usecases.order.CancelOrderRequest;
-import com.mycompany.myshop.backend.usecases.order.DeliverOrderRequest;
-import com.mycompany.myshop.backend.usecases.order.PlaceOrderResponse;
-import com.mycompany.myshop.backend.usecases.order.ViewOrderDetailsRequest;
-import com.mycompany.myshop.backend.usecases.order.ViewOrderDetailsResponse;
-import com.mycompany.myshop.backend.usecases.order.BrowseOrderHistory;
-import com.mycompany.myshop.backend.usecases.order.CancelOrder;
-import com.mycompany.myshop.backend.usecases.order.DeliverOrder;
-import com.mycompany.myshop.backend.usecases.order.PlaceOrder;
-import com.mycompany.myshop.backend.usecases.order.ViewOrderDetails;
+import com.mycompany.myshop.backend.usecases.queries.order.BrowseOrderHistoryRequest;
+import com.mycompany.myshop.backend.usecases.queries.order.BrowseOrderHistoryResponse;
+import com.mycompany.myshop.backend.usecases.commands.order.CancelOrderRequest;
+import com.mycompany.myshop.backend.usecases.commands.order.DeliverOrderRequest;
+import com.mycompany.myshop.backend.usecases.commands.order.PlaceOrderResponse;
+import com.mycompany.myshop.backend.usecases.queries.order.ViewOrderDetailsRequest;
+import com.mycompany.myshop.backend.usecases.queries.order.ViewOrderDetailsResponse;
+import com.mycompany.myshop.backend.usecases.queries.order.BrowseOrderHistory;
+import com.mycompany.myshop.backend.usecases.commands.order.CancelOrder;
+import com.mycompany.myshop.backend.usecases.commands.order.DeliverOrder;
+import com.mycompany.myshop.backend.usecases.commands.order.PlaceOrder;
+import com.mycompany.myshop.backend.usecases.queries.order.ViewOrderDetails;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
@@ -73,8 +73,7 @@ class OrderControllerIntegrationTest {
 
     @Test
     void placeOrderReturnsCreated() throws Exception {
-        var response = new PlaceOrderResponse();
-        response.setOrderNumber("ORD-001");
+        var response = new PlaceOrderResponse("ORD-001");
         when(placeOrder.execute(any())).thenReturn(Result.ok(response));
 
         mockMvc.perform(post("/api/orders")
@@ -114,10 +113,7 @@ class OrderControllerIntegrationTest {
     // than leaving the client to assume it: the numbers it echoes are the ones that were honoured.
     @Test
     void browseOrderHistoryReturnsOk() throws Exception {
-        var response = new BrowseOrderHistoryResponse();
-        response.setOrders(List.of());
-        response.setPage(1);
-        response.setSize(50);
+        var response = new BrowseOrderHistoryResponse(List.of(), 1, 50, 0, 0);
         when(browseOrderHistory.execute(new BrowseOrderHistoryRequest(null, null, null)))
             .thenReturn(Result.ok(response));
 
@@ -133,12 +129,7 @@ class OrderControllerIntegrationTest {
     // are asserted on the wire rather than trusted to the mapper.
     @Test
     void browseOrderHistoryReportsTheTotals() throws Exception {
-        var response = new BrowseOrderHistoryResponse();
-        response.setOrders(List.of());
-        response.setPage(3);
-        response.setSize(10);
-        response.setTotalElements(26);
-        response.setTotalPages(3);
+        var response = new BrowseOrderHistoryResponse(List.of(), 3, 10, 26, 3);
         when(browseOrderHistory.execute(any(BrowseOrderHistoryRequest.class)))
             .thenReturn(Result.ok(response));
 
@@ -152,8 +143,7 @@ class OrderControllerIntegrationTest {
 
     @Test
     void browseOrderHistoryPassesThePageThrough() throws Exception {
-        var response = new BrowseOrderHistoryResponse();
-        response.setOrders(List.of());
+        var response = new BrowseOrderHistoryResponse(List.of(), 0, 0, 0, 0);
         when(browseOrderHistory.execute(new BrowseOrderHistoryRequest(null, 2, 25)))
             .thenReturn(Result.ok(response));
 
@@ -163,21 +153,22 @@ class OrderControllerIntegrationTest {
 
     @Test
     void getOrderReturnsOk() throws Exception {
-        var response = new ViewOrderDetailsResponse();
-        response.setOrderNumber("ORD-001");
-        response.setOrderTimestamp(Instant.parse("2026-03-10T12:00:00Z"));
-        response.setSku("BOOK-123");
-        response.setQuantity(2);
-        response.setUnitPrice(new BigDecimal("10.00"));
-        response.setBasePrice(new BigDecimal("20.00"));
-        response.setDiscountRate(BigDecimal.ZERO);
-        response.setDiscountAmount(BigDecimal.ZERO);
-        response.setSubtotalPrice(new BigDecimal("20.00"));
-        response.setTaxRate(new BigDecimal("0.10"));
-        response.setTaxAmount(new BigDecimal("2.00"));
-        response.setTotalPrice(new BigDecimal("22.00"));
-        response.setStatus("PLACED");
-        response.setCountry("US");
+        var response = new ViewOrderDetailsResponse(
+            "ORD-001",
+            Instant.parse("2026-03-10T12:00:00Z"),
+            "BOOK-123",
+            2,
+            new BigDecimal("10.00"),
+            new BigDecimal("20.00"),
+            BigDecimal.ZERO,
+            BigDecimal.ZERO,
+            new BigDecimal("20.00"),
+            new BigDecimal("0.10"),
+            new BigDecimal("2.00"),
+            new BigDecimal("22.00"),
+            "PLACED",
+            "US",
+            null);
         when(viewOrderDetails.execute(new ViewOrderDetailsRequest("ORD-001"))).thenReturn(Result.ok(response));
 
         mockMvc.perform(get("/api/orders/ORD-001"))

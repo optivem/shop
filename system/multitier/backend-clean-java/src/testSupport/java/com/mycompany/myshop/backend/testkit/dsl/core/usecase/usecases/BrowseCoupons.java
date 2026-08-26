@@ -1,6 +1,6 @@
 package com.mycompany.myshop.backend.testkit.dsl.core.usecase.usecases;
 
-import com.mycompany.myshop.backend.usecases.coupon.BrowseCouponsResponse;
+import com.mycompany.myshop.backend.usecases.queries.coupon.BrowseCouponsResponse;
 import com.mycompany.myshop.backend.testkit.driver.port.MyShopDriver;
 import com.mycompany.myshop.backend.testkit.dsl.core.shared.UseCaseContext;
 import com.mycompany.myshop.backend.testkit.dsl.core.shared.UseCaseResult;

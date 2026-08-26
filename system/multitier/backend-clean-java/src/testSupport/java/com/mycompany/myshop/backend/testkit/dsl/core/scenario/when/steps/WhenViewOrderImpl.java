@@ -1,6 +1,6 @@
 package com.mycompany.myshop.backend.testkit.dsl.core.scenario.when.steps;
 
-import com.mycompany.myshop.backend.usecases.order.ViewOrderDetailsResponse;
+import com.mycompany.myshop.backend.usecases.queries.order.ViewOrderDetailsResponse;
 import com.mycompany.myshop.backend.testkit.dsl.core.ScenarioDslImpl;
 import com.mycompany.myshop.backend.testkit.dsl.core.scenario.ExecutionResult;
 import com.mycompany.myshop.backend.testkit.dsl.core.scenario.ExecutionResultBuilder;

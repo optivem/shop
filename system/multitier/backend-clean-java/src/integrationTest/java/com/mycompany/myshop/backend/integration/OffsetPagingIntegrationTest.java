@@ -6,13 +6,13 @@ import com.mycompany.myshop.backend.backendtest.configuration.TestcontainersConf
 import com.mycompany.myshop.backend.domain.values.OrderStatus;
 import com.mycompany.myshop.backend.infrastructure.persistence.entities.CouponJpaEntity;
 import com.mycompany.myshop.backend.infrastructure.persistence.entities.OrderJpaEntity;
-import com.mycompany.myshop.backend.infrastructure.persistence.queries.JpaCouponQuery;
-import com.mycompany.myshop.backend.infrastructure.persistence.queries.JpaOrderQuery;
-import com.mycompany.myshop.backend.usecases.queries.CouponListItem;
-import com.mycompany.myshop.backend.usecases.queries.CouponQuery;
-import com.mycompany.myshop.backend.usecases.queries.OrderListItem;
-import com.mycompany.myshop.backend.usecases.queries.OrderQuery;
-import com.mycompany.myshop.backend.usecases.queries.PageSpec;
+import com.mycompany.myshop.backend.infrastructure.persistence.readers.JpaCouponReader;
+import com.mycompany.myshop.backend.infrastructure.persistence.readers.JpaOrderReader;
+import com.mycompany.myshop.backend.usecases.queries.coupon.BrowseCouponsItemResponse;
+import com.mycompany.myshop.backend.usecases.queries.coupon.ports.CouponReader;
+import com.mycompany.myshop.backend.usecases.queries.order.BrowseOrderHistoryItemResponse;
+import com.mycompany.myshop.backend.usecases.queries.order.ports.OrderReader;
+import com.mycompany.myshop.backend.usecases.queries.common.PageSpec;
 import jakarta.persistence.EntityManager;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -25,7 +25,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
-// The paging in JpaOrderQuery and JpaCouponQuery is native SQL -- LIMIT/OFFSET plus a COUNT over the
+// The paging in JpaOrderReader and JpaCouponReader is native SQL -- LIMIT/OFFSET plus a COUNT over the
 // same predicate -- and neither the offset arithmetic nor the agreement between the two statements
 // is something the compiler can check. So this test drives real Postgres.
 //
@@ -41,7 +41,7 @@ import org.springframework.test.context.ActiveProfiles;
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @ActiveProfiles("test")
-@Import({TestcontainersConfiguration.class, JpaOrderQuery.class, JpaCouponQuery.class})
+@Import({TestcontainersConfiguration.class, JpaOrderReader.class, JpaCouponReader.class})
 class OffsetPagingIntegrationTest {
 
     // Every order this test writes carries this in its number, so the query's own filter scopes the
@@ -51,10 +51,10 @@ class OffsetPagingIntegrationTest {
     private static final Instant BASE = Instant.parse("2026-03-10T12:00:00Z");
 
     @Autowired
-    private OrderQuery orderQuery;
+    private OrderReader orderReader;
 
     @Autowired
-    private CouponQuery couponQuery;
+    private CouponReader couponReader;
 
     @Autowired
     private EntityManager entityManager;
@@ -96,7 +96,7 @@ class OffsetPagingIntegrationTest {
         }
         entityManager.flush();
 
-        var page = orderQuery.listOrders(SCOPE, new PageSpec(1, 2));
+        var page = orderReader.listOrders(SCOPE, new PageSpec(1, 2));
 
         assertThat(page.items()).hasSize(2);
         assertThat(page.totalElements()).isEqualTo(5);
@@ -112,7 +112,7 @@ class OffsetPagingIntegrationTest {
         }
         entityManager.flush();
 
-        var page = orderQuery.listOrders(SCOPE, new PageSpec(3, 2));
+        var page = orderReader.listOrders(SCOPE, new PageSpec(3, 2));
 
         assertThat(page.items()).hasSize(1);
         assertThat(page.totalPages()).isEqualTo(3);
@@ -125,7 +125,7 @@ class OffsetPagingIntegrationTest {
         persistOrder(SCOPE + "-1", BASE);
         entityManager.flush();
 
-        var page = orderQuery.listOrders(SCOPE, new PageSpec(99, 10));
+        var page = orderReader.listOrders(SCOPE, new PageSpec(99, 10));
 
         assertThat(page.items()).isEmpty();
         assertThat(page.totalElements()).isEqualTo(1);
@@ -139,10 +139,10 @@ class OffsetPagingIntegrationTest {
         entityManager.flush();
 
         var visited = new ArrayList<String>();
-        var first = couponQuery.listCoupons(new PageSpec(PageSpec.FIRST_PAGE, 2));
+        var first = couponReader.listCoupons(new PageSpec(PageSpec.FIRST_PAGE, 2));
         visited.addAll(codes(first.items()));
         for (var pageNumber = PageSpec.FIRST_PAGE + 1; pageNumber <= first.totalPages(); pageNumber++) {
-            visited.addAll(codes(couponQuery.listCoupons(new PageSpec(pageNumber, 2)).items()));
+            visited.addAll(codes(couponReader.listCoupons(new PageSpec(pageNumber, 2)).items()));
         }
 
         // Newest published first, so the coupons this test wrote lead the list in reverse insertion
@@ -153,20 +153,20 @@ class OffsetPagingIntegrationTest {
 
     private List<String> walkOrders(int size) {
         var visited = new ArrayList<String>();
-        var first = orderQuery.listOrders(SCOPE, new PageSpec(PageSpec.FIRST_PAGE, size));
+        var first = orderReader.listOrders(SCOPE, new PageSpec(PageSpec.FIRST_PAGE, size));
         visited.addAll(orderNumbers(first.items()));
         for (var pageNumber = PageSpec.FIRST_PAGE + 1; pageNumber <= first.totalPages(); pageNumber++) {
-            visited.addAll(orderNumbers(orderQuery.listOrders(SCOPE, new PageSpec(pageNumber, size)).items()));
+            visited.addAll(orderNumbers(orderReader.listOrders(SCOPE, new PageSpec(pageNumber, size)).items()));
         }
         return visited;
     }
 
-    private static List<String> orderNumbers(List<OrderListItem> items) {
-        return items.stream().map(OrderListItem::orderNumber).toList();
+    private static List<String> orderNumbers(List<BrowseOrderHistoryItemResponse> items) {
+        return items.stream().map(BrowseOrderHistoryItemResponse::orderNumber).toList();
     }
 
-    private static List<String> codes(List<CouponListItem> items) {
-        return items.stream().map(CouponListItem::code).toList();
+    private static List<String> codes(List<BrowseCouponsItemResponse> items) {
+        return items.stream().map(BrowseCouponsItemResponse::code).toList();
     }
 
     private void persistOrder(String orderNumber, Instant orderTimestamp) {

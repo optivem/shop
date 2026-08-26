@@ -6,9 +6,10 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.mycompany.myshop.backend.BaseComponentTest;
-import com.mycompany.myshop.backend.usecases.order.BrowseOrderHistoryResponse;
-import com.mycompany.myshop.backend.usecases.order.PlaceOrderRequest;
-import com.mycompany.myshop.backend.usecases.order.PlaceOrderResponse;
+import com.mycompany.myshop.backend.usecases.queries.order.BrowseOrderHistoryItemResponse;
+import com.mycompany.myshop.backend.usecases.queries.order.BrowseOrderHistoryResponse;
+import com.mycompany.myshop.backend.usecases.commands.order.PlaceOrderRequest;
+import com.mycompany.myshop.backend.usecases.commands.order.PlaceOrderResponse;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 
@@ -22,8 +23,8 @@ class OrderHistoryComponentTest extends BaseComponentTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getOrders())
-            .extracting(BrowseOrderHistoryResponse.BrowseOrderHistoryItemResponse::getOrderNumber)
+        assertThat(response.getBody().orders())
+            .extracting(BrowseOrderHistoryItemResponse::orderNumber)
             .contains(orderNumber);
     }
 
@@ -52,6 +53,6 @@ class OrderHistoryComponentTest extends BaseComponentTest {
 
         var placed = restTemplate.postForEntity("/api/orders", request, PlaceOrderResponse.class);
         assertThat(placed.getBody()).isNotNull();
-        return placed.getBody().getOrderNumber();
+        return placed.getBody().orderNumber();
     }
 }
