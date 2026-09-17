@@ -1,3 +1,4 @@
+import type { OrderStatus } from '../../../../common/domain/OrderStatus.js';
 export interface ThenOrder extends PromiseLike<void> {
   and(): this;
   hasSku(expectedSku: string): this;
@@ -6,7 +7,7 @@ export interface ThenOrder extends PromiseLike<void> {
   hasBasePrice(basePrice: string | number): this;
   hasSubtotalPrice(subtotalPrice: string | number): this;
   hasTotalPrice(totalPrice: string | number): this;
-  hasStatus(expectedStatus: string): this;
+  hasStatus(expectedStatus: OrderStatus): this;
   hasTotalPriceGreaterThanZero(): this;
   hasOrderNumberPrefix(expectedPrefix: string): this;
   hasDiscountRate(expectedDiscountRate: number): this;

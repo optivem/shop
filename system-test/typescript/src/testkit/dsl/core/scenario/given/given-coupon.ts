@@ -1,6 +1,6 @@
-import { CouponConfig } from '../scenario-context.js';
-import { ThenContractStage } from '../then/then-contract.js';
-import { WhenStage } from '../when/when-stage.js';
+import type { CouponConfig } from '../scenario-context.js';
+import type { ThenContractStage } from '../then/then-contract.js';
+import type { WhenStage } from '../when/when-stage.js';
 import type { GivenStage } from './given-stage.js';
 import type { GivenCoupon as IGivenCoupon } from '../../../port/given/steps/given-coupon.js';
 import { assertNotAwaited } from '../assert-not-awaited.js';

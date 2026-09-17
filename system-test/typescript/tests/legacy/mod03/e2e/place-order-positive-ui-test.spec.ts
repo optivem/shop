@@ -29,9 +29,8 @@ test('shouldPlaceOrderForValidInput', async ({ config, myShopPage }) => {
     await notification.waitFor({ state: 'visible', timeout: TIMEOUT });
     const successText = await notification.textContent({ timeout: TIMEOUT });
     expect(successText).toContain('Order has been created with Order Number');
-    const match = successText?.match(/Order has been created with Order Number ([\w-]+)/);
-    expect(match).not.toBeNull();
-    const orderNumber = match![1];
+    const orderNumber = /Order has been created with Order Number ([\w-]+)/.exec(successText ?? '')?.[1] ?? '';
+    expect(orderNumber).not.toBe('');
 
     // Then: navigate to order history, filter, view details, assert fields
     await myShopPage.goto(`${myShopUiUrl}/order-history`);

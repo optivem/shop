@@ -1,4 +1,4 @@
-import type { Browser } from 'playwright';
+import type { Browser } from '@playwright/test';
 import type { Result } from '../../../common/result.js';
 import { success, failure } from '../../../common/result.js';
 import type { GoToMyShopRequest } from '../../port/dtos/GoToMyShopRequest.js';

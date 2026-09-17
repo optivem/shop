@@ -1,10 +1,11 @@
+import type { OrderStatus } from '../../../../common/domain/OrderStatus.js';
 import { expect } from '@playwright/test';
-import { SystemError } from '../../../../driver/port/dtos/errors/SystemError.js';
-import { ViewOrderResponse } from '../../../../driver/port/dtos/ViewOrderResponse.js';
+import type { SystemError } from '../../../../driver/port/dtos/errors/SystemError.js';
+import type { ViewOrderResponse } from '../../../../driver/port/dtos/ViewOrderResponse.js';
 import { DEFAULTS } from '../defaults.js';
-import { UseCaseContext } from '../../shared/use-case-context.js';
-import { AppContext } from '../app-context.js';
-import { ScenarioContext } from '../scenario-context.js';
+import type { UseCaseContext } from '../../shared/use-case-context.js';
+import type { AppContext } from '../app-context.js';
+import type { ScenarioContext } from '../scenario-context.js';
 
 export class ThenViewOrderResultStage implements PromiseLike<void> {
   private _expectSuccess = true;
@@ -116,19 +117,17 @@ export class ThenViewOrderResultStage implements PromiseLike<void> {
     await this._arrangeCoupons();
     await this._placeGivenOrders();
 
-    const targetOrderNumber = this.ctx.orderConfigs.length > 0 && this.ctx.orderConfigs[0].orderNumber
-      ? this.ctx.orderConfigs[0].orderNumber
-      : this.orderNumber;
+    const targetOrderNumber = this.ctx.orderConfigs[0]?.orderNumber ?? this.orderNumber;
 
     const result = await this.app.myShop('dynamic').viewOrder({ orderNumber: targetOrderNumber });
 
     if (this._expectSuccess) {
-      expect(result.success).toBe(true);
+      expect(result.success, JSON.stringify(result)).toBe(true);
       if (result.success) {
         for (const fn of this._orderAssertions) fn(result.value);
       }
     } else {
-      expect(result.success).toBe(false);
+      expect(result.success, JSON.stringify(result)).toBe(false);
       if (!result.success) {
         for (const fn of this._errorAssertions) fn(result.error, this.useCaseContext);
       }
@@ -165,7 +164,7 @@ export class ThenViewOrderSuccess implements PromiseLike<void> {
 export class ThenViewOrderOrder implements PromiseLike<void> {
   constructor(private readonly stage: ThenViewOrderResultStage) {}
 
-  hasStatus(status: string): this {
+  hasStatus(status: OrderStatus): this {
     this.stage._addOrderAssertion((order) => {
       expect(order.status).toBe(status);
     });
@@ -205,8 +204,7 @@ export class ThenViewOrderFailure implements PromiseLike<void> {
     this.stage._addErrorAssertion((error, useCaseContext) => {
       const expandedMessage = useCaseContext.expandAliases(message);
       const fieldError = error.fieldErrors.find((fe) => fe.field === field);
-      expect(fieldError).toBeDefined();
-      expect(fieldError!.message).toBe(expandedMessage);
+      expect(fieldError?.message, `Expected field error for '${field}' in ${JSON.stringify(error.fieldErrors)}`).toBe(expandedMessage);
     });
     return this;
   }

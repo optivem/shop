@@ -62,7 +62,7 @@ export function useCoupons() {
     setIsCreating(false);
 
     if (result.success) {
-      setTimeout(refresh, 100);
+      refresh();
     }
 
     return result;

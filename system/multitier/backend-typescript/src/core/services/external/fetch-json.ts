@@ -1,4 +1,4 @@
-import { ClassConstructor, plainToInstance } from 'class-transformer';
+import { type ClassConstructor, plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 
 export class HttpStatusError extends Error {

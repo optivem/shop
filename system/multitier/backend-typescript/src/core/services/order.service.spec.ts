@@ -1,15 +1,15 @@
 import Decimal from 'decimal.js';
-import { EntityManager, Repository } from 'typeorm';
+import type { EntityManager, Repository } from 'typeorm';
 import { Order } from '../entities/order.entity';
 import { OrderStatus } from '../entities/order-status.enum';
 import { PlaceOrderRequest } from '../dtos/place-order-request.dto';
 import { ValidationException } from '../exceptions/validation.exception';
 import { NotExistValidationException } from '../exceptions/not-exist-validation.exception';
 import { OrderService } from './order.service';
-import { ErpGateway } from './external/erp.gateway';
-import { TaxGateway } from './external/tax.gateway';
-import { ClockGateway } from './external/clock.gateway';
-import { CouponService } from './coupon.service';
+import type { ErpGateway } from './external/erp.gateway';
+import type { TaxGateway } from './external/tax.gateway';
+import type { ClockGateway } from './external/clock.gateway';
+import type { CouponService } from './coupon.service';
 
 const NORMAL_TIME = new Date('2025-06-15T10:00:00Z');
 const DEC_31_YEAR_END_BLACKOUT = new Date('2025-12-31T23:59:00Z');

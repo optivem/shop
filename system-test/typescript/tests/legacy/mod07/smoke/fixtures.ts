@@ -1,8 +1,8 @@
 import { test as base } from '@playwright/test';
 import { ChannelContext, bindChannels } from '@optivem/optivem-testing';
 import { bindTestEach } from '../../../../src/testkit/driver/adapter/shared/client/playwright/bindTestEach.js';
-import { chromium } from 'playwright';
-import type { Browser } from 'playwright';
+import { chromium } from '@playwright/test';
+import type { Browser } from '@playwright/test';
 import { loadConfiguration } from '../../../../config/configuration-loader.js';
 import { MyShopApiDriver } from '../../../../src/testkit/driver/adapter/api/my-shop-api-driver.js';
 import { MyShopUiDriver } from '../../../../src/testkit/driver/adapter/ui/my-shop-ui-driver.js';

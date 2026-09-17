@@ -1,4 +1,4 @@
-import { INestApplication } from '@nestjs/common';
+import type { INestApplication } from '@nestjs/common';
 import { GlobalExceptionFilter } from './api/exception/global-exception.filter';
 import { RequestValidationPipe } from './api/exception/request-validation.pipe';
 import { DecimalFormatInterceptor } from './api/interceptor/decimal-format.interceptor';

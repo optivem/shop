@@ -1,6 +1,6 @@
 import Decimal from 'decimal.js';
 import { Transform } from 'class-transformer';
-import { isISO8601, ValidateBy, ValidationOptions } from 'class-validator';
+import { isISO8601, ValidateBy, type ValidationOptions } from 'class-validator';
 
 // Marks a constraint whose failure means the value has the wrong type, not a wrong value.
 export const TYPE_MISMATCH = { typeMismatch: true };

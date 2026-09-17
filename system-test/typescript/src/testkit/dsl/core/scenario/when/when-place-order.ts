@@ -1,7 +1,7 @@
 import { DEFAULTS } from '../defaults.js';
-import { UseCaseContext } from '../../shared/use-case-context.js';
-import { AppContext } from '../app-context.js';
-import { ScenarioContext } from '../scenario-context.js';
+import type { UseCaseContext } from '../../shared/use-case-context.js';
+import type { AppContext } from '../app-context.js';
+import type { ScenarioContext } from '../scenario-context.js';
 import { ThenResultStage } from '../then/then-place-order.js';
 import { assertNotAwaited } from '../assert-not-awaited.js';
 
@@ -17,6 +17,9 @@ export class WhenPlaceOrder {
     private readonly useCaseContext: UseCaseContext,
   ) {}
 
+  // Accepted so scenarios read the same as their Java/.NET twins, where the order number is the
+  // alias the placed order is stored under. Here Then reads the number off the place-order result,
+  // so there is nothing to store.
   withOrderNumber(_orderNumber: string): this {
     return this;
   }

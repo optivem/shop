@@ -1,4 +1,4 @@
-import { Result, success } from '../../../../../common/result.js';
+import { type Result, success } from '../../../../../common/result.js';
 import type { ErpErrorResponse } from '../../../../port/external/erp/dtos/errors/ErpErrorResponse.js';
 import type { ReturnsProductRequest } from '../../../../port/external/erp/dtos/ReturnsProductRequest.js';
 import type { ReturnsPromotionRequest } from '../../../../port/external/erp/dtos/ReturnsPromotionRequest.js';

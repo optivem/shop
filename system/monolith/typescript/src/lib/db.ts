@@ -1,6 +1,7 @@
 import { Pool, type PoolClient } from 'pg';
 import Decimal from 'decimal.js';
 import { envOrDefault } from './env';
+import type { OrderStatus } from './order-status';
 
 const MONEY_SCALE = 2;
 const RATE_SCALE = 4;
@@ -57,7 +58,7 @@ export interface OrderRow {
   tax_amount: string;
   total_price: string;
   applied_coupon_code: string | null;
-  status: string;
+  status: OrderStatus;
 }
 
 export interface CouponRow {
@@ -85,7 +86,7 @@ export async function insertOrder(order: {
   taxAmount: Decimal;
   totalPrice: Decimal;
   appliedCouponCode: string | null;
-  status: string;
+  status: OrderStatus;
 }, db: Queryable = pool): Promise<void> {
   await db.query(
     `INSERT INTO orders (order_number, order_timestamp, country, sku, quantity, unit_price, base_price, discount_rate, discount_amount, subtotal_price, tax_rate, tax_amount, total_price, applied_coupon_code, status)
@@ -104,7 +105,7 @@ export async function findByOrderNumber(orderNumber: string): Promise<OrderRow |
     'SELECT * FROM orders WHERE order_number = $1',
     [orderNumber]
   );
-  return result.rows[0] || null;
+  return result.rows[0] ?? null;
 }
 
 export async function findAllOrders(orderNumberFilter?: string): Promise<OrderRow[]> {
@@ -121,7 +122,7 @@ export async function findAllOrders(orderNumberFilter?: string): Promise<OrderRo
   return result.rows;
 }
 
-export async function updateOrderStatus(orderNumber: string, status: string): Promise<void> {
+export async function updateOrderStatus(orderNumber: string, status: OrderStatus): Promise<void> {
   await pool.query(
     'UPDATE orders SET status = $1 WHERE order_number = $2',
     [status, orderNumber]
@@ -147,7 +148,7 @@ export async function findCouponByCode(code: string): Promise<CouponRow | null> 
     'SELECT * FROM coupons WHERE code = $1',
     [code]
   );
-  return result.rows[0] || null;
+  return result.rows[0] ?? null;
 }
 
 // Claims one use of the coupon; false when its usage limit is already reached. The check and the

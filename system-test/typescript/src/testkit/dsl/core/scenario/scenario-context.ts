@@ -3,6 +3,7 @@
 // `scenario-context.ts` holds Given-stage scenario data (products, coupons, orders, etc.),
 // and `app-context.ts` holds the active channel and driver registry.
 
+import type { OrderStatus } from '../../../common/domain/OrderStatus.js';
 import { DEFAULTS } from './defaults.js';
 
 export interface ClockConfig {
@@ -37,7 +38,7 @@ export interface OrderConfig {
   quantity: string;
   country: string;
   couponCode: string | null;
-  status: string;
+  status: OrderStatus;
   orderNumber?: string;
 }
 

@@ -1,6 +1,6 @@
 import { test as base } from '@playwright/test';
-import { chromium } from 'playwright';
-import type { Browser } from 'playwright';
+import { chromium } from '@playwright/test';
+import type { Browser } from '@playwright/test';
 import { loadConfiguration } from '../../../../config/configuration-loader.js';
 import type { MyShopDriver } from '../../../../src/testkit/driver/port/my-shop-driver.js';
 import type { ErpDriver } from '../../../../src/testkit/driver/port/external/erp/erp-driver.js';
@@ -9,9 +9,6 @@ import { MyShopApiDriver } from '../../../../src/testkit/driver/adapter/api/my-s
 import { MyShopUiDriver } from '../../../../src/testkit/driver/adapter/ui/my-shop-ui-driver.js';
 import { ErpRealDriver } from '../../../../src/testkit/driver/adapter/external/erp/erp-real-driver.js';
 import { TaxRealDriver } from '../../../../src/testkit/driver/adapter/external/tax/tax-real-driver.js';
-import { envOrDefault } from '../../../../src/testkit/common/fallback.js';
-
-process.env.EXTERNAL_SYSTEM_MODE = envOrDefault('EXTERNAL_SYSTEM_MODE', 'real');
 
 const config = loadConfiguration();
 

@@ -1,4 +1,4 @@
-import { Result, success } from '../../../../../common/result.js';
+import { type Result, success } from '../../../../../common/result.js';
 import type { ClockErrorResponse } from '../../../../port/external/clock/dtos/errors/ClockErrorResponse.js';
 import type { GetTimeResponse } from '../../../../port/external/clock/dtos/GetTimeResponse.js';
 

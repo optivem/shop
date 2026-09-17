@@ -1,4 +1,4 @@
-import { PublishCouponRequest, BrowseCouponsResponse } from '../types/api.types';
+import type { PublishCouponRequest, BrowseCouponsResponse } from '../types/api.types';
 import { fetchJson, fetchNoContent } from '../common';
 import { isBrowseCouponsResponse } from '../types/api.guards';
 import type { Result } from '../types/result.types';

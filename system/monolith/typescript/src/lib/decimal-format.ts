@@ -15,7 +15,7 @@ const DECIMAL_FIELDS: Record<string, number> = {
 const SENTINEL = '__DECIMAL_';
 
 const SENTINEL_REGEX = new RegExp(
-  String.raw`"${SENTINEL}([\d.]+)${SENTINEL}"`,
+  String.raw`"${SENTINEL}(-?[\d.]+)${SENTINEL}"`,
   'g',
 );
 

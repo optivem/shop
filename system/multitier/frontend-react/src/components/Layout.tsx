@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { Navbar } from './Navbar';
 import { Breadcrumb } from './Breadcrumb';
 import { Notification } from './Notification';

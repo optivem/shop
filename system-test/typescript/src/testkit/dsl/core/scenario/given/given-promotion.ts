@@ -1,6 +1,6 @@
-import { PromotionConfig } from '../scenario-context.js';
-import { ThenContractStage } from '../then/then-contract.js';
-import { WhenStage } from '../when/when-stage.js';
+import type { PromotionConfig } from '../scenario-context.js';
+import type { ThenContractStage } from '../then/then-contract.js';
+import type { WhenStage } from '../when/when-stage.js';
 import type { GivenStage } from './given-stage.js';
 import type { GivenPromotion as IGivenPromotion } from '../../../port/given/steps/given-promotion.js';
 import { assertNotAwaited } from '../assert-not-awaited.js';

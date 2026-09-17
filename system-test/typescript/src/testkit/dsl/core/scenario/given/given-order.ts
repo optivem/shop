@@ -1,6 +1,7 @@
-import { OrderConfig } from '../scenario-context.js';
-import { ThenContractStage } from '../then/then-contract.js';
-import { WhenStage } from '../when/when-stage.js';
+import type { OrderStatus } from '../../../../common/domain/OrderStatus.js';
+import type { OrderConfig } from '../scenario-context.js';
+import type { ThenContractStage } from '../then/then-contract.js';
+import type { WhenStage } from '../when/when-stage.js';
 import type { GivenStage } from './given-stage.js';
 import type { GivenOrder as IGivenOrder } from '../../../port/given/steps/given-order.js';
 import { assertNotAwaited } from '../assert-not-awaited.js';
@@ -36,7 +37,7 @@ export class GivenOrder implements IGivenOrder {
     return this;
   }
 
-  withStatus(status: string): this {
+  withStatus(status: OrderStatus): this {
     this.config.status = status;
     return this;
   }

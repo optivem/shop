@@ -1,10 +1,10 @@
-import { INestApplication } from '@nestjs/common';
+import type { INestApplication } from '@nestjs/common';
 import Decimal from 'decimal.js';
 import { Test } from '@nestjs/testing';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, type Repository } from 'typeorm';
 import {
   PostgreSqlContainer,
-  StartedPostgreSqlContainer,
+  type StartedPostgreSqlContainer,
 } from '@testcontainers/postgresql';
 import { AppModule } from '../../app.module';
 import { Order } from '../entities/order.entity';

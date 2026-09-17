@@ -1,10 +1,7 @@
 import { test as base } from '@playwright/test';
-import { chromium } from 'playwright';
-import type { Browser, BrowserContext, Page } from 'playwright';
+import { chromium } from '@playwright/test';
+import type { Browser, BrowserContext, Page } from '@playwright/test';
 import { loadConfiguration, type TestConfig } from '../../../../config/configuration-loader.js';
-import { envOrDefault } from '../../../../src/testkit/common/fallback.js';
-
-process.env.EXTERNAL_SYSTEM_MODE = envOrDefault('EXTERNAL_SYSTEM_MODE', 'real');
 
 const config = loadConfiguration();
 

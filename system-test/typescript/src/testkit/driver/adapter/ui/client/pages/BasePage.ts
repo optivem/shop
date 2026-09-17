@@ -1,4 +1,4 @@
-import type { Page } from 'playwright';
+import type { Page } from '@playwright/test';
 import type { Result } from '../../../../../common/result.js';
 import { success, failure } from '../../../../../common/result.js';
 import type { SystemError } from '../../../../port/dtos/errors/SystemError.js';

@@ -1,6 +1,6 @@
-import { AppContext } from './app-context.js';
+import type { AppContext } from './app-context.js';
 import { ScenarioContext } from './scenario-context.js';
-import { UseCaseContext } from '../shared/use-case-context.js';
+import type { UseCaseContext } from '../shared/use-case-context.js';
 import { AssumeStage } from './assume/assume-stage.js';
 import { GivenStage } from './given/given-stage.js';
 import { WhenStage } from './when/when-stage.js';

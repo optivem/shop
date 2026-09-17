@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { chromium, type Browser, type BrowserContext, type Page } from 'playwright';
+import { chromium, type Browser, type BrowserContext, type Page } from '@playwright/test';
 import { loadConfiguration, type TestConfig } from '../../../../config/configuration-loader.js';
 
 export interface MyShopBrowser {

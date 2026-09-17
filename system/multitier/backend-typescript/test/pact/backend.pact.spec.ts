@@ -2,7 +2,7 @@ import { Verifier } from '@pact-foundation/pact';
 import Decimal from 'decimal.js';
 import * as path from 'path';
 import { ComponentHarness } from '../support/component-harness';
-import { Order } from '../../src/core/entities/order.entity';
+import type { Order } from '../../src/core/entities/order.entity';
 import { OrderStatus } from '../../src/core/entities/order-status.enum';
 
 describe('Backend Pact Provider Verification', () => {

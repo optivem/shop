@@ -1,6 +1,6 @@
-import { UseCaseContext } from '../../shared/use-case-context.js';
-import { AppContext } from '../app-context.js';
-import { ScenarioContext } from '../scenario-context.js';
+import type { UseCaseContext } from '../../shared/use-case-context.js';
+import type { AppContext } from '../app-context.js';
+import type { ScenarioContext } from '../scenario-context.js';
 import { WhenPlaceOrder } from './when-place-order.js';
 import { WhenCancelOrder } from './when-cancel-order.js';
 import { WhenViewOrder } from './when-view-order.js';

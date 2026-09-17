@@ -1,20 +1,20 @@
-import { Result } from '../../common/result.js';
-import { AsyncCloseable } from './async-closeable.js';
-import { GoToMyShopRequest } from './dtos/GoToMyShopRequest.js';
-import { GoToMyShopResponse } from './dtos/GoToMyShopResponse.js';
-import { PlaceOrderRequest } from './dtos/PlaceOrderRequest.js';
-import { PlaceOrderResponse } from './dtos/PlaceOrderResponse.js';
-import { CancelOrderRequest } from './dtos/CancelOrderRequest.js';
-import { CancelOrderResponse } from './dtos/CancelOrderResponse.js';
-import { DeliverOrderRequest } from './dtos/DeliverOrderRequest.js';
-import { DeliverOrderResponse } from './dtos/DeliverOrderResponse.js';
-import { ViewOrderRequest } from './dtos/ViewOrderRequest.js';
-import { ViewOrderResponse } from './dtos/ViewOrderResponse.js';
-import { SystemError } from './dtos/errors/SystemError.js';
-import { PublishCouponRequest } from './dtos/PublishCouponRequest.js';
-import { PublishCouponResponse } from './dtos/PublishCouponResponse.js';
-import { BrowseCouponsRequest } from './dtos/BrowseCouponsRequest.js';
-import { BrowseCouponsResponse } from './dtos/BrowseCouponsResponse.js';
+import type { Result } from '../../common/result.js';
+import type { AsyncCloseable } from './async-closeable.js';
+import type { GoToMyShopRequest } from './dtos/GoToMyShopRequest.js';
+import type { GoToMyShopResponse } from './dtos/GoToMyShopResponse.js';
+import type { PlaceOrderRequest } from './dtos/PlaceOrderRequest.js';
+import type { PlaceOrderResponse } from './dtos/PlaceOrderResponse.js';
+import type { CancelOrderRequest } from './dtos/CancelOrderRequest.js';
+import type { CancelOrderResponse } from './dtos/CancelOrderResponse.js';
+import type { DeliverOrderRequest } from './dtos/DeliverOrderRequest.js';
+import type { DeliverOrderResponse } from './dtos/DeliverOrderResponse.js';
+import type { ViewOrderRequest } from './dtos/ViewOrderRequest.js';
+import type { ViewOrderResponse } from './dtos/ViewOrderResponse.js';
+import type { SystemError } from './dtos/errors/SystemError.js';
+import type { PublishCouponRequest } from './dtos/PublishCouponRequest.js';
+import type { PublishCouponResponse } from './dtos/PublishCouponResponse.js';
+import type { BrowseCouponsRequest } from './dtos/BrowseCouponsRequest.js';
+import type { BrowseCouponsResponse } from './dtos/BrowseCouponsResponse.js';
 
 export interface MyShopDriver extends AsyncCloseable {
   goToMyShop(request: GoToMyShopRequest): Promise<Result<GoToMyShopResponse, SystemError>>;

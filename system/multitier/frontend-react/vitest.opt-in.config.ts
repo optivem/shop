@@ -5,9 +5,10 @@ import base from './vite.config';
 // the default `npm test` (vite.config.ts) deliberately excludes. It inherits
 // every base setting (react plugin, jsdom, setup, timeouts, sequential file
 // running) and only overrides which files are collected — so the two stay in
-// sync. Narrow to a single suite with a CLI path arg, e.g.
-//   vitest run --config vitest.opt-in.config.ts src/test/pact
-// which is exactly what `npm run test:component` / `test:pact` do.
+// sync. `npm run test:pact` runs every opt-in suite (the component and integration
+// suites both drive the Pact mock server and write the contract); narrow to one
+// suite with a CLI path arg, as `npm run test:component` does:
+//   vitest run --config vitest.opt-in.config.ts src/test/latest/component
 const baseTest = (base as { test?: Record<string, unknown> }).test ?? {};
 
 export default defineConfig({

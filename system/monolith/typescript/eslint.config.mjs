@@ -23,6 +23,10 @@ export default defineConfig(
         tsconfigRootDir: import.meta.dirname,
       },
     },
+    rules: {
+      "@typescript-eslint/consistent-type-imports": ["error", { fixStyle: "inline-type-imports" }],
+      "@typescript-eslint/no-import-type-side-effects": "error",
+    },
   },
   {
     files: ["**/*.{js,mjs,cjs}"],

@@ -35,6 +35,8 @@ export default defineConfig(
         },
         rules: {
             '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+            '@typescript-eslint/consistent-type-imports': ['error', { fixStyle: 'inline-type-imports' }],
+            '@typescript-eslint/no-import-type-side-effects': 'error',
         },
     },
     {

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { ORDER_STATUSES } from './order-status';
 
 // Response shapes of the monolith's own API, as read by the pages. Responses are parsed, not cast,
 // so a malformed body fails with a clear message instead of a TypeError while rendering.
@@ -28,7 +29,7 @@ export const orderDetailSchema = z.object({
   taxAmount: z.number(),
   totalPrice: z.number(),
   appliedCouponCode: z.string().nullable(),
-  status: z.string(),
+  status: z.enum(ORDER_STATUSES),
 });
 
 export const ordersResponseSchema = z.object({
@@ -39,7 +40,7 @@ export const ordersResponseSchema = z.object({
       sku: z.string(),
       quantity: z.number(),
       totalPrice: z.number(),
-      status: z.string(),
+      status: z.enum(ORDER_STATUSES),
     })
   ),
 });

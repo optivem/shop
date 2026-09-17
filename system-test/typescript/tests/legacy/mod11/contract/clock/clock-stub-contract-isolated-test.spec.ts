@@ -1,6 +1,6 @@
-process.env.EXTERNAL_SYSTEM_MODE = 'stub';
-
 import { test } from '../fixtures.js';
+
+test.use({ externalSystemMode: 'stub' });
 
 test.describe('@isolated', () => {
     test.describe.configure({ mode: 'serial' });

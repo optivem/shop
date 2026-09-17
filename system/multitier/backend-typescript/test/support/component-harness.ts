@@ -1,13 +1,13 @@
-import { INestApplication } from '@nestjs/common';
+import type { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import * as http from 'http';
-import { AddressInfo } from 'net';
+import type { AddressInfo } from 'net';
 import {
   PostgreSqlContainer,
-  StartedPostgreSqlContainer,
+  type StartedPostgreSqlContainer,
 } from '@testcontainers/postgresql';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, type Repository } from 'typeorm';
 import { AppModule } from '../../src/app.module';
 import { configureApp } from '../../src/configure-app';
 import { Order } from '../../src/core/entities/order.entity';

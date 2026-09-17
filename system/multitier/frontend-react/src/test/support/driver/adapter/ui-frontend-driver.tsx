@@ -160,9 +160,9 @@ export class UiFrontendDriver implements FrontendDriver {
     this.publishedCode = code;
     renderWithProviders(<AdminCoupons />);
     await this.fill('Coupon Code', code);
-    // A number input, and a decimal is typed one keystroke at a time: "0." is not a number, so
-    // userEvent.type would drive the field through a NaN state. One change event carries the value
-    // the user ends up with.
+    // A number input: userEvent.type would drive it through intermediate values like "0." that
+    // are not valid floating-point numbers, which the browser (and jsdom) sanitizes back to an
+    // empty string mid-keystroke. One change event sets the final value directly, bypassing that.
     fireEvent.change(screen.getByLabelText('Discount Rate'), {
       target: { value: String(discountRate) },
     });

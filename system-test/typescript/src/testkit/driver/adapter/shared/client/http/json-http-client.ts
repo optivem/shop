@@ -1,4 +1,4 @@
-import { Result, success, failure } from '../../../../../common/result.js';
+import { type Result, success, failure } from '../../../../../common/result.js';
 
 // Builds the client's error type from a failed response; body is undefined when it is not JSON.
 export type ErrorMapper<E> = (status: number, body: unknown) => E;

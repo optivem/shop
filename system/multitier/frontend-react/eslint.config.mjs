@@ -16,9 +16,7 @@ export default defineConfig(
     languageOptions: {
       globals: globals.browser,
       parserOptions: {
-        projectService: {
-          allowDefaultProject: ['vite.config.ts', 'vitest.opt-in.config.ts'],
-        },
+        projectService: true,
         tsconfigRootDir: import.meta.dirname,
       },
     },
@@ -26,6 +24,8 @@ export default defineConfig(
       // Same convention tsc's noUnusedParameters honours: a leading underscore marks a
       // parameter a signature requires but this implementation deliberately ignores.
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/consistent-type-imports': ['error', { fixStyle: 'inline-type-imports' }],
+      '@typescript-eslint/no-import-type-side-effects': 'error',
     },
   },
   {

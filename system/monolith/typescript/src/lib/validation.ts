@@ -1,6 +1,6 @@
 import Decimal from 'decimal.js';
 import { z } from 'zod';
-import { FieldError } from './errors';
+import type { FieldError } from './errors';
 
 export type ValidationResult<T> = { ok: true; value: T } | { ok: false; errors: FieldError[] };
 

@@ -1,9 +1,9 @@
 import { expect } from '@playwright/test';
-import { SystemError } from '../../../../driver/port/dtos/errors/SystemError.js';
-import { BrowseCouponItem } from '../../../../driver/port/dtos/BrowseCouponsResponse.js';
-import { UseCaseContext } from '../../shared/use-case-context.js';
-import { AppContext } from '../app-context.js';
-import { ScenarioContext } from '../scenario-context.js';
+import type { SystemError } from '../../../../driver/port/dtos/errors/SystemError.js';
+import type { BrowseCouponItem } from '../../../../driver/port/dtos/BrowseCouponsResponse.js';
+import type { UseCaseContext } from '../../shared/use-case-context.js';
+import type { AppContext } from '../app-context.js';
+import type { ScenarioContext } from '../scenario-context.js';
 
 export class ThenPublishCouponResultStage implements PromiseLike<void> {
   private _expectSuccess = true;
@@ -92,10 +92,10 @@ export class ThenPublishCouponResultStage implements PromiseLike<void> {
     });
 
     if (this._expectSuccess) {
-      expect(result.success).toBe(true);
+      expect(result.success, JSON.stringify(result)).toBe(true);
       await this._runCouponAssertions();
     } else {
-      expect(result.success).toBe(false);
+      expect(result.success, JSON.stringify(result)).toBe(false);
       if (!result.success) {
         for (const fn of this._errorAssertions) fn(result.error, this.useCaseContext);
       }
@@ -144,14 +144,14 @@ export class ThenPublishCouponCoupon implements PromiseLike<void> {
 
   isValidFrom(validFrom: string): this {
     this.stage._addCouponAssertion(this.code, (coupon) => {
-      expect(new Date(coupon.validFrom!).getTime()).toBe(new Date(validFrom).getTime());
+      expect(coupon.validFrom ? new Date(coupon.validFrom).getTime() : coupon.validFrom, 'validFrom').toBe(new Date(validFrom).getTime());
     });
     return this;
   }
 
   isValidTo(validTo: string): this {
     this.stage._addCouponAssertion(this.code, (coupon) => {
-      expect(new Date(coupon.validTo!).getTime()).toBe(new Date(validTo).getTime());
+      expect(coupon.validTo ? new Date(coupon.validTo).getTime() : coupon.validTo, 'validTo').toBe(new Date(validTo).getTime());
     });
     return this;
   }
@@ -196,8 +196,7 @@ export class ThenPublishCouponFailure implements PromiseLike<void> {
     this.stage._addErrorAssertion((error, useCaseContext) => {
       const expandedMessage = useCaseContext.expandAliases(message);
       const fieldError = error.fieldErrors.find((fe) => fe.field === field);
-      expect(fieldError).toBeDefined();
-      expect(fieldError!.message).toBe(expandedMessage);
+      expect(fieldError?.message, `Expected field error for '${field}' in ${JSON.stringify(error.fieldErrors)}`).toBe(expandedMessage);
     });
     return this;
   }

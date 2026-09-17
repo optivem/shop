@@ -1,4 +1,4 @@
-import { FormEvent } from 'react';
+import type { FormEvent } from 'react';
 import { FormInput, SubmitButton } from '../../components';
 import type { OrderFormData } from '../../types/form.types';
 

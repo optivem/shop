@@ -2,10 +2,11 @@ import Decimal from 'decimal.js';
 import { Client } from 'pg';
 import {
   PostgreSqlContainer,
-  StartedPostgreSqlContainer,
+  type StartedPostgreSqlContainer,
 } from '@testcontainers/postgresql';
 import * as fs from 'fs';
 import * as path from 'path';
+import type * as DbModule from '../lib/db';
 
 // Canonical schema — the same migrations Flyway applies for the Java backend
 // (system/db/migrations). Applied to the throwaway container so the test
@@ -39,7 +40,7 @@ async function applyMigrations(
 
 describe('db adapter [integration]', () => {
   let postgres: StartedPostgreSqlContainer;
-  let db: typeof import('../lib/db');
+  let db: typeof DbModule;
 
   beforeAll(async () => {
     postgres = await new PostgreSqlContainer('postgres:16-alpine')
@@ -94,11 +95,9 @@ describe('db adapter [integration]', () => {
 
     const found = await db.findByOrderNumber('ORD-100');
 
-    expect(found).not.toBeNull();
-    expect(found!.sku).toBe('BOOK-123');
+    expect(found).toMatchObject({ sku: 'BOOK-123', status: 'PLACED' });
     // numeric columns round-trip as strings via node-postgres.
-    expect(Number(found!.total_price)).toBeCloseTo(22.0);
-    expect(found!.status).toBe('PLACED');
+    expect(Number(found?.total_price)).toBeCloseTo(22.0);
   });
 
   it('never lets concurrent claims exceed a coupon usage limit', async () => {

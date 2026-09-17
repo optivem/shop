@@ -1,8 +1,8 @@
 import { expect } from '@playwright/test';
-import { BrowseCouponsResponse } from '../../../../driver/port/dtos/BrowseCouponsResponse.js';
-import { UseCaseContext } from '../../shared/use-case-context.js';
-import { AppContext } from '../app-context.js';
-import { ScenarioContext } from '../scenario-context.js';
+import type { BrowseCouponsResponse } from '../../../../driver/port/dtos/BrowseCouponsResponse.js';
+import type { UseCaseContext } from '../../shared/use-case-context.js';
+import type { AppContext } from '../app-context.js';
+import type { ScenarioContext } from '../scenario-context.js';
 
 export class ThenBrowseCouponsResultStage implements PromiseLike<void> {
   private _executionPromise: Promise<void> | null = null;
@@ -43,7 +43,7 @@ export class ThenBrowseCouponsResultStage implements PromiseLike<void> {
     }
 
     const result = await this.app.myShop('static').browseCoupons({});
-    expect(result.success).toBe(true);
+    expect(result.success, JSON.stringify(result)).toBe(true);
     if (result.success) {
       this._browseResult = result.value;
     }

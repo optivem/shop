@@ -1,9 +1,9 @@
-import { Result } from '../../../../common/result.js';
-import { ErpErrorResponse } from './dtos/errors/ErpErrorResponse.js';
-import { GetProductRequest } from './dtos/GetProductRequest.js';
-import { GetProductResponse } from './dtos/GetProductResponse.js';
-import { ReturnsProductRequest } from './dtos/ReturnsProductRequest.js';
-import { ReturnsPromotionRequest } from './dtos/ReturnsPromotionRequest.js';
+import type { Result } from '../../../../common/result.js';
+import type { ErpErrorResponse } from './dtos/errors/ErpErrorResponse.js';
+import type { GetProductRequest } from './dtos/GetProductRequest.js';
+import type { GetProductResponse } from './dtos/GetProductResponse.js';
+import type { ReturnsProductRequest } from './dtos/ReturnsProductRequest.js';
+import type { ReturnsPromotionRequest } from './dtos/ReturnsPromotionRequest.js';
 
 export interface ErpDriver {
   goToErp(): Promise<Result<void, ErpErrorResponse>>;

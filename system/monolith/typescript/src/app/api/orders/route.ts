@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import crypto from 'node:crypto';
 import Decimal from 'decimal.js';
 import { insertOrder, findAllOrders, findCouponByCode, tryIncrementCouponUsage, inTransaction } from '@/lib/db';

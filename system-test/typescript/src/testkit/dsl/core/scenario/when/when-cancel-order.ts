@@ -1,7 +1,7 @@
 import { DEFAULTS } from '../defaults.js';
-import { UseCaseContext } from '../../shared/use-case-context.js';
-import { AppContext } from '../app-context.js';
-import { ScenarioContext } from '../scenario-context.js';
+import type { UseCaseContext } from '../../shared/use-case-context.js';
+import type { AppContext } from '../app-context.js';
+import type { ScenarioContext } from '../scenario-context.js';
 import { ThenCancelOrderResultStage } from '../then/then-cancel-order.js';
 import { assertNotAwaited } from '../assert-not-awaited.js';
 

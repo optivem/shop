@@ -1,6 +1,6 @@
 // Shared helpers for component and Pact consumer tests.
-import { ReactElement } from 'react';
-import { render, RenderOptions } from '@testing-library/react';
+import type { ReactElement } from 'react';
+import { render, type RenderOptions } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { vi } from 'vitest';
 import { NotificationProvider } from '../contexts/NotificationContext';

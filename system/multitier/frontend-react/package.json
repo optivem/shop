@@ -6,19 +6,22 @@
   "scripts": {
     "dev": "vite",
     "start": "vite",
-    "build": "tsc && vite build",
+    "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc -b",
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:component": "vitest run --config vitest.opt-in.config.ts src/test/legacy/component src/test/latest/component",
-    "test:unit": "vitest run src/test/harness.test.tsx",
-    "test:pact": "vitest run --config vitest.opt-in.config.ts src/test/pact",
+    "test:unit": "vitest run src/test/unit",
+    "test:pact": "vitest run --config vitest.opt-in.config.ts",
     "test:integration": "vitest run --config vitest.opt-in.config.ts src/test/legacy/integration src/test/latest/integration",
     "test:legacy": "vitest run --config vitest.opt-in.config.ts src/test/legacy",
     "test:latest": "vitest run --config vitest.opt-in.config.ts src/test/latest"
+  },
+  "engines": {
+    "node": ">=22"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
@@ -27,6 +30,7 @@
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
+    "@types/node": "^22.10.7",
     "@types/react": "^18.2.43",
     "@types/react-dom": "^18.2.17",
     "@vitejs/plugin-react": "^4.2.1",

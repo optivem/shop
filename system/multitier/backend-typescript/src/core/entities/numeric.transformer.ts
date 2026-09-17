@@ -1,5 +1,5 @@
 import Decimal from 'decimal.js';
-import { ValueTransformer } from 'typeorm';
+import type { ValueTransformer } from 'typeorm';
 
 /**
  * Maps a Postgres `numeric(p, scale)` column to a `Decimal`.

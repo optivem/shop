@@ -1,8 +1,8 @@
 import { ChannelType } from '../../../channel/channel-type.js';
-import { MyShopDriver } from '../../../driver/port/my-shop-driver.js';
-import { ErpDriver } from '../../../driver/port/external/erp/erp-driver.js';
-import { ClockDriver } from '../../../driver/port/external/clock/clock-driver.js';
-import { TaxDriver } from '../../../driver/port/external/tax/tax-driver.js';
+import type { MyShopDriver } from '../../../driver/port/my-shop-driver.js';
+import type { ErpDriver } from '../../../driver/port/external/erp/erp-driver.js';
+import type { ClockDriver } from '../../../driver/port/external/clock/clock-driver.js';
+import type { TaxDriver } from '../../../driver/port/external/tax/tax-driver.js';
 
 export type ChannelMode = 'dynamic' | 'static';
 

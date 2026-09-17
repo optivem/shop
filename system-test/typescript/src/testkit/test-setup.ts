@@ -1,4 +1,4 @@
-import { loadConfiguration, TestConfig } from '../../config/configuration-loader.js';
+import { loadConfiguration, type TestConfig } from '../../config/configuration-loader.js';
 import { ScenarioDsl, AppContext } from './dsl/scenario-dsl.js';
 import type { ChannelMode } from './dsl/scenario-dsl.js';
 import { UseCaseContext } from './dsl/core/shared/use-case-context.js';
@@ -10,16 +10,17 @@ import { ClockRealDriver } from './driver/adapter/external/clock/clock-real-driv
 import { ClockStubDriver } from './driver/adapter/external/clock/clock-stub-driver.js';
 import { TaxRealDriver } from './driver/adapter/external/tax/tax-real-driver.js';
 import { TaxStubDriver } from './driver/adapter/external/tax/tax-stub-driver.js';
-import { ErpDriver } from './driver/port/external/erp/erp-driver.js';
-import { ClockDriver } from './driver/port/external/clock/clock-driver.js';
-import { TaxDriver } from './driver/port/external/tax/tax-driver.js';
-import { Browser } from 'playwright';
+import type { ErpDriver } from './driver/port/external/erp/erp-driver.js';
+import type { ClockDriver } from './driver/port/external/clock/clock-driver.js';
+import type { TaxDriver } from './driver/port/external/tax/tax-driver.js';
+import type { Browser } from '@playwright/test';
 import { ChannelType, type ChannelTypeValue } from './channel/channel-type.js';
-import { envOrDefault, nonEmptyOr } from './common/fallback.js';
+import { channelModeFromEnv } from './common/env.js';
+import type { ExternalSystemMode } from './dsl/port/external-system-mode.js';
 
 export type Channel = ChannelTypeValue;
 export type { ChannelMode } from './dsl/scenario-dsl.js';
-export type ExternalSystemMode = 'real' | 'stub';
+export type { ExternalSystemMode } from './dsl/port/external-system-mode.js';
 
 export interface ScenarioOptions {
   channel?: Channel;
@@ -32,7 +33,7 @@ export function createScenario(options: ScenarioOptions = {}): ScenarioDsl {
   const mode = options.externalSystemMode ?? 'real';
   const config = loadConfiguration({ externalSystemMode: mode });
 
-  const channelMode: ChannelMode = nonEmptyOr(options.channelMode, envOrDefault('CHANNEL_MODE', 'dynamic').toLowerCase() as ChannelMode);
+  const channelMode = options.channelMode ?? channelModeFromEnv();
   const channel = options.channel ?? ChannelType.API;
 
   const app = new AppContext({

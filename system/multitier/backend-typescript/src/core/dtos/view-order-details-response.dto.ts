@@ -1,5 +1,5 @@
-import Decimal from 'decimal.js';
-import { OrderStatus } from '../entities/order-status.enum';
+import type Decimal from 'decimal.js';
+import type { OrderStatus } from '../entities/order-status.enum';
 
 export class ViewOrderDetailsResponse {
   orderNumber!: string;

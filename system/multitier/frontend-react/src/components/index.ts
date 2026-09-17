@@ -12,3 +12,4 @@ export { FormInput } from './FormInput';
 export { SubmitButton } from './SubmitButton';
 export { DataState } from './DataState';
 export { TableDataState } from './TableDataState';
+export { SortableHeaderCell } from './SortableHeaderCell';

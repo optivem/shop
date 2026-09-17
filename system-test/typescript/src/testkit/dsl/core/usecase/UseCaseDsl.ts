@@ -1,13 +1,10 @@
 import type { AppContext, ChannelMode } from '../scenario/app-context.js';
-import { UseCaseContext, type ExternalSystemMode } from '../shared/use-case-context.js';
+import { UseCaseContext } from '../shared/use-case-context.js';
+import { externalSystemModeFromEnv } from '../../../common/env.js';
 import { MyShopDsl } from './MyShopDsl.js';
 import { ClockDsl } from './external/clock/ClockDsl.js';
 import { ErpDsl } from './external/erp/ErpDsl.js';
 import { TaxDsl } from './external/tax/TaxDsl.js';
-
-function resolveExternalSystemMode(): ExternalSystemMode {
-  return (process.env.EXTERNAL_SYSTEM_MODE as ExternalSystemMode) ?? 'real';
-}
 
 export class UseCaseDsl {
   private readonly useCaseContext: UseCaseContext;
@@ -17,7 +14,7 @@ export class UseCaseDsl {
   private _taxDsl?: TaxDsl;
 
   constructor(private readonly app: AppContext) {
-    this.useCaseContext = new UseCaseContext(resolveExternalSystemMode());
+    this.useCaseContext = new UseCaseContext(externalSystemModeFromEnv());
   }
 
   myShop(mode?: ChannelMode): MyShopDsl {

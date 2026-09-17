@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import Decimal from 'decimal.js';
 import { insertCoupon, findAllCoupons, findCouponByCode } from '@/lib/db';
 import { badRequestResponse, validationErrorResponse, internalErrorResponse } from '@/lib/errors';

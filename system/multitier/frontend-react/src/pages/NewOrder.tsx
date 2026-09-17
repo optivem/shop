@@ -1,4 +1,4 @@
-import { FormEvent, useCallback } from 'react';
+import { type FormEvent, useCallback } from 'react';
 import { Layout } from '../components';
 import { OrderForm } from '../features/orders';
 import { useNotificationContext } from '../contexts/useNotificationContext';

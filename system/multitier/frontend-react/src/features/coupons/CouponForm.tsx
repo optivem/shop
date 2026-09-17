@@ -1,4 +1,4 @@
-import { useState, FormEvent, useCallback } from 'react';
+import { useState, type FormEvent, useCallback } from 'react';
 import { SubmitButton } from '../../components/SubmitButton';
 
 export interface CouponFormData {
@@ -51,7 +51,7 @@ export function CouponForm({ onSubmit, isSubmitting, generateCouponCode }: Reado
                 id="code"
                 aria-label="Coupon Code"
                 value={formData.code}
-                onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                onChange={(e) => setFormData((prev) => ({ ...prev, code: e.target.value }))}
                 placeholder="e.g., SUMMER2026"
               />
             </div>
@@ -63,7 +63,7 @@ export function CouponForm({ onSubmit, isSubmitting, generateCouponCode }: Reado
                 id="discountRate"
                 aria-label="Discount Rate"
                 value={formData.discountRate}
-                onChange={(e) => setFormData({ ...formData, discountRate: e.target.value })}
+                onChange={(e) => setFormData((prev) => ({ ...prev, discountRate: e.target.value }))}
                 step="0.01"
                 placeholder="e.g., 0.2 for 20% off"
               />
@@ -78,7 +78,7 @@ export function CouponForm({ onSubmit, isSubmitting, generateCouponCode }: Reado
                 id="validFrom"
                 aria-label="Valid From"
                 value={formData.validFrom}
-                onChange={(e) => setFormData({ ...formData, validFrom: e.target.value })}
+                onChange={(e) => setFormData((prev) => ({ ...prev, validFrom: e.target.value }))}
               />
               <small className="form-text text-muted">Leave empty for immediate validity</small>
             </div>
@@ -90,7 +90,7 @@ export function CouponForm({ onSubmit, isSubmitting, generateCouponCode }: Reado
                 id="validTo"
                 aria-label="Valid To"
                 value={formData.validTo}
-                onChange={(e) => setFormData({ ...formData, validTo: e.target.value })}
+                onChange={(e) => setFormData((prev) => ({ ...prev, validTo: e.target.value }))}
               />
               <small className="form-text text-muted">Leave empty for no expiration</small>
             </div>
@@ -104,7 +104,7 @@ export function CouponForm({ onSubmit, isSubmitting, generateCouponCode }: Reado
                 id="usageLimit"
                 aria-label="Usage Limit"
                 value={formData.usageLimit}
-                onChange={(e) => setFormData({ ...formData, usageLimit: e.target.value })}
+                onChange={(e) => setFormData((prev) => ({ ...prev, usageLimit: e.target.value }))}
                 placeholder="Leave empty for unlimited"
               />
             </div>

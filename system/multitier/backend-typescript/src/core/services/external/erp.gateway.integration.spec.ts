@@ -1,5 +1,9 @@
-import { GenericContainer, StartedTestContainer, Wait } from 'testcontainers';
-import { ConfigService } from '@nestjs/config';
+import {
+  GenericContainer,
+  type StartedTestContainer,
+  Wait,
+} from 'testcontainers';
+import type { ConfigService } from '@nestjs/config';
 import { ErpGateway } from './erp.gateway';
 
 describe('ErpGateway [integration]', () => {

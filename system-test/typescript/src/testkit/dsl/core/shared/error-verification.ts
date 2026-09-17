@@ -19,8 +19,7 @@ export class ErrorVerification extends ResponseVerification<SystemError> {
     const expandedMessage = this.getContext().expandAliases(expectedMessage);
     const fields = this.getResponse().fieldErrors ?? [];
     const matching = fields.find((f) => f.field === expandedField);
-    expect(matching, `Expected field error for '${expandedField}' in ${JSON.stringify(fields)}`).toBeDefined();
-    expect(matching!.message).toBe(expandedMessage);
+    expect(matching?.message, `Expected field error for '${expandedField}' in ${JSON.stringify(fields)}`).toBe(expandedMessage);
     return this;
   }
 }

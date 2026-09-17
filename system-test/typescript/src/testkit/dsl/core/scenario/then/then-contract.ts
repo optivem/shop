@@ -1,10 +1,10 @@
 import { expect } from '@playwright/test';
-import { GetTimeResponse } from '../../../../driver/port/external/clock/dtos/GetTimeResponse.js';
-import { GetProductResponse } from '../../../../driver/port/external/erp/dtos/GetProductResponse.js';
-import { GetTaxResponse } from '../../../../driver/port/external/tax/dtos/GetTaxResponse.js';
-import { UseCaseContext } from '../../shared/use-case-context.js';
-import { AppContext } from '../app-context.js';
-import { ScenarioContext } from '../scenario-context.js';
+import type { GetTimeResponse } from '../../../../driver/port/external/clock/dtos/GetTimeResponse.js';
+import type { GetProductResponse } from '../../../../driver/port/external/erp/dtos/GetProductResponse.js';
+import type { GetTaxResponse } from '../../../../driver/port/external/tax/dtos/GetTaxResponse.js';
+import type { UseCaseContext } from '../../shared/use-case-context.js';
+import type { AppContext } from '../app-context.js';
+import type { ScenarioContext } from '../scenario-context.js';
 
 import type { ThenStage as IThenStage } from '../../../port/then/then-stage.js';
 
@@ -37,13 +37,15 @@ export class ThenContractStage implements PromiseLike<void>, IThenStage {
   }
 
   _addProductAssertion(sku: string, fn: (product: GetProductResponse) => void): void {
-    if (!this._productAssertions.has(sku)) this._productAssertions.set(sku, []);
-    this._productAssertions.get(sku)!.push(fn);
+    const assertions = this._productAssertions.get(sku) ?? [];
+    assertions.push(fn);
+    this._productAssertions.set(sku, assertions);
   }
 
   _addCountryAssertion(country: string, fn: (tax: GetTaxResponse) => void): void {
-    if (!this._countryAssertions.has(country)) this._countryAssertions.set(country, []);
-    this._countryAssertions.get(country)!.push(fn);
+    const assertions = this._countryAssertions.get(country) ?? [];
+    assertions.push(fn);
+    this._countryAssertions.set(country, assertions);
   }
 
   private async execute(): Promise<void> {

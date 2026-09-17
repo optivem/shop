@@ -7,7 +7,7 @@ import {
   flexRender,
   type SortingState,
 } from '@tanstack/react-table';
-import { TableDataState } from '../../components';
+import { SortableHeaderCell, TableDataState } from '../../components';
 import { UNLIMITED_USAGE_LIMIT, type BrowseCouponsItemResponse } from '../../types/api.types';
 
 const columnHelper = createColumnHelper<BrowseCouponsItemResponse>();
@@ -101,23 +101,7 @@ export function CouponTable({ coupons, isLoading, error, getCouponStatus, onRefr
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
-                    <th
-                      key={header.id}
-                      onClick={header.column.getToggleSortingHandler()}
-                      style={{ cursor: header.column.getCanSort() ? 'pointer' : 'default' }}
-                    >
-                      <div className="d-flex align-items-center">
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                        {header.column.getIsSorted() && (
-                          <span className="ms-1">
-                            {header.column.getIsSorted() === 'asc' ? '↑' : '↓'}
-                          </span>
-                        )}
-                      </div>
-                    </th>
+                    <SortableHeaderCell key={header.id} header={header} />
                   ))}
                 </tr>
               ))}

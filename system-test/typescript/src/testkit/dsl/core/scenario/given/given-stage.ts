@@ -1,7 +1,7 @@
 import { DEFAULTS } from '../defaults.js';
-import { UseCaseContext } from '../../shared/use-case-context.js';
-import { AppContext } from '../app-context.js';
-import { ScenarioContext, ProductConfig, CouponConfig, CountryConfig, OrderConfig } from '../scenario-context.js';
+import type { UseCaseContext } from '../../shared/use-case-context.js';
+import type { AppContext } from '../app-context.js';
+import type { ScenarioContext, ProductConfig, CouponConfig, CountryConfig, OrderConfig } from '../scenario-context.js';
 import { WhenStage } from '../when/when-stage.js';
 import { ThenContractStage } from '../then/then-contract.js';
 import { GivenClock } from './given-clock.js';

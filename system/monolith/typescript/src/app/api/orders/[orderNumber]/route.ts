@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 import Decimal from 'decimal.js';
 import { findByOrderNumber } from '@/lib/db';
 import { notFoundResponse, internalErrorResponse } from '@/lib/errors';

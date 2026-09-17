@@ -1,5 +1,7 @@
 # 2026-09-17 09:58:34 UTC — TypeScript best-practice fixes across all TypeScript projects
 
+> 🤖 **Picked up by agent** — `Valentina_Desk` at `2026-09-17T15:22:16Z`
+
 ## TL;DR
 
 **Why:** A read-only review of the four TypeScript projects (`system/monolith/typescript`, `system/multitier/backend-typescript`, `system/multitier/frontend-react`, `system-test/typescript`) found the code modern and well-linted (zero `any`, zero suppressions, type-aware ESLint), but with a handful of real defects: money round-trips through float, the backend isn't in strict mode, untrusted input is `as`-cast instead of parsed, a few user-visible frontend bugs, and a system-test DSL "thenable" trap that hangs instead of failing.
@@ -19,30 +21,9 @@
 
 ## ▶ Next executable step (resume here)
 
-**Step 9 — system-test config and runner hygiene** (`system-test/typescript`). First check the Deferred note: see whether the env-mode setup appears in course docs/articles that would need re-syncing. Then replace the top-of-file `process.env.EXTERNAL_SYSTEM_MODE = …` in the 23 spec/fixture files with a Playwright option fixture (`test.use({ externalSystemMode: 'stub' })`), and parse the env once with a throwing guard (`withApp.ts`, `test-setup.ts`, `UseCaseDsl.ts`). Split the `package.json` scripts into parallel (`--grep-invert @isolated`) and isolated (`--workers=1`) scripts, as CI does. `withApp.ts`: use Playwright's `browser` fixture instead of launching Chromium per test, with `try/finally` cleanup. Steps 5–8 have landed. Responses are now parsed at every HTTP boundary: monolith zod in `lib/external.ts` and `lib/api-types.ts`; backend `fetchJson` + class-validator DTOs; frontend guards in `types/api.guards.ts`; system-test controllers go through `JsonHttpClient` + `SystemErrorMapper.fromResponse`. The backend component harness builds from `AppModule` with `configureApp`. Gate: typecheck, lint, and the `--sample` system tests (ask before running them locally).
+**Step 16 — port the fixes to `jasonribble/events-companion`** (separate repo, own commit). Steps 1–15 have landed in shop. Start by auditing which defects actually exist there (its domain differs from shop), then apply the equivalents listed in Step 16. Shop precedents to copy: `assertNotAwaited` (Step 3), zod `parse*Request` (Step 5) and response schemas (Step 6), the `common/env.ts` env parser and `test.use({ externalSystemMode })` option fixture (Step 9), `as const` + type for enums (Step 11), `consistent-type-imports` + `no-import-type-side-effects` lint rules and the tsconfig flags (Step 12). Gate: that repo's typecheck, lint and unit tests; ask before running its system tests locally.
 
 ## Steps
-
-### Medium — runner hygiene, frontend cleanup
-
-- [ ] **Step 9: System-test config and runner hygiene.**
-  - Replace top-of-file `process.env.EXTERNAL_SYSTEM_MODE = …` in 23 spec/fixture files with a Playwright option fixture (`test.use({ externalSystemMode: 'stub' })`); parse env once with a throwing guard (`withApp.ts:15-16`, `test-setup.ts:35`, `UseCaseDsl.ts:9`).
-  - `package.json` scripts: `--grep-invert @isolated` on the parallel scripts + a separate `--workers=1` isolated script, mirroring CI.
-  - `withApp.ts:5,19` — use Playwright's `browser` fixture (or a worker-scoped one) instead of launching Chromium per test; `try/finally` cleanup.
-- [ ] **Step 10: Frontend dead code and scripts.** Delete `common.ts:6-102` (unused `showNotification`/`showApiError`/`handleResult`, direct `innerHTML`) and `hooks/useNotification.ts` — verify first: `pages/AdminCoupons.tsx` calls a `handleResult`, so confirm which one before deleting. Fix `test:pact` (points at non-existent `src/test/pact`) and `test:unit` (misses `src/test/unit/*.unit.test.ts`; re-check — it currently points at `src/test/harness.test.tsx`, which exists). Add tests for Step 2's fixes (coupon-load error shown, form keeps input on failed save); refresh the stale "NaN state" comment in `ui-frontend-driver.tsx` `publishCoupon`. `useCoupons.ts:65` — call `refresh()` directly instead of `setTimeout(refresh, 100)`.
-
-### Low — hygiene
-
-- [ ] **Step 11: Types.** `enum OrderStatus` → string-literal union / `as const` object in frontend `types/api.types.ts:3` and system-test `common/domain/OrderStatus.ts:1` (`hasStatus` takes `OrderStatus`); monolith `db.ts:28` `status: string` → `OrderStatus`; backend `externalSystemMode: string` → `'real' | 'stub'`. (Monolith `FieldError`/`ErrorData` already consolidated into `lib/api-types.ts` in Step 6.)
-- [ ] **Step 12: tsconfig / lint consistency.** Add `noUncheckedIndexedAccess` (monolith, system-test), `noImplicitReturns` + `noFallthroughCasesInSwitch` (monolith), `noImplicitOverride` (system-test), `isolatedModules` (system-test); enable `verbatimModuleSyntax` or `@typescript-eslint/consistent-type-imports` everywhere. Remove leftovers: backend `baseUrl`/`declaration`/`allowSyntheticDefaultImports`, frontend unused `baseUrl` + `@/*` alias. Frontend: `tsconfig.app`/`tsconfig.node` split so `vite.config.ts` is type-checked (and fix `__dirname` in ESM).
-- [ ] **Step 13: package.json.** `"engines": { "node": ">=22" }` in all four. Backend: remove unused `nock`, `@eslint/eslintrc`, `ts-loader`, `source-map-support`. System-test: drop direct `playwright` dep (re-exported by `@playwright/test`), align `@playwright/test` minimum, `@types/node` → `^22`.
-- [ ] **Step 14: Dead code.** Backend `AppService.getHello`, `getAppConfig`/`AppConfig`. System-test `ThenFailureAnd` (`then-place-order.ts:401`), no-op `withOrderNumber()` (`when-place-order.ts:19`).
-- [ ] **Step 15: Small correctness / test-quality items.**
-  - Monolith `errors.ts:71` — don't return internal error messages in 500 responses.
-  - Monolith `src/__tests__/app.spec.ts` placeholder — replace with unit tests for `decimal-format.ts` (`validation.ts` is covered by `validation.spec.ts` since Step 5).
-  - Replace `!` after `toBeDefined()` with `toMatchObject` / optional chaining (monolith `db.integration.spec.ts:97-100`, system-test 14 sites).
-  - System-test then-stages: add context to `expect(result.success).toBe(true)` (e.g. `expect(result.success, JSON.stringify(result))`).
-  - Frontend: `setFormData(prev => …)` updater form in `CouponForm.tsx`; remove redundant `cleanup()` in `test/setup.ts`; keyboard/`aria-sort` on sortable headers (`CouponTable.tsx:103`, `OrderHistoryTable.tsx:159`); drop double filtering in `OrderHistoryTable.tsx`.
 
 ### Port — student repo `jasonribble/events-companion`
 
@@ -56,9 +37,10 @@
 
 - **Cross-language parity plan** (Java, .NET, TypeScript — decided 2026-09-17): check the Java/.NET twins for the same defects as Steps 4, 5 and 7 (money round-trip, cast-instead-of-parse input validation, coupon usage race) and fix them in all three. Also carries:
   - **Money wire format → strings** (`"20.00"`), the recorded string-canonical direction. It changes the API contract, so every backend, all three system-test suites, Pact contracts and frontend types move together in one coordinated change.
+  - **Don't leak internal error messages in 500 responses.** All six backends (monolith + multitier, Java/.NET/TypeScript) return `detail: "Internal server error: <exception message>"`. Log the exception server-side and return a generic detail in all of them together (moved here from Step 15, 2026-09-17, so the TypeScript monolith doesn't diverge from the other five).
   - **Blackout message fix.** Every implementation (all Java/.NET/TS backends, backend-clean-java `YearEndBlackoutPolicy`) enforces 22:00–22:30 inclusive, and every test's boundary data agrees (22:30:00 blocked, 22:30:01 allowed), but the error message everywhere says "between 22:00 and 23:00". Behavior is the consistent spec; change the message to "between 22:00 and 22:30" in all backends, system tests (3 languages), component tests and `frontend-react/src/test/interactions/order.interactions.ts:140`.
 - **Frontend major upgrades plan** (decided 2026-09-17): React 19, Vite 7, Vitest 3, kept separate because it carries upgrade risk rather than best-practice fixes.
 
 ## Deferred
 
-- **Course materials:** whether `OrderStatus` enum → union (Step 11) or system-test env-mode fixtures (Step 9) appear in docs/articles that need re-sync. Deferred by the user 2026-09-17; check before executing those steps.
+- (none — the course-materials check was cleared 2026-09-17: course docs only reference `EXTERNAL_SYSTEM_MODE` in Java / as the env var, and show no TS `OrderStatus` enum.)

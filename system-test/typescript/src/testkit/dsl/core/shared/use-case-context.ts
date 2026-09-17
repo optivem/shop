@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 
-export type ExternalSystemMode = 'real' | 'stub';
+import type { ExternalSystemMode } from '../../port/external-system-mode.js';
 
 export class UseCaseContext {
   private readonly externalSystemMode: ExternalSystemMode;

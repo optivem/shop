@@ -4,13 +4,11 @@ import {
   useReactTable,
   getCoreRowModel,
   getSortedRowModel,
-  getFilteredRowModel,
   createColumnHelper,
   flexRender,
   type SortingState,
-  type ColumnFiltersState,
 } from '@tanstack/react-table';
-import { LoadingSpinner, ErrorMessage } from '../../components';
+import { LoadingSpinner, ErrorMessage, SortableHeaderCell } from '../../components';
 import type { BrowseOrderHistoryItemResponse } from '../../types/api.types';
 
 export interface OrderHistoryTableProps {
@@ -26,7 +24,7 @@ const columnHelper = createColumnHelper<BrowseOrderHistoryItemResponse>();
 
 /**
  * Order history table component using TanStack Table
- * Includes sorting, filtering, and order listing
+ * Includes sorting and order listing; filtering by order number happens server-side (useOrders)
  */
 export function OrderHistoryTable({
   orders,
@@ -37,7 +35,6 @@ export function OrderHistoryTable({
   onRefresh
 }: Readonly<OrderHistoryTableProps>) {
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
   const columns = useMemo(
     () => [
@@ -91,27 +88,16 @@ export function OrderHistoryTable({
     []
   );
 
-  // Filter orders by order number
-  const filteredOrders = useMemo(() => {
-    if (!filter) return orders;
-    return orders.filter((order) =>
-      order.orderNumber.toLowerCase().includes(filter.toLowerCase())
-    );
-  }, [orders, filter]);
-
   // eslint-disable-next-line react-hooks/incompatible-library -- TanStack Table's useReactTable is inherently incompatible with React Compiler memoization; no compiler is used here and there is no compatible API to switch to
   const table = useReactTable({
-    data: filteredOrders,
+    data: orders,
     columns,
     state: {
       sorting,
-      columnFilters,
     },
     onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
   });
 
   return (
@@ -156,23 +142,7 @@ export function OrderHistoryTable({
                 {table.getHeaderGroups().map((headerGroup) => (
                   <tr key={headerGroup.id}>
                     {headerGroup.headers.map((header) => (
-                      <th
-                        key={header.id}
-                        onClick={header.column.getToggleSortingHandler()}
-                        style={{ cursor: header.column.getCanSort() ? 'pointer' : 'default' }}
-                      >
-                        <div className="d-flex align-items-center">
-                          {flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                          {header.column.getIsSorted() && (
-                            <span className="ms-1">
-                              {header.column.getIsSorted() === 'asc' ? '\u2191' : '\u2193'}
-                            </span>
-                          )}
-                        </div>
-                      </th>
+                      <SortableHeaderCell key={header.id} header={header} />
                     ))}
                   </tr>
                 ))}

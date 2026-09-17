@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { findByOrderNumber, updateOrderStatus } from '@/lib/db';
 import { notFoundResponse, generalValidationErrorResponse, internalErrorResponse } from '@/lib/errors';
 

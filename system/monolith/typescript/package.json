@@ -14,6 +14,9 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage"
   },
+  "engines": {
+    "node": ">=22"
+  },
   "dependencies": {
     "decimal.js": "^10.6.0",
     "next": "^15.5.14",

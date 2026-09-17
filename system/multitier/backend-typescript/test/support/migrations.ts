@@ -1,5 +1,5 @@
 import { Client } from 'pg';
-import { StartedPostgreSqlContainer } from '@testcontainers/postgresql';
+import type { StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import * as fs from 'fs';
 import * as path from 'path';
 
