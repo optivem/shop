@@ -1,7 +1,6 @@
 import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigService } from '@nestjs/config';
 import * as http from 'http';
 import { AddressInfo } from 'net';
 import {
@@ -9,21 +8,11 @@ import {
   StartedPostgreSqlContainer,
 } from '@testcontainers/postgresql';
 import { DataSource, Repository } from 'typeorm';
-import { AppController } from '../../src/app.controller';
-import { AppService } from '../../src/app.service';
-import { HealthController } from '../../src/api/controller/health.controller';
-import { OrderController } from '../../src/api/controller/order.controller';
-import { CouponController } from '../../src/api/controller/coupon.controller';
-import { OrderService } from '../../src/core/services/order.service';
-import { CouponService } from '../../src/core/services/coupon.service';
-import { ErpGateway } from '../../src/core/services/external/erp.gateway';
-import { ClockGateway } from '../../src/core/services/external/clock.gateway';
-import { TaxGateway } from '../../src/core/services/external/tax.gateway';
-import { GlobalExceptionFilter } from '../../src/api/exception/global-exception.filter';
-import { RequestValidationPipe } from '../../src/api/exception/request-validation.pipe';
-import { DecimalFormatInterceptor } from '../../src/api/interceptor/decimal-format.interceptor';
+import { AppModule } from '../../src/app.module';
+import { configureApp } from '../../src/configure-app';
 import { Order } from '../../src/core/entities/order.entity';
 import { Coupon } from '../../src/core/entities/coupon.entity';
+import { applyMigrations } from './migrations';
 
 /**
  * A tiny in-process HTTP stub server (the Node analogue of WireMock used by the Java harness).
@@ -98,55 +87,31 @@ export class ComponentHarness {
 
     await Promise.all([this.erp.start(), this.tax.start(), this.clock.start()]);
 
-    const moduleRef = await Test.createTestingModule({
-      imports: [
-        ConfigModule.forRoot({ isGlobal: true }),
-        TypeOrmModule.forRoot({
-          type: 'postgres',
-          host: this.postgres.getHost(),
-          port: this.postgres.getPort(),
-          username: this.postgres.getUsername(),
-          password: this.postgres.getPassword(),
-          database: this.postgres.getDatabase(),
-          entities: [Order, Coupon],
-          synchronize: true,
-        }),
-        TypeOrmModule.forFeature([Order, Coupon]),
-      ],
-      controllers: [
-        AppController,
-        HealthController,
-        OrderController,
-        CouponController,
-      ],
-      providers: [
-        AppService,
-        OrderService,
-        CouponService,
-        ErpGateway,
-        ClockGateway,
-        TaxGateway,
-        {
-          provide: ConfigService,
-          useValue: {
-            get: (key: string, defaultValue?: unknown) => {
-              const cfg: Record<string, string> = {
-                ERP_API_URL: this.erp.url,
-                TAX_API_URL: this.tax.url,
-                CLOCK_API_URL: this.clock.url,
-                EXTERNAL_SYSTEM_MODE: 'stub',
-              };
-              return cfg[key] ?? defaultValue;
-            },
-          },
-        },
-      ],
-    }).compile();
+    await applyMigrations(this.postgres);
+
+    // The real AppModule; only configuration is replaced, pointing it at the container and the stubs.
+    const config: Record<string, string> = {
+      POSTGRES_DB_HOST: this.postgres.getHost(),
+      POSTGRES_DB_PORT: String(this.postgres.getPort()),
+      POSTGRES_DB_NAME: this.postgres.getDatabase(),
+      POSTGRES_DB_USER: this.postgres.getUsername(),
+      POSTGRES_DB_PASSWORD: this.postgres.getPassword(),
+      NODE_ENV: 'production', // turns off TypeORM query logging
+      ERP_API_URL: this.erp.url,
+      TAX_API_URL: this.tax.url,
+      CLOCK_API_URL: this.clock.url,
+      EXTERNAL_SYSTEM_MODE: 'stub',
+    };
+    const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
+      .overrideProvider(ConfigService)
+      .useValue({
+        get: (key: string, defaultValue?: unknown) =>
+          config[key] ?? defaultValue,
+      })
+      .compile();
 
     this.app = moduleRef.createNestApplication();
-    this.app.useGlobalPipes(new RequestValidationPipe());
-    this.app.useGlobalFilters(new GlobalExceptionFilter());
-    this.app.useGlobalInterceptors(new DecimalFormatInterceptor());
+    configureApp(this.app);
     await this.app.listen(0);
 
     const server = this.app.getHttpServer() as http.Server;

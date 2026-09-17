@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ClockGetTimeResponse } from '../../dtos/external/clock-get-time-response.dto';
+import { errorMessage, fetchJson } from './fetch-json';
 
 @Injectable()
 export class ClockGateway {
@@ -32,29 +33,13 @@ export class ClockGateway {
 
   private async getStubTime(): Promise<Date> {
     const url = `${this.clockUrl}/api/time`;
-
     try {
-      const response = await fetch(url, {
-        signal: AbortSignal.timeout(10000),
-      });
-
-      if (!response.ok) {
-        const body = await response.text();
-        throw new Error(
-          `Clock API returned status ${response.status}. URL: ${url}. Response: ${body}`,
-        );
-      }
-
-      const clockResponse = (await response.json()) as ClockGetTimeResponse;
+      const clockResponse = await fetchJson(url, ClockGetTimeResponse);
       return new Date(clockResponse.time);
     } catch (e) {
-      if (e instanceof Error && e.message.startsWith('Clock API returned')) {
-        throw e;
-      }
-      const err = e as Error;
-      throw new Error(
-        `Failed to fetch current time from URL: ${this.clockUrl}. Error: ${err.constructor.name}: ${err.message}`,
-      );
+      throw new Error(`Failed to fetch current time. ${errorMessage(e)}`, {
+        cause: e,
+      });
     }
   }
 }

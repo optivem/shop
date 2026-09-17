@@ -57,9 +57,23 @@ describe('ErpGateway [integration]', () => {
 
     const result = await erpGateway.getProductDetails('BOOK-123');
 
-    expect(result).not.toBeNull();
-    expect(result!.id).toBe('BOOK-123');
-    expect(result!.price).toBe(10.0);
+    expect(result).toMatchObject({ price: 10.0 });
+  });
+
+  it('getProductDetails encodes the SKU in the URL', async () => {
+    await stubGetJson('/api/products/A%20B%23C', 200, { price: 5.0 });
+
+    const result = await erpGateway.getProductDetails('A B#C');
+
+    expect(result).toMatchObject({ price: 5.0 });
+  });
+
+  it('getProductDetails throws a clear error on a malformed response', async () => {
+    await stubGetJson('/api/products/BOOK-123', 200, { price: '10.00' });
+
+    await expect(erpGateway.getProductDetails('BOOK-123')).rejects.toThrow(
+      'Malformed response',
+    );
   });
 
   it('getProductDetails returns null when not found', async () => {

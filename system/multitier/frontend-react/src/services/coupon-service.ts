@@ -1,5 +1,6 @@
 import { PublishCouponRequest, BrowseCouponsResponse } from '../types/api.types';
-import { fetchJson } from '../common';
+import { fetchJson, fetchNoContent } from '../common';
+import { isBrowseCouponsResponse } from '../types/api.guards';
 import type { Result } from '../types/result.types';
 
 const API_BASE_URL = '/api/coupons';
@@ -21,7 +22,7 @@ export async function createCoupon(
     usageLimit: usageLimit ?? undefined
   };
 
-  return await fetchJson<void>(API_BASE_URL, {
+  return await fetchNoContent(API_BASE_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -31,7 +32,7 @@ export async function createCoupon(
 }
 
 export async function browseCoupons(): Promise<Result<BrowseCouponsResponse>> {
-  return await fetchJson<BrowseCouponsResponse>(API_BASE_URL, {
+  return await fetchJson(API_BASE_URL, isBrowseCouponsResponse, {
     method: 'GET'
   });
 }

@@ -2,39 +2,23 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import {
+  couponsResponseSchema,
+  formatFieldErrors,
+  parseJson,
+  readErrorData,
+  type Coupon,
+} from "@/lib/api-types";
 
-interface Coupon {
-  code: string;
-  discountRate: number;
-  validFrom?: string;
-  validTo?: string;
-  usageLimit?: number;
-  usedCount: number;
-}
-
-interface FieldError {
-  field?: string;
-  message: string;
-}
-
-interface ErrorData {
-  detail?: string;
-  errors?: FieldError[];
-}
-
-interface CouponsResponse {
-  coupons?: Coupon[];
-}
-
-function formatDateOrFallback(dateStr: string | undefined, fallback: string): string {
+function formatDateOrFallback(dateStr: string | null | undefined, fallback: string): string {
   if (!dateStr) return fallback;
   return new Date(dateStr).toLocaleString("en-US", { timeZone: "UTC" });
 }
 
-const formatDate = (dateStr?: string) => formatDateOrFallback(dateStr, "Immediate");
-const formatValidTo = (dateStr?: string) => formatDateOrFallback(dateStr, "Never");
+const formatDate = (dateStr?: string | null) => formatDateOrFallback(dateStr, "Immediate");
+const formatValidTo = (dateStr?: string | null) => formatDateOrFallback(dateStr, "Never");
 
-function formatUsageLimit(value?: number): string {
+function formatUsageLimit(value?: number | null): string {
   if (value === undefined || value === null || value === 2147483647)
     return "Unlimited";
   return value.toString();
@@ -61,8 +45,8 @@ export default function AdminCouponsPage() {
     try {
       const response = await fetch("/api/coupons");
       if (response.ok) {
-        const data = (await response.json()) as CouponsResponse;
-        setCoupons(data.coupons ?? []);
+        const data = await parseJson(response, couponsResponseSchema);
+        setCoupons(data.coupons);
       }
     } catch {
       // ignore
@@ -119,14 +103,8 @@ export default function AdminCouponsPage() {
           void loadCoupons();
         }, 100);
       } else {
-        const data = (await response.json()) as ErrorData;
-        const fieldErrors: string[] = [];
-        if (data.errors && data.errors.length > 0) {
-          data.errors.forEach((err) => {
-            const fieldPart = err.field ? `${err.field}: ` : "";
-            fieldErrors.push(`${fieldPart}${err.message}`);
-          });
-        }
+        const data = await readErrorData(response);
+        const fieldErrors = formatFieldErrors(data);
         setNotification({
           type: "error",
           message: data.detail ?? "Failed to create coupon",

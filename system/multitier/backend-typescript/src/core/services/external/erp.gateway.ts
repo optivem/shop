@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ErpProductDetailsResponse } from '../../dtos/external/erp-product-details-response.dto';
 import { ErpGetPromotionResponse } from '../../dtos/external/erp-get-promotion-response.dto';
+import { errorMessage, fetchJson, isNotFound } from './fetch-json';
 
 @Injectable()
 export class ErpGateway {
@@ -17,60 +18,28 @@ export class ErpGateway {
   async getProductDetails(
     sku: string,
   ): Promise<ErpProductDetailsResponse | null> {
-    const url = `${this.erpUrl}/api/products/${sku}`;
-
+    const url = `${this.erpUrl}/api/products/${encodeURIComponent(sku)}`;
     try {
-      const response = await fetch(url, {
-        signal: AbortSignal.timeout(10000),
-      });
-
-      if (response.status === 404) {
+      return await fetchJson(url, ErpProductDetailsResponse);
+    } catch (e) {
+      if (isNotFound(e)) {
         return null;
       }
-
-      if (!response.ok) {
-        const body = await response.text();
-        throw new Error(
-          `ERP API returned status ${response.status} for SKU: ${sku}. URL: ${url}. Response: ${body}`,
-        );
-      }
-
-      return (await response.json()) as ErpProductDetailsResponse;
-    } catch (e) {
-      if (e instanceof Error && e.message.startsWith('ERP API returned')) {
-        throw e;
-      }
-      const err = e as Error;
       throw new Error(
-        `Failed to fetch product details for SKU: ${sku} from URL: ${url}. Error: ${err.constructor.name}: ${err.message}`,
+        `Failed to fetch product details for SKU: ${sku}. ${errorMessage(e)}`,
+        { cause: e },
       );
     }
   }
 
   async getPromotionDetails(): Promise<ErpGetPromotionResponse> {
     const url = `${this.erpUrl}/api/promotion`;
-
     try {
-      const response = await fetch(url, {
-        signal: AbortSignal.timeout(10000),
-      });
-
-      if (!response.ok) {
-        const body = await response.text();
-        throw new Error(
-          `ERP API returned status ${response.status} for promotion. URL: ${url}. Response: ${body}`,
-        );
-      }
-
-      return (await response.json()) as ErpGetPromotionResponse;
+      return await fetchJson(url, ErpGetPromotionResponse);
     } catch (e) {
-      if (e instanceof Error && e.message.startsWith('ERP API returned')) {
-        throw e;
-      }
-      const err = e as Error;
-      throw new Error(
-        `Failed to fetch promotion details from URL: ${url}. Error: ${err.constructor.name}: ${err.message}`,
-      );
+      throw new Error(`Failed to fetch promotion details. ${errorMessage(e)}`, {
+        cause: e,
+      });
     }
   }
 }

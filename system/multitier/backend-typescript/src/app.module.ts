@@ -15,6 +15,17 @@ import { TaxGateway } from './core/services/external/tax.gateway';
 import { Order } from './core/entities/order.entity';
 import { Coupon } from './core/entities/coupon.entity';
 
+// Environment values are strings; a port that is not a number fails at startup, not on first connect.
+function parsePort(value: string): number {
+  const port = Number(value);
+  if (!Number.isInteger(port) || port <= 0) {
+    throw new Error(
+      `POSTGRES_DB_PORT must be a positive integer, got: ${value}`,
+    );
+  }
+  return port;
+}
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -25,7 +36,9 @@ import { Coupon } from './core/entities/coupon.entity';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
         const host = configService.get<string>('POSTGRES_DB_HOST', 'localhost');
-        const port = configService.get<number>('POSTGRES_DB_PORT', 5432);
+        const port = parsePort(
+          configService.get<string>('POSTGRES_DB_PORT', '5432'),
+        );
         const database = configService.get<string>('POSTGRES_DB_NAME', 'app');
         const username = configService.get<string>('POSTGRES_DB_USER', 'app');
         const password = configService.get<string>(

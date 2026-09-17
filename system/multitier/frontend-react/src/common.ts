@@ -1,6 +1,7 @@
 // Common notification functions shared across all pages
 
-import type { ApiError, ProblemDetail } from './types/error.types';
+import type { ApiError } from './types/error.types';
+import { isProblemDetail, type Guard } from './types/api.guards';
 import type { Result } from './types/result.types';
 
 export function showNotification(
@@ -103,25 +104,43 @@ export function handleResult<T>(
 
 /**
  * Performs a fetch request and returns a Result.
- * Handles HTTP errors, network errors, and JSON parsing.
+ * Handles HTTP errors, network errors, and checks the JSON body against the expected type.
  *
  * @param url The URL to fetch
+ * @param isExpected Runtime guard for the expected response body
  * @param options Fetch options (method, headers, body, etc.)
- * @returns Result containing parsed JSON data or error
+ * @returns Result containing the checked JSON data or error
  */
-export async function fetchJson<T>(url: string, options?: RequestInit): Promise<Result<T>> {
+export async function fetchJson<T>(url: string, isExpected: Guard<T>, options?: RequestInit): Promise<Result<T>> {
+  return fetchResult(url, options, async (response) => {
+    const data: unknown = await response.json();
+    if (!isExpected(data)) {
+      return {
+        success: false,
+        error: { message: `Unexpected response from server. (Status: ${response.status})`, status: response.status }
+      };
+    }
+    return { success: true, data };
+  });
+}
+
+/**
+ * Performs a fetch request whose success response has no body (e.g. 204 No Content).
+ */
+export async function fetchNoContent(url: string, options?: RequestInit): Promise<Result<void>> {
+  return fetchResult(url, options, () => Promise.resolve({ success: true, data: undefined }));
+}
+
+async function fetchResult<T>(
+  url: string,
+  options: RequestInit | undefined,
+  onSuccess: (response: Response) => Promise<Result<T>>
+): Promise<Result<T>> {
   try {
     const response = await fetch(url, options);
-
     if (response.ok) {
-      // Handle 204 No Content
-      if (response.status === 204) {
-        return { success: true, data: undefined as T };
-      }
-      const data = (await response.json()) as T;
-      return { success: true, data };
+      return await onSuccess(response);
     }
-
     const error = await extractApiError(response);
     return { success: false, error };
   } catch (e: unknown) {
@@ -152,7 +171,8 @@ async function safeParseJson(response: Response): Promise<unknown> {
  * @returns ApiError object with message and optional field errors
  */
 export async function extractApiError(response: Response): Promise<ApiError> {
-  const errorData = (await safeParseJson(response)) as ProblemDetail | null;
+  const body = await safeParseJson(response);
+  const errorData = isProblemDetail(body) ? body : null;
 
   let message = '';
   let fieldErrors: string[] | undefined = undefined;

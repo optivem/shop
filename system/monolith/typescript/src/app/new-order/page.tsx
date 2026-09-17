@@ -2,20 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-
-interface FieldError {
-  field: string;
-  message: string;
-}
-
-interface PlaceOrderResponse {
-  orderNumber: string;
-}
-
-interface ErrorData {
-  detail?: string;
-  errors?: FieldError[];
-}
+import { formatFieldErrors, parseJson, placeOrderResponseSchema, readErrorData } from "@/lib/api-types";
 
 function buildOrderBody(sku: string, quantity: string, country: string, couponCode: string): Record<string, unknown> {
   const body: Record<string, unknown> = {};
@@ -65,24 +52,17 @@ export default function NewOrderPage() {
         body: JSON.stringify(body),
       });
 
-      const data: unknown = await response.json();
-
       if (response.ok) {
+        const data = await parseJson(response, placeOrderResponseSchema);
         setNotification({
           type: "success",
-          message: `Success! Order has been created with Order Number ${(data as PlaceOrderResponse).orderNumber}`,
+          message: `Success! Order has been created with Order Number ${data.orderNumber}`,
           fieldErrors: [],
           id: nextId,
         });
       } else {
-        const errorData = data as ErrorData;
-        const fieldErrors: string[] = [];
-        if (errorData.errors && errorData.errors.length > 0) {
-          errorData.errors.forEach((err) => {
-            const fieldPart = err.field ? `${err.field}: ` : "";
-            fieldErrors.push(`${fieldPart}${err.message}`);
-          });
-        }
+        const errorData = await readErrorData(response);
+        const fieldErrors = formatFieldErrors(errorData);
         setNotification({
           type: "error",
           message: errorData.detail ?? "An error occurred",

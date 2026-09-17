@@ -2,23 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-
-interface Order {
-  orderNumber: string;
-  orderTimestamp: string;
-  sku: string;
-  quantity: number;
-  totalPrice: number;
-  status: string;
-}
-
-interface OrdersResponse {
-  orders?: Order[];
-}
-
-interface ErrorData {
-  detail?: string;
-}
+import { ordersResponseSchema, parseJson, readErrorData, type Order } from "@/lib/api-types";
 
 export default function OrderHistoryPage() {
   const [filter, setFilter] = useState("");
@@ -37,15 +21,16 @@ export default function OrderHistoryPage() {
       }
 
       const response = await fetch(url);
-      const data: unknown = await response.json();
 
       if (!response.ok) {
-        setError((data as ErrorData).detail ?? "Failed to load orders");
+        const data = await readErrorData(response);
+        setError(data.detail ?? "Failed to load orders");
         setOrders([]);
         return;
       }
 
-      setOrders((data as OrdersResponse).orders ?? []);
+      const data = await parseJson(response, ordersResponseSchema);
+      setOrders(data.orders);
     } catch (err) {
       setError(
         `Network error: ${err instanceof Error ? err.message : String(err)}`

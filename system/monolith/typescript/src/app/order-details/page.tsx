@@ -3,34 +3,13 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-
-interface OrderDetail {
-  orderNumber: string;
-  orderTimestamp: string;
-  country: string;
-  sku: string;
-  quantity: number;
-  unitPrice: number;
-  basePrice: number;
-  discountRate: number;
-  discountAmount: number;
-  subtotalPrice: number;
-  taxRate: number;
-  taxAmount: number;
-  totalPrice: number;
-  appliedCouponCode: string | null;
-  status: string;
-}
-
-interface FieldError {
-  field?: string;
-  message: string;
-}
-
-interface ErrorData {
-  detail?: string;
-  errors?: FieldError[];
-}
+import {
+  formatFieldErrors,
+  orderDetailSchema,
+  parseJson,
+  readErrorData,
+  type OrderDetail,
+} from "@/lib/api-types";
 
 function OrderDetailsContent() {
   const searchParams = useSearchParams();
@@ -68,14 +47,13 @@ function OrderDetailsContent() {
         }
 
         if (!response.ok) {
-          const data = (await response.json()) as ErrorData;
+          const data = await readErrorData(response);
           setError(data.detail ?? "Failed to load order");
           setLoading(false);
           return;
         }
 
-        const data = (await response.json()) as OrderDetail;
-        setOrder(data);
+        setOrder(await parseJson(response, orderDetailSchema));
       } catch (err) {
         setError(
           `Network error: ${err instanceof Error ? err.message : String(err)}`
@@ -110,14 +88,8 @@ function OrderDetailsContent() {
           id: nextId,
         });
       } else {
-        const data = (await response.json()) as ErrorData;
-        const fieldErrors: string[] = [];
-        if (data.errors && data.errors.length > 0) {
-          data.errors.forEach((err) => {
-            const fieldPart = err.field ? `${err.field}: ` : "";
-            fieldErrors.push(`${fieldPart}${err.message}`);
-          });
-        }
+        const data = await readErrorData(response);
+        const fieldErrors = formatFieldErrors(data);
         setNotification({
           type: "error",
           message: data.detail ?? "Failed to cancel order",
@@ -159,14 +131,8 @@ function OrderDetailsContent() {
           id: nextId,
         });
       } else {
-        const data = (await response.json()) as ErrorData;
-        const fieldErrors: string[] = [];
-        if (data.errors && data.errors.length > 0) {
-          data.errors.forEach((err) => {
-            const fieldPart = err.field ? `${err.field}: ` : "";
-            fieldErrors.push(`${fieldPart}${err.message}`);
-          });
-        }
+        const data = await readErrorData(response);
+        const fieldErrors = formatFieldErrors(data);
         setNotification({
           type: "error",
           message: data.detail ?? "Failed to deliver order",

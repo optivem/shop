@@ -69,8 +69,8 @@ export interface PublishCouponRequest {
 export interface BrowseCouponsItemResponse {
   code: string;
   discountRate: number;
-  validFrom?: string;
-  validTo?: string;
+  validFrom?: string | null;
+  validTo?: string | null;
   usageLimit: number | null;
   usedCount: number;
 }

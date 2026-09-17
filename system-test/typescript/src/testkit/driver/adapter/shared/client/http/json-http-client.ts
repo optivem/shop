@@ -1,7 +1,13 @@
 import { Result, success, failure } from '../../../../../common/result.js';
 
+// Builds the client's error type from a failed response; body is undefined when it is not JSON.
+export type ErrorMapper<E> = (status: number, body: unknown) => E;
+
 export class JsonHttpClient<E> {
-  constructor(private readonly baseUrl: string) {}
+  constructor(
+    private readonly baseUrl: string,
+    private readonly toError: ErrorMapper<E>,
+  ) {}
 
   async get<T>(path: string): Promise<Result<T, E>> {
     const response = await fetch(`${this.baseUrl}${path}`);
@@ -9,38 +15,25 @@ export class JsonHttpClient<E> {
   }
 
   async post<T>(path: string, body?: unknown): Promise<Result<T, E>> {
-    const response = await fetch(`${this.baseUrl}${path}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: body === undefined ? undefined : JSON.stringify(body),
-    });
-    return this.handleResponse<T>(response);
+    return this.handleResponse<T>(await this.doPost(path, body));
   }
 
   async getVoid(path: string): Promise<Result<void, E>> {
     const response = await fetch(`${this.baseUrl}${path}`);
-    if (response.ok) return success(undefined);
-    try {
-      const error = (await response.json()) as E;
-      return failure(error);
-    } catch {
-      return failure({ message: `HTTP ${response.status}` } as unknown as E);
-    }
+    return response.ok ? success(undefined) : failure(await this.readError(response));
   }
 
   async postVoid(path: string, body?: unknown): Promise<Result<void, E>> {
-    const response = await fetch(`${this.baseUrl}${path}`, {
+    const response = await this.doPost(path, body);
+    return response.ok ? success(undefined) : failure(await this.readError(response));
+  }
+
+  private doPost(path: string, body: unknown): Promise<Response> {
+    return fetch(`${this.baseUrl}${path}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: body === undefined ? undefined : JSON.stringify(body),
     });
-    if (response.ok) return success(undefined);
-    try {
-      const error = (await response.json()) as E;
-      return failure(error);
-    } catch {
-      return failure({ message: `HTTP ${response.status}` } as unknown as E);
-    }
   }
 
   private async handleResponse<T>(response: Response): Promise<Result<T, E>> {
@@ -48,11 +41,11 @@ export class JsonHttpClient<E> {
       const data = (await response.json()) as T;
       return success(data);
     }
-    try {
-      const error = (await response.json()) as E;
-      return failure(error);
-    } catch {
-      return failure({ message: `HTTP ${response.status}` } as unknown as E);
-    }
+    return failure(await this.readError(response));
+  }
+
+  private async readError(response: Response): Promise<E> {
+    const body: unknown = await response.json().catch(() => undefined);
+    return this.toError(response.status, body);
   }
 }

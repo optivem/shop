@@ -181,7 +181,7 @@ describe('OrderService', () => {
   }
 
   function givenProductExists(sku: string, price: number) {
-    erpGateway.getProductDetails.mockResolvedValue({ id: sku, price });
+    erpGateway.getProductDetails.mockResolvedValue({ price });
   }
 
   function givenNoPromotion() {
@@ -196,11 +196,7 @@ describe('OrderService', () => {
   }
 
   function givenTaxRate(_country: string, rate: number) {
-    taxGateway.getTaxDetails.mockResolvedValue({
-      id: 'id',
-      countryName: 'US',
-      taxRate: rate,
-    });
+    taxGateway.getTaxDetails.mockResolvedValue({ taxRate: rate });
   }
 
   function buildRequest(

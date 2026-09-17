@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { TaxDetailsResponse } from '../../dtos/external/tax-details-response.dto';
+import { errorMessage, fetchJson, isNotFound } from './fetch-json';
 
 @Injectable()
 export class TaxGateway {
@@ -14,32 +15,16 @@ export class TaxGateway {
   }
 
   async getTaxDetails(country: string): Promise<TaxDetailsResponse | null> {
-    const url = `${this.taxUrl}/api/countries/${country}`;
-
+    const url = `${this.taxUrl}/api/countries/${encodeURIComponent(country)}`;
     try {
-      const response = await fetch(url, {
-        signal: AbortSignal.timeout(10000),
-      });
-
-      if (response.status === 404) {
+      return await fetchJson(url, TaxDetailsResponse);
+    } catch (e) {
+      if (isNotFound(e)) {
         return null;
       }
-
-      if (!response.ok) {
-        const body = await response.text();
-        throw new Error(
-          `Tax API returned status ${response.status} for country: ${country}. URL: ${url}. Response: ${body}`,
-        );
-      }
-
-      return (await response.json()) as TaxDetailsResponse;
-    } catch (e) {
-      if (e instanceof Error && e.message.startsWith('Tax API returned')) {
-        throw e;
-      }
-      const err = e as Error;
       throw new Error(
-        `Failed to fetch tax details for country: ${country} from URL: ${url}. Error: ${err.constructor.name}: ${err.message}`,
+        `Failed to fetch tax details for country: ${country}. ${errorMessage(e)}`,
+        { cause: e },
       );
     }
   }

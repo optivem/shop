@@ -1,8 +1,7 @@
+import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { GlobalExceptionFilter } from './api/exception/global-exception.filter';
-import { RequestValidationPipe } from './api/exception/request-validation.pipe';
-import { DecimalFormatInterceptor } from './api/interceptor/decimal-format.interceptor';
+import { configureApp } from './configure-app';
 import { envOrDefault } from './config/app.config';
 
 async function bootstrap() {
@@ -21,10 +20,15 @@ async function bootstrap() {
     maxAge: 3600,
   });
 
-  app.useGlobalPipes(new RequestValidationPipe());
-  app.useGlobalFilters(new GlobalExceptionFilter());
-  app.useGlobalInterceptors(new DecimalFormatInterceptor());
+  configureApp(app);
 
   await app.listen(process.env.PORT ?? 8081);
 }
-void bootstrap();
+
+bootstrap().catch((error: unknown) => {
+  new Logger('Bootstrap').error(
+    'Application failed to start',
+    error instanceof Error ? error.stack : String(error),
+  );
+  process.exit(1);
+});

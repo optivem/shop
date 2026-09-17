@@ -2,46 +2,14 @@ import { INestApplication } from '@nestjs/common';
 import Decimal from 'decimal.js';
 import { Test } from '@nestjs/testing';
 import { DataSource, Repository } from 'typeorm';
-import { Client } from 'pg';
 import {
   PostgreSqlContainer,
   StartedPostgreSqlContainer,
 } from '@testcontainers/postgresql';
-import * as fs from 'fs';
-import * as path from 'path';
 import { AppModule } from '../../app.module';
 import { Order } from '../entities/order.entity';
 import { OrderStatus } from '../entities/order-status.enum';
-
-// Canonical schema — the same migrations Flyway applies for the Java backend
-// (system/db/migrations). Applied to the throwaway container so the test
-// exercises the real DDL, not an entity-synchronised schema.
-const MIGRATIONS_DIR = path.resolve(__dirname, '../../../../../db/migrations');
-
-async function applyMigrations(
-  container: StartedPostgreSqlContainer,
-): Promise<void> {
-  const client = new Client({
-    host: container.getHost(),
-    port: container.getPort(),
-    user: container.getUsername(),
-    password: container.getPassword(),
-    database: container.getDatabase(),
-  });
-  await client.connect();
-  try {
-    const files = fs
-      .readdirSync(MIGRATIONS_DIR)
-      .filter((f) => f.endsWith('.sql'))
-      .sort();
-    for (const file of files) {
-      const sql = fs.readFileSync(path.join(MIGRATIONS_DIR, file), 'utf8');
-      await client.query(sql);
-    }
-  } finally {
-    await client.end();
-  }
-}
+import { applyMigrations } from '../../../test/support/migrations';
 
 describe('OrderRepository [integration]', () => {
   let app: INestApplication;
