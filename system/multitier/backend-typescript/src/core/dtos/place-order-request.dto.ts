@@ -1,28 +1,35 @@
 import {
+  IsDefined,
   IsInt,
-  IsNotEmpty,
   IsOptional,
   IsPositive,
   IsString,
-  Matches,
 } from 'class-validator';
+import {
+  BlankAsMissing,
+  NumericStringAsNumber,
+  TYPE_MISMATCH,
+} from './request-parsing';
 
 export class PlaceOrderRequest {
-  @IsNotEmpty({ message: 'SKU must not be empty' })
-  @Matches(/\S/, { message: 'SKU must not be empty' })
-  @IsString({ message: 'SKU must not be empty' })
+  @BlankAsMissing()
+  @IsDefined({ message: 'SKU must not be empty' })
+  @IsString({ message: 'SKU must not be empty', context: TYPE_MISMATCH })
   sku!: string;
 
-  @IsNotEmpty({ message: 'Quantity must not be empty' })
-  @IsInt({ message: 'Quantity must be an integer' })
+  @NumericStringAsNumber()
+  @IsDefined({ message: 'Quantity must not be empty' })
+  @IsInt({ message: 'Quantity must be an integer', context: TYPE_MISMATCH })
   @IsPositive({ message: 'Quantity must be positive' })
   quantity!: number;
 
-  @IsNotEmpty({ message: 'Country must not be empty' })
-  @Matches(/\S/, { message: 'Country must not be empty' })
-  @IsString({ message: 'Country must not be empty' })
+  @BlankAsMissing()
+  @IsDefined({ message: 'Country must not be empty' })
+  @IsString({ message: 'Country must not be empty', context: TYPE_MISMATCH })
   country!: string;
 
+  @BlankAsMissing()
   @IsOptional()
+  @IsString({ message: 'Coupon code must be a string', context: TYPE_MISMATCH })
   couponCode?: string;
 }

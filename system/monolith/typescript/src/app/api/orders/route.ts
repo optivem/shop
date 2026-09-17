@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'node:crypto';
 import Decimal from 'decimal.js';
-import { insertOrder, findAllOrders, findCouponByCode, incrementCouponUsage } from '@/lib/db';
+import { insertOrder, findAllOrders, findCouponByCode, tryIncrementCouponUsage, inTransaction } from '@/lib/db';
 import { getCurrentTime, getProductDetails, getPromotionDetails, getTaxDetails } from '@/lib/external';
-import { validatePlaceOrderRequest } from '@/lib/validation';
+import { parsePlaceOrderRequest } from '@/lib/validation';
 import { badRequestResponse, validationErrorResponse, generalValidationErrorResponse, internalErrorResponse } from '@/lib/errors';
 import { isRecord } from '@/lib/type-guards';
 import { jsonResponseWithDecimals } from '@/lib/decimal-format';
@@ -28,14 +28,22 @@ async function resolveCoupon(couponCode: string | null, now: Date): Promise<Coup
     return couponError(`Coupon code ${couponCode} has expired`);
   }
   if (coupon.usage_limit !== null && coupon.used_count >= coupon.usage_limit) {
-    return couponError(`Coupon code ${couponCode} has exceeded its usage limit`);
+    return couponError(usageLimitExceededMessage(couponCode));
   }
 
   return { ok: true, discountRate: new Decimal(coupon.discount_rate), appliedCouponCode: couponCode };
 }
 
 function couponError(message: string): CouponResolution {
-  return { ok: false, response: validationErrorResponse([{ field: 'couponCode', message }]) };
+  return { ok: false, response: couponErrorResponse(message) };
+}
+
+function couponErrorResponse(message: string): NextResponse {
+  return validationErrorResponse([{ field: 'couponCode', message }]);
+}
+
+function usageLimitExceededMessage(couponCode: string): string {
+  return `Coupon code ${couponCode} has exceeded its usage limit`;
 }
 
 export async function POST(request: NextRequest) {
@@ -46,16 +54,12 @@ export async function POST(request: NextRequest) {
       return badRequestResponse('Invalid request format');
     }
 
-    const fieldErrors = validatePlaceOrderRequest(body);
-    if (fieldErrors.length > 0) {
-      return validationErrorResponse(fieldErrors);
+    const parsed = parsePlaceOrderRequest(body);
+    if (!parsed.ok) {
+      return validationErrorResponse(parsed.errors);
     }
-
-    const sku = body.sku as string;
-    // The validator guarantees quantity is an integer or an integer-valued string.
-    const quantity = Number(body.quantity);
-    const country = (body.country as string).trim();
-    const couponCode = typeof body.couponCode === 'string' && body.couponCode.trim() !== '' ? body.couponCode : null;
+    const { sku, quantity, country } = parsed.value;
+    const couponCode = parsed.value.couponCode ?? null;
 
     const now = await getCurrentTime();
 
@@ -102,26 +106,36 @@ export async function POST(request: NextRequest) {
     const orderNumber = `ORD-${crypto.randomUUID().toUpperCase()}`;
     const orderTimestamp = now;
 
-    await insertOrder({
-      orderNumber,
-      orderTimestamp,
-      country,
-      sku,
-      quantity,
-      unitPrice,
-      basePrice,
-      discountRate,
-      discountAmount,
-      subtotalPrice,
-      taxRate,
-      taxAmount,
-      totalPrice,
-      appliedCouponCode,
-      status: 'PLACED',
+    // The usage count is claimed with a conditional UPDATE in the same transaction as the insert, so
+    // concurrent orders cannot exceed the limit and a failed insert does not use up the coupon.
+    const rejection = await inTransaction(async (db) => {
+      if (appliedCouponCode && !(await tryIncrementCouponUsage(appliedCouponCode, db))) {
+        return couponErrorResponse(usageLimitExceededMessage(appliedCouponCode));
+      }
+      await insertOrder(
+        {
+          orderNumber,
+          orderTimestamp,
+          country,
+          sku,
+          quantity,
+          unitPrice,
+          basePrice,
+          discountRate,
+          discountAmount,
+          subtotalPrice,
+          taxRate,
+          taxAmount,
+          totalPrice,
+          appliedCouponCode,
+          status: 'PLACED',
+        },
+        db
+      );
+      return null;
     });
-
-    if (appliedCouponCode) {
-      await incrementCouponUsage(appliedCouponCode);
+    if (rejection) {
+      return rejection;
     }
 
     return NextResponse.json(

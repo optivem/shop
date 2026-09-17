@@ -20,7 +20,7 @@ import { ErpGateway } from '../../src/core/services/external/erp.gateway';
 import { ClockGateway } from '../../src/core/services/external/clock.gateway';
 import { TaxGateway } from '../../src/core/services/external/tax.gateway';
 import { GlobalExceptionFilter } from '../../src/api/exception/global-exception.filter';
-import { CustomValidationPipe } from '../../src/api/exception/custom-validation.pipe';
+import { RequestValidationPipe } from '../../src/api/exception/request-validation.pipe';
 import { DecimalFormatInterceptor } from '../../src/api/interceptor/decimal-format.interceptor';
 import { Order } from '../../src/core/entities/order.entity';
 import { Coupon } from '../../src/core/entities/coupon.entity';
@@ -144,7 +144,7 @@ export class ComponentHarness {
     }).compile();
 
     this.app = moduleRef.createNestApplication();
-    this.app.useGlobalPipes(new CustomValidationPipe());
+    this.app.useGlobalPipes(new RequestValidationPipe());
     this.app.useGlobalFilters(new GlobalExceptionFilter());
     this.app.useGlobalInterceptors(new DecimalFormatInterceptor());
     await this.app.listen(0);

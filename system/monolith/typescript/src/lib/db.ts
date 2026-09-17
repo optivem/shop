@@ -1,4 +1,4 @@
-import { Pool } from 'pg';
+import { Pool, type PoolClient } from 'pg';
 import Decimal from 'decimal.js';
 import { envOrDefault } from './env';
 
@@ -22,6 +22,24 @@ const pool = new Pool({
   user: envOrDefault('POSTGRES_DB_USER', 'app'),
   password: envOrDefault('POSTGRES_DB_PASSWORD', 'app'),
 });
+
+// Either the pool or a client checked out for a transaction.
+type Queryable = Pool | PoolClient;
+
+export async function inTransaction<T>(work: (db: Queryable) => Promise<T>): Promise<T> {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const result = await work(client);
+    await client.query('COMMIT');
+    return result;
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
+}
 
 export interface OrderRow {
   id: number;
@@ -68,8 +86,8 @@ export async function insertOrder(order: {
   totalPrice: Decimal;
   appliedCouponCode: string | null;
   status: string;
-}): Promise<void> {
-  await pool.query(
+}, db: Queryable = pool): Promise<void> {
+  await db.query(
     `INSERT INTO orders (order_number, order_timestamp, country, sku, quantity, unit_price, base_price, discount_rate, discount_amount, subtotal_price, tax_rate, tax_amount, total_price, applied_coupon_code, status)
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`,
     [
@@ -132,11 +150,14 @@ export async function findCouponByCode(code: string): Promise<CouponRow | null> 
   return result.rows[0] || null;
 }
 
-export async function incrementCouponUsage(code: string): Promise<void> {
-  await pool.query(
-    'UPDATE coupons SET used_count = used_count + 1 WHERE code = $1',
+// Claims one use of the coupon; false when its usage limit is already reached. The check and the
+// increment are a single statement, so concurrent claims cannot exceed the limit.
+export async function tryIncrementCouponUsage(code: string, db: Queryable = pool): Promise<boolean> {
+  const result = await db.query(
+    'UPDATE coupons SET used_count = used_count + 1 WHERE code = $1 AND (usage_limit IS NULL OR used_count < usage_limit)',
     [code]
   );
+  return result.rowCount === 1;
 }
 
 export async function findAllCoupons(): Promise<CouponRow[]> {

@@ -102,11 +102,14 @@ export class OrderService {
     order.status = OrderStatus.PLACED;
     order.appliedCouponCode = appliedCouponCode ?? null;
 
-    await this.orderRepository.save(order);
-
-    if (appliedCouponCode) {
-      await this.couponService.incrementUsageCount(appliedCouponCode);
-    }
+    // The coupon use is claimed in the same transaction as the insert, so a failed insert does not
+    // use up the coupon.
+    await this.orderRepository.manager.transaction(async (manager) => {
+      if (appliedCouponCode) {
+        await this.couponService.claimUsage(appliedCouponCode, manager);
+      }
+      await manager.withRepository(this.orderRepository).save(order);
+    });
 
     const response = new PlaceOrderResponse();
     response.orderNumber = orderNumber;

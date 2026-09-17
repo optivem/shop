@@ -100,4 +100,28 @@ describe('db adapter [integration]', () => {
     expect(Number(found!.total_price)).toBeCloseTo(22.0);
     expect(found!.status).toBe('PLACED');
   });
+
+  it('never lets concurrent claims exceed a coupon usage limit', async () => {
+    await db.insertCoupon({ code: 'RACE-2', discountRate: new Decimal('0.1'), usageLimit: 2 });
+
+    const claims = await Promise.all(
+      Array.from({ length: 10 }, () => db.tryIncrementCouponUsage('RACE-2')),
+    );
+
+    expect(claims.filter(Boolean)).toHaveLength(2);
+    expect((await db.findCouponByCode('RACE-2'))?.used_count).toBe(2);
+  });
+
+  it('rolls back a coupon claim when the transaction fails', async () => {
+    await db.insertCoupon({ code: 'ROLLBACK-1', discountRate: new Decimal('0.1'), usageLimit: 1 });
+
+    await expect(
+      db.inTransaction(async (tx) => {
+        await db.tryIncrementCouponUsage('ROLLBACK-1', tx);
+        throw new Error('insert failed');
+      }),
+    ).rejects.toThrow('insert failed');
+
+    expect((await db.findCouponByCode('ROLLBACK-1'))?.used_count).toBe(0);
+  });
 });

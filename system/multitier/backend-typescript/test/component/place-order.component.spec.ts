@@ -144,4 +144,59 @@ describe('Place Order (component)', () => {
 
     expect(response.status).toBe(422);
   });
+
+  it('never lets concurrent orders exceed a coupon usage limit', async () => {
+    await harness.couponRepo.save(
+      harness.couponRepo.create({
+        code: 'LIMITED2',
+        discountRate: new Decimal('0.10'),
+        validFrom: null,
+        validTo: null,
+        usageLimit: 2,
+        usedCount: 0,
+      }),
+    );
+    harness.stubClock('2026-03-10T12:00:00Z');
+    harness.stubProduct('BOOK-123', 10.0);
+    harness.stubPromotion(false, 1.0);
+    harness.stubTax('US', 0.1);
+
+    const responses = await Promise.all(
+      Array.from({ length: 10 }, () =>
+        request(harness.httpServer()).post('/api/orders').send({
+          sku: 'BOOK-123',
+          quantity: 1,
+          country: 'US',
+          couponCode: 'LIMITED2',
+        }),
+      ),
+    );
+
+    expect(responses.filter((r) => r.status === 201)).toHaveLength(2);
+    expect(responses.filter((r) => r.status === 422)).toHaveLength(8);
+    const coupon = await harness.couponRepo.findOneByOrFail({
+      code: 'LIMITED2',
+    });
+    expect(coupon.usedCount).toBe(2);
+    expect(
+      await harness.orderRepo.countBy({ appliedCouponCode: 'LIMITED2' }),
+    ).toBe(2);
+  });
+
+  it('rejects an invalid quantity with a field error instead of a server error', async () => {
+    const response = await request(harness.httpServer())
+      .post('/api/orders')
+      .send({ sku: 'BOOK-123', quantity: 'lala', country: 'US' });
+
+    expect(response.status).toBe(422);
+    expect(response.body).toMatchObject({
+      errors: [
+        {
+          field: 'quantity',
+          message: 'Quantity must be an integer',
+          code: 'TYPE_MISMATCH',
+        },
+      ],
+    });
+  });
 });

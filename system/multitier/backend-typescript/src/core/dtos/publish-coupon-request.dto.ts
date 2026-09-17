@@ -1,30 +1,63 @@
+import Decimal from 'decimal.js';
 import {
-  IsNotEmpty,
-  IsNumber,
+  IsDate,
+  IsDefined,
+  IsInt,
   IsOptional,
   IsPositive,
-  Matches,
-  Max,
-  Min,
+  IsString,
 } from 'class-validator';
+import {
+  BlankAsMissing,
+  IsDecimal,
+  IsDecimalAtMost,
+  IsDecimalGreaterThan,
+  NumericStringAsNumber,
+  ToDateTime,
+  ToDecimal,
+  TYPE_MISMATCH,
+} from './request-parsing';
 
 export class PublishCouponRequest {
-  @IsNotEmpty({ message: 'Coupon code must not be blank' })
-  @Matches(/\S/, { message: 'Coupon code must not be blank' })
+  @BlankAsMissing()
+  @IsDefined({ message: 'Coupon code must not be blank' })
+  @IsString({
+    message: 'Coupon code must not be blank',
+    context: TYPE_MISMATCH,
+  })
   code!: string;
 
-  @IsNumber({}, { message: 'Discount rate must not be null' })
-  @Min(0.0001, { message: 'Discount rate must be greater than 0.00' })
-  @Max(1, { message: 'Discount rate must be at most 1.00' })
-  discountRate!: number;
+  @ToDecimal()
+  @IsDefined({ message: 'Discount rate must not be null' })
+  @IsDecimal({
+    message: 'Discount rate must be a number',
+    context: TYPE_MISMATCH,
+  })
+  @IsDecimalGreaterThan(0, {
+    message: 'Discount rate must be greater than 0.00',
+  })
+  @IsDecimalAtMost(1, { message: 'Discount rate must be at most 1.00' })
+  discountRate!: Decimal;
 
+  @ToDateTime()
   @IsOptional()
-  validFrom?: string;
+  @IsDate({
+    message: 'Valid from must be a valid date-time',
+    context: TYPE_MISMATCH,
+  })
+  validFrom?: Date;
 
+  @ToDateTime()
   @IsOptional()
-  validTo?: string;
+  @IsDate({
+    message: 'Valid to must be a valid date-time',
+    context: TYPE_MISMATCH,
+  })
+  validTo?: Date;
 
+  @NumericStringAsNumber()
   @IsOptional()
+  @IsInt({ message: 'Usage limit must be an integer', context: TYPE_MISMATCH })
   @IsPositive({ message: 'Usage limit must be positive' })
   usageLimit?: number;
 }

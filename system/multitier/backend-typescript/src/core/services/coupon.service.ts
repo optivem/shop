@@ -1,8 +1,9 @@
 import Decimal from 'decimal.js';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { Coupon } from '../entities/coupon.entity';
+import { PublishCouponRequest } from '../dtos/publish-coupon-request.dto';
 import { ValidationException } from '../exceptions/validation.exception';
 import { ClockGateway } from './external/clock.gateway';
 
@@ -67,23 +68,32 @@ export class CouponService {
     return coupon.discountRate;
   }
 
-  async incrementUsageCount(couponCode: string): Promise<void> {
-    const coupon = await this.couponRepository.findOne({
-      where: { code: couponCode },
-    });
-    if (coupon) {
-      coupon.usedCount++;
-      await this.couponRepository.save(coupon);
+  // The limit check and the increment are a single conditional UPDATE, so concurrent orders
+  // cannot exceed the usage limit.
+  async claimUsage(couponCode: string, manager: EntityManager): Promise<void> {
+    const result = await manager
+      .createQueryBuilder()
+      .update(Coupon)
+      .set({ usedCount: () => 'used_count + 1' })
+      .where('code = :couponCode', { couponCode })
+      .andWhere('(usage_limit IS NULL OR used_count < usage_limit)')
+      .execute();
+
+    if (result.affected !== 1) {
+      this.throwCouponValidationException(
+        CouponService.MSG_COUPON_USAGE_LIMIT_REACHED,
+        couponCode,
+      );
     }
   }
 
-  async createCoupon(
-    code: string,
-    discountRate: number,
-    validFrom?: string,
-    validTo?: string,
-    usageLimit?: number,
-  ): Promise<void> {
+  async createCoupon({
+    code,
+    discountRate,
+    validFrom,
+    validTo,
+    usageLimit,
+  }: PublishCouponRequest): Promise<void> {
     const existing = await this.couponRepository.findOne({ where: { code } });
     if (existing) {
       this.throwCouponValidationException(
@@ -94,9 +104,9 @@ export class CouponService {
 
     const coupon = new Coupon();
     coupon.code = code;
-    coupon.discountRate = new Decimal(discountRate);
-    coupon.validFrom = validFrom ? new Date(validFrom) : null;
-    coupon.validTo = validTo ? new Date(validTo) : null;
+    coupon.discountRate = discountRate;
+    coupon.validFrom = validFrom ?? null;
+    coupon.validTo = validTo ?? null;
     coupon.usageLimit = usageLimit ?? null;
     coupon.usedCount = 0;
 

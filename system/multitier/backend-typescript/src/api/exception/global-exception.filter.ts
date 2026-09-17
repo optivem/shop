@@ -9,6 +9,7 @@ import {
 import type { Response } from 'express';
 import { ValidationException } from '../../core/exceptions/validation.exception';
 import { NotExistValidationException } from '../../core/exceptions/not-exist-validation.exception';
+import { RequestValidationException } from './request-validation.exception';
 
 const VALIDATION_ERROR_TYPE_URI =
   'https://api.my-company.example/errors/validation-error';
@@ -19,13 +20,6 @@ const BAD_REQUEST_TYPE_URI =
 const INTERNAL_SERVER_ERROR_TYPE_URI =
   'https://api.my-company.example/errors/internal-server-error';
 
-interface ValidationError {
-  field: string;
-  message: string;
-  code?: string | null;
-  rejectedValue?: unknown;
-}
-
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
   private readonly logger = new Logger(GlobalExceptionFilter.name);
@@ -34,12 +28,14 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
 
-    if (exception instanceof NotExistValidationException) {
+    if (exception instanceof RequestValidationException) {
+      this.handleRequestValidationException(exception, response);
+    } else if (exception instanceof NotExistValidationException) {
       this.handleNotExistValidationException(exception, response);
     } else if (exception instanceof ValidationException) {
       this.handleValidationException(exception, response);
     } else if (exception instanceof BadRequestException) {
-      this.handleBadRequestException(exception, response);
+      this.handleBadRequestException(response);
     } else if (exception instanceof HttpException) {
       this.handleHttpException(exception, response);
     } else {
@@ -73,6 +69,21 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     }
   }
 
+  private handleRequestValidationException(
+    ex: RequestValidationException,
+    response: Response,
+  ) {
+    const body = {
+      type: VALIDATION_ERROR_TYPE_URI,
+      title: 'Validation Error',
+      status: 422,
+      detail: ex.message,
+      timestamp: new Date().toISOString(),
+      errors: ex.fieldErrors,
+    };
+    response.status(422).type('application/problem+json').json(body);
+  }
+
   private handleNotExistValidationException(
     ex: NotExistValidationException,
     response: Response,
@@ -87,33 +98,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     response.status(404).type('application/problem+json').json(body);
   }
 
-  private handleBadRequestException(
-    ex: BadRequestException,
-    response: Response,
-  ) {
-    const exResponse = ex.getResponse() as Record<string, unknown>;
-
-    // Check if this is a validation pipe error (class-validator)
-    if (Array.isArray(exResponse?.validationErrors)) {
-      const rawBody = exResponse.rawBody as Record<string, unknown> | undefined;
-      const errors = this.buildValidationErrors(
-        exResponse.validationErrors as ValidationErrorDetail[],
-        rawBody,
-      );
-
-      const body = {
-        type: VALIDATION_ERROR_TYPE_URI,
-        title: 'Validation Error',
-        status: 422,
-        detail: 'The request contains one or more validation errors',
-        timestamp: new Date().toISOString(),
-        errors,
-      };
-      response.status(422).type('application/problem+json').json(body);
-      return;
-    }
-
-    // Generic bad request (e.g., malformed JSON)
+  // Malformed JSON, or a body that is not an object.
+  private handleBadRequestException(response: Response) {
     const body = {
       type: BAD_REQUEST_TYPE_URI,
       title: 'Bad Request',
@@ -149,109 +135,4 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     };
     response.status(500).type('application/problem+json').json(body);
   }
-
-  private buildValidationErrors(
-    validationErrors: ValidationErrorDetail[],
-    rawBody: Record<string, unknown> | undefined,
-  ): ValidationError[] {
-    const errors: ValidationError[] = [];
-
-    for (const err of validationErrors) {
-      const field = err.field;
-      const constraints = err.constraints || {};
-      const constraintEntries = Object.entries(constraints);
-      const firstConstraint = constraintEntries[0];
-      const lastConstraint = constraintEntries.at(-1);
-
-      if (firstConstraint === undefined || lastConstraint === undefined) {
-        continue;
-      }
-
-      const [firstKey, firstMessage] = firstConstraint;
-      const [, lastMessage] = lastConstraint;
-
-      // Check if this is a type mismatch scenario
-      const isTypeMismatch = this.isTypeMismatch(
-        field,
-        err.expectedType,
-        rawBody,
-      );
-
-      if (isTypeMismatch === 'empty') {
-        const emptyMessage = constraints.isNotEmpty ?? lastMessage;
-        errors.push({
-          field,
-          message: emptyMessage,
-          code: null,
-          rejectedValue: null,
-        });
-      } else if (isTypeMismatch === 'type_mismatch') {
-        const typeMismatchMessage = err.typeMismatchMessage ?? firstMessage;
-        errors.push({
-          field,
-          message: typeMismatchMessage,
-          code: 'TYPE_MISMATCH',
-          rejectedValue: null,
-        });
-      } else {
-        // Normal validation error - use the first constraint message
-        errors.push({
-          field,
-          message: firstMessage,
-          code: firstKey === 'isNotEmpty' ? 'NotBlank' : null,
-          rejectedValue: null,
-        });
-      }
-    }
-
-    return errors;
-  }
-
-  private isTypeMismatch(
-    field: string,
-    expectedType: string | undefined,
-    rawBody: Record<string, unknown> | undefined,
-  ): 'empty' | 'type_mismatch' | 'normal' {
-    if (!rawBody || expectedType !== 'integer') {
-      return 'normal';
-    }
-
-    const rawValue = rawBody[field];
-
-    // null or undefined → empty
-    if (rawValue === null || rawValue === undefined) {
-      return 'empty';
-    }
-
-    // string → check if empty/whitespace, parseable integer, or type mismatch
-    if (typeof rawValue === 'string') {
-      if (rawValue.trim() === '') {
-        return 'empty';
-      }
-      const num = Number(rawValue);
-      if (Number.isInteger(num)) {
-        return 'normal';
-      }
-      return 'type_mismatch';
-    }
-
-    // number that's not an integer → type mismatch (e.g., 1.5)
-    if (typeof rawValue === 'number' && !Number.isInteger(rawValue)) {
-      return 'type_mismatch';
-    }
-
-    // boolean → type mismatch
-    if (typeof rawValue === 'boolean') {
-      return 'type_mismatch';
-    }
-
-    return 'normal';
-  }
-}
-
-interface ValidationErrorDetail {
-  field: string;
-  constraints: Record<string, string>;
-  expectedType?: string;
-  typeMismatchMessage?: string;
 }

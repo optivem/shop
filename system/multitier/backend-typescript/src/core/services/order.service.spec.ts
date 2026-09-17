@@ -1,5 +1,5 @@
 import Decimal from 'decimal.js';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { Order } from '../entities/order.entity';
 import { OrderStatus } from '../entities/order-status.enum';
 import { PlaceOrderRequest } from '../dtos/place-order-request.dto';
@@ -17,7 +17,11 @@ const DEC_31_CANCEL_BLACKOUT = new Date('2025-12-31T22:15:00Z');
 
 describe('OrderService', () => {
   let service: OrderService;
-  let orderRepository: jest.Mocked<Pick<Repository<Order>, 'save' | 'findOne'>>;
+  let orderRepository: jest.Mocked<
+    Pick<Repository<Order>, 'save' | 'findOne'>
+  > & {
+    manager: Pick<EntityManager, 'transaction' | 'withRepository'>;
+  };
   let erpGateway: jest.Mocked<
     Pick<ErpGateway, 'getProductDetails' | 'getPromotionDetails'>
   >;
@@ -26,7 +30,18 @@ describe('OrderService', () => {
   let couponService: jest.Mocked<Pick<CouponService, 'getDiscount'>>;
 
   beforeEach(() => {
-    orderRepository = { save: jest.fn(), findOne: jest.fn() };
+    orderRepository = {
+      save: jest.fn(),
+      findOne: jest.fn(),
+      // Runs the transaction inline against the same mocked repository.
+      manager: {
+        transaction: jest.fn(
+          (work: (manager: EntityManager) => Promise<unknown>) =>
+            work(orderRepository.manager as EntityManager),
+        ),
+        withRepository: jest.fn(() => orderRepository),
+      } as unknown as Pick<EntityManager, 'transaction' | 'withRepository'>,
+    };
     erpGateway = {
       getProductDetails: jest.fn(),
       getPromotionDetails: jest.fn(),

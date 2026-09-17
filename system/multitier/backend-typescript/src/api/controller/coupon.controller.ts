@@ -13,13 +13,7 @@ export class CouponController {
   @Post()
   @HttpCode(204)
   async createCoupon(@Body() request: PublishCouponRequest): Promise<void> {
-    await this.couponService.createCoupon(
-      request.code,
-      request.discountRate,
-      request.validFrom,
-      request.validTo,
-      request.usageLimit,
-    );
+    await this.couponService.createCoupon(request);
   }
 
   @Get()

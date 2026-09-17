@@ -3,7 +3,7 @@ import Decimal from 'decimal.js';
 import { insertCoupon, findAllCoupons, findCouponByCode } from '@/lib/db';
 import { badRequestResponse, validationErrorResponse, internalErrorResponse } from '@/lib/errors';
 import { isRecord } from '@/lib/type-guards';
-import { validatePublishCouponRequest } from '@/lib/validation';
+import { parsePublishCouponRequest } from '@/lib/validation';
 import { jsonResponseWithDecimals } from '@/lib/decimal-format';
 
 export async function POST(request: NextRequest) {
@@ -14,27 +14,20 @@ export async function POST(request: NextRequest) {
       return badRequestResponse('Invalid request format');
     }
 
-    const fieldErrors = validatePublishCouponRequest(body);
-    if (fieldErrors.length > 0) {
-      return validationErrorResponse(fieldErrors);
+    const parsed = parsePublishCouponRequest(body);
+    if (!parsed.ok) {
+      return validationErrorResponse(parsed.errors);
     }
+    const { code, discountRate, validFrom, validTo, usageLimit } = parsed.value;
 
-    const codeStr = (body.code as string).trim();
-    // The validator guarantees discountRate is a number or a numeric string in (0, 1].
-    const discountRate = new Decimal(typeof body.discountRate === 'string' ? body.discountRate.trim() : body.discountRate as number);
-
-    const existing = await findCouponByCode(codeStr);
+    const existing = await findCouponByCode(code);
     if (existing) {
-      return validationErrorResponse([{ field: 'couponCode', message: `Coupon code ${codeStr} already exists` }]);
+      return validationErrorResponse([{ field: 'couponCode', message: `Coupon code ${code} already exists` }]);
     }
 
-    const validFrom = body.validFrom ? new Date(body.validFrom as string) : null;
-    const validTo = body.validTo ? new Date(body.validTo as string) : null;
-    const usageLimit = body.usageLimit == null ? null : Number(body.usageLimit);
+    await insertCoupon({ code, discountRate, validFrom, validTo, usageLimit });
 
-    await insertCoupon({ code: codeStr, discountRate, validFrom, validTo, usageLimit });
-
-    return NextResponse.json({ code: codeStr }, { status: 201 });
+    return NextResponse.json({ code }, { status: 201 });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     return internalErrorResponse(message);

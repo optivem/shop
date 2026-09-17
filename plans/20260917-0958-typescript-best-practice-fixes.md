@@ -15,22 +15,21 @@
 - Frontend: coupon-load errors are shown, the coupon form keeps input on a failed save, clearing the discount field doesn't produce `NaN`, and the order form resets to a consistent initial state.
 - System-test: an incomplete scenario (`await scenario.when().placeOrder()` with no `.then()…`) fails immediately with a clear message instead of hanging to the 60s timeout; local `npm test` scripts behave like CI.
 - Dead code and unused dependencies removed; `engines: node >= 22` declared everywhere; `enum`s replaced by union / `as const`.
+- The applicable fixes are also applied to the student repo `jasonribble/events-companion` (Next.js `system/` + `system-test/`).
 
 ## ▶ Next executable step (resume here)
 
-**Step 5 — parse, don't cast, request input** (both backends). Monolith `src/lib/validation.ts`, `app/api/coupons/route.ts`, `app/api/orders/route.ts`: validator returns `{ ok: true, value } | { ok: false, errors }`; reject non-number/NaN/non-string/invalid-date with 422. Backend: replace `custom-validation.pipe.ts` with Nest `ValidationPipe({ transform: true, exceptionFactory })`, preserving the current error-response shape. Note Steps 1–4 landed: backend is now `strict`, money is `Decimal` internally (monolith rounds in `lib/db.ts`, backend via `numeric.transformer.ts`), and the frontend now sends `discountRate: null` for an empty field, so the backend must return 422 for it. Gate: typecheck, lint, unit tests, the Docker-backed component/pact/integration suites, and `--sample` system tests for monolith + multitier TypeScript.
+**Step 6 — validate HTTP/JSON responses** (all four projects). Monolith `src/lib/external.ts` and the `order-details/page.tsx` fetches: parse with zod (added to the monolith in Step 5; see `src/lib/validation.ts` for the style). Backend `erp.gateway.ts`, `tax.gateway.ts`, `clock.gateway.ts`: one `fetchJson<T>()` helper with a runtime guard, typed `HttpStatusError`, `new Error(msg, { cause })`, `encodeURIComponent` on `sku`/`country`. Frontend `common.ts`: guards on responses and a separate `fetchNoContent(): Promise<Result<void>>`. System-test `json-http-client.ts`: build a full `SystemError` (`fieldErrors: []`). Steps 5 and 7 have landed: request input is parsed (monolith zod `parse*Request` returning `{ ok, value | errors }`; backend `RequestValidationPipe` + class-validator DTOs with `request-parsing.ts` transforms), and coupon usage is claimed by a conditional UPDATE inside the order-insert transaction in both backends. Gate: typecheck, lint, unit tests, the Docker-backed component/pact/integration suites, and `--sample` system tests for monolith + multitier TypeScript.
 
 ## Steps
 
 ### Medium — trust boundaries, races, framework idioms
 
-- [ ] **Step 5: Parse, don't cast, request input.** Monolith `src/lib/validation.ts:35,60`, `app/api/coupons/route.ts:21-30`, `app/api/orders/route.ts:54,57` — validator returns `{ ok: true, value } | { ok: false, errors }` (or zod); reject non-number/NaN/non-string/invalid-date with 422. Backend: replace hand-rolled `custom-validation.pipe.ts` (2 `eslint-disable`s) with Nest `ValidationPipe({ transform: true, exceptionFactory })`, preserving the current error-response shape.
 - [ ] **Step 6: Validate HTTP/JSON responses.**
   - Monolith `src/lib/external.ts:25,45,58,77` and page fetches (`order-details/page.tsx:71,77`).
   - Backend `erp.gateway.ts:43,70`, `tax.gateway.ts:40`, `clock.gateway.ts:54` — one `fetchJson<T>()` helper, typed `HttpStatusError` instead of message-prefix rethrow, `new Error(msg, { cause })`, `encodeURIComponent` on `sku`/`country`.
   - Frontend `common.ts:119-155` — guards on responses; separate `fetchNoContent(): Promise<Result<void>>` instead of `undefined as T`.
   - System-test `json-http-client.ts:24-55` — build a full `SystemError` (`fieldErrors: []`) instead of `{ message } as unknown as E`, so `then-place-order.ts:382` fails as an assertion, not a `TypeError`.
-- [ ] **Step 7: Coupon usage race.** Monolith `orders/route.ts:30`→`:122` and backend `coupon.service.ts:69-77` — transaction, or conditional `UPDATE … SET used_count = used_count + 1 WHERE used_count < usage_limit` and check row count.
 - [ ] **Step 8: Backend Nest idioms.** `order.controller.ts:16,32,41` — `@HttpCode(204)` / `@Res({ passthrough: true })` instead of raw `@Res()`. `component-harness.ts:101-149` — build from `AppModule` with `.overrideProvider(...)` and a shared `configureApp(app)` used by `main.ts` (currently drifted: missing `AdminController`). `app.module.ts:28` — parse `POSTGRES_DB_PORT`. `main.ts:30` — `bootstrap().catch(...)` with exit.
 - [ ] **Step 9: System-test config and runner hygiene.**
   - Replace top-of-file `process.env.EXTERNAL_SYSTEM_MODE = …` in 23 spec/fixture files with a Playwright option fixture (`test.use({ externalSystemMode: 'stub' })`); parse env once with a throwing guard (`withApp.ts:15-16`, `test-setup.ts:35`, `UseCaseDsl.ts:9`).
@@ -46,10 +45,18 @@
 - [ ] **Step 14: Dead code.** Backend `AppService.getHello`, `getAppConfig`/`AppConfig`. System-test `ThenFailureAnd` (`then-place-order.ts:401`), no-op `withOrderNumber()` (`when-place-order.ts:19`).
 - [ ] **Step 15: Small correctness / test-quality items.**
   - Monolith `errors.ts:71` — don't return internal error messages in 500 responses.
-  - Monolith `src/__tests__/app.spec.ts` placeholder — add unit tests for `validation.ts` / `decimal-format.ts`.
-  - Replace `!` after `toBeDefined()` with `toMatchObject` / optional chaining (monolith `db.integration.spec.ts:97-100`, system-test 14 sites, backend `global-exception.filter.ts:177`).
+  - Monolith `src/__tests__/app.spec.ts` placeholder — replace with unit tests for `decimal-format.ts` (`validation.ts` is covered by `validation.spec.ts` since Step 5).
+  - Replace `!` after `toBeDefined()` with `toMatchObject` / optional chaining (monolith `db.integration.spec.ts:97-100`, system-test 14 sites).
   - System-test then-stages: add context to `expect(result.success).toBe(true)` (e.g. `expect(result.success, JSON.stringify(result))`).
   - Frontend: `setFormData(prev => …)` updater form in `CouponForm.tsx`; remove redundant `cleanup()` in `test/setup.ts`; keyboard/`aria-sort` on sortable headers (`CouponTable.tsx:103`, `OrderHistoryTable.tsx:159`); drop double filtering in `OrderHistoryTable.tsx`.
+
+### Port — student repo `jasonribble/events-companion`
+
+- [ ] **Step 16: Apply the fixes to events-companion** (local clone at `$GITHUB_ROOT/student/jasonribble/events-companion`, sibling of `optivem/`; precedent: the linting plan landed shop `0666d51d` + events-companion `26cac89`). Its layout is a Next.js `system/` (monolith-shaped) + `system-test/` (+ `external-systems/simulators`), and its domain differs from shop, so first audit which defects actually exist there, then apply the equivalents:
+  - Already done in shop, still to port: Step 3 (DSL thenable guard, `assertNotAwaited` helper) and Step 4 monolith part (money/decimals exact internally, wire shape unchanged) — only if the domain has money/decimal fields.
+  - Monolith/system-test parts of Steps 5, 6, 7 (if a similar usage-limit race exists), 9, 11, 12, 13, 14, 15.
+  - Not applicable (no NestJS backend or React frontend): Steps 1, 2, 8, 10 and the backend/frontend parts of the other steps.
+  - Gate: that repo's `npm run typecheck`, `npm run lint`, unit tests, and its system tests (ask before running them locally). Commit to that repo separately with its own message.
 
 ## Follow-up plans (out of scope here)
 
