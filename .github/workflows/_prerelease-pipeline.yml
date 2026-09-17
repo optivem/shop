@@ -399,8 +399,12 @@ jobs:
           workflow-inputs: '{"commit-sha": "${{ inputs.commit-sha }}"}'
 
       # Resolve the rc tag that actually points at the tested SHA — whether our
-      # dispatched run created it or a concurrent scheduled run did. This makes
-      # the meta-pipeline race-tolerant with the hourly cron on acceptance-stage.
+      # dispatched run created it or an earlier pinned run of the same SHA did.
+      # The pinned dispatch above always runs its tests and tags this SHA: the
+      # acceptance-stage staleness skip applies to unpinned runs only. So the
+      # hourly cron moving `latest` on to a newer commit no longer starves this
+      # step of a tag. A re-run re-tests the SHA and adds a higher rc tag; we
+      # resolve the highest, so that is harmless.
       - id: get-version
         uses: optivem/actions/resolve-latest-tag-from-sha@v1
         with:

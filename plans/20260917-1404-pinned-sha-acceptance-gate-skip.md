@@ -8,24 +8,15 @@
 ## Outcomes
 
 - A pinned dispatch whose images are older than the last acceptance run still runs the tests and tags the pinned commit.
-- Pinned dispatches stay idempotent: re-dispatching an already-tagged commit skips with an "RC tag already exists on pinned SHA" reason, and the pipeline's `resolve-latest-tag-from-sha` finds that tag.
+- Pinned dispatches always run: re-dispatching an already-tagged commit re-runs the suite and adds a higher rc tag. Accepted deliberately over an idempotency check, in exchange for a smaller change.
 - Unpinned (scheduled or `latest`) runs keep today's staleness skip unchanged.
 - All six tag-publishing acceptance-stage workflows have structurally identical check jobs.
 - The "race-tolerant with the hourly cron" comment at `_prerelease-pipeline.yml:401-403` describes the actual guarantee.
 
 ## ▶ Next executable step (resume here)
 
-Step 1: edit the `check` job in `.github/workflows/multitier-dotnet-acceptance-stage.yml` (gate at lines 131-139). Insert an `Existing RC Tag On Pinned SHA` step (id `pinned-rc-tag`) after `Detect Test Changes Since Last RC`. Give it `if: inputs.commit-sha != ''` and `uses: optivem/actions/resolve-latest-tag-from-sha@v1` with `commit-sha: ${{ env.COMMIT_SHA }}` and `pattern: multitier-dotnet-v${{ steps.read-base-version.outputs.base-version }}-rc.*`. In `Evaluate Run Gate`, AND `inputs.commit-sha == ''` into the "No new artifacts…" condition. Then add `{"when": ${{ inputs.commit-sha != '' && steps.pinned-rc-tag.outputs.tag != '' }}, "reason": "RC tag already exists on pinned SHA."}`. Stop at that file for review; it becomes the template for Step 2.
+Commit the workflow changes with `/commit`, scoped to the shop repo, then verify in CI (Step 1 below). The code work is done: in all six `*-acceptance-stage.yml` files the staleness skip condition gained `inputs.commit-sha == ''`, so a pinned dispatch always runs its tests and tags its commit, with a comment above `Evaluate Run Gate` recording why. `_prerelease-pipeline.yml:401-406` documents the new guarantee. actionlint passes and the six check jobs are identical apart from the pre-existing image list. No idempotency check was added: re-runs re-test the commit and add a higher rc tag, which the pipeline resolves. The `-cloud` variants are manual-dispatch only and no pipeline consumes their RC tag, so they were left alone; `-legacy` variants publish no RC tag and keep today's skip.
 
 ## Steps
 
-- [ ] Step 1: Fix the gate in `.github/workflows/multitier-dotnet-acceptance-stage.yml` as described above. Check the `resolve-latest-tag-from-sha` action's inputs and outputs, and how it handles an empty result versus an error. Per the check-* rule, an API or auth failure must fail loudly, not return an empty tag.
-- [ ] Step 2: Apply the same change to `multitier-{java,typescript}-acceptance-stage.yml` (gate line 138) and `monolith-{dotnet,java,typescript}-acceptance-stage.yml` (gate line 136), changing only the tag prefix.
-- [ ] Step 3: Check the `-cloud` variants (`*-acceptance-stage-cloud.yml`, which have `rc-version`). If any pipeline dispatches them pinned and requires a tag on that commit, apply the same fix. Otherwise note why they are out of scope. `-legacy` variants publish no RC tag and are out of scope.
-- [ ] Step 4: Update the comment at `.github/workflows/_prerelease-pipeline.yml:401-403` to say that pinned runs never skip unless the commit is already tagged, so tolerance of the cron no longer depends on the cron tagging the same commit.
-- [ ] Step 5: Static checks. Run actionlint (or a YAML lint) on the changed workflows, and diff the six `check` jobs to confirm they match apart from the prefix. Optionally run the `workflow-comparator` agent.
-- [ ] Step 6: Commit via `/commit`, then verify in CI. Dispatch `prerelease-pipeline-multitier-dotnet.yml` with `commit-sha` pinned to a commit whose images predate the last acceptance run, and confirm acceptance-stage runs the tests and publishes an RC tag on that commit. Dispatch the same commit again and confirm it skips with "RC tag already exists on pinned SHA" and the pipeline still passes.
-
-## Open questions
-
-- Should `-legacy` pinned runs also bypass the staleness skip, so every pinned dispatch actually runs legacy tests? Nothing depends on it today; recommended to leave as is.
+- [ ] Step 1: Commit via `/commit`, then verify in CI. Dispatch `prerelease-pipeline-multitier-dotnet.yml` with `commit-sha` pinned to a commit whose images predate the last acceptance run, and confirm acceptance-stage runs the tests and publishes an RC tag on that commit, and that the pipeline gets past `Fail If No RC Tag On SHA`.

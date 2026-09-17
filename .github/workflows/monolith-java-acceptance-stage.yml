@@ -133,7 +133,7 @@ jobs:
           skip-conditions: |
             [
               {"when": ${{ steps.check-tag.outputs.exists == 'true' }}, "reason": "Release in progress — version already tagged, awaiting post-release VERSION bump."},
-              {"when": ${{ steps.artifacts-changed.outputs.newer != 'true' && steps.test-changes.outputs.changed != 'true' }}, "reason": "No new artifacts since last run AND no test/workflow changes since last RC tag." }
+              {"when": ${{ inputs.commit-sha == '' && steps.artifacts-changed.outputs.newer != 'true' && steps.test-changes.outputs.changed != 'true' }}, "reason": "No new artifacts since last run AND no test/workflow changes since last RC tag." }
             ]
 
   run:
