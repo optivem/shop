@@ -24,6 +24,15 @@ Read-only audit of the five Java/.NET backends (`system/monolith/{java,dotnet}`,
 
 **Wire format today:** all five emit money/rates as bare JSON numbers. The fixed-looking 2dp/4dp is *incidental* — it falls out of `BigDecimal`/`decimal` scale surviving the DB round trip. Unlike TypeScript (`decimal-format.interceptor.ts`, `numeric.transformer.ts`), there is **no formatter to repurpose**; a string wire format needs a new Jackson serializer and a new `System.Text.Json` `JsonConverter` written from scratch. Field surface is identical in every backend: 6 amounts @2dp + 2 rates @4dp on order details, `totalPrice` on order-history items, `discountRate` on coupon browse/publish.
 
+### ⚠️ Provenance of these findings — not all equally verified
+
+This audit was produced by subagents, and **one of them fabricated evidence on its first pass** (wrong Java package root, a message text that does not exist in the repo, non-existent file paths, and a false negative on `contracts/frontend-backend.json`) before self-correcting on a re-run. Treat the findings accordingly:
+
+- **Verified by hand, trust these:** everything in the *blackout message* item and the *500 response* item — message text, the 16 sites, the enforced 22:00–22:30 boundary, which backends leak, which backends log, and `backend-clean-java`'s `GENERAL_ERROR_DETAIL` precedent. Each was re-checked directly against the source after the subagent's first report proved unreliable.
+- **High-confidence but NOT line-by-line verified:** the money findings (no `double` leak anywhere; rounding implicit in four backends) and the validation findings (all five already return 422 + `TYPE_MISMATCH`), and in particular **"the coupon race is present in exactly `monolith/java`, `monolith/dotnet`, `backend-java`, `backend-dotnet`"**. These came from two other subagents whose reports cross-checked as mutually consistent, but were not independently confirmed.
+
+**How to apply:** when execution first opens each of those four backends, confirm the read-then-write increment is actually there before changing it, and confirm `backend-clean-java` really is exempt. If any backend turns out already fixed, the item shrinks — do not assume the table above is the final word.
+
 ## Steps
 
 - [ ] **Coupon usage race** — fix in `monolith/java`, `monolith/dotnet`, `backend-java`, `backend-dotnet` (the other two defects need no work; see *Audit findings*).
