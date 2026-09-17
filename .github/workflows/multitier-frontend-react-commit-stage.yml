@@ -93,8 +93,8 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       # Typecheck production + component-test sources up front (the component's
-      # compileCommands in component-tests.yaml) so a compile error fails fast before the
-      # gating suites.
+      # compileCommands in component-tests.yaml, i.e. `npm run typecheck` = `tsc --noEmit`) so a
+      # type error fails fast before the gating suites.
       - name: Compile Code
         run: gh optivem component-test compile --component frontend
 

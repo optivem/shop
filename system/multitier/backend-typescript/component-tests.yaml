@@ -3,7 +3,7 @@ setupCommands:
     command: npm ci
 compileCommands:
   - name: Typecheck production + test sources
-    command: npx tsc --noEmit
+    command: npm run typecheck
 testFilter: -t '<test>'
 suites:
   - id: unit

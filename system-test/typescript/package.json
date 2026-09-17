@@ -4,6 +4,7 @@
   "type": "module",
   "description": "MyShop - System Tests",
   "scripts": {
+    "typecheck": "tsc --noEmit",
     "test": "playwright test",
     "test:architecture": "playwright test --project=architecture-test",
     "test:acceptance": "playwright test --project=acceptance-test",
