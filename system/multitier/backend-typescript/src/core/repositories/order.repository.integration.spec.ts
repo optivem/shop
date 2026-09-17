@@ -1,4 +1,5 @@
 import { INestApplication } from '@nestjs/common';
+import Decimal from 'decimal.js';
 import { Test } from '@nestjs/testing';
 import { DataSource, Repository } from 'typeorm';
 import { Client } from 'pg';
@@ -95,14 +96,14 @@ describe('OrderRepository [integration]', () => {
         country: 'US',
         sku: 'BOOK-123',
         quantity: 2,
-        unitPrice: 10.0,
-        basePrice: 20.0,
-        discountRate: 0,
-        discountAmount: 0,
-        subtotalPrice: 20.0,
-        taxRate: 0.1,
-        taxAmount: 2.0,
-        totalPrice: 22.0,
+        unitPrice: new Decimal('10.00'),
+        basePrice: new Decimal('20.00'),
+        discountRate: new Decimal('0.0000'),
+        discountAmount: new Decimal('0.00'),
+        subtotalPrice: new Decimal('20.00'),
+        taxRate: new Decimal('0.1000'),
+        taxAmount: new Decimal('2.00'),
+        totalPrice: new Decimal('22.00'),
         status: OrderStatus.PLACED,
         appliedCouponCode: null,
       }),
@@ -115,8 +116,10 @@ describe('OrderRepository [integration]', () => {
     expect(found).not.toBeNull();
     expect(found!.id).toBe(saved.id);
     expect(found!.sku).toBe('BOOK-123');
-    // numeric columns round-trip as strings via node-postgres.
-    expect(Number(found!.totalPrice)).toBeCloseTo(22.0);
+    // numeric columns round-trip exactly: node-postgres returns a string, the column transformer
+    // reads it into a Decimal.
+    expect(found!.totalPrice).toBeInstanceOf(Decimal);
+    expect(found!.totalPrice.toFixed(2)).toBe('22.00');
     expect(found!.status).toBe(OrderStatus.PLACED);
   });
 });

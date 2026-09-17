@@ -9,12 +9,12 @@ import { isRecord } from '@/lib/type-guards';
 import { jsonResponseWithDecimals } from '@/lib/decimal-format';
 
 type CouponResolution =
-  | { ok: true; discountRate: number; appliedCouponCode: string | null }
+  | { ok: true; discountRate: Decimal; appliedCouponCode: string | null }
   | { ok: false; response: NextResponse };
 
 async function resolveCoupon(couponCode: string | null, now: Date): Promise<CouponResolution> {
   if (!couponCode) {
-    return { ok: true, discountRate: 0, appliedCouponCode: null };
+    return { ok: true, discountRate: new Decimal(0), appliedCouponCode: null };
   }
 
   const coupon = await findCouponByCode(couponCode);
@@ -31,7 +31,7 @@ async function resolveCoupon(couponCode: string | null, now: Date): Promise<Coup
     return couponError(`Coupon code ${couponCode} has exceeded its usage limit`);
   }
 
-  return { ok: true, discountRate: Number(coupon.discount_rate), appliedCouponCode: couponCode };
+  return { ok: true, discountRate: new Decimal(coupon.discount_rate), appliedCouponCode: couponCode };
 }
 
 function couponError(message: string): CouponResolution {
@@ -74,19 +74,20 @@ export async function POST(request: NextRequest) {
       ]);
     }
 
-    const unitPrice = product.price;
+    // Money stays exact (Decimal) through the whole computation; it is rounded once, on persist.
+    const unitPrice = new Decimal(product.price);
     const promotion = await getPromotionDetails();
-    const promotionFactor = promotion.promotionActive ? promotion.discount : 1;
-    const basePrice = new Decimal(unitPrice).mul(quantity).toNumber();
-    const promotedPrice = new Decimal(basePrice).mul(promotionFactor).toNumber();
+    const promotionFactor = new Decimal(promotion.promotionActive ? promotion.discount : 1);
+    const basePrice = unitPrice.mul(quantity);
+    const promotedPrice = basePrice.mul(promotionFactor);
 
     const couponResolution = await resolveCoupon(couponCode, now);
     if (!couponResolution.ok) {
       return couponResolution.response;
     }
     const { discountRate, appliedCouponCode } = couponResolution;
-    const discountAmount = new Decimal(promotedPrice).mul(discountRate).toNumber();
-    const subtotalPrice = new Decimal(promotedPrice).sub(discountAmount).toNumber();
+    const discountAmount = promotedPrice.mul(discountRate);
+    const subtotalPrice = promotedPrice.sub(discountAmount);
 
     const taxDetails = await getTaxDetails(country);
     if (!taxDetails) {
@@ -94,9 +95,9 @@ export async function POST(request: NextRequest) {
         { field: 'country', message: `Country does not exist: ${country}` },
       ]);
     }
-    const taxRate = taxDetails.taxRate;
-    const taxAmount = new Decimal(subtotalPrice).mul(taxRate).toNumber();
-    const totalPrice = new Decimal(subtotalPrice).add(taxAmount).toNumber();
+    const taxRate = new Decimal(taxDetails.taxRate);
+    const taxAmount = subtotalPrice.mul(taxRate);
+    const totalPrice = subtotalPrice.add(taxAmount);
 
     const orderNumber = `ORD-${crypto.randomUUID().toUpperCase()}`;
     const orderTimestamp = now;
@@ -148,7 +149,7 @@ export async function GET(request: NextRequest) {
         country: o.country,
         sku: o.sku,
         quantity: o.quantity,
-        totalPrice: Number.parseFloat(o.total_price),
+        totalPrice: new Decimal(o.total_price),
         appliedCouponCode: o.applied_coupon_code,
         status: o.status,
       })),

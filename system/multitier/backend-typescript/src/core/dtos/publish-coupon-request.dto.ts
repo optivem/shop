@@ -11,12 +11,12 @@ import {
 export class PublishCouponRequest {
   @IsNotEmpty({ message: 'Coupon code must not be blank' })
   @Matches(/\S/, { message: 'Coupon code must not be blank' })
-  code: string;
+  code!: string;
 
   @IsNumber({}, { message: 'Discount rate must not be null' })
   @Min(0.0001, { message: 'Discount rate must be greater than 0.00' })
   @Max(1, { message: 'Discount rate must be at most 1.00' })
-  discountRate: number;
+  discountRate!: number;
 
   @IsOptional()
   validFrom?: string;

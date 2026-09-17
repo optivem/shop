@@ -45,7 +45,7 @@ export class CustomValidationPipe implements PipeTransform {
     const errors = await validate(object as object);
 
     if (errors.length > 0) {
-      const fieldMeta = TYPE_VALIDATION_METADATA[className] || {};
+      const fieldMeta = TYPE_VALIDATION_METADATA[className] ?? {};
 
       const validationErrors = errors.map((err) => {
         const field = err.property;

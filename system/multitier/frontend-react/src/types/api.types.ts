@@ -54,6 +54,10 @@ export interface BrowseOrderHistoryResponse {
 }
 
 // Coupon API types
+
+// The backend reports a coupon with no usage limit as Integer.MAX_VALUE.
+export const UNLIMITED_USAGE_LIMIT = 2147483647;
+
 export interface PublishCouponRequest {
   code: string;
   discountRate: number;
@@ -67,7 +71,7 @@ export interface BrowseCouponsItemResponse {
   discountRate: number;
   validFrom?: string;
   validTo?: string;
-  usageLimit: number;
+  usageLimit: number | null;
   usedCount: number;
 }
 
@@ -80,6 +84,6 @@ export interface GetCouponResponse {
   discountRate: number;
   validFrom?: string;
   validTo?: string;
-  usageLimit: number;
+  usageLimit: number | null;
   usedCount: number;
 }

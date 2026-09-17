@@ -2,6 +2,7 @@ import { UseCaseContext } from '../../shared/use-case-context.js';
 import { AppContext } from '../app-context.js';
 import { ScenarioContext } from '../scenario-context.js';
 import { ThenPublishCouponResultStage } from '../then/then-publish-coupon.js';
+import { assertNotAwaited } from '../assert-not-awaited.js';
 
 export class WhenPublishCoupon {
   private code = '';
@@ -45,7 +46,9 @@ export class WhenPublishCoupon {
     return this;
   }
 
-  then(): ThenPublishCouponResultStage {
+  then(): ThenPublishCouponResultStage;
+  then(...args: unknown[]): ThenPublishCouponResultStage {
+    assertNotAwaited(args);
     this.ctx.markExecuted();
     return new ThenPublishCouponResultStage(this.app, this.ctx, this.useCaseContext, this.code, this.discountRate, this.validFrom, this.validTo, this.usageLimit);
   }

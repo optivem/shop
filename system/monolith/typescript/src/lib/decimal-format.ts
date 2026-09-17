@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import Decimal from 'decimal.js';
 
 const DECIMAL_FIELDS: Record<string, number> = {
   unitPrice: 2,
@@ -31,8 +32,9 @@ function markDecimals(obj: unknown): unknown {
     const result: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
       const scale = DECIMAL_FIELDS[key];
-      if (scale !== undefined && typeof value === 'number') {
-        result[key] = `${SENTINEL}${value.toFixed(scale)}${SENTINEL}`;
+      if (scale !== undefined && Decimal.isDecimal(value)) {
+        // Format straight from the exact Decimal (never via a float) into the fixed-scale JSON number shape.
+        result[key] = `${SENTINEL}${value.toFixed(scale, Decimal.ROUND_HALF_UP)}${SENTINEL}`;
       } else {
         result[key] = markDecimals(value);
       }

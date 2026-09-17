@@ -1,3 +1,4 @@
+import Decimal from 'decimal.js';
 import { Repository } from 'typeorm';
 import { Order } from '../entities/order.entity';
 import { OrderStatus } from '../entities/order-status.enum';
@@ -176,7 +177,7 @@ describe('OrderService', () => {
   }
 
   function givenNoDiscount() {
-    couponService.getDiscount.mockResolvedValue(0);
+    couponService.getDiscount.mockResolvedValue(new Decimal(0));
   }
 
   function givenTaxRate(_country: string, rate: number) {
@@ -206,14 +207,14 @@ describe('OrderService', () => {
     order.country = 'US';
     order.sku = 'BOOK-123';
     order.quantity = 1;
-    order.unitPrice = 10;
-    order.basePrice = 10;
-    order.discountRate = 0;
-    order.discountAmount = 0;
-    order.subtotalPrice = 10;
-    order.taxRate = 0.1;
-    order.taxAmount = 1;
-    order.totalPrice = 11;
+    order.unitPrice = new Decimal('10.00');
+    order.basePrice = new Decimal('10.00');
+    order.discountRate = new Decimal('0.0000');
+    order.discountAmount = new Decimal('0.00');
+    order.subtotalPrice = new Decimal('10.00');
+    order.taxRate = new Decimal('0.1000');
+    order.taxAmount = new Decimal('1.00');
+    order.totalPrice = new Decimal('11.00');
     order.status = OrderStatus.PLACED;
     order.appliedCouponCode = null;
     return order;
@@ -227,17 +228,33 @@ describe('OrderService', () => {
         sku: 'BOOK-123',
         quantity: 2,
         country: 'US',
-        unitPrice: 10,
-        basePrice: 20,
-        discountRate: 0,
-        discountAmount: 0,
-        subtotalPrice: 20,
-        taxRate: 0.1,
-        taxAmount: 2,
-        totalPrice: 22,
         status: OrderStatus.PLACED,
         appliedCouponCode: null,
       }),
     );
+
+    // Amounts are Decimals: compare their fixed-point values, not the objects' internals.
+    const [saved] = orderRepository.save.mock.calls.at(-1) ?? [];
+    expect(saved).toBeDefined();
+    const amounts = saved as Order;
+    expect({
+      unitPrice: amounts.unitPrice.toFixed(2),
+      basePrice: amounts.basePrice.toFixed(2),
+      discountRate: amounts.discountRate.toFixed(4),
+      discountAmount: amounts.discountAmount.toFixed(2),
+      subtotalPrice: amounts.subtotalPrice.toFixed(2),
+      taxRate: amounts.taxRate.toFixed(4),
+      taxAmount: amounts.taxAmount.toFixed(2),
+      totalPrice: amounts.totalPrice.toFixed(2),
+    }).toEqual({
+      unitPrice: '10.00',
+      basePrice: '20.00',
+      discountRate: '0.0000',
+      discountAmount: '0.00',
+      subtotalPrice: '20.00',
+      taxRate: '0.1000',
+      taxAmount: '2.00',
+      totalPrice: '22.00',
+    });
   }
 });

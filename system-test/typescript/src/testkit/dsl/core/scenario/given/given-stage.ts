@@ -11,6 +11,7 @@ import { GivenCoupon } from './given-coupon.js';
 import { GivenCountry } from './given-country.js';
 import { GivenOrder } from './given-order.js';
 import type { GivenStage as IGivenStage } from '../../../port/given/given-stage.js';
+import { assertNotAwaited } from '../assert-not-awaited.js';
 
 export class GivenStage implements IGivenStage {
   constructor(
@@ -68,7 +69,9 @@ export class GivenStage implements IGivenStage {
     return new WhenStage(this.app, this.ctx, this.useCaseContext);
   }
 
-  then(): ThenContractStage {
+  then(): ThenContractStage;
+  then(...args: unknown[]): ThenContractStage {
+    assertNotAwaited(args);
     return new ThenContractStage(this.app, this.ctx, this.useCaseContext);
   }
 }

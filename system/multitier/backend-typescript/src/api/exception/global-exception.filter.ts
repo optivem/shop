@@ -159,11 +159,16 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     for (const err of validationErrors) {
       const field = err.field;
       const constraints = err.constraints || {};
-      const constraintKeys = Object.keys(constraints);
+      const constraintEntries = Object.entries(constraints);
+      const firstConstraint = constraintEntries[0];
+      const lastConstraint = constraintEntries.at(-1);
 
-      if (constraintKeys.length === 0) {
+      if (firstConstraint === undefined || lastConstraint === undefined) {
         continue;
       }
+
+      const [firstKey, firstMessage] = firstConstraint;
+      const [, lastMessage] = lastConstraint;
 
       // Check if this is a type mismatch scenario
       const isTypeMismatch = this.isTypeMismatch(
@@ -173,8 +178,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       );
 
       if (isTypeMismatch === 'empty') {
-        const emptyMessage =
-          constraints.isNotEmpty || constraints[constraintKeys.at(-1)!];
+        const emptyMessage = constraints.isNotEmpty ?? lastMessage;
         errors.push({
           field,
           message: emptyMessage,
@@ -182,8 +186,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
           rejectedValue: null,
         });
       } else if (isTypeMismatch === 'type_mismatch') {
-        const typeMismatchMessage =
-          err.typeMismatchMessage ?? constraints[constraintKeys[0]];
+        const typeMismatchMessage = err.typeMismatchMessage ?? firstMessage;
         errors.push({
           field,
           message: typeMismatchMessage,
@@ -192,11 +195,10 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         });
       } else {
         // Normal validation error - use the first constraint message
-        const key = constraintKeys[0];
         errors.push({
           field,
-          message: constraints[key],
-          code: key === 'isNotEmpty' ? 'NotBlank' : null,
+          message: firstMessage,
+          code: firstKey === 'isNotEmpty' ? 'NotBlank' : null,
           rejectedValue: null,
         });
       }

@@ -1,5 +1,5 @@
 export class TaxDetailsResponse {
-  id: string;
-  countryName: string;
-  taxRate: number;
+  id!: string;
+  countryName!: string;
+  taxRate!: number;
 }

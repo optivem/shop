@@ -3,6 +3,7 @@ import { UseCaseContext } from '../../shared/use-case-context.js';
 import { AppContext } from '../app-context.js';
 import { ScenarioContext } from '../scenario-context.js';
 import { ThenViewOrderResultStage } from '../then/then-view-order.js';
+import { assertNotAwaited } from '../assert-not-awaited.js';
 
 export class WhenViewOrder {
   private orderNumber: string = DEFAULTS.ORDER_NUMBER;
@@ -18,7 +19,9 @@ export class WhenViewOrder {
     return this;
   }
 
-  then(): ThenViewOrderResultStage {
+  then(): ThenViewOrderResultStage;
+  then(...args: unknown[]): ThenViewOrderResultStage {
+    assertNotAwaited(args);
     this.ctx.markExecuted();
     return new ThenViewOrderResultStage(this.app, this.ctx, this.useCaseContext, this.orderNumber);
   }

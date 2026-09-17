@@ -3,6 +3,7 @@ import { UseCaseContext } from '../../shared/use-case-context.js';
 import { AppContext } from '../app-context.js';
 import { ScenarioContext } from '../scenario-context.js';
 import { ThenResultStage } from '../then/then-place-order.js';
+import { assertNotAwaited } from '../assert-not-awaited.js';
 
 export class WhenPlaceOrder {
   private sku: string | null = DEFAULTS.SKU;
@@ -40,7 +41,9 @@ export class WhenPlaceOrder {
     return this;
   }
 
-  then(): ThenResultStage {
+  then(): ThenResultStage;
+  then(...args: unknown[]): ThenResultStage {
+    assertNotAwaited(args);
     this.ctx.markExecuted();
     return new ThenResultStage(this.app, this.ctx, this.useCaseContext, this.sku, this.quantity, this.country, this.couponCode);
   }

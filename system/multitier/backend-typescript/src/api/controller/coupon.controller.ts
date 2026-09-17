@@ -27,7 +27,7 @@ export class CouponController {
     const coupons = await this.couponService.getAllCoupons();
     const items: BrowseCouponsItemResponse[] = coupons.map((c) => ({
       code: c.code,
-      discountRate: Number(c.discountRate),
+      discountRate: c.discountRate,
       validFrom: c.validFrom ? new Date(c.validFrom).toISOString() : null,
       validTo: c.validTo ? new Date(c.validTo).toISOString() : null,
       usageLimit: c.usageLimit,

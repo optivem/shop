@@ -1,3 +1,4 @@
+import Decimal from 'decimal.js';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -24,9 +25,9 @@ export class CouponService {
     private readonly clockGateway: ClockGateway,
   ) {}
 
-  async getDiscount(couponCode?: string): Promise<number> {
+  async getDiscount(couponCode?: string): Promise<Decimal> {
     if (!couponCode || couponCode.trim() === '') {
-      return 0;
+      return new Decimal(0);
     }
 
     const coupon = await this.couponRepository.findOne({
@@ -63,7 +64,7 @@ export class CouponService {
       );
     }
 
-    return Number(coupon.discountRate);
+    return coupon.discountRate;
   }
 
   async incrementUsageCount(couponCode: string): Promise<void> {
@@ -93,7 +94,7 @@ export class CouponService {
 
     const coupon = new Coupon();
     coupon.code = code;
-    coupon.discountRate = discountRate;
+    coupon.discountRate = new Decimal(discountRate);
     coupon.validFrom = validFrom ? new Date(validFrom) : null;
     coupon.validTo = validTo ? new Date(validTo) : null;
     coupon.usageLimit = usageLimit ?? null;

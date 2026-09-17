@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import Decimal from 'decimal.js';
 import { findByOrderNumber } from '@/lib/db';
 import { notFoundResponse, internalErrorResponse } from '@/lib/errors';
 import { jsonResponseWithDecimals } from '@/lib/decimal-format';
@@ -21,14 +22,14 @@ export async function GET(
       country: order.country,
       sku: order.sku,
       quantity: order.quantity,
-      unitPrice: Number.parseFloat(order.unit_price),
-      basePrice: Number.parseFloat(order.base_price),
-      discountRate: Number.parseFloat(order.discount_rate),
-      discountAmount: Number.parseFloat(order.discount_amount),
-      subtotalPrice: Number.parseFloat(order.subtotal_price),
-      taxRate: Number.parseFloat(order.tax_rate),
-      taxAmount: Number.parseFloat(order.tax_amount),
-      totalPrice: Number.parseFloat(order.total_price),
+      unitPrice: new Decimal(order.unit_price),
+      basePrice: new Decimal(order.base_price),
+      discountRate: new Decimal(order.discount_rate),
+      discountAmount: new Decimal(order.discount_amount),
+      subtotalPrice: new Decimal(order.subtotal_price),
+      taxRate: new Decimal(order.tax_rate),
+      taxAmount: new Decimal(order.tax_amount),
+      totalPrice: new Decimal(order.total_price),
       appliedCouponCode: order.applied_coupon_code,
       status: order.status,
     });

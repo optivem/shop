@@ -18,25 +18,9 @@
 
 ## ▶ Next executable step (resume here)
 
-**Step 1 — backend strict mode** (mechanical, independent of all open questions). In `system/multitier/backend-typescript/tsconfig.json`: add `"strict": true`, remove `"noImplicitAny": false` and `"strictBindCallApply": false`, add `"noUncheckedIndexedAccess": true` and `"noImplicitOverride": true`. Run `npx tsc --noEmit`; expect ~70 TS2564 (uninitialized class fields in DTOs/entities) plus whatever `noUncheckedIndexedAccess` surfaces. Fix with definite-assignment `!` on TypeORM entity / class-validator DTO fields, and real `undefined` handling for index access (e.g. `result.rows[0] ?? null`). Gate: `npm run typecheck`, `npm run lint`, and `npm test` pass in that project. Unblocks nothing else, but is the cheapest win.
+**Step 5 — parse, don't cast, request input** (both backends). Monolith `src/lib/validation.ts`, `app/api/coupons/route.ts`, `app/api/orders/route.ts`: validator returns `{ ok: true, value } | { ok: false, errors }`; reject non-number/NaN/non-string/invalid-date with 422. Backend: replace `custom-validation.pipe.ts` with Nest `ValidationPipe({ transform: true, exceptionFactory })`, preserving the current error-response shape. Note Steps 1–4 landed: backend is now `strict`, money is `Decimal` internally (monolith rounds in `lib/db.ts`, backend via `numeric.transformer.ts`), and the frontend now sends `discountRate: null` for an empty field, so the backend must return 422 for it. Gate: typecheck, lint, unit tests, the Docker-backed component/pact/integration suites, and `--sample` system tests for monolith + multitier TypeScript.
 
 ## Steps
-
-### Priority — real defects and cheapest wins
-
-- [ ] **Step 1: Backend strict mode.** See the next-step block above.
-- [ ] **Step 2: Frontend user-visible bugs** (`system/multitier/frontend-react`):
-  - `pages/AdminCoupons.tsx:7-15` — destructure `error` from `useCoupons()` and pass it through `CouponTable` → `TableDataState`.
-  - `features/coupons/CouponForm.tsx:29-33` — `onSubmit` returns a success flag / `Result`; reset only on success.
-  - `features/coupons/CouponForm.tsx:63` — keep `discountRate` as a string in form state (like `usageLimit`), parse on submit.
-  - `hooks/useOrderForm.ts:52` — single `INITIAL_FORM` constant used for initial state, post-submit reset, and `resetForm`.
-  - `types/api.types.ts:70,83` — `usageLimit: number | null`; name the `2147483647` "unlimited" sentinel.
-- [ ] **Step 3: System-test thenable hang** (`system-test/typescript`). In the ~20 given/when stage classes with zero-arg `then()` (e.g. `src/testkit/dsl/core/scenario/when/when-place-order.ts:43`, `given/given-stage.ts:71`), throw `Error('Incomplete scenario: add .then().shouldSucceed()/shouldFail()')` when called with arguments (i.e. by `await`). Consider a shared helper to avoid 20 copies.
-- [ ] **Step 4: Money stays exact internally** (both backends). **The JSON wire contract does not change in this plan** (responses keep the current fixed-2-dp JSON number shape, so Java/.NET parity, system tests, Pact contracts and frontend types are untouched); moving the wire format to strings is a cross-language decision, see *Follow-up plans*.
-  - Monolith `src/app/api/orders/route.ts:80-99` — drop per-step `.toNumber()`; keep `Decimal`, round once, write `.toFixed(2)` strings to pg. `orders/[orderNumber]/route.ts:24-31` — read `numeric` as `new Decimal(str)`, not `parseFloat`.
-  - Backend `order.service.ts:71-86`, `:278-285`, `coupon.controller.ts:30` — same; add a TypeORM column transformer for `numeric` columns (entities currently typed `number`, pg returns `string`, e.g. `order.entity.ts:43`).
-  - Backend `decimal-format.interceptor.ts` — keep the output shape but feed it from `Decimal` (`toFixed(2)` on the Decimal, not the float); fix the self-send inside `map` (return the value and let Nest reply) and the `[\d.]+` placeholder regex that misses negatives.
-  - Gate: system tests' money assertions still pass unchanged (proves the contract didn't move).
 
 ### Medium — trust boundaries, races, framework idioms
 
@@ -52,7 +36,7 @@
   - Replace top-of-file `process.env.EXTERNAL_SYSTEM_MODE = …` in 23 spec/fixture files with a Playwright option fixture (`test.use({ externalSystemMode: 'stub' })`); parse env once with a throwing guard (`withApp.ts:15-16`, `test-setup.ts:35`, `UseCaseDsl.ts:9`).
   - `package.json` scripts: `--grep-invert @isolated` on the parallel scripts + a separate `--workers=1` isolated script, mirroring CI.
   - `withApp.ts:5,19` — use Playwright's `browser` fixture (or a worker-scoped one) instead of launching Chromium per test; `try/finally` cleanup.
-- [ ] **Step 10: Frontend dead code and scripts.** Delete `common.ts:6-102` (unused `showNotification`/`showApiError`/`handleResult`, direct `innerHTML`) and `hooks/useNotification.ts`. Fix `test:pact` (points at non-existent `src/test/pact`) and `test:unit` (misses `src/test/unit/*.unit.test.ts`). `useCoupons.ts:65` — call `refresh()` directly instead of `setTimeout(refresh, 100)`.
+- [ ] **Step 10: Frontend dead code and scripts.** Delete `common.ts:6-102` (unused `showNotification`/`showApiError`/`handleResult`, direct `innerHTML`) and `hooks/useNotification.ts` — verify first: `pages/AdminCoupons.tsx` calls a `handleResult`, so confirm which one before deleting. Fix `test:pact` (points at non-existent `src/test/pact`) and `test:unit` (misses `src/test/unit/*.unit.test.ts`; re-check — it currently points at `src/test/harness.test.tsx`, which exists). Add tests for Step 2's fixes (coupon-load error shown, form keeps input on failed save); refresh the stale "NaN state" comment in `ui-frontend-driver.tsx` `publishCoupon`. `useCoupons.ts:65` — call `refresh()` directly instead of `setTimeout(refresh, 100)`.
 
 ### Low — hygiene
 
@@ -76,4 +60,4 @@
 
 ## Deferred
 
-- **Course materials:** whether `OrderStatus` enum → union (Step 11), system-test env-mode fixtures (Step 9) or the DSL `then()` guard (Step 3) appear in docs/articles that need re-sync. Deferred by the user 2026-09-17; check before executing those steps.
+- **Course materials:** whether `OrderStatus` enum → union (Step 11) or system-test env-mode fixtures (Step 9) appear in docs/articles that need re-sync. Deferred by the user 2026-09-17; check before executing those steps.

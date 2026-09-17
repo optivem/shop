@@ -4,7 +4,8 @@ import {
   Injectable,
   NestInterceptor,
 } from '@nestjs/common';
-import { Response } from 'express';
+import Decimal from 'decimal.js';
+import type { Response } from 'express';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
@@ -21,8 +22,22 @@ const DECIMAL_FIELDS: Record<string, number> = {
 
 const SENTINEL = '__DECIMAL_';
 
+function toDecimal(value: unknown): Decimal | null {
+  if (Decimal.isDecimal(value)) {
+    return value.isFinite() ? value : null;
+  }
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return new Decimal(value);
+  }
+  return null;
+}
+
 function markDecimals(obj: unknown): unknown {
   if (obj === null || obj === undefined) {
+    return obj;
+  }
+
+  if (Decimal.isDecimal(obj)) {
     return obj;
   }
 
@@ -34,8 +49,10 @@ function markDecimals(obj: unknown): unknown {
     const result: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
       const scale = DECIMAL_FIELDS[key];
-      if (scale !== undefined && typeof value === 'number') {
-        result[key] = `${SENTINEL}${value.toFixed(scale)}${SENTINEL}`;
+      const decimal = scale === undefined ? null : toDecimal(value);
+      if (scale !== undefined && decimal !== null) {
+        result[key] =
+          `${SENTINEL}${decimal.toFixed(scale, Decimal.ROUND_HALF_UP)}${SENTINEL}`;
       } else {
         result[key] = markDecimals(value);
       }
@@ -47,7 +64,7 @@ function markDecimals(obj: unknown): unknown {
 }
 
 const SENTINEL_REGEX = new RegExp(
-  String.raw`"${SENTINEL}([\d.]+)${SENTINEL}"`,
+  String.raw`"${SENTINEL}(-?[\d.]+)${SENTINEL}"`,
   'g',
 );
 
@@ -64,13 +81,11 @@ export class DecimalFormatInterceptor implements NestInterceptor {
         const json = JSON.stringify(marked);
         const formatted = json.replaceAll(SENTINEL_REGEX, '$1');
 
+        // Hand the pre-serialised JSON back to Nest, which sends it: a string body goes out via
+        // res.send() verbatim, keeping the Content-Type set here instead of re-serialising it.
         const response = context.switchToHttp().getResponse<Response>();
-        if (!response.headersSent) {
-          response.setHeader('Content-Type', 'application/json; charset=utf-8');
-          response.send(formatted);
-        }
-
-        return undefined;
+        response.setHeader('Content-Type', 'application/json; charset=utf-8');
+        return formatted;
       }),
     );
   }

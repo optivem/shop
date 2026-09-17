@@ -3,22 +3,23 @@ import { SubmitButton } from '../../components/SubmitButton';
 
 export interface CouponFormData {
   code: string;
-  discountRate: number;
+  discountRate: string;
   validFrom: string;
   validTo: string;
   usageLimit: string;
 }
 
 export interface CouponFormProps {
-  onSubmit: (formData: CouponFormData) => Promise<void>;
+  /** Resolves to whether the coupon was saved; the form is reset only on success. */
+  onSubmit: (formData: CouponFormData) => Promise<boolean>;
   isSubmitting: boolean;
   generateCouponCode: () => string;
 }
 
 export function CouponForm({ onSubmit, isSubmitting, generateCouponCode }: Readonly<CouponFormProps>) {
-  const getDefaultFormData = useCallback(() => ({
+  const getDefaultFormData = useCallback((): CouponFormData => ({
     code: generateCouponCode(),
-    discountRate: 0.2,
+    discountRate: '0.2',
     validFrom: '',
     validTo: '',
     usageLimit: ''
@@ -28,8 +29,10 @@ export function CouponForm({ onSubmit, isSubmitting, generateCouponCode }: Reado
 
   const handleSubmit = useCallback(async (e: FormEvent) => {
     e.preventDefault();
-    await onSubmit(formData);
-    setFormData(getDefaultFormData());
+    const saved = await onSubmit(formData);
+    if (saved) {
+      setFormData(getDefaultFormData());
+    }
   }, [onSubmit, formData, getDefaultFormData]);
 
   return (
@@ -60,7 +63,7 @@ export function CouponForm({ onSubmit, isSubmitting, generateCouponCode }: Reado
                 id="discountRate"
                 aria-label="Discount Rate"
                 value={formData.discountRate}
-                onChange={(e) => setFormData({ ...formData, discountRate: Number.parseFloat(e.target.value) })}
+                onChange={(e) => setFormData({ ...formData, discountRate: e.target.value })}
                 step="0.01"
                 placeholder="e.g., 0.2 for 20% off"
               />

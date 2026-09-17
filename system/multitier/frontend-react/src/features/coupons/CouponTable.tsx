@@ -8,18 +8,19 @@ import {
   type SortingState,
 } from '@tanstack/react-table';
 import { TableDataState } from '../../components';
-import type { BrowseCouponsItemResponse } from '../../types/api.types';
+import { UNLIMITED_USAGE_LIMIT, type BrowseCouponsItemResponse } from '../../types/api.types';
 
 const columnHelper = createColumnHelper<BrowseCouponsItemResponse>();
 
 interface CouponTableProps {
   coupons: BrowseCouponsItemResponse[];
   isLoading: boolean;
+  error: string | null;
   getCouponStatus: (coupon: BrowseCouponsItemResponse) => string;
   onRefresh: () => void;
 }
 
-export function CouponTable({ coupons, isLoading, getCouponStatus, onRefresh }: Readonly<CouponTableProps>) {
+export function CouponTable({ coupons, isLoading, error, getCouponStatus, onRefresh }: Readonly<CouponTableProps>) {
   const [sorting, setSorting] = useState<SortingState>([]);
 
   const columns = useMemo(
@@ -52,7 +53,7 @@ export function CouponTable({ coupons, isLoading, getCouponStatus, onRefresh }: 
         header: 'Usage Limit',
         cell: (info) => {
           const value = info.getValue();
-          return value === null || value === 2147483647 ? 'Unlimited' : value;
+          return value === null || value === UNLIMITED_USAGE_LIMIT ? 'Unlimited' : value;
         },
       }),
       columnHelper.accessor('usedCount', {
@@ -122,9 +123,10 @@ export function CouponTable({ coupons, isLoading, getCouponStatus, onRefresh }: 
               ))}
             </thead>
             <tbody>
-              {isLoading || table.getRowModel().rows.length === 0 ? (
+              {isLoading || error || table.getRowModel().rows.length === 0 ? (
                 <TableDataState
                   isLoading={isLoading}
+                  error={error}
                   isEmpty={table.getRowModel().rows.length === 0}
                   colSpan={columns.length}
                   loadingMessage="Loading coupons..."

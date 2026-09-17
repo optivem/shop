@@ -7,6 +7,7 @@ export function AdminCoupons() {
   const {
     coupons,
     isLoading,
+    error,
     isCreating,
     submitCoupon,
     generateCouponCode,
@@ -16,12 +17,15 @@ export function AdminCoupons() {
 
   const { setSuccess, handleResult } = useNotificationContext();
 
-  const handleCouponSubmit = async (formData: CouponFormData) => {
+  const handleCouponSubmit = async (formData: CouponFormData): Promise<boolean> => {
     const createdCode = formData.code;
+    const result = await submitCoupon(formData);
 
-    handleResult(await submitCoupon(formData), () => {
+    handleResult(result, () => {
       setSuccess(`Coupon '${createdCode}' created successfully!`);
     });
+
+    return result.success;
   };
 
   return (
@@ -38,6 +42,7 @@ export function AdminCoupons() {
       <CouponTable
         coupons={coupons}
         isLoading={isLoading}
+        error={error}
         getCouponStatus={getCouponStatus}
         onRefresh={refresh}
       />

@@ -67,25 +67,21 @@ export class OrderService {
 
     const unitPrice = await this.getUnitPrice(sku);
     const promotion = await this.erpGateway.getPromotionDetails();
-    const promotionFactor = promotion.promotionActive ? promotion.discount : 1;
-    const basePrice = new Decimal(unitPrice).mul(quantity).toNumber();
-    const promotedPrice = new Decimal(basePrice)
-      .mul(promotionFactor)
-      .toNumber();
+    const promotionFactor = promotion.promotionActive
+      ? new Decimal(promotion.discount)
+      : new Decimal(1);
+    const basePrice = unitPrice.mul(quantity);
+    const promotedPrice = basePrice.mul(promotionFactor);
 
     const discountRate = await this.couponService.getDiscount(couponCode);
-    const discountAmount = new Decimal(promotedPrice)
-      .mul(discountRate)
-      .toNumber();
-    const subtotalPrice = new Decimal(promotedPrice)
-      .sub(discountAmount)
-      .toNumber();
+    const discountAmount = promotedPrice.mul(discountRate);
+    const subtotalPrice = promotedPrice.sub(discountAmount);
 
     const taxRate = await this.getTaxRate(country);
-    const taxAmount = new Decimal(subtotalPrice).mul(taxRate).toNumber();
-    const totalPrice = new Decimal(subtotalPrice).add(taxAmount).toNumber();
+    const taxAmount = subtotalPrice.mul(taxRate);
+    const totalPrice = subtotalPrice.add(taxAmount);
 
-    const appliedCouponCode = discountRate > 0 ? (couponCode ?? null) : null;
+    const appliedCouponCode = discountRate.gt(0) ? (couponCode ?? null) : null;
 
     const orderNumber = this.generateOrderNumber();
 
@@ -95,14 +91,14 @@ export class OrderService {
     order.country = country;
     order.sku = sku;
     order.quantity = quantity;
-    order.unitPrice = unitPrice;
-    order.basePrice = basePrice;
-    order.discountRate = discountRate;
-    order.discountAmount = discountAmount;
-    order.subtotalPrice = subtotalPrice;
-    order.taxRate = taxRate;
-    order.taxAmount = taxAmount;
-    order.totalPrice = totalPrice;
+    order.unitPrice = OrderService.roundMoney(unitPrice);
+    order.basePrice = OrderService.roundMoney(basePrice);
+    order.discountRate = OrderService.roundRate(discountRate);
+    order.discountAmount = OrderService.roundMoney(discountAmount);
+    order.subtotalPrice = OrderService.roundMoney(subtotalPrice);
+    order.taxRate = OrderService.roundRate(taxRate);
+    order.taxAmount = OrderService.roundMoney(taxAmount);
+    order.totalPrice = OrderService.roundMoney(totalPrice);
     order.status = OrderStatus.PLACED;
     order.appliedCouponCode = appliedCouponCode ?? null;
 
@@ -117,7 +113,17 @@ export class OrderService {
     return response;
   }
 
-  private async getUnitPrice(sku: string): Promise<number> {
+  // Intermediate amounts stay exact; each value is rounded exactly once, here, to the scale of the
+  // column it is persisted in (numeric(10,2) for money, numeric(5,4) for rates).
+  private static roundMoney(value: Decimal): Decimal {
+    return value.toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+  }
+
+  private static roundRate(value: Decimal): Decimal {
+    return value.toDecimalPlaces(4, Decimal.ROUND_HALF_UP);
+  }
+
+  private async getUnitPrice(sku: string): Promise<Decimal> {
     const productDetails = await this.erpGateway.getProductDetails(sku);
     if (productDetails === null) {
       throw new ValidationException(
@@ -126,10 +132,10 @@ export class OrderService {
       );
     }
 
-    return Number(productDetails.price);
+    return new Decimal(productDetails.price);
   }
 
-  private async getTaxRate(country: string): Promise<number> {
+  private async getTaxRate(country: string): Promise<Decimal> {
     const taxDetails = await this.taxGateway.getTaxDetails(country);
     if (taxDetails === null) {
       throw new ValidationException(
@@ -138,7 +144,7 @@ export class OrderService {
       );
     }
 
-    return Number(taxDetails.taxRate);
+    return new Decimal(taxDetails.taxRate);
   }
 
   async deliverOrder(orderNumber: string): Promise<void> {
@@ -248,7 +254,7 @@ export class OrderService {
       item.sku = order.sku;
       item.country = order.country;
       item.quantity = order.quantity;
-      item.totalPrice = Number(order.totalPrice);
+      item.totalPrice = order.totalPrice;
       item.status = order.status;
       item.appliedCouponCode = order.appliedCouponCode;
       return item;
@@ -275,14 +281,14 @@ export class OrderService {
     response.orderTimestamp = new Date(order.orderTimestamp).toISOString();
     response.sku = order.sku;
     response.quantity = order.quantity;
-    response.unitPrice = Number(order.unitPrice);
-    response.basePrice = Number(order.basePrice);
-    response.discountRate = Number(order.discountRate);
-    response.discountAmount = Number(order.discountAmount);
-    response.subtotalPrice = Number(order.subtotalPrice);
-    response.taxRate = Number(order.taxRate);
-    response.taxAmount = Number(order.taxAmount);
-    response.totalPrice = Number(order.totalPrice);
+    response.unitPrice = order.unitPrice;
+    response.basePrice = order.basePrice;
+    response.discountRate = order.discountRate;
+    response.discountAmount = order.discountAmount;
+    response.subtotalPrice = order.subtotalPrice;
+    response.taxRate = order.taxRate;
+    response.taxAmount = order.taxAmount;
+    response.totalPrice = order.totalPrice;
     response.status = order.status;
     response.country = order.country;
     response.appliedCouponCode = order.appliedCouponCode;

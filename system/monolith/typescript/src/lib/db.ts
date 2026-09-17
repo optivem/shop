@@ -1,5 +1,19 @@
 import { Pool } from 'pg';
+import Decimal from 'decimal.js';
 import { envOrDefault } from './env';
+
+const MONEY_SCALE = 2;
+const RATE_SCALE = 4;
+
+// Money is kept exact (Decimal) through the computation and rounded exactly once, here at the
+// persistence boundary, to the column scale (NUMERIC(10,2) money, NUMERIC(5,4) rates).
+function money(value: Decimal): string {
+  return value.toFixed(MONEY_SCALE, Decimal.ROUND_HALF_UP);
+}
+
+function rate(value: Decimal): string {
+  return value.toFixed(RATE_SCALE, Decimal.ROUND_HALF_UP);
+}
 
 const pool = new Pool({
   host: envOrDefault('POSTGRES_DB_HOST', 'localhost'),
@@ -44,14 +58,14 @@ export async function insertOrder(order: {
   country: string;
   sku: string;
   quantity: number;
-  unitPrice: number;
-  basePrice: number;
-  discountRate: number;
-  discountAmount: number;
-  subtotalPrice: number;
-  taxRate: number;
-  taxAmount: number;
-  totalPrice: number;
+  unitPrice: Decimal;
+  basePrice: Decimal;
+  discountRate: Decimal;
+  discountAmount: Decimal;
+  subtotalPrice: Decimal;
+  taxRate: Decimal;
+  taxAmount: Decimal;
+  totalPrice: Decimal;
   appliedCouponCode: string | null;
   status: string;
 }): Promise<void> {
@@ -60,8 +74,8 @@ export async function insertOrder(order: {
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`,
     [
       order.orderNumber, order.orderTimestamp, order.country, order.sku, order.quantity,
-      order.unitPrice, order.basePrice, order.discountRate, order.discountAmount,
-      order.subtotalPrice, order.taxRate, order.taxAmount, order.totalPrice,
+      money(order.unitPrice), money(order.basePrice), rate(order.discountRate), money(order.discountAmount),
+      money(order.subtotalPrice), rate(order.taxRate), money(order.taxAmount), money(order.totalPrice),
       order.appliedCouponCode, order.status
     ]
   );
@@ -98,7 +112,7 @@ export async function updateOrderStatus(orderNumber: string, status: string): Pr
 
 export async function insertCoupon(coupon: {
   code: string;
-  discountRate: number;
+  discountRate: Decimal;
   validFrom?: Date | null;
   validTo?: Date | null;
   usageLimit?: number | null;
@@ -106,7 +120,7 @@ export async function insertCoupon(coupon: {
   await pool.query(
     `INSERT INTO coupons (code, discount_rate, valid_from, valid_to, usage_limit, used_count)
      VALUES ($1, $2, $3, $4, $5, 0)`,
-    [coupon.code, coupon.discountRate, coupon.validFrom ?? null, coupon.validTo ?? null, coupon.usageLimit ?? null]
+    [coupon.code, rate(coupon.discountRate), coupon.validFrom ?? null, coupon.validTo ?? null, coupon.usageLimit ?? null]
   );
 }
 

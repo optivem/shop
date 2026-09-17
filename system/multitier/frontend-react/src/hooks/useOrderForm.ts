@@ -5,19 +5,21 @@ import type { OrderFormData } from '../types/form.types';
 import type { PlaceOrderResponse } from '../types/api.types';
 import type { Result } from '../types/result.types';
 
+const INITIAL_FORM: OrderFormData = {
+  sku: '',
+  quantity: 0,
+  quantityValue: '',
+  country: 'US',
+  couponCode: '',
+};
+
 /**
  * Custom hook for managing order form state, validation, and submission
  * Handles all business logic for placing orders including client-side validation
  * @returns Form state, submission state, and control functions
  */
 export function useOrderForm() {
-  const [formData, setFormData] = useState<OrderFormData>({
-    sku: '',
-    quantity: 0,
-    quantityValue: '',
-    country: 'US',
-    couponCode: '',
-  });
+  const [formData, setFormData] = useState<OrderFormData>(INITIAL_FORM);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const submitOrder = async (): Promise<Result<PlaceOrderResponse>> => {
@@ -45,13 +47,7 @@ export function useOrderForm() {
 
     if (result.success) {
       // Reset form on success
-      setFormData({
-        sku: '',
-        quantity: 0,
-        quantityValue: '',
-        country: '',
-        couponCode: '',
-      });
+      setFormData(INITIAL_FORM);
     }
 
     return result;
@@ -62,13 +58,7 @@ export function useOrderForm() {
   };
 
   const resetForm = () => {
-    setFormData({
-      sku: '',
-      quantity: 0,
-      quantityValue: '',
-      country: 'US',
-      couponCode: '',
-    });
+    setFormData(INITIAL_FORM);
   };
 
   return {

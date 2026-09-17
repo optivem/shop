@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import Decimal from 'decimal.js';
 import { findCouponByCode } from '@/lib/db';
 import { notFoundResponse, internalErrorResponse } from '@/lib/errors';
 import { jsonResponseWithDecimals } from '@/lib/decimal-format';
@@ -21,7 +22,7 @@ export async function GET(
 
     return jsonResponseWithDecimals({
       code: coupon.code,
-      discountRate: Number.parseFloat(coupon.discount_rate),
+      discountRate: new Decimal(coupon.discount_rate),
       validFrom: coupon.valid_from ? formatTimestamp(coupon.valid_from) : null,
       validTo: coupon.valid_to ? formatTimestamp(coupon.valid_to) : null,
       usageLimit: coupon.usage_limit,

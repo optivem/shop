@@ -1,4 +1,5 @@
 import { Verifier } from '@pact-foundation/pact';
+import Decimal from 'decimal.js';
 import * as path from 'path';
 import { ComponentHarness } from '../support/component-harness';
 import { Order } from '../../src/core/entities/order.entity';
@@ -20,14 +21,14 @@ describe('Backend Pact Provider Verification', () => {
     country: 'US',
     sku: 'BOOK-123',
     quantity: 2,
-    unitPrice: 10.0,
-    basePrice: 20.0,
-    discountRate: 0,
-    discountAmount: 0,
-    subtotalPrice: 20.0,
-    taxRate: 0.1,
-    taxAmount: 2.0,
-    totalPrice: 22.0,
+    unitPrice: new Decimal('10.00'),
+    basePrice: new Decimal('20.00'),
+    discountRate: new Decimal('0.0000'),
+    discountAmount: new Decimal('0.00'),
+    subtotalPrice: new Decimal('20.00'),
+    taxRate: new Decimal('0.1000'),
+    taxAmount: new Decimal('2.00'),
+    totalPrice: new Decimal('22.00'),
     status: OrderStatus.PLACED,
     appliedCouponCode: null,
   });
@@ -157,7 +158,7 @@ describe('Backend Pact Provider Verification', () => {
           await harness.couponRepo.save(
             harness.couponRepo.create({
               code: 'SAVE10',
-              discountRate: 0.2,
+              discountRate: new Decimal('0.2000'),
               usageLimit: 100,
               usedCount: 0,
               validFrom: null,
@@ -175,7 +176,7 @@ describe('Backend Pact Provider Verification', () => {
           await harness.couponRepo.save(
             harness.couponRepo.create({
               code: 'SAVE10',
-              discountRate: 0.2,
+              discountRate: new Decimal('0.2000'),
               usageLimit: 100,
               usedCount: 0,
               validFrom: null,

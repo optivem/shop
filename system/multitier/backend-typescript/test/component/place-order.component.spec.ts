@@ -1,3 +1,4 @@
+import Decimal from 'decimal.js';
 import request from 'supertest';
 import { ComponentHarness } from '../support/component-harness';
 
@@ -96,7 +97,7 @@ describe('Place Order (component)', () => {
     await harness.couponRepo.save(
       harness.couponRepo.create({
         code: 'SAVE20',
-        discountRate: 0.2,
+        discountRate: new Decimal('0.2000'),
         usageLimit: 100,
         usedCount: 0,
         validFrom: null,

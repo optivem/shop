@@ -1,3 +1,3 @@
 export class ClockGetTimeResponse {
-  time: string;
+  time!: string;
 }

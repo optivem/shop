@@ -3,6 +3,7 @@ import { UseCaseContext } from '../../shared/use-case-context.js';
 import { AppContext } from '../app-context.js';
 import { ScenarioContext } from '../scenario-context.js';
 import { ThenCancelOrderResultStage } from '../then/then-cancel-order.js';
+import { assertNotAwaited } from '../assert-not-awaited.js';
 
 export class WhenCancelOrder {
   private orderNumber: string = DEFAULTS.ORDER_NUMBER;
@@ -18,7 +19,9 @@ export class WhenCancelOrder {
     return this;
   }
 
-  then(): ThenCancelOrderResultStage {
+  then(): ThenCancelOrderResultStage;
+  then(...args: unknown[]): ThenCancelOrderResultStage {
+    assertNotAwaited(args);
     this.ctx.markExecuted();
     return new ThenCancelOrderResultStage(this.app, this.ctx, this.useCaseContext, this.orderNumber);
   }

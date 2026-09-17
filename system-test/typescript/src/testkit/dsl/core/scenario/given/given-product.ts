@@ -3,6 +3,7 @@ import { ThenContractStage } from '../then/then-contract.js';
 import { WhenStage } from '../when/when-stage.js';
 import type { GivenStage } from './given-stage.js';
 import type { GivenProduct as IGivenProduct } from '../../../port/given/steps/given-product.js';
+import { assertNotAwaited } from '../assert-not-awaited.js';
 
 export class GivenProduct implements IGivenProduct {
   constructor(
@@ -28,7 +29,9 @@ export class GivenProduct implements IGivenProduct {
     return this.stage.when();
   }
 
-  then(): ThenContractStage {
+  then(): ThenContractStage;
+  then(...args: unknown[]): ThenContractStage {
+    assertNotAwaited(args);
     return this.stage.then();
   }
 }

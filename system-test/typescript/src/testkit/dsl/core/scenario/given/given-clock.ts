@@ -5,6 +5,7 @@ import { WhenStage } from '../when/when-stage.js';
 import type { GivenStage } from './given-stage.js';
 import type { GivenClock as IGivenClock } from '../../../port/given/steps/given-clock.js';
 import { nonEmptyOr } from '../../../../common/fallback.js';
+import { assertNotAwaited } from '../assert-not-awaited.js';
 
 export class GivenClock implements IGivenClock {
   constructor(
@@ -35,7 +36,9 @@ export class GivenClock implements IGivenClock {
     return this.stage.when();
   }
 
-  then(): ThenContractStage {
+  then(): ThenContractStage;
+  then(...args: unknown[]): ThenContractStage {
+    assertNotAwaited(args);
     return this.stage.then();
   }
 }

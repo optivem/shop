@@ -1,3 +1,4 @@
+import Decimal from 'decimal.js';
 import { Client } from 'pg';
 import {
   PostgreSqlContainer,
@@ -79,14 +80,14 @@ describe('db adapter [integration]', () => {
       country: 'US',
       sku: 'BOOK-123',
       quantity: 2,
-      unitPrice: 10.0,
-      basePrice: 20.0,
-      discountRate: 0,
-      discountAmount: 0,
-      subtotalPrice: 20.0,
-      taxRate: 0.1,
-      taxAmount: 2.0,
-      totalPrice: 22.0,
+      unitPrice: new Decimal('10.0'),
+      basePrice: new Decimal('20.0'),
+      discountRate: new Decimal('0'),
+      discountAmount: new Decimal('0'),
+      subtotalPrice: new Decimal('20.0'),
+      taxRate: new Decimal('0.1'),
+      taxAmount: new Decimal('2.0'),
+      totalPrice: new Decimal('22.0'),
       appliedCouponCode: null,
       status: 'PLACED',
     });

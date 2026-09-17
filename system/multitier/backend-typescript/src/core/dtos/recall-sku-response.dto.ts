@@ -1,4 +1,4 @@
 export class RecallSkuResponse {
-  sku: string;
-  cancelledCount: number;
+  sku!: string;
+  cancelledCount!: number;
 }

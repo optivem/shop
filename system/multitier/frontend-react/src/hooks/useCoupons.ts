@@ -53,7 +53,7 @@ export function useCoupons() {
 
     const result = await createCoupon(
       formData.code,
-      formData.discountRate,
+      Number.parseFloat(formData.discountRate),
       validFrom,
       validTo,
       formData.usageLimit ? Number.parseInt(formData.usageLimit) : null

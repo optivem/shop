@@ -1,10 +1,12 @@
+import Decimal from 'decimal.js';
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 import { OrderStatus } from './order-status.enum';
+import { numericTransformer } from './numeric.transformer';
 
 @Entity('orders')
 export class Order {
   @PrimaryGeneratedColumn('identity')
-  id: number;
+  id!: number;
 
   @Column({
     name: 'order_number',
@@ -13,10 +15,10 @@ export class Order {
     unique: true,
     nullable: false,
   })
-  orderNumber: string;
+  orderNumber!: string;
 
   @Column({ name: 'order_timestamp', type: 'timestamptz', nullable: false })
-  orderTimestamp: Date;
+  orderTimestamp!: Date;
 
   @Column({
     name: 'country',
@@ -25,13 +27,13 @@ export class Order {
     nullable: false,
     default: () => "'US'",
   })
-  country: string;
+  country!: string;
 
   @Column({ name: 'sku', type: 'varchar', length: 255, nullable: false })
-  sku: string;
+  sku!: string;
 
   @Column({ name: 'quantity', nullable: false })
-  quantity: number;
+  quantity!: number;
 
   @Column({
     name: 'unit_price',
@@ -39,8 +41,9 @@ export class Order {
     precision: 10,
     scale: 2,
     nullable: false,
+    transformer: numericTransformer(2),
   })
-  unitPrice: number;
+  unitPrice!: Decimal;
 
   @Column({
     name: 'base_price',
@@ -48,9 +51,10 @@ export class Order {
     precision: 10,
     scale: 2,
     nullable: false,
+    transformer: numericTransformer(2),
     default: 0,
   })
-  basePrice: number;
+  basePrice!: Decimal;
 
   @Column({
     name: 'discount_rate',
@@ -58,9 +62,10 @@ export class Order {
     precision: 5,
     scale: 4,
     nullable: false,
+    transformer: numericTransformer(4),
     default: 0,
   })
-  discountRate: number;
+  discountRate!: Decimal;
 
   @Column({
     name: 'discount_amount',
@@ -68,9 +73,10 @@ export class Order {
     precision: 10,
     scale: 2,
     nullable: false,
+    transformer: numericTransformer(2),
     default: 0,
   })
-  discountAmount: number;
+  discountAmount!: Decimal;
 
   @Column({
     name: 'subtotal_price',
@@ -78,9 +84,10 @@ export class Order {
     precision: 10,
     scale: 2,
     nullable: false,
+    transformer: numericTransformer(2),
     default: 0,
   })
-  subtotalPrice: number;
+  subtotalPrice!: Decimal;
 
   @Column({
     name: 'tax_rate',
@@ -88,9 +95,10 @@ export class Order {
     precision: 5,
     scale: 4,
     nullable: false,
+    transformer: numericTransformer(4),
     default: 0,
   })
-  taxRate: number;
+  taxRate!: Decimal;
 
   @Column({
     name: 'tax_amount',
@@ -98,9 +106,10 @@ export class Order {
     precision: 10,
     scale: 2,
     nullable: false,
+    transformer: numericTransformer(2),
     default: 0,
   })
-  taxAmount: number;
+  taxAmount!: Decimal;
 
   @Column({
     name: 'total_price',
@@ -108,11 +117,12 @@ export class Order {
     precision: 10,
     scale: 2,
     nullable: false,
+    transformer: numericTransformer(2),
   })
-  totalPrice: number;
+  totalPrice!: Decimal;
 
   @Column({ name: 'status', type: 'varchar', length: 50, nullable: false })
-  status: OrderStatus;
+  status!: OrderStatus;
 
   @Column({
     name: 'applied_coupon_code',
@@ -121,5 +131,5 @@ export class Order {
     nullable: true,
     default: null,
   })
-  appliedCouponCode: string | null;
+  appliedCouponCode!: string | null;
 }

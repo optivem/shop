@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import Decimal from 'decimal.js';
 import { insertCoupon, findAllCoupons, findCouponByCode } from '@/lib/db';
 import { badRequestResponse, validationErrorResponse, internalErrorResponse } from '@/lib/errors';
 import { isRecord } from '@/lib/type-guards';
@@ -19,7 +20,8 @@ export async function POST(request: NextRequest) {
     }
 
     const codeStr = (body.code as string).trim();
-    const discountRate = typeof body.discountRate === 'string' ? Number(body.discountRate) : body.discountRate as number;
+    // The validator guarantees discountRate is a number or a numeric string in (0, 1].
+    const discountRate = new Decimal(typeof body.discountRate === 'string' ? body.discountRate.trim() : body.discountRate as number);
 
     const existing = await findCouponByCode(codeStr);
     if (existing) {
@@ -45,7 +47,7 @@ export async function GET() {
     return jsonResponseWithDecimals({
       coupons: coupons.map((c) => ({
         code: c.code,
-        discountRate: Number.parseFloat(c.discount_rate),
+        discountRate: new Decimal(c.discount_rate),
         validFrom: c.valid_from ? c.valid_from.toISOString() : null,
         validTo: c.valid_to ? c.valid_to.toISOString() : null,
         usageLimit: c.usage_limit,
