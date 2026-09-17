@@ -15,9 +15,11 @@ export class ErpRealDriver extends BaseErpDriver<ErpRealClient> {
     return this.client.createProduct(request);
   }
 
-  async returnsPromotion(_request: ReturnsPromotionRequest): Promise<Result<void, ErpErrorResponse>> {
-    return success(undefined);
+  returnsPromotion(_request: ReturnsPromotionRequest): Promise<Result<void, ErpErrorResponse>> {
+    return Promise.resolve(success(undefined));
   }
 
-  async close(): Promise<void> {}
+  close(): Promise<void> {
+    return Promise.resolve();
+  }
 }

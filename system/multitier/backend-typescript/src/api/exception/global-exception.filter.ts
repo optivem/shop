@@ -174,7 +174,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
       if (isTypeMismatch === 'empty') {
         const emptyMessage =
-          constraints['isNotEmpty'] || constraints[constraintKeys.at(-1)!];
+          constraints.isNotEmpty || constraints[constraintKeys.at(-1)!];
         errors.push({
           field,
           message: emptyMessage,
@@ -183,7 +183,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         });
       } else if (isTypeMismatch === 'type_mismatch') {
         const typeMismatchMessage =
-          err.typeMismatchMessage || constraints[constraintKeys[0]];
+          err.typeMismatchMessage ?? constraints[constraintKeys[0]];
         errors.push({
           field,
           message: typeMismatchMessage,

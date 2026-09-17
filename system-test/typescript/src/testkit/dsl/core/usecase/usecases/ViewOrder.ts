@@ -6,7 +6,7 @@ import { BaseMyShopUseCase } from './base/BaseMyShopUseCase.js';
 import { ViewOrderVerification } from './ViewOrderVerification.js';
 
 export class ViewOrder extends BaseMyShopUseCase<ViewOrderResponse, ViewOrderVerification> {
-  private _orderNumber: string = '';
+  private _orderNumber = '';
 
   constructor(driver: MyShopDriver, context: UseCaseContext) {
     super(driver, context);

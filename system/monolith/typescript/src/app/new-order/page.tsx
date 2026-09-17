@@ -8,6 +8,10 @@ interface FieldError {
   message: string;
 }
 
+interface PlaceOrderResponse {
+  orderNumber: string;
+}
+
 interface ErrorData {
   detail?: string;
   errors?: FieldError[];
@@ -61,12 +65,12 @@ export default function NewOrderPage() {
         body: JSON.stringify(body),
       });
 
-      const data = await response.json();
+      const data: unknown = await response.json();
 
       if (response.ok) {
         setNotification({
           type: "success",
-          message: `Success! Order has been created with Order Number ${data.orderNumber}`,
+          message: `Success! Order has been created with Order Number ${(data as PlaceOrderResponse).orderNumber}`,
           fieldErrors: [],
           id: nextId,
         });
@@ -81,7 +85,7 @@ export default function NewOrderPage() {
         }
         setNotification({
           type: "error",
-          message: errorData.detail || "An error occurred",
+          message: errorData.detail ?? "An error occurred",
           fieldErrors,
           id: nextId,
         });
@@ -139,7 +143,11 @@ export default function NewOrderPage() {
               <h4 className="mb-0">Place Your Order</h4>
             </div>
             <div className="card-body">
-              <form onSubmit={handleSubmit}>
+              <form
+                onSubmit={(e) => {
+                  void handleSubmit(e);
+                }}
+              >
                 <div className="mb-3">
                   <label htmlFor="sku" className="form-label">
                     SKU:

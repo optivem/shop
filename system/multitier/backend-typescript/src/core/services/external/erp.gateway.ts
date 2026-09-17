@@ -14,7 +14,9 @@ export class ErpGateway {
     );
   }
 
-  async getProductDetails(sku: string): Promise<ErpProductDetailsResponse | null> {
+  async getProductDetails(
+    sku: string,
+  ): Promise<ErpProductDetailsResponse | null> {
     const url = `${this.erpUrl}/api/products/${sku}`;
 
     try {

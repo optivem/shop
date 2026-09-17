@@ -5,8 +5,8 @@ import type { Result } from './types/result.types';
 
 export function showNotification(
   message: string,
-  isError: boolean = false,
-  containerElementId: string = 'notifications'
+  isError = false,
+  containerElementId = 'notifications'
 ): void {
   const notificationsDiv = document.getElementById(containerElementId);
   if (!notificationsDiv) {
@@ -118,24 +118,24 @@ export async function fetchJson<T>(url: string, options?: RequestInit): Promise<
       if (response.status === 204) {
         return { success: true, data: undefined as T };
       }
-      const data = await response.json();
+      const data = (await response.json()) as T;
       return { success: true, data };
     }
 
     const error = await extractApiError(response);
     return { success: false, error };
-  } catch (e: any) {
+  } catch (e: unknown) {
     return {
       success: false,
       error: {
-        message: `Network error: ${e.message}`,
+        message: `Network error: ${e instanceof Error ? e.message : String(e)}`,
         status: 0
       }
     };
   }
 }
 
-async function safeParseJson(response: Response): Promise<any> {
+async function safeParseJson(response: Response): Promise<unknown> {
   try {
     return await response.json();
   } catch (e) {
@@ -152,7 +152,7 @@ async function safeParseJson(response: Response): Promise<any> {
  * @returns ApiError object with message and optional field errors
  */
 export async function extractApiError(response: Response): Promise<ApiError> {
-  const errorData: ProblemDetail | null = await safeParseJson(response);
+  const errorData = (await safeParseJson(response)) as ProblemDetail | null;
 
   let message = '';
   let fieldErrors: string[] | undefined = undefined;

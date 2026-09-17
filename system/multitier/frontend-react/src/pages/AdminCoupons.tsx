@@ -1,7 +1,7 @@
 import { Layout } from '../components';
-import { CouponForm, CouponTable } from '../features/coupons';
+import { CouponForm, CouponTable, type CouponFormData } from '../features/coupons';
 import { useCoupons } from '../hooks';
-import { useNotificationContext } from '../contexts/NotificationContext';
+import { useNotificationContext } from '../contexts/useNotificationContext';
 
 export function AdminCoupons() {
   const {
@@ -16,7 +16,7 @@ export function AdminCoupons() {
 
   const { setSuccess, handleResult } = useNotificationContext();
 
-  const handleCouponSubmit = async (formData: any) => {
+  const handleCouponSubmit = async (formData: CouponFormData) => {
     const createdCode = formData.code;
 
     handleResult(await submitCoupon(formData), () => {

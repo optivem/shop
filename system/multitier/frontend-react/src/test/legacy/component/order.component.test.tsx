@@ -105,7 +105,9 @@ describe('NewOrder — client-side validation (no request fired)', () => {
 describe('OrderHistory', () => {
   it('shows the loading spinner while the request is in flight', async () => {
     await provider.executeTest(async () => {
-      vi.stubGlobal('fetch', vi.fn(() => new Promise<Response>(() => {})));
+      vi.stubGlobal('fetch', vi.fn(() => new Promise<Response>(() => {
+        // never settles: keeps the request in flight
+      })));
       renderWithProviders(<OrderHistory />);
 
       expect(screen.getByText('Loading orders...')).toBeInTheDocument();

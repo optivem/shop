@@ -1,1 +1,1 @@
-export interface PublishCouponResponse {}
+export type PublishCouponResponse = Record<string, never>;

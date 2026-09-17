@@ -7,7 +7,7 @@ import type { Result } from '../types/result.types';
 export class OrderGateway {
   private readonly baseUrl: string;
 
-  constructor(baseUrl: string = '/api/orders') {
+  constructor(baseUrl = '/api/orders') {
     this.baseUrl = baseUrl;
   }
 

@@ -1,1 +1,1 @@
-export interface DeliverOrderResponse {}
+export type DeliverOrderResponse = Record<string, never>;

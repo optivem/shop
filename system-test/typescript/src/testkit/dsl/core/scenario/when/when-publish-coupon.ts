@@ -4,7 +4,7 @@ import { ScenarioContext } from '../scenario-context.js';
 import { ThenPublishCouponResultStage } from '../then/then-publish-coupon.js';
 
 export class WhenPublishCoupon {
-  private code: string = '';
+  private code = '';
   private discountRate: number | string = 0;
   private validFrom?: string;
   private validTo?: string;

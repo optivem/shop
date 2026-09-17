@@ -1,1 +1,1 @@
-export interface GoToMyShopResponse {}
+export type GoToMyShopResponse = Record<string, never>;

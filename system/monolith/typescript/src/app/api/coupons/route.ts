@@ -1,25 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { insertCoupon, findAllCoupons, findCouponByCode } from '@/lib/db';
-import { validationErrorResponse, internalErrorResponse } from '@/lib/errors';
+import { badRequestResponse, validationErrorResponse, internalErrorResponse } from '@/lib/errors';
+import { isRecord } from '@/lib/type-guards';
 import { validatePublishCouponRequest } from '@/lib/validation';
 import { jsonResponseWithDecimals } from '@/lib/decimal-format';
 
 export async function POST(request: NextRequest) {
   try {
-    let body: Record<string, unknown>;
-    try {
-      body = await request.json();
-    } catch {
-      return NextResponse.json(
-        {
-          type: 'https://api.my-company.example/errors/bad-request',
-          title: 'Bad Request',
-          status: 400,
-          detail: 'Invalid request format',
-          timestamp: new Date().toISOString(),
-        },
-        { status: 400 }
-      );
+    // Malformed JSON and non-object JSON (null, array, primitive) are both an invalid request format.
+    const body: unknown = await request.json().catch(() => undefined);
+    if (!isRecord(body)) {
+      return badRequestResponse('Invalid request format');
     }
 
     const fieldErrors = validatePublishCouponRequest(body);

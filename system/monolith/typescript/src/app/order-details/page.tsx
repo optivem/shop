@@ -22,6 +22,16 @@ interface OrderDetail {
   status: string;
 }
 
+interface FieldError {
+  field?: string;
+  message: string;
+}
+
+interface ErrorData {
+  detail?: string;
+  errors?: FieldError[];
+}
+
 function OrderDetailsContent() {
   const searchParams = useSearchParams();
   const orderNumber = searchParams.get("orderNumber");
@@ -46,10 +56,10 @@ function OrderDetailsContent() {
       return;
     }
 
-    async function loadOrder() {
+    async function loadOrder(orderNumberToLoad: string) {
       try {
         const response = await fetch(
-          `/api/orders/${encodeURIComponent(orderNumber!)}`
+          `/api/orders/${encodeURIComponent(orderNumberToLoad)}`
         );
 
         if (response.status === 404) {
@@ -58,13 +68,13 @@ function OrderDetailsContent() {
         }
 
         if (!response.ok) {
-          const data = await response.json();
-          setError(data.detail || "Failed to load order");
+          const data = (await response.json()) as ErrorData;
+          setError(data.detail ?? "Failed to load order");
           setLoading(false);
           return;
         }
 
-        const data = await response.json();
+        const data = (await response.json()) as OrderDetail;
         setOrder(data);
       } catch (err) {
         setError(
@@ -75,7 +85,7 @@ function OrderDetailsContent() {
       }
     }
 
-    loadOrder();
+    void loadOrder(orderNumber);
   }, [orderNumber]);
 
   async function handleCancel() {
@@ -100,17 +110,17 @@ function OrderDetailsContent() {
           id: nextId,
         });
       } else {
-        const data = await response.json();
+        const data = (await response.json()) as ErrorData;
         const fieldErrors: string[] = [];
         if (data.errors && data.errors.length > 0) {
-          data.errors.forEach((err: { field?: string; message: string }) => {
+          data.errors.forEach((err) => {
             const fieldPart = err.field ? `${err.field}: ` : "";
             fieldErrors.push(`${fieldPart}${err.message}`);
           });
         }
         setNotification({
           type: "error",
-          message: data.detail || "Failed to cancel order",
+          message: data.detail ?? "Failed to cancel order",
           fieldErrors,
           id: nextId,
         });
@@ -149,17 +159,17 @@ function OrderDetailsContent() {
           id: nextId,
         });
       } else {
-        const data = await response.json();
+        const data = (await response.json()) as ErrorData;
         const fieldErrors: string[] = [];
         if (data.errors && data.errors.length > 0) {
-          data.errors.forEach((err: { field?: string; message: string }) => {
+          data.errors.forEach((err) => {
             const fieldPart = err.field ? `${err.field}: ` : "";
             fieldErrors.push(`${fieldPart}${err.message}`);
           });
         }
         setNotification({
           type: "error",
-          message: data.detail || "Failed to deliver order",
+          message: data.detail ?? "Failed to deliver order",
           fieldErrors,
           id: nextId,
         });
@@ -332,7 +342,7 @@ function OrderDetailsContent() {
                 <div className="col-md-6 mb-3">
                   <strong>Applied Coupon Code:</strong>
                   <p aria-label="Display Applied Coupon">
-                    {order.appliedCouponCode || 'None'}
+                    {order.appliedCouponCode ?? 'None'}
                   </p>
                 </div>
               </div>
@@ -341,7 +351,9 @@ function OrderDetailsContent() {
                   <button
                     className="btn btn-danger"
                     aria-label="Cancel Order"
-                    onClick={handleCancel}
+                    onClick={() => {
+                      void handleCancel();
+                    }}
                     disabled={isCancelling}
                   >
                     {isCancelling ? "Cancelling..." : "Cancel Order"}
@@ -351,7 +363,9 @@ function OrderDetailsContent() {
                   <button
                     className="btn btn-warning"
                     aria-label="Deliver Order"
-                    onClick={handleDeliver}
+                    onClick={() => {
+                      void handleDeliver();
+                    }}
                     disabled={isDelivering}
                   >
                     {isDelivering ? "Delivering..." : "Deliver Order"}

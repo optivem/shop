@@ -12,6 +12,20 @@ interface Coupon {
   usedCount: number;
 }
 
+interface FieldError {
+  field?: string;
+  message: string;
+}
+
+interface ErrorData {
+  detail?: string;
+  errors?: FieldError[];
+}
+
+interface CouponsResponse {
+  coupons?: Coupon[];
+}
+
 function formatDateOrFallback(dateStr: string | undefined, fallback: string): string {
   if (!dateStr) return fallback;
   return new Date(dateStr).toLocaleString("en-US", { timeZone: "UTC" });
@@ -47,8 +61,8 @@ export default function AdminCouponsPage() {
     try {
       const response = await fetch("/api/coupons");
       if (response.ok) {
-        const data = await response.json();
-        setCoupons(data.coupons || []);
+        const data = (await response.json()) as CouponsResponse;
+        setCoupons(data.coupons ?? []);
       }
     } catch {
       // ignore
@@ -58,7 +72,7 @@ export default function AdminCouponsPage() {
   }
 
   useEffect(() => {
-    loadCoupons();
+    void loadCoupons();
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -101,19 +115,21 @@ export default function AdminCouponsPage() {
         setValidFrom("");
         setValidTo("");
         setUsageLimit("");
-        setTimeout(loadCoupons, 100);
+        setTimeout(() => {
+          void loadCoupons();
+        }, 100);
       } else {
-        const data = await response.json();
+        const data = (await response.json()) as ErrorData;
         const fieldErrors: string[] = [];
         if (data.errors && data.errors.length > 0) {
-          data.errors.forEach((err: { field?: string; message: string }) => {
+          data.errors.forEach((err) => {
             const fieldPart = err.field ? `${err.field}: ` : "";
             fieldErrors.push(`${fieldPart}${err.message}`);
           });
         }
         setNotification({
           type: "error",
-          message: data.detail || "Failed to create coupon",
+          message: data.detail ?? "Failed to create coupon",
           fieldErrors,
           id: nextId,
         });
@@ -167,7 +183,11 @@ export default function AdminCouponsPage() {
           <h4 className="mb-0">Create New Coupon</h4>
         </div>
         <div className="card-body">
-          <form onSubmit={handleSubmit}>
+          <form
+            onSubmit={(e) => {
+              void handleSubmit(e);
+            }}
+          >
             <div className="row mb-3">
               <div className="col-md-6">
                 <label htmlFor="code" className="form-label">
@@ -268,7 +288,9 @@ export default function AdminCouponsPage() {
           <button
             className="btn btn-light btn-sm"
             aria-label="Refresh Coupon List"
-            onClick={loadCoupons}
+            onClick={() => {
+              void loadCoupons();
+            }}
           >
             Refresh
           </button>

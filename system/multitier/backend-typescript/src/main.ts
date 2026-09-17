@@ -3,12 +3,14 @@ import { AppModule } from './app.module';
 import { GlobalExceptionFilter } from './api/exception/global-exception.filter';
 import { CustomValidationPipe } from './api/exception/custom-validation.pipe';
 import { DecimalFormatInterceptor } from './api/interceptor/decimal-format.interceptor';
+import { envOrDefault } from './config/app.config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  const allowedOrigins = (
-    process.env.ALLOWED_ORIGINS || 'http://localhost:8080'
+  const allowedOrigins = envOrDefault(
+    'ALLOWED_ORIGINS',
+    'http://localhost:8080',
   ).split(',');
 
   app.enableCors({

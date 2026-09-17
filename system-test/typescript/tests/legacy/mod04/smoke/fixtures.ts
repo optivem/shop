@@ -5,8 +5,9 @@ import { loadConfiguration } from '../../../../config/configuration-loader.js';
 import { MyShopApiClient } from '../../../../src/testkit/driver/adapter/api/client/MyShopApiClient.js';
 import { ErpRealClient } from '../../../../src/testkit/driver/adapter/external/erp/client/ErpRealClient.js';
 import { TaxRealClient } from '../../../../src/testkit/driver/adapter/external/tax/client/TaxRealClient.js';
+import { envOrDefault } from '../../../../src/testkit/common/fallback.js';
 
-process.env.EXTERNAL_SYSTEM_MODE = process.env.EXTERNAL_SYSTEM_MODE || 'real';
+process.env.EXTERNAL_SYSTEM_MODE = envOrDefault('EXTERNAL_SYSTEM_MODE', 'real');
 
 const config = loadConfiguration();
 

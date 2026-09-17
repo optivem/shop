@@ -30,7 +30,7 @@ export class MyShopUiClient {
       }
       return failure({ message: `MyShop UI not available: ${response?.status()}`, fieldErrors: [] });
     } catch (e) {
-      return failure({ message: `MyShop UI not available: ${e}`, fieldErrors: [] });
+      return failure({ message: `MyShop UI not available: ${String(e)}`, fieldErrors: [] });
     }
   }
 
@@ -52,11 +52,11 @@ export class MyShopUiClient {
 
   async close(): Promise<void> {
     if (this.currentPage) {
-      await this.currentPage.close().catch(() => {});
+      await this.currentPage.close();
       this.currentPage = null;
     }
     if (this.context) {
-      await this.context.close().catch(() => {});
+      await this.context.close();
       this.context = null;
     }
   }

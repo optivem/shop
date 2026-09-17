@@ -52,30 +52,30 @@ export class ThenCancelOrderResultStage implements PromiseLike<void> {
   private async _arrangeTax(): Promise<void> {
     if (this.ctx.countryConfigs.length > 0) {
       for (const countryConfig of this.ctx.countryConfigs) {
-        const resolvedCountry = this.useCaseContext.getParamValueOrLiteral(countryConfig.country) as string;
+        const resolvedCountry = this.useCaseContext.getParamValueOrLiteral(countryConfig.country);
         await this.app.taxDriver.returnsTaxRate({ country: resolvedCountry, taxRate: countryConfig.taxRate });
       }
       return;
     }
-    const resolvedCountry = this.useCaseContext.getParamValueOrLiteral(DEFAULTS.COUNTRY) as string;
+    const resolvedCountry = this.useCaseContext.getParamValueOrLiteral(DEFAULTS.COUNTRY);
     await this.app.taxDriver.returnsTaxRate({ country: resolvedCountry, taxRate: DEFAULTS.TAX_RATE });
   }
 
   private async _arrangeProducts(): Promise<void> {
     if (this.ctx.hasExplicitProduct) {
       for (const pc of this.ctx.productConfigs) {
-        const resolvedSku = this.useCaseContext.getParamValue(pc.sku) as string;
+        const resolvedSku = this.useCaseContext.getParamValue(pc.sku);
         await this.app.erpDriver.returnsProduct({ sku: resolvedSku, price: pc.price });
       }
       return;
     }
-    const resolvedSku = this.useCaseContext.getParamValue(DEFAULTS.SKU) as string;
+    const resolvedSku = this.useCaseContext.getParamValue(DEFAULTS.SKU);
     await this.app.erpDriver.returnsProduct({ sku: resolvedSku, price: DEFAULTS.UNIT_PRICE });
   }
 
   private async _arrangeCoupons(): Promise<void> {
     for (const cc of this.ctx.couponConfigs) {
-      const resolvedCode = this.useCaseContext.getParamValue(cc.code) as string;
+      const resolvedCode = this.useCaseContext.getParamValue(cc.code);
       await this.app.myShop().publishCoupon({
         code: resolvedCode,
         discountRate: String(cc.discountRate),
@@ -88,9 +88,9 @@ export class ThenCancelOrderResultStage implements PromiseLike<void> {
 
   private async _placeGivenOrders(): Promise<void> {
     for (const oc of this.ctx.orderConfigs) {
-      const resolvedSku = this.useCaseContext.getParamValue(oc.sku) as string;
-      const resolvedCountry = this.useCaseContext.getParamValueOrLiteral(oc.country) as string;
-      const resolvedCouponCode = this.useCaseContext.getParamValue(oc.couponCode) as string | null;
+      const resolvedSku = this.useCaseContext.getParamValue(oc.sku);
+      const resolvedCountry = this.useCaseContext.getParamValueOrLiteral(oc.country);
+      const resolvedCouponCode = this.useCaseContext.getParamValue(oc.couponCode);
       const placeResult = await this.app.myShop().placeOrder({
         sku: resolvedSku,
         quantity: oc.quantity,

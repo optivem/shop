@@ -17,13 +17,13 @@ export abstract class BasePage {
 
     const successNotification = this.page.locator(`[role='alert'].notification.success`);
     if ((await successNotification.count()) > 0) {
-      const text = (await successNotification.textContent({ timeout: PAGE_TIMEOUT_MS }))?.trim() || '';
+      const text = (await successNotification.textContent({ timeout: PAGE_TIMEOUT_MS }))?.trim() ?? '';
       return success(text);
     }
 
     const errorNotification = this.page.locator(`[role='alert'].notification.error`);
     const errorMessage =
-      (await errorNotification.locator('.error-message').textContent({ timeout: PAGE_TIMEOUT_MS }))?.trim() || '';
+      (await errorNotification.locator('.error-message').textContent({ timeout: PAGE_TIMEOUT_MS }))?.trim() ?? '';
     const fieldErrorTexts = await errorNotification.locator('.field-error').allTextContents();
     const fieldErrors = fieldErrorTexts.map((text) => {
       const colonIndex = text.indexOf(':');

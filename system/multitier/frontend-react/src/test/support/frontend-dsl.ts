@@ -63,14 +63,12 @@ export class FrontendDsl {
   }
 
   private ready(): Promise<FrontendDriver> {
-    if (!this.driver) {
-      this.driver = (async () => {
-        const baseUrl = await this.backendUrl();
-        const driver = this.newDriver();
-        driver.useBackend(baseUrl);
-        return driver;
-      })();
-    }
+    this.driver ??= (async () => {
+      const baseUrl = await this.backendUrl();
+      const driver = this.newDriver();
+      driver.useBackend(baseUrl);
+      return driver;
+    })();
     return this.driver;
   }
 }

@@ -1,5 +1,6 @@
 import { test as base } from '@playwright/test';
-import { ChannelContext, bindChannels, bindTestEach } from '@optivem/optivem-testing';
+import { ChannelContext, bindChannels } from '@optivem/optivem-testing';
+import { bindTestEach } from '../../../../src/testkit/driver/adapter/shared/client/playwright/bindTestEach.js';
 import { chromium } from 'playwright';
 import type { Browser } from 'playwright';
 import { loadConfiguration } from '../../../../config/configuration-loader.js';
@@ -11,8 +12,9 @@ import { MyShopUiDriver } from '../../../../src/testkit/driver/adapter/ui/my-sho
 import { ErpRealDriver } from '../../../../src/testkit/driver/adapter/external/erp/erp-real-driver.js';
 import { TaxRealDriver } from '../../../../src/testkit/driver/adapter/external/tax/tax-real-driver.js';
 import { ChannelType } from '../../../../src/testkit/channel/channel-type.js';
+import { envOrDefault, nonEmptyOr } from '../../../../src/testkit/common/fallback.js';
 
-process.env.EXTERNAL_SYSTEM_MODE = process.env.EXTERNAL_SYSTEM_MODE || 'real';
+process.env.EXTERNAL_SYSTEM_MODE = envOrDefault('EXTERNAL_SYSTEM_MODE', 'real');
 
 const config = loadConfiguration();
 
@@ -24,7 +26,7 @@ const _test = base.extend<{ myShopDriver: MyShopDriver; erpDriver: ErpDriver; ta
         await browser.close();
     },
     myShopDriver: async ({ _myShopBrowser }, use) => {
-        const channel = ChannelContext.get() || ChannelType.API;
+        const channel = nonEmptyOr(ChannelContext.get(), ChannelType.API);
         let driver: MyShopDriver;
         if (channel === ChannelType.UI) {
             driver = new MyShopUiDriver(config.myShop.frontendUrl, _myShopBrowser);

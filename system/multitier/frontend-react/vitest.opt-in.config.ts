@@ -1,4 +1,3 @@
-/// <reference types="vitest/config" />
 import { defineConfig, configDefaults } from 'vitest/config';
 import base from './vite.config';
 

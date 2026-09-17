@@ -99,6 +99,7 @@ export function OrderHistoryTable({
     );
   }, [orders, filter]);
 
+  // eslint-disable-next-line react-hooks/incompatible-library -- TanStack Table's useReactTable is inherently incompatible with React Compiler memoization; no compiler is used here and there is no compatible API to switch to
   const table = useReactTable({
     data: filteredOrders,
     columns,

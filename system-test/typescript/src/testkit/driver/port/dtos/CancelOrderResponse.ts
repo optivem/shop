@@ -1,1 +1,1 @@
-export interface CancelOrderResponse {}
+export type CancelOrderResponse = Record<string, never>;

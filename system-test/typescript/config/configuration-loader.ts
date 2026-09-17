@@ -1,6 +1,7 @@
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import * as fs from 'node:fs';
+import { envOrDefault, nonEmptyOr } from '../src/testkit/common/fallback.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -28,8 +29,8 @@ export interface ConfigOverrides {
 }
 
 export function loadConfiguration(overrides?: ConfigOverrides): TestConfig {
-  const environment = (process.env.ENVIRONMENT || 'local').toLowerCase();
-  const externalSystemMode = overrides?.externalSystemMode || (process.env.EXTERNAL_SYSTEM_MODE || 'real').toLowerCase();
+  const environment = envOrDefault('ENVIRONMENT', 'local').toLowerCase();
+  const externalSystemMode = nonEmptyOr(overrides?.externalSystemMode, envOrDefault('EXTERNAL_SYSTEM_MODE', 'real').toLowerCase());
 
   const configFileName = `test-config-${environment}-${externalSystemMode}.json`;
   const configPath = join(__dirname, configFileName);

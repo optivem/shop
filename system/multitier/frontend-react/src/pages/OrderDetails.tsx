@@ -3,8 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Layout, DataState } from '../components';
 import { OrderDetailView } from '../features/orders';
 import { useOrderDetails } from '../hooks';
-import { useNotificationContext } from '../contexts/NotificationContext';
+import { useNotificationContext } from '../contexts/useNotificationContext';
 import { orderService } from '../services/order-service';
+import { OrderStatus } from '../types/api.types';
 
 export function OrderDetails() {
   const { orderNumber } = useParams<{ orderNumber: string }>();
@@ -59,21 +60,21 @@ export function OrderDetails() {
               <>
                 <OrderDetailView order={order} />
                 <div className="mt-4 d-flex gap-2">
-                  {order.status !== 'CANCELLED' && order.status !== 'DELIVERED' && (
+                  {order.status !== OrderStatus.CANCELLED && order.status !== OrderStatus.DELIVERED && (
                     <button
                       className="btn btn-danger"
                       aria-label="Cancel Order"
-                      onClick={handleCancel}
+                      onClick={() => { void handleCancel(); }}
                       disabled={isCancelling}
                     >
                       {isCancelling ? 'Cancelling...' : 'Cancel Order'}
                     </button>
                   )}
-                  {order.status !== 'CANCELLED' && order.status !== 'DELIVERED' && (
+                  {order.status !== OrderStatus.CANCELLED && order.status !== OrderStatus.DELIVERED && (
                     <button
                       className="btn btn-warning"
                       aria-label="Deliver Order"
-                      onClick={handleDeliver}
+                      onClick={() => { void handleDeliver(); }}
                       disabled={isDelivering}
                     >
                       {isDelivering ? 'Delivering...' : 'Deliver Order'}

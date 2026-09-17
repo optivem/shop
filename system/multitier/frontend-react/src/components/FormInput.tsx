@@ -22,7 +22,7 @@ export function FormInput({
   ...inputProps
 }: Readonly<FormInputProps>) {
   // Auto-generate ID from label if not provided
-  const inputId = id || label.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  const inputId = id ?? label.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 
   return (
     <div className="mb-3">

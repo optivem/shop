@@ -2,7 +2,7 @@ import { ReactNode } from 'react';
 import { Navbar } from './Navbar';
 import { Breadcrumb } from './Breadcrumb';
 import { Notification } from './Notification';
-import { useNotificationContext } from '../contexts/NotificationContext';
+import { useNotificationContext } from '../contexts/useNotificationContext';
 
 interface BreadcrumbItem {
   label: string;

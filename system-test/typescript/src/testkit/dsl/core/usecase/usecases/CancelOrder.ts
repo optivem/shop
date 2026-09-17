@@ -6,7 +6,7 @@ import type { UseCaseContext } from '../../shared/use-case-context.js';
 import { BaseMyShopUseCase } from './base/BaseMyShopUseCase.js';
 
 export class CancelOrder extends BaseMyShopUseCase<CancelOrderResponse, VoidVerification> {
-  private _orderNumberResultAlias: string = '';
+  private _orderNumberResultAlias = '';
 
   constructor(driver: MyShopDriver, context: UseCaseContext) {
     super(driver, context);

@@ -49,7 +49,7 @@ export class CustomValidationPipe implements PipeTransform {
 
       const validationErrors = errors.map((err) => {
         const field = err.property;
-        const constraints = err.constraints || {};
+        const constraints = err.constraints ?? {};
         const meta = fieldMeta[field];
 
         return {
@@ -88,7 +88,7 @@ export class CustomValidationPipe implements PipeTransform {
   }
 
   private toValidate(metadata: ArgumentMetadata): boolean {
-    const types: Array<new (...args: unknown[]) => unknown> = [
+    const types: (new (...args: unknown[]) => unknown)[] = [
       String,
       Boolean,
       Number,

@@ -1,8 +1,10 @@
-process.env.EXTERNAL_SYSTEM_MODE = process.env.EXTERNAL_SYSTEM_MODE || 'stub';
+process.env.EXTERNAL_SYSTEM_MODE = envOrDefault('EXTERNAL_SYSTEM_MODE', 'stub');
 
-import { bindChannels, bindTestEach } from '@optivem/optivem-testing';
+import { bindChannels } from '@optivem/optivem-testing';
+import { bindTestEach } from '../../../../src/testkit/driver/adapter/shared/client/playwright/bindTestEach.js';
 import { withApp } from '../../../../src/testkit/driver/adapter/shared/client/playwright/withApp.js';
 import { ChannelType } from '../../../../src/testkit/channel/channel-type.js';
+import { envOrDefault } from '../../../../src/testkit/common/fallback.js';
 
 const _test = withApp();
 const test = Object.assign(_test, {

@@ -54,7 +54,7 @@ export class ThenPublishCouponResultStage implements PromiseLike<void> {
   private async _arrangeCoupons(): Promise<void> {
     // Set up given coupons first (for duplicate tests)
     for (const cc of this.ctx.couponConfigs) {
-      const resolvedCode = this.useCaseContext.getParamValue(cc.code) as string;
+      const resolvedCode = this.useCaseContext.getParamValue(cc.code);
       await this.app.myShop().publishCoupon({
         code: resolvedCode,
         discountRate: String(cc.discountRate),
@@ -67,7 +67,7 @@ export class ThenPublishCouponResultStage implements PromiseLike<void> {
 
   private async _runCouponAssertions(): Promise<void> {
     for (const couponEntry of this._couponAssertions) {
-      const resolvedCouponCode = this.useCaseContext.getParamValue(couponEntry.code) as string;
+      const resolvedCouponCode = this.useCaseContext.getParamValue(couponEntry.code);
       const browseResult = await this.app.myShop().browseCoupons({});
       expect(browseResult.success).toBe(true);
       if (!browseResult.success) continue;
@@ -82,7 +82,7 @@ export class ThenPublishCouponResultStage implements PromiseLike<void> {
   private async _doExecute(): Promise<void> {
     await this._arrangeCoupons();
 
-    const resolvedCode = this.useCaseContext.getParamValue(this.code) as string;
+    const resolvedCode = this.useCaseContext.getParamValue(this.code);
     const result = await this.app.myShop('static').publishCoupon({
       code: resolvedCode,
       discountRate: String(this.discountRate),

@@ -5,7 +5,7 @@ describe('match', () => {
   it('calls success handler when result is successful', () => {
     const result = { success: true as const, data: 42 };
     const onSuccess = vi.fn((data: number) => `ok:${data}`);
-    const onError = vi.fn();
+    const onError = vi.fn<() => string>();
 
     const output = match(result, { success: onSuccess, error: onError });
 
@@ -17,7 +17,7 @@ describe('match', () => {
   it('calls error handler when result is a failure', () => {
     const error = { message: 'Not found', status: 404 };
     const result = { success: false as const, error };
-    const onSuccess = vi.fn();
+    const onSuccess = vi.fn<() => string>();
     const onError = vi.fn(() => 'err');
 
     const output = match(result, { success: onSuccess, error: onError });

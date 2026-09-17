@@ -12,6 +12,14 @@ interface Order {
   status: string;
 }
 
+interface OrdersResponse {
+  orders?: Order[];
+}
+
+interface ErrorData {
+  detail?: string;
+}
+
 export default function OrderHistoryPage() {
   const [filter, setFilter] = useState("");
   const [orders, setOrders] = useState<Order[]>([]);
@@ -29,15 +37,15 @@ export default function OrderHistoryPage() {
       }
 
       const response = await fetch(url);
-      const data = await response.json();
+      const data: unknown = await response.json();
 
       if (!response.ok) {
-        setError(data.detail || "Failed to load orders");
+        setError((data as ErrorData).detail ?? "Failed to load orders");
         setOrders([]);
         return;
       }
 
-      setOrders(data.orders || []);
+      setOrders((data as OrdersResponse).orders ?? []);
     } catch (err) {
       setError(
         `Network error: ${err instanceof Error ? err.message : String(err)}`
@@ -49,11 +57,11 @@ export default function OrderHistoryPage() {
   }, []);
 
   useEffect(() => {
-    loadOrders();
+    void loadOrders();
   }, [loadOrders]);
 
   function handleRefresh() {
-    loadOrders(filter || undefined);
+    void loadOrders(filter || undefined);
   }
 
   return (

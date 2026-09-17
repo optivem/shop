@@ -1,11 +1,12 @@
 import { Pool } from 'pg';
+import { envOrDefault } from './env';
 
 const pool = new Pool({
-  host: process.env.POSTGRES_DB_HOST || 'localhost',
-  port: Number.parseInt(process.env.POSTGRES_DB_PORT || '5432', 10),
-  database: process.env.POSTGRES_DB_NAME || 'app',
-  user: process.env.POSTGRES_DB_USER || 'app',
-  password: process.env.POSTGRES_DB_PASSWORD || 'app',
+  host: envOrDefault('POSTGRES_DB_HOST', 'localhost'),
+  port: Number.parseInt(envOrDefault('POSTGRES_DB_PORT', '5432'), 10),
+  database: envOrDefault('POSTGRES_DB_NAME', 'app'),
+  user: envOrDefault('POSTGRES_DB_USER', 'app'),
+  password: envOrDefault('POSTGRES_DB_PASSWORD', 'app'),
 });
 
 export interface OrderRow {

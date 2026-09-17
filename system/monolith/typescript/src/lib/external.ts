@@ -1,7 +1,9 @@
-const ERP_API_URL = () => process.env.ERP_API_URL || 'http://localhost:9001/erp';
-const CLOCK_API_URL = () => process.env.CLOCK_API_URL || 'http://localhost:9001/clock';
-const TAX_API_URL = () => process.env.TAX_API_URL || 'http://localhost:9001/tax';
-const EXTERNAL_SYSTEM_MODE = () => process.env.EXTERNAL_SYSTEM_MODE || 'real';
+import { envOrDefault } from './env';
+
+const ERP_API_URL = () => envOrDefault('ERP_API_URL', 'http://localhost:9001/erp');
+const CLOCK_API_URL = () => envOrDefault('CLOCK_API_URL', 'http://localhost:9001/clock');
+const TAX_API_URL = () => envOrDefault('TAX_API_URL', 'http://localhost:9001/tax');
+const EXTERNAL_SYSTEM_MODE = () => envOrDefault('EXTERNAL_SYSTEM_MODE', 'real');
 
 export async function getCurrentTime(): Promise<Date> {
   const mode = EXTERNAL_SYSTEM_MODE();

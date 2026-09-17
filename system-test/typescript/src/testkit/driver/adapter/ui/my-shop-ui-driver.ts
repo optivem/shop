@@ -39,7 +39,9 @@ export class MyShopUiDriver implements MyShopDriver {
     await homeResult.value.clickNewOrder();
 
     const newOrderPage = this.client.newOrderPage();
-    await newOrderPage.inputSku(request.sku);
+    if (request.sku !== null) {
+      await newOrderPage.inputSku(request.sku);
+    }
     if (request.quantity !== null) {
       await newOrderPage.inputQuantity(request.quantity);
     }

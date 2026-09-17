@@ -42,7 +42,7 @@ export async function setUpMyShopBrowser(): Promise<MyShopBrowser> {
 
 export async function tearDownMyShopBrowser(myShopBrowser: MyShopBrowser | null): Promise<void> {
   if (!myShopBrowser) return;
-  await myShopBrowser.page.close().catch(() => {});
-  await myShopBrowser.context.close().catch(() => {});
-  await myShopBrowser.browser.close().catch(() => {});
+  await myShopBrowser.page.close();
+  await myShopBrowser.context.close();
+  await myShopBrowser.browser.close();
 }

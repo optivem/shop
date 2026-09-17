@@ -22,7 +22,7 @@ function pathOf(filePath: string): string {
 }
 
 // A1 — request DTOs in the driver port expose only string members.
-test('A1 - request DTOs in driver/port/dtos declare only string members', () => {
+function findA1Violations(): string[] {
   const violations: string[] = [];
   const dtoFiles = sourceFiles.filter((sf) => pathOf(sf.getFilePath()).includes('/driver/port/dtos/'));
 
@@ -43,18 +43,23 @@ test('A1 - request DTOs in driver/port/dtos declare only string members', () => 
     }
   }
 
+  return violations;
+}
+
+test('A1 - request DTOs in driver/port/dtos declare only string members', () => {
+  const violations = findA1Violations();
   expect(violations, `Request DTOs in driver/port/dtos must declare only string members: ${violations.join('; ')}`).toEqual([]);
 });
 
 // A2 — verification public methods are fluent (own type) or terminal (void); never getters.
-test('A2 - verification public methods are fluent or void', () => {
+function findA2Violations(): string[] {
   const violations: string[] = [];
   const coreFiles = sourceFiles.filter((sf) => pathOf(sf.getFilePath()).includes('/dsl/core/'));
 
   for (const sf of coreFiles) {
     for (const cls of sf.getClasses()) {
       const className = cls.getName();
-      if (!className || !className.endsWith('Verification')) continue;
+      if (!className?.endsWith('Verification')) continue;
       for (const method of cls.getMethods()) {
         const scope = method.getScope();
         if (scope === Scope.Protected || scope === Scope.Private) continue;
@@ -67,11 +72,16 @@ test('A2 - verification public methods are fluent or void', () => {
     }
   }
 
+  return violations;
+}
+
+test('A2 - verification public methods are fluent or void', () => {
+  const violations = findA2Violations();
   expect(violations, `Verification public methods must return their own type (fluent) or void (terminal): ${violations.join('; ')}`).toEqual([]);
 });
 
 // A7 — DSL core declares no own *Request/*Response; it reuses driver/port/dtos.
-test('A7 - dsl/core declares no own *Request/*Response DTOs', () => {
+function findA7Violations(): string[] {
   const violations: string[] = [];
   const coreFiles = sourceFiles.filter((sf) => pathOf(sf.getFilePath()).includes('/dsl/core/'));
 
@@ -90,11 +100,16 @@ test('A7 - dsl/core declares no own *Request/*Response DTOs', () => {
     }
   }
 
+  return violations;
+}
+
+test('A7 - dsl/core declares no own *Request/*Response DTOs', () => {
+  const violations = findA7Violations();
   expect(violations, `DSL core must not declare its own *Request/*Response DTOs: ${violations.join('; ')}`).toEqual([]);
 });
 
 // A10 — every MyShopDriver operation takes a single *Request and returns Result<*Response, …> (strict).
-test('A10 - every MyShopDriver method takes a *Request and returns a *Response', () => {
+function findA10Violations(): { found: boolean; violations: string[] } {
   const violations: string[] = [];
   let found = false;
 
@@ -111,13 +126,18 @@ test('A10 - every MyShopDriver method takes a *Request and returns a *Response',
       }
 
       const ret = method.getReturnTypeNode()?.getText() ?? method.getReturnType().getText();
-      const firstTypeArg = ret.match(/Result<\s*([A-Za-z0-9_]+)/)?.[1] ?? '';
+      const firstTypeArg = /Result<\s*([A-Za-z0-9_]+)/.exec(ret)?.[1] ?? '';
       if (!firstTypeArg.endsWith('Response')) {
         violations.push(`${method.getName()} must return Result<*Response, …> (was ${ret})`);
       }
     }
   }
 
+  return { found, violations };
+}
+
+test('A10 - every MyShopDriver method takes a *Request and returns a *Response', () => {
+  const { found, violations } = findA10Violations();
   expect(found, 'MyShopDriver interface not found').toBe(true);
   expect(violations, `Every MyShopDriver method must take a single *Request and return Result<*Response, …>: ${violations.join('; ')}`).toEqual([]);
 });

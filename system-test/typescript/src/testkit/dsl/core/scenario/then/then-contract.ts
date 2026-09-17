@@ -10,8 +10,8 @@ import type { ThenStage as IThenStage } from '../../../port/then/then-stage.js';
 
 export class ThenContractStage implements PromiseLike<void>, IThenStage {
   private readonly _clockAssertions: ((time: GetTimeResponse) => void)[] = [];
-  private readonly _productAssertions: Map<string, ((product: GetProductResponse) => void)[]> = new Map();
-  private readonly _countryAssertions: Map<string, ((tax: GetTaxResponse) => void)[]> = new Map();
+  private readonly _productAssertions = new Map<string, ((product: GetProductResponse) => void)[]>();
+  private readonly _countryAssertions = new Map<string, ((tax: GetTaxResponse) => void)[]>();
   private _executionPromise: Promise<void> | null = null;
 
   constructor(
@@ -58,12 +58,12 @@ export class ThenContractStage implements PromiseLike<void>, IThenStage {
     }
 
     for (const pc of this.ctx.productConfigs) {
-      const resolvedSku = this.useCaseContext.getParamValue(pc.sku) as string;
+      const resolvedSku = this.useCaseContext.getParamValue(pc.sku);
       await this.app.erpDriver.returnsProduct({ sku: resolvedSku, price: pc.price });
     }
 
     for (const cc of this.ctx.countryConfigs) {
-      const resolvedCountry = this.useCaseContext.getParamValueOrLiteral(cc.country) as string;
+      const resolvedCountry = this.useCaseContext.getParamValueOrLiteral(cc.country);
       await this.app.taxDriver.returnsTaxRate({ country: resolvedCountry, taxRate: cc.taxRate });
     }
   }
@@ -79,7 +79,7 @@ export class ThenContractStage implements PromiseLike<void>, IThenStage {
 
   private async _runProductAssertions(): Promise<void> {
     for (const [sku, assertions] of this._productAssertions) {
-      const resolvedSku = this.useCaseContext.getParamValue(sku) as string;
+      const resolvedSku = this.useCaseContext.getParamValue(sku);
       const productResult = await this.app.erpDriver.getProduct({ sku: resolvedSku });
       expect(productResult.success).toBe(true);
       if (productResult.success) {
@@ -90,7 +90,7 @@ export class ThenContractStage implements PromiseLike<void>, IThenStage {
 
   private async _runCountryAssertions(): Promise<void> {
     for (const [countryCode, assertions] of this._countryAssertions) {
-      const resolvedCountry = this.useCaseContext.getParamValueOrLiteral(countryCode) as string;
+      const resolvedCountry = this.useCaseContext.getParamValueOrLiteral(countryCode);
       const taxResult = await this.app.taxDriver.getTaxRate({ country: resolvedCountry });
       expect(taxResult.success).toBe(true);
       if (taxResult.success) {
@@ -144,7 +144,7 @@ export class ThenContractProduct implements PromiseLike<void> {
 
   hasSku(expectedSku: string): this {
     this.stage._addProductAssertion(this.sku, (p) => {
-      const resolved = this.stage.useCaseContext.getParamValue(expectedSku) as string;
+      const resolved = this.stage.useCaseContext.getParamValue(expectedSku);
       expect(p.sku).toBe(resolved);
     });
     return this;
@@ -173,7 +173,7 @@ export class ThenContractCountry implements PromiseLike<void> {
 
   hasCountry(expected: string): this {
     this.stage._addCountryAssertion(this.countryCode, (t) => {
-      const resolved = this.stage.useCaseContext.getParamValueOrLiteral(expected) as string;
+      const resolved = this.stage.useCaseContext.getParamValueOrLiteral(expected);
       expect(t.country).toBe(resolved);
     });
     return this;

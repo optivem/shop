@@ -15,6 +15,7 @@ import { ClockDriver } from './driver/port/external/clock/clock-driver.js';
 import { TaxDriver } from './driver/port/external/tax/tax-driver.js';
 import { Browser } from 'playwright';
 import { ChannelType, type ChannelTypeValue } from './channel/channel-type.js';
+import { envOrDefault, nonEmptyOr } from './common/fallback.js';
 
 export type Channel = ChannelTypeValue;
 export type { ChannelMode } from './dsl/scenario-dsl.js';
@@ -28,11 +29,11 @@ export interface ScenarioOptions {
 }
 
 export function createScenario(options: ScenarioOptions = {}): ScenarioDsl {
-  const mode = options.externalSystemMode || 'real';
+  const mode = options.externalSystemMode ?? 'real';
   const config = loadConfiguration({ externalSystemMode: mode });
 
-  const channelMode: ChannelMode = options.channelMode || (process.env.CHANNEL_MODE?.toLowerCase() as ChannelMode) || 'dynamic';
-  const channel = options.channel || ChannelType.API;
+  const channelMode: ChannelMode = nonEmptyOr(options.channelMode, envOrDefault('CHANNEL_MODE', 'dynamic').toLowerCase() as ChannelMode);
+  const channel = options.channel ?? ChannelType.API;
 
   const app = new AppContext({
     channelMode,

@@ -1,7 +1,7 @@
 import { FormEvent, useCallback } from 'react';
 import { Layout } from '../components';
 import { OrderForm } from '../features/orders';
-import { useNotificationContext } from '../contexts/NotificationContext';
+import { useNotificationContext } from '../contexts/useNotificationContext';
 import { useOrderForm } from '../hooks';
 
 /**
@@ -31,7 +31,7 @@ export function NewOrder() {
           <OrderForm
             formData={formData}
             onFormChange={updateFormData}
-            onSubmit={handleSubmit}
+            onSubmit={(e) => { void handleSubmit(e); }}
             isSubmitting={isSubmitting}
           />
         </div>

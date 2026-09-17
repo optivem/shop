@@ -1,1 +1,1 @@
-export interface BrowseCouponsRequest {}
+export type BrowseCouponsRequest = Record<string, never>;

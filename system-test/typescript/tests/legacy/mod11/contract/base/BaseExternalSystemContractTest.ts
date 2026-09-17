@@ -6,7 +6,6 @@
 // so this module exposes only the test-type alias used by the per-entity
 // contract helpers (BaseClockContractTest, BaseErpContractTest).
 
-import type { TestType } from '@playwright/test';
+import type { withApp } from '../../../../../src/testkit/driver/adapter/shared/client/playwright/withApp.js';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type ContractTest = TestType<any, any>;
+export type ContractTest = ReturnType<typeof withApp>;

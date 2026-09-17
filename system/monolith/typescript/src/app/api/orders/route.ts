@@ -4,7 +4,8 @@ import Decimal from 'decimal.js';
 import { insertOrder, findAllOrders, findCouponByCode, incrementCouponUsage } from '@/lib/db';
 import { getCurrentTime, getProductDetails, getPromotionDetails, getTaxDetails } from '@/lib/external';
 import { validatePlaceOrderRequest } from '@/lib/validation';
-import { validationErrorResponse, generalValidationErrorResponse, internalErrorResponse } from '@/lib/errors';
+import { badRequestResponse, validationErrorResponse, generalValidationErrorResponse, internalErrorResponse } from '@/lib/errors';
+import { isRecord } from '@/lib/type-guards';
 import { jsonResponseWithDecimals } from '@/lib/decimal-format';
 
 type CouponResolution =
@@ -39,20 +40,10 @@ function couponError(message: string): CouponResolution {
 
 export async function POST(request: NextRequest) {
   try {
-    let body: Record<string, unknown>;
-    try {
-      body = await request.json();
-    } catch {
-      return NextResponse.json(
-        {
-          type: 'https://api.my-company.example/errors/bad-request',
-          title: 'Bad Request',
-          status: 400,
-          detail: 'Invalid request format',
-          timestamp: new Date().toISOString(),
-        },
-        { status: 400 }
-      );
+    // Malformed JSON and non-object JSON (null, array, primitive) are both an invalid request format.
+    const body: unknown = await request.json().catch(() => undefined);
+    if (!isRecord(body)) {
+      return badRequestResponse('Invalid request format');
     }
 
     const fieldErrors = validatePlaceOrderRequest(body);
@@ -61,8 +52,9 @@ export async function POST(request: NextRequest) {
     }
 
     const sku = body.sku as string;
-    const quantity = typeof body.quantity === 'string' ? Number(body.quantity) : body.quantity as number;
-    const country = (body.country as string)?.trim() || '';
+    // The validator guarantees quantity is an integer or an integer-valued string.
+    const quantity = Number(body.quantity);
+    const country = (body.country as string).trim();
     const couponCode = typeof body.couponCode === 'string' && body.couponCode.trim() !== '' ? body.couponCode : null;
 
     const now = await getCurrentTime();
@@ -146,7 +138,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const orderNumberFilter = request.nextUrl.searchParams.get('orderNumber') || undefined;
+    const orderNumberFilter = request.nextUrl.searchParams.get('orderNumber') ?? undefined;
     const orders = await findAllOrders(orderNumberFilter);
 
     return jsonResponseWithDecimals({

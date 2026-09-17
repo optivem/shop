@@ -5,6 +5,8 @@
   "description": "MyShop - System Tests",
   "scripts": {
     "typecheck": "tsc --noEmit",
+    "lint": "eslint . --max-warnings 0",
+    "lint:fix": "eslint . --fix",
     "test": "playwright test",
     "test:architecture": "playwright test --project=architecture-test",
     "test:acceptance": "playwright test --project=acceptance-test",
@@ -23,10 +25,15 @@
   "author": "Optivem",
   "license": "MIT-0",
   "devDependencies": {
+    "@eslint/js": "^9.39.5",
     "@playwright/test": "^1.41.0",
     "@types/node": "^20.11.5",
+    "eslint": "^9.39.5",
+    "eslint-plugin-playwright": "^2.12.0",
+    "globals": "^17.12.0",
     "ts-morph": "^28.0.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.70.0"
   },
   "dependencies": {
     "@optivem/optivem-testing": "1.1.9",

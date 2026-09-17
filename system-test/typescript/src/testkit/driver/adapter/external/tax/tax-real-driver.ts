@@ -10,9 +10,11 @@ export class TaxRealDriver extends BaseTaxDriver<TaxRealClient> {
     super(new TaxRealClient(baseUrl));
   }
 
-  async returnsTaxRate(_request: ReturnsTaxRateRequest): Promise<Result<void, TaxErrorResponse>> {
-    return success(undefined);
+  returnsTaxRate(_request: ReturnsTaxRateRequest): Promise<Result<void, TaxErrorResponse>> {
+    return Promise.resolve(success(undefined));
   }
 
-  async close(): Promise<void> {}
+  close(): Promise<void> {
+    return Promise.resolve();
+  }
 }

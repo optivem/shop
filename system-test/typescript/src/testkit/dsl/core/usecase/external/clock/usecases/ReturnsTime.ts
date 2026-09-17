@@ -8,7 +8,7 @@ import type { UseCaseContext } from '../../../../shared/use-case-context.js';
 import { BaseClockUseCase } from './base/BaseClockUseCase.js';
 
 export class ReturnsTime extends BaseClockUseCase<void, VoidVerification> {
-  private _time: string = '';
+  private _time = '';
 
   constructor(driver: ClockDriver, context: UseCaseContext) {
     super(driver, context);

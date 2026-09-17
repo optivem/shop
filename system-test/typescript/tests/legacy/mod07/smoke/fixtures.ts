@@ -1,5 +1,6 @@
 import { test as base } from '@playwright/test';
-import { ChannelContext, bindChannels, bindTestEach } from '@optivem/optivem-testing';
+import { ChannelContext, bindChannels } from '@optivem/optivem-testing';
+import { bindTestEach } from '../../../../src/testkit/driver/adapter/shared/client/playwright/bindTestEach.js';
 import { chromium } from 'playwright';
 import type { Browser } from 'playwright';
 import { loadConfiguration } from '../../../../config/configuration-loader.js';
@@ -10,6 +11,7 @@ import { TaxRealDriver } from '../../../../src/testkit/driver/adapter/external/t
 import { ClockRealDriver } from '../../../../src/testkit/driver/adapter/external/clock/clock-real-driver.js';
 import { AppContext, UseCaseDsl } from '../../../../src/testkit/dsl/scenario-dsl.js';
 import { ChannelType } from '../../../../src/testkit/channel/channel-type.js';
+import { nonEmptyOr } from '../../../../src/testkit/common/fallback.js';
 
 const config = loadConfiguration();
 
@@ -20,7 +22,7 @@ const _test = base.extend<{ app: UseCaseDsl; _myShopBrowser: Browser }>({
         await browser.close();
     },
     app: async ({ _myShopBrowser }, use) => {
-        const channel = ChannelContext.get() || ChannelType.API;
+        const channel = nonEmptyOr(ChannelContext.get(), ChannelType.API);
         const appContext = new AppContext({
             channelMode: 'dynamic',
             channel,

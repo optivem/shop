@@ -5,9 +5,9 @@ import { ScenarioContext } from '../scenario-context.js';
 import { ThenResultStage } from '../then/then-place-order.js';
 
 export class WhenPlaceOrder {
-  private sku: string = DEFAULTS.SKU;
+  private sku: string | null = DEFAULTS.SKU;
   private quantity: string | null = DEFAULTS.QUANTITY;
-  private country: string = DEFAULTS.COUNTRY;
+  private country: string | null = DEFAULTS.COUNTRY;
   private couponCode: string | null = null;
 
   constructor(
@@ -21,7 +21,7 @@ export class WhenPlaceOrder {
   }
 
   withSku(sku: string | null): this {
-    this.sku = sku as string;
+    this.sku = sku;
     return this;
   }
 
@@ -31,7 +31,7 @@ export class WhenPlaceOrder {
   }
 
   withCountry(country: string | null): this {
-    this.country = country as string;
+    this.country = country;
     return this;
   }
 

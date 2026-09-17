@@ -25,7 +25,7 @@ export class PactBackendStubDriver implements BackendStubDriver {
   private url?: Promise<string>;
   private run?: Promise<void>;
   private release?: () => void;
-  private failure?: unknown;
+  private failure?: Error;
 
   stub(interaction: V3Interaction): void {
     if (this.url) {
@@ -52,26 +52,24 @@ export class PactBackendStubDriver implements BackendStubDriver {
     if (this.staged === 0) {
       return Promise.resolve(UNREACHABLE_BACKEND);
     }
-    if (!this.url) {
-      this.url = new Promise<string>((resolveUrl, rejectUrl) => {
-        this.run = this.provider
-          .executeTest(async (mockServer) => {
-            resolveUrl(mockServer.url);
-            await new Promise<void>((release) => {
-              this.release = release;
-            });
-          })
-          .then(
-            () => undefined,
-            (error: unknown) => {
-              // Verification failure (or a mock-server boot failure, in which case
-              // the URL was never resolved). finish() rethrows it on the owning test.
-              this.failure = error;
-              rejectUrl(error);
-            },
-          );
-      });
-    }
+    this.url ??= new Promise<string>((resolveUrl, rejectUrl) => {
+      this.run = this.provider
+        .executeTest(async (mockServer) => {
+          resolveUrl(mockServer.url);
+          await new Promise<void>((release) => {
+            this.release = release;
+          });
+        })
+        .then(
+          () => undefined,
+          (error: unknown) => {
+            // Verification failure (or a mock-server boot failure, in which case
+            // the URL was never resolved). finish() rethrows it on the owning test.
+            this.failure = error instanceof Error ? error : new Error(String(error));
+            rejectUrl(this.failure);
+          },
+        );
+    });
     return this.url;
   }
 

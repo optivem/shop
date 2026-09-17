@@ -17,24 +17,32 @@ export class UseCaseContext {
     return this.externalSystemMode;
   }
 
+  // Overloads: a null/undefined/blank alias is returned unchanged, so the result is only
+  // nullable when the alias is.
+  getParamValue(alias: string): string;
+  getParamValue(alias: string | null): string | null;
+  getParamValue(alias: string | null | undefined): string | null | undefined;
   getParamValue(alias: string | null | undefined): string | null | undefined {
-    if (this.isNullOrBlank(alias)) {
+    if (alias === undefined || alias === null || this.isBlank(alias)) {
       return alias;
     }
 
-    const key = alias as string;
-    if (this.paramMap.has(key)) {
-      return this.paramMap.get(key)!;
+    const existing = this.paramMap.get(alias);
+    if (existing !== undefined) {
+      return existing;
     }
 
-    const value = this.generateParamValue(key);
-    this.paramMap.set(key, value);
+    const value = this.generateParamValue(alias);
+    this.paramMap.set(alias, value);
 
     return value;
   }
 
+  getParamValueOrLiteral(alias: string): string;
+  getParamValueOrLiteral(alias: string | null): string | null;
+  getParamValueOrLiteral(alias: string | null | undefined): string | null | undefined;
   getParamValueOrLiteral(alias: string | null | undefined): string | null | undefined {
-    if (this.isNullOrBlank(alias)) {
+    if (alias === undefined || alias === null || this.isBlank(alias)) {
       return alias;
     }
     switch (this.externalSystemMode) {
@@ -43,7 +51,7 @@ export class UseCaseContext {
       case 'real':
         return alias;
       default:
-        throw new Error(`Unsupported external system mode: ${this.externalSystemMode}`);
+        throw new Error(`Unsupported external system mode: ${String(this.externalSystemMode)}`);
     }
   }
 
@@ -51,17 +59,19 @@ export class UseCaseContext {
     this.resultMap.set(alias, value);
   }
 
+  getResultValue(alias: string): string;
+  getResultValue(alias: string | null): string | null;
+  getResultValue(alias: string | null | undefined): string | null | undefined;
   getResultValue(alias: string | null | undefined): string | null | undefined {
-    if (this.isNullOrBlank(alias)) {
+    if (alias === undefined || alias === null || this.isBlank(alias)) {
       return alias;
     }
-    const key = alias as string;
-    const value = this.resultMap.get(key);
+    const value = this.resultMap.get(alias);
     if (value === undefined) {
       return alias;
     }
     if (value.includes('FAILED')) {
-      throw new Error(`Cannot get result value for alias '${key}' because the operation failed: ${value}`);
+      throw new Error(`Cannot get result value for alias '${alias}' because the operation failed: ${value}`);
     }
     return value;
   }
@@ -82,7 +92,7 @@ export class UseCaseContext {
     return `${alias}-${suffix}`;
   }
 
-  private isNullOrBlank(alias: string | null | undefined): boolean {
-    return alias === undefined || alias === null || alias.trim().length === 0;
+  private isBlank(alias: string): boolean {
+    return alias.trim().length === 0;
   }
 }

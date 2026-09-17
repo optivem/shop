@@ -38,7 +38,7 @@ export class ThenBrowseCouponsResultStage implements PromiseLike<void> {
 
   private async _doExecute(): Promise<void> {
     for (const cc of this.ctx.couponConfigs) {
-      const resolvedCode = this.useCaseContext.getParamValue(cc.code) as string;
+      const resolvedCode = this.useCaseContext.getParamValue(cc.code);
       await this.app.myShop().publishCoupon({ code: resolvedCode, discountRate: String(cc.discountRate) });
     }
 
@@ -77,11 +77,11 @@ export class ThenBrowseCouponsSuccess implements PromiseLike<void> {
 export class ThenBrowseCouponsFailure implements PromiseLike<void> {
   constructor(private readonly stage: ThenBrowseCouponsResultStage) {}
 
-  errorMessage(expected: string): this {
+  errorMessage(_expected: string): this {
     return this;
   }
 
-  fieldErrorMessage(field: string, message: string): this {
+  fieldErrorMessage(_field: string, _message: string): this {
     return this;
   }
 

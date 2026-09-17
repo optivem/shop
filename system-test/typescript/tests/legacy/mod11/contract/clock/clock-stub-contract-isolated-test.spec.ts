@@ -4,6 +4,7 @@ import { test } from '../fixtures.js';
 
 test.describe('@isolated', () => {
     test.describe.configure({ mode: 'serial' });
+
     test('shouldBeAbleToGetConfiguredTime', async ({ scenario }) => {
         await scenario
             .given()

@@ -8,7 +8,7 @@ import type { UseCaseContext } from '../../../../shared/use-case-context.js';
 import { BaseErpUseCase } from './base/BaseErpUseCase.js';
 
 export class ReturnsPromotion extends BaseErpUseCase<void, VoidVerification> {
-  private _promotionActive: boolean = false;
+  private _promotionActive = false;
   private _discount: number | string = '';
 
   constructor(driver: ErpDriver, context: UseCaseContext) {

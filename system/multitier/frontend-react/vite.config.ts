@@ -1,8 +1,10 @@
-/// <reference types="vitest/config" />
 import { defineConfig } from 'vite';
 import { configDefaults } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
+
+// An empty BACKEND_API_URL counts as unset, so this is deliberately not `??`.
+const backendApiUrl = process.env.BACKEND_API_URL;
 
 export default defineConfig({
   plugins: [react()],
@@ -34,7 +36,7 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
-        target: process.env.BACKEND_API_URL || 'http://localhost:8081',
+        target: backendApiUrl !== undefined && backendApiUrl !== '' ? backendApiUrl : 'http://localhost:8081',
         changeOrigin: true
       }
     }

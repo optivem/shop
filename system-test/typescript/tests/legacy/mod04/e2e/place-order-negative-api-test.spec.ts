@@ -1,4 +1,5 @@
 import { apiTest as test, expect } from './base/BaseE2eTest.js';
+import { assertThatResult } from '../../../../src/testkit/common/result-assert.js';
 
 test('shouldRejectOrderWithNonIntegerQuantity', async ({ myShopApiClient }) => {
     // When: place order with non-integer quantity via API client
@@ -6,9 +7,8 @@ test('shouldRejectOrderWithNonIntegerQuantity', async ({ myShopApiClient }) => {
 
     // Then: should fail
     expect(result.success).toBe(false);
-    if (!result.success) {
-        expect(result.error.message).toContain('The request contains one or more validation errors');
-        const quantityError = result.error.fieldErrors.find((e) => e.field === 'quantity');
-        expect(quantityError?.message).toBe('Quantity must be an integer');
-    }
+    const error = assertThatResult(result).getError();
+    expect(error.message).toContain('The request contains one or more validation errors');
+    const quantityError = error.fieldErrors.find((e) => e.field === 'quantity');
+    expect(quantityError?.message).toBe('Quantity must be an integer');
 });

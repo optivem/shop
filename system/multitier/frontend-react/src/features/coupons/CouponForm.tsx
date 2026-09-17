@@ -38,7 +38,7 @@ export function CouponForm({ onSubmit, isSubmitting, generateCouponCode }: Reado
         <h4 className="mb-0">Create New Coupon</h4>
       </div>
       <div className="card-body">
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={(e) => { void handleSubmit(e); }}>
           <div className="row mb-3">
             <div className="col-md-6">
               <label htmlFor="code" className="form-label">Coupon Code:</label>

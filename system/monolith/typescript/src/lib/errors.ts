@@ -9,6 +9,19 @@ export interface FieldError {
   rejectedValue?: unknown;
 }
 
+export function badRequestResponse(detail: string) {
+  return NextResponse.json(
+    {
+      type: `${BASE_URL}/bad-request`,
+      title: 'Bad Request',
+      status: 400,
+      detail,
+      timestamp: new Date().toISOString(),
+    },
+    { status: 400 }
+  );
+}
+
 export function validationErrorResponse(errors: FieldError[]) {
   return NextResponse.json(
     {

@@ -5,27 +5,35 @@ import type { CouponFormData } from '../features/coupons';
 
 export function useCoupons() {
   const [coupons, setCoupons] = useState<BrowseCouponsItemResponse[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
-
-  const loadCoupons = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-
-    const result = await browseCoupons();
-
-    if (result.success) {
-      setCoupons(result.data.coupons);
-    } else {
-      setError('Failed to load coupons');
-    }
-    setIsLoading(false);
-  }, []);
+  const [reloadCount, setReloadCount] = useState(0);
+  // The reload whose response is currently applied; loading is derived from it.
+  const [loadedReloadCount, setLoadedReloadCount] = useState<number | null>(null);
 
   useEffect(() => {
-    loadCoupons();
-  }, [loadCoupons]);
+    // Ignore a response superseded by a newer refresh or arriving after unmount.
+    let ignore = false;
+    void browseCoupons().then((result) => {
+      if (ignore) return;
+      if (result.success) {
+        setCoupons(result.data.coupons);
+        setError(null);
+      } else {
+        setError('Failed to load coupons');
+      }
+      setLoadedReloadCount(reloadCount);
+    });
+    return () => {
+      ignore = true;
+    };
+  }, [reloadCount]);
+
+  const refresh = useCallback(() => {
+    setReloadCount((count) => count + 1);
+  }, []);
+
+  const isLoading = loadedReloadCount !== reloadCount;
 
   const generateCouponCode = (): string => {
     const randomNum = Math.floor(1000 + Math.random() * 9000);
@@ -54,9 +62,7 @@ export function useCoupons() {
     setIsCreating(false);
 
     if (result.success) {
-      setTimeout(async () => {
-        await loadCoupons();
-      }, 100);
+      setTimeout(refresh, 100);
     }
 
     return result;
@@ -64,8 +70,7 @@ export function useCoupons() {
 
   const getCouponStatus = (coupon: BrowseCouponsItemResponse): string => {
     const now = new Date().toISOString();
-    const validFrom = coupon.validFrom ? coupon.validFrom : null;
-    const validTo = coupon.validTo ? coupon.validTo : null;
+    const { validFrom, validTo } = coupon;
 
     if (validFrom && now < validFrom) {
       return 'Not Yet Valid';
@@ -85,6 +90,6 @@ export function useCoupons() {
     submitCoupon,
     generateCouponCode,
     getCouponStatus,
-    refresh: loadCoupons
+    refresh
   };
 }

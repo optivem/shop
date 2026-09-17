@@ -1,7 +1,8 @@
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 import { ErrorBoundary } from './components';
-import { NotificationProvider, useNotificationContext } from './contexts/NotificationContext';
+import { NotificationProvider } from './contexts/NotificationContext';
+import { useNotificationContext } from './contexts/useNotificationContext';
 import { Home, NewOrder, OrderHistory, OrderDetails, AdminCoupons } from './pages';
 
 /**

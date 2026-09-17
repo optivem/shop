@@ -1,6 +1,6 @@
 // Smoke test: proves the Vitest + RTL + jsdom harness is wired up correctly,
 // with no backend and no network. If this is green, the harness works.
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { screen } from '@testing-library/react';
 import { OrderForm } from '../features/orders/OrderForm';
 import { renderWithProviders } from './test-utils';
@@ -10,8 +10,8 @@ describe('test harness', () => {
     renderWithProviders(
       <OrderForm
         formData={{ sku: '', quantity: 0, quantityValue: '', country: 'US', couponCode: '' }}
-        onFormChange={() => {}}
-        onSubmit={() => {}}
+        onFormChange={vi.fn()}
+        onSubmit={vi.fn()}
         isSubmitting={false}
       />,
     );

@@ -50,7 +50,10 @@ describe('ErpGateway [integration]', () => {
   }
 
   it('getProductDetails returns details when found', async () => {
-    await stubGetJson('/api/products/BOOK-123', 200, { id: 'BOOK-123', price: 10.0 });
+    await stubGetJson('/api/products/BOOK-123', 200, {
+      id: 'BOOK-123',
+      price: 10.0,
+    });
 
     const result = await erpGateway.getProductDetails('BOOK-123');
 

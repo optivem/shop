@@ -1,19 +1,8 @@
-import { createContext, useContext, useState, useCallback, useMemo, useRef, ReactNode } from 'react';
+import { useState, useCallback, useMemo, useRef, ReactNode } from 'react';
 import type { ApiError } from '../types/error.types';
 import type { Result } from '../types/result.types';
 import { match } from '../types/result.types';
-
-interface NotificationContextType {
-  successMessage: string | null;
-  error: ApiError | null;
-  notificationId: number;
-  clearNotification: () => void;
-  setSuccess: (message: string) => void;
-  setError: (error: ApiError) => void;
-  handleResult: <T>(result: Result<T>, onSuccess: (data: T) => void) => void;
-}
-
-const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
+import { NotificationContext } from './notification-context';
 
 export function NotificationProvider({ children }: Readonly<{ children: ReactNode }>) {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -70,12 +59,4 @@ export function NotificationProvider({ children }: Readonly<{ children: ReactNod
       {children}
     </NotificationContext.Provider>
   );
-}
-
-export function useNotificationContext() {
-  const context = useContext(NotificationContext);
-  if (!context) {
-    throw new Error('useNotificationContext must be used within NotificationProvider');
-  }
-  return context;
 }

@@ -9,17 +9,19 @@ import { ClockRealClient } from './client/ClockRealClient.js';
 export class ClockRealDriver implements ClockDriver {
   private readonly client = new ClockRealClient();
 
-  async goToClock(): Promise<Result<void, ClockErrorResponse>> {
-    return success(undefined);
+  goToClock(): Promise<Result<void, ClockErrorResponse>> {
+    return Promise.resolve(success(undefined));
   }
 
   async getTime(): Promise<Result<GetTimeResponse, ClockErrorResponse>> {
     return this.client.getTime();
   }
 
-  async returnsTime(_request: ReturnsTimeRequest): Promise<Result<void, ClockErrorResponse>> {
-    return success(undefined);
+  returnsTime(_request: ReturnsTimeRequest): Promise<Result<void, ClockErrorResponse>> {
+    return Promise.resolve(success(undefined));
   }
 
-  async close(): Promise<void> {}
+  close(): Promise<void> {
+    return Promise.resolve();
+  }
 }

@@ -1,13 +1,14 @@
 import { BasePage, PAGE_TIMEOUT_MS } from './BasePage.js';
+import { nonEmptyOr } from '../../../../../common/fallback.js';
 
-type CouponRow = {
+interface CouponRow {
   code: string;
   discountRate: number;
   validFrom?: string;
   validTo?: string;
   usageLimit?: number;
   usedCount: number;
-};
+}
 
 function parseDisplayedDateToIso(displayed: string | undefined): string | undefined {
   if (!displayed || displayed.trim() === '') return undefined;
@@ -59,8 +60,8 @@ export class CouponManagementPage extends BasePage {
     const result: CouponRow[] = [];
     for (let i = 0; i < count; i++) {
       const cells = rows.nth(i).locator('td');
-      const code = (await cells.nth(0).textContent())?.trim() || '';
-      const rateText = (await cells.nth(1).textContent())?.trim() || '0';
+      const code = (await cells.nth(0).textContent())?.trim() ?? '';
+      const rateText = nonEmptyOr((await cells.nth(1).textContent())?.trim(), '0');
       const discountRate = Number.parseFloat(rateText.replace('%', '')) / 100;
       const validFrom = parseDisplayedDateToIso((await cells.nth(2).textContent()) ?? undefined);
       const validTo = parseDisplayedDateToIso((await cells.nth(3).textContent()) ?? undefined);
