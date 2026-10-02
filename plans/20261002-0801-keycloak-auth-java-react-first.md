@@ -59,7 +59,7 @@ Grounded in `system/multitier/backend-java` controllers and `docker/java/multiti
 
 ## ▶ Next executable step (resume here)
 
-Step 10 is DONE locally (uncommitted/unpushed until the commit gate; unverified in CI): cross-lang-system-verification.yml no longer excludes multitier systems and exports KEYCLOAK_URL_REAL/STUB from the SUT's systems.yaml Keycloak component. After it is pushed, confirm the multitier cross-lang matrix (6 combos) is green via `gh run list --repo optivem/shop --limit 20`. Next unit: Step 11 — design decided (server-side OIDC per monolith; see Resolved decisions), ready to execute. Order-ownership plan `plans/20261002-1209-order-ownership-and-dsl-identities.md` is still pending.
+Step 11 — Java monolith is DONE locally (uncommitted until the commit gate; CI unverified): `SecurityConfig` (oauth2Login + PKCE + Bearer resource server, CSRF cookie, same role rules as multitier), `shop-monolith` confidential client in the shared realm, Keycloak service + AUTH_* env in the 4 java/monolith compose files, Keycloak component in java/monolith/systems.yaml, KEYCLOAK_URL_* in the monolith-java acceptance workflows. Verified locally: 15 unit/security tests, checkstyle, and Java system tests (smoke, e2e API + UI, legacy ApiAuthorizationTest) green against the live stack. After pushing, confirm monolith-java commit/acceptance and the cross-lang matrix are green via `gh run list --repo optivem/shop --limit 20`. Next unit: Step 11 for the .NET monolith (fresh session; reuse the Java recipe: confidential client `shop-monolith` already in the realm with all monolith redirect URIs, ID-token realm_access.roles mapper, PKCE S256 required, split browser/internal endpoints, CSRF header for page fetch calls; Keycloak ports 8291/8292), then the TypeScript monolith (8391/8392). Order-ownership plan `plans/20261002-1209-order-ownership-and-dsl-identities.md` is still pending.
 
 ## Steps
 
@@ -68,7 +68,7 @@ Phase 1 — get it working end-to-end on Java backend + React frontend (multitie
 
 Phase 2 — spread
 
-- [ ] Step 11: Monolith variants (java, dotnet, typescript) — server-side OIDC login (confidential client, auth code + PKCE, session cookie) plus Bearer-JWT validation on API routes; see Resolved decisions.
+- [ ] Step 11: Monolith variants — dotnet and typescript remain (java done): server-side OIDC login (confidential client, auth code + PKCE, session cookie) plus Bearer-JWT validation on API routes; see Resolved decisions. Also update the `KEYCLOAK_URL_REAL/STUB` expression in `_prerelease-pipeline.yml` (currently yields 8191/8192 for dotnet monolith, '' for typescript monolith) and add KEYCLOAK_URL_* to the dotnet/typescript monolith acceptance workflows.
 - [ ] Step 12: Cloud/prod-stage: managed or hardened IdP, secrets, TLS (separate from local/pipeline Keycloak).
 
 ## Phase 1 follow-ups noted during verification
@@ -82,6 +82,9 @@ Phase 2 — spread
 - Cloud stage workflows (`*-cloud.yml`) and QA/prod stages for java multitier not yet reviewed for Keycloak (Step 12).
 - Access rules live centrally in `SecurityConfig` (URL rules + `anyRequest().authenticated()`), kept deliberately: secure-by-default, single audit point. Risk: a renamed/added route can silently stop matching a rule (fails closed, but unnoticed). Improvement: make `SecurityConfigTest` verify every controller route — admin-only endpoints return 403 for CUSTOMER and 401 with no token, public ones are open, and a new route without an expected status fails the test (e.g. enumerate routes from `RequestMappingHandlerMapping`). First read the existing test to see what it already covers. Data-dependent rules (order ownership) go in service layer / `@PreAuthorize` in the ownership plan, not in URL rules.
 - Expired-token and wrong-audience cases rely on Spring's standard validators; not tested against live Keycloak.
+
+- Java monolith: Spring does not send PKCE for confidential clients by default; the realm client requires S256, so `SecurityConfig` adds it via `OAuth2AuthorizationRequestCustomizers.withPkce()` (without it Keycloak returns `Missing parameter: code_challenge_method`). Pages' `fetch()` POSTs get the CSRF token from the XSRF-TOKEN cookie via a wrapper in `layout.html`; Bearer requests are CSRF-exempt.
+- Keycloak only imports the realm on first start: recreate the keycloak container (`down -v`) after realm changes such as the new `shop-monolith` client.
 
 ## Lesson from CI (2026-10-02)
 

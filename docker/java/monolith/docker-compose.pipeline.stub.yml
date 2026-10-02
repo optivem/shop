@@ -17,11 +17,41 @@ services:
       - CLOCK_API_URL=http://external-system-stubs:8080/clock
       - TAX_API_URL=http://external-system-stubs:8080/tax
       - EXTERNAL_SYSTEM_MODE=stub
+      - AUTH_ISSUER_URI=http://localhost:8192/realms/shop
+      - AUTH_TOKEN_URI=http://keycloak:8080/realms/shop/protocol/openid-connect/token
+      - AUTH_JWK_SET_URI=http://keycloak:8080/realms/shop/protocol/openid-connect/certs
+      - AUTH_AUDIENCE=shop-backend
+      - AUTH_CLIENT_SECRET=shop-monolith-test-secret
     depends_on:
       db-migrate:
         condition: service_completed_successfully
+      keycloak:
+        condition: service_healthy
       external-system-stubs:
         condition: service_started
+    networks:
+      - app-network
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    command: start-dev --import-realm
+    environment:
+      - KC_BOOTSTRAP_ADMIN_USERNAME=admin
+      - KC_BOOTSTRAP_ADMIN_PASSWORD=admin
+      - KC_HOSTNAME=http://localhost:8192
+      - KC_HOSTNAME_BACKCHANNEL_DYNAMIC=true
+      - KC_HTTP_ENABLED=true
+      - KC_HEALTH_ENABLED=true
+    ports:
+      - "8192:8080"
+    volumes:
+      - ../../keycloak/shop-realm.json:/opt/keycloak/data/import/shop-realm.json:ro
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/9000 && echo -e 'GET /health/ready HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n' >&3 && grep -q '\"status\": \"UP\"' <&3"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
     networks:
       - app-network
 

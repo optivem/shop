@@ -36,6 +36,19 @@ management:
     health:
       show-details: always
 
+auth:
+  # Browser-facing issuer (what appears in tokens' iss and in the login redirect); the server-to-server
+  # endpoints may differ inside Docker, hence the separate overrides.
+  issuer-uri: ${AUTH_ISSUER_URI:http://localhost:8191/realms/shop}
+  authorization-uri: ${AUTH_AUTHORIZATION_URI:${auth.issuer-uri}/protocol/openid-connect/auth}
+  token-uri: ${AUTH_TOKEN_URI:${auth.issuer-uri}/protocol/openid-connect/token}
+  jwk-set-uri: ${AUTH_JWK_SET_URI:${auth.issuer-uri}/protocol/openid-connect/certs}
+  end-session-uri: ${AUTH_END_SESSION_URI:${auth.issuer-uri}/protocol/openid-connect/logout}
+  audience: ${AUTH_AUDIENCE:shop-backend}
+  client-id: ${AUTH_CLIENT_ID:shop-monolith}
+  # Clearly-marked test-realm value; supply a real secret via the environment outside local/pipeline stacks.
+  client-secret: ${AUTH_CLIENT_SECRET:shop-monolith-test-secret}
+
 error:
   types:
     base-url: https://api.my-company.example/errors

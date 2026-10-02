@@ -223,7 +223,7 @@ jobs:
         # Test code defaults to its own language's port set (3[1|2|3]xx). For cross-lang
         # runs the test process must point at the SUT's port set instead. Each loader
         # checks env vars after loading its config file; this step exports the 10
-        # mode-suffixed URLs (5 keys + Keycloak for multitier, × _REAL/_STUB) extracted from the SUT's systems.yaml.
+        # mode-suffixed URLs (5 keys + Keycloak where the SUT has one, × _REAL/_STUB) extracted from the SUT's systems.yaml.
         # Tax is not in externalSystems but is colocated with ERP — derived by URL swap.
         run: |
           SYSTEM_YAML=docker/${{ matrix.system-lang }}/${{ matrix.arch }}/systems.yaml
@@ -235,8 +235,8 @@ jobs:
             ERP_URL=$(jq -r --arg lbl "$label" '.systems[] | select(.label == $lbl) | .externalSystems[] | select(.name | test("ERP")) | .url' <<< "$SYSTEM_JSON" | sed 's|/health$||')
             CLOCK_URL=$(jq -r --arg lbl "$label" '.systems[] | select(.label == $lbl) | .externalSystems[] | select(.name | test("Clock")) | .url' <<< "$SYSTEM_JSON" | sed 's|/health$||')
             TAX_URL="${ERP_URL%/erp}/tax"
-            # Multitier SUTs ship a Keycloak component; test drivers acquire tokens from it.
-            # Monolith SUTs have none — leaving KEYCLOAK_URL_* unset keeps auth opt-out.
+            # SUTs with auth ship a Keycloak component; test drivers acquire tokens from it.
+            # SUTs without one leave KEYCLOAK_URL_* unset, which keeps auth opt-out.
             KEYCLOAK_URL=$(jq -r --arg lbl "$label" '.systems[] | select(.label == $lbl) | .components[] | select(.name == "Keycloak") | .url' <<< "$SYSTEM_JSON" | sed 's|/realms/.*$||')
             {
               echo "MYSHOP_UI_BASE_URL_${SUFFIX}=${UI_URL}"

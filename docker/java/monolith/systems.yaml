@@ -30,6 +30,9 @@ systems:
       - name: Monolith API
         url: http://localhost:8112/health
         containerName: system
+      - name: Keycloak
+        url: http://localhost:8192/realms/shop
+        containerName: keycloak
     externalSystems:
       - name: ERP API (Stub)
         url: http://localhost:9112/erp/health
@@ -48,6 +51,9 @@ systems:
       - name: Monolith API
         url: http://localhost:8111/health
         containerName: system
+      - name: Keycloak
+        url: http://localhost:8191/realms/shop
+        containerName: keycloak
     externalSystems:
       - name: ERP API (Real)
         url: http://localhost:9111/erp/health
