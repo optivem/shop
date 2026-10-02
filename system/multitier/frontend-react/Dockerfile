@@ -33,6 +33,11 @@ COPY nginx.conf /etc/nginx/templates/default.conf.template
 # Limit envsubst to these variables so nginx variables ($host, $remote_addr, ...) are left intact
 ENV NGINX_ENVSUBST_FILTER=BACKEND_API_URL|KEYCLOAK_URL|KEYCLOAK_REALM|KEYCLOAK_CLIENT_ID
 
+# Empty Keycloak defaults keep the template valid when auth is not configured (the SPA then runs without login)
+ENV KEYCLOAK_URL="" \
+    KEYCLOAK_REALM="" \
+    KEYCLOAK_CLIENT_ID=""
+
 # Expose port 3000 (unprivileged user can bind ports >1024)
 EXPOSE 3000
 

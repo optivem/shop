@@ -1,5 +1,6 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { AuthProvider, hasAuthParams, useAuth } from 'react-oidc-context';
+import { AuthDisabledContext } from './auth-disabled';
 import { userManager } from './user-manager';
 
 // Removes `code` and `state` from the URL once the redirect callback has been handled.
@@ -50,7 +51,11 @@ export function RequireAuth({ children }: Readonly<{ children: ReactNode }>) {
   return <>{children}</>;
 }
 
+/** Wraps the app in OIDC login, or renders it as-is (no login, no token) when no Keycloak is configured. */
 export function AuthGate({ children }: Readonly<{ children: ReactNode }>) {
+  if (!userManager) {
+    return <AuthDisabledContext.Provider value={true}>{children}</AuthDisabledContext.Provider>;
+  }
   return (
     <AuthProvider userManager={userManager} onSigninCallback={onSigninCallback}>
       <RequireAuth>{children}</RequireAuth>

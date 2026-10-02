@@ -23,9 +23,18 @@ function valueOrDefault(value: string | undefined, fallback: string): string {
   return value !== undefined && value !== '' ? value : fallback;
 }
 
-export function getAuthConfig(runtime: RuntimeConfig | undefined = globalThis.window.__APP_CONFIG__): AuthConfig {
+/**
+ * Resolves the auth settings, or undefined when authentication is disabled (no Keycloak URL configured).
+ * The local Keycloak defaults apply only under the Vite dev server.
+ */
+export function getAuthConfig(
+  runtime: RuntimeConfig | undefined = globalThis.window.__APP_CONFIG__,
+  useDevDefaults: boolean = import.meta.env.DEV,
+): AuthConfig | undefined {
+  const keycloakUrl = valueOrDefault(runtime?.keycloakUrl, useDevDefaults ? 'http://localhost:8191' : '');
+  if (keycloakUrl === '') return undefined;
   return {
-    keycloakUrl: valueOrDefault(runtime?.keycloakUrl, 'http://localhost:8191').replace(/\/+$/, ''),
+    keycloakUrl: keycloakUrl.replace(/\/+$/, ''),
     realm: valueOrDefault(runtime?.keycloakRealm, 'shop'),
     clientId: valueOrDefault(runtime?.keycloakClientId, 'shop-frontend'),
   };

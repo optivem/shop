@@ -1,9 +1,10 @@
-import { useAuth } from 'react-oidc-context';
+import { useContext } from 'react';
+import { AuthContext } from 'react-oidc-context';
 
 /** Shows the signed-in username and a logout button. */
 export function UserMenu() {
-  const auth = useAuth();
-  if (!auth.isAuthenticated) return null;
+  const auth = useContext(AuthContext);
+  if (!auth?.isAuthenticated) return null;
 
   const profile = auth.user?.profile;
   const username = profile?.preferred_username ?? profile?.name ?? profile?.sub;

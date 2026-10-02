@@ -104,12 +104,24 @@ describe('Navbar user menu', () => {
 
 describe('auth config', () => {
   it('uses local defaults when no runtime config is present', () => {
-    expect(getAuthority(getAuthConfig({}))).toBe('http://localhost:8191/realms/shop');
+    expect(getAuthority(getAuthConfig({}, true)!)).toBe('http://localhost:8191/realms/shop');
   });
 
   it('builds the authority from runtime values', () => {
-    const config = getAuthConfig({ keycloakUrl: 'http://kc:8080/', keycloakRealm: 'r', keycloakClientId: 'c' });
+    const config = getAuthConfig({ keycloakUrl: 'http://kc:8080/', keycloakRealm: 'r', keycloakClientId: 'c' }, false)!;
     expect(getAuthority(config)).toBe('http://kc:8080/realms/r');
     expect(config.clientId).toBe('c');
+  });
+});
+
+describe('auth disabled', () => {
+  it('is disabled when the runtime config has no Keycloak URL outside dev', () => {
+    expect(getAuthConfig({}, false)).toBeUndefined();
+    expect(getAuthConfig({ keycloakUrl: '', keycloakRealm: '', keycloakClientId: '' }, false)).toBeUndefined();
+    expect(getAuthConfig(undefined, false)).toBeUndefined();
+  });
+
+  it('is enabled when a Keycloak URL is configured', () => {
+    expect(getAuthConfig({ keycloakUrl: 'http://kc:8080' }, false)?.keycloakUrl).toBe('http://kc:8080');
   });
 });

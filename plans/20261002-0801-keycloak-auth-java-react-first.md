@@ -82,6 +82,11 @@ Phase 2 — spread
 - Cloud stage workflows (`*-cloud.yml`) and QA/prod stages for java multitier not yet reviewed for Keycloak (Step 12).
 - Expired-token and wrong-audience cases rely on Spring's standard validators; not tested against live Keycloak.
 
+## Lesson from CI (2026-10-02)
+
+- `frontend-react` and its Docker image are SHARED by the Java, .NET and TypeScript multitier stacks. Phase 1 initially made Keycloak config mandatory, which broke the .NET/TypeScript pipelines (nginx `unknown "keycloak_url" variable`). Fixed: the image starts with empty KEYCLOAK_* (defaults in the Dockerfile) and the app runs with auth DISABLED when keycloakUrl is empty. Any compose file that wants login must set all three KEYCLOAK_* vars (Phase 2 sets them for .NET/TypeScript when their backends validate tokens).
+- Rule: any change to a shared artifact (frontend image, db migrations, realm file) must be checked against all three language stacks before pushing.
+
 ## Open questions
 
 None for Phase 1 — all resolved (2026-10-02):
