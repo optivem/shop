@@ -58,7 +58,7 @@ Grounded in `system/multitier/backend-java` controllers and `docker/java/multiti
 
 ## ▶ Next executable step (resume here)
 
-Steps 8 and 9 (backend-dotnet + backend-typescript resource servers, system-test token acquisition, Keycloak in dotnet/typescript multitier compose, workflows) are implemented and verified locally (all latest + legacy suites green; .NET legacy UI has a ~1-in-9 intermittent 30s timeout, see follow-ups). Pending: commit (one commit for the shop repo via /commit), then push and confirm CI: `gh run list --repo optivem/shop --limit 20` — fix only auth-related failures. Next unit after that: Step 10 (re-enable multitier cross-lang in cross-lang-system-verification.yml: the job must start the SUT's Keycloak and pass KEYCLOAK_URL to test drivers; remove the three temporary `arch: multitier` excludes). Order-ownership plan `plans/20261002-1209-order-ownership-and-dsl-identities.md` is still pending and was recommended before Phase 2 (author chose to spread first).
+Steps 8 and 9 (backend-dotnet + backend-typescript resource servers, system-test token acquisition, Keycloak in dotnet/typescript multitier compose, workflows) are DONE, pushed (head 61fb8ba) and green in CI: multitier acceptance stages for java, dotnet (latest + legacy) and typescript (latest + legacy). Fixes made along the way: realm redirect URIs for all frontend ports, `hashIterations(1)` in the test realm and a 90s .NET UI login timeout (CI login timeouts under parallel load), integration-spec JWT env. Still unconfirmed in CI: the full prerelease pipeline (`gh run list --repo optivem/shop --limit 20`). Next unit: Step 10 (re-enable multitier cross-lang in cross-lang-system-verification.yml: the job must start the SUT's Keycloak and pass KEYCLOAK_URL to test drivers; remove the three temporary `arch: multitier` excludes). Order-ownership plan `plans/20261002-1209-order-ownership-and-dsl-identities.md` is still pending and was recommended before Phase 2 (author chose to spread first).
 
 ## Steps
 
@@ -73,7 +73,7 @@ Phase 2 — spread
 
 ## Phase 1 follow-ups noted during verification
 
-- .NET legacy UI suites (mod02 smoke, mod06/07 e2e-ui) fail intermittently (~1 in 9 runner runs) with a 30s Playwright timeout after the Keycloak login; not reproducible when looping the tests directly. Needs diagnosis (suspect first login on a cold Keycloak or load under the runner).
+- (Mitigated by hashIterations(1) + 90s timeout; root cause unconfirmed) .NET legacy UI suites (mod02 smoke, mod06/07 e2e-ui) failed intermittently (~1 in 9 runner runs) with a 30s Playwright timeout after the Keycloak login; not reproducible when looping the tests directly. Needs diagnosis (suspect first login on a cold Keycloak or load under the runner).
 - .NET backend: access rules are controller attributes, not a central table, and unknown routes return 404 rather than 401; no route-enumeration test yet (see the SecurityConfig follow-up above). JWKS fetch has no retry.
 - Shared realm `docker/keycloak/shop-realm.json` redirect URIs/web origins now list all multitier frontend ports (3111/3112/3211/3212/3311/3312/5173); a new stack port must be added there. Keycloak only imports the realm on first start, so recreate the keycloak container after changing it.
 - Local system-test runs of dotnet/typescript need KEYCLOAK_URL_REAL / KEYCLOAK_URL_STUB exported (8291/8292, 8391/8392).
