@@ -5,11 +5,13 @@ import { OrderDetailView } from '../features/orders';
 import { useOrderDetails } from '../hooks';
 import { useNotificationContext } from '../contexts/useNotificationContext';
 import { orderService } from '../services/order-service';
+import { useRoles } from '../auth/useRoles';
 import { OrderStatus } from '../types/api.types';
 
 export function OrderDetails() {
   const { orderNumber } = useParams<{ orderNumber: string }>();
   const navigate = useNavigate();
+  const { isAdmin } = useRoles();
   const { order, isLoading, error, refresh } = useOrderDetails(orderNumber);
   const { handleResult, setSuccess } = useNotificationContext();
   const [isCancelling, setIsCancelling] = useState(false);
@@ -70,7 +72,7 @@ export function OrderDetails() {
                       {isCancelling ? 'Cancelling...' : 'Cancel Order'}
                     </button>
                   )}
-                  {order.status !== OrderStatus.CANCELLED && order.status !== OrderStatus.DELIVERED && (
+                  {isAdmin && order.status !== OrderStatus.CANCELLED && order.status !== OrderStatus.DELIVERED && (
                     <button
                       className="btn btn-warning"
                       aria-label="Deliver Order"

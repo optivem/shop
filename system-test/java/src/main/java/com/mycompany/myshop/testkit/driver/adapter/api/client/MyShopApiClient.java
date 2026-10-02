@@ -72,7 +72,7 @@ public class MyShopApiClient implements AutoCloseable {
         if (path.startsWith("/api/admin/")) {
             return true;
         }
-        if ("POST".equals(method) && path.equals("/api/coupons")) {
+        if (path.equals("/api/coupons") && ("POST".equals(method) || "GET".equals(method))) {
             return true;
         }
         return "POST".equals(method) && path.startsWith("/api/orders/") && path.endsWith("/deliver");

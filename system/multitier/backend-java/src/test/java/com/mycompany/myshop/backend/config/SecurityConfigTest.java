@@ -66,9 +66,15 @@ class SecurityConfigTest {
     }
 
     @Test
-    void customerCanBrowseOrdersAndCoupons() throws Exception {
+    void customerCanBrowseOrders() throws Exception {
         mockMvc.perform(get("/api/orders").with(customer())).andExpect(status().isOk());
-        mockMvc.perform(get("/api/coupons").with(customer())).andExpect(status().isOk());
+    }
+
+    @Test
+    void customerCannotBrowseCoupons() throws Exception {
+        mockMvc.perform(get("/api/coupons").with(customer()))
+            .andExpect(status().isForbidden())
+            .andExpect(jsonPath("$.status").value(403));
     }
 
     @Test

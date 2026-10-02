@@ -27,8 +27,16 @@ class ApiAuthorizationTest extends BaseApiClientTest {
     }
 
     @Test
-    void shouldAllowCustomerToBrowseCoupons() {
+    void shouldRejectCustomerBrowsingCoupons() {
         var result = myShopApiClient.as(ApiIdentity.CUSTOMER).coupons().browseCoupons();
+
+        assertThatResult(result).isFailure();
+        assertThat(result.getError().getStatus()).isEqualTo(403);
+    }
+
+    @Test
+    void shouldAllowAdminToBrowseCoupons() {
+        var result = myShopApiClient.as(ApiIdentity.ADMIN).coupons().browseCoupons();
 
         assertThatResult(result).isSuccess();
     }

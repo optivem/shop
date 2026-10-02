@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { ErrorBoundary } from './components';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { useNotificationContext } from './contexts/useNotificationContext';
+import { RequireAdmin } from './auth/RequireAdmin';
 import { Home, NewOrder, OrderHistory, OrderDetails, AdminCoupons } from './pages';
 
 /**
@@ -35,7 +36,7 @@ export function App() {
             <Route path="/new-order" element={<NewOrder />} />
             <Route path="/order-history" element={<OrderHistory />} />
             <Route path="/order-details/:orderNumber" element={<OrderDetails />} />
-            <Route path="/admin-coupons" element={<AdminCoupons />} />
+            <Route path="/admin-coupons" element={<RequireAdmin><AdminCoupons /></RequireAdmin>} />
           </Routes>
         </BrowserRouter>
       </NotificationProvider>

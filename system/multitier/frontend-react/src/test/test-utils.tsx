@@ -7,9 +7,20 @@ import { AuthContext, type AuthContextProps } from 'react-oidc-context';
 import type { User } from 'oidc-client-ts';
 import { NotificationProvider } from '../contexts/NotificationContext';
 
-/** An authenticated auth context for tests; override fields (e.g. signoutRedirect) as needed. */
-export function createMockAuth(overrides: Partial<AuthContextProps> = {}): AuthContextProps {
-  const user = { access_token: 'test-access-token', profile: { sub: 'u1', preferred_username: 'customer1' } } as User;
+function fakeJwt(roles: string[]): string {
+  const encode = (o: object) => btoa(JSON.stringify(o)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+  return `${encode({ alg: 'none' })}.${encode({ realm_access: { roles } })}.sig`;
+}
+
+/**
+ * An authenticated auth context for tests; override fields (e.g. signoutRedirect) as needed.
+ * `roles` goes into the access token's realm_access.roles; defaults to an admin.
+ */
+export function createMockAuth(
+  overrides: Partial<AuthContextProps> = {},
+  roles: string[] = ['ADMIN', 'CUSTOMER'],
+): AuthContextProps {
+  const user = { access_token: fakeJwt(roles), profile: { sub: 'u1', preferred_username: 'customer1' } } as User;
   return {
     isLoading: false,
     isAuthenticated: true,

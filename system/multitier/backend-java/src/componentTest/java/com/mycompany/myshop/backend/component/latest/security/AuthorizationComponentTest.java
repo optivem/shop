@@ -58,6 +58,18 @@ class AuthorizationComponentTest extends BaseComponentTest {
     }
 
     @Test
+    void customerCannotBrowseCoupons() {
+        assertThat(call(HttpMethod.GET, "/api/coupons", TestAuthConfiguration.CUSTOMER_TOKEN).getStatusCode())
+            .isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    void adminCanBrowseCoupons() {
+        assertThat(call(HttpMethod.GET, "/api/coupons", TestAuthConfiguration.ADMIN_TOKEN).getStatusCode())
+            .isEqualTo(HttpStatus.OK);
+    }
+
+    @Test
     void customerCannotPublishCoupon() {
         assertThat(call(HttpMethod.POST, "/api/coupons", TestAuthConfiguration.CUSTOMER_TOKEN).getStatusCode())
             .isEqualTo(HttpStatus.FORBIDDEN);

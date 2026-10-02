@@ -1,3 +1,4 @@
+import { useRoles } from '../auth/useRoles';
 import { Layout, FeatureCard } from '../components';
 
 /**
@@ -5,6 +6,7 @@ import { Layout, FeatureCard } from '../components';
  * Provides navigation to key features: MyShop and Order History
  */
 export function Home() {
+  const { isAdmin } = useRoles();
   return (
     <Layout>
       <div className="jumbotron bg-light p-5 rounded">
@@ -26,6 +28,7 @@ export function Home() {
             linkTo="/order-history"
             linkText="View Orders"
           />
+          {isAdmin && (
           <FeatureCard
             icon="Coupon Management"
             title="Coupon Management"
@@ -33,6 +36,7 @@ export function Home() {
             linkTo="/admin-coupons"
             linkText="Manage Coupons"
           />
+          )}
         </div>
       </div>
     </Layout>

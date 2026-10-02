@@ -53,6 +53,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/health").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/orders/{orderNumber}/deliver").hasRole(ADMIN)
                 .requestMatchers(HttpMethod.POST, "/api/coupons").hasRole(ADMIN)
+                .requestMatchers(HttpMethod.GET, "/api/coupons").hasRole(ADMIN)
                 .requestMatchers("/api/admin/**").hasRole(ADMIN)
                 .anyRequest().authenticated())
             .oauth2ResourceServer(oauth -> oauth
