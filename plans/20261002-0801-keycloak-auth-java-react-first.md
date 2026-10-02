@@ -58,7 +58,9 @@ Grounded in `system/multitier/backend-java` controllers and `docker/java/multiti
 
 ## ▶ Next executable step (resume here)
 
-Phase 1 is implemented and verified locally (Keycloak in the 4 Java multitier compose files, backend-java resource server, React OIDC login, Java system-test token + Playwright UI login for latest and legacy suites, CI env wiring, cross-lang exclusion). Remaining: (a) confirm the pushed pipeline is green for multitier-java (acceptance, acceptance-legacy, qa, prod stages) and the cross-lang matrix; (b) manual browser login by the author; (c) then start Phase 2 with Step 8 (backend-dotnet resource server + system-test/dotnet token acquisition + Playwright login), using the Phase 1 diff as the recipe.
+Phase 1 is DONE and pushed (latest commit da1dc770 incl. admin-only coupon listing and role-aware React UI). Local gate on 2026-10-02: all 11 latest and all 25 legacy Java system-test suites PASSED via `gh optivem system-test run` against the stacks started with `gh optivem system start --restart`. CI: multitier-java acceptance-stage-legacy and the monolith QA stages were green; multitier-java acceptance/qa and the prerelease pipeline were still running — first action: `gh run list --repo optivem/shop --limit 15` and confirm multitier-java acceptance, qa, prerelease and cross-lang are green; fix only auth-related failures.
+
+Then decide with the author the next piece: (a) write a separate plan for order ownership + admin/customer separation (customers see only their own orders, admins see all, admins cannot place orders; needs owner column migration, backend rules, UI, two-customer isolation tests, Playwright identity split) — recommended to do in Java before spreading; then (b) Phase 2, Step 8 (backend-dotnet resource server + system-test/dotnet token + Playwright login), using the Phase 1 diff (commits 6ef4b6af, 0a3efd0d, 4c4d0f1d, da1dc770) as the recipe.
 
 ## Steps
 
