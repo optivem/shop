@@ -100,6 +100,9 @@ jobs:
       contents: read
     env:
       GH_OPTIVEM_CONFIG: gh-optivem-${{ inputs.architecture }}-${{ inputs.language }}.yaml
+      # Enables token acquisition in the Java system tests (opt-in; ignored by other languages).
+      KEYCLOAK_URL_REAL: http://localhost:8191
+      KEYCLOAK_URL_STUB: http://localhost:8192
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v6
