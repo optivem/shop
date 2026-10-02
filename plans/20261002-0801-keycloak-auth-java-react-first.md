@@ -13,6 +13,7 @@
 - System-test drivers (Java first) acquire tokens programmatically against the test realm in the driver layer; the DSL stays free of auth concerns.
 - The cross-lang-system-verification matrix stays green throughout the rollout (no silent breakage of dotnet/typescript test langs).
 - A documented, repeatable recipe for spreading to backend-dotnet, backend-typescript, then the monolith variants.
+- Monolith end state (Step 11): opening a monolith UI redirects to Keycloak; after login the server holds a session cookie (tokens never reach browser JS); UI pages and API routes enforce the same role rules as multitier (public `/health`, authenticated orders, ADMIN-only admin/coupon-create/deliver; 401/403 semantics for API). Monolith system tests acquire tokens in the driver layer, UI tests log in via the Keycloak page. Unchanged: multitier setup, shared realm (plus new monolith clients), DSL free of auth concerns, cross-lang matrix green.
 
 ## Decisions settled (2026-10-02)
 
@@ -58,7 +59,7 @@ Grounded in `system/multitier/backend-java` controllers and `docker/java/multiti
 
 ## ▶ Next executable step (resume here)
 
-Steps 8 and 9 (backend-dotnet + backend-typescript resource servers, system-test token acquisition, Keycloak in dotnet/typescript multitier compose, workflows) are DONE, pushed (head 61fb8ba) and green in CI: multitier acceptance stages for java, dotnet (latest + legacy) and typescript (latest + legacy). Fixes made along the way: realm redirect URIs for all frontend ports, `hashIterations(1)` in the test realm and a 90s .NET UI login timeout (CI login timeouts under parallel load), integration-spec JWT env. Still unconfirmed in CI: the full prerelease pipeline (`gh run list --repo optivem/shop --limit 20`). Next unit: Step 10 (re-enable multitier cross-lang in cross-lang-system-verification.yml: the job must start the SUT's Keycloak and pass KEYCLOAK_URL to test drivers; remove the three temporary `arch: multitier` excludes). Order-ownership plan `plans/20261002-1209-order-ownership-and-dsl-identities.md` is still pending and was recommended before Phase 2 (author chose to spread first).
+Step 10 is DONE locally (uncommitted/unpushed until the commit gate; unverified in CI): cross-lang-system-verification.yml no longer excludes multitier systems and exports KEYCLOAK_URL_REAL/STUB from the SUT's systems.yaml Keycloak component. After it is pushed, confirm the multitier cross-lang matrix (6 combos) is green via `gh run list --repo optivem/shop --limit 20`. Next unit: Step 11 — design decided (server-side OIDC per monolith; see Resolved decisions), ready to execute. Order-ownership plan `plans/20261002-1209-order-ownership-and-dsl-identities.md` is still pending.
 
 ## Steps
 
@@ -67,8 +68,7 @@ Phase 1 — get it working end-to-end on Java backend + React frontend (multitie
 
 Phase 2 — spread
 
-- [ ] Step 10: Re-enable/complete the cross-lang matrix for all combinations; remove any temporary gating.
-- [ ] Step 11: Monolith variants (java, dotnet, typescript) — decide how the monolith's bundled UI does login (see open questions).
+- [ ] Step 11: Monolith variants (java, dotnet, typescript) — server-side OIDC login (confidential client, auth code + PKCE, session cookie) plus Bearer-JWT validation on API routes; see Resolved decisions.
 - [ ] Step 12: Cloud/prod-stage: managed or hardened IdP, secrets, TLS (separate from local/pipeline Keycloak).
 
 ## Phase 1 follow-ups noted during verification
@@ -88,6 +88,11 @@ Phase 2 — spread
 - `frontend-react` and its Docker image are SHARED by the Java, .NET and TypeScript multitier stacks. Phase 1 initially made Keycloak config mandatory, which broke the .NET/TypeScript pipelines (nginx `unknown "keycloak_url" variable`). Fixed: the image starts with empty KEYCLOAK_* (defaults in the Dockerfile) and the app runs with auth DISABLED when keycloakUrl is empty. Any compose file that wants login must set all three KEYCLOAK_* vars (Phase 2 sets them for .NET/TypeScript when their backends validate tokens).
 - Rule: any change to a shared artifact (frontend image, db migrations, realm file) must be checked against all three language stacks before pushing.
 
+## Resolved decisions
+
+- **Monolith UI login (Step 11), resolved 2026-10-02:** server-side OIDC. Each monolith (Java/Thymeleaf, .NET/Razor Pages, TypeScript/Next.js) is a confidential Keycloak client using authorization code + PKCE server-side with a session cookie (Spring `oauth2Login` / ASP.NET OpenIdConnect / Auth.js). UI pages use the session; API routes also accept Bearer JWTs (same role rules as multitier). Rationale: standard pattern for server-rendered apps, tokens stay off the browser, realm reused with one new client per monolith. Alternatives rejected: in-browser oidc-client-ts on server-rendered pages (awkward, tokens in JS); auth proxy/BFF in front (hides in-app security teaching material, extra component).
+  - Consequences: add `shop-monolith-*` confidential client(s) + redirect URIs to `docker/keycloak/shop-realm.json` (client secret = clearly-marked test value, env-supplied); monolith system-test drivers acquire tokens as in multitier; UI tests drive the Keycloak login page. Check every change against all three language stacks before pushing.
+
 ## Open questions
 
 None for Phase 1 — all resolved (2026-10-02):
@@ -95,4 +100,4 @@ None for Phase 1 — all resolved (2026-10-02):
 - Legacy and latest system-test suites both get token acquisition in Phase 1 (logic in the shared driver/client layer).
 - Frontend-react is shared across backends (Phase 2 only touches backends + test drivers).
 - Keycloak startup time in CI: verify during Step 6 (health-wait step); not a blocker.
-- Deferred to Phase 2: monolith UI login flow (Step 11), prod IdP (Step 12).
+- Monolith UI login flow (Step 11): resolved — see Resolved decisions. Deferred to Phase 2: prod IdP (Step 12).

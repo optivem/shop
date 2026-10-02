@@ -51,11 +51,6 @@ jobs:
           - { test-lang: java,       system-lang: java }
           - { test-lang: dotnet,     system-lang: dotnet }
           - { test-lang: typescript, system-lang: typescript }
-          # TEMPORARY: every multitier system now requires Keycloak auth, and the cross-lang job
-          # does not yet start/point test drivers at the SUT's Keycloak (Step 10). Remove then.
-          - { arch: multitier, system-lang: java }
-          - { arch: multitier, system-lang: dotnet }
-          - { arch: multitier, system-lang: typescript }
         include:
           # Per (arch, system-lang) image set + compose service names.
           # Mirrors the per-(arch, lang)-acceptance-stage.yml deployments.
@@ -228,7 +223,7 @@ jobs:
         # Test code defaults to its own language's port set (3[1|2|3]xx). For cross-lang
         # runs the test process must point at the SUT's port set instead. Each loader
         # checks env vars after loading its config file; this step exports the 10
-        # mode-suffixed URLs (5 keys × _REAL/_STUB) extracted from the SUT's systems.yaml.
+        # mode-suffixed URLs (5 keys + Keycloak for multitier, × _REAL/_STUB) extracted from the SUT's systems.yaml.
         # Tax is not in externalSystems but is colocated with ERP — derived by URL swap.
         run: |
           SYSTEM_YAML=docker/${{ matrix.system-lang }}/${{ matrix.arch }}/systems.yaml
@@ -240,16 +235,20 @@ jobs:
             ERP_URL=$(jq -r --arg lbl "$label" '.systems[] | select(.label == $lbl) | .externalSystems[] | select(.name | test("ERP")) | .url' <<< "$SYSTEM_JSON" | sed 's|/health$||')
             CLOCK_URL=$(jq -r --arg lbl "$label" '.systems[] | select(.label == $lbl) | .externalSystems[] | select(.name | test("Clock")) | .url' <<< "$SYSTEM_JSON" | sed 's|/health$||')
             TAX_URL="${ERP_URL%/erp}/tax"
+            # Multitier SUTs ship a Keycloak component; test drivers acquire tokens from it.
+            # Monolith SUTs have none — leaving KEYCLOAK_URL_* unset keeps auth opt-out.
+            KEYCLOAK_URL=$(jq -r --arg lbl "$label" '.systems[] | select(.label == $lbl) | .components[] | select(.name == "Keycloak") | .url' <<< "$SYSTEM_JSON" | sed 's|/realms/.*$||')
             {
               echo "MYSHOP_UI_BASE_URL_${SUFFIX}=${UI_URL}"
               echo "MYSHOP_API_BASE_URL_${SUFFIX}=${API_URL}"
               echo "ERP_API_BASE_URL_${SUFFIX}=${ERP_URL}"
               echo "CLOCK_API_BASE_URL_${SUFFIX}=${CLOCK_URL}"
               echo "TAX_API_BASE_URL_${SUFFIX}=${TAX_URL}"
+              if [ -n "$KEYCLOAK_URL" ]; then echo "KEYCLOAK_URL_${SUFFIX}=${KEYCLOAK_URL}"; fi
             } >> "$GITHUB_ENV"
           done
           echo "::group::Exported URL env vars"
-          grep -E '^(MYSHOP|ERP|CLOCK|TAX)_' "$GITHUB_ENV" || true
+          grep -E '^(MYSHOP|ERP|CLOCK|TAX|KEYCLOAK)_' "$GITHUB_ENV" || true
           echo "::endgroup::"
 
       # Cross-lang combos test (test-lang) suites against (system-lang)'s SUT,
