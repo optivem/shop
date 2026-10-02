@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Diagnostics;
@@ -6,6 +7,7 @@ namespace MyCompany.MyShop.Monolith.Pages
 {
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     [IgnoreAntiforgeryToken]
+    [AllowAnonymous]
     public class ErrorModel : PageModel
     {
         public string? RequestId { get; set; }

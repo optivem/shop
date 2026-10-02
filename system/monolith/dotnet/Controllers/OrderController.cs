@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MyCompany.MyShop.Monolith.Api.Security;
 using MyCompany.MyShop.Monolith.Core.Dtos;
 using MyCompany.MyShop.Monolith.Core.Services;
 
@@ -43,6 +45,7 @@ public class OrderController : ControllerBase
         return NoContent();
     }
 
+    [Authorize(Roles = Roles.Admin)]
     [HttpPost("{orderNumber}/deliver")]
     public async Task<IActionResult> DeliverOrder(string orderNumber)
     {

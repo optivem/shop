@@ -7,6 +7,24 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/MyCompany.MyShop.Monolith.styles.css" asp-append-version="true" />
+    <script>
+        // Same-origin state-changing fetch() calls carry the CSRF token the server sets in the XSRF-TOKEN cookie.
+        (function () {
+            var originalFetch = window.fetch;
+            window.fetch = function (input, init) {
+                init = init || {};
+                var method = (init.method || 'GET').toUpperCase();
+                if (method !== 'GET' && method !== 'HEAD') {
+                    var match = document.cookie.match(/(?:^|; )XSRF-TOKEN=([^;]*)/);
+                    if (match) {
+                        init.headers = new Headers(init.headers || {});
+                        init.headers.set('X-XSRF-TOKEN', decodeURIComponent(match[1]));
+                    }
+                }
+                return originalFetch.call(this, input, init);
+            };
+        })();
+    </script>
     <style>
         .notification { padding: 12px; margin-top: 10px; margin-bottom: 16px; border-radius: 4px; font-weight: 600; }
         .notification.success { background: #d1e7dd; color: #0f5132; border: 1px solid #badbcc; }
@@ -23,6 +41,14 @@
         <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
             <div class="container">
                 <a class="navbar-brand" href="/">MyShop</a>
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <form method="post" action="/logout" class="d-flex align-items-center ms-auto">
+                        <span class="navbar-text me-3">@User.Identity.Name</span>
+                        <button type="submit" class="btn btn-outline-light btn-sm">Logout</button>
+                        @Html.AntiForgeryToken()
+                    </form>
+                }
             </div>
         </nav>
     </header>

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MyCompany.MyShop.Monolith.Controllers;
@@ -6,6 +7,7 @@ namespace MyCompany.MyShop.Monolith.Controllers;
 [Route("")]
 public class HealthController : ControllerBase
 {
+    [AllowAnonymous]
     [HttpGet("health")]
     public IActionResult CheckHealth()
     {

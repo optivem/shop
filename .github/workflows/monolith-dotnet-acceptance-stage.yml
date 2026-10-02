@@ -146,6 +146,9 @@ jobs:
       packages: write
     env:
       GH_OPTIVEM_CONFIG: gh-optivem-monolith-dotnet.yaml
+      # Enables token acquisition in the .NET system tests (opt-in; unset => no auth).
+      KEYCLOAK_URL_REAL: http://localhost:8291
+      KEYCLOAK_URL_STUB: http://localhost:8292
       # The test suites pass no environment override, so this selects Environment.Acceptance.
       ENVIRONMENT: acceptance
     outputs:
@@ -189,7 +192,7 @@ jobs:
         with:
           endpoints: |
             [
-              { "name": "MyShop UI", "url": "http://localhost:3211/" },
+              { "name": "MyShop UI", "url": "http://localhost:3211/health" },
               { "name": "MyShop API", "url": "http://localhost:8211/health" },
               { "name": "ERP", "url": "http://localhost:9211/erp/health" },
               { "name": "Clock", "url": "http://localhost:9211/clock/health" }
@@ -213,7 +216,7 @@ jobs:
         with:
           endpoints: |
             [
-              { "name": "MyShop UI", "url": "http://localhost:3212/" },
+              { "name": "MyShop UI", "url": "http://localhost:3212/health" },
               { "name": "MyShop API", "url": "http://localhost:8212/health" },
               { "name": "ERP", "url": "http://localhost:9212/erp/health" },
               { "name": "Clock", "url": "http://localhost:9212/clock/health" }

@@ -1,5 +1,9 @@
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.EntityFrameworkCore;
 using MyCompany.MyShop.Monolith.Api.Exception;
+using MyCompany.MyShop.Monolith.Api.Security;
 using MyCompany.MyShop.Monolith.Core.Services;
 using MyCompany.MyShop.Monolith.Core.Services.External;
 using MyCompany.MyShop.Monolith.Data;
@@ -40,6 +44,8 @@ var connectionString = $"Host={pgHost};Port={pgPort};Database={pgName};Username=
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
 
+builder.Services.AddShopAuthentication();
+
 // Register services
 builder.Services.AddScoped<ErpGateway>();
 builder.Services.AddScoped<ClockGateway>();
@@ -71,10 +77,19 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseAuthentication();
+app.UseShopCsrfProtection();
 app.UseAuthorization();
 
 app.MapRazorPages();
 app.MapControllers();
+
+app.MapPost("/logout", async (HttpContext context) =>
+{
+    await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+    await context.SignOutAsync(OpenIdConnectDefaults.AuthenticationScheme,
+        new AuthenticationProperties { RedirectUri = "/" });
+});
 
 await app.RunAsync();
 

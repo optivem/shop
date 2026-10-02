@@ -1,10 +1,13 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MyCompany.MyShop.Monolith.Api.Security;
 using MyCompany.MyShop.Monolith.Core.Dtos;
 using MyCompany.MyShop.Monolith.Core.Services;
 
 namespace MyCompany.MyShop.Monolith.Controllers;
 
 [ApiController]
+[Authorize(Roles = Roles.Admin)]
 [Route("api/coupons")]
 public class CouponController : ControllerBase
 {

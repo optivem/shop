@@ -1,30 +1,14 @@
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using MyCompany.MyShop.Monolith.Data;
 using Xunit;
 
 namespace MyCompany.MyShop.Monolith.Tests;
 
-public class MonolithApplicationTests : IClassFixture<WebApplicationFactory<Program>>
+public class MonolithApplicationTests : IClassFixture<ShopWebApplicationFactory>
 {
-    private readonly WebApplicationFactory<Program> _factory;
+    private readonly ShopWebApplicationFactory _factory;
 
-    public MonolithApplicationTests(WebApplicationFactory<Program> factory)
+    public MonolithApplicationTests(ShopWebApplicationFactory factory)
     {
-        _factory = factory.WithWebHostBuilder(builder =>
-        {
-            builder.ConfigureServices(services =>
-            {
-                var descriptor = services.SingleOrDefault(
-                    d => d.ServiceType == typeof(DbContextOptions<AppDbContext>));
-                if (descriptor != null)
-                    services.Remove(descriptor);
-
-                services.AddDbContext<AppDbContext>(options =>
-                    options.UseInMemoryDatabase("TestDb"));
-            });
-        });
+        _factory = factory;
     }
 
     [Fact]
