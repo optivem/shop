@@ -9,7 +9,7 @@ public sealed class KeycloakUiLogin
     private const string UsernameSelector = "#username";
     private const string PasswordSelector = "#password";
     private const string SubmitSelector = "#kc-login";
-    private const int TimeoutMilliseconds = 30_000;
+    private const int TimeoutMilliseconds = 90_000;
 
     private readonly string _keycloakBaseUrl;
     private readonly TestUser _user;

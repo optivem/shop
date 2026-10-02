@@ -5,6 +5,7 @@
   "registrationAllowed": false,
   "loginWithEmailAllowed": true,
   "accessTokenLifespan": 300,
+  "passwordPolicy": "hashIterations(1)",
   "roles": {
     "realm": [
       { "name": "CUSTOMER", "description": "Regular shop customer" },
