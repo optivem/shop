@@ -1,4 +1,3 @@
-import request from 'supertest';
 import { ComponentHarness } from '../support/component-harness';
 
 /**
@@ -26,7 +25,8 @@ describe('Order History (component)', () => {
     harness.stubPromotion(false, 1.0);
     harness.stubTax('US', 0.1);
 
-    const placed = await request(harness.httpServer())
+    const placed = await harness
+      .adminApi()
       .post('/api/orders')
       .send({ sku: 'BOOK-123', quantity: 2, country: 'US' });
     expect(placed.status).toBe(201);
@@ -36,7 +36,7 @@ describe('Order History (component)', () => {
   it('browse returns placed orders', async () => {
     const orderNumber = await placeOrder();
 
-    const response = await request(harness.httpServer()).get('/api/orders');
+    const response = await harness.adminApi().get('/api/orders');
 
     expect(response.status).toBe(200);
     const body = response.body as { orders: { orderNumber: string }[] };
@@ -45,9 +45,7 @@ describe('Order History (component)', () => {
   });
 
   it('view missing order returns Not Found', async () => {
-    const response = await request(harness.httpServer()).get(
-      '/api/orders/UNKNOWN',
-    );
+    const response = await harness.adminApi().get('/api/orders/UNKNOWN');
 
     expect(response.status).toBe(404);
   });

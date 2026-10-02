@@ -1,8 +1,10 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MyCompany.MyShop.Backend.Controllers;
 
 [ApiController]
+[AllowAnonymous]
 [Route("")]
 public class HealthController : ControllerBase
 {

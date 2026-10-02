@@ -58,11 +58,7 @@ Grounded in `system/multitier/backend-java` controllers and `docker/java/multiti
 
 ## ▶ Next executable step (resume here)
 
-Phase 1 is DONE and pushed (latest commit da1dc770 incl. admin-only coupon listing and role-aware React UI). Local gate on 2026-10-02: all 11 latest and all 25 legacy Java system-test suites PASSED via `gh optivem system-test run` against the stacks started with `gh optivem system start --restart`. CI: multitier-java acceptance-stage-legacy and the monolith QA stages were green; multitier-java acceptance/qa and the prerelease pipeline were still running — first action: `gh run list --repo optivem/shop --limit 15` and confirm multitier-java acceptance, qa, prerelease and cross-lang are green; fix only auth-related failures.
-
-Also check the manually dispatched multitier-dotnet/typescript acceptance-stage runs (started on 3862bc6 after the frontend auth-disabled fix; `gh run list --repo optivem/shop --limit 20`), and re-run the red prerelease-pipeline-multitier-dotnet/typescript if still red (their local-job failure was never diagnosed). Also the prerelease-pipeline-multitier-java run 36990669134 failed only on a missing rc tag for 4c4d0f1 (likely superseded by newer commits) — trigger a fresh prerelease run to confirm.
-
-Then the next piece: a separate plan now exists — `plans/20261002-1209-order-ownership-and-dsl-identities.md` (customers see only their own orders, admins see all and cannot place orders, identities in the test DSL). Recommended: do it in Java BEFORE Phase 2. Original note: (a) write a separate plan for order ownership + admin/customer separation (customers see only their own orders, admins see all, admins cannot place orders; needs owner column migration, backend rules, UI, two-customer isolation tests, Playwright identity split) — recommended to do in Java before spreading; then (b) Phase 2, Step 8 (backend-dotnet resource server + system-test/dotnet token + Playwright login), using the Phase 1 diff (commits 6ef4b6af, 0a3efd0d, 4c4d0f1d, da1dc770) as the recipe.
+Steps 8 and 9 (backend-dotnet + backend-typescript resource servers, system-test token acquisition, Keycloak in dotnet/typescript multitier compose, workflows) are implemented and verified locally (all latest + legacy suites green; .NET legacy UI has a ~1-in-9 intermittent 30s timeout, see follow-ups). Pending: commit (one commit for the shop repo via /commit), then push and confirm CI: `gh run list --repo optivem/shop --limit 20` — fix only auth-related failures. Next unit after that: Step 10 (re-enable multitier cross-lang in cross-lang-system-verification.yml: the job must start the SUT's Keycloak and pass KEYCLOAK_URL to test drivers; remove the three temporary `arch: multitier` excludes). Order-ownership plan `plans/20261002-1209-order-ownership-and-dsl-identities.md` is still pending and was recommended before Phase 2 (author chose to spread first).
 
 ## Steps
 
@@ -71,17 +67,20 @@ Phase 1 — get it working end-to-end on Java backend + React frontend (multitie
 
 Phase 2 — spread
 
-- [ ] Step 8: backend-dotnet resource server + system-test/dotnet token acquisition.
-- [ ] Step 9: backend-typescript resource server + system-test/typescript token acquisition.
 - [ ] Step 10: Re-enable/complete the cross-lang matrix for all combinations; remove any temporary gating.
 - [ ] Step 11: Monolith variants (java, dotnet, typescript) — decide how the monolith's bundled UI does login (see open questions).
 - [ ] Step 12: Cloud/prod-stage: managed or hardened IdP, secrets, TLS (separate from local/pipeline Keycloak).
 
 ## Phase 1 follow-ups noted during verification
 
+- .NET legacy UI suites (mod02 smoke, mod06/07 e2e-ui) fail intermittently (~1 in 9 runner runs) with a 30s Playwright timeout after the Keycloak login; not reproducible when looping the tests directly. Needs diagnosis (suspect first login on a cold Keycloak or load under the runner).
+- .NET backend: access rules are controller attributes, not a central table, and unknown routes return 404 rather than 401; no route-enumeration test yet (see the SecurityConfig follow-up above). JWKS fetch has no retry.
+- Shared realm `docker/keycloak/shop-realm.json` redirect URIs/web origins now list all multitier frontend ports (3111/3112/3211/3212/3311/3312/5173); a new stack port must be added there. Keycloak only imports the realm on first start, so recreate the keycloak container after changing it.
+- Local system-test runs of dotnet/typescript need KEYCLOAK_URL_REAL / KEYCLOAK_URL_STUB exported (8291/8292, 8391/8392).
 - Actuator and swagger endpoints on backend-java now require authentication ("everything else"); revisit if they must be public.
 - `npm audit` reported warnings after adding oidc-client-ts / react-oidc-context; not addressed.
 - Cloud stage workflows (`*-cloud.yml`) and QA/prod stages for java multitier not yet reviewed for Keycloak (Step 12).
+- Access rules live centrally in `SecurityConfig` (URL rules + `anyRequest().authenticated()`), kept deliberately: secure-by-default, single audit point. Risk: a renamed/added route can silently stop matching a rule (fails closed, but unnoticed). Improvement: make `SecurityConfigTest` verify every controller route — admin-only endpoints return 403 for CUSTOMER and 401 with no token, public ones are open, and a new route without an expected status fails the test (e.g. enumerate routes from `RequestMappingHandlerMapping`). First read the existing test to see what it already covers. Data-dependent rules (order ownership) go in service layer / `@PreAuthorize` in the ownership plan, not in URL rules.
 - Expired-token and wrong-audience cases rely on Spring's standard validators; not tested against live Keycloak.
 
 ## Lesson from CI (2026-10-02)

@@ -15,7 +15,7 @@ const config = loadConfiguration();
 // Driver fixtures for API tests
 export const apiTest = base.extend<{ myShopDriver: MyShopDriver; erpDriver: ErpDriver; taxDriver: TaxDriver }>({
     myShopDriver: async ({}, use) => {
-        const driver = new MyShopApiDriver(config.myShop.backendApiUrl);
+        const driver = new MyShopApiDriver(config.myShop.backendApiUrl, config.keycloakUrl);
         await use(driver);
         await driver.close();
     },
@@ -39,7 +39,7 @@ export const uiTest = base.extend<{ myShopDriver: MyShopDriver; erpDriver: ErpDr
         await browser.close();
     },
     myShopDriver: async ({ _myShopBrowser }, use) => {
-        const driver = new MyShopUiDriver(config.myShop.frontendUrl, _myShopBrowser);
+        const driver = new MyShopUiDriver(config.myShop.frontendUrl, _myShopBrowser, config.keycloakUrl);
         await use(driver);
         await driver.close();
     },

@@ -100,9 +100,9 @@ jobs:
       contents: read
     env:
       GH_OPTIVEM_CONFIG: gh-optivem-${{ inputs.architecture }}-${{ inputs.language }}.yaml
-      # Enables token acquisition in the Java system tests (opt-in; ignored by other languages).
-      KEYCLOAK_URL_REAL: http://localhost:8191
-      KEYCLOAK_URL_STUB: http://localhost:8192
+      # Enables token acquisition in the Java and multitier .NET/TypeScript system tests (opt-in; ports are per-language; empty for monolith TypeScript, which has no auth).
+      KEYCLOAK_URL_REAL: ${{ (inputs.language != 'typescript' && ((inputs.language == 'dotnet' && inputs.architecture == 'multitier') && 'http://localhost:8291' || 'http://localhost:8191')) || (inputs.architecture == 'multitier' && 'http://localhost:8391') || '' }}
+      KEYCLOAK_URL_STUB: ${{ (inputs.language != 'typescript' && ((inputs.language == 'dotnet' && inputs.architecture == 'multitier') && 'http://localhost:8292' || 'http://localhost:8192')) || (inputs.architecture == 'multitier' && 'http://localhost:8392') || '' }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v6

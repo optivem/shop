@@ -9,6 +9,7 @@ using MyCompany.MyShop.Backend.Core.Entities;
 using MyCompany.MyShop.Backend.Data;
 using PactNet.Infrastructure.Outputters;
 using PactNet.Verifier;
+using MyCompany.MyShop.Backend.Tests.Support;
 using System.Net;
 using System.Text.Json;
 using Testcontainers.PostgreSql;
@@ -120,6 +121,7 @@ public class BackendPactVerificationTest : IAsyncLifetime
         new PactVerifier("backend", config)
             .WithHttpEndpoint(new Uri(_factory.ServerAddress))
             .WithFileSource(new FileInfo(pactPath))
+            .WithCustomHeader("Authorization", "Bearer " + TestAuth.AdminToken)
             .WithProviderStateUrl(new Uri($"http://127.0.0.1:{_statePort}/"))
             .Verify();
     }
@@ -393,6 +395,7 @@ public class BackendPactVerificationTest : IAsyncLifetime
 
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
+            builder.UseTestAuth();
             builder.ConfigureServices(services =>
             {
                 var descriptor = services.SingleOrDefault(

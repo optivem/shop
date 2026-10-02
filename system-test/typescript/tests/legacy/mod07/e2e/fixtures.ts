@@ -28,9 +28,9 @@ const _test = base.extend<{ app: UseCaseDsl; _myShopBrowser: Browser }>({
             channel,
             myShopDriverFactory: (ch) => {
                 if (ch === ChannelType.UI) {
-                    return new MyShopUiDriver(config.myShop.frontendUrl, _myShopBrowser);
+                    return new MyShopUiDriver(config.myShop.frontendUrl, _myShopBrowser, config.keycloakUrl);
                 }
-                return new MyShopApiDriver(config.myShop.backendApiUrl);
+                return new MyShopApiDriver(config.myShop.backendApiUrl, config.keycloakUrl);
             },
             erpDriver: new ErpRealDriver(config.externalSystems.erp.url),
             clockDriver: new ClockRealDriver(),

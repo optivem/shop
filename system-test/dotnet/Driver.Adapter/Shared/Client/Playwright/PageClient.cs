@@ -6,20 +6,31 @@ public class PageClient
 {
     private readonly IPage _page;
     private readonly float _timeoutMilliseconds;
+    private readonly KeycloakUiLogin? _login;
 
     // 30 second timeout for better stability
     private const int DefaultTimeoutSeconds = 30;
     private const int DefaultTimeoutMilliseconds = DefaultTimeoutSeconds * 1000;
 
-    private PageClient(IPage page, float timeoutMilliseconds)
+    private PageClient(IPage page, float timeoutMilliseconds, KeycloakUiLogin? login)
     {
         _page = page;
         _timeoutMilliseconds = timeoutMilliseconds;
+        _login = login;
     }
 
-    public PageClient(IPage page, string baseUrl)
-        : this(page, DefaultTimeoutMilliseconds)
+    public PageClient(IPage page, string baseUrl, KeycloakUiLogin? login = null)
+        : this(page, DefaultTimeoutMilliseconds, login)
     {
+    }
+
+    // When the app redirected the browser to the Keycloak login form, sign in before touching the page.
+    private async Task LoginIfRedirectedAsync()
+    {
+        if (_login != null)
+        {
+            await _login.LoginIfRequiredAsync(_page);
+        }
     }
 
     public ILocator GetLocator(string selector)
@@ -55,6 +66,7 @@ public class PageClient
     public async Task<List<string>> ReadAllTextContentsAsync(string selector)
     {
         var locator = _page.Locator(selector);
+        await LoginIfRedirectedAsync();
         // Wait for at least one element to be visible
         // AllTextContentsAsync() doesn't trigger strict mode - it's designed for multiple elements
         await locator.First.WaitForAsync(GetDefaultWaitForOptions());
@@ -64,6 +76,7 @@ public class PageClient
 
     public async Task WaitForVisibleAsync(string selector, float? timeoutMilliseconds = null)
     {
+        await LoginIfRedirectedAsync();
         var locator = _page.Locator(selector);
         var options = timeoutMilliseconds.HasValue
             ? new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = timeoutMilliseconds.Value }
@@ -99,6 +112,7 @@ public class PageClient
 
     private async Task<ILocator> GetLocatorAsync(string selector, LocatorWaitForOptions waitForOptions)
     {
+        await LoginIfRedirectedAsync();
         var locator = _page.Locator(selector);
         await locator.WaitForAsync(waitForOptions);
 

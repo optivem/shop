@@ -64,11 +64,11 @@ public abstract class BaseChannelDriverTest : BaseConfigurableTest, IAsyncLifeti
 
         if (channelType == ChannelType.UI)
         {
-            return await MyShopUiDriver.CreateAsync(configuration.MyShopUiBaseUrl);
+            return await MyShopUiDriver.CreateAsync(configuration.MyShopUiBaseUrl, configuration.KeycloakBaseUrl);
         }
         else if (channelType == ChannelType.API)
         {
-            return new MyShopApiDriver(configuration.MyShopApiBaseUrl);
+            return new MyShopApiDriver(configuration.MyShopApiBaseUrl, configuration.KeycloakBaseUrl);
         }
         else
         {

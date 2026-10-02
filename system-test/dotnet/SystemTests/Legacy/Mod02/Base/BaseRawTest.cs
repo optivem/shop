@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Driver.Adapter.Shared.Client.Playwright;
 using Microsoft.Playwright;
 using SystemTests.TestInfrastructure.Configuration;
 using Dsl.Core;
@@ -50,6 +51,15 @@ public abstract class BaseRawTest : BaseConfigurableTest, IAsyncLifetime
 
         shopUiBrowserContext = await shopUiBrowser.NewContextAsync(contextOptions);
         shopUiPage = await shopUiBrowserContext.NewPageAsync();
+    }
+
+    protected async Task LoginToMyShopUiIfRequiredAsync()
+    {
+        var login = KeycloakUiLogin.ForBaseUrl(_configuration.KeycloakBaseUrl);
+        if (login != null)
+        {
+            await login.EnsureLoggedInAsync(shopUiPage!, "a[href='/new-order']");
+        }
     }
 
     protected void SetUpMyShopHttpClient()

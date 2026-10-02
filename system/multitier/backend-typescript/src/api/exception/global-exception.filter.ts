@@ -3,8 +3,10 @@ import {
   BadRequestException,
   Catch,
   ExceptionFilter,
+  ForbiddenException,
   HttpException,
   Logger,
+  UnauthorizedException,
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { ValidationException } from '../../core/exceptions/validation.exception';
@@ -17,6 +19,9 @@ const RESOURCE_NOT_FOUND_TYPE_URI =
   'https://api.my-company.example/errors/resource-not-found';
 const BAD_REQUEST_TYPE_URI =
   'https://api.my-company.example/errors/bad-request';
+const UNAUTHORIZED_TYPE_URI =
+  'https://api.my-company.example/errors/unauthorized';
+const FORBIDDEN_TYPE_URI = 'https://api.my-company.example/errors/forbidden';
 const INTERNAL_SERVER_ERROR_TYPE_URI =
   'https://api.my-company.example/errors/internal-server-error';
 
@@ -34,6 +39,10 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       this.handleNotExistValidationException(exception, response);
     } else if (exception instanceof ValidationException) {
       this.handleValidationException(exception, response);
+    } else if (exception instanceof UnauthorizedException) {
+      this.handleUnauthorizedException(response);
+    } else if (exception instanceof ForbiddenException) {
+      this.handleForbiddenException(response);
     } else if (exception instanceof BadRequestException) {
       this.handleBadRequestException(response);
     } else if (exception instanceof HttpException) {
@@ -96,6 +105,32 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       timestamp: new Date().toISOString(),
     };
     response.status(404).type('application/problem+json').json(body);
+  }
+
+  private handleUnauthorizedException(response: Response) {
+    const body = {
+      type: UNAUTHORIZED_TYPE_URI,
+      title: 'Unauthorized',
+      status: 401,
+      detail: 'Authentication is required',
+      timestamp: new Date().toISOString(),
+    };
+    response
+      .status(401)
+      .set('WWW-Authenticate', 'Bearer')
+      .type('application/problem+json')
+      .json(body);
+  }
+
+  private handleForbiddenException(response: Response) {
+    const body = {
+      type: FORBIDDEN_TYPE_URI,
+      title: 'Forbidden',
+      status: 403,
+      detail: 'You do not have permission to perform this action',
+      timestamp: new Date().toISOString(),
+    };
+    response.status(403).type('application/problem+json').json(body);
   }
 
   // Malformed JSON, or a body that is not an object.

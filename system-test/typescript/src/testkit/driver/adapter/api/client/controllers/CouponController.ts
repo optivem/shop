@@ -3,6 +3,7 @@ import type { PublishCouponRequest } from '../../../../port/dtos/PublishCouponRe
 import type { BrowseCouponsResponse } from '../../../../port/dtos/BrowseCouponsResponse.js';
 import type { SystemError } from '../../../../port/dtos/errors/SystemError.js';
 import { JsonHttpClient } from '../../../shared/client/http/json-http-client.js';
+import type { BearerTokenSource } from '../../../shared/client/http/bearer-token-source.js';
 import { SystemErrorMapper } from '../../SystemErrorMapper.js';
 
 export class CouponController {
@@ -10,8 +11,8 @@ export class CouponController {
 
   private readonly httpClient: JsonHttpClient<SystemError>;
 
-  constructor(baseUrl: string) {
-    this.httpClient = new JsonHttpClient(baseUrl, SystemErrorMapper.fromResponse);
+  constructor(baseUrl: string, tokenSource?: BearerTokenSource) {
+    this.httpClient = new JsonHttpClient(baseUrl, SystemErrorMapper.fromResponse, tokenSource);
   }
 
   publishCoupon(request: PublishCouponRequest): Promise<Result<void, SystemError>> {

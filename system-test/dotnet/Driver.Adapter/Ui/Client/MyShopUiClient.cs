@@ -34,6 +34,8 @@ public class MyShopUiClient : IAsyncDisposable
 
     private const string HtmlClosingTag = "</html>";
 
+    private const string HomeReadySelector = "a[href='/new-order']";
+
 
 
     private readonly string _baseUrl;
@@ -48,13 +50,15 @@ public class MyShopUiClient : IAsyncDisposable
 
     private readonly HomePage _homePage;
 
+    private readonly KeycloakUiLogin? _login;
+
 
 
     private IResponse? _response;
 
 
 
-    private MyShopUiClient(string baseUrl, IPlaywright playwright, IBrowser browser, IBrowserContext context, IPage page, HomePage homePage)
+    private MyShopUiClient(string baseUrl, IPlaywright playwright, IBrowser browser, IBrowserContext context, IPage page, HomePage homePage, KeycloakUiLogin? login)
 
     {
 
@@ -70,11 +74,14 @@ public class MyShopUiClient : IAsyncDisposable
 
         _homePage = homePage;
 
+        _login = login;
+
     }
 
 
 
-    public static async Task<MyShopUiClient> CreateAsync(string baseUrl)
+    /// <param name="keycloakBaseUrl">When null or blank, no login is performed.</param>
+    public static async Task<MyShopUiClient> CreateAsync(string baseUrl, string? keycloakBaseUrl = null)
 
     {
 
@@ -104,13 +111,14 @@ public class MyShopUiClient : IAsyncDisposable
 
         var page = await context.NewPageAsync();
 
-        var pageClient = new PlaywrightGateway(page, baseUrl);
+        var login = KeycloakUiLogin.ForBaseUrl(keycloakBaseUrl);
+        var pageClient = new PlaywrightGateway(page, baseUrl, login);
 
         var homePage = new HomePage(pageClient);
 
 
 
-        return new MyShopUiClient(baseUrl, playwright, browser, context, page, homePage);
+        return new MyShopUiClient(baseUrl, playwright, browser, context, page, homePage, login);
 
     }
 
@@ -121,6 +129,12 @@ public class MyShopUiClient : IAsyncDisposable
     {
 
         _response = await _page.GotoAsync(_baseUrl);
+
+        if (_login != null)
+        {
+            await _login.EnsureLoggedInAsync(_page, HomeReadySelector);
+        }
+
 
         return _homePage;
 

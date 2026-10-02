@@ -30,12 +30,12 @@ public abstract class BaseClientTest : BaseConfigurableTest, IAsyncLifetime
 
     protected async Task SetUpMyShopUiClientAsync()
     {
-        _shopUiClient = await MyShopUiClient.CreateAsync(_configuration.MyShopUiBaseUrl);
+        _shopUiClient = await MyShopUiClient.CreateAsync(_configuration.MyShopUiBaseUrl, _configuration.KeycloakBaseUrl);
     }
 
     protected void SetUpMyShopApiClient()
     {
-        _shopApiClient = new MyShopApiClient(_configuration.MyShopApiBaseUrl);
+        _shopApiClient = new MyShopApiClient(_configuration.MyShopApiBaseUrl, _configuration.KeycloakBaseUrl);
     }
 
     protected void SetUpExternalClients()

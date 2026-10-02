@@ -31,7 +31,8 @@ public class PlaceOrderPositiveApiTest : BaseE2eTest
 
         var placeOrderUri = new Uri(_configuration.MyShopApiBaseUrl + "/api/orders");
         var placeOrderContent = new StringContent(placeOrderJson, Encoding.UTF8, "application/json");
-        var placeOrderResponse = await _shopApiHttpClient!.PostAsync(placeOrderUri, placeOrderContent);
+        var placeOrderRequest = await WithCustomerAuthAsync(new HttpRequestMessage(HttpMethod.Post, placeOrderUri) { Content = placeOrderContent });
+        var placeOrderResponse = await _shopApiHttpClient!.SendAsync(placeOrderRequest);
         ((int)placeOrderResponse.StatusCode).ShouldBe(201);
 
         var placeOrderBody = await placeOrderResponse.Content.ReadAsStringAsync();
@@ -40,7 +41,8 @@ public class PlaceOrderPositiveApiTest : BaseE2eTest
         orderNumber.ShouldStartWith("ORD-");
 
         var viewOrderUri = new Uri(_configuration.MyShopApiBaseUrl + $"/api/orders/{orderNumber}");
-        var viewOrderResponse = await _shopApiHttpClient!.GetAsync(viewOrderUri);
+        var viewOrderRequest = await WithCustomerAuthAsync(new HttpRequestMessage(HttpMethod.Get, viewOrderUri));
+        var viewOrderResponse = await _shopApiHttpClient!.SendAsync(viewOrderRequest);
         ((int)viewOrderResponse.StatusCode).ShouldBe((int)HttpStatusCode.OK);
 
         var viewOrderBody = await viewOrderResponse.Content.ReadAsStringAsync();

@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
@@ -14,6 +15,9 @@ import { ClockGateway } from './core/services/external/clock.gateway';
 import { TaxGateway } from './core/services/external/tax.gateway';
 import { Order } from './core/entities/order.entity';
 import { Coupon } from './core/entities/coupon.entity';
+import { AuthGuard } from './auth/auth.guard';
+import { loadAuthConfig } from './auth/auth.config';
+import { JwtVerifier } from './auth/jwt-verifier';
 
 // Environment values are strings; a port that is not a number fails at startup, not on first connect.
 function parsePort(value: string): number {
@@ -74,6 +78,13 @@ function parsePort(value: string): number {
     ErpGateway,
     ClockGateway,
     TaxGateway,
+    {
+      provide: JwtVerifier,
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) =>
+        new JwtVerifier(loadAuthConfig(config)),
+    },
+    { provide: APP_GUARD, useClass: AuthGuard },
   ],
 })
 export class AppModule {}

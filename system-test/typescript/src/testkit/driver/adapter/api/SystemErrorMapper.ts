@@ -24,7 +24,10 @@ export class SystemErrorMapper {
   // so an error assertion fails on the value it checks rather than with a TypeError.
   static fromResponse(this: void, status: number, body: unknown): SystemError {
     const problemDetail = toProblemDetail(body);
-    return SystemErrorMapper.from({ ...problemDetail, detail: problemDetail.detail ?? `Request failed (HTTP ${status})` });
+    return {
+      ...SystemErrorMapper.from({ ...problemDetail, detail: problemDetail.detail ?? `Request failed (HTTP ${status})` }),
+      status,
+    };
   }
 }
 

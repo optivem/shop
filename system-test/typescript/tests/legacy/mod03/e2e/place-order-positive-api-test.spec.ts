@@ -1,5 +1,7 @@
 import { apiTest as test, expect } from './base/BaseE2eTest.js';
 import { randomUUID } from 'node:crypto';
+import { authHeadersFor } from '../../../../src/testkit/driver/adapter/shared/client/http/keycloak-token-provider.js';
+import { TestUsers } from '../../../../src/testkit/driver/adapter/shared/client/http/test-user.js';
 
 test('shouldPlaceOrderForValidInput', async ({ config }) => {
     const sku = `SKU-${randomUUID().substring(0, 8)}`;
@@ -15,9 +17,10 @@ test('shouldPlaceOrderForValidInput', async ({ config }) => {
     expect(createProductResponse.status).toBe(201);
 
     // When: place order via raw HTTP
+    const customerAuth = await authHeadersFor(config.keycloakUrl, TestUsers.CUSTOMER);
     const placeOrderResponse = await fetch(`${myShopApiUrl}/api/orders`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...customerAuth },
         body: JSON.stringify({ sku, quantity: '5', country: 'US' }),
     });
 
@@ -27,7 +30,7 @@ test('shouldPlaceOrderForValidInput', async ({ config }) => {
     expect(orderData.orderNumber).toBeDefined();
 
     // Then: view order via raw HTTP and assert full details
-    const viewOrderResponse = await fetch(`${myShopApiUrl}/api/orders/${orderData.orderNumber}`);
+    const viewOrderResponse = await fetch(`${myShopApiUrl}/api/orders/${orderData.orderNumber}`, { headers: customerAuth });
     expect(viewOrderResponse.ok).toBe(true);
     const order = (await viewOrderResponse.json()) as {
         orderNumber: string;

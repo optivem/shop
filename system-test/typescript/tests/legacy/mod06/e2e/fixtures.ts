@@ -27,9 +27,9 @@ const _test = base.extend<{ myShopDriver: MyShopDriver; erpDriver: ErpDriver; ta
         const channel = nonEmptyOr(ChannelContext.get(), ChannelType.API);
         let driver: MyShopDriver;
         if (channel === ChannelType.UI) {
-            driver = new MyShopUiDriver(config.myShop.frontendUrl, _myShopBrowser);
+            driver = new MyShopUiDriver(config.myShop.frontendUrl, _myShopBrowser, config.keycloakUrl);
         } else {
-            driver = new MyShopApiDriver(config.myShop.backendApiUrl);
+            driver = new MyShopApiDriver(config.myShop.backendApiUrl, config.keycloakUrl);
         }
         await use(driver);
         await driver.close();

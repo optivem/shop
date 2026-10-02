@@ -1,4 +1,7 @@
 using System.Text.Json;
+using System.Net.Http.Headers;
+using Driver.Adapter.Shared.Client.Http;
+using Driver.Adapter.Shared.Client.Playwright;
 using Microsoft.Playwright;
 using SystemTests.TestInfrastructure.Configuration;
 using Dsl.Core;
@@ -49,6 +52,26 @@ public abstract class BaseRawTest : BaseConfigurableTest, IAsyncLifetime
 
         shopUiBrowserContext = await shopUiBrowser.NewContextAsync(contextOptions);
         shopUiPage = await shopUiBrowserContext.NewPageAsync();
+    }
+
+    protected async Task<HttpRequestMessage> WithCustomerAuthAsync(HttpRequestMessage request)
+    {
+        var keycloakBaseUrl = _configuration.KeycloakBaseUrl;
+        if (!string.IsNullOrWhiteSpace(keycloakBaseUrl))
+        {
+            var token = await KeycloakTokenProvider.ForBaseUrl(keycloakBaseUrl).GetTokenAsync(TestUser.Customer);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        }
+        return request;
+    }
+
+    protected async Task LoginToMyShopUiIfRequiredAsync()
+    {
+        var login = KeycloakUiLogin.ForBaseUrl(_configuration.KeycloakBaseUrl);
+        if (login != null)
+        {
+            await login.EnsureLoggedInAsync(shopUiPage!, "a[href='/new-order']");
+        }
     }
 
     protected void SetUpMyShopHttpClient()

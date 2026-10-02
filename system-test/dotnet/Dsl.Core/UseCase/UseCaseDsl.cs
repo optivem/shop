@@ -80,8 +80,8 @@ public class UseCaseDsl : IAsyncDisposable
     {
         return channelType switch
         {
-            ChannelType.UI => await MyShopUiDriver.CreateAsync(_configuration.MyShopUiBaseUrl),
-            ChannelType.API => new MyShopApiDriver(_configuration.MyShopApiBaseUrl),
+            ChannelType.UI => await MyShopUiDriver.CreateAsync(_configuration.MyShopUiBaseUrl, _configuration.KeycloakBaseUrl),
+            ChannelType.API => new MyShopApiDriver(_configuration.MyShopApiBaseUrl, _configuration.KeycloakBaseUrl),
             _ => throw new InvalidOperationException($"Unknown channel type: {channelType}")
         };
     }

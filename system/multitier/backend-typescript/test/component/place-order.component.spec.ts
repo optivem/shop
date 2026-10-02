@@ -1,5 +1,4 @@
 import Decimal from 'decimal.js';
-import request from 'supertest';
 import { ComponentHarness } from '../support/component-harness';
 
 /**
@@ -42,16 +41,12 @@ describe('Place Order (component)', () => {
   }
 
   const placeAndFetch = async (body: OrderRequest): Promise<OrderDetails> => {
-    const placed = await request(harness.httpServer())
-      .post('/api/orders')
-      .send(body);
+    const placed = await harness.adminApi().post('/api/orders').send(body);
     expect(placed.status).toBe(201);
     const { orderNumber } = placed.body as { orderNumber: string };
     expect(orderNumber).toBeDefined();
 
-    const details = await request(harness.httpServer()).get(
-      `/api/orders/${orderNumber}`,
-    );
+    const details = await harness.adminApi().get(`/api/orders/${orderNumber}`);
     expect(details.status).toBe(200);
     return details.body as OrderDetails;
   };
@@ -127,7 +122,8 @@ describe('Place Order (component)', () => {
   it('rejects an order during the New Year blackout', async () => {
     harness.stubClock('2026-12-31T23:59:00Z');
 
-    const response = await request(harness.httpServer())
+    const response = await harness
+      .adminApi()
       .post('/api/orders')
       .send({ sku: 'BOOK-123', quantity: 2, country: 'US' });
 
@@ -138,7 +134,8 @@ describe('Place Order (component)', () => {
     harness.stubClock('2026-03-10T12:00:00Z');
     harness.stubProductMissing('MISSING-1');
 
-    const response = await request(harness.httpServer())
+    const response = await harness
+      .adminApi()
       .post('/api/orders')
       .send({ sku: 'MISSING-1', quantity: 1, country: 'US' });
 
@@ -163,7 +160,7 @@ describe('Place Order (component)', () => {
 
     const responses = await Promise.all(
       Array.from({ length: 10 }, () =>
-        request(harness.httpServer()).post('/api/orders').send({
+        harness.adminApi().post('/api/orders').send({
           sku: 'BOOK-123',
           quantity: 1,
           country: 'US',
@@ -184,7 +181,8 @@ describe('Place Order (component)', () => {
   });
 
   it('rejects an invalid quantity with a field error instead of a server error', async () => {
-    const response = await request(harness.httpServer())
+    const response = await harness
+      .adminApi()
       .post('/api/orders')
       .send({ sku: 'BOOK-123', quantity: 'lala', country: 'US' });
 

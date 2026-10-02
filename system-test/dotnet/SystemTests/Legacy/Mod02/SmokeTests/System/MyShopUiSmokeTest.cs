@@ -18,6 +18,8 @@ public class MyShopUiSmokeTest : BaseRawTest
 
         Assert.Equal(200, response!.Status);
 
+        await LoginToMyShopUiIfRequiredAsync();
+
         var contentType = response.Headers["content-type"];
         Assert.NotNull(contentType);
         Assert.Contains("text/html", contentType);

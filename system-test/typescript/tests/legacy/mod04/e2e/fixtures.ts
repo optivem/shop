@@ -11,7 +11,7 @@ const config = loadConfiguration();
 // Client fixtures for API tests
 export const apiTest = base.extend<{ myShopApiClient: MyShopApiClient; erpClient: ErpRealClient }>({
     myShopApiClient: async ({}, use) => {
-        await use(new MyShopApiClient(config.myShop.backendApiUrl));
+        await use(new MyShopApiClient(config.myShop.backendApiUrl, config.keycloakUrl));
     },
     erpClient: async ({}, use) => {
         await use(new ErpRealClient(config.externalSystems.erp.url));
@@ -26,7 +26,7 @@ export const uiTest = base.extend<{ myShopUiClient: MyShopUiClient; _myShopBrows
         await browser.close();
     },
     myShopUiClient: async ({ _myShopBrowser }, use) => {
-        const client = new MyShopUiClient(config.myShop.frontendUrl, _myShopBrowser);
+        const client = new MyShopUiClient(config.myShop.frontendUrl, _myShopBrowser, config.keycloakUrl);
         await use(client);
         await client.close();
     },

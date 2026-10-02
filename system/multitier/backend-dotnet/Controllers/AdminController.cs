@@ -1,9 +1,12 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MyCompany.MyShop.Backend.Api.Security;
 using MyCompany.MyShop.Backend.Core.Services;
 
 namespace MyCompany.MyShop.Backend.Controllers;
 
 [ApiController]
+[Authorize(Roles = Roles.Admin)]
 [Route("api/admin")]
 public class AdminController : ControllerBase
 {

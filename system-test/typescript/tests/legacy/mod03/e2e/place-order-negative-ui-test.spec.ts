@@ -1,4 +1,5 @@
 import { uiTest as test, expect } from './base/BaseE2eTest.js';
+import { loginToMyShopUiIfRequired } from '../../../../src/testkit/driver/adapter/shared/client/playwright/keycloak-ui-login.js';
 
 const TIMEOUT = 30_000;
 
@@ -7,6 +8,7 @@ test('shouldRejectOrderWithNonIntegerQuantity', async ({ config, myShopPage }) =
 
     // When: place order with invalid quantity via UI
     await myShopPage.goto(myShopUiUrl);
+    await loginToMyShopUiIfRequired(myShopPage, config.keycloakUrl);
     await myShopPage.locator("a[href='/new-order']").click({ timeout: TIMEOUT });
     await myShopPage.locator('[aria-label="SKU"]').fill('SOME-SKU', { timeout: TIMEOUT });
     await myShopPage.locator('[aria-label="Quantity"]').fill('invalid-quantity', { timeout: TIMEOUT });

@@ -26,6 +26,7 @@ public partial class PlaceOrderPositiveUiTest : BaseE2eTest
         ((int)createProductResponse.StatusCode).ShouldBe(201);
 
         await shopUiPage!.GotoAsync(_configuration.MyShopUiBaseUrl);
+        await LoginToMyShopUiIfRequiredAsync();
         await shopUiPage.Locator("a[href='/new-order']").ClickAsync();
 
         await shopUiPage.Locator("[aria-label=\"SKU\"]").FillAsync(sku);

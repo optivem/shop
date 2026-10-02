@@ -35,9 +35,9 @@ public class MyShopUiDriver : IMyShopDriver
         GC.SuppressFinalize(this);
     }
 
-    public static async Task<MyShopUiDriver> CreateAsync(string baseUrl)
+    public static async Task<MyShopUiDriver> CreateAsync(string baseUrl, string? keycloakBaseUrl = null)
     {
-        var client = await MyShopUiClient.CreateAsync(baseUrl);
+        var client = await MyShopUiClient.CreateAsync(baseUrl, keycloakBaseUrl);
         return new MyShopUiDriver(client);
     }
 

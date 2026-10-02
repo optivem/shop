@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using MyCompany.MyShop.Backend.Data;
+using MyCompany.MyShop.Backend.Tests.Support;
 using Xunit;
 
 namespace MyCompany.MyShop.Backend.Tests.Component;
@@ -14,6 +15,7 @@ public class BackendApplicationTests : IClassFixture<WebApplicationFactory<Progr
     {
         _factory = factory.WithWebHostBuilder(builder =>
         {
+            builder.UseTestAuth();
             builder.ConfigureServices(services =>
             {
                 var descriptor = services.SingleOrDefault(

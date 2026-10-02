@@ -22,7 +22,8 @@ public class PlaceOrderNegativeApiTest : BaseE2eTest
 
         var uri = new Uri(_configuration.MyShopApiBaseUrl + "/api/orders");
         var content = new StringContent(placeOrderJson, Encoding.UTF8, "application/json");
-        var response = await _shopApiHttpClient!.PostAsync(uri, content);
+        var request = await WithCustomerAuthAsync(new HttpRequestMessage(HttpMethod.Post, uri) { Content = content });
+        var response = await _shopApiHttpClient!.SendAsync(request);
 
         ((int)response.StatusCode).ShouldBe(422);
         var body = await response.Content.ReadAsStringAsync();

@@ -10,7 +10,7 @@ const config = loadConfiguration();
 
 export const apiTest = base.extend<{ myShopApiClient: MyShopApiClient; erpClient: ErpRealClient; taxClient: TaxRealClient }>({
     myShopApiClient: async ({}, use) => {
-        await use(new MyShopApiClient(config.myShop.backendApiUrl));
+        await use(new MyShopApiClient(config.myShop.backendApiUrl, config.keycloakUrl));
     },
     erpClient: async ({}, use) => {
         await use(new ErpRealClient(config.externalSystems.erp.url));

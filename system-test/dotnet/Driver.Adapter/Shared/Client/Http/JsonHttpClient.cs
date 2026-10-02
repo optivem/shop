@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -21,12 +22,22 @@ public class JsonHttpClient<E> : IDisposable
 
     private readonly HttpClient _httpClient;
     private readonly string _baseUrl;
+    private Func<string, string, Task<string?>>? _bearerTokenSource;
     private bool _disposed;
 
     public JsonHttpClient(string baseUrl)
     {
         _httpClient = new HttpClient { BaseAddress = new Uri(baseUrl) };
         _baseUrl = baseUrl;
+    }
+
+    /// <summary>
+    /// Supplies the access token for each request (method, path), or null to send it without an
+    /// Authorization header.
+    /// </summary>
+    public void SetBearerTokenSource(Func<string, string, Task<string?>> bearerTokenSource)
+    {
+        _bearerTokenSource = bearerTokenSource;
     }
 
     public void Dispose()
@@ -127,12 +138,36 @@ public class JsonHttpClient<E> : IDisposable
         return await SendRequest(httpRequest);
     }
 
-    private Task<HttpResponseMessage> SendRequest(HttpRequestMessage httpRequest)
-        => _httpClient.SendAsync(httpRequest);
+    private async Task<HttpResponseMessage> SendRequest(HttpRequestMessage httpRequest)
+    {
+        var tokenSource = _bearerTokenSource;
+        if (tokenSource != null)
+        {
+            var token = await tokenSource(httpRequest.Method.Method, httpRequest.RequestUri!.AbsolutePath);
+            if (token != null)
+            {
+                httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            }
+        }
+
+        return await _httpClient.SendAsync(httpRequest);
+    }
 
     private string SerializeRequest(object request)
     {
         return JsonSerializer.Serialize(request, _jsonOptions);
+    }
+
+    // A rejection without a body (for example a bare 401) still has to surface its status.
+    private static E CreateEmptyBodyError(int statusCode)
+    {
+        var instance = Activator.CreateInstance<E>();
+        var statusProperty = typeof(E).GetProperty("Status");
+        if (statusProperty != null && (statusProperty.PropertyType == typeof(int) || statusProperty.PropertyType == typeof(int?)))
+        {
+            statusProperty.SetValue(instance, statusCode);
+        }
+        return instance;
     }
 
     private static async Task<T> ReadResponseAsync<T>(HttpResponseMessage httpResponse, JsonSerializerOptions jsonOptions)
@@ -145,7 +180,10 @@ public class JsonHttpClient<E> : IDisposable
     {
         if (!httpResponse.IsSuccessStatusCode)
         {
-            var error = await ReadResponseAsync<E>(httpResponse, _jsonOptions);
+            var errorBody = await httpResponse.Content.ReadAsStringAsync();
+            var error = string.IsNullOrWhiteSpace(errorBody)
+                ? CreateEmptyBodyError((int)httpResponse.StatusCode)
+                : JsonSerializer.Deserialize<E>(errorBody, _jsonOptions)!;
             return Result<T, E>.Failure(error);
         }
 

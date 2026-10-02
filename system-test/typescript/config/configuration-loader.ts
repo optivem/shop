@@ -13,6 +13,11 @@ export interface TestConfig {
     frontendUrl: string;
     backendApiUrl: string;
   };
+  /**
+   * Keycloak base URL. Authentication is opt-in: when unset no token is requested and no
+   * Authorization header is sent, so the suites still run against systems without auth.
+   */
+  keycloakUrl?: string;
   externalSystems: {
     erp: {
       url: string;
@@ -54,6 +59,10 @@ export function loadConfiguration(overrides?: ConfigOverrides): TestConfig {
   config.externalSystems.erp.url = getEnvVarOrDefault('ERP_API_BASE_URL' + suffix, config.externalSystems.erp.url);
   config.externalSystems.clock.url = getEnvVarOrDefault('CLOCK_API_BASE_URL' + suffix, config.externalSystems.clock.url);
   config.externalSystems.tax.url = getEnvVarOrDefault('TAX_API_BASE_URL' + suffix, config.externalSystems.tax.url);
+
+  // KEYCLOAK_URL_<MODE> wins over the generic KEYCLOAK_URL; neither is in the JSON files.
+  const keycloakUrl = getEnvVarOrDefault('KEYCLOAK_URL' + suffix, getEnvVarOrDefault('KEYCLOAK_URL', ''));
+  config.keycloakUrl = keycloakUrl === '' ? undefined : keycloakUrl;
 
   return config;
 }

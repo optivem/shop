@@ -12,9 +12,9 @@ public class MyShopApiDriver : IMyShopDriver
 {
     private readonly MyShopApiClient _apiClient;
 
-    public MyShopApiDriver(string baseUrl)
+    public MyShopApiDriver(string baseUrl, string? keycloakBaseUrl = null)
     {
-        _apiClient = new MyShopApiClient(baseUrl);
+        _apiClient = new MyShopApiClient(baseUrl, keycloakBaseUrl);
     }
 
     public ValueTask DisposeAsync()

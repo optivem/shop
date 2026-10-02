@@ -46,6 +46,11 @@ describe('Backend Pact Provider Verification', () => {
       provider: 'backend',
       providerBaseUrl: harness.baseUrl(),
       pactUrls: [pactFile],
+      // The consumer contract describes the calls, not the credentials; the backend requires a token.
+      requestFilter: (req, _res, next) => {
+        req.headers.authorization = `Bearer ${harness.adminToken}`;
+        next();
+      },
       stateHandlers: {
         'product BOOK-123 exists and US is taxable': async () => {
           await harness.resetState();

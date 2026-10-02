@@ -4,6 +4,7 @@ import type { PlaceOrderResponse } from '../../../../port/dtos/PlaceOrderRespons
 import type { ViewOrderResponse } from '../../../../port/dtos/ViewOrderResponse.js';
 import type { SystemError } from '../../../../port/dtos/errors/SystemError.js';
 import { JsonHttpClient } from '../../../shared/client/http/json-http-client.js';
+import type { BearerTokenSource } from '../../../shared/client/http/bearer-token-source.js';
 import { SystemErrorMapper } from '../../SystemErrorMapper.js';
 
 export class OrderController {
@@ -11,8 +12,8 @@ export class OrderController {
 
   private readonly httpClient: JsonHttpClient<SystemError>;
 
-  constructor(baseUrl: string) {
-    this.httpClient = new JsonHttpClient(baseUrl, SystemErrorMapper.fromResponse);
+  constructor(baseUrl: string, tokenSource?: BearerTokenSource) {
+    this.httpClient = new JsonHttpClient(baseUrl, SystemErrorMapper.fromResponse, tokenSource);
   }
 
   placeOrder(request: PlaceOrderRequest): Promise<Result<PlaceOrderResponse, SystemError>> {

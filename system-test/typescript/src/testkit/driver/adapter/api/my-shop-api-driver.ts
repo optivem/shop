@@ -21,8 +21,8 @@ import { MyShopApiClient } from './client/MyShopApiClient.js';
 export class MyShopApiDriver implements MyShopDriver {
   private readonly client: MyShopApiClient;
 
-  constructor(baseUrl: string) {
-    this.client = new MyShopApiClient(baseUrl);
+  constructor(baseUrl: string, keycloakBaseUrl?: string) {
+    this.client = new MyShopApiClient(baseUrl, keycloakBaseUrl);
   }
 
   async goToMyShop(_request: GoToMyShopRequest): Promise<Result<GoToMyShopResponse, SystemError>> {

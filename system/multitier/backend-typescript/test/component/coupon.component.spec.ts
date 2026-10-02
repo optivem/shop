@@ -1,4 +1,3 @@
-import request from 'supertest';
 import { ComponentHarness } from '../support/component-harness';
 
 /**
@@ -21,12 +20,13 @@ describe('Coupon (component)', () => {
   });
 
   it('publish returns No Content, then browse lists the coupon', async () => {
-    const publish = await request(harness.httpServer())
+    const publish = await harness
+      .adminApi()
       .post('/api/coupons')
       .send({ code: 'SAVE10', discountRate: 0.2, usageLimit: 100 });
     expect(publish.status).toBe(204);
 
-    const browse = await request(harness.httpServer()).get('/api/coupons');
+    const browse = await harness.adminApi().get('/api/coupons');
     expect(browse.status).toBe(200);
     const body = browse.body as { coupons: { code: string }[] };
     const codes = body.coupons.map((c) => c.code);

@@ -24,8 +24,15 @@ public static class SystemConfigurationLoader
         var taxBaseUrl = GetEnvVarOrDefault("TAX_API_BASE_URL" + suffix, GetValue(configuration, "Tax:ApiBaseUrl"));
         var clockBaseUrl = GetEnvVarOrDefault("CLOCK_API_BASE_URL" + suffix, GetValue(configuration, "Clock:ApiBaseUrl"));
 
+        // Authentication is opt-in: unset means the SUT is unauthenticated and no token is ever requested.
+        var keycloakBaseUrl = System.Environment.GetEnvironmentVariable("KEYCLOAK_URL" + suffix);
+        if (string.IsNullOrWhiteSpace(keycloakBaseUrl))
+            keycloakBaseUrl = System.Environment.GetEnvironmentVariable("KEYCLOAK_URL");
+        if (string.IsNullOrWhiteSpace(keycloakBaseUrl))
+            keycloakBaseUrl = null;
+
         return new Dsl.Core.Configuration(shopUiBaseUrl, shopApiBaseUrl, erpBaseUrl, taxBaseUrl, clockBaseUrl,
-            externalSystemMode, channelMode);
+            keycloakBaseUrl, externalSystemMode, channelMode);
     }
 
     private static string GetEnvVarOrDefault(string envVarName, string fileValue)

@@ -148,6 +148,9 @@ jobs:
       packages: write
     env:
       GH_OPTIVEM_CONFIG: gh-optivem-multitier-typescript.yaml
+      # Enables token acquisition in the TypeScript system tests (opt-in; unset => no auth).
+      KEYCLOAK_URL_REAL: http://localhost:8391
+      KEYCLOAK_URL_STUB: http://localhost:8392
       # configuration-loader.ts uses ENVIRONMENT to pick test-config-acceptance-{stub,real}.json.
       ENVIRONMENT: acceptance
     outputs:

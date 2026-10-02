@@ -2,20 +2,30 @@ import type { Browser, BrowserContext, Page } from '@playwright/test';
 import type { Result } from '../../../../common/result.js';
 import { success, failure } from '../../../../common/result.js';
 import type { SystemError } from '../../../port/dtos/errors/SystemError.js';
+import { KeycloakUiLogin } from '../../shared/client/playwright/keycloak-ui-login.js';
 import { HomePage } from './pages/HomePage.js';
 import { NewOrderPage } from './pages/NewOrderPage.js';
 import { OrderHistoryPage } from './pages/OrderHistoryPage.js';
 import { OrderDetailsPage } from './pages/OrderDetailsPage.js';
 import { CouponManagementPage } from './pages/CouponManagementPage.js';
 
+const HOME_READY_SELECTOR = "a[href='/new-order']";
+
 export class MyShopUiClient {
   private context: BrowserContext | null = null;
   private currentPage: Page | null = null;
+  private readonly login: KeycloakUiLogin | undefined;
 
+  /**
+   * @param keycloakBaseUrl when undefined or empty, the app is assumed to have no login screen.
+   */
   constructor(
     private readonly baseUrl: string,
     private readonly browser: Browser,
-  ) {}
+    keycloakBaseUrl?: string,
+  ) {
+    this.login = KeycloakUiLogin.forBaseUrl(keycloakBaseUrl);
+  }
 
   async openHomePage(): Promise<Result<HomePage, SystemError>> {
     try {
@@ -26,6 +36,7 @@ export class MyShopUiClient {
       const page = this.requirePage();
       const response = await page.goto(this.baseUrl);
       if (response?.status() === 200) {
+        await this.login?.ensureLoggedIn(page, HOME_READY_SELECTOR);
         return success(new HomePage(page));
       }
       return failure({ message: `MyShop UI not available: ${response?.status()}`, fieldErrors: [] });

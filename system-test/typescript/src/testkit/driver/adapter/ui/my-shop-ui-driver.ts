@@ -23,8 +23,8 @@ import { NewOrderPage } from './client/pages/NewOrderPage.js';
 export class MyShopUiDriver implements MyShopDriver {
   private readonly client: MyShopUiClient;
 
-  constructor(baseUrl: string, browser: Browser) {
-    this.client = new MyShopUiClient(baseUrl, browser);
+  constructor(baseUrl: string, browser: Browser, keycloakBaseUrl?: string) {
+    this.client = new MyShopUiClient(baseUrl, browser, keycloakBaseUrl);
   }
 
   async goToMyShop(_request: GoToMyShopRequest): Promise<Result<GoToMyShopResponse, SystemError>> {

@@ -31,6 +31,9 @@ systems:
       - name: Backend API
         url: http://localhost:8212/health
         containerName: backend
+      - name: Keycloak
+        url: http://localhost:8292/realms/shop
+        containerName: keycloak
     externalSystems:
       - name: ERP API (Stub)
         url: http://localhost:9212/erp/health
@@ -49,6 +52,9 @@ systems:
       - name: Backend API
         url: http://localhost:8211/health
         containerName: backend
+      - name: Keycloak
+        url: http://localhost:8291/realms/shop
+        containerName: keycloak
     externalSystems:
       - name: ERP API (Real)
         url: http://localhost:9211/erp/health

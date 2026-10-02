@@ -13,6 +13,8 @@ import { configureApp } from '../../src/configure-app';
 import { Order } from '../../src/core/entities/order.entity';
 import { Coupon } from '../../src/core/entities/coupon.entity';
 import { applyMigrations } from './migrations';
+import { TEST_AUDIENCE, TEST_ISSUER, TestIdp } from './test-idp';
+import request from 'supertest';
 
 /**
  * A tiny in-process HTTP stub server (the Node analogue of WireMock used by the Java harness).
@@ -77,6 +79,8 @@ export class ComponentHarness {
   private readonly erp = new StubServer();
   private readonly tax = new StubServer();
   private readonly clock = new StubServer();
+  readonly idp = new TestIdp();
+  adminToken = '';
 
   async start(): Promise<void> {
     this.postgres = await new PostgreSqlContainer('postgres:16-alpine')
@@ -85,7 +89,13 @@ export class ComponentHarness {
       .withPassword('app')
       .start();
 
-    await Promise.all([this.erp.start(), this.tax.start(), this.clock.start()]);
+    await Promise.all([
+      this.erp.start(),
+      this.tax.start(),
+      this.clock.start(),
+      this.idp.start(),
+    ]);
+    this.adminToken = await this.idp.adminToken();
 
     await applyMigrations(this.postgres);
 
@@ -101,6 +111,9 @@ export class ComponentHarness {
       TAX_API_URL: this.tax.url,
       CLOCK_API_URL: this.clock.url,
       EXTERNAL_SYSTEM_MODE: 'stub',
+      AUTH_ISSUER_URI: TEST_ISSUER,
+      AUTH_JWK_SET_URI: this.idp.jwkSetUri,
+      AUTH_AUDIENCE: TEST_AUDIENCE,
     };
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
       .overrideProvider(ConfigService)
@@ -124,7 +137,12 @@ export class ComponentHarness {
 
   async stop(): Promise<void> {
     await this.app.close();
-    await Promise.all([this.erp.stop(), this.tax.stop(), this.clock.stop()]);
+    await Promise.all([
+      this.erp.stop(),
+      this.tax.stop(),
+      this.clock.stop(),
+      this.idp.stop(),
+    ]);
     await this.postgres.stop();
   }
 
@@ -139,6 +157,13 @@ export class ComponentHarness {
 
   baseUrl(): string {
     return `http://127.0.0.1:${this.port}`;
+  }
+
+  /** A client that calls the API as an admin, for tests that are not about authorization. */
+  adminApi() {
+    return request
+      .agent(this.httpServer())
+      .set('Authorization', `Bearer ${this.adminToken}`);
   }
 
   httpServer(): http.Server {

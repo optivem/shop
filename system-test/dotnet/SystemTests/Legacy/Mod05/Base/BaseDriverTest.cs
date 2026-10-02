@@ -29,12 +29,12 @@ public abstract class BaseDriverTest : BaseConfigurableTest, IAsyncLifetime
 
     protected void SetUpMyShopApiDriver()
     {
-        _shopDriver = new MyShopApiDriver(_configuration.MyShopApiBaseUrl);
+        _shopDriver = new MyShopApiDriver(_configuration.MyShopApiBaseUrl, _configuration.KeycloakBaseUrl);
     }
 
     protected async Task SetUpMyShopUiDriverAsync()
     {
-        _shopDriver = await MyShopUiDriver.CreateAsync(_configuration.MyShopUiBaseUrl);
+        _shopDriver = await MyShopUiDriver.CreateAsync(_configuration.MyShopUiBaseUrl, _configuration.KeycloakBaseUrl);
     }
 
     protected void SetUpExternalDrivers()

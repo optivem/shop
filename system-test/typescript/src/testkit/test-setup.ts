@@ -52,9 +52,9 @@ export function createScenario(options: ScenarioOptions = {}): ScenarioDsl {
 function createMyShopDriverForChannel(config: TestConfig, channel: Channel, options: ScenarioOptions) {
   if (channel === ChannelType.UI) {
     if (!options.browser) throw new Error('Browser is required for UI channel');
-    return new MyShopUiDriver(config.myShop.frontendUrl, options.browser);
+    return new MyShopUiDriver(config.myShop.frontendUrl, options.browser, config.keycloakUrl);
   }
-  return new MyShopApiDriver(config.myShop.backendApiUrl);
+  return new MyShopApiDriver(config.myShop.backendApiUrl, config.keycloakUrl);
 }
 
 function createErpDriver(config: TestConfig, mode: ExternalSystemMode): ErpDriver {

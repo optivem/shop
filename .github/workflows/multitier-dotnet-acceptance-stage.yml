@@ -148,6 +148,9 @@ jobs:
       packages: write
     env:
       GH_OPTIVEM_CONFIG: gh-optivem-multitier-dotnet.yaml
+      # Enables token acquisition in the .NET system tests (opt-in; unset => no auth).
+      KEYCLOAK_URL_REAL: http://localhost:8291
+      KEYCLOAK_URL_STUB: http://localhost:8292
       # The test suites pass no environment override, so this selects Environment.Acceptance.
       ENVIRONMENT: acceptance
     outputs:

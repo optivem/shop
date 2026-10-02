@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using MyCompany.MyShop.Backend.Api.Exception;
+using MyCompany.MyShop.Backend.Api.Security;
 using MyCompany.MyShop.Backend.Core.Services;
 using MyCompany.MyShop.Backend.Core.Services.External;
 using MyCompany.MyShop.Backend.Data;
@@ -62,6 +63,9 @@ builder.Services.AddScoped<TaxGateway>();
 builder.Services.AddScoped<CouponService>();
 builder.Services.AddScoped<OrderService>();
 
+// Configure JWT bearer authentication and authorization
+builder.Services.AddShopAuthentication();
+
 // Register exception handler
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
@@ -81,6 +85,7 @@ app.UseRouting();
 
 app.UseCors();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

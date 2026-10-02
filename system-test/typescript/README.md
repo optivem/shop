@@ -83,3 +83,11 @@ Substitute `gh-optivem-multitier-typescript.yaml` for the multitier architecture
 | `e2e-ui` | E2E tests (real) - UI channel |
 
 You can also pass a **group alias** to `--suite`: `acceptance` runs every acceptance partition, while `acceptance-api` / `acceptance-ui` each run that channel's parallel + isolated partitions together.
+
+## Authentication
+
+The API client acquires Keycloak access tokens (password grant, client `shop-system-test`, realm `shop`) only when a Keycloak base URL is configured; otherwise no token is requested and no `Authorization` header is sent, so the suites still run against systems without auth. The UI drivers log in through the Keycloak login form (user `admin1`) when the app redirects there.
+
+Enable it with `KEYCLOAK_URL_REAL` / `KEYCLOAK_URL_STUB` (per external-system mode) or `KEYCLOAK_URL` (fallback), e.g. `KEYCLOAK_URL_REAL=http://localhost:8391` and `KEYCLOAK_URL_STUB=http://localhost:8392` for the local TypeScript multitier stack. The authorization tests (`api-authorization-test.spec.ts`) are skipped when no Keycloak URL is set.
+
+By default, admin-only operations (deliver order, publish and browse coupons, `/api/admin/**`) use `admin1` and everything else uses `customer1`. A test can override this with `myShopApiClient.as(ApiIdentity.ANONYMOUS | CUSTOMER | ADMIN)`. The DSL contains no authentication concerns.

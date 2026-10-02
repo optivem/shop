@@ -1,5 +1,6 @@
 import { uiTest as test, expect } from './base/BaseE2eTest.js';
 import { randomUUID } from 'node:crypto';
+import { loginToMyShopUiIfRequired } from '../../../../src/testkit/driver/adapter/shared/client/playwright/keycloak-ui-login.js';
 
 const TIMEOUT = 30_000;
 
@@ -18,6 +19,7 @@ test('shouldPlaceOrderForValidInput', async ({ config, myShopPage }) => {
 
     // When: place order via UI
     await myShopPage.goto(myShopUiUrl);
+    await loginToMyShopUiIfRequired(myShopPage, config.keycloakUrl);
     await myShopPage.locator("a[href='/new-order']").click({ timeout: TIMEOUT });
     await myShopPage.locator('[aria-label="SKU"]').fill(sku, { timeout: TIMEOUT });
     await myShopPage.locator('[aria-label="Quantity"]').fill('5', { timeout: TIMEOUT });
@@ -33,7 +35,10 @@ test('shouldPlaceOrderForValidInput', async ({ config, myShopPage }) => {
     expect(orderNumber).not.toBe('');
 
     // Then: navigate to order history, filter, view details, assert fields
-    await myShopPage.goto(`${myShopUiUrl}/order-history`);
+    // A full page load drops the in-memory token and login lands on the home page, so navigate in-app.
+    await myShopPage.goto(myShopUiUrl);
+    await loginToMyShopUiIfRequired(myShopPage, config.keycloakUrl);
+    await myShopPage.locator("a[href='/order-history']").click({ timeout: TIMEOUT });
     await myShopPage.locator("[aria-label='Order Number']").fill(orderNumber, { timeout: TIMEOUT });
     await myShopPage.locator("[aria-label='Refresh Order List']").click({ timeout: TIMEOUT });
     const row = myShopPage.locator(`//tr[contains(., '${orderNumber}')]`);
