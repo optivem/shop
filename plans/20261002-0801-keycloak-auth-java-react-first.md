@@ -75,7 +75,6 @@ Phase 2 — spread
 
 ## Phase 1 follow-ups noted during verification
 
-- Local-only: `system/multitier/backend-java/gradlew` has CRLF line endings in the Windows working copy, which breaks `docker compose --build` locally (not changed in the repo).
 - Actuator and swagger endpoints on backend-java now require authentication ("everything else"); revisit if they must be public.
 - `npm audit` reported warnings after adding oidc-client-ts / react-oidc-context; not addressed.
 - Cloud stage workflows (`*-cloud.yml`) and QA/prod stages for java multitier not yet reviewed for Keycloak (Step 12).
