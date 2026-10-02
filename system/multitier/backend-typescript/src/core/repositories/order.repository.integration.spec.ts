@@ -34,7 +34,8 @@ describe('OrderRepository [integration]', () => {
     process.env.POSTGRES_DB_PASSWORD = postgres.getPassword();
     // AppModule requires JWT settings at startup; this spec never validates a token (JWKS is fetched lazily).
     process.env.AUTH_ISSUER_URI = 'http://localhost:0/realms/shop';
-    process.env.AUTH_JWK_SET_URI = 'http://localhost:0/realms/shop/protocol/openid-connect/certs';
+    process.env.AUTH_JWK_SET_URI =
+      'http://localhost:0/realms/shop/protocol/openid-connect/certs';
     process.env.AUTH_AUDIENCE = 'shop-backend';
 
     const moduleRef = await Test.createTestingModule({
