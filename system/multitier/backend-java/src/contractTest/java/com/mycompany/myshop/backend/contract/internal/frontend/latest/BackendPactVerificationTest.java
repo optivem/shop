@@ -7,11 +7,13 @@ import au.com.dius.pact.provider.junitsupport.Provider;
 import au.com.dius.pact.provider.junitsupport.State;
 import au.com.dius.pact.provider.junitsupport.loader.PactFolder;
 import com.mycompany.myshop.backend.BaseComponentTest;
+import com.mycompany.myshop.backend.backendtest.configuration.TestAuthConfiguration;
 import com.mycompany.myshop.backend.core.entities.Coupon;
 import com.mycompany.myshop.backend.core.entities.Order;
 import com.mycompany.myshop.backend.core.entities.OrderStatus;
 import java.math.BigDecimal;
 import java.time.Instant;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,7 +32,11 @@ class BackendPactVerificationTest extends BaseComponentTest {
 
     @BeforeEach
     void setTarget(PactVerificationContext context) {
-        context.setTarget(new HttpTestTarget("localhost", port));
+        context.setTarget(new HttpTestTarget("localhost", port, "", () -> provider -> HttpClients.custom()
+            .disableRedirectHandling()
+            .addRequestInterceptorFirst((request, entity, httpContext) ->
+                request.setHeader("Authorization", "Bearer " + TestAuthConfiguration.ADMIN_TOKEN))
+            .build()));
     }
 
     @TestTemplate

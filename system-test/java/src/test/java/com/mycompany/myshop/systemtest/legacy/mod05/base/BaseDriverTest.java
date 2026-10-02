@@ -25,11 +25,11 @@ public abstract class BaseDriverTest extends BaseConfigurableTest {
     }
 
     protected void setUpMyShopUiDriver() {
-        myShopDriver = new MyShopUiDriver(configuration.getMyShopUiBaseUrl(), BrowserLifecycleExtension.getBrowser());
+        myShopDriver = new MyShopUiDriver(configuration.getMyShopUiBaseUrl(), BrowserLifecycleExtension.getBrowser(), configuration.getKeycloakBaseUrl());
     }
 
     protected void setUpMyShopApiDriver() {
-        myShopDriver = new MyShopApiDriver(configuration.getMyShopApiBaseUrl());
+        myShopDriver = new MyShopApiDriver(configuration.getMyShopApiBaseUrl(), configuration.getKeycloakBaseUrl());
     }
 
     protected void setUpExternalDrivers() {

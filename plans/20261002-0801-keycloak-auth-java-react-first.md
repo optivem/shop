@@ -19,6 +19,33 @@
 - IdP: Keycloak. Backend: in-app JWT validation (resource server). SPA login: authorization code + PKCE (BFF deferred, can be adopted later without backend changes). Test tokens: dedicated test realm, fetched in the driver layer. Browser token storage: in memory.
 - Rollout: Java backend + React frontend first (multitier), then spread to .NET/TypeScript and monoliths.
 
+## Author answers (2026-10-02) — design CONFIRMED
+
+- Phase 1 is role-based only; order owner-scoping is a separate follow-up plan.
+- Endpoint rules as drafted below.
+- Push per verified milestone; stop if CI breaks.
+- Real Keycloak in both stub and real compose variants (no token stub).
+- Execution: batch mode, subagents for backend-java / frontend-react / system-test-java after the contract is fixed; stop only for the final manual browser login or unexpected problems.
+
+## Step 1 — design note (confirmed)
+
+Grounded in `system/multitier/backend-java` controllers and `docker/java/multitier/docker-compose.local.real.yml` (frontend :3111, backend :8111, postgres, flyway, simulators).
+
+**Keycloak realm `shop`** (new compose service `keycloak`, `start-dev --import-realm`, realm JSON mounted from a shared dir, e.g. `docker/keycloak/shop-realm.json`)
+- Clients: `shop-frontend` (public, PKCE S256 required, redirect URIs `http://localhost:3111/*`, web origin `http://localhost:3111`); `shop-system-test` (direct-access/password grant enabled, test realm only).
+- Realm roles: `CUSTOMER`, `ADMIN`. Test users: `customer1` (CUSTOMER), `admin1` (ADMIN) with clearly-marked test passwords.
+- Audience mapper so access tokens carry `aud` = `shop-backend`; roles exposed via `realm_access.roles`.
+
+**Backend endpoint protection** (current endpoints: `/health`, `/api/orders` GET/POST, `/api/orders/{n}` GET, `/cancel`, `/deliver`, `/api/coupons` GET/POST, `/api/admin/recall/{sku}`)
+- Public: `/health`.
+- Authenticated (any role): `/api/orders` and `/api/orders/{n}` (read/create), `/cancel`.
+- ADMIN only: `/api/admin/**`, `/api/coupons` POST, `/deliver`.
+- `/api/coupons` GET: authenticated.
+
+**Open design points to confirm**
+- Orders currently have no owner. The "customer sees only their own orders" rule needs an `owner` (token `sub`) column + Flyway migration — larger scope. Recommendation: Phase 1 ships role-based rules only; owner-scoping becomes its own follow-up plan.
+- Whether the external-system simulators need any auth (recommendation: no).
+
 ## Best-practice guardrails (author is new to auth — default to the safe, standard path)
 
 - Use standard flows only: authorization code + PKCE for the SPA. No implicit flow, no password grant in the browser, no custom login form.
@@ -31,19 +58,12 @@
 
 ## ▶ Next executable step (resume here)
 
-Step 1: write a short design note (inside this plan or `docs/`) pinning the realm layout (realm name, clients, roles, users), token claims the backend relies on, and the CORS/redirect-URI settings for the React dev + compose setups. Design only; no code. After it settles, move to Step 2 (Keycloak in compose + realm import).
+Phase 1 is implemented and verified locally (Keycloak in the 4 Java multitier compose files, backend-java resource server, React OIDC login, Java system-test token + Playwright UI login for latest and legacy suites, CI env wiring, cross-lang exclusion). Remaining: (a) confirm the pushed pipeline is green for multitier-java (acceptance, acceptance-legacy, qa, prod stages) and the cross-lang matrix; (b) manual browser login by the author; (c) then start Phase 2 with Step 8 (backend-dotnet resource server + system-test/dotnet token acquisition + Playwright login), using the Phase 1 diff as the recipe.
 
 ## Steps
 
 Phase 1 — get it working end-to-end on Java backend + React frontend (multitier)
 
-- [ ] Step 1: Design note — realm/clients/roles/users, claims used, redirect URIs, which endpoints become protected and with what roles.
-- [ ] Step 2: Add Keycloak service + realm-import JSON to `docker/java/multitier/docker-compose.*.yml` (local + pipeline; real variant). Decide stub variant (see open questions).
-- [ ] Step 3: backend-java — add `spring-boot-starter-oauth2-resource-server`, issuer/JWKS config via env vars, security filter chain, role mapping; unit/slice tests with mock JWTs.
-- [ ] Step 4: frontend-react — OIDC login (authorization code + PKCE), token handling, logout, attach bearer token to API client; component tests with a mocked auth provider.
-- [ ] Step 5: system-test/java — token-acquisition in the driver layer (test realm, password or client-credentials grant); keep DSL auth-agnostic; add acceptance scenarios for 401/403 and an owner-only rule.
-- [ ] Step 6: CI — wire Keycloak startup/health-wait into the Java multitier acceptance/QA/prod-stage workflows; handle the cross-lang matrix (see open questions).
-- [ ] Step 7: Verify end-to-end locally and in the pipeline; write the "spread recipe" (what changed, per layer).
 
 Phase 2 — spread
 
@@ -53,13 +73,19 @@ Phase 2 — spread
 - [ ] Step 11: Monolith variants (java, dotnet, typescript) — decide how the monolith's bundled UI does login (see open questions).
 - [ ] Step 12: Cloud/prod-stage: managed or hardened IdP, secrets, TLS (separate from local/pipeline Keycloak).
 
+## Phase 1 follow-ups noted during verification
+
+- Local-only: `system/multitier/backend-java/gradlew` has CRLF line endings in the Windows working copy, which breaks `docker compose --build` locally (not changed in the repo).
+- Actuator and swagger endpoints on backend-java now require authentication ("everything else"); revisit if they must be public.
+- `npm audit` reported warnings after adding oidc-client-ts / react-oidc-context; not addressed.
+- Cloud stage workflows (`*-cloud.yml`) and QA/prod stages for java multitier not yet reviewed for Keycloak (Step 12).
+- Expired-token and wrong-audience cases rely on Spring's standard validators; not tested against live Keycloak.
+
 ## Open questions
 
-- **Frontend sharing (inferred):** `system/multitier/frontend-react` appears to be a single frontend shared by all backend languages. Recommendation: yes — do the React work once in Phase 1; Phase 2 then only touches backends and test drivers.
-- **Cross-lang matrix (test-lang × system-lang):** a Java auth-protected system breaks dotnet/typescript test drivers until they gain token acquisition. Options: (a) gate/exclude the Java-auth multitier system from the matrix until Step 10; (b) add token acquisition to all test langs early. Recommendation: (a) — it keeps Phase 1 small; make the exclusion explicit and tracked by Step 10 so it can't linger silently.
-- **Stub variant:** what replaces Keycloak in `stub` compose files? Recommendation: run real Keycloak in both variants at first (it is cheap and avoids a second implementation); revisit only if startup time hurts the pipeline.
-- **Token acquisition grant for tests:** password grant vs client-credentials with a service-account user. Recommendation: password grant on a dedicated test realm (needs real user roles); never enabled in prod.
-- **Keycloak startup time in CI:** needs a health-wait step and realm import in `start-dev` mode; confirm the budget in the acceptance stage.
-- **Authorization rules to demonstrate:** which concrete requirement drives the ATDD example? Recommendation: "a customer can only see their own orders; admin can see all".
-- **Monolith UI login:** server-rendered/bundled UI may need a different flow (OIDC login via the backend vs SPA). Defer to Step 11.
-- **Legacy vs latest test suites:** do both get auth, or only latest? Recommendation: confirm in Step 1.
+None for Phase 1 — all resolved (2026-10-02):
+- Cross-lang matrix: gate the java-multitier (auth) system out of cross-lang-system-verification until Step 10 re-enables it.
+- Legacy and latest system-test suites both get token acquisition in Phase 1 (logic in the shared driver/client layer).
+- Frontend-react is shared across backends (Phase 2 only touches backends + test drivers).
+- Keycloak startup time in CI: verify during Step 6 (health-wait step); not a blocker.
+- Deferred to Phase 2: monolith UI login flow (Step 11), prod IdP (Step 12).

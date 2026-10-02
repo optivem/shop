@@ -12,14 +12,30 @@ public class PageClient {
     private static final int DEFAULT_TIMEOUT_MILLISECONDS = DEFAULT_TIMEOUT_SECONDS * 1000;
     private final Page page;
     private final int timeoutMilliseconds;
+    private final KeycloakUiLogin login;
 
     public PageClient(Page page) {
-        this(page, DEFAULT_TIMEOUT_MILLISECONDS);
+        this(page, DEFAULT_TIMEOUT_MILLISECONDS, null);
+    }
+
+    public PageClient(Page page, KeycloakUiLogin login) {
+        this(page, DEFAULT_TIMEOUT_MILLISECONDS, login);
     }
 
     public PageClient(Page page, int timeoutMilliseconds) {
+        this(page, timeoutMilliseconds, null);
+    }
+
+    public PageClient(Page page, int timeoutMilliseconds, KeycloakUiLogin login) {
         this.page = page;
         this.timeoutMilliseconds = timeoutMilliseconds;
+        this.login = login;
+    }
+
+    private void loginIfRedirected() {
+        if (login != null) {
+            login.loginIfRequired(page);
+        }
     }
 
     public void fill(String selector, String value) {
@@ -45,6 +61,7 @@ public class PageClient {
 
     public List<String> readAllTextContents(String selector) {
         var locator = page.locator(selector);
+        loginIfRedirected();
         // Wait for at least one element to be visible
         // allTextContents() doesn't trigger strict mode - it's designed for multiple elements
         locator.first().waitFor(getDefaultWaitForOptions());
@@ -57,6 +74,7 @@ public class PageClient {
     }
 
     public void waitForVisible(String selector) {
+        loginIfRedirected();
         var locator = page.locator(selector);
         locator.waitFor(getDefaultWaitForOptions());
     }
@@ -80,6 +98,7 @@ public class PageClient {
     }
 
     private Locator getLocator(String selector, Locator.WaitForOptions waitForOptions) {
+        loginIfRedirected();
         var locator = page.locator(selector);
         locator.waitFor(waitForOptions);
 

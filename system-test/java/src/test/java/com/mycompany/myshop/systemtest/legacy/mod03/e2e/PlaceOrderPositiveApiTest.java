@@ -50,7 +50,7 @@ class PlaceOrderPositiveApiTest extends BaseE2eTest {
                 """.formatted(sku, COUNTRY);
 
         var placeOrderUri = URI.create(getMyShopApiBaseUrl() + "/api/orders");
-        var placeOrderRequest = HttpRequest.newBuilder()
+        var placeOrderRequest = withCustomerAuth(HttpRequest.newBuilder())
                 .uri(placeOrderUri)
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(placeOrderJson))
@@ -64,7 +64,7 @@ class PlaceOrderPositiveApiTest extends BaseE2eTest {
         assertThat(orderNumber).startsWith("ORD-");
 
         var viewOrderUri = URI.create(getMyShopApiBaseUrl() + "/api/orders/" + orderNumber);
-        var viewOrderRequest = HttpRequest.newBuilder()
+        var viewOrderRequest = withCustomerAuth(HttpRequest.newBuilder())
                 .uri(viewOrderUri)
                 .header("Content-Type", "application/json")
                 .GET()

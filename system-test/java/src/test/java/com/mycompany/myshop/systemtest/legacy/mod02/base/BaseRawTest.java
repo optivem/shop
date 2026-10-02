@@ -6,6 +6,7 @@ import com.microsoft.playwright.*;
 import com.mycompany.myshop.systemtest.configuration.BaseConfigurableTest;
 import com.mycompany.myshop.systemtest.configuration.Configuration;
 import com.mycompany.myshop.testkit.common.Closer;
+import com.mycompany.myshop.testkit.driver.adapter.shared.client.playwright.KeycloakUiLogin;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 
@@ -62,6 +63,13 @@ public abstract class BaseRawTest extends BaseConfigurableTest {
 
     protected String getMyShopApiBaseUrl() {
         return configuration.getMyShopApiBaseUrl();
+    }
+
+    protected void loginToMyShopUiIfRequired() {
+        var login = KeycloakUiLogin.forBaseUrl(configuration.getKeycloakBaseUrl());
+        if (login != null) {
+            login.ensureLoggedIn(myShopUiPage, "a[href='/new-order']");
+        }
     }
 
     protected String getMyShopUiBaseUrl() {

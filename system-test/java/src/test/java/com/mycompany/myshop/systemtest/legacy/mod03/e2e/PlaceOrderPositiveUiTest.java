@@ -45,6 +45,7 @@ class PlaceOrderPositiveUiTest extends BaseE2eTest {
         assertThat(createProductResponse.statusCode()).isEqualTo(201);
 
         myShopUiPage.navigate(getMyShopUiBaseUrl());
+        loginToMyShopUiIfRequired();
         myShopUiPage.locator("a[href='/new-order']").click();
 
         myShopUiPage.locator("[aria-label=\"SKU\"]").fill(sku);

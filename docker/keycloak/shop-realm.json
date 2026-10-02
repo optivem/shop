@@ -1,0 +1,98 @@
+{
+  "realm": "shop",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "accessTokenLifespan": 300,
+  "roles": {
+    "realm": [
+      { "name": "CUSTOMER", "description": "Regular shop customer" },
+      { "name": "ADMIN", "description": "Shop administrator" }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "shop-frontend",
+      "name": "Shop Frontend (React SPA)",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "protocol": "openid-connect",
+      "redirectUris": [
+        "http://localhost:3111/*",
+        "http://localhost:3112/*",
+        "http://localhost:5173/*"
+      ],
+      "webOrigins": [
+        "http://localhost:3111",
+        "http://localhost:3112",
+        "http://localhost:5173"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:3111/*##http://localhost:3112/*##http://localhost:5173/*"
+      },
+      "protocolMappers": [
+        {
+          "name": "shop-backend-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "shop-backend",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "shop-system-test",
+      "name": "Shop System Tests (TEST REALM ONLY - password grant)",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "protocol": "openid-connect",
+      "protocolMappers": [
+        {
+          "name": "shop-backend-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "shop-backend",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "customer1",
+      "email": "customer1@example.com",
+      "firstName": "Test",
+      "lastName": "Customer",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [ { "type": "password", "value": "customer1-test-password", "temporary": false } ],
+      "realmRoles": [ "CUSTOMER" ]
+    },
+    {
+      "username": "admin1",
+      "email": "admin1@example.com",
+      "firstName": "Test",
+      "lastName": "Admin",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [ { "type": "password", "value": "admin1-test-password", "temporary": false } ],
+      "realmRoles": [ "ADMIN", "CUSTOMER" ]
+    }
+  ]
+}

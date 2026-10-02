@@ -25,11 +25,11 @@ public abstract class BaseClientTest extends BaseConfigurableTest {
     }
 
     protected void setUpMyShopUiClient() {
-        myShopUiClient = new MyShopUiClient(configuration.getMyShopUiBaseUrl(), BrowserLifecycleExtension.getBrowser());
+        myShopUiClient = new MyShopUiClient(configuration.getMyShopUiBaseUrl(), BrowserLifecycleExtension.getBrowser(), configuration.getKeycloakBaseUrl());
     }
 
     protected void setUpMyShopApiClient() {
-        myShopApiClient = new MyShopApiClient(configuration.getMyShopApiBaseUrl());
+        myShopApiClient = new MyShopApiClient(configuration.getMyShopApiBaseUrl(), configuration.getKeycloakBaseUrl());
     }
 
     protected void setUpExternalClients() {

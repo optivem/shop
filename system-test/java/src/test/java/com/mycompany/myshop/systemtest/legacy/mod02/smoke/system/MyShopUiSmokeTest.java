@@ -18,6 +18,8 @@ class MyShopUiSmokeTest extends BaseRawTest {
 
         assertThat(response.status()).isEqualTo(200);
 
+        loginToMyShopUiIfRequired();
+
         var contentType = response.headers().get("content-type");
         assertThat(contentType).isNotNull().contains("text/html");
 

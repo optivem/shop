@@ -2,6 +2,7 @@ package com.mycompany.myshop.backend.integration;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -9,6 +10,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.mycompany.myshop.backend.api.controller.OrderController;
+import com.mycompany.myshop.backend.config.ProblemDetailSecurityHandlers;
+import com.mycompany.myshop.backend.config.SecurityConfig;
 import com.mycompany.myshop.backend.core.dtos.BrowseOrderHistoryResponse;
 import com.mycompany.myshop.backend.core.dtos.PlaceOrderResponse;
 import com.mycompany.myshop.backend.core.dtos.ViewOrderDetailsResponse;
@@ -20,7 +23,14 @@ import java.time.Instant;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.MockMvcBuilderCustomizer;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -28,7 +38,23 @@ import org.springframework.test.web.servlet.MockMvc;
 // No ERP stub -> no DSL refactor -> no latest/legacy twin. This test stubs OrderService with Mockito,
 // an internal seam, not an external system.
 @WebMvcTest(OrderController.class)
+@ActiveProfiles("test")
+@Import({SecurityConfig.class, ProblemDetailSecurityHandlers.class,
+    OrderControllerIntegrationTest.AdminRequests.class})
 class OrderControllerIntegrationTest {
+
+    /** Every request in this class runs as an authenticated admin; authorization has its own tests. */
+    @TestConfiguration
+    static class AdminRequests {
+        @Bean
+        MockMvcBuilderCustomizer adminByDefault() {
+            return builder -> builder.defaultRequest(get("/").with(jwt().authorities(
+                new SimpleGrantedAuthority("ROLE_ADMIN"))));
+        }
+    }
+
+    @MockitoBean
+    private JwtDecoder jwtDecoder;
 
     @Autowired
     private MockMvc mockMvc;

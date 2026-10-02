@@ -27,6 +27,7 @@ public class JsonHttpClient<E> implements AutoCloseable {
     private final HttpClient httpClient;
     private final String baseUrl;
     private final Class<E> errorType;
+    private volatile BearerTokenSource bearerTokenSource;
 
     public JsonHttpClient(HttpClient httpClient, String baseUrl, Class<E> errorType, ObjectMapper objectMapper) {
         this.httpClient = httpClient;
@@ -48,6 +49,10 @@ public class JsonHttpClient<E> implements AutoCloseable {
         mapper.setConfig(mapper.getDeserializationConfig()
                 .with(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES));
         return mapper;
+    }
+
+    public void setBearerTokenSource(BearerTokenSource bearerTokenSource) {
+        this.bearerTokenSource = bearerTokenSource;
     }
 
     @Override
@@ -123,10 +128,19 @@ public class JsonHttpClient<E> implements AutoCloseable {
         }
     }
 
+    private HttpRequest.Builder requestBuilder(String method, String path, URI uri) {
+        var builder = HttpRequest.newBuilder().uri(uri);
+        var source = bearerTokenSource;
+        var token = source == null ? null : source.tokenFor(method, path);
+        if (token != null) {
+            builder.header("Authorization", "Bearer " + token);
+        }
+        return builder;
+    }
+
     private HttpResponse<String> doGet(String path) {
         var uri = getUri(path);
-        var httpRequest = HttpRequest.newBuilder()
-                .uri(uri)
+        var httpRequest = requestBuilder("GET", path, uri)
                 .GET()
                 .build();
 
@@ -137,8 +151,7 @@ public class JsonHttpClient<E> implements AutoCloseable {
         var uri = getUri(path);
         var jsonBody = serializeRequest(request);
 
-        var httpRequest = HttpRequest.newBuilder()
-                .uri(uri)
+        var httpRequest = requestBuilder("POST", path, uri)
                 .header(CONTENT_TYPE, APPLICATION_JSON)
                 .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
                 .build();
@@ -149,8 +162,7 @@ public class JsonHttpClient<E> implements AutoCloseable {
     private HttpResponse<String> doPost(String path) {
         var uri = getUri(path);
 
-        var httpRequest = HttpRequest.newBuilder()
-                .uri(uri)
+        var httpRequest = requestBuilder("POST", path, uri)
                 .header(CONTENT_TYPE, APPLICATION_JSON)
                 .POST(HttpRequest.BodyPublishers.noBody())
                 .build();
@@ -162,8 +174,7 @@ public class JsonHttpClient<E> implements AutoCloseable {
         var uri = getUri(path);
         var jsonBody = serializeRequest(request);
 
-        var httpRequest = HttpRequest.newBuilder()
-                .uri(uri)
+        var httpRequest = requestBuilder("PUT", path, uri)
                 .header(CONTENT_TYPE, APPLICATION_JSON)
                 .PUT(HttpRequest.BodyPublishers.ofString(jsonBody))
                 .build();
@@ -174,8 +185,7 @@ public class JsonHttpClient<E> implements AutoCloseable {
     private HttpResponse<String> doDelete(String path) {
         var uri = getUri(path);
 
-        var httpRequest = HttpRequest.newBuilder()
-                .uri(uri)
+        var httpRequest = requestBuilder("DELETE", path, uri)
                 .DELETE()
                 .build();
 
@@ -236,6 +246,25 @@ public class JsonHttpClient<E> implements AutoCloseable {
         }
     }
 
+    @SuppressWarnings("java:S3011") // Reflection needed to build an error from a body-less response
+    private E createEmptyBodyError(int statusCode) {
+        try {
+            var constructor = errorType.getDeclaredConstructor();
+            constructor.setAccessible(true);
+            var instance = constructor.newInstance();
+            try {
+                var statusField = errorType.getDeclaredField("status");
+                statusField.setAccessible(true);
+                statusField.set(instance, statusCode);
+            } catch (NoSuchFieldException | IllegalArgumentException e) {
+                // error type has no usable status field
+            }
+            return instance;
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException("Request failed with HTTP " + statusCode + " and an empty body", e);
+        }
+    }
+
     private boolean isSuccessStatusCode(HttpResponse<String> httpResponse) {
         var statusCode = HttpStatus.valueOf(httpResponse.statusCode());
         return statusCode.is2xxSuccessful();
@@ -243,6 +272,9 @@ public class JsonHttpClient<E> implements AutoCloseable {
 
     private <T> Result<T, E> getResultOrFailure(HttpResponse<String> httpResponse, Class<T> responseType) {
         if (!isSuccessStatusCode(httpResponse)) {
+            if (httpResponse.body() == null || httpResponse.body().isBlank()) {
+                return Result.failure(createEmptyBodyError(httpResponse.statusCode()));
+            }
             var error = readResponse(httpResponse, errorType);
             return Result.failure(error);
         }

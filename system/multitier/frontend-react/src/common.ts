@@ -3,6 +3,7 @@
 import { isProblemDetail, type Guard } from './types/api.guards';
 import type { Result } from './types/result.types';
 import type { ApiError } from './types/error.types';
+import { getAccessToken, notifyUnauthorized } from './auth/access-token';
 
 /**
  * Performs a fetch request and returns a Result.
@@ -39,9 +40,12 @@ async function fetchResult<T>(
   onSuccess: (response: Response) => Promise<Result<T>>
 ): Promise<Result<T>> {
   try {
-    const response = await fetch(url, options);
+    const response = await fetch(url, await withBearerToken(options));
     if (response.ok) {
       return await onSuccess(response);
+    }
+    if (response.status === 401) {
+      notifyUnauthorized();
     }
     const error = await extractApiError(response);
     return { success: false, error };
@@ -54,6 +58,14 @@ async function fetchResult<T>(
       }
     };
   }
+}
+
+async function withBearerToken(options: RequestInit | undefined): Promise<RequestInit | undefined> {
+  const token = await getAccessToken();
+  if (!token) return options;
+  const headers = new Headers(options?.headers);
+  headers.set('Authorization', `Bearer ${token}`);
+  return { ...options, headers };
 }
 
 async function safeParseJson(response: Response): Promise<unknown> {

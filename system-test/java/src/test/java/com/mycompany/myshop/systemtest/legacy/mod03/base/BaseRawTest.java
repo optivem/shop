@@ -6,10 +6,14 @@ import com.microsoft.playwright.*;
 import com.mycompany.myshop.systemtest.configuration.BaseConfigurableTest;
 import com.mycompany.myshop.systemtest.configuration.Configuration;
 import com.mycompany.myshop.testkit.common.Closer;
+import com.mycompany.myshop.testkit.driver.adapter.shared.client.playwright.KeycloakUiLogin;
+import com.mycompany.myshop.testkit.driver.adapter.shared.client.http.KeycloakTokenProvider;
+import com.mycompany.myshop.testkit.driver.adapter.shared.client.http.TestUser;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 
 import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
 
 public abstract class BaseRawTest extends BaseConfigurableTest {
     protected Configuration configuration;
@@ -59,6 +63,22 @@ public abstract class BaseRawTest extends BaseConfigurableTest {
 
     protected String getMyShopApiBaseUrl() {
         return configuration.getMyShopApiBaseUrl();
+    }
+
+    protected HttpRequest.Builder withCustomerAuth(HttpRequest.Builder builder) {
+        var keycloakBaseUrl = configuration.getKeycloakBaseUrl();
+        if (keycloakBaseUrl == null || keycloakBaseUrl.isBlank()) {
+            return builder;
+        }
+        var token = KeycloakTokenProvider.forBaseUrl(keycloakBaseUrl).getToken(TestUser.CUSTOMER);
+        return builder.header("Authorization", "Bearer " + token);
+    }
+
+    protected void loginToMyShopUiIfRequired() {
+        var login = KeycloakUiLogin.forBaseUrl(configuration.getKeycloakBaseUrl());
+        if (login != null) {
+            login.ensureLoggedIn(myShopUiPage, "a[href='/new-order']");
+        }
     }
 
     protected String getMyShopUiBaseUrl() {

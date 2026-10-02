@@ -28,7 +28,7 @@ class PlaceOrderNegativeApiTest extends BaseE2eTest {
                 """.formatted(SKU + "-" + UUID.randomUUID().toString().substring(0, 8), COUNTRY);
 
         var response = myShopApiHttpClient.send(
-                HttpRequest.newBuilder()
+                withCustomerAuth(HttpRequest.newBuilder())
                         .uri(URI.create(getMyShopApiBaseUrl() + "/api/orders"))
                         .header("Content-Type", "application/json")
                         .POST(HttpRequest.BodyPublishers.ofString(placeOrderJson))

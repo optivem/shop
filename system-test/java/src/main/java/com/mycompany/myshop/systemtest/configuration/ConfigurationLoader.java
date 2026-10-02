@@ -34,8 +34,12 @@ public class ConfigurationLoader {
         var taxBaseUrl = getEnvVarOrDefault("TAX_API_BASE_URL" + suffix,
                 getNestedStringValue(config, "test", "tax", "api", BASE_URL));
 
+        // Authentication is opt-in: unset means the SUT is unauthenticated and no token is ever requested.
+        var keycloakBaseUrl = getEnvVarOrDefault("KEYCLOAK_URL" + suffix,
+                getEnvVarOrDefault("KEYCLOAK_URL", null));
+
         return new Configuration(myShopUiBaseUrl, myShopApiBaseUrl, erpBaseUrl, clockBaseUrl, taxBaseUrl,
-                externalSystemMode, channelMode);
+                keycloakBaseUrl, externalSystemMode, channelMode);
     }
 
     private static String getEnvVarOrDefault(String envVarName, String fileValue) {

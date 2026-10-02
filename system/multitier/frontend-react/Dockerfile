@@ -30,8 +30,8 @@ COPY --from=build /app/dist /usr/share/nginx/html
 # Copy nginx configuration template — image's entrypoint runs envsubst on /etc/nginx/templates/*.template
 COPY nginx.conf /etc/nginx/templates/default.conf.template
 
-# Limit envsubst to BACKEND_API_URL so nginx variables ($host, $remote_addr, ...) are left intact
-ENV NGINX_ENVSUBST_FILTER=BACKEND_API_URL
+# Limit envsubst to these variables so nginx variables ($host, $remote_addr, ...) are left intact
+ENV NGINX_ENVSUBST_FILTER=BACKEND_API_URL|KEYCLOAK_URL|KEYCLOAK_REALM|KEYCLOAK_CLIENT_ID
 
 # Expose port 3000 (unprivileged user can bind ports >1024)
 EXPOSE 3000

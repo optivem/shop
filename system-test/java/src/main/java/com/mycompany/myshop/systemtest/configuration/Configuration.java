@@ -13,6 +13,7 @@ public class Configuration {
     private final String erpBaseUrl;
     private final String clockBaseUrl;
     private final String taxBaseUrl;
+    private final String keycloakBaseUrl;
     private final ExternalSystemMode externalSystemMode;
     private final ChannelMode channelMode;
 }

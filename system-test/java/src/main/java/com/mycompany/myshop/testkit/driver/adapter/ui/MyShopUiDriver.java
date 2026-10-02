@@ -39,7 +39,11 @@ public class MyShopUiDriver implements MyShopDriver {
     private CouponManagementPage couponManagementPage;
 
     public MyShopUiDriver(String baseUrl, Browser browser) {
-        this.client = new MyShopUiClient(baseUrl, browser);
+        this(baseUrl, browser, null);
+    }
+
+    public MyShopUiDriver(String baseUrl, Browser browser, String keycloakBaseUrl) {
+        this.client = new MyShopUiClient(baseUrl, browser, keycloakBaseUrl);
     }
 
     @Override

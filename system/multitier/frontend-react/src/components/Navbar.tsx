@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { UserMenu } from './UserMenu';
 
 interface NavbarProps {
   title?: string;
@@ -16,6 +17,7 @@ export function Navbar({ title }: Readonly<NavbarProps>) {
           MyShop
         </Link>
         {title && <span className="navbar-text text-white">{title}</span>}
+        <UserMenu />
       </div>
     </nav>
   );

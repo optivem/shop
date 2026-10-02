@@ -46,9 +46,9 @@ public abstract class BaseChannelDriverTest extends BaseConfigurableTest {
         }
 
         if (ChannelType.UI.equals(channel)) {
-            return new MyShopUiDriver(configuration.getMyShopUiBaseUrl(), BrowserLifecycleExtension.getBrowser());
+            return new MyShopUiDriver(configuration.getMyShopUiBaseUrl(), BrowserLifecycleExtension.getBrowser(), configuration.getKeycloakBaseUrl());
         } else if (ChannelType.API.equals(channel)) {
-            return new MyShopApiDriver(configuration.getMyShopApiBaseUrl());
+            return new MyShopApiDriver(configuration.getMyShopApiBaseUrl(), configuration.getKeycloakBaseUrl());
         } else {
             throw new IllegalStateException("Unknown channel: " + channel);
         }

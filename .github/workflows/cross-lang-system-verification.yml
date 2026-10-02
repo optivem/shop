@@ -51,6 +51,9 @@ jobs:
           - { test-lang: java,       system-lang: java }
           - { test-lang: dotnet,     system-lang: dotnet }
           - { test-lang: typescript, system-lang: typescript }
+          # TEMPORARY: the multitier Java system requires Keycloak auth; dotnet/typescript
+          # test drivers cannot acquire tokens yet. Remove when they gain token acquisition.
+          - { arch: multitier, system-lang: java }
         include:
           # Per (arch, system-lang) image set + compose service names.
           # Mirrors the per-(arch, lang)-acceptance-stage.yml deployments.

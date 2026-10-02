@@ -37,6 +37,11 @@ management:
 allowed:
   origins: ${ALLOWED_ORIGINS:http://localhost:8080}
 
+auth:
+  issuer-uri: ${AUTH_ISSUER_URI}
+  jwk-set-uri: ${AUTH_JWK_SET_URI}
+  audience: ${AUTH_AUDIENCE}
+
 error:
   types:
     base-url: https://api.my-company.example/errors

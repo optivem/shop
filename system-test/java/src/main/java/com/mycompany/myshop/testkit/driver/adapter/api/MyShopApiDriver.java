@@ -24,7 +24,11 @@ public class MyShopApiDriver implements MyShopDriver {
     private final MyShopApiClient apiClient;
 
     public MyShopApiDriver(String baseUrl) {
-        this.apiClient = new MyShopApiClient(baseUrl);
+        this(baseUrl, null);
+    }
+
+    public MyShopApiDriver(String baseUrl, String keycloakBaseUrl) {
+        this.apiClient = new MyShopApiClient(baseUrl, keycloakBaseUrl);
     }
 
     @Override

@@ -3,6 +3,7 @@ package com.mycompany.myshop.testkit.driver.adapter.ui.client;
 import com.microsoft.playwright.*;
 import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.HomePage;
 import com.mycompany.myshop.testkit.common.Closer;
+import com.mycompany.myshop.testkit.driver.adapter.shared.client.playwright.KeycloakUiLogin;
 import com.mycompany.myshop.testkit.driver.adapter.shared.client.playwright.PageClient;
 import org.springframework.http.HttpStatus;
 
@@ -12,16 +13,24 @@ public class MyShopUiClient implements AutoCloseable {
     private static final String HTML_OPENING_TAG = "<html";
     private static final String HTML_CLOSING_TAG = "</html>";
 
+    private static final String HOME_READY_SELECTOR = "a[href='/new-order']";
+
     private final String baseUrl;
     private final BrowserContext context;
     private final Page page;
     private final PageClient pageClient;
     private final HomePage homePage;
+    private final KeycloakUiLogin login;
 
     private Response response;
 
     public MyShopUiClient(String baseUrl, Browser browser) {
+        this(baseUrl, browser, null);
+    }
+
+    public MyShopUiClient(String baseUrl, Browser browser, String keycloakBaseUrl) {
         this.baseUrl = baseUrl;
+        this.login = KeycloakUiLogin.forBaseUrl(keycloakBaseUrl);
 
         // Create isolated browser context for this test instance
         var contextOptions = new Browser.NewContextOptions()
@@ -34,12 +43,15 @@ public class MyShopUiClient implements AutoCloseable {
         // Each test gets its own page
         this.page = context.newPage();
 
-        this.pageClient = new PageClient(page);
+        this.pageClient = new PageClient(page, login);
         this.homePage = new HomePage(pageClient);
     }
 
     public HomePage openHomePage() {
         response = page.navigate(baseUrl);
+        if (login != null) {
+            login.ensureLoggedIn(page, HOME_READY_SELECTOR);
+        }
         return homePage;
     }
 

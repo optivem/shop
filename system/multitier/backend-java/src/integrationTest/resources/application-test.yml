@@ -22,6 +22,11 @@ clock:
 tax:
   url: http://localhost:9999/tax
 
+auth:
+  issuer-uri: http://localhost:8191/realms/shop
+  jwk-set-uri: http://localhost:8191/realms/shop/protocol/openid-connect/certs
+  audience: shop-backend
+
 error:
   types:
     base-url: https://api.my-company.example/errors

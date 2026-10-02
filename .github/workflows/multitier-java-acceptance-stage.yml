@@ -148,6 +148,9 @@ jobs:
       packages: write
     env:
       GH_OPTIVEM_CONFIG: gh-optivem-multitier-java.yaml
+      # Enables token acquisition in the Java system tests (opt-in; unset => no auth).
+      KEYCLOAK_URL_REAL: http://localhost:8191
+      KEYCLOAK_URL_STUB: http://localhost:8192
       # The test suites run without -Denvironment, so this selects Environment.ACCEPTANCE.
       ENVIRONMENT: acceptance
     outputs:

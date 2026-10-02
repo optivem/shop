@@ -4,6 +4,7 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
+import com.mycompany.myshop.backend.backendtest.configuration.TestAuthConfiguration;
 import com.mycompany.myshop.backend.backendtest.configuration.TestcontainersConfiguration;
 import com.mycompany.myshop.backend.core.repositories.CouponRepository;
 import com.mycompany.myshop.backend.core.repositories.OrderRepository;
@@ -18,6 +19,7 @@ import com.mycompany.myshop.backend.testkit.driver.adapter.sut.SutErpReader;
 import com.mycompany.myshop.backend.testkit.driver.adapter.sut.SutTaxReader;
 import com.mycompany.myshop.backend.testkit.dsl.core.ScenarioDslImpl;
 import com.mycompany.myshop.backend.testkit.dsl.core.usecase.UseCaseDsl;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -48,7 +50,7 @@ import org.springframework.test.context.DynamicPropertySource;
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
-@Import(TestcontainersConfiguration.class)
+@Import({TestcontainersConfiguration.class, TestAuthConfiguration.class})
 public abstract class BaseComponentTest {
 
     protected static final WireMockServer ERP = new WireMockServer(options().dynamicPort());
@@ -125,6 +127,12 @@ public abstract class BaseComponentTest {
         CLOCK.resetAll();
         orderRepository.deleteAll();
         couponRepository.deleteAll();
+
+        // Every call through the shared template is made as an admin; the security tests use their own client.
+        restTemplate.getRestTemplate().setInterceptors(List.of((request, body, execution) -> {
+            request.getHeaders().setBearerAuth(TestAuthConfiguration.ADMIN_TOKEN);
+            return execution.execute(request, body);
+        }));
 
         // Wired here rather than as field initializers: restTemplate/objectMapper are autowired
         // instance fields, not yet populated at field-init time.
