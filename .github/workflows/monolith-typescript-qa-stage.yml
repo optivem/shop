@@ -101,7 +101,7 @@ jobs:
         with:
           endpoints: |
             [
-              { "name": "MyShop UI", "url": "http://localhost:3311/" },
+              { "name": "MyShop UI", "url": "http://localhost:3311/health" },
               { "name": "MyShop API", "url": "http://localhost:8311/health" },
               { "name": "ERP", "url": "http://localhost:9311/erp/health" },
               { "name": "Clock", "url": "http://localhost:9311/clock/health" }

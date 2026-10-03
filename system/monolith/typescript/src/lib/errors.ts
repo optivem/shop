@@ -62,6 +62,32 @@ export function notFoundResponse(detail: string) {
   );
 }
 
+export function unauthorizedResponse(detail: string) {
+  return NextResponse.json(
+    {
+      type: `${BASE_URL}/unauthorized`,
+      title: 'Unauthorized',
+      status: 401,
+      detail,
+      timestamp: new Date().toISOString(),
+    },
+    { status: 401, headers: { 'WWW-Authenticate': 'Bearer' } }
+  );
+}
+
+export function forbiddenResponse() {
+  return NextResponse.json(
+    {
+      type: `${BASE_URL}/forbidden`,
+      title: 'Forbidden',
+      status: 403,
+      detail: 'You do not have permission to perform this action',
+      timestamp: new Date().toISOString(),
+    },
+    { status: 403 }
+  );
+}
+
 export function internalErrorResponse(message: string) {
   return NextResponse.json(
     {
