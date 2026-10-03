@@ -177,9 +177,7 @@ jobs:
         with:
           endpoints: |
             [
-              { "name": "Java real UI",  "url": "http://localhost:3111/" },
               { "name": "Java real API", "url": "http://localhost:8111/health" },
-              { "name": "Java stub UI",  "url": "http://localhost:3112/" },
               { "name": "Java stub API", "url": "http://localhost:8112/health" }
             ]
           compose-file: docker-compose.pipeline.stub.yml
@@ -230,9 +228,7 @@ jobs:
         with:
           endpoints: |
             [
-              { "name": "TS real UI",  "url": "http://localhost:3311/" },
               { "name": "TS real API", "url": "http://localhost:8311/health" },
-              { "name": "TS stub UI",  "url": "http://localhost:3312/" },
               { "name": "TS stub API", "url": "http://localhost:8312/health" }
             ]
           compose-file: docker-compose.pipeline.stub.yml

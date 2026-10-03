@@ -172,8 +172,8 @@ jobs:
         run: |
           SYSTEM_YAML=docker/${{ matrix.system-lang }}/${{ matrix.arch }}/systems.yaml
           SYSTEM_JSON=$(yq -o=json '.' "$SYSTEM_YAML")
-          REAL_JSON=$(jq -c '.systems[] | select(.label == "real") | [(.components + .externalSystems)[] | {name, url}]' <<< "$SYSTEM_JSON")
-          STUB_JSON=$(jq -c '.systems[] | select(.label == "stub") | [(.components + .externalSystems)[] | {name, url}]' <<< "$SYSTEM_JSON")
+          REAL_JSON=$(jq -c --arg arch "${{ matrix.arch }}" '.systems[] | select(.label == "real") | [((if $arch == "monolith" then .components[1:] else .components end) + .externalSystems)[] | {name, url}]' <<< "$SYSTEM_JSON")
+          STUB_JSON=$(jq -c --arg arch "${{ matrix.arch }}" '.systems[] | select(.label == "stub") | [((if $arch == "monolith" then .components[1:] else .components end) + .externalSystems)[] | {name, url}]' <<< "$SYSTEM_JSON")
           {
             echo "real<<EOF"
             echo "$REAL_JSON"

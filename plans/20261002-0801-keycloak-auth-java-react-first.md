@@ -60,11 +60,13 @@ Grounded in `system/multitier/backend-java` controllers and `docker/java/multiti
 
 ## ▶ Next executable step (resume here)
 
-Step 11 is DONE for all three monoliths. CI status on commit f410e79 (2026-10-03): .NET monolith acceptance (latest + legacy) green; TypeScript monolith **legacy** acceptance green on the fresh image; TypeScript monolith **latest** acceptance was still in progress when the session ended (re-dispatched after the first runs failed). The first TS failures (404 instead of 401/403) were a RACE, not a bug: acceptance was dispatched before the commit stage had published the new image, so it tested the old auth-less image. Lesson: after pushing, wait for the commit-stage run to finish before `gh workflow run <acceptance>`.
+Step 11 is DONE for all three monoliths; TS monolith latest+legacy acceptance green (run 37124202413). `cross-lang-system-verification` is now a reusable workflow only (no `workflow_dispatch`); verify it via `gh workflow run meta-prerelease-stage.yml --ref main` (~1h+) after the probe fixes below are pushed (wait for the commit-stage runs first).
 
-First action next session: `gh run list --workflow monolith-typescript-acceptance-stage.yml --limit 2` — confirm the latest re-dispatched run is green (if red, read `gh run view <id> --log-failed` and fix). Then run `gh workflow run cross-lang-system-verification.yml --ref main` (last run 2026-04-28, predates the monolith auth work) and fix anything red.
+Last scheduled meta-prerelease-stage (SHA 64bc2ad, before TS monolith) failed on: cross-lang `* tests vs monolith java` and drift `monolith — Java → TS schema interop` (readiness probe of the login-protected UI root `/` never gets 200), plus `prerelease-pipeline-monolith-java [level:local]` (gh-optivem `WaitForURL` in `internal/build/runner/health.go` requires 200 on `systems.yaml` components[0] = UI root; fails with "Monolith ... not ready after 30 attempts"). Fixed in shop (uncommitted→committed this session): cross-lang endpoint list skips the monolith UI root; drift.yml monolith probes use only the API `/health`.
 
-Next unit after that: Step 12 (cloud/prod-stage IdP) is design work, not a mechanical edit — draft it with `/create-plan` (managed or hardened IdP, secrets, TLS; separate from the local/pipeline Keycloak). Order-ownership plan `plans/20261002-1209-order-ownership-and-dsl-identities.md` is still pending.
+First action next session: (1) confirm the meta-prerelease-stage run is green; (2) fix the local-stage probe — design choice in gh-optivem: add an optional per-component `healthUrl` to systems.yaml (recommended: keeps `url` as the UI base the tests use) or make `WaitForSystem` accept any non-5xx; then re-run `prerelease-pipeline-monolith-java` with `level=local`; check the .NET/TS monolith local stages for the same problem.
+
+Next unit after that: Step 12 (cloud/prod-stage IdP) is design work — draft it with `/create-plan`. Order-ownership plan `plans/20261002-1209-order-ownership-and-dsl-identities.md` is still pending.
 
 ## Steps
 
