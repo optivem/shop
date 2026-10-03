@@ -119,6 +119,13 @@ class SecurityConfigTest {
     }
 
     @Test
+    void homePageWithoutSessionAndWithoutAcceptHeaderRedirectsToKeycloakLogin() throws Exception {
+        mockMvc.perform(get("/"))
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrlPattern("**/oauth2/authorization/keycloak"));
+    }
+
+    @Test
     void customerSessionCanOpenHomePage() throws Exception {
         mockMvc.perform(get("/").with(customerSession())).andExpect(status().isOk());
     }

@@ -59,6 +59,6 @@ public sealed class KeycloakUiLogin
         await page.FillAsync(PasswordSelector, _user.Password());
         await page.ClickAsync(SubmitSelector);
         await page.WaitForURLAsync(url => !url.StartsWith(_keycloakBaseUrl, StringComparison.Ordinal),
-            new PageWaitForURLOptions { Timeout = TimeoutMilliseconds, WaitUntil = WaitUntilState.Commit });
+            new PageWaitForURLOptions { Timeout = TimeoutMilliseconds });
     }
 }

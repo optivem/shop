@@ -41,11 +41,14 @@ import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfFilter;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
+import org.springframework.security.web.util.matcher.AnyRequestMatcher;
+import org.springframework.security.web.util.matcher.OrRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -120,7 +123,10 @@ public class SecurityConfig {
             .logout(logout -> logout.logoutSuccessHandler(logoutSuccessHandler(clientRegistrations)))
             .exceptionHandling(e -> e
                 // API calls get 401 problem details; page requests keep the default redirect to the Keycloak login.
-                .defaultAuthenticationEntryPointFor(handlers, apiRequests)
+                .defaultAuthenticationEntryPointFor(handlers, new OrRequestMatcher(apiRequests, bearerRequests))
+                // Everything else redirects to login regardless of the Accept header (clients without one, e.g. probes, would otherwise get a 401).
+                .defaultAuthenticationEntryPointFor(new LoginUrlAuthenticationEntryPoint("/oauth2/authorization/keycloak"),
+                    AnyRequestMatcher.INSTANCE)
                 .accessDeniedHandler(handlers));
         return http.build();
     }

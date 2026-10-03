@@ -68,7 +68,11 @@ Last scheduled meta-prerelease-stage (SHA 64bc2ad, before TS monolith) failed on
 
 Done this session (uncommitted until review): gh-optivem `Component.HealthUrl` (optional, probes prefer it over `url`; tested) and `healthUrl: <ui>/health` on the `Monolith` UI entry in the java/dotnet/typescript monolith `systems.yaml`.
 
-First action next session: (1) once gh-optivem is committed/released and the shop commit-stage runs finish, dispatch `gh workflow run meta-prerelease-stage.yml --ref main` (~1h+) and confirm green, including `prerelease-pipeline-monolith-java [level:local]` and the .NET/TS monolith local stages; (2) if any monolith still fails readiness, diagnose that stage specifically.
+Run 37126180862 (meta-prerelease-stage, on released gh-optivem v1.6.86) findings, fixed in shop: (a) Java monolith local stage — the probe's GET `/` has no Accept header so Spring returned 401 instead of the login redirect (.NET/TS redirect unconditionally); `SecurityConfig` now redirects every non-API/non-Bearer request to login (+ test). (b) .NET UI timeouts (`KeycloakUiLogin.LoginAsync` `WaitUntil=Commit` race, flaky ~3 of 4 runs) — dropped `Commit`. Both unverified until the next meta-prerelease-stage run. Order matters: shop must be fully green first; the shop meta pipeline then triggers gh-optivem itself (do NOT dispatch gh-release-stage manually). `healthUrl` stays committed in gh-optivem/shop (harmless, keeps `url` as the UI base).
+
+Next: re-dispatch `meta-prerelease-stage` (subagent watches) and confirm green.
+
+(Superseded) First action next session: (1) once gh-optivem is committed/released and the shop commit-stage runs finish, dispatch `gh workflow run meta-prerelease-stage.yml --ref main` (~1h+) and confirm green, including `prerelease-pipeline-monolith-java [level:local]` and the .NET/TS monolith local stages; (2) if any monolith still fails readiness, diagnose that stage specifically.
 
 Next unit after that: Step 12 (cloud/prod-stage IdP) is design work — draft it with `/create-plan`. Order-ownership plan `plans/20261002-1209-order-ownership-and-dsl-identities.md` is still pending.
 
