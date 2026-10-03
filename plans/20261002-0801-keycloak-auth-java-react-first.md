@@ -72,7 +72,9 @@ Run 37126180862 (meta-prerelease-stage, on released gh-optivem v1.6.86) findings
 
 Run 37133721795 (after 6c2af459): Java monolith local stage + dotnet-vs-multitier-java now green. Still failing: .NET UI timeout, now inside `WaitForURLAsync`'s internal `WaitForLoadStateAsync` (dotnet vs multitier typescript cross-lang; `multitier-dotnet-acceptance-stage-legacy` mod03-e2e). Fix applied: `KeycloakUiLogin.LoginAsync` polls `location.href` via `WaitForFunctionAsync` instead of `WaitForURLAsync` (no load-state wait). Unverified.
 
-Next: re-dispatch `meta-prerelease-stage` (subagent watches) and confirm green.
+RESULT: meta-prerelease-stage run 37142307930 (SHA 77f51479) is fully GREEN (all local/cross-lang/pipeline jobs, tag-meta-rc ran). The .NET `KeycloakUiLogin` poll fix and the Java monolith login-redirect fix both held. The gh-acceptance-stage dispatch into optivem/gh-optivem lives in `meta-release-stage.yml` (line ~302), NOT in the prerelease pipeline.
+
+Next: author decides when to run shop `meta-release-stage` (release action — ask first; read the workflow before running), which dispatches gh-acceptance-stage in gh-optivem; then `gh-release-stage` promotes the gh-optivem RC with `healthUrl` (release action — ask first). After that, Step 12 (cloud/prod IdP) is design work: draft with `/create-plan`.
 
 (Superseded) First action next session: (1) once gh-optivem is committed/released and the shop commit-stage runs finish, dispatch `gh workflow run meta-prerelease-stage.yml --ref main` (~1h+) and confirm green, including `prerelease-pipeline-monolith-java [level:local]` and the .NET/TS monolith local stages; (2) if any monolith still fails readiness, diagnose that stage specifically.
 
