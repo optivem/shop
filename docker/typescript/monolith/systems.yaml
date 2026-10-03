@@ -26,6 +26,7 @@ systems:
     components:
       - name: Monolith
         url: http://localhost:3312
+        healthUrl: http://localhost:3312/health
         containerName: system
       - name: Monolith API
         url: http://localhost:8312/health
@@ -47,6 +48,7 @@ systems:
     components:
       - name: Monolith
         url: http://localhost:3311
+        healthUrl: http://localhost:3311/health
         containerName: system
       - name: Monolith API
         url: http://localhost:8311/health

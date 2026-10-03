@@ -64,7 +64,9 @@ Step 11 is DONE for all three monoliths; TS monolith latest+legacy acceptance gr
 
 Last scheduled meta-prerelease-stage (SHA 64bc2ad, before TS monolith) failed on: cross-lang `* tests vs monolith java` and drift `monolith — Java → TS schema interop` (readiness probe of the login-protected UI root `/` never gets 200), plus `prerelease-pipeline-monolith-java [level:local]` (gh-optivem `WaitForURL` in `internal/build/runner/health.go` requires 200 on `systems.yaml` components[0] = UI root; fails with "Monolith ... not ready after 30 attempts"). Fixed in shop (uncommitted→committed this session): cross-lang endpoint list skips the monolith UI root; drift.yml monolith probes use only the API `/health`.
 
-First action next session: (1) confirm the meta-prerelease-stage run is green; (2) fix the local-stage probe — design choice in gh-optivem: add an optional per-component `healthUrl` to systems.yaml (recommended: keeps `url` as the UI base the tests use) or make `WaitForSystem` accept any non-5xx; then re-run `prerelease-pipeline-monolith-java` with `level=local`; check the .NET/TS monolith local stages for the same problem.
+Done this session (uncommitted until review): gh-optivem `Component.HealthUrl` (optional, probes prefer it over `url`; tested) and `healthUrl: <ui>/health` on the `Monolith` UI entry in the java/dotnet/typescript monolith `systems.yaml`.
+
+First action next session: (1) once gh-optivem is committed/released and the shop commit-stage runs finish, dispatch `gh workflow run meta-prerelease-stage.yml --ref main` (~1h+) and confirm green, including `prerelease-pipeline-monolith-java [level:local]` and the .NET/TS monolith local stages; (2) if any monolith still fails readiness, diagnose that stage specifically.
 
 Next unit after that: Step 12 (cloud/prod-stage IdP) is design work — draft it with `/create-plan`. Order-ownership plan `plans/20261002-1209-order-ownership-and-dsl-identities.md` is still pending.
 
