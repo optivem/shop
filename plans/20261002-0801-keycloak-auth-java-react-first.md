@@ -60,7 +60,11 @@ Grounded in `system/multitier/backend-java` controllers and `docker/java/multiti
 
 ## ▶ Next executable step (resume here)
 
-Step 11 is DONE for all three monoliths (Java + .NET committed earlier; TypeScript committed in the latest session). Verified locally for the TypeScript monolith: unit tests (policy), lint, build, and the TS system tests on stub (smoke/e2e/acceptance/isolated) and real (smoke/e2e/acceptance). **CI is unverified for .NET and TypeScript monoliths and the cross-lang matrix on the monolith SUTs is unconfirmed.** First action next session: run `gh workflow run monolith-typescript-acceptance-stage.yml --ref main`, the `-legacy` one, and the .NET equivalents (`monolith-dotnet-acceptance-stage[-legacy].yml`), then the cross-lang-system-verification workflow; fix anything red. Next unit after that: Step 12 (cloud/prod-stage IdP) is design work, not a mechanical edit — draft it with `/create-plan` (managed or hardened IdP, secrets, TLS; separate from the local/pipeline Keycloak). Order-ownership plan `plans/20261002-1209-order-ownership-and-dsl-identities.md` is still pending.
+Step 11 is DONE for all three monoliths. CI status on commit f410e79 (2026-10-03): .NET monolith acceptance (latest + legacy) green; TypeScript monolith **legacy** acceptance green on the fresh image; TypeScript monolith **latest** acceptance was still in progress when the session ended (re-dispatched after the first runs failed). The first TS failures (404 instead of 401/403) were a RACE, not a bug: acceptance was dispatched before the commit stage had published the new image, so it tested the old auth-less image. Lesson: after pushing, wait for the commit-stage run to finish before `gh workflow run <acceptance>`.
+
+First action next session: `gh run list --workflow monolith-typescript-acceptance-stage.yml --limit 2` — confirm the latest re-dispatched run is green (if red, read `gh run view <id> --log-failed` and fix). Then run `gh workflow run cross-lang-system-verification.yml --ref main` (last run 2026-04-28, predates the monolith auth work) and fix anything red.
+
+Next unit after that: Step 12 (cloud/prod-stage IdP) is design work, not a mechanical edit — draft it with `/create-plan` (managed or hardened IdP, secrets, TLS; separate from the local/pipeline Keycloak). Order-ownership plan `plans/20261002-1209-order-ownership-and-dsl-identities.md` is still pending.
 
 ## Steps
 
