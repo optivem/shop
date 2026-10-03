@@ -60,6 +60,8 @@ Grounded in `system/multitier/backend-java` controllers and `docker/java/multiti
 
 ## ▶ Next executable step (resume here)
 
+**Execution style (author decision 2026-10-03): no `/clear` hand-offs.** Run the rest of this plan in ONE session and keep the main context small by delegating to subagents (default, non-worktree): one for each long wait/monitor (release publish, `meta-prerelease-stage` run, ~1h+), one for each failure diagnosis (`gh-monitor` / `general-purpose`, returning only the root cause + proposed fix). The main session only dispatches, reads the short verdicts, and applies/approves fixes. Do not end the session with a "Next session: /clear" block unless the plan is truly blocked on the author.
+
 Step 11 is DONE for all three monoliths; TS monolith latest+legacy acceptance green (run 37124202413). `cross-lang-system-verification` is now a reusable workflow only (no `workflow_dispatch`); verify it via `gh workflow run meta-prerelease-stage.yml --ref main` (~1h+) after the probe fixes below are pushed (wait for the commit-stage runs first).
 
 Last scheduled meta-prerelease-stage (SHA 64bc2ad, before TS monolith) failed on: cross-lang `* tests vs monolith java` and drift `monolith — Java → TS schema interop` (readiness probe of the login-protected UI root `/` never gets 200), plus `prerelease-pipeline-monolith-java [level:local]` (gh-optivem `WaitForURL` in `internal/build/runner/health.go` requires 200 on `systems.yaml` components[0] = UI root; fails with "Monolith ... not ready after 30 attempts"). Fixed in shop (uncommitted→committed this session): cross-lang endpoint list skips the monolith UI root; drift.yml monolith probes use only the API `/health`.
