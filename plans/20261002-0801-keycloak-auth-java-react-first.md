@@ -70,6 +70,8 @@ Done this session (uncommitted until review): gh-optivem `Component.HealthUrl` (
 
 Run 37126180862 (meta-prerelease-stage, on released gh-optivem v1.6.86) findings, fixed in shop: (a) Java monolith local stage — the probe's GET `/` has no Accept header so Spring returned 401 instead of the login redirect (.NET/TS redirect unconditionally); `SecurityConfig` now redirects every non-API/non-Bearer request to login (+ test). (b) .NET UI timeouts (`KeycloakUiLogin.LoginAsync` `WaitUntil=Commit` race, flaky ~3 of 4 runs) — dropped `Commit`. Both unverified until the next meta-prerelease-stage run. Order matters: shop must be fully green first; the shop meta pipeline then triggers gh-optivem itself (do NOT dispatch gh-release-stage manually). `healthUrl` stays committed in gh-optivem/shop (harmless, keeps `url` as the UI base).
 
+Run 37133721795 (after 6c2af459): Java monolith local stage + dotnet-vs-multitier-java now green. Still failing: .NET UI timeout, now inside `WaitForURLAsync`'s internal `WaitForLoadStateAsync` (dotnet vs multitier typescript cross-lang; `multitier-dotnet-acceptance-stage-legacy` mod03-e2e). Fix applied: `KeycloakUiLogin.LoginAsync` polls `location.href` via `WaitForFunctionAsync` instead of `WaitForURLAsync` (no load-state wait). Unverified.
+
 Next: re-dispatch `meta-prerelease-stage` (subagent watches) and confirm green.
 
 (Superseded) First action next session: (1) once gh-optivem is committed/released and the shop commit-stage runs finish, dispatch `gh workflow run meta-prerelease-stage.yml --ref main` (~1h+) and confirm green, including `prerelease-pipeline-monolith-java [level:local]` and the .NET/TS monolith local stages; (2) if any monolith still fails readiness, diagnose that stage specifically.

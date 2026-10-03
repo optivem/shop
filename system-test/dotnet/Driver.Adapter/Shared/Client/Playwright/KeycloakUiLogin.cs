@@ -58,7 +58,8 @@ public sealed class KeycloakUiLogin
         await page.FillAsync(UsernameSelector, _user.Username());
         await page.FillAsync(PasswordSelector, _user.Password());
         await page.ClickAsync(SubmitSelector);
-        await page.WaitForURLAsync(url => !url.StartsWith(_keycloakBaseUrl, StringComparison.Ordinal),
-            new PageWaitForURLOptions { Timeout = TimeoutMilliseconds });
+        // Poll location instead of WaitForURLAsync, which also waits on a load-state event that can hang on the redirect back.
+        await page.WaitForFunctionAsync("keycloakBase => !location.href.startsWith(keycloakBase)", _keycloakBaseUrl,
+            new PageWaitForFunctionOptions { Timeout = TimeoutMilliseconds });
     }
 }
