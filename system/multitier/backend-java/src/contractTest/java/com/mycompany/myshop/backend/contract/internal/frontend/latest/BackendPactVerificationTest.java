@@ -35,8 +35,14 @@ class BackendPactVerificationTest extends BaseComponentTest {
         context.setTarget(new HttpTestTarget("localhost", port, "", () -> provider -> HttpClients.custom()
             .disableRedirectHandling()
             .addRequestInterceptorFirst((request, entity, httpContext) ->
-                request.setHeader("Authorization", "Bearer " + TestAuthConfiguration.ADMIN_TOKEN))
+                request.setHeader("Authorization", "Bearer " + tokenFor(request.getMethod(), request.getPath())))
             .build()));
+    }
+
+    /** Placing an order is customer-only; every other interaction runs as an admin. */
+    private static String tokenFor(String method, String path) {
+        var placesOrder = "POST".equals(method) && "/api/orders".equals(path);
+        return placesOrder ? TestAuthConfiguration.CUSTOMER_TOKEN : TestAuthConfiguration.ADMIN_TOKEN;
     }
 
     @TestTemplate
@@ -158,6 +164,6 @@ class BackendPactVerificationTest extends BaseComponentTest {
             "BOOK-123", 2, new BigDecimal("10.00"), new BigDecimal("20.00"),
             BigDecimal.ZERO, BigDecimal.ZERO, new BigDecimal("20.00"),
             new BigDecimal("0.10"), new BigDecimal("2.00"), new BigDecimal("22.00"),
-            status, null);
+            status, null, "customer-sub", "customer1");
     }
 }

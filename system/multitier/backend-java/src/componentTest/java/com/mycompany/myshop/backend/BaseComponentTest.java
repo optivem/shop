@@ -20,6 +20,7 @@ import com.mycompany.myshop.backend.testkit.driver.adapter.sut.SutTaxReader;
 import com.mycompany.myshop.backend.testkit.dsl.core.ScenarioDslImpl;
 import com.mycompany.myshop.backend.testkit.dsl.core.usecase.UseCaseDsl;
 import java.util.List;
+import org.springframework.http.HttpMethod;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -128,9 +129,13 @@ public abstract class BaseComponentTest {
         orderRepository.deleteAll();
         couponRepository.deleteAll();
 
-        // Every call through the shared template is made as an admin; the security tests use their own client.
+        // Calls through the shared template are made as an admin, except placing an order, which only a
+        // customer may do; the security tests use their own client.
         restTemplate.getRestTemplate().setInterceptors(List.of((request, body, execution) -> {
-            request.getHeaders().setBearerAuth(TestAuthConfiguration.ADMIN_TOKEN);
+            var placesOrder = request.getMethod() == HttpMethod.POST && "/api/orders".equals(request.getURI().getPath());
+            request.getHeaders().setBearerAuth(placesOrder
+                ? TestAuthConfiguration.CUSTOMER_TOKEN
+                : TestAuthConfiguration.ADMIN_TOKEN);
             return execution.execute(request, body);
         }));
 

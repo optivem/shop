@@ -18,10 +18,18 @@ public class KeycloakUiLogin {
     }
 
     public static KeycloakUiLogin forBaseUrl(String keycloakBaseUrl) {
+        return forBaseUrl(keycloakBaseUrl, TestUser.CUSTOMER);
+    }
+
+    public static KeycloakUiLogin forBaseUrl(String keycloakBaseUrl, TestUser user) {
         if (keycloakBaseUrl == null || keycloakBaseUrl.isBlank()) {
             return null;
         }
-        return new KeycloakUiLogin(keycloakBaseUrl, TestUser.ADMIN);
+        return new KeycloakUiLogin(keycloakBaseUrl, user);
+    }
+
+    public TestUser getUser() {
+        return user;
     }
 
     public boolean isLoginPage(Page page) {

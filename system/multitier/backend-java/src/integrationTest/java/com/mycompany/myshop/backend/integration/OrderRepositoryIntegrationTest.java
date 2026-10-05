@@ -53,7 +53,9 @@ class OrderRepositoryIntegrationTest {
             new BigDecimal("2.00"),
             new BigDecimal("22.00"),
             OrderStatus.PLACED,
-            null
+            null,
+            "customer-sub",
+            "customer1"
         );
 
         orderRepository.save(order);

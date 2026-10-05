@@ -2,6 +2,7 @@ package com.mycompany.myshop.systemtest.latest.acceptance;
 
 import com.mycompany.myshop.systemtest.latest.acceptance.base.BaseApiClientTest;
 import com.mycompany.myshop.testkit.driver.adapter.api.client.ApiIdentity;
+import com.mycompany.myshop.testkit.driver.port.dtos.PlaceOrderRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.PublishCouponRequest;
 import org.junit.jupiter.api.Test;
 
@@ -52,6 +53,16 @@ class ApiAuthorizationTest extends BaseApiClientTest {
     @Test
     void shouldRejectCustomerDeliveringOrder() {
         var result = myShopApiClient.as(ApiIdentity.CUSTOMER).orders().deliverOrder("ORD-NONEXISTENT");
+
+        assertThatResult(result).isFailure();
+        assertThat(result.getError().getStatus()).isEqualTo(403);
+    }
+
+    @Test
+    void shouldRejectAdminPlacingOrder() {
+        var request = PlaceOrderRequest.builder().sku("ANY-SKU").quantity("1").country("US").build();
+
+        var result = myShopApiClient.as(ApiIdentity.ADMIN).orders().placeOrder(request);
 
         assertThatResult(result).isFailure();
         assertThat(result.getError().getStatus()).isEqualTo(403);

@@ -1,5 +1,7 @@
 package com.mycompany.myshop.backend.config;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
@@ -12,6 +14,7 @@ import com.mycompany.myshop.backend.api.controller.AdminController;
 import com.mycompany.myshop.backend.api.controller.CouponController;
 import com.mycompany.myshop.backend.api.controller.HealthController;
 import com.mycompany.myshop.backend.api.controller.OrderController;
+import com.mycompany.myshop.backend.core.dtos.PlaceOrderResponse;
 import com.mycompany.myshop.backend.core.services.CouponService;
 import com.mycompany.myshop.backend.core.services.OrderService;
 import org.junit.jupiter.api.Test;
@@ -95,6 +98,31 @@ class SecurityConfigTest {
     void customerCannotUseAdminEndpoints() throws Exception {
         mockMvc.perform(post("/api/admin/recall/BOOK-123").with(customer()))
             .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void adminCannotPlaceOrder() throws Exception {
+        mockMvc.perform(post("/api/orders").with(admin())
+                .contentType("application/json").content("{}"))
+            .andExpect(status().isForbidden())
+            .andExpect(jsonPath("$.status").value(403));
+    }
+
+    @Test
+    void customerCanPlaceOrder() throws Exception {
+        var response = new PlaceOrderResponse();
+        response.setOrderNumber("ORD-1");
+        when(orderService.placeOrder(any(), any())).thenReturn(response);
+
+        mockMvc.perform(post("/api/orders").with(customer())
+                .contentType("application/json")
+                .content("{\"sku\":\"BOOK-123\",\"quantity\":1,\"country\":\"US\"}"))
+            .andExpect(status().isCreated());
+    }
+
+    @Test
+    void adminCanBrowseAllOrders() throws Exception {
+        mockMvc.perform(get("/api/orders").with(admin())).andExpect(status().isOk());
     }
 
     @Test

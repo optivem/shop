@@ -20,22 +20,25 @@ public class TestAuthConfiguration {
 
     public static final String ADMIN_TOKEN = "admin-token";
     public static final String CUSTOMER_TOKEN = "customer-token";
+    public static final String OTHER_CUSTOMER_TOKEN = "other-customer-token";
 
     @Bean
     @Primary
     public JwtDecoder testJwtDecoder() {
         return token -> switch (token) {
-            case ADMIN_TOKEN -> jwtWithRoles(token, "ADMIN");
-            case CUSTOMER_TOKEN -> jwtWithRoles(token, "CUSTOMER");
+            case ADMIN_TOKEN -> jwtWithRoles(token, "admin-user", "ADMIN");
+            case CUSTOMER_TOKEN -> jwtWithRoles(token, "customer-user", "CUSTOMER");
+            case OTHER_CUSTOMER_TOKEN -> jwtWithRoles(token, "other-customer-user", "CUSTOMER");
             default -> throw new BadJwtException("Unknown test token");
         };
     }
 
-    private static Jwt jwtWithRoles(String token, String role) {
+    private static Jwt jwtWithRoles(String token, String subject, String role) {
         var now = Instant.now();
         return Jwt.withTokenValue(token)
             .header("alg", "none")
-            .subject(role.toLowerCase() + "-user")
+            .subject(subject)
+            .claim("preferred_username", subject)
             .claim("realm_access", Map.of("roles", List.of(role)))
             .issuedAt(now)
             .expiresAt(now.plusSeconds(3600))

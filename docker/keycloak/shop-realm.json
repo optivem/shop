@@ -145,7 +145,17 @@
       "enabled": true,
       "emailVerified": true,
       "credentials": [ { "type": "password", "value": "admin1-test-password", "temporary": false } ],
-      "realmRoles": [ "ADMIN", "CUSTOMER" ]
+      "realmRoles": [ "ADMIN" ]
+    },
+    {
+      "username": "customer2",
+      "email": "customer2@example.com",
+      "firstName": "Other",
+      "lastName": "Customer",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [ { "type": "password", "value": "customer2-test-password", "temporary": false } ],
+      "realmRoles": [ "CUSTOMER" ]
     }
   ]
 }

@@ -3,6 +3,7 @@ package com.mycompany.myshop.testkit.driver.adapter.ui.client;
 import com.microsoft.playwright.*;
 import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.HomePage;
 import com.mycompany.myshop.testkit.common.Closer;
+import com.mycompany.myshop.testkit.driver.adapter.shared.client.http.TestUser;
 import com.mycompany.myshop.testkit.driver.adapter.shared.client.playwright.KeycloakUiLogin;
 import com.mycompany.myshop.testkit.driver.adapter.shared.client.playwright.PageClient;
 import org.springframework.http.HttpStatus;
@@ -16,11 +17,13 @@ public class MyShopUiClient implements AutoCloseable {
     private static final String HOME_READY_SELECTOR = "a[href='/new-order']";
 
     private final String baseUrl;
-    private final BrowserContext context;
-    private final Page page;
-    private final PageClient pageClient;
-    private final HomePage homePage;
-    private final KeycloakUiLogin login;
+    private final Browser browser;
+    private final String keycloakBaseUrl;
+    private BrowserContext context;
+    private Page page;
+    private PageClient pageClient;
+    private HomePage homePage;
+    private KeycloakUiLogin login;
 
     private Response response;
 
@@ -30,7 +33,28 @@ public class MyShopUiClient implements AutoCloseable {
 
     public MyShopUiClient(String baseUrl, Browser browser, String keycloakBaseUrl) {
         this.baseUrl = baseUrl;
-        this.login = KeycloakUiLogin.forBaseUrl(keycloakBaseUrl);
+        this.browser = browser;
+        this.keycloakBaseUrl = keycloakBaseUrl;
+        open(TestUser.CUSTOMER);
+    }
+
+    /**
+     * Makes {@code user} the logged-in user. Switching discards the browser session (a fresh isolated
+     * context) so the next page open logs in as the new user. No-op without Keycloak or when already that user.
+     *
+     * @return true when the session was replaced, so callers must re-open the home page
+     */
+    public boolean switchUser(TestUser user) {
+        if (login == null || login.getUser() == user) {
+            return false;
+        }
+        close();
+        open(user);
+        return true;
+    }
+
+    private void open(TestUser user) {
+        this.login = KeycloakUiLogin.forBaseUrl(keycloakBaseUrl, user);
 
         // Create isolated browser context for this test instance
         var contextOptions = new Browser.NewContextOptions()
@@ -45,6 +69,7 @@ public class MyShopUiClient implements AutoCloseable {
 
         this.pageClient = new PageClient(page, login);
         this.homePage = new HomePage(pageClient);
+        this.response = null;
     }
 
     public HomePage openHomePage() {

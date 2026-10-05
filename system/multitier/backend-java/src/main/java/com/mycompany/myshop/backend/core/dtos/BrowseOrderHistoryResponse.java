@@ -25,5 +25,6 @@ public class BrowseOrderHistoryResponse {
         private BigDecimal totalPrice;
         private OrderStatus status;
         private String appliedCouponCode;
+        private String customer;
     }
 }

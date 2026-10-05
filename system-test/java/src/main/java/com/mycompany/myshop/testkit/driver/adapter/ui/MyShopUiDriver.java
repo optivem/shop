@@ -1,6 +1,7 @@
 package com.mycompany.myshop.testkit.driver.adapter.ui;
 
 import com.microsoft.playwright.Browser;
+import com.mycompany.myshop.testkit.driver.adapter.shared.client.http.TestUser;
 import com.mycompany.myshop.testkit.driver.adapter.ui.client.MyShopUiClient;
 import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.CouponManagementPage;
 import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.HomePage;
@@ -65,6 +66,7 @@ public class MyShopUiDriver implements MyShopDriver {
 
     @Override
     public Result<PlaceOrderResponse, SystemError> placeOrder(PlaceOrderRequest request) {
+        actAs(TestUser.CUSTOMER);
         var sku = request.getSku();
         var quantity = request.getQuantity();
         var country = request.getCountry();
@@ -112,6 +114,7 @@ public class MyShopUiDriver implements MyShopDriver {
 
     @Override
     public Result<DeliverOrderResponse, SystemError> deliverOrder(DeliverOrderRequest request) {
+        actAs(TestUser.ADMIN);
         var viewResult = viewOrder(ViewOrderRequest.builder().orderNumber(request.getOrderNumber()).build());
 
         if (viewResult.isFailure()) {
@@ -182,6 +185,7 @@ public class MyShopUiDriver implements MyShopDriver {
 
     @Override
     public Result<PublishCouponResponse, SystemError> publishCoupon(PublishCouponRequest request) {
+        actAs(TestUser.ADMIN);
         ensureOnCouponManagementPage();
 
         couponManagementPage.inputCouponCode(request.getCode());
@@ -197,6 +201,7 @@ public class MyShopUiDriver implements MyShopDriver {
 
     @Override
     public Result<BrowseCouponsResponse, SystemError> browseCoupons(BrowseCouponsRequest request) {
+        actAs(TestUser.ADMIN);
         navigateToCouponManagementPage();
 
         var coupons = couponManagementPage.readCoupons();
@@ -206,6 +211,20 @@ public class MyShopUiDriver implements MyShopDriver {
                 .build();
 
         return success(response);
+    }
+
+    // --- identity ---
+
+    /** Admin-only operations run as admin; order placement runs as customer; other operations keep the current user. */
+    private void actAs(TestUser user) {
+        if (client.switchUser(user)) {
+            currentPage = Page.NONE;
+            homePage = null;
+            newOrderPage = null;
+            orderHistoryPage = null;
+            orderDetailsPage = null;
+            couponManagementPage = null;
+        }
     }
 
     // --- page navigation ---

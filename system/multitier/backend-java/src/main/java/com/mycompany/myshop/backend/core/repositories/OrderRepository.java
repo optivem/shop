@@ -15,6 +15,11 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     List<Order> findAllByOrderByOrderTimestampDesc();
 
+    List<Order> findByOwnerOrderByOrderTimestampDesc(String owner);
+
+    @Query("SELECT o FROM Order o WHERE o.owner = :owner AND LOWER(o.orderNumber) LIKE LOWER(CONCAT('%', :orderNumber, '%')) ORDER BY o.orderTimestamp DESC")
+    List<Order> findByOwnerAndOrderNumberContainingIgnoreCase(@Param("owner") String owner, @Param("orderNumber") String orderNumber);
+
     List<Order> findBySku(String sku);
 
     @Query("SELECT o FROM Order o WHERE LOWER(o.orderNumber) LIKE LOWER(CONCAT('%', :orderNumber, '%')) ORDER BY o.orderTimestamp DESC")

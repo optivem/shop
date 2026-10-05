@@ -1,5 +1,7 @@
 # 2026-10-02 UTC — Order ownership, admin/customer separation, and identities in the test DSL
 
+> 🤖 **Picked up by agent** — `ValentinaLaptop` at `2026-10-05T18:22:24Z`
+
 ## TL;DR
 
 **Why:** After adding Keycloak authentication (see `plans/20261002-0801-keycloak-auth-java-react-first.md`), any logged-in customer can see every order, and admins can place orders. The intended model is: customers see only their own orders, admins see all orders but do not place them, and the acceptance tests can express "which user does this".
@@ -17,25 +19,22 @@
 
 ## ▶ Next executable step (resume here)
 
-Design only: confirm the open questions below with the author, then draft the acceptance scenarios (Step 1) in the repo's existing DSL style before any implementation. Start by reading how the latest acceptance DSL expresses givens/when (`system-test/java`, latest `acceptance` tests and the use-case DSL) and how `MyShopApiClient` / `KeycloakUiLogin` currently choose identities (`ApiIdentity`, `TestUser`).
+Step 1 (rest) + Step 6 together: design and add the DSL identity vocabulary in Java latest (given a customer / another customer / an admin; when acting as X), thread the identity through the API driver and the UI driver (UI already has `MyShopUiClient.switchUser`; API client has `ApiIdentity`, needs an OTHER_CUSTOMER / `customer2` identity and `TestUser.CUSTOMER2`), then write the isolation scenarios, move all `ApiAuthorizationTest` cases into DSL scenarios and delete that class (customer A cannot see customer B's order; admin sees all orders; customer cannot see others' history) — they should pass against the already-implemented backend-java rules. Start by reading `testkit/dsl/core/scenario/given/GivenImpl.java`, `when/WhenImpl.java`, and `MyShopApiDriver`.
+
+Done so far (committed): UI default-identity switching (Step 1b), realm (Step 2), migration (Step 3), backend-java ownership rules with unit/component/integration/contract tests (Step 4), API-level test that an admin cannot place an order.
 
 ## Steps
 
-- [ ] Step 1: Acceptance scenarios first (ATDD): write the isolation/admin scenarios and the DSL identity vocabulary in Java latest; they fail (red) until the backend rules exist.
-- [ ] Step 2: Realm: remove CUSTOMER from `admin1`; add a second customer (`customer2`) to `docker/keycloak/shop-realm.json`.
-- [ ] Step 3: DB migration (shared `system/db/migrations`): add nullable `owner` column (and index) to orders; confirm dotnet/typescript backends tolerate the extra nullable column.
-- [ ] Step 4: backend-java: set owner from the token on order creation; owner/admin filtering on history and lookup; CUSTOMER-only on place order; admin-or-owner on view/cancel; tests (unit, slice, component).
-- [ ] Step 5: frontend-react: hide place-order for admins; show customer in admin order list; tests. (Frontend image is shared by all three stacks — check the auth-disabled mode still works and verify against the dotnet/typescript stacks before pushing.)
+- [ ] Step 1: Isolation/admin scenarios and the DSL identity vocabulary in Java latest (backend rules already exist, so these go green rather than red; the API-level "admin cannot place order" test is done). Do together with Step 6. **Delete the Java latest `ApiAuthorizationTest`** (`latest/acceptance`) once every case in it (anonymous => 401, customer => 403 on coupons/deliver, admin allowed, admin cannot place order; health stays public) is expressed as DSL scenarios — so the DSL needs an anonymous identity too. Legacy `mod04/e2e/ApiAuthorizationTest` stays (legacy keeps defaults); the dotnet/typescript latest equivalents follow in Phase 2.
+- [ ] Step 5: frontend-react (also port the UI default-identity switching from Java `MyShopUiClient`/`KeycloakUiLogin` to the dotnet and typescript testkits, whose UI login is still hard-wired to admin1): hide place-order for admins; show customer in admin order list; tests. (Frontend image is shared by all three stacks — check the auth-disabled mode still works and verify against the dotnet/typescript stacks before pushing.)
 - [ ] Step 6: Test drivers: API client and Playwright driver take the identity from the scenario (DSL) instead of operation-based defaults / always admin1; keep opt-in behaviour (no Keycloak URL => no auth).
 - [ ] Step 7: Verify locally with `gh optivem` (full latest + legacy suites), then push per milestone and watch CI; confirm dotnet/typescript pipelines unaffected.
 - [ ] Step 8: Update the Keycloak plan's Phase 2 recipe to include the ownership model for .NET/TypeScript (or schedule it after Phase 2 per the sequencing decision).
 
-## Open questions
+## Decisions (all open questions resolved 2026-10-05)
 
-- **Sequencing vs Keycloak Phase 2:** do this in Java before spreading auth to .NET/TypeScript, or after? Recommendation: before, so the other languages copy a finished model once.
-- **Another customer's order:** 404 or 403? Recommendation: 404 (do not reveal that the order exists).
-- **Can admins cancel orders?** Recommendation: yes (support use case); delivery stays admin-only.
-- **Existing orders with no owner:** recommendation: leave owner null, admin-only visibility.
-- **Order history for admin:** full list with customer shown; pagination/filter needed now? Recommendation: not in this plan.
-- **Legacy suites:** do the legacy (mod02–mod11) suites get identity support or keep the default customer/admin choice? Recommendation: keep defaults for legacy, switch only latest to DSL identities; legacy only needs to keep passing with admin1 no longer having CUSTOMER (check mod UI tests that place orders).
-- **Monoliths and other languages:** follow in the Keycloak plan's Phase 2 (Steps 8–11) once the Java model is settled.
+- Sequencing: Java first, then Keycloak Phase 2 copies the finished model.
+- Another customer's order => 404. Admins may cancel any order; delivery stays admin-only.
+- Existing orders keep a null owner (admin-only visibility). No pagination/filter in this plan.
+- Legacy suites keep default identities, BUT the UI client must get DEFAULT-identity behaviour (login as customer1, re-login as admin1 for admin-only pages: coupons, deliver) because UI login is hard-wired to admin1 today and legacy UI tests mix both roles in one session. This must land before the realm change (Step 2).
+- Monoliths and other languages follow in Keycloak Phase 2 (Steps 8–11).

@@ -1,6 +1,7 @@
 package com.mycompany.myshop.backend.integration;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -43,13 +44,13 @@ import org.springframework.test.web.servlet.MockMvc;
     OrderControllerIntegrationTest.AdminRequests.class})
 class OrderControllerIntegrationTest {
 
-    /** Every request in this class runs as an authenticated admin; authorization has its own tests. */
+    /** Every request runs as a user holding both roles (to place and to administer); authorization has its own tests. */
     @TestConfiguration
     static class AdminRequests {
         @Bean
         MockMvcBuilderCustomizer adminByDefault() {
             return builder -> builder.defaultRequest(get("/").with(jwt().authorities(
-                new SimpleGrantedAuthority("ROLE_ADMIN"))));
+                new SimpleGrantedAuthority("ROLE_ADMIN"), new SimpleGrantedAuthority("ROLE_CUSTOMER"))));
         }
     }
 
@@ -66,7 +67,7 @@ class OrderControllerIntegrationTest {
     void placeOrderReturnsCreated() throws Exception {
         var response = new PlaceOrderResponse();
         response.setOrderNumber("ORD-001");
-        when(orderService.placeOrder(any())).thenReturn(response);
+        when(orderService.placeOrder(any(), any())).thenReturn(response);
 
         mockMvc.perform(post("/api/orders")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -88,7 +89,7 @@ class OrderControllerIntegrationTest {
     void browseOrderHistoryReturnsOk() throws Exception {
         var response = new BrowseOrderHistoryResponse();
         response.setOrders(List.of());
-        when(orderService.browseOrderHistory(null, null, null)).thenReturn(response);
+        when(orderService.browseOrderHistory(any(), any(), any(), any())).thenReturn(response);
 
         mockMvc.perform(get("/api/orders"))
             .andExpect(status().isOk());
@@ -111,7 +112,7 @@ class OrderControllerIntegrationTest {
         response.setTotalPrice(new BigDecimal("22.00"));
         response.setStatus(OrderStatus.PLACED);
         response.setCountry("US");
-        when(orderService.getOrder("ORD-001")).thenReturn(response);
+        when(orderService.getOrder(eq("ORD-001"), any())).thenReturn(response);
 
         mockMvc.perform(get("/api/orders/ORD-001"))
             .andExpect(status().isOk())
@@ -120,7 +121,7 @@ class OrderControllerIntegrationTest {
 
     @Test
     void getOrderNotFoundReturnsNotFound() throws Exception {
-        when(orderService.getOrder("UNKNOWN"))
+        when(orderService.getOrder(eq("UNKNOWN"), any()))
             .thenThrow(new NotExistValidationException("Order UNKNOWN not found"));
 
         mockMvc.perform(get("/api/orders/UNKNOWN"))

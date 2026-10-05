@@ -31,6 +31,7 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     private static final String ADMIN = "ADMIN";
+    private static final String CUSTOMER = "CUSTOMER";
 
     @Value("${auth.issuer-uri}")
     private String issuerUri;
@@ -52,6 +53,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/health").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/orders/{orderNumber}/deliver").hasRole(ADMIN)
+                .requestMatchers(HttpMethod.POST, "/api/orders").hasRole(CUSTOMER)
                 .requestMatchers(HttpMethod.POST, "/api/coupons").hasRole(ADMIN)
                 .requestMatchers(HttpMethod.GET, "/api/coupons").hasRole(ADMIN)
                 .requestMatchers("/api/admin/**").hasRole(ADMIN)
