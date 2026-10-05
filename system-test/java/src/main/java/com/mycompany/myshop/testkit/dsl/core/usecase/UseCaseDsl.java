@@ -12,6 +12,7 @@ import com.mycompany.myshop.testkit.driver.port.external.clock.ClockDriver;
 import com.mycompany.myshop.testkit.driver.port.external.erp.ErpDriver;
 import com.mycompany.myshop.testkit.driver.port.external.tax.TaxDriver;
 import com.mycompany.myshop.testkit.driver.port.MyShopDriver;
+import com.mycompany.myshop.testkit.driver.port.UserIdentity;
 import com.mycompany.myshop.testkit.dsl.port.ChannelMode;
 import com.mycompany.myshop.testkit.dsl.port.ExternalSystemMode;
 import com.optivem.testing.contexts.ChannelContext;
@@ -34,6 +35,7 @@ public class UseCaseDsl implements Closeable {
     private final Supplier<TaxDriver> taxDriverSupplier;
 
     private final Map<String, MyShopDsl> shops = new HashMap<>();
+    private UserIdentity identity = UserIdentity.DEFAULT;
     private ErpDriver erpDriver;
     private ClockDriver clockDriver;
     private TaxDriver taxDriver;
@@ -79,9 +81,16 @@ public class UseCaseDsl implements Closeable {
         }
     }
 
+    /** Selects who MyShop operations are performed as, until changed again. */
+    public void actAs(UserIdentity identity) {
+        this.identity = identity;
+    }
+
     public MyShopDsl myShop(ChannelMode mode) {
         var channel = resolveMyShopChannel(mode);
-        return getOrCreateMyShop(channel);
+        var shop = getOrCreateMyShop(channel);
+        shop.actAs(identity);
+        return shop;
     }
 
     public MyShopDsl myShop() {

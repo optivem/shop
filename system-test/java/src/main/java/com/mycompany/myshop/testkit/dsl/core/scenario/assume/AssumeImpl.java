@@ -1,5 +1,6 @@
 package com.mycompany.myshop.testkit.dsl.core.scenario.assume;
 
+import com.mycompany.myshop.testkit.driver.port.UserIdentity;
 import com.mycompany.myshop.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.testkit.dsl.port.assume.AssumeStage;
 import com.mycompany.myshop.testkit.dsl.port.assume.steps.AssumeRunning;
@@ -9,6 +10,12 @@ public class AssumeImpl implements AssumeStage {
 
     public AssumeImpl(UseCaseDsl app) {
         this.app = app;
+    }
+
+    @Override
+    public AssumeImpl actingAsAnonymous() {
+        app.actAs(UserIdentity.ANONYMOUS);
+        return this;
     }
 
     @Override

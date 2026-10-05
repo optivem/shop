@@ -88,6 +88,6 @@ You can also pass a **group alias** to `--suite`: `acceptance` runs every accept
 
 The API client acquires Keycloak access tokens (password grant, client `shop-system-test`, realm `shop`) only when a Keycloak base URL is configured; otherwise no token is requested and no `Authorization` header is sent, so the suites still run against systems without auth.
 
-Enable it with `KEYCLOAK_URL_REAL` / `KEYCLOAK_URL_STUB` (per external-system mode) or `KEYCLOAK_URL` (fallback), e.g. `KEYCLOAK_URL_REAL=http://localhost:8191` and `KEYCLOAK_URL_STUB=http://localhost:8192` for the local Java multitier stack. The authorization tests (`ApiAuthorizationTest`) are skipped when no Keycloak URL is set.
+Enable it with `KEYCLOAK_URL_REAL` / `KEYCLOAK_URL_STUB` (per external-system mode) or `KEYCLOAK_URL` (fallback), e.g. `KEYCLOAK_URL_REAL=http://localhost:8191` and `KEYCLOAK_URL_STUB=http://localhost:8192` for the local Java multitier stack. The identity scenarios (`AccessControlTest`, `OrderOwnershipTest`, which use `actingAsCustomer()` / `actingAsAnotherCustomer()` / `actingAsAdmin()` / `actingAsAnonymous()`) are skipped when no Keycloak URL is set.
 
 By default, admin-only operations (deliver order, publish coupon, `/api/admin/**`) use `admin1` and everything else uses `customer1` (`admin1` holds only ADMIN and cannot place orders; `customer2` is a second customer for isolation scenarios). A test can override this with `myShopApiClient.as(ApiIdentity.ANONYMOUS | CUSTOMER | ADMIN)`.

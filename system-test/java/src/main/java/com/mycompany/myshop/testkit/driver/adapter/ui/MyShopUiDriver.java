@@ -10,6 +10,8 @@ import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.OrderDetailsP
 import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.OrderHistoryPage;
 import com.mycompany.myshop.testkit.driver.port.dtos.BrowseCouponsRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.BrowseCouponsResponse;
+import com.mycompany.myshop.testkit.driver.port.dtos.BrowseOrderHistoryRequest;
+import com.mycompany.myshop.testkit.driver.port.dtos.BrowseOrderHistoryResponse;
 import com.mycompany.myshop.testkit.driver.port.dtos.CancelOrderRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.CancelOrderResponse;
 import com.mycompany.myshop.testkit.driver.port.dtos.DeliverOrderRequest;
@@ -23,6 +25,7 @@ import com.mycompany.myshop.testkit.driver.port.dtos.PublishCouponResponse;
 import com.mycompany.myshop.testkit.driver.port.dtos.ViewOrderRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.ViewOrderResponse;
 import com.mycompany.myshop.testkit.driver.port.MyShopDriver;
+import com.mycompany.myshop.testkit.driver.port.UserIdentity;
 import com.mycompany.myshop.testkit.driver.port.dtos.error.SystemError;
 import com.mycompany.myshop.testkit.common.Result;
 
@@ -32,6 +35,7 @@ import static com.mycompany.myshop.testkit.dsl.core.usecase.commons.SystemResult
 public class MyShopUiDriver implements MyShopDriver {
     private final MyShopUiClient client;
 
+    private TestUser requestedUser;
     private Page currentPage = Page.NONE;
     private HomePage homePage;
     private NewOrderPage newOrderPage;
@@ -50,6 +54,17 @@ public class MyShopUiDriver implements MyShopDriver {
     @Override
     public void close() {
         client.close();
+    }
+
+    @Override
+    public void actAs(UserIdentity identity) {
+        requestedUser = switch (identity) {
+            case DEFAULT -> null;
+            case CUSTOMER -> TestUser.CUSTOMER;
+            case OTHER_CUSTOMER -> TestUser.CUSTOMER2;
+            case ADMIN -> TestUser.ADMIN;
+            case ANONYMOUS -> throw new UnsupportedOperationException("The UI requires a logged-in user");
+        };
     }
 
     @Override
@@ -95,6 +110,7 @@ public class MyShopUiDriver implements MyShopDriver {
 
     @Override
     public Result<CancelOrderResponse, SystemError> cancelOrder(CancelOrderRequest request) {
+        switchToRequestedUser();
         var viewResult = viewOrder(ViewOrderRequest.builder().orderNumber(request.getOrderNumber()).build());
 
         if (viewResult.isFailure()) {
@@ -134,6 +150,7 @@ public class MyShopUiDriver implements MyShopDriver {
 
     @Override
     public Result<ViewOrderResponse, SystemError> viewOrder(ViewOrderRequest request) {
+        switchToRequestedUser();
         var orderNumber = request.getOrderNumber();
         var result = ensureOnOrderDetailsPage(orderNumber);
         if (result.isFailure()) {
@@ -184,6 +201,11 @@ public class MyShopUiDriver implements MyShopDriver {
     }
 
     @Override
+    public Result<BrowseOrderHistoryResponse, SystemError> browseOrderHistory(BrowseOrderHistoryRequest request) {
+        throw new UnsupportedOperationException("Browsing order history is only supported through the API channel");
+    }
+
+    @Override
     public Result<PublishCouponResponse, SystemError> publishCoupon(PublishCouponRequest request) {
         actAs(TestUser.ADMIN);
         ensureOnCouponManagementPage();
@@ -215,8 +237,16 @@ public class MyShopUiDriver implements MyShopDriver {
 
     // --- identity ---
 
-    /** Admin-only operations run as admin; order placement runs as customer; other operations keep the current user. */
-    private void actAs(TestUser user) {
+    /** Operations that have no default user run as the requested identity, or keep the current user when none was requested. */
+    private void switchToRequestedUser() {
+        if (requestedUser != null) {
+            actAs(requestedUser);
+        }
+    }
+
+    /** An explicitly requested identity wins; otherwise admin-only operations run as admin and order placement as customer. */
+    private void actAs(TestUser operationDefault) {
+        var user = requestedUser != null ? requestedUser : operationDefault;
         if (client.switchUser(user)) {
             currentPage = Page.NONE;
             homePage = null;

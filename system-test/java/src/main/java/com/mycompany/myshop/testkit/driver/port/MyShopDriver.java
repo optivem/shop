@@ -2,6 +2,8 @@ package com.mycompany.myshop.testkit.driver.port;
 
 import com.mycompany.myshop.testkit.driver.port.dtos.error.SystemError;
 import com.mycompany.myshop.testkit.driver.port.dtos.BrowseCouponsRequest;
+import com.mycompany.myshop.testkit.driver.port.dtos.BrowseOrderHistoryRequest;
+import com.mycompany.myshop.testkit.driver.port.dtos.BrowseOrderHistoryResponse;
 import com.mycompany.myshop.testkit.driver.port.dtos.BrowseCouponsResponse;
 import com.mycompany.myshop.testkit.driver.port.dtos.CancelOrderRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.CancelOrderResponse;
@@ -18,6 +20,9 @@ import com.mycompany.myshop.testkit.driver.port.dtos.ViewOrderResponse;
 import com.mycompany.myshop.testkit.common.Result;
 
 public interface MyShopDriver extends AutoCloseable {
+    /** Selects who subsequent operations are performed as. */
+    void actAs(UserIdentity identity);
+
     Result<GoToMyShopResponse, SystemError> goToMyShop(GoToMyShopRequest request);
 
     Result<PlaceOrderResponse, SystemError> placeOrder(PlaceOrderRequest request);
@@ -27,6 +32,8 @@ public interface MyShopDriver extends AutoCloseable {
     Result<DeliverOrderResponse, SystemError> deliverOrder(DeliverOrderRequest request);
 
     Result<ViewOrderResponse, SystemError> viewOrder(ViewOrderRequest request);
+
+    Result<BrowseOrderHistoryResponse, SystemError> browseOrderHistory(BrowseOrderHistoryRequest request);
 
     Result<PublishCouponResponse, SystemError> publishCoupon(PublishCouponRequest request);
 

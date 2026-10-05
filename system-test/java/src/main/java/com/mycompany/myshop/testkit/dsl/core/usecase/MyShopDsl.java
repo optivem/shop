@@ -1,7 +1,9 @@
 package com.mycompany.myshop.testkit.dsl.core.usecase;
 
 import com.mycompany.myshop.testkit.driver.port.MyShopDriver;
+import com.mycompany.myshop.testkit.driver.port.UserIdentity;
 import com.mycompany.myshop.testkit.dsl.core.usecase.usecases.BrowseCoupons;
+import com.mycompany.myshop.testkit.dsl.core.usecase.usecases.BrowseOrderHistory;
 import com.mycompany.myshop.testkit.dsl.core.usecase.usecases.CancelOrder;
 import com.mycompany.myshop.testkit.dsl.core.usecase.usecases.DeliverOrder;
 import com.mycompany.myshop.testkit.dsl.core.usecase.usecases.GoToMyShop;
@@ -27,6 +29,10 @@ public class MyShopDsl implements Closeable {
         Closer.close(driver);
     }
 
+    public void actAs(UserIdentity identity) {
+        driver.actAs(identity);
+    }
+
     public GoToMyShop goToMyShop() {
         return new GoToMyShop(driver, context);
     }
@@ -45,6 +51,10 @@ public class MyShopDsl implements Closeable {
 
     public ViewOrder viewOrder() {
         return new ViewOrder(driver, context);
+    }
+
+    public BrowseOrderHistory browseOrderHistory() {
+        return new BrowseOrderHistory(driver, context);
     }
 
     public PublishCoupon publishCoupon() {

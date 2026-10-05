@@ -1,9 +1,12 @@
 package com.mycompany.myshop.testkit.driver.adapter.api;
 
+import com.mycompany.myshop.testkit.driver.adapter.api.client.ApiIdentity;
 import com.mycompany.myshop.testkit.driver.adapter.api.client.MyShopApiClient;
 import com.mycompany.myshop.testkit.driver.port.dtos.error.SystemError;
 import com.mycompany.myshop.testkit.driver.port.dtos.BrowseCouponsRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.BrowseCouponsResponse;
+import com.mycompany.myshop.testkit.driver.port.dtos.BrowseOrderHistoryRequest;
+import com.mycompany.myshop.testkit.driver.port.dtos.BrowseOrderHistoryResponse;
 import com.mycompany.myshop.testkit.driver.port.dtos.CancelOrderRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.CancelOrderResponse;
 import com.mycompany.myshop.testkit.driver.port.dtos.DeliverOrderRequest;
@@ -17,6 +20,7 @@ import com.mycompany.myshop.testkit.driver.port.dtos.PublishCouponResponse;
 import com.mycompany.myshop.testkit.driver.port.dtos.ViewOrderRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.ViewOrderResponse;
 import com.mycompany.myshop.testkit.driver.port.MyShopDriver;
+import com.mycompany.myshop.testkit.driver.port.UserIdentity;
 import com.mycompany.myshop.testkit.common.Closer;
 import com.mycompany.myshop.testkit.common.Result;
 
@@ -34,6 +38,17 @@ public class MyShopApiDriver implements MyShopDriver {
     @Override
     public void close() {
         Closer.close(apiClient);
+    }
+
+    @Override
+    public void actAs(UserIdentity identity) {
+        apiClient.as(switch (identity) {
+            case DEFAULT -> ApiIdentity.DEFAULT;
+            case ANONYMOUS -> ApiIdentity.ANONYMOUS;
+            case CUSTOMER -> ApiIdentity.CUSTOMER;
+            case OTHER_CUSTOMER -> ApiIdentity.OTHER_CUSTOMER;
+            case ADMIN -> ApiIdentity.ADMIN;
+        });
     }
 
     @Override
@@ -65,6 +80,11 @@ public class MyShopApiDriver implements MyShopDriver {
     @Override
     public Result<ViewOrderResponse, SystemError> viewOrder(ViewOrderRequest request) {
         return apiClient.orders().viewOrder(request.getOrderNumber()).mapError(SystemErrorMapper::from);
+    }
+
+    @Override
+    public Result<BrowseOrderHistoryResponse, SystemError> browseOrderHistory(BrowseOrderHistoryRequest request) {
+        return apiClient.orders().browseOrderHistory(request.getOrderNumber()).mapError(SystemErrorMapper::from);
     }
 
     @Override

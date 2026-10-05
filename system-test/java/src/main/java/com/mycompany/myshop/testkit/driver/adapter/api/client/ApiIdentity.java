@@ -6,5 +6,6 @@ public enum ApiIdentity {
     /** Call without any Authorization header. */
     ANONYMOUS,
     CUSTOMER,
+    OTHER_CUSTOMER,
     ADMIN
 }

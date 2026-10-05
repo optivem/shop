@@ -1,6 +1,7 @@
 package com.mycompany.myshop.testkit.dsl.core.scenario.given.steps;
 
 import com.mycompany.myshop.testkit.common.Converter;
+import com.mycompany.myshop.testkit.driver.port.UserIdentity;
 import com.mycompany.myshop.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.given.GivenImpl;
 import com.mycompany.myshop.testkit.dsl.port.given.steps.GivenOrder;
@@ -15,6 +16,7 @@ public class GivenOrderImpl extends BaseGivenStep implements GivenOrder {
     private String country;
     private String couponCodeAlias;
     private OrderStatus status;
+    private UserIdentity placedBy = UserIdentity.DEFAULT;
 
     public GivenOrderImpl(GivenImpl given) {
         super(given);
@@ -56,6 +58,16 @@ public class GivenOrderImpl extends BaseGivenStep implements GivenOrder {
         return this;
     }
 
+    public GivenOrderImpl placedByCustomer() {
+        this.placedBy = UserIdentity.CUSTOMER;
+        return this;
+    }
+
+    public GivenOrderImpl placedByAnotherCustomer() {
+        this.placedBy = UserIdentity.OTHER_CUSTOMER;
+        return this;
+    }
+
     public GivenOrderImpl withStatus(OrderStatus status) {
         this.status = status;
         return this;
@@ -67,6 +79,22 @@ public class GivenOrderImpl extends BaseGivenStep implements GivenOrder {
 
     @Override
     public void execute(UseCaseDsl app) {
+        app.actAs(placedBy);
+        try {
+            placeAndCancel(app);
+        } finally {
+            app.actAs(UserIdentity.DEFAULT);
+        }
+
+        if (status == OrderStatus.DELIVERED) {
+            app.myShop().deliverOrder()
+                    .orderNumber(orderNumber)
+                    .execute()
+                    .shouldSucceed();
+        }
+    }
+
+    private void placeAndCancel(UseCaseDsl app) {
         app.myShop().placeOrder()
                 .orderNumber(orderNumber)
                 .sku(sku)
@@ -78,13 +106,6 @@ public class GivenOrderImpl extends BaseGivenStep implements GivenOrder {
 
         if (status == OrderStatus.CANCELLED) {
             app.myShop().cancelOrder()
-                    .orderNumber(orderNumber)
-                    .execute()
-                    .shouldSucceed();
-        }
-
-        if (status == OrderStatus.DELIVERED) {
-            app.myShop().deliverOrder()
                     .orderNumber(orderNumber)
                     .execute()
                     .shouldSucceed();

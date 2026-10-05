@@ -2,6 +2,7 @@ package com.mycompany.myshop.testkit.driver.adapter.shared.client.http;
 
 public enum TestUser {
     CUSTOMER("customer1", "customer1-test-password"),
+    CUSTOMER2("customer2", "customer2-test-password"),
     ADMIN("admin1", "admin1-test-password");
 
     private final String username;

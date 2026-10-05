@@ -63,6 +63,7 @@ public class MyShopApiClient implements AutoCloseable {
         return switch (identity) {
             case ANONYMOUS -> null;
             case CUSTOMER -> tokenProvider.getToken(TestUser.CUSTOMER);
+            case OTHER_CUSTOMER -> tokenProvider.getToken(TestUser.CUSTOMER2);
             case ADMIN -> tokenProvider.getToken(TestUser.ADMIN);
             case DEFAULT -> tokenProvider.getToken(isAdminOnly(method, path) ? TestUser.ADMIN : TestUser.CUSTOMER);
         };
