@@ -13,17 +13,15 @@ import { ValidationException } from '../../core/exceptions/validation.exception'
 import { NotExistValidationException } from '../../core/exceptions/not-exist-validation.exception';
 import { RequestValidationException } from './request-validation.exception';
 
-const VALIDATION_ERROR_TYPE_URI =
-  'https://api.my-company.example/errors/validation-error';
-const RESOURCE_NOT_FOUND_TYPE_URI =
-  'https://api.my-company.example/errors/resource-not-found';
-const BAD_REQUEST_TYPE_URI =
-  'https://api.my-company.example/errors/bad-request';
-const UNAUTHORIZED_TYPE_URI =
-  'https://api.my-company.example/errors/unauthorized';
-const FORBIDDEN_TYPE_URI = 'https://api.my-company.example/errors/forbidden';
-const INTERNAL_SERVER_ERROR_TYPE_URI =
-  'https://api.my-company.example/errors/internal-server-error';
+// Types are built from one short base so line widths (and thus Prettier's
+// wrapping) do not depend on the company name substituted at scaffold time.
+const PROBLEM_TYPE_BASE_URI = 'https://api.my-company.example/errors';
+const VALIDATION_ERROR_TYPE_URI = `${PROBLEM_TYPE_BASE_URI}/validation-error`;
+const RESOURCE_NOT_FOUND_TYPE_URI = `${PROBLEM_TYPE_BASE_URI}/resource-not-found`;
+const BAD_REQUEST_TYPE_URI = `${PROBLEM_TYPE_BASE_URI}/bad-request`;
+const UNAUTHORIZED_TYPE_URI = `${PROBLEM_TYPE_BASE_URI}/unauthorized`;
+const FORBIDDEN_TYPE_URI = `${PROBLEM_TYPE_BASE_URI}/forbidden`;
+const INTERNAL_SERVER_ERROR_TYPE_URI = `${PROBLEM_TYPE_BASE_URI}/internal-server-error`;
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
