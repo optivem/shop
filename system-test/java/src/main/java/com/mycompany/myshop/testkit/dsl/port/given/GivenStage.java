@@ -22,9 +22,11 @@ public interface GivenStage {
 
     GivenCoupon coupon();
 
+    /** Logs in as the default customer (customer1). */
     GivenStage loggedInAsCustomer();
 
-    GivenStage loggedInAsAnotherCustomer();
+    /** Logs in as the customer known in this scenario by the given alias. */
+    GivenStage loggedInAsCustomer(String alias);
 
     GivenStage loggedInAsAdmin();
 

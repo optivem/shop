@@ -16,9 +16,11 @@ public interface GivenOrder extends GivenStep {
 
     GivenOrder withCouponCode(String couponCode);
 
+    /** The order is placed by the default customer (customer1). */
     GivenOrder placedByCustomer();
 
-    GivenOrder placedByAnotherCustomer();
+    /** The order is placed by the customer known in this scenario by the given alias. */
+    GivenOrder placedByCustomer(String alias);
 
     GivenOrder withStatus(String status);
 

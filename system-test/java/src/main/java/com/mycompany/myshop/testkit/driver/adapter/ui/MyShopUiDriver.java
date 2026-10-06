@@ -58,10 +58,9 @@ public class MyShopUiDriver implements MyShopDriver {
 
     @Override
     public void actAs(UserIdentity identity) {
-        requestedUser = switch (identity) {
+        requestedUser = switch (identity.kind()) {
             case DEFAULT -> null;
-            case CUSTOMER -> TestUser.CUSTOMER;
-            case OTHER_CUSTOMER -> TestUser.CUSTOMER2;
+            case CUSTOMER -> TestUser.customer(identity.customerIndex());
             case ADMIN -> TestUser.ADMIN;
             case ANONYMOUS -> throw new UnsupportedOperationException("The UI requires a logged-in user");
         };

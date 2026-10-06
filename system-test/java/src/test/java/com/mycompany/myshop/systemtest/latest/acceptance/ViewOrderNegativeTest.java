@@ -39,8 +39,8 @@ class ViewOrderNegativeTest extends BaseAcceptanceTest {
     void customerShouldNotBeAbleToViewAnotherCustomersOrder() {
         scenario
                 .given().order()
-                    .placedByAnotherCustomer()
-                .and().loggedInAsCustomer()
+                    .placedByCustomer("B")
+                .and().loggedInAsCustomer("A")
                 .when().viewOrder()
                 .then().shouldFail()
                     .errorMessage("Order " + DEFAULT_ORDER_NUMBER + " does not exist.");

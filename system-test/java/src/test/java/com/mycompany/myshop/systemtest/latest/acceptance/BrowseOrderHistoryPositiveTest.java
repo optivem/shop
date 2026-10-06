@@ -43,7 +43,7 @@ class BrowseOrderHistoryPositiveTest extends BaseAcceptanceTest {
     void adminShouldSeeAnotherCustomersOrderInHistory() {
         scenario
                 .given().order()
-                    .placedByAnotherCustomer()
+                    .placedByCustomer("B")
                 .and().loggedInAsAdmin()
                 .when().browseOrderHistory()
                 .then().shouldSucceed()

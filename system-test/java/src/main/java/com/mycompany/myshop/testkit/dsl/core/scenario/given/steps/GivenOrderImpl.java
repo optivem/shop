@@ -16,10 +16,12 @@ public class GivenOrderImpl extends BaseGivenStep implements GivenOrder {
     private String country;
     private String couponCodeAlias;
     private OrderStatus status;
-    private UserIdentity placedBy = UserIdentity.DEFAULT;
+    private final GivenImpl given;
+    private String placedByAlias;
 
     public GivenOrderImpl(GivenImpl given) {
         super(given);
+        this.given = given;
 
         withOrderNumber(DEFAULT_ORDER_NUMBER);
         withSku(DEFAULT_SKU);
@@ -59,13 +61,18 @@ public class GivenOrderImpl extends BaseGivenStep implements GivenOrder {
     }
 
     public GivenOrderImpl placedByCustomer() {
-        this.placedBy = UserIdentity.CUSTOMER;
+        this.placedByAlias = null;
         return this;
     }
 
-    public GivenOrderImpl placedByAnotherCustomer() {
-        this.placedBy = UserIdentity.OTHER_CUSTOMER;
+    public GivenOrderImpl placedByCustomer(String alias) {
+        given.registerCustomer(alias);
+        this.placedByAlias = alias;
         return this;
+    }
+
+    public boolean isPlacedByDefaultCustomer() {
+        return placedByAlias == null;
     }
 
     public GivenOrderImpl withStatus(OrderStatus status) {
@@ -79,7 +86,7 @@ public class GivenOrderImpl extends BaseGivenStep implements GivenOrder {
 
     @Override
     public void execute(UseCaseDsl app) {
-        app.actAs(placedBy);
+        app.actAs(placedByAlias == null ? given.defaultCustomer() : given.resolveCustomer(placedByAlias));
         try {
             placeAndCancel(app);
         } finally {

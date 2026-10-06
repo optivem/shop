@@ -31,6 +31,18 @@ class ViewOrderPositiveTest extends BaseAcceptanceTest {
     @TestTemplate
     @Channel({ChannelType.UI, ChannelType.API})
     @RequiresKeycloak
+    void sameCustomerAliasShouldResolveToSameCustomer() {
+        scenario
+                .given().order()
+                    .placedByCustomer("B")
+                .and().loggedInAsCustomer("B")
+                .when().viewOrder()
+                .then().shouldSucceed();
+    }
+
+    @TestTemplate
+    @Channel({ChannelType.UI, ChannelType.API})
+    @RequiresKeycloak
     void adminShouldBeAbleToViewCustomerOrder() {
         scenario
                 .given().order()
@@ -46,7 +58,7 @@ class ViewOrderPositiveTest extends BaseAcceptanceTest {
     void adminShouldBeAbleToViewAnotherCustomersOrder() {
         scenario
                 .given().order()
-                    .placedByAnotherCustomer()
+                    .placedByCustomer("B")
                 .and().loggedInAsAdmin()
                 .when().viewOrder()
                 .then().shouldSucceed();

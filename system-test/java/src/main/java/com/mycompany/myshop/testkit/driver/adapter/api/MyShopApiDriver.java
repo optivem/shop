@@ -20,6 +20,7 @@ import com.mycompany.myshop.testkit.driver.port.dtos.PublishCouponResponse;
 import com.mycompany.myshop.testkit.driver.port.dtos.ViewOrderRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.ViewOrderResponse;
 import com.mycompany.myshop.testkit.driver.port.MyShopDriver;
+import com.mycompany.myshop.testkit.driver.adapter.shared.client.http.TestUser;
 import com.mycompany.myshop.testkit.driver.port.UserIdentity;
 import com.mycompany.myshop.testkit.common.Closer;
 import com.mycompany.myshop.testkit.common.Result;
@@ -42,13 +43,12 @@ public class MyShopApiDriver implements MyShopDriver {
 
     @Override
     public void actAs(UserIdentity identity) {
-        apiClient.as(switch (identity) {
-            case DEFAULT -> ApiIdentity.DEFAULT;
-            case ANONYMOUS -> ApiIdentity.ANONYMOUS;
-            case CUSTOMER -> ApiIdentity.CUSTOMER;
-            case OTHER_CUSTOMER -> ApiIdentity.OTHER_CUSTOMER;
-            case ADMIN -> ApiIdentity.ADMIN;
-        });
+        switch (identity.kind()) {
+            case DEFAULT -> apiClient.as(ApiIdentity.DEFAULT);
+            case ANONYMOUS -> apiClient.as(ApiIdentity.ANONYMOUS);
+            case CUSTOMER -> apiClient.asCustomer(TestUser.customer(identity.customerIndex()));
+            case ADMIN -> apiClient.as(ApiIdentity.ADMIN);
+        }
     }
 
     @Override

@@ -51,8 +51,8 @@ class CancelOrderNegativeTest extends BaseAcceptanceTest {
     void customerShouldNotBeAbleToCancelAnotherCustomersOrder() {
         scenario
                 .given().order()
-                    .placedByAnotherCustomer()
-                .and().loggedInAsCustomer()
+                    .placedByCustomer("B")
+                .and().loggedInAsCustomer("A")
                 .when().cancelOrder()
                 .then().shouldFail()
                     .errorMessage("Order " + DEFAULT_ORDER_NUMBER + " does not exist.");

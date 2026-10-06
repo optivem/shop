@@ -16,6 +16,7 @@ import com.mycompany.myshop.testkit.dsl.core.scenario.when.WhenImpl;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 public class GivenImpl implements GivenStage {
     private final UseCaseDsl app;
@@ -26,7 +27,9 @@ public class GivenImpl implements GivenStage {
     private final List<GivenOrderImpl> orders;
     private final List<GivenCountryImpl> countries;
     private final List<GivenCouponImpl> coupons;
-    private UserIdentity loggedInIdentity = UserIdentity.DEFAULT;
+    private final CustomerAliases customers = new CustomerAliases();
+    private Supplier<UserIdentity> loggedIn = () -> UserIdentity.DEFAULT;
+    private boolean loggedInChosen;
 
     public GivenImpl(UseCaseDsl app, ScenarioDslImpl scenario) {
         this.app = app;
@@ -76,27 +79,45 @@ public class GivenImpl implements GivenStage {
 
     @Override
     public GivenImpl loggedInAsCustomer() {
-        return loggedInAs(UserIdentity.CUSTOMER);
+        customers.reserveDefaultCustomer();
+        return loggedInAs(customers::defaultCustomer);
     }
 
     @Override
-    public GivenImpl loggedInAsAnotherCustomer() {
-        return loggedInAs(UserIdentity.OTHER_CUSTOMER);
+    public GivenImpl loggedInAsCustomer(String alias) {
+        customers.register(alias);
+        return loggedInAs(() -> customers.resolve(alias));
     }
 
     @Override
     public GivenImpl loggedInAsAdmin() {
-        return loggedInAs(UserIdentity.ADMIN);
+        return loggedInAs(() -> UserIdentity.ADMIN);
     }
 
     @Override
     public GivenImpl notLoggedIn() {
-        return loggedInAs(UserIdentity.ANONYMOUS);
+        return loggedInAs(() -> UserIdentity.ANONYMOUS);
     }
 
-    private GivenImpl loggedInAs(UserIdentity identity) {
-        this.loggedInIdentity = identity;
+    private GivenImpl loggedInAs(Supplier<UserIdentity> identity) {
+        this.loggedIn = identity;
+        this.loggedInChosen = true;
         return this;
+    }
+
+    /** Registers a customer alias for an order placed in this scenario. */
+    public void registerCustomer(String alias) {
+        customers.register(alias);
+    }
+
+    /** Resolves the customer behind an alias; only valid once the scenario is being set up. */
+    public UserIdentity resolveCustomer(String alias) {
+        return customers.resolve(alias);
+    }
+
+    /** The default customer (customer1). */
+    public UserIdentity defaultCustomer() {
+        return customers.defaultCustomer();
     }
 
     public WhenImpl when() {
@@ -110,12 +131,20 @@ public class GivenImpl implements GivenStage {
     }
 
     private void setup() {
+        reserveDefaultCustomerIfUsed();
         setupClock();
         setupErp();
         setupTax();
         setupPromotion();
         setupMyShop();
-        app.actAs(loggedInIdentity);
+        app.actAs(loggedIn.get());
+    }
+
+    /** Operations with no explicit customer run as the default customer, so customer1 must stay theirs. */
+    private void reserveDefaultCustomerIfUsed() {
+        if (!loggedInChosen || orders.stream().anyMatch(GivenOrderImpl::isPlacedByDefaultCustomer)) {
+            customers.reserveDefaultCustomer();
+        }
     }
 
     private void setupPromotion() {

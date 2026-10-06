@@ -15,8 +15,8 @@ class BrowseOrderHistoryNegativeTest extends BaseAcceptanceTest {
     void customerShouldNotSeeAnotherCustomersOrderInHistory() {
         scenario
                 .given().order()
-                    .placedByAnotherCustomer()
-                .and().loggedInAsCustomer()
+                    .placedByCustomer("B")
+                .and().loggedInAsCustomer("A")
                 .when().browseOrderHistory()
                 .then().shouldSucceed()
                     .orderHistory()
