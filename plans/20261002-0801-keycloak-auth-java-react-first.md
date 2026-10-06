@@ -87,6 +87,7 @@ Phase 1 — get it working end-to-end on Java backend + React frontend (multitie
 
 Phase 2 — spread
 
+- [ ] Step 13: Order ownership model for the remaining backends (the Java multitier model is done, see the 2026-10-02 order-ownership work): .NET and TypeScript multitier backends and the three monoliths copy it. Recipe: set `orders.owner` (token `sub`) and `owner_name` (`preferred_username`) on placement (columns already exist in the shared migration `V20261005190000__add_order_owner.sql`); place order requires CUSTOMER (`admin1` now holds only ADMIN, `customer2` is a second customer); customers' history and lookup return only their own orders and another customer's order is 404 (no existence leak); admins see all orders (history items carry `customer`) and may cancel any order; deliver stays admin-only; orders with a null owner are admin-only. Test drivers for each language need the DSL identities and the UI default-identity switch used in Java (the UI switch is already ported to the dotnet and typescript multitier test kits; the DSL identities and order-history use case are not). Monolith UIs must hide place-order from admins like the shared React frontend does.
 - [ ] Step 12: Cloud/prod-stage: managed or hardened IdP, secrets, TLS (separate from local/pipeline Keycloak).
 
 ## Phase 1 follow-ups noted during verification

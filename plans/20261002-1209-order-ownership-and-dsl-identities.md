@@ -1,6 +1,5 @@
 # 2026-10-02 UTC — Order ownership, admin/customer separation, and identities in the test DSL
 
-> 🤖 **Picked up by agent** — `ValentinaLaptop` at `2026-10-05T18:22:24Z`
 
 ## TL;DR
 
@@ -19,14 +18,13 @@
 
 ## ▶ Next executable step (resume here)
 
-Step 7: verify locally with `gh optivem` (full latest + legacy suites; this is also the first real run of the new Java identity scenarios `AccessControlTest` / `OrderOwnershipTest`, and of the dotnet/typescript UI default-identity switch against the Keycloak stack), then push per milestone and watch CI; confirm dotnet/typescript pipelines unaffected. Then Step 8.
+Confirm CI only: after the next scheduled runs on `shop` main at or after commit `72bc2e99`, check that the acceptance stages are green (`gh run list --repo optivem/shop`), especially `multitier-dotnet-acceptance-stage` (it failed on `1080c53b` with the admin home-ready timeout fixed in `72bc2e99`) and the three monolith stages (never run locally). If any fails, root-cause it; otherwise delete this plan. The ownership model for the other backends and monoliths is tracked as Step 13 of `plans/20261002-0801-keycloak-auth-java-react-first.md`.
 
-Done so far (committed): UI default-identity switching (Java), realm, migration, backend-java ownership rules with tests. Done, not yet committed or executed: Java latest DSL identities (`actingAsCustomer/AnotherCustomer/Admin/Anonymous`, `placedByCustomer/AnotherCustomer`, `browseOrderHistory`, `deliverOrder`, `statusCode`), `UserIdentity` threaded through the API and UI drivers, `OrderOwnershipTest` + `AccessControlTest`, `ApiAuthorizationTest` (latest) deleted. Step 5 (compiled/unit-tested only, not committed, not run against the stack): frontend-react hides place-order from admins without CUSTOMER (`canPlaceOrder` in `useRoles`, `RequireCanPlaceOrder` route guard, Home card), admin-only Customer column in the order history table (shown only when an order carries `customer`), optional `customer` in the API type and guard; dotnet/typescript UI default-identity switching (customer1 default, fresh session as admin1 for deliver/publish/browse coupons). Once the frontend hides place-order for admins, consider enabling the UI channel on the admin scenarios in `AccessControlTest`.
+Done and pushed: backend-java ownership rules, realm split, `owner` migration, Java DSL identities and scenarios (latest `ApiAuthorizationTest` removed), frontend changes, dotnet/typescript UI identity switch. Local verification: Java, dotnet and typescript multitier latest + legacy all green.
 
 ## Steps
 
-- [ ] Step 7: Verify locally with `gh optivem` (full latest + legacy suites), then push per milestone and watch CI; confirm dotnet/typescript pipelines unaffected.
-- [ ] Step 8: Update the Keycloak plan's Phase 2 recipe to include the ownership model for .NET/TypeScript (or schedule it after Phase 2 per the sequencing decision).
+- [ ] Step 7 (remaining): watch CI on `shop` main after `72bc2e99` (see the resume block above).
 
 ## Decisions (all open questions resolved 2026-10-05)
 
