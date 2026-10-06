@@ -10,7 +10,7 @@ import { OrderHistoryPage } from './pages/OrderHistoryPage.js';
 import { OrderDetailsPage } from './pages/OrderDetailsPage.js';
 import { CouponManagementPage } from './pages/CouponManagementPage.js';
 
-const HOME_READY_SELECTOR = "a[href='/new-order']";
+const HOME_READY_SELECTOR = "a[href='/order-history']";
 
 export class MyShopUiClient {
   private context: BrowserContext | null = null;

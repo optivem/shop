@@ -14,7 +14,7 @@ public class MyShopUiClient implements AutoCloseable {
     private static final String HTML_OPENING_TAG = "<html";
     private static final String HTML_CLOSING_TAG = "</html>";
 
-    private static final String HOME_READY_SELECTOR = "a[href='/new-order']";
+    private static final String HOME_READY_SELECTOR = "a[href='/order-history']";
 
     private final String baseUrl;
     private final Browser browser;

@@ -36,7 +36,7 @@ public class MyShopUiClient : IAsyncDisposable
 
     private const string HtmlClosingTag = "</html>";
 
-    private const string HomeReadySelector = "a[href='/new-order']";
+    private const string HomeReadySelector = "a[href='/order-history']";
 
 
 

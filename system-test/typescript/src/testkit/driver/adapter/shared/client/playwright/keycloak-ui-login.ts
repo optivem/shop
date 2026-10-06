@@ -45,7 +45,7 @@ export class KeycloakUiLogin {
   }
 }
 
-const HOME_READY_SELECTOR = "a[href='/new-order']";
+const HOME_READY_SELECTOR = "a[href='/order-history']";
 
 /** For raw Playwright tests: logs in when the app redirects to Keycloak; does nothing when auth is not configured. */
 export async function loginToMyShopUiIfRequired(page: Page, keycloakBaseUrl: string | undefined): Promise<void> {
