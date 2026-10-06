@@ -11,6 +11,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import java.util.stream.Stream;
 
 import static com.mycompany.myshop.testkit.dsl.core.scenario.ScenarioDefaults.DEFAULT_ORDER_NUMBER;
+import static com.mycompany.myshop.systemtest.commons.constants.ErrorMessages.AUTHENTICATION_REQUIRED;
 
 class ViewOrderNegativeTest extends BaseAcceptanceTest {
     private static Stream<Arguments> provideNonExistentOrderValues() {
@@ -39,7 +40,8 @@ class ViewOrderNegativeTest extends BaseAcceptanceTest {
         scenario
                 .given().order()
                     .placedByAnotherCustomer()
-                .when().actingAsCustomer().viewOrder()
+                .and().loggedInAsCustomer()
+                .when().viewOrder()
                 .then().shouldFail()
                     .errorMessage("Order " + DEFAULT_ORDER_NUMBER + " does not exist.");
     }
@@ -49,8 +51,9 @@ class ViewOrderNegativeTest extends BaseAcceptanceTest {
     @RequiresKeycloak
     void anonymousShouldNotBeAbleToViewOrder() {
         scenario
-                .when().actingAsAnonymous().viewOrder()
+                .given().notLoggedIn()
+                .when().viewOrder()
                 .then().shouldFail()
-                    .statusCode(401);
+                    .errorMessage(AUTHENTICATION_REQUIRED);
     }
 }

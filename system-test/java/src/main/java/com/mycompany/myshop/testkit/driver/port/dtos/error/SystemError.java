@@ -11,7 +11,6 @@ import java.util.List;
 @Builder
 public class SystemError {
     private final String message;
-    private final Integer status;
     private final List<FieldError> fields;
 
     public static SystemError of(String message) {

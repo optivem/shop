@@ -19,14 +19,6 @@ public class ErrorVerification extends ResponseVerification<SystemError> {
         return this;
     }
 
-    public ErrorVerification statusCode(int expectedStatus) {
-        var status = getResponse().getStatus();
-        assertThat(status)
-                .withFailMessage("Expected HTTP status: %d, but got: %s", expectedStatus, status)
-                .isEqualTo(expectedStatus);
-        return this;
-    }
-
     public ErrorVerification fieldErrorMessage(String expectedField, String expectedMessage) {
         var expandedExpectedField = getContext().expandAliases(expectedField);
         var expandedExpectedMessage = getContext().expandAliases(expectedMessage);

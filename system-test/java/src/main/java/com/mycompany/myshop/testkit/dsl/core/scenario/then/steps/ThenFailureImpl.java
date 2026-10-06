@@ -26,11 +26,6 @@ public class ThenFailureImpl<R, V extends ResponseVerification<R>>
         return this;
     }
 
-    public ThenFailureImpl<R, V> statusCode(int expectedStatus) {
-        failureVerification.statusCode(expectedStatus);
-        return this;
-    }
-
     public ThenFailureImpl<R, V> fieldErrorMessage(
             String expectedField, String expectedMessage) {
         failureVerification.fieldErrorMessage(expectedField, expectedMessage);

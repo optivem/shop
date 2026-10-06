@@ -26,7 +26,8 @@ class CancelOrderPositiveTest extends BaseAcceptanceTest {
         scenario
                 .given().order()
                     .placedByCustomer()
-                .when().actingAsAdmin().cancelOrder()
+                .and().loggedInAsAdmin()
+                .when().cancelOrder()
                 .then().shouldSucceed()
                 .and().order()
                     .hasStatus(OrderStatus.CANCELLED);

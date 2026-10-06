@@ -14,9 +14,9 @@ public class SystemErrorMapper {
             var fieldErrors = problemDetail.getErrors().stream()
                     .map(e -> new SystemError.FieldError(e.getField(), e.getMessage(), e.getCode()))
                     .toList();
-            return SystemError.builder().message(message).status(problemDetail.getStatus()).fields(fieldErrors).build();
+            return SystemError.builder().message(message).fields(fieldErrors).build();
         }
 
-        return SystemError.builder().message(message).status(problemDetail.getStatus()).build();
+        return SystemError.builder().message(message).build();
     }
 }

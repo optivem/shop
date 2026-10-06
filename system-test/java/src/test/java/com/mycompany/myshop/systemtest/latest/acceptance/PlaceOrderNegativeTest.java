@@ -9,6 +9,8 @@ import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import static com.mycompany.myshop.systemtest.commons.constants.ErrorMessages.PERMISSION_DENIED;
+
 class PlaceOrderNegativeTest extends BaseAcceptanceTest {
     @TestTemplate
     @Channel({ChannelType.UI, ChannelType.API})
@@ -183,8 +185,9 @@ class PlaceOrderNegativeTest extends BaseAcceptanceTest {
     @RequiresKeycloak
     void adminShouldNotBeAbleToPlaceOrder() {
         scenario
-                .when().actingAsAdmin().placeOrder()
+                .given().loggedInAsAdmin()
+                .when().placeOrder()
                 .then().shouldFail()
-                    .statusCode(403);
+                    .errorMessage(PERMISSION_DENIED);
     }
 }

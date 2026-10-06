@@ -16,7 +16,8 @@ class BrowseOrderHistoryNegativeTest extends BaseAcceptanceTest {
         scenario
                 .given().order()
                     .placedByAnotherCustomer()
-                .when().actingAsCustomer().browseOrderHistory()
+                .and().loggedInAsCustomer()
+                .when().browseOrderHistory()
                 .then().shouldSucceed()
                     .orderHistory()
                         .doesNotContainOrder(DEFAULT_ORDER_NUMBER);

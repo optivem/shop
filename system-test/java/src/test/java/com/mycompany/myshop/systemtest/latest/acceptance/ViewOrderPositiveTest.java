@@ -23,7 +23,8 @@ class ViewOrderPositiveTest extends BaseAcceptanceTest {
         scenario
                 .given().order()
                     .placedByCustomer()
-                .when().actingAsCustomer().viewOrder()
+                .and().loggedInAsCustomer()
+                .when().viewOrder()
                 .then().shouldSucceed();
     }
 
@@ -34,7 +35,8 @@ class ViewOrderPositiveTest extends BaseAcceptanceTest {
         scenario
                 .given().order()
                     .placedByCustomer()
-                .when().actingAsAdmin().viewOrder()
+                .and().loggedInAsAdmin()
+                .when().viewOrder()
                 .then().shouldSucceed();
     }
 
@@ -45,7 +47,8 @@ class ViewOrderPositiveTest extends BaseAcceptanceTest {
         scenario
                 .given().order()
                     .placedByAnotherCustomer()
-                .when().actingAsAdmin().viewOrder()
+                .and().loggedInAsAdmin()
+                .when().viewOrder()
                 .then().shouldSucceed();
     }
 }

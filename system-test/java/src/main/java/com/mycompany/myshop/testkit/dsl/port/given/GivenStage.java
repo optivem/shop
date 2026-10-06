@@ -22,6 +22,14 @@ public interface GivenStage {
 
     GivenCoupon coupon();
 
+    GivenStage loggedInAsCustomer();
+
+    GivenStage loggedInAsAnotherCustomer();
+
+    GivenStage loggedInAsAdmin();
+
+    GivenStage notLoggedIn();
+
     WhenStage when();
 
     ThenStage then();

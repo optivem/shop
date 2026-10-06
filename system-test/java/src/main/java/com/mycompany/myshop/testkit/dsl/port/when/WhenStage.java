@@ -9,14 +9,6 @@ import com.mycompany.myshop.testkit.dsl.port.when.steps.WhenPublishCoupon;
 import com.mycompany.myshop.testkit.dsl.port.when.steps.WhenViewOrder;
 
 public interface WhenStage {
-    WhenStage actingAsCustomer();
-
-    WhenStage actingAsAnotherCustomer();
-
-    WhenStage actingAsAdmin();
-
-    WhenStage actingAsAnonymous();
-
     WhenPlaceOrder placeOrder();
 
     WhenCancelOrder cancelOrder();

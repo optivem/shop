@@ -1,5 +1,6 @@
 package com.mycompany.myshop.testkit.dsl.core.scenario.given;
 
+import com.mycompany.myshop.testkit.driver.port.UserIdentity;
 import com.mycompany.myshop.testkit.dsl.core.ScenarioDslImpl;
 import com.mycompany.myshop.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.then.ThenImpl;
@@ -25,6 +26,7 @@ public class GivenImpl implements GivenStage {
     private final List<GivenOrderImpl> orders;
     private final List<GivenCountryImpl> countries;
     private final List<GivenCouponImpl> coupons;
+    private UserIdentity loggedInIdentity = UserIdentity.DEFAULT;
 
     public GivenImpl(UseCaseDsl app, ScenarioDslImpl scenario) {
         this.app = app;
@@ -72,6 +74,31 @@ public class GivenImpl implements GivenStage {
         return coupon;
     }
 
+    @Override
+    public GivenImpl loggedInAsCustomer() {
+        return loggedInAs(UserIdentity.CUSTOMER);
+    }
+
+    @Override
+    public GivenImpl loggedInAsAnotherCustomer() {
+        return loggedInAs(UserIdentity.OTHER_CUSTOMER);
+    }
+
+    @Override
+    public GivenImpl loggedInAsAdmin() {
+        return loggedInAs(UserIdentity.ADMIN);
+    }
+
+    @Override
+    public GivenImpl notLoggedIn() {
+        return loggedInAs(UserIdentity.ANONYMOUS);
+    }
+
+    private GivenImpl loggedInAs(UserIdentity identity) {
+        this.loggedInIdentity = identity;
+        return this;
+    }
+
     public WhenImpl when() {
         setup();
         return new WhenImpl(app, scenario, !products.isEmpty(), !countries.isEmpty(), true);
@@ -88,6 +115,7 @@ public class GivenImpl implements GivenStage {
         setupTax();
         setupPromotion();
         setupMyShop();
+        app.actAs(loggedInIdentity);
     }
 
     private void setupPromotion() {

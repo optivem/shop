@@ -16,7 +16,8 @@ class BrowseOrderHistoryPositiveTest extends BaseAcceptanceTest {
         scenario
                 .given().order()
                     .placedByCustomer()
-                .when().actingAsCustomer().browseOrderHistory()
+                .and().loggedInAsCustomer()
+                .when().browseOrderHistory()
                 .then().shouldSucceed()
                     .orderHistory()
                         .containsOrder(DEFAULT_ORDER_NUMBER);
@@ -29,7 +30,8 @@ class BrowseOrderHistoryPositiveTest extends BaseAcceptanceTest {
         scenario
                 .given().order()
                     .placedByCustomer()
-                .when().actingAsAdmin().browseOrderHistory()
+                .and().loggedInAsAdmin()
+                .when().browseOrderHistory()
                 .then().shouldSucceed()
                     .orderHistory()
                         .containsOrder(DEFAULT_ORDER_NUMBER);
@@ -42,7 +44,8 @@ class BrowseOrderHistoryPositiveTest extends BaseAcceptanceTest {
         scenario
                 .given().order()
                     .placedByAnotherCustomer()
-                .when().actingAsAdmin().browseOrderHistory()
+                .and().loggedInAsAdmin()
+                .when().browseOrderHistory()
                 .then().shouldSucceed()
                     .orderHistory()
                         .containsOrder(DEFAULT_ORDER_NUMBER);

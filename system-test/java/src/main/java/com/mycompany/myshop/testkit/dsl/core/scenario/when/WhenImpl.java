@@ -1,6 +1,5 @@
 package com.mycompany.myshop.testkit.dsl.core.scenario.when;
 
-import com.mycompany.myshop.testkit.driver.port.UserIdentity;
 import com.mycompany.myshop.testkit.dsl.core.ScenarioDslImpl;
 import com.mycompany.myshop.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.when.steps.WhenBrowseCouponsImpl;
@@ -21,7 +20,6 @@ public class WhenImpl implements WhenStage {
     private boolean hasProduct;
     private boolean hasTaxRate;
     private boolean hasPromotion;
-    private UserIdentity identity = UserIdentity.DEFAULT;
 
     public WhenImpl(UseCaseDsl app, ScenarioDslImpl scenario, boolean hasProduct, boolean hasTaxRate, boolean hasPromotion) {
         this.app = app;
@@ -64,65 +62,35 @@ public class WhenImpl implements WhenStage {
         }
     }
 
-    @Override
-    public WhenImpl actingAsCustomer() {
-        return actingAs(UserIdentity.CUSTOMER);
-    }
-
-    @Override
-    public WhenImpl actingAsAnotherCustomer() {
-        return actingAs(UserIdentity.OTHER_CUSTOMER);
-    }
-
-    @Override
-    public WhenImpl actingAsAdmin() {
-        return actingAs(UserIdentity.ADMIN);
-    }
-
-    @Override
-    public WhenImpl actingAsAnonymous() {
-        return actingAs(UserIdentity.ANONYMOUS);
-    }
-
-    private WhenImpl actingAs(UserIdentity identity) {
-        this.identity = identity;
-        return this;
-    }
-
-    private <S extends BaseWhenStep<?, ?>> S asIdentity(S step) {
-        step.actingAs(identity);
-        return step;
-    }
-
     public WhenPlaceOrderImpl placeOrder() {
         ensureDefaults();
-        return asIdentity(new WhenPlaceOrderImpl(app, scenario));
+        return new WhenPlaceOrderImpl(app, scenario);
     }
 
     public WhenCancelOrderImpl cancelOrder() {
         ensureDefaults();
-        return asIdentity(new WhenCancelOrderImpl(app, scenario));
+        return new WhenCancelOrderImpl(app, scenario);
     }
 
     public WhenDeliverOrderImpl deliverOrder() {
-        return asIdentity(new WhenDeliverOrderImpl(app, scenario));
+        return new WhenDeliverOrderImpl(app, scenario);
     }
 
     public WhenViewOrderImpl viewOrder() {
         ensureDefaults();
-        return asIdentity(new WhenViewOrderImpl(app, scenario));
+        return new WhenViewOrderImpl(app, scenario);
     }
 
     public WhenBrowseOrderHistoryImpl browseOrderHistory() {
-        return asIdentity(new WhenBrowseOrderHistoryImpl(app, scenario));
+        return new WhenBrowseOrderHistoryImpl(app, scenario);
     }
 
     public WhenPublishCouponImpl publishCoupon() {
-        return asIdentity(new WhenPublishCouponImpl(app, scenario));
+        return new WhenPublishCouponImpl(app, scenario);
     }
 
     public WhenBrowseCouponsImpl browseCoupons() {
-        return asIdentity(new WhenBrowseCouponsImpl(app, scenario));
+        return new WhenBrowseCouponsImpl(app, scenario);
     }
 
 }
