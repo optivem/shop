@@ -1,6 +1,7 @@
 package com.mycompany.myshop.systemtest.latest.acceptance;
 
 import com.mycompany.myshop.systemtest.latest.acceptance.base.BaseAcceptanceTest;
+import com.mycompany.myshop.systemtest.latest.acceptance.base.RequiresKeycloak;
 import com.mycompany.myshop.testkit.channel.ChannelType;
 import com.optivem.testing.Channel;
 import org.junit.jupiter.api.TestTemplate;
@@ -8,6 +9,8 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.stream.Stream;
+
+import static com.mycompany.myshop.testkit.dsl.core.scenario.ScenarioDefaults.DEFAULT_ORDER_NUMBER;
 
 class ViewOrderNegativeTest extends BaseAcceptanceTest {
     private static Stream<Arguments> provideNonExistentOrderValues() {
@@ -27,5 +30,27 @@ class ViewOrderNegativeTest extends BaseAcceptanceTest {
                     .withOrderNumber(orderNumber)
                 .then().shouldFail()
                     .errorMessage(expectedErrorMessage);
+    }
+
+    @TestTemplate
+    @Channel({ChannelType.UI, ChannelType.API})
+    @RequiresKeycloak
+    void customerShouldNotBeAbleToViewAnotherCustomersOrder() {
+        scenario
+                .given().order()
+                    .placedByAnotherCustomer()
+                .when().actingAsCustomer().viewOrder()
+                .then().shouldFail()
+                    .errorMessage("Order " + DEFAULT_ORDER_NUMBER + " does not exist.");
+    }
+
+    @TestTemplate
+    @Channel(ChannelType.API)
+    @RequiresKeycloak
+    void anonymousShouldNotBeAbleToViewOrder() {
+        scenario
+                .when().actingAsAnonymous().viewOrder()
+                .then().shouldFail()
+                    .statusCode(401);
     }
 }

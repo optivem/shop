@@ -1,11 +1,14 @@
 package com.mycompany.myshop.systemtest.latest.acceptance;
 
 import com.mycompany.myshop.systemtest.latest.acceptance.base.BaseAcceptanceTest;
+import com.mycompany.myshop.systemtest.latest.acceptance.base.RequiresKeycloak;
 import com.mycompany.myshop.testkit.channel.ChannelType;
 import com.mycompany.myshop.testkit.common.domain.OrderStatus;
 import com.optivem.testing.Channel;
 import com.optivem.testing.DataSource;
 import org.junit.jupiter.api.TestTemplate;
+
+import static com.mycompany.myshop.testkit.dsl.core.scenario.ScenarioDefaults.DEFAULT_ORDER_NUMBER;
 
 class CancelOrderNegativeTest extends BaseAcceptanceTest {
     @TestTemplate
@@ -40,5 +43,17 @@ class CancelOrderNegativeTest extends BaseAcceptanceTest {
                     .withOrderNumber("non-existent-order-12345")
                 .then().shouldFail()
                     .errorMessage("Order non-existent-order-12345 does not exist.");
+    }
+
+    @TestTemplate
+    @Channel({ChannelType.API})
+    @RequiresKeycloak
+    void customerShouldNotBeAbleToCancelAnotherCustomersOrder() {
+        scenario
+                .given().order()
+                    .placedByAnotherCustomer()
+                .when().actingAsCustomer().cancelOrder()
+                .then().shouldFail()
+                    .errorMessage("Order " + DEFAULT_ORDER_NUMBER + " does not exist.");
     }
 }
