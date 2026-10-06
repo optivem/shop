@@ -1,6 +1,7 @@
 package com.mycompany.myshop.core.services;
 
 import com.mycompany.myshop.core.dtos.BrowseOrderHistoryResponse;
+import com.mycompany.myshop.core.dtos.CurrentUser;
 import com.mycompany.myshop.core.dtos.PlaceOrderRequest;
 import com.mycompany.myshop.core.dtos.PlaceOrderResponse;
 import com.mycompany.myshop.core.dtos.ViewOrderDetailsResponse;
@@ -43,7 +44,7 @@ public class OrderService {
         this.couponService = couponService;
     }
 
-    public PlaceOrderResponse placeOrder(PlaceOrderRequest request) {
+    public PlaceOrderResponse placeOrder(PlaceOrderRequest request, CurrentUser user) {
         var sku = request.getSku();
         var quantity = request.getQuantity();
         var country = request.getCountry();
@@ -84,7 +85,7 @@ public class OrderService {
                 sku, quantity, unitPrice, basePrice,
                 discountRate, discountAmount, subtotalPrice,
                 taxRate, taxAmount, totalPrice, OrderStatus.PLACED,
-                appliedCouponCode);
+                appliedCouponCode, user.subject(), user.username());
 
         orderRepository.save(order);
 
@@ -136,7 +137,7 @@ public class OrderService {
         orderRepository.save(order);
     }
 
-    public void cancelOrder(String orderNumber) {
+    public void cancelOrder(String orderNumber, CurrentUser user) {
         var now = LocalDateTime.ofInstant(clockGateway.getCurrentTime(), ZoneId.of("UTC"));
         var currentMonthDay = MonthDay.from(now);
 
@@ -150,13 +151,7 @@ public class OrderService {
             }
         }
 
-        var optionalOrder = orderRepository.findByOrderNumber(orderNumber);
-
-        if (optionalOrder.isEmpty()) {
-            throw new NotExistValidationException("Order " + orderNumber + " does not exist.");
-        }
-
-        var order = optionalOrder.get();
+        var order = findAccessibleOrder(orderNumber, user);
 
         if (order.getStatus() == OrderStatus.CANCELLED) {
             throw new ValidationException("Order has already been cancelled");
@@ -166,12 +161,17 @@ public class OrderService {
         orderRepository.save(order);
     }
 
-    public BrowseOrderHistoryResponse browseOrderHistory(String orderNumberFilter) {
+    public BrowseOrderHistoryResponse browseOrderHistory(String orderNumberFilter, CurrentUser user) {
         List<Order> orders;
-        if (orderNumberFilter == null || orderNumberFilter.trim().isEmpty()) {
-            orders = orderRepository.findAllByOrderByOrderTimestampDesc();
+        var hasFilter = orderNumberFilter != null && !orderNumberFilter.trim().isEmpty();
+        if (user.admin()) {
+            orders = hasFilter
+                    ? orderRepository.findByOrderNumberContainingIgnoreCaseOrderByOrderTimestampDesc(orderNumberFilter.trim())
+                    : orderRepository.findAllByOrderByOrderTimestampDesc();
         } else {
-            orders = orderRepository.findByOrderNumberContainingIgnoreCaseOrderByOrderTimestampDesc(orderNumberFilter.trim());
+            orders = hasFilter
+                    ? orderRepository.findByOwnerAndOrderNumberContainingIgnoreCase(user.subject(), orderNumberFilter.trim())
+                    : orderRepository.findByOwnerOrderByOrderTimestampDesc(user.subject());
         }
 
         var items = orders.stream()
@@ -185,6 +185,7 @@ public class OrderService {
                     item.setTotalPrice(order.getTotalPrice());
                     item.setStatus(order.getStatus());
                     item.setAppliedCouponCode(order.getAppliedCouponCode());
+                    item.setCustomer(order.getOwnerName());
                     return item;
                 })
                 .toList();
@@ -194,14 +195,8 @@ public class OrderService {
         return result;
     }
 
-    public ViewOrderDetailsResponse getOrder(String orderNumber) {
-        var optionalOrder = orderRepository.findByOrderNumber(orderNumber);
-
-        if (optionalOrder.isEmpty()) {
-            throw new NotExistValidationException("Order " + orderNumber + " does not exist.");
-        }
-
-        var order = optionalOrder.get();
+    public ViewOrderDetailsResponse getOrder(String orderNumber, CurrentUser user) {
+        var order = findAccessibleOrder(orderNumber, user);
 
         var response = new ViewOrderDetailsResponse();
         response.setOrderNumber(orderNumber);
@@ -221,6 +216,13 @@ public class OrderService {
         response.setAppliedCouponCode(order.getAppliedCouponCode());
 
         return response;
+    }
+
+    /** Another customer's order is reported as non-existent, so its existence is not revealed. */
+    private Order findAccessibleOrder(String orderNumber, CurrentUser user) {
+        return orderRepository.findByOrderNumber(orderNumber)
+                .filter(order -> user.admin() || user.subject().equals(order.getOwner()))
+                .orElseThrow(() -> new NotExistValidationException("Order " + orderNumber + " does not exist."));
     }
 
     private String generateOrderNumber() {

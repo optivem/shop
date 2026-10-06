@@ -1,9 +1,11 @@
 package com.mycompany.myshop.controllers.web;
 
+import com.mycompany.myshop.config.CurrentUserResolver;
 import com.mycompany.myshop.core.dtos.PlaceOrderRequest;
 import com.mycompany.myshop.core.dtos.PlaceOrderResponse;
 import com.mycompany.myshop.core.exceptions.ValidationException;
 import com.mycompany.myshop.core.services.OrderService;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -33,7 +35,8 @@ public class MyShopController {
                              @RequestParam String quantity,
                              @RequestParam(required = false, defaultValue = "") String country,
                              @RequestParam(required = false, defaultValue = "") String couponCode,
-                             RedirectAttributes redirectAttributes) {
+                             RedirectAttributes redirectAttributes,
+                             Authentication authentication) {
         try {
             var request = new PlaceOrderRequest();
             request.setSku(sku);
@@ -57,7 +60,7 @@ public class MyShopController {
             request.setCountry(country);
             request.setCouponCode(couponCode.isBlank() ? null : couponCode);
 
-            PlaceOrderResponse response = orderService.placeOrder(request);
+            PlaceOrderResponse response = orderService.placeOrder(request, CurrentUserResolver.resolve(authentication));
             redirectAttributes.addFlashAttribute("success",
                     "Success! Order has been created with Order Number " + response.getOrderNumber());
             return REDIRECT_NEW_ORDER;

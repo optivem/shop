@@ -61,6 +61,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class SecurityConfig {
 
     private static final String ADMIN = "ADMIN";
+    private static final String CUSTOMER = "CUSTOMER";
     private static final String REGISTRATION_ID = "keycloak";
     private static final String BEARER_PREFIX = "Bearer ";
 
@@ -107,10 +108,12 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.GET, "/health").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/orders/{orderNumber}/deliver").hasRole(ADMIN)
+                .requestMatchers(HttpMethod.POST, "/api/orders").hasRole(CUSTOMER)
                 .requestMatchers(HttpMethod.POST, "/api/coupons").hasRole(ADMIN)
                 .requestMatchers(HttpMethod.GET, "/api/coupons").hasRole(ADMIN)
                 .requestMatchers("/api/admin/**").hasRole(ADMIN)
                 .requestMatchers("/admin-coupons").hasRole(ADMIN)
+                .requestMatchers("/new-order").hasRole(CUSTOMER)
                 .anyRequest().authenticated())
             .oauth2Login(login -> login
                 .authorizationEndpoint(endpoint -> endpoint

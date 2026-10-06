@@ -1,5 +1,7 @@
 package com.mycompany.myshop.config;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin;
@@ -14,6 +16,8 @@ import com.mycompany.myshop.api.controller.HealthController;
 import com.mycompany.myshop.api.controller.OrderApiController;
 import com.mycompany.myshop.controllers.web.AdminCouponsController;
 import com.mycompany.myshop.controllers.web.HomeController;
+import com.mycompany.myshop.controllers.web.MyShopController;
+import com.mycompany.myshop.core.dtos.PlaceOrderResponse;
 import com.mycompany.myshop.core.services.CouponService;
 import com.mycompany.myshop.core.services.OrderService;
 import org.junit.jupiter.api.Test;
@@ -29,7 +33,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 @WebMvcTest({OrderApiController.class, CouponApiController.class, HealthController.class,
-    HomeController.class, AdminCouponsController.class})
+    HomeController.class, AdminCouponsController.class, MyShopController.class})
 @ActiveProfiles("test")
 @Import({SecurityConfig.class, ProblemDetailSecurityHandlers.class})
 class SecurityConfigTest {
@@ -103,6 +107,50 @@ class SecurityConfigTest {
         mockMvc.perform(post("/api/coupons").with(customerToken())
                 .contentType("application/json").content("{}"))
             .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void adminTokenCannotPlaceOrder() throws Exception {
+        mockMvc.perform(post("/api/orders").with(adminToken())
+                .contentType("application/json").content("{}"))
+            .andExpect(status().isForbidden())
+            .andExpect(jsonPath("$.status").value(403))
+            .andExpect(jsonPath("$.detail").value("You do not have permission to perform this action"));
+    }
+
+    @Test
+    void anonymousCannotPlaceOrder() throws Exception {
+        mockMvc.perform(post("/api/orders").with(csrf())
+                .contentType("application/json").content("{}"))
+            .andExpect(status().isUnauthorized())
+            .andExpect(jsonPath("$.detail").value("Authentication is required"));
+    }
+
+    @Test
+    void customerTokenCanPlaceOrder() throws Exception {
+        var response = new PlaceOrderResponse();
+        response.setOrderNumber("ORD-1");
+        when(orderService.placeOrder(any(), any())).thenReturn(response);
+
+        mockMvc.perform(post("/api/orders").with(customerToken())
+                .contentType("application/json")
+                .content("{\"sku\":\"BOOK-123\",\"quantity\":1,\"country\":\"US\"}"))
+            .andExpect(status().isCreated());
+    }
+
+    @Test
+    void adminTokenCanBrowseAllOrders() throws Exception {
+        mockMvc.perform(get("/api/orders").with(adminToken())).andExpect(status().isOk());
+    }
+
+    @Test
+    void adminSessionCannotOpenNewOrderPage() throws Exception {
+        mockMvc.perform(get("/new-order").with(adminSession())).andExpect(status().isForbidden());
+    }
+
+    @Test
+    void customerSessionCanOpenNewOrderPage() throws Exception {
+        mockMvc.perform(get("/new-order").with(customerSession())).andExpect(status().isOk());
     }
 
     @Test

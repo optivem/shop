@@ -1,6 +1,8 @@
 package com.mycompany.myshop.controllers.web;
 
+import com.mycompany.myshop.config.CurrentUserResolver;
 import com.mycompany.myshop.core.services.OrderService;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,9 +18,11 @@ public class OrderHistoryController {
     }
 
     @GetMapping("/order-history")
-    public String orderHistory(@RequestParam(required = false) String orderNumber, Model model) {
-        var response = orderService.browseOrderHistory(orderNumber);
+    public String orderHistory(@RequestParam(required = false) String orderNumber, Model model,
+                               Authentication authentication) {
+        var response = orderService.browseOrderHistory(orderNumber, CurrentUserResolver.resolve(authentication));
         model.addAttribute("orders", response.getOrders());
+        model.addAttribute("admin", CurrentUserResolver.isAdmin(authentication));
         model.addAttribute("filter", orderNumber != null ? orderNumber : "");
         return "order-history";
     }

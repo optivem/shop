@@ -44,7 +44,9 @@ class OrderRepositoryIntegrationTest extends AbstractIntegrationTest {
             new BigDecimal("2.00"),
             new BigDecimal("22.00"),
             OrderStatus.PLACED,
-            null
+            null,
+            "customer-sub",
+            "customer1"
         );
 
         orderRepository.save(order);
@@ -54,5 +56,7 @@ class OrderRepositoryIntegrationTest extends AbstractIntegrationTest {
         assertThat(found.get().getSku()).isEqualTo("BOOK-123");
         assertThat(found.get().getTotalPrice()).isEqualByComparingTo(new BigDecimal("22.00"));
         assertThat(found.get().getStatus()).isEqualTo(OrderStatus.PLACED);
+        assertThat(found.get().getOwner()).isEqualTo("customer-sub");
+        assertThat(found.get().getOwnerName()).isEqualTo("customer1");
     }
 }

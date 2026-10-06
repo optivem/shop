@@ -78,13 +78,20 @@ public class Order {
     @Column(name = "applied_coupon_code", nullable = true)
     private String appliedCouponCode;
 
+    /** Token subject of the customer who placed the order; null for orders that predate ownership. */
+    @Column(name = "owner", nullable = true)
+    private String owner;
+
+    @Column(name = "owner_name", nullable = true)
+    private String ownerName;
+
     // one arg per persisted orders column — wide list is intrinsic to the entity mapping
     @SuppressWarnings("java:S107")
     public Order(String orderNumber, Instant orderTimestamp, String country,
                  String sku, int quantity, BigDecimal unitPrice, BigDecimal basePrice,
                  BigDecimal discountRate, BigDecimal discountAmount, BigDecimal subtotalPrice,
                  BigDecimal taxRate, BigDecimal taxAmount, BigDecimal totalPrice, OrderStatus status,
-                 String appliedCouponCode) {
+                 String appliedCouponCode, String owner, String ownerName) {
         if (orderTimestamp == null) {
             throw new IllegalArgumentException("orderTimestamp cannot be null");
         }
@@ -137,5 +144,7 @@ public class Order {
         this.totalPrice = totalPrice;
         this.status = status;
         this.appliedCouponCode = appliedCouponCode;
+        this.owner = owner;
+        this.ownerName = ownerName;
     }
 }
