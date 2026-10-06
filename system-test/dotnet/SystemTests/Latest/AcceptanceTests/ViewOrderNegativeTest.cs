@@ -1,3 +1,5 @@
+using static Dsl.Core.Scenario.ScenarioDefaults;
+using static SystemTests.Commons.Constants.ErrorMessages;
 using SystemTests.Latest.AcceptanceTests.Base;
 using Dsl.Core.UseCase;
 using Optivem.Testing;
@@ -22,5 +24,28 @@ public class ViewOrderNegativeTest : BaseAcceptanceTest
             .When().ViewOrder().WithOrderNumber(orderNumber)
             .Then().ShouldFail()
             .ErrorMessage(expectedErrorMessage);
+    }
+
+    [RequiresKeycloakTheory]
+    [ChannelData(ChannelType.UI, ChannelType.API)]
+    public async Task CustomerShouldNotBeAbleToViewAnotherCustomersOrder(Channel channel)
+    {
+        await Scenario(channel)
+            .Given().Order().PlacedByCustomer("B")
+            .And().LoggedInAsCustomer("A")
+            .When().ViewOrder()
+            .Then().ShouldFail()
+            .ErrorMessage($"Order {DefaultOrderNumber} does not exist.");
+    }
+
+    [RequiresKeycloakTheory]
+    [ChannelData(ChannelType.API)]
+    public async Task AnonymousShouldNotBeAbleToViewOrder(Channel channel)
+    {
+        await Scenario(channel)
+            .Given().NotLoggedIn()
+            .When().ViewOrder()
+            .Then().ShouldFail()
+            .ErrorMessage(AuthenticationRequired);
     }
 }

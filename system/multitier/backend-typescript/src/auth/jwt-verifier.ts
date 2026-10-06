@@ -3,6 +3,7 @@ import type { AuthConfig } from './auth.config';
 
 export interface AuthenticatedUser {
   subject: string;
+  username: string;
   roles: string[];
 }
 
@@ -27,7 +28,13 @@ export class JwtVerifier {
       audience: this.config.audience,
       algorithms: ['RS256'],
     });
-    return { subject: payload.sub ?? '', roles: realmRoles(payload) };
+    const subject = payload.sub ?? '';
+    const preferred = payload.preferred_username;
+    return {
+      subject,
+      username: typeof preferred === 'string' ? preferred : subject,
+      roles: realmRoles(payload),
+    };
   }
 }
 

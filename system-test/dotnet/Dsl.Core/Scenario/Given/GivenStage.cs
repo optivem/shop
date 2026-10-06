@@ -5,6 +5,7 @@ using Dsl.Port.Given.Steps;
 using Dsl.Port.Then;
 using Dsl.Port.When;
 using Driver.Adapter;
+using Driver.Port;
 using Dsl.Core.Scenario.Given;
 using Optivem.Testing;
 
@@ -20,6 +21,9 @@ namespace Dsl.Core.Scenario.Given
         private readonly List<GivenCoupon> _coupons;
         private GivenClock? _clock;
         private GivenPromotion _promotion;
+        private readonly CustomerAliases _customers = new();
+        private Func<UserIdentity> _loggedIn = () => UserIdentity.Default;
+        private bool _loggedInChosen;
 
         public GivenStage(Channel? channel, UseCaseDsl app, ScenarioDsl scenario)
             : base(channel)
@@ -86,6 +90,46 @@ namespace Dsl.Core.Scenario.Given
 
         IGivenCoupon IGivenStage.Coupon() => Coupon();
 
+        public GivenStage LoggedInAsCustomer()
+        {
+            _customers.ReserveDefaultCustomer();
+            return LoggedInAs(CustomerAliases.DefaultCustomer);
+        }
+
+        IGivenStage IGivenStage.LoggedInAsCustomer() => LoggedInAsCustomer();
+
+        public GivenStage LoggedInAsCustomer(string alias)
+        {
+            _customers.Register(alias);
+            return LoggedInAs(() => _customers.Resolve(alias));
+        }
+
+        IGivenStage IGivenStage.LoggedInAsCustomer(string alias) => LoggedInAsCustomer(alias);
+
+        public GivenStage LoggedInAsAdmin() => LoggedInAs(() => UserIdentity.Admin);
+
+        IGivenStage IGivenStage.LoggedInAsAdmin() => LoggedInAsAdmin();
+
+        public GivenStage NotLoggedIn() => LoggedInAs(() => UserIdentity.Anonymous);
+
+        IGivenStage IGivenStage.NotLoggedIn() => NotLoggedIn();
+
+        private GivenStage LoggedInAs(Func<UserIdentity> identity)
+        {
+            _loggedIn = identity;
+            _loggedInChosen = true;
+            return this;
+        }
+
+        /// <summary>Registers a customer alias for an order placed in this scenario.</summary>
+        internal void RegisterCustomer(string alias) => _customers.Register(alias);
+
+        /// <summary>Resolves the customer behind an alias; only valid once the scenario is being set up.</summary>
+        internal UserIdentity ResolveCustomer(string alias) => _customers.Resolve(alias);
+
+        /// <summary>The default customer (customer1).</summary>
+        internal static UserIdentity DefaultCustomer() => CustomerAliases.DefaultCustomer();
+
         public WhenStage When()
         {
             return new WhenStage(Channel, _app, _scenario, _products.Count > 0, true, _countries.Count > 0, SetupGiven);
@@ -102,11 +146,22 @@ namespace Dsl.Core.Scenario.Given
 
         private async Task SetupGiven()
         {
+            ReserveDefaultCustomerIfUsed();
             await SetupClock();
             await SetupPromotion();
             await SetupErp();
             await SetupTax();
             await SetupMyShop();
+            _app.ActAs(_loggedIn());
+        }
+
+        /// <summary>Operations with no explicit customer run as the default customer, so customer1 must stay theirs.</summary>
+        private void ReserveDefaultCustomerIfUsed()
+        {
+            if (!_loggedInChosen || _orders.Any(o => o.IsPlacedByDefaultCustomer))
+            {
+                _customers.ReserveDefaultCustomer();
+            }
         }
 
         private async Task SetupPromotion()

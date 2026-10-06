@@ -1,3 +1,4 @@
+using static SystemTests.Commons.Constants.ErrorMessages;
 using SystemTests.Commons.Providers;
 using SystemTests.Latest.AcceptanceTests.Base;
 using Dsl.Core.UseCase;
@@ -167,5 +168,16 @@ public class PlaceOrderNegativeTest : BaseAcceptanceTest
             .Then().ShouldFail()
             .ErrorMessage("The request contains one or more validation errors")
             .FieldErrorMessage("couponCode", "Coupon code LIMITED2024 has exceeded its usage limit");
+    }
+
+    [RequiresKeycloakTheory]
+    [ChannelData(ChannelType.API)]
+    public async Task AdminShouldNotBeAbleToPlaceOrder(Channel channel)
+    {
+        await Scenario(channel)
+            .Given().LoggedInAsAdmin()
+            .When().PlaceOrder()
+            .Then().ShouldFail()
+            .ErrorMessage(PermissionDenied);
     }
 }

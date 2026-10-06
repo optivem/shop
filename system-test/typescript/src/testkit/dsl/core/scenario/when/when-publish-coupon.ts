@@ -1,3 +1,4 @@
+import { DEFAULTS } from '../defaults.js';
 import type { UseCaseContext } from '../../shared/use-case-context.js';
 import type { AppContext } from '../app-context.js';
 import type { ScenarioContext } from '../scenario-context.js';
@@ -5,8 +6,8 @@ import { ThenPublishCouponResultStage } from '../then/then-publish-coupon.js';
 import { assertNotAwaited } from '../assert-not-awaited.js';
 
 export class WhenPublishCoupon {
-  private code = '';
-  private discountRate: number | string = 0;
+  private code: string = DEFAULTS.COUPON_CODE;
+  private discountRate: number | string = DEFAULTS.DISCOUNT_RATE;
   private validFrom?: string;
   private validTo?: string;
   private usageLimit?: number | string;

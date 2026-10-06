@@ -46,6 +46,11 @@ public class OrderController
 
 
 
+    public Task<Result<BrowseOrderHistoryResponse, ProblemDetailResponse>> BrowseOrderHistoryAsync(string? orderNumber)
+        => _httpClient.GetAsync<BrowseOrderHistoryResponse>(string.IsNullOrWhiteSpace(orderNumber)
+            ? Endpoint
+            : $"{Endpoint}?orderNumber={Uri.EscapeDataString(orderNumber)}");
+
     public Task<Result<VoidValue, ProblemDetailResponse>> CancelOrderAsync(string? orderNumber)
         => _httpClient.PostAsync($"{Endpoint}/{orderNumber}/cancel");
 

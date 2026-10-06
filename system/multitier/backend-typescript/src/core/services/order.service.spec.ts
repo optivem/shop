@@ -10,6 +10,23 @@ import type { ErpGateway } from './external/erp.gateway';
 import type { TaxGateway } from './external/tax.gateway';
 import type { ClockGateway } from './external/clock.gateway';
 import type { CouponService } from './coupon.service';
+import type { CurrentUser } from '../../auth/current-user';
+
+const CUSTOMER: CurrentUser = {
+  subject: 'sub-customer',
+  username: 'customer1',
+  admin: false,
+};
+const OTHER_CUSTOMER: CurrentUser = {
+  subject: 'sub-other',
+  username: 'customer2',
+  admin: false,
+};
+const ADMIN: CurrentUser = {
+  subject: 'sub-admin',
+  username: 'admin1',
+  admin: true,
+};
 
 const NORMAL_TIME = new Date('2025-06-15T10:00:00Z');
 const DEC_31_YEAR_END_BLACKOUT = new Date('2025-12-31T23:59:00Z');
@@ -18,7 +35,7 @@ const DEC_31_CANCEL_BLACKOUT = new Date('2025-12-31T22:15:00Z');
 describe('OrderService', () => {
   let service: OrderService;
   let orderRepository: jest.Mocked<
-    Pick<Repository<Order>, 'save' | 'findOne'>
+    Pick<Repository<Order>, 'save' | 'findOne' | 'find'>
   > & {
     manager: Pick<EntityManager, 'transaction' | 'withRepository'>;
   };
@@ -33,6 +50,7 @@ describe('OrderService', () => {
     orderRepository = {
       save: jest.fn(),
       findOne: jest.fn(),
+      find: jest.fn(),
       // Runs the transaction inline against the same mocked repository.
       manager: {
         transaction: jest.fn(
@@ -70,6 +88,7 @@ describe('OrderService', () => {
 
       const response = await service.placeOrder(
         buildRequest('BOOK-123', 2, 'US'),
+        CUSTOMER,
       );
 
       expect(response.orderNumber).toMatch(/^ORD-/);
@@ -80,7 +99,7 @@ describe('OrderService', () => {
       clockGateway.getCurrentTime.mockResolvedValue(DEC_31_YEAR_END_BLACKOUT);
 
       await expect(
-        service.placeOrder(buildRequest('BOOK-123', 1, 'US')),
+        service.placeOrder(buildRequest('BOOK-123', 1, 'US'), CUSTOMER),
       ).rejects.toThrow('December 31');
     });
 
@@ -89,7 +108,7 @@ describe('OrderService', () => {
       erpGateway.getProductDetails.mockResolvedValue(null);
 
       const error = await service
-        .placeOrder(buildRequest('UNKNOWN', 1, 'US'))
+        .placeOrder(buildRequest('UNKNOWN', 1, 'US'), CUSTOMER)
         .catch((e: unknown) => e);
 
       expect(error).toBeInstanceOf(ValidationException);
@@ -104,7 +123,7 @@ describe('OrderService', () => {
       taxGateway.getTaxDetails.mockResolvedValue(null);
 
       const error = await service
-        .placeOrder(buildRequest('BOOK-123', 1, 'XX'))
+        .placeOrder(buildRequest('BOOK-123', 1, 'XX'), CUSTOMER)
         .catch((e: unknown) => e);
 
       expect(error).toBeInstanceOf(ValidationException);
@@ -150,7 +169,7 @@ describe('OrderService', () => {
       orderRepository.findOne.mockResolvedValue(order);
       orderRepository.save.mockResolvedValue({} as Order);
 
-      await service.cancelOrder('ORD-001');
+      await service.cancelOrder('ORD-001', CUSTOMER);
 
       expect(order.status).toBe(OrderStatus.CANCELLED);
       expect(orderRepository.save).toHaveBeenCalledWith(order);
@@ -159,7 +178,7 @@ describe('OrderService', () => {
     it('throws during December 31 cancellation blackout', async () => {
       clockGateway.getCurrentTime.mockResolvedValue(DEC_31_CANCEL_BLACKOUT);
 
-      await expect(service.cancelOrder('ORD-001')).rejects.toThrow(
+      await expect(service.cancelOrder('ORD-001', CUSTOMER)).rejects.toThrow(
         'December 31',
       );
     });
@@ -170,9 +189,60 @@ describe('OrderService', () => {
       order.status = OrderStatus.CANCELLED;
       orderRepository.findOne.mockResolvedValue(order);
 
-      await expect(service.cancelOrder('ORD-001')).rejects.toThrow(
+      await expect(service.cancelOrder('ORD-001', CUSTOMER)).rejects.toThrow(
         'already been cancelled',
       );
+    });
+  });
+
+  describe('ownership', () => {
+    it("reports another customer's order as non-existent on view and cancel", async () => {
+      givenNormalTime();
+      orderRepository.findOne.mockResolvedValue(placedOrder('ORD-001'));
+
+      await expect(service.getOrder('ORD-001', OTHER_CUSTOMER)).rejects.toThrow(
+        'Order ORD-001 does not exist.',
+      );
+      await expect(
+        service.cancelOrder('ORD-001', OTHER_CUSTOMER),
+      ).rejects.toBeInstanceOf(NotExistValidationException);
+    });
+
+    it('lets an admin view and cancel any order, including one without an owner', async () => {
+      givenNormalTime();
+      const order = placedOrder('ORD-001');
+      order.owner = null;
+      orderRepository.findOne.mockResolvedValue(order);
+      orderRepository.save.mockResolvedValue({} as Order);
+
+      await expect(service.getOrder('ORD-001', ADMIN)).resolves.toBeDefined();
+      await service.cancelOrder('ORD-001', ADMIN);
+      expect(order.status).toBe(OrderStatus.CANCELLED);
+    });
+
+    it('hides an order without an owner from customers', async () => {
+      const order = placedOrder('ORD-001');
+      order.owner = null;
+      orderRepository.findOne.mockResolvedValue(order);
+
+      await expect(
+        service.getOrder('ORD-001', CUSTOMER),
+      ).rejects.toBeInstanceOf(NotExistValidationException);
+    });
+
+    it("filters a customer's history by owner and shows the customer to admins", async () => {
+      orderRepository.find.mockResolvedValue([placedOrder('ORD-001')]);
+
+      await service.browseOrderHistory(undefined, CUSTOMER);
+      expect(orderRepository.find).toHaveBeenLastCalledWith(
+        expect.objectContaining({ where: { owner: CUSTOMER.subject } }),
+      );
+
+      const result = await service.browseOrderHistory(undefined, ADMIN);
+      expect(orderRepository.find).toHaveBeenLastCalledWith(
+        expect.objectContaining({ where: {} }),
+      );
+      expect(result.orders[0]?.customer).toBe('customer1');
     });
   });
 
@@ -228,6 +298,8 @@ describe('OrderService', () => {
     order.totalPrice = new Decimal('11.00');
     order.status = OrderStatus.PLACED;
     order.appliedCouponCode = null;
+    order.owner = CUSTOMER.subject;
+    order.ownerName = CUSTOMER.username;
     return order;
   }
 
@@ -241,6 +313,8 @@ describe('OrderService', () => {
         country: 'US',
         status: OrderStatus.PLACED,
         appliedCouponCode: null,
+        owner: CUSTOMER.subject,
+        ownerName: CUSTOMER.username,
       }),
     );
 

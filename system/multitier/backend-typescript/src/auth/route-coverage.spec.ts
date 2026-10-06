@@ -14,7 +14,7 @@ const EXPECTED: Record<string, Access> = {
   'GET /': 'authenticated',
   'GET /health': 'public',
   'GET /api/orders': 'authenticated',
-  'POST /api/orders': 'authenticated',
+  'POST /api/orders': 'customer',
   'GET /api/orders/:orderNumber': 'authenticated',
   'POST /api/orders/:orderNumber/cancel': 'authenticated',
   'POST /api/orders/:orderNumber/deliver': 'admin',

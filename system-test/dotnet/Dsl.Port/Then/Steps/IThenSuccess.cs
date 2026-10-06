@@ -6,5 +6,7 @@ public interface IThenSuccess
 {
     IThenSuccessAnd And();
 
+    IThenOrderHistory OrderHistory();
+
     TaskAwaiter GetAwaiter();
 }

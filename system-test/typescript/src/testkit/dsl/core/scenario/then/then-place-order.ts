@@ -8,6 +8,7 @@ import { DEFAULTS } from '../defaults.js';
 import type { UseCaseContext } from '../../shared/use-case-context.js';
 import type { AppContext } from '../app-context.js';
 import type { ScenarioContext } from '../scenario-context.js';
+import { placeGivenOrder } from '../given/place-given-order.js';
 
 export class ThenResultStage implements PromiseLike<void> {
   private _expectSuccess = true;
@@ -108,18 +109,8 @@ export class ThenResultStage implements PromiseLike<void> {
   }
 
   private async _placeGivenOrders(): Promise<void> {
-    // Execute given orders (e.g., to exhaust coupon usage limits)
     for (const oc of this.ctx.orderConfigs) {
-      const orderSku = this.useCaseContext.getParamValue(oc.sku);
-      const orderCountry = this.useCaseContext.getParamValueOrLiteral(oc.country);
-      const orderCouponCode = this.useCaseContext.getParamValue(oc.couponCode);
-      const orderResult = await this.app.myShop().placeOrder({
-        sku: orderSku,
-        quantity: oc.quantity,
-        country: orderCountry,
-        couponCode: orderCouponCode,
-      });
-      expect(orderResult.success).toBe(true);
+      await placeGivenOrder(this.app, this.ctx, this.useCaseContext, oc);
     }
   }
 
@@ -156,6 +147,7 @@ export class ThenResultStage implements PromiseLike<void> {
   }
 
   private async _doExecute(): Promise<void> {
+    this.ctx.reserveDefaultCustomerIfUsed();
     await this._arrangeClock();
     await this._arrangeTax();
 
@@ -167,6 +159,7 @@ export class ThenResultStage implements PromiseLike<void> {
     await this._arrangeProducts();
     await this._arrangeCoupons();
     await this._placeGivenOrders();
+    this.app.actAs(this.ctx.loggedInIdentity());
 
     const resolvedSku = this.useCaseContext.getParamValue(this.sku);
     const resolvedCountry = this.useCaseContext.getParamValueOrLiteral(this.country);

@@ -1,3 +1,4 @@
+using static SystemTests.Commons.Constants.ErrorMessages;
 using SystemTests.Latest.AcceptanceTests.Base;
 using SystemTests.Commons.Providers;
 using Dsl.Core.UseCase;
@@ -83,5 +84,16 @@ public class PublishCouponNegativeTest : BaseAcceptanceTest
             .Then().ShouldFail()
             .ErrorMessage("The request contains one or more validation errors")
             .FieldErrorMessage("code", "Coupon code must not be blank");
+    }
+
+    [RequiresKeycloakTheory]
+    [ChannelData(ChannelType.API)]
+    public async Task CustomerShouldNotBeAbleToPublishCoupon(Channel channel)
+    {
+        await Scenario(channel)
+            .Given().LoggedInAsCustomer()
+            .When().PublishCoupon()
+            .Then().ShouldFail()
+            .ErrorMessage(PermissionDenied);
     }
 }

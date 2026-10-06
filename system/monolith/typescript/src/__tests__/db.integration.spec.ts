@@ -91,13 +91,54 @@ describe('db adapter [integration]', () => {
       totalPrice: new Decimal('22.0'),
       appliedCouponCode: null,
       status: 'PLACED',
+      owner: 'sub-a',
+      ownerName: 'customer-a',
     });
 
     const found = await db.findByOrderNumber('ORD-100');
 
-    expect(found).toMatchObject({ sku: 'BOOK-123', status: 'PLACED' });
+    expect(found).toMatchObject({ sku: 'BOOK-123', status: 'PLACED', owner: 'sub-a', owner_name: 'customer-a' });
     // numeric columns round-trip as strings via node-postgres.
     expect(Number(found?.total_price)).toBeCloseTo(22.0);
+  });
+
+  it('lists a customer only their own orders and an admin all of them', async () => {
+    const order = (orderNumber: string, owner: string, ownerName: string) => ({
+      orderNumber,
+      orderTimestamp: new Date('2026-01-02T00:00:00Z'),
+      country: 'US',
+      sku: 'BOOK-123',
+      quantity: 1,
+      unitPrice: new Decimal('10.0'),
+      basePrice: new Decimal('10.0'),
+      discountRate: new Decimal('0'),
+      discountAmount: new Decimal('0'),
+      subtotalPrice: new Decimal('10.0'),
+      taxRate: new Decimal('0.1'),
+      taxAmount: new Decimal('1.0'),
+      totalPrice: new Decimal('11.0'),
+      appliedCouponCode: null,
+      status: 'PLACED' as const,
+      owner,
+      ownerName,
+    });
+    await db.insertOrder(order('ORD-OWN-A', 'sub-a', 'customer-a'));
+    await db.insertOrder(order('ORD-OWN-B', 'sub-b', 'customer-b'));
+
+    const mine = (await db.findAllOrders(undefined, 'sub-a')).map((o) => o.order_number);
+    const filtered = (await db.findAllOrders('own-b', 'sub-a')).map((o) => o.order_number);
+    const all = (await db.findAllOrders('ORD-OWN')).map((o) => o.order_number);
+
+    expect(mine).toContain('ORD-OWN-A');
+    expect(mine).not.toContain('ORD-OWN-B');
+    expect(filtered).toEqual([]);
+    expect(all).toEqual(expect.arrayContaining(['ORD-OWN-A', 'ORD-OWN-B']));
+
+    const admin = { subject: 'sub-admin', admin: true };
+    const customerA = { subject: 'sub-a', admin: false };
+    expect(await db.findAccessibleOrder('ORD-OWN-B', customerA)).toBeNull();
+    expect(await db.findAccessibleOrder('ORD-OWN-A', customerA)).not.toBeNull();
+    expect(await db.findAccessibleOrder('ORD-OWN-B', admin)).not.toBeNull();
   });
 
   it('never lets concurrent claims exceed a coupon usage limit', async () => {

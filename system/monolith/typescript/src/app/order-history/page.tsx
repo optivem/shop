@@ -41,6 +41,9 @@ export default function OrderHistoryPage() {
     }
   }, []);
 
+  // The API reports the customer only to admins, so its presence is what turns the column on.
+  const showCustomer = orders.some((order) => order.customer !== undefined);
+
   useEffect(() => {
     void loadOrders();
   }, [loadOrders]);
@@ -129,6 +132,7 @@ export default function OrderHistoryPage() {
                 <thead>
                   <tr>
                     <th>Order Number</th>
+                    {showCustomer && <th>Customer</th>}
                     <th>Order Date</th>
                     <th>SKU</th>
                     <th>Quantity</th>
@@ -140,7 +144,7 @@ export default function OrderHistoryPage() {
                 <tbody>
                   {orders.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="text-center">
+                      <td colSpan={showCustomer ? 8 : 7} className="text-center">
                         No orders found
                       </td>
                     </tr>
@@ -148,6 +152,7 @@ export default function OrderHistoryPage() {
                     orders.map((order) => (
                       <tr key={order.orderNumber}>
                         <td>{order.orderNumber}</td>
+                        {showCustomer && <td>{order.customer ?? "-"}</td>}
                         <td>
                           {new Date(order.orderTimestamp).toLocaleString("en-US", {
                             timeZone: "UTC",

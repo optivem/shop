@@ -50,6 +50,7 @@ public sealed class ShopWebApplicationFactory : WebApplicationFactory<Program>
             audience: audience,
             claims:
             [
+                new Claim("sub", "test-user"),
                 new Claim("preferred_username", "tester"),
                 new Claim("realm_access", $"{{\"roles\":[\"{role}\"]}}", JsonClaimValueTypes.Json),
             ],

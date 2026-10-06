@@ -41,6 +41,7 @@ export const ordersResponseSchema = z.object({
       quantity: z.number(),
       totalPrice: z.number(),
       status: z.enum(ORDER_STATUSES),
+      customer: z.string().nullish(),
     })
   ),
 });

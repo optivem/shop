@@ -45,11 +45,19 @@ export class TestIdp {
 
   async token(
     roles: string[],
-    opts: { issuer?: string; audience?: string; expiresIn?: string } = {},
+    opts: {
+      issuer?: string;
+      audience?: string;
+      expiresIn?: string;
+      subject?: string;
+    } = {},
   ): Promise<string> {
-    return new SignJWT({ realm_access: { roles } })
+    return new SignJWT({
+      realm_access: { roles },
+      preferred_username: opts.subject ?? 'test-user',
+    })
       .setProtectedHeader({ alg: 'RS256', kid: 'test-key' })
-      .setSubject('test-user')
+      .setSubject(opts.subject ?? 'test-user')
       .setIssuer(opts.issuer ?? TEST_ISSUER)
       .setAudience(opts.audience ?? TEST_AUDIENCE)
       .setIssuedAt()
@@ -61,7 +69,7 @@ export class TestIdp {
     return this.token(['ADMIN']);
   }
 
-  customerToken(): Promise<string> {
-    return this.token(['CUSTOMER']);
+  customerToken(subject?: string): Promise<string> {
+    return this.token(['CUSTOMER'], { subject });
   }
 }

@@ -1,9 +1,10 @@
 // The single place that decides who may call what. The AuthGuard consults this table for every
 // request, so a new controller route is protected without anyone remembering to annotate it.
 
-export type Access = 'public' | 'authenticated' | 'admin';
+export type Access = 'public' | 'authenticated' | 'admin' | 'customer';
 
 export const ADMIN_ROLE = 'ADMIN';
+export const CUSTOMER_ROLE = 'CUSTOMER';
 
 interface RoutePolicy {
   /** Upper-case HTTP method, or '*' for any. */
@@ -18,6 +19,7 @@ const POLICIES: readonly RoutePolicy[] = [
   { method: 'OPTIONS', path: /^\/.*$/, access: 'public' },
   { method: 'GET', path: /^\/health$/, access: 'public' },
   { method: 'POST', path: /^\/api\/orders\/[^/]+\/deliver$/, access: 'admin' },
+  { method: 'POST', path: /^\/api\/orders$/, access: 'customer' },
   { method: 'POST', path: /^\/api\/coupons$/, access: 'admin' },
   { method: 'GET', path: /^\/api\/coupons$/, access: 'admin' },
   { method: '*', path: /^\/api\/admin(\/.*)?$/, access: 'admin' },

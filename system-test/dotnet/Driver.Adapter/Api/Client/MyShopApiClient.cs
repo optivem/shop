@@ -12,6 +12,7 @@ public class MyShopApiClient : IDisposable
     private readonly CouponController _couponController;
     private readonly KeycloakTokenProvider? _tokenProvider;
     private volatile ApiIdentity _identity = ApiIdentity.Default;
+    private volatile TestUser _customer = TestUser.Customer;
     private bool _disposed;
 
     /// <param name="keycloakBaseUrl">When null or blank, no token is acquired and no Authorization header is sent.</param>
@@ -34,12 +35,20 @@ public class MyShopApiClient : IDisposable
         return this;
     }
 
+    /// <summary>Calls are made as the given customer, until changed again.</summary>
+    public MyShopApiClient AsCustomer(TestUser customer)
+    {
+        _identity = ApiIdentity.Customer;
+        _customer = customer;
+        return this;
+    }
+
     private async Task<string?> TokenForAsync(string method, string path)
     {
         return _identity switch
         {
             ApiIdentity.Anonymous => null,
-            ApiIdentity.Customer => await _tokenProvider!.GetTokenAsync(TestUser.Customer),
+            ApiIdentity.Customer => await _tokenProvider!.GetTokenAsync(_customer),
             ApiIdentity.Admin => await _tokenProvider!.GetTokenAsync(TestUser.Admin),
             _ => await _tokenProvider!.GetTokenAsync(IsAdminOnly(method, path) ? TestUser.Admin : TestUser.Customer)
         };

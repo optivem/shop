@@ -1,4 +1,5 @@
-import { test, forChannels, ChannelType } from './base/fixtures.js';
+import { test, forChannels, ChannelType, requiresKeycloak } from './base/fixtures.js';
+import { ErrorMessages } from '../../commons/constants/error-messages.js';
 import { emptyArguments } from '../../commons/providers/empty-arguments-provider.js';
 
 forChannels(ChannelType.UI, ChannelType.API)(() => {
@@ -79,5 +80,16 @@ forChannels(ChannelType.API)(() => {
                 .errorMessage('The request contains one or more validation errors')
                 .fieldErrorMessage('code', 'Coupon code must not be blank');
         });
+    });
+
+    test('customerShouldNotBeAbleToPublishCoupon', requiresKeycloak, async ({ scenario }) => {
+        await scenario
+            .given()
+            .loggedInAsCustomer()
+            .when()
+            .publishCoupon()
+            .then()
+            .shouldFail()
+            .errorMessage(ErrorMessages.PERMISSION_DENIED);
     });
 });

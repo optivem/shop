@@ -24,6 +24,27 @@ public class MyShopApiDriver : IMyShopDriver
         return ValueTask.CompletedTask;
     }
 
+    public void ActAs(UserIdentity identity)
+    {
+        switch (identity.Kind)
+        {
+            case UserIdentityKind.Default:
+                _apiClient.As(ApiIdentity.Default);
+                break;
+            case UserIdentityKind.Anonymous:
+                _apiClient.As(ApiIdentity.Anonymous);
+                break;
+            case UserIdentityKind.Customer:
+                _apiClient.AsCustomer(TestUserExtensions.CustomerAt(identity.CustomerIndex));
+                break;
+            case UserIdentityKind.Admin:
+                _apiClient.As(ApiIdentity.Admin);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(identity), identity, null);
+        }
+    }
+
     public Task<Result<GoToMyShopResponse, SystemError>> GoToMyShopAsync(GoToMyShopRequest request)
         => _apiClient.Health().CheckHealthAsync()
             .MapErrorAsync(MapError)
@@ -58,6 +79,10 @@ public class MyShopApiDriver : IMyShopDriver
 
     public Task<Result<ViewOrderResponse, SystemError>> ViewOrderAsync(ViewOrderRequest request)
         => _apiClient.Orders().ViewOrderAsync(request.OrderNumber)
+            .MapErrorAsync(MapError);
+
+    public Task<Result<BrowseOrderHistoryResponse, SystemError>> BrowseOrderHistoryAsync(BrowseOrderHistoryRequest request)
+        => _apiClient.Orders().BrowseOrderHistoryAsync(request.OrderNumber)
             .MapErrorAsync(MapError);
 
     public Task<Result<PublishCouponResponse, SystemError>> PublishCouponAsync(PublishCouponRequest request)

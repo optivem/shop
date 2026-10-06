@@ -5,7 +5,7 @@ describe('route policy', () => {
     ['GET', '/health', 'public'],
     ['OPTIONS', '/api/orders', 'public'],
     ['GET', '/api/orders', 'authenticated'],
-    ['POST', '/api/orders', 'authenticated'],
+    ['POST', '/api/orders', 'customer'],
     ['GET', '/api/orders/ORD-1', 'authenticated'],
     ['POST', '/api/orders/ORD-1/cancel', 'authenticated'],
     ['POST', '/api/orders/ORD-1/deliver', 'admin'],

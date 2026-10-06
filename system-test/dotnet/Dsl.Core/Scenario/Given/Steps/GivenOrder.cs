@@ -1,6 +1,7 @@
 using Common;
 using Dsl.Port.Given.Steps;
 using Dsl.Core.Scenario.Given;
+using Driver.Port;
 using Driver.Port.Dtos;
 using Common.Domain;
 using static Dsl.Core.Scenario.ScenarioDefaults;
@@ -15,9 +16,12 @@ public class GivenOrder : BaseGiven, IGivenOrder
     private string? _country;
     private string? _couponCodeAlias;
     private OrderStatus _status;
+    private readonly GivenStage _given;
+    private string? _placedByAlias;
 
     public GivenOrder(GivenStage givenClause) : base(givenClause)
     {
+        _given = givenClause;
         WithOrderNumber(DefaultOrderNumber);
         WithSku(DefaultSku);
         WithQuantity(DefaultQuantity);
@@ -73,6 +77,25 @@ public class GivenOrder : BaseGiven, IGivenOrder
 
     IGivenOrder IGivenOrder.WithCouponCode(string? couponCode) => WithCouponCode(couponCode);
 
+    public GivenOrder PlacedByCustomer()
+    {
+        _placedByAlias = null;
+        return this;
+    }
+
+    IGivenOrder IGivenOrder.PlacedByCustomer() => PlacedByCustomer();
+
+    public GivenOrder PlacedByCustomer(string alias)
+    {
+        _given.RegisterCustomer(alias);
+        _placedByAlias = alias;
+        return this;
+    }
+
+    IGivenOrder IGivenOrder.PlacedByCustomer(string alias) => PlacedByCustomer(alias);
+
+    internal bool IsPlacedByDefaultCustomer => _placedByAlias == null;
+
     public GivenOrder WithStatus(OrderStatus status)
     {
         _status = status;
@@ -82,6 +105,28 @@ public class GivenOrder : BaseGiven, IGivenOrder
     IGivenOrder IGivenOrder.WithStatus(OrderStatus status) => WithStatus(status);
 
     internal override async Task Execute(UseCaseDsl app)
+    {
+        app.ActAs(_placedByAlias == null ? GivenStage.DefaultCustomer() : _given.ResolveCustomer(_placedByAlias));
+        try
+        {
+            await PlaceAndCancel(app);
+        }
+        finally
+        {
+            app.ActAs(UserIdentity.Default);
+        }
+
+        if (_status == OrderStatus.Delivered)
+        {
+            var shop = await app.MyShop(Channel!);
+            (await shop.DeliverOrder()
+                .OrderNumber(_orderNumber)
+                .Execute())
+                .ShouldSucceed();
+        }
+    }
+
+    private async Task PlaceAndCancel(UseCaseDsl app)
     {
         var shop = await app.MyShop(Channel!);
 
@@ -97,14 +142,6 @@ public class GivenOrder : BaseGiven, IGivenOrder
         if (_status == OrderStatus.Cancelled)
         {
             (await shop.CancelOrder()
-                .OrderNumber(_orderNumber)
-                .Execute())
-                .ShouldSucceed();
-        }
-
-        if (_status == OrderStatus.Delivered)
-        {
-            (await shop.DeliverOrder()
                 .OrderNumber(_orderNumber)
                 .Execute())
                 .ShouldSucceed();

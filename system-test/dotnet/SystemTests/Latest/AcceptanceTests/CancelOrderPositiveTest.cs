@@ -19,4 +19,17 @@ public class CancelOrderPositiveTest : BaseAcceptanceTest
             .And().Order()
             .HasStatus(OrderStatus.Cancelled);
     }
+
+    [RequiresKeycloakTheory]
+    [ChannelData(ChannelType.UI, ChannelType.API)]
+    public async Task AdminShouldBeAbleToCancelCustomerOrder(Channel channel)
+    {
+        await Scenario(channel)
+            .Given().Order().PlacedByCustomer()
+            .And().LoggedInAsAdmin()
+            .When().CancelOrder()
+            .Then().ShouldSucceed()
+            .And().Order()
+            .HasStatus(OrderStatus.Cancelled);
+    }
 }

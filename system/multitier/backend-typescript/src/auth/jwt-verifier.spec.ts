@@ -38,9 +38,11 @@ describe('JwtVerifier', () => {
   it('accepts a valid token and maps realm roles', async () => {
     const token = await sign({
       realm_access: { roles: ['ADMIN', 'CUSTOMER'] },
+      preferred_username: 'alice',
     });
     await expect(verifier.verify(token)).resolves.toEqual({
       subject: 'user-1',
+      username: 'alice',
       roles: ['ADMIN', 'CUSTOMER'],
     });
   });

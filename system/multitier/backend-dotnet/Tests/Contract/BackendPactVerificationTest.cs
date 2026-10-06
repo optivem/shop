@@ -121,7 +121,7 @@ public class BackendPactVerificationTest : IAsyncLifetime
         new PactVerifier("backend", config)
             .WithHttpEndpoint(new Uri(_factory.ServerAddress))
             .WithFileSource(new FileInfo(pactPath))
-            .WithCustomHeader("Authorization", "Bearer " + TestAuth.AdminToken)
+            .WithCustomHeader("Authorization", "Bearer " + TestAuth.AdminAndCustomerToken)
             .WithProviderStateUrl(new Uri($"http://127.0.0.1:{_statePort}/"))
             .Verify();
     }

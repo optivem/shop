@@ -28,7 +28,7 @@ public class OrderService
         _couponService = couponService;
     }
 
-    public async Task<PlaceOrderResponse> PlaceOrderAsync(PlaceOrderRequest request)
+    public async Task<PlaceOrderResponse> PlaceOrderAsync(PlaceOrderRequest request, CurrentUser user)
     {
         var sku = request.Sku!;
         var quantity = request.Quantity!.Value;
@@ -82,7 +82,9 @@ public class OrderService
             TaxAmount = taxAmount,
             TotalPrice = totalPrice,
             Status = OrderStatus.PLACED,
-            AppliedCouponCode = appliedCouponCode
+            AppliedCouponCode = appliedCouponCode,
+            Owner = user.Subject,
+            OwnerName = user.Username
         };
 
         _dbContext.Orders.Add(order);
@@ -166,7 +168,7 @@ public class OrderService
         };
     }
 
-    public async Task CancelOrderAsync(string orderNumber)
+    public async Task CancelOrderAsync(string orderNumber, CurrentUser user)
     {
         var now = (await _clockGateway.GetCurrentTimeAsync()).ToUniversalTime();
 
@@ -182,13 +184,7 @@ public class OrderService
             }
         }
 
-        var order = await _dbContext.Orders
-            .FirstOrDefaultAsync(o => o.OrderNumber == orderNumber);
-
-        if (order == null)
-        {
-            throw new NotExistValidationException($"Order {orderNumber} does not exist.");
-        }
+        var order = await FindAccessibleOrderAsync(orderNumber, user);
 
         if (order.Status == OrderStatus.CANCELLED)
         {
@@ -199,24 +195,24 @@ public class OrderService
         await _dbContext.SaveChangesAsync();
     }
 
-    public async Task<BrowseOrderHistoryResponse> BrowseOrderHistoryAsync(string? orderNumberFilter)
+    public async Task<BrowseOrderHistoryResponse> BrowseOrderHistoryAsync(string? orderNumberFilter, CurrentUser user)
     {
-        List<Order> orders;
+        var query = _dbContext.Orders.AsQueryable();
 
-        if (string.IsNullOrWhiteSpace(orderNumberFilter))
+        if (!user.Admin)
         {
-            orders = await _dbContext.Orders
-                .OrderByDescending(o => o.OrderTimestamp)
-                .ToListAsync();
+            query = query.Where(o => o.Owner == user.Subject);
         }
-        else
+
+        if (!string.IsNullOrWhiteSpace(orderNumberFilter))
         {
             var filter = orderNumberFilter.Trim();
-            orders = await _dbContext.Orders
-                .Where(o => EF.Functions.ILike(o.OrderNumber, $"%{filter}%"))
-                .OrderByDescending(o => o.OrderTimestamp)
-                .ToListAsync();
+            query = query.Where(o => EF.Functions.ILike(o.OrderNumber, $"%{filter}%"));
         }
+
+        var orders = await query
+            .OrderByDescending(o => o.OrderTimestamp)
+            .ToListAsync();
 
         var items = orders.Select(order => new BrowseOrderHistoryItemResponse
         {
@@ -227,21 +223,16 @@ public class OrderService
             Quantity = order.Quantity,
             TotalPrice = order.TotalPrice,
             Status = order.Status,
-            AppliedCouponCode = order.AppliedCouponCode
+            AppliedCouponCode = order.AppliedCouponCode,
+            Customer = order.OwnerName
         }).ToList();
 
         return new BrowseOrderHistoryResponse { Orders = items };
     }
 
-    public async Task<ViewOrderDetailsResponse> GetOrderAsync(string orderNumber)
+    public async Task<ViewOrderDetailsResponse> GetOrderAsync(string orderNumber, CurrentUser user)
     {
-        var order = await _dbContext.Orders
-            .FirstOrDefaultAsync(o => o.OrderNumber == orderNumber);
-
-        if (order == null)
-        {
-            throw new NotExistValidationException($"Order {orderNumber} does not exist.");
-        }
+        var order = await FindAccessibleOrderAsync(orderNumber, user);
 
         return new ViewOrderDetailsResponse
         {
@@ -261,6 +252,20 @@ public class OrderService
             Country = order.Country,
             AppliedCouponCode = order.AppliedCouponCode
         };
+    }
+
+    /// <summary>Another customer's order is reported as non-existent, so its existence is not revealed.</summary>
+    private async Task<Order> FindAccessibleOrderAsync(string orderNumber, CurrentUser user)
+    {
+        var order = await _dbContext.Orders
+            .FirstOrDefaultAsync(o => o.OrderNumber == orderNumber);
+
+        if (order == null || (!user.Admin && order.Owner != user.Subject))
+        {
+            throw new NotExistValidationException($"Order {orderNumber} does not exist.");
+        }
+
+        return order;
     }
 
     private static string GenerateOrderNumber()

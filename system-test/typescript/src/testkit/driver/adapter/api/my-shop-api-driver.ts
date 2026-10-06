@@ -11,18 +11,40 @@ import type { DeliverOrderResponse } from '../../port/dtos/DeliverOrderResponse.
 import type { ViewOrderRequest } from '../../port/dtos/ViewOrderRequest.js';
 import type { ViewOrderResponse } from '../../port/dtos/ViewOrderResponse.js';
 import type { SystemError } from '../../port/dtos/errors/SystemError.js';
+import type { BrowseOrderHistoryRequest } from '../../port/dtos/BrowseOrderHistoryRequest.js';
+import type { BrowseOrderHistoryResponse } from '../../port/dtos/BrowseOrderHistoryResponse.js';
 import type { PublishCouponRequest } from '../../port/dtos/PublishCouponRequest.js';
 import type { PublishCouponResponse } from '../../port/dtos/PublishCouponResponse.js';
 import type { BrowseCouponsRequest } from '../../port/dtos/BrowseCouponsRequest.js';
 import type { BrowseCouponsResponse } from '../../port/dtos/BrowseCouponsResponse.js';
 import type { MyShopDriver } from '../../port/my-shop-driver.js';
+import type { UserIdentity } from '../../port/user-identity.js';
+import { testCustomer } from '../shared/client/http/test-user.js';
 import { MyShopApiClient } from './client/MyShopApiClient.js';
+import { ApiIdentity } from './client/api-identity.js';
 
 export class MyShopApiDriver implements MyShopDriver {
   private readonly client: MyShopApiClient;
 
   constructor(baseUrl: string, keycloakBaseUrl?: string) {
     this.client = new MyShopApiClient(baseUrl, keycloakBaseUrl);
+  }
+
+  actAs(identity: UserIdentity): void {
+    switch (identity.kind) {
+      case 'DEFAULT':
+        this.client.as(ApiIdentity.DEFAULT);
+        break;
+      case 'ANONYMOUS':
+        this.client.as(ApiIdentity.ANONYMOUS);
+        break;
+      case 'CUSTOMER':
+        this.client.asCustomer(testCustomer(identity.customerIndex));
+        break;
+      case 'ADMIN':
+        this.client.as(ApiIdentity.ADMIN);
+        break;
+    }
   }
 
   async goToMyShop(_request: GoToMyShopRequest): Promise<Result<GoToMyShopResponse, SystemError>> {
@@ -49,6 +71,10 @@ export class MyShopApiDriver implements MyShopDriver {
 
   async viewOrder(request: ViewOrderRequest): Promise<Result<ViewOrderResponse, SystemError>> {
     return this.client.orders().viewOrder(request.orderNumber);
+  }
+
+  async browseOrderHistory(request: BrowseOrderHistoryRequest): Promise<Result<BrowseOrderHistoryResponse, SystemError>> {
+    return this.client.orders().browseOrderHistory(request.orderNumber);
   }
 
   async publishCoupon(request: PublishCouponRequest): Promise<Result<PublishCouponResponse, SystemError>> {

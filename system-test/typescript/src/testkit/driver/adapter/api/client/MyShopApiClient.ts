@@ -3,7 +3,7 @@ import { OrderController } from './controllers/OrderController.js';
 import { CouponController } from './controllers/CouponController.js';
 import { ApiIdentity, type ApiIdentityValue } from './api-identity.js';
 import { KeycloakTokenProvider } from '../../shared/client/http/keycloak-token-provider.js';
-import { TestUsers } from '../../shared/client/http/test-user.js';
+import { TestUsers, type TestUser } from '../../shared/client/http/test-user.js';
 import type { BearerTokenSource } from '../../shared/client/http/bearer-token-source.js';
 
 export class MyShopApiClient {
@@ -12,6 +12,7 @@ export class MyShopApiClient {
   private readonly couponController: CouponController;
   private readonly tokenProvider: KeycloakTokenProvider | undefined;
   private identity: ApiIdentityValue = ApiIdentity.DEFAULT;
+  private customer: TestUser = TestUsers.CUSTOMER;
 
   /**
    * @param keycloakBaseUrl when undefined or empty, no token is acquired and no Authorization header is sent.
@@ -29,6 +30,13 @@ export class MyShopApiClient {
   /** Selects who the following calls are made as. */
   as(identity: ApiIdentityValue): this {
     this.identity = identity;
+    return this;
+  }
+
+  /** Calls are made as the given customer, until changed again. */
+  asCustomer(customer: TestUser): this {
+    this.identity = ApiIdentity.CUSTOMER;
+    this.customer = customer;
     return this;
   }
 
@@ -51,7 +59,7 @@ export class MyShopApiClient {
       case ApiIdentity.ANONYMOUS:
         return undefined;
       case ApiIdentity.CUSTOMER:
-        return provider.getToken(TestUsers.CUSTOMER);
+        return provider.getToken(this.customer);
       case ApiIdentity.ADMIN:
         return provider.getToken(TestUsers.ADMIN);
       case ApiIdentity.DEFAULT:

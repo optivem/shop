@@ -6,6 +6,7 @@ import { DEFAULTS } from '../defaults.js';
 import type { UseCaseContext } from '../../shared/use-case-context.js';
 import type { AppContext } from '../app-context.js';
 import type { ScenarioContext } from '../scenario-context.js';
+import { placeGivenOrder } from '../given/place-given-order.js';
 
 export class ThenCancelOrderResultStage implements PromiseLike<void> {
   private _expectSuccess = true;
@@ -89,23 +90,7 @@ export class ThenCancelOrderResultStage implements PromiseLike<void> {
 
   private async _placeGivenOrders(): Promise<void> {
     for (const oc of this.ctx.orderConfigs) {
-      const resolvedSku = this.useCaseContext.getParamValue(oc.sku);
-      const resolvedCountry = this.useCaseContext.getParamValueOrLiteral(oc.country);
-      const resolvedCouponCode = this.useCaseContext.getParamValue(oc.couponCode);
-      const placeResult = await this.app.myShop().placeOrder({
-        sku: resolvedSku,
-        quantity: oc.quantity,
-        country: resolvedCountry,
-        couponCode: resolvedCouponCode,
-      });
-      if (!placeResult.success) continue;
-      oc.orderNumber = placeResult.value.orderNumber;
-      if (oc.status === 'CANCELLED') {
-        await this.app.myShop().cancelOrder({ orderNumber: placeResult.value.orderNumber });
-      }
-      if (oc.status === 'DELIVERED') {
-        await this.app.myShop().deliverOrder({ orderNumber: placeResult.value.orderNumber });
-      }
+      await placeGivenOrder(this.app, this.ctx, this.useCaseContext, oc);
     }
   }
 
@@ -119,6 +104,7 @@ export class ThenCancelOrderResultStage implements PromiseLike<void> {
   }
 
   private async _doExecute(): Promise<void> {
+    this.ctx.reserveDefaultCustomerIfUsed();
     await this._arrangeClock();
     await this._arrangeTax();
 
@@ -130,6 +116,7 @@ export class ThenCancelOrderResultStage implements PromiseLike<void> {
     await this._arrangeProducts();
     await this._arrangeCoupons();
     await this._placeGivenOrders();
+    this.app.actAs(this.ctx.loggedInIdentity());
 
     const targetOrderNumber = this.ctx.orderConfigs[0]?.orderNumber ?? this.orderNumber;
 

@@ -22,10 +22,18 @@ describe('AuthGuard', () => {
     verify.mockReset();
     verify.mockImplementation((token: string) => {
       if (token === 'admin-token') {
-        return Promise.resolve({ subject: 'a', roles: ['ADMIN'] });
+        return Promise.resolve({
+          subject: 'a',
+          username: 'admin1',
+          roles: ['ADMIN'],
+        });
       }
       if (token === 'customer-token') {
-        return Promise.resolve({ subject: 'c', roles: ['CUSTOMER'] });
+        return Promise.resolve({
+          subject: 'c',
+          username: 'customer1',
+          roles: ['CUSTOMER'],
+        });
       }
       return Promise.reject(new Error('invalid'));
     });
@@ -78,6 +86,7 @@ describe('AuthGuard', () => {
     await expect(guard.canActivate(context)).resolves.toBe(true);
     expect((request as { user?: unknown }).user).toEqual({
       subject: 'c',
+      username: 'customer1',
       roles: ['CUSTOMER'],
     });
   });
@@ -92,6 +101,22 @@ describe('AuthGuard', () => {
     await expect(guard.canActivate(context)).rejects.toBeInstanceOf(
       ForbiddenException,
     );
+  });
+
+  it('rejects an admin without the CUSTOMER role on place order with 403', async () => {
+    const { context } = contextFor('POST', '/api/orders', 'Bearer admin-token');
+    await expect(guard.canActivate(context)).rejects.toBeInstanceOf(
+      ForbiddenException,
+    );
+  });
+
+  it('lets a customer place an order', async () => {
+    const { context } = contextFor(
+      'POST',
+      '/api/orders',
+      'Bearer customer-token',
+    );
+    await expect(guard.canActivate(context)).resolves.toBe(true);
   });
 
   it('lets an admin use admin routes', async () => {

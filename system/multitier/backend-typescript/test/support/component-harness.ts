@@ -166,6 +166,13 @@ export class ComponentHarness {
       .set('Authorization', `Bearer ${this.adminToken}`);
   }
 
+  /** A client that calls the API as the given customer (a distinct subject per name). */
+  async customerApi(subject = 'customer-a') {
+    return request
+      .agent(this.httpServer())
+      .set('Authorization', `Bearer ${await this.idp.customerToken(subject)}`);
+  }
+
   httpServer(): http.Server {
     return this.app.getHttpServer() as http.Server;
   }

@@ -25,6 +25,7 @@ public class UseCaseDsl : IAsyncDisposable
     private readonly UseCaseContext _context;
     private readonly Configuration _configuration;
     private readonly Dictionary<string, MyShopDsl> _shops = new();
+    private UserIdentity _identity = UserIdentity.Default;
     private ErpDsl? _erp;
     private TaxDsl? _tax;
     private ClockDsl? _clock;
@@ -33,6 +34,12 @@ public class UseCaseDsl : IAsyncDisposable
     {
         _context = new UseCaseContext(configuration.ExternalSystemMode);
         _configuration = configuration;
+    }
+
+    /// <summary>Selects who MyShop operations are performed as, until changed again.</summary>
+    public void ActAs(UserIdentity identity)
+    {
+        _identity = identity;
     }
 
     public async Task<MyShopDsl> MyShop(ChannelMode mode, Channel channel)
@@ -53,6 +60,7 @@ public class UseCaseDsl : IAsyncDisposable
             shop = await MyShopDsl.CreateAsync(await CreateMyShopDriverForChannelAsync(channelType), _context);
             _shops[channelType] = shop;
         }
+        shop.ActAs(_identity);
         return shop;
     }
 

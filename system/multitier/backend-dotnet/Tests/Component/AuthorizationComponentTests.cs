@@ -135,6 +135,14 @@ public class AuthorizationComponentTests : IClassFixture<WebApplicationFactory<P
     }
 
     [Fact]
+    public async Task AdminCannotPlaceOrder()
+    {
+        var response = await Call(HttpMethod.Post, "/api/orders", TestAuth.AdminToken);
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
     public async Task CustomerCannotDeliverOrder()
     {
         var response = await Call(HttpMethod.Post, "/api/orders/ORD-1/deliver", TestAuth.CustomerToken);

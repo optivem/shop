@@ -119,6 +119,8 @@ function findA10Violations(): { found: boolean; violations: string[] } {
     found = true;
 
     for (const method of iface.getMethods()) {
+      // actAs selects the acting identity for later operations; it is not itself a system operation.
+      if (method.getName() === 'actAs') continue;
       const params = method.getParameters();
       const paramType = params[0]?.getTypeNode()?.getText() ?? '';
       if (params.length !== 1 || !paramType.endsWith('Request')) {

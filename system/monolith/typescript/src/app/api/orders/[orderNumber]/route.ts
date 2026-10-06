@@ -1,16 +1,21 @@
 import type { NextRequest } from 'next/server';
 import Decimal from 'decimal.js';
-import { findByOrderNumber } from '@/lib/db';
-import { notFoundResponse, internalErrorResponse } from '@/lib/errors';
+import { findAccessibleOrder } from '@/lib/db';
+import { resolveCaller } from '@/lib/auth/caller';
+import { notFoundResponse, internalErrorResponse, unauthorizedResponse } from '@/lib/errors';
 import { jsonResponseWithDecimals } from '@/lib/decimal-format';
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ orderNumber: string }> }
 ) {
   try {
+    const caller = await resolveCaller(request);
+    if (!caller) {
+      return unauthorizedResponse('Authentication is required');
+    }
     const { orderNumber } = await params;
-    const order = await findByOrderNumber(orderNumber);
+    const order = await findAccessibleOrder(orderNumber, caller);
 
     if (!order) {
       return notFoundResponse(`Order ${orderNumber} does not exist.`);

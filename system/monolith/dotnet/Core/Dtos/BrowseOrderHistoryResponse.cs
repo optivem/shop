@@ -17,4 +17,5 @@ public class BrowseOrderHistoryItemResponse
     public decimal TotalPrice { get; set; }
     public OrderStatus Status { get; set; }
     public string? AppliedCouponCode { get; set; }
+    public string? Customer { get; set; }
 }

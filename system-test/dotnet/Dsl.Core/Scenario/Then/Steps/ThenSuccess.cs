@@ -26,6 +26,13 @@ public class ThenSuccess<TSuccessResponse, TSuccessVerification>
 
     IThenSuccessAnd IThenSuccess.And() => And();
 
+    public ThenSuccessOrderHistory<TSuccessResponse, TSuccessVerification> OrderHistory()
+    {
+        return new ThenSuccessOrderHistory<TSuccessResponse, TSuccessVerification>(_thenClause);
+    }
+
+    IThenOrderHistory IThenSuccess.OrderHistory() => OrderHistory();
+
     /// <summary>
     /// When awaited with no further chaining, runs the success verification.
     /// </summary>

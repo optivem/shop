@@ -41,12 +41,16 @@ describe('Place Order (component)', () => {
   }
 
   const placeAndFetch = async (body: OrderRequest): Promise<OrderDetails> => {
-    const placed = await harness.adminApi().post('/api/orders').send(body);
+    const placed = await (await harness.customerApi())
+      .post('/api/orders')
+      .send(body);
     expect(placed.status).toBe(201);
     const { orderNumber } = placed.body as { orderNumber: string };
     expect(orderNumber).toBeDefined();
 
-    const details = await harness.adminApi().get(`/api/orders/${orderNumber}`);
+    const details = await (
+      await harness.customerApi()
+    ).get(`/api/orders/${orderNumber}`);
     expect(details.status).toBe(200);
     return details.body as OrderDetails;
   };
@@ -122,8 +126,8 @@ describe('Place Order (component)', () => {
   it('rejects an order during the New Year blackout', async () => {
     harness.stubClock('2026-12-31T23:59:00Z');
 
-    const response = await harness
-      .adminApi()
+    const customer = await harness.customerApi();
+    const response = await customer
       .post('/api/orders')
       .send({ sku: 'BOOK-123', quantity: 2, country: 'US' });
 
@@ -134,8 +138,8 @@ describe('Place Order (component)', () => {
     harness.stubClock('2026-03-10T12:00:00Z');
     harness.stubProductMissing('MISSING-1');
 
-    const response = await harness
-      .adminApi()
+    const customer = await harness.customerApi();
+    const response = await customer
       .post('/api/orders')
       .send({ sku: 'MISSING-1', quantity: 1, country: 'US' });
 
@@ -158,9 +162,10 @@ describe('Place Order (component)', () => {
     harness.stubPromotion(false, 1.0);
     harness.stubTax('US', 0.1);
 
+    const customer = await harness.customerApi();
     const responses = await Promise.all(
       Array.from({ length: 10 }, () =>
-        harness.adminApi().post('/api/orders').send({
+        customer.post('/api/orders').send({
           sku: 'BOOK-123',
           quantity: 1,
           country: 'US',
@@ -181,8 +186,8 @@ describe('Place Order (component)', () => {
   });
 
   it('rejects an invalid quantity with a field error instead of a server error', async () => {
-    const response = await harness
-      .adminApi()
+    const customer = await harness.customerApi();
+    const response = await customer
       .post('/api/orders')
       .send({ sku: 'BOOK-123', quantity: 'lala', country: 'US' });
 

@@ -8,12 +8,24 @@ function keySet() {
   return jwks;
 }
 
-/** Validates signature (JWKS), issuer, audience and expiry; returns the realm roles, or null if invalid. */
-export async function verifyBearerToken(token: string): Promise<string[] | null> {
+export interface TokenIdentity {
+  subject: string;
+  username: string;
+  roles: string[];
+}
+
+/** Validates signature (JWKS), issuer, audience and expiry; returns the caller's identity, or null if invalid. */
+export async function verifyBearerToken(token: string): Promise<TokenIdentity | null> {
   const { issuer, audience } = authSettings();
   try {
     const { payload } = await jwtVerify(token, keySet(), { issuer, audience });
-    return realmRoles(payload.realm_access);
+    const subject = payload.sub ?? '';
+    const preferred = payload.preferred_username;
+    return {
+      subject,
+      username: typeof preferred === 'string' ? preferred : subject,
+      roles: realmRoles(payload.realm_access),
+    };
   } catch {
     return null;
   }

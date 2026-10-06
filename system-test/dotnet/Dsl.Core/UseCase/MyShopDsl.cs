@@ -27,6 +27,8 @@ public class MyShopDsl : IAsyncDisposable
         GC.SuppressFinalize(this);
     }
 
+    public void ActAs(UserIdentity identity) => _driver.ActAs(identity);
+
     public GoToMyShop GoToMyShop() => new(_driver, _context);
 
     public PlaceOrder PlaceOrder() => new(_driver, _context);
@@ -36,6 +38,8 @@ public class MyShopDsl : IAsyncDisposable
     public DeliverOrder DeliverOrder() => new(_driver, _context);
 
     public ViewOrder ViewOrder() => new(_driver, _context);
+
+    public BrowseOrderHistory BrowseOrderHistory() => new(_driver, _context);
 
     public PublishCoupon PublishCoupon() => new(_driver, _context);
 

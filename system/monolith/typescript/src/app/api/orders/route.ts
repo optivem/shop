@@ -4,9 +4,16 @@ import Decimal from 'decimal.js';
 import { insertOrder, findAllOrders, findCouponByCode, tryIncrementCouponUsage, inTransaction } from '@/lib/db';
 import { getCurrentTime, getProductDetails, getPromotionDetails, getTaxDetails } from '@/lib/external';
 import { parsePlaceOrderRequest } from '@/lib/validation';
-import { badRequestResponse, validationErrorResponse, generalValidationErrorResponse, internalErrorResponse } from '@/lib/errors';
+import {
+  badRequestResponse,
+  validationErrorResponse,
+  generalValidationErrorResponse,
+  internalErrorResponse,
+  unauthorizedResponse,
+} from '@/lib/errors';
 import { isRecord } from '@/lib/type-guards';
 import { jsonResponseWithDecimals } from '@/lib/decimal-format';
+import { resolveCaller } from '@/lib/auth/caller';
 
 type CouponResolution =
   | { ok: true; discountRate: Decimal; appliedCouponCode: string | null }
@@ -48,6 +55,11 @@ function usageLimitExceededMessage(couponCode: string): string {
 
 export async function POST(request: NextRequest) {
   try {
+    const caller = await resolveCaller(request);
+    if (!caller) {
+      return unauthorizedResponse('Authentication is required');
+    }
+
     // Malformed JSON and non-object JSON (null, array, primitive) are both an invalid request format.
     const body: unknown = await request.json().catch(() => undefined);
     if (!isRecord(body)) {
@@ -129,6 +141,8 @@ export async function POST(request: NextRequest) {
           totalPrice,
           appliedCouponCode,
           status: 'PLACED',
+          owner: caller.subject,
+          ownerName: caller.username,
         },
         db
       );
@@ -153,8 +167,12 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
+    const caller = await resolveCaller(request);
+    if (!caller) {
+      return unauthorizedResponse('Authentication is required');
+    }
     const orderNumberFilter = request.nextUrl.searchParams.get('orderNumber') ?? undefined;
-    const orders = await findAllOrders(orderNumberFilter);
+    const orders = await findAllOrders(orderNumberFilter, caller.admin ? null : caller.subject);
 
     return jsonResponseWithDecimals({
       orders: orders.map((o) => ({
@@ -166,6 +184,7 @@ export async function GET(request: NextRequest) {
         totalPrice: new Decimal(o.total_price),
         appliedCouponCode: o.applied_coupon_code,
         status: o.status,
+        customer: caller.admin ? o.owner_name : undefined,
       })),
     });
   } catch (error) {

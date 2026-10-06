@@ -73,4 +73,13 @@ public class Order
     [MaxLength(255)]
     [Column("applied_coupon_code")]
     public string? AppliedCouponCode { get; set; }
+
+    /// <summary>Token subject of the customer who placed the order; null for orders that predate ownership.</summary>
+    [MaxLength(255)]
+    [Column("owner")]
+    public string? Owner { get; set; }
+
+    [MaxLength(255)]
+    [Column("owner_name")]
+    public string? OwnerName { get; set; }
 }

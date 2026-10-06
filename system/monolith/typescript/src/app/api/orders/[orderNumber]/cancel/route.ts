@@ -1,13 +1,23 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import { findByOrderNumber, updateOrderStatus } from '@/lib/db';
+import { findAccessibleOrder, updateOrderStatus } from '@/lib/db';
+import { resolveCaller } from '@/lib/auth/caller';
 import { getCurrentTime } from '@/lib/external';
-import { notFoundResponse, generalValidationErrorResponse, internalErrorResponse } from '@/lib/errors';
+import {
+  notFoundResponse,
+  generalValidationErrorResponse,
+  internalErrorResponse,
+  unauthorizedResponse,
+} from '@/lib/errors';
 
 export async function POST(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ orderNumber: string }> }
 ) {
   try {
+    const caller = await resolveCaller(request);
+    if (!caller) {
+      return unauthorizedResponse('Authentication is required');
+    }
     const { orderNumber } = await params;
 
     const now = await getCurrentTime();
@@ -25,7 +35,7 @@ export async function POST(
       }
     }
 
-    const order = await findByOrderNumber(orderNumber);
+    const order = await findAccessibleOrder(orderNumber, caller);
 
     if (!order) {
       return notFoundResponse(`Order ${orderNumber} does not exist.`);

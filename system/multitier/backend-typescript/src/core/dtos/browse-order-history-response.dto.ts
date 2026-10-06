@@ -10,6 +10,7 @@ export class BrowseOrderHistoryItemResponse {
   totalPrice!: Decimal;
   status!: OrderStatus;
   appliedCouponCode!: string | null;
+  customer!: string | null;
 }
 
 export class BrowseOrderHistoryResponse {

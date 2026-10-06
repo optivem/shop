@@ -11,17 +11,23 @@ import type { DeliverOrderResponse } from './dtos/DeliverOrderResponse.js';
 import type { ViewOrderRequest } from './dtos/ViewOrderRequest.js';
 import type { ViewOrderResponse } from './dtos/ViewOrderResponse.js';
 import type { SystemError } from './dtos/errors/SystemError.js';
+import type { BrowseOrderHistoryRequest } from './dtos/BrowseOrderHistoryRequest.js';
+import type { BrowseOrderHistoryResponse } from './dtos/BrowseOrderHistoryResponse.js';
+import type { UserIdentity } from './user-identity.js';
 import type { PublishCouponRequest } from './dtos/PublishCouponRequest.js';
 import type { PublishCouponResponse } from './dtos/PublishCouponResponse.js';
 import type { BrowseCouponsRequest } from './dtos/BrowseCouponsRequest.js';
 import type { BrowseCouponsResponse } from './dtos/BrowseCouponsResponse.js';
 
 export interface MyShopDriver extends AsyncCloseable {
+  /** Selects who subsequent operations are performed as. */
+  actAs(identity: UserIdentity): void;
   goToMyShop(request: GoToMyShopRequest): Promise<Result<GoToMyShopResponse, SystemError>>;
   placeOrder(request: PlaceOrderRequest): Promise<Result<PlaceOrderResponse, SystemError>>;
   cancelOrder(request: CancelOrderRequest): Promise<Result<CancelOrderResponse, SystemError>>;
   deliverOrder(request: DeliverOrderRequest): Promise<Result<DeliverOrderResponse, SystemError>>;
   viewOrder(request: ViewOrderRequest): Promise<Result<ViewOrderResponse, SystemError>>;
+  browseOrderHistory(request: BrowseOrderHistoryRequest): Promise<Result<BrowseOrderHistoryResponse, SystemError>>;
   publishCoupon(request: PublishCouponRequest): Promise<Result<PublishCouponResponse, SystemError>>;
   browseCoupons(request: BrowseCouponsRequest): Promise<Result<BrowseCouponsResponse, SystemError>>;
 }

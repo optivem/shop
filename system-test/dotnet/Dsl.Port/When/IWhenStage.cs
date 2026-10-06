@@ -8,7 +8,11 @@ public interface IWhenStage
 
     IWhenCancelOrder CancelOrder();
 
+    IWhenDeliverOrder DeliverOrder();
+
     IWhenViewOrder ViewOrder();
+
+    IWhenBrowseOrderHistory BrowseOrderHistory();
 
     IWhenPublishCoupon PublishCoupon();
 

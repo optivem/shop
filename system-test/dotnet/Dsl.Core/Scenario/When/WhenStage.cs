@@ -84,6 +84,20 @@ namespace Dsl.Core.Scenario.When
 
         IWhenCancelOrder IWhenStage.CancelOrder() => CancelOrder();
 
+        public DeliverOrder DeliverOrder()
+        {
+            return new DeliverOrder(_app, _scenario, () => EnsureGiven());
+        }
+
+        IWhenDeliverOrder IWhenStage.DeliverOrder() => DeliverOrder();
+
+        public WhenBrowseOrderHistory BrowseOrderHistory()
+        {
+            return new WhenBrowseOrderHistory(_app, _scenario, () => EnsureGiven());
+        }
+
+        IWhenBrowseOrderHistory IWhenStage.BrowseOrderHistory() => BrowseOrderHistory();
+
         public ViewOrder ViewOrder()
         {
             return new ViewOrder(_app, _scenario, () => EnsureGiven());

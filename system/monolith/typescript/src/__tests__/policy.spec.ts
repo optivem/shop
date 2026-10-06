@@ -15,10 +15,8 @@ describe('decide', () => {
 
   it.each([
     ['GET', '/'],
-    ['GET', '/new-order'],
     ['GET', '/order-history'],
     ['GET', '/api/orders'],
-    ['POST', '/api/orders'],
     ['GET', '/api/orders/ORD-1'],
     ['POST', '/api/orders/ORD-1/cancel'],
     ['GET', '/api/unknown-route'],
@@ -26,6 +24,15 @@ describe('decide', () => {
     expect(decide(method, path, null)).toBe('unauthenticated');
     expect(decide(method, path, customer)).toBe('allow');
     expect(decide(method, path, admin)).toBe('allow');
+  });
+
+  it.each([
+    ['POST', '/api/orders'],
+    ['GET', '/new-order'],
+  ])('%s %s is CUSTOMER only', (method, path) => {
+    expect(decide(method, path, null)).toBe('unauthenticated');
+    expect(decide(method, path, customer)).toBe('allow');
+    expect(decide(method, path, admin)).toBe('forbidden');
   });
 
   it.each([

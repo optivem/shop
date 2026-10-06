@@ -12,20 +12,40 @@ import type { DeliverOrderResponse } from '../../port/dtos/DeliverOrderResponse.
 import type { ViewOrderRequest } from '../../port/dtos/ViewOrderRequest.js';
 import type { ViewOrderResponse } from '../../port/dtos/ViewOrderResponse.js';
 import type { SystemError } from '../../port/dtos/errors/SystemError.js';
+import type { BrowseOrderHistoryRequest } from '../../port/dtos/BrowseOrderHistoryRequest.js';
+import type { BrowseOrderHistoryResponse } from '../../port/dtos/BrowseOrderHistoryResponse.js';
+import type { UserIdentity } from '../../port/user-identity.js';
 import type { PublishCouponRequest } from '../../port/dtos/PublishCouponRequest.js';
 import type { PublishCouponResponse } from '../../port/dtos/PublishCouponResponse.js';
 import type { BrowseCouponsRequest } from '../../port/dtos/BrowseCouponsRequest.js';
 import type { BrowseCouponsResponse } from '../../port/dtos/BrowseCouponsResponse.js';
 import type { MyShopDriver } from '../../port/my-shop-driver.js';
-import { TestUsers } from '../shared/client/http/test-user.js';
+import { TestUsers, testCustomer, type TestUser } from '../shared/client/http/test-user.js';
 import { MyShopUiClient } from './client/MyShopUiClient.js';
 import { NewOrderPage } from './client/pages/NewOrderPage.js';
 
 export class MyShopUiDriver implements MyShopDriver {
   private readonly client: MyShopUiClient;
+  private requestedUser: TestUser | undefined;
 
   constructor(baseUrl: string, browser: Browser, keycloakBaseUrl?: string) {
     this.client = new MyShopUiClient(baseUrl, browser, keycloakBaseUrl);
+  }
+
+  actAs(identity: UserIdentity): void {
+    switch (identity.kind) {
+      case 'DEFAULT':
+        this.requestedUser = undefined;
+        break;
+      case 'CUSTOMER':
+        this.requestedUser = testCustomer(identity.customerIndex);
+        break;
+      case 'ADMIN':
+        this.requestedUser = TestUsers.ADMIN;
+        break;
+      case 'ANONYMOUS':
+        throw new Error('The UI requires a logged-in user');
+    }
   }
 
   async goToMyShop(_request: GoToMyShopRequest): Promise<Result<GoToMyShopResponse, SystemError>> {
@@ -35,7 +55,7 @@ export class MyShopUiDriver implements MyShopDriver {
   }
 
   async placeOrder(request: PlaceOrderRequest): Promise<Result<PlaceOrderResponse, SystemError>> {
-    await this.client.switchUser(TestUsers.CUSTOMER);
+    await this.runAs(TestUsers.CUSTOMER);
     const homeResult = await this.client.openHomePage();
     if (!homeResult.success) return failure(homeResult.error);
     await homeResult.value.clickNewOrder();
@@ -67,6 +87,7 @@ export class MyShopUiDriver implements MyShopDriver {
   }
 
   async viewOrder(request: ViewOrderRequest): Promise<Result<ViewOrderResponse, SystemError>> {
+    await this.switchToRequestedUser();
     const orderNumber = request.orderNumber;
     const homeResult = await this.client.openHomePage();
     if (!homeResult.success) return failure(homeResult.error);
@@ -105,6 +126,7 @@ export class MyShopUiDriver implements MyShopDriver {
   }
 
   async cancelOrder(request: CancelOrderRequest): Promise<Result<CancelOrderResponse, SystemError>> {
+    await this.switchToRequestedUser();
     const orderNumber = request.orderNumber;
     const homeResult = await this.client.openHomePage();
     if (!homeResult.success) return failure(homeResult.error);
@@ -130,7 +152,7 @@ export class MyShopUiDriver implements MyShopDriver {
   }
 
   async deliverOrder(request: DeliverOrderRequest): Promise<Result<DeliverOrderResponse, SystemError>> {
-    await this.client.switchUser(TestUsers.ADMIN);
+    await this.runAs(TestUsers.ADMIN);
     const orderNumber = request.orderNumber;
     const homeResult = await this.client.openHomePage();
     if (!homeResult.success) return failure(homeResult.error);
@@ -155,8 +177,12 @@ export class MyShopUiDriver implements MyShopDriver {
     return failure(notificationResult.error);
   }
 
+  browseOrderHistory(_request: BrowseOrderHistoryRequest): Promise<Result<BrowseOrderHistoryResponse, SystemError>> {
+    return Promise.reject(new Error('Browsing order history is only supported through the API channel'));
+  }
+
   async publishCoupon(request: PublishCouponRequest): Promise<Result<PublishCouponResponse, SystemError>> {
-    await this.client.switchUser(TestUsers.ADMIN);
+    await this.runAs(TestUsers.ADMIN);
     const homeResult = await this.client.openHomePage();
     if (!homeResult.success) return failure(homeResult.error);
     await homeResult.value.clickAdminCoupons();
@@ -181,7 +207,7 @@ export class MyShopUiDriver implements MyShopDriver {
   }
 
   async browseCoupons(_request: BrowseCouponsRequest): Promise<Result<BrowseCouponsResponse, SystemError>> {
-    await this.client.switchUser(TestUsers.ADMIN);
+    await this.runAs(TestUsers.ADMIN);
     const homeResult = await this.client.openHomePage();
     if (!homeResult.success) return failure(homeResult.error);
     await homeResult.value.clickAdminCoupons();
@@ -195,5 +221,17 @@ export class MyShopUiDriver implements MyShopDriver {
 
   async close(): Promise<void> {
     await this.client.close();
+  }
+
+  /** An explicitly requested identity wins; otherwise admin-only operations run as admin and order placement as customer. */
+  private async runAs(operationDefault: TestUser): Promise<void> {
+    await this.client.switchUser(this.requestedUser ?? operationDefault);
+  }
+
+  /** Operations that have no default user run as the requested identity, or keep the current user when none was requested. */
+  private async switchToRequestedUser(): Promise<void> {
+    if (this.requestedUser) {
+      await this.client.switchUser(this.requestedUser);
+    }
   }
 }

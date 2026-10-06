@@ -19,6 +19,7 @@ import { ErpGateway } from './external/erp.gateway';
 import { ClockGateway } from './external/clock.gateway';
 import { TaxGateway } from './external/tax.gateway';
 import { CouponService } from './coupon.service';
+import type { CurrentUser } from '../../auth/current-user';
 
 @Injectable()
 export class OrderService {
@@ -36,7 +37,10 @@ export class OrderService {
     private readonly couponService: CouponService,
   ) {}
 
-  async placeOrder(request: PlaceOrderRequest): Promise<PlaceOrderResponse> {
+  async placeOrder(
+    request: PlaceOrderRequest,
+    user: CurrentUser,
+  ): Promise<PlaceOrderResponse> {
     const sku = request.sku;
     const quantity = request.quantity;
     const country = request.country;
@@ -101,6 +105,8 @@ export class OrderService {
     order.totalPrice = OrderService.roundMoney(totalPrice);
     order.status = OrderStatus.PLACED;
     order.appliedCouponCode = appliedCouponCode ?? null;
+    order.owner = user.subject;
+    order.ownerName = user.username;
 
     // The coupon use is claimed in the same transaction as the insert, so a failed insert does not
     // use up the coupon.
@@ -193,7 +199,7 @@ export class OrderService {
     return response;
   }
 
-  async cancelOrder(orderNumber: string): Promise<void> {
+  async cancelOrder(orderNumber: string, user: CurrentUser): Promise<void> {
     const now = await this.clockGateway.getCurrentTime();
 
     const utcMonth = now.getUTCMonth();
@@ -214,15 +220,7 @@ export class OrderService {
       }
     }
 
-    const order = await this.orderRepository.findOne({
-      where: { orderNumber },
-    });
-
-    if (!order) {
-      throw new NotExistValidationException(
-        `Order ${orderNumber} does not exist.`,
-      );
-    }
+    const order = await this.findAccessibleOrder(orderNumber, user);
 
     if (order.status === OrderStatus.CANCELLED) {
       throw new ValidationException('Order has already been cancelled');
@@ -233,22 +231,17 @@ export class OrderService {
   }
 
   async browseOrderHistory(
-    orderNumberFilter?: string,
+    orderNumberFilter: string | undefined,
+    user: CurrentUser,
   ): Promise<BrowseOrderHistoryResponse> {
-    let orders: Order[];
-
-    if (!orderNumberFilter || orderNumberFilter.trim() === '') {
-      orders = await this.orderRepository.find({
-        order: { orderTimestamp: 'DESC' },
-      });
-    } else {
-      orders = await this.orderRepository.find({
-        where: {
-          orderNumber: ILike(`%${orderNumberFilter.trim()}%`),
-        },
-        order: { orderTimestamp: 'DESC' },
-      });
-    }
+    const filter = orderNumberFilter?.trim();
+    const orders = await this.orderRepository.find({
+      where: {
+        ...(filter ? { orderNumber: ILike(`%${filter}%`) } : {}),
+        ...(user.admin ? {} : { owner: user.subject }),
+      },
+      order: { orderTimestamp: 'DESC' },
+    });
 
     const items = orders.map((order) => {
       const item = new BrowseOrderHistoryItemResponse();
@@ -260,6 +253,7 @@ export class OrderService {
       item.totalPrice = order.totalPrice;
       item.status = order.status;
       item.appliedCouponCode = order.appliedCouponCode;
+      item.customer = order.ownerName;
       return item;
     });
 
@@ -268,16 +262,11 @@ export class OrderService {
     return result;
   }
 
-  async getOrder(orderNumber: string): Promise<ViewOrderDetailsResponse> {
-    const order = await this.orderRepository.findOne({
-      where: { orderNumber },
-    });
-
-    if (!order) {
-      throw new NotExistValidationException(
-        `Order ${orderNumber} does not exist.`,
-      );
-    }
+  async getOrder(
+    orderNumber: string,
+    user: CurrentUser,
+  ): Promise<ViewOrderDetailsResponse> {
+    const order = await this.findAccessibleOrder(orderNumber, user);
 
     const response = new ViewOrderDetailsResponse();
     response.orderNumber = order.orderNumber;
@@ -296,6 +285,22 @@ export class OrderService {
     response.country = order.country;
     response.appliedCouponCode = order.appliedCouponCode;
     return response;
+  }
+
+  /** Another customer's order is reported as non-existent, so its existence is not revealed. */
+  private async findAccessibleOrder(
+    orderNumber: string,
+    user: CurrentUser,
+  ): Promise<Order> {
+    const order = await this.orderRepository.findOne({
+      where: { orderNumber },
+    });
+    if (!order || !(user.admin || order.owner === user.subject)) {
+      throw new NotExistValidationException(
+        `Order ${orderNumber} does not exist.`,
+      );
+    }
+    return order;
   }
 
   private generateOrderNumber(): string {

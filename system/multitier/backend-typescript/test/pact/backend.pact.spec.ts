@@ -42,13 +42,17 @@ describe('Backend Pact Provider Verification', () => {
       '../../../../../contracts/frontend-backend.json',
     );
 
+    // Placing an order needs CUSTOMER and the contract's order lookups reach any owner's order, which
+    // only an admin may do, so the verifier runs as a user holding both roles.
+    const token = await harness.idp.token(['ADMIN', 'CUSTOMER']);
+
     await new Verifier({
       provider: 'backend',
       providerBaseUrl: harness.baseUrl(),
       pactUrls: [pactFile],
       // The consumer contract describes the calls, not the credentials; the backend requires a token.
       requestFilter: (req, _res, next) => {
-        req.headers.authorization = `Bearer ${harness.adminToken}`;
+        req.headers.authorization = `Bearer ${token}`;
         next();
       },
       stateHandlers: {

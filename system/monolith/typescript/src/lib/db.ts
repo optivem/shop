@@ -59,6 +59,9 @@ export interface OrderRow {
   total_price: string;
   applied_coupon_code: string | null;
   status: OrderStatus;
+  /** Token subject of the customer who placed the order; null for orders that predate ownership. */
+  owner: string | null;
+  owner_name: string | null;
 }
 
 export interface CouponRow {
@@ -87,15 +90,17 @@ export async function insertOrder(order: {
   totalPrice: Decimal;
   appliedCouponCode: string | null;
   status: OrderStatus;
+  owner: string;
+  ownerName: string;
 }, db: Queryable = pool): Promise<void> {
   await db.query(
-    `INSERT INTO orders (order_number, order_timestamp, country, sku, quantity, unit_price, base_price, discount_rate, discount_amount, subtotal_price, tax_rate, tax_amount, total_price, applied_coupon_code, status)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`,
+    `INSERT INTO orders (order_number, order_timestamp, country, sku, quantity, unit_price, base_price, discount_rate, discount_amount, subtotal_price, tax_rate, tax_amount, total_price, applied_coupon_code, status, owner, owner_name)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)`,
     [
       order.orderNumber, order.orderTimestamp, order.country, order.sku, order.quantity,
       money(order.unitPrice), money(order.basePrice), rate(order.discountRate), money(order.discountAmount),
       money(order.subtotalPrice), rate(order.taxRate), money(order.taxAmount), money(order.totalPrice),
-      order.appliedCouponCode, order.status
+      order.appliedCouponCode, order.status, order.owner, order.ownerName
     ]
   );
 }
@@ -108,18 +113,37 @@ export async function findByOrderNumber(orderNumber: string): Promise<OrderRow |
   return result.rows[0] ?? null;
 }
 
-export async function findAllOrders(orderNumberFilter?: string): Promise<OrderRow[]> {
+// `owner` restricts the history to one customer's orders; null (admin) lists every order.
+export async function findAllOrders(orderNumberFilter?: string, owner: string | null = null): Promise<OrderRow[]> {
+  const conditions: string[] = [];
+  const params: string[] = [];
   if (orderNumberFilter) {
-    const result = await pool.query<OrderRow>(
-      'SELECT * FROM orders WHERE LOWER(order_number) LIKE LOWER($1) ORDER BY order_timestamp DESC',
-      [`%${orderNumberFilter}%`]
-    );
-    return result.rows;
+    params.push(`%${orderNumberFilter}%`);
+    conditions.push(`LOWER(order_number) LIKE LOWER($${params.length})`);
   }
+  if (owner !== null) {
+    params.push(owner);
+    conditions.push(`owner = $${params.length}`);
+  }
+  const where = conditions.length > 0 ? ` WHERE ${conditions.join(' AND ')}` : '';
   const result = await pool.query<OrderRow>(
-    'SELECT * FROM orders ORDER BY order_timestamp DESC'
+    `SELECT * FROM orders${where} ORDER BY order_timestamp DESC`,
+    params
   );
   return result.rows;
+}
+
+// Another customer's order is reported as missing, so its existence is not revealed. Orders without an
+// owner are visible to admins only.
+export async function findAccessibleOrder(
+  orderNumber: string,
+  caller: { subject: string; admin: boolean }
+): Promise<OrderRow | null> {
+  const order = await findByOrderNumber(orderNumber);
+  if (!order || !(caller.admin || order.owner === caller.subject)) {
+    return null;
+  }
+  return order;
 }
 
 export async function updateOrderStatus(orderNumber: string, status: OrderStatus): Promise<void> {

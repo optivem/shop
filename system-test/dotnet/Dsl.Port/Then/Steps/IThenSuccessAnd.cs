@@ -6,6 +6,8 @@ public interface IThenSuccessAnd
 
     IThenOrder Order();
 
+    IThenOrderHistory OrderHistory();
+
     Task<IThenClock> Clock();
 
     Task<IThenProduct> Product(string skuAlias);

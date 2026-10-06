@@ -16,8 +16,8 @@ interface Resolved {
 async function resolvePrincipal(request: NextRequest): Promise<Resolved> {
   const authorization = request.headers.get('authorization');
   if (authorization?.toLowerCase().startsWith(BEARER_PREFIX)) {
-    const roles = await verifyBearerToken(authorization.slice(BEARER_PREFIX.length).trim());
-    return { principal: roles ? { roles } : null, viaSession: false };
+    const identity = await verifyBearerToken(authorization.slice(BEARER_PREFIX.length).trim());
+    return { principal: identity ? { roles: identity.roles } : null, viaSession: false };
   }
   const session = await openSession(request.cookies.get(SESSION_COOKIE)?.value);
   return { principal: session ? { roles: session.roles } : null, viaSession: session !== null };

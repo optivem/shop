@@ -37,7 +37,12 @@ export async function GET(request: NextRequest) {
     const response = NextResponse.redirect(new URL(login.returnTo, base));
     response.cookies.set(
       SESSION_COOKIE,
-      await sealSession({ name, roles: realmRoles(claims.realm_access), idToken: tokens.id_token }),
+      await sealSession({
+        subject: claims.sub,
+        name,
+        roles: realmRoles(claims.realm_access),
+        idToken: tokens.id_token,
+      }),
       sessionCookieOptions
     );
     response.cookies.set(LOGIN_COOKIE, '', cookieOptions(0));

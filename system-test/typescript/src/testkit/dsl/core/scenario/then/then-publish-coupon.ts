@@ -80,7 +80,9 @@ export class ThenPublishCouponResultStage implements PromiseLike<void> {
   }
 
   private async _doExecute(): Promise<void> {
+    this.ctx.reserveDefaultCustomerIfUsed();
     await this._arrangeCoupons();
+    this.app.actAs(this.ctx.loggedInIdentity());
 
     const resolvedCode = this.useCaseContext.getParamValue(this.code);
     const result = await this.app.myShop('static').publishCoupon({

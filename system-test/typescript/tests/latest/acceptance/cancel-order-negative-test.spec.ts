@@ -1,5 +1,6 @@
-import { test, forChannels, ChannelType } from './base/fixtures.js';
+import { test, forChannels, ChannelType, requiresKeycloak } from './base/fixtures.js';
 import { OrderStatus } from '../../../src/testkit/common/dtos.js';
+import { DEFAULTS } from '../../../src/testkit/dsl/core/scenario/defaults.js';
 
 const nonExistentOrderCases = [
     { orderNumber: 'NON-EXISTENT-ORDER-99999', message: 'Order NON-EXISTENT-ORDER-99999 does not exist.' },
@@ -41,5 +42,19 @@ forChannels(ChannelType.API)(() => {
             .then()
             .shouldFail()
             .errorMessage('Order non-existent-order-12345 does not exist.');
+    });
+
+    test('customerShouldNotBeAbleToCancelAnotherCustomersOrder', requiresKeycloak, async ({ scenario }) => {
+        await scenario
+            .given()
+            .order()
+            .placedByCustomer('B')
+            .and()
+            .loggedInAsCustomer('A')
+            .when()
+            .cancelOrder()
+            .then()
+            .shouldFail()
+            .errorMessage(`Order ${DEFAULTS.ORDER_NUMBER} does not exist.`);
     });
 });

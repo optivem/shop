@@ -21,6 +21,13 @@ public class ThenSuccessAnd<TSuccessResponse, TSuccessVerification>
 
     IThenOrder IThenSuccessAnd.Order() => Order();
 
+    public ThenSuccessOrderHistory<TSuccessResponse, TSuccessVerification> OrderHistory()
+    {
+        return new ThenSuccessOrderHistory<TSuccessResponse, TSuccessVerification>(_thenClause);
+    }
+
+    IThenOrderHistory IThenSuccessAnd.OrderHistory() => OrderHistory();
+
     public async Task<IThenClock> Clock()
     {
         await _thenClause.GetExecutionResult();

@@ -8,6 +8,8 @@ const SESSION_TTL_SECONDS = 60 * 60;
 const LOGIN_TTL_SECONDS = 10 * 60;
 
 export interface Session {
+  /** Token subject (`sub`) of the logged-in user. */
+  subject: string;
   name: string;
   roles: string[];
   /** Kept only so logout can tell Keycloak which session to end. */
@@ -62,10 +64,21 @@ export const sealLoginState = (login: LoginState) => seal(login, LOGIN_TTL_SECON
 
 export async function openSession(token: string | undefined): Promise<Session | null> {
   const p = await unseal(token);
-  if (!p || typeof p.name !== 'string' || typeof p.idToken !== 'string' || !Array.isArray(p.roles)) {
+  if (
+    !p ||
+    typeof p.subject !== 'string' ||
+    typeof p.name !== 'string' ||
+    typeof p.idToken !== 'string' ||
+    !Array.isArray(p.roles)
+  ) {
     return null;
   }
-  return { name: p.name, idToken: p.idToken, roles: p.roles.filter((r): r is string => typeof r === 'string') };
+  return {
+    subject: p.subject,
+    name: p.name,
+    idToken: p.idToken,
+    roles: p.roles.filter((r): r is string => typeof r === 'string'),
+  };
 }
 
 export async function openLoginState(token: string | undefined): Promise<LoginState | null> {

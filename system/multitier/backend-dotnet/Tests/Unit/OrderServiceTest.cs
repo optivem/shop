@@ -18,6 +18,10 @@ public class OrderServiceTest : IDisposable
     private static readonly DateTime Dec31YearEndBlackout = new(2025, 12, 31, 23, 59, 0, DateTimeKind.Utc);
     private static readonly DateTime Dec31CancelBlackout = new(2025, 12, 31, 22, 15, 0, DateTimeKind.Utc);
 
+    private static readonly CurrentUser Alice = new("sub-alice", "alice", false);
+    private static readonly CurrentUser Bob = new("sub-bob", "bob", false);
+    private static readonly CurrentUser Admin = new("sub-admin", "admin1", true);
+
     private readonly AppDbContext _dbContext;
     private readonly Mock<ClockGateway> _clockMock;
     private readonly Mock<ErpGateway> _erpMock;
@@ -57,7 +61,7 @@ public class OrderServiceTest : IDisposable
         GivenNoDiscount();
         GivenTaxRate("US", 0.10m);
 
-        var response = await _service.PlaceOrderAsync(BuildRequest("BOOK-123", 2, "US"));
+        var response = await _service.PlaceOrderAsync(BuildRequest("BOOK-123", 2, "US"), Alice);
 
         Assert.StartsWith("ORD-", response.OrderNumber);
         await AssertSavedOrder(response);
@@ -69,7 +73,7 @@ public class OrderServiceTest : IDisposable
         _clockMock.Setup(g => g.GetCurrentTimeAsync()).ReturnsAsync(Dec31YearEndBlackout);
 
         var ex = await Assert.ThrowsAsync<ValidationException>(
-            () => _service.PlaceOrderAsync(BuildRequest("BOOK-123", 1, "US")));
+            () => _service.PlaceOrderAsync(BuildRequest("BOOK-123", 1, "US"), Alice));
 
         Assert.Contains("December 31", ex.Message);
     }
@@ -81,7 +85,7 @@ public class OrderServiceTest : IDisposable
         _erpMock.Setup(g => g.GetProductDetailsAsync("UNKNOWN")).ReturnsAsync((ErpProductDetailsResponse?)null);
 
         var ex = await Assert.ThrowsAsync<ValidationException>(
-            () => _service.PlaceOrderAsync(BuildRequest("UNKNOWN", 1, "US")));
+            () => _service.PlaceOrderAsync(BuildRequest("UNKNOWN", 1, "US"), Alice));
 
         Assert.Equal("sku", ex.FieldName);
     }
@@ -96,7 +100,7 @@ public class OrderServiceTest : IDisposable
         _taxMock.Setup(g => g.GetTaxDetailsAsync("XX")).ReturnsAsync((TaxDetailsResponse?)null);
 
         var ex = await Assert.ThrowsAsync<ValidationException>(
-            () => _service.PlaceOrderAsync(BuildRequest("BOOK-123", 1, "XX")));
+            () => _service.PlaceOrderAsync(BuildRequest("BOOK-123", 1, "XX"), Alice));
 
         Assert.Equal("country", ex.FieldName);
     }
@@ -134,9 +138,9 @@ public class OrderServiceTest : IDisposable
     public async Task CancelOrder_TransitionsStatusToCancelled()
     {
         GivenNormalTime();
-        await SeedOrder("ORD-001", OrderStatus.PLACED);
+        await SeedOrder("ORD-001", OrderStatus.PLACED, "sub-alice", "alice");
 
-        await _service.CancelOrderAsync("ORD-001");
+        await _service.CancelOrderAsync("ORD-001", Alice);
 
         var saved = await _dbContext.Orders.FirstAsync(o => o.OrderNumber == "ORD-001");
         Assert.Equal(OrderStatus.CANCELLED, saved.Status);
@@ -148,7 +152,7 @@ public class OrderServiceTest : IDisposable
         _clockMock.Setup(g => g.GetCurrentTimeAsync()).ReturnsAsync(Dec31CancelBlackout);
 
         var ex = await Assert.ThrowsAsync<ValidationException>(
-            () => _service.CancelOrderAsync("ORD-001"));
+            () => _service.CancelOrderAsync("ORD-001", Alice));
 
         Assert.Contains("December 31", ex.Message);
     }
@@ -157,12 +161,118 @@ public class OrderServiceTest : IDisposable
     public async Task CancelOrder_ThrowsWhenOrderAlreadyCancelled()
     {
         GivenNormalTime();
-        await SeedOrder("ORD-001", OrderStatus.CANCELLED);
+        await SeedOrder("ORD-001", OrderStatus.CANCELLED, "sub-alice", "alice");
 
         var ex = await Assert.ThrowsAsync<ValidationException>(
-            () => _service.CancelOrderAsync("ORD-001"));
+            () => _service.CancelOrderAsync("ORD-001", Alice));
 
         Assert.Contains("already been cancelled", ex.Message);
+    }
+
+    [Fact]
+    public async Task PlaceOrder_RecordsOwnerFromCaller()
+    {
+        GivenNormalTime();
+        GivenProductExists("BOOK-123", 10.00m);
+        GivenNoPromotion();
+        GivenNoDiscount();
+        GivenTaxRate("US", 0.10m);
+
+        await _service.PlaceOrderAsync(BuildRequest("BOOK-123", 2, "US"), Alice);
+
+        var saved = await _dbContext.Orders.FirstAsync();
+        Assert.Equal("sub-alice", saved.Owner);
+        Assert.Equal("alice", saved.OwnerName);
+    }
+
+    [Fact]
+    public async Task BrowseOrderHistory_CustomerSeesOnlyOwnOrders()
+    {
+        await SeedOrder("ORD-A", OrderStatus.PLACED, "sub-alice", "alice");
+        await SeedOrder("ORD-B", OrderStatus.PLACED, "sub-bob", "bob");
+        await SeedOrder("ORD-LEGACY", OrderStatus.PLACED);
+
+        var response = await _service.BrowseOrderHistoryAsync(null, Alice);
+
+        Assert.Equal(["ORD-A"], response.Orders.Select(o => o.OrderNumber));
+    }
+
+    [Fact]
+    public async Task BrowseOrderHistory_AdminSeesAllOrdersWithCustomer()
+    {
+        await SeedOrder("ORD-A", OrderStatus.PLACED, "sub-alice", "alice");
+        await SeedOrder("ORD-LEGACY", OrderStatus.PLACED);
+
+        var response = await _service.BrowseOrderHistoryAsync(null, Admin);
+
+        Assert.Equal(2, response.Orders.Count);
+        Assert.Equal("alice", response.Orders.Single(o => o.OrderNumber == "ORD-A").Customer);
+        Assert.Null(response.Orders.Single(o => o.OrderNumber == "ORD-LEGACY").Customer);
+    }
+
+    [Fact]
+    public async Task GetOrder_ReturnsOwnOrder()
+    {
+        await SeedOrder("ORD-A", OrderStatus.PLACED, "sub-alice", "alice");
+
+        var response = await _service.GetOrderAsync("ORD-A", Alice);
+
+        Assert.Equal("ORD-A", response.OrderNumber);
+    }
+
+    [Fact]
+    public async Task GetOrder_ThrowsNotExistForAnotherCustomersOrder()
+    {
+        await SeedOrder("ORD-A", OrderStatus.PLACED, "sub-alice", "alice");
+
+        var ex = await Assert.ThrowsAsync<NotExistValidationException>(
+            () => _service.GetOrderAsync("ORD-A", Bob));
+
+        Assert.Equal("Order ORD-A does not exist.", ex.Message);
+    }
+
+    [Fact]
+    public async Task GetOrder_AdminCanViewAnyOrderIncludingLegacy()
+    {
+        await SeedOrder("ORD-A", OrderStatus.PLACED, "sub-alice", "alice");
+        await SeedOrder("ORD-LEGACY", OrderStatus.PLACED);
+
+        Assert.Equal("ORD-A", (await _service.GetOrderAsync("ORD-A", Admin)).OrderNumber);
+        Assert.Equal("ORD-LEGACY", (await _service.GetOrderAsync("ORD-LEGACY", Admin)).OrderNumber);
+    }
+
+    [Fact]
+    public async Task GetOrder_ThrowsNotExistForCustomerOnLegacyOrder()
+    {
+        await SeedOrder("ORD-LEGACY", OrderStatus.PLACED);
+
+        await Assert.ThrowsAsync<NotExistValidationException>(
+            () => _service.GetOrderAsync("ORD-LEGACY", Alice));
+    }
+
+    [Fact]
+    public async Task CancelOrder_ThrowsNotExistForAnotherCustomersOrder()
+    {
+        GivenNormalTime();
+        await SeedOrder("ORD-A", OrderStatus.PLACED, "sub-alice", "alice");
+
+        await Assert.ThrowsAsync<NotExistValidationException>(
+            () => _service.CancelOrderAsync("ORD-A", Bob));
+
+        var saved = await _dbContext.Orders.FirstAsync(o => o.OrderNumber == "ORD-A");
+        Assert.Equal(OrderStatus.PLACED, saved.Status);
+    }
+
+    [Fact]
+    public async Task CancelOrder_AdminCanCancelAnyOrder()
+    {
+        GivenNormalTime();
+        await SeedOrder("ORD-A", OrderStatus.PLACED, "sub-alice", "alice");
+
+        await _service.CancelOrderAsync("ORD-A", Admin);
+
+        var saved = await _dbContext.Orders.FirstAsync(o => o.OrderNumber == "ORD-A");
+        Assert.Equal(OrderStatus.CANCELLED, saved.Status);
     }
 
     private void GivenNormalTime() =>
@@ -186,7 +296,7 @@ public class OrderServiceTest : IDisposable
     private static PlaceOrderRequest BuildRequest(string sku, int quantity, string country) =>
         new() { Sku = sku, Quantity = quantity, Country = country };
 
-    private async Task SeedOrder(string orderNumber, OrderStatus status)
+    private async Task SeedOrder(string orderNumber, OrderStatus status, string? owner = null, string? ownerName = null)
     {
         _dbContext.Orders.Add(new Order
         {
@@ -203,7 +313,9 @@ public class OrderServiceTest : IDisposable
             TaxRate = 0.10m,
             TaxAmount = 1m,
             TotalPrice = 11m,
-            Status = status
+            Status = status,
+            Owner = owner,
+            OwnerName = ownerName
         });
         await _dbContext.SaveChangesAsync();
     }

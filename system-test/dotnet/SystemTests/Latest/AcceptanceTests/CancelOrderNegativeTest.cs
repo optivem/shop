@@ -1,3 +1,4 @@
+using static Dsl.Core.Scenario.ScenarioDefaults;
 using SystemTests.Latest.AcceptanceTests.Base;
 using Dsl.Core.UseCase;
 using Driver.Port.Dtos;
@@ -40,5 +41,17 @@ public class CancelOrderNegativeTest : BaseAcceptanceTest
             .When().CancelOrder().WithOrderNumber("non-existent-order-12345")
             .Then().ShouldFail()
             .ErrorMessage("Order non-existent-order-12345 does not exist.");
+    }
+
+    [RequiresKeycloakTheory]
+    [ChannelData(ChannelType.API)]
+    public async Task CustomerShouldNotBeAbleToCancelAnotherCustomersOrder(Channel channel)
+    {
+        await Scenario(channel)
+            .Given().Order().PlacedByCustomer("B")
+            .And().LoggedInAsCustomer("A")
+            .When().CancelOrder()
+            .Then().ShouldFail()
+            .ErrorMessage($"Order {DefaultOrderNumber} does not exist.");
     }
 }

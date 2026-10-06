@@ -1,4 +1,5 @@
 export const ADMIN = 'ADMIN';
+export const CUSTOMER = 'CUSTOMER';
 
 export type Decision = 'allow' | 'unauthenticated' | 'forbidden';
 
@@ -15,6 +16,12 @@ const ADMIN_ONLY: readonly ((method: string, path: string) => boolean)[] = [
   (_method, path) => path === '/admin-coupons',
 ];
 
+// Placing an order is the customer's job: admins (who hold no CUSTOMER role) manage orders but do not place them.
+const CUSTOMER_ONLY: readonly ((method: string, path: string) => boolean)[] = [
+  (method, path) => method === 'POST' && path === '/api/orders',
+  (_method, path) => path === '/new-order',
+];
+
 /**
  * The single place that says who may call what. Secure by default: anything not listed as public needs an
  * authenticated principal, so a new route is protected until a rule opens it up.
@@ -27,6 +34,9 @@ export function decide(method: string, path: string, principal: Principal | null
     return 'unauthenticated';
   }
   if (ADMIN_ONLY.some((rule) => rule(method, path)) && !principal.roles.includes(ADMIN)) {
+    return 'forbidden';
+  }
+  if (CUSTOMER_ONLY.some((rule) => rule(method, path)) && !principal.roles.includes(CUSTOMER)) {
     return 'forbidden';
   }
   return 'allow';

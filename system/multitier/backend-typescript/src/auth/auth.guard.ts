@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import type { Request } from 'express';
 import { JwtVerifier, type AuthenticatedUser } from './jwt-verifier';
-import { ADMIN_ROLE, accessFor } from './route-policy';
+import { ADMIN_ROLE, CUSTOMER_ROLE, accessFor } from './route-policy';
 
 export type AuthenticatedRequest = Request & { user?: AuthenticatedUser };
 
@@ -36,6 +36,9 @@ export class AuthGuard implements CanActivate {
     request.user = user;
 
     if (access === 'admin' && !user.roles.includes(ADMIN_ROLE)) {
+      throw new ForbiddenException();
+    }
+    if (access === 'customer' && !user.roles.includes(CUSTOMER_ROLE)) {
       throw new ForbiddenException();
     }
     return true;

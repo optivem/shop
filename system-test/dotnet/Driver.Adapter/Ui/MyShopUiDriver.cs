@@ -13,6 +13,7 @@ namespace Driver.Adapter.Ui;
 public class MyShopUiDriver : IMyShopDriver
 {
     private readonly MyShopUiClient _client;
+    private TestUser? _requestedUser;
     private Page _currentPage = Page.None;
 
     private HomePage? _homePage;
@@ -40,6 +41,18 @@ public class MyShopUiDriver : IMyShopDriver
     {
         var client = await MyShopUiClient.CreateAsync(baseUrl, keycloakBaseUrl);
         return new MyShopUiDriver(client);
+    }
+
+    public void ActAs(UserIdentity identity)
+    {
+        _requestedUser = identity.Kind switch
+        {
+            UserIdentityKind.Default => null,
+            UserIdentityKind.Customer => TestUserExtensions.CustomerAt(identity.CustomerIndex),
+            UserIdentityKind.Admin => TestUser.Admin,
+            UserIdentityKind.Anonymous => throw new NotSupportedException("The UI requires a logged-in user"),
+            _ => throw new ArgumentOutOfRangeException(nameof(identity), identity, null)
+        };
     }
 
     public async Task<Result<GoToMyShopResponse, SystemError>> GoToMyShopAsync(GoToMyShopRequest request)
@@ -89,6 +102,7 @@ public class MyShopUiDriver : IMyShopDriver
 
     public async Task<Result<CancelOrderResponse, SystemError>> CancelOrderAsync(CancelOrderRequest request)
     {
+        await SwitchToRequestedUserAsync();
         var viewResult = await ViewOrderAsync(new ViewOrderRequest { OrderNumber = request.OrderNumber });
         if (viewResult.IsFailure)
         {
@@ -157,6 +171,7 @@ public class MyShopUiDriver : IMyShopDriver
 
     public async Task<Result<ViewOrderResponse, SystemError>> ViewOrderAsync(ViewOrderRequest request)
     {
+        await SwitchToRequestedUserAsync();
         var result = await EnsureOnOrderDetailsPageAsync(request.OrderNumber);
         if (result.IsFailure)
         {
@@ -207,6 +222,9 @@ public class MyShopUiDriver : IMyShopDriver
         return Success(response);
     }
 
+    public Task<Result<BrowseOrderHistoryResponse, SystemError>> BrowseOrderHistoryAsync(BrowseOrderHistoryRequest request)
+        => throw new NotSupportedException("Browsing order history is only supported through the API channel");
+
     public async Task<Result<PublishCouponResponse, SystemError>> PublishCouponAsync(PublishCouponRequest request)
     {
         await ActAsAsync(TestUser.Admin);
@@ -250,9 +268,19 @@ public class MyShopUiDriver : IMyShopDriver
         return Success(new BrowseCouponsResponse { Coupons = finalCoupons });
     }
 
-    /// <summary>Runs the operation as <paramref name="user"/>: order placement as customer, admin-only operations as admin.</summary>
-    private async Task ActAsAsync(TestUser user)
+    /// <summary>Operations that have no default user run as the requested identity, or keep the current user when none was requested.</summary>
+    private async Task SwitchToRequestedUserAsync()
     {
+        if (_requestedUser != null)
+        {
+            await ActAsAsync(_requestedUser.Value);
+        }
+    }
+
+    /// <summary>An explicitly requested identity wins; otherwise admin-only operations run as admin and order placement as customer.</summary>
+    private async Task ActAsAsync(TestUser operationDefault)
+    {
+        var user = _requestedUser ?? operationDefault;
         if (await _client.SwitchUserAsync(user))
         {
             _currentPage = Page.None;

@@ -18,5 +18,11 @@ public interface IGivenOrder : IGivenStep
 
     IGivenOrder WithCouponCode(string? couponCode);
 
+    /// <summary>The order is placed by the default customer (customer1).</summary>
+    IGivenOrder PlacedByCustomer();
+
+    /// <summary>The order is placed by the customer known in this scenario by the given alias.</summary>
+    IGivenOrder PlacedByCustomer(string alias);
+
     IGivenOrder WithStatus(OrderStatus status);
 }

@@ -24,15 +24,22 @@ public static class SystemConfigurationLoader
         var taxBaseUrl = GetEnvVarOrDefault("TAX_API_BASE_URL" + suffix, GetValue(configuration, "Tax:ApiBaseUrl"));
         var clockBaseUrl = GetEnvVarOrDefault("CLOCK_API_BASE_URL" + suffix, GetValue(configuration, "Clock:ApiBaseUrl"));
 
-        // Authentication is opt-in: unset means the SUT is unauthenticated and no token is ever requested.
-        var keycloakBaseUrl = System.Environment.GetEnvironmentVariable("KEYCLOAK_URL" + suffix);
-        if (string.IsNullOrWhiteSpace(keycloakBaseUrl))
-            keycloakBaseUrl = System.Environment.GetEnvironmentVariable("KEYCLOAK_URL");
-        if (string.IsNullOrWhiteSpace(keycloakBaseUrl))
-            keycloakBaseUrl = null;
+        var keycloakBaseUrl = ResolveKeycloakBaseUrl(externalSystemMode);
 
         return new Dsl.Core.Configuration(shopUiBaseUrl, shopApiBaseUrl, erpBaseUrl, taxBaseUrl, clockBaseUrl,
             keycloakBaseUrl, externalSystemMode, channelMode);
+    }
+
+    /// <summary>
+    /// Authentication is opt-in: null means the SUT is unauthenticated and no token is ever requested.
+    /// </summary>
+    public static string? ResolveKeycloakBaseUrl(ExternalSystemMode externalSystemMode)
+    {
+        var suffix = "_" + externalSystemMode.ToString().ToUpper();
+        var keycloakBaseUrl = System.Environment.GetEnvironmentVariable("KEYCLOAK_URL" + suffix);
+        if (string.IsNullOrWhiteSpace(keycloakBaseUrl))
+            keycloakBaseUrl = System.Environment.GetEnvironmentVariable("KEYCLOAK_URL");
+        return string.IsNullOrWhiteSpace(keycloakBaseUrl) ? null : keycloakBaseUrl;
     }
 
     private static string GetEnvVarOrDefault(string envVarName, string fileValue)

@@ -14,6 +14,10 @@ export interface GivenStage {
   coupon(): GivenCoupon;
   country(): GivenCountry;
   order(): GivenOrder;
+  /** Logs in as the customer known in this scenario by the given alias, or as the default customer (customer1) when no alias is given. */
+  loggedInAsCustomer(alias?: string): GivenStage;
+  loggedInAsAdmin(): GivenStage;
+  notLoggedIn(): GivenStage;
   and(): GivenStage;
   when(): WhenStage;
   then(): ThenStage;

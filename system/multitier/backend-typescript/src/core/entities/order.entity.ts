@@ -132,4 +132,23 @@ export class Order {
     default: null,
   })
   appliedCouponCode!: string | null;
+
+  /** Token subject of the customer who placed the order; null for orders that predate ownership. */
+  @Column({
+    name: 'owner',
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+    default: null,
+  })
+  owner!: string | null;
+
+  @Column({
+    name: 'owner_name',
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+    default: null,
+  })
+  ownerName!: string | null;
 }

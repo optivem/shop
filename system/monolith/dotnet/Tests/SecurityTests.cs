@@ -53,6 +53,14 @@ public class SecurityTests : IClassFixture<ShopWebApplicationFactory>
     }
 
     [Fact]
+    public async Task PlaceOrder_WithAdminToken_Returns403()
+    {
+        var response = await Client(_factory.CreateToken("ADMIN"))
+            .PostAsync("/api/orders", new StringContent("{}", System.Text.Encoding.UTF8, "application/json"));
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Coupons_WithCustomerToken_Returns403()
     {
         var response = await Client(_factory.CreateToken("CUSTOMER")).GetAsync("/api/coupons");

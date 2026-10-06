@@ -1,6 +1,7 @@
 import type { Result } from '../../../../../common/result.js';
 import type { PlaceOrderRequest } from '../../../../port/dtos/PlaceOrderRequest.js';
 import type { PlaceOrderResponse } from '../../../../port/dtos/PlaceOrderResponse.js';
+import type { BrowseOrderHistoryResponse } from '../../../../port/dtos/BrowseOrderHistoryResponse.js';
 import type { ViewOrderResponse } from '../../../../port/dtos/ViewOrderResponse.js';
 import type { SystemError } from '../../../../port/dtos/errors/SystemError.js';
 import { JsonHttpClient } from '../../../shared/client/http/json-http-client.js';
@@ -22,6 +23,13 @@ export class OrderController {
 
   viewOrder(orderNumber: string): Promise<Result<ViewOrderResponse, SystemError>> {
     return this.httpClient.get<ViewOrderResponse>(`${OrderController.ENDPOINT}/${orderNumber}`);
+  }
+
+  browseOrderHistory(orderNumber: string): Promise<Result<BrowseOrderHistoryResponse, SystemError>> {
+    const path = orderNumber.trim() === ''
+      ? OrderController.ENDPOINT
+      : `${OrderController.ENDPOINT}?orderNumber=${encodeURIComponent(orderNumber)}`;
+    return this.httpClient.get<BrowseOrderHistoryResponse>(path);
   }
 
   cancelOrder(orderNumber: string): Promise<Result<void, SystemError>> {
