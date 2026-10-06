@@ -4,6 +4,7 @@ import { ErrorBoundary } from './components';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { useNotificationContext } from './contexts/useNotificationContext';
 import { RequireAdmin } from './auth/RequireAdmin';
+import { RequireCanPlaceOrder } from './auth/RequireCanPlaceOrder';
 import { Home, NewOrder, OrderHistory, OrderDetails, AdminCoupons } from './pages';
 
 /**
@@ -33,7 +34,7 @@ export function App() {
           <RouteChangeHandler />
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/new-order" element={<NewOrder />} />
+            <Route path="/new-order" element={<RequireCanPlaceOrder><NewOrder /></RequireCanPlaceOrder>} />
             <Route path="/order-history" element={<OrderHistory />} />
             <Route path="/order-details/:orderNumber" element={<OrderDetails />} />
             <Route path="/admin-coupons" element={<RequireAdmin><AdminCoupons /></RequireAdmin>} />

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { screen } from '@testing-library/react';
 import { Route, Routes } from 'react-router-dom';
 import { RequireAdmin } from '../../auth/RequireAdmin';
+import { RequireCanPlaceOrder } from '../../auth/RequireCanPlaceOrder';
 import { getRolesFromToken } from '../../auth/roles';
 import { Home } from '../../pages/Home';
 import { createMockAuth, renderWithProviders } from '../test-utils';
@@ -47,3 +48,34 @@ describe('RequireAdmin', () => {
   });
 });
 
+
+describe('place-order access', () => {
+  const adminOnly = () => createMockAuth({}, ['ADMIN']);
+  const newOrderRoute = (
+    <Routes>
+      <Route path="/new-order" element={<RequireCanPlaceOrder><div>order form</div></RequireCanPlaceOrder>} />
+    </Routes>
+  );
+
+  it('hides new order from an admin who is not a customer', () => {
+    renderWithProviders(<Home />, { auth: adminOnly() });
+    expect(screen.queryByText('New Order', { selector: 'a' })).not.toBeInTheDocument();
+    expect(screen.getByText('Manage Coupons')).toBeInTheDocument();
+  });
+
+  it('shows new order to a customer', () => {
+    renderWithProviders(<Home />, { auth: customer() });
+    expect(screen.getByText('New Order', { selector: 'a' })).toBeInTheDocument();
+  });
+
+  it('blocks an admin-only user from the new order route', () => {
+    renderWithProviders(newOrderRoute, { initialEntry: '/new-order', auth: adminOnly() });
+    expect(screen.getByText('Not authorized')).toBeInTheDocument();
+    expect(screen.queryByText('order form')).not.toBeInTheDocument();
+  });
+
+  it('lets a customer reach the new order route', () => {
+    renderWithProviders(newOrderRoute, { initialEntry: '/new-order', auth: customer() });
+    expect(screen.getByText('order form')).toBeInTheDocument();
+  });
+});

@@ -6,7 +6,7 @@ import { Layout, FeatureCard } from '../components';
  * Provides navigation to key features: MyShop and Order History
  */
 export function Home() {
-  const { isAdmin } = useRoles();
+  const { isAdmin, canPlaceOrder } = useRoles();
   return (
     <Layout>
       <div className="jumbotron bg-light p-5 rounded">
@@ -14,6 +14,7 @@ export function Home() {
         <p className="lead">Your modern e-commerce solution</p>
         <hr className="my-4" />
         <div className="row mt-4">
+          {canPlaceOrder && (
           <FeatureCard
             icon="New Order"
             title="New Order"
@@ -21,6 +22,7 @@ export function Home() {
             linkTo="/new-order"
             linkText="New Order"
           />
+          )}
           <FeatureCard
             icon="Order History"
             title="Order History"

@@ -67,6 +67,7 @@ export const isBrowseOrderHistoryResponse = hasShape<BrowseOrderHistoryResponse>
       totalPrice: isNumber,
       appliedCouponCode: isStringOrNull,
       status: isOrderStatus,
+      customer: isOptionalString,
     })
   ),
 });

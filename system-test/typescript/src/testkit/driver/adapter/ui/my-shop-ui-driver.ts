@@ -17,6 +17,7 @@ import type { PublishCouponResponse } from '../../port/dtos/PublishCouponRespons
 import type { BrowseCouponsRequest } from '../../port/dtos/BrowseCouponsRequest.js';
 import type { BrowseCouponsResponse } from '../../port/dtos/BrowseCouponsResponse.js';
 import type { MyShopDriver } from '../../port/my-shop-driver.js';
+import { TestUsers } from '../shared/client/http/test-user.js';
 import { MyShopUiClient } from './client/MyShopUiClient.js';
 import { NewOrderPage } from './client/pages/NewOrderPage.js';
 
@@ -34,6 +35,7 @@ export class MyShopUiDriver implements MyShopDriver {
   }
 
   async placeOrder(request: PlaceOrderRequest): Promise<Result<PlaceOrderResponse, SystemError>> {
+    await this.client.switchUser(TestUsers.CUSTOMER);
     const homeResult = await this.client.openHomePage();
     if (!homeResult.success) return failure(homeResult.error);
     await homeResult.value.clickNewOrder();
@@ -128,6 +130,7 @@ export class MyShopUiDriver implements MyShopDriver {
   }
 
   async deliverOrder(request: DeliverOrderRequest): Promise<Result<DeliverOrderResponse, SystemError>> {
+    await this.client.switchUser(TestUsers.ADMIN);
     const orderNumber = request.orderNumber;
     const homeResult = await this.client.openHomePage();
     if (!homeResult.success) return failure(homeResult.error);
@@ -153,6 +156,7 @@ export class MyShopUiDriver implements MyShopDriver {
   }
 
   async publishCoupon(request: PublishCouponRequest): Promise<Result<PublishCouponResponse, SystemError>> {
+    await this.client.switchUser(TestUsers.ADMIN);
     const homeResult = await this.client.openHomePage();
     if (!homeResult.success) return failure(homeResult.error);
     await homeResult.value.clickAdminCoupons();
@@ -177,6 +181,7 @@ export class MyShopUiDriver implements MyShopDriver {
   }
 
   async browseCoupons(_request: BrowseCouponsRequest): Promise<Result<BrowseCouponsResponse, SystemError>> {
+    await this.client.switchUser(TestUsers.ADMIN);
     const homeResult = await this.client.openHomePage();
     if (!homeResult.success) return failure(homeResult.error);
     await homeResult.value.clickAdminCoupons();

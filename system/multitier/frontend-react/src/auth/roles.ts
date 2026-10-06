@@ -1,4 +1,5 @@
 export const ADMIN_ROLE = 'ADMIN';
+export const CUSTOMER_ROLE = 'CUSTOMER';
 
 function decodeBase64Url(value: string): string {
   const padded = value.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(value.length / 4) * 4, '=');

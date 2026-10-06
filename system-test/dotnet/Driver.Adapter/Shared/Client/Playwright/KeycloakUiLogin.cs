@@ -21,12 +21,14 @@ public sealed class KeycloakUiLogin
     }
 
     /// <summary>Returns null when no Keycloak URL is configured (the SUT then has no login).</summary>
-    public static KeycloakUiLogin? ForBaseUrl(string? keycloakBaseUrl)
+    public static KeycloakUiLogin? ForBaseUrl(string? keycloakBaseUrl, TestUser user = TestUser.Customer)
     {
         if (string.IsNullOrWhiteSpace(keycloakBaseUrl))
             return null;
-        return new KeycloakUiLogin(keycloakBaseUrl, TestUser.Admin);
+        return new KeycloakUiLogin(keycloakBaseUrl, user);
     }
+
+    public TestUser User => _user;
 
     public bool IsLoginPage(IPage page) => page.Url.StartsWith(_keycloakBaseUrl, StringComparison.Ordinal);
 

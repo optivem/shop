@@ -1,4 +1,5 @@
 using Common;
+using Driver.Adapter.Shared.Client.Http;
 using Driver.Adapter.Ui.Client;
 using Driver.Adapter.Ui.Client.Pages;
 using Driver.Port.Dtos;
@@ -57,6 +58,7 @@ public class MyShopUiDriver : IMyShopDriver
 
     public async Task<Result<PlaceOrderResponse, SystemError>> PlaceOrderAsync(PlaceOrderRequest request)
     {
+        await ActAsAsync(TestUser.Customer);
         var sku = request.Sku;
         var quantity = request.Quantity;
         var country = request.Country;
@@ -123,6 +125,7 @@ public class MyShopUiDriver : IMyShopDriver
 
     public async Task<Result<DeliverOrderResponse, SystemError>> DeliverOrderAsync(DeliverOrderRequest request)
     {
+        await ActAsAsync(TestUser.Admin);
         var viewResult = await ViewOrderAsync(new ViewOrderRequest { OrderNumber = request.OrderNumber });
         if (viewResult.IsFailure)
         {
@@ -206,6 +209,7 @@ public class MyShopUiDriver : IMyShopDriver
 
     public async Task<Result<PublishCouponResponse, SystemError>> PublishCouponAsync(PublishCouponRequest request)
     {
+        await ActAsAsync(TestUser.Admin);
         await EnsureOnCouponManagementPageAsync();
 
         await _couponManagementPage!.InputCouponCodeAsync(request.Code);
@@ -221,6 +225,8 @@ public class MyShopUiDriver : IMyShopDriver
 
     public async Task<Result<BrowseCouponsResponse, SystemError>> BrowseCouponsAsync(BrowseCouponsRequest request)
     {
+        await ActAsAsync(TestUser.Admin);
+
         // Retry with fresh page navigations to handle UI eventual consistency —
         // after publishing a coupon or placing an order, the coupon table
         // may not yet reflect the latest state on first load.
@@ -242,6 +248,20 @@ public class MyShopUiDriver : IMyShopDriver
         var finalCoupons = await _couponManagementPage!.ReadCouponsAsync();
 
         return Success(new BrowseCouponsResponse { Coupons = finalCoupons });
+    }
+
+    /// <summary>Runs the operation as <paramref name="user"/>: order placement as customer, admin-only operations as admin.</summary>
+    private async Task ActAsAsync(TestUser user)
+    {
+        if (await _client.SwitchUserAsync(user))
+        {
+            _currentPage = Page.None;
+            _homePage = null;
+            _newOrderPage = null;
+            _orderHistoryPage = null;
+            _orderDetailsPage = null;
+            _couponManagementPage = null;
+        }
     }
 
     private async Task<HomePage> GetHomePageAsync()

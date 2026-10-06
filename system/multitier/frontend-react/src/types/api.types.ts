@@ -49,6 +49,7 @@ export interface BrowseOrderHistoryItemResponse {
   totalPrice: number;
   appliedCouponCode: string | null;
   status: OrderStatus;
+  customer?: string | null; // owner of the order; only some backends report it
 }
 
 export interface BrowseOrderHistoryResponse {

@@ -2,6 +2,7 @@ import type { Browser, BrowserContext, Page } from '@playwright/test';
 import type { Result } from '../../../../common/result.js';
 import { success, failure } from '../../../../common/result.js';
 import type { SystemError } from '../../../port/dtos/errors/SystemError.js';
+import { TestUsers, type TestUser } from '../../shared/client/http/test-user.js';
 import { KeycloakUiLogin } from '../../shared/client/playwright/keycloak-ui-login.js';
 import { HomePage } from './pages/HomePage.js';
 import { NewOrderPage } from './pages/NewOrderPage.js';
@@ -14,7 +15,7 @@ const HOME_READY_SELECTOR = "a[href='/new-order']";
 export class MyShopUiClient {
   private context: BrowserContext | null = null;
   private currentPage: Page | null = null;
-  private readonly login: KeycloakUiLogin | undefined;
+  private login: KeycloakUiLogin | undefined;
 
   /**
    * @param keycloakBaseUrl when undefined or empty, the app is assumed to have no login screen.
@@ -22,9 +23,19 @@ export class MyShopUiClient {
   constructor(
     private readonly baseUrl: string,
     private readonly browser: Browser,
-    keycloakBaseUrl?: string,
+    private readonly keycloakBaseUrl?: string,
   ) {
-    this.login = KeycloakUiLogin.forBaseUrl(keycloakBaseUrl);
+    this.login = KeycloakUiLogin.forBaseUrl(keycloakBaseUrl, TestUsers.CUSTOMER);
+  }
+
+  /**
+   * Makes `user` the logged-in user. Switching discards the browser session (the next openHomePage()
+   * creates a fresh isolated context and logs in as the new user). No-op without Keycloak or when already that user.
+   */
+  async switchUser(user: TestUser): Promise<void> {
+    if (!this.login || this.login.getUser() === user) return;
+    await this.close();
+    this.login = KeycloakUiLogin.forBaseUrl(this.keycloakBaseUrl, user);
   }
 
   async openHomePage(): Promise<Result<HomePage, SystemError>> {

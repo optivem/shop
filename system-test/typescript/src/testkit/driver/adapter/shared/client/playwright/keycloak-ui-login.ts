@@ -14,9 +14,13 @@ export class KeycloakUiLogin {
   ) {}
 
   /** Returns undefined when no Keycloak URL is configured (the system under test has no login). */
-  static forBaseUrl(keycloakBaseUrl: string | undefined): KeycloakUiLogin | undefined {
+  static forBaseUrl(keycloakBaseUrl: string | undefined, user: TestUser = TestUsers.CUSTOMER): KeycloakUiLogin | undefined {
     if (!keycloakBaseUrl) return undefined;
-    return new KeycloakUiLogin(keycloakBaseUrl, TestUsers.ADMIN);
+    return new KeycloakUiLogin(keycloakBaseUrl, user);
+  }
+
+  getUser(): TestUser {
+    return this.user;
   }
 
   /** Waits until either the Keycloak login form or the app-ready selector shows, logging in if needed. */

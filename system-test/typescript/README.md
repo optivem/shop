@@ -86,7 +86,7 @@ You can also pass a **group alias** to `--suite`: `acceptance` runs every accept
 
 ## Authentication
 
-The API client acquires Keycloak access tokens (password grant, client `shop-system-test`, realm `shop`) only when a Keycloak base URL is configured; otherwise no token is requested and no `Authorization` header is sent, so the suites still run against systems without auth. The UI drivers log in through the Keycloak login form (user `admin1`) when the app redirects there.
+The API client acquires Keycloak access tokens (password grant, client `shop-system-test`, realm `shop`) only when a Keycloak base URL is configured; otherwise no token is requested and no `Authorization` header is sent, so the suites still run against systems without auth. The UI drivers log in through the Keycloak login form when the app redirects there: as `customer1` by default, switching to a fresh browser session as `admin1` for admin-only operations (deliver order, publish and browse coupons).
 
 Enable it with `KEYCLOAK_URL_REAL` / `KEYCLOAK_URL_STUB` (per external-system mode) or `KEYCLOAK_URL` (fallback), e.g. `KEYCLOAK_URL_REAL=http://localhost:8391` and `KEYCLOAK_URL_STUB=http://localhost:8392` for the local TypeScript multitier stack. The authorization tests (`api-authorization-test.spec.ts`) are skipped when no Keycloak URL is set.
 

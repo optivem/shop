@@ -8,6 +8,7 @@ import {
   flexRender,
   type SortingState,
 } from '@tanstack/react-table';
+import { useRoles } from '../../auth/useRoles';
 import { LoadingSpinner, ErrorMessage, SortableHeaderCell } from '../../components';
 import type { BrowseOrderHistoryItemResponse } from '../../types/api.types';
 
@@ -35,6 +36,9 @@ export function OrderHistoryTable({
   onRefresh
 }: Readonly<OrderHistoryTableProps>) {
   const [sorting, setSorting] = useState<SortingState>([]);
+  const { isAdmin } = useRoles();
+  // Only admins see everyone's orders, and only backends that report the owner can fill the column.
+  const showCustomer = isAdmin && orders.some((order) => order.customer);
 
   const columns = useMemo(
     () => [
@@ -42,6 +46,14 @@ export function OrderHistoryTable({
         header: 'Order Number',
         cell: (info) => info.getValue(),
       }),
+      ...(showCustomer
+        ? [
+            columnHelper.accessor('customer', {
+              header: 'Customer',
+              cell: (info) => info.getValue() ?? '-',
+            }),
+          ]
+        : []),
       columnHelper.accessor('orderTimestamp', {
         header: 'Order Date',
         cell: (info) => new Date(info.getValue()).toLocaleString('en-US', { timeZone: 'UTC' }),
@@ -85,7 +97,7 @@ export function OrderHistoryTable({
         ),
       }),
     ],
-    []
+    [showCustomer]
   );
 
   // eslint-disable-next-line react-hooks/incompatible-library -- TanStack Table's useReactTable is inherently incompatible with React Compiler memoization; no compiler is used here and there is no compatible API to switch to

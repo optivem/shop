@@ -2,6 +2,8 @@ using Microsoft.Playwright;
 
 using Driver.Adapter.Ui.Client.Pages;
 
+using Driver.Adapter.Shared.Client.Http;
+
 using Driver.Adapter.Shared.Client.Playwright;
 
 using System.Net;
@@ -44,13 +46,15 @@ public class MyShopUiClient : IAsyncDisposable
 
     private readonly IBrowser _browser;
 
-    private readonly IBrowserContext _context;
+    private readonly string? _keycloakBaseUrl;
 
-    private readonly IPage _page;
+    private IBrowserContext _context;
 
-    private readonly HomePage _homePage;
+    private IPage _page;
 
-    private readonly KeycloakUiLogin? _login;
+    private HomePage _homePage;
+
+    private KeycloakUiLogin? _login;
 
 
 
@@ -58,7 +62,7 @@ public class MyShopUiClient : IAsyncDisposable
 
 
 
-    private MyShopUiClient(string baseUrl, IPlaywright playwright, IBrowser browser, IBrowserContext context, IPage page, HomePage homePage, KeycloakUiLogin? login)
+    private MyShopUiClient(string baseUrl, IPlaywright playwright, IBrowser browser, IBrowserContext context, IPage page, HomePage homePage, KeycloakUiLogin? login, string? keycloakBaseUrl)
 
     {
 
@@ -75,6 +79,7 @@ public class MyShopUiClient : IAsyncDisposable
         _homePage = homePage;
 
         _login = login;
+        _keycloakBaseUrl = keycloakBaseUrl;
 
     }
 
@@ -91,38 +96,53 @@ public class MyShopUiClient : IAsyncDisposable
 
 
 
-        // Create isolated browser context with specific configuration
+        var (context, page, login, homePage) = await OpenSessionAsync(browser, baseUrl, keycloakBaseUrl, TestUser.Customer);
 
-        var contextOptions = new BrowserNewContextOptions
-
-        {
-
-            ViewportSize = new ViewportSize { Width = 1920, Height = 1080 },
-
-            StorageStatePath = null // Ensure complete isolation between parallel tests
-
-        };
-
-        var context = await browser.NewContextAsync(contextOptions);
-
-
-
-        // Each test gets its own page
-
-        var page = await context.NewPageAsync();
-
-        var login = KeycloakUiLogin.ForBaseUrl(keycloakBaseUrl);
-        var pageClient = new PlaywrightGateway(page, baseUrl, login);
-
-        var homePage = new HomePage(pageClient);
-
-
-
-        return new MyShopUiClient(baseUrl, playwright, browser, context, page, homePage, login);
+        return new MyShopUiClient(baseUrl, playwright, browser, context, page, homePage, login, keycloakBaseUrl);
 
     }
 
 
+
+    /// <summary>
+    /// Makes <paramref name="user"/> the logged-in user. Switching discards the browser session (a fresh isolated
+    /// context) so the next page open logs in as the new user. No-op without Keycloak or when already that user.
+    /// </summary>
+    /// <returns>true when the session was replaced, so callers must re-open the home page</returns>
+    public async Task<bool> SwitchUserAsync(TestUser user)
+    {
+        if (_login == null || _login.User == user)
+        {
+            return false;
+        }
+
+        await _page.CloseAsync();
+        await _context.CloseAsync();
+        (_context, _page, _login, _homePage) = await OpenSessionAsync(_browser, _baseUrl, _keycloakBaseUrl, user);
+        _response = null;
+        return true;
+    }
+
+    private static async Task<(IBrowserContext Context, IPage Page, KeycloakUiLogin? Login, HomePage HomePage)> OpenSessionAsync(
+        IBrowser browser, string baseUrl, string? keycloakBaseUrl, TestUser user)
+    {
+        // Create isolated browser context with specific configuration
+        var contextOptions = new BrowserNewContextOptions
+        {
+            ViewportSize = new ViewportSize { Width = 1920, Height = 1080 },
+            StorageStatePath = null // Ensure complete isolation between parallel tests
+        };
+        var context = await browser.NewContextAsync(contextOptions);
+
+        // Each test gets its own page
+        var page = await context.NewPageAsync();
+
+        var login = KeycloakUiLogin.ForBaseUrl(keycloakBaseUrl, user);
+        var pageClient = new PlaywrightGateway(page, baseUrl, login);
+        var homePage = new HomePage(pageClient);
+
+        return (context, page, login, homePage);
+    }
 
     public async Task<HomePage> OpenHomePageAsync()
 
