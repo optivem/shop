@@ -1,8 +1,8 @@
-import { test, forChannels, ChannelType, requiresKeycloak } from './base/fixtures.js';
+import { test, forChannels, ChannelType } from './base/fixtures.js';
 import { DEFAULTS } from '../../../src/testkit/dsl/core/scenario/defaults.js';
 
 forChannels(ChannelType.API)(() => {
-    test('customerShouldSeeOwnOrderInHistory', requiresKeycloak, async ({ scenario }) => {
+    test('customerShouldSeeOwnOrderInHistory', async ({ scenario }) => {
         await scenario
             .given()
             .order()
@@ -17,7 +17,7 @@ forChannels(ChannelType.API)(() => {
             .containsOrder(DEFAULTS.ORDER_NUMBER);
     });
 
-    test('adminShouldSeeCustomerOrderInHistory', requiresKeycloak, async ({ scenario }) => {
+    test('adminShouldSeeCustomerOrderInHistory', async ({ scenario }) => {
         await scenario
             .given()
             .order()
@@ -32,7 +32,7 @@ forChannels(ChannelType.API)(() => {
             .containsOrder(DEFAULTS.ORDER_NUMBER);
     });
 
-    test('adminShouldSeeAnotherCustomersOrderInHistory', requiresKeycloak, async ({ scenario }) => {
+    test('adminShouldSeeAnotherCustomersOrderInHistory', async ({ scenario }) => {
         await scenario
             .given()
             .order()

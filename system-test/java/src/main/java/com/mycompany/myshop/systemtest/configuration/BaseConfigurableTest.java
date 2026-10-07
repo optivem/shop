@@ -41,6 +41,17 @@ public abstract class BaseConfigurableTest {
         return ConfigurationLoader.load(environment, externalSystemMode, channelMode);
     }
 
+    protected String requireKeycloakBaseUrl(Configuration configuration) {
+        var keycloakBaseUrl = configuration.getKeycloakBaseUrl();
+        if (keycloakBaseUrl == null || keycloakBaseUrl.isBlank()) {
+            var suffix = "_" + configuration.getExternalSystemMode().name().toUpperCase();
+            throw new IllegalStateException("Keycloak base URL is not configured. Set the environment variable KEYCLOAK_URL"
+                    + suffix + " (or KEYCLOAK_URL) to the Keycloak base URL, e.g. http://localhost:8180, "
+                    + "and start the Keycloak container before running these tests.");
+        }
+        return keycloakBaseUrl;
+    }
+
     protected UseCaseDsl createUseCaseDsl(Configuration configuration) {
         return new UseCaseDsl(
                 configuration.getExternalSystemMode(),

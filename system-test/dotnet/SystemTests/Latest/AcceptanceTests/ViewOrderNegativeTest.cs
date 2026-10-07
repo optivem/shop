@@ -26,7 +26,7 @@ public class ViewOrderNegativeTest : BaseAcceptanceTest
             .ErrorMessage(expectedErrorMessage);
     }
 
-    [RequiresKeycloakTheory]
+    [Theory]
     [ChannelData(ChannelType.UI, ChannelType.API)]
     public async Task CustomerShouldNotBeAbleToViewAnotherCustomersOrder(Channel channel)
     {
@@ -38,7 +38,7 @@ public class ViewOrderNegativeTest : BaseAcceptanceTest
             .ErrorMessage($"Order {DefaultOrderNumber} does not exist.");
     }
 
-    [RequiresKeycloakTheory]
+    [Theory]
     [ChannelData(ChannelType.API)]
     public async Task AnonymousShouldNotBeAbleToViewOrder(Channel channel)
     {

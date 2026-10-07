@@ -31,7 +31,7 @@ public static class SystemConfigurationLoader
     }
 
     /// <summary>
-    /// Authentication is opt-in: null means the SUT is unauthenticated and no token is ever requested.
+    /// Returns null when no Keycloak URL is configured; suites that need authentication must reject null.
     /// </summary>
     public static string? ResolveKeycloakBaseUrl(ExternalSystemMode externalSystemMode)
     {

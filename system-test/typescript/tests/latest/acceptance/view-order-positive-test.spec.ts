@@ -1,4 +1,4 @@
-import { test, forChannels, ChannelType, requiresKeycloak } from './base/fixtures.js';
+import { test, forChannels, ChannelType } from './base/fixtures.js';
 
 forChannels(ChannelType.UI, ChannelType.API)(() => {
     test('shouldBeAbleToViewOrder', async ({ scenario }) => {
@@ -11,7 +11,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
             .shouldSucceed();
     });
 
-    test('customerShouldBeAbleToViewOwnOrder', requiresKeycloak, async ({ scenario }) => {
+    test('customerShouldBeAbleToViewOwnOrder', async ({ scenario }) => {
         await scenario
             .given()
             .order()
@@ -24,7 +24,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
             .shouldSucceed();
     });
 
-    test('sameCustomerAliasShouldResolveToSameCustomer', requiresKeycloak, async ({ scenario }) => {
+    test('sameCustomerAliasShouldResolveToSameCustomer', async ({ scenario }) => {
         await scenario
             .given()
             .order()
@@ -37,7 +37,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
             .shouldSucceed();
     });
 
-    test('adminShouldBeAbleToViewCustomerOrder', requiresKeycloak, async ({ scenario }) => {
+    test('adminShouldBeAbleToViewCustomerOrder', async ({ scenario }) => {
         await scenario
             .given()
             .order()
@@ -50,7 +50,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
             .shouldSucceed();
     });
 
-    test('adminShouldBeAbleToViewAnotherCustomersOrder', requiresKeycloak, async ({ scenario }) => {
+    test('adminShouldBeAbleToViewAnotherCustomersOrder', async ({ scenario }) => {
         await scenario
             .given()
             .order()

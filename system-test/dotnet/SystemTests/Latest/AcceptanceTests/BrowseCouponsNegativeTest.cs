@@ -7,7 +7,7 @@ namespace SystemTests.Latest.AcceptanceTests;
 
 public class BrowseCouponsNegativeTest : BaseAcceptanceTest
 {
-    [RequiresKeycloakTheory]
+    [Theory]
     [ChannelData(ChannelType.API)]
     public async Task CustomerShouldNotBeAbleToBrowseCoupons(Channel channel)
     {

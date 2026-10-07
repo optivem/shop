@@ -86,7 +86,7 @@ public class PublishCouponNegativeTest : BaseAcceptanceTest
             .FieldErrorMessage("code", "Coupon code must not be blank");
     }
 
-    [RequiresKeycloakTheory]
+    [Theory]
     [ChannelData(ChannelType.API)]
     public async Task CustomerShouldNotBeAbleToPublishCoupon(Channel channel)
     {

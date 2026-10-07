@@ -1,4 +1,4 @@
-import { test, forChannels, ChannelType, requiresKeycloak } from './base/fixtures.js';
+import { test, forChannels, ChannelType } from './base/fixtures.js';
 import { OrderStatus } from '../../../src/testkit/common/dtos.js';
 import { DEFAULTS } from '../../../src/testkit/dsl/core/scenario/defaults.js';
 
@@ -44,7 +44,7 @@ forChannels(ChannelType.API)(() => {
             .errorMessage('Order non-existent-order-12345 does not exist.');
     });
 
-    test('customerShouldNotBeAbleToCancelAnotherCustomersOrder', requiresKeycloak, async ({ scenario }) => {
+    test('customerShouldNotBeAbleToCancelAnotherCustomersOrder', async ({ scenario }) => {
         await scenario
             .given()
             .order()

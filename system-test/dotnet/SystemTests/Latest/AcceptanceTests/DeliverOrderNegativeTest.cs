@@ -7,7 +7,7 @@ namespace SystemTests.Latest.AcceptanceTests;
 
 public class DeliverOrderNegativeTest : BaseAcceptanceTest
 {
-    [RequiresKeycloakTheory]
+    [Theory]
     [ChannelData(ChannelType.API)]
     public async Task CustomerShouldNotBeAbleToDeliverOrder(Channel channel)
     {

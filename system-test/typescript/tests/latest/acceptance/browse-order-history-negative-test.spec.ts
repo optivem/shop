@@ -1,8 +1,8 @@
-import { test, forChannels, ChannelType, requiresKeycloak } from './base/fixtures.js';
+import { test, forChannels, ChannelType } from './base/fixtures.js';
 import { DEFAULTS } from '../../../src/testkit/dsl/core/scenario/defaults.js';
 
 forChannels(ChannelType.API)(() => {
-    test('customerShouldNotSeeAnotherCustomersOrderInHistory', requiresKeycloak, async ({ scenario }) => {
+    test('customerShouldNotSeeAnotherCustomersOrderInHistory', async ({ scenario }) => {
         await scenario
             .given()
             .order()

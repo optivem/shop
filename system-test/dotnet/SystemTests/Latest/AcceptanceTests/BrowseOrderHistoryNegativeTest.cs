@@ -7,7 +7,7 @@ namespace SystemTests.Latest.AcceptanceTests;
 
 public class BrowseOrderHistoryNegativeTest : BaseAcceptanceTest
 {
-    [RequiresKeycloakTheory]
+    [Theory]
     [ChannelData(ChannelType.API)]
     public async Task CustomerShouldNotSeeAnotherCustomersOrderInHistory(Channel channel)
     {

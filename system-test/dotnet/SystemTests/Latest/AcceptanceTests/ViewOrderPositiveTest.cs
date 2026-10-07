@@ -16,7 +16,7 @@ public class ViewOrderPositiveTest : BaseAcceptanceTest
             .Then().ShouldSucceed();
     }
 
-    [RequiresKeycloakTheory]
+    [Theory]
     [ChannelData(ChannelType.UI, ChannelType.API)]
     public async Task CustomerShouldBeAbleToViewOwnOrder(Channel channel)
     {
@@ -27,7 +27,7 @@ public class ViewOrderPositiveTest : BaseAcceptanceTest
             .Then().ShouldSucceed();
     }
 
-    [RequiresKeycloakTheory]
+    [Theory]
     [ChannelData(ChannelType.UI, ChannelType.API)]
     public async Task SameCustomerAliasShouldResolveToSameCustomer(Channel channel)
     {
@@ -38,7 +38,7 @@ public class ViewOrderPositiveTest : BaseAcceptanceTest
             .Then().ShouldSucceed();
     }
 
-    [RequiresKeycloakTheory]
+    [Theory]
     [ChannelData(ChannelType.UI, ChannelType.API)]
     public async Task AdminShouldBeAbleToViewCustomerOrder(Channel channel)
     {
@@ -49,7 +49,7 @@ public class ViewOrderPositiveTest : BaseAcceptanceTest
             .Then().ShouldSucceed();
     }
 
-    [RequiresKeycloakTheory]
+    [Theory]
     [ChannelData(ChannelType.UI, ChannelType.API)]
     public async Task AdminShouldBeAbleToViewAnotherCustomersOrder(Channel channel)
     {

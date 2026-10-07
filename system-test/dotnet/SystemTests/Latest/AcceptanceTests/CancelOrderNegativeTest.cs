@@ -43,7 +43,7 @@ public class CancelOrderNegativeTest : BaseAcceptanceTest
             .ErrorMessage("Order non-existent-order-12345 does not exist.");
     }
 
-    [RequiresKeycloakTheory]
+    [Theory]
     [ChannelData(ChannelType.API)]
     public async Task CustomerShouldNotBeAbleToCancelAnotherCustomersOrder(Channel channel)
     {

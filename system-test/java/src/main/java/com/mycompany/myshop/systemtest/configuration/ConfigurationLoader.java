@@ -34,7 +34,7 @@ public class ConfigurationLoader {
         var taxBaseUrl = getEnvVarOrDefault("TAX_API_BASE_URL" + suffix,
                 getNestedStringValue(config, "test", "tax", "api", BASE_URL));
 
-        // Authentication is opt-in: unset means the SUT is unauthenticated and no token is ever requested.
+        // Optional at load time (legacy suites run without it); latest acceptance suites require it.
         var keycloakBaseUrl = getEnvVarOrDefault("KEYCLOAK_URL" + suffix,
                 getEnvVarOrDefault("KEYCLOAK_URL", null));
 

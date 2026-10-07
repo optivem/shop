@@ -1,8 +1,8 @@
-import { test, forChannels, ChannelType, requiresKeycloak } from './base/fixtures.js';
+import { test, forChannels, ChannelType } from './base/fixtures.js';
 import { ErrorMessages } from '../../commons/constants/error-messages.js';
 
 forChannels(ChannelType.API)(() => {
-    test('customerShouldNotBeAbleToDeliverOrder', requiresKeycloak, async ({ scenario }) => {
+    test('customerShouldNotBeAbleToDeliverOrder', async ({ scenario }) => {
         await scenario
             .given()
             .loggedInAsCustomer()

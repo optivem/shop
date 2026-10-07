@@ -1,4 +1,4 @@
-import { test, forChannels, ChannelType, requiresKeycloak } from './base/fixtures.js';
+import { test, forChannels, ChannelType } from './base/fixtures.js';
 import { ErrorMessages } from '../../commons/constants/error-messages.js';
 import { emptyArguments } from '../../commons/providers/empty-arguments-provider.js';
 
@@ -82,7 +82,7 @@ forChannels(ChannelType.API)(() => {
         });
     });
 
-    test('customerShouldNotBeAbleToPublishCoupon', requiresKeycloak, async ({ scenario }) => {
+    test('customerShouldNotBeAbleToPublishCoupon', async ({ scenario }) => {
         await scenario
             .given()
             .loggedInAsCustomer()

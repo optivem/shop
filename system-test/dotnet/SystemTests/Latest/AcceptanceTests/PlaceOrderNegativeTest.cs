@@ -170,7 +170,7 @@ public class PlaceOrderNegativeTest : BaseAcceptanceTest
             .FieldErrorMessage("couponCode", "Coupon code LIMITED2024 has exceeded its usage limit");
     }
 
-    [RequiresKeycloakTheory]
+    [Theory]
     [ChannelData(ChannelType.API)]
     public async Task AdminShouldNotBeAbleToPlaceOrder(Channel channel)
     {

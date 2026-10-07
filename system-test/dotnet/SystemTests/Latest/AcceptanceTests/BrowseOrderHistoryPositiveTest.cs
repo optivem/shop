@@ -7,7 +7,7 @@ namespace SystemTests.Latest.AcceptanceTests;
 
 public class BrowseOrderHistoryPositiveTest : BaseAcceptanceTest
 {
-    [RequiresKeycloakTheory]
+    [Theory]
     [ChannelData(ChannelType.API)]
     public async Task CustomerShouldSeeOwnOrderInHistory(Channel channel)
     {
@@ -19,7 +19,7 @@ public class BrowseOrderHistoryPositiveTest : BaseAcceptanceTest
             .OrderHistory().ContainsOrder(DefaultOrderNumber);
     }
 
-    [RequiresKeycloakTheory]
+    [Theory]
     [ChannelData(ChannelType.API)]
     public async Task AdminShouldSeeCustomerOrderInHistory(Channel channel)
     {
@@ -31,7 +31,7 @@ public class BrowseOrderHistoryPositiveTest : BaseAcceptanceTest
             .OrderHistory().ContainsOrder(DefaultOrderNumber);
     }
 
-    [RequiresKeycloakTheory]
+    [Theory]
     [ChannelData(ChannelType.API)]
     public async Task AdminShouldSeeAnotherCustomersOrderInHistory(Channel channel)
     {

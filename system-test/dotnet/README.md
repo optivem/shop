@@ -87,9 +87,9 @@ You can also pass a **group alias** to `--suite`: `acceptance` runs every accept
 
 ## Authentication
 
-The API client acquires Keycloak access tokens (password grant, client `shop-system-test`, realm `shop`) only when a Keycloak base URL is configured; otherwise no token is requested and no `Authorization` header is sent, so the suites still run against systems without auth.
+The API client acquires Keycloak access tokens (password grant, client `shop-system-test`, realm `shop`) and sends them as the `Authorization` header.
 
-Enable it with `KEYCLOAK_URL_REAL` / `KEYCLOAK_URL_STUB` (per external-system mode) or `KEYCLOAK_URL` (fallback), e.g. `KEYCLOAK_URL_REAL=http://localhost:8291` and `KEYCLOAK_URL_STUB=http://localhost:8292` for the local .NET multitier stack. The identity scenarios (marked `[RequiresKeycloakTheory]`) are skipped when no Keycloak URL is set.
+Required for the latest acceptance suites (a missing URL fails them with a configuration error); set `KEYCLOAK_URL_REAL` / `KEYCLOAK_URL_STUB` (per external-system mode) or `KEYCLOAK_URL` (fallback), e.g. `KEYCLOAK_URL_REAL=http://localhost:8291` and `KEYCLOAK_URL_STUB=http://localhost:8292` for the local .NET multitier stack. The identity scenarios (marked `[RequiresKeycloakTheory]`).
 
 By default, admin-only operations (deliver order, publish/browse coupons, `/api/admin/**`) use `admin1` and everything else uses `customer1`. A test can override this with `apiClient.As(ApiIdentity.Anonymous | Customer | Admin)`.
 

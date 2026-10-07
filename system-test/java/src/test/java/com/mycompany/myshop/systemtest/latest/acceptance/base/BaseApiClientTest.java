@@ -7,17 +7,13 @@ import com.mycompany.myshop.testkit.dsl.port.ExternalSystemMode;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
-
 public abstract class BaseApiClientTest extends BaseConfigurableTest {
     protected MyShopApiClient myShopApiClient;
 
     @BeforeEach
     void setUpApiClient() {
         var configuration = loadConfiguration();
-        var keycloakBaseUrl = configuration.getKeycloakBaseUrl();
-        assumeTrue(keycloakBaseUrl != null && !keycloakBaseUrl.isBlank(),
-                "Authorization tests require KEYCLOAK_URL to be set");
+        var keycloakBaseUrl = requireKeycloakBaseUrl(configuration);
         myShopApiClient = new MyShopApiClient(configuration.getMyShopApiBaseUrl(), keycloakBaseUrl);
     }
 

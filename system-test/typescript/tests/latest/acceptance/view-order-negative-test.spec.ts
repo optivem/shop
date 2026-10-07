@@ -1,4 +1,4 @@
-import { test, forChannels, ChannelType, requiresKeycloak } from './base/fixtures.js';
+import { test, forChannels, ChannelType } from './base/fixtures.js';
 import { ErrorMessages } from '../../commons/constants/error-messages.js';
 import { DEFAULTS } from '../../../src/testkit/dsl/core/scenario/defaults.js';
 
@@ -22,7 +22,7 @@ test.eachAlsoFirstRow(nonExistentOrderCases)(
 );
 
 forChannels(ChannelType.UI, ChannelType.API)(() => {
-    test('customerShouldNotBeAbleToViewAnotherCustomersOrder', requiresKeycloak, async ({ scenario }) => {
+    test('customerShouldNotBeAbleToViewAnotherCustomersOrder', async ({ scenario }) => {
         await scenario
             .given()
             .order()
@@ -38,7 +38,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
 });
 
 forChannels(ChannelType.API)(() => {
-    test('anonymousShouldNotBeAbleToViewOrder', requiresKeycloak, async ({ scenario }) => {
+    test('anonymousShouldNotBeAbleToViewOrder', async ({ scenario }) => {
         await scenario
             .given()
             .notLoggedIn()

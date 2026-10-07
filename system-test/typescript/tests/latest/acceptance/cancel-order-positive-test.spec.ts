@@ -1,4 +1,4 @@
-import { test, forChannels, ChannelType, requiresKeycloak } from './base/fixtures.js';
+import { test, forChannels, ChannelType } from './base/fixtures.js';
 import { OrderStatus } from '../../../src/testkit/common/dtos.js';
 
 forChannels(ChannelType.UI, ChannelType.API)(() => {
@@ -15,7 +15,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
             .hasStatus(OrderStatus.CANCELLED);
     });
 
-    test('adminShouldBeAbleToCancelCustomerOrder', requiresKeycloak, async ({ scenario }) => {
+    test('adminShouldBeAbleToCancelCustomerOrder', async ({ scenario }) => {
         await scenario
             .given()
             .order()

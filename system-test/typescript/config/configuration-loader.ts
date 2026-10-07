@@ -14,8 +14,8 @@ export interface TestConfig {
     backendApiUrl: string;
   };
   /**
-   * Keycloak base URL. Authentication is opt-in: when unset no token is requested and no
-   * Authorization header is sent, so the suites still run against systems without auth.
+   * Keycloak base URL, optional at load time (legacy suites run without it); the latest
+   * acceptance suites fail fast when it is unset.
    */
   keycloakUrl?: string;
   externalSystems: {

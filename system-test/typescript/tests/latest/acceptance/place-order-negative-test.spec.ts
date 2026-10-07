@@ -1,4 +1,4 @@
-import { test, forChannels, ChannelType, requiresKeycloak } from './base/fixtures.js';
+import { test, forChannels, ChannelType } from './base/fixtures.js';
 import { ErrorMessages } from '../../commons/constants/error-messages.js';
 import { emptyArguments } from '../../commons/providers/empty-arguments-provider.js';
 
@@ -184,7 +184,7 @@ forChannels(ChannelType.API)(() => {
             .fieldErrorMessage('country', 'Country must not be empty');
     });
 
-    test('adminShouldNotBeAbleToPlaceOrder', requiresKeycloak, async ({ scenario }) => {
+    test('adminShouldNotBeAbleToPlaceOrder', async ({ scenario }) => {
         await scenario
             .given()
             .loggedInAsAdmin()
