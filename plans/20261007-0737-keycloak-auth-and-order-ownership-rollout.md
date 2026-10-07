@@ -30,8 +30,8 @@ The main session only dispatches, reads short verdicts, and approves fixes. Do n
 
 ## Steps
 
-- [ ] Step 1: **Verify the retired Keycloak opt-in guard in CI.** Done in code 2026-10-07 (Java/.NET/TS latest acceptance suites: guard deleted, a missing `KEYCLOAK_URL_*` is a hard configuration failure; cloud pipelines out of scope; the non-cloud QA/prod/signoff workflows run no system tests so need no wiring). Remaining: watch the acceptance-stage runs after the push (positive identity paths were only compile-verified locally) and fix any failure.
-- [ ] Step 2: **Release (pre-approved by the author 2026-10-07 once shop is green; still read the workflow before running).** Run shop `meta-release-stage` (it dispatches `gh-acceptance-stage` in `optivem/gh-optivem`, ~line 302 of `meta-release-stage.yml`), then `gh-release-stage` to promote the gh-optivem RC with `healthUrl`. Use a monitor subagent; do NOT dispatch `gh-release-stage` manually before shop is green.
+All steps complete (2026-10-07): CI green incl. the 6 latest acceptance stages on 36fd78c8 with the guard retired; shop meta-release-stage runs automatically on each meta-rc tag (1.0.205 released) and gh-optivem v1.6.88 already contains `healthUrl`. Cloud pipelines are out of scope; QA/prod/signoff workflows run no system tests. Only the optional follow-ups below remain; delete this plan when none are wanted.
+
 
 ## Follow-ups (not blocking; pick up opportunistically)
 
