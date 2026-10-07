@@ -5,6 +5,7 @@ import { ViewOrder } from './usecases/ViewOrder.js';
 import { CancelOrder } from './usecases/CancelOrder.js';
 import { DeliverOrder } from './usecases/DeliverOrder.js';
 import { BrowseCoupons } from './usecases/BrowseCoupons.js';
+import { BrowseOrderHistory } from './usecases/BrowseOrderHistory.js';
 import { PublishCoupon } from './usecases/PublishCoupon.js';
 import { GoToMyShop } from './usecases/GoToMyShop.js';
 
@@ -32,6 +33,10 @@ export class MyShopDsl {
 
   deliverOrder(): DeliverOrder {
     return new DeliverOrder(this.driver, this.context);
+  }
+
+  browseOrderHistory(): BrowseOrderHistory {
+    return new BrowseOrderHistory(this.driver, this.context);
   }
 
   browseCoupons(): BrowseCoupons {
