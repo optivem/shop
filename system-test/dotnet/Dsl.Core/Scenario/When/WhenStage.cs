@@ -3,7 +3,6 @@ using Dsl.Port.When;
 using Dsl.Port.When.Steps;
 using Optivem.Testing;
 using Driver.Adapter;
-using static Dsl.Core.Scenario.ScenarioDefaults;
 
 namespace Dsl.Core.Scenario.When
 {
@@ -11,24 +10,20 @@ namespace Dsl.Core.Scenario.When
     {
         private readonly UseCaseDsl _app;
         private readonly ScenarioDsl _scenario;
-        private bool _hasPromotion;
-        private bool _hasProduct;
-        private bool _hasTaxRate;
+        private readonly DefaultGivens _defaults;
         private readonly Func<Task>? _givenSetup;
 
-        public WhenStage(Channel? channel, UseCaseDsl app, ScenarioDsl scenario, bool hasProduct, bool hasPromotion, bool hasTaxRate, Func<Task>? givenSetup = null)
+        public WhenStage(Channel? channel, UseCaseDsl app, ScenarioDsl scenario, DefaultGivens defaults, Func<Task>? givenSetup = null)
             : base(channel)
         {
             _app = app;
             _scenario = scenario;
-            _hasProduct = hasProduct;
-            _hasPromotion = hasPromotion;
-            _hasTaxRate = hasTaxRate;
+            _defaults = defaults;
             _givenSetup = givenSetup;
         }
 
         public WhenStage(Channel? channel, UseCaseDsl app, ScenarioDsl scenario)
-            : this(channel, app, scenario, false, false, false, null)
+            : this(channel, app, scenario, new DefaultGivens(app, channel), null)
         {
         }
 
@@ -39,35 +34,7 @@ namespace Dsl.Core.Scenario.When
                 await _givenSetup();
             }
 
-            if (!_hasPromotion)
-            {
-                var result = await _app.Erp().ReturnsPromotion()
-                    .WithActive(DefaultPromotionActive)
-                    .WithDiscount(DefaultPromotionDiscount)
-                    .Execute();
-                result.ShouldSucceed();
-                _hasPromotion = true;
-            }
-
-            if (!_hasProduct)
-            {
-                var result = await _app.Erp().ReturnsProduct()
-                    .Sku(DefaultSku)
-                    .UnitPrice(DefaultUnitPrice)
-                    .Execute();
-                result.ShouldSucceed();
-                _hasProduct = true;
-            }
-
-            if (!_hasTaxRate)
-            {
-                var result = await _app.Tax().ReturnsTaxRate()
-                    .Country(DefaultCountry)
-                    .TaxRate(DefaultTaxRate)
-                    .Execute();
-                result.ShouldSucceed();
-                _hasTaxRate = true;
-            }
+            await _defaults.EnsureAsync(whenStepRuns: true);
         }
 
         public PlaceOrder PlaceOrder()

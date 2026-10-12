@@ -1,5 +1,7 @@
 # 2026-10-12 12:00:00 UTC — One place for default Given values (scenario DSL)
 
+> 🤖 **Picked up by agent** — `ValentinaLaptop` at `2026-10-12T10:45:59Z`
+
 ## TL;DR
 
 **Why:** A student asked why default test data is created in two places in the .NET scenario DSL. They are right: the same knowledge ("what is the default product / country / promotion") is spread across two stages, and the two paths can disagree.
@@ -40,25 +42,20 @@ Source: `system-test/dotnet/Dsl.Core/Scenario/Given/GivenStage.cs` and `.../When
 
 ## ▶ Next executable step (resume here)
 
-Step 1: in `system-test/dotnet`, add a small failing test (or a recorded-call assertion on the ERP and Tax stubs) for a scenario with an order and no declared product. It asserts that the default product and tax rate are each created exactly once. This confirms the double creation described above before any refactor. Gate: `dotnet build` and `gh optivem system-test run --sample` for .NET.
+Step 7: Java parity. .NET is done and committed (`DefaultGivens` in `system-test/dotnet/Dsl.Core/Scenario/`). Mirror its structure in `system-test/java` (`GivenImpl.setupErp/setupTax/setupCoupons` versus `WhenImpl.ensureDefaults`), run the owner for every When, and run the Java sample suite with `GH_OPTIVEM_CONFIG=gh-optivem-monolith-java.yaml`. Then TypeScript alignment, then Step 8 (docs).
 
 ## Steps
 
-1. **Pin the current behaviour (.NET).** Step above. Report whether the double creation is reproduced.
-2. **Introduce the single owner (.NET).** Add `DefaultGivens` next to `ScenarioDefaults`. It tracks which of product, country/tax rate, promotion and coupon are already present, and has one idempotent `EnsureAsync(...)`.
-3. **Route `GivenStage` through it.** Replace the three `if (_orders.Count > 0 && _x.Count == 0)` blocks with calls to the owner. Declared givens mark the matching default as present.
-4. **Route `WhenStage` through it.** Remove the `hasProduct` / `hasPromotion` / `hasTaxRate` constructor flags and the `Returns*` default calls from `EnsureGiven`. It calls the owner after `_givenSetup`.
-5. **Decide the Then path.** Either `ThenStageBase` gets the same owner, or it is documented why it doesn't need it. Recommended: share the owner, so all three stages behave the same.
-6. **Verify (.NET).** `./compile-all.sh`, then `gh optivem system-test run --sample` with `GH_OPTIVEM_CONFIG=gh-optivem-monolith-dotnet.yaml`.
 7. **Parity.** Java has the same duplication (`GivenImpl.setupErp/setupTax/setupCoupons` versus `WhenImpl.ensureDefaults`), so apply the same structure there and run the Java sample suite. TypeScript already has a single owner (`arrangeGiven` in `given/arrange-given.ts`, no defaults in `WhenStage`), so only align naming and the small gaps listed in the findings.
 8. **Docs.** If `docs/atdd/architecture/*.md` describes where defaults live, update it to name the single owner.
 
 ## Open questions
 
-- Should a declared Given that has no dependents (for example a product with no orders) still trigger default country and coupon creation? Recommended: no, keep today's rule (defaults only when something depends on them), and encode it once in the owner.
-- Where does the coupon default belong when there is no When-side coupon fallback today? Recommended: keep it Given-driven (only when orders exist), and don't introduce a new When-side default.
+None — all resolved before execution (2026-10-12), following the recommendations:
 
-- Java skips `ensureDefaults()` for `deliverOrder`, `browseOrderHistory`, `publishCoupon` and `browseCoupons`, while .NET runs `EnsureGiven` for all of them. Which is intended? Recommended: the .NET behaviour (run the owner for every When), so all three stages and both languages behave the same; confirm no Java test relies on the skip.
+- A declared Given with no dependents does not trigger default country/coupon creation; defaults only when something depends on them, encoded once in the owner.
+- The coupon default stays Given-driven (only when orders exist); no new When-side default.
+- Java runs the owner for every When (the .NET behaviour); confirm no Java test relies on the skip.
 
 ## Reply note (what changed, for the follow-up to the question)
 

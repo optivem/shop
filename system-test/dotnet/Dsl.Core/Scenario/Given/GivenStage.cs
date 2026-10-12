@@ -19,6 +19,7 @@ namespace Dsl.Core.Scenario.Given
         private readonly List<GivenOrder> _orders;
         private readonly List<GivenCountry> _countries;
         private readonly List<GivenCoupon> _coupons;
+        private readonly DefaultGivens _defaults;
         private GivenClock? _clock;
         private GivenPromotion _promotion;
         private readonly CustomerAliases _customers = new();
@@ -36,10 +37,12 @@ namespace Dsl.Core.Scenario.Given
             _coupons = new List<GivenCoupon>();
             _clock = null;
             _promotion = new GivenPromotion(this);
+            _defaults = new DefaultGivens(app, channel);
         }
 
         public GivenProduct Product()
         {
+            _defaults.MarkProduct();
             var productBuilder = new GivenProduct(this);
             _products.Add(productBuilder);
             return productBuilder;
@@ -49,6 +52,7 @@ namespace Dsl.Core.Scenario.Given
 
         public GivenOrder Order()
         {
+            _defaults.MarkOrder();
             var orderBuilder = new GivenOrder(this);
             _orders.Add(orderBuilder);
             return orderBuilder;
@@ -66,6 +70,7 @@ namespace Dsl.Core.Scenario.Given
 
         public GivenCountry Country()
         {
+            _defaults.MarkTaxRate();
             var countryBuilder = new GivenCountry(this);
             _countries.Add(countryBuilder);
             return countryBuilder;
@@ -83,6 +88,7 @@ namespace Dsl.Core.Scenario.Given
 
         public GivenCoupon Coupon()
         {
+            _defaults.MarkCoupon();
             var couponBuilder = new GivenCoupon(this);
             _coupons.Add(couponBuilder);
             return couponBuilder;
@@ -132,7 +138,7 @@ namespace Dsl.Core.Scenario.Given
 
         public WhenStage When()
         {
-            return new WhenStage(Channel, _app, _scenario, _products.Count > 0, true, _countries.Count > 0, SetupGiven);
+            return new WhenStage(Channel, _app, _scenario, _defaults, SetupGiven);
         }
 
         IWhenStage IGivenStage.When() => When();
@@ -167,6 +173,7 @@ namespace Dsl.Core.Scenario.Given
         private async Task SetupPromotion()
         {
             await _promotion.Execute(_app);
+            _defaults.MarkPromotion();
         }
 
         private async Task SetupClock()
@@ -179,12 +186,6 @@ namespace Dsl.Core.Scenario.Given
 
         private async Task SetupErp()
         {
-            if (_orders.Count > 0 && _products.Count == 0)
-            {
-                var defaultProduct = new GivenProduct(this);
-                _products.Add(defaultProduct);
-            }
-
             foreach (var product in _products)
             {
                 await product.Execute(_app);
@@ -193,12 +194,6 @@ namespace Dsl.Core.Scenario.Given
 
         private async Task SetupTax()
         {
-            if (_orders.Count > 0 && _countries.Count == 0)
-            {
-                var defaultCountry = new GivenCountry(this);
-                _countries.Add(defaultCountry);
-            }
-
             foreach (var country in _countries)
             {
                 await country.Execute(_app);
@@ -213,11 +208,7 @@ namespace Dsl.Core.Scenario.Given
 
         private async Task SetupCoupons()
         {
-            if (_orders.Count > 0 && _coupons.Count == 0)
-            {
-                var defaultCoupon = new GivenCoupon(this);
-                _coupons.Add(defaultCoupon);
-            }
+            await _defaults.EnsureAsync(whenStepRuns: false);
 
             foreach (var coupon in _coupons)
             {
