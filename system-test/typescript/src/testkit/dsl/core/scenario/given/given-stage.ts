@@ -4,6 +4,7 @@ import type { AppContext } from '../app-context.js';
 import type { ScenarioContext, ProductConfig, CouponConfig, CountryConfig, OrderConfig } from '../scenario-context.js';
 import { WhenStage } from '../when/when-stage.js';
 import { ThenContractStage } from '../then/then-contract.js';
+import { DefaultGivens } from './default-givens.js';
 import { GivenClock } from './given-clock.js';
 import { GivenProduct } from './given-product.js';
 import { GivenPromotion } from './given-promotion.js';
@@ -27,7 +28,7 @@ export class GivenStage implements IGivenStage {
   }
 
   product(): GivenProduct {
-    const config: ProductConfig = { sku: DEFAULTS.SKU, price: DEFAULTS.UNIT_PRICE };
+    const config: ProductConfig = DefaultGivens.product();
     this.ctx.productConfigs.push(config);
     this.ctx.hasExplicitProduct = true;
     return new GivenProduct(this, config);
@@ -39,13 +40,13 @@ export class GivenStage implements IGivenStage {
   }
 
   coupon(): GivenCoupon {
-    const config: CouponConfig = { code: DEFAULTS.COUPON_CODE, discountRate: 0.1 };
+    const config: CouponConfig = DefaultGivens.coupon();
     this.ctx.couponConfigs.push(config);
     return new GivenCoupon(this, config);
   }
 
   country(): GivenCountry {
-    const config: CountryConfig = { country: DEFAULTS.COUNTRY, taxRate: DEFAULTS.TAX_RATE };
+    const config: CountryConfig = DefaultGivens.country();
     this.ctx.countryConfigs.push(config);
     return new GivenCountry(this, config);
   }

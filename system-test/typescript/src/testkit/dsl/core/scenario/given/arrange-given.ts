@@ -1,7 +1,7 @@
 import type { UseCaseContext } from '../../shared/use-case-context.js';
 import type { AppContext } from '../app-context.js';
-import { DEFAULTS } from '../defaults.js';
 import type { ScenarioContext } from '../scenario-context.js';
+import { DefaultGivens } from './default-givens.js';
 import { placeGivenOrder } from './place-given-order.js';
 
 /**
@@ -15,8 +15,7 @@ export async function arrangeGiven(app: AppContext, ctx: ScenarioContext, useCas
     await app.clockDriver.returnsTime({ time: ctx.clockConfig.time });
   }
 
-  const countryConfigs = ctx.countryConfigs.length > 0 ? ctx.countryConfigs : [{ country: DEFAULTS.COUNTRY, taxRate: DEFAULTS.TAX_RATE }];
-  for (const countryConfig of countryConfigs) {
+  for (const countryConfig of DefaultGivens.countriesFor(ctx)) {
     const country = useCaseContext.getParamValueOrLiteral(countryConfig.country);
     await app.taxDriver.returnsTaxRate({ country, taxRate: countryConfig.taxRate });
   }
@@ -26,13 +25,12 @@ export async function arrangeGiven(app: AppContext, ctx: ScenarioContext, useCas
     discount: ctx.promotionConfig.discount,
   });
 
-  const productConfigs = ctx.hasExplicitProduct ? ctx.productConfigs : [{ sku: DEFAULTS.SKU, price: DEFAULTS.UNIT_PRICE }];
-  for (const productConfig of productConfigs) {
+  for (const productConfig of DefaultGivens.productsFor(ctx)) {
     const sku = useCaseContext.getParamValue(productConfig.sku);
     await app.erpDriver.returnsProduct({ sku, price: productConfig.price });
   }
 
-  for (const couponConfig of ctx.couponConfigs) {
+  for (const couponConfig of DefaultGivens.couponsFor(ctx)) {
     await app.myShop().publishCoupon({
       code: useCaseContext.getParamValue(couponConfig.code),
       discountRate: String(couponConfig.discountRate),

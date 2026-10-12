@@ -8,7 +8,7 @@ import { DEFAULTS } from '../defaults.js';
 import type { UseCaseContext } from '../../shared/use-case-context.js';
 import type { AppContext } from '../app-context.js';
 import type { ScenarioContext } from '../scenario-context.js';
-import { placeGivenOrder } from '../given/place-given-order.js';
+import { arrangeGiven } from '../given/arrange-given.js';
 
 export class ThenResultStage implements PromiseLike<void> {
   private _expectSuccess = true;
@@ -65,55 +65,6 @@ export class ThenResultStage implements PromiseLike<void> {
     return this._executionPromise;
   }
 
-  private async _arrangeClock(): Promise<void> {
-    if (this.ctx.clockConfig) {
-      await this.app.clockDriver.returnsTime({ time: this.ctx.clockConfig.time });
-    }
-  }
-
-  private async _arrangeTax(): Promise<void> {
-    if (this.ctx.countryConfigs.length > 0) {
-      for (const countryConfig of this.ctx.countryConfigs) {
-        const resolvedCountry = this.useCaseContext.getParamValueOrLiteral(countryConfig.country);
-        await this.app.taxDriver.returnsTaxRate({ country: resolvedCountry, taxRate: countryConfig.taxRate });
-      }
-      return;
-    }
-    const resolvedCountry = this.useCaseContext.getParamValueOrLiteral(DEFAULTS.COUNTRY);
-    await this.app.taxDriver.returnsTaxRate({ country: resolvedCountry, taxRate: DEFAULTS.TAX_RATE });
-  }
-
-  private async _arrangeProducts(): Promise<void> {
-    if (this.ctx.hasExplicitProduct) {
-      for (const pc of this.ctx.productConfigs) {
-        const resolvedSku = this.useCaseContext.getParamValue(pc.sku);
-        await this.app.erpDriver.returnsProduct({ sku: resolvedSku, price: pc.price });
-      }
-      return;
-    }
-    const resolvedSku = this.useCaseContext.getParamValue(DEFAULTS.SKU);
-    await this.app.erpDriver.returnsProduct({ sku: resolvedSku, price: DEFAULTS.UNIT_PRICE });
-  }
-
-  private async _arrangeCoupons(): Promise<void> {
-    for (const cc of this.ctx.couponConfigs) {
-      const resolvedCode = this.useCaseContext.getParamValue(cc.code);
-      await this.app.myShop().publishCoupon({
-        code: resolvedCode,
-        discountRate: String(cc.discountRate),
-        validFrom: cc.validFrom,
-        validTo: cc.validTo,
-        usageLimit: cc.usageLimit === undefined ? undefined : String(cc.usageLimit),
-      });
-    }
-  }
-
-  private async _placeGivenOrders(): Promise<void> {
-    for (const oc of this.ctx.orderConfigs) {
-      await placeGivenOrder(this.app, this.ctx, this.useCaseContext, oc);
-    }
-  }
-
   private async _runOrderAssertions(orderNumber: string): Promise<void> {
     if (this._orderAssertions.length === 0) return;
     const orderResult = await this.app.myShop().viewOrder({ orderNumber });
@@ -147,19 +98,7 @@ export class ThenResultStage implements PromiseLike<void> {
   }
 
   private async _doExecute(): Promise<void> {
-    this.ctx.reserveDefaultCustomerIfUsed();
-    await this._arrangeClock();
-    await this._arrangeTax();
-
-    await this.app.erpDriver.returnsPromotion({
-      promotionActive: this.ctx.promotionConfig.promotionActive,
-      discount: this.ctx.promotionConfig.discount,
-    });
-
-    await this._arrangeProducts();
-    await this._arrangeCoupons();
-    await this._placeGivenOrders();
-    this.app.actAs(this.ctx.loggedInIdentity());
+    await arrangeGiven(this.app, this.ctx, this.useCaseContext);
 
     const resolvedSku = this.useCaseContext.getParamValue(this.sku);
     const resolvedCountry = this.useCaseContext.getParamValueOrLiteral(this.country);
