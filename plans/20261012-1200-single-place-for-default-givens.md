@@ -58,6 +58,8 @@ Step 1: in `system-test/dotnet`, add a small failing test (or a recorded-call as
 - Should a declared Given that has no dependents (for example a product with no orders) still trigger default country and coupon creation? Recommended: no, keep today's rule (defaults only when something depends on them), and encode it once in the owner.
 - Where does the coupon default belong when there is no When-side coupon fallback today? Recommended: keep it Given-driven (only when orders exist), and don't introduce a new When-side default.
 
+- Java skips `ensureDefaults()` for `deliverOrder`, `browseOrderHistory`, `publishCoupon` and `browseCoupons`, while .NET runs `EnsureGiven` for all of them. Which is intended? Recommended: the .NET behaviour (run the owner for every When), so all three stages and both languages behave the same; confirm no Java test relies on the skip.
+
 ## Reply note (what changed, for the follow-up to the question)
 
 Once executed, the reply can state: defaults now live in one component (`DefaultGivens`); `SetupGiven` and `EnsureGiven` both delegate to it; a previously hidden double creation of the default product and tax rate is gone; Java and TypeScript were aligned.
