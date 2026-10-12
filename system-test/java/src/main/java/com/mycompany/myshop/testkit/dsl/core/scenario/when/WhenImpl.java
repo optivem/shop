@@ -1,6 +1,7 @@
 package com.mycompany.myshop.testkit.dsl.core.scenario.when;
 
 import com.mycompany.myshop.testkit.dsl.core.ScenarioDslImpl;
+import com.mycompany.myshop.testkit.dsl.core.scenario.DefaultGivens;
 import com.mycompany.myshop.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.when.steps.WhenBrowseCouponsImpl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.when.steps.WhenBrowseOrderHistoryImpl;
@@ -12,54 +13,23 @@ import com.mycompany.myshop.testkit.dsl.core.scenario.when.steps.BaseWhenStep;
 import com.mycompany.myshop.testkit.dsl.core.scenario.when.steps.WhenViewOrderImpl;
 import com.mycompany.myshop.testkit.dsl.port.when.WhenStage;
 
-import static com.mycompany.myshop.testkit.dsl.core.scenario.ScenarioDefaults.*;
-
 public class WhenImpl implements WhenStage {
     private final UseCaseDsl app;
     private final ScenarioDslImpl scenario;
-    private boolean hasProduct;
-    private boolean hasTaxRate;
-    private boolean hasPromotion;
+    private final DefaultGivens defaults;
 
-    public WhenImpl(UseCaseDsl app, ScenarioDslImpl scenario, boolean hasProduct, boolean hasTaxRate, boolean hasPromotion) {
+    public WhenImpl(UseCaseDsl app, ScenarioDslImpl scenario, DefaultGivens defaults) {
         this.app = app;
         this.scenario = scenario;
-        this.hasProduct = hasProduct;
-        this.hasTaxRate = hasTaxRate;
-        this.hasPromotion = hasPromotion;
+        this.defaults = defaults;
     }
 
     public WhenImpl(UseCaseDsl app, ScenarioDslImpl scenario) {
-        this(app, scenario, false, false, false);
+        this(app, scenario, new DefaultGivens(app));
     }
 
     private void ensureDefaults() {
-        if (!hasProduct) {
-            app.erp().returnsProduct()
-                    .sku(DEFAULT_SKU)
-                    .unitPrice(DEFAULT_UNIT_PRICE)
-                    .execute()
-                    .shouldSucceed();
-            hasProduct = true;
-        }
-
-        if (!hasTaxRate) {
-            app.tax().returnsTaxRate()
-                    .country(DEFAULT_COUNTRY)
-                    .taxRate(DEFAULT_TAX_RATE)
-                    .execute()
-                    .shouldSucceed();
-            hasTaxRate = true;
-        }
-
-        if (!hasPromotion) {
-            app.erp().returnsPromotion()
-                    .withActive(DEFAULT_PROMOTION_ACTIVE)
-                    .withDiscount(DEFAULT_PROMOTION_DISCOUNT)
-                    .execute()
-                    .shouldSucceed();
-            hasPromotion = true;
-        }
+        defaults.ensure(true);
     }
 
     public WhenPlaceOrderImpl placeOrder() {
@@ -73,6 +43,7 @@ public class WhenImpl implements WhenStage {
     }
 
     public WhenDeliverOrderImpl deliverOrder() {
+        ensureDefaults();
         return new WhenDeliverOrderImpl(app, scenario);
     }
 
@@ -82,14 +53,17 @@ public class WhenImpl implements WhenStage {
     }
 
     public WhenBrowseOrderHistoryImpl browseOrderHistory() {
+        ensureDefaults();
         return new WhenBrowseOrderHistoryImpl(app, scenario);
     }
 
     public WhenPublishCouponImpl publishCoupon() {
+        ensureDefaults();
         return new WhenPublishCouponImpl(app, scenario);
     }
 
     public WhenBrowseCouponsImpl browseCoupons() {
+        ensureDefaults();
         return new WhenBrowseCouponsImpl(app, scenario);
     }
 

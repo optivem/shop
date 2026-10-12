@@ -42,11 +42,11 @@ Source: `system-test/dotnet/Dsl.Core/Scenario/Given/GivenStage.cs` and `.../When
 
 ## ▶ Next executable step (resume here)
 
-Step 7: Java parity. .NET is done and committed (`DefaultGivens` in `system-test/dotnet/Dsl.Core/Scenario/`). Mirror its structure in `system-test/java` (`GivenImpl.setupErp/setupTax/setupCoupons` versus `WhenImpl.ensureDefaults`), run the owner for every When, and run the Java sample suite with `GH_OPTIVEM_CONFIG=gh-optivem-monolith-java.yaml`. Then TypeScript alignment, then Step 8 (docs).
+Step 7 (TypeScript part): .NET and Java are done and committed. TypeScript already has a single owner (`arrangeGiven` in `given/arrange-given.ts`, no defaults in `WhenStage`), so only align naming and the small gaps listed in the findings (no default coupon for orders; `DEFAULTS.SKU` / `UNIT_PRICE` duplicated between `GivenStage.product()` and the `arrangeGiven` fallback). Run the TypeScript sample suite with `GH_OPTIVEM_CONFIG=gh-optivem-monolith-typescript.yaml`. Then Step 8 (docs).
 
 ## Steps
 
-7. **Parity.** Java has the same duplication (`GivenImpl.setupErp/setupTax/setupCoupons` versus `WhenImpl.ensureDefaults`), so apply the same structure there and run the Java sample suite. TypeScript already has a single owner (`arrangeGiven` in `given/arrange-given.ts`, no defaults in `WhenStage`), so only align naming and the small gaps listed in the findings.
+7. **Parity (TypeScript remaining).** TypeScript already has a single owner (`arrangeGiven` in `given/arrange-given.ts`, no defaults in `WhenStage`), so only align naming and the small gaps listed in the findings.
 8. **Docs.** If `docs/atdd/architecture/*.md` describes where defaults live, update it to name the single owner.
 
 ## Open questions

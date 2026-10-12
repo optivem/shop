@@ -2,6 +2,7 @@ package com.mycompany.myshop.testkit.dsl.core.scenario.given;
 
 import com.mycompany.myshop.testkit.driver.port.UserIdentity;
 import com.mycompany.myshop.testkit.dsl.core.ScenarioDslImpl;
+import com.mycompany.myshop.testkit.dsl.core.scenario.DefaultGivens;
 import com.mycompany.myshop.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.then.ThenImpl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.given.steps.GivenClockImpl;
@@ -27,6 +28,7 @@ public class GivenImpl implements GivenStage {
     private final List<GivenOrderImpl> orders;
     private final List<GivenCountryImpl> countries;
     private final List<GivenCouponImpl> coupons;
+    private final DefaultGivens defaults;
     private final CustomerAliases customers = new CustomerAliases();
     private Supplier<UserIdentity> loggedIn = () -> UserIdentity.DEFAULT;
     private boolean loggedInChosen;
@@ -34,6 +36,7 @@ public class GivenImpl implements GivenStage {
     public GivenImpl(UseCaseDsl app, ScenarioDslImpl scenario) {
         this.app = app;
         this.scenario = scenario;
+        this.defaults = new DefaultGivens(app);
         this.clock = null;
         this.promotion = new GivenPromotionImpl(this);
         this.products = new ArrayList<>();
@@ -43,12 +46,14 @@ public class GivenImpl implements GivenStage {
     }
 
     public GivenProductImpl product() {
+        defaults.markProduct();
         var product = new GivenProductImpl(this);
         products.add(product);
         return product;
     }
 
     public GivenOrderImpl order() {
+        defaults.markOrder();
         var order = new GivenOrderImpl(this);
         orders.add(order);
         return order;
@@ -66,12 +71,14 @@ public class GivenImpl implements GivenStage {
     }
 
     public GivenCountryImpl country() {
+        defaults.markTaxRate();
         var country = new GivenCountryImpl(this);
         countries.add(country);
         return country;
     }
 
     public GivenCouponImpl coupon() {
+        defaults.markCoupon();
         var coupon = new GivenCouponImpl(this);
         coupons.add(coupon);
         return coupon;
@@ -122,7 +129,7 @@ public class GivenImpl implements GivenStage {
 
     public WhenImpl when() {
         setup();
-        return new WhenImpl(app, scenario, !products.isEmpty(), !countries.isEmpty(), true);
+        return new WhenImpl(app, scenario, defaults);
     }
 
     public ThenStage then() {
@@ -149,6 +156,7 @@ public class GivenImpl implements GivenStage {
 
     private void setupPromotion() {
         promotion.execute(app);
+        defaults.markPromotion();
     }
 
     private void setupClock() {
@@ -158,22 +166,12 @@ public class GivenImpl implements GivenStage {
     }
 
     private void setupErp() {
-        if (!orders.isEmpty() && products.isEmpty()) {
-            var defaultProduct = new GivenProductImpl(this);
-            products.add(defaultProduct);
-        }
-
         for (var product : products) {
             product.execute(app);
         }
     }
 
     private void setupTax() {
-        if (!orders.isEmpty() && countries.isEmpty()) {
-            var defaultCountry = new GivenCountryImpl(this);
-            countries.add(defaultCountry);
-        }
-
         for (var country : countries) {
             country.execute(app);
         }
@@ -185,10 +183,7 @@ public class GivenImpl implements GivenStage {
     }
 
     private void setupCoupons() {
-        if (!orders.isEmpty() && coupons.isEmpty()) {
-            var defaultCoupon = new GivenCouponImpl(this);
-            coupons.add(defaultCoupon);
-        }
+        defaults.ensure(false);
 
         for (var coupon : coupons) {
             coupon.execute(app);
