@@ -15,7 +15,7 @@
 
 ## ▶ Next executable step (resume here)
 
-Step 5b: fix the release race in `pact-backend-stub-driver.ts` (see Steps), verify with `npx tsc --noEmit` + `npm run test:component` x3 in `system/multitier/frontend-react`, commit. Then finish Step 6 (confirm one green `multitier-frontend-react-commit-stage` run).
+Step 6: confirm one green `multitier-frontend-react-commit-stage` run in shop (triggered by the Step 5b commit). Then remove this plan; the operator Verification item (gh-optivem `gh-acceptance-stage` re-run) is outside this repo.
 
 ## Measurements (Steps 1 + 3, done 2026-10-13)
 
@@ -39,7 +39,6 @@ QA stages (`*-qa-stage*.yml`) only deploy, run no suites, so they're out of scop
 
 ## Steps
 
-- [ ] Step 5b: Fix the release race in `system/multitier/frontend-react/src/test/support/driver/adapter/pact-backend-stub-driver.ts`. Create the deferred before calling `executeTest` so `finish()` can always release it, and make `reset()` release any pending run instead of dropping it. Then run `npx tsc --noEmit` and `npm run test:component` a few times. See the Pact hang finding below.
 - [ ] Step 6: Confirm one green `multitier-frontend-react-commit-stage` run in shop. (actionlint clean and timeouts pushed on 2026-10-13.)
 
 ## Pact hang finding (Step 5, 2026-10-13)
@@ -49,7 +48,7 @@ QA stages (`*-qa-stage*.yml`) only deploy, run no suites, so they're out of scop
 - Likely cause is in our code. `release` is only assigned inside the `executeTest` callback (driver :59-61).
   - If a test times out before the mock server is up, `finish()` calls `this.release?.()` (:82) while `release` is still undefined, then `await this.run` (:83) waits forever.
   - After the 30s `hookTimeout` (`vite.config.ts:17`), `reset()` (`component-harness.ts:39`, driver :101-108) drops `release` without calling it, which leaks a parked run with a live native mock server.
-  - Fix: Step 5b. No retries.
+  - Fixed 2026-10-13: deferred now created before `executeTest`, `reset()` releases a parked run. No retries. `npm run test:component` green 3/3 locally.
 
 ## Verification
 

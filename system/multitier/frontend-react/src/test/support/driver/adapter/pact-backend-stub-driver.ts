@@ -53,12 +53,15 @@ export class PactBackendStubDriver implements BackendStubDriver {
       return Promise.resolve(UNREACHABLE_BACKEND);
     }
     this.url ??= new Promise<string>((resolveUrl, rejectUrl) => {
+      // The deferred exists before executeTest is called, so finish() can always
+      // release it — even when teardown races a mock server that is still booting.
+      const held = new Promise<void>((release) => {
+        this.release = release;
+      });
       this.run = this.provider
         .executeTest(async (mockServer) => {
           resolveUrl(mockServer.url);
-          await new Promise<void>((release) => {
-            this.release = release;
-          });
+          await held;
         })
         .then(
           () => undefined,
@@ -97,8 +100,10 @@ export class PactBackendStubDriver implements BackendStubDriver {
 
   // A fresh provider per test: PactV3 keeps its staged interactions internally and
   // exposes no way to drop them, so a test that stubs without acting cannot leak
-  // into the next one.
+  // into the next one. A run still parked (its finish() timed out) is released
+  // rather than dropped, so its native mock server shuts down instead of leaking.
   reset(): void {
+    this.release?.();
     this.provider = newProvider();
     this.staged = 0;
     this.url = undefined;
