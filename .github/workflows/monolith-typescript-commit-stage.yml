@@ -52,6 +52,8 @@ jobs:
   run:
     needs: check
     runs-on: ubuntu-latest
+    # A hung suite (e.g. intermittent Pact native hang) must fail fast instead of burning GitHub's 6h job limit.
+    timeout-minutes: 30
     permissions:
       contents: read
       packages: write

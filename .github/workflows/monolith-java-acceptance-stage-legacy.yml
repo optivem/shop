@@ -106,6 +106,8 @@ jobs:
     needs: check
     if: needs.check.outputs.should-run == 'true'
     runs-on: ubuntu-latest
+    # A hung suite must fail fast instead of burning GitHub's 6h job limit.
+    timeout-minutes: 90
     permissions:
       contents: read
       packages: read

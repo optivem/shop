@@ -287,6 +287,8 @@ jobs:
   test-smoke-real:
     needs: [deploy-frontend, deploy-backend, deploy-external-real]
     runs-on: ubuntu-latest
+    # A hung suite must fail fast instead of burning GitHub's 6h job limit.
+    timeout-minutes: 30
     permissions:
       contents: read
     steps:
@@ -323,6 +325,8 @@ jobs:
   test-smoke-stub:
     needs: [deploy-frontend, deploy-backend, deploy-external-stub]
     runs-on: ubuntu-latest
+    # A hung suite must fail fast instead of burning GitHub's 6h job limit.
+    timeout-minutes: 30
     permissions:
       contents: read
     steps:
@@ -359,6 +363,8 @@ jobs:
   test-acceptance-api:
     needs: [deploy-frontend, deploy-backend, deploy-external-real]
     runs-on: ubuntu-latest
+    # A hung suite must fail fast instead of burning GitHub's 6h job limit.
+    timeout-minutes: 30
     permissions:
       contents: read
     steps:
@@ -396,6 +402,8 @@ jobs:
   test-acceptance-ui:
     needs: [deploy-frontend, deploy-backend, deploy-external-real]
     runs-on: ubuntu-latest
+    # A hung suite must fail fast instead of burning GitHub's 6h job limit.
+    timeout-minutes: 30
     permissions:
       contents: read
     steps:
@@ -447,6 +455,8 @@ jobs:
   test-acceptance-isolated-api:
     needs: [deploy-frontend, deploy-backend, deploy-external-real]
     runs-on: ubuntu-latest
+    # A hung suite must fail fast instead of burning GitHub's 6h job limit.
+    timeout-minutes: 30
     permissions:
       contents: read
     steps:
@@ -484,6 +494,8 @@ jobs:
   test-acceptance-isolated-ui:
     needs: [deploy-frontend, deploy-backend, deploy-external-real]
     runs-on: ubuntu-latest
+    # A hung suite must fail fast instead of burning GitHub's 6h job limit.
+    timeout-minutes: 30
     permissions:
       contents: read
     steps:
@@ -535,6 +547,8 @@ jobs:
   test-contract-stub:
     needs: [deploy-frontend, deploy-backend, deploy-external-stub]
     runs-on: ubuntu-latest
+    # A hung suite must fail fast instead of burning GitHub's 6h job limit.
+    timeout-minutes: 30
     permissions:
       contents: read
     steps:
@@ -571,6 +585,8 @@ jobs:
   test-contract-stub-isolated:
     needs: [deploy-frontend, deploy-backend, deploy-external-stub]
     runs-on: ubuntu-latest
+    # A hung suite must fail fast instead of burning GitHub's 6h job limit.
+    timeout-minutes: 30
     permissions:
       contents: read
     steps:
@@ -607,6 +623,8 @@ jobs:
   test-contract-real:
     needs: [deploy-frontend, deploy-backend, deploy-external-real]
     runs-on: ubuntu-latest
+    # A hung suite must fail fast instead of burning GitHub's 6h job limit.
+    timeout-minutes: 30
     permissions:
       contents: read
     steps:
@@ -643,6 +661,8 @@ jobs:
   test-e2e-api:
     needs: [deploy-frontend, deploy-backend, deploy-external-real]
     runs-on: ubuntu-latest
+    # A hung suite must fail fast instead of burning GitHub's 6h job limit.
+    timeout-minutes: 30
     permissions:
       contents: read
     steps:
@@ -679,6 +699,8 @@ jobs:
   test-e2e-ui:
     needs: [deploy-frontend, deploy-backend, deploy-external-real]
     runs-on: ubuntu-latest
+    # A hung suite must fail fast instead of burning GitHub's 6h job limit.
+    timeout-minutes: 30
     permissions:
       contents: read
     steps:

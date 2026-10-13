@@ -244,6 +244,8 @@ jobs:
   test-smoke-real:
     needs: [deploy-app, deploy-external-real]
     runs-on: ubuntu-latest
+    # A hung suite must fail fast instead of burning GitHub's 6h job limit.
+    timeout-minutes: 30
     permissions:
       contents: read
     steps:
@@ -275,6 +277,8 @@ jobs:
   test-smoke-stub:
     needs: [deploy-app, deploy-external-stub]
     runs-on: ubuntu-latest
+    # A hung suite must fail fast instead of burning GitHub's 6h job limit.
+    timeout-minutes: 30
     permissions:
       contents: read
     steps:
@@ -306,6 +310,8 @@ jobs:
   test-acceptance-api:
     needs: [deploy-app, deploy-external-real]
     runs-on: ubuntu-latest
+    # A hung suite must fail fast instead of burning GitHub's 6h job limit.
+    timeout-minutes: 30
     permissions:
       contents: read
     steps:
@@ -337,6 +343,8 @@ jobs:
   test-acceptance-ui:
     needs: [deploy-app, deploy-external-real]
     runs-on: ubuntu-latest
+    # A hung suite must fail fast instead of burning GitHub's 6h job limit.
+    timeout-minutes: 30
     permissions:
       contents: read
     steps:
@@ -381,6 +389,8 @@ jobs:
   test-acceptance-isolated-api:
     needs: [deploy-app, deploy-external-real]
     runs-on: ubuntu-latest
+    # A hung suite must fail fast instead of burning GitHub's 6h job limit.
+    timeout-minutes: 30
     permissions:
       contents: read
     steps:
@@ -412,6 +422,8 @@ jobs:
   test-acceptance-isolated-ui:
     needs: [deploy-app, deploy-external-real]
     runs-on: ubuntu-latest
+    # A hung suite must fail fast instead of burning GitHub's 6h job limit.
+    timeout-minutes: 30
     permissions:
       contents: read
     steps:
@@ -456,6 +468,8 @@ jobs:
   test-contract-stub:
     needs: [deploy-app, deploy-external-stub]
     runs-on: ubuntu-latest
+    # A hung suite must fail fast instead of burning GitHub's 6h job limit.
+    timeout-minutes: 30
     permissions:
       contents: read
     steps:
@@ -487,6 +501,8 @@ jobs:
   test-contract-stub-isolated:
     needs: [deploy-app, deploy-external-stub]
     runs-on: ubuntu-latest
+    # A hung suite must fail fast instead of burning GitHub's 6h job limit.
+    timeout-minutes: 30
     permissions:
       contents: read
     steps:
@@ -518,6 +534,8 @@ jobs:
   test-contract-real:
     needs: [deploy-app, deploy-external-real]
     runs-on: ubuntu-latest
+    # A hung suite must fail fast instead of burning GitHub's 6h job limit.
+    timeout-minutes: 30
     permissions:
       contents: read
     steps:
@@ -549,6 +567,8 @@ jobs:
   test-e2e-api:
     needs: [deploy-app, deploy-external-real]
     runs-on: ubuntu-latest
+    # A hung suite must fail fast instead of burning GitHub's 6h job limit.
+    timeout-minutes: 30
     permissions:
       contents: read
     steps:
@@ -580,6 +600,8 @@ jobs:
   test-e2e-ui:
     needs: [deploy-app, deploy-external-real]
     runs-on: ubuntu-latest
+    # A hung suite must fail fast instead of burning GitHub's 6h job limit.
+    timeout-minutes: 30
     permissions:
       contents: read
     steps:

@@ -1,4 +1,5 @@
 # 2026-10-13 08:17:41 UTC — Commit-stage job timeouts (fail fast on hung test suites)
+> 🤖 **Picked up by agent** — `Valentina_Desk` at `2026-10-13T08:27:59Z`
 
 ## TL;DR
 
@@ -14,16 +15,41 @@
 
 ## ▶ Next executable step (resume here)
 
-Step 1: measure green durations. Run one `gh run list --repo optivem/shop --workflow <wf> --status success --limit 5 --json databaseId,createdAt,updatedAt` per commit-stage workflow (one call each, sleeping between calls is not needed). Record the max `run` job duration per workflow in this plan, then pick each `timeout-minutes` value (default 30, at least 2x the max green duration). Then do Step 2.
+Step 5b: fix the release race in `pact-backend-stub-driver.ts` (see Steps), verify with `npx tsc --noEmit` + `npm run test:component` x3 in `system/multitier/frontend-react`, commit. Then finish Step 6 (confirm one green `multitier-frontend-react-commit-stage` run).
+
+## Measurements (Steps 1 + 3, done 2026-10-13)
+
+Max whole-run duration (min) over the last 5 green runs (upper bound on the job), and the chosen job timeout (>= 2x, default 30):
+
+| Workflow | Max green | `timeout-minutes` |
+|---|---|---|
+| monolith-dotnet-commit-stage | 16 | 40 |
+| monolith-java-commit-stage | 21 | 45 |
+| monolith-typescript-commit-stage | 9 | 30 |
+| multitier-backend-clean-java-commit-stage | 3 | 30 |
+| multitier-backend-dotnet-commit-stage | 18 | 40 |
+| multitier-backend-java-commit-stage | 20 | 45 |
+| multitier-backend-typescript-commit-stage | 15 | 30 |
+| multitier-frontend-react-commit-stage | 20 | 45 |
+| `*-acceptance-stage.yml` / `-legacy.yml` `run` job (12 files) | 40 | 90 |
+| `*-acceptance-stage-cloud.yml` `test-*` jobs (6 files, no green history) | n/a | 30 |
+| `_prerelease-pipeline.yml` `local` job | 8 (job-level) | 45 |
+
+QA stages (`*-qa-stage*.yml`) only deploy, run no suites, so they're out of scope.
 
 ## Steps
 
-- [ ] Step 1: Measure the green `run` job duration for each of the 8 `.github/workflows/*-commit-stage.yml` and pick a per-workflow `timeout-minutes` (default 30, at least 2x the slowest recent green run). Record the numbers here.
-- [ ] Step 2: Add `timeout-minutes: <n>` to the `run` job of all 8 commit-stage workflows (e.g. `multitier-frontend-react-commit-stage.yml:52`), each with a one-line comment: a hung suite (e.g. intermittent Pact native hang) must fail fast instead of burning GitHub's 6h job limit.
-- [ ] Step 3: Parity sweep. Check `_prerelease-pipeline.yml` (e.g. ~line 325 "Run Component Tests (multitier frontend)") and the acceptance/qa stage workflows for jobs running test suites without `timeout-minutes`, and add them with the same rule.
-- [ ] Step 4: Confirm gh-optivem's scaffolding carries the change. Find how gh-optivem copies/renders shop's commit-stage workflows (scaffolded name e.g. `frontend-commit-stage.yml`). Check whether any gh-optivem template-rendering code or golden/snapshot tests pin workflow contents and would strip or need the new key, and update those in gh-optivem if needed.
-- [ ] Step 5: Investigate the intermittent hang in `system/multitier/frontend-react/src/test/support/driver/adapter/pact-backend-stub-driver.ts` (PactV3 `executeTest`, held open on a deferred until `finish()`). Search upstream pact-js / pact-js-core issues for executeTest/writePact/mock-server hangs at @pact-foundation/pact 13 / pact-core 15.2.1, and check for a newer pact-core with a fix. If a fix exists, bump it and run `npm run test:component` locally (after `npm ci`) several times. Do not add retries. Record the finding in this plan.
-- [ ] Step 6: Verify. Lint the edited workflows (actionlint if available, else a YAML parse), push, and confirm one green `multitier-frontend-react-commit-stage` run in shop.
+- [ ] Step 5b: Fix the release race in `system/multitier/frontend-react/src/test/support/driver/adapter/pact-backend-stub-driver.ts`. Create the deferred before calling `executeTest` so `finish()` can always release it, and make `reset()` release any pending run instead of dropping it. Then run `npx tsc --noEmit` and `npm run test:component` a few times. See the Pact hang finding below.
+- [ ] Step 6: Confirm one green `multitier-frontend-react-commit-stage` run in shop. (actionlint clean and timeouts pushed on 2026-10-13.)
+
+## Pact hang finding (Step 5, 2026-10-13)
+
+- Versions: `@pact-foundation/pact` 13.2.0, `@pact-foundation/pact-core` 15.2.1. Latest are pact 17.1.4 and pact-core 20.2.0.
+- Upstream: no relevant issue or fix found. Searched for PactV3 executeTest / writePact / mock-server / pact_ffi hang or deadlock and vitest-never-exits. The pact-core changelog from 15.2.1 to 20.2.0 has no hang or shutdown fix. pact-js #1220 and pact-core #510 are unrelated. So no bump.
+- Likely cause is in our code. `release` is only assigned inside the `executeTest` callback (driver :59-61).
+  - If a test times out before the mock server is up, `finish()` calls `this.release?.()` (:82) while `release` is still undefined, then `await this.run` (:83) waits forever.
+  - After the 30s `hookTimeout` (`vite.config.ts:17`), `reset()` (`component-harness.ts:39`, driver :101-108) drops `release` without calling it, which leaks a parked run with a live native mock server.
+  - Fix: Step 5b. No retries.
 
 ## Verification
 
@@ -31,5 +57,4 @@ Step 1: measure green durations. Run one `gh run list --repo optivem/shop --work
 
 ## Open questions
 
-- Timeout value: 30 min is the default. Step 1's measurements may justify a different value per workflow (inferred; not stated by the user).
-- Scope of Step 3: whether acceptance/qa stage workflows already have their own timeouts is unchecked. Include them only if they run suites without one.
+None. All resolved during Steps 1 and 3 (see Measurements).
