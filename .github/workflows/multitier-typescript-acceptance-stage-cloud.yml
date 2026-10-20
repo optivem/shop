@@ -22,8 +22,8 @@ jobs:
     permissions:
       packages: read
     outputs:
-      artifacts-exist: ${{ steps.check-artifacts.outputs.exist }}
-      skip-reason: ${{ steps.check-artifacts.outputs.exist != 'true' && 'No artifacts published yet — waiting for the commit stage to produce images.' || '' }}
+      artifacts-exist: ${{ steps.check-artifacts.outputs.results && !contains(steps.check-artifacts.outputs.results, '"exists":false') }}
+      skip-reason: ${{ steps.check-artifacts.outputs.results && contains(steps.check-artifacts.outputs.results, '"exists":false') && 'Not all artifacts published yet — waiting for the commit stage to produce every image.' || '' }}
     steps:
       - name: Check Container Packages Exist
         id: check-artifacts
