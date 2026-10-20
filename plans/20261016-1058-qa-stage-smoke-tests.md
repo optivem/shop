@@ -1,0 +1,29 @@
+# 2026-10-16 10:58:35 UTC — Add smoke tests to the QA and Production Stages
+
+## TL;DR
+
+**Why:** The pipeline course (`courses/01-pipeline/accelerator/course/06-advanced-guides/08-post-deployment-observability.md:48`) says production smoke tests are "the same smoke tests that run in the Acceptance and QA stages", but every `*-qa-stage.yml` only deploys (Simulate Deployment → Wait for Systems → Record QA Deployment) and runs no tests. A QA engineer can be handed a deployment that is up but broken, which is the Monday-morning story in the QA Stage overview.
+**End result:** Every QA Stage and Production Stage workflow runs smoke tests in real mode after deployment. That's 12 files per stage: monolith/multitier × java/dotnet/typescript × local/cloud. In QA, a failure stops the stage before the QA deployment is recorded. In Production, a failure stops it before the release is tagged and published. The QA and Production Stage lessons document the new step, so the course prose matches the code.
+
+## Outcomes
+
+- A QA deployment is recorded only after smoke tests confirm the system is reachable in the QA environment.
+- Smoke tests run in real external-system mode with `environment=qa` in all 12 QA Stage workflows, using the same step shape as the Acceptance Stage. There is no stub-mode run, because the QA environment is connected to test instances of the real external systems, never to stubs (settled 2026-10-16).
+- A production release is tagged and published only after smoke tests pass against the system connected to the real external systems, with `environment=production` (settled 2026-10-16). Smoke tests stay read-only, so running them in Production can't change real data (settled 2026-10-16). The current Java smoke tests (`latest/smoke/system/MyShopSmokeTest`, `latest/smoke/external/{Clock,Erp,Tax}SmokeTest`) only assert `shouldBeRunning()`, so the same suite works in Production with no separate read-only set.
+- The system-test configs for all three languages can target the QA and Production environments, with the `qa` and `production` URLs resolved the same way as `acceptance`.
+- The `courses/01-pipeline/accelerator/course/04-qa-stage/` and `05-production-stage/` lessons show the smoke-test step. The advanced-guide sentence at `08-post-deployment-observability.md:48` becomes true and no longer presents production smoke tests as optional.
+
+## ▶ Next executable step (resume here)
+
+Step 1: in `monolith-java-qa-stage.yml` and `system-test/java`, check how the job-level `ENVIRONMENT: acceptance` variable (see `monolith-java-acceptance-stage.yml`) resolves URLs and external-system mode for `gh optivem system-test run --suite smoke-real`, and whether `qa` and `production` environment configs exist. QA is connected to test instances of the real external systems, so the mode is settled as real only. Production uses the real external systems. Stop and report before editing only if the test runner can't reach the QA or Production endpoints. This unblocks Steps 2–4.
+
+## Steps
+
+- [ ] Step 1: Investigate. Find how the system tests resolve environment URLs (the job-level `ENVIRONMENT` variable, plus the suites in `system-test/<lang>/tests.yaml`) in Java, .NET and TypeScript. Confirm that the QA deployment (`Simulate Deployment (QA Environment)`) exposes endpoints the runner can reach. Its external systems are test instances of the real ones. Do the same for the Production deployment (`Simulate Deployment (Production Environment)`), which uses the real external systems. Check the `-cloud` variants too. Confirm that the .NET and TypeScript smoke tests are also read-only `shouldBeRunning()` checks, as the Java ones are. If any of them write data, stop and report.
+- [ ] Step 2: Add `qa` and `production` environments to the system-test config for all three languages, if they're missing.
+- [ ] Step 3: Copy the Acceptance Stage's test-run shape into the QA job: job-level `GH_OPTIVEM_CONFIG` and `ENVIRONMENT: qa`, then the toolchain setup, `Install gh-optivem CLI extension`, `Setup Test Harness`, and a `smoke-real` step (`gh optivem system-test run --suite smoke-real`). Add them to `monolith-java-qa-stage.yml` after `Wait for Systems` and before `Record QA Deployment`. Verify with a CI run.
+- [ ] Step 4: Roll the same change out to the other 11 QA Stage workflows (dotnet/typescript, multitier, `-cloud`). Verify with CI runs.
+- [ ] Step 5: Add the same smoke-test steps (`smoke-real`, `ENVIRONMENT: production`) to `monolith-java-prod-stage.yml` after `Wait for Systems (Simulate Deployment (Production Environment))` and before `Tag Docker Images with System Release Version` / `Publish Release Tag`. Verify with a CI run, then roll out to the other 11 Production Stage workflows.
+- [ ] Step 6: gh-optivem: student repos get these workflows automatically. `internal/scaffolding/steps/apply_template.go` (`pipelineWorkflows`) copies shop's `*-qa-stage.yml` / `*-prod-stage.yml` into the student repo and renames them to `qa-stage.yml` / `prod-stage.yml`. Check that `templates.FixupWorkflowContent` rewrites the new lines correctly (the `system-test/<lang>` working-directory paths, toolchain setup, and the `qa` / `production` environment flags), and that `steps/verify.go` doesn't need updating. Then run a test scaffold for each architecture/language. The workflows themselves need no separate edit in gh-optivem.
+- [ ] Step 7: Courses: update the `01-pipeline/accelerator/course/04-qa-stage/` lessons (e.g. `01-deploy-to-qa.md` or a new lesson, plus the overview/recap step lists and the sandbox project) to document the smoke-test step. Do the same for `05-production-stage/` (`02-deploy-to-prod.md`, `08-recap.md`, `07-sandbox-project.md`). Rewrite `06-advanced-guides/08-post-deployment-observability.md:48` so production smoke tests are part of the core Production Stage rather than an optional add-on.
+
