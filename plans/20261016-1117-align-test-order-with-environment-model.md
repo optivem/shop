@@ -35,7 +35,7 @@ Report back before editing. This unblocks Steps 2–5.
 - [ ] Step 1: Investigate. Find out how `gh optivem system-test run` orders suites when no `--suite` is given. List every place that hard-codes the suite order: workflows, `tests.yaml`, gh-optivem scaffolding/verify/tests/README, and the courses. Use `grep -rn "contract-stub\|acceptance-parallel"` across shop, gh-optivem and courses.
 - [ ] Step 2: shop: reorder the suites in `monolith-java-acceptance-stage.yml` and `system-test/java/tests.yaml`, then check with a CI run. Roll out to the other 11 acceptance-stage workflows (monolith/multitier × java/dotnet/typescript × local/cloud) and the dotnet/typescript `tests.yaml` files. Leave `*-acceptance-stage-legacy.yml` alone, because it mirrors the module-by-module course progression. Step 5 decides whether to change its order too.
 - [ ] Step 3: gh-optivem: update anything that lists the suite order (MAPPING.md, README, scaffolding tests, `steps/verify.go`). Create a test student repo for each architecture and language to confirm the copied workflows keep the new order.
-- [ ] Step 4: Pipeline course: update `01-pipeline/accelerator/course/03-acceptance-stage/03-system-tests-run.md`:
+- [ ] Step 4: Pipeline course: update `01-pipeline-accelerator/course/03-acceptance-stage/03-system-tests-run.md`:
   - swap the Acceptance and Contract steps in the numbered sequence and add the one-sentence reason (the stubs are validated before the tests that rely on them)
   - replace the `./gradlew ... -Denvironment=acceptance` YAML with the current `gh optivem system-test run --suite` steps
   - fix the "Every test step passes the same `-Denvironment=acceptance` flag" prose so it describes the job-level `ENVIRONMENT` variable instead
