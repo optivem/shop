@@ -8,6 +8,8 @@ public interface ThenOrder extends ThenStep<ThenOrder> {
 
     ThenOrder hasQuantity(int expectedQuantity);
 
+    ThenOrder hasCountry(String expectedCountry);
+
     ThenOrder hasUnitPrice(double expectedUnitPrice);
 
     ThenOrder hasUnitPrice(String expectedUnitPrice);

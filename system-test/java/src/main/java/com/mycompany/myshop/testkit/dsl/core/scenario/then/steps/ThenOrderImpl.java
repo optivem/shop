@@ -37,6 +37,11 @@ public class ThenOrderImpl<R, V extends ResponseVerification<R>>
         return this;
     }
 
+    public ThenOrderImpl<R, V> hasCountry(String expectedCountry) {
+        orderVerification.country(expectedCountry);
+        return this;
+    }
+
     public ThenOrderImpl<R, V> hasUnitPrice(double expectedUnitPrice) {
         orderVerification.unitPrice(expectedUnitPrice);
         return this;

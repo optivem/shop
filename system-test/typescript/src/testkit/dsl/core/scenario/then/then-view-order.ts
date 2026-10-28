@@ -16,7 +16,7 @@ export class ThenViewOrderResultStage implements PromiseLike<void> {
   constructor(
     private readonly app: AppContext,
     private readonly ctx: ScenarioContext,
-    private readonly useCaseContext: UseCaseContext,
+    readonly useCaseContext: UseCaseContext,
     private readonly orderNumber: string,
   ) {}
 
@@ -93,6 +93,90 @@ export class ThenViewOrderSuccess implements PromiseLike<void> {
 
 export class ThenViewOrderOrder implements PromiseLike<void> {
   constructor(private readonly stage: ThenViewOrderResultStage) {}
+
+  hasSku(expectedSku: string): this {
+    this.stage._addOrderAssertion((order) => {
+      expect(order.sku).toBe(this.stage.useCaseContext.getParamValue(expectedSku));
+    });
+    return this;
+  }
+
+  hasQuantity(expectedQuantity: number): this {
+    this.stage._addOrderAssertion((order) => {
+      expect(order.quantity).toBe(expectedQuantity);
+    });
+    return this;
+  }
+
+  hasCountry(expectedCountry: string): this {
+    this.stage._addOrderAssertion((order) => {
+      expect(order.country).toBe(this.stage.useCaseContext.getParamValueOrLiteral(expectedCountry));
+    });
+    return this;
+  }
+
+  hasUnitPrice(expectedUnitPrice: string | number): this {
+    this.stage._addOrderAssertion((order) => {
+      expect(order.unitPrice).toBe(Number(expectedUnitPrice));
+    });
+    return this;
+  }
+
+  hasBasePrice(basePrice: string | number): this {
+    this.stage._addOrderAssertion((order) => {
+      expect(order.basePrice).toBe(Number(basePrice));
+    });
+    return this;
+  }
+
+  hasDiscountRate(discountRate: string | number): this {
+    this.stage._addOrderAssertion((order) => {
+      expect(order.discountRate).toBe(Number(discountRate));
+    });
+    return this;
+  }
+
+  hasDiscountAmount(discountAmount: string | number): this {
+    this.stage._addOrderAssertion((order) => {
+      expect(order.discountAmount).toBe(Number(discountAmount));
+    });
+    return this;
+  }
+
+  hasSubtotalPrice(subtotalPrice: string | number): this {
+    this.stage._addOrderAssertion((order) => {
+      expect(order.subtotalPrice).toBe(Number(subtotalPrice));
+    });
+    return this;
+  }
+
+  hasTaxRate(taxRate: string | number): this {
+    this.stage._addOrderAssertion((order) => {
+      expect(order.taxRate).toBe(Number(taxRate));
+    });
+    return this;
+  }
+
+  hasTaxAmount(taxAmount: string | number): this {
+    this.stage._addOrderAssertion((order) => {
+      expect(order.taxAmount).toBe(Number(taxAmount));
+    });
+    return this;
+  }
+
+  hasTotalPrice(totalPrice: string | number): this {
+    this.stage._addOrderAssertion((order) => {
+      expect(order.totalPrice).toBe(Number(totalPrice));
+    });
+    return this;
+  }
+
+  hasAppliedCoupon(expectedCouponCode: string): this {
+    this.stage._addOrderAssertion((order) => {
+      expect(order.appliedCouponCode).toBe(this.stage.useCaseContext.getParamValue(expectedCouponCode));
+    });
+    return this;
+  }
 
   hasStatus(status: OrderStatus): this {
     this.stage._addOrderAssertion((order) => {

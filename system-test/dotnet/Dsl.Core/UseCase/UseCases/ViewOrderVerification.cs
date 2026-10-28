@@ -54,8 +54,9 @@ public class ViewOrderVerification : ResponseVerification<ViewOrderResponse>
         return Status(Enum.Parse<OrderStatus>(expectedStatus));
     }
 
-    public ViewOrderVerification Country(string expectedCountry)
+    public ViewOrderVerification Country(string expectedCountryAlias)
     {
+        var expectedCountry = Context.GetParamValueOrLiteral(expectedCountryAlias);
         Response.Country.ShouldBe(expectedCountry,
             $"Expected country: '{expectedCountry}', but got: '{Response.Country}'");
         return this;

@@ -2,6 +2,7 @@ package com.mycompany.myshop.systemtest.latest.acceptance;
 
 import com.mycompany.myshop.systemtest.latest.acceptance.base.BaseAcceptanceTest;
 import com.mycompany.myshop.testkit.channel.ChannelType;
+import com.mycompany.myshop.testkit.common.domain.OrderStatus;
 import com.optivem.testing.Channel;
 import org.junit.jupiter.api.TestTemplate;
 
@@ -10,9 +11,37 @@ class ViewOrderPositiveTest extends BaseAcceptanceTest {
     @Channel({ChannelType.UI, ChannelType.API})
     void shouldBeAbleToViewOrder() {
         scenario
-                .given().order()
+                .given().product()
+                    .withSku("BOOK-123")
+                    .withUnitPrice(20.00)
+                .and().country()
+                    .withCode("US")
+                    .withTaxRate("0.10")
+                .and().coupon()
+                    .withCouponCode("SUMMER2025")
+                    .withDiscountRate(0.10)
+                .and().order()
+                    .withSku("BOOK-123")
+                    .withQuantity(5)
+                    .withCountry("US")
+                    .withCouponCode("SUMMER2025")
                 .when().viewOrder()
-                .then().shouldSucceed();
+                .then().shouldSucceed()
+                .and().order()
+                    .hasOrderNumberPrefix("ORD-")
+                    .hasSku("BOOK-123")
+                    .hasQuantity(5)
+                    .hasCountry("US")
+                    .hasUnitPrice(20.00)
+                    .hasBasePrice(100.00)
+                    .hasAppliedCoupon("SUMMER2025")
+                    .hasDiscountRate(0.10)
+                    .hasDiscountAmount(10.00)
+                    .hasSubtotalPrice(90.00)
+                    .hasTaxRate(0.10)
+                    .hasTaxAmount(9.00)
+                    .hasTotalPrice(99.00)
+                    .hasStatus(OrderStatus.PLACED);
     }
 
     @TestTemplate

@@ -46,6 +46,15 @@ public class ViewOrderVerification extends ResponseVerification<ViewOrderRespons
         return quantity(Converter.toInteger(expectedQuantity));
     }
 
+    public ViewOrderVerification country(String expectedCountryAlias) {
+        var expectedCountry = getContext().getParamValueOrLiteral(expectedCountryAlias);
+        var actualCountry = getResponse().getCountry();
+        assertThat(actualCountry)
+                .withFailMessage("Expected country to be '%s', but was '%s'", expectedCountry, actualCountry)
+                .isEqualTo(expectedCountry);
+        return this;
+    }
+
     public ViewOrderVerification unitPrice(BigDecimal expectedUnitPrice) {
         var actualPrice = getResponse().getUnitPrice();
         assertThat(actualPrice)
