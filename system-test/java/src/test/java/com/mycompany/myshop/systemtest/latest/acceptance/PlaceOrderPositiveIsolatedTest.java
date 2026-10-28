@@ -5,10 +5,12 @@ import com.mycompany.myshop.testkit.channel.ChannelType;
 import com.optivem.testing.Channel;
 import com.optivem.testing.Isolated;
 
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.TestTemplate;
 
 @Isolated
 class PlaceOrderPositiveIsolatedTest extends BaseAcceptanceTest {
+    @Tag("UC-001.6")
     @TestTemplate
     @Channel({ChannelType.UI, ChannelType.API})
     void shouldRecordPlacementTimestamp() {
@@ -21,6 +23,7 @@ class PlaceOrderPositiveIsolatedTest extends BaseAcceptanceTest {
                     .hasTime("2026-01-15T10:30:00Z");
     }
 
+    @Tag("UC-001.7")
     @TestTemplate
     @Channel({ChannelType.UI, ChannelType.API})
     void shouldApplyFullPriceWithoutPromotion() {
@@ -34,6 +37,7 @@ class PlaceOrderPositiveIsolatedTest extends BaseAcceptanceTest {
                     .hasTotalPrice(100.00);
     }
 
+    @Tag("UC-001.7")
     @TestTemplate
     @Channel({ChannelType.UI, ChannelType.API})
     void shouldApplyDiscountWhenPromotionIsActive() {

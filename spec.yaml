@@ -1,0 +1,5 @@
+specDir: docs/use-cases
+results: "system-test/java/build/test-results/**/*.xml"
+exclude:
+  - "**/legacy/**"
+threshold: 90

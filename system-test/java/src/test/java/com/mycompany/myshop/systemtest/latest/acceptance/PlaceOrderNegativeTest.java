@@ -4,6 +4,7 @@ import com.mycompany.myshop.systemtest.commons.providers.EmptyArgumentsProvider;
 import com.mycompany.myshop.systemtest.latest.acceptance.base.BaseAcceptanceTest;
 import com.mycompany.myshop.testkit.channel.ChannelType;
 import com.optivem.testing.Channel;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -11,6 +12,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import static com.mycompany.myshop.systemtest.commons.constants.ErrorMessages.PERMISSION_DENIED;
 
 class PlaceOrderNegativeTest extends BaseAcceptanceTest {
+    @Tag("UC-001.8")
     @TestTemplate
     @Channel({ChannelType.UI, ChannelType.API})
     void shouldRejectOrderWithInvalidQuantity() {
@@ -22,6 +24,7 @@ class PlaceOrderNegativeTest extends BaseAcceptanceTest {
                     .fieldErrorMessage("quantity", "Quantity must be an integer");
     }
 
+    @Tag("UC-001.9")
     @TestTemplate
     @Channel({ChannelType.UI, ChannelType.API})
     void shouldRejectOrderWithNonExistentSku() {
@@ -33,6 +36,7 @@ class PlaceOrderNegativeTest extends BaseAcceptanceTest {
                     .fieldErrorMessage("sku", "Product does not exist for SKU: NON-EXISTENT-SKU-12345");
     }
 
+    @Tag("UC-001.8")
     @TestTemplate
     @Channel({ChannelType.UI, ChannelType.API})
     void shouldRejectOrderWithNegativeQuantity() {
@@ -44,6 +48,7 @@ class PlaceOrderNegativeTest extends BaseAcceptanceTest {
                     .fieldErrorMessage("quantity", "Quantity must be positive");
     }
 
+    @Tag("UC-001.8")
     @TestTemplate
     @Channel({ChannelType.UI, ChannelType.API})
     void shouldRejectOrderWithZeroQuantity() {
@@ -55,6 +60,7 @@ class PlaceOrderNegativeTest extends BaseAcceptanceTest {
                     .fieldErrorMessage("quantity", "Quantity must be positive");
     }
 
+    @Tag("UC-001.9")
     @TestTemplate
     @Channel(value = {ChannelType.API}, alsoForFirstRow = ChannelType.UI)
     @ArgumentsSource(EmptyArgumentsProvider.class)
@@ -67,6 +73,7 @@ class PlaceOrderNegativeTest extends BaseAcceptanceTest {
                     .fieldErrorMessage("sku", "SKU must not be empty");
     }
 
+    @Tag("UC-001.8")
     @TestTemplate
     @Channel(value = {ChannelType.API}, alsoForFirstRow = ChannelType.UI)
     @ArgumentsSource(EmptyArgumentsProvider.class)
@@ -79,6 +86,7 @@ class PlaceOrderNegativeTest extends BaseAcceptanceTest {
                     .fieldErrorMessage("quantity", "Quantity must not be empty");
     }
 
+    @Tag("UC-001.8")
     @TestTemplate
     @Channel(value = {ChannelType.API}, alsoForFirstRow = ChannelType.UI)
     @ValueSource(strings = {"3.5", "lala"})
@@ -91,6 +99,7 @@ class PlaceOrderNegativeTest extends BaseAcceptanceTest {
                     .fieldErrorMessage("quantity", "Quantity must be an integer");
     }
 
+    @Tag("UC-001.10")
     @TestTemplate
     @Channel(value = {ChannelType.API}, alsoForFirstRow = ChannelType.UI)
     @ArgumentsSource(EmptyArgumentsProvider.class)
@@ -103,6 +112,7 @@ class PlaceOrderNegativeTest extends BaseAcceptanceTest {
                     .fieldErrorMessage("country", "Country must not be empty");
     }
 
+    @Tag("UC-001.10")
     @TestTemplate
     @Channel({ChannelType.UI, ChannelType.API})
     void shouldRejectOrderWithInvalidCountry() {
@@ -114,6 +124,7 @@ class PlaceOrderNegativeTest extends BaseAcceptanceTest {
                     .fieldErrorMessage("country", "Country does not exist: XX");
     }
 
+    @Tag("UC-001.8")
     @TestTemplate
     @Channel({ChannelType.API})
     void shouldRejectOrderWithNullQuantity() {
@@ -125,6 +136,7 @@ class PlaceOrderNegativeTest extends BaseAcceptanceTest {
                     .fieldErrorMessage("quantity", "Quantity must not be empty");
     }
 
+    @Tag("UC-001.9")
     @TestTemplate
     @Channel({ChannelType.API})
     void shouldRejectOrderWithNullSku() {
@@ -136,6 +148,7 @@ class PlaceOrderNegativeTest extends BaseAcceptanceTest {
                     .fieldErrorMessage("sku", "SKU must not be empty");
     }
 
+    @Tag("UC-001.10")
     @TestTemplate
     @Channel({ChannelType.API})
     void shouldRejectOrderWithNullCountry() {
@@ -147,6 +160,7 @@ class PlaceOrderNegativeTest extends BaseAcceptanceTest {
                     .fieldErrorMessage("country", "Country must not be empty");
     }
 
+    @Tag("UC-001.11")
     @TestTemplate
     @Channel({ChannelType.UI, ChannelType.API})
     void cannotPlaceOrderWithNonExistentCoupon() {
@@ -158,6 +172,7 @@ class PlaceOrderNegativeTest extends BaseAcceptanceTest {
                     .fieldErrorMessage("couponCode", "Coupon code INVALIDCOUPON does not exist");
     }
 
+    @Tag("UC-001.11")
     @TestTemplate
     @Channel({ChannelType.UI, ChannelType.API})
     void cannotPlaceOrderWithCouponThatHasExceededUsageLimit() {
@@ -179,6 +194,7 @@ class PlaceOrderNegativeTest extends BaseAcceptanceTest {
                     .fieldErrorMessage("couponCode", "Coupon code LIMITED2024 has exceeded its usage limit");
     }
 
+    @Tag("UC-001.12")
     @TestTemplate
     @Channel(ChannelType.API)
     void adminShouldNotBeAbleToPlaceOrder() {

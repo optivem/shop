@@ -5,9 +5,11 @@ import com.mycompany.myshop.testkit.channel.ChannelType;
 import com.mycompany.myshop.testkit.common.domain.OrderStatus;
 import com.optivem.testing.Channel;
 import com.optivem.testing.DataSource;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.TestTemplate;
 
 class PlaceOrderPositiveTest extends BaseAcceptanceTest {
+    @Tag("UC-001.1")
     @TestTemplate
     @Channel({ChannelType.UI, ChannelType.API})
     void shouldBeAbleToPlaceOrderForValidInput() {
@@ -25,6 +27,7 @@ class PlaceOrderPositiveTest extends BaseAcceptanceTest {
                 .then().shouldSucceed();
     }
 
+    @Tag("UC-001.1")
     @TestTemplate
     @Channel({ChannelType.UI, ChannelType.API})
     void orderStatusShouldBePlacedAfterPlacingOrder() {
@@ -35,6 +38,7 @@ class PlaceOrderPositiveTest extends BaseAcceptanceTest {
                     .hasStatus(OrderStatus.PLACED);
     }
 
+    @Tag("UC-001.2")
     @TestTemplate
     @Channel({ChannelType.UI, ChannelType.API})
     void shouldCalculateBasePriceAsProductOfUnitPriceAndQuantity() {
@@ -48,6 +52,7 @@ class PlaceOrderPositiveTest extends BaseAcceptanceTest {
                     .hasBasePrice(100.00);
     }
 
+    @Tag("UC-001.2")
     @TestTemplate
     @Channel(value = {ChannelType.API}, alsoForFirstRow = ChannelType.UI)
     @DataSource({"20.00", "5", "100.00"})
@@ -65,6 +70,7 @@ class PlaceOrderPositiveTest extends BaseAcceptanceTest {
                     .hasBasePrice(basePrice);
     }
 
+    @Tag("UC-001.1")
     @TestTemplate
     @Channel({ChannelType.UI, ChannelType.API})
     void orderPrefixShouldBeORD() {
@@ -75,6 +81,7 @@ class PlaceOrderPositiveTest extends BaseAcceptanceTest {
                     .hasOrderNumberPrefix("ORD-");
     }
 
+    @Tag("UC-001.3")
     @TestTemplate
     @Channel({ChannelType.UI, ChannelType.API})
     void discountRateShouldBeAppliedForCoupon() {
@@ -90,6 +97,7 @@ class PlaceOrderPositiveTest extends BaseAcceptanceTest {
                     .hasDiscountRate(0.15);
     }
 
+    @Tag("UC-001.3")
     @TestTemplate
     @Channel({ChannelType.UI, ChannelType.API})
     void discountRateShouldBeNotAppliedWhenThereIsNoCoupon() {
@@ -103,6 +111,7 @@ class PlaceOrderPositiveTest extends BaseAcceptanceTest {
                     .hasDiscountAmount(0.00);
     }
 
+    @Tag("UC-001.3")
     @TestTemplate
     @Channel({ChannelType.UI, ChannelType.API})
     void subtotalPriceShouldBeCalculatedAsTheBasePriceMinusDiscountAmountWhenWeHaveCoupon() {
@@ -123,6 +132,7 @@ class PlaceOrderPositiveTest extends BaseAcceptanceTest {
                     .hasSubtotalPrice(85.00);
     }
 
+    @Tag("UC-001.3")
     @TestTemplate
     @Channel({ChannelType.UI, ChannelType.API})
     void subtotalPriceShouldBeSameAsBasePriceWhenNoCoupon() {
@@ -138,6 +148,7 @@ class PlaceOrderPositiveTest extends BaseAcceptanceTest {
                     .hasSubtotalPrice(100.00);
     }
 
+    @Tag("UC-001.4")
     @TestTemplate
     @Channel(value = {ChannelType.API}, alsoForFirstRow = ChannelType.UI)
     @DataSource({"UK", "0.09"})
@@ -154,6 +165,7 @@ class PlaceOrderPositiveTest extends BaseAcceptanceTest {
                     .hasTaxRate(taxRate);
     }
 
+    @Tag("UC-001.4")
     @TestTemplate
     @Channel(value = {ChannelType.API}, alsoForFirstRow = ChannelType.UI)
     @DataSource({"UK", "0.09", "50.00", "4.50", "54.50"})
@@ -176,6 +188,7 @@ class PlaceOrderPositiveTest extends BaseAcceptanceTest {
                     .hasTotalPrice(expectedTotalPrice);
     }
 
+    @Tag("UC-001.5")
     @TestTemplate
     @Channel({ChannelType.UI, ChannelType.API})
     void couponUsageCountHasBeenIncrementedAfterItsBeenUsed() {
@@ -189,6 +202,7 @@ class PlaceOrderPositiveTest extends BaseAcceptanceTest {
                     .hasUsedCount(1);
     }
 
+    @Tag("UC-001.4")
     @TestTemplate
     @Channel(ChannelType.API)
     void orderTotalShouldIncludeTax() {
@@ -205,6 +219,7 @@ class PlaceOrderPositiveTest extends BaseAcceptanceTest {
                     .hasTotalPrice(23.80);
     }
 
+    @Tag("UC-001.3")
     @TestTemplate
     @Channel(ChannelType.API)
     void orderTotalShouldReflectCouponDiscount() {
@@ -222,6 +237,8 @@ class PlaceOrderPositiveTest extends BaseAcceptanceTest {
                     .hasTotalPrice(19.26);
     }
 
+    @Tag("UC-001.3")
+    @Tag("UC-001.4")
     @TestTemplate
     @Channel(ChannelType.API)
     void orderTotalShouldApplyCouponDiscountAndTax() {
