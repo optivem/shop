@@ -18,25 +18,19 @@ public class ThenStageBase : IThenStage
         _setupCompleted = false;
     }
 
-    public async Task<IThenClock> Clock()
+    public IThenClock Clock()
     {
-        await EnsureSetup();
-        var verification = (await _app.Clock().GetTime().Execute()).ShouldSucceed();
-        return new Steps.ThenClock(_app, verification);
+        return new Steps.ThenClock(_app, EnsureSetup);
     }
 
-    public async Task<IThenProduct> Product(string skuAlias)
+    public IThenProduct Product(string skuAlias)
     {
-        await EnsureSetup();
-        var verification = (await _app.Erp().GetProduct().Sku(skuAlias).Execute()).ShouldSucceed();
-        return new Steps.ThenProduct(_app, verification);
+        return new Steps.ThenProduct(_app, skuAlias, EnsureSetup);
     }
 
-    public async Task<IThenCountry> Country(string countryAlias)
+    public IThenCountry Country(string countryAlias)
     {
-        await EnsureSetup();
-        var verification = (await _app.Tax().GetTaxRate().Country(countryAlias).Execute()).ShouldSucceed();
-        return new Steps.ThenCountry(_app, verification);
+        return new Steps.ThenCountry(_app, countryAlias, EnsureSetup);
     }
 
     protected async Task EnsureSetup()

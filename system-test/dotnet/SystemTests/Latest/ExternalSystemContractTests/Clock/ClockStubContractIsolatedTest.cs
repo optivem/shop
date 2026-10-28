@@ -12,9 +12,9 @@ public class ClockStubContractIsolatedTest : BaseExternalSystemContractTest
     [Fact]
     public async Task ShouldBeAbleToGetConfiguredTime()
     {
-        (await Scenario()
+        await Scenario()
             .Given().Clock().WithTime("2024-01-02T09:00:00Z")
-            .Then().Clock())
+            .Then().Clock()
             .HasTime("2024-01-02T09:00:00Z");
     }
 }

@@ -11,11 +11,11 @@ public class PlaceOrderPositiveIsolatedTest : BaseAcceptanceTest
     [ChannelData(ChannelType.UI, ChannelType.API)]
     public async Task ShouldRecordPlacementTimestamp(Channel channel)
     {
-        (await Scenario(channel)
+        await Scenario(channel)
             .Given().Clock().WithTime("2026-01-15T10:30:00Z")
             .When().PlaceOrder()
             .Then().ShouldSucceed()
-            .And().Clock())
+            .And().Clock()
             .HasTime("2026-01-15T10:30:00Z");
     }
 

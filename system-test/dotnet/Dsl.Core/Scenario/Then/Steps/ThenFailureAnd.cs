@@ -27,31 +27,32 @@ public class ThenFailureAnd<TSuccessResponse, TSuccessVerification>
 
     IThenOrder IThenFailureAnd.Order() => Order();
 
-    public async Task<IThenClock> Clock()
+    public IThenClock Clock()
     {
-        await _thenClause.GetExecutionResult();
-        var verification = (await _thenClause.App.Clock().GetTime().Execute()).ShouldSucceed();
-        return new Steps.ThenClock(_thenClause.App, verification);
+        return new Steps.ThenClock(_thenClause.App, VerifyFailure);
     }
 
-    async Task<IThenClock> IThenFailureAnd.Clock() => await Clock();
-
-    public async Task<IThenProduct> Product(string skuAlias)
+    public IThenProduct Product(string skuAlias)
     {
-        await _thenClause.GetExecutionResult();
-        var verification = (await _thenClause.App.Erp().GetProduct().Sku(skuAlias).Execute()).ShouldSucceed();
-        return new Steps.ThenProduct(_thenClause.App, verification);
+        return new Steps.ThenProduct(_thenClause.App, skuAlias, VerifyFailure);
     }
 
-    async Task<IThenProduct> IThenFailureAnd.Product(string skuAlias) => await Product(skuAlias);
-
-    public async Task<IThenCountry> Country(string countryAlias)
+    public IThenCountry Country(string countryAlias)
     {
-        var verification = (await _thenClause.App.Tax().GetTaxRate().Country(countryAlias).Execute()).ShouldSucceed();
-        return new Steps.ThenCountry(_thenClause.App, verification);
+        return new Steps.ThenCountry(_thenClause.App, countryAlias, VerifyFailure);
     }
 
-    async Task<IThenCountry> IThenFailureAnd.Country(string countryAlias) => await Country(countryAlias);
+    private async Task VerifyFailure()
+    {
+        var result = await _thenClause.GetExecutionResult();
+        if (result.Result == null)
+            throw new InvalidOperationException("Cannot verify failure: no operation was executed");
+        var failureVerification = result.Result.ShouldFail();
+        foreach (var assertion in _failureAssertions)
+        {
+            assertion(failureVerification);
+        }
+    }
 
     public ThenFailureCoupon<TSuccessResponse, TSuccessVerification> Coupon(string couponCode)
     {

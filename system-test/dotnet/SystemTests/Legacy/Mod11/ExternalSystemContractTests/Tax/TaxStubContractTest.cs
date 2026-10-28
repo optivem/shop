@@ -9,9 +9,9 @@ public class TaxStubContractTest : BaseTaxContractTest
     [Fact]
     public async Task ShouldBeAbleToGetConfiguredTaxRate()
     {
-        (await Scenario()
+        await Scenario()
             .Given().Country().WithCode("LALA").WithTaxRate(0.23m)
-            .Then().Country("LALA"))
+            .Then().Country("LALA")
             .HasCountry("LALA")
             .HasTaxRate(0.23m);
     }

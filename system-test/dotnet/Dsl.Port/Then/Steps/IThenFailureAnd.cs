@@ -6,11 +6,11 @@ public interface IThenFailureAnd
 
     IThenOrder Order();
 
-    Task<IThenClock> Clock();
+    IThenClock Clock();
 
-    Task<IThenProduct> Product(string skuAlias);
+    IThenProduct Product(string skuAlias);
 
-    Task<IThenCountry> Country(string countryAlias);
+    IThenCountry Country(string countryAlias);
 
     IThenCoupon Coupon(string couponCode);
 

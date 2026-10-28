@@ -28,31 +28,26 @@ public class ThenSuccessAnd<TSuccessResponse, TSuccessVerification>
 
     IThenOrderHistory IThenSuccessAnd.OrderHistory() => OrderHistory();
 
-    public async Task<IThenClock> Clock()
+    public IThenClock Clock()
     {
-        await _thenClause.GetExecutionResult();
-        var verification = (await _thenClause.App.Clock().GetTime().Execute()).ShouldSucceed();
-        return new Steps.ThenClock(_thenClause.App, verification);
+        return new Steps.ThenClock(_thenClause.App, VerifySuccess);
     }
 
-    async Task<IThenClock> IThenSuccessAnd.Clock() => await Clock();
-
-    public async Task<IThenProduct> Product(string skuAlias)
+    public IThenProduct Product(string skuAlias)
     {
-        await _thenClause.GetExecutionResult();
-        var verification = (await _thenClause.App.Erp().GetProduct().Sku(skuAlias).Execute()).ShouldSucceed();
-        return new Steps.ThenProduct(_thenClause.App, verification);
+        return new Steps.ThenProduct(_thenClause.App, skuAlias, VerifySuccess);
     }
 
-    async Task<IThenProduct> IThenSuccessAnd.Product(string skuAlias) => await Product(skuAlias);
-
-    public async Task<IThenCountry> Country(string countryAlias)
+    public IThenCountry Country(string countryAlias)
     {
-        var verification = (await _thenClause.App.Tax().GetTaxRate().Country(countryAlias).Execute()).ShouldSucceed();
-        return new Steps.ThenCountry(_thenClause.App, verification);
+        return new Steps.ThenCountry(_thenClause.App, countryAlias, VerifySuccess);
     }
 
-    async Task<IThenCountry> IThenSuccessAnd.Country(string countryAlias) => await Country(countryAlias);
+    private async Task VerifySuccess()
+    {
+        var result = await _thenClause.GetExecutionResult();
+        _ = result.Result.ShouldSucceed();
+    }
 
     public ThenSuccessCoupon<TSuccessResponse, TSuccessVerification> Coupon(string couponCode)
     {

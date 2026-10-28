@@ -7,9 +7,9 @@ public abstract class BaseClockContractTest : BaseExternalSystemContractTest
     [Fact]
     public async Task ShouldBeAbleToGetTime()
     {
-        (await Scenario()
+        await Scenario()
             .Given()
-            .Then().Clock())
+            .Then().Clock()
             .HasTime();
     }
 }

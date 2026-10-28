@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+
 namespace Dsl.Port.Then.Steps;
 
 public interface IThenCountry
@@ -8,9 +10,11 @@ public interface IThenCountry
 
     IThenCountry HasTaxRateIsPositive();
 
-    Task<IThenClock> Clock();
+    IThenClock Clock();
 
-    Task<IThenProduct> Product(string skuAlias);
+    IThenProduct Product(string skuAlias);
 
-    Task<IThenCountry> Country(string countryAlias);
+    IThenCountry Country(string countryAlias);
+
+    TaskAwaiter GetAwaiter();
 }

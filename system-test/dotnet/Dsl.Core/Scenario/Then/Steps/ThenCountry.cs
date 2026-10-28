@@ -1,53 +1,38 @@
 using Dsl.Core.External.Tax.UseCases;
 using Dsl.Port.Then.Steps;
-using Driver.Adapter;
 
 namespace Dsl.Core.Scenario.Then.Steps;
 
-public class ThenCountry : IThenCountry
+public class ThenCountry : BaseThenLookup<GetTaxVerification>, IThenCountry
 {
-    private readonly UseCaseDsl _app;
-    private readonly GetTaxVerification _verification;
+    private readonly string _countryAlias;
 
-    public ThenCountry(UseCaseDsl app, GetTaxVerification verification)
+    public ThenCountry(UseCaseDsl app, string countryAlias, Func<Task> prelude)
+        : base(app, prelude)
     {
-        _app = app;
-        _verification = verification;
+        _countryAlias = countryAlias;
+    }
+
+    protected override async Task<GetTaxVerification> Fetch()
+    {
+        return (await _app.Tax().GetTaxRate().Country(_countryAlias).Execute()).ShouldSucceed();
     }
 
     public IThenCountry HasCountry(string country)
     {
-        _verification.Country(country);
+        AddVerification(v => v.Country(country));
         return this;
     }
 
     public IThenCountry HasTaxRate(decimal taxRate)
     {
-        _verification.TaxRate(taxRate);
+        AddVerification(v => v.TaxRate(taxRate));
         return this;
     }
 
     public IThenCountry HasTaxRateIsPositive()
     {
-        _verification.TaxRateIsPositive();
+        AddVerification(v => v.TaxRateIsPositive());
         return this;
-    }
-
-    public async Task<IThenClock> Clock()
-    {
-        var verification = (await _app.Clock().GetTime().Execute()).ShouldSucceed();
-        return new ThenClock(_app, verification);
-    }
-
-    public async Task<IThenProduct> Product(string skuAlias)
-    {
-        var verification = (await _app.Erp().GetProduct().Sku(skuAlias).Execute()).ShouldSucceed();
-        return new ThenProduct(_app, verification);
-    }
-
-    public async Task<IThenCountry> Country(string countryAlias)
-    {
-        var verification = (await _app.Tax().GetTaxRate().Country(countryAlias).Execute()).ShouldSucceed();
-        return new ThenCountry(_app, verification);
     }
 }
