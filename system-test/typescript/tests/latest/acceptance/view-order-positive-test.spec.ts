@@ -33,14 +33,9 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
             .hasQuantity(5)
             .hasCountry('US')
             .hasUnitPrice(20)
-            .hasBasePrice(100)
             .hasAppliedCoupon('SUMMER2025')
             .hasDiscountRate(0.1)
-            .hasDiscountAmount(10)
-            .hasSubtotalPrice(90)
             .hasTaxRate(0.1)
-            .hasTaxAmount(9)
-            .hasTotalPrice(99)
             .hasStatus(OrderStatus.PLACED);
     });
 

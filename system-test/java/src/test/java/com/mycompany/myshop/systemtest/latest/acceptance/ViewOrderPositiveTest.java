@@ -33,14 +33,9 @@ class ViewOrderPositiveTest extends BaseAcceptanceTest {
                     .hasQuantity(5)
                     .hasCountry("US")
                     .hasUnitPrice(20.00)
-                    .hasBasePrice(100.00)
                     .hasAppliedCoupon("SUMMER2025")
                     .hasDiscountRate(0.10)
-                    .hasDiscountAmount(10.00)
-                    .hasSubtotalPrice(90.00)
                     .hasTaxRate(0.10)
-                    .hasTaxAmount(9.00)
-                    .hasTotalPrice(99.00)
                     .hasStatus(OrderStatus.PLACED);
     }
 

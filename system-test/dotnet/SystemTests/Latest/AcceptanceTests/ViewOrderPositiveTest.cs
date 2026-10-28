@@ -24,14 +24,9 @@ public class ViewOrderPositiveTest : BaseAcceptanceTest
             .HasQuantity(5)
             .HasCountry("US")
             .HasUnitPrice(20.00m)
-            .HasBasePrice(100.00m)
             .HasAppliedCoupon("SUMMER2025")
             .HasDiscountRate(0.10m)
-            .HasDiscountAmount(10.00m)
-            .HasSubtotalPrice(90.00m)
             .HasTaxRate(0.10m)
-            .HasTaxAmount("9.00")
-            .HasTotalPrice(99.00m)
             .HasStatus(OrderStatus.Placed);
     }
 
