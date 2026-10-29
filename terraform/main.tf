@@ -11,6 +11,12 @@ resource "google_project" "this" {
   # Set on the project itself so billing is linked before any API is enabled (Cloud Run requires it)
   billing_account     = var.billing_account_id
   auto_create_network = false
+
+  # Google places the project under the creator's organization/folder (e.g. a Workspace domain);
+  # without this, the next plan would try to move it out of that org (org_id -> null)
+  lifecycle {
+    ignore_changes = [org_id, folder_id]
+  }
 }
 
 resource "random_id" "project_suffix" {
