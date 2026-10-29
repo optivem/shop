@@ -4,6 +4,7 @@ set -euo pipefail
 # Setup Google Cloud infrastructure using Terraform
 # Prerequisite: gcloud and gh CLIs authenticated
 # Optional: SYSTEM_NAME=<4-14 chars> overrides the name derived from the repo (prefixes the GCP project, services, secrets, databases)
+# Optional: NEON_DATABASE_URL=<postgres://...> stores the legacy single connection string (non-multitier-java variants)
 # Usage: ./setup-gcp.sh [--yes]   (--yes applies Terraform plans that change/destroy resources without asking)
 
 AUTO_APPROVE=false
@@ -289,16 +290,14 @@ for s in GHCR_TOKEN WORKFLOW_TOKEN; do
   fi
 done
 
-# Legacy single connection string, still read by the monolith/other cloud workflows
-echo ""
-echo "Optional (other variants only, not multitier-java): single Neon connection string."
-echo "Leave blank to skip."
-read -rp "Paste Neon connection string (or press Enter): " NEON_URL || true
-
+# Legacy single connection string, still read by the monolith/other cloud workflows (opt-in via env var, so reruns never prompt)
+NEON_URL="${NEON_DATABASE_URL:-}"
 if [[ -n "$NEON_URL" ]]; then
   echo -n "$NEON_URL" | gcloud secrets versions add db-connection-string --data-file=- --project="$PROJECT_ID" --quiet
   gh secret set NEON_DATABASE_URL --body "$NEON_URL"
   echo "  ✅ Database URL stored"
+elif ! secret_has_version db-connection-string; then
+  echo "  ℹ️  Skipped legacy db-connection-string (other variants only, not multitier-java); set NEON_DATABASE_URL=<url> and rerun to store it"
 fi
 
 # Write local config
