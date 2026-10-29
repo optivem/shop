@@ -70,7 +70,7 @@ gcloud_active=$(gcloud auth list --filter=status:ACTIVE --format="value(account)
   PREREQ_OK=false
   gcloud_active=""
 }
-if [[ -z "${gcloud_active:-}" ]] && [[ "$PREREQ_OK" == "true" ]]; then
+if [[ -z "${gcloud_active:-}" ]]; then
   echo "❌ Not authenticated to Google Cloud. Run: gcloud auth login"
   PREREQ_OK=false
 elif [[ -n "${gcloud_active:-}" ]]; then
