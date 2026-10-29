@@ -125,9 +125,13 @@ echo "  ✅ Billing account: $BILLING_ACCOUNT"
 echo ""
 
 # Initialize Terraform
-echo "Initializing Terraform..."
+echo "Initializing Terraform (remote state in GCS)..."
 cd "$(dirname "$0")/terraform"
-terraform init
+# shellcheck source=terraform/state-backend.sh
+source ./state-backend.sh
+STATE_BUCKET=$(ensure_state_backend "$BILLING_ACCOUNT")
+echo "  ✅ State: gs://$STATE_BUCKET/$REPO"
+init_state_backend "$STATE_BUCKET" "$REPO"
 
 # Plan
 echo ""

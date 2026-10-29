@@ -1,5 +1,9 @@
 terraform {
   required_version = ">= 1.0"
+
+  # Bucket/prefix supplied at init by state-backend.sh (shared state project, prefix = owner/repo)
+  backend "gcs" {}
+
   required_providers {
     google = {
       source  = "hashicorp/google"

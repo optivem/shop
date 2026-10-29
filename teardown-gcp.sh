@@ -20,16 +20,34 @@ if ! command -v gh &> /dev/null; then
   exit 1
 fi
 
-# Read config
-if [[ ! -f deploy-config.yml ]]; then
-  echo "❌ deploy-config.yml not found. Nothing to tear down."
+if ! command -v gcloud &> /dev/null; then
+  echo "❌ gcloud CLI not found."
   exit 1
 fi
 
-PROJECT_ID=$(grep 'project-id:' deploy-config.yml | awk '{print $2}')
+# Terraform credentials: ADC if present, else the 'gcloud auth login' session token
+if ! gcloud auth application-default print-access-token &> /dev/null; then
+  GOOGLE_OAUTH_ACCESS_TOKEN=$(gcloud auth print-access-token) || { echo "❌ Run: gcloud auth login --no-launch-browser"; exit 1; }
+  export GOOGLE_OAUTH_ACCESS_TOKEN
+fi
+
+REPO=$(gh repo view --json nameWithOwner -q '.nameWithOwner')
+
+# Find the project through the remote state (works from any clone/machine)
+cd "$(dirname "$0")/terraform"
+# shellcheck source=terraform/state-backend.sh
+source ./state-backend.sh
+STATE_PROJECT=$(find_state_project)
+if [[ -z "$STATE_PROJECT" ]]; then
+  echo "❌ No Terraform state project found (label $STATE_PROJECT_LABEL). Nothing to tear down."
+  exit 1
+fi
+init_state_backend "${STATE_PROJECT}-tfstate" "$REPO" > /dev/null
+PROJECT_ID=$(terraform output -raw project_id 2> /dev/null) || PROJECT_ID=""
+cd - > /dev/null
 
 if [[ -z "$PROJECT_ID" ]]; then
-  echo "❌ Could not read project-id from deploy-config.yml"
+  echo "❌ No project in the Terraform state for $REPO. Nothing to tear down."
   exit 1
 fi
 
@@ -49,8 +67,7 @@ fi
 
 echo ""
 
-# Get GitHub repo and billing account (needed for terraform destroy)
-REPO=$(gh repo view --json nameWithOwner -q '.nameWithOwner')
+# Billing account (needed for terraform destroy)
 BILLING_ACCOUNT=$(gcloud billing accounts list --format="value(name)" --limit=1) || {
   rc=$?
   echo "  ⚠️  'gcloud billing accounts list' failed (exit $rc) — see stderr above; continuing without billing account" >&2
@@ -89,6 +106,7 @@ delete_gh_thing variable GCP_PROJECT_ID
 delete_gh_thing variable GCP_REGION
 delete_gh_thing variable GCP_WORKLOAD_IDENTITY_PROVIDER
 delete_gh_thing variable GCP_SERVICE_ACCOUNT
+delete_gh_thing variable SYSTEM_NAME
 delete_gh_thing secret NEON_DATABASE_URL
 echo "  ✅ GitHub variables and secrets removed"
 echo ""
@@ -105,5 +123,6 @@ echo " Teardown Complete!"
 echo "========================================="
 echo ""
 echo "  All GCP resources have been removed."
+echo "  The shared Terraform state project ($STATE_PROJECT) is kept for other systems."
 echo "  Your GitHub Actions will fall back to Docker deployment."
 echo ""

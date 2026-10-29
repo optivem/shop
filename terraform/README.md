@@ -86,6 +86,16 @@ After applying, Terraform outputs:
 
 These are automatically configured in GitHub repository variables.
 
+## State
+
+Terraform state lives in GCS, not on your machine, so setup/teardown work from any clone:
+
+- One **state project** per Google account, labelled `purpose=terraform-state` (created on first `./setup-gcp.sh` as `tfstate-<random>`, shared by every system scaffolded from this repo).
+- One versioned bucket in it, `gs://<state-project>-tfstate`; each repo uses prefix `<owner>/<repo>`.
+- `state-backend.sh` (sourced by both scripts) finds or creates them and runs `terraform init -backend-config=...`.
+
+Manual init: `terraform init -backend-config="bucket=<state-project>-tfstate" -backend-config="prefix=owner/repo"`.
+
 ## Teardown
 
 Remove all GCP resources:
@@ -157,11 +167,7 @@ If Terraform state gets corrupted, refresh:
 terraform refresh
 ```
 
-Or start fresh:
-```bash
-rm -rf .terraform terraform.tfstate* .terraform.lock.hcl
-terraform init
-```
+Or restore an earlier state: the bucket is versioned, so `gcloud storage ls -a gs://<state-project>-tfstate/<owner>/<repo>/` lists previous versions to copy back. Don't delete the remote state to "start fresh" — Terraform would then create a second project.
 
 ## See Also
 
