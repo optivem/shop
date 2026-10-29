@@ -133,3 +133,40 @@ resource "google_secret_manager_secret_version" "db_connection_string" {
   secret      = google_secret_manager_secret.db_connection_string.id
   secret_data = var.neon_database_url
 }
+
+# Runtime identity for the Cloud Run services (separate from the deployer)
+resource "google_service_account" "shop_runtime" {
+  project      = google_project.my_shop.project_id
+  account_id   = "shop-runtime"
+  display_name = "Shop Cloud Run runtime"
+
+  depends_on = [google_project_service.required_apis]
+}
+
+# Secret versions are added out of band (gcloud secrets versions add) so values stay out of state
+resource "google_secret_manager_secret" "shop_runtime" {
+  for_each  = toset(["shop-mt-java-acceptance-db", "keycloak-db", "keycloak-admin-password"])
+  project   = google_project.my_shop.project_id
+  secret_id = each.value
+
+  replication {
+    auto {}
+  }
+
+  depends_on = [google_project_service.required_apis]
+}
+
+resource "google_secret_manager_secret_iam_member" "shop_runtime_accessor" {
+  for_each  = google_secret_manager_secret.shop_runtime
+  project   = google_project.my_shop.project_id
+  secret_id = each.value.secret_id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.shop_runtime.email}"
+}
+
+# Deployer may deploy services that run as the runtime SA
+resource "google_service_account_iam_member" "deployer_acts_as_runtime" {
+  service_account_id = google_service_account.shop_runtime.name
+  role               = "roles/iam.serviceAccountUser"
+  member             = local.github_wif_principal
+}

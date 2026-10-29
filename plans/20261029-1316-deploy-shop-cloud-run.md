@@ -30,12 +30,9 @@
 
 ## ▶ Next executable step (resume here)
 
-**Step 1 — Terraform additions** (see below). Then Steps 2–6 in order; Step 7 needs the user.
+**Step 2 — Migration image + Cloud Run Job** (below). Then Steps 3–6 in order; Step 7 needs the user. Step 1 (Terraform) is written but unvalidated — `terraform` is not installed on this machine; `setup-gcp.sh` will validate it in Step 7. `db-connection-string` is kept: the other variants' workflows still use it.
 
 ## Steps
-
-### 1. Terraform
-In `terraform/main.tf`: add Secret Manager secrets (no versions) `shop-mt-java-acceptance-db` (JSON of the five `POSTGRES_DB_*` values) and `keycloak-db`, `keycloak-admin-password`; grant the Cloud Run runtime service account `secretAccessor` on them; add the `iam.serviceAccountUser` binding the deployer needs to deploy as the runtime SA. Remove the unused `db-connection-string` secret/variable only if nothing else references it. Update `terraform/README.md` and `terraform.tfvars.example`.
 
 ### 2. Migration image + Cloud Run Job
 Add `system/db/Dockerfile` (`FROM flyway/flyway:10.21.0-alpine`, `COPY migrations /flyway/sql`). The workflow builds it, pushes to `app-images`, and runs it as Cloud Run Job `shop-mt-java-migrate` before the backend deploy.

@@ -22,3 +22,8 @@ output "artifact_registry_repository" {
   description = "Artifact Registry repository name"
   value       = google_artifact_registry_repository.app_images.name
 }
+
+output "runtime_service_account_email" {
+  description = "Cloud Run runtime service account email"
+  value       = google_service_account.shop_runtime.email
+}
