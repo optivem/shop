@@ -48,4 +48,4 @@ Naming is no longer hardcoded to `shop`: Terraform derives `system_name` from th
 After the user confirms Step 7: dispatch `multitier-java-acceptance-stage-cloud`, hand over the run ID (do not poll), fix failures within scope.
 
 ### 9. Follow-ups (not in this plan)
-Template to other variants; QA/prod cloud stages for multitier-java; the cloud realm exposes a password-grant test client and test users — acceptable for a demo, revisit before anything real.
+Template to all other variants (monolith + multitier × java/dotnet/typescript) in a new plan once multitier-java's first run is green — user-approved 2026-10-29. Cost guardrails for that: Artifact Registry cleanup policy (keep last N images per variant — the only real growing cost), one shared Keycloak across variants, Secret Manager versions beyond the 6 free (~$0.06/version/month); QA/prod cloud stages for multitier-java; the cloud realm exposes a password-grant test client and test users — acceptable for a demo, revisit before anything real.
