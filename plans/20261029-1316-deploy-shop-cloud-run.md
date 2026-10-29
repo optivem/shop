@@ -11,7 +11,7 @@
 
 1. **Surface:** `multitier/java` only, system tests in **TypeScript**. Other variants later, by templating.
 2. **Backend exposure:** public, restricted by CORS (`ALLOWED_ORIGINS`).
-3. **DB:** Neon, one project for the shop with one database per variant (`shop_mt_java`) plus one for Keycloak (`keycloak`). Neon is free-tier; Cloud SQL is rejected (paid, no free tier).
+3. **DB:** Neon, one project; one database per stack (`shop_mt_java_real`, `shop_mt_java_stub`) plus one for Keycloak (`keycloak`). Neon is free-tier; Cloud SQL is rejected (paid, no free tier).
 4. **Region:** `us-central1`.
 5. **CI trigger:** manual dispatch for the cloud acceptance/QA/prod stages. The hourly cron stays commented out.
 6. **Images to Google:** the workflow **copies** the tested GHCR image (same digest) into Artifact Registry `app-images` (keyless via WIF, no PAT). Cloud Run deploys from there. Applies to our images and to the Keycloak image (quay.io).
@@ -44,13 +44,21 @@ Add `docker/keycloak/Dockerfile.cloud`: Keycloak 26.0 with the Postgres driver a
 Add `system-test/typescript/config/test-config-acceptance-*.json` entries as needed (URLs come from env overrides in the workflow).
 
 ### 5. Rewrite `multitier-java-acceptance-stage-cloud.yml`
-Job order: `check` → `promote-images` (copy GHCR digests to `app-images`) → `deploy-simulators` → `migrate` (job) → `deploy-keycloak` → `deploy-backend` (`--port=8081`, five DB vars from the JSON secret, simulator URLs, Keycloak URLs, `ALLOWED_ORIGINS`) → `deploy-frontend` (`--port=3000`, runtime env) → TypeScript system-test jobs (smoke longer wait for Keycloak) → `promote` / `publish-tag` / `summary`. Replace every `system-test/java` / Gradle step with `system-test/typescript` (`npm ci`, `npx playwright test --project=...`), same suite split. Update the `check` job's `check-changes-since-tag` path to `system-test/typescript`. Then run `gh optivem` / `actionlint` (`lint-workflows.yml`) locally.
+**Principle: logically equivalent to `multitier-java-acceptance-stage.yml` except where cloud genuinely differs.** Parity requirements:
+- **Gates:** keep `preflight`; add the "release already published" check (`check-tag-exists`, `multitier-java-v<base>`) and `evaluate-run-gate`; a manual `commit-sha` bypasses the "no new artifacts/changes" skip, as in non-cloud.
+- **Two stacks**, as in non-cloud (`EXTERNAL_SYSTEM_MODE` is deploy-time): a **real** stack (frontend, backend, simulators, DB `shop_mt_java_real`) and a **stub** stack (frontend, backend, stubs, DB `shop_mt_java_stub`). Secrets: one JSON DB secret per stack. Keycloak is shared; its realm lists both frontend URLs.
+- **Suites:** run the same 11 suites in the same order as non-cloud, via `gh optivem system-test setup` / `gh optivem system-test run --suite <id>` (TypeScript), **sequentially** (isolated suites need exclusive state), with env overrides `ENVIRONMENT=acceptance`, `MYSHOP_UI_BASE_URL_<MODE>`, `MYSHOP_API_BASE_URL_<MODE>`, `ERP/CLOCK/TAX_API_BASE_URL_<MODE>`, `KEYCLOAK_URL`. No raw Gradle/Playwright flags.
+- **After green:** compose RC version, tag images, publish git tag, summary.
+
+Intentional differences from non-cloud: Cloud Run deploy instead of docker compose; no Docker Hub login; `promote-images` step (GHCR to Artifact Registry, same digest); Flyway Cloud Run job before each backend deploy; longer wait for Keycloak cold start; RC tag prefix `multitier-java-cloud`; no Sonar job (would only repeat the non-cloud analysis of the same test code); `check-changes-since-tag` path `system-test/typescript` and the cloud workflow file.
+
+Job order: `check` → `promote-images` → `deploy-keycloak` → `deploy-real-stack` / `deploy-stub-stack` (simulators/stubs, migrate, backend `--port=8081`, frontend `--port=3000`) → `run` (sequential suites) → `promote` / `publish-tag` → `summary`. Validate with `actionlint` / `lint-workflows.yml` locally.
 
 ### 6. Cost guardrails
 Document in `terraform/README.md`: GCP budget alerts (€5/€20), `min-instances=0` everywhere, `teardown-gcp.sh` for reset.
 
 ### 7. USER STEP — provision (agent pauses here)
-Agent gives exact commands for: `./setup-gcp.sh`; creating the Neon project, databases `shop_mt_java` and `keycloak`; `gcloud secrets versions add` for the three secrets; setting `GCP_PROJECT_ID`, `GCP_REGION`, `GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_SERVICE_ACCOUNT` on the `multitier-java-acceptance` GitHub environment.
+Agent gives exact commands for: `./setup-gcp.sh`; creating the Neon project, databases `shop_mt_java_real`, `shop_mt_java_stub` and `keycloak`; `gcloud secrets versions add` for the three secrets; setting `GCP_PROJECT_ID`, `GCP_REGION`, `GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_SERVICE_ACCOUNT` on the `multitier-java-acceptance` GitHub environment.
 
 ### 8. First run
 After the user confirms Step 7: dispatch `multitier-java-acceptance-stage-cloud`, hand over the run ID (do not poll), fix failures within scope.
