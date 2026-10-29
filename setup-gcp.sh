@@ -4,6 +4,10 @@ set -euo pipefail
 # Setup Google Cloud infrastructure using Terraform
 # Prerequisite: gcloud and gh CLIs authenticated
 # Optional: SYSTEM_NAME=<4-14 chars> overrides the name derived from the repo (prefixes the GCP project, services, secrets, databases)
+# Usage: ./setup-gcp.sh [--yes]   (--yes applies Terraform plans that change/destroy resources without asking)
+
+AUTO_APPROVE=false
+[[ "${1:-}" == "--yes" ]] && AUTO_APPROVE=true
 
 echo "========================================="
 echo " GCP Infrastructure Setup (Terraform)"
@@ -138,25 +142,37 @@ echo ""
 echo "Planning infrastructure..."
 terraform plan -var="github_repo=$REPO" -var="billing_account_id=$BILLING_ACCOUNT" -var="system_name=${SYSTEM_NAME:-}" -out=tfplan
 
-# Apply
-echo ""
-echo "⚠️  Review the plan above. Proceed with applying? (yes/no)"
-read -r PROCEED
+# Apply: additions go ahead; updates/deletes need confirmation (or --yes)
+plan_json=$(terraform show -json tfplan)
+RISKY=$(jq -r '.resource_changes[]? | select(.change.actions | index("update") or index("delete")) | "    \(.change.actions | join("/")): \(.address)"' <<< "$plan_json")
+CREATES=$(jq '[.resource_changes[]? | select(.change.actions == ["create"])] | length' <<< "$plan_json")
 
-if [[ "$PROCEED" != "yes" ]]; then
-  echo "Cancelled. Run './setup-gcp.sh' again to continue."
-  rm -f tfplan
-  exit 0
+if [[ -z "$RISKY" && "$CREATES" -eq 0 ]]; then
+  echo ""
+  echo "  ✅ Infrastructure already up to date"
+elif [[ -n "$RISKY" && "$AUTO_APPROVE" != "true" ]]; then
+  echo ""
+  echo "⚠️  This plan CHANGES or DELETES existing resources:"
+  echo "$RISKY"
+  echo "Proceed with applying? (yes/no)"
+  read -r PROCEED
+  if [[ "$PROCEED" != "yes" ]]; then
+    echo "Cancelled. Run './setup-gcp.sh' again to continue."
+    rm -f tfplan
+    exit 0
+  fi
 fi
 
-echo ""
-echo "Applying infrastructure..."
-terraform apply tfplan
+if [[ -n "$RISKY" || "$CREATES" -gt 0 ]]; then
+  echo ""
+  echo "Applying infrastructure ($CREATES to add${RISKY:+, plus the changes above})..."
+  terraform apply tfplan
+fi
 rm -f tfplan
 
 # Get outputs
 echo ""
-echo "✅ Infrastructure created!"
+echo "✅ Infrastructure ready"
 echo ""
 echo "Retrieving outputs..."
 PROJECT_ID=$(terraform output -raw project_id)
