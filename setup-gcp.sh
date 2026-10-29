@@ -241,7 +241,8 @@ ensure_neon() {
 
 # Secret Manager values for multitier-java (created empty by Terraform; values never go through Terraform state)
 secret_has_version() {
-  [[ -n "$(gcloud secrets versions list "$1" --project="$PROJECT_ID" --filter=state:ENABLED --limit=1 --format='value(name)')" ]]
+  # stderr dropped: gcloud warns "filter keys were not present" whenever a secret has no versions yet
+  [[ -n "$(gcloud secrets versions list "$1" --project="$PROJECT_ID" --filter=state:ENABLED --limit=1 --format='value(name)' 2> /dev/null)" ]]
 }
 
 if secret_has_version "$SYSTEM-multitier-java-acceptance-db" && secret_has_version "$SYSTEM-keycloak-db"; then
@@ -274,9 +275,13 @@ fi
 echo ""
 MISSING_GH_SECRETS=()
 repo_secrets=$(gh secret list --json name --jq '.[].name')
+# Organization secrets shared with this repo satisfy the workflows too (best-effort: user repos have none)
+org_secrets=$(gh api "repos/$REPO/actions/organization-secrets" --paginate --jq '.secrets[].name' 2> /dev/null) || org_secrets=""
 for s in GHCR_TOKEN WORKFLOW_TOKEN; do
   if grep -qx "$s" <<< "$repo_secrets"; then
     echo "  ✅ GitHub secret $s exists"
+  elif grep -qx "$s" <<< "$org_secrets"; then
+    echo "  ✅ GitHub secret $s exists (organization secret)"
   else
     echo "  ⚠️  GitHub secret $s is missing"
     MISSING_GH_SECRETS+=("$s")
