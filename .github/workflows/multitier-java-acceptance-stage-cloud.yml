@@ -188,8 +188,12 @@ jobs:
         env:
           PROJECT: ${{ vars.GCP_PROJECT_ID }}
           REGION: ${{ vars.GCP_REGION }}
+          WIF_PROVIDER: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
         run: |
-          PROJECT_NUMBER=$(gcloud projects describe "$PROJECT" --format='value(projectNumber)')
+          # The deployer SA has no resourcemanager.projects.get; the provider
+          # name is projects/<number>/locations/global/..., so read it from there.
+          PROJECT_NUMBER=$(cut -d/ -f2 <<< "$WIF_PROVIDER")
+          [[ "$PROJECT_NUMBER" =~ ^[0-9]+$ ]] || { echo "::error::Cannot parse project number from GCP_WORKLOAD_IDENTITY_PROVIDER"; exit 1; }
           {
             echo "registry=${REGION}-docker.pkg.dev/${PROJECT}/app-images"
             echo "tag=${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
