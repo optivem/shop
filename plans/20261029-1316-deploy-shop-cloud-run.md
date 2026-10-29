@@ -1,133 +1,62 @@
 # Deploy `shop` for real — Cloud Run + Neon
 
-**Goal:** Run the shop as a live, reachable demo (not just `gh optivem system start` locally), cheaply enough that an idle month costs ~nothing.
-**Target:** GCP Cloud Run (compute) + Neon (Postgres). Region `us-central1` (Terraform default; Tier-1, includes free tier).
-**Scope (chosen):** Stand up **one** variant end-to-end first — `multitier/java` — then template across the other five. Legacy variants out of scope for v1.
-**Status:** Plan. No infra applied yet.
+> 🤖 **Picked up by agent** — `ValentinaLaptop` at `2026-10-29T12:31:52Z`
 
-## Decision & rationale
+## TL;DR
 
-**Cloud Run + Neon, not Cloudflare / AWS / Azure.** Three reasons, in order of weight:
+**Why:** The shop only runs locally (`gh optivem system start`). The existing `multitier-java-*-stage-cloud.yml` workflows cannot work: nothing is provisioned and the deploy steps don't match what the app needs (ports, DB vars, Keycloak, simulator URLs, migrations).
+**End result:** `multitier/java` (React frontend + Java backend + simulators + Keycloak) runs on GCP Cloud Run with Neon Postgres, deployed by the manual-dispatch acceptance-cloud workflow, tested by the **TypeScript** system tests, at ~$0 when idle.
 
-1. **Scale-to-zero is the whole game for a demo.** A teaching demo is idle most of the month and live during sessions. Cloud Run scales to zero natively and has a *perpetual* free tier (180K vCPU-s, 360K GiB-s, 2M requests/month). A demo this size almost certainly never leaves the free tier → compute ≈ $0. AWS Fargate is ~2× cheaper *per always-on unit* but has no scale-to-zero and no compute free tier, so a mostly-idle demo bills like a full-time service. Azure Container Apps is priced like Cloud Run but buys us nothing here.
-2. **You're already 90% tooled for it.** `terraform/` provisions the project, Artifact Registry, Secret Manager, and GitHub Actions OIDC (Workload Identity Federation) with exactly the right roles (`run.admin`, `artifactregistry.writer`, `secretmanager.secretAccessor`, `iam.serviceAccountUser`). Picking any other provider throws that away to save nothing meaningful.
-3. **The DB is the part none of the serverless container platforms host well.** The `postgres:16-alpine` service in the compose files is fine locally but wrong for production — ephemeral container storage, no managed backups. Neon (serverless Postgres, scales to zero, free tier) is the right split, and `terraform/variables.tf` already has a `neon_database_url` variable wired into Secret Manager. Keep it; it's provider-agnostic.
+## Decisions (all resolved)
 
-Cloudflare Containers is technically capable now but the wrong fit: the shop is multi-service with a relational DB, and Cloudflare wants each container fronted by a Worker + Durable Object with no native orchestration and weak persistence — more plumbing, and you'd still need external Postgres.
+1. **Surface:** `multitier/java` only, system tests in **TypeScript**. Other variants later, by templating.
+2. **Backend exposure:** public, restricted by CORS (`ALLOWED_ORIGINS`).
+3. **DB:** Neon, one project for the shop with one database per variant (`shop_mt_java`) plus one for Keycloak (`keycloak`). Neon is free-tier; Cloud SQL is rejected (paid, no free tier).
+4. **Region:** `us-central1`.
+5. **CI trigger:** manual dispatch for the cloud acceptance/QA/prod stages. The hourly cron stays commented out.
+6. **Images to Google:** the workflow **copies** the tested GHCR image (same digest) into Artifact Registry `app-images` (keyless via WIF, no PAT). Cloud Run deploys from there. Applies to our images and to the Keycloak image (quay.io).
+7. **Keycloak:** Keycloak 26 on Cloud Run (scale-to-zero) with its own Neon database, realm imported from `docker/keycloak/shop-realm.json` with the frontend URL substituted in. Smoke tests wait longer for its cold start.
+8. **Who provisions:** the user runs `setup-gcp.sh`, creates Neon, and sets GitHub environment variables. The agent writes code/config, then pauses and hands over exact commands, then dispatches and runs the first cloud acceptance workflow.
+9. **Secrets:** DB credentials as **one JSON secret per variant** (Secret Manager bills per version; 6 free). Never in Terraform state: the user adds versions with `gcloud secrets versions add`.
 
 ## What's already in place (don't rebuild)
 
-- **Terraform** — project, Artifact Registry repo `app-images`, Secret Manager secret `db-connection-string`, WIF pool + `github-deployer` SA with deploy roles. `setup-gcp.sh` / `teardown-gcp.sh` wrap it.
-- **Dockerfiles** — every service already has one: `system/multitier/backend-{java,dotnet,typescript}/Dockerfile`, `system/multitier/frontend-react/Dockerfile`, `system/monolith/{java,dotnet,typescript}/Dockerfile`, `external-systems/simulators/Dockerfile`. No image work needed beyond build+push.
-- **Variant model** — `gh-optivem-<arch>-<lang>.yaml` already describes each variant's service paths. The deploy can read these so it stays DRY across the six.
-- **Migrations** — `system/db/migrations` (Flyway), already used by the `db-migrate` compose service.
+- **Terraform** — project, Artifact Registry `app-images`, secret `db-connection-string`, WIF pool + `github-deployer` roles (`run.admin`, `artifactregistry.writer`, `secretmanager.secretAccessor`, `iam.serviceAccountUser`). `setup-gcp.sh` / `teardown-gcp.sh` wrap it.
+- **Images** — the commit stage already publishes `multitier-frontend-react`, `multitier-backend-java` (and the simulator/stub images) to GHCR.
+- **Migrations** — `system/db/migrations` (Flyway).
+- **Frontend** reads `BACKEND_API_URL`, `KEYCLOAK_URL`, `KEYCLOAK_REALM`, `KEYCLOAK_CLIENT_ID` at **runtime** (nginx envsubst) — no rebuild per environment. Listens on 3000.
+- **Backend** listens on **8081**; needs `POSTGRES_DB_HOST/PORT/NAME/USER/PASSWORD`, `ERP/CLOCK/TAX_API_URL`, `EXTERNAL_SYSTEM_MODE`, `ALLOWED_ORIGINS`, `AUTH_ISSUER_URI`, `AUTH_JWK_SET_URI`, `AUTH_AUDIENCE=shop-backend`. There is no `cloud` Spring profile.
+- **TypeScript system tests** read `ENVIRONMENT`, `EXTERNAL_SYSTEM_MODE`, `MYSHOP_UI_BASE_URL_<MODE>`, `MYSHOP_API_BASE_URL_<MODE>`, `ERP/CLOCK/TAX_API_BASE_URL_<MODE>`, `KEYCLOAK_URL(_<MODE>)`; config files `system-test/typescript/config/test-config-<env>-<mode>.json` (only `local` exists besides `acceptance`).
 
-## Architecture: compose → Cloud Run mapping
+## ▶ Next executable step (resume here)
 
-`multitier/java` "real" stack (from `docker/java/multitier/docker-compose.local.real.yml`):
+**Step 1 — Terraform additions** (see below). Then Steps 2–6 in order; Step 7 needs the user.
 
-| Compose service | Cloud Run target | Notes |
-|---|---|---|
-| `frontend` (React, :3000) | Cloud Run **service** `shop-mt-java-frontend`, public | Needs `BACKEND_API_URL` — see gotcha |
-| `backend` (:8081) | Cloud Run **service** `shop-mt-java-backend` | Reads DB + simulator URLs from env/secrets |
-| `external-system-simulators` (:9000) | Cloud Run **service** `shop-mt-java-sim` | "real" mode uses simulators for clock/erp/tax |
-| `db-migrate` (Flyway, one-shot) | Cloud Run **job** `shop-mt-java-migrate` | Runs once per deploy; not a service |
-| `postgres` | **Neon** (external) | Drop the in-cluster Postgres entirely |
+## Steps
 
-Service naming prefix `shop-<arch>-<lang>-<role>` lets all six variants live in **one** project without collision.
+### 1. Terraform
+In `terraform/main.tf`: add Secret Manager secrets (no versions) `shop-mt-java-acceptance-db` (JSON of the five `POSTGRES_DB_*` values) and `keycloak-db`, `keycloak-admin-password`; grant the Cloud Run runtime service account `secretAccessor` on them; add the `iam.serviceAccountUser` binding the deployer needs to deploy as the runtime SA. Remove the unused `db-connection-string` secret/variable only if nothing else references it. Update `terraform/README.md` and `terraform.tfvars.example`.
 
-## Phases
+### 2. Migration image + Cloud Run Job
+Add `system/db/Dockerfile` (`FROM flyway/flyway:10.21.0-alpine`, `COPY migrations /flyway/sql`). The workflow builds it, pushes to `app-images`, and runs it as Cloud Run Job `shop-mt-java-migrate` before the backend deploy.
 
-### Phase 0 — Prove one variant
-Do `multitier/java` fully before touching the others. Rationale: multitier is the harder case (frontend + backend + simulators + DB), so anything that works here templates trivially down to the monolith (single service + simulators + DB). Java is the slowest cold-start case, so if its UX is acceptable, the TS/.NET variants only get better.
+### 3. Keycloak image
+Add `docker/keycloak/Dockerfile.cloud`: Keycloak 26.0 with the Postgres driver and the realm template; at start, substitute the frontend/redirect URL into the realm and `start --import-realm` against Neon. Cloud Run URLs are deterministic (`https://<service>-<project-number>.<region>.run.app`), so the frontend URL is known before the frontend deploys.
 
-### Phase 1 — Provision (already built)
-```bash
-./setup-gcp.sh   # terraform apply: project, Artifact Registry, Secret Manager, WIF
-```
-Confirm the `github-deployer` SA and `app-images` repo exist. No new Terraform needed for v1.
+### 4. Cloud test config
+Add `system-test/typescript/config/test-config-acceptance-*.json` entries as needed (URLs come from env overrides in the workflow).
 
-### Phase 2 — Database (Neon)
-1. Create a Neon project; create a **branch/database per variant** (e.g. `shop-mt-java`) so the shared Flyway schema can't collide across live variants.
-2. Put the connection string in the existing secret: `gcloud secrets versions add db-connection-string --data-file=-` (or via `terraform.tfvars` → `neon_database_url`).
-3. **Gotcha — URL vs discrete vars:** the backend wants `POSTGRES_DB_HOST/PORT/NAME/USER/PASSWORD` (see compose), but Neon hands you one URL. Either (a) store the five discrete values as separate secrets, or (b) add a tiny env-mapping step in the backend entrypoint that parses the URL. Pick (a) for v1 — no code change, and it keeps the same env contract the app already has. **Cost:** Secret Manager bills $0.06/version/location/month with 6 versions free per billing account, so store the five values as **one JSON secret per variant** (6 versions total ≈ $0), not 30 separate secrets (~$1.44/month).
+### 5. Rewrite `multitier-java-acceptance-stage-cloud.yml`
+Job order: `check` → `promote-images` (copy GHCR digests to `app-images`) → `deploy-simulators` → `migrate` (job) → `deploy-keycloak` → `deploy-backend` (`--port=8081`, five DB vars from the JSON secret, simulator URLs, Keycloak URLs, `ALLOWED_ORIGINS`) → `deploy-frontend` (`--port=3000`, runtime env) → TypeScript system-test jobs (smoke longer wait for Keycloak) → `promote` / `publish-tag` / `summary`. Replace every `system-test/java` / Gradle step with `system-test/typescript` (`npm ci`, `npx playwright test --project=...`), same suite split. Update the `check` job's `check-changes-since-tag` path to `system-test/typescript`. Then run `gh optivem` / `actionlint` (`lint-workflows.yml`) locally.
 
-### Phase 3 — Build & push images
-Dockerfiles exist, so per service:
-```bash
-REG=us-central1-docker.pkg.dev/$PROJECT_ID/app-images
-docker build -t $REG/shop-mt-java-backend system/multitier/backend-java
-docker push  $REG/shop-mt-java-backend
-# repeat for frontend-react and external-systems/simulators
-```
-Tag with the repo `VERSION` (currently `1.0.117`) so deploys are traceable.
+### 6. Cost guardrails
+Document in `terraform/README.md`: GCP budget alerts (€5/€20), `min-instances=0` everywhere, `teardown-gcp.sh` for reset.
 
-### Phase 4 — Deploy services
-Order matters because of the frontend→backend URL dependency:
-1. `gcloud run deploy shop-mt-java-sim` (no deps).
-2. `gcloud run deploy shop-mt-java-backend` — set `EXTERNAL_SYSTEM_MODE=real`, `ERP/CLOCK/TAX_API_URL` = the sim service URL, DB vars from secrets, `ALLOWED_ORIGINS` = frontend URL (filled in pass 2).
-3. `gcloud run deploy shop-mt-java-frontend --allow-unauthenticated` with `BACKEND_API_URL` = backend URL.
-4. Re-deploy backend with the now-known frontend origin in `ALLOWED_ORIGINS`.
+### 7. USER STEP — provision (agent pauses here)
+Agent gives exact commands for: `./setup-gcp.sh`; creating the Neon project, databases `shop_mt_java` and `keycloak`; `gcloud secrets versions add` for the three secrets; setting `GCP_PROJECT_ID`, `GCP_REGION`, `GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_SERVICE_ACCOUNT` on the `multitier-java-acceptance` GitHub environment.
 
-**Gotcha — frontend env timing:** confirm `frontend-react` reads `BACKEND_API_URL` at **runtime** (its Node server) and not baked at build. If it's build-time, the backend URL must be known before `docker build`, which means deploying backend first and rebuilding the frontend image with the URL — not a runtime env. Verify before scripting.
+### 8. First run
+After the user confirms Step 7: dispatch `multitier-java-acceptance-stage-cloud`, hand over the run ID (do not poll), fix failures within scope.
 
-### Phase 5 — Migrations as a Cloud Run Job
-The compose `db-migrate` mounts `system/db/migrations` as a volume; **Cloud Run Jobs can't mount host volumes.** Build a one-shot migration image instead:
-```dockerfile
-FROM flyway/flyway:10.21.0-alpine
-COPY system/db/migrations /flyway/sql
-```
-Deploy as a job, run it against the Neon URL on each release (in CI, after build, before the service deploy that needs the new schema).
-
-### Phase 6 — CI/CD (use the existing OIDC)
-Add a GitHub Actions workflow that authenticates via the `github-deployer` WIF (already provisioned), builds+pushes the three images, runs the migration job, then deploys the three services. **Trigger on tag, not every push to `main`** — controls churn and cost, and matches a release cadence for a demo. (Per `CLAUDE.md`: no GitHub Pages; if you want a status/URL page, it's `docs/*.md`.)
-
-### Phase 7 — Template across variants
-Parameterize Phases 3–6 by `<arch>` and `<lang>`, reading service paths from the `gh-optivem-<arch>-<lang>.yaml` files so there's a single source of truth. Monolith collapses backend+frontend into one service. Roll out TS and .NET multitier next (faster cold starts), then the three monoliths.
-
-### Phase 8 — Cost guardrails
-- Set a **GCP budget alert** at e.g. €5 and €20 so a misconfigured `min-instances` can't surprise you.
-- Default `min-instances=0` everywhere. Only set `min-instances=1` on a *single* showcased variant if JVM cold start hurts a live session — and only for the session.
-- `teardown-gcp.sh` already exists for full reset between cohorts if you want zero standing footprint.
-
-## Cost rationale
-
-For the demo usage shape (idle most of the month, bursts during sessions):
-
-- **Compute:** all services at `min-instances=0`. A few thousand requests and tens of vCPU-seconds per session stays inside Cloud Run's free tier (180K vCPU-s / 360K GiB-s / 2M req per month, account-wide, never expires) → **~$0**.
-- **DB:** Neon free tier covers a demo, and scales to zero between sessions → **~$0**.
-- **Storage/egress:** Artifact Registry image storage is cents; ingress is free; demo egress is well under any threshold → **negligible**.
-- **The only way this costs real money** is pinning `min-instances>0` (always-warm) — a small Cloud Run instance kept warm runs on the order of a few €/month *each*, which is why warm-pinning is per-session and per-variant, not a default.
-
-Net: a parked demo is ~free; a busy month is single-digit euros.
-
-## DECISIONS (resolved)
-
-1. **Live surface area:** deploy `multitier/java` (React frontend + Java backend) with the system tests in **TypeScript**. Other variants deploy on demand. The existing `multitier-java-*-stage-cloud.yml` workflows run Java system tests today — switching them to TypeScript is part of this plan.
-2. **Backend exposure:** public, restricted by CORS (`ALLOWED_ORIGINS`).
-3. **DB isolation:** Neon branch per variant.
-4. **Region:** `us-central1`.
-5. **CI trigger:** manual dispatch for acceptance/QA/prod cloud stages, matching the non-cloud QA/prod stages. The cloud acceptance hourly cron is present but commented out (done) to keep demo costs down.
-
-## Audit findings (2026-10-29) — the existing `multitier-java-*-stage-cloud.yml` workflows cannot work as-is
-
-Nothing is provisioned: no GCP/WIF variables are set on any GitHub environment, so `setup-gcp.sh` has never been applied.
-
-| # | Gap | Fix |
-|---|---|---|
-| 1 | Cloud Run cannot pull `ghcr.io` images directly (workflows deploy GHCR digests) | Artifact Registry **remote repository** proxying GHCR (or copy images into `app-images`); add to Terraform |
-| 2 | Backend deploy sets `SPRING_PROFILES_ACTIVE=cloud` + `DATABASE_URL`, but there is no `cloud` profile; the app reads `POSTGRES_DB_HOST/PORT/NAME/USER/PASSWORD` | Drop the profile; pass the five discrete vars (one JSON secret per variant, see Phase 2) |
-| 3 | Backend listens on **8081**; workflow uses `--port=8080` | `--port=8081` |
-| 4 | Backend requires `AUTH_ISSUER_URI`, `AUTH_JWK_SET_URI`, `AUTH_AUDIENCE` (no defaults) — it won't start without an OIDC provider | Cloud Keycloak (decision below) |
-| 5 | Frontend (nginx, runtime envsubst) needs `BACKEND_API_URL`, `KEYCLOAK_URL`, `KEYCLOAK_REALM`, `KEYCLOAK_CLIENT_ID`; workflow sets none, and deploys in parallel with the backend | Runtime env confirmed (no rebuild). Deploy backend first, then frontend with `BACKEND_API_URL` = backend URL |
-| 6 | Backend needs `ERP/CLOCK/TAX_API_URL`, `EXTERNAL_SYSTEM_MODE`, `ALLOWED_ORIGINS` — workflow sets none | Set from the deployed simulator and frontend URLs |
-| 7 | No Flyway migration step | Migration Cloud Run Job (Phase 5) before the backend deploy |
-| 8 | Smoke/acceptance jobs run Java system tests | Switch to `system-test/typescript` (env vars `MYSHOP_UI_BASE_URL`, `MYSHOP_API_BASE_URL`, `ERP/CLOCK/TAX_API_BASE_URL`, `KEYCLOAK_URL`, `ENVIRONMENT`, `EXTERNAL_SYSTEM_MODE`) |
-| 9 | Phases 3–4 (manual docker build/push, hand-run `gcloud run deploy`) are obsolete: the commit stage already publishes images and the cloud workflows deploy them | Remove those phases; keep only the Artifact Registry remote repo |
-| 10 | `20261009-1521-production-readiness-gaps` item 6.1 proposes **Cloud SQL** (paid, not free-tier) | Keep Neon; reconcile that item |
-| 11 | `VERSION` reference `1.0.117` in Phase 3 is stale | Moot once Phase 3 is removed |
-
-## Still to do
-
-- **Keycloak decision (gap 4): Keycloak 26 on Cloud Run (scale-to-zero) + a second Neon database, importing `docker/keycloak/shop-realm.json`.** Smoke tests need a longer startup wait for its cold start. Rewrite Phases 2–6 per the table above.
-- Execute: provision GCP, set environment variables, rewrite the multitier-java cloud acceptance workflow, run it.
+### 9. Follow-ups (not in this plan)
+Template to other variants; QA/prod cloud stages for multitier-java; the cloud realm exposes a password-grant test client and test users — acceptable for a demo, revisit before anything real.
