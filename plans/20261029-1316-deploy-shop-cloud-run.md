@@ -30,12 +30,22 @@
 
 ## ▶ Next executable step (resume here)
 
-**Step 7 — USER STEP (provision)**: agent pauses, hands over exact commands; then Step 8 (first run) after the user confirms. Steps 5–6 are done: `multitier-java-acceptance-stage-cloud.yml` is rewritten (actionlint clean, not yet run) and cost guardrails are in `terraform/README.md`. Step 1 (Terraform) is written but unvalidated — `terraform` is not installed here; `setup-gcp.sh` will validate it. `db-connection-string` is kept for the other variants. The workflow expects Secret Manager secrets `shop-mt-java-acceptance-db`, `keycloak-db` (JSON `{host,port,user,password}`) and `keycloak-admin-password`, and service account `shop-runtime@<project>`.
+**Step 7 — USER STEP (provision)**: commands already handed over (see Step 7 below for the ordered checklist); user is running them in the devcontainer. Wait for "provisioned", then Step 8 (first run) after the user confirms. Steps 5–6 are done: `multitier-java-acceptance-stage-cloud.yml` is rewritten (actionlint clean, not yet run) and cost guardrails are in `terraform/README.md`. Step 1 (Terraform) is written but unvalidated — `terraform` is not installed here; `setup-gcp.sh` will validate it. `db-connection-string` is kept for the other variants. The workflow expects Secret Manager secrets `shop-mt-java-acceptance-db`, `keycloak-db` (JSON `{host,port,user,password}`) and `keycloak-admin-password`, and service account `shop-runtime@<project>`.
 
 ## Steps
 
 ### 7. USER STEP — provision (agent pauses here)
-Agent gives exact commands for: `./setup-gcp.sh`; creating the Neon project, databases `shop_mt_java_real`, `shop_mt_java_stub` and `keycloak`; `gcloud secrets versions add` for the three secrets; setting `GCP_PROJECT_ID`, `GCP_REGION`, `GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_SERVICE_ACCOUNT` on the `multitier-java-acceptance` GitHub environment.
+**Status:** commands already handed over; user is reopening in the devcontainer (has gcloud/terraform/gh pinned — no Windows installs needed) to run them. On resume: do NOT re-explain from scratch; ask "provisioned?" and continue at Step 8 once confirmed. If the user is stuck, help from their pasted error.
+
+Order for the user (all in the devcontainer terminal, repo root):
+1. Verify `gcloud --version && terraform --version && gh --version`; log in (`gcloud auth login`, `gcloud auth application-default login` — add `--no-launch-browser` if needed — and `gh auth login`; host logins don't carry over). Needs a GCP billing account.
+2. `./setup-gcp.sh` (first real validation of the unvalidated Terraform; it creates the secrets `shop-mt-java-acceptance-db`, `keycloak-db`, `keycloak-admin-password` but not their versions). Note the printed project ID, region, WIF provider, deployer SA (`terraform output` in `terraform/` to re-show).
+3. Neon: one project, databases `shop_mt_java_real`, `shop_mt_java_stub`, `keycloak`.
+4. `echo -n '{"host":"<h>","port":"5432","user":"<u>","password":"<p>"}' | gcloud secrets versions add shop-mt-java-acceptance-db --data-file=-` (same for `keycloak-db`); `echo -n '<pw>' | gcloud secrets versions add keycloak-admin-password --data-file=-`.
+5. `gh variable set GCP_PROJECT_ID|GCP_REGION(us-central1)|GCP_WORKLOAD_IDENTITY_PROVIDER|GCP_SERVICE_ACCOUNT --env multitier-java-acceptance --body "<value>"`; ensure the environment and the `GHCR_TOKEN` / `WORKFLOW_TOKEN` secrets exist.
+6. Tell the agent "provisioned".
+
+Original summary — agent gives exact commands for: `./setup-gcp.sh`; creating the Neon project, databases `shop_mt_java_real`, `shop_mt_java_stub` and `keycloak`; `gcloud secrets versions add` for the three secrets; setting `GCP_PROJECT_ID`, `GCP_REGION`, `GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_SERVICE_ACCOUNT` on the `multitier-java-acceptance` GitHub environment.
 
 ### 8. First run
 After the user confirms Step 7: dispatch `multitier-java-acceptance-stage-cloud`, hand over the run ID (do not poll), fix failures within scope.
