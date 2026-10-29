@@ -78,12 +78,17 @@ elif [[ -n "${gcloud_active:-}" ]]; then
   echo "  ✅ Google Cloud authenticated as: $GCP_ACCOUNT"
 fi
 
-# Terraform's google provider uses Application Default Credentials, separate from 'gcloud auth login'
-if command -v gcloud &> /dev/null; then
+# Terraform's google provider prefers Application Default Credentials; without them, hand it a token from
+# the 'gcloud auth login' session (valid ~1h, enough for one apply). Avoids the separate ADC login, which
+# org policies or the consent screen's per-scope checkboxes can block.
+if [[ -n "${GCP_ACCOUNT:-}" ]]; then
   if gcloud auth application-default print-access-token &> /dev/null; then
-    echo "  ✅ Application Default Credentials found"
+    echo "  ✅ Terraform credentials: Application Default Credentials"
+  elif GOOGLE_OAUTH_ACCESS_TOKEN=$(gcloud auth print-access-token 2> /dev/null); then
+    export GOOGLE_OAUTH_ACCESS_TOKEN
+    echo "  ✅ Terraform credentials: gcloud session token ($GCP_ACCOUNT)"
   else
-    echo "❌ No Application Default Credentials (needed by Terraform). Run: gcloud auth application-default login --no-launch-browser"
+    echo "❌ Could not get an access token for Terraform. Run: gcloud auth login --no-launch-browser"
     PREREQ_OK=false
   fi
 fi
