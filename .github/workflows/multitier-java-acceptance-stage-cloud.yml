@@ -185,9 +185,12 @@ jobs:
           PROJECT: ${{ vars.GCP_PROJECT_ID }}
           REGION: ${{ vars.GCP_REGION }}
         run: |
-          echo "registry=${REGION}-docker.pkg.dev/${PROJECT}/app-images" >> "$GITHUB_OUTPUT"
-          echo "tag=${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_OUTPUT"
-          echo "project-number=$(gcloud projects describe "$PROJECT" --format='value(projectNumber)')" >> "$GITHUB_OUTPUT"
+          PROJECT_NUMBER=$(gcloud projects describe "$PROJECT" --format='value(projectNumber)')
+          {
+            echo "registry=${REGION}-docker.pkg.dev/${PROJECT}/app-images"
+            echo "tag=${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+            echo "project-number=${PROJECT_NUMBER}"
+          } >> "$GITHUB_OUTPUT"
           gcloud auth configure-docker "${REGION}-docker.pkg.dev" --quiet
 
       # Manifest copy keeps the tested digest.
