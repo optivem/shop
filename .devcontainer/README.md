@@ -1,6 +1,6 @@
 # Dev Container
 
-Reproducible development environment with `gcloud`, `gh`, `terraform`, Docker, and Node 22 pre-installed. Works identically on Windows, macOS, and Linux.
+Reproducible development environment with `gcloud`, `gh`, `terraform`, Docker, Node 22, and Claude Code pre-installed. Works identically on Windows, macOS, and Linux.
 
 ## Prerequisites
 
@@ -52,6 +52,11 @@ Versions are pinned in [devcontainer.json](devcontainer.json). Update in one pla
 | gcloud    | latest  |
 | terraform | 1.10.3  |
 | node      | 22      |
+| claude    | latest  |
+
+## Claude Code
+
+Login state lives in the `shop-claude-config` volume, so it survives rebuilds. `CLAUDE_CONFIG_DIR` points at `~/.claude` so that `.claude.json` (normally in `$HOME`, which is wiped on rebuild) is stored in the volume too. Your host's personal slash commands (`~/.claude/commands`, e.g. `/execute-plan`, `/create-plan`, `/commit`) are bind-mounted read-only on top of it. Edit them on the host; the container sees changes immediately. The host folder must exist before the container starts.
 
 ## Rebuilding after config changes
 

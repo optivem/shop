@@ -3,6 +3,8 @@ set -euo pipefail
 
 # Named volumes are created root-owned; the login state in them must be writable by vscode
 sudo chown -R "$(id -u):$(id -g)" "$HOME/.config/gcloud" "$HOME/.config/gh"
+# ~/.claude/commands is a read-only bind mount from the host; skip it
+sudo find "$HOME/.claude" -path "$HOME/.claude/commands" -prune -o -exec chown "$(id -u):$(id -g)" {} +
 
 echo "=== Verifying devcontainer tools ==="
 echo ""
@@ -23,6 +25,7 @@ check gcloud    "gcloud --version | head -1"
 check terraform "terraform version | head -1"
 check docker    "docker --version"
 check node      "node --version"
+check claude    "claude --version"
 
 echo ""
 echo "=== Next steps ==="

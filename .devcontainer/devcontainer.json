@@ -16,7 +16,8 @@
     },
     "ghcr.io/devcontainers/features/node:1": {
       "version": "22"
-    }
+    },
+    "ghcr.io/anthropics/devcontainer-features/claude-code:1": {}
   },
   "customizations": {
     "vscode": {
@@ -33,8 +34,13 @@
   },
   "mounts": [
     "source=shop-gcloud-config,target=/home/vscode/.config/gcloud,type=volume",
-    "source=shop-gh-config,target=/home/vscode/.config/gh,type=volume"
+    "source=shop-gh-config,target=/home/vscode/.config/gh,type=volume",
+    "source=shop-claude-config,target=/home/vscode/.claude,type=volume",
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.claude/commands,target=/home/vscode/.claude/commands,type=bind,readonly"
   ],
+  "containerEnv": {
+    "CLAUDE_CONFIG_DIR": "/home/vscode/.claude"
+  },
   "forwardPorts": [],
   "postCreateCommand": "bash .devcontainer/post-create.sh",
   "remoteUser": "vscode"
