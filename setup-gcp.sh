@@ -3,6 +3,7 @@ set -euo pipefail
 
 # Setup Google Cloud infrastructure using Terraform
 # Prerequisite: gcloud and gh CLIs authenticated
+# Optional: SYSTEM_NAME=<4-14 chars> overrides the name derived from the repo (prefixes the GCP project, services, secrets, databases)
 
 echo "========================================="
 echo " GCP Infrastructure Setup (Terraform)"
@@ -39,6 +40,13 @@ else
   echo "  ✅ gh CLI found"
 fi
 
+if ! command -v jq &> /dev/null; then
+  echo "❌ jq not found. Install from: https://jqlang.org/download"
+  PREREQ_OK=false
+else
+  echo "  ✅ jq found"
+fi
+
 if ! command -v terraform &> /dev/null; then
   echo "❌ terraform CLI not found."
   install_hint Hashicorp.Terraform hashicorp/tap/terraform "https://developer.hashicorp.com/terraform/install"
@@ -68,6 +76,16 @@ if [[ -z "${gcloud_active:-}" ]] && [[ "$PREREQ_OK" == "true" ]]; then
 elif [[ -n "${gcloud_active:-}" ]]; then
   GCP_ACCOUNT=$(echo "$gcloud_active" | head -1)
   echo "  ✅ Google Cloud authenticated as: $GCP_ACCOUNT"
+fi
+
+# Terraform's google provider uses Application Default Credentials, separate from 'gcloud auth login'
+if command -v gcloud &> /dev/null; then
+  if gcloud auth application-default print-access-token &> /dev/null; then
+    echo "  ✅ Application Default Credentials found"
+  else
+    echo "❌ No Application Default Credentials (needed by Terraform). Run: gcloud auth application-default login --no-launch-browser"
+    PREREQ_OK=false
+  fi
 fi
 
 if [[ "$PREREQ_OK" != "true" ]]; then
@@ -109,7 +127,7 @@ terraform init
 # Plan
 echo ""
 echo "Planning infrastructure..."
-terraform plan -var="github_repo=$REPO" -var="billing_account_id=$BILLING_ACCOUNT" -out=tfplan
+terraform plan -var="github_repo=$REPO" -var="billing_account_id=$BILLING_ACCOUNT" -var="system_name=${SYSTEM_NAME:-}" -out=tfplan
 
 # Apply
 echo ""
@@ -136,6 +154,8 @@ PROJECT_ID=$(terraform output -raw project_id)
 REGION=$(terraform output -raw region)
 WIF_PROVIDER=$(terraform output -raw workload_identity_provider)
 SA_EMAIL=$(terraform output -raw service_account_email)
+SYSTEM=$(terraform output -raw system_name)
+DB_PREFIX="${SYSTEM//-/_}"
 
 # Configure GitHub repo with variables
 echo ""
@@ -144,15 +164,81 @@ gh variable set GCP_PROJECT_ID --body "$PROJECT_ID"
 gh variable set GCP_REGION --body "$REGION"
 gh variable set GCP_WORKLOAD_IDENTITY_PROVIDER --body "$WIF_PROVIDER"
 gh variable set GCP_SERVICE_ACCOUNT --body "$SA_EMAIL"
+gh variable set SYSTEM_NAME --body "$SYSTEM"
 
 echo "  ✅ GCP_PROJECT_ID = $PROJECT_ID"
 echo "  ✅ GCP_REGION = $REGION"
 echo "  ✅ GCP_WORKLOAD_IDENTITY_PROVIDER"
 echo "  ✅ GCP_SERVICE_ACCOUNT = $SA_EMAIL"
+echo "  ✅ SYSTEM_NAME = $SYSTEM"
 
-# Prompt for optional database URL
+# Secret Manager values for multitier-java (created empty by Terraform; values never go through Terraform state)
+secret_has_version() {
+  [[ -n "$(gcloud secrets versions list "$1" --project="$PROJECT_ID" --filter=state:ENABLED --limit=1 --format='value(name)')" ]]
+}
+
+if secret_has_version "$SYSTEM-multitier-java-acceptance-db" && secret_has_version "$SYSTEM-keycloak-db"; then
+  echo ""
+  echo "  ✅ Neon credentials already stored ($SYSTEM-multitier-java-acceptance-db, $SYSTEM-keycloak-db)"
+else
+  echo ""
+  echo "========================================="
+  echo " MANUAL STEP: create the Neon database"
+  echo "========================================="
+  echo "  1. Open https://console.neon.tech and create a project (region: AWS US East / us-east is closest to us-central1)."
+  echo "  2. In that project, create three databases:"
+  echo "       ${DB_PREFIX}_multitier_java_real"
+  echo "       ${DB_PREFIX}_multitier_java_stub"
+  echo "       ${DB_PREFIX}_keycloak"
+  echo "  3. Open 'Connect' and note the host (e.g. ep-xxx.us-east-2.aws.neon.tech), user and password."
+  echo "     Use the direct host, not the '-pooler' one."
+  echo ""
+  read -rp "Press Enter when the databases exist..." _
+  read -rp "Neon host: " NEON_HOST
+  read -rp "Neon user: " NEON_USER
+  read -rsp "Neon password (hidden): " NEON_PASSWORD
+  echo ""
+  if [[ -z "$NEON_HOST" || -z "$NEON_USER" || -z "$NEON_PASSWORD" ]]; then
+    echo "❌ Host, user and password are all required. Re-run './setup-gcp.sh' (Terraform steps are idempotent)."
+    exit 1
+  fi
+  db_json=$(jq -cn --arg h "$NEON_HOST" --arg u "$NEON_USER" --arg p "$NEON_PASSWORD" \
+    '{host: $h, port: "5432", user: $u, password: $p}')
+  for s in "$SYSTEM-multitier-java-acceptance-db" "$SYSTEM-keycloak-db"; do
+    echo -n "$db_json" | gcloud secrets versions add "$s" --data-file=- --project="$PROJECT_ID" --quiet > /dev/null
+    echo "  ✅ Stored $s"
+  done
+fi
+
+if secret_has_version "$SYSTEM-keycloak-admin-password"; then
+  echo "  ✅ Keycloak admin password already stored"
+else
+  read -rsp "Choose a Keycloak admin password (hidden, Enter = generate one): " KC_ADMIN_PASSWORD
+  echo ""
+  if [[ -z "$KC_ADMIN_PASSWORD" ]]; then
+    KC_ADMIN_PASSWORD=$(openssl rand -base64 24)
+    echo "  Generated. Read it back with: gcloud secrets versions access latest --secret=$SYSTEM-keycloak-admin-password"
+  fi
+  echo -n "$KC_ADMIN_PASSWORD" | gcloud secrets versions add "$SYSTEM-keycloak-admin-password" --data-file=- --project="$PROJECT_ID" --quiet > /dev/null
+  echo "  ✅ Stored $SYSTEM-keycloak-admin-password"
+fi
+
+# GitHub secrets the cloud workflows need (not created by this script)
 echo ""
-echo "Optional: Database connection (Neon, Cloud SQL, etc.)"
+MISSING_GH_SECRETS=()
+repo_secrets=$(gh secret list --json name --jq '.[].name')
+for s in GHCR_TOKEN WORKFLOW_TOKEN; do
+  if grep -qx "$s" <<< "$repo_secrets"; then
+    echo "  ✅ GitHub secret $s exists"
+  else
+    echo "  ⚠️  GitHub secret $s is missing"
+    MISSING_GH_SECRETS+=("$s")
+  fi
+done
+
+# Legacy single connection string, still read by the monolith/other cloud workflows
+echo ""
+echo "Optional (other variants only, not multitier-java): single Neon connection string."
 echo "Leave blank to skip."
 read -rp "Paste Neon connection string (or press Enter): " NEON_URL || true
 
@@ -182,7 +268,15 @@ echo "  GCP Project:  $PROJECT_ID"
 echo "  Region:       $REGION"
 echo "  Cost:         \$0/month (free tier)"
 echo ""
+if (( ${#MISSING_GH_SECRETS[@]} > 0 )); then
+  echo "  ⚠️  MANUAL STEP before triggering the workflow — set the missing GitHub secrets:"
+  for s in "${MISSING_GH_SECRETS[@]}"; do
+    echo "    gh secret set $s"
+  done
+  echo "    (GHCR_TOKEN: PAT with read:packages; WORKFLOW_TOKEN: PAT with repo + workflow)"
+  echo ""
+fi
 echo "  Next steps:"
-echo "    - Trigger workflow: gh workflow run monolith-typescript-acceptance-stage-cloud.yml"
+echo "    - Trigger workflow: gh workflow run multitier-java-acceptance-stage-cloud.yml"
 echo "    - To tear down:    terraform destroy -var=\"github_repo=$REPO\" -var=\"billing_account_id=$BILLING_ACCOUNT\""
 echo ""

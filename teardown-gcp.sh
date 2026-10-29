@@ -63,6 +63,7 @@ cd "$(dirname "$0")/terraform"
 terraform destroy \
   -var="github_repo=$REPO" \
   -var="billing_account_id=$BILLING_ACCOUNT" \
+  -var="system_name=${SYSTEM_NAME:-}" \
   -auto-approve
 
 echo "  ✅ GCP infrastructure destroyed"

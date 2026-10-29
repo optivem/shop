@@ -1,6 +1,6 @@
 # Deploy `shop` for real — Cloud Run + Neon
 
-> 🤖 **Picked up by agent** — `ValentinaLaptop` at `2026-10-29T12:31:52Z`
+> 🤖 **Picked up by agent** — `c027518f5d86` at `2026-10-29T15:42:58Z`
 
 ## TL;DR
 
@@ -11,7 +11,7 @@
 
 1. **Surface:** `multitier/java` only, system tests in **TypeScript**. Other variants later, by templating.
 2. **Backend exposure:** public, restricted by CORS (`ALLOWED_ORIGINS`).
-3. **DB:** Neon, one project; one database per stack (`shop_mt_java_real`, `shop_mt_java_stub`) plus one for Keycloak (`keycloak`). Neon is free-tier; Cloud SQL is rejected (paid, no free tier).
+3. **DB:** Neon, one project; one database per stack (`<system>_multitier_java_real`, `<system>_multitier_java_stub`) plus one for Keycloak (`<system>_keycloak`); `<system>` is derived from the repo name (see resume block). Neon is free-tier; Cloud SQL is rejected (paid, no free tier).
 4. **Region:** `us-central1`.
 5. **CI trigger:** manual dispatch for the cloud acceptance/QA/prod stages. The hourly cron stays commented out.
 6. **Images to Google:** the workflow **copies** the tested GHCR image (same digest) into Artifact Registry `app-images` (keyless via WIF, no PAT). Cloud Run deploys from there. Applies to our images and to the Keycloak image (quay.io).
@@ -30,22 +30,19 @@
 
 ## ▶ Next executable step (resume here)
 
-**Step 7 — USER STEP (provision)**: commands already handed over (see Step 7 below for the ordered checklist); user is running them in the devcontainer. Wait for "provisioned", then Step 8 (first run) after the user confirms. Steps 5–6 are done: `multitier-java-acceptance-stage-cloud.yml` is rewritten (actionlint clean, not yet run) and cost guardrails are in `terraform/README.md`. Step 1 (Terraform) is written but unvalidated — `terraform` is not installed here; `setup-gcp.sh` will validate it. `db-connection-string` is kept for the other variants. The workflow expects Secret Manager secrets `shop-mt-java-acceptance-db`, `keycloak-db` (JSON `{host,port,user,password}`) and `keycloak-admin-password`, and service account `shop-runtime@<project>`.
+**Step 7 — USER STEP (provision), step-by-step with the user.** The user runs `./setup-gcp.sh` and pastes output; the agent helps with each ❌ / manual prompt. Wait for "provisioned", then Step 8. Steps 1–6 are done (Terraform still unvalidated — no `terraform` here; `setup-gcp.sh` is its first real run; workflow not yet linted since the rename — no `actionlint` here).
+
+Naming is no longer hardcoded to `shop`: Terraform derives `system_name` from the repo name (max 14 chars, override with `SYSTEM_NAME=<name> ./setup-gcp.sh`), and it prefixes the GCP project, Cloud Run services (`<system>-multitier-java-{real,stub}-{frontend,backend,sim,stubs}`, `<system>-multitier-java-keycloak`), secrets (`<system>-multitier-java-acceptance-db`, `<system>-keycloak-db`, `<system>-keycloak-admin-password`) and Neon databases (`<system>_multitier_java_{real,stub}`, `<system>_keycloak`). The runtime SA is plain `runtime@<project>` (30-char SA limit). The workflow reads the prefix from the `SYSTEM_NAME` GitHub variable, which `setup-gcp.sh` sets. `db-connection-string` is kept for the other variants.
 
 ## Steps
 
 ### 7. USER STEP — provision (agent pauses here)
-**Status:** commands already handed over; user is reopening in the devcontainer (has gcloud/terraform/gh pinned — no Windows installs needed) to run them. On resume: do NOT re-explain from scratch; ask "provisioned?" and continue at Step 8 once confirmed. If the user is stuck, help from their pasted error.
-
-Order for the user (all in the devcontainer terminal, repo root):
-1. Verify `gcloud --version && terraform --version && gh --version`; log in (`gcloud auth login`, `gcloud auth application-default login` — add `--no-launch-browser` if needed — and `gh auth login`; host logins don't carry over). Needs a GCP billing account.
-2. `./setup-gcp.sh` (first real validation of the unvalidated Terraform; it creates the secrets `shop-mt-java-acceptance-db`, `keycloak-db`, `keycloak-admin-password` but not their versions). Note the printed project ID, region, WIF provider, deployer SA (`terraform output` in `terraform/` to re-show).
-3. Neon: one project, databases `shop_mt_java_real`, `shop_mt_java_stub`, `keycloak`.
-4. `echo -n '{"host":"<h>","port":"5432","user":"<u>","password":"<p>"}' | gcloud secrets versions add shop-mt-java-acceptance-db --data-file=-` (same for `keycloak-db`); `echo -n '<pw>' | gcloud secrets versions add keycloak-admin-password --data-file=-`.
-5. `gh variable set GCP_PROJECT_ID|GCP_REGION(us-central1)|GCP_WORKLOAD_IDENTITY_PROVIDER|GCP_SERVICE_ACCOUNT --env multitier-java-acceptance --body "<value>"`; ensure the environment and the `GHCR_TOKEN` / `WORKFLOW_TOKEN` secrets exist.
-6. Tell the agent "provisioned".
-
-Original summary — agent gives exact commands for: `./setup-gcp.sh`; creating the Neon project, databases `shop_mt_java_real`, `shop_mt_java_stub` and `keycloak`; `gcloud secrets versions add` for the three secrets; setting `GCP_PROJECT_ID`, `GCP_REGION`, `GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_SERVICE_ACCOUNT` on the `multitier-java-acceptance` GitHub environment.
+`./setup-gcp.sh` (devcontainer, repo root) now drives the whole step and tells the user every manual action:
+1. Prerequisite checks: gcloud / gh / terraform / jq installed; `gh auth login`, `gcloud auth login`, `gcloud auth application-default login --no-launch-browser` — prints the fix command for each ❌. Needs a GCP billing account.
+2. Terraform plan → user types `yes` → apply. Sets repo variables `GCP_PROJECT_ID`, `GCP_REGION`, `GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_SERVICE_ACCOUNT`, `SYSTEM_NAME`.
+3. MANUAL: create the Neon project + the three databases (names printed), then paste host/user/password → script stores both DB secrets; Keycloak admin password is entered or generated. Skips secrets that already have a version (safe to re-run).
+4. Warns if GitHub secrets `GHCR_TOKEN` / `WORKFLOW_TOKEN` are missing and prints the `gh secret set` commands.
+5. User tells the agent "provisioned".
 
 ### 8. First run
 After the user confirms Step 7: dispatch `multitier-java-acceptance-stage-cloud`, hand over the run ID (do not poll), fix failures within scope.

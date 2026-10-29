@@ -9,11 +9,11 @@ terraform {
 }
 
 provider "google" {
-  project = google_project.my_shop.project_id
+  project = google_project.this.project_id
   region  = var.region
 }
 
 provider "google-beta" {
-  project = google_project.my_shop.project_id
+  project = google_project.this.project_id
   region  = var.region
 }

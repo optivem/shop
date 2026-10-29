@@ -1,6 +1,6 @@
 output "project_id" {
   description = "GCP Project ID"
-  value       = google_project.my_shop.project_id
+  value       = google_project.this.project_id
 }
 
 output "region" {
@@ -25,5 +25,10 @@ output "artifact_registry_repository" {
 
 output "runtime_service_account_email" {
   description = "Cloud Run runtime service account email"
-  value       = google_service_account.shop_runtime.email
+  value       = google_service_account.runtime.email
+}
+
+output "system_name" {
+  description = "Prefix for Cloud Run services, secrets and databases"
+  value       = local.system_name
 }

@@ -106,8 +106,8 @@ Google Cloud Project
 ├── Artifact Registry (Docker images)
 ├── Workload Identity Pool (GitHub OIDC)
 │   └── Service Account (github-deployer)
-├── Secret Manager (db-connection-string, shop-mt-java-acceptance-db, keycloak-db, keycloak-admin-password)
-├── Service Account (shop-runtime, Cloud Run runtime identity)
+├── Secret Manager (db-connection-string, <system>-multitier-java-acceptance-db, <system>-keycloak-db, <system>-keycloak-admin-password)
+├── Service Account (runtime, Cloud Run runtime identity)
 └── IAM Roles
     ├── Cloud Run Admin
     ├── Artifact Registry Writer
