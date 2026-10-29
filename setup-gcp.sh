@@ -330,5 +330,5 @@ if (( ${#MISSING_GH_SECRETS[@]} > 0 )); then
 fi
 echo "  Next steps:"
 echo "    - Trigger workflow: gh workflow run multitier-java-acceptance-stage-cloud.yml"
-echo "    - To tear down:    terraform destroy -var=\"github_repo=$REPO\" -var=\"billing_account_id=$BILLING_ACCOUNT\""
+echo "    - To tear down:    ./teardown-gcp.sh   (GCP project, Neon project, GitHub variables)"
 echo ""

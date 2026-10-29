@@ -30,22 +30,14 @@
 
 ## ▶ Next executable step (resume here)
 
-**Step 7 — USER STEP (provision), step-by-step with the user.** The user runs `./setup-gcp.sh` and pastes output; the agent helps with each ❌ / manual prompt. Wait for "provisioned", then Step 8. Steps 1–6 are done. Terraform passes `terraform validate` + `fmt` (2026-10-29); `setup-gcp.sh` is its first real apply. Workflow not yet linted since the rename (no `actionlint` here). 2026-10-29: Terraform applied (project `shop-3aa1c8`, GitHub variables set); script was stopped at the old manual Neon prompt and the Neon step is now automated — re-run `./setup-gcp.sh` to finish.
+**Step 8 — first cloud run.** Provisioning is done (2026-10-29): GCP project `shop-3aa1c8` (us-central1, under the optivem.com org), Neon project `shop` (`mute-dew-88263622`, aws-us-east-2) with `shop_multitier_java_{real,stub}` + `shop_keycloak`, all three Secret Manager secrets have version 1, GitHub repo variables set; `GHCR_TOKEN` / `WORKFLOW_TOKEN` come from optivem org secrets. Dispatch `gh workflow run multitier-java-acceptance-stage-cloud.yml`, hand the run ID to the user (do not poll), fix failures within scope. The workflow has never been linted since the rename (no `actionlint` here) — expect first-run issues.
 
-Naming is no longer hardcoded to `shop`: Terraform derives `system_name` from the repo name (max 14 chars, override with `SYSTEM_NAME=<name> ./setup-gcp.sh`), and it prefixes the GCP project, Cloud Run services (`<system>-multitier-java-{real,stub}-{frontend,backend,sim,stubs}`, `<system>-multitier-java-keycloak`), secrets (`<system>-multitier-java-acceptance-db`, `<system>-keycloak-db`, `<system>-keycloak-admin-password`) and Neon databases (`<system>_multitier_java_{real,stub}`, `<system>_keycloak`). The runtime SA is plain `runtime@<project>` (30-char SA limit). The workflow reads the prefix from the `SYSTEM_NAME` GitHub variable, which `setup-gcp.sh` sets. `db-connection-string` is kept for the other variants.
+Naming is no longer hardcoded to `shop`: Terraform derives `system_name` from the repo name (max 14 chars, override with `SYSTEM_NAME=<name> ./setup-gcp.sh`), and it prefixes the GCP project, Cloud Run services (`<system>-multitier-java-{real,stub}-{frontend,backend,sim,stubs}`, `<system>-multitier-java-keycloak`), secrets (`<system>-multitier-java-acceptance-db`, `<system>-keycloak-db`, `<system>-keycloak-admin-password`), the Neon project (`<system>`) and Neon databases (`<system>_multitier_java_{real,stub}`, `<system>_keycloak`). The runtime SA is plain `runtime@<project>` (30-char SA limit). The workflow reads the prefix from the `SYSTEM_NAME` GitHub variable, which `setup-gcp.sh` sets. `db-connection-string` is kept for the other variants.
 
 ## Steps
 
-### 7. USER STEP — provision (agent pauses here)
-`./setup-gcp.sh` (devcontainer, repo root) now drives the whole step and tells the user every manual action:
-1. Prerequisite checks: gcloud / gh / terraform / jq installed; `gh auth login`, `gcloud auth login`, `gcloud auth application-default login --no-launch-browser` — prints the fix command for each ❌. Needs a GCP billing account.
-2. Terraform plan → user types `yes` → apply. Sets repo variables `GCP_PROJECT_ID`, `GCP_REGION`, `GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_SERVICE_ACCOUNT`, `SYSTEM_NAME`.
-3. Neon via `neonctl` (pinned 8.13.2, npx fallback): Neon login (`npx -y neonctl@8.13.2 login` or `NEON_API_KEY`) is checked with the other prerequisites, finds/creates Neon project `<system>` in `aws-us-east-2`, creates any missing databases owned by `neondb_owner`, and pipes the direct-endpoint credentials into both DB secrets; Keycloak admin password is entered or generated. Skips secrets that already have a version (safe to re-run). `NEON_ORG_ID=<id>` if the Neon account has several orgs.
-4. Warns if GitHub secrets `GHCR_TOKEN` / `WORKFLOW_TOKEN` are missing and prints the `gh secret set` commands.
-5. User tells the agent "provisioned".
-
 ### 8. First run
-After the user confirms Step 7: dispatch `multitier-java-acceptance-stage-cloud`, hand over the run ID (do not poll), fix failures within scope.
+Dispatch `multitier-java-acceptance-stage-cloud`, hand over the run ID (do not poll), fix failures within scope.
 
 ### 9. Follow-ups (not in this plan)
 Template to all other variants (monolith + multitier × java/dotnet/typescript) in a new plan once multitier-java's first run is green — user-approved 2026-10-29. Cost guardrails for that: Artifact Registry cleanup policy (keep last N images per variant — the only real growing cost), one shared Keycloak across variants, Secret Manager versions beyond the 6 free (~$0.06/version/month); QA/prod cloud stages for multitier-java; the cloud realm exposes a password-grant test client and test users — acceptable for a demo, revisit before anything real.
