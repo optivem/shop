@@ -30,23 +30,9 @@
 
 ## ▶ Next executable step (resume here)
 
-**Step 5 — rewrite `multitier-java-acceptance-stage-cloud.yml`** (below). Already in place for it: `system/db/Dockerfile` (migrations), `docker/keycloak/Dockerfile.cloud` (needs env `FRONTEND_URL_REAL`/`FRONTEND_URL_STUB`, `KC_HOSTNAME`, `KC_DB_URL/USERNAME/PASSWORD`, `KC_BOOTSTRAP_ADMIN_*`; build context `docker/keycloak`), `external-systems/stubs/Dockerfile` (WireMock stubs, port 8080) and `external-systems/simulators/Dockerfile` (port 9000) — simulators/stubs are NOT published to GHCR, so the workflow must build+push them to Artifact Registry. `test-config-acceptance-{real,stub}.json` already exist (URLs come from env overrides), so no config work. Then Step 6; Step 7 needs the user. Step 1 (Terraform) is written but unvalidated — `terraform` is not installed on this machine; `setup-gcp.sh` will validate it in Step 7. `db-connection-string` is kept: the other variants' workflows still use it.
+**Step 7 — USER STEP (provision)**: agent pauses, hands over exact commands; then Step 8 (first run) after the user confirms. Steps 5–6 are done: `multitier-java-acceptance-stage-cloud.yml` is rewritten (actionlint clean, not yet run) and cost guardrails are in `terraform/README.md`. Step 1 (Terraform) is written but unvalidated — `terraform` is not installed here; `setup-gcp.sh` will validate it. `db-connection-string` is kept for the other variants. The workflow expects Secret Manager secrets `shop-mt-java-acceptance-db`, `keycloak-db` (JSON `{host,port,user,password}`) and `keycloak-admin-password`, and service account `shop-runtime@<project>`.
 
 ## Steps
-
-### 5. Rewrite `multitier-java-acceptance-stage-cloud.yml`
-**Principle: logically equivalent to `multitier-java-acceptance-stage.yml` except where cloud genuinely differs.** Parity requirements:
-- **Gates:** keep `preflight`; add the "release already published" check (`check-tag-exists`, `multitier-java-v<base>`) and `evaluate-run-gate`; a manual `commit-sha` bypasses the "no new artifacts/changes" skip, as in non-cloud.
-- **Two stacks**, as in non-cloud (`EXTERNAL_SYSTEM_MODE` is deploy-time): a **real** stack (frontend, backend, simulators, DB `shop_mt_java_real`) and a **stub** stack (frontend, backend, stubs, DB `shop_mt_java_stub`). Secrets: one JSON DB secret per stack. Keycloak is shared; its realm lists both frontend URLs.
-- **Suites:** run the same 11 suites in the same order as non-cloud, via `gh optivem system-test setup` / `gh optivem system-test run --suite <id>` (TypeScript), **sequentially** (isolated suites need exclusive state), with env overrides `ENVIRONMENT=acceptance`, `MYSHOP_UI_BASE_URL_<MODE>`, `MYSHOP_API_BASE_URL_<MODE>`, `ERP/CLOCK/TAX_API_BASE_URL_<MODE>`, `KEYCLOAK_URL`. No raw Gradle/Playwright flags.
-- **After green:** compose RC version, tag images, publish git tag, summary.
-
-Intentional differences from non-cloud: Cloud Run deploy instead of docker compose; no Docker Hub login; `promote-images` step (GHCR to Artifact Registry, same digest); Flyway Cloud Run job before each backend deploy; longer wait for Keycloak cold start; RC tag prefix `multitier-java-cloud`; no Sonar job (would only repeat the non-cloud analysis of the same test code); `check-changes-since-tag` path `system-test/typescript` and the cloud workflow file.
-
-Job order: `check` → `promote-images` → `deploy-keycloak` → `deploy-real-stack` / `deploy-stub-stack` (simulators/stubs, migrate, backend `--port=8081`, frontend `--port=3000`) → `run` (sequential suites) → `promote` / `publish-tag` → `summary`. Validate with `actionlint` / `lint-workflows.yml` locally.
-
-### 6. Cost guardrails
-Document in `terraform/README.md`: GCP budget alerts (€5/€20), `min-instances=0` everywhere, `teardown-gcp.sh` for reset.
 
 ### 7. USER STEP — provision (agent pauses here)
 Agent gives exact commands for: `./setup-gcp.sh`; creating the Neon project, databases `shop_mt_java_real`, `shop_mt_java_stub` and `keycloak`; `gcloud secrets versions add` for the three secrets; setting `GCP_PROJECT_ID`, `GCP_REGION`, `GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_SERVICE_ACCOUNT` on the `multitier-java-acceptance` GitHub environment.

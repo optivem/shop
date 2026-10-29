@@ -124,6 +124,13 @@ Google Cloud Project
 
 **Total estimated cost**: ~$0/month at demo scale
 
+### Cost guardrails
+
+- **Budget alerts**: create two on the billing account (Billing > Budgets & alerts): €5 and €20 per month, alerting at 50/90/100%.
+- **Scale to zero**: every Cloud Run service is deployed with `min-instances=0` and small `max-instances`, so idle cost is ~0 (Keycloak cold-starts on first request).
+- **Secret versions**: keep to one JSON secret per variant; only 6 versions are free.
+- **Reset**: `./teardown-gcp.sh` destroys everything; `./setup-gcp.sh` recreates it.
+
 ## Troubleshooting
 
 ### Authentication issues
