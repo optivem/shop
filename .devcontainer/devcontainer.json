@@ -6,7 +6,7 @@
       "version": "2.67.0"
     },
     "ghcr.io/dhoeric/features/google-cloud-cli:1": {
-      "version": "500.0.0"
+      "version": "590.0.1"
     },
     "ghcr.io/devcontainers/features/terraform:1": {
       "version": "1.10.3"
