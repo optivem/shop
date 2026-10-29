@@ -1,7 +1,5 @@
 # Deploy `shop` for real — Cloud Run + Neon
 
-> 🤖 **Picked up by agent** — `b2d83c7ed0bc` at `2026-10-29T20:03:26Z`
-
 ## TL;DR
 
 **Why:** The shop only runs locally (`gh optivem system start`). The existing `multitier-java-*-stage-cloud.yml` workflows cannot work: nothing is provisioned and the deploy steps don't match what the app needs (ports, DB vars, Keycloak, simulator URLs, migrations).
@@ -30,7 +28,9 @@
 
 ## ▶ Next executable step (resume here)
 
-**Step 8 — first cloud run.** Provisioning is done (2026-10-29): GCP project `shop-3aa1c8` (us-central1, under the optivem.com org), Neon project `shop` (`mute-dew-88263622`, aws-us-east-2) with `shop_multitier_java_{real,stub}` + `shop_keycloak`, all three Secret Manager secrets have version 1, GitHub repo variables set; `GHCR_TOKEN` / `WORKFLOW_TOKEN` come from optivem org secrets. Dispatch `gh workflow run multitier-java-acceptance-stage-cloud.yml`, hand the run ID to the user (do not poll), fix failures within scope. The workflow has never been linted since the rename (no `actionlint` here) — expect first-run issues.
+**Step 8 — first cloud run: check the result and fix failures.** Dispatched 2026-10-29 as run [40950877262](https://github.com/optivem/shop/actions/runs/40950877262) on `802a8083`. Read it with `gh run view 40950877262 --log-failed`. If it failed, fix within scope (workflow `.github/workflows/multitier-java-acceptance-stage-cloud.yml`, Terraform, `setup-gcp.sh`), commit, and re-dispatch with `gh workflow run multitier-java-acceptance-stage-cloud.yml --ref main`; hand the new run ID to the user (do not poll). The workflow had never been linted (no `actionlint` here), so first-run issues are expected. Step 8 is done once a run is green.
+
+Provisioning is done (2026-10-29): GCP project `shop-3aa1c8` (us-central1, under the optivem.com org), Neon project `shop` (`mute-dew-88263622`, aws-us-east-2) with `shop_multitier_java_{real,stub}` + `shop_keycloak`, all three Secret Manager secrets have version 1, GitHub repo variables set; `GHCR_TOKEN` / `WORKFLOW_TOKEN` come from optivem org secrets.
 
 Naming is no longer hardcoded to `shop`: Terraform derives `system_name` from the repo name (max 14 chars, override with `SYSTEM_NAME=<name> ./setup-gcp.sh`), and it prefixes the GCP project, Cloud Run services (`<system>-multitier-java-{real,stub}-{frontend,backend,sim,stubs}`, `<system>-multitier-java-keycloak`), secrets (`<system>-multitier-java-acceptance-db`, `<system>-keycloak-db`, `<system>-keycloak-admin-password`), the Neon project (`<system>`) and Neon databases (`<system>_multitier_java_{real,stub}`, `<system>_keycloak`). The runtime SA is plain `runtime@<project>` (30-char SA limit). The workflow reads the prefix from the `SYSTEM_NAME` GitHub variable, which `setup-gcp.sh` sets. `db-connection-string` is kept for the other variants.
 
