@@ -26,12 +26,14 @@ neon_check_auth() {
   if ! command -v neonctl &> /dev/null && ! command -v npx &> /dev/null; then
     echo "❌ neonctl not found (and no npx to run it). Install Node.js, or: npm i -g neonctl@${NEONCTL_VERSION}"
     return 1
-  elif ! neon_cli me -o json &> /dev/null; then
+  fi
+  local me
+  if ! me=$(neon_cli me -o json 2> /dev/null); then
     echo "❌ Not authenticated to Neon. Run: npx -y neonctl@${NEONCTL_VERSION} login"
     echo "    (or export NEON_API_KEY=<key> from Neon console → Account settings → API keys; no account yet: https://console.neon.tech)"
     return 1
   fi
-  echo "  ✅ Neon authenticated"
+  echo "  ✅ Neon authenticated as: $(jq -r '.email // .login // .name // "unknown"' <<< "$me" 2> /dev/null || echo unknown)"
 }
 
 # Sets NEON_ORG_ARGS from NEON_ORG_ID, or the account's only org; fails if there are several to choose from
