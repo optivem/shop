@@ -30,18 +30,9 @@
 
 ## ▶ Next executable step (resume here)
 
-**Step 2 — Migration image + Cloud Run Job** (below). Then Steps 3–6 in order; Step 7 needs the user. Step 1 (Terraform) is written but unvalidated — `terraform` is not installed on this machine; `setup-gcp.sh` will validate it in Step 7. `db-connection-string` is kept: the other variants' workflows still use it.
+**Step 5 — rewrite `multitier-java-acceptance-stage-cloud.yml`** (below). Already in place for it: `system/db/Dockerfile` (migrations), `docker/keycloak/Dockerfile.cloud` (needs env `FRONTEND_URL_REAL`/`FRONTEND_URL_STUB`, `KC_HOSTNAME`, `KC_DB_URL/USERNAME/PASSWORD`, `KC_BOOTSTRAP_ADMIN_*`; build context `docker/keycloak`), `external-systems/stubs/Dockerfile` (WireMock stubs, port 8080) and `external-systems/simulators/Dockerfile` (port 9000) — simulators/stubs are NOT published to GHCR, so the workflow must build+push them to Artifact Registry. `test-config-acceptance-{real,stub}.json` already exist (URLs come from env overrides), so no config work. Then Step 6; Step 7 needs the user. Step 1 (Terraform) is written but unvalidated — `terraform` is not installed on this machine; `setup-gcp.sh` will validate it in Step 7. `db-connection-string` is kept: the other variants' workflows still use it.
 
 ## Steps
-
-### 2. Migration image + Cloud Run Job
-Add `system/db/Dockerfile` (`FROM flyway/flyway:10.21.0-alpine`, `COPY migrations /flyway/sql`). The workflow builds it, pushes to `app-images`, and runs it as Cloud Run Job `shop-mt-java-migrate` before the backend deploy.
-
-### 3. Keycloak image
-Add `docker/keycloak/Dockerfile.cloud`: Keycloak 26.0 with the Postgres driver and the realm template; at start, substitute the frontend/redirect URL into the realm and `start --import-realm` against Neon. Cloud Run URLs are deterministic (`https://<service>-<project-number>.<region>.run.app`), so the frontend URL is known before the frontend deploys.
-
-### 4. Cloud test config
-Add `system-test/typescript/config/test-config-acceptance-*.json` entries as needed (URLs come from env overrides in the workflow).
 
 ### 5. Rewrite `multitier-java-acceptance-stage-cloud.yml`
 **Principle: logically equivalent to `multitier-java-acceptance-stage.yml` except where cloud genuinely differs.** Parity requirements:
