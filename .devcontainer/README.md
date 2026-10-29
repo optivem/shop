@@ -23,6 +23,10 @@ Install once on your host machine:
 
 **Troubleshooting:** if you see an **"Add configuration to workspace / user data folder"** prompt or a template picker (Alpine, C#, Show all templates…), VS Code did **not** detect the existing config. Cancel, close the folder, and reopen `shop/` directly — do not pick a template, or you'll overwrite the shared config.
 
+**Troubleshooting (Windows):** if the container fails to start with `accessing specified distro mount service: stat /run/guest-services/distro-services/ubuntu.sock: no such file or directory`, Docker Desktop's WSL integration for your distro (e.g. Ubuntu) isn't running. In Docker Desktop → **Settings → Resources → WSL Integration**, enable your distro and click **Apply & Restart**. If it's already enabled, run `wsl --shutdown`, restart Docker Desktop, and try again. This often breaks after a Docker Desktop update, because the distro integration service doesn't always come back up.
+
+**Troubleshooting (Windows):** if every git command in the container prints `warning: safe.directory 'C:/...' not absolute`, your Windows `~/.gitconfig` has `safe.directory` entries with Windows paths, and Dev Containers copies that file into the container. The warnings are harmless, but the proper fix is on the host. `safe.directory` is only needed for repos owned by a *different* user. Check the folder's owner with `(Get-Acl <folder>).Owner` in PowerShell. If it's your own account, the entries are stale, so remove them on Windows with `git config --global --unset-all safe.directory`. If git on Windows later reports "dubious ownership", fix the ownership with `takeown /f <folder> /r /d y` instead of adding `safe.directory` entries back.
+
 ## Deploy to Google Cloud Run
 
 Run these inside the container terminal:
