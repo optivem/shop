@@ -9,12 +9,24 @@ echo " GCP Infrastructure Setup (Terraform)"
 echo "========================================="
 echo ""
 
+# Print the install command for the detected OS (reproducible route: reopen the repo in the devcontainer)
+install_hint() {
+  local winget_id="$1" brew_pkg="$2" apt_note="$3"
+  case "$(uname -s)" in
+    MINGW*|MSYS*|CYGWIN*) echo "   Install: winget install --id $winget_id -e   (then restart the terminal)" ;;
+    Darwin*)              echo "   Install: brew install $brew_pkg" ;;
+    *)                    echo "   Install: $apt_note" ;;
+  esac
+  echo "   Or reopen the repo in the devcontainer, which has every tool pinned."
+}
+
 # Check prerequisites
 echo "Checking prerequisites..."
 PREREQ_OK=true
 
 if ! command -v gcloud &> /dev/null; then
-  echo "❌ gcloud CLI not found. Install from: https://cloud.google.com/sdk/docs/install"
+  echo "❌ gcloud CLI not found."
+  install_hint Google.CloudSDK --cask\ google-cloud-sdk "https://cloud.google.com/sdk/docs/install"
   PREREQ_OK=false
 else
   echo "  ✅ gcloud CLI found"
@@ -28,7 +40,8 @@ else
 fi
 
 if ! command -v terraform &> /dev/null; then
-  echo "❌ terraform CLI not found. Install from: https://www.terraform.io/downloads"
+  echo "❌ terraform CLI not found."
+  install_hint Hashicorp.Terraform hashicorp/tap/terraform "https://developer.hashicorp.com/terraform/install"
   PREREQ_OK=false
 else
   echo "  ✅ terraform CLI found"

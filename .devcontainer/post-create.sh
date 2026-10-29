@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Named volumes are created root-owned; the login state in them must be writable by vscode
+sudo chown -R "$(id -u):$(id -g)" "$HOME/.config/gcloud" "$HOME/.config/gh"
+
 echo "=== Verifying devcontainer tools ==="
 echo ""
 
@@ -26,7 +29,8 @@ echo "=== Next steps ==="
 echo ""
 echo "1. Authenticate:"
 echo "     gh auth login"
-echo "     gcloud auth login"
+echo "     gcloud auth login --no-launch-browser"
+echo "     gcloud auth application-default login --no-launch-browser"
 echo ""
 echo "2. Optional: Set up cloud infrastructure (GCP)"
 echo "     cd terraform"

@@ -6,7 +6,7 @@
       "version": "2.67.0"
     },
     "ghcr.io/dhoeric/features/google-cloud-cli:1": {
-      "version": "latest"
+      "version": "500.0.0"
     },
     "ghcr.io/devcontainers/features/terraform:1": {
       "version": "1.10.3"
@@ -31,6 +31,10 @@
       }
     }
   },
+  "mounts": [
+    "source=shop-gcloud-config,target=/home/vscode/.config/gcloud,type=volume",
+    "source=shop-gh-config,target=/home/vscode/.config/gh,type=volume"
+  ],
   "forwardPorts": [],
   "postCreateCommand": "bash .devcontainer/post-create.sh",
   "remoteUser": "vscode"
