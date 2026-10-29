@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # Tear down what setup-gcp.sh creates: the GCP project (Terraform), the Neon project,
 # GitHub repo variables/secrets and deploy-config.yml
@@ -133,7 +134,7 @@ echo ""
 # Remove local config
 echo "Step 4/4: Removing local config..."
 cd - > /dev/null
-rm -f deploy-config.yml
+rm -f "$ROOT_DIR/deploy-config.yml"
 echo "  ✅ deploy-config.yml removed"
 echo ""
 

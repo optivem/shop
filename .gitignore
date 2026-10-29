@@ -25,3 +25,6 @@ test-results/
 # ATDD driver runtime artefacts
 classify.log
 .gh-optivem/
+
+# Written by setup-gcp.sh (per machine)
+deploy-config.yml

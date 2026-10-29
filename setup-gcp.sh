@@ -7,6 +7,7 @@ set -euo pipefail
 # Usage: ./setup-gcp.sh [--yes]   (--yes applies Terraform plans that change/destroy resources without asking)
 
 AUTO_APPROVE=false
+ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
 [[ "${1:-}" == "--yes" ]] && AUTO_APPROVE=true
 
 echo "========================================="
@@ -301,7 +302,7 @@ if [[ -n "$NEON_URL" ]]; then
 fi
 
 # Write local config
-cat > deploy-config.yml <<EOF
+cat > "$ROOT_DIR/deploy-config.yml" <<EOF
 deployment-target: cloud-run
 cloud-run:
   project-id: $PROJECT_ID
