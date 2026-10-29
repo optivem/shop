@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Tear down Google Cloud infrastructure using Terraform
-# Deletes the GCP project and removes GitHub repo variables/secrets
+# Tear down what setup-gcp.sh creates: the GCP project (Terraform), the Neon project,
+# GitHub repo variables/secrets and deploy-config.yml
 
 echo "========================================="
 echo " GCP Infrastructure Teardown"
@@ -25,6 +25,10 @@ if ! command -v gcloud &> /dev/null; then
   exit 1
 fi
 
+# shellcheck source=terraform/neon.sh
+source "$(dirname "$0")/terraform/neon.sh"
+neon_check_auth || exit 1
+
 # Terraform credentials: ADC if present, else the 'gcloud auth login' session token
 if ! gcloud auth application-default print-access-token &> /dev/null; then
   GOOGLE_OAUTH_ACCESS_TOKEN=$(gcloud auth print-access-token) || { echo "❌ Run: gcloud auth login --no-launch-browser"; exit 1; }
@@ -44,6 +48,7 @@ if [[ -z "$STATE_PROJECT" ]]; then
 fi
 init_state_backend "${STATE_PROJECT}-tfstate" "$REPO" > /dev/null
 PROJECT_ID=$(terraform output -raw project_id 2> /dev/null) || PROJECT_ID=""
+SYSTEM=$(terraform output -raw system_name 2> /dev/null) || SYSTEM=""
 cd - > /dev/null
 
 if [[ -z "$PROJECT_ID" ]]; then
@@ -51,10 +56,15 @@ if [[ -z "$PROJECT_ID" ]]; then
   exit 1
 fi
 
+neon_resolve_org || exit 1
+NEON_PROJECT_ID=$(neon_find_project "$SYSTEM") || exit 1
+
 echo "  GCP Project: $PROJECT_ID"
+echo "  Neon project: ${NEON_PROJECT_ID:-(none named '$SYSTEM')}"
 echo ""
 echo "⚠️  This will permanently delete:"
 echo "     - GCP project '$PROJECT_ID' and ALL its resources"
+[[ -n "$NEON_PROJECT_ID" ]] && echo "     - Neon project '$SYSTEM' ($NEON_PROJECT_ID) and ALL its databases"
 echo "     - GitHub repo variables (GCP_PROJECT_ID, GCP_REGION, etc.)"
 echo "     - GitHub repo secret (NEON_DATABASE_URL)"
 echo ""
@@ -75,19 +85,28 @@ BILLING_ACCOUNT=$(gcloud billing accounts list --format="value(name)" --limit=1)
 }
 
 # Terraform destroy
-echo "Step 1/3: Destroying infrastructure with Terraform..."
+echo "Step 1/4: Destroying infrastructure with Terraform..."
 cd "$(dirname "$0")/terraform"
 terraform destroy \
   -var="github_repo=$REPO" \
   -var="billing_account_id=$BILLING_ACCOUNT" \
-  -var="system_name=${SYSTEM_NAME:-}" \
+  -var="system_name=$SYSTEM" \
   -auto-approve
 
 echo "  ✅ GCP infrastructure destroyed"
 echo ""
 
+echo "Step 2/4: Deleting the Neon project..."
+if [[ -n "$NEON_PROJECT_ID" ]]; then
+  neon_cli projects delete "$NEON_PROJECT_ID" > /dev/null
+  echo "  ✅ Neon project $NEON_PROJECT_ID deleted"
+else
+  echo "  (skipped: no Neon project named '$SYSTEM')"
+fi
+echo ""
+
 # Remove GitHub variables and secrets
-echo "Step 2/3: Removing GitHub repo variables and secrets..."
+echo "Step 3/4: Removing GitHub repo variables and secrets..."
 # Best-effort deletes — variable/secret may already be gone. Soft-fail but
 # surface any non-"not found" stderr so auth/scope issues stay visible.
 delete_gh_thing() {
@@ -112,7 +131,7 @@ echo "  ✅ GitHub variables and secrets removed"
 echo ""
 
 # Remove local config
-echo "Step 3/3: Removing local config..."
+echo "Step 4/4: Removing local config..."
 cd - > /dev/null
 rm -f deploy-config.yml
 echo "  ✅ deploy-config.yml removed"
@@ -122,9 +141,7 @@ echo "========================================="
 echo " Teardown Complete!"
 echo "========================================="
 echo ""
-echo "  All GCP resources have been removed."
+echo "  All GCP and Neon resources have been removed."
 echo "  The shared Terraform state project ($STATE_PROJECT) is kept for other systems."
-echo "  The Neon project (named after the system) is kept: delete it in https://console.neon.tech"
-echo "  or with: npx -y neonctl@8.13.2 projects delete <project-id>"
 echo "  Your GitHub Actions will fall back to Docker deployment."
 echo ""

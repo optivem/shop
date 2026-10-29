@@ -25,18 +25,8 @@ install_hint() {
   echo "   Or reopen the repo in the devcontainer, which has every tool pinned."
 }
 
-# Neon is driven by neonctl (pinned; npx fallback, so no global install is needed)
-NEONCTL_VERSION=8.13.2
-NEON_REGION=aws-us-east-2   # closest Neon region to us-central1
-NEON_ROLE=neondb_owner
-
-neon_cli() {
-  if command -v neonctl &> /dev/null; then
-    neonctl "$@" --no-analytics
-  else
-    npx -y "neonctl@${NEONCTL_VERSION}" "$@" --no-analytics
-  fi
-}
+# shellcheck source=terraform/neon.sh
+source "$(dirname "$0")/terraform/neon.sh"
 
 # Check prerequisites
 echo "Checking prerequisites..."
@@ -95,16 +85,7 @@ elif [[ -n "${gcloud_active:-}" ]]; then
   echo "  ✅ Google Cloud authenticated as: $GCP_ACCOUNT"
 fi
 
-if ! command -v neonctl &> /dev/null && ! command -v npx &> /dev/null; then
-  echo "❌ neonctl not found (and no npx to run it). Install Node.js, or: npm i -g neonctl@${NEONCTL_VERSION}"
-  PREREQ_OK=false
-elif ! neon_cli me -o json &> /dev/null; then
-  echo "❌ Not authenticated to Neon. Run: npx -y neonctl@${NEONCTL_VERSION} login"
-  echo "    (or export NEON_API_KEY=<key> from Neon console → Account settings → API keys; no account yet: https://console.neon.tech)"
-  PREREQ_OK=false
-else
-  echo "  ✅ Neon authenticated"
-fi
+neon_check_auth || PREREQ_OK=false
 
 # Terraform's google provider prefers Application Default Credentials; without them, hand it a token from
 # the 'gcloud auth login' session (valid ~1h, enough for one apply). Avoids the separate ADC login, which
@@ -222,37 +203,16 @@ echo "  ✅ GCP_SERVICE_ACCOUNT = $SA_EMAIL"
 echo "  ✅ SYSTEM_NAME = $SYSTEM"
 
 # Neon: one project named after the system, one database per stack + Keycloak, all owned by the default role.
-# Nothing is clicked in the console and credentials never touch Terraform state: neonctl → Secret Manager.
-# neonctl list commands print either a bare array or {<key>: [...]}; normalize to an array
-neon_items() { jq -c --arg k "$1" 'if type == "array" then . else (.[$k] // []) end'; }
-
 # Sets db_json ({host, port, user, password}) for the direct (non-pooler) endpoint
 ensure_neon() {
-  local org_args=() orgs
-  if [[ -n "${NEON_ORG_ID:-}" ]]; then
-    org_args=(--org-id "$NEON_ORG_ID")
-  else
-    orgs=$(neon_cli orgs list -o json 2> /dev/null | neon_items organizations) || orgs="[]"
-    if [[ "$(jq length <<< "$orgs")" -eq 1 ]]; then
-      org_args=(--org-id "$(jq -r '.[0].id' <<< "$orgs")")
-    elif [[ "$(jq length <<< "$orgs")" -gt 1 ]]; then
-      echo "❌ Your Neon account has several organizations. Pick one and re-run:"
-      jq -r '.[] | "     NEON_ORG_ID=\(.id) ./setup-gcp.sh    # \(.name)"' <<< "$orgs"
-      exit 1
-    fi
+  neon_resolve_org || exit 1
+  local project_id
+  project_id=$(neon_find_project "$SYSTEM") || exit 1
+  if [[ -z "$project_id" ]]; then
+    echo "  Creating Neon project '$SYSTEM' ($NEON_REGION)..."
+    project_id=$(neon_cli projects create --name "$SYSTEM" --region-id "$NEON_REGION" ${NEON_ORG_ARGS[@]+"${NEON_ORG_ARGS[@]}"} \
+      --no-secrets -o json | jq -r '.project.id // .id')
   fi
-
-  local project_id matches
-  matches=$(neon_cli projects list ${org_args[@]+"${org_args[@]}"} -o json | neon_items projects | jq -c --arg n "$SYSTEM" '[.[] | select(.name == $n)]')
-  case "$(jq length <<< "$matches")" in
-    0)
-      echo "  Creating Neon project '$SYSTEM' ($NEON_REGION)..."
-      project_id=$(neon_cli projects create --name "$SYSTEM" --region-id "$NEON_REGION" ${org_args[@]+"${org_args[@]}"} --no-secrets -o json \
-        | jq -r '.project.id // .id')
-      ;;
-    1) project_id=$(jq -r '.[0].id' <<< "$matches") ;;
-    *) echo "❌ Several Neon projects are named '$SYSTEM'; delete or rename the extras and re-run."; exit 1 ;;
-  esac
   echo "  ✅ Neon project: $SYSTEM ($project_id)"
 
   local existing db
