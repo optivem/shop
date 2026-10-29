@@ -8,12 +8,11 @@ terraform {
   }
 }
 
+# No default project: it is created here (a provider can't depend on a resource); every resource sets project explicitly
 provider "google" {
-  project = google_project.this.project_id
-  region  = var.region
+  region = var.region
 }
 
 provider "google-beta" {
-  project = google_project.this.project_id
-  region  = var.region
+  region = var.region
 }

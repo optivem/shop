@@ -8,17 +8,13 @@ locals {
 resource "google_project" "this" {
   name            = local.system_name
   project_id      = "${local.system_name}-${random_id.project_suffix.hex}"
+  # Set on the project itself so billing is linked before any API is enabled (Cloud Run requires it)
+  billing_account = var.billing_account_id
   auto_create_network = false
 }
 
 resource "random_id" "project_suffix" {
   byte_length = 3
-}
-
-# Link billing account
-resource "google_billing_project_info" "this" {
-  billing_account_id = var.billing_account_id
-  project_id         = google_project.this.project_id
 }
 
 # Enable required APIs
@@ -51,7 +47,6 @@ resource "google_artifact_registry_repository" "app_images" {
 resource "google_iam_workload_identity_pool" "github_actions" {
   project                   = google_project.this.project_id
   workload_identity_pool_id = "github-actions"
-  location                  = "global"
   display_name              = "GitHub Actions"
 
   depends_on = [google_project_service.required_apis]
@@ -62,7 +57,6 @@ resource "google_iam_workload_identity_pool_provider" "github" {
   project                            = google_project.this.project_id
   workload_identity_pool_id          = google_iam_workload_identity_pool.github_actions.workload_identity_pool_id
   workload_identity_pool_provider_id = "github"
-  location                           = "global"
   display_name                       = "GitHub"
 
   attribute_mapping = {
