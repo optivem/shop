@@ -25,6 +25,19 @@ install_hint() {
   echo "   Or reopen the repo in the devcontainer, which has every tool pinned."
 }
 
+# Neon is driven by neonctl (pinned; npx fallback, so no global install is needed)
+NEONCTL_VERSION=8.13.2
+NEON_REGION=aws-us-east-2   # closest Neon region to us-central1
+NEON_ROLE=neondb_owner
+
+neon_cli() {
+  if command -v neonctl &> /dev/null; then
+    neonctl "$@" --no-analytics
+  else
+    npx -y "neonctl@${NEONCTL_VERSION}" "$@" --no-analytics
+  fi
+}
+
 # Check prerequisites
 echo "Checking prerequisites..."
 PREREQ_OK=true
@@ -80,6 +93,17 @@ if [[ -z "${gcloud_active:-}" ]]; then
 elif [[ -n "${gcloud_active:-}" ]]; then
   GCP_ACCOUNT=$(echo "$gcloud_active" | head -1)
   echo "  ✅ Google Cloud authenticated as: $GCP_ACCOUNT"
+fi
+
+if ! command -v neonctl &> /dev/null && ! command -v npx &> /dev/null; then
+  echo "❌ neonctl not found (and no npx to run it). Install Node.js, or: npm i -g neonctl@${NEONCTL_VERSION}"
+  PREREQ_OK=false
+elif ! neon_cli me -o json &> /dev/null; then
+  echo "❌ Not authenticated to Neon. Run: npx -y neonctl@${NEONCTL_VERSION} login"
+  echo "    (or export NEON_API_KEY=<key> from Neon console → Account settings → API keys; no account yet: https://console.neon.tech)"
+  PREREQ_OK=false
+else
+  echo "  ✅ Neon authenticated"
 fi
 
 # Terraform's google provider prefers Application Default Credentials; without them, hand it a token from
@@ -198,41 +222,12 @@ echo "  ✅ GCP_SERVICE_ACCOUNT = $SA_EMAIL"
 echo "  ✅ SYSTEM_NAME = $SYSTEM"
 
 # Neon: one project named after the system, one database per stack + Keycloak, all owned by the default role.
-# Driven by neonctl (pinned; npx fallback) so nothing is clicked in the console and credentials never touch
-# Terraform state: they go straight from neonctl into Secret Manager.
-NEONCTL_VERSION=8.13.2
-NEON_REGION=aws-us-east-2   # closest Neon region to us-central1
-NEON_ROLE=neondb_owner
-
-neon_cli() {
-  if command -v neonctl &> /dev/null; then
-    neonctl "$@" --no-analytics
-  else
-    npx -y "neonctl@${NEONCTL_VERSION}" "$@" --no-analytics
-  fi
-}
-
+# Nothing is clicked in the console and credentials never touch Terraform state: neonctl → Secret Manager.
 # neonctl list commands print either a bare array or {<key>: [...]}; normalize to an array
 neon_items() { jq -c --arg k "$1" 'if type == "array" then . else (.[$k] // []) end'; }
 
 # Sets db_json ({host, port, user, password}) for the direct (non-pooler) endpoint
 ensure_neon() {
-  if ! command -v neonctl &> /dev/null && ! command -v npx &> /dev/null; then
-    echo "❌ Neither neonctl nor npx found. Install Node.js (npx) or: npm i -g neonctl@${NEONCTL_VERSION}"
-    exit 1
-  fi
-  if ! neon_cli me -o json &> /dev/null; then
-    echo "  Signing in to Neon (browser; sign up at https://console.neon.tech first if you have no account)..."
-    neon_cli login || true
-  fi
-  if ! neon_cli me -o json &> /dev/null; then
-    echo "❌ Not authenticated to Neon. Either run: npx -y neonctl@${NEONCTL_VERSION} login"
-    echo "   or export NEON_API_KEY=<key> (Neon console → Account settings → API keys),"
-    echo "   then re-run './setup-gcp.sh' (everything before this step is skipped as already done)."
-    exit 1
-  fi
-  echo "  ✅ Neon authenticated"
-
   local org_args=() orgs
   if [[ -n "${NEON_ORG_ID:-}" ]]; then
     org_args=(--org-id "$NEON_ORG_ID")

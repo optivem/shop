@@ -40,7 +40,7 @@ Naming is no longer hardcoded to `shop`: Terraform derives `system_name` from th
 `./setup-gcp.sh` (devcontainer, repo root) now drives the whole step and tells the user every manual action:
 1. Prerequisite checks: gcloud / gh / terraform / jq installed; `gh auth login`, `gcloud auth login`, `gcloud auth application-default login --no-launch-browser` — prints the fix command for each ❌. Needs a GCP billing account.
 2. Terraform plan → user types `yes` → apply. Sets repo variables `GCP_PROJECT_ID`, `GCP_REGION`, `GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_SERVICE_ACCOUNT`, `SYSTEM_NAME`.
-3. Neon via `neonctl` (pinned 8.13.2, npx fallback): signs in with the browser if needed (`neonctl login`, or `NEON_API_KEY`), finds/creates Neon project `<system>` in `aws-us-east-2`, creates any missing databases owned by `neondb_owner`, and pipes the direct-endpoint credentials into both DB secrets; Keycloak admin password is entered or generated. Skips secrets that already have a version (safe to re-run). `NEON_ORG_ID=<id>` if the Neon account has several orgs.
+3. Neon via `neonctl` (pinned 8.13.2, npx fallback): Neon login (`npx -y neonctl@8.13.2 login` or `NEON_API_KEY`) is checked with the other prerequisites, finds/creates Neon project `<system>` in `aws-us-east-2`, creates any missing databases owned by `neondb_owner`, and pipes the direct-endpoint credentials into both DB secrets; Keycloak admin password is entered or generated. Skips secrets that already have a version (safe to re-run). `NEON_ORG_ID=<id>` if the Neon account has several orgs.
 4. Warns if GitHub secrets `GHCR_TOKEN` / `WORKFLOW_TOKEN` are missing and prints the `gh secret set` commands.
 5. User tells the agent "provisioned".
 
