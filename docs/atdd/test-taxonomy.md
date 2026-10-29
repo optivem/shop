@@ -79,6 +79,10 @@ The `Stub` / `Real` marker is load-bearing, not decorative: `component-tests.yam
 '*StubConsumabilityContractTest'`), which is what keeps the `Real` twins — they need a
 live simulator — out of the commit stage.
 
+### Real-simulator image build needs BuildKit
+
+The real-parity contract suite builds the simulator image with a separate Gradle task, not Testcontainers' `ImageFromDockerfile`. That class drives docker-java's classic builder, which rejects the simulator's `RUN --mount=type=cache` ("the --mount option requires BuildKit"). Testcontainers still owns the container lifecycle; only the image build moves out. The task is not a `dependsOn` of `contractTest`, so other contract suites don't pay for it.
+
 ### Why counterparty comes first in the path, and why `external/` has no twin
 
 Everywhere else in the suite the folder leads with `latest/` or `legacy/` — the "after" and
