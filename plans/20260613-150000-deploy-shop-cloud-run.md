@@ -50,7 +50,7 @@ Confirm the `github-deployer` SA and `app-images` repo exist. No new Terraform n
 ### Phase 2 — Database (Neon)
 1. Create a Neon project; create a **branch/database per variant** (e.g. `shop-mt-java`) so the shared Flyway schema can't collide across live variants.
 2. Put the connection string in the existing secret: `gcloud secrets versions add db-connection-string --data-file=-` (or via `terraform.tfvars` → `neon_database_url`).
-3. **Gotcha — URL vs discrete vars:** the backend wants `POSTGRES_DB_HOST/PORT/NAME/USER/PASSWORD` (see compose), but Neon hands you one URL. Either (a) store the five discrete values as separate secrets, or (b) add a tiny env-mapping step in the backend entrypoint that parses the URL. Pick (a) for v1 — no code change, and it keeps the same env contract the app already has.
+3. **Gotcha — URL vs discrete vars:** the backend wants `POSTGRES_DB_HOST/PORT/NAME/USER/PASSWORD` (see compose), but Neon hands you one URL. Either (a) store the five discrete values as separate secrets, or (b) add a tiny env-mapping step in the backend entrypoint that parses the URL. Pick (a) for v1 — no code change, and it keeps the same env contract the app already has. **Cost:** Secret Manager bills $0.06/version/location/month with 6 versions free per billing account, so store the five values as **one JSON secret per variant** (6 versions total ≈ $0), not 30 separate secrets (~$1.44/month).
 
 ### Phase 3 — Build & push images
 Dockerfiles exist, so per service:
@@ -101,10 +101,16 @@ For the demo usage shape (idle most of the month, bursts during sessions):
 
 Net: a parked demo is ~free; a busy month is single-digit euros.
 
-## OPEN DECISIONS (pick before executing)
+## DECISIONS (resolved)
 
-1. **Live surface area:** keep only 1–2 variants live and deploy the rest on-demand, **or** keep all six warm-able? (Recommend: 1–2 live, rest deployable via CI tag.)
-2. **Backend exposure:** backend public, **or** `ingress=internal` + frontend-only via Cloud Run service-to-service auth? (Recommend: internal for backend; only the frontend and sim need to be reachable — sim only if you want to show stub responses.)
-3. **DB isolation:** Neon branch per variant **or** one shared DB? (Recommend: branch per variant — same Flyway schema, but no cross-variant interference.)
-4. **Region:** stay on `us-central1`, or `europe-west1` for EU-session latency? (Both Tier-1 / free-tier eligible.)
-5. **CI trigger:** tag-based release **or** push-to-`main` auto-deploy? (Recommend: tag.)
+1. **Live surface area:** deploy `multitier/java` (React frontend + Java backend) with the system tests in **TypeScript**. Other variants deploy on demand. The existing `multitier-java-*-stage-cloud.yml` workflows run Java system tests today — switching them to TypeScript is part of this plan.
+2. **Backend exposure:** public, restricted by CORS (`ALLOWED_ORIGINS`).
+3. **DB isolation:** Neon branch per variant.
+4. **Region:** `us-central1`.
+5. **CI trigger:** manual dispatch for acceptance/QA/prod cloud stages, matching the non-cloud QA/prod stages. The cloud acceptance hourly cron is present but commented out (done) to keep demo costs down.
+
+## Still to do
+
+- Update Phase 6 to reuse the existing `*-stage-cloud.yml` workflows instead of adding a new one.
+- Update the stale `VERSION` reference in Phase 3 (now `1.0.220`).
+- Verify whether `frontend-react` reads `BACKEND_API_URL` at runtime or build time.

@@ -118,10 +118,10 @@ Google Cloud Project
 
 - **Free tier eligible**: Most resources are free or have generous free quotas
 - **Artifact Registry**: 0.5 GB free storage per month
-- **Secret Manager**: $6/month per active secret (1 secret)
+- **Secret Manager**: $0.06/month per active secret version per location; first 6 versions free per billing account (1 secret ≈ $0)
 - **Cloud Run**: Free tier includes 180,000 GB-seconds/month
 
-**Total estimated cost**: $6/month (Secret Manager only)
+**Total estimated cost**: ~$0/month at demo scale
 
 ## Troubleshooting
 

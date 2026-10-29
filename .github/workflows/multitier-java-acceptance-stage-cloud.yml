@@ -1,6 +1,9 @@
 name: multitier-java-acceptance-stage-cloud
 
 on:
+  # Cron off to keep demo costs down; enable for a real application.
+  # schedule:
+  #   - cron: '0 * * * *'  # Run every hour
   workflow_dispatch:
     inputs:
       commit-sha:
