@@ -197,6 +197,93 @@ echo "  ✅ GCP_WORKLOAD_IDENTITY_PROVIDER"
 echo "  ✅ GCP_SERVICE_ACCOUNT = $SA_EMAIL"
 echo "  ✅ SYSTEM_NAME = $SYSTEM"
 
+# Neon: one project named after the system, one database per stack + Keycloak, all owned by the default role.
+# Driven by neonctl (pinned; npx fallback) so nothing is clicked in the console and credentials never touch
+# Terraform state: they go straight from neonctl into Secret Manager.
+NEONCTL_VERSION=8.13.2
+NEON_REGION=aws-us-east-2   # closest Neon region to us-central1
+NEON_ROLE=neondb_owner
+
+neon_cli() {
+  if command -v neonctl &> /dev/null; then
+    neonctl "$@" --no-analytics
+  else
+    npx -y "neonctl@${NEONCTL_VERSION}" "$@" --no-analytics
+  fi
+}
+
+# neonctl list commands print either a bare array or {<key>: [...]}; normalize to an array
+neon_items() { jq -c --arg k "$1" 'if type == "array" then . else (.[$k] // []) end'; }
+
+# Sets db_json ({host, port, user, password}) for the direct (non-pooler) endpoint
+ensure_neon() {
+  if ! command -v neonctl &> /dev/null && ! command -v npx &> /dev/null; then
+    echo "❌ Neither neonctl nor npx found. Install Node.js (npx) or: npm i -g neonctl@${NEONCTL_VERSION}"
+    exit 1
+  fi
+  if ! neon_cli me -o json &> /dev/null; then
+    echo "  Signing in to Neon (browser; sign up at https://console.neon.tech first if you have no account)..."
+    neon_cli login || true
+  fi
+  if ! neon_cli me -o json &> /dev/null; then
+    echo "❌ Not authenticated to Neon. Either run: npx -y neonctl@${NEONCTL_VERSION} login"
+    echo "   or export NEON_API_KEY=<key> (Neon console → Account settings → API keys),"
+    echo "   then re-run './setup-gcp.sh' (everything before this step is skipped as already done)."
+    exit 1
+  fi
+  echo "  ✅ Neon authenticated"
+
+  local org_args=() orgs
+  if [[ -n "${NEON_ORG_ID:-}" ]]; then
+    org_args=(--org-id "$NEON_ORG_ID")
+  else
+    orgs=$(neon_cli orgs list -o json 2> /dev/null | neon_items organizations) || orgs="[]"
+    if [[ "$(jq length <<< "$orgs")" -eq 1 ]]; then
+      org_args=(--org-id "$(jq -r '.[0].id' <<< "$orgs")")
+    elif [[ "$(jq length <<< "$orgs")" -gt 1 ]]; then
+      echo "❌ Your Neon account has several organizations. Pick one and re-run:"
+      jq -r '.[] | "     NEON_ORG_ID=\(.id) ./setup-gcp.sh    # \(.name)"' <<< "$orgs"
+      exit 1
+    fi
+  fi
+
+  local project_id matches
+  matches=$(neon_cli projects list ${org_args[@]+"${org_args[@]}"} -o json | neon_items projects | jq -c --arg n "$SYSTEM" '[.[] | select(.name == $n)]')
+  case "$(jq length <<< "$matches")" in
+    0)
+      echo "  Creating Neon project '$SYSTEM' ($NEON_REGION)..."
+      project_id=$(neon_cli projects create --name "$SYSTEM" --region-id "$NEON_REGION" ${org_args[@]+"${org_args[@]}"} --no-secrets -o json \
+        | jq -r '.project.id // .id')
+      ;;
+    1) project_id=$(jq -r '.[0].id' <<< "$matches") ;;
+    *) echo "❌ Several Neon projects are named '$SYSTEM'; delete or rename the extras and re-run."; exit 1 ;;
+  esac
+  echo "  ✅ Neon project: $SYSTEM ($project_id)"
+
+  local existing db
+  existing=$(neon_cli databases list --project-id "$project_id" -o json | neon_items databases | jq -r '.[].name')
+  for db in "${DB_PREFIX}_multitier_java_real" "${DB_PREFIX}_multitier_java_stub" "${DB_PREFIX}_keycloak"; do
+    if grep -qx "$db" <<< "$existing"; then
+      echo "  ✅ Database $db exists"
+    else
+      neon_cli databases create --project-id "$project_id" --name "$db" --owner-name "$NEON_ROLE" -o json > /dev/null
+      echo "  ✅ Created database $db"
+    fi
+  done
+
+  # Direct endpoint (Flyway and Keycloak need session features the pooler lacks); parse with node so
+  # percent-encoded password characters are decoded
+  local conn
+  conn=$(neon_cli connection-string --project-id "$project_id" --role-name "$NEON_ROLE" \
+    --database-name "${DB_PREFIX}_keycloak" | grep -E '^postgres(ql)?://' | tail -1)
+  if [[ -z "$conn" ]]; then
+    echo "❌ Could not read the Neon connection string for project $project_id."
+    exit 1
+  fi
+  db_json=$(node -e 'const u = new URL(process.argv[1]); console.log(JSON.stringify({host: u.hostname, port: u.port || "5432",
+    user: decodeURIComponent(u.username), password: decodeURIComponent(u.password)}))' "$conn")
+}
+
 # Secret Manager values for multitier-java (created empty by Terraform; values never go through Terraform state)
 secret_has_version() {
   [[ -n "$(gcloud secrets versions list "$1" --project="$PROJECT_ID" --filter=state:ENABLED --limit=1 --format='value(name)')" ]]
@@ -207,28 +294,8 @@ if secret_has_version "$SYSTEM-multitier-java-acceptance-db" && secret_has_versi
   echo "  ✅ Neon credentials already stored ($SYSTEM-multitier-java-acceptance-db, $SYSTEM-keycloak-db)"
 else
   echo ""
-  echo "========================================="
-  echo " MANUAL STEP: create the Neon database"
-  echo "========================================="
-  echo "  1. Open https://console.neon.tech and create a project (region: AWS US East / us-east is closest to us-central1)."
-  echo "  2. In that project, create three databases:"
-  echo "       ${DB_PREFIX}_multitier_java_real"
-  echo "       ${DB_PREFIX}_multitier_java_stub"
-  echo "       ${DB_PREFIX}_keycloak"
-  echo "  3. Open 'Connect' and note the host (e.g. ep-xxx.us-east-2.aws.neon.tech), user and password."
-  echo "     Use the direct host, not the '-pooler' one."
-  echo ""
-  read -rp "Press Enter when the databases exist..." _
-  read -rp "Neon host: " NEON_HOST
-  read -rp "Neon user: " NEON_USER
-  read -rsp "Neon password (hidden): " NEON_PASSWORD
-  echo ""
-  if [[ -z "$NEON_HOST" || -z "$NEON_USER" || -z "$NEON_PASSWORD" ]]; then
-    echo "❌ Host, user and password are all required. Re-run './setup-gcp.sh' (Terraform steps are idempotent)."
-    exit 1
-  fi
-  db_json=$(jq -cn --arg h "$NEON_HOST" --arg u "$NEON_USER" --arg p "$NEON_PASSWORD" \
-    '{host: $h, port: "5432", user: $u, password: $p}')
+  echo "Provisioning Neon (neonctl)..."
+  ensure_neon
   for s in "$SYSTEM-multitier-java-acceptance-db" "$SYSTEM-keycloak-db"; do
     echo -n "$db_json" | gcloud secrets versions add "$s" --data-file=- --project="$PROJECT_ID" --quiet > /dev/null
     echo "  ✅ Stored $s"

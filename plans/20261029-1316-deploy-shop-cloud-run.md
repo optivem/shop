@@ -16,7 +16,7 @@
 5. **CI trigger:** manual dispatch for the cloud acceptance/QA/prod stages. The hourly cron stays commented out.
 6. **Images to Google:** the workflow **copies** the tested GHCR image (same digest) into Artifact Registry `app-images` (keyless via WIF, no PAT). Cloud Run deploys from there. Applies to our images and to the Keycloak image (quay.io).
 7. **Keycloak:** Keycloak 26 on Cloud Run (scale-to-zero) with its own Neon database, realm imported from `docker/keycloak/shop-realm.json` with the frontend URL substituted in. Smoke tests wait longer for its cold start.
-8. **Who provisions:** the user runs `setup-gcp.sh`, creates Neon, and sets GitHub environment variables. The agent writes code/config, then pauses and hands over exact commands, then dispatches and runs the first cloud acceptance workflow.
+8. **Who provisions:** the user runs `setup-gcp.sh`, which provisions GCP (Terraform) and Neon (`neonctl`, user-requested 2026-10-29 instead of console clicks) and sets the GitHub variables. The agent writes code/config, then pauses and hands over exact commands, then dispatches and runs the first cloud acceptance workflow.
 9. **Secrets:** DB credentials as **one JSON secret per variant** (Secret Manager bills per version; 6 free). Never in Terraform state: the user adds versions with `gcloud secrets versions add`.
 
 ## What's already in place (don't rebuild)
@@ -30,7 +30,7 @@
 
 ## ▶ Next executable step (resume here)
 
-**Step 7 — USER STEP (provision), step-by-step with the user.** The user runs `./setup-gcp.sh` and pastes output; the agent helps with each ❌ / manual prompt. Wait for "provisioned", then Step 8. Steps 1–6 are done. Terraform passes `terraform validate` + `fmt` (2026-10-29); `setup-gcp.sh` is its first real apply. Workflow not yet linted since the rename (no `actionlint` here). Neither `gh` nor `gcloud` is logged in yet in the devcontainer.
+**Step 7 — USER STEP (provision), step-by-step with the user.** The user runs `./setup-gcp.sh` and pastes output; the agent helps with each ❌ / manual prompt. Wait for "provisioned", then Step 8. Steps 1–6 are done. Terraform passes `terraform validate` + `fmt` (2026-10-29); `setup-gcp.sh` is its first real apply. Workflow not yet linted since the rename (no `actionlint` here). 2026-10-29: Terraform applied (project `shop-3aa1c8`, GitHub variables set); script was stopped at the old manual Neon prompt and the Neon step is now automated — re-run `./setup-gcp.sh` to finish.
 
 Naming is no longer hardcoded to `shop`: Terraform derives `system_name` from the repo name (max 14 chars, override with `SYSTEM_NAME=<name> ./setup-gcp.sh`), and it prefixes the GCP project, Cloud Run services (`<system>-multitier-java-{real,stub}-{frontend,backend,sim,stubs}`, `<system>-multitier-java-keycloak`), secrets (`<system>-multitier-java-acceptance-db`, `<system>-keycloak-db`, `<system>-keycloak-admin-password`) and Neon databases (`<system>_multitier_java_{real,stub}`, `<system>_keycloak`). The runtime SA is plain `runtime@<project>` (30-char SA limit). The workflow reads the prefix from the `SYSTEM_NAME` GitHub variable, which `setup-gcp.sh` sets. `db-connection-string` is kept for the other variants.
 
@@ -40,7 +40,7 @@ Naming is no longer hardcoded to `shop`: Terraform derives `system_name` from th
 `./setup-gcp.sh` (devcontainer, repo root) now drives the whole step and tells the user every manual action:
 1. Prerequisite checks: gcloud / gh / terraform / jq installed; `gh auth login`, `gcloud auth login`, `gcloud auth application-default login --no-launch-browser` — prints the fix command for each ❌. Needs a GCP billing account.
 2. Terraform plan → user types `yes` → apply. Sets repo variables `GCP_PROJECT_ID`, `GCP_REGION`, `GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_SERVICE_ACCOUNT`, `SYSTEM_NAME`.
-3. MANUAL: create the Neon project + the three databases (names printed), then paste host/user/password → script stores both DB secrets; Keycloak admin password is entered or generated. Skips secrets that already have a version (safe to re-run).
+3. Neon via `neonctl` (pinned 8.13.2, npx fallback): signs in with the browser if needed (`neonctl login`, or `NEON_API_KEY`), finds/creates Neon project `<system>` in `aws-us-east-2`, creates any missing databases owned by `neondb_owner`, and pipes the direct-endpoint credentials into both DB secrets; Keycloak admin password is entered or generated. Skips secrets that already have a version (safe to re-run). `NEON_ORG_ID=<id>` if the Neon account has several orgs.
 4. Warns if GitHub secrets `GHCR_TOKEN` / `WORKFLOW_TOKEN` are missing and prints the `gh secret set` commands.
 5. User tells the agent "provisioned".
 
