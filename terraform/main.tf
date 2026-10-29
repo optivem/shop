@@ -90,36 +90,39 @@ resource "google_service_account" "github_deployer" {
 resource "google_service_account_iam_member" "github_wif_workload_identity" {
   service_account_id = google_service_account.github_deployer.name
   role               = "roles/iam.workloadIdentityUser"
-  member             = "principalSet://iam.googleapis.com/projects/${google_project.this.number}/locations/global/workloadIdentityPools/${google_iam_workload_identity_pool.github_actions.workload_identity_pool_id}/attribute.repository/${var.github_repo}"
+  member             = local.github_wif_principal
 }
 
 # IAM Bindings: Project roles
 locals {
-  github_wif_principal = "principalSet://iam.googleapis.com/projects/${google_project.this.number}/locations/global/workloadIdentityPools/${google_iam_workload_identity_pool.github_actions.workload_identity_pool_id}/attribute.repository/${var.github_repo}"
+  # The workflows impersonate github-deployer (auth action's service_account input), so the deploy roles
+  # belong to that service account; the WIF principal only gets workloadIdentityUser on it
+  github_deployer_member = "serviceAccount:${google_service_account.github_deployer.email}"
+  github_wif_principal   = "principalSet://iam.googleapis.com/projects/${google_project.this.number}/locations/global/workloadIdentityPools/${google_iam_workload_identity_pool.github_actions.workload_identity_pool_id}/attribute.repository/${var.github_repo}"
 }
 
 resource "google_project_iam_member" "github_run_admin" {
   project = google_project.this.project_id
   role    = "roles/run.admin"
-  member  = local.github_wif_principal
+  member  = local.github_deployer_member
 }
 
 resource "google_project_iam_member" "github_sa_user" {
   project = google_project.this.project_id
   role    = "roles/iam.serviceAccountUser"
-  member  = local.github_wif_principal
+  member  = local.github_deployer_member
 }
 
 resource "google_project_iam_member" "github_artifact_registry_writer" {
   project = google_project.this.project_id
   role    = "roles/artifactregistry.writer"
-  member  = local.github_wif_principal
+  member  = local.github_deployer_member
 }
 
 resource "google_project_iam_member" "github_secret_accessor" {
   project = google_project.this.project_id
   role    = "roles/secretmanager.secretAccessor"
-  member  = local.github_wif_principal
+  member  = local.github_deployer_member
 }
 
 # Secret Manager: Database connection
@@ -174,5 +177,5 @@ resource "google_secret_manager_secret_iam_member" "runtime_accessor" {
 resource "google_service_account_iam_member" "deployer_acts_as_runtime" {
   service_account_id = google_service_account.runtime.name
   role               = "roles/iam.serviceAccountUser"
-  member             = local.github_wif_principal
+  member             = local.github_deployer_member
 }
