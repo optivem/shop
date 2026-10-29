@@ -6,10 +6,10 @@ locals {
 }
 
 resource "google_project" "this" {
-  name            = local.system_name
-  project_id      = "${local.system_name}-${random_id.project_suffix.hex}"
+  name       = local.system_name
+  project_id = "${local.system_name}-${random_id.project_suffix.hex}"
   # Set on the project itself so billing is linked before any API is enabled (Cloud Run requires it)
-  billing_account = var.billing_account_id
+  billing_account     = var.billing_account_id
   auto_create_network = false
 }
 
@@ -35,10 +35,10 @@ resource "google_project_service" "required_apis" {
 
 # Artifact Registry repository
 resource "google_artifact_registry_repository" "app_images" {
-  project      = google_project.this.project_id
-  location     = var.region
+  project       = google_project.this.project_id
+  location      = var.region
   repository_id = "app-images"
-  format       = "DOCKER"
+  format        = "DOCKER"
 
   depends_on = [google_project_service.required_apis]
 }

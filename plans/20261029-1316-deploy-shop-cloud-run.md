@@ -1,6 +1,6 @@
 # Deploy `shop` for real — Cloud Run + Neon
 
-> 🤖 **Picked up by agent** — `c027518f5d86` at `2026-10-29T15:42:58Z`
+> 🤖 **Picked up by agent** — `b2d83c7ed0bc` at `2026-10-29T20:03:26Z`
 
 ## TL;DR
 
@@ -30,7 +30,7 @@
 
 ## ▶ Next executable step (resume here)
 
-**Step 7 — USER STEP (provision), step-by-step with the user.** The user runs `./setup-gcp.sh` and pastes output; the agent helps with each ❌ / manual prompt. Wait for "provisioned", then Step 8. Steps 1–6 are done (Terraform still unvalidated — no `terraform` here; `setup-gcp.sh` is its first real run; workflow not yet linted since the rename — no `actionlint` here).
+**Step 7 — USER STEP (provision), step-by-step with the user.** The user runs `./setup-gcp.sh` and pastes output; the agent helps with each ❌ / manual prompt. Wait for "provisioned", then Step 8. Steps 1–6 are done. Terraform passes `terraform validate` + `fmt` (2026-10-29); `setup-gcp.sh` is its first real apply. Workflow not yet linted since the rename (no `actionlint` here). Neither `gh` nor `gcloud` is logged in yet in the devcontainer.
 
 Naming is no longer hardcoded to `shop`: Terraform derives `system_name` from the repo name (max 14 chars, override with `SYSTEM_NAME=<name> ./setup-gcp.sh`), and it prefixes the GCP project, Cloud Run services (`<system>-multitier-java-{real,stub}-{frontend,backend,sim,stubs}`, `<system>-multitier-java-keycloak`), secrets (`<system>-multitier-java-acceptance-db`, `<system>-keycloak-db`, `<system>-keycloak-admin-password`) and Neon databases (`<system>_multitier_java_{real,stub}`, `<system>_keycloak`). The runtime SA is plain `runtime@<project>` (30-char SA limit). The workflow reads the prefix from the `SYSTEM_NAME` GitHub variable, which `setup-gcp.sh` sets. `db-connection-string` is kept for the other variants.
 
