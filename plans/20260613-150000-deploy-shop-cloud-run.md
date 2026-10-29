@@ -109,8 +109,25 @@ Net: a parked demo is ~free; a busy month is single-digit euros.
 4. **Region:** `us-central1`.
 5. **CI trigger:** manual dispatch for acceptance/QA/prod cloud stages, matching the non-cloud QA/prod stages. The cloud acceptance hourly cron is present but commented out (done) to keep demo costs down.
 
+## Audit findings (2026-10-29) — the existing `multitier-java-*-stage-cloud.yml` workflows cannot work as-is
+
+Nothing is provisioned: no GCP/WIF variables are set on any GitHub environment, so `setup-gcp.sh` has never been applied.
+
+| # | Gap | Fix |
+|---|---|---|
+| 1 | Cloud Run cannot pull `ghcr.io` images directly (workflows deploy GHCR digests) | Artifact Registry **remote repository** proxying GHCR (or copy images into `app-images`); add to Terraform |
+| 2 | Backend deploy sets `SPRING_PROFILES_ACTIVE=cloud` + `DATABASE_URL`, but there is no `cloud` profile; the app reads `POSTGRES_DB_HOST/PORT/NAME/USER/PASSWORD` | Drop the profile; pass the five discrete vars (one JSON secret per variant, see Phase 2) |
+| 3 | Backend listens on **8081**; workflow uses `--port=8080` | `--port=8081` |
+| 4 | Backend requires `AUTH_ISSUER_URI`, `AUTH_JWK_SET_URI`, `AUTH_AUDIENCE` (no defaults) — it won't start without an OIDC provider | Cloud Keycloak (decision below) |
+| 5 | Frontend (nginx, runtime envsubst) needs `BACKEND_API_URL`, `KEYCLOAK_URL`, `KEYCLOAK_REALM`, `KEYCLOAK_CLIENT_ID`; workflow sets none, and deploys in parallel with the backend | Runtime env confirmed (no rebuild). Deploy backend first, then frontend with `BACKEND_API_URL` = backend URL |
+| 6 | Backend needs `ERP/CLOCK/TAX_API_URL`, `EXTERNAL_SYSTEM_MODE`, `ALLOWED_ORIGINS` — workflow sets none | Set from the deployed simulator and frontend URLs |
+| 7 | No Flyway migration step | Migration Cloud Run Job (Phase 5) before the backend deploy |
+| 8 | Smoke/acceptance jobs run Java system tests | Switch to `system-test/typescript` (env vars `MYSHOP_UI_BASE_URL`, `MYSHOP_API_BASE_URL`, `ERP/CLOCK/TAX_API_BASE_URL`, `KEYCLOAK_URL`, `ENVIRONMENT`, `EXTERNAL_SYSTEM_MODE`) |
+| 9 | Phases 3–4 (manual docker build/push, hand-run `gcloud run deploy`) are obsolete: the commit stage already publishes images and the cloud workflows deploy them | Remove those phases; keep only the Artifact Registry remote repo |
+| 10 | `20261009-1521-production-readiness-gaps` item 6.1 proposes **Cloud SQL** (paid, not free-tier) | Keep Neon; reconcile that item |
+| 11 | `VERSION` reference `1.0.117` in Phase 3 is stale | Moot once Phase 3 is removed |
+
 ## Still to do
 
-- Update Phase 6 to reuse the existing `*-stage-cloud.yml` workflows instead of adding a new one.
-- Update the stale `VERSION` reference in Phase 3 (now `1.0.220`).
-- Verify whether `frontend-react` reads `BACKEND_API_URL` at runtime or build time.
+- **Keycloak decision (gap 4): Keycloak 26 on Cloud Run (scale-to-zero) + a second Neon database, importing `docker/keycloak/shop-realm.json`.** Smoke tests need a longer startup wait for its cold start. Rewrite Phases 2–6 per the table above.
+- Execute: provision GCP, set environment variables, rewrite the multitier-java cloud acceptance workflow, run it.
