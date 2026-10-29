@@ -4,10 +4,14 @@ set -euo pipefail
 # Delete EVERYTHING the current accounts can see, not just shop:
 #   - every ACTIVE GCP project visible to the gcloud account (including the Terraform state project)
 #   - every Neon project in every Neon organization (and the personal account)
-# Lists everything first and asks for a typed confirmation before deleting anything.
+# Dry run by default; with --execute it lists everything and asks for a typed confirmation before deleting.
 # GCP projects go to DELETE_REQUESTED: billing stops at once, and they can be restored for 30 days
 # (gcloud projects undelete <id>). Neon project deletion is immediate.
-# Usage: ./teardown-everything.sh
+# Usage: ./teardown-everything.sh             dry run (default): list what would be deleted, delete nothing
+#        ./teardown-everything.sh --execute   list, then delete after the typed confirmation
+
+EXECUTE=false
+[[ "${1:-}" == "--execute" ]] && EXECUTE=true
 
 echo "========================================="
 echo " Teardown EVERYTHING (all GCP + all Neon)"
@@ -30,16 +34,19 @@ echo ""
 # GCP projects
 GCP_PROJECTS=$(gcloud projects list --filter="lifecycleState:ACTIVE" --format="value(projectId)" | sort)
 
-# Neon projects: every organization, plus the personal account (stdin closed so neonctl never prompts)
+# Neon projects: every organization, or the personal account when there are none (with orgs, an org-less
+# 'projects list' prompts for one instead of printing JSON; stdin is closed so neonctl never waits)
 NEON_PROJECTS="[]"
 org_ids=$(neon_cli orgs list -o json < /dev/null 2> /dev/null | neon_items organizations | jq -r '.[].id') || org_ids=""
-for org in $org_ids ""; do
+for org in ${org_ids:-""}; do
   args=()
   [[ -n "$org" ]] && args=(--org-id "$org")
   found=$(neon_cli projects list ${args[@]+"${args[@]}"} -o json < /dev/null 2> /dev/null | neon_items projects) || found="[]"
   NEON_PROJECTS=$(jq -c -s 'add | unique_by(.id)' <<< "$NEON_PROJECTS $found")
 done
 
+$EXECUTE || echo "DRY RUN — nothing will be deleted (pass --execute to delete)"
+$EXECUTE || echo ""
 echo "GCP projects to delete:"
 if [[ -n "$GCP_PROJECTS" ]]; then
   gcloud projects list --filter="lifecycleState:ACTIVE" --format="table[no-heading](projectId,name)" | sed 's/^/     /'
@@ -57,6 +64,11 @@ echo ""
 
 if [[ -z "$GCP_PROJECTS" && "$(jq length <<< "$NEON_PROJECTS")" -eq 0 ]]; then
   echo "Nothing to delete."
+  exit 0
+fi
+
+if ! $EXECUTE; then
+  echo "DRY RUN complete — nothing was deleted. To delete all of the above: ./teardown-everything.sh --execute"
   exit 0
 fi
 
