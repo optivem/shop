@@ -1,6 +1,6 @@
 # Dev Container
 
-Reproducible development environment with `gcloud`, `gh`, `terraform`, Docker, Node 22, and Claude Code pre-installed. Works identically on Windows, macOS, and Linux.
+Reproducible development environment with `gcloud`, `gh`, `terraform`, Docker, Node 22, Java 21, .NET 8, PowerShell, and Claude Code pre-installed, plus what the Java, .NET, and TypeScript system tests need (`gh optivem`, Chromium OS libraries). Works identically on Windows, macOS, and Linux.
 
 ## Prerequisites
 

@@ -25,7 +25,24 @@ check gcloud    "gcloud --version | head -1"
 check terraform "terraform version | head -1"
 check docker    "docker --version"
 check node      "node --version"
+check java      "java -version"
+check dotnet    "dotnet --version"
+check pwsh      "pwsh --version"
 check claude    "claude --version"
+
+echo ""
+echo "=== Installing test prerequisites ==="
+echo ""
+
+# Chromium's OS libraries; each suite downloads the browser itself
+(cd system-test/typescript && npx --yes playwright install-deps chromium)
+
+# gh-optivem needs a GitHub login, so a fresh container installs it after `gh auth login`
+if gh auth status >/dev/null 2>&1; then
+  gh extension install optivem/gh-optivem || gh extension upgrade optivem/gh-optivem
+else
+  echo "  Skipped gh-optivem: run 'gh extension install optivem/gh-optivem' after 'gh auth login'"
+fi
 
 echo ""
 echo "=== Next steps ==="
