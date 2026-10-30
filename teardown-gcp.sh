@@ -79,7 +79,7 @@ fi
 echo ""
 
 # Billing account (needed for terraform destroy)
-gcloud services enable cloudbilling.googleapis.com --project="$STATE_PROJECT" --quiet
+use_state_project_for_quota "$STATE_PROJECT"
 BILLING_ACCOUNT=$(gcloud billing accounts list --billing-project="$STATE_PROJECT" --format="value(name)" --limit=1) || {
   rc=$?
   echo "  ⚠️  'gcloud billing accounts list' failed (exit $rc) — see stderr above; continuing without billing account" >&2

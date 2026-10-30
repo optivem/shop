@@ -148,6 +148,7 @@ echo "Initializing Terraform (remote state in GCS)..."
 cd "$(dirname "$0")/terraform"
 STATE_BUCKET=$(ensure_state_backend "$STATE_PROJECT" "$BILLING_ACCOUNT")
 echo "  ✅ State: gs://$STATE_BUCKET/$REPO"
+use_state_project_for_quota "$STATE_PROJECT"
 init_state_backend "$STATE_BUCKET" "$REPO"
 
 # Plan
