@@ -7,7 +7,9 @@
 
 ## ▶ Next executable step (resume here)
 
-U1 is done and committed. Next: U2 (execute the refined `plans/backlog/p4-maintenance/20260917-1811-frontend-major-upgrades.md`, Vite 7 -> Vitest 3 -> React 19, one commit per step), then Wave 2 in parallel: U3 (`SecurityConfigTest` additions) and U4 (system-test driver items).
+U1 and U3 are done and committed. U2 is partly done: Vite 7 is on main; Vitest 3 is unfinished on branch `wip/frontend-vitest-3` (`5a78ab2b`) with build and lint failing.
+
+Next: resume U2 at Step 2 of `plans/backlog/p4-maintenance/20260917-1811-frontend-major-upgrades.md` (merge that branch, fix `vite.config.ts(8,13)` TS2769 and the lint error, run the full gate), then React 19 and the wrap-up. Then U4 (system-test driver items), which needs docker and must not run alongside U2's gates. Scope decisions for that run: the `20261030-1822-template-cloud-deploy-all-variants` plan is another agent's, so stay out of its files; push each verified unit; U5-U12 stay blocked on Q-A..Q-H. Commit with `--paths`, and don't use `git pull --autostash` while another agent shares the checkout. New from U3: a HEAD-on-admin-GET gap, recorded in the keycloak follow-ups plan.
 
 Read-only analysis of `plans/backlog/p1..p4`. No existing plan was edited. Repo state was spot-checked (grep/ls) to find stale premises.
 
