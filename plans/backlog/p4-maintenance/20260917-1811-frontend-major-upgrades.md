@@ -13,7 +13,6 @@
 
 ## Steps
 
-- [ ] **1. Vite 5 -> 7 + @vitejs/plugin-react 4 -> latest compatible** in `system/multitier/frontend-react`: bump, review the Vite 6/7 migration guides (Sass/CSS, `resolve.conditions`, default browser target, Node engine), fix `vite.config.ts`, run gate.
 - [ ] **2. Vitest 2 -> 3**: bump (also `vitest.opt-in.config.ts`), review migration guide (spy/mocks reset behavior, `workspace` -> `projects` naming, reporter changes), bump jsdom if peer requires, run gate.
 - [ ] **3. React 18 -> 19**: bump `react`, `react-dom`, `@types/react`, `@types/react-dom`; fix removed APIs (`ReactDOM.render`/`propTypes`/`defaultProps` on functions, string refs, `act` import from `react`), ensure `@testing-library/react` and `eslint-plugin-react-hooks` are compatible; run gate.
 - [ ] **4. Wrap-up:** run the full multitier TypeScript system tests, bump VERSION via the normal flow, confirm the frontend commit-stage workflow is green.
