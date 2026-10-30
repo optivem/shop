@@ -1,5 +1,7 @@
 # Deploy `shop` for real — Cloud Run + Neon
 
+> 🤖 **Picked up by agent** — `b2d83c7ed0bc` at `2026-10-30T16:41:50Z`
+
 ## TL;DR
 
 **Why:** The shop only runs locally (`gh optivem system start`). The existing `multitier-java-*-stage-cloud.yml` workflows cannot work: nothing is provisioned and the deploy steps don't match what the app needs (ports, DB vars, Keycloak, simulator URLs, migrations).
@@ -28,7 +30,7 @@
 
 ## ▶ Next executable step (resume here)
 
-**Step 8 — first cloud run: check the result and fix failures.** Run 1 failed at `promote-images` (fixed in `6a83b076`). Run 2 ([40951559533](https://github.com/optivem/shop/actions/runs/40951559533)) deployed the stack, then failed at the first suite: `gh optivem system-test run` probes `systems.yaml`, which named localhost. The `run` job now rewrites its checkout's `docker/typescript/multitier/systems.yaml` with the Cloud Run URLs (this also stops the CLI exporting a localhost `KEYCLOAK_URL_<MODE>`). Run 3, dispatched 2026-10-30, is [41059142730](https://github.com/optivem/shop/actions/runs/41059142730). Read it with `gh run view <id> --log-failed`. If it failed, fix within scope (workflow `.github/workflows/multitier-java-acceptance-stage-cloud.yml`, Terraform, `setup-gcp.sh`), commit, and re-dispatch with `gh workflow run multitier-java-acceptance-stage-cloud.yml --ref main`; hand the new run ID to the user (do not poll). Step 8 is done once a run is green. Watch for: the CLI's pre-run probe has a 2s timeout and Cloud Run scales to zero, so a suite after a long idle gap could fail with "system stub/real is not running" even though the stack is healthy.
+**Step 8 — first cloud run: check the result and fix failures.** Runs 1-2 failed before any test ran (fixed in `6a83b076`, `9060c909`). Run 3 ([41059142730](https://github.com/optivem/shop/actions/runs/41059142730)) passed smoke stub/real and acceptance-parallel-api, then failed acceptance-parallel-ui with 502/429s: the frontend's nginx proxied `/api/` to the backend's Cloud Run URL without SNI and with the frontend's own `Host`. Fixed in `system/multitier/frontend-react/nginx.conf` (`proxy_ssl_server_name on`, `Host $proxy_host`). Next: wait for `multitier-frontend-react-commit-stage` to publish that image, then dispatch `gh workflow run multitier-java-acceptance-stage-cloud.yml --ref main` and hand the run ID to the user (do not poll). Read results with `gh run view <id> --log-failed`; fix within scope (that workflow, `nginx.conf`, Terraform, `setup-gcp.sh`), commit, re-dispatch. Step 8 is done once a run is green. Watch for: the CLI's pre-run probe has a 2s timeout and Cloud Run scales to zero, so a suite after a long idle gap could fail with "system stub/real is not running" even though the stack is healthy.
 
 Provisioning is done (2026-10-29): GCP project `shop-3aa1c8` (us-central1, under the optivem.com org), Neon project `shop` (`mute-dew-88263622`, aws-us-east-2) with `shop_multitier_java_{real,stub}` + `shop_keycloak`, all three Secret Manager secrets have version 1, GitHub repo variables set; `GHCR_TOKEN` / `WORKFLOW_TOKEN` come from optivem org secrets.
 
