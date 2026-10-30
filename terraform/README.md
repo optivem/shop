@@ -90,7 +90,7 @@ These are automatically configured in GitHub repository variables.
 
 Terraform state lives in GCS, not on your machine, so setup/teardown work from any clone:
 
-- One **state project** per Google account, labelled `purpose=terraform-state` (created on first `./setup-gcp.sh` as `tfstate-<random>`, shared by every system scaffolded from this repo).
+- One **state project** per Google account, labelled `purpose=terraform-state` (created on first `./setup-gcp.sh` as `tfstate-<random>`, shared by every system scaffolded from this repo). The scripts create it, not Terraform, because it holds Terraform's own state; it also gives `gcloud` a project to run the billing lookup against, so setup works on an account with no projects.
 - One versioned bucket in it, `gs://<state-project>-tfstate`; each repo uses prefix `<owner>/<repo>`.
 - `state-backend.sh` (sourced by both scripts) finds or creates them and runs `terraform init -backend-config=...`.
 

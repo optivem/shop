@@ -29,6 +29,8 @@ install_hint() {
 
 # shellcheck source=terraform/neon.sh
 source "$(dirname "$0")/terraform/neon.sh"
+# shellcheck source=terraform/state-backend.sh
+source "$(dirname "$0")/terraform/state-backend.sh"
 
 # Check prerequisites
 echo "Checking prerequisites..."
@@ -117,9 +119,15 @@ REPO=$(gh repo view --json nameWithOwner -q '.nameWithOwner')
 echo "  📦 GitHub repo: $REPO"
 echo ""
 
+# The state project comes first: the billing lookup below needs a project to run against
+echo "Checking Terraform state project..."
+STATE_PROJECT=$(ensure_state_project)
+echo "  ✅ State project: $STATE_PROJECT"
+echo ""
+
 # Get or prompt for billing account
 echo "Checking GCP billing account..."
-BILLING_ACCOUNT=$(gcloud billing accounts list --format="value(name)" --limit=1) || {
+BILLING_ACCOUNT=$(gcloud billing accounts list --billing-project="$STATE_PROJECT" --format="value(name)" --limit=1) || {
   rc=$?
   echo "❌ 'gcloud billing accounts list' failed (exit $rc) — see stderr above" >&2
   exit "$rc"
@@ -138,9 +146,7 @@ echo ""
 # Initialize Terraform
 echo "Initializing Terraform (remote state in GCS)..."
 cd "$(dirname "$0")/terraform"
-# shellcheck source=terraform/state-backend.sh
-source ./state-backend.sh
-STATE_BUCKET=$(ensure_state_backend "$BILLING_ACCOUNT")
+STATE_BUCKET=$(ensure_state_backend "$STATE_PROJECT" "$BILLING_ACCOUNT")
 echo "  ✅ State: gs://$STATE_BUCKET/$REPO"
 init_state_backend "$STATE_BUCKET" "$REPO"
 

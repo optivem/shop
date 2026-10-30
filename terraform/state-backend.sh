@@ -12,17 +12,29 @@ find_state_project() {
   gcloud projects list --filter="labels.${STATE_PROJECT_LABEL}" --format="value(projectId)" --limit=1
 }
 
-# Creates the state project + bucket if missing (idempotent); prints progress to stderr, bucket name to stdout
-ensure_state_backend() {
-  local billing_account="$1" project bucket
+# Runs before anything else in GCP: a clean account has no project for gcloud to bill API calls to,
+# so even 'gcloud billing accounts list' needs this one. Creates the state project if missing and
+# enables the Cloud Billing API (idempotent); prints progress to stderr, project ID to stdout
+ensure_state_project() {
+  local project
   project=$(find_state_project)
   if [[ -z "$project" ]]; then
     project="tfstate-$(openssl rand -hex 3)"
     echo "  Creating Terraform state project $project..." >&2
     gcloud projects create "$project" --name="Terraform state" --labels="$STATE_PROJECT_LABEL" --quiet >&2
-    gcloud billing projects link "$project" --billing-account="$billing_account" --quiet > /dev/null
-    gcloud services enable storage.googleapis.com --project="$project" --quiet >&2
   fi
+  gcloud services enable cloudbilling.googleapis.com --project="$project" --quiet >&2
+  echo "$project"
+}
+
+# Links billing, enables storage and creates the bucket where missing (idempotent); prints progress to stderr, bucket name to stdout
+ensure_state_backend() {
+  local project="$1" billing_account="$2" bucket
+  if [[ "$(gcloud billing projects describe "$project" --billing-project="$project" --format="value(billingEnabled)")" != "True" ]]; then
+    echo "  Linking billing to $project..." >&2
+    gcloud billing projects link "$project" --billing-account="$billing_account" --billing-project="$project" --quiet > /dev/null
+  fi
+  gcloud services enable storage.googleapis.com --project="$project" --quiet >&2
   bucket="${project}-tfstate"
   if ! gcloud storage buckets describe "gs://${bucket}" --project="$project" &> /dev/null; then
     echo "  Creating state bucket gs://${bucket}..." >&2
