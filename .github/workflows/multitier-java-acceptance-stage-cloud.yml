@@ -491,6 +491,39 @@ jobs:
       # The system is already deployed by earlier jobs, so no `gh optivem system start`.
       - name: Setup Test Harness
         run: gh optivem system-test setup
+
+      # `system-test run` health-probes systems.yaml and exports KEYCLOAK_URL_<MODE>
+      # from it, so the checkout's copy must name the deployed stack, not localhost.
+      # composeFile is required by the loader but unused: nothing is started here.
+      - name: Point systems.yaml at the Deployed Stack
+        run: |
+          set -euo pipefail
+          system_entry() {
+            local label="$1" ui="$2" api="$3" erp="$4" clock="$5"
+            cat <<EOF
+            - label: ${label}
+              composeFile: docker-compose.local.${label}.yml
+              containerName: cloud-${label}
+              components:
+                - name: Frontend
+                  url: ${ui}
+                - name: Backend API
+                  url: ${api}/health
+                - name: Keycloak
+                  url: ${KEYCLOAK_URL}/realms/shop
+              externalSystems:
+                - name: ERP API
+                  url: ${erp}/health
+                - name: Clock API
+                  url: ${clock}/health
+          EOF
+          }
+          {
+            echo "systems:"
+            system_entry stub "$MYSHOP_UI_BASE_URL_STUB" "$MYSHOP_API_BASE_URL_STUB" "$ERP_API_BASE_URL_STUB" "$CLOCK_API_BASE_URL_STUB"
+            system_entry real "$MYSHOP_UI_BASE_URL_REAL" "$MYSHOP_API_BASE_URL_REAL" "$ERP_API_BASE_URL_REAL" "$CLOCK_API_BASE_URL_REAL"
+          } > docker/typescript/multitier/systems.yaml
+
       # === Run Smoke Tests ===
       - name: smoke-stub
         run: gh optivem system-test run --suite smoke-stub

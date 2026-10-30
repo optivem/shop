@@ -28,7 +28,7 @@
 
 ## ▶ Next executable step (resume here)
 
-**Step 8 — first cloud run: check the result and fix failures.** Run 1 ([40950877262](https://github.com/optivem/shop/actions/runs/40950877262)) failed at `promote-images` › Resolve Registry: the deployer SA can't `gcloud projects describe`. Fixed in `6a83b076` (project number parsed from `GCP_WORKLOAD_IDENTITY_PROVIDER`). Run 2 dispatched 2026-10-29 as [40951559533](https://github.com/optivem/shop/actions/runs/40951559533). Read it with `gh run view 40951559533 --log-failed`. If it failed, fix within scope (workflow `.github/workflows/multitier-java-acceptance-stage-cloud.yml`, Terraform, `setup-gcp.sh`), commit, and re-dispatch with `gh workflow run multitier-java-acceptance-stage-cloud.yml --ref main`; hand the new run ID to the user (do not poll). Step 8 is done once a run is green.
+**Step 8 — first cloud run: check the result and fix failures.** Run 1 failed at `promote-images` (fixed in `6a83b076`). Run 2 ([40951559533](https://github.com/optivem/shop/actions/runs/40951559533)) deployed the stack, then failed at the first suite: `gh optivem system-test run` probes `systems.yaml`, which named localhost. The `run` job now rewrites its checkout's `docker/typescript/multitier/systems.yaml` with the Cloud Run URLs (this also stops the CLI exporting a localhost `KEYCLOAK_URL_<MODE>`). Run 3 is RUN3_PLACEHOLDER. Read it with `gh run view <id> --log-failed`. If it failed, fix within scope (workflow `.github/workflows/multitier-java-acceptance-stage-cloud.yml`, Terraform, `setup-gcp.sh`), commit, and re-dispatch with `gh workflow run multitier-java-acceptance-stage-cloud.yml --ref main`; hand the new run ID to the user (do not poll). Step 8 is done once a run is green. Watch for: the CLI's pre-run probe has a 2s timeout and Cloud Run scales to zero, so a suite after a long idle gap could fail with "system stub/real is not running" even though the stack is healthy.
 
 Provisioning is done (2026-10-29): GCP project `shop-3aa1c8` (us-central1, under the optivem.com org), Neon project `shop` (`mute-dew-88263622`, aws-us-east-2) with `shop_multitier_java_{real,stub}` + `shop_keycloak`, all three Secret Manager secrets have version 1, GitHub repo variables set; `GHCR_TOKEN` / `WORKFLOW_TOKEN` come from optivem org secrets.
 
@@ -41,3 +41,6 @@ Dispatch `multitier-java-acceptance-stage-cloud`, hand over the run ID (do not p
 
 ### 9. Follow-ups (not in this plan)
 Template to all other variants (monolith + multitier × java/dotnet/typescript) in a new plan once multitier-java's first run is green — user-approved 2026-10-29. Cost guardrails for that: Artifact Registry cleanup policy (keep last N images per variant — the only real growing cost), one shared Keycloak across variants, Secret Manager versions beyond the 6 free (~$0.06/version/month); QA/prod cloud stages for multitier-java; the cloud realm exposes a password-grant test client and test users — acceptable for a demo, revisit before anything real.
+
+### 10. Tear down and re-provision from scratch (user, last step)
+After everything above is done, the user runs `./teardown-everything.sh`, then repeats `./setup-gcp.sh`.
