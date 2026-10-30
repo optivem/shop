@@ -1,7 +1,5 @@
 # 2026-10-29 12:56 UTC — Plan coordination meta-plan: backlog execution
 
-> 🤖 **Picked up by agent** — `ValentinaLaptop` at `2026-10-30T16:54:16Z`
-
 ## TL;DR
 
 **Why:** The 18 backlog plans overlap on the same files and contracts, several are already done or obsolete, and most are blocked on user decisions, so they can't safely be picked up in isolation while the cloud deploy plan is active.
