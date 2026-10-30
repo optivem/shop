@@ -28,7 +28,7 @@
 
 ## ▶ Next executable step (resume here)
 
-**Step 8 — first cloud run: check the result and fix failures.** Runs 1-2 failed before any test ran (fixed in `6a83b076`, `9060c909`). Run 3 ([41059142730](https://github.com/optivem/shop/actions/runs/41059142730)) passed smoke stub/real and acceptance-parallel-api, then failed acceptance-parallel-ui with 502/429s: the frontend's nginx proxied `/api/` to the backend's Cloud Run URL without SNI and with the frontend's own `Host`. Fixed in `system/multitier/frontend-react/nginx.conf` (`proxy_ssl_server_name on`, `Host $proxy_host`). Local TypeScript multitier sample tests passed and `multitier-frontend-react-commit-stage` published the image. Run 4, dispatched 2026-10-30, is [41098534927](https://github.com/optivem/shop/actions/runs/41098534927). Read it with `gh run view 41098534927 --log-failed`; if it failed, re-dispatch with `gh workflow run multitier-java-acceptance-stage-cloud.yml --ref main` after fixing, and hand the new run ID to the user (do not poll); fix within scope (that workflow, `nginx.conf`, Terraform, `setup-gcp.sh`), commit, re-dispatch. Step 8 is done once a run is green. Watch for: the CLI's pre-run probe has a 2s timeout and Cloud Run scales to zero, so a suite after a long idle gap could fail with "system stub/real is not running" even though the stack is healthy.
+**No agent-executable work remains: the first cloud run is green.** Run 4 ([41098534927](https://github.com/optivem/shop/actions/runs/41098534927), 2026-10-30) passed every suite against Cloud Run, smoke through e2e. Two things are left, in this order: (1) draft the follow-up plan for Step 9 with `/create-plan` (design work, nothing to edit here); (2) the user runs Step 10. Note that `04d4550d` (after run 4) changed `system/multitier/backend-java` and added a migration, so the next dispatch of `gh workflow run multitier-java-acceptance-stage-cloud.yml --ref main` is the first to exercise it in the cloud. Watch for: the CLI's pre-run probe has a 2s timeout and Cloud Run scales to zero, so a suite after a long idle gap could fail with "system stub/real is not running" even though the stack is healthy.
 
 Provisioning is done (2026-10-29): GCP project `shop-3aa1c8` (us-central1, under the optivem.com org), Neon project `shop` (`mute-dew-88263622`, aws-us-east-2) with `shop_multitier_java_{real,stub}` + `shop_keycloak`, all three Secret Manager secrets have version 1, GitHub repo variables set; `GHCR_TOKEN` / `WORKFLOW_TOKEN` come from optivem org secrets.
 
@@ -36,11 +36,8 @@ Naming is no longer hardcoded to `shop`: Terraform derives `system_name` from th
 
 ## Steps
 
-### 8. First run
-Dispatch `multitier-java-acceptance-stage-cloud`, hand over the run ID (do not poll), fix failures within scope.
-
-### 9. Follow-ups (not in this plan)
-Template to all other variants (monolith + multitier × java/dotnet/typescript) in a new plan once multitier-java's first run is green — user-approved 2026-10-29. Cost guardrails for that: Artifact Registry cleanup policy (keep last N images per variant — the only real growing cost), one shared Keycloak across variants, Secret Manager versions beyond the 6 free (~$0.06/version/month); QA/prod cloud stages for multitier-java; the cloud realm exposes a password-grant test client and test users — acceptable for a demo, revisit before anything real.
+### 9. Follow-ups (not in this plan) — ⏳ Deferred: needs its own plan
+Template to all other variants (monolith + multitier × java/dotnet/typescript) in a new plan now that multitier-java's first run is green — user-approved 2026-10-29. Cost guardrails for that: Artifact Registry cleanup policy (keep last N images per variant — the only real growing cost), one shared Keycloak across variants, Secret Manager versions beyond the 6 free (~$0.06/version/month); QA/prod cloud stages for multitier-java; the cloud realm exposes a password-grant test client and test users — acceptable for a demo, revisit before anything real.
 
 ### 10. Tear down and re-provision from scratch (user, last step)
 After everything above is done, the user runs `./teardown-everything.sh`, then repeats `./setup-gcp.sh`.
