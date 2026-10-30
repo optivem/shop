@@ -269,7 +269,9 @@ jobs:
           set -euo pipefail
           build() {
             local name="$1" context="${*: -1}"; shift
-            local ref="${REGISTRY}/${name}:$(git rev-parse --short=12 "HEAD:${context}")"
+            local tag
+            tag="$(git rev-parse --short=12 "HEAD:${context}")"
+            local ref="${REGISTRY}/${name}:${tag}"
             if docker manifest inspect "$ref" > /dev/null 2>&1; then
               echo "Reusing ${ref}"
             else
