@@ -21,12 +21,10 @@ What we get out of this — the goals and deliverables:
 
 ## ▶ Next executable step (resume here)
 
-**Step 2:** split Keycloak out of the multitier-java stack into a shared service `<system>-keycloak` (`multitier-java-acceptance-stage-cloud.yml`, `docker/keycloak/Dockerfile.cloud`). The realm import must list every variant's frontend URL up front, because `--import-realm` skips a realm that already exists. Project `shop-90b6e2` has never deployed, so nothing needs migrating. Registry cleanup is live (keep 10 per image name).
+**Step 4:** extract a reusable workflow from `.github/workflows/multitier-java-acceptance-stage-cloud.yml` and keep multitier-java green on it (last green: [41114706648](https://github.com/optivem/shop/actions/runs/41114706648)). Now true: Keycloak is the shared service `${SYSTEM}-keycloak`, and its image takes build args `SYSTEM` and `RUN_APP_SUFFIX`; `docker/keycloak/cloud-realm.jq` already lists all six variants × real|stub, so new variants need no realm change. The workflow reads one secret, `${SYSTEM}-db`, and database names come from convention (`${SYSTEM//-/_}_multitier_java_<stack>`), but `ensure_neon` in `setup-gcp.sh` still creates only the multitier-java and Keycloak databases, so later variants must add theirs. Parameterise at least the language, the architecture, the image names, `system/<arch>/<lang>/VERSION`, the tag prefix and the concurrency group; hard-coded `multitier-java` also appears in the `check` gate and the `run` job's URLs. The dispatch gate runs without `commit-sha` only when the workflow or `system-test/typescript` changed since the last `multitier-java-cloud-v*-rc.*` tag, or there are new artifacts. The other `*-stage-cloud.yml` workflows still read the removed `db-connection-string` until Steps 5 to 7 replace them.
 
 ## Steps
 
-- [ ] Step 2: Shared Keycloak: split it out of the multitier-java stack and rename `shop-multitier-java-keycloak`; realm import lists every variant's frontend URL
-- [ ] Step 3: Secrets: one shared `<system>-db` secret plus `<system>-keycloak-admin-password` (see decision 6), then update Terraform, `setup-gcp.sh` and `multitier-java-acceptance-stage-cloud.yml`
 - [ ] Step 4: Extract a reusable workflow from `multitier-java-acceptance-stage-cloud.yml`, keeping multitier-java green on it
 - [ ] Step 5: Roll out to multitier dotnet and typescript, one green run each, replacing the existing `multitier-*-acceptance-stage-cloud.yml`
 - [ ] Step 6: Roll out to monolith java, dotnet and typescript, one green run each (no separate backend service, so the workflow must handle a different service shape), replacing the existing `monolith-*-acceptance-stage-cloud.yml`
