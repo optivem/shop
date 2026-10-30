@@ -4,7 +4,6 @@ set -euo pipefail
 # Setup Google Cloud infrastructure using Terraform
 # Prerequisite: gcloud and gh CLIs authenticated
 # Optional: SYSTEM_NAME=<4-14 chars> overrides the name derived from the repo (prefixes the GCP project, services, secrets, databases)
-# Optional: NEON_DATABASE_URL=<postgres://...> stores the legacy single connection string (non-multitier-java variants)
 # Usage: ./setup-gcp.sh [--yes]   (--yes applies Terraform plans that change/destroy resources without asking)
 
 AUTO_APPROVE=false
@@ -248,23 +247,21 @@ ensure_neon() {
     user: decodeURIComponent(u.username), password: decodeURIComponent(u.password)}))' "$conn")
 }
 
-# Secret Manager values for multitier-java (created empty by Terraform; values never go through Terraform state)
+# Secret Manager values (created empty by Terraform; values never go through Terraform state)
 secret_has_version() {
   # stderr dropped: gcloud warns "filter keys were not present" whenever a secret has no versions yet
   [[ -n "$(gcloud secrets versions list "$1" --project="$PROJECT_ID" --filter=state:ENABLED --limit=1 --format='value(name)' 2> /dev/null)" ]]
 }
 
-if secret_has_version "$SYSTEM-multitier-java-acceptance-db" && secret_has_version "$SYSTEM-keycloak-db"; then
+if secret_has_version "$SYSTEM-db"; then
   echo ""
-  echo "  ✅ Neon credentials already stored ($SYSTEM-multitier-java-acceptance-db, $SYSTEM-keycloak-db)"
+  echo "  ✅ Neon credentials already stored ($SYSTEM-db)"
 else
   echo ""
   echo "Provisioning Neon (neonctl)..."
   ensure_neon
-  for s in "$SYSTEM-multitier-java-acceptance-db" "$SYSTEM-keycloak-db"; do
-    echo -n "$db_json" | gcloud secrets versions add "$s" --data-file=- --project="$PROJECT_ID" --quiet > /dev/null
-    echo "  ✅ Stored $s"
-  done
+  echo -n "$db_json" | gcloud secrets versions add "$SYSTEM-db" --data-file=- --project="$PROJECT_ID" --quiet > /dev/null
+  echo "  ✅ Stored $SYSTEM-db"
 fi
 
 if secret_has_version "$SYSTEM-keycloak-admin-password"; then
@@ -296,16 +293,6 @@ for s in GHCR_TOKEN WORKFLOW_TOKEN; do
     MISSING_GH_SECRETS+=("$s")
   fi
 done
-
-# Legacy single connection string, still read by the monolith/other cloud workflows (opt-in via env var, so reruns never prompt)
-NEON_URL="${NEON_DATABASE_URL:-}"
-if [[ -n "$NEON_URL" ]]; then
-  echo -n "$NEON_URL" | gcloud secrets versions add db-connection-string --data-file=- --project="$PROJECT_ID" --quiet
-  gh secret set NEON_DATABASE_URL --body "$NEON_URL"
-  echo "  ✅ Database URL stored"
-elif ! secret_has_version db-connection-string; then
-  echo "  ℹ️  Skipped legacy db-connection-string (other variants only, not multitier-java); set NEON_DATABASE_URL=<url> and rerun to store it"
-fi
 
 # Write local config
 cat > "$ROOT_DIR/deploy-config.yml" <<EOF

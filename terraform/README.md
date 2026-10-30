@@ -69,7 +69,6 @@ terraform destroy
 | `region` | GCP region | No | `us-central1` |
 | `github_repo` | GitHub repo in `owner/repo` format | Yes | `myorg/shop` |
 | `billing_account_id` | GCP billing account ID | Yes | `01ABCD-EFGHIJ-KLMNOP` |
-| `neon_database_url` | Optional Neon connection string | No | `postgres://...` |
 
 Find your billing account ID:
 ```bash
@@ -116,7 +115,7 @@ Google Cloud Project
 ├── Artifact Registry (Docker images)
 ├── Workload Identity Pool (GitHub OIDC)
 │   └── Service Account (github-deployer)
-├── Secret Manager (db-connection-string, <system>-multitier-java-acceptance-db, <system>-keycloak-db, <system>-keycloak-admin-password)
+├── Secret Manager (<system>-db, <system>-keycloak-admin-password)
 ├── Service Account (runtime, Cloud Run runtime identity)
 └── IAM Roles
     ├── Cloud Run Admin
@@ -138,7 +137,7 @@ Google Cloud Project
 
 - **Budget alerts**: create two on the billing account (Billing > Budgets & alerts): €5 and €20 per month, alerting at 50/90/100%.
 - **Scale to zero**: every Cloud Run service is deployed with `min-instances=0` and small `max-instances`, so idle cost is ~0 (Keycloak cold-starts on first request).
-- **Secret versions**: keep to one JSON secret per variant; only 6 versions are free.
+- **Secret versions**: one shared `<system>-db` JSON secret plus `<system>-keycloak-admin-password`, 2 versions in total; only 6 are free.
 - **Reset**: `./teardown-gcp.sh` destroys everything; `./setup-gcp.sh` recreates it.
 
 ## Troubleshooting

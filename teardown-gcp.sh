@@ -3,7 +3,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # Tear down what setup-gcp.sh creates: the GCP project (Terraform), the Neon project,
-# GitHub repo variables/secrets and deploy-config.yml
+# GitHub repo variables and deploy-config.yml
 
 echo "========================================="
 echo " GCP Infrastructure Teardown"
@@ -67,7 +67,6 @@ echo "⚠️  This will permanently delete:"
 echo "     - GCP project '$PROJECT_ID' and ALL its resources"
 [[ -n "$NEON_PROJECT_ID" ]] && echo "     - Neon project '$SYSTEM' ($NEON_PROJECT_ID) and ALL its databases"
 echo "     - GitHub repo variables (GCP_PROJECT_ID, GCP_REGION, etc.)"
-echo "     - GitHub repo secret (NEON_DATABASE_URL)"
 echo ""
 read -rp "  Are you sure? Type the project ID to confirm: " CONFIRM
 
@@ -107,8 +106,8 @@ else
 fi
 echo ""
 
-# Remove GitHub variables and secrets
-echo "Step 3/4: Removing GitHub repo variables and secrets..."
+# Remove GitHub variables
+echo "Step 3/4: Removing GitHub repo variables..."
 # Best-effort deletes — variable/secret may already be gone. Soft-fail but
 # surface any non-"not found" stderr so auth/scope issues stay visible.
 delete_gh_thing() {
@@ -128,8 +127,7 @@ delete_gh_thing variable GCP_REGION
 delete_gh_thing variable GCP_WORKLOAD_IDENTITY_PROVIDER
 delete_gh_thing variable GCP_SERVICE_ACCOUNT
 delete_gh_thing variable SYSTEM_NAME
-delete_gh_thing secret NEON_DATABASE_URL
-echo "  ✅ GitHub variables and secrets removed"
+echo "  ✅ GitHub variables removed"
 echo ""
 
 # Remove local config

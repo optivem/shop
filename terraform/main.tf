@@ -144,24 +144,6 @@ resource "google_project_iam_member" "github_secret_accessor" {
   member  = local.github_deployer_member
 }
 
-# Secret Manager: Database connection
-resource "google_secret_manager_secret" "db_connection_string" {
-  project   = google_project.this.project_id
-  secret_id = "db-connection-string"
-
-  replication {
-    auto {}
-  }
-
-  depends_on = [google_project_service.required_apis]
-}
-
-resource "google_secret_manager_secret_version" "db_connection_string" {
-  count       = var.neon_database_url != "" ? 1 : 0
-  secret      = google_secret_manager_secret.db_connection_string.id
-  secret_data = var.neon_database_url
-}
-
 # Runtime identity for the Cloud Run services (separate from the deployer)
 resource "google_service_account" "runtime" {
   project      = google_project.this.project_id
@@ -171,9 +153,10 @@ resource "google_service_account" "runtime" {
   depends_on = [google_project_service.required_apis]
 }
 
+# Shared DB credentials (database names come from convention) plus the Keycloak admin password.
 # Secret versions are added out of band (gcloud secrets versions add) so values stay out of state
 resource "google_secret_manager_secret" "runtime" {
-  for_each  = toset([for s in ["multitier-java-acceptance-db", "keycloak-db", "keycloak-admin-password"] : "${local.system_name}-${s}"])
+  for_each  = toset([for s in ["db", "keycloak-admin-password"] : "${local.system_name}-${s}"])
   project   = google_project.this.project_id
   secret_id = each.value
 

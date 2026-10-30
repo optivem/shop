@@ -1,12 +1,13 @@
-# Cloud Run Keycloak: adds the deployed frontend URLs to the realm as ${FRONTEND_URL_*} placeholders,
-# which Keycloak resolves from env vars on import. Build context: docker/keycloak.
+# Cloud Run Keycloak: bakes every variant's deployed URLs into the realm at image build, because
+# --import-realm skips a realm that already exists, so URLs added later would never take effect.
+# Build context: docker/keycloak. Build args: SYSTEM, RUN_APP_SUFFIX (<project-number>.<region>.run.app).
 FROM alpine:3.20 AS realm
-COPY shop-realm.json /realm.json
-RUN sed -i '1,/"clientId": "shop-monolith"/{ \
-      s|"redirectUris": \[|"redirectUris": [ "${FRONTEND_URL_REAL}/*", "${FRONTEND_URL_STUB}/*",|; \
-      s|"webOrigins": \[|"webOrigins": [ "${FRONTEND_URL_REAL}", "${FRONTEND_URL_STUB}",|; \
-      s|"post.logout.redirect.uris": "|"post.logout.redirect.uris": "${FRONTEND_URL_REAL}/*##${FRONTEND_URL_STUB}/*##|; \
-    }' /realm.json
+ARG SYSTEM
+ARG RUN_APP_SUFFIX
+RUN apk add --no-cache jq
+COPY shop-realm.json cloud-realm.jq /
+RUN jq --arg system "${SYSTEM:?build arg required}" --arg suffix "${RUN_APP_SUFFIX:?build arg required}" \
+      -f /cloud-realm.jq /shop-realm.json > /realm.json
 
 FROM quay.io/keycloak/keycloak:26.0 AS builder
 ENV KC_DB=postgres \

@@ -4,4 +4,3 @@
 # region = "us-central1"
 # github_repo = "owner/repo"
 # billing_account_id = "XXXXXX-XXXXXX-XXXXXX"
-# neon_database_url = "postgres://user:password@host/db"
