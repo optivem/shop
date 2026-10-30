@@ -62,6 +62,8 @@ export interface OrderRow {
   /** Token subject of the customer who placed the order; null for orders that predate ownership. */
   owner: string | null;
   owner_name: string | null;
+  /** Optimistic-locking counter; BIGINT, so node-postgres returns it as a string. */
+  version: string;
 }
 
 export interface CouponRow {
@@ -146,11 +148,14 @@ export async function findAccessibleOrder(
   return order;
 }
 
-export async function updateOrderStatus(orderNumber: string, status: OrderStatus): Promise<void> {
-  await pool.query(
-    'UPDATE orders SET status = $1 WHERE order_number = $2',
-    [status, orderNumber]
+// Optimistic locking: applies only if the row still has the version that was read; false means
+// another update got there first and the caller should report a conflict.
+export async function updateOrderStatus(order: Pick<OrderRow, 'order_number' | 'version'>, status: OrderStatus): Promise<boolean> {
+  const result = await pool.query(
+    'UPDATE orders SET status = $1, version = version + 1 WHERE order_number = $2 AND version = $3',
+    [status, order.order_number, order.version]
   );
+  return result.rowCount === 1;
 }
 
 export async function insertCoupon(coupon: {

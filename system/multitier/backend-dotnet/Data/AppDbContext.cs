@@ -12,6 +12,27 @@ public class AppDbContext : DbContext
     public DbSet<Order> Orders { get; set; } = null!;
     public DbSet<Coupon> Coupons { get; set; } = null!;
 
+    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        BumpOrderVersions();
+        return base.SaveChangesAsync(cancellationToken);
+    }
+
+    public override int SaveChanges()
+    {
+        BumpOrderVersions();
+        return base.SaveChanges();
+    }
+
+    private void BumpOrderVersions()
+    {
+        foreach (var entry in ChangeTracker.Entries<Order>().Where(e => e.State == EntityState.Modified))
+        {
+            var version = entry.Property(e => e.Version);
+            version.CurrentValue = version.OriginalValue + 1;
+        }
+    }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Order>(entity =>

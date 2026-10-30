@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -47,6 +48,9 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @Value("${error.types.bad-request}")
     private String badRequestTypeUri;
+
+    @Value("${error.types.conflict}")
+    private String conflictTypeUri;
 
     @Value("${error.types.internal-server-error}")
     private String internalServerErrorTypeUri;
@@ -94,6 +98,19 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         problemDetail.setProperty(PROP_TIMESTAMP, Instant.now());
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problemDetail);
+    }
+
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    public ResponseEntity<ProblemDetail> handleOptimisticLock(ObjectOptimisticLockingFailureException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+                HttpStatus.CONFLICT,
+                "The resource was modified concurrently, please retry"
+        );
+        problemDetail.setType(URI.create(conflictTypeUri));
+        problemDetail.setTitle("Conflict");
+        problemDetail.setProperty(PROP_TIMESTAMP, Instant.now());
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(problemDetail);
     }
 
     @Override

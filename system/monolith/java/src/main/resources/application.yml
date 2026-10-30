@@ -55,6 +55,7 @@ error:
     validation-error: ${error.types.base-url}/validation-error
     resource-not-found: ${error.types.base-url}/resource-not-found
     bad-request: ${error.types.base-url}/bad-request
+    conflict: ${error.types.base-url}/conflict
     internal-server-error: ${error.types.base-url}/internal-server-error
 
 external:

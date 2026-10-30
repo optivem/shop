@@ -60,11 +60,13 @@ public class CouponService
 
     public async Task IncrementUsageCountAsync(string couponCode)
     {
-        var coupon = await _dbContext.Coupons.FirstOrDefaultAsync(c => c.Code == couponCode);
-        if (coupon != null)
+        var updated = await _dbContext.Coupons
+            .Where(c => c.Code == couponCode && (c.UsageLimit == null || c.UsedCount < c.UsageLimit))
+            .ExecuteUpdateAsync(s => s.SetProperty(c => c.UsedCount, c => c.UsedCount + 1));
+
+        if (updated == 0)
         {
-            coupon.UsedCount++;
-            await _dbContext.SaveChangesAsync();
+            ThrowCouponValidationException(MsgCouponUsageLimitReached, couponCode);
         }
     }
 

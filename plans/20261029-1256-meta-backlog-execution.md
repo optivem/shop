@@ -1,9 +1,15 @@
 # 2026-10-29 12:56 UTC — Plan coordination meta-plan: backlog execution
 
+> 🤖 **Picked up by agent** — `ValentinaLaptop` at `2026-10-30T16:54:16Z`
+
 ## TL;DR
 
 **Why:** The 18 backlog plans overlap on the same files and contracts, several are already done or obsolete, and most are blocked on user decisions, so they can't safely be picked up in isolation while the cloud deploy plan is active.
 **End result:** The backlog runs in a safe order: obsolete plans deleted, the two money plans merged, autonomous work done in two waves, and decision-gated work following once the user answers Q-A..Q-H, with no conflicting edits or docker clashes.
+
+## ▶ Next executable step (resume here)
+
+U1 is done and committed. Next: U2 (execute the refined `plans/backlog/p4-maintenance/20260917-1811-frontend-major-upgrades.md`, Vite 7 -> Vitest 3 -> React 19, one commit per step), then Wave 2 in parallel: U3 (`SecurityConfigTest` additions) and U4 (system-test driver items).
 
 Read-only analysis of `plans/backlog/p1..p4`. No existing plan was edited. Repo state was spot-checked (grep/ls) to find stale premises.
 

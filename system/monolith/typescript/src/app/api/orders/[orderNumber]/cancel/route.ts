@@ -3,6 +3,7 @@ import { findAccessibleOrder, updateOrderStatus } from '@/lib/db';
 import { resolveCaller } from '@/lib/auth/caller';
 import { getCurrentTime } from '@/lib/external';
 import {
+  conflictResponse,
   notFoundResponse,
   generalValidationErrorResponse,
   internalErrorResponse,
@@ -45,7 +46,9 @@ export async function POST(
       return generalValidationErrorResponse('Order has already been cancelled');
     }
 
-    await updateOrderStatus(orderNumber, 'CANCELLED');
+    if (!(await updateOrderStatus(order, 'CANCELLED'))) {
+      return conflictResponse();
+    }
 
     return new NextResponse(null, { status: 204 });
   } catch (error) {

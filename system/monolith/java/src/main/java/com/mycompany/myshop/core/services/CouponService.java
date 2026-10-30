@@ -5,6 +5,7 @@ import com.mycompany.myshop.core.exceptions.ValidationException;
 import com.mycompany.myshop.core.repositories.CouponRepository;
 import com.mycompany.myshop.core.services.external.ClockGateway;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -61,12 +62,10 @@ public class CouponService {
         return coupon.getDiscountRate();
     }
 
+    @Transactional
     public void incrementUsageCount(String couponCode) {
-        var optionalCoupon = couponRepository.findByCode(couponCode);
-        if (optionalCoupon.isPresent()) {
-            var coupon = optionalCoupon.get();
-            coupon.setUsedCount(coupon.getUsedCount() + 1);
-            couponRepository.save(coupon);
+        if (couponRepository.incrementUsedCountIfBelowLimit(couponCode) == 0) {
+            throwCouponValidationException(MSG_COUPON_USAGE_LIMIT_REACHED, couponCode);
         }
     }
 

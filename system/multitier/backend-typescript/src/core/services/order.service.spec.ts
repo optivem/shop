@@ -4,6 +4,7 @@ import { Order } from '../entities/order.entity';
 import { OrderStatus } from '../entities/order-status.enum';
 import { PlaceOrderRequest } from '../dtos/place-order-request.dto';
 import { ValidationException } from '../exceptions/validation.exception';
+import { ConcurrentModificationException } from '../exceptions/concurrent-modification.exception';
 import { NotExistValidationException } from '../exceptions/not-exist-validation.exception';
 import { OrderService } from './order.service';
 import type { ErpGateway } from './external/erp.gateway';
@@ -35,7 +36,7 @@ const DEC_31_CANCEL_BLACKOUT = new Date('2025-12-31T22:15:00Z');
 describe('OrderService', () => {
   let service: OrderService;
   let orderRepository: jest.Mocked<
-    Pick<Repository<Order>, 'save' | 'findOne' | 'find'>
+    Pick<Repository<Order>, 'save' | 'update' | 'findOne' | 'find'>
   > & {
     manager: Pick<EntityManager, 'transaction' | 'withRepository'>;
   };
@@ -49,6 +50,7 @@ describe('OrderService', () => {
   beforeEach(() => {
     orderRepository = {
       save: jest.fn(),
+      update: jest.fn().mockResolvedValue({ affected: 1 }),
       findOne: jest.fn(),
       find: jest.fn(),
       // Runs the transaction inline against the same mocked repository.
@@ -140,7 +142,7 @@ describe('OrderService', () => {
       await service.deliverOrder('ORD-001');
 
       expect(order.status).toBe(OrderStatus.DELIVERED);
-      expect(orderRepository.save).toHaveBeenCalledWith(order);
+      expect(orderRepository.update).toHaveBeenCalled();
     });
 
     it('throws when order not found', async () => {
@@ -172,7 +174,17 @@ describe('OrderService', () => {
       await service.cancelOrder('ORD-001', CUSTOMER);
 
       expect(order.status).toBe(OrderStatus.CANCELLED);
-      expect(orderRepository.save).toHaveBeenCalledWith(order);
+      expect(orderRepository.update).toHaveBeenCalled();
+    });
+
+    it('reports a concurrent modification when the version no longer matches', async () => {
+      givenNormalTime();
+      orderRepository.findOne.mockResolvedValue(placedOrder('ORD-001'));
+      orderRepository.update.mockResolvedValue({ affected: 0 } as never);
+
+      await expect(
+        service.cancelOrder('ORD-001', CUSTOMER),
+      ).rejects.toBeInstanceOf(ConcurrentModificationException);
     });
 
     it('throws during December 31 cancellation blackout', async () => {

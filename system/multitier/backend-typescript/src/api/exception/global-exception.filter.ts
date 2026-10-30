@@ -11,6 +11,7 @@ import {
 import type { Response } from 'express';
 import { ValidationException } from '../../core/exceptions/validation.exception';
 import { NotExistValidationException } from '../../core/exceptions/not-exist-validation.exception';
+import { ConcurrentModificationException } from '../../core/exceptions/concurrent-modification.exception';
 import { RequestValidationException } from './request-validation.exception';
 
 // Types are built from one short base so line widths (and thus Prettier's
@@ -19,6 +20,7 @@ const PROBLEM_TYPE_BASE_URI = 'https://api.my-company.example/errors';
 const VALIDATION_ERROR_TYPE_URI = `${PROBLEM_TYPE_BASE_URI}/validation-error`;
 const RESOURCE_NOT_FOUND_TYPE_URI = `${PROBLEM_TYPE_BASE_URI}/resource-not-found`;
 const BAD_REQUEST_TYPE_URI = `${PROBLEM_TYPE_BASE_URI}/bad-request`;
+const CONFLICT_TYPE_URI = `${PROBLEM_TYPE_BASE_URI}/conflict`;
 const UNAUTHORIZED_TYPE_URI = `${PROBLEM_TYPE_BASE_URI}/unauthorized`;
 const FORBIDDEN_TYPE_URI = `${PROBLEM_TYPE_BASE_URI}/forbidden`;
 const INTERNAL_SERVER_ERROR_TYPE_URI = `${PROBLEM_TYPE_BASE_URI}/internal-server-error`;
@@ -37,6 +39,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       this.handleNotExistValidationException(exception, response);
     } else if (exception instanceof ValidationException) {
       this.handleValidationException(exception, response);
+    } else if (exception instanceof ConcurrentModificationException) {
+      this.handleConflictException(exception, response);
     } else if (exception instanceof UnauthorizedException) {
       this.handleUnauthorizedException(response);
     } else if (exception instanceof ForbiddenException) {
@@ -103,6 +107,20 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       timestamp: new Date().toISOString(),
     };
     response.status(404).type('application/problem+json').json(body);
+  }
+
+  private handleConflictException(
+    ex: ConcurrentModificationException,
+    response: Response,
+  ) {
+    const body = {
+      type: CONFLICT_TYPE_URI,
+      title: 'Conflict',
+      status: 409,
+      detail: 'The resource was modified concurrently, please retry',
+      timestamp: new Date().toISOString(),
+    };
+    response.status(409).type('application/problem+json').json(body);
   }
 
   private handleUnauthorizedException(response: Response) {

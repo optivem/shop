@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using MyCompany.MyShop.Monolith.Data;
 using Testcontainers.PostgreSql;
 using Xunit;
@@ -15,6 +16,12 @@ public abstract class AbstractIntegrationTest : IAsyncLifetime
         .Build();
 
     protected AppDbContext DbContext { get; private set; } = null!;
+
+    protected AppDbContext NewDbContext(params IInterceptor[] interceptors) =>
+        new(new DbContextOptionsBuilder<AppDbContext>()
+            .UseNpgsql(_postgres.GetConnectionString())
+            .AddInterceptors(interceptors)
+            .Options);
 
     public async Task InitializeAsync()
     {

@@ -9,12 +9,15 @@ import {
 import { AppModule } from '../../app.module';
 import { Order } from '../entities/order.entity';
 import { OrderStatus } from '../entities/order-status.enum';
+import { OrderService } from '../services/order.service';
+import { ConcurrentModificationException } from '../exceptions/concurrent-modification.exception';
 import { applyMigrations } from '../../../test/support/migrations';
 
 describe('OrderRepository [integration]', () => {
   let app: INestApplication;
   let postgres: StartedPostgreSqlContainer;
   let orderRepo: Repository<Order>;
+  let orderService: OrderService;
 
   beforeAll(async () => {
     postgres = await new PostgreSqlContainer('postgres:16-alpine')
@@ -46,6 +49,7 @@ describe('OrderRepository [integration]', () => {
     await app.init();
 
     orderRepo = moduleRef.get(DataSource).getRepository(Order);
+    orderService = moduleRef.get(OrderService);
   }, 120_000);
 
   afterAll(async () => {
@@ -94,5 +98,40 @@ describe('OrderRepository [integration]', () => {
     expect(found!.totalPrice).toBeInstanceOf(Decimal);
     expect(found!.totalPrice.toFixed(2)).toBe('22.00');
     expect(found!.status).toBe(OrderStatus.PLACED);
+  });
+
+  it('bumps the version on a status change and rejects a stale update', async () => {
+    const order = await orderRepo.save(
+      orderRepo.create({
+        orderNumber: 'ORD-002',
+        orderTimestamp: new Date('2026-01-01T00:00:00Z'),
+        country: 'US',
+        sku: 'BOOK-123',
+        quantity: 1,
+        unitPrice: new Decimal('10.00'),
+        totalPrice: new Decimal('11.00'),
+        status: OrderStatus.PLACED,
+      }),
+    );
+    expect(order.version).toBe('0');
+
+    await orderService.deliverOrder('ORD-002');
+    const delivered = await orderRepo.findOneByOrFail({
+      orderNumber: 'ORD-002',
+    });
+    expect(delivered.status).toBe(OrderStatus.DELIVERED);
+    expect(delivered.version).toBe('1');
+
+    // A stale copy (version 0) must not overwrite the delivered order.
+    const stale = Object.assign(new Order(), delivered, {
+      status: OrderStatus.PLACED,
+      version: '0',
+    });
+    const privateUpdate = orderService as unknown as {
+      updateStatus(o: Order, s: OrderStatus): Promise<void>;
+    };
+    await expect(
+      privateUpdate.updateStatus(stale, OrderStatus.CANCELLED),
+    ).rejects.toBeInstanceOf(ConcurrentModificationException);
   });
 });

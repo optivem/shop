@@ -87,13 +87,17 @@ public class OrderService
             OwnerName = user.Username
         };
 
-        _dbContext.Orders.Add(order);
-        await _dbContext.SaveChangesAsync();
+        await using var transaction = await _dbContext.Database.BeginTransactionAsync();
 
+        // Increment first: a rejected increment leaves no order behind.
         if (appliedCouponCode != null)
         {
             await _couponService.IncrementUsageCountAsync(appliedCouponCode);
         }
+
+        _dbContext.Orders.Add(order);
+        await _dbContext.SaveChangesAsync();
+        await transaction.CommitAsync();
 
         return new PlaceOrderResponse { OrderNumber = orderNumber };
     }

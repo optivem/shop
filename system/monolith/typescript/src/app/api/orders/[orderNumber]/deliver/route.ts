@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { findByOrderNumber, updateOrderStatus } from '@/lib/db';
-import { notFoundResponse, generalValidationErrorResponse, internalErrorResponse } from '@/lib/errors';
+import { conflictResponse, notFoundResponse, generalValidationErrorResponse, internalErrorResponse } from '@/lib/errors';
 
 export async function POST(
   _request: NextRequest,
@@ -19,7 +19,9 @@ export async function POST(
       return generalValidationErrorResponse('Order cannot be delivered in its current status');
     }
 
-    await updateOrderStatus(orderNumber, 'DELIVERED');
+    if (!(await updateOrderStatus(order, 'DELIVERED'))) {
+      return conflictResponse();
+    }
 
     return new NextResponse(null, { status: 204 });
   } catch (error) {

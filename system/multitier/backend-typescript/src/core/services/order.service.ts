@@ -15,6 +15,7 @@ import { ViewOrderDetailsResponse } from '../dtos/view-order-details-response.dt
 import { RecallSkuResponse } from '../dtos/recall-sku-response.dto';
 import { ValidationException } from '../exceptions/validation.exception';
 import { NotExistValidationException } from '../exceptions/not-exist-validation.exception';
+import { ConcurrentModificationException } from '../exceptions/concurrent-modification.exception';
 import { ErpGateway } from './external/erp.gateway';
 import { ClockGateway } from './external/clock.gateway';
 import { TaxGateway } from './external/tax.gateway';
@@ -173,8 +174,7 @@ export class OrderService {
       );
     }
 
-    order.status = OrderStatus.DELIVERED;
-    await this.orderRepository.save(order);
+    await this.updateStatus(order, OrderStatus.DELIVERED);
   }
 
   async recallSku(sku: string): Promise<RecallSkuResponse> {
@@ -187,8 +187,7 @@ export class OrderService {
     let cancelledCount = 0;
     for (const order of orders) {
       if (order.status === OrderStatus.PLACED) {
-        order.status = OrderStatus.CANCELLED;
-        await this.orderRepository.save(order);
+        await this.updateStatus(order, OrderStatus.CANCELLED);
         cancelledCount++;
       }
     }
@@ -226,8 +225,7 @@ export class OrderService {
       throw new ValidationException('Order has already been cancelled');
     }
 
-    order.status = OrderStatus.CANCELLED;
-    await this.orderRepository.save(order);
+    await this.updateStatus(order, OrderStatus.CANCELLED);
   }
 
   async browseOrderHistory(
@@ -285,6 +283,20 @@ export class OrderService {
     response.country = order.country;
     response.appliedCouponCode = order.appliedCouponCode;
     return response;
+  }
+
+  // Optimistic locking: applies only if the row still has the version that was read.
+  private async updateStatus(order: Order, status: OrderStatus): Promise<void> {
+    const result = await this.orderRepository.update(
+      { id: order.id, version: order.version },
+      { status, version: () => 'version + 1' },
+    );
+    if (result.affected !== 1) {
+      throw new ConcurrentModificationException(
+        `Order ${order.orderNumber} was modified concurrently`,
+      );
+    }
+    order.status = status;
   }
 
   /** Another customer's order is reported as non-existent, so its existence is not revealed. */

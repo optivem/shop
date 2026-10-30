@@ -36,6 +36,7 @@ public class OrderServiceTest : IDisposable
 
         _dbContext = new AppDbContext(new DbContextOptionsBuilder<AppDbContext>()
             .UseInMemoryDatabase($"test-{Guid.NewGuid()}")
+            .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.InMemoryEventId.TransactionIgnoredWarning))
             .Options);
 
         _clockMock = new Mock<ClockGateway>(httpClient, config.Object);

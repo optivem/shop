@@ -15,6 +15,7 @@ import com.mycompany.myshop.backend.core.services.external.ClockGateway;
 import com.mycompany.myshop.backend.core.services.external.ErpGateway;
 import com.mycompany.myshop.backend.core.services.external.TaxGateway;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -47,6 +48,7 @@ public class OrderService {
         this.couponService = couponService;
     }
 
+    @Transactional
     public PlaceOrderResponse placeOrder(PlaceOrderRequest request, CurrentUser user) {
         var sku = request.getSku();
         var quantity = request.getQuantity();
@@ -90,11 +92,12 @@ public class OrderService {
                 taxRate, taxAmount, totalPrice, OrderStatus.PLACED,
                 appliedCouponCode, user.subject(), user.username());
 
-        orderRepository.save(order);
-
+        // Increment first: a rejected increment leaves no order behind.
         if (appliedCouponCode != null) {
             couponService.incrementUsageCount(appliedCouponCode);
         }
+
+        orderRepository.save(order);
 
         var response = new PlaceOrderResponse();
         response.setOrderNumber(orderNumber);

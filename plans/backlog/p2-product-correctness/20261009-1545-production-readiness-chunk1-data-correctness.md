@@ -19,7 +19,9 @@ Parent plan: `20261009-1521-production-readiness-gaps.md` (Chunk 1). Chunk 0's p
 
 ## ▶ Next executable step (resume here)
 
-Step 1.1, Java monolith (`system/monolith/java`): add an integration test in the existing `integrationTest` source set (Testcontainers Postgres) that makes `CouponService.incrementUsageCount` throw after the order is saved, then asserts that no `orders` row exists. Confirm it fails (no `@Transactional` yet), then add `@Transactional` to `OrderService.placeOrder`. Gate: `./gradlew build` and `./gradlew integrationTest`. Unblocks 1.2, which builds on the same transaction boundary.
+Steps 1.1, 1.2, 1.3 and 1.6 are done. Resume at step 1.4 (idempotent POST /api/orders), then 1.5, per the open questions below.
+
+Done notes: race/atomicity proofs are integration tests, not acceptance scenarios (the DSL cannot issue parallel calls). Order has a `version` column (migration `V20261030090000__add_order_version.sql`); a lost update returns 409 ProblemDetail with type `.../conflict`. `backend-clean-java` needed no change: PlaceOrder already runs in `TransactionalUseCase` with an atomic `tryRedeem`, its cancel/deliver are single-statement updates, and it has no auth or owner concept. The frontend-backend contract needed no change (409 is not a consumer-visible flow). UUID order numbers are not a security control; the owner check is (details and cancel return 404 for another customer's order; deliver is admin-only).
 
 ## Findings already established (so we don't re-derive)
 
@@ -35,26 +37,6 @@ Step 1.1, Java monolith (`system/monolith/java`): add an integration test in the
 
 Each numbered step follows this order: failing test first, then the fix, then the other languages. Verification gate per step: `./compile-all.sh`, plus `gh optivem system-test run --sample` for each affected language (CLAUDE.md pre-commit rules).
 
-### 1.1 Atomic placeOrder (transaction)
-- [ ] 1.1.a Java monolith: failing integration test, then `@Transactional` on `placeOrder`.
-- [ ] 1.1.b Java multitier backend (`backend-java`, and check `backend-clean-java`): same.
-- [ ] 1.1.c .NET (monolith and `backend-dotnet`): wrap save and coupon increment in one DB transaction (or a single `SaveChanges` unit of work). Check whether it already is one.
-- [ ] 1.1.d TypeScript (monolith and `backend-typescript`): one `pg` transaction (`BEGIN`/`COMMIT`) around both writes. Check first.
-- [ ] 1.1.e Acceptance scenario: add it only if it can be expressed black-box. Otherwise keep the integration test as the proof and say so in the plan.
-
-### 1.2 Atomic coupon usage (no oversell)
-- [ ] 1.2.a Replace read-modify-write with a conditional update: `UPDATE coupons SET used_count = used_count + 1 WHERE code = :code AND (usage_limit IS NULL OR used_count < usage_limit)`. If zero rows are updated, throw the existing coupon-limit `ValidationException`. Keep `getDiscount`'s limit check as a fast early rejection.
-- [ ] 1.2.b Because `incrementUsageCount` now enforces the limit, order of operations in `placeOrder` matters. Decide whether to increment before saving the order (so a rejected increment never leaves an order behind). The transaction from 1.1 makes either order safe, so prefer increment-then-save.
-- [ ] 1.2.c Concurrency test: coupon limit 1, N parallel `placeOrder` calls, exactly one success. Java first, then .NET and TS.
-- [ ] 1.2.d Acceptance scenario for "coupon limit holds under concurrent orders" in the system-test DSL (three languages), if the DSL can issue parallel calls. If it can't, keep the concurrency test at integration level.
-
-### 1.3 Optimistic locking on Order
-- [ ] 1.3.a Flyway migration (expand only): `ALTER TABLE orders ADD COLUMN version BIGINT NOT NULL DEFAULT 0`. Put it in `system/db/migrations` (shared by all languages) following the timestamped naming.
-- [ ] 1.3.b Java: `@Version` on `Order`. .NET: a concurrency token (`RowVersion` or a `version` integer). TS: `UPDATE ... WHERE id = $1 AND version = $2`, and check the affected row count.
-- [ ] 1.3.c Map the conflict to HTTP 409 ProblemDetail in `GlobalExceptionHandler` (and the .NET/TS equivalents). Add `error.types.conflict` to the config.
-- [ ] 1.3.d Test: deliver and cancel racing on the same order. Exactly one succeeds and the other gets 409.
-- [ ] 1.3.e Check whether the test-kit/DSL needs a way to express the 409, and whether the contract (`contracts/`) or OpenAPI docs need the new response.
-
 ### 1.4 Idempotent POST /api/orders
 - [ ] 1.4.a Decide scope and TTL (open question below), then write the migration for an `idempotency_keys` table: `(owner, key)` unique, request hash, response status/body, `created_at`.
 - [ ] 1.4.b Behaviour: first request stores the key and the result in the same transaction as the order. A repeat with the same key and the same request body returns the stored response. A repeat with the same key and a different body returns 422 (or 409, decide). A request without the header behaves as today, so the header stays optional.
@@ -68,11 +50,6 @@ Each numbered step follows this order: failing test first, then the fix, then th
 - [ ] 1.5.c UI templates and React frontend: add paging controls (or keep the default page size large enough, documented, if UI work is out of scope).
 - [ ] 1.5.d Search: `LIKE '%x%'` on `LOWER(order_number)` cannot use a b-tree index. Options: (1) prefix search with an index on `LOWER(order_number)`, (2) a `pg_trgm` GIN index, (3) accept as is for a teaching dataset. Decide in the open questions, then add the migration if needed.
 - [ ] 1.5.e Tests: page size cap, stable ordering across pages, and the empty page.
-
-### 1.6 Order access control check
-- [ ] 1.6.a Confirm for order details and cancel (all three languages) that a non-admin user can only read or cancel their own orders, and that a different user's order number returns 404 (not 403, so existence isn't leaked). `OrderService` line ~224 filters by owner for history; check details/cancel separately.
-- [ ] 1.6.b If any path is missing the check, add a failing test first, then fix it.
-- [ ] 1.6.c Record in the plan that UUID order numbers are not a security control; the owner check is.
 
 ## Out of scope for this chunk
 

@@ -62,6 +62,19 @@ export function notFoundResponse(detail: string) {
   );
 }
 
+export function conflictResponse() {
+  return NextResponse.json(
+    {
+      type: `${BASE_URL}/conflict`,
+      title: 'Conflict',
+      status: 409,
+      detail: 'The resource was modified concurrently, please retry',
+      timestamp: new Date().toISOString(),
+    },
+    { status: 409 }
+  );
+}
+
 export function unauthorizedResponse(detail: string) {
   return NextResponse.json(
     {

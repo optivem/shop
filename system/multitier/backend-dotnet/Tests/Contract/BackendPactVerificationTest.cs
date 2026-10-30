@@ -184,6 +184,7 @@ public class BackendPactVerificationTest : IAsyncLifetime
         _erp.Reset();
         _tax.Reset();
         _clock.Reset();
+        _db.ChangeTracker.Clear();
         _db.Orders.RemoveRange(_db.Orders);
         _db.Coupons.RemoveRange(_db.Coupons);
         _db.SaveChanges();

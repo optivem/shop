@@ -133,6 +133,10 @@ export class Order {
   })
   appliedCouponCode!: string | null;
 
+  /** Optimistic-locking counter; bigint, so the driver returns it as a string. */
+  @Column({ name: 'version', type: 'bigint', nullable: false, default: 0 })
+  version!: string;
+
   /** Token subject of the customer who placed the order; null for orders that predate ownership. */
   @Column({
     name: 'owner',

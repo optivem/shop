@@ -75,6 +75,11 @@ public class Order
     public string? AppliedCouponCode { get; set; }
 
     /// <summary>Token subject of the customer who placed the order; null for orders that predate ownership.</summary>
+    /// <summary>Optimistic-locking counter, bumped on every update.</summary>
+    [ConcurrencyCheck]
+    [Column("version")]
+    public long Version { get; set; }
+
     [MaxLength(255)]
     [Column("owner")]
     public string? Owner { get; set; }

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.EntityFrameworkCore;
 using MyCompany.MyShop.Monolith.Core.Exceptions;
 
 namespace MyCompany.MyShop.Monolith.Api.Exception;
@@ -7,6 +8,7 @@ public class GlobalExceptionHandler : IExceptionHandler
 {
     private const string ValidationErrorTypeUri = "https://api.my-company.com/errors/validation-error";
     private const string ResourceNotFoundTypeUri = "https://api.my-company.com/errors/resource-not-found";
+    private const string ConflictTypeUri = "https://api.my-company.com/errors/conflict";
     private const string InternalServerErrorTypeUri = "https://api.my-company.com/errors/internal-server-error";
 
     private readonly ILogger<GlobalExceptionHandler> _logger;
@@ -26,6 +28,10 @@ public class GlobalExceptionHandler : IExceptionHandler
 
             case ValidationException validationEx:
                 await WriteValidationResponse(httpContext, validationEx, cancellationToken);
+                return true;
+
+            case DbUpdateConcurrencyException:
+                await WriteConflictResponse(httpContext, cancellationToken);
                 return true;
 
             default:
@@ -82,6 +88,23 @@ public class GlobalExceptionHandler : IExceptionHandler
             title = "Resource Not Found",
             status = 404,
             detail = ex.Message,
+            timestamp = DateTime.UtcNow
+        };
+
+        await httpContext.Response.WriteAsJsonAsync(response, cancellationToken);
+    }
+
+    private static async Task WriteConflictResponse(HttpContext httpContext, CancellationToken cancellationToken)
+    {
+        httpContext.Response.StatusCode = StatusCodes.Status409Conflict;
+        httpContext.Response.ContentType = "application/problem+json";
+
+        var response = new
+        {
+            type = ConflictTypeUri,
+            title = "Conflict",
+            status = 409,
+            detail = "The resource was modified concurrently, please retry",
             timestamp = DateTime.UtcNow
         };
 

@@ -141,6 +141,15 @@ describe('db adapter [integration]', () => {
     expect(await db.findAccessibleOrder('ORD-OWN-B', admin)).not.toBeNull();
   });
 
+  it('rejects a status update made from a stale read', async () => {
+    const order = await db.findByOrderNumber('ORD-100');
+    if (!order) throw new Error('seed order missing');
+
+    expect(await db.updateOrderStatus(order, 'DELIVERED')).toBe(true);
+    expect(await db.updateOrderStatus(order, 'CANCELLED')).toBe(false);
+    expect((await db.findByOrderNumber('ORD-100'))?.status).toBe('DELIVERED');
+  });
+
   it('never lets concurrent claims exceed a coupon usage limit', async () => {
     await db.insertCoupon({ code: 'RACE-2', discountRate: new Decimal('0.1'), usageLimit: 2 });
 

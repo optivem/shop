@@ -8,6 +8,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.ColumnDefault;
@@ -84,6 +85,10 @@ public class Order {
 
     @Column(name = "owner_name", nullable = true)
     private String ownerName;
+
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version;
 
     // one arg per persisted orders column — wide list is intrinsic to the entity mapping
     @SuppressWarnings("java:S107")
