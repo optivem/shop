@@ -46,6 +46,25 @@ resource "google_artifact_registry_repository" "app_images" {
   repository_id = "app-images"
   format        = "DOCKER"
 
+  # KEEP wins over DELETE, so each image name keeps its 10 newest versions. 10 because the shared
+  # shop-* images are rebuilt by every variant's run: fewer could drop an image a variant still runs.
+  cleanup_policy_dry_run = false
+  cleanup_policies {
+    id     = "keep-last-10"
+    action = "KEEP"
+    most_recent_versions {
+      keep_count = 10
+    }
+  }
+  cleanup_policies {
+    id     = "delete-the-rest"
+    action = "DELETE"
+    condition {
+      tag_state  = "ANY"
+      older_than = "86400s"
+    }
+  }
+
   depends_on = [google_project_service.required_apis]
 }
 
