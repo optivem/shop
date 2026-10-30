@@ -20,6 +20,7 @@ Install once on your host machine:
    - ⚠️ Do **not** pick **Dev Containers: Add Dev Container Configuration Files…** — that creates a new config from templates. The repo already ships one in `.devcontainer/`.
 3. First launch builds the image (~3-5 min); subsequent launches are instant.
 4. [.devcontainer/post-create.sh](post-create.sh) runs automatically and verifies tooling.
+5. [.devcontainer/post-start.sh](post-start.sh) runs on every start and replaces any .NET `bin/` and `obj/` folders created on the host, so the C# extension and `dotnet build` work in the container. If you restore or build on the host while the container is running, run `bash .devcontainer/post-start.sh` in the container terminal.
 
 **Troubleshooting:** if you see an **"Add configuration to workspace / user data folder"** prompt or a template picker (Alpine, C#, Show all templates…), VS Code did **not** detect the existing config. Cancel, close the folder, and reopen `shop/` directly — do not pick a template, or you'll overwrite the shared config.
 
