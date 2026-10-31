@@ -21,11 +21,10 @@ What we get out of this — the goals and deliverables:
 
 ## ▶ Next executable step (resume here)
 
-**Step 6:** make `_acceptance-stage-cloud.yml` accept `architecture: monolith`, then replace `.github/workflows/monolith-{java,dotnet,typescript}-acceptance-stage-cloud.yml` with thin callers, one green run each. Monolith is one service `<system>-monolith-<language>-<stack>` on port 8080 serving UI and API, image `monolith-system-<language>`; `docker/keycloak/cloud-realm.jq` and the Neon databases already cover it. Behind Cloud Run, Java and .NET need forwarded-header settings so the OIDC redirect stays `https`.
+**Step 7:** rewrite `multitier-java-{qa,prod}-stage-cloud.yml` as thin callers of a new shared deploy-stage workflow; add `<system>_multitier_java_{qa,production}` to `ensure_neon` and run `./setup-gcp.sh --yes`; give QA its own realm, because `--import-realm` skips the existing `shop` realm so new URLs never reach it. Dispatch QA, never prod (decision 8).
 
 ## Steps
 
-- [ ] Step 6: Roll out to monolith java, dotnet and typescript, one green run each (no separate backend service, so the workflow must handle a different service shape), replacing the existing `monolith-*-acceptance-stage-cloud.yml`
 - [ ] Step 7: QA/prod cloud stages for multitier-java (manual dispatch): rewrite the existing `multitier-java-{qa,prod}-stage-cloud.yml`; get QA green, and stop before dispatching prod (see decision 8)
 - [ ] Step 8: Realm hardening: prod realm without the password-grant test client and test users
 
