@@ -448,6 +448,7 @@ jobs:
           rm -f "$env_file"
           gcloud run jobs execute "$MIGRATE_JOB" --region "$REGION" --project "$PROJECT" --wait
 
+      # PGSSLMODE: Neon requires TLS. JDBC and Npgsql negotiate it, but node-postgres only uses it when told.
       - name: Deploy Backend
         run: |
           set -euo pipefail
@@ -458,7 +459,7 @@ jobs:
             --arg ext "$EXT_URL" --arg mode "$STACK" \
             --arg origin "$FRONTEND_URL" --arg kc "$KEYCLOAK_URL" \
             '{POSTGRES_DB_HOST:$host, POSTGRES_DB_PORT:$port, POSTGRES_DB_NAME:$name,
-              POSTGRES_DB_USER:$user, POSTGRES_DB_PASSWORD:$pass,
+              POSTGRES_DB_USER:$user, POSTGRES_DB_PASSWORD:$pass, PGSSLMODE:"require",
               ERP_API_URL:($ext + "/erp"), CLOCK_API_URL:($ext + "/clock"), TAX_API_URL:($ext + "/tax"),
               EXTERNAL_SYSTEM_MODE:$mode, ALLOWED_ORIGINS:$origin,
               AUTH_ISSUER_URI:($kc + "/realms/shop"),

@@ -211,36 +211,39 @@ echo "  ✅ GCP_SERVICE_ACCOUNT = $SA_EMAIL"
 echo "  ✅ SYSTEM_NAME = $SYSTEM"
 
 # Neon: one project named after the system, one database per stack + Keycloak, all owned by the default role.
-# Sets db_json ({host, port, user, password}) for the direct (non-pooler) endpoint
+# Runs on every setup, so a variant added later gets its databases even though the credentials already exist.
+# Sets NEON_PROJECT_ID
 ensure_neon() {
   neon_resolve_org || exit 1
-  local project_id
-  project_id=$(neon_find_project "$SYSTEM") || exit 1
-  if [[ -z "$project_id" ]]; then
+  NEON_PROJECT_ID=$(neon_find_project "$SYSTEM") || exit 1
+  if [[ -z "$NEON_PROJECT_ID" ]]; then
     echo "  Creating Neon project '$SYSTEM' ($NEON_REGION)..."
-    project_id=$(neon_cli projects create --name "$SYSTEM" --region-id "$NEON_REGION" ${NEON_ORG_ARGS[@]+"${NEON_ORG_ARGS[@]}"} \
+    NEON_PROJECT_ID=$(neon_cli projects create --name "$SYSTEM" --region-id "$NEON_REGION" ${NEON_ORG_ARGS[@]+"${NEON_ORG_ARGS[@]}"} \
       --no-secrets -o json | jq -r '.project.id // .id')
   fi
-  echo "  ✅ Neon project: $SYSTEM ($project_id)"
+  echo "  ✅ Neon project: $SYSTEM ($NEON_PROJECT_ID)"
 
   local existing db
-  existing=$(neon_cli databases list --project-id "$project_id" -o json | neon_items databases | jq -r '.[].name')
-  for db in "${DB_PREFIX}_multitier_java_real" "${DB_PREFIX}_multitier_java_stub" "${DB_PREFIX}_keycloak"; do
+  existing=$(neon_cli databases list --project-id "$NEON_PROJECT_ID" -o json | neon_items databases | jq -r '.[].name')
+  for db in "${DB_PREFIX}"_{multitier,monolith}_{java,dotnet,typescript}_{real,stub} "${DB_PREFIX}_keycloak"; do
     if grep -qx "$db" <<< "$existing"; then
       echo "  ✅ Database $db exists"
     else
-      neon_cli databases create --project-id "$project_id" --name "$db" --owner-name "$NEON_ROLE" -o json > /dev/null
+      neon_cli databases create --project-id "$NEON_PROJECT_ID" --name "$db" --owner-name "$NEON_ROLE" -o json > /dev/null
       echo "  ✅ Created database $db"
     fi
   done
+}
 
+# Sets db_json ({host, port, user, password}) for the direct (non-pooler) endpoint
+read_neon_credentials() {
   # Direct endpoint (Flyway and Keycloak need session features the pooler lacks); parse with node so
   # percent-encoded password characters are decoded
   local conn
-  conn=$(neon_cli connection-string --project-id "$project_id" --role-name "$NEON_ROLE" \
+  conn=$(neon_cli connection-string --project-id "$NEON_PROJECT_ID" --role-name "$NEON_ROLE" \
     --database-name "${DB_PREFIX}_keycloak" | grep -E '^postgres(ql)?://' | tail -1)
   if [[ -z "$conn" ]]; then
-    echo "❌ Could not read the Neon connection string for project $project_id."
+    echo "❌ Could not read the Neon connection string for project $NEON_PROJECT_ID."
     exit 1
   fi
   db_json=$(node -e 'const u = new URL(process.argv[1]); console.log(JSON.stringify({host: u.hostname, port: u.port || "5432",
@@ -253,13 +256,14 @@ secret_has_version() {
   [[ -n "$(gcloud secrets versions list "$1" --project="$PROJECT_ID" --filter=state:ENABLED --limit=1 --format='value(name)' 2> /dev/null)" ]]
 }
 
+echo ""
+echo "Provisioning Neon (neonctl)..."
+ensure_neon
+
 if secret_has_version "$SYSTEM-db"; then
-  echo ""
   echo "  ✅ Neon credentials already stored ($SYSTEM-db)"
 else
-  echo ""
-  echo "Provisioning Neon (neonctl)..."
-  ensure_neon
+  read_neon_credentials
   echo -n "$db_json" | gcloud secrets versions add "$SYSTEM-db" --data-file=- --project="$PROJECT_ID" --quiet > /dev/null
   echo "  ✅ Stored $SYSTEM-db"
 fi
