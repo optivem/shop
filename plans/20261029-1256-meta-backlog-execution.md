@@ -1,5 +1,7 @@
 # 2026-10-29 12:56 UTC — Plan coordination meta-plan: backlog execution
 
+> 🤖 **Picked up by agent** — `f003112cc63e` at `2026-10-31T12:10:37Z`
+
 ## TL;DR
 
 **Why:** The 18 backlog plans overlap on the same files and contracts, several are already done or obsolete, and most are blocked on user decisions, so they can't safely be picked up in isolation while the cloud deploy plan is active.
@@ -7,9 +9,9 @@
 
 ## ▶ Next executable step (resume here)
 
-U1 and U3 are done and committed. U2 is partly done: Vite 7 is on main; Vitest 3 is unfinished on branch `wip/frontend-vitest-3` (`5a78ab2b`) with build and lint failing.
+U1, U2 and U3 are done and on main (frontend-react is on Vite 7, Vitest 3 and React 19; run `npm ci` there after pulling).
 
-Next: resume U2 at Step 2 of `plans/backlog/p4-maintenance/20260917-1811-frontend-major-upgrades.md` (merge that branch, fix `vite.config.ts(8,13)` TS2769 and the lint error, run the full gate), then React 19 and the wrap-up. Then U4 (system-test driver items), which needs docker and must not run alongside U2's gates. Scope decisions for that run: the `20261030-1822-template-cloud-deploy-all-variants` plan is another agent's, so stay out of its files; push each verified unit; U5-U12 stay blocked on Q-A..Q-H. Commit with `--paths`, and don't use `git pull --autostash` while another agent shares the checkout. New from U3: a HEAD-on-admin-GET gap, recorded in the keycloak follow-ups plan.
+Next: U4, the three system-test driver items in `plans/backlog/p2-product-correctness/20261007-1114-keycloak-auth-followups.md`: UI ownership check via direct order-details URL; UI access-denial support then widen `@Channel`; unify default-identity resolution. Stop and report if the UI driver needs a redesign. Scope decisions for the run: the `20261030-1822-template-cloud-deploy-all-variants` plan is another agent's, so stay out of its files; push each verified unit, unless a cloud run is in progress; U5-U12 stay blocked on Q-A..Q-H (confirmed 2026-10-31). Commit with `--paths`, and don't use `git pull --autostash` while another agent shares the checkout. Commit plan edits before running `gh optivem commit`: an uncommitted plan file blocks its `pull --rebase`.
 
 Read-only analysis of `plans/backlog/p1..p4`. No existing plan was edited. Repo state was spot-checked (grep/ls) to find stale premises.
 
