@@ -1,7 +1,7 @@
 import { test, forChannels, ChannelType } from './base/fixtures.js';
 import { DEFAULTS } from '../../../src/testkit/dsl/core/scenario/defaults.js';
 
-forChannels(ChannelType.API)(() => {
+forChannels(ChannelType.UI, ChannelType.API)(() => {
     test('customerShouldNotSeeAnotherCustomersOrderInHistory', async ({ scenario }) => {
         await scenario
             .given()

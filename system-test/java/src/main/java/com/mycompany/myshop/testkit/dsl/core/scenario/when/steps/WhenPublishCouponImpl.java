@@ -3,6 +3,7 @@ package com.mycompany.myshop.testkit.dsl.core.scenario.when.steps;
 import com.mycompany.myshop.testkit.common.Converter;
 import com.mycompany.myshop.testkit.dsl.core.scenario.ExecutionResult;
 import com.mycompany.myshop.testkit.dsl.core.scenario.ExecutionResultBuilder;
+import com.mycompany.myshop.testkit.dsl.port.ChannelMode;
 import com.mycompany.myshop.testkit.dsl.core.ScenarioDslImpl;
 import com.mycompany.myshop.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.testkit.dsl.core.shared.VoidVerification;
@@ -65,7 +66,7 @@ public class WhenPublishCouponImpl extends BaseWhenStep<Void, VoidVerification> 
 
     @Override
     protected ExecutionResult<Void, VoidVerification> execute(UseCaseDsl app) {
-        var result = app.myShop().publishCoupon()
+        var result = app.myShop(ChannelMode.DYNAMIC).publishCoupon()
                 .couponCode(couponCode)
                 .discountRate(discountRate)
                 .validFrom(validFrom)

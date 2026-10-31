@@ -14,10 +14,12 @@ public class MyShopUiDriver : IMyShopDriver
 {
     private readonly MyShopUiClient _client;
     private TestUser? _requestedUser;
+    private bool _anonymous;
     private Page _currentPage = Page.None;
 
     private HomePage? _homePage;
     private NewOrderPage? _newOrderPage;
+    private OrderHistoryPage? _orderHistoryPage;
     private OrderDetailsPage? _orderDetailsPage;
     private CouponManagementPage? _couponManagementPage;
 
@@ -44,12 +46,12 @@ public class MyShopUiDriver : IMyShopDriver
 
     public void ActAs(UserIdentity identity)
     {
+        _anonymous = identity.Kind == UserIdentityKind.Anonymous;
         _requestedUser = identity.Kind switch
         {
-            UserIdentityKind.Default => null,
+            UserIdentityKind.Default or UserIdentityKind.Anonymous => null,
             UserIdentityKind.Customer => TestUserExtensions.CustomerAt(identity.CustomerIndex),
             UserIdentityKind.Admin => TestUser.Admin,
-            UserIdentityKind.Anonymous => throw new NotSupportedException("The UI requires a logged-in user"),
             _ => throw new ArgumentOutOfRangeException(nameof(identity), identity, null)
         };
     }
@@ -70,13 +72,22 @@ public class MyShopUiDriver : IMyShopDriver
 
     public async Task<Result<PlaceOrderResponse, SystemError>> PlaceOrderAsync(PlaceOrderRequest request)
     {
+        if (_anonymous)
+        {
+            return await LoginRequiredAsync<PlaceOrderResponse>("/new-order");
+        }
+
         await ActAsAsync(TestUser.Customer);
         var sku = request.Sku;
         var quantity = request.Quantity;
         var country = request.Country;
         var couponCode = request.CouponCode;
 
-        await EnsureOnNewOrderPageAsync();
+        var pageResult = await EnsureOnNewOrderPageAsync();
+        if (pageResult.IsFailure)
+        {
+            return Failure<PlaceOrderResponse>(pageResult.Error);
+        }
 
         await _newOrderPage!.InputSkuAsync(sku);
         await _newOrderPage.InputQuantityAsync(quantity);
@@ -145,7 +156,12 @@ public class MyShopUiDriver : IMyShopDriver
             return Failure<DeliverOrderResponse>(viewResult.Error);
         }
 
-        await _orderDetailsPage!.ClickDeliverOrderAsync();
+        if (await _orderDetailsPage!.IsDeliverButtonHiddenAsync() && viewResult.Value.Status == OrderStatus.Placed)
+        {
+            return Failure<DeliverOrderResponse>(MyShopUiClient.PermissionDenied);
+        }
+
+        await _orderDetailsPage.ClickDeliverOrderAsync();
 
         var deliverResult = await _orderDetailsPage.GetResultAsync();
         if (deliverResult.IsFailure)
@@ -170,6 +186,11 @@ public class MyShopUiDriver : IMyShopDriver
 
     public async Task<Result<ViewOrderResponse, SystemError>> ViewOrderAsync(ViewOrderRequest request)
     {
+        if (_anonymous)
+        {
+            return await LoginRequiredAsync<ViewOrderResponse>($"/order-details?orderNumber={Uri.EscapeDataString(request.OrderNumber ?? string.Empty)}");
+        }
+
         await SwitchToRequestedUserAsync();
         var result = await EnsureOnOrderDetailsPageAsync(request.OrderNumber);
         if (result.IsFailure)
@@ -215,13 +236,45 @@ public class MyShopUiDriver : IMyShopDriver
         return Success(response);
     }
 
-    public Task<Result<BrowseOrderHistoryResponse, SystemError>> BrowseOrderHistoryAsync(BrowseOrderHistoryRequest request)
-        => throw new NotSupportedException("Browsing order history is only supported through the API channel");
+    public async Task<Result<BrowseOrderHistoryResponse, SystemError>> BrowseOrderHistoryAsync(BrowseOrderHistoryRequest request)
+    {
+        if (_anonymous)
+        {
+            return await LoginRequiredAsync<BrowseOrderHistoryResponse>("/order-history");
+        }
+
+        await SwitchToRequestedUserAsync();
+        var homePage = await GetHomePageAsync();
+        _orderHistoryPage = await homePage.ClickOrderHistoryAsync();
+        SetCurrentPage(Page.OrderHistory);
+
+        if (!string.IsNullOrWhiteSpace(request.OrderNumber))
+        {
+            await _orderHistoryPage.InputOrderNumberAsync(request.OrderNumber);
+            await _orderHistoryPage.ClickSearchAsync();
+        }
+
+        var orderNumbers = await _orderHistoryPage.ReadOrderNumbersAsync();
+        var orders = orderNumbers
+            .Select(orderNumber => new BrowseOrderHistoryResponse.OrderDto { OrderNumber = orderNumber })
+            .ToList();
+
+        return Success(new BrowseOrderHistoryResponse { Orders = orders });
+    }
 
     public async Task<Result<PublishCouponResponse, SystemError>> PublishCouponAsync(PublishCouponRequest request)
     {
+        if (_anonymous)
+        {
+            return await LoginRequiredAsync<PublishCouponResponse>("/admin-coupons");
+        }
+
         await ActAsAsync(TestUser.Admin);
-        await EnsureOnCouponManagementPageAsync();
+        var pageResult = await EnsureOnCouponManagementPageAsync();
+        if (pageResult.IsFailure)
+        {
+            return Failure<PublishCouponResponse>(pageResult.Error);
+        }
 
         await _couponManagementPage!.InputCouponCodeAsync(request.Code);
         await _couponManagementPage.InputDiscountRateAsync(request.DiscountRate);
@@ -236,6 +289,11 @@ public class MyShopUiDriver : IMyShopDriver
 
     public async Task<Result<BrowseCouponsResponse, SystemError>> BrowseCouponsAsync(BrowseCouponsRequest request)
     {
+        if (_anonymous)
+        {
+            return await LoginRequiredAsync<BrowseCouponsResponse>("/admin-coupons");
+        }
+
         await ActAsAsync(TestUser.Admin);
 
         // Retry with fresh page navigations to handle UI eventual consistency —
@@ -243,7 +301,12 @@ public class MyShopUiDriver : IMyShopDriver
         // may not yet reflect the latest state on first load.
         for (int attempt = 0; attempt < MaxBrowseRetries; attempt++)
         {
-            await NavigateToCouponManagementPageAsync();
+            var pageResult = await NavigateToCouponManagementPageAsync();
+            if (pageResult.IsFailure)
+            {
+                return Failure<BrowseCouponsResponse>(pageResult.Error);
+            }
+
             var coupons = await _couponManagementPage!.ReadCouponsAsync();
 
             if (coupons.Count > 0)
@@ -279,9 +342,16 @@ public class MyShopUiDriver : IMyShopDriver
             _currentPage = Page.None;
             _homePage = null;
             _newOrderPage = null;
+            _orderHistoryPage = null;
             _orderDetailsPage = null;
             _couponManagementPage = null;
         }
+    }
+
+    private async Task<Result<T, SystemError>> LoginRequiredAsync<T>(string path)
+    {
+        await _client.AssertLoginRequiredForAsync(path);
+        return Failure<T>(MyShopUiClient.AuthenticationRequired);
     }
 
     private async Task<HomePage> GetHomePageAsync()
@@ -294,14 +364,32 @@ public class MyShopUiDriver : IMyShopDriver
         return _homePage;
     }
 
-    private async Task EnsureOnNewOrderPageAsync()
+    /// <summary>A user who has no link to the page opens its URL, which is what can be refused.</summary>
+    private async Task<Result<VoidValue, SystemError>> EnsureOnNewOrderPageAsync()
     {
-        if (!IsOnPage(Page.NewOrder))
+        if (IsOnPage(Page.NewOrder))
         {
-            var homePage = await GetHomePageAsync();
+            return Success();
+        }
+
+        var homePage = await GetHomePageAsync();
+        if (_requestedUser != TestUser.Admin)
+        {
             _newOrderPage = await homePage.ClickNewOrderAsync();
             SetCurrentPage(Page.NewOrder);
+            return Success();
         }
+
+        var result = await _client.OpenNewOrderPageAsync();
+        if (result.IsFailure)
+        {
+            SetCurrentPage(Page.None);
+            return Failure(result.Error);
+        }
+
+        _newOrderPage = result.Value;
+        SetCurrentPage(Page.NewOrder);
+        return Success();
     }
 
     private async Task<Result<VoidValue, SystemError>> EnsureOnOrderDetailsPageAsync(string? orderNumber)
@@ -313,19 +401,32 @@ public class MyShopUiDriver : IMyShopDriver
         return await _orderDetailsPage.GetLoadResultAsync(orderNumber);
     }
 
-    private async Task EnsureOnCouponManagementPageAsync()
+    private async Task<Result<VoidValue, SystemError>> EnsureOnCouponManagementPageAsync()
     {
-        if (!IsOnPage(Page.CouponManagement))
-        {
-            await NavigateToCouponManagementPageAsync();
-        }
+        return IsOnPage(Page.CouponManagement) ? Success() : await NavigateToCouponManagementPageAsync();
     }
 
-    private async Task NavigateToCouponManagementPageAsync()
+    /// <summary>A user who has no link to the page opens its URL, which is what can be refused.</summary>
+    private async Task<Result<VoidValue, SystemError>> NavigateToCouponManagementPageAsync()
     {
         var homePage = await GetHomePageAsync();
-        _couponManagementPage = await homePage.ClickCouponManagementAsync();
+        if (_requestedUser == null || _requestedUser == TestUser.Admin)
+        {
+            _couponManagementPage = await homePage.ClickCouponManagementAsync();
+            SetCurrentPage(Page.CouponManagement);
+            return Success();
+        }
+
+        var result = await _client.OpenCouponManagementPageAsync();
+        if (result.IsFailure)
+        {
+            SetCurrentPage(Page.None);
+            return Failure(result.Error);
+        }
+
+        _couponManagementPage = result.Value;
         SetCurrentPage(Page.CouponManagement);
+        return Success();
     }
 
     private bool IsOnPage(Page page)
@@ -343,6 +444,7 @@ public class MyShopUiDriver : IMyShopDriver
         None,
         Home,
         NewOrder,
+        OrderHistory,
         OrderDetails,
         CouponManagement
     }

@@ -9,12 +9,13 @@ import static com.mycompany.myshop.systemtest.commons.constants.ErrorMessages.PE
 
 class DeliverOrderNegativeTest extends BaseAcceptanceTest {
     @TestTemplate
-    @Channel(ChannelType.API)
+    @Channel({ChannelType.UI, ChannelType.API})
     void customerShouldNotBeAbleToDeliverOrder() {
         scenario
-                .given().loggedInAsCustomer()
+                .given().order()
+                    .placedByCustomer()
+                .and().loggedInAsCustomer()
                 .when().deliverOrder()
-                    .withOrderNumber("ORD-NONEXISTENT")
                 .then().shouldFail()
                     .errorMessage(PERMISSION_DENIED);
     }

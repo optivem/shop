@@ -6,6 +6,7 @@ using Driver.Adapter;
 using Driver.Port.Dtos;
 using Dsl.Core.UseCase.UseCases;
 using Optivem.Testing;
+using Dsl.Port;
 using static Dsl.Core.Scenario.ScenarioDefaults;
 
 namespace Dsl.Core.Scenario.When.Steps;
@@ -83,7 +84,7 @@ public class PlaceOrder : BaseWhen<PlaceOrderResponse, PlaceOrderVerification>, 
 
     protected override async Task<ExecutionResult<PlaceOrderResponse, PlaceOrderVerification>> Execute(UseCaseDsl app)
     {
-        var shop = await app.MyShop(Channel);
+        var shop = await app.MyShop(ChannelMode.Dynamic, Channel);
         var result = await shop.PlaceOrder()
             .OrderNumber(_orderNumber)
             .Sku(_sku)

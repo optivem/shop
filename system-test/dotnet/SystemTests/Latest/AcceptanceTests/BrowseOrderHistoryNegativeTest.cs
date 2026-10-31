@@ -8,7 +8,7 @@ namespace SystemTests.Latest.AcceptanceTests;
 public class BrowseOrderHistoryNegativeTest : BaseAcceptanceTest
 {
     [Theory]
-    [ChannelData(ChannelType.API)]
+    [ChannelData(ChannelType.UI, ChannelType.API)]
     public async Task CustomerShouldNotSeeAnotherCustomersOrderInHistory(Channel channel)
     {
         await Scenario(channel)

@@ -8,7 +8,7 @@ namespace SystemTests.Latest.AcceptanceTests;
 public class BrowseCouponsNegativeTest : BaseAcceptanceTest
 {
     [Theory]
-    [ChannelData(ChannelType.API)]
+    [ChannelData(ChannelType.UI, ChannelType.API)]
     public async Task CustomerShouldNotBeAbleToBrowseCoupons(Channel channel)
     {
         await Scenario(channel)

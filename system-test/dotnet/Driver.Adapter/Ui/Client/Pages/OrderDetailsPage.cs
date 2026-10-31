@@ -152,6 +152,11 @@ public class OrderDetailsPage : BasePage
         await PageClient.ClickAsync(DeliverOrderOutputSelector);
     }
 
+    public async Task<bool> IsDeliverButtonHiddenAsync()
+    {
+        return await PageClient.IsHiddenAsync(DeliverOrderOutputSelector);
+    }
+
     public async Task<bool> IsCancelButtonHiddenAsync()
     {
         return await PageClient.IsHiddenAsync(CancelOrderOutputSelector);

@@ -9,7 +9,7 @@ import static com.mycompany.myshop.testkit.dsl.core.scenario.ScenarioDefaults.DE
 
 class BrowseOrderHistoryPositiveTest extends BaseAcceptanceTest {
     @TestTemplate
-    @Channel(ChannelType.API)
+    @Channel({ChannelType.UI, ChannelType.API})
     void customerShouldSeeOwnOrderInHistory() {
         scenario
                 .given().order()
@@ -22,7 +22,7 @@ class BrowseOrderHistoryPositiveTest extends BaseAcceptanceTest {
     }
 
     @TestTemplate
-    @Channel(ChannelType.API)
+    @Channel({ChannelType.UI, ChannelType.API})
     void adminShouldSeeCustomerOrderInHistory() {
         scenario
                 .given().order()
@@ -35,7 +35,7 @@ class BrowseOrderHistoryPositiveTest extends BaseAcceptanceTest {
     }
 
     @TestTemplate
-    @Channel(ChannelType.API)
+    @Channel({ChannelType.UI, ChannelType.API})
     void adminShouldSeeAnotherCustomersOrderInHistory() {
         scenario
                 .given().order()

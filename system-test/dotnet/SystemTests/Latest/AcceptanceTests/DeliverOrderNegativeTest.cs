@@ -8,12 +8,13 @@ namespace SystemTests.Latest.AcceptanceTests;
 public class DeliverOrderNegativeTest : BaseAcceptanceTest
 {
     [Theory]
-    [ChannelData(ChannelType.API)]
+    [ChannelData(ChannelType.UI, ChannelType.API)]
     public async Task CustomerShouldNotBeAbleToDeliverOrder(Channel channel)
     {
         await Scenario(channel)
-            .Given().LoggedInAsCustomer()
-            .When().DeliverOrder().WithOrderNumber("ORD-NONEXISTENT")
+            .Given().Order().PlacedByCustomer()
+            .And().LoggedInAsCustomer()
+            .When().DeliverOrder()
             .Then().ShouldFail()
             .ErrorMessage(PermissionDenied);
     }

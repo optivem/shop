@@ -7,6 +7,8 @@ namespace Driver.Adapter.Ui.Client.Pages;
 public class CouponManagementPage : BasePage
 {
     private const string CouponCodeInputSelector = "[aria-label=\"Coupon Code\"]";
+
+    public const string ReadySelector = CouponCodeInputSelector;
     private const string DiscountRateInputSelector = "[aria-label=\"Discount Rate\"]";
     private const string ValidFromInputSelector = "[aria-label=\"Valid From\"]";
     private const string ValidToInputSelector = "[aria-label=\"Valid To\"]";

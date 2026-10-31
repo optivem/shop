@@ -9,7 +9,7 @@ import static com.mycompany.myshop.systemtest.commons.constants.ErrorMessages.PE
 
 class BrowseCouponsNegativeTest extends BaseAcceptanceTest {
     @TestTemplate
-    @Channel(ChannelType.API)
+    @Channel({ChannelType.UI, ChannelType.API})
     void customerShouldNotBeAbleToBrowseCoupons() {
         scenario
                 .given().loggedInAsCustomer()

@@ -6,6 +6,12 @@ using Driver.Adapter.Shared.Client.Http;
 
 using Driver.Adapter.Shared.Client.Playwright;
 
+using Common;
+
+using Driver.Port;
+
+using Driver.Port.Dtos.Error;
+
 using System.Net;
 
 using PlaywrightGateway = Driver.Adapter.Shared.Client.Playwright.PageClient;
@@ -39,6 +45,16 @@ public class MyShopUiClient : IAsyncDisposable
     private const string HomeReadySelector = "a[href='/order-history']";
 
     private const string SinglePageAppRootSelector = "#root";
+
+    public const string AuthenticationRequired = "Authentication is required";
+
+    public const string PermissionDenied = "You do not have permission to perform this action";
+
+    private const string NotAuthorizedSelector = "h1:has-text('Not authorized'):visible";
+
+    private const string NewOrderPath = "/new-order";
+
+    private const string CouponManagementPath = "/admin-coupons";
 
 
 
@@ -170,6 +186,51 @@ public class MyShopUiClient : IAsyncDisposable
         var encodedOrderNumber = Uri.EscapeDataString(orderNumber ?? string.Empty);
         await OpenDirectlyAsync($"/order-details?orderNumber={encodedOrderNumber}", $"/order-details/{encodedOrderNumber}");
         return new OrderDetailsPage(new PlaywrightGateway(_page, _baseUrl, _login));
+    }
+
+    /// <summary>Opens the new order page by its URL, reporting a refusal. The app must already be open.</summary>
+    public Task<Result<NewOrderPage, SystemError>> OpenNewOrderPageAsync()
+    {
+        var pageClient = new PlaywrightGateway(_page, _baseUrl, _login);
+        return OpenRestrictedPageAsync(NewOrderPath, NewOrderPage.ReadySelector, new NewOrderPage(pageClient));
+    }
+
+    /// <summary>Opens the coupon management page by its URL, reporting a refusal. The app must already be open.</summary>
+    public Task<Result<CouponManagementPage, SystemError>> OpenCouponManagementPageAsync()
+    {
+        var pageClient = new PlaywrightGateway(_page, _baseUrl, _login);
+        return OpenRestrictedPageAsync(CouponManagementPath, CouponManagementPage.ReadySelector, new CouponManagementPage(pageClient));
+    }
+
+    /// <summary>Opens <paramref name="path"/> in a throwaway session that never logs in, and requires the app to send it to the login form.</summary>
+    public async Task AssertLoginRequiredForAsync(string path)
+    {
+        if (_login == null)
+        {
+            throw new InvalidOperationException("Anonymous access can only be exercised against a system with a login");
+        }
+
+        await using var anonymousContext = await _browser.NewContextAsync();
+        var anonymousPage = await anonymousContext.NewPageAsync();
+        await anonymousPage.GotoAsync(_baseUrl + path);
+        await _login.WaitForLoginFormAsync(anonymousPage);
+    }
+
+    /// <summary>The server-rendered UIs refuse with a 403 response; the React frontend renders a "Not authorized" page.</summary>
+    private async Task<Result<T, SystemError>> OpenRestrictedPageAsync<T>(string path, string readySelector, T openedPage)
+    {
+        await OpenDirectlyAsync(path, path);
+
+        if (_response?.Status == (int)HttpStatusCode.Forbidden)
+        {
+            return SystemResults.Failure<T>(PermissionDenied);
+        }
+
+        var pageClient = new PlaywrightGateway(_page, _baseUrl, _login);
+        await pageClient.WaitForVisibleAsync(readySelector + ", " + NotAuthorizedSelector);
+        return await pageClient.IsHiddenAsync(NotAuthorizedSelector)
+            ? SystemResults.Success(openedPage)
+            : SystemResults.Failure<T>(PermissionDenied);
     }
 
     /// <summary>

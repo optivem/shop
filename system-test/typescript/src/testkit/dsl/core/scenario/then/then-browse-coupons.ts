@@ -51,7 +51,7 @@ export class ThenBrowseCouponsResultStage implements PromiseLike<void> {
 
     this.app.actAs(this.ctx.loggedInIdentity());
 
-    const result = await this.app.myShop('static').browseCoupons({});
+    const result = await this.app.myShop('dynamic').browseCoupons({});
     if (this._expectSuccess) {
       expect(result.success, JSON.stringify(result)).toBe(true);
       if (result.success) {

@@ -171,7 +171,7 @@ public class PlaceOrderNegativeTest : BaseAcceptanceTest
     }
 
     [Theory]
-    [ChannelData(ChannelType.API)]
+    [ChannelData(ChannelType.UI, ChannelType.API)]
     public async Task AdminShouldNotBeAbleToPlaceOrder(Channel channel)
     {
         await Scenario(channel)

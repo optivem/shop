@@ -56,6 +56,11 @@ public class KeycloakUiLogin {
         }
     }
 
+    /** Waits for the login form, without filling it in. */
+    public void waitForLoginForm(Page page) {
+        page.waitForSelector(SUBMIT_SELECTOR, new Page.WaitForSelectorOptions().setTimeout(TIMEOUT_MILLISECONDS));
+    }
+
     private void login(Page page) {
         page.waitForSelector(SUBMIT_SELECTOR, new Page.WaitForSelectorOptions().setTimeout(TIMEOUT_MILLISECONDS));
         page.fill(USERNAME_SELECTOR, user.getUsername());

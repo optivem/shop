@@ -87,7 +87,7 @@ public class PublishCouponNegativeTest : BaseAcceptanceTest
     }
 
     [Theory]
-    [ChannelData(ChannelType.API)]
+    [ChannelData(ChannelType.UI, ChannelType.API)]
     public async Task CustomerShouldNotBeAbleToPublishCoupon(Channel channel)
     {
         await Scenario(channel)

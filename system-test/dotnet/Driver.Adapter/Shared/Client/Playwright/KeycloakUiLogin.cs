@@ -54,6 +54,12 @@ public sealed class KeycloakUiLogin
         }
     }
 
+    /// <summary>Waits for the login form, without filling it in.</summary>
+    public async Task WaitForLoginFormAsync(IPage page)
+    {
+        await page.WaitForSelectorAsync(SubmitSelector, new PageWaitForSelectorOptions { Timeout = TimeoutMilliseconds });
+    }
+
     private async Task LoginAsync(IPage page)
     {
         await page.WaitForSelectorAsync(SubmitSelector, new PageWaitForSelectorOptions { Timeout = TimeoutMilliseconds });

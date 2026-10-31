@@ -74,6 +74,12 @@ public class PageClient
         return contents.ToList();
     }
 
+    public async Task<List<string>> ReadAllTextContentsNoWaitAsync(string selector)
+    {
+        var contents = await _page.Locator(selector).AllTextContentsAsync();
+        return contents.ToList();
+    }
+
     public async Task WaitForVisibleAsync(string selector, float? timeoutMilliseconds = null)
     {
         await LoginIfRedirectedAsync();

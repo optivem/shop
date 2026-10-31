@@ -184,6 +184,9 @@ forChannels(ChannelType.API)(() => {
             .fieldErrorMessage('country', 'Country must not be empty');
     });
 
+});
+
+forChannels(ChannelType.UI, ChannelType.API)(() => {
     test('adminShouldNotBeAbleToPlaceOrder', async ({ scenario }) => {
         await scenario
             .given()

@@ -8,7 +8,7 @@ namespace SystemTests.Latest.AcceptanceTests;
 public class BrowseOrderHistoryPositiveTest : BaseAcceptanceTest
 {
     [Theory]
-    [ChannelData(ChannelType.API)]
+    [ChannelData(ChannelType.UI, ChannelType.API)]
     public async Task CustomerShouldSeeOwnOrderInHistory(Channel channel)
     {
         await Scenario(channel)
@@ -20,7 +20,7 @@ public class BrowseOrderHistoryPositiveTest : BaseAcceptanceTest
     }
 
     [Theory]
-    [ChannelData(ChannelType.API)]
+    [ChannelData(ChannelType.UI, ChannelType.API)]
     public async Task AdminShouldSeeCustomerOrderInHistory(Channel channel)
     {
         await Scenario(channel)
@@ -32,7 +32,7 @@ public class BrowseOrderHistoryPositiveTest : BaseAcceptanceTest
     }
 
     [Theory]
-    [ChannelData(ChannelType.API)]
+    [ChannelData(ChannelType.UI, ChannelType.API)]
     public async Task AdminShouldSeeAnotherCustomersOrderInHistory(Channel channel)
     {
         await Scenario(channel)

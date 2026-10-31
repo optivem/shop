@@ -7,6 +7,7 @@ import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.CouponManagem
 import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.HomePage;
 import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.NewOrderPage;
 import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.OrderDetailsPage;
+import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.OrderHistoryPage;
 import com.mycompany.myshop.testkit.driver.port.dtos.BrowseCouponsRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.BrowseCouponsResponse;
 import com.mycompany.myshop.testkit.driver.port.dtos.BrowseOrderHistoryRequest;
@@ -27,6 +28,7 @@ import com.mycompany.myshop.testkit.driver.port.MyShopDriver;
 import com.mycompany.myshop.testkit.driver.port.UserIdentity;
 import com.mycompany.myshop.testkit.driver.port.dtos.error.SystemError;
 import com.mycompany.myshop.testkit.common.Result;
+import com.mycompany.myshop.testkit.common.domain.OrderStatus;
 
 import static com.mycompany.myshop.testkit.dsl.core.usecase.commons.SystemResults.failure;
 import static com.mycompany.myshop.testkit.dsl.core.usecase.commons.SystemResults.success;
@@ -35,9 +37,11 @@ public class MyShopUiDriver implements MyShopDriver {
     private final MyShopUiClient client;
 
     private TestUser requestedUser;
+    private boolean anonymous;
     private Page currentPage = Page.NONE;
     private HomePage homePage;
     private NewOrderPage newOrderPage;
+    private OrderHistoryPage orderHistoryPage;
     private OrderDetailsPage orderDetailsPage;
     private CouponManagementPage couponManagementPage;
 
@@ -56,11 +60,11 @@ public class MyShopUiDriver implements MyShopDriver {
 
     @Override
     public void actAs(UserIdentity identity) {
+        anonymous = identity.kind() == UserIdentity.Kind.ANONYMOUS;
         requestedUser = switch (identity.kind()) {
-            case DEFAULT -> null;
+            case DEFAULT, ANONYMOUS -> null;
             case CUSTOMER -> TestUser.customer(identity.customerIndex());
             case ADMIN -> TestUser.ADMIN;
-            case ANONYMOUS -> throw new UnsupportedOperationException("The UI requires a logged-in user");
         };
     }
 
@@ -78,13 +82,21 @@ public class MyShopUiDriver implements MyShopDriver {
 
     @Override
     public Result<PlaceOrderResponse, SystemError> placeOrder(PlaceOrderRequest request) {
+        if (anonymous) {
+            return loginRequired("/new-order");
+        }
+
         actAs(TestUser.CUSTOMER);
         var sku = request.getSku();
         var quantity = request.getQuantity();
         var country = request.getCountry();
         var couponCode = request.getCouponCode();
 
-        ensureOnNewOrderPage();
+        var pageResult = ensureOnNewOrderPage();
+        if (pageResult.isFailure()) {
+            return failure(pageResult.getError());
+        }
+
         newOrderPage.inputSku(sku);
         newOrderPage.inputQuantity(quantity);
         newOrderPage.inputCountry(country);
@@ -134,6 +146,10 @@ public class MyShopUiDriver implements MyShopDriver {
             return failure(viewResult.getError());
         }
 
+        if (orderDetailsPage.isDeliverButtonHidden() && viewResult.getValue().getStatus() == OrderStatus.PLACED) {
+            return failure(MyShopUiClient.PERMISSION_DENIED);
+        }
+
         orderDetailsPage.clickDeliverOrder();
 
         var result = orderDetailsPage.getResult();
@@ -147,8 +163,12 @@ public class MyShopUiDriver implements MyShopDriver {
 
     @Override
     public Result<ViewOrderResponse, SystemError> viewOrder(ViewOrderRequest request) {
-        switchToRequestedUser();
         var orderNumber = request.getOrderNumber();
+        if (anonymous) {
+            return loginRequired("/order-details/" + orderNumber);
+        }
+
+        switchToRequestedUser();
         var result = ensureOnOrderDetailsPage(orderNumber);
         if (result.isFailure()) {
             return failure(result.getError());
@@ -193,13 +213,38 @@ public class MyShopUiDriver implements MyShopDriver {
 
     @Override
     public Result<BrowseOrderHistoryResponse, SystemError> browseOrderHistory(BrowseOrderHistoryRequest request) {
-        throw new UnsupportedOperationException("Browsing order history is only supported through the API channel");
+        if (anonymous) {
+            return loginRequired("/order-history");
+        }
+
+        switchToRequestedUser();
+        orderHistoryPage = getHomePage().clickOrderHistory();
+        currentPage = Page.ORDER_HISTORY;
+
+        var orderNumber = request.getOrderNumber();
+        if (orderNumber != null && !orderNumber.isBlank()) {
+            orderHistoryPage.inputOrderNumber(orderNumber);
+            orderHistoryPage.clickSearch();
+        }
+
+        var orders = orderHistoryPage.readOrderNumbers().stream()
+                .map(listed -> BrowseOrderHistoryResponse.OrderDto.builder().orderNumber(listed).build())
+                .toList();
+
+        return success(BrowseOrderHistoryResponse.builder().orders(orders).build());
     }
 
     @Override
     public Result<PublishCouponResponse, SystemError> publishCoupon(PublishCouponRequest request) {
+        if (anonymous) {
+            return loginRequired("/admin-coupons");
+        }
+
         actAs(TestUser.ADMIN);
-        ensureOnCouponManagementPage();
+        var pageResult = ensureOnCouponManagementPage();
+        if (pageResult.isFailure()) {
+            return failure(pageResult.getError());
+        }
 
         couponManagementPage.inputCouponCode(request.getCode());
         couponManagementPage.inputDiscountRate(request.getDiscountRate());
@@ -214,8 +259,15 @@ public class MyShopUiDriver implements MyShopDriver {
 
     @Override
     public Result<BrowseCouponsResponse, SystemError> browseCoupons(BrowseCouponsRequest request) {
+        if (anonymous) {
+            return loginRequired("/admin-coupons");
+        }
+
         actAs(TestUser.ADMIN);
-        navigateToCouponManagementPage();
+        var pageResult = navigateToCouponManagementPage();
+        if (pageResult.isFailure()) {
+            return failure(pageResult.getError());
+        }
 
         var coupons = couponManagementPage.readCoupons();
 
@@ -242,9 +294,15 @@ public class MyShopUiDriver implements MyShopDriver {
             currentPage = Page.NONE;
             homePage = null;
             newOrderPage = null;
+            orderHistoryPage = null;
             orderDetailsPage = null;
             couponManagementPage = null;
         }
+    }
+
+    private <T> Result<T, SystemError> loginRequired(String path) {
+        client.assertLoginRequiredFor(path);
+        return failure(MyShopUiClient.AUTHENTICATION_REQUIRED);
     }
 
     // --- page navigation ---
@@ -257,22 +315,52 @@ public class MyShopUiDriver implements MyShopDriver {
         return homePage;
     }
 
-    private void ensureOnNewOrderPage() {
-        if (currentPage != Page.NEW_ORDER) {
-            newOrderPage = getHomePage().clickNewOrder();
+    /** A user who has no link to the page opens its URL, which is what can be refused. */
+    private Result<Void, SystemError> ensureOnNewOrderPage() {
+        if (currentPage == Page.NEW_ORDER) {
+            return success();
+        }
+
+        var homePage = getHomePage();
+        if (requestedUser != TestUser.ADMIN) {
+            newOrderPage = homePage.clickNewOrder();
             currentPage = Page.NEW_ORDER;
+            return success();
         }
+
+        var result = client.openNewOrderPage();
+        if (result.isFailure()) {
+            currentPage = Page.NONE;
+            return failure(result.getError());
+        }
+
+        newOrderPage = result.getValue();
+        currentPage = Page.NEW_ORDER;
+        return success();
     }
 
-    private void ensureOnCouponManagementPage() {
-        if (currentPage != Page.COUPON_MANAGEMENT) {
-            navigateToCouponManagementPage();
-        }
+    private Result<Void, SystemError> ensureOnCouponManagementPage() {
+        return currentPage == Page.COUPON_MANAGEMENT ? success() : navigateToCouponManagementPage();
     }
 
-    private void navigateToCouponManagementPage() {
-        couponManagementPage = getHomePage().clickCouponManagement();
+    /** A user who has no link to the page opens its URL, which is what can be refused. */
+    private Result<Void, SystemError> navigateToCouponManagementPage() {
+        var homePage = getHomePage();
+        if (requestedUser == null || requestedUser == TestUser.ADMIN) {
+            couponManagementPage = homePage.clickCouponManagement();
+            currentPage = Page.COUPON_MANAGEMENT;
+            return success();
+        }
+
+        var result = client.openCouponManagementPage();
+        if (result.isFailure()) {
+            currentPage = Page.NONE;
+            return failure(result.getError());
+        }
+
+        couponManagementPage = result.getValue();
         currentPage = Page.COUPON_MANAGEMENT;
+        return success();
     }
 
     private Result<Void, SystemError> ensureOnOrderDetailsPage(String orderNumber) {
@@ -287,6 +375,7 @@ public class MyShopUiDriver implements MyShopDriver {
         NONE,
         HOME,
         NEW_ORDER,
+        ORDER_HISTORY,
         ORDER_DETAILS,
         COUPON_MANAGEMENT
     }

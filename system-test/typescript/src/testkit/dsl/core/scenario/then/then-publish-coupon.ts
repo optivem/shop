@@ -85,7 +85,7 @@ export class ThenPublishCouponResultStage implements PromiseLike<void> {
     this.app.actAs(this.ctx.loggedInIdentity());
 
     const resolvedCode = this.useCaseContext.getParamValue(this.code);
-    const result = await this.app.myShop('static').publishCoupon({
+    const result = await this.app.myShop('dynamic').publishCoupon({
       code: resolvedCode,
       discountRate: String(this.discountRate),
       validFrom: this.validFrom,

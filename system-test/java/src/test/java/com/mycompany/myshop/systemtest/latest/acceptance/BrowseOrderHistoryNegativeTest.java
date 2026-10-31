@@ -9,7 +9,7 @@ import static com.mycompany.myshop.testkit.dsl.core.scenario.ScenarioDefaults.DE
 
 class BrowseOrderHistoryNegativeTest extends BaseAcceptanceTest {
     @TestTemplate
-    @Channel(ChannelType.API)
+    @Channel({ChannelType.UI, ChannelType.API})
     void customerShouldNotSeeAnotherCustomersOrderInHistory() {
         scenario
                 .given().order()

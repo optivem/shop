@@ -37,7 +37,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
     });
 });
 
-forChannels(ChannelType.API)(() => {
+forChannels(ChannelType.UI, ChannelType.API)(() => {
     test('anonymousShouldNotBeAbleToViewOrder', async ({ scenario }) => {
         await scenario
             .given()

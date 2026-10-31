@@ -34,6 +34,10 @@ export class OrderDetailsPage extends BasePage {
     await cancelButton.click({ timeout: PAGE_TIMEOUT_MS });
   }
 
+  async isDeliverButtonHidden(): Promise<boolean> {
+    return (await this.page.locator('[aria-label="Deliver Order"]').count()) === 0;
+  }
+
   async clickDeliverOrder(): Promise<void> {
     const deliverButton = this.page.locator('[aria-label="Deliver Order"]');
     await deliverButton.waitFor({ state: 'visible', timeout: PAGE_TIMEOUT_MS });

@@ -129,6 +129,10 @@ public class OrderDetailsPage extends BasePage {
         pageClient.click(DELIVER_ORDER_SELECTOR);
     }
 
+    public boolean isDeliverButtonHidden() {
+        return pageClient.isHidden(DELIVER_ORDER_SELECTOR);
+    }
+
     public boolean isCancelButtonHidden() {
         return pageClient.isHidden(CANCEL_ORDER_SELECTOR);
     }

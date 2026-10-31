@@ -6,6 +6,7 @@ using Common;
 using Driver.Port.Dtos;
 using Dsl.Core.UseCase.UseCases;
 using Optivem.Testing;
+using Dsl.Port;
 using static Dsl.Core.Scenario.ScenarioDefaults;
 
 namespace Dsl.Core.Scenario.When.Steps;
@@ -82,7 +83,7 @@ public class WhenPublishCoupon : BaseWhen<VoidValue, VoidVerification>, IWhenPub
 
     protected override async Task<ExecutionResult<VoidValue, VoidVerification>> Execute(UseCaseDsl app)
     {
-        var shop = await app.MyShop(Channel);
+        var shop = await app.MyShop(ChannelMode.Dynamic, Channel);
         var result = await shop.PublishCoupon()
             .CouponCode(_couponCode)
             .DiscountRate(_discountRate)

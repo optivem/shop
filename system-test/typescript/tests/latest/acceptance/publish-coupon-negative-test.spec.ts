@@ -82,6 +82,9 @@ forChannels(ChannelType.API)(() => {
         });
     });
 
+});
+
+forChannels(ChannelType.UI, ChannelType.API)(() => {
     test('customerShouldNotBeAbleToPublishCoupon', async ({ scenario }) => {
         await scenario
             .given()

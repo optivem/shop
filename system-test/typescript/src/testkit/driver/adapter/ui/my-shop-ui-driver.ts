@@ -13,7 +13,10 @@ import type { ViewOrderRequest } from '../../port/dtos/ViewOrderRequest.js';
 import type { ViewOrderResponse } from '../../port/dtos/ViewOrderResponse.js';
 import type { SystemError } from '../../port/dtos/errors/SystemError.js';
 import type { BrowseOrderHistoryRequest } from '../../port/dtos/BrowseOrderHistoryRequest.js';
-import type { BrowseOrderHistoryResponse } from '../../port/dtos/BrowseOrderHistoryResponse.js';
+import type {
+  BrowseOrderHistoryOrderItem,
+  BrowseOrderHistoryResponse,
+} from '../../port/dtos/BrowseOrderHistoryResponse.js';
 import type { UserIdentity } from '../../port/user-identity.js';
 import type { PublishCouponRequest } from '../../port/dtos/PublishCouponRequest.js';
 import type { PublishCouponResponse } from '../../port/dtos/PublishCouponResponse.js';
@@ -21,21 +24,25 @@ import type { BrowseCouponsRequest } from '../../port/dtos/BrowseCouponsRequest.
 import type { BrowseCouponsResponse } from '../../port/dtos/BrowseCouponsResponse.js';
 import type { MyShopDriver } from '../../port/my-shop-driver.js';
 import { TestUsers, testCustomer, type TestUser } from '../shared/client/http/test-user.js';
-import { MyShopUiClient } from './client/MyShopUiClient.js';
+import { AUTHENTICATION_REQUIRED, MyShopUiClient, PERMISSION_DENIED } from './client/MyShopUiClient.js';
 import { NewOrderPage } from './client/pages/NewOrderPage.js';
+import type { CouponManagementPage } from './client/pages/CouponManagementPage.js';
 import type { OrderDetailsPage } from './client/pages/OrderDetailsPage.js';
 
 export class MyShopUiDriver implements MyShopDriver {
   private readonly client: MyShopUiClient;
   private requestedUser: TestUser | undefined;
+  private anonymous = false;
 
   constructor(baseUrl: string, browser: Browser, keycloakBaseUrl?: string) {
     this.client = new MyShopUiClient(baseUrl, browser, keycloakBaseUrl);
   }
 
   actAs(identity: UserIdentity): void {
+    this.anonymous = identity.kind === 'ANONYMOUS';
     switch (identity.kind) {
       case 'DEFAULT':
+      case 'ANONYMOUS':
         this.requestedUser = undefined;
         break;
       case 'CUSTOMER':
@@ -44,8 +51,6 @@ export class MyShopUiDriver implements MyShopDriver {
       case 'ADMIN':
         this.requestedUser = TestUsers.ADMIN;
         break;
-      case 'ANONYMOUS':
-        throw new Error('The UI requires a logged-in user');
     }
   }
 
@@ -56,12 +61,13 @@ export class MyShopUiDriver implements MyShopDriver {
   }
 
   async placeOrder(request: PlaceOrderRequest): Promise<Result<PlaceOrderResponse, SystemError>> {
-    await this.runAs(TestUsers.CUSTOMER);
-    const homeResult = await this.client.openHomePage();
-    if (!homeResult.success) return failure(homeResult.error);
-    await homeResult.value.clickNewOrder();
+    if (this.anonymous) return this.loginRequired('/new-order');
 
-    const newOrderPage = this.client.newOrderPage();
+    await this.runAs(TestUsers.CUSTOMER);
+    const pageResult = await this.openNewOrderPage();
+    if (!pageResult.success) return failure(pageResult.error);
+
+    const newOrderPage = pageResult.value;
     if (request.sku !== null) {
       await newOrderPage.inputSku(request.sku);
     }
@@ -88,6 +94,10 @@ export class MyShopUiDriver implements MyShopDriver {
   }
 
   async viewOrder(request: ViewOrderRequest): Promise<Result<ViewOrderResponse, SystemError>> {
+    if (this.anonymous) {
+      return this.loginRequired(`/order-details?orderNumber=${encodeURIComponent(request.orderNumber)}`);
+    }
+
     await this.switchToRequestedUser();
     const orderNumber = request.orderNumber;
     const detailsResult = await this.openOrderDetails(orderNumber);
@@ -114,6 +124,10 @@ export class MyShopUiDriver implements MyShopDriver {
   }
 
   async cancelOrder(request: CancelOrderRequest): Promise<Result<CancelOrderResponse, SystemError>> {
+    if (this.anonymous) {
+      return this.loginRequired(`/order-details?orderNumber=${encodeURIComponent(request.orderNumber)}`);
+    }
+
     await this.switchToRequestedUser();
     const orderNumber = request.orderNumber;
     const detailsResult = await this.openOrderDetails(orderNumber);
@@ -127,11 +141,19 @@ export class MyShopUiDriver implements MyShopDriver {
   }
 
   async deliverOrder(request: DeliverOrderRequest): Promise<Result<DeliverOrderResponse, SystemError>> {
+    if (this.anonymous) {
+      return this.loginRequired(`/order-details?orderNumber=${encodeURIComponent(request.orderNumber)}`);
+    }
+
     await this.runAs(TestUsers.ADMIN);
     const orderNumber = request.orderNumber;
     const detailsResult = await this.openOrderDetails(orderNumber);
     if (!detailsResult.success) return failure(detailsResult.error);
     const detailsPage = detailsResult.value;
+    if ((await detailsPage.isDeliverButtonHidden()) && (await detailsPage.getStatus()) === 'PLACED') {
+      return failure({ message: PERMISSION_DENIED, fieldErrors: [] });
+    }
+
     await detailsPage.clickDeliverOrder();
 
     const notificationResult = await detailsPage.getResult();
@@ -139,17 +161,33 @@ export class MyShopUiDriver implements MyShopDriver {
     return failure(notificationResult.error);
   }
 
-  browseOrderHistory(_request: BrowseOrderHistoryRequest): Promise<Result<BrowseOrderHistoryResponse, SystemError>> {
-    return Promise.reject(new Error('Browsing order history is only supported through the API channel'));
+  async browseOrderHistory(request: BrowseOrderHistoryRequest): Promise<Result<BrowseOrderHistoryResponse, SystemError>> {
+    if (this.anonymous) return this.loginRequired('/order-history');
+
+    await this.switchToRequestedUser();
+    const homeResult = await this.client.openHomePage();
+    if (!homeResult.success) return failure(homeResult.error);
+    await homeResult.value.clickOrderHistory();
+
+    const orderHistoryPage = this.client.orderHistoryPage();
+    if (request.orderNumber) {
+      await orderHistoryPage.inputOrderNumber(request.orderNumber);
+      await orderHistoryPage.clickSearch();
+    }
+
+    const orderNumbers = await orderHistoryPage.readOrderNumbers();
+    const orders = orderNumbers.map((orderNumber) => ({ orderNumber } as BrowseOrderHistoryOrderItem));
+    return success({ orders } as BrowseOrderHistoryResponse);
   }
 
   async publishCoupon(request: PublishCouponRequest): Promise<Result<PublishCouponResponse, SystemError>> {
-    await this.runAs(TestUsers.ADMIN);
-    const homeResult = await this.client.openHomePage();
-    if (!homeResult.success) return failure(homeResult.error);
-    await homeResult.value.clickAdminCoupons();
+    if (this.anonymous) return this.loginRequired('/admin-coupons');
 
-    const couponPage = this.client.couponManagementPage();
+    await this.runAs(TestUsers.ADMIN);
+    const pageResult = await this.openCouponManagementPage();
+    if (!pageResult.success) return failure(pageResult.error);
+
+    const couponPage = pageResult.value;
     await couponPage.inputCouponCode(request.code);
     await couponPage.inputDiscountRate(request.discountRate);
     if (request.validFrom) {
@@ -169,12 +207,13 @@ export class MyShopUiDriver implements MyShopDriver {
   }
 
   async browseCoupons(_request: BrowseCouponsRequest): Promise<Result<BrowseCouponsResponse, SystemError>> {
-    await this.runAs(TestUsers.ADMIN);
-    const homeResult = await this.client.openHomePage();
-    if (!homeResult.success) return failure(homeResult.error);
-    await homeResult.value.clickAdminCoupons();
+    if (this.anonymous) return this.loginRequired('/admin-coupons');
 
-    const couponPage = this.client.couponManagementPage();
+    await this.runAs(TestUsers.ADMIN);
+    const pageResult = await this.openCouponManagementPage();
+    if (!pageResult.success) return failure(pageResult.error);
+
+    const couponPage = pageResult.value;
     await couponPage.clickRefreshCouponList();
     const rows = await couponPage.getCouponRows();
 
@@ -183,6 +222,33 @@ export class MyShopUiDriver implements MyShopDriver {
 
   async close(): Promise<void> {
     await this.client.close();
+  }
+
+  private async loginRequired<T>(path: string): Promise<Result<T, SystemError>> {
+    await this.client.assertLoginRequiredFor(path);
+    return failure({ message: AUTHENTICATION_REQUIRED, fieldErrors: [] });
+  }
+
+  /** A user who has no link to the page opens its URL, which is what can be refused. */
+  private async openNewOrderPage(): Promise<Result<NewOrderPage, SystemError>> {
+    const homeResult = await this.client.openHomePage();
+    if (!homeResult.success) return failure(homeResult.error);
+
+    if (this.requestedUser === TestUsers.ADMIN) return this.client.openNewOrderPage();
+
+    await homeResult.value.clickNewOrder();
+    return success(this.client.newOrderPage());
+  }
+
+  /** A user who has no link to the page opens its URL, which is what can be refused. */
+  private async openCouponManagementPage(): Promise<Result<CouponManagementPage, SystemError>> {
+    const homeResult = await this.client.openHomePage();
+    if (!homeResult.success) return failure(homeResult.error);
+
+    if (this.requestedUser && this.requestedUser !== TestUsers.ADMIN) return this.client.openCouponManagementPage();
+
+    await homeResult.value.clickAdminCoupons();
+    return success(this.client.couponManagementPage());
   }
 
   private async openOrderDetails(orderNumber: string): Promise<Result<OrderDetailsPage, SystemError>> {

@@ -39,7 +39,7 @@ public class ViewOrderNegativeTest : BaseAcceptanceTest
     }
 
     [Theory]
-    [ChannelData(ChannelType.API)]
+    [ChannelData(ChannelType.UI, ChannelType.API)]
     public async Task AnonymousShouldNotBeAbleToViewOrder(Channel channel)
     {
         await Scenario(channel)

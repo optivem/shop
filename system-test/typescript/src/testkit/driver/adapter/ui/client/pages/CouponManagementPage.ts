@@ -21,6 +21,8 @@ function parseDisplayedDateToIso(displayed: string | undefined): string | undefi
   return new Date(utcMs).toISOString().replace('.000Z', 'Z');
 }
 
+export const COUPON_MANAGEMENT_READY_SELECTOR = '[aria-label="Coupon Code"]';
+
 export class CouponManagementPage extends BasePage {
   async inputCouponCode(code: string): Promise<void> {
     await this.page.locator('[aria-label="Coupon Code"]').fill(code, { timeout: PAGE_TIMEOUT_MS });

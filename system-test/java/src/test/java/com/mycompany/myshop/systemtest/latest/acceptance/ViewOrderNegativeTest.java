@@ -45,7 +45,7 @@ class ViewOrderNegativeTest extends BaseAcceptanceTest {
     }
 
     @TestTemplate
-    @Channel(ChannelType.API)
+    @Channel({ChannelType.UI, ChannelType.API})
     void anonymousShouldNotBeAbleToViewOrder() {
         scenario
                 .given().notLoggedIn()

@@ -196,7 +196,7 @@ class PlaceOrderNegativeTest extends BaseAcceptanceTest {
 
     @Tag("UC-001.12")
     @TestTemplate
-    @Channel(ChannelType.API)
+    @Channel({ChannelType.UI, ChannelType.API})
     void adminShouldNotBeAbleToPlaceOrder() {
         scenario
                 .given().loggedInAsAdmin()

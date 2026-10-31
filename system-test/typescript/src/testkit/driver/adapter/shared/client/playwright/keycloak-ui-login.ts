@@ -32,6 +32,11 @@ export class KeycloakUiLogin {
     }
   }
 
+  /** Waits for the login form, without filling it in. */
+  async waitForLoginForm(page: Page): Promise<void> {
+    await page.waitForSelector(SUBMIT_SELECTOR, { timeout: TIMEOUT_MS });
+  }
+
   private isLoginPage(page: Page): boolean {
     return page.url().startsWith(this.keycloakBaseUrl);
   }

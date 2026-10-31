@@ -16,6 +16,8 @@ public partial class NewOrderPage : BasePage
 
     private const string SkuInputSelector = "[aria-label=\"SKU\"]";
 
+    public const string ReadySelector = SkuInputSelector;
+
     private const string QuantityInputSelector = "[aria-label=\"Quantity\"]";
 
     private const string CountryInputSelector = "[aria-label=\"Country\"]";

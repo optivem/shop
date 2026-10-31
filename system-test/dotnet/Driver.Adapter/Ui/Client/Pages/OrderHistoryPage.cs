@@ -18,6 +18,10 @@ public class OrderHistoryPage : BasePage
 
     private const string SearchButtonSelector = "[aria-label='Refresh Order List']";
 
+    private const string TableRowSelector = "table tbody tr:visible";
+
+    private const string OrderNumberCellSelector = "table tbody tr:visible:has(a) td:first-child";
+
 
 
     private const string RowSelectorTemplate = "//tr[contains(., '{0}')]";
@@ -53,6 +57,14 @@ public class OrderHistoryPage : BasePage
     }
 
 
+
+    /// <summary>Reads the listed order numbers; the table holds a single linkless row when there are no orders.</summary>
+    public async Task<List<string>> ReadOrderNumbersAsync()
+    {
+        await PageClient.ReadAllTextContentsAsync(TableRowSelector);
+        var orderNumbers = await PageClient.ReadAllTextContentsNoWaitAsync(OrderNumberCellSelector);
+        return orderNumbers.Select(orderNumber => orderNumber.Trim()).ToList();
+    }
 
     public async Task<bool> WaitForOrderRowAsync(string? orderNumber, int timeoutMilliseconds = 10000)
 
