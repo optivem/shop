@@ -22,7 +22,7 @@ public class JsonHttpClient<E> : IDisposable
 
     private readonly HttpClient _httpClient;
     private readonly string _baseUrl;
-    private Func<string, string, Task<string?>>? _bearerTokenSource;
+    private Func<Task<string?>>? _bearerTokenSource;
     private bool _disposed;
 
     public JsonHttpClient(string baseUrl)
@@ -35,7 +35,7 @@ public class JsonHttpClient<E> : IDisposable
     /// Supplies the access token for each request (method, path), or null to send it without an
     /// Authorization header.
     /// </summary>
-    public void SetBearerTokenSource(Func<string, string, Task<string?>> bearerTokenSource)
+    public void SetBearerTokenSource(Func<Task<string?>> bearerTokenSource)
     {
         _bearerTokenSource = bearerTokenSource;
     }
@@ -143,7 +143,7 @@ public class JsonHttpClient<E> : IDisposable
         var tokenSource = _bearerTokenSource;
         if (tokenSource != null)
         {
-            var token = await tokenSource(httpRequest.Method.Method, httpRequest.RequestUri!.AbsolutePath);
+            var token = await tokenSource();
             if (token != null)
             {
                 httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);

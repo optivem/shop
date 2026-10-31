@@ -19,72 +19,80 @@ import type { BrowseCouponsRequest } from '../../port/dtos/BrowseCouponsRequest.
 import type { BrowseCouponsResponse } from '../../port/dtos/BrowseCouponsResponse.js';
 import type { MyShopDriver } from '../../port/my-shop-driver.js';
 import type { UserIdentity } from '../../port/user-identity.js';
-import { testCustomer } from '../shared/client/http/test-user.js';
+import { TestUsers, testCustomer, type TestUser } from '../shared/client/http/test-user.js';
 import { MyShopApiClient } from './client/MyShopApiClient.js';
 import { ApiIdentity } from './client/api-identity.js';
 
 export class MyShopApiDriver implements MyShopDriver {
   private readonly client: MyShopApiClient;
+  private requestedUser: TestUser | undefined;
+  private anonymous = false;
 
   constructor(baseUrl: string, keycloakBaseUrl?: string) {
     this.client = new MyShopApiClient(baseUrl, keycloakBaseUrl);
   }
 
   actAs(identity: UserIdentity): void {
+    this.anonymous = identity.kind === 'ANONYMOUS';
     switch (identity.kind) {
       case 'DEFAULT':
-        this.client.as(ApiIdentity.DEFAULT);
-        break;
       case 'ANONYMOUS':
-        this.client.as(ApiIdentity.ANONYMOUS);
+        this.requestedUser = undefined;
         break;
       case 'CUSTOMER':
-        this.client.asCustomer(testCustomer(identity.customerIndex));
+        this.requestedUser = testCustomer(identity.customerIndex);
         break;
       case 'ADMIN':
-        this.client.as(ApiIdentity.ADMIN);
+        this.requestedUser = TestUsers.ADMIN;
         break;
     }
   }
 
+  /** An explicitly requested identity wins; otherwise the operation runs as its default user. */
+  private runAs(operationDefault: TestUser): MyShopApiClient {
+    const user = this.requestedUser ?? operationDefault;
+    if (this.anonymous) return this.client.as(ApiIdentity.ANONYMOUS);
+    return user === TestUsers.ADMIN ? this.client.as(ApiIdentity.ADMIN) : this.client.asCustomer(user);
+  }
+
   async goToMyShop(_request: GoToMyShopRequest): Promise<Result<GoToMyShopResponse, SystemError>> {
-    const result = await this.client.health().checkHealth();
+    const result = await this.runAs(TestUsers.CUSTOMER).health().checkHealth();
     if (result.success) return success({});
     return failure(result.error);
   }
 
   async placeOrder(request: PlaceOrderRequest): Promise<Result<PlaceOrderResponse, SystemError>> {
-    return this.client.orders().placeOrder(request);
+    return this.runAs(TestUsers.CUSTOMER).orders().placeOrder(request);
   }
 
   async cancelOrder(request: CancelOrderRequest): Promise<Result<CancelOrderResponse, SystemError>> {
-    const result = await this.client.orders().cancelOrder(request.orderNumber);
+    const result = await this.runAs(TestUsers.CUSTOMER).orders().cancelOrder(request.orderNumber);
     if (result.success) return success({});
     return failure(result.error);
   }
 
   async deliverOrder(request: DeliverOrderRequest): Promise<Result<DeliverOrderResponse, SystemError>> {
-    const result = await this.client.orders().deliverOrder(request.orderNumber);
+    const result = await this.runAs(TestUsers.ADMIN).orders().deliverOrder(request.orderNumber);
     if (result.success) return success({});
     return failure(result.error);
   }
 
   async viewOrder(request: ViewOrderRequest): Promise<Result<ViewOrderResponse, SystemError>> {
-    return this.client.orders().viewOrder(request.orderNumber);
+    return this.runAs(TestUsers.CUSTOMER).orders().viewOrder(request.orderNumber);
   }
 
   async browseOrderHistory(request: BrowseOrderHistoryRequest): Promise<Result<BrowseOrderHistoryResponse, SystemError>> {
-    return this.client.orders().browseOrderHistory(request.orderNumber);
+    return this.runAs(TestUsers.CUSTOMER).orders().browseOrderHistory(request.orderNumber);
   }
 
   async publishCoupon(request: PublishCouponRequest): Promise<Result<PublishCouponResponse, SystemError>> {
-    const result = await this.client.coupons().publishCoupon(request);
+    const result = await this.runAs(TestUsers.ADMIN).coupons().publishCoupon(request);
     if (result.success) return success({});
     return failure(result.error);
   }
 
   async browseCoupons(_request: BrowseCouponsRequest): Promise<Result<BrowseCouponsResponse, SystemError>> {
-    return this.client.coupons().browseCoupons();
+    return this.runAs(TestUsers.ADMIN).coupons().browseCoupons();
   }
 
   async close(): Promise<void> {

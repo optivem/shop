@@ -77,7 +77,7 @@ public class MyShopUiDriver : IMyShopDriver
             return await LoginRequiredAsync<PlaceOrderResponse>("/new-order");
         }
 
-        await ActAsAsync(TestUser.Customer);
+        await RunAsAsync(TestUser.Customer);
         var sku = request.Sku;
         var quantity = request.Quantity;
         var country = request.Country;
@@ -112,7 +112,7 @@ public class MyShopUiDriver : IMyShopDriver
 
     public async Task<Result<CancelOrderResponse, SystemError>> CancelOrderAsync(CancelOrderRequest request)
     {
-        await SwitchToRequestedUserAsync();
+        await RunAsAsync(TestUser.Customer);
         var viewResult = await ViewOrderAsync(new ViewOrderRequest { OrderNumber = request.OrderNumber });
         if (viewResult.IsFailure)
         {
@@ -149,7 +149,7 @@ public class MyShopUiDriver : IMyShopDriver
 
     public async Task<Result<DeliverOrderResponse, SystemError>> DeliverOrderAsync(DeliverOrderRequest request)
     {
-        await ActAsAsync(TestUser.Admin);
+        await RunAsAsync(TestUser.Admin);
         var viewResult = await ViewOrderAsync(new ViewOrderRequest { OrderNumber = request.OrderNumber });
         if (viewResult.IsFailure)
         {
@@ -191,7 +191,7 @@ public class MyShopUiDriver : IMyShopDriver
             return await LoginRequiredAsync<ViewOrderResponse>($"/order-details?orderNumber={Uri.EscapeDataString(request.OrderNumber ?? string.Empty)}");
         }
 
-        await SwitchToRequestedUserAsync();
+        await RunAsAsync(TestUser.Customer);
         var result = await EnsureOnOrderDetailsPageAsync(request.OrderNumber);
         if (result.IsFailure)
         {
@@ -243,7 +243,7 @@ public class MyShopUiDriver : IMyShopDriver
             return await LoginRequiredAsync<BrowseOrderHistoryResponse>("/order-history");
         }
 
-        await SwitchToRequestedUserAsync();
+        await RunAsAsync(TestUser.Customer);
         var homePage = await GetHomePageAsync();
         _orderHistoryPage = await homePage.ClickOrderHistoryAsync();
         SetCurrentPage(Page.OrderHistory);
@@ -269,7 +269,7 @@ public class MyShopUiDriver : IMyShopDriver
             return await LoginRequiredAsync<PublishCouponResponse>("/admin-coupons");
         }
 
-        await ActAsAsync(TestUser.Admin);
+        await RunAsAsync(TestUser.Admin);
         var pageResult = await EnsureOnCouponManagementPageAsync();
         if (pageResult.IsFailure)
         {
@@ -294,7 +294,7 @@ public class MyShopUiDriver : IMyShopDriver
             return await LoginRequiredAsync<BrowseCouponsResponse>("/admin-coupons");
         }
 
-        await ActAsAsync(TestUser.Admin);
+        await RunAsAsync(TestUser.Admin);
 
         // Retry with fresh page navigations to handle UI eventual consistency —
         // after publishing a coupon or placing an order, the coupon table
@@ -324,17 +324,8 @@ public class MyShopUiDriver : IMyShopDriver
         return Success(new BrowseCouponsResponse { Coupons = finalCoupons });
     }
 
-    /// <summary>Operations that have no default user run as the requested identity, or keep the current user when none was requested.</summary>
-    private async Task SwitchToRequestedUserAsync()
-    {
-        if (_requestedUser != null)
-        {
-            await ActAsAsync(_requestedUser.Value);
-        }
-    }
-
-    /// <summary>An explicitly requested identity wins; otherwise admin-only operations run as admin and order placement as customer.</summary>
-    private async Task ActAsAsync(TestUser operationDefault)
+    /// <summary>An explicitly requested identity wins; otherwise the operation runs as its default user.</summary>
+    private async Task RunAsAsync(TestUser operationDefault)
     {
         var user = _requestedUser ?? operationDefault;
         if (await _client.SwitchUserAsync(user))

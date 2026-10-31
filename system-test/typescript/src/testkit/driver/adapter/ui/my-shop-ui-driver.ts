@@ -98,7 +98,7 @@ export class MyShopUiDriver implements MyShopDriver {
       return this.loginRequired(`/order-details?orderNumber=${encodeURIComponent(request.orderNumber)}`);
     }
 
-    await this.switchToRequestedUser();
+    await this.runAs(TestUsers.CUSTOMER);
     const orderNumber = request.orderNumber;
     const detailsResult = await this.openOrderDetails(orderNumber);
     if (!detailsResult.success) return failure(detailsResult.error);
@@ -128,7 +128,7 @@ export class MyShopUiDriver implements MyShopDriver {
       return this.loginRequired(`/order-details?orderNumber=${encodeURIComponent(request.orderNumber)}`);
     }
 
-    await this.switchToRequestedUser();
+    await this.runAs(TestUsers.CUSTOMER);
     const orderNumber = request.orderNumber;
     const detailsResult = await this.openOrderDetails(orderNumber);
     if (!detailsResult.success) return failure(detailsResult.error);
@@ -164,7 +164,7 @@ export class MyShopUiDriver implements MyShopDriver {
   async browseOrderHistory(request: BrowseOrderHistoryRequest): Promise<Result<BrowseOrderHistoryResponse, SystemError>> {
     if (this.anonymous) return this.loginRequired('/order-history');
 
-    await this.switchToRequestedUser();
+    await this.runAs(TestUsers.CUSTOMER);
     const homeResult = await this.client.openHomePage();
     if (!homeResult.success) return failure(homeResult.error);
     await homeResult.value.clickOrderHistory();
@@ -261,15 +261,8 @@ export class MyShopUiDriver implements MyShopDriver {
     return success(detailsPage);
   }
 
-  /** An explicitly requested identity wins; otherwise admin-only operations run as admin and order placement as customer. */
+  /** An explicitly requested identity wins; otherwise the operation runs as its default user. */
   private async runAs(operationDefault: TestUser): Promise<void> {
     await this.client.switchUser(this.requestedUser ?? operationDefault);
-  }
-
-  /** Operations that have no default user run as the requested identity, or keep the current user when none was requested. */
-  private async switchToRequestedUser(): Promise<void> {
-    if (this.requestedUser) {
-      await this.client.switchUser(this.requestedUser);
-    }
   }
 }

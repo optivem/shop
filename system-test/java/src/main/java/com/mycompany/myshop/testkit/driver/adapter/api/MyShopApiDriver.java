@@ -28,6 +28,9 @@ import com.mycompany.myshop.testkit.common.Result;
 public class MyShopApiDriver implements MyShopDriver {
     private final MyShopApiClient apiClient;
 
+    private TestUser requestedUser;
+    private boolean anonymous;
+
     public MyShopApiDriver(String baseUrl) {
         this(baseUrl, null);
     }
@@ -43,16 +46,29 @@ public class MyShopApiDriver implements MyShopDriver {
 
     @Override
     public void actAs(UserIdentity identity) {
-        switch (identity.kind()) {
-            case DEFAULT -> apiClient.as(ApiIdentity.DEFAULT);
-            case ANONYMOUS -> apiClient.as(ApiIdentity.ANONYMOUS);
-            case CUSTOMER -> apiClient.asCustomer(TestUser.customer(identity.customerIndex()));
-            case ADMIN -> apiClient.as(ApiIdentity.ADMIN);
+        anonymous = identity.kind() == UserIdentity.Kind.ANONYMOUS;
+        requestedUser = switch (identity.kind()) {
+            case DEFAULT, ANONYMOUS -> null;
+            case CUSTOMER -> TestUser.customer(identity.customerIndex());
+            case ADMIN -> TestUser.ADMIN;
+        };
+    }
+
+    /** An explicitly requested identity wins; otherwise the operation runs as its default user. */
+    private void runAs(TestUser operationDefault) {
+        var user = requestedUser != null ? requestedUser : operationDefault;
+        if (anonymous) {
+            apiClient.as(ApiIdentity.ANONYMOUS);
+        } else if (user == TestUser.ADMIN) {
+            apiClient.as(ApiIdentity.ADMIN);
+        } else {
+            apiClient.asCustomer(user);
         }
     }
 
     @Override
     public Result<GoToMyShopResponse, SystemError> goToMyShop(GoToMyShopRequest request) {
+        runAs(TestUser.CUSTOMER);
         return apiClient.health().checkHealth()
                 .mapError(SystemErrorMapper::from)
                 .map(value -> GoToMyShopResponse.builder().build());
@@ -60,11 +76,13 @@ public class MyShopApiDriver implements MyShopDriver {
 
     @Override
     public Result<PlaceOrderResponse, SystemError> placeOrder(PlaceOrderRequest request) {
+        runAs(TestUser.CUSTOMER);
         return apiClient.orders().placeOrder(request).mapError(SystemErrorMapper::from);
     }
 
     @Override
     public Result<CancelOrderResponse, SystemError> cancelOrder(CancelOrderRequest request) {
+        runAs(TestUser.CUSTOMER);
         return apiClient.orders().cancelOrder(request.getOrderNumber())
                 .mapError(SystemErrorMapper::from)
                 .map(value -> CancelOrderResponse.builder().build());
@@ -72,6 +90,7 @@ public class MyShopApiDriver implements MyShopDriver {
 
     @Override
     public Result<DeliverOrderResponse, SystemError> deliverOrder(DeliverOrderRequest request) {
+        runAs(TestUser.ADMIN);
         return apiClient.orders().deliverOrder(request.getOrderNumber())
                 .mapError(SystemErrorMapper::from)
                 .map(value -> DeliverOrderResponse.builder().build());
@@ -79,16 +98,19 @@ public class MyShopApiDriver implements MyShopDriver {
 
     @Override
     public Result<ViewOrderResponse, SystemError> viewOrder(ViewOrderRequest request) {
+        runAs(TestUser.CUSTOMER);
         return apiClient.orders().viewOrder(request.getOrderNumber()).mapError(SystemErrorMapper::from);
     }
 
     @Override
     public Result<BrowseOrderHistoryResponse, SystemError> browseOrderHistory(BrowseOrderHistoryRequest request) {
+        runAs(TestUser.CUSTOMER);
         return apiClient.orders().browseOrderHistory(request.getOrderNumber()).mapError(SystemErrorMapper::from);
     }
 
     @Override
     public Result<PublishCouponResponse, SystemError> publishCoupon(PublishCouponRequest request) {
+        runAs(TestUser.ADMIN);
         return apiClient.coupons().publishCoupon(request)
                 .mapError(SystemErrorMapper::from)
                 .map(value -> PublishCouponResponse.builder().build());
@@ -96,6 +118,7 @@ public class MyShopApiDriver implements MyShopDriver {
 
     @Override
     public Result<BrowseCouponsResponse, SystemError> browseCoupons(BrowseCouponsRequest request) {
+        runAs(TestUser.ADMIN);
         return apiClient.coupons().browseCoupons().mapError(SystemErrorMapper::from);
     }
 }

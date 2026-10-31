@@ -128,10 +128,10 @@ public class JsonHttpClient<E> implements AutoCloseable {
         }
     }
 
-    private HttpRequest.Builder requestBuilder(String method, String path, URI uri) {
+    private HttpRequest.Builder requestBuilder(URI uri) {
         var builder = HttpRequest.newBuilder().uri(uri);
         var source = bearerTokenSource;
-        var token = source == null ? null : source.tokenFor(method, path);
+        var token = source == null ? null : source.tokenFor();
         if (token != null) {
             builder.header("Authorization", "Bearer " + token);
         }
@@ -140,7 +140,7 @@ public class JsonHttpClient<E> implements AutoCloseable {
 
     private HttpResponse<String> doGet(String path) {
         var uri = getUri(path);
-        var httpRequest = requestBuilder("GET", path, uri)
+        var httpRequest = requestBuilder(uri)
                 .GET()
                 .build();
 
@@ -151,7 +151,7 @@ public class JsonHttpClient<E> implements AutoCloseable {
         var uri = getUri(path);
         var jsonBody = serializeRequest(request);
 
-        var httpRequest = requestBuilder("POST", path, uri)
+        var httpRequest = requestBuilder(uri)
                 .header(CONTENT_TYPE, APPLICATION_JSON)
                 .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
                 .build();
@@ -162,7 +162,7 @@ public class JsonHttpClient<E> implements AutoCloseable {
     private HttpResponse<String> doPost(String path) {
         var uri = getUri(path);
 
-        var httpRequest = requestBuilder("POST", path, uri)
+        var httpRequest = requestBuilder(uri)
                 .header(CONTENT_TYPE, APPLICATION_JSON)
                 .POST(HttpRequest.BodyPublishers.noBody())
                 .build();
@@ -174,7 +174,7 @@ public class JsonHttpClient<E> implements AutoCloseable {
         var uri = getUri(path);
         var jsonBody = serializeRequest(request);
 
-        var httpRequest = requestBuilder("PUT", path, uri)
+        var httpRequest = requestBuilder(uri)
                 .header(CONTENT_TYPE, APPLICATION_JSON)
                 .PUT(HttpRequest.BodyPublishers.ofString(jsonBody))
                 .build();
@@ -185,7 +185,7 @@ public class JsonHttpClient<E> implements AutoCloseable {
     private HttpResponse<String> doDelete(String path) {
         var uri = getUri(path);
 
-        var httpRequest = requestBuilder("DELETE", path, uri)
+        var httpRequest = requestBuilder(uri)
                 .DELETE()
                 .build();
 

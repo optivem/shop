@@ -86,7 +86,7 @@ public class MyShopUiDriver implements MyShopDriver {
             return loginRequired("/new-order");
         }
 
-        actAs(TestUser.CUSTOMER);
+        runAs(TestUser.CUSTOMER);
         var sku = request.getSku();
         var quantity = request.getQuantity();
         var country = request.getCountry();
@@ -119,7 +119,7 @@ public class MyShopUiDriver implements MyShopDriver {
 
     @Override
     public Result<CancelOrderResponse, SystemError> cancelOrder(CancelOrderRequest request) {
-        switchToRequestedUser();
+        runAs(TestUser.CUSTOMER);
         var viewResult = viewOrder(ViewOrderRequest.builder().orderNumber(request.getOrderNumber()).build());
 
         if (viewResult.isFailure()) {
@@ -139,7 +139,7 @@ public class MyShopUiDriver implements MyShopDriver {
 
     @Override
     public Result<DeliverOrderResponse, SystemError> deliverOrder(DeliverOrderRequest request) {
-        actAs(TestUser.ADMIN);
+        runAs(TestUser.ADMIN);
         var viewResult = viewOrder(ViewOrderRequest.builder().orderNumber(request.getOrderNumber()).build());
 
         if (viewResult.isFailure()) {
@@ -168,7 +168,7 @@ public class MyShopUiDriver implements MyShopDriver {
             return loginRequired("/order-details/" + orderNumber);
         }
 
-        switchToRequestedUser();
+        runAs(TestUser.CUSTOMER);
         var result = ensureOnOrderDetailsPage(orderNumber);
         if (result.isFailure()) {
             return failure(result.getError());
@@ -217,7 +217,7 @@ public class MyShopUiDriver implements MyShopDriver {
             return loginRequired("/order-history");
         }
 
-        switchToRequestedUser();
+        runAs(TestUser.CUSTOMER);
         orderHistoryPage = getHomePage().clickOrderHistory();
         currentPage = Page.ORDER_HISTORY;
 
@@ -240,7 +240,7 @@ public class MyShopUiDriver implements MyShopDriver {
             return loginRequired("/admin-coupons");
         }
 
-        actAs(TestUser.ADMIN);
+        runAs(TestUser.ADMIN);
         var pageResult = ensureOnCouponManagementPage();
         if (pageResult.isFailure()) {
             return failure(pageResult.getError());
@@ -263,7 +263,7 @@ public class MyShopUiDriver implements MyShopDriver {
             return loginRequired("/admin-coupons");
         }
 
-        actAs(TestUser.ADMIN);
+        runAs(TestUser.ADMIN);
         var pageResult = navigateToCouponManagementPage();
         if (pageResult.isFailure()) {
             return failure(pageResult.getError());
@@ -280,15 +280,8 @@ public class MyShopUiDriver implements MyShopDriver {
 
     // --- identity ---
 
-    /** Operations that have no default user run as the requested identity, or keep the current user when none was requested. */
-    private void switchToRequestedUser() {
-        if (requestedUser != null) {
-            actAs(requestedUser);
-        }
-    }
-
-    /** An explicitly requested identity wins; otherwise admin-only operations run as admin and order placement as customer. */
-    private void actAs(TestUser operationDefault) {
+    /** An explicitly requested identity wins; otherwise the operation runs as its default user. */
+    private void runAs(TestUser operationDefault) {
         var user = requestedUser != null ? requestedUser : operationDefault;
         if (client.switchUser(user)) {
             currentPage = Page.NONE;

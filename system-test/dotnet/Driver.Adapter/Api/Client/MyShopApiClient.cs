@@ -11,7 +11,7 @@ public class MyShopApiClient : IDisposable
     private readonly OrderController _orderController;
     private readonly CouponController _couponController;
     private readonly KeycloakTokenProvider? _tokenProvider;
-    private volatile ApiIdentity _identity = ApiIdentity.Default;
+    private volatile ApiIdentity _identity = ApiIdentity.Customer;
     private volatile TestUser _customer = TestUser.Customer;
     private bool _disposed;
 
@@ -43,26 +43,14 @@ public class MyShopApiClient : IDisposable
         return this;
     }
 
-    private async Task<string?> TokenForAsync(string method, string path)
+    private async Task<string?> TokenForAsync()
     {
         return _identity switch
         {
             ApiIdentity.Anonymous => null,
-            ApiIdentity.Customer => await _tokenProvider!.GetTokenAsync(_customer),
             ApiIdentity.Admin => await _tokenProvider!.GetTokenAsync(TestUser.Admin),
-            _ => await _tokenProvider!.GetTokenAsync(IsAdminOnly(method, path) ? TestUser.Admin : TestUser.Customer)
+            _ => await _tokenProvider!.GetTokenAsync(_customer)
         };
-    }
-
-    private static bool IsAdminOnly(string method, string path)
-    {
-        if (path.StartsWith("/api/admin/", StringComparison.Ordinal))
-            return true;
-        if (path == "/api/coupons" && (method == "POST" || method == "GET"))
-            return true;
-        return method == "POST"
-            && path.StartsWith("/api/orders/", StringComparison.Ordinal)
-            && path.EndsWith("/deliver", StringComparison.Ordinal);
     }
 
     public void Dispose()

@@ -15,7 +15,7 @@ public class MyShopApiClient implements AutoCloseable {
     private final OrderController orderController;
     private final CouponController couponController;
     private final KeycloakTokenProvider tokenProvider;
-    private volatile ApiIdentity identity = ApiIdentity.DEFAULT;
+    private volatile ApiIdentity identity = ApiIdentity.CUSTOMER;
     private volatile TestUser customer = TestUser.CUSTOMER;
 
     public MyShopApiClient(String baseUrl) {
@@ -67,22 +67,11 @@ public class MyShopApiClient implements AutoCloseable {
         Closer.close(httpClient);
     }
 
-    private String tokenFor(String method, String path) {
+    private String tokenFor() {
         return switch (identity) {
             case ANONYMOUS -> null;
             case CUSTOMER -> tokenProvider.getToken(customer);
             case ADMIN -> tokenProvider.getToken(TestUser.ADMIN);
-            case DEFAULT -> tokenProvider.getToken(isAdminOnly(method, path) ? TestUser.ADMIN : TestUser.CUSTOMER);
         };
-    }
-
-    private static boolean isAdminOnly(String method, String path) {
-        if (path.startsWith("/api/admin/")) {
-            return true;
-        }
-        if (path.equals("/api/coupons") && ("POST".equals(method) || "GET".equals(method))) {
-            return true;
-        }
-        return "POST".equals(method) && path.startsWith("/api/orders/") && path.endsWith("/deliver");
     }
 }

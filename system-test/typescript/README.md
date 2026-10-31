@@ -90,4 +90,4 @@ The API client acquires Keycloak access tokens (password grant, client `shop-sys
 
 Required for the latest acceptance suites (a missing URL fails them with a configuration error); set `KEYCLOAK_URL_REAL` / `KEYCLOAK_URL_STUB` (per external-system mode) or `KEYCLOAK_URL` (fallback), e.g. `KEYCLOAK_URL_REAL=http://localhost:8391` and `KEYCLOAK_URL_STUB=http://localhost:8392` for the local TypeScript multitier stack. The authorization tests (`api-authorization-test.spec.ts`).
 
-By default, admin-only operations (deliver order, publish and browse coupons, `/api/admin/**`) use `admin1` and everything else uses `customer1`. A test can override this with `myShopApiClient.as(ApiIdentity.ANONYMOUS | CUSTOMER | ADMIN)`. The DSL contains no authentication concerns.
+Each driver operation picks its default user: admin-only operations (deliver order, publish and browse coupons) use `admin1` and everything else uses `customer1`; the API client on its own calls as `customer1`. A test can override this with `myShopApiClient.as(ApiIdentity.ANONYMOUS | CUSTOMER | ADMIN)`. The DSL contains no authentication concerns.

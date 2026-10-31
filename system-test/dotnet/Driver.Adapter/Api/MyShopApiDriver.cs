@@ -11,6 +11,8 @@ namespace Driver.Adapter.Api;
 public class MyShopApiDriver : IMyShopDriver
 {
     private readonly MyShopApiClient _apiClient;
+    private TestUser? _requestedUser;
+    private bool _anonymous;
 
     public MyShopApiDriver(string baseUrl, string? keycloakBaseUrl = null)
     {
@@ -26,27 +28,30 @@ public class MyShopApiDriver : IMyShopDriver
 
     public void ActAs(UserIdentity identity)
     {
-        switch (identity.Kind)
+        _anonymous = identity.Kind == UserIdentityKind.Anonymous;
+        _requestedUser = identity.Kind switch
         {
-            case UserIdentityKind.Default:
-                _apiClient.As(ApiIdentity.Default);
-                break;
-            case UserIdentityKind.Anonymous:
-                _apiClient.As(ApiIdentity.Anonymous);
-                break;
-            case UserIdentityKind.Customer:
-                _apiClient.AsCustomer(TestUserExtensions.CustomerAt(identity.CustomerIndex));
-                break;
-            case UserIdentityKind.Admin:
-                _apiClient.As(ApiIdentity.Admin);
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(identity), identity, null);
+            UserIdentityKind.Default or UserIdentityKind.Anonymous => null,
+            UserIdentityKind.Customer => TestUserExtensions.CustomerAt(identity.CustomerIndex),
+            UserIdentityKind.Admin => TestUser.Admin,
+            _ => throw new ArgumentOutOfRangeException(nameof(identity), identity, null)
+        };
+    }
+
+    /// <summary>An explicitly requested identity wins; otherwise the operation runs as its default user.</summary>
+    private MyShopApiClient RunAs(TestUser operationDefault)
+    {
+        var user = _requestedUser ?? operationDefault;
+        if (_anonymous)
+        {
+            return _apiClient.As(ApiIdentity.Anonymous);
         }
+
+        return user == TestUser.Admin ? _apiClient.As(ApiIdentity.Admin) : _apiClient.AsCustomer(user);
     }
 
     public Task<Result<GoToMyShopResponse, SystemError>> GoToMyShopAsync(GoToMyShopRequest request)
-        => _apiClient.Health().CheckHealthAsync()
+        => RunAs(TestUser.Customer).Health().CheckHealthAsync()
             .MapErrorAsync(MapError)
             .MapAsync(_ => new GoToMyShopResponse());
 
@@ -64,33 +69,33 @@ public class MyShopApiDriver : IMyShopDriver
     }
 
     public Task<Result<PlaceOrderResponse, SystemError>> PlaceOrderAsync(PlaceOrderRequest request)
-        => _apiClient.Orders().PlaceOrderAsync(request)
+        => RunAs(TestUser.Customer).Orders().PlaceOrderAsync(request)
             .MapErrorAsync(MapError);
 
     public Task<Result<CancelOrderResponse, SystemError>> CancelOrderAsync(CancelOrderRequest request)
-        => _apiClient.Orders().CancelOrderAsync(request.OrderNumber)
+        => RunAs(TestUser.Customer).Orders().CancelOrderAsync(request.OrderNumber)
             .MapErrorAsync(MapError)
             .MapAsync(_ => new CancelOrderResponse());
 
     public Task<Result<DeliverOrderResponse, SystemError>> DeliverOrderAsync(DeliverOrderRequest request)
-        => _apiClient.Orders().DeliverOrderAsync(request.OrderNumber)
+        => RunAs(TestUser.Admin).Orders().DeliverOrderAsync(request.OrderNumber)
             .MapErrorAsync(MapError)
             .MapAsync(_ => new DeliverOrderResponse());
 
     public Task<Result<ViewOrderResponse, SystemError>> ViewOrderAsync(ViewOrderRequest request)
-        => _apiClient.Orders().ViewOrderAsync(request.OrderNumber)
+        => RunAs(TestUser.Customer).Orders().ViewOrderAsync(request.OrderNumber)
             .MapErrorAsync(MapError);
 
     public Task<Result<BrowseOrderHistoryResponse, SystemError>> BrowseOrderHistoryAsync(BrowseOrderHistoryRequest request)
-        => _apiClient.Orders().BrowseOrderHistoryAsync(request.OrderNumber)
+        => RunAs(TestUser.Customer).Orders().BrowseOrderHistoryAsync(request.OrderNumber)
             .MapErrorAsync(MapError);
 
     public Task<Result<PublishCouponResponse, SystemError>> PublishCouponAsync(PublishCouponRequest request)
-        => _apiClient.Coupons().PublishCouponAsync(request)
+        => RunAs(TestUser.Admin).Coupons().PublishCouponAsync(request)
             .MapErrorAsync(MapError)
             .MapAsync(_ => new PublishCouponResponse());
 
     public Task<Result<BrowseCouponsResponse, SystemError>> BrowseCouponsAsync(BrowseCouponsRequest request)
-        => _apiClient.Coupons().BrowseCouponsAsync()
+        => RunAs(TestUser.Admin).Coupons().BrowseCouponsAsync()
             .MapErrorAsync(MapError);
 }

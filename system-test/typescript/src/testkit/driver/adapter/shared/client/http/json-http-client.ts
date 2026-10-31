@@ -31,19 +31,19 @@ export class JsonHttpClient<E> {
   }
 
   private async doGet(path: string): Promise<Response> {
-    return fetch(`${this.baseUrl}${path}`, { headers: await this.authHeaders('GET', path) });
+    return fetch(`${this.baseUrl}${path}`, { headers: await this.authHeaders() });
   }
 
   private async doPost(path: string, body: unknown): Promise<Response> {
     return fetch(`${this.baseUrl}${path}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...(await this.authHeaders('POST', path)) },
+      headers: { 'Content-Type': 'application/json', ...(await this.authHeaders()) },
       body: body === undefined ? undefined : JSON.stringify(body),
     });
   }
 
-  private async authHeaders(method: string, path: string): Promise<Record<string, string>> {
-    const token = await this.tokenSource?.(method, path);
+  private async authHeaders(): Promise<Record<string, string>> {
+    const token = await this.tokenSource?.();
     return token ? { Authorization: `Bearer ${token}` } : {};
   }
 

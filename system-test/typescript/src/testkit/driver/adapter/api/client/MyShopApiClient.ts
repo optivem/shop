@@ -11,7 +11,7 @@ export class MyShopApiClient {
   private readonly orderController: OrderController;
   private readonly couponController: CouponController;
   private readonly tokenProvider: KeycloakTokenProvider | undefined;
-  private identity: ApiIdentityValue = ApiIdentity.DEFAULT;
+  private identity: ApiIdentityValue = ApiIdentity.CUSTOMER;
   private customer: TestUser = TestUsers.CUSTOMER;
 
   /**
@@ -20,7 +20,7 @@ export class MyShopApiClient {
   constructor(baseUrl: string, keycloakBaseUrl?: string) {
     this.tokenProvider = keycloakBaseUrl ? KeycloakTokenProvider.forBaseUrl(keycloakBaseUrl) : undefined;
     const tokenSource: BearerTokenSource | undefined = this.tokenProvider
-      ? (method, path) => this.tokenFor(method, path)
+      ? () => this.tokenFor()
       : undefined;
     this.healthController = new HealthController(baseUrl);
     this.orderController = new OrderController(baseUrl, tokenSource);
@@ -52,7 +52,7 @@ export class MyShopApiClient {
     return this.couponController;
   }
 
-  private async tokenFor(method: string, path: string): Promise<string | undefined> {
+  private async tokenFor(): Promise<string | undefined> {
     const provider = this.tokenProvider;
     if (!provider) return undefined;
     switch (this.identity) {
@@ -62,14 +62,6 @@ export class MyShopApiClient {
         return provider.getToken(this.customer);
       case ApiIdentity.ADMIN:
         return provider.getToken(TestUsers.ADMIN);
-      case ApiIdentity.DEFAULT:
-        return provider.getToken(isAdminOnly(method, path) ? TestUsers.ADMIN : TestUsers.CUSTOMER);
     }
   }
-}
-
-function isAdminOnly(method: string, path: string): boolean {
-  if (path.startsWith('/api/admin/')) return true;
-  if (path === '/api/coupons') return true;
-  return method === 'POST' && path.startsWith('/api/orders/') && path.endsWith('/deliver');
 }
