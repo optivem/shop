@@ -14,7 +14,7 @@
 
 ## ▶ Next executable step (resume here)
 
-Step 1: in `.github/workflows/multitier-java-prod-stage-cloud.yml`, remove lines 185-208 (`Read Component Base Versions`, `Compose Component Tags`, `Tag Docker Images with Component Release Versions`), first checking that no later step references the `read-component-versions` or `compose-component-tags` ids. Do the same in the other five cloud prod workflows (Step 2) so all six land in one commit. Do not commit the recovery bump (Step 3) before these removals, or another cloud run could occupy the new versions.
+Step 1: in `.github/workflows/multitier-java-prod-stage-cloud.yml`, comment out lines 185-208 (`Read Component Base Versions`, `Compose Component Tags`, `Tag Docker Images with Component Release Versions`) rather than deleting them, with the explanatory comment from Step 1 above the block, first checking that no later step references the `read-component-versions` or `compose-component-tags` ids. Do the same in the other five cloud prod workflows (Step 2) so all six land in one commit. Do not commit the recovery bump (Step 3) before these changes, or another cloud run could occupy the new versions.
 
 ## Root cause
 
@@ -26,8 +26,8 @@ Step 1: in `.github/workflows/multitier-java-prod-stage-cloud.yml`, remove lines
 
 ## Steps
 
-- [ ] Step 1: Remove the three component-tagging steps from `multitier-java-prod-stage-cloud.yml` (lines 185-208).
-- [ ] Step 2: Remove the same three steps from the other five workflows, reading each block first and confirming no remaining step uses their ids:
+- [ ] Step 1: Comment out, do not delete, the three component-tagging steps in `multitier-java-prod-stage-cloud.yml` (lines 185-208). Put a comment above the block saying the steps are disabled because cloud prod must not claim bare `vX.Y.Z` component versions: this stage creates no component git tags and no `VERSION` bump, so `bump-patch-versions` skips those versions and `meta-prerelease-stage` deadlocks. Say to re-enable them only together with those git tags and the bump, as in `plans/20261031-2111-move-release-ownership-to-cloud.md`, and name failing run 41241065273.
+- [ ] Step 2: Comment out the same three steps, with the same comment, in the other five workflows, reading each block first and confirming no remaining active step uses their ids:
   - `multitier-dotnet-prod-stage-cloud.yml` (starts at line 294, `Tag Docker Images…` step at 313)
   - `multitier-typescript-prod-stage-cloud.yml` (starts at line 294, `Tag Docker Images…` step at 313)
   - `monolith-java-prod-stage-cloud.yml` (starts at line 252, `Tag Docker Images…` step at 268)
@@ -36,7 +36,7 @@ Step 1: in `.github/workflows/multitier-java-prod-stage-cloud.yml`, remove lines
 - [ ] Step 3: One-time recovery: set `system/multitier/backend-java/VERSION` to `1.5.217` and `system/multitier/frontend-react/VERSION` to `1.3.222`. First re-check that those versions are free in GHCR and git.
 - [ ] Step 4: In `_meta-prerelease-pipeline.yml`, correct the post-bump failure text. It currently says `meta-bump-all did not advance the relevant VERSION files` without explaining why; it should say an image exists with no matching git tag, so the bump skipped it and a manual `VERSION` bump is needed.
 - [ ] Step 5: Verify:
-  - `grep -l "Component Release Versions" .github/workflows/*prod-stage-cloud.yml` returns nothing.
+  - `grep -lE '^\s*- name: .*Component Release Versions' .github/workflows/*prod-stage-cloud.yml` returns nothing, so no active step remains (the commented-out ones start with `#`).
   - All six workflows parse (run `actionlint` if available).
   - Dispatch `meta-prerelease-stage` and confirm the `check` job passes both version checks and the pipeline continues.
   - On the next cloud prod run, confirm no new bare `vX.Y.Z` component image appears.
