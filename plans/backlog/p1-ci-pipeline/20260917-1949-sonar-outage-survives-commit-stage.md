@@ -25,13 +25,13 @@ Note on repo scope: most of the work lands in the sibling `optivem/actions` chec
 - [ ] Step 3: If the decision needs per-call tuning, add `attempts` and `delays` inputs to `optivem/actions/retry@v1` (`retry/action.yml` exposes neither today; `shared/retry.sh:43` hardcodes `_RETRY_DELAYS=(5 15 45)` and `retry-core.sh:49` `_RETRY_CORE_ATTEMPTS=4`). Cover the new inputs in `shared/_test-retry.sh`, then release via `update-v1.yml`.
 - [ ] Step 4: Verify. `actionlint` on the changed workflows; run the actions repo's `commit-stage.yml` shell tests; then re-run a real commit stage and confirm the Sonar step behaves as decided.
 
+## Resolved decisions
+
+1. **What a vendor outage does to the build: (b) non-blocking on transient failure only.** The step reports a warning and the stage continues when the scanner exhausts retries against a 5xx, but still fails on a quality-gate verdict or a real scanner error. Chosen over widening the envelope because the 2026-09-17 outage outlasted any reasonable envelope, and the retry layer already distinguishes exhaustion (`exhausted N attempts`, `retry-core.sh:161`) from a verdict. Accepted cost: some commits land without analysis.
+
 ## Open questions
 
 Decide before execution — each option is a different policy, not an implementation detail:
 
-1. **What should a vendor outage do to the build?**
-   - **(a) Widen the retry envelope** — e.g. 6 attempts with 30/60/120/240s backoff, roughly 8 minutes of patience instead of 65 seconds. Keeps Sonar blocking and green means analyzed. Costs runner minutes while a real outage is in progress, and still fails on an outage longer than the envelope. Today's outage lasted at least 15 minutes, so this alone would not have saved run 35264500002.
-   - **(b) Make Sonar non-blocking on transient failure only** — the step reports a warning and the stage continues when the scanner exhausts retries against a 5xx, but still fails on a quality-gate verdict or a real scanner error. Survives any outage length. Needs the exhaustion case to be distinguishable from a verdict, which the retry envelope already knows (`exhausted N attempts` versus a clean non-zero verdict), and means some commits land without analysis.
-   - **(c) Status quo** — outages are rare, re-run by hand. Zero work beyond Step 1.
-2. **If (b): who notices the skipped analysis?** Options: a job summary warning only, a follow-up issue, or a scheduled re-scan of `main`. Unresolved.
+2. **Who notices the skipped analysis?** Options: a job summary warning only, a follow-up issue, or a scheduled re-scan of `main`. Unresolved.
 3. **Should the acceptance stages' `Run Sonar Analysis` follow the same policy as the commit stages, or stay blocking?** They gate RC tagging, so the answer may differ.
