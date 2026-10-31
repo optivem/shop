@@ -1,13 +1,23 @@
-# Cloud Run Keycloak: bakes every variant's deployed URLs into the realm at image build, because
+# Cloud Run Keycloak: bakes every variant's deployed URLs into the realms at image build, because
 # --import-realm skips a realm that already exists, so URLs added later would never take effect.
+# A new realm in the import dir is imported, so a stage that needs URLs gets its own realm:
+#   shop       acceptance, with the password-grant test client and test users
+#   shop-qa    QA, same clients and users
+#   shop-prod  production: SPA client only, no test users, checked below so it can't regress
+# Import files must be named <realm>-realm.json.
 # Build context: docker/keycloak. Build args: SYSTEM, RUN_APP_SUFFIX (<project-number>.<region>.run.app).
 FROM alpine:3.20 AS realm
 ARG SYSTEM
 ARG RUN_APP_SUFFIX
 RUN apk add --no-cache jq
-COPY shop-realm.json cloud-realm.jq /
-RUN jq --arg system "${SYSTEM:?build arg required}" --arg suffix "${RUN_APP_SUFFIX:?build arg required}" \
+COPY shop-realm.json redirects.jq cloud-realm.jq stage-realm.jq prod-realm.jq prod-realm-check.jq /
+RUN jq -L / --arg system "${SYSTEM:?build arg required}" --arg suffix "${RUN_APP_SUFFIX:?build arg required}" \
       -f /cloud-realm.jq /shop-realm.json > /realm.json
+RUN jq -L / --arg realm shop-qa --arg stage qa --arg system "${SYSTEM}" --arg suffix "${RUN_APP_SUFFIX}" \
+      -f /stage-realm.jq /shop-realm.json > /realm-qa.json
+RUN jq -L / --arg realm shop-prod --arg stage production --arg system "${SYSTEM}" --arg suffix "${RUN_APP_SUFFIX}" \
+      -f /stage-realm.jq /shop-realm.json | jq -f /prod-realm.jq > /realm-prod.json \
+    && jq -e -f /prod-realm-check.jq /realm-prod.json
 
 FROM quay.io/keycloak/keycloak:26.0 AS builder
 ENV KC_DB=postgres \
@@ -17,6 +27,8 @@ RUN /opt/keycloak/bin/kc.sh build
 FROM quay.io/keycloak/keycloak:26.0
 COPY --from=builder /opt/keycloak/ /opt/keycloak/
 COPY --from=realm /realm.json /opt/keycloak/data/import/shop-realm.json
+COPY --from=realm /realm-qa.json /opt/keycloak/data/import/shop-qa-realm.json
+COPY --from=realm /realm-prod.json /opt/keycloak/data/import/shop-prod-realm.json
 ENV KC_DB=postgres \
     KC_HTTP_ENABLED=true \
     KC_PROXY_HEADERS=xforwarded \

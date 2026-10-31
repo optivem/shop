@@ -48,7 +48,16 @@ resource "google_artifact_registry_repository" "app_images" {
 
   # KEEP wins over DELETE, so each image name keeps its 10 newest versions. 10 because the shared
   # shop-* images are rebuilt by every variant's run: fewer could drop an image a variant still runs.
+  # Production images keep a production-* tag, because acceptance runs would otherwise evict them.
   cleanup_policy_dry_run = false
+  cleanup_policies {
+    id     = "keep-production"
+    action = "KEEP"
+    condition {
+      tag_state    = "TAGGED"
+      tag_prefixes = ["production-"]
+    }
+  }
   cleanup_policies {
     id     = "keep-last-10"
     action = "KEEP"

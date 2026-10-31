@@ -1,0 +1,409 @@
+name: _deploy-stage-cloud
+
+# QA / production stage on Cloud Run: deploys a release candidate, then runs the smoke tests.
+# Callers own the dispatch trigger, concurrency, RC resolution and what happens after a green
+# deploy (github.workflow resolves to the caller, so a concurrency group here would deadlock).
+#
+# Everything per-variant comes from <architecture>-<language> and <stage>: the GitHub
+# environment, and the service and database names. The realm comes from <stage> (see
+# docker/keycloak/Dockerfile.cloud). Multitier only for now; monolith needs the Deploy System
+# step from _acceptance-stage-cloud.yml.
+#
+# Two checkouts on purpose: the RC tag for the migrations, simulators and smoke tests, so a stage
+# runs what the RC was tested with, and the workflow's own commit for Keycloak, shared by all
+# (see build-cloud-images).
+
+on:
+  workflow_call:
+    inputs:
+      stage:
+        description: 'Stage: qa or production'
+        required: true
+        type: string
+      architecture:
+        description: 'Architecture: only multitier for now'
+        required: true
+        type: string
+      language:
+        description: 'Language: java, dotnet, or typescript'
+        required: true
+        type: string
+      images:
+        description: 'JSON map of role to GHCR image name: {"frontend":"multitier-frontend-react","backend":"multitier-backend-java"}'
+        required: true
+        type: string
+      version:
+        description: 'Release candidate: both the git tag and the GHCR image tag'
+        required: true
+        type: string
+
+permissions: {}
+
+env:
+  # Prefix for Cloud Run services, secrets and databases; set by setup-gcp.sh from the repo name
+  SYSTEM: ${{ vars.SYSTEM_NAME }}
+  ARCHITECTURE: ${{ inputs.architecture }}
+  STAGE: ${{ inputs.stage }}
+  PREFIX: ${{ inputs.architecture }}-${{ inputs.language }}
+  VERSION: ${{ inputs.version }}
+  REALM: ${{ inputs.stage == 'production' && 'shop-prod' || 'shop-qa' }}
+
+jobs:
+  # === Copy the RC's Images + Build Cloud-only Images into Artifact Registry ===
+  promote-images:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: ${{ inputs.architecture }}-${{ inputs.language }}-${{ inputs.stage }}
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      registry: ${{ steps.registry.outputs.registry }}
+      tag: ${{ steps.registry.outputs.tag }}
+      project-number: ${{ steps.registry.outputs.project-number }}
+      db-migrate-image: ${{ steps.shared.outputs.db-migrate }}
+      keycloak-image: ${{ steps.shared.outputs.keycloak }}
+      simulators-image: ${{ steps.keep-simulators.outputs.image }}
+    steps:
+      - name: Check Stage Is Supported
+        run: |
+          if [[ "$STAGE" != qa && "$STAGE" != production ]]; then
+            echo "::error::Unknown stage '$STAGE'."
+            exit 1
+          fi
+          if [[ "$ARCHITECTURE" != multitier ]]; then
+            echo "::error::Architecture '$ARCHITECTURE' has no cloud stage yet."
+            exit 1
+          fi
+
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+
+      - name: Checkout Release Candidate
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.version }}
+          path: source
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+
+      - name: Setup Cloud SDK
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Log in to GHCR
+        uses: optivem/actions/docker-login@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GHCR_TOKEN }}
+
+      - name: Resolve Registry
+        id: registry
+        env:
+          PROJECT: ${{ vars.GCP_PROJECT_ID }}
+          REGION: ${{ vars.GCP_REGION }}
+          WIF_PROVIDER: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+        run: |
+          # The deployer SA has no resourcemanager.projects.get; the provider
+          # name is projects/<number>/locations/global/..., so read it from there.
+          PROJECT_NUMBER=$(cut -d/ -f2 <<< "$WIF_PROVIDER")
+          [[ "$PROJECT_NUMBER" =~ ^[0-9]+$ ]] || { echo "::error::Cannot parse project number from GCP_WORKLOAD_IDENTITY_PROVIDER"; exit 1; }
+          {
+            echo "registry=${REGION}-docker.pkg.dev/${PROJECT}/app-images"
+            # The stage prefix is what keeps production images through the registry cleanup (terraform/main.tf)
+            echo "tag=${STAGE}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+            echo "project-number=${PROJECT_NUMBER}"
+          } >> "$GITHUB_OUTPUT"
+          gcloud auth configure-docker "${REGION}-docker.pkg.dev" --quiet
+
+      # Manifest copy keeps the digest the acceptance stage tested.
+      - name: Copy RC Images (GHCR to Artifact Registry)
+        env:
+          REGISTRY: ${{ steps.registry.outputs.registry }}
+          TAG: ${{ steps.registry.outputs.tag }}
+          IMAGES: ${{ inputs.images }}
+          BASE: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}
+        run: |
+          set -euo pipefail
+          jq -r '.[]' <<< "$IMAGES" | while read -r name; do
+            docker buildx imagetools create -t "${REGISTRY}/${name}:${TAG}" "${BASE}/${name}:${VERSION}"
+          done
+
+      - name: Build and Push Cloud-only Images
+        id: shared
+        uses: ./.github/actions/build-cloud-images
+        with:
+          registry: ${{ steps.registry.outputs.registry }}
+          system: ${{ vars.SYSTEM_NAME }}
+          region: ${{ vars.GCP_REGION }}
+          project-number: ${{ steps.registry.outputs.project-number }}
+          source-path: source
+
+      - name: Tag Simulators Image for This Stage
+        id: keep-simulators
+        env:
+          REGISTRY: ${{ steps.registry.outputs.registry }}
+          TAG: ${{ steps.registry.outputs.tag }}
+          IMAGE: ${{ steps.shared.outputs.simulators }}
+        run: |
+          set -euo pipefail
+          docker buildx imagetools create -t "${REGISTRY}/shop-simulators:${TAG}" "$IMAGE"
+          echo "image=${REGISTRY}/shop-simulators:${TAG}" >> "$GITHUB_OUTPUT"
+
+  # === Deploy: Keycloak (shared by all variants) ===
+  deploy-keycloak:
+    needs: promote-images
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: ${{ inputs.architecture }}-${{ inputs.language }}-${{ inputs.stage }}
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+
+      - name: Setup Cloud SDK
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Deploy Keycloak to Cloud Run
+        uses: ./.github/actions/deploy-keycloak-cloud
+        with:
+          image: ${{ needs.promote-images.outputs.keycloak-image }}
+          system: ${{ vars.SYSTEM_NAME }}
+          project: ${{ vars.GCP_PROJECT_ID }}
+          project-number: ${{ needs.promote-images.outputs.project-number }}
+          region: ${{ vars.GCP_REGION }}
+
+  # === Deploy: Stage Stack ===
+  deploy-stack:
+    needs: [promote-images, deploy-keycloak]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: ${{ inputs.architecture }}-${{ inputs.language }}-${{ inputs.stage }}
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      REGION: ${{ vars.GCP_REGION }}
+      PROJECT: ${{ vars.GCP_PROJECT_ID }}
+      PROJECT_NUMBER: ${{ needs.promote-images.outputs.project-number }}
+      REGISTRY: ${{ needs.promote-images.outputs.registry }}
+      TAG: ${{ needs.promote-images.outputs.tag }}
+      BACKEND_IMAGE: ${{ fromJSON(inputs.images).backend }}
+      FRONTEND_IMAGE: ${{ fromJSON(inputs.images).frontend }}
+      MIGRATE_IMAGE: ${{ needs.promote-images.outputs.db-migrate-image }}
+      SIM_IMAGE: ${{ needs.promote-images.outputs.simulators-image }}
+    steps:
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+
+      - name: Setup Cloud SDK
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Resolve Stack Settings
+        run: |
+          set -euo pipefail
+          url() { echo "https://$1-${PROJECT_NUMBER}.${REGION}.run.app"; }
+          p="${SYSTEM}-${PREFIX}-${STAGE}"
+          {
+            echo "DB_NAME=${SYSTEM//-/_}_${PREFIX//-/_}_${STAGE}"
+            echo "SA=runtime@${PROJECT}.iam.gserviceaccount.com"
+            echo "SIM_NAME=${p}-sim"
+            echo "MIGRATE_JOB=${p}-migrate"
+            echo "BACKEND_NAME=${p}-backend"
+            echo "FRONTEND_NAME=${p}-frontend"
+            echo "SIM_URL=$(url "${p}-sim")"
+            echo "BACKEND_URL=$(url "${p}-backend")"
+            echo "FRONTEND_URL=$(url "${p}-frontend")"
+            echo "KEYCLOAK_URL=$(url "${SYSTEM}-keycloak")"
+          } >> "$GITHUB_ENV"
+
+      - name: Deploy External Systems
+        run: |
+          set -euo pipefail
+          gcloud run deploy "$SIM_NAME" \
+            --image "$SIM_IMAGE" --region "$REGION" --project "$PROJECT" \
+            --service-account "$SA" --port 9000 --memory 1Gi \
+            --min-instances 0 --max-instances 2 --allow-unauthenticated
+
+      - name: Read DB Credentials
+        run: |
+          set -euo pipefail
+          db="$(gcloud secrets versions access latest --secret="${SYSTEM}-db")"
+          password="$(jq -r .password <<< "$db")"
+          echo "::add-mask::${password}"
+          {
+            echo "DB_HOST=$(jq -r .host <<< "$db")"
+            echo "DB_PORT=$(jq -r .port <<< "$db")"
+            echo "DB_USER=$(jq -r .user <<< "$db")"
+            echo "DB_PASSWORD=${password}"
+          } >> "$GITHUB_ENV"
+
+      # Flyway reads its settings from FLYWAY_* env vars (avoids comma-splitting of --args).
+      - name: Run DB Migrations
+        run: |
+          set -euo pipefail
+          env_file="${RUNNER_TEMP}/migrate-env.json"
+          jq -n \
+            --arg url "jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}?sslmode=require" \
+            --arg user "$DB_USER" --arg pass "$DB_PASSWORD" \
+            '{FLYWAY_URL:$url, FLYWAY_USER:$user, FLYWAY_PASSWORD:$pass, FLYWAY_LOCATIONS:"filesystem:/flyway/sql"}' > "$env_file"
+          gcloud run jobs deploy "$MIGRATE_JOB" \
+            --image "$MIGRATE_IMAGE" --region "$REGION" --project "$PROJECT" \
+            --service-account "$SA" --args migrate --max-retries 0 --task-timeout 600 \
+            --env-vars-file "$env_file"
+          rm -f "$env_file"
+          gcloud run jobs execute "$MIGRATE_JOB" --region "$REGION" --project "$PROJECT" --wait
+
+      # PGSSLMODE: Neon requires TLS. JDBC and Npgsql negotiate it, but node-postgres only uses it when told.
+      - name: Deploy Backend
+        run: |
+          set -euo pipefail
+          env_file="${RUNNER_TEMP}/backend-env.json"
+          jq -n \
+            --arg host "$DB_HOST" --arg port "$DB_PORT" --arg name "$DB_NAME" \
+            --arg user "$DB_USER" --arg pass "$DB_PASSWORD" \
+            --arg ext "$SIM_URL" --arg origin "$FRONTEND_URL" \
+            --arg issuer "${KEYCLOAK_URL}/realms/${REALM}" \
+            '{POSTGRES_DB_HOST:$host, POSTGRES_DB_PORT:$port, POSTGRES_DB_NAME:$name,
+              POSTGRES_DB_USER:$user, POSTGRES_DB_PASSWORD:$pass, PGSSLMODE:"require",
+              ERP_API_URL:($ext + "/erp"), CLOCK_API_URL:($ext + "/clock"), TAX_API_URL:($ext + "/tax"),
+              EXTERNAL_SYSTEM_MODE:"real", ALLOWED_ORIGINS:$origin,
+              AUTH_ISSUER_URI:$issuer,
+              AUTH_JWK_SET_URI:($issuer + "/protocol/openid-connect/certs"),
+              AUTH_AUDIENCE:"shop-backend"}' > "$env_file"
+          gcloud run deploy "$BACKEND_NAME" \
+            --image "${REGISTRY}/${BACKEND_IMAGE}:${TAG}" --region "$REGION" --project "$PROJECT" \
+            --service-account "$SA" --port 8081 --memory 1Gi --cpu 1 --cpu-boost \
+            --min-instances 0 --max-instances 2 --allow-unauthenticated \
+            --env-vars-file "$env_file"
+          rm -f "$env_file"
+
+      - name: Deploy Frontend
+        run: |
+          set -euo pipefail
+          gcloud run deploy "$FRONTEND_NAME" \
+            --image "${REGISTRY}/${FRONTEND_IMAGE}:${TAG}" --region "$REGION" --project "$PROJECT" \
+            --service-account "$SA" --port 3000 \
+            --min-instances 0 --max-instances 2 --allow-unauthenticated \
+            --set-env-vars "BACKEND_API_URL=${BACKEND_URL},KEYCLOAK_URL=${KEYCLOAK_URL},KEYCLOAK_REALM=${REALM},KEYCLOAK_CLIENT_ID=shop-frontend"
+
+      - name: Wait for Systems
+        uses: optivem/actions/wait-for-endpoints@v1
+        with:
+          endpoints: |
+            [
+              { "name": "MyShop UI", "url": "${{ env.FRONTEND_URL }}/" },
+              { "name": "MyShop API", "url": "${{ env.BACKEND_URL }}/health" },
+              { "name": "ERP", "url": "${{ env.SIM_URL }}/erp/health" },
+              { "name": "Clock", "url": "${{ env.SIM_URL }}/clock/health" }
+            ]
+          max-attempts: '60'
+          wait-seconds: '10'
+          timeout-seconds: '900'
+
+  # === Run Smoke Tests (TypeScript): they need no login, so they work on every stage ===
+  smoke:
+    needs: [promote-images, deploy-stack]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: ${{ inputs.architecture }}-${{ inputs.language }}-${{ inputs.stage }}
+    permissions:
+      contents: read
+      packages: read
+    env:
+      GH_OPTIVEM_CONFIG: gh-optivem-${{ inputs.architecture }}-typescript.yaml
+      # Selects test-config-acceptance-real.json; every URL in it is overridden below.
+      ENVIRONMENT: acceptance
+      REGION: ${{ vars.GCP_REGION }}
+      PROJECT_NUMBER: ${{ needs.promote-images.outputs.project-number }}
+    steps:
+      - name: Resolve System URLs
+        run: |
+          set -euo pipefail
+          url() { echo "https://$1-${PROJECT_NUMBER}.${REGION}.run.app"; }
+          p="${SYSTEM}-${PREFIX}-${STAGE}"
+          {
+            echo "MYSHOP_UI_BASE_URL_REAL=$(url "${p}-frontend")"
+            echo "MYSHOP_API_BASE_URL_REAL=$(url "${p}-backend")"
+            echo "ERP_API_BASE_URL_REAL=$(url "${p}-sim")/erp"
+            echo "CLOCK_API_BASE_URL_REAL=$(url "${p}-sim")/clock"
+            echo "TAX_API_BASE_URL_REAL=$(url "${p}-sim")/tax"
+            echo "KEYCLOAK_URL=$(url "${SYSTEM}-keycloak")"
+          } >> "$GITHUB_ENV"
+
+      - name: Checkout Release Candidate
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.version }}
+
+      - name: Log in to GHCR
+        uses: optivem/actions/docker-login@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GHCR_TOKEN }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22.x
+          cache: 'npm'
+          cache-dependency-path: system-test/typescript/package-lock.json
+
+      - name: Cache Playwright Browsers
+        id: cache-playwright
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('system-test/typescript/package-lock.json') }}
+
+      - name: Install gh-optivem CLI extension
+        uses: optivem/actions/install-gh-optivem@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      # The stack is already deployed by earlier jobs, so no `gh optivem system start`.
+      - name: Setup Test Harness
+        run: gh optivem system-test setup
+
+      # `system-test run` health-probes systems.yaml, so the checkout's copy must name the
+      # deployed stack, not localhost. composeFile is required by the loader but unused.
+      - name: Point systems.yaml at the Deployed Stack
+        run: |
+          set -euo pipefail
+          cat > "docker/typescript/${ARCHITECTURE}/systems.yaml" <<EOF
+          systems:
+            - label: real
+              composeFile: docker-compose.local.real.yml
+              containerName: cloud-real
+              components:
+                - name: Frontend
+                  url: ${MYSHOP_UI_BASE_URL_REAL}
+                - name: Backend API
+                  url: ${MYSHOP_API_BASE_URL_REAL}/health
+                - name: Keycloak
+                  url: ${KEYCLOAK_URL}/realms/${REALM}
+              externalSystems:
+                - name: ERP API
+                  url: ${ERP_API_BASE_URL_REAL}/health
+                - name: Clock API
+                  url: ${CLOCK_API_BASE_URL_REAL}/health
+          EOF
+
+      - name: smoke-real
+        run: gh optivem system-test run --suite smoke-real

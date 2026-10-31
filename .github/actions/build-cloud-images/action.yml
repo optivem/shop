@@ -1,0 +1,69 @@
+name: 'Build Cloud-only Images'
+description: >-
+  Builds the shared images into Artifact Registry, tagged by the git tree hash of their build
+  context and only built when that tag is missing. Needs a registry login and a checkout.
+  Keycloak always comes from the checkout at the workspace root, never from source-path: every
+  variant and stage shares one instance, so an older source must not roll its realms back.
+
+inputs:
+  registry:
+    description: 'Artifact Registry path: <region>-docker.pkg.dev/<project>/app-images'
+    required: true
+  system:
+    description: 'System name, baked into the Keycloak realms'
+    required: true
+  region:
+    description: 'GCP region, baked into the Keycloak realms'
+    required: true
+  project-number:
+    description: 'GCP project number, baked into the Keycloak realms'
+    required: true
+  source-path:
+    description: 'Checkout holding the db-migrate, simulators and stubs sources for the version under test'
+    required: false
+    default: '.'
+
+outputs:
+  db-migrate:
+    description: 'db-migrate image reference'
+    value: ${{ steps.build.outputs.db-migrate }}
+  keycloak:
+    description: 'Keycloak image reference'
+    value: ${{ steps.build.outputs.keycloak }}
+  simulators:
+    description: 'Simulators image reference'
+    value: ${{ steps.build.outputs.simulators }}
+  stubs:
+    description: 'Stubs image reference'
+    value: ${{ steps.build.outputs.stubs }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Build and Push
+      id: build
+      shell: bash
+      env:
+        REGISTRY: ${{ inputs.registry }}
+        SYSTEM: ${{ inputs.system }}
+        RUN_APP_SUFFIX: ${{ inputs.project-number }}.${{ inputs.region }}.run.app
+        SOURCE: ${{ inputs.source-path }}
+      run: |
+        set -euo pipefail
+        build() {
+          local name="$1" root="$2" context="$3"; shift 3
+          local tag
+          tag="$(git -C "$root" rev-parse --short=12 "HEAD:${context}")"
+          local ref="${REGISTRY}/${name}:${tag}"
+          if docker manifest inspect "$ref" > /dev/null 2>&1; then
+            echo "Reusing ${ref}"
+          else
+            docker build -t "$ref" "$@" "${root}/${context}" && docker push "$ref"
+          fi
+          echo "${name#shop-}=${ref}" >> "$GITHUB_OUTPUT"
+        }
+        build shop-db-migrate "$SOURCE" system/db
+        build shop-keycloak . docker/keycloak -f docker/keycloak/Dockerfile.cloud \
+          --build-arg "SYSTEM=${SYSTEM}" --build-arg "RUN_APP_SUFFIX=${RUN_APP_SUFFIX}"
+        build shop-simulators "$SOURCE" external-systems/simulators
+        build shop-stubs "$SOURCE" external-systems/stubs

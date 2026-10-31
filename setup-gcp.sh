@@ -225,7 +225,8 @@ ensure_neon() {
 
   local existing db
   existing=$(neon_cli databases list --project-id "$NEON_PROJECT_ID" -o json | neon_items databases | jq -r '.[].name')
-  for db in "${DB_PREFIX}"_{multitier,monolith}_{java,dotnet,typescript}_{real,stub} "${DB_PREFIX}_keycloak"; do
+  for db in "${DB_PREFIX}"_{multitier,monolith}_{java,dotnet,typescript}_{real,stub} \
+    "${DB_PREFIX}"_multitier_java_{qa,production} "${DB_PREFIX}_keycloak"; do
     if grep -qx "$db" <<< "$existing"; then
       echo "  ✅ Database $db exists"
     else

@@ -137,6 +137,7 @@ Google Cloud Project
 
 - **Budget alerts**: create two on the billing account (Billing > Budgets & alerts): €5 and €20 per month, alerting at 50/90/100%.
 - **Scale to zero**: every Cloud Run service is deployed with `min-instances=0` and small `max-instances`, so idle cost is ~0 (Keycloak cold-starts on first request).
+- **Stages**: multitier-java has manual QA and production stages (`multitier-java-{qa,prod}-stage-cloud.yml`). Each has its own services and database, and shares the one Keycloak through its own realm (`shop-qa`, `shop-prod`; see `docker/keycloak/Dockerfile.cloud`). `shop-prod` has no test client and no users, so add real users in the Keycloak admin console.
 - **Secret versions**: one shared `<system>-db` JSON secret plus `<system>-keycloak-admin-password`, 2 versions in total; only 6 are free.
 - **Reset**: `./teardown-gcp.sh` destroys everything; `./setup-gcp.sh` recreates it.
 

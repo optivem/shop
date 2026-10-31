@@ -27,20 +27,20 @@ jobs:
         uses: optivem/actions/validate-env-vars-defined@v1
         with:
           names: |
-            DOCKERHUB_USERNAME
-            DOCKERHUB_TOKEN
             GCP_PROJECT_ID
             GCP_REGION
             GCP_WORKLOAD_IDENTITY_PROVIDER
             GCP_SERVICE_ACCOUNT
+            SYSTEM_NAME
+            GHCR_TOKEN
             WORKFLOW_TOKEN
         env:
-          DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
-          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
           GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
           GCP_REGION: ${{ vars.GCP_REGION }}
           GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           GCP_SERVICE_ACCOUNT: ${{ vars.GCP_SERVICE_ACCOUNT }}
+          SYSTEM_NAME: ${{ vars.SYSTEM_NAME }}
+          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
           WORKFLOW_TOKEN: ${{ secrets.WORKFLOW_TOKEN }}
 
       - name: Resolve Latest RC
@@ -65,136 +65,23 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-frontend-react
             ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-backend-java
 
-  deploy-frontend:
+  deploy:
     needs: check
-    if: needs.check.result == 'success'
-    runs-on: ubuntu-latest
-    environment: multitier-java-qa
     permissions:
       contents: read
       id-token: write
-    outputs:
-      app-url: ${{ steps.deploy.outputs.url }}
-    steps:
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v3
-        with:
-          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
-
-      - name: Setup Cloud SDK
-        uses: google-github-actions/setup-gcloud@v3
-
-      - name: Log in to GHCR
-        uses: optivem/actions/docker-login@v1
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GHCR_TOKEN }}
-
-      - name: Deploy Frontend to Cloud Run
-        id: deploy
-        uses: google-github-actions/deploy-cloudrun@v3
-        with:
-          service: multitier-java-frontend-qa
-          image: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-frontend-react:${{ needs.check.outputs.version }}
-          region: ${{ vars.GCP_REGION }}
-          project_id: ${{ vars.GCP_PROJECT_ID }}
-          flags: --port=3000 --max-instances=3 --allow-unauthenticated
-
-      - name: Wait for Frontend Ready
-        uses: optivem/actions/wait-for-endpoints@v1
-        with:
-          endpoints: '[{"name": "multitier-java-frontend-qa", "url": "${{ steps.deploy.outputs.url }}"}]'
-
-  deploy-backend:
-    needs: check
-    if: needs.check.result == 'success'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
-    outputs:
-      app-url: ${{ steps.deploy.outputs.url }}
-    steps:
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v3
-        with:
-          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
-
-      - name: Setup Cloud SDK
-        uses: google-github-actions/setup-gcloud@v3
-
-      - name: Log in to GHCR
-        uses: optivem/actions/docker-login@v1
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GHCR_TOKEN }}
-
-      - name: Deploy Backend to Cloud Run
-        id: deploy
-        uses: google-github-actions/deploy-cloudrun@v3
-        with:
-          service: multitier-java-backend-qa
-          image: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-backend-java:${{ needs.check.outputs.version }}
-          region: ${{ vars.GCP_REGION }}
-          project_id: ${{ vars.GCP_PROJECT_ID }}
-          env_vars: |
-            SPRING_PROFILES_ACTIVE=cloud
-          secrets: |
-            DATABASE_URL=db-connection-string:latest
-          flags: --port=8080 --max-instances=3 --allow-unauthenticated
-
-      - name: Wait for Backend Ready
-        uses: optivem/actions/wait-for-endpoints@v1
-        with:
-          endpoints: '[{"name": "multitier-java-backend-qa", "url": "${{ steps.deploy.outputs.url }}"}]'
-
-  deploy-external-real:
-    needs: check
-    if: needs.check.result == 'success'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
-    outputs:
-      external-url: ${{ steps.deploy.outputs.url }}
-    steps:
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v3
-        with:
-          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
-
-      - name: Setup Cloud SDK
-        uses: google-github-actions/setup-gcloud@v3
-
-      - name: Log in to GHCR
-        uses: optivem/actions/docker-login@v1
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GHCR_TOKEN }}
-
-      - name: Deploy External Real to Cloud Run
-        id: deploy
-        uses: google-github-actions/deploy-cloudrun@v3
-        with:
-          service: external-real-qa
-          image: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/external-real-sim:latest
-          region: ${{ vars.GCP_REGION }}
-          project_id: ${{ vars.GCP_PROJECT_ID }}
-          flags: --port=9000 --max-instances=3 --allow-unauthenticated
-
-      - name: Wait for External Real Ready
-        uses: optivem/actions/wait-for-endpoints@v1
-        with:
-          endpoints: '[{"name": "external-real-qa", "url": "${{ steps.deploy.outputs.url }}"}]'
+      packages: read
+    uses: ./.github/workflows/_deploy-stage-cloud.yml
+    secrets: inherit
+    with:
+      stage: qa
+      architecture: multitier
+      language: java
+      images: '{"frontend":"multitier-frontend-react","backend":"multitier-backend-java"}'
+      version: ${{ needs.check.outputs.version }}
 
   promote:
-    needs: [check, deploy-frontend, deploy-backend, deploy-external-real]
+    needs: [check, deploy]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -210,7 +97,7 @@ jobs:
           token: ${{ secrets.WORKFLOW_TOKEN }}
 
   summary:
-    needs: [check, promote]
+    needs: [check, deploy, promote]
     if: always()
     runs-on: ubuntu-latest
     permissions:
@@ -220,7 +107,7 @@ jobs:
       uses: optivem/actions/render-system-stage-summary@v1
       with:
         stage-name: 'QA Stage (Cloud Run)'
-        stage-result: ${{ needs.promote.result }}
+        stage-result: ${{ (needs.check.result == 'failure' || needs.deploy.result == 'failure') && 'failure' || needs.promote.result }}
         environment: qa
         success-version: ${{ needs.promote.outputs.version }}
         success-artifact-ids: ${{ needs.promote.outputs.image-urls }}

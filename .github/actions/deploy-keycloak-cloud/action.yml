@@ -1,0 +1,76 @@
+name: 'Deploy Keycloak to Cloud Run'
+description: >-
+  Deploys the one Keycloak every variant and stage shares, and waits for all its realms.
+  Redeploys only when the image, a setting or the db credentials changed, so one workflow
+  doesn't restart Keycloak under another's tests. Needs gcloud authenticated.
+
+inputs:
+  image:
+    description: 'Keycloak image reference'
+    required: true
+  system:
+    description: 'System name: prefixes the service, secrets and database'
+    required: true
+  project:
+    description: 'GCP project ID'
+    required: true
+  project-number:
+    description: 'GCP project number'
+    required: true
+  region:
+    description: 'GCP region'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Deploy
+      shell: bash
+      env:
+        IMAGE: ${{ inputs.image }}
+        SYSTEM: ${{ inputs.system }}
+        PROJECT: ${{ inputs.project }}
+        PROJECT_NUMBER: ${{ inputs.project-number }}
+        REGION: ${{ inputs.region }}
+      run: |
+        set -euo pipefail
+        url() { echo "https://$1-${PROJECT_NUMBER}.${REGION}.run.app"; }
+        db="$(gcloud secrets versions access latest --secret="${SYSTEM}-db")"
+        db_host="$(jq -r .host <<< "$db")"; db_port="$(jq -r .port <<< "$db")"
+        db_user="$(jq -r .user <<< "$db")"; db_password="$(jq -r .password <<< "$db")"
+        echo "::add-mask::${db_password}"
+        env_file="${RUNNER_TEMP}/keycloak-env.json"
+        jq -n \
+          --arg host "$(url "${SYSTEM}-keycloak")" \
+          --arg dburl "jdbc:postgresql://${db_host}:${db_port}/${SYSTEM//-/_}_keycloak?sslmode=require" \
+          --arg dbuser "$db_user" --arg dbpass "$db_password" \
+          '{KC_HOSTNAME:$host, KC_DB_URL:$dburl, KC_DB_USERNAME:$dbuser, KC_DB_PASSWORD:$dbpass,
+            KC_BOOTSTRAP_ADMIN_USERNAME:"admin"}' > "$env_file"
+        args=(--image "$IMAGE" --region "$REGION" --project "$PROJECT"
+          --service-account "runtime@${PROJECT}.iam.gserviceaccount.com"
+          --port 8080 --memory 1Gi --cpu 1 --cpu-boost
+          --min-instances 0 --max-instances 2 --allow-unauthenticated
+          --set-secrets "KC_BOOTSTRAP_ADMIN_PASSWORD=${SYSTEM}-keycloak-admin-password:latest")
+        fingerprint="$(printf '%s\n' "${args[@]}" | cat - "$env_file" | sha256sum | cut -c1-32)"
+        deployed="$(gcloud run services describe "${SYSTEM}-keycloak" --region "$REGION" --project "$PROJECT" \
+          --format='value(metadata.labels.deploy_fingerprint)' 2> /dev/null || true)"
+        if [[ "$deployed" == "$fingerprint" ]]; then
+          echo "Keycloak is unchanged, not redeploying."
+        else
+          gcloud run deploy "${SYSTEM}-keycloak" "${args[@]}" \
+            --env-vars-file "$env_file" --labels "deploy_fingerprint=${fingerprint}"
+        fi
+        rm -f "$env_file"
+
+    - name: Wait for Keycloak (cold start + realm import)
+      uses: optivem/actions/wait-for-endpoints@v1
+      with:
+        endpoints: |
+          [
+            {"name": "Keycloak shop", "url": "https://${{ inputs.system }}-keycloak-${{ inputs.project-number }}.${{ inputs.region }}.run.app/realms/shop/.well-known/openid-configuration"},
+            {"name": "Keycloak shop-qa", "url": "https://${{ inputs.system }}-keycloak-${{ inputs.project-number }}.${{ inputs.region }}.run.app/realms/shop-qa/.well-known/openid-configuration"},
+            {"name": "Keycloak shop-prod", "url": "https://${{ inputs.system }}-keycloak-${{ inputs.project-number }}.${{ inputs.region }}.run.app/realms/shop-prod/.well-known/openid-configuration"}
+          ]
+        max-attempts: '60'
+        wait-seconds: '10'
+        timeout-seconds: '900'
