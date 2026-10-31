@@ -1,6 +1,6 @@
 # 2026-10-30 18:22:31 UTC — Template the cloud deploy to all variants
 
-> 🤖 **Picked up by agent** — `49d10304c35f` at `2026-10-31T08:48:59Z`
+> 🤖 **Picked up by agent** — `531392d34340` at `2026-10-31T10:21:16Z`
 
 ## TL;DR
 
@@ -21,11 +21,10 @@ What we get out of this — the goals and deliverables:
 
 ## ▶ Next executable step (resume here)
 
-**Step 5:** roll out to multitier dotnet and typescript, one green run each, by replacing `.github/workflows/multitier-{dotnet,typescript}-acceptance-stage-cloud.yml` with thin callers of `_acceptance-stage-cloud.yml`, shaped like `multitier-java-acceptance-stage-cloud.yml` (last green: [41118734035](https://github.com/optivem/shop/actions/runs/41118734035)). First extend the database loop in `ensure_neon` in `setup-gcp.sh`, which still creates only the multitier-java and Keycloak databases, and run `./setup-gcp.sh --yes`. Everything per-variant comes from `<architecture>-<language>`, including the GitHub environment `<architecture>-<language>-acceptance`, so check those environments exist. `docker/keycloak/cloud-realm.jq` already lists all six variants × real|stub, and the images are tagged by tree hash so an unchanged Keycloak is not redeployed. The other `*-stage-cloud.yml` workflows still read the removed `db-connection-string` until Steps 5 to 7 replace them. Needs `gh`, `gcloud` and `neonctl` logged in.
+**Step 6:** make `_acceptance-stage-cloud.yml` accept `architecture: monolith`, then replace `.github/workflows/monolith-{java,dotnet,typescript}-acceptance-stage-cloud.yml` with thin callers, one green run each. Monolith is one service `<system>-monolith-<language>-<stack>` on port 8080 serving UI and API, image `monolith-system-<language>`; `docker/keycloak/cloud-realm.jq` and the Neon databases already cover it. Behind Cloud Run, Java and .NET need forwarded-header settings so the OIDC redirect stays `https`.
 
 ## Steps
 
-- [ ] Step 5: Roll out to multitier dotnet and typescript, one green run each, replacing the existing `multitier-*-acceptance-stage-cloud.yml`
 - [ ] Step 6: Roll out to monolith java, dotnet and typescript, one green run each (no separate backend service, so the workflow must handle a different service shape), replacing the existing `monolith-*-acceptance-stage-cloud.yml`
 - [ ] Step 7: QA/prod cloud stages for multitier-java (manual dispatch): rewrite the existing `multitier-java-{qa,prod}-stage-cloud.yml`; get QA green, and stop before dispatching prod (see decision 8)
 - [ ] Step 8: Realm hardening: prod realm without the password-grant test client and test users

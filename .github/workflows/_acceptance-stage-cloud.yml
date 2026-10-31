@@ -16,7 +16,7 @@ on:
   workflow_call:
     inputs:
       architecture:
-        description: 'Architecture: multitier (monolith is not implemented yet)'
+        description: 'Architecture: multitier or monolith'
         required: true
         type: string
       language:
@@ -24,7 +24,7 @@ on:
         required: true
         type: string
       images:
-        description: 'JSON map of role to GHCR image name, e.g. {"frontend":"multitier-frontend-react","backend":"multitier-backend-java"}'
+        description: 'JSON map of role to GHCR image name: {"frontend":"multitier-frontend-react","backend":"multitier-backend-java"} or {"system":"monolith-system-java"}'
         required: true
         type: string
       commit-sha:
@@ -56,8 +56,8 @@ jobs:
     steps:
       - name: Check Architecture Is Supported
         run: |
-          if [[ "$ARCHITECTURE" != multitier ]]; then
-            echo "::error::Architecture '$ARCHITECTURE' is not implemented in this workflow yet."
+          if [[ "$ARCHITECTURE" != multitier && "$ARCHITECTURE" != monolith ]]; then
+            echo "::error::Unknown architecture '$ARCHITECTURE'."
             exit 1
           fi
 
@@ -377,6 +377,7 @@ jobs:
       TAG: ${{ needs.promote-images.outputs.tag }}
       BACKEND_IMAGE: ${{ fromJSON(inputs.images).backend }}
       FRONTEND_IMAGE: ${{ fromJSON(inputs.images).frontend }}
+      SYSTEM_IMAGE: ${{ fromJSON(inputs.images).system }}
       MIGRATE_IMAGE: ${{ needs.promote-images.outputs.db-migrate-image }}
       STACK: ${{ matrix.stack }}
       EXT_SERVICE: ${{ matrix.ext-service }}
@@ -403,12 +404,20 @@ jobs:
             echo "SA=runtime@${PROJECT}.iam.gserviceaccount.com"
             echo "EXT_NAME=${p}-${EXT_SERVICE}"
             echo "MIGRATE_JOB=${p}-migrate"
-            echo "BACKEND_NAME=${p}-backend"
-            echo "FRONTEND_NAME=${p}-frontend"
             echo "EXT_URL=$(url "${p}-${EXT_SERVICE}")"
-            echo "BACKEND_URL=$(url "${p}-backend")"
-            echo "FRONTEND_URL=$(url "${p}-frontend")"
             echo "KEYCLOAK_URL=$(url "${SYSTEM}-keycloak")"
+            if [[ "$ARCHITECTURE" == monolith ]]; then
+              echo "SYSTEM_SERVICE=${p}"
+              echo "UI_HEALTH_URL=$(url "${p}")/health"
+              echo "API_HEALTH_URL=$(url "${p}")/health"
+            else
+              echo "BACKEND_NAME=${p}-backend"
+              echo "FRONTEND_NAME=${p}-frontend"
+              echo "BACKEND_URL=$(url "${p}-backend")"
+              echo "FRONTEND_URL=$(url "${p}-frontend")"
+              echo "UI_HEALTH_URL=$(url "${p}-frontend")/"
+              echo "API_HEALTH_URL=$(url "${p}-backend")/health"
+            fi
           } >> "$GITHUB_ENV"
 
       - name: Deploy External Systems (${{ matrix.ext-service }})
@@ -448,8 +457,37 @@ jobs:
           rm -f "$env_file"
           gcloud run jobs execute "$MIGRATE_JOB" --region "$REGION" --project "$PROJECT" --wait
 
+      # Monolith runs the OIDC login itself, so it has to see the https the browser used, or Keycloak
+      # rejects the redirect URI: the two forwarded-header settings cover Java and .NET (TypeScript reads
+      # x-forwarded-proto itself). One instance, because Java and .NET keep sessions and login state in memory.
+      - name: Deploy System
+        if: inputs.architecture == 'monolith'
+        run: |
+          set -euo pipefail
+          env_file="${RUNNER_TEMP}/system-env.json"
+          jq -n \
+            --arg host "$DB_HOST" --arg port "$DB_PORT" --arg name "$DB_NAME" \
+            --arg user "$DB_USER" --arg pass "$DB_PASSWORD" \
+            --arg ext "$EXT_URL" --arg mode "$STACK" --arg kc "$KEYCLOAK_URL" \
+            '{POSTGRES_DB_HOST:$host, POSTGRES_DB_PORT:$port, POSTGRES_DB_NAME:$name,
+              POSTGRES_DB_USER:$user, POSTGRES_DB_PASSWORD:$pass, PGSSLMODE:"require",
+              ERP_API_URL:($ext + "/erp"), CLOCK_API_URL:($ext + "/clock"), TAX_API_URL:($ext + "/tax"),
+              EXTERNAL_SYSTEM_MODE:$mode,
+              AUTH_ISSUER_URI:($kc + "/realms/shop"),
+              AUTH_TOKEN_URI:($kc + "/realms/shop/protocol/openid-connect/token"),
+              AUTH_JWK_SET_URI:($kc + "/realms/shop/protocol/openid-connect/certs"),
+              AUTH_AUDIENCE:"shop-backend", AUTH_CLIENT_SECRET:"shop-monolith-test-secret",
+              SERVER_FORWARDHEADERSSTRATEGY:"native", ASPNETCORE_FORWARDEDHEADERS_ENABLED:"true"}' > "$env_file"
+          gcloud run deploy "$SYSTEM_SERVICE" \
+            --image "${REGISTRY}/${SYSTEM_IMAGE}:${TAG}" --region "$REGION" --project "$PROJECT" \
+            --service-account "$SA" --port 8080 --memory 1Gi --cpu 1 --cpu-boost \
+            --min-instances 0 --max-instances 1 --allow-unauthenticated \
+            --env-vars-file "$env_file"
+          rm -f "$env_file"
+
       # PGSSLMODE: Neon requires TLS. JDBC and Npgsql negotiate it, but node-postgres only uses it when told.
       - name: Deploy Backend
+        if: inputs.architecture == 'multitier'
         run: |
           set -euo pipefail
           env_file="${RUNNER_TEMP}/backend-env.json"
@@ -473,6 +511,7 @@ jobs:
           rm -f "$env_file"
 
       - name: Deploy Frontend
+        if: inputs.architecture == 'multitier'
         run: |
           set -euo pipefail
           gcloud run deploy "$FRONTEND_NAME" \
@@ -486,8 +525,8 @@ jobs:
         with:
           endpoints: |
             [
-              { "name": "MyShop UI", "url": "${{ env.FRONTEND_URL }}/" },
-              { "name": "MyShop API", "url": "${{ env.BACKEND_URL }}/health" },
+              { "name": "MyShop UI", "url": "${{ env.UI_HEALTH_URL }}" },
+              { "name": "MyShop API", "url": "${{ env.API_HEALTH_URL }}" },
               { "name": "ERP", "url": "${{ env.EXT_URL }}/erp/health" },
               { "name": "Clock", "url": "${{ env.EXT_URL }}/clock/health" }
             ]
@@ -523,9 +562,14 @@ jobs:
             p="${SYSTEM}-${PREFIX}-${stack}"
             mode="${stack^^}"
             ext="$(url "${p}-$([[ "$stack" == real ]] && echo sim || echo stubs)")"
+            if [[ "$ARCHITECTURE" == monolith ]]; then
+              ui="$(url "${p}")"; api="$ui"
+            else
+              ui="$(url "${p}-frontend")"; api="$(url "${p}-backend")"
+            fi
             {
-              echo "MYSHOP_UI_BASE_URL_${mode}=$(url "${p}-frontend")"
-              echo "MYSHOP_API_BASE_URL_${mode}=$(url "${p}-backend")"
+              echo "MYSHOP_UI_BASE_URL_${mode}=${ui}"
+              echo "MYSHOP_API_BASE_URL_${mode}=${api}"
               echo "ERP_API_BASE_URL_${mode}=${ext}/erp"
               echo "CLOCK_API_BASE_URL_${mode}=${ext}/clock"
               echo "TAX_API_BASE_URL_${mode}=${ext}/tax"
@@ -579,14 +623,19 @@ jobs:
           set -euo pipefail
           system_entry() {
             local label="$1" ui="$2" api="$3" erp="$4" clock="$5"
+            local ui_name=Frontend api_name="Backend API" ui_health=""
+            if [[ "$ARCHITECTURE" == monolith ]]; then
+              ui_name=Monolith api_name="Monolith API"
+              ui_health=$'\n'"        healthUrl: ${ui}/health"
+            fi
             cat <<EOF
             - label: ${label}
               composeFile: docker-compose.local.${label}.yml
               containerName: cloud-${label}
               components:
-                - name: Frontend
-                  url: ${ui}
-                - name: Backend API
+                - name: ${ui_name}
+                  url: ${ui}${ui_health}
+                - name: ${api_name}
                   url: ${api}/health
                 - name: Keycloak
                   url: ${KEYCLOAK_URL}/realms/shop
