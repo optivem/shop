@@ -16,10 +16,6 @@ What we get out of this — the goals and deliverables:
 - `git ls-files --eol` reports no CRLF in the index other than files that are meant to have it.
 - A CI check catches a missing `.gitattributes` or a misnormalized file before it reaches `main`.
 
-## ▶ Next executable step (resume here)
+## Closed without Windows verification
 
-Only the Windows half of Step 6 remains, and it needs a person on a Windows machine. Everything else is done, and the dev container checks passed.
-
-## Steps
-
-- [ ] Step 6: On Windows, make a fresh clone inside WSL and confirm a clean `git status`, no output from `git ls-files --eol | grep -E 'w/crlf.*eol=lf|w/lf.*eol=crlf'`, and that `run-sonar.sh` starts. Then delete this plan. — ⏳ Deferred: needs a Windows machine, which the dev container can't provide.
+The Windows half of Step 6 was not tested. The user chose to close this plan on 2026-10-31 without it. A fresh clone on Windows was never checked. Only the dev container was verified.
