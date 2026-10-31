@@ -37,7 +37,7 @@ What we get out of this — the goals and deliverables:
 2. **Neon for QA/prod:** separate databases in the existing project; check the free-tier limits first.
 3. **Keycloak for prod:** a separate realm on the shared instance.
 4. **Prod tests:** smoke tests that need no login.
-5. **Old plan's Step 10:** runs after this plan, with `./teardown-gcp.sh` (shop only). Not `./teardown-everything.sh --execute`, which would also delete the 11 other GCP projects.
+5. **Old plan's teardown and re-provision:** already done by the user (reported 2026-10-31), before this plan finished, so the old plan is deleted. Project IDs recorded earlier may be stale: read `GCP_PROJECT_ID` from the GitHub variable. For any later teardown use `./teardown-gcp.sh` (shop only), not `./teardown-everything.sh --execute`, which would also delete the 11 other GCP projects.
 6. **Secrets:** one shared `<system>-db` secret (host/port/user/password) plus the Keycloak admin password, 2 versions in total; database names come from convention. Supersedes the old plan's "one secret per variant". The per-variant secrets and the legacy `db-connection-string` go.
 7. **Applying Terraform:** the agent runs `./setup-gcp.sh --yes` itself.
 8. **Prod dispatch:** the agent does not dispatch the prod stage. It publishes a real tag and a public GitHub Release, and that tag makes acceptance skip until VERSION is bumped. Hand the user the exact command instead.

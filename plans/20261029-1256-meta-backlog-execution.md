@@ -196,7 +196,7 @@ Run before any wave:
 
 1. `grep -l "PICKUP\|in-flight\|claimed by\|Picked up by agent" plans/*.md plans/backlog/*/*.md` — on 2026-10-29 this matched the cloud plan (real "Picked up by agent" marker) and `tax-real-parity-contract-test.md` (false positive: the word appears in prose). Any new hit means another agent is in flight; stop and ask.
 2. `git status` — at analysis time `.github/workflows/multitier-java-acceptance-stage-cloud.yml`, `plans/20261029-1316-deploy-shop-cloud-run.md` and `terraform/README.md` were modified by the cloud plan. Do not touch or stage those.
-3. The cloud plan `plans/20261029-1316-deploy-shop-cloud-run.md` is **active** (someone else is executing; Step 7 is user provisioning, Step 8 a first cloud run). Do not edit its files (footprint above). Pushes to `main` change the images it deploys; get user OK before pushing while Step 8 is in progress.
+3. The original cloud plan is finished and deleted (2026-10-31); cloud work continues in `plans/20261030-1822-template-cloud-deploy-all-variants.md`, which is what "the cloud plan" means from here on. It is **active**: do not edit its files, and get user OK before pushing while one of its cloud runs is in progress.
 4. `git config core.hooksPath .githooks` is set (repo CLAUDE.md).
 5. No docker stack running (`gh optivem system stop`) before the first system-test gate; rebuild images with `--no-cache` if UI tests time out on `aria-label="SKU"`.
 

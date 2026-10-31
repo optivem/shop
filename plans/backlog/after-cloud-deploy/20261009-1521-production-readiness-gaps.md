@@ -66,7 +66,7 @@ Child plan: `20261009-1545-production-readiness-chunk1-data-correctness.md` (det
 - [ ] 5.6 Pin base images by digest and tighten the floating `^` ranges in TS, supported by a lockfile and renovation PRs.
 
 ### Chunk 6 — Deploy and operations
-- [ ] 6.1 Terraform: Cloud Run services, Neon (Postgres, free tier; see `plans/20261029-1316-deploy-shop-cloud-run.md`), Secret Manager wiring, and minimum/maximum instances (verify what `terraform/main.tf` already has beyond the first 80 lines).
+- [ ] 6.1 Terraform: Cloud Run services, Neon (Postgres, free tier; see `plans/20261030-1822-template-cloud-deploy-all-variants.md`), Secret Manager wiring, and minimum/maximum instances (verify what `terraform/main.tf` already has beyond the first 80 lines).
 - [ ] 6.2 Migration policy doc: expand/contract, backward-compatible migrations, no destructive migration in the same release as the code that stops using the column.
 - [ ] 6.3 Rollback procedure for the prod stage, and a documented rollback test.
 - [ ] 6.4 Runbooks under `docker/docs/operations/` (currently empty): deploy, rollback, DB restore, dependency outage.
