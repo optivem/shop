@@ -1,7 +1,5 @@
 # 2026-10-30 18:22:31 UTC — Template the cloud deploy to all variants
 
-> 🤖 **Picked up by agent** — `531392d34340` at `2026-10-31T10:21:16Z`
-
 ## TL;DR
 
 **Why:** Only `multitier/java` deploys to Cloud Run, and only through its acceptance stage (first green run: [41098534927](https://github.com/optivem/shop/actions/runs/41098534927)). The other five variants have no working cloud deploy, multitier-java has no QA/prod cloud stages, and copying the current setup as-is would multiply Keycloak instances, secrets and images.
