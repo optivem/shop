@@ -13,7 +13,6 @@
 
 ## Steps
 
-- [ ] **2. Vitest 2 -> 3**: bump (also `vitest.opt-in.config.ts`), review migration guide (spy/mocks reset behavior, `workspace` -> `projects` naming, reporter changes), bump jsdom if peer requires, run gate. **In progress on branch `wip/frontend-vitest-3` (`5a78ab2b`), not on main:** the bump is done, but `npm run build` fails with TS2769 at `vite.config.ts(8,13)` and `npm run lint` reports 1 error (cause not looked at). Sample tests were stopped unfinished; unit, component and pact results are unknown. Merge the branch, fix, run the full gate, commit to main, delete the branch.
 - [ ] **3. React 18 -> 19**: bump `react`, `react-dom`, `@types/react`, `@types/react-dom`; fix removed APIs (`ReactDOM.render`/`propTypes`/`defaultProps` on functions, string refs, `act` import from `react`), ensure `@testing-library/react` and `eslint-plugin-react-hooks` are compatible; run gate.
 - [ ] **4. Wrap-up:** run the full multitier TypeScript system tests, bump VERSION via the normal flow, confirm the frontend commit-stage workflow is green.
 

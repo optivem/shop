@@ -9,11 +9,10 @@ import base from './vite.config';
 // suites both drive the Pact mock server and write the contract); narrow to one
 // suite with a CLI path arg, as `npm run test:component` does:
 //   vitest run --config vitest.opt-in.config.ts src/test/latest/component
-const baseTest = (base as unknown as { test?: Record<string, unknown> }).test ?? {};
+const baseTest = (base as { test?: Record<string, unknown> }).test ?? {};
 
 export default defineConfig({
-  // Cast until Vitest 3: Vitest 2's defineConfig is typed against its bundled Vite 5.
-  ...(base as object),
+  ...base,
   test: {
     ...baseTest,
     include: [

@@ -1,5 +1,4 @@
-import { defineConfig, type UserConfig } from 'vite';
-import { configDefaults } from 'vitest/config';
+import { defineConfig, configDefaults } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 
 // An empty BACKEND_API_URL counts as unset, so this is deliberately not `??`.
@@ -40,6 +39,4 @@ export default defineConfig({
       }
     }
   }
-  // Vitest 2 bundles its own Vite 5 and augments that copy's UserConfig, so `test`
-  // isn't known to Vite 7's type. Removed by the Vitest 3 upgrade, which shares Vite 7.
-} as UserConfig);
+});
