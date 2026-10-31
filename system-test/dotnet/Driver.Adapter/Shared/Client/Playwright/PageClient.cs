@@ -98,6 +98,12 @@ public class PageClient
         }
     }
 
+    /// <summary>Moves a single-page app to a route without reloading it.</summary>
+    public async Task NavigateWithinAppAsync(string route)
+    {
+        await _page.EvaluateAsync("route => { history.pushState({}, '', route); dispatchEvent(new PopStateEvent('popstate')); }", route);
+    }
+
     public async Task<string?> ReadAttributeAsync(string selector, string attributeName)
     {
         var locator = _page.Locator(selector);

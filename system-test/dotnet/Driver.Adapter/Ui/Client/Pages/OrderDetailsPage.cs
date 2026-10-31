@@ -1,5 +1,8 @@
 using Driver.Adapter.Shared.Client.Playwright;
+using Driver.Port;
 using Driver.Port.Dtos;
+using Driver.Port.Dtos.Error;
+using Common;
 using Common.Domain;
 
 namespace Driver.Adapter.Ui.Client.Pages;
@@ -24,6 +27,11 @@ public class OrderDetailsPage : BasePage
     private const string CancelOrderOutputSelector = "[aria-label='Cancel Order']";
     private const string DeliverOrderOutputSelector = "[aria-label='Deliver Order']";
 
+    private const string OrderLoadedSelector = OrderNumberOutputSelector + ":visible";
+    private const string OrderNotFoundSelector = "p:has-text('Order not found'):visible";
+    private const string OrderErrorSelector = ".alert-danger:visible, .notification.error:visible";
+    private const string OrderErrorPrefix = "Error:";
+
     // Display text constants
     private const string TextNone = "None";
     private const string DollarSymbol = "$";
@@ -36,9 +44,23 @@ public class OrderDetailsPage : BasePage
     {
     }
 
-    public async Task<bool> IsLoadedSuccessfullyAsync()
+    /// <summary>Waits for the page to show the order, or what it shows instead when the order can't be viewed.</summary>
+    public async Task<Result<VoidValue, SystemError>> GetLoadResultAsync(string? orderNumber)
     {
-        return await PageClient.IsVisibleAsync(OrderNumberOutputSelector);
+        await PageClient.WaitForVisibleAsync(string.Join(", ", OrderLoadedSelector, OrderNotFoundSelector, OrderErrorSelector));
+
+        if (!await PageClient.IsHiddenAsync(OrderLoadedSelector))
+        {
+            return SystemResults.Success();
+        }
+
+        if (!await PageClient.IsHiddenAsync(OrderNotFoundSelector))
+        {
+            return SystemResults.Failure($"Order {orderNumber} does not exist.");
+        }
+
+        var errorMessage = await PageClient.ReadTextContentAsync(OrderErrorSelector);
+        return SystemResults.Failure(errorMessage.Replace(OrderErrorPrefix, string.Empty).Trim());
     }
 
     public async Task<string> GetOrderNumberAsync()

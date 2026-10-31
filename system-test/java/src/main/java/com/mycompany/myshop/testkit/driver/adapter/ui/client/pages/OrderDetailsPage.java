@@ -1,11 +1,16 @@
 package com.mycompany.myshop.testkit.driver.adapter.ui.client.pages;
 
 import com.mycompany.myshop.testkit.common.Converter;
+import com.mycompany.myshop.testkit.common.Result;
 import com.mycompany.myshop.testkit.common.domain.OrderStatus;
 import com.mycompany.myshop.testkit.driver.adapter.shared.client.playwright.PageClient;
+import com.mycompany.myshop.testkit.driver.port.dtos.error.SystemError;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+
+import static com.mycompany.myshop.testkit.dsl.core.usecase.commons.SystemResults.failure;
+import static com.mycompany.myshop.testkit.dsl.core.usecase.commons.SystemResults.success;
 
 public class OrderDetailsPage extends BasePage {
     private static final String ORDER_NUMBER_OUTPUT_SELECTOR = "[aria-label='Display Order Number']";
@@ -25,6 +30,10 @@ public class OrderDetailsPage extends BasePage {
     private static final String APPLIED_COUPON_OUTPUT_SELECTOR = "[aria-label='Display Applied Coupon']";
     private static final String CANCEL_ORDER_SELECTOR = "[aria-label='Cancel Order']";
     private static final String DELIVER_ORDER_SELECTOR = "[aria-label='Deliver Order']";
+    private static final String ORDER_LOADED_SELECTOR = ORDER_NUMBER_OUTPUT_SELECTOR + ":visible";
+    private static final String ORDER_NOT_FOUND_SELECTOR = "p:has-text('Order not found'):visible";
+    private static final String ORDER_ERROR_SELECTOR = ".alert-danger:visible, .notification.error:visible";
+    private static final String ORDER_ERROR_PREFIX = "Error:";
     private static final String TEXT_NONE = "None";
     private static final String DOLLAR_SYMBOL = "$";
     private static final String PERCENT_SYMBOL = "%";
@@ -33,8 +42,19 @@ public class OrderDetailsPage extends BasePage {
         super(pageClient);
     }
 
-    public boolean isLoadedSuccessfully() {
-        return pageClient.isVisible(ORDER_NUMBER_OUTPUT_SELECTOR);
+    /** Waits for the page to show the order, or what it shows instead when the order can't be viewed. */
+    public Result<Void, SystemError> getLoadResult(String orderNumber) {
+        pageClient.waitForVisible(String.join(", ", ORDER_LOADED_SELECTOR, ORDER_NOT_FOUND_SELECTOR, ORDER_ERROR_SELECTOR));
+
+        if (!pageClient.isHidden(ORDER_LOADED_SELECTOR)) {
+            return success();
+        }
+
+        if (!pageClient.isHidden(ORDER_NOT_FOUND_SELECTOR)) {
+            return failure("Order " + orderNumber + " does not exist.");
+        }
+
+        return failure(pageClient.readTextContent(ORDER_ERROR_SELECTOR).replace(ORDER_ERROR_PREFIX, "").trim());
     }
 
     public String getOrderNumber() {

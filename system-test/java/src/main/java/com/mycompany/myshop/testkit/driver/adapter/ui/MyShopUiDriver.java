@@ -7,7 +7,6 @@ import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.CouponManagem
 import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.HomePage;
 import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.NewOrderPage;
 import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.OrderDetailsPage;
-import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.OrderHistoryPage;
 import com.mycompany.myshop.testkit.driver.port.dtos.BrowseCouponsRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.BrowseCouponsResponse;
 import com.mycompany.myshop.testkit.driver.port.dtos.BrowseOrderHistoryRequest;
@@ -39,7 +38,6 @@ public class MyShopUiDriver implements MyShopDriver {
     private Page currentPage = Page.NONE;
     private HomePage homePage;
     private NewOrderPage newOrderPage;
-    private OrderHistoryPage orderHistoryPage;
     private OrderDetailsPage orderDetailsPage;
     private CouponManagementPage couponManagementPage;
 
@@ -156,12 +154,6 @@ public class MyShopUiDriver implements MyShopDriver {
             return failure(result.getError());
         }
 
-        var isSuccess = orderDetailsPage.isLoadedSuccessfully();
-
-        if (!isSuccess) {
-            return Result.failure(result.getError());
-        }
-
         var displayOrderNumber = orderDetailsPage.getOrderNumber();
         var orderTimestamp = orderDetailsPage.getOrderTimestamp();
         var sku = orderDetailsPage.getSku();
@@ -250,7 +242,6 @@ public class MyShopUiDriver implements MyShopDriver {
             currentPage = Page.NONE;
             homePage = null;
             newOrderPage = null;
-            orderHistoryPage = null;
             orderDetailsPage = null;
             couponManagementPage = null;
         }
@@ -284,34 +275,18 @@ public class MyShopUiDriver implements MyShopDriver {
         currentPage = Page.COUPON_MANAGEMENT;
     }
 
-    private void ensureOnOrderHistoryPage() {
-        if (currentPage != Page.ORDER_HISTORY) {
-            orderHistoryPage = getHomePage().clickOrderHistory();
-            currentPage = Page.ORDER_HISTORY;
-        }
-    }
-
     private Result<Void, SystemError> ensureOnOrderDetailsPage(String orderNumber) {
-        ensureOnOrderHistoryPage();
-        orderHistoryPage.inputOrderNumber(orderNumber);
-        orderHistoryPage.clickSearch();
-
-        var isOrderListed = orderHistoryPage.isOrderListed(orderNumber);
-        if (!isOrderListed) {
-            return failure("Order " + orderNumber + " does not exist.");
-        }
-
-        orderDetailsPage = orderHistoryPage.clickViewOrderDetails(orderNumber);
+        getHomePage();
+        orderDetailsPage = client.openOrderDetailsPage(orderNumber);
         currentPage = Page.ORDER_DETAILS;
 
-        return success();
+        return orderDetailsPage.getLoadResult(orderNumber);
     }
 
     private enum Page {
         NONE,
         HOME,
         NEW_ORDER,
-        ORDER_HISTORY,
         ORDER_DETAILS,
         COUPON_MANAGEMENT
     }

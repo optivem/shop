@@ -23,6 +23,7 @@ import type { MyShopDriver } from '../../port/my-shop-driver.js';
 import { TestUsers, testCustomer, type TestUser } from '../shared/client/http/test-user.js';
 import { MyShopUiClient } from './client/MyShopUiClient.js';
 import { NewOrderPage } from './client/pages/NewOrderPage.js';
+import type { OrderDetailsPage } from './client/pages/OrderDetailsPage.js';
 
 export class MyShopUiDriver implements MyShopDriver {
   private readonly client: MyShopUiClient;
@@ -89,22 +90,9 @@ export class MyShopUiDriver implements MyShopDriver {
   async viewOrder(request: ViewOrderRequest): Promise<Result<ViewOrderResponse, SystemError>> {
     await this.switchToRequestedUser();
     const orderNumber = request.orderNumber;
-    const homeResult = await this.client.openHomePage();
-    if (!homeResult.success) return failure(homeResult.error);
-    await homeResult.value.clickOrderHistory();
-
-    const orderHistoryPage = this.client.orderHistoryPage();
-    await orderHistoryPage.inputOrderNumber(orderNumber);
-    await orderHistoryPage.clickSearch();
-
-    if (!(await orderHistoryPage.isOrderListed(orderNumber))) {
-      return failure({ message: `Order ${orderNumber} does not exist.`, fieldErrors: [] });
-    }
-
-    await orderHistoryPage.clickViewOrderDetails(orderNumber);
-
-    const detailsPage = this.client.orderDetailsPage();
-    await detailsPage.waitForLoad();
+    const detailsResult = await this.openOrderDetails(orderNumber);
+    if (!detailsResult.success) return failure(detailsResult.error);
+    const detailsPage = detailsResult.value;
 
     return success({
       orderNumber: await detailsPage.getOrderNumber(),
@@ -128,22 +116,9 @@ export class MyShopUiDriver implements MyShopDriver {
   async cancelOrder(request: CancelOrderRequest): Promise<Result<CancelOrderResponse, SystemError>> {
     await this.switchToRequestedUser();
     const orderNumber = request.orderNumber;
-    const homeResult = await this.client.openHomePage();
-    if (!homeResult.success) return failure(homeResult.error);
-    await homeResult.value.clickOrderHistory();
-
-    const orderHistoryPage = this.client.orderHistoryPage();
-    await orderHistoryPage.inputOrderNumber(orderNumber);
-    await orderHistoryPage.clickSearch();
-
-    if (!(await orderHistoryPage.isOrderListed(orderNumber))) {
-      return failure({ message: `Order ${orderNumber} does not exist.`, fieldErrors: [] });
-    }
-
-    await orderHistoryPage.clickViewOrderDetails(orderNumber);
-
-    const detailsPage = this.client.orderDetailsPage();
-    await detailsPage.waitForLoad();
+    const detailsResult = await this.openOrderDetails(orderNumber);
+    if (!detailsResult.success) return failure(detailsResult.error);
+    const detailsPage = detailsResult.value;
     await detailsPage.clickCancelOrder();
 
     const notificationResult = await detailsPage.getResult();
@@ -154,22 +129,9 @@ export class MyShopUiDriver implements MyShopDriver {
   async deliverOrder(request: DeliverOrderRequest): Promise<Result<DeliverOrderResponse, SystemError>> {
     await this.runAs(TestUsers.ADMIN);
     const orderNumber = request.orderNumber;
-    const homeResult = await this.client.openHomePage();
-    if (!homeResult.success) return failure(homeResult.error);
-    await homeResult.value.clickOrderHistory();
-
-    const orderHistoryPage = this.client.orderHistoryPage();
-    await orderHistoryPage.inputOrderNumber(orderNumber);
-    await orderHistoryPage.clickSearch();
-
-    if (!(await orderHistoryPage.isOrderListed(orderNumber))) {
-      return failure({ message: `Order ${orderNumber} does not exist.`, fieldErrors: [] });
-    }
-
-    await orderHistoryPage.clickViewOrderDetails(orderNumber);
-
-    const detailsPage = this.client.orderDetailsPage();
-    await detailsPage.waitForLoad();
+    const detailsResult = await this.openOrderDetails(orderNumber);
+    if (!detailsResult.success) return failure(detailsResult.error);
+    const detailsPage = detailsResult.value;
     await detailsPage.clickDeliverOrder();
 
     const notificationResult = await detailsPage.getResult();
@@ -221,6 +183,16 @@ export class MyShopUiDriver implements MyShopDriver {
 
   async close(): Promise<void> {
     await this.client.close();
+  }
+
+  private async openOrderDetails(orderNumber: string): Promise<Result<OrderDetailsPage, SystemError>> {
+    const homeResult = await this.client.openHomePage();
+    if (!homeResult.success) return failure(homeResult.error);
+
+    const detailsPage = await this.client.openOrderDetailsPage(orderNumber);
+    const loadResult = await detailsPage.getLoadResult(orderNumber);
+    if (!loadResult.success) return failure(loadResult.error);
+    return success(detailsPage);
   }
 
   /** An explicitly requested identity wins; otherwise admin-only operations run as admin and order placement as customer. */

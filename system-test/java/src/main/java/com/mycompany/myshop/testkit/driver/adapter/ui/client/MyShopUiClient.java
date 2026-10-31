@@ -2,11 +2,15 @@ package com.mycompany.myshop.testkit.driver.adapter.ui.client;
 
 import com.microsoft.playwright.*;
 import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.HomePage;
+import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.OrderDetailsPage;
 import com.mycompany.myshop.testkit.common.Closer;
 import com.mycompany.myshop.testkit.driver.adapter.shared.client.http.TestUser;
 import com.mycompany.myshop.testkit.driver.adapter.shared.client.playwright.KeycloakUiLogin;
 import com.mycompany.myshop.testkit.driver.adapter.shared.client.playwright.PageClient;
 import org.springframework.http.HttpStatus;
+
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 public class MyShopUiClient implements AutoCloseable {
     private static final String CONTENT_TYPE = "content-type";
@@ -15,6 +19,7 @@ public class MyShopUiClient implements AutoCloseable {
     private static final String HTML_CLOSING_TAG = "</html>";
 
     private static final String HOME_READY_SELECTOR = "a[href='/order-history']";
+    private static final String SINGLE_PAGE_APP_ROOT_SELECTOR = "#root";
 
     private final String baseUrl;
     private final Browser browser;
@@ -78,6 +83,26 @@ public class MyShopUiClient implements AutoCloseable {
             login.ensureLoggedIn(page, HOME_READY_SELECTOR);
         }
         return homePage;
+    }
+
+    /** Opens an order by its URL, not through the order history. The app must already be open. */
+    public OrderDetailsPage openOrderDetailsPage(String orderNumber) {
+        var encodedOrderNumber = URLEncoder.encode(orderNumber, StandardCharsets.UTF_8).replace("+", "%20");
+        var path = "/order-details/" + encodedOrderNumber;
+        openDirectly(path, path);
+        return new OrderDetailsPage(pageClient);
+    }
+
+    /**
+     * Server-rendered UIs are simply navigated to. The React frontend keeps its session in memory and returns to
+     * the home page after the login redirect, so a reload would lose the URL: it is moved to the route in place.
+     */
+    private void openDirectly(String serverPath, String singlePageAppRoute) {
+        if (page.locator(SINGLE_PAGE_APP_ROOT_SELECTOR).count() > 0) {
+            pageClient.navigateWithinApp(singlePageAppRoute);
+        } else {
+            response = page.navigate(baseUrl + serverPath);
+        }
     }
 
     public boolean isStatusOk() {

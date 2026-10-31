@@ -38,6 +38,8 @@ public class MyShopUiClient : IAsyncDisposable
 
     private const string HomeReadySelector = "a[href='/order-history']";
 
+    private const string SinglePageAppRootSelector = "#root";
+
 
 
     private readonly string _baseUrl;
@@ -161,6 +163,30 @@ public class MyShopUiClient : IAsyncDisposable
     }
 
 
+
+    /// <summary>Opens an order by its URL, not through the order history. The app must already be open.</summary>
+    public async Task<OrderDetailsPage> OpenOrderDetailsPageAsync(string? orderNumber)
+    {
+        var encodedOrderNumber = Uri.EscapeDataString(orderNumber ?? string.Empty);
+        await OpenDirectlyAsync($"/order-details?orderNumber={encodedOrderNumber}", $"/order-details/{encodedOrderNumber}");
+        return new OrderDetailsPage(new PlaywrightGateway(_page, _baseUrl, _login));
+    }
+
+    /// <summary>
+    /// Server-rendered UIs are simply navigated to. The React frontend keeps its session in memory and returns to
+    /// the home page after the login redirect, so a reload would lose the URL: it is moved to the route in place.
+    /// </summary>
+    private async Task OpenDirectlyAsync(string serverPath, string singlePageAppRoute)
+    {
+        if (await _page.Locator(SinglePageAppRootSelector).CountAsync() > 0)
+        {
+            await new PlaywrightGateway(_page, _baseUrl, _login).NavigateWithinAppAsync(singlePageAppRoute);
+        }
+        else
+        {
+            _response = await _page.GotoAsync(_baseUrl + serverPath);
+        }
+    }
 
     public bool IsStatusOk()
 

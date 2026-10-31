@@ -11,6 +11,7 @@ import { OrderDetailsPage } from './pages/OrderDetailsPage.js';
 import { CouponManagementPage } from './pages/CouponManagementPage.js';
 
 const HOME_READY_SELECTOR = "a[href='/order-history']";
+const SINGLE_PAGE_APP_ROOT_SELECTOR = '#root';
 
 export class MyShopUiClient {
   private context: BrowserContext | null = null;
@@ -56,16 +57,19 @@ export class MyShopUiClient {
     }
   }
 
+  /** Opens an order by its URL, not through the order history. The app must already be open. */
+  async openOrderDetailsPage(orderNumber: string): Promise<OrderDetailsPage> {
+    const encodedOrderNumber = encodeURIComponent(orderNumber);
+    await this.openDirectly(`/order-details?orderNumber=${encodedOrderNumber}`, `/order-details/${encodedOrderNumber}`);
+    return new OrderDetailsPage(this.requirePage());
+  }
+
   newOrderPage(): NewOrderPage {
     return new NewOrderPage(this.requirePage());
   }
 
   orderHistoryPage(): OrderHistoryPage {
     return new OrderHistoryPage(this.requirePage());
-  }
-
-  orderDetailsPage(): OrderDetailsPage {
-    return new OrderDetailsPage(this.requirePage());
   }
 
   couponManagementPage(): CouponManagementPage {
@@ -80,6 +84,22 @@ export class MyShopUiClient {
     if (this.context) {
       await this.context.close();
       this.context = null;
+    }
+  }
+
+  /**
+   * Server-rendered UIs are simply navigated to. The React frontend keeps its session in memory and returns to
+   * the home page after the login redirect, so a reload would lose the URL: it is moved to the route in place.
+   */
+  private async openDirectly(serverPath: string, singlePageAppRoute: string): Promise<void> {
+    const page = this.requirePage();
+    if ((await page.locator(SINGLE_PAGE_APP_ROOT_SELECTOR).count()) > 0) {
+      await page.evaluate(
+        "route => { history.pushState({}, '', route); dispatchEvent(new PopStateEvent('popstate')); }",
+        singlePageAppRoute,
+      );
+    } else {
+      await page.goto(`${this.baseUrl}${serverPath}`);
     }
   }
 

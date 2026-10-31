@@ -1,11 +1,31 @@
+import type { Result } from '../../../../../common/result.js';
+import { success, failure } from '../../../../../common/result.js';
+import type { SystemError } from '../../../../port/dtos/errors/SystemError.js';
 import { BasePage, PAGE_TIMEOUT_MS } from './BasePage.js';
 import { nonEmptyOr } from '../../../../../common/fallback.js';
 
+const ORDER_LOADED_SELECTOR = "[aria-label='Display Order Number']:visible";
+const ORDER_NOT_FOUND_SELECTOR = "p:has-text('Order not found'):visible";
+const ORDER_ERROR_SELECTOR = ".alert-danger:visible, .notification.error:visible";
+const ORDER_ERROR_PREFIX = 'Error:';
+
 export class OrderDetailsPage extends BasePage {
-  async waitForLoad(): Promise<void> {
+  /** Waits for the page to show the order, or what it shows instead when the order can't be viewed. */
+  async getLoadResult(orderNumber: string): Promise<Result<void, SystemError>> {
     await this.page
-      .locator("[aria-label='Display Order Number']")
+      .locator([ORDER_LOADED_SELECTOR, ORDER_NOT_FOUND_SELECTOR, ORDER_ERROR_SELECTOR].join(', '))
       .waitFor({ state: 'visible', timeout: PAGE_TIMEOUT_MS });
+
+    if ((await this.page.locator(ORDER_LOADED_SELECTOR).count()) > 0) {
+      return success(undefined);
+    }
+
+    if ((await this.page.locator(ORDER_NOT_FOUND_SELECTOR).count()) > 0) {
+      return failure({ message: `Order ${orderNumber} does not exist.`, fieldErrors: [] });
+    }
+
+    const errorText = (await this.page.locator(ORDER_ERROR_SELECTOR).textContent({ timeout: PAGE_TIMEOUT_MS })) ?? '';
+    return failure({ message: errorText.replace(ORDER_ERROR_PREFIX, '').trim(), fieldErrors: [] });
   }
 
   async clickCancelOrder(): Promise<void> {

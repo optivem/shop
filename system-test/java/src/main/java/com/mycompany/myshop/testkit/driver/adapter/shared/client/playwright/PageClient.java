@@ -88,6 +88,11 @@ public class PageClient {
         }
     }
 
+    /** Moves a single-page app to a route without reloading it. */
+    public void navigateWithinApp(String route) {
+        page.evaluate("route => { history.pushState({}, '', route); dispatchEvent(new PopStateEvent('popstate')); }", route);
+    }
+
     public void removeElements(String selector) {
         page.evaluate("selector => document.querySelectorAll(selector).forEach(el => el.remove())", selector);
     }

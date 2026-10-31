@@ -18,7 +18,6 @@ public class MyShopUiDriver : IMyShopDriver
 
     private HomePage? _homePage;
     private NewOrderPage? _newOrderPage;
-    private OrderHistoryPage? _orderHistoryPage;
     private OrderDetailsPage? _orderDetailsPage;
     private CouponManagementPage? _couponManagementPage;
 
@@ -178,13 +177,7 @@ public class MyShopUiDriver : IMyShopDriver
             return Failure<ViewOrderResponse>(result.Error);
         }
 
-        var isSuccess = await _orderDetailsPage!.IsLoadedSuccessfullyAsync();
-        if (!isSuccess)
-        {
-            return Failure<ViewOrderResponse>(result.Error);
-        }
-
-        var displayOrderNumber = await _orderDetailsPage.GetOrderNumberAsync();
+        var displayOrderNumber = await _orderDetailsPage!.GetOrderNumberAsync();
         var orderTimestamp = await _orderDetailsPage.GetOrderTimestampAsync();
         var sku = await _orderDetailsPage.GetSkuAsync();
         var quantity = await _orderDetailsPage.GetQuantityAsync();
@@ -286,7 +279,6 @@ public class MyShopUiDriver : IMyShopDriver
             _currentPage = Page.None;
             _homePage = null;
             _newOrderPage = null;
-            _orderHistoryPage = null;
             _orderDetailsPage = null;
             _couponManagementPage = null;
         }
@@ -312,33 +304,13 @@ public class MyShopUiDriver : IMyShopDriver
         }
     }
 
-    private async Task EnsureOnOrderHistoryPageAsync()
-    {
-        if (!IsOnPage(Page.OrderHistory))
-        {
-            var homePage = await GetHomePageAsync();
-            _orderHistoryPage = await homePage.ClickOrderHistoryAsync();
-            SetCurrentPage(Page.OrderHistory);
-        }
-    }
-
     private async Task<Result<VoidValue, SystemError>> EnsureOnOrderDetailsPageAsync(string? orderNumber)
     {
-        await EnsureOnOrderHistoryPageAsync();
-
-        await _orderHistoryPage!.InputOrderNumberAsync(orderNumber);
-        await _orderHistoryPage.ClickSearchAsync();
-
-        var isOrderListed = await _orderHistoryPage.WaitForOrderRowAsync(orderNumber);
-        if (!isOrderListed)
-        {
-            return Failure("Order " + orderNumber + " does not exist.");
-        }
-
-        _orderDetailsPage = await _orderHistoryPage.ClickViewOrderDetailsAsync(orderNumber);
+        await GetHomePageAsync();
+        _orderDetailsPage = await _client.OpenOrderDetailsPageAsync(orderNumber);
         SetCurrentPage(Page.OrderDetails);
 
-        return Success();
+        return await _orderDetailsPage.GetLoadResultAsync(orderNumber);
     }
 
     private async Task EnsureOnCouponManagementPageAsync()
@@ -371,7 +343,6 @@ public class MyShopUiDriver : IMyShopDriver
         None,
         Home,
         NewOrder,
-        OrderHistory,
         OrderDetails,
         CouponManagement
     }
