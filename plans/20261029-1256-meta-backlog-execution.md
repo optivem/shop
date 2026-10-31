@@ -1,7 +1,5 @@
 # 2026-10-29 12:56 UTC — Plan coordination meta-plan: backlog execution
 
-> 🤖 **Picked up by agent** — `f003112cc63e` at `2026-10-31T12:10:37Z`
-
 ## TL;DR
 
 **Why:** The 18 backlog plans overlap on the same files and contracts, several are already done or obsolete, and most are blocked on user decisions, so they can't safely be picked up in isolation while the cloud deploy plan is active.
@@ -9,9 +7,17 @@
 
 ## ▶ Next executable step (resume here)
 
-U1, U2 and U3 are done and on main (frontend-react is on Vite 7, Vitest 3 and React 19; run `npm ci` there after pulling).
+U1, U2 and U3 are done and on main (frontend-react is on Vite 7, Vitest 3 and React 19; run `npm ci` there after pulling). U4 items 1 and 2 are on main (`9ccf1a8d`, `d153ec75`).
 
-Next: U4, the three system-test driver items in `plans/backlog/p2-product-correctness/20261007-1114-keycloak-auth-followups.md`: UI ownership check via direct order-details URL; UI access-denial support then widen `@Channel`; unify default-identity resolution. Stop and report if the UI driver needs a redesign. Scope decisions for the run: the `20261030-1822-template-cloud-deploy-all-variants` plan is another agent's, so stay out of its files; push each verified unit, unless a cloud run is in progress; U5-U12 stay blocked on Q-A..Q-H (confirmed 2026-10-31). Commit with `--paths`, and don't use `git pull --autostash` while another agent shares the checkout. Commit plan edits before running `gh optivem commit`: an uncommitted plan file blocks its `pull --rebase`.
+Next: finish U4 item 3 (unify default-identity resolution). The work is complete in all three languages but unverified, on branch `wip/u4-default-identity` (`b393c3be`), not on main. That commit also deletes the item's bullet from `plans/backlog/p2-product-correctness/20261007-1114-keycloak-auth-followups.md`.
+
+1. Rebase the branch onto `origin/main`.
+2. Run what is still missing: ESLint in `system-test/typescript` (2 unused-parameter errors in `json-http-client.ts` were fixed but not re-checked), the TypeScript legacy sample (interrupted), and targeted runs on multitier java, dotnet and typescript. Add one `--sample` run for the UI `When` change from item 2, unless the monolith samples above already cover it after the rebase. Already passed: monolith java, dotnet and typescript targeted 13/13 UI and 13/13 API, sample 11/11 suites each; legacy samples java and dotnet 26/26. Use `gh optivem system build --rebuild` when switching language: the image tag is shared across languages and a stale image fails falsely.
+3. Fast-forward it to main, push, delete the branch locally and on origin, and remove U4 from this plan.
+
+Scope decisions for the run: the `20261030-1822-template-cloud-deploy-all-variants` plan is another agent's, so stay out of its files; push each verified unit, unless a cloud run is in progress; U5-U12 stay blocked on Q-A..Q-H (confirmed 2026-10-31). Commit with `--paths`, and don't use `git pull --autostash` while another agent shares the checkout. Commit plan edits before running `gh optivem commit`: an uncommitted plan file blocks its `pull --rebase`.
+
+Found by U4, not fixed (production): a React user pasting an order-details URL lands on home, because tokens are in memory and the deep link is dropped across the login redirect. `.NET` `cancelOrder` is still `CHANNEL_MODE=static`, so its UI test silently uses the API.
 
 Read-only analysis of `plans/backlog/p1..p4`. No existing plan was edited. Repo state was spot-checked (grep/ls) to find stale premises.
 
