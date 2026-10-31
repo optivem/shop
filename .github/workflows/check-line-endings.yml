@@ -1,0 +1,56 @@
+name: check-line-endings
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: check-line-endings-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check-line-endings:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Check .gitattributes and index line endings
+        run: |
+          set -euo pipefail
+          status=0
+
+          if [ ! -f .gitattributes ]; then
+            echo "::error::Root .gitattributes is missing"
+            status=1
+          fi
+
+          nested=$(git ls-files '*/.gitattributes')
+          if [ -n "$nested" ]; then
+            echo "::error::Root .gitattributes is the single source of truth, remove the nested files:"
+            echo "$nested"
+            status=1
+          fi
+
+          # `git status` can't be used here: with eol=lf, CRLF on disk counts as unmodified.
+          eol=$(git ls-files --eol)
+
+          not_normalized=$(grep -E '^i/(crlf|mixed) ' <<< "$eol" || true)
+          if [ -n "$not_normalized" ]; then
+            echo "::error::Files stored with CRLF in the index, run 'git add --renormalize .':"
+            echo "$not_normalized"
+            status=1
+          fi
+
+          undeclared_binary=$(grep -E '^i/-text +w/[^ ]+ +attr/text=auto' <<< "$eol" || true)
+          if [ -n "$undeclared_binary" ]; then
+            echo "::error::Binary files relying on auto-detection, declare their type in .gitattributes:"
+            echo "$undeclared_binary"
+            status=1
+          fi
+
+          exit "$status"

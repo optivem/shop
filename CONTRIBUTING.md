@@ -73,6 +73,24 @@ Do **not** substitute `./gradlew test`, `mvn test`, `dotnet test`, or `npm
 test` — these wrappers manage Docker containers and per-suite environment
 variables that the raw toolchain does not.
 
+## Line endings
+
+The root [`.gitattributes`](.gitattributes) is the single source of truth: LF everywhere, CRLF for `*.bat` and `*.cmd`, and binary types declared explicitly. Don't add nested `.gitattributes` files. When you add a new binary type, declare it in the root file. The `check-line-endings` workflow fails otherwise.
+
+On Windows, clone inside WSL or the dev container rather than on the Windows filesystem, so scripts keep their LF endings and run in Linux.
+
+`git status` can't show line-ending drift, because with `eol=lf` a CRLF file on disk counts as unmodified. Check with `git ls-files --eol` instead:
+
+```bash
+git ls-files --eol | grep -E 'w/crlf.*eol=lf|w/lf.*eol=crlf'
+```
+
+To recover a stale checkout, first commit or stash your work, because this discards local changes. Then rewrite every file:
+
+```bash
+git rm --cached -r -q . && git reset --hard
+```
+
 ## Schema changes
 
 How to change the shop database schema safely.
