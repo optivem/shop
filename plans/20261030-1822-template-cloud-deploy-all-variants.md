@@ -21,12 +21,10 @@ What we get out of this — the goals and deliverables:
 
 ## ▶ Next executable step (resume here)
 
-**Step 7:** rewrite `multitier-java-{qa,prod}-stage-cloud.yml` as thin callers of a new shared deploy-stage workflow; add `<system>_multitier_java_{qa,production}` to `ensure_neon` and run `./setup-gcp.sh --yes`; give QA its own realm, because `--import-realm` skips the existing `shop` realm so new URLs never reach it. Dispatch QA, never prod (decision 8).
+**Only the user's prod dispatch remains** (decision 8). Steps 7 and 8 are done: QA is green ([41194541260](https://github.com/optivem/shop/actions/runs/41194541260)), and `shop-qa` and `shop-prod` are live. Sign off the RC with `multitier-java-qa-signoff`, passing `version` explicitly, then dispatch `multitier-java-prod-stage-cloud`.
 
 ## Steps
 
-- [ ] Step 7: QA/prod cloud stages for multitier-java (manual dispatch): rewrite the existing `multitier-java-{qa,prod}-stage-cloud.yml`; get QA green, and stop before dispatching prod (see decision 8)
-- [ ] Step 8: Realm hardening: prod realm without the password-grant test client and test users
 
 ## Decisions (user-approved 2026-10-30)
 
