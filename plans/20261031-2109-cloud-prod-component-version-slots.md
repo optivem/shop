@@ -1,7 +1,5 @@
 # 2026-10-31 21:09:45 UTC — Stop cloud prod stages claiming on-prem component version slots
 
-> 🤖 **Picked up by agent** — `531392d34340` at `2026-11-02T10:29:38Z`
-
 ## TL;DR
 
 **Why:** `meta-prerelease-stage` has failed on every scheduled run since the first cloud prod deploy (run 41203994943, 2026-10-31 13:05 UTC). That run pushed `multitier-backend-java:v1.5.216` and `multitier-frontend-react:v1.3.221` to GHCR without git tags or a `VERSION` bump. The prerelease check treats those images as taken versions, and `meta-bump-all` cannot advance them because it only bumps on a git tag.
@@ -16,7 +14,7 @@
 
 ## ▶ Next executable step (resume here)
 
-Step 5: after the fixes are pushed, dispatch `meta-prerelease-stage` (`gh workflow run meta-prerelease-stage.yml`) and confirm the `check` job passes both version checks and the pipeline continues. Then watch the next cloud prod run for any new bare `vX.Y.Z` component image.
+Only deferred work remains: after the next cloud prod run, check that it pushed no bare `vX.Y.Z` component image (e.g. `docker manifest inspect ghcr.io/optivem/shop/multitier-backend-java:v<current VERSION>` should be absent). Then delete this plan.
 
 ## Root cause
 
@@ -28,9 +26,7 @@ Step 5: after the fixes are pushed, dispatch `meta-prerelease-stage` (`gh workfl
 
 ## Steps
 
-- [ ] Step 5: Verify:
-  - Dispatch `meta-prerelease-stage` and confirm the `check` job passes both version checks and the pipeline continues.
-  - On the next cloud prod run, confirm no new bare `vX.Y.Z` component image appears.
+- [ ] Step 5: On the next cloud prod run of any flavor, confirm no new bare `vX.Y.Z` component image appears in GHCR — ⏳ Deferred: needs a cloud prod deploy to happen; `meta-prerelease-stage` run 41429702966 already passed the pre-bump version check on 2026-11-02.
 
 ## Open questions
 
