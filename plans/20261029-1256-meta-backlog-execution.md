@@ -7,13 +7,11 @@
 
 ## ▶ Next executable step (resume here)
 
-U1, U2 and U3 are done and on main (frontend-react is on Vite 7, Vitest 3 and React 19; run `npm ci` there after pulling). U4 items 1 and 2 are on main (`9ccf1a8d`, `d153ec75`).
+U1-U4 are done and on main (frontend-react is on Vite 7, Vitest 3 and React 19; run `npm ci` there after pulling). U4 item 3 was verified on 2026-11-02: compile-all 7/7, TS legacy sample 26/26, multitier java/dotnet/ts targeted and sample 11/11, monolith java sample 11/11.
 
-Next: finish U4 item 3 (unify default-identity resolution). The work is complete in all three languages but unverified, on branch `wip/u4-default-identity` (`b393c3be`), not on main. That commit also deletes the item's bullet from `plans/backlog/p2-product-correctness/20261007-1114-keycloak-auth-followups.md`.
+Next: no autonomous unit remains. U5-U12 are blocked on the user answering Q-A..Q-H (see Blocked on user; "accept all recommendations" unblocks all of them). Once answered, follow the order in Wave 2's last paragraph, starting with `/refine-plan` / `/execute-plan` on U5 (`cross-language-parity-fixes`) and `/create-plan` for the CS1 money merge. The original cloud-deploy plan is no longer in `plans/` (2026-11-02), so re-check C8/C9/C10 before scheduling U7/U8.
 
-1. Rebase the branch onto `origin/main`.
-2. Run what is still missing: ESLint in `system-test/typescript` (2 unused-parameter errors in `json-http-client.ts` were fixed but not re-checked), the TypeScript legacy sample (interrupted), and targeted runs on multitier java, dotnet and typescript. Add one `--sample` run for the UI `When` change from item 2, unless the monolith samples above already cover it after the rebase. Already passed: monolith java, dotnet and typescript targeted 13/13 UI and 13/13 API, sample 11/11 suites each; legacy samples java and dotnet 26/26. Use `gh optivem system build --rebuild` when switching language: the image tag is shared across languages and a stale image fails falsely.
-3. Fast-forward it to main, push, delete the branch locally and on origin, and remove U4 from this plan.
+Open follow-ups found during U4 (not fixed): `npm run lint` in `system-test/typescript` fails `--max-warnings 0` on 3 warnings in `tests/legacy/mod04/e2e/api-authorization-test.spec.ts` (skipped test, two tests without assertions; predates U4). `system-test/java/README.md` still references `AccessControlTest` / `OrderOwnershipTest`, which don't exist.
 
 Scope decisions for the run: the `20261030-1822-template-cloud-deploy-all-variants` plan is another agent's, so stay out of its files; push each verified unit, unless a cloud run is in progress; U5-U12 stay blocked on Q-A..Q-H (confirmed 2026-10-31). Commit with `--paths`, and don't use `git pull --autostash` while another agent shares the checkout. Commit plan edits before running `gh optivem commit`: an uncommitted plan file blocks its `pull --rebase`.
 
@@ -118,7 +116,6 @@ A = autonomous-ready, B = needs user decision (see Blocked on user).
 | U1 | #7 steps 1.1, 1.2, 1.3, 1.6 | code, 3 languages, new Flyway migration | `OrderService`, `CouponService`, coupon/order repositories, `Order` entity, `GlobalExceptionHandler` (409) and equivalents, `system/db/migrations/V*__order_version.sql`, integration/concurrency tests in monoliths + multitier backends | A |
 | U2 | #18 frontend upgrades (after `/refine-plan`) | dependency upgrade | `system/multitier/frontend-react/{package.json,package-lock.json,vite.config.*}` + test config | A (halt if refine finds a decision) |
 | U3 | #6: `SecurityConfigTest` route enumeration; expired-token / wrong-audience cases | Java tests | `system/monolith/java/.../config/SecurityConfigTest.java`, `system/multitier/backend-java/.../config/SecurityConfigTest.java` | A |
-| U4 | #6: UI order-details direct-URL ownership check; UI support for access-denial acceptance tests then widen `@Channel`; unify default-identity resolution | system-test drivers, 3 languages | `system-test/{java,dotnet,typescript}` `MyShopUiDriver`, `MyShopApiClient`, affected acceptance tests | A (stop and report if the UI driver needs a redesign) |
 | U5 | #4 parity-fixes (race verify-only, 500 detail, blackout text) | code + contract regen | 7 backends, `contracts/frontend-backend.json`, `CancelOrderNegativeIsolatedTest` x3, frontend interactions | B (Q-C) |
 | U6 | CS1 merged `money-strings-end-to-end` | code, all layers | see CS1 | B (Q-B) |
 | U7 | #7 steps 1.4, 1.5 | API change | idempotency table, pagination, frontend | B (Q-D) |
