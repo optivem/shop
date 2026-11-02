@@ -126,20 +126,49 @@ Google Cloud Project
 
 ## Cost
 
-- **Free tier eligible**: Most resources are free or have generous free quotas
-- **Artifact Registry**: 0.5 GB free storage per month
-- **Secret Manager**: $0.06/month per active secret version per location; first 6 versions free per billing account (1 secret ≈ $0)
-- **Cloud Run**: Free tier includes 180,000 GB-seconds/month
+Google Cloud bills **per resource, by usage**. Each service has its own meter (time, storage, requests, data transferred), and the charges add up on the billing account linked to the project. There is no flat fee. Many services have a monthly free tier, counted per billing account.
 
-**Total estimated cost**: ~$0/month at demo scale
+**Total estimated cost**: ~$0/month at demo scale.
 
-### Cost guardrails
+### What is billed
 
-- **Budget alerts**: create two on the billing account (Billing > Budgets & alerts): €5 and €20 per month, alerting at 50/90/100%.
-- **Scale to zero**: every Cloud Run service is deployed with `min-instances=0` and small `max-instances`, so idle cost is ~0 (Keycloak cold-starts on first request).
-- **Stages**: multitier-java has manual QA and production stages (`multitier-java-{qa,prod}-stage-cloud.yml`). Each has its own services and database, and shares the one Keycloak through its own realm (`shop-qa`, `shop-prod`; see `docker/keycloak/Dockerfile.cloud`). `shop-prod` has no test client and no users, so add real users in the Keycloak admin console.
-- **Secret versions**: one shared `<system>-db` JSON secret plus `<system>-keycloak-admin-password`, 2 versions in total; only 6 are free.
+| Service | What you pay for | Free tier (per month) |
+|---|---|---|
+| **Cloud Run** (request-based billing, the default) | vCPU-seconds and GiB-seconds, but **only while an instance is handling a request** (rounded up to 100 ms), plus a per-request fee | 180,000 vCPU-seconds, 360,000 GiB-seconds, 2M requests |
+| **Cloud Run** (instance-based billing, or `min-instances > 0`) | The instance's **whole lifetime**, even when idle | Same pool as above |
+| **Artifact Registry** | GB stored per month (~$0.10/GB after the free amount) | 0.5 GB |
+| **Secret Manager** | ~$0.06 per active secret version per location, plus access operations (~$0.03 per 10,000) | 6 versions, 10,000 accesses |
+| **Network egress** | Data leaving Google to the internet (responses to browsers and test runners); traffic coming in is free | Small allowance (~1 GiB from North America regions) |
+| **Cloud Logging** | Log data ingested above the free amount | 50 GiB per project |
+| **IAM, Workload Identity Federation, service accounts, enabled APIs, the project itself** | Free | — |
+
+### Not on the GCP bill
+
+- **Neon Postgres** bills separately through the Neon account (see `neon.sh`).
+- **Image builds** run in GitHub Actions, not Cloud Build, so there is no Cloud Build charge.
+
+### What keeps idle cost at ~$0
+
+- **Scale to zero**: the shared cloud stages (`_acceptance-stage-cloud.yml`, `_deploy-stage-cloud.yml`) deploy every service with `--min-instances 0`; the per-variant QA/prod stage workflows don't pass the flag and rely on Cloud Run's default of 0. You pay nothing between requests; the trade-off is a cold start on the first request (Keycloak's is the slowest).
+- **Small `max-instances`**: 1–2 in the shared cloud stages, 3 in the per-variant QA/prod stages. This caps the cost of a traffic spike or a runaway test.
+- **Image cleanup**: the `app-images` repository's cleanup policy (`main.tf`) keeps the 10 newest versions of each image plus every `production-*` tag, and deletes the rest once they are a day old. With many images this can still go past the 0.5 GB free tier, but at ~$0.10/GB the overage is cents.
+- **Few secret versions**: one shared `<system>-db` JSON secret plus `<system>-keycloak-admin-password`, 2 versions in total; only 6 are free.
+- **Budget alerts**: create two on the billing account (Billing > Budgets & alerts), at €5 and €20 per month, alerting at 50/90/100%. Budgets **only alert; they do not stop spending**.
 - **Reset**: `./teardown-gcp.sh` destroys everything; `./setup-gcp.sh` recreates it.
+
+### Stages
+
+multitier-java has manual QA and production stages (`multitier-java-{qa,prod}-stage-cloud.yml`). Each has its own services and database, and shares the one Keycloak through its own realm (`shop-qa`, `shop-prod`; see `docker/keycloak/Dockerfile.cloud`). `shop-prod` has no test client and no users, so add real users in the Keycloak admin console.
+
+### What would start costing money
+
+- Setting `min-instances ≥ 1` on any service: one always-on instance costs a few dollars a month or more.
+- Switching a service to instance-based ("CPU always allocated") billing.
+- Images piling up if the cleanup policy stops working.
+- More secret versions than the free 6.
+- Heavy system-test traffic or large responses going past the egress or logging free tiers.
+
+Prices and free tiers change. Check the [Cloud Run pricing page](https://cloud.google.com/run/pricing) and the project's **Billing → Reports** for current figures.
 
 ## Troubleshooting
 
