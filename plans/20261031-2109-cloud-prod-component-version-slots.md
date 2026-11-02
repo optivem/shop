@@ -16,7 +16,7 @@
 
 ## ▶ Next executable step (resume here)
 
-Step 3: re-check that `multitier-backend-java:v1.5.217` / `multitier-frontend-react:v1.3.222` images and the `multitier-backend-java-v1.5.217` / `multitier-frontend-react-v1.3.222` git tags do not exist, then set `system/multitier/backend-java/VERSION` to `1.5.217` and `system/multitier/frontend-react/VERSION` to `1.3.222`. Steps 1-2 (cloud tagging disabled) are already committed, so the new versions can't be taken by a cloud run.
+Step 4: in `.github/workflows/_meta-prerelease-pipeline.yml` (~line 451 and the `::error::` line after it), reword the post-bump failure to explain that an image exists with no matching git tag, so `meta-bump-all` skipped it and a manual `VERSION` bump is needed.
 
 ## Root cause
 
@@ -28,7 +28,6 @@ Step 3: re-check that `multitier-backend-java:v1.5.217` / `multitier-frontend-re
 
 ## Steps
 
-- [ ] Step 3: One-time recovery: set `system/multitier/backend-java/VERSION` to `1.5.217` and `system/multitier/frontend-react/VERSION` to `1.3.222`. First re-check that those versions are free in GHCR and git.
 - [ ] Step 4: In `_meta-prerelease-pipeline.yml`, correct the post-bump failure text. It currently says `meta-bump-all did not advance the relevant VERSION files` without explaining why; it should say an image exists with no matching git tag, so the bump skipped it and a manual `VERSION` bump is needed.
 - [ ] Step 5: Verify:
   - Dispatch `meta-prerelease-stage` and confirm the `check` job passes both version checks and the pipeline continues.
