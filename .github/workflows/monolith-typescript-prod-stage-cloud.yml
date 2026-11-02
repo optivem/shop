@@ -249,27 +249,33 @@ jobs:
           title: ${{ steps.release-notes.outputs.title }}
           notes-file: ${{ steps.release-notes.outputs.notes-file }}
 
-      - name: Read Component Base Versions
-        id: read-component-versions
-        uses: optivem/actions/read-base-versions@v1
-        with:
-          entries: |
-            [
-              {"key": "ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/monolith-system-typescript:${{ needs.check.outputs.version }}",
-               "file": "system/monolith/typescript/VERSION"}
-            ]
+      # Component-tagging steps disabled: cloud prod must not claim bare vX.Y.Z
+      # component versions. This stage creates no component git tags and no VERSION
+      # bump, so optivem/actions/bump-patch-versions skips those versions and
+      # meta-prerelease-stage deadlocks (failing run 41241065273). Re-enable only
+      # together with the component git tags and the VERSION bump, as planned in
+      # plans/20261031-2111-move-release-ownership-to-cloud.md.
+      # - name: Read Component Base Versions
+      #   id: read-component-versions
+      #   uses: optivem/actions/read-base-versions@v1
+      #   with:
+      #     entries: |
+      #       [
+      #         {"key": "ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/monolith-system-typescript:${{ needs.check.outputs.version }}",
+      #          "file": "system/monolith/typescript/VERSION"}
+      #       ]
 
-      - name: Compose Component Tags
-        id: compose-component-tags
-        uses: optivem/actions/compose-tags@v1
-        with:
-          versions: ${{ steps.read-component-versions.outputs.versions }}
+      # - name: Compose Component Tags
+      #   id: compose-component-tags
+      #   uses: optivem/actions/compose-tags@v1
+      #   with:
+      #     versions: ${{ steps.read-component-versions.outputs.versions }}
 
-      - name: Tag Docker Images with Component Release Versions
-        uses: optivem/actions/tag-docker-images@v1
-        with:
-          image-tags: ${{ steps.compose-component-tags.outputs.tags }}
-          token: ${{ secrets.GHCR_TOKEN }}
+      # - name: Tag Docker Images with Component Release Versions
+      #   uses: optivem/actions/tag-docker-images@v1
+      #   with:
+      #     image-tags: ${{ steps.compose-component-tags.outputs.tags }}
+      #     token: ${{ secrets.GHCR_TOKEN }}
 
   summary:
     needs: [check, promote]
