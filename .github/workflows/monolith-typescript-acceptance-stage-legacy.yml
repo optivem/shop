@@ -199,11 +199,6 @@ jobs:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('system-test/typescript/package-lock.json') }}
 
-      - name: Install Playwright Browser
-        if: steps.cache-playwright.outputs.cache-hit != 'true'
-        working-directory: system-test/typescript
-        run: npx playwright install chromium
-
       - name: Install gh-optivem CLI extension
         uses: optivem/actions/install-gh-optivem@v1
         with:
