@@ -25,7 +25,7 @@ Step 0, then Step 1. Refresh the side-by-side comparison: fetch each event-hub f
 For every file, read **both** versions side by side and write the best merged version for shop. Don't take event-hub's file wholesale and don't keep shop's by default.
 
 - **Recency is a strong signal, not the deciding one.** Check `git log` for the file in both repos (dates below). The newer change usually reflects the latest thinking, but read *why* it was made (commit message, linked plan) before adopting it.
-- **Go hunk by hunk.** Classify each difference as: (a) a fix or improvement → take it, whichever repo it came from; (b) a shop-specific difference (variants × languages, separate `shop-qa` realm, simulators *and* stubs) → keep shop's; (c) event-hub-specific (its stacks, custom domains, its devcontainer) → leave out; (d) both repos changed the same area in different ways → combine them, and note the reasoning in the commit message.
+- **Go hunk by hunk.** Classify each difference as: (a) a fix or improvement → take it, whichever repo it came from; (b) a shop-specific difference (variants × languages, separate `shop-qa` realm, simulators *and* stubs) → keep shop's; (c) event-hub-specific (its stacks, its devcontainer specifics) → leave out; custom domains → the follow-up plan; (d) both repos changed the same area in different ways → combine them, and note the reasoning in the commit message.
 - **Note anything where shop is ahead** (for example `--min-instances 0` on Keycloak) in a short "back-port to event-hub" list, so the two repos converge instead of drifting further. Don't edit event-hub from this plan.
 - **Keep shop's style:** comment density, step numbering, emoji banners, wording ("variant" rather than "stack").
 
@@ -49,6 +49,19 @@ Last commit per file as of 2026-11-02:
 | `.devcontainer/post-start.sh` (shop) vs `fix-git-credential-helpers.sh` (event-hub) | 2026-11-02 `a623ef9d` | 2026-11-02 `b8b1312` | same day, two different fixes for one problem |
 
 Re-check the dates when executing: either repo may have moved on.
+
+## Shop ↔ event-hub file names
+
+The same files have different names in the two repos. Shop's single-pipeline plan (`20261102-1855-single-pipeline-deploy-target.md`, Step 6b) drops "cloud" from shop's names, so match files by this table, not by path:
+
+| Shop today | Shop after single-pipeline Step 6b | event-hub |
+|---|---|---|
+| `.github/workflows/_deploy-stage-cloud.yml` | `_deploy-stage.yml` | `.github/workflows/_deploy-cloud-run.yml` |
+| `.github/workflows/_acceptance-stage-cloud.yml` | `_acceptance-stage.yml` | (in `acceptance-stage.yml`) |
+| `.github/actions/deploy-keycloak-cloud` | `deploy-keycloak` | `deploy-keycloak-cloud` |
+| `.github/actions/build-cloud-images` | `build-shared-images` | `build-cloud-images` |
+| `docker/keycloak/Dockerfile.cloud` | `Dockerfile` | `Dockerfile.cloud` |
+| `docker/keycloak/cloud-realm.jq` | `acceptance-realm.jq` | `cloud-realm.jq` |
 
 ## Findings (2026-11-02, shop `main` vs event-hub `main`)
 
@@ -79,7 +92,7 @@ Source of truth for the teardown/ADC part: event-hub's own plan `plans/20261102-
 - *Shop is ahead (back-port):* the `chown` of the global `claude-code` install so auto-update works, the pinned `gh` version, and possibly the `post-start.sh` approach to the credential helpers.
 
 **Event-hub-only, not ported** (see Decisions)
-- Custom-domain mapping (`.github/scripts/ensure-domain-mapping.sh`, the `CUSTOM_DOMAIN` block at the end of `setup-gcp.sh`).
+- Custom-domain mapping (`.github/scripts/ensure-domain-mapping.sh`, the `CUSTOM_DOMAIN` block at the end of `setup-gcp.sh`): goes to the follow-up custom-domains plan.
 - Cold-start work (event-hub plan `20261102-1953-reduce-cloud-run-cold-start-latency.md`).
 
 ## Steps
@@ -112,6 +125,6 @@ Collected while merging; to hand over to event-hub as its own plan.
 ## Decisions (2026-11-02)
 
 - **`deploy-config.yml`: dropped.** It's a gitignored local file that nothing reads, left over from an old Docker-or-Cloud-Run switch, and event-hub has already removed it. Remove the write in `setup-gcp.sh`, teardown's step 4 and its "fall back to Docker deployment" line (teardown goes back to 3 steps, like event-hub's), the mention in `teardown-everything.sh`, the line in `terraform/README.md` and the `.gitignore` entry.
-- **Custom domains:** left out. Shop has no domain of its own, so its stages stay on `*.run.app`.
+- **Custom domains: yes, in a separate follow-up plan** (decision changed on 2026-11-02, for a fully realistic end-to-end example). Shop uses a subdomain of `optivem.com`, set through the `CUSTOM_DOMAIN` repo variable on `optivem/shop`, so scaffolded repos stay opt-in and default to `*.run.app`. Only one reference variant is mapped (multitier-java QA and prod, plus the shared Keycloak on `auth.`), since it is the only variant with its own QA and production databases. The rest stay on `run.app`. **Where the logic lives:** in the shared `.github/workflows/_deploy-stage-cloud.yml` and `.github/actions/deploy-keycloak-cloud`, not in the 18 variant workflows. The shared workflow takes one optional input (e.g. `frontend-domain`), and only `multitier-java-qa-stage-cloud.yml` (`shop-qa`) and `multitier-java-prod-stage-cloud.yml` (`shop`) pass it. The other 16 variant files don't change. Keycloak is one instance shared by every variant, so moving it to `auth.<domain>` switches the login URL for **all** variants. That happens automatically, through the shared files. That plan waits until event-hub's `20261102-1954-custom-domains-for-cloud-run.md` is proven end to end, including the Keycloak redirect decoupling, then merges the finished design. This plan doesn't port any of it, so `setup-gcp.sh` has no `CUSTOM_DOMAIN` block yet.
 - **Cold start:** handled in a follow-up shop plan, once event-hub's `20261102-1953-reduce-cloud-run-cold-start-latency.md` is done.
 - **Order:** this sync runs before `20261102-1855-single-pipeline-deploy-target.md`, which then builds on the merged `setup-gcp.sh`, `terraform/main.tf` and `terraform/README.md`.
