@@ -448,10 +448,10 @@ jobs:
               echo ""
               jq -r '.[] | "- `\(.)`"' <<< "$found"
               echo ""
-              echo "meta-bump-all did not advance the relevant VERSION files. Investigate manually: ${BUMP_URL}"
+              echo "meta-bump-all did not advance the relevant VERSION files. It bumps a VERSION only when the matching git tag exists, so an image pushed with no matching git tag (e.g. by a stage that retags images without tagging git) is skipped. Bump the affected VERSION file(s) manually past the taken version. Bump run: ${BUMP_URL}"
             } >> "$GITHUB_STEP_SUMMARY"
             found_flat=$(jq -r 'join(", ")' <<< "$found")
-            echo "::error::Version slot STILL taken after auto-bump: ${found_flat}. Investigate meta-bump-all: ${BUMP_URL}"
+            echo "::error::Version slot STILL taken after auto-bump: ${found_flat}. The image exists with no matching git tag, so meta-bump-all skipped it; bump the VERSION file manually. Bump run: ${BUMP_URL}"
             exit 1
           fi
           echo "All artifacts available after auto-bump. OK to proceed."

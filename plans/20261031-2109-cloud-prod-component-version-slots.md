@@ -16,7 +16,7 @@
 
 ## ▶ Next executable step (resume here)
 
-Step 4: in `.github/workflows/_meta-prerelease-pipeline.yml` (~line 451 and the `::error::` line after it), reword the post-bump failure to explain that an image exists with no matching git tag, so `meta-bump-all` skipped it and a manual `VERSION` bump is needed.
+Step 5: after the fixes are pushed, dispatch `meta-prerelease-stage` (`gh workflow run meta-prerelease-stage.yml`) and confirm the `check` job passes both version checks and the pipeline continues. Then watch the next cloud prod run for any new bare `vX.Y.Z` component image.
 
 ## Root cause
 
@@ -28,7 +28,6 @@ Step 4: in `.github/workflows/_meta-prerelease-pipeline.yml` (~line 451 and the 
 
 ## Steps
 
-- [ ] Step 4: In `_meta-prerelease-pipeline.yml`, correct the post-bump failure text. It currently says `meta-bump-all did not advance the relevant VERSION files` without explaining why; it should say an image exists with no matching git tag, so the bump skipped it and a manual `VERSION` bump is needed.
 - [ ] Step 5: Verify:
   - Dispatch `meta-prerelease-stage` and confirm the `check` job passes both version checks and the pipeline continues.
   - On the next cloud prod run, confirm no new bare `vX.Y.Z` component image appears.
