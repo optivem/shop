@@ -1,7 +1,5 @@
 # 2026-11-02 18:55:09 UTC — Single release owner: cloud acceptance + Docker gates
 
-> 🤖 **Picked up by agent** — `f003112cc63e` at `2026-11-02T20:21:20Z`
-
 ## TL;DR
 
 **Why:** Each of the six flavors has two parallel sets of acceptance, QA and prod workflows: Docker (`*-acceptance-stage`, `*-qa-stage`, `*-prod-stage`) and cloud (`*-stage-cloud`). That doubles maintenance, and it creates two release owners per flavor. The two-owner problem is the only reason the version-slot and release-ownership plans exist.
