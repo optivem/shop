@@ -26,12 +26,26 @@ None. All resolved before execution; the acceptance naming below was confirmed o
 
 ## ▶ Next executable step (resume here)
 
-Step 2: prototype the two acceptance tracks on multitier-java. Read Outcomes (two tracks, decided 2026-11-02) and the Inventory first.
+Step 2, "Prove it" only. Step 2's code is committed locally in `b893a9cc` (not pushed): `_acceptance-stage.yml`, `_acceptance-stage-docker-compose.yml`, the three renamed multitier-java callers, and a `docker-compose-acceptance` input on `_prerelease-pipeline.yml` that only `prerelease-pipeline-multitier-java.yml` sets. actionlint (with shellcheck) is clean.
 
-- **Create** `.github/workflows/_acceptance-stage.yml` (cloud, owns RC, from `_acceptance-stage-cloud.yml`) and `.github/workflows/_acceptance-stage-docker-compose.yml` (gate only, no tag, `suite-set: latest|legacy`, from `multitier-java-acceptance-stage.yml`).
-- **Rename and rewrite as thin callers** (`git mv`): `multitier-java-acceptance-stage.yml` → `multitier-java-acceptance-stage-docker-compose.yml` (Docker latest); `multitier-java-acceptance-stage-legacy.yml` → `multitier-java-acceptance-stage-docker-compose-legacy.yml` (Docker legacy, no cron); `multitier-java-acceptance-stage-cloud.yml` → `multitier-java-acceptance-stage.yml` (cloud, manual only, cron commented out).
-- **Edit** `_prerelease-pipeline.yml` so multitier-java dispatches the `-docker-compose[-legacy]` names and stops after the Docker gates (no RC check, no auto-QA). Other flavors keep the old names until Step 5.
-- **Prove it:** Docker latest + legacy green with no tag; a manual cloud run green that creates `multitier-java-v<x.y.z>-rc.N`.
+**Blocked until CI can validate `gh-optivem-multitier-java.yaml`:** the `inner-loop:` key from `cf2869ad` is rejected by gh-optivem v1.6.105. Fix that first, through a gh-optivem release that accepts the key or by moving the key out; it is not part of this plan. Then push `b893a9cc`. GitHub only registers the renamed workflow files after the push.
+
+1. **Docker gates (no tag):** `gh workflow run prerelease-pipeline-multitier-java.yml -f level=acceptance -f commit-sha=<sha>`. Use a pinned main SHA whose commit-stage `sha-<sha>` images exist. Pinning makes both gates run, because the unpinned staleness skip doesn't apply. Green means:
+   - `multitier-java-acceptance-stage-docker-compose` succeeds, with the 11 latest suites and sonar run.
+   - `multitier-java-acceptance-stage-docker-compose-legacy` succeeds, with the 26 `modNN-*` suites run and the Playwright 1.64.0 install step run on a cache miss.
+   - The pipeline's `acceptance-stage` job skips the RC check, and `qa-stage`/`qa-signoff` are skipped. With `level=qa` they are skipped too.
+   - **No tag is created:** `git ls-remote --tags origin 'multitier-java-v*-rc.*'` shows the same list before and after.
+2. **Cloud RC owner:** `gh workflow run multitier-java-acceptance-stage.yml -f commit-sha=<same sha>`. Green means:
+   - Deploy, the Java harness and the 11 suites against Cloud Run succeed. This is the first time Java tests run against Cloud Run (Surprise 1).
+   - `publish-tag` creates `multitier-java-v<VERSION>-rc.<run_number>` on `<sha>`.
+   - `verify-rc-tag` resolves that tag, and `sonar` succeeds.
+   - GHCR `multitier-frontend-react` and `multitier-backend-java` carry the same rc tag.
+   - No `multitier-java-cloud-v*` tag is created.
+3. Then tick Step 2 and move on to Step 3.
+
+Notes for the proof:
+- The cloud caller kept the old Docker file's path, so it inherits that workflow's run history and README badge. `get-last-workflow-run` may see an old Docker run, but that only affects unpinned runs.
+- Until Step 3, the meta `tag-meta-rc` manifest needs a QA-approved multitier-java RC at the current VERSION. Getting one takes a manual cloud run, then `multitier-java-qa-stage.yml`, then `multitier-java-qa-signoff.yml`.
 
 ## Inventory (Step 1 result, 2026-11-02)
 
