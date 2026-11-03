@@ -2,6 +2,7 @@ plugins {
 	id 'java'
 	id 'checkstyle'
 	id 'jacoco'
+	id 'info.solidsoft.pitest' version '1.15.0'
 	id 'org.sonarqube' version '7.2.3.7755'
 	id 'org.springframework.boot' version '3.5.6'
 	id 'io.spring.dependency-management' version '1.1.7'
@@ -126,6 +127,25 @@ tasks.register('componentTest', Test) {
 	classpath = sourceSets.componentTest.runtimeClasspath
 	useJUnitPlatform()
 	shouldRunAfter tasks.named('test')
+}
+
+// Mutation gate for the gh-optivem inner loop (`gh optivem component-test mutation`). Opt-in; not part of
+// `build`. The component tests are the killing suite. PIT_TARGET_CLASSES (comma-separated FQCNs) scopes the
+// run to the classes a ticket changed; unset means the whole backend (the nightly full baseline).
+pitest {
+	pitestVersion = '1.17.4'
+	junit5PluginVersion = '1.2.1'
+	mainSourceSets = [sourceSets.main]
+	testSourceSets = [sourceSets.componentTest]
+	targetClasses = providers.environmentVariable('PIT_TARGET_CLASSES')
+		.map { it.split(',').collect { c -> c.trim() }.findAll { c -> !c.isEmpty() }.toSet() }
+		.orElse(['com.mycompany.myshop.backend.*'] as Set)
+	targetTests = ['com.mycompany.myshop.backend.component.*']
+	outputFormats = ['XML']
+	timestampedReports = false
+	threads = 2
+	useClasspathFile = true  // the componentTest classpath exceeds the Windows command-line limit
+	failWhenNoMutations = false
 }
 
 tasks.register('contractTest', Test) {

@@ -50,5 +50,13 @@ suites:
     command: .\gradlew.bat externalSimulatorImage contractTest --tests '*RealParityContractTest'
     sampleTest: "getProductDetailsReturnsDetailsWhenFound"
     requiresDocker: true
+  - id: mutation
+    name: Mutation (PIT)
+    # Inner-loop mutation gate: `gh optivem component-test mutation --component backend` runs this suite with
+    # PIT_TARGET_CLASSES set to the ticket's changed classes (or unset for the whole backend with --all) and
+    # scores the report. Deliberately absent from suiteGroups.all: opt-in, never part of the commit-stage gate.
+    command: .\gradlew.bat pitest
+    testReportPath: build/reports/pitest/mutations.xml
+    requiresDocker: true
 suiteGroups:
   all: [unit, integration, component, provider-verification, external-contract]

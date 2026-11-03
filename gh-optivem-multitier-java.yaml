@@ -13,6 +13,10 @@ system:
         repo: optivem/shop
         lang: java
         sonar-project: optivem_shop-multitier-backend-java
+        inner-loop:
+            mode: test-after
+        paths:
+            component-test: system/multitier/backend-java/src/componentTest/java/com/mycompany/myshop/backend
     frontend:
         path: system/multitier/frontend-react
         repo: optivem/shop
