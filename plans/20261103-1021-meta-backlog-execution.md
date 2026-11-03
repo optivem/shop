@@ -1,7 +1,5 @@
 # 2026-11-03 10:21 UTC — Plan coordination meta-plan: backlog execution
 
-> 🤖 **Picked up by agent** — `f003112cc63e` at `2026-11-03T20:27:17Z`
-
 
 ## TL;DR
 
@@ -12,27 +10,34 @@
 
 U1-U4 are done and on main (frontend-react is on Vite 7, Vitest 3 and React 19; run `npm ci` there after pulling). U4 item 3 was verified on 2026-11-02: compile-all 7/7, TS legacy sample 26/26, multitier java/dotnet/ts targeted and sample 11/11, monolith java sample 11/11.
 
-Session wrapped up on 2026-11-03 (about 17:45 UTC). Resume with `/clear`, then `/execute-plan plans/20261103-1021-meta-backlog-execution.md`.
+Session paused on 2026-11-03 at about 22:10 UTC, at the user's request. Resume with `/clear`, then `/execute-plan plans/20261103-1021-meta-backlog-execution.md`.
+
+**Standing rule (user, 2026-11-03): no new branches or worktrees.** Work directly on main, verify each unit, push it, then start the next. The branches below are the last ones. Once their contents are on main, delete them.
 
 **Done:** M1, M2 and M3 (4 manual checks for the user remain in the GCP-sync plan's ▶ block), plus U5, U9 and U12 (#12 Steps 1–2 still pending, see below).
 
-**In progress, needs finishing first, before anything is pushed:**
-- **U6 Phase 2 + U7 (#7 steps 1.4/1.5) + #12 Steps 1–2** were implemented together ("implement all, test once", user decision 2026-11-03) in worktree `/workspaces/shop/.claude/worktrees/agent-a4f007858792e70c6`, branch `worktree-agent-a4f007858792e70c6`. It holds the verified Phase 1 commit plus a WIP commit. The final `--sample` sweep was interrupted partway through.
-- Read the ▶ block of `plans/backlog/p2-product-correctness/20261103-1504-money-strings-end-to-end.md` **in that worktree** for which configs passed. Finish the sweep, split the work into per-unit commits, rebase onto main and push. Nothing from it is on main yet. Backup branches on origin:
-  - `wip/meta-u6-u7` (`5e18fbd9`): the full WIP, Phase 1 + WIP.
-  - `wip/meta-u6-only` (`306a9cf7`) and `wip/meta-u6-u7-code` (`e552b0f4`): code-only snapshots for splitting the work into U6 / U7 / #12 commits.
-- **Sweep status:**
-  - Passed: monolith-java, monolith-java-legacy, multitier-java, multitier-java-legacy, monolith-dotnet, monolith-dotnet-legacy.
-  - Not yet run: multitier-dotnet (aborted), multitier-dotnet-legacy, the 4 TypeScript configs, `compile-all.sh`, and the 4 `component-test run` configs.
-- **Watch for:**
-  - `system-test/typescript` lint fails on 3 pre-existing warnings (follow-ups item 1). Fix that first if a gate lints.
-  - A sub-agent briefly ran `git stash`/`pop` in that worktree, so a lost edit is possible. The rest of the sweep should catch it.
-- **After pushing:** delete the U6 and U7 plans (all their steps are done) and mark U6, U7 and #12 Steps 1–2 done here. Delete the `wip/meta-*` branches.
+**Do this first: land U6 Phase 2 + U7 (#7 steps 1.4/1.5) + #12 Steps 1–2 on main.**
+- Where it is: worktree `/workspaces/shop/.claude/worktrees/meta-u6-u7`, branch `meta-u6-u7`. That's 3 commits on top of `origin/main` `5b7203ca`:
+  - `ea3f8bbf` Phase 1: the Java DSLs become String-only (verified earlier)
+  - `5de80d5a` the big WIP: U6 Phase 2, U7, #12 1–2
+  - `ce548adb` fix for the 3 pre-existing `system-test/typescript` lint warnings, plus follow-up plan edits
+- **`ce548adb` exists only locally.** The force-push updating `origin/wip/meta-u6-u7` was blocked by the permission classifier, so origin still has the old `5e18fbd9`, which lacks the rebase and the lint fix. If the worktree disappears, rebuild from `origin/wip/meta-u6-u7` and redo the lint fix: 3 lines in `system-test/typescript/eslint.config.mjs`.
+- **Test status on the current tree:**
+  - `--sample`: all 12 configs passed. Six passed on 2026-11-03 before the pause; on 2026-11-03 between 20:40 and 21:55 UTC: multitier-dotnet, multitier-dotnet-legacy, monolith-typescript, monolith-typescript-legacy, multitier-typescript and multitier-typescript-legacy.
+  - Component test `multitier-java`: passed, 83/83.
+- **Still to run:**
+  - `bash compile-all.sh` (`./compile-all.sh` failed with "Permission denied" in the worktree because the exec bit is missing; run it via `bash`).
+  - `gh optivem component-test run -c gh-optivem-<x>.yaml` for multitier-clean-java, multitier-dotnet and multitier-typescript. This was stopped partway, during multitier-java's contractTest re-run.
+- **Then:**
+  1. Rewrite the branch as per-unit commits on top of `origin/main`: Phase 1, U6 Phase 2, U7, #12, then bookkeeping. Split the WIP using the snapshot diffs: U6 = `origin/wip/meta-u6-only` (`306a9cf7`) vs `2f3c9cd9`; U7 = `origin/wip/meta-u6-u7-code` (`e552b0f4`) vs `306a9cf7`; whatever remains is #12 plus plan edits. The lint fix goes with U6.
+  2. Bookkeeping: delete `plans/backlog/p2-product-correctness/20261103-1504-money-strings-end-to-end.md` and `.../20261009-1545-production-readiness-chunk1-data-correctness.md` if all their steps are done. Mark U6, U7 and #12 1–2 done in M5.
+  3. Check that no cloud deploy run is in progress, then `git push origin HEAD:main`.
+  4. Delete `origin/wip/meta-u6-u7`, `wip/meta-u6-only` and `wip/meta-u6-u7-code`, the worktree, and the local branch `meta-u6-u7`.
 
-**M4 (P2 Steps 3–9): waiting on one user answer.**
+**M4 (P2 Steps 3–9): unblocked, answer recorded below.**
 - The P2 Step 3 QA and prod proof passed on the throwaway branch `p2-step3-proof` (commits 991a2cd2 `_qa-stage.yml`/`_prod-stage.yml`; a0b13346, the Step 4 thin callers plus deletion of the `-cloud` twins; 8f1fb7fb, anonymous smoke). Prod run 41671160377 published the real release `multitier-java-v1.0.235`, and VERSION was bumped to 1.0.236.
 - That tripped Step 3's bare-image guard: `multitier-backend-java:v1.5.217` was pushed, but it came with matching git tags, a release and VERSION bumps.
-- **User answered 2026-11-03 20:30 UTC: yes, that is the expected release shape.** So: rebase the 3 branch commits onto main, run cloud acceptance on 1.0.236 → QA → signoff → prod on main, delete the `multitier-java-cloud-v1.0.235` tag and release, run `git fetch --prune --prune-tags`, then delete the branch `p2-step3-proof`.
+- **User answered 2026-11-03 20:30 UTC: yes, that is the expected release shape.** Start M4 only after the U6/U7/#12 work is on main. Put the 3 `p2-step3-proof` commits onto main (no new branch), and delete `p2-step3-proof` once they're on main. Then: rebase the 3 branch commits onto main, run cloud acceptance on 1.0.236 → QA → signoff → prod on main, delete the `multitier-java-cloud-v1.0.235` tag and release, run `git fetch --prune --prune-tags`, then delete the branch `p2-step3-proof`.
 - No GHCR versions can be deleted under the guard, because every `*-cloud-v*` version also carries `sha-*`, `v*-rc.*` or `vX.Y.Z` tags.
 - Prod runs stay pre-approved (user, 2026-11-03).
 - Then Steps 5 (start with the .NET `JsonWireMockClient` scheme fix), 6, 6b, 8 and 9. Step 7 moved to `plans/backlog/p1-ci-pipeline/20261103-1536-gh-optivem-scaffolds-single-pipeline.md`.
