@@ -72,7 +72,7 @@ The same files have different names in the two repos. Shop's single-pipeline pla
 
 Re-checked 2026-11-03 (Step 0): event-hub moved on in `setup-gcp.sh` (`537a6ad` generates the Keycloak admin password instead of prompting, taken; `4254341`/`835a1f9` print the custom domains, left for the custom-domains plan) and in `.devcontainer/post-create.sh` (`75aec36`, its own version of shop's Claude Code chown, combined with shop's). `teardown-everything.sh` exists only in shop and has none of the three teardown bugs; only its `deploy-config.yml` mention changed. Every other finding below still held.
 
-Source of truth for the teardown/ADC part: event-hub's own plan `plans/20261102-2015-sync-gcp-scripts-to-shop.md`.
+Source of truth for the teardown/ADC part: event-hub's plan `20261102-2015-sync-gcp-scripts-to-shop.md` (deleted 2026-11-03 once this merge covered it; re-checked then: `teardown-gcp.sh` identical in both repos, `state-backend.sh` differs only in a header comment, `setup-gcp.sh` only in project-specific parts plus event-hub's `CUSTOM_DOMAIN` blocks).
 
 **To port**
 - `teardown-gcp.sh` (173 diff lines): all three bugs are present — `gh "$kind" delete "$name" --yes`, `terraform output -raw project_id/system_name`, `exit 1` on an empty state, and the "Type the project ID to confirm" prompt.
