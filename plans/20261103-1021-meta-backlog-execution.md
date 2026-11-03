@@ -9,7 +9,7 @@
 
 U1-U4 are done and on main (frontend-react is on Vite 7, Vitest 3 and React 19; run `npm ci` there after pulling). U4 item 3 was verified on 2026-11-02: compile-all 7/7, TS legacy sample 26/26, multitier java/dotnet/ts targeted and sample 11/11, monolith java sample 11/11.
 
-Next (2026-11-03): run **P1, the Playwright upgrade** (`/execute-plan plans/20261103-1006-upgrade-playwright-ubuntu-26.md`) before anything else. CI is red without it, and it must land before single-pipeline Step 2 (see "Active top-level plans" below). After that, no autonomous backlog unit remains. U5-U12 are blocked on the user answering Q-A..Q-H (see Blocked on user; "accept all recommendations" unblocks all of them). Once answered, follow the order in Wave 2's last paragraph, starting with `/refine-plan` / `/execute-plan` on U5 (`cross-language-parity-fixes`) and `/create-plan` for the CS1 money merge. The original cloud-deploy plan is no longer in `plans/` (2026-11-02), so re-check C8/C9/C10 before scheduling U7/U8.
+Next (2026-11-03): **Step M1** in "Steps" below. Run every step of `plans/20261103-1006-upgrade-playwright-ubuntu-26.md`, following that plan's own rules (all of its decisions are resolved, and its Step 6 push and dispatch are pre-approved). CI is red until it lands, and it must land before M2. U5-U12 are blocked on the user answering Q-A..Q-H (see Blocked on user; "accept all recommendations" unblocks all of them). Once answered, follow the order in Wave 2's last paragraph, starting with `/refine-plan` / `/execute-plan` on U5 (`cross-language-parity-fixes`) and `/create-plan` for the CS1 money merge. The original cloud-deploy plan is no longer in `plans/` (2026-11-02), so re-check C8/C9/C10 before scheduling U7/U8.
 
 Open follow-ups found during U4 (not fixed): `npm run lint` in `system-test/typescript` fails `--max-warnings 0` on 3 warnings in `tests/legacy/mod04/e2e/api-authorization-test.spec.ts` (skipped test, two tests without assertions; predates U4). `system-test/java/README.md` still references `AccessControlTest` / `OrderOwnershipTest`, which don't exist.
 
@@ -18,6 +18,16 @@ Scope decisions for the run: the `20261030-1822-template-cloud-deploy-all-varian
 Found by U4, not fixed (production): a React user pasting an order-details URL lands on home, because tokens are in memory and the deep link is dropped across the login redirect. `.NET` `cancelOrder` is still `CHANNEL_MODE=static`, so its UI test silently uses the API.
 
 Read-only analysis of `plans/backlog/p1..p4`. No existing plan was edited. Repo state was spot-checked (grep/ls) to find stale premises.
+
+## Steps (execute via this meta-plan)
+
+`/execute-plan` on this file runs these steps in order. Each step executes its child plan through a subagent that follows the `/execute-plan` rules for that child: its own gates, its own pre-approvals, item deletion and the child's ▶ block. Delete an M-step here once its child scope is verified done; if the child plan is fully done, the child plan file is deleted too. Then refresh the ▶ block above to name the next M-step. Child plans stay the source of truth for details, so don't copy their items here.
+
+- [ ] Step M1 — **P1 Playwright upgrade:** execute all of `plans/20261103-1006-upgrade-playwright-ubuntu-26.md` (Steps 1–6; Step 6 is pre-approved). Done when that plan file is deleted and `meta-prerelease-stage.yml` is green with no `does not support chromium on ubuntu26.04` in its logs.
+- [ ] Step M2 — **P2 single-pipeline, Step 2 only:** execute Step 2 of `plans/20261102-1855-single-pipeline-deploy-target.md` (multitier-java acceptance tracks). Carry the `@1.64.0` legacy Playwright pin from M1 into `_acceptance-stage-docker-compose.yml`. Gate: Docker latest and legacy green with no tag. The one manual cloud run creates `multitier-java-v<x.y.z>-rc.N`; that RC tag and a few cents of GCP are expected. Stop after Step 2 and hand back, because Step 3 builds on its result.
+- [ ] Step M3 — **P3 GCP-script sync:** execute `plans/20261102-2020-sync-gcp-cloud-scripts-from-event-hub.md`. It must land before P2 Step 6. It's independent of M2, so it can run in parallel with M2 in a separate session; the files are disjoint as long as P2 stays out of `setup-gcp.sh`/`terraform/`.
+- [ ] Step M4 — **P2 single-pipeline, Steps 3–9:** resume that plan after the user reviews M2. Steps 4 and later delete tags, releases, GHCR images and environments, so honour that plan's gates.
+- [ ] Step M5 — **Backlog U5–U12:** blocked on Q-A..Q-H (see "Blocked on user"). Once they're answered, follow "Suggested run order", step 5.
 
 ## Active top-level plans (added 2026-11-03)
 
