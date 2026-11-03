@@ -13,11 +13,9 @@ U1-U4 are done and on main (frontend-react is on Vite 7, Vitest 3 and React 19; 
 
 Next (2026-11-03): **Step M2**. M1 and M3 are done. M2's proof is blocked until `gh-optivem-multitier-java.yaml` validates again: the `inner-loop:` key from `cf2869ad` needs a gh-optivem release that supports it, or the key has to be removed. Q-A..Q-H were answered on 2026-11-03 (see "User decisions (2026-11-03)"), and the whole meta (M1–M5) runs autonomously.
 
-Open follow-ups found during U4 (not fixed): `npm run lint` in `system-test/typescript` fails `--max-warnings 0` on 3 warnings in `tests/legacy/mod04/e2e/api-authorization-test.spec.ts` (skipped test, two tests without assertions; predates U4). `system-test/java/README.md` still references `AccessControlTest` / `OrderOwnershipTest`, which don't exist.
+Follow-ups found during the run (not fixed) are in `plans/backlog/p2-product-correctness/20261103-1336-meta-run-followups.md`. The removed inner-loop keys get re-added via `plans/backlog/p1-ci-pipeline/20261103-1335-readd-inner-loop-pilot-config.md`.
 
 Scope decisions for the run: the `20261030-1822-template-cloud-deploy-all-variants` plan is another agent's, so stay out of its files; push each verified unit, unless a cloud run is in progress; U5-U12 stay blocked on Q-A..Q-H (confirmed 2026-10-31). Commit with `--paths`, and don't use `git pull --autostash` while another agent shares the checkout. Commit plan edits before running `gh optivem commit`: an uncommitted plan file blocks its `pull --rebase`.
-
-Found by U4, not fixed (production): a React user pasting an order-details URL lands on home, because tokens are in memory and the deep link is dropped across the login redirect. `.NET` `cancelOrder` is still `CHANNEL_MODE=static`, so its UI test silently uses the API.
 
 Read-only analysis of `plans/backlog/p1..p4`. No existing plan was edited. Repo state was spot-checked (grep/ls) to find stale premises.
 
