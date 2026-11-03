@@ -1,0 +1,398 @@
+name: _prod-stage
+
+# Production stage, shared by every variant: deploys the latest QA-approved release candidate
+# (or an explicit one) to production on Cloud Run, runs the smoke tests against it, and on a
+# green deploy publishes the release: the <architecture>-<language>-v<x.y.z> git tag, image tag
+# and GitHub release, plus the component image and git tags.
+#
+# Callers (<architecture>-<language>-prod-stage.yml) own the dispatch trigger, the workflow name
+# and concurrency (github.workflow resolves to the caller, so a group here would deadlock). They
+# also call <architecture>-<language>-bump-patch-version.yml after this workflow succeeds,
+# because a `uses:` path cannot be built from inputs.
+#
+# Everything per-variant comes from <architecture>-<language> and the images: the tag prefix,
+# the GitHub environment, the Cloud Run names, and the component VERSION files
+# (multitier: system/multitier/<image without "multitier-">/VERSION; monolith:
+# system/monolith/<language>/VERSION).
+#
+# Cloud Run is the active deploy target. A Docker Compose deploy sits below as one commented
+# block; see the note there before switching to it.
+
+on:
+  workflow_call:
+    inputs:
+      architecture:
+        description: 'Architecture: only multitier for now'
+        required: true
+        type: string
+      language:
+        description: 'Language: java, dotnet, or typescript'
+        required: true
+        type: string
+      test-language:
+        description: 'Language of the smoke tests (java, dotnet, or typescript); empty means the same as language'
+        required: false
+        type: string
+        default: ''
+      images:
+        description: 'JSON map of role to GHCR image name: {"frontend":"multitier-frontend-react","backend":"multitier-backend-java"}. The roles are the compose service names.'
+        required: true
+        type: string
+      version:
+        description: 'Release candidate to release (e.g., multitier-java-v1.0.0-rc.1); empty releases the latest QA-approved RC'
+        required: false
+        type: string
+        default: ''
+
+permissions: {}
+
+env:
+  ARCHITECTURE: ${{ inputs.architecture }}
+  LANGUAGE: ${{ inputs.language }}
+  PREFIX: ${{ inputs.architecture }}-${{ inputs.language }}
+
+jobs:
+  # === Resolve QA-Approved Release Candidate ===
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ inputs.version || steps.resolve-latest.outputs.tag }}
+      image-urls: ${{ steps.resolve-images.outputs.image-urls }}
+      service-names: ${{ steps.images.outputs.services }}
+    steps:
+      - name: Ensure Environment Variables Defined
+        uses: optivem/actions/validate-env-vars-defined@v1
+        with:
+          names: |
+            GCP_PROJECT_ID
+            GCP_REGION
+            GCP_WORKLOAD_IDENTITY_PROVIDER
+            GCP_SERVICE_ACCOUNT
+            SYSTEM_NAME
+            GHCR_TOKEN
+            WORKFLOW_TOKEN
+        env:
+          GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+          GCP_REGION: ${{ vars.GCP_REGION }}
+          GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          GCP_SERVICE_ACCOUNT: ${{ vars.GCP_SERVICE_ACCOUNT }}
+          SYSTEM_NAME: ${{ vars.SYSTEM_NAME }}
+          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+          WORKFLOW_TOKEN: ${{ secrets.WORKFLOW_TOKEN }}
+
+      # Image URLs and compose service names come out in the same order, which is how
+      # deploy-docker-compose pairs them (Docker Compose block below).
+      - name: Expand Image URLs
+        id: images
+        env:
+          IMAGES: ${{ inputs.images }}
+          BASE: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}
+        run: |
+          set -euo pipefail
+          {
+            echo 'urls<<EOF'
+            jq -r --arg base "$BASE" '.[] | "\($base)/\(.)"' <<< "$IMAGES"
+            echo 'EOF'
+            echo 'services<<EOF'
+            jq -r 'keys_unsorted[]' <<< "$IMAGES"
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Checkout Repository
+        if: inputs.version == ''
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Resolve Latest QA-Approved RC
+        id: resolve-latest
+        if: inputs.version == ''
+        uses: optivem/actions/resolve-latest-prerelease-with-status@v1
+        with:
+          tag-prefix: ${{ env.PREFIX }}-v
+          status-context: qa/signoff
+          token: ${{ secrets.WORKFLOW_TOKEN }}
+
+      - name: Check RC Exists
+        if: inputs.version != ''
+        uses: optivem/actions/validate-tag-exists@v1
+        with:
+          tag: ${{ inputs.version }}
+
+      - name: Check QA Approved
+        id: qa-status
+        if: inputs.version != ''
+        uses: optivem/actions/get-commit-status@v1
+        with:
+          commit-sha: ${{ inputs.version }}
+          context: qa/signoff
+          state: success
+          token: ${{ secrets.WORKFLOW_TOKEN }}
+
+      - name: Verify QA Approved
+        if: inputs.version != '' && steps.qa-status.outputs.state != 'success'
+        shell: bash
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          echo "::error::Version $VERSION has no successful qa/signoff commit-status. Cannot deploy to production."
+          exit 1
+
+      - name: Generate Release Version
+        id: release-version
+        uses: optivem/actions/compose-release-version@v1
+        with:
+          prerelease-version: ${{ inputs.version || steps.resolve-latest.outputs.tag }}
+
+      - name: Check System Release Already Published
+        id: check-release-tag
+        uses: optivem/actions/check-tag-exists@v1
+        with:
+          tag: ${{ steps.release-version.outputs.version }}
+
+      - name: Verify System Release Not Yet Published
+        if: steps.check-release-tag.outputs.exists == 'true'
+        shell: bash
+        env:
+          TAG: ${{ steps.release-version.outputs.version }}
+        run: |
+          echo "::error::Version $TAG is already released. Bump the VERSION file and create a new RC."
+          exit 1
+
+      - name: Compose Docker Image URLs
+        id: resolve-images
+        uses: optivem/actions/compose-docker-image-urls@v1
+        with:
+          tag: ${{ inputs.version || steps.resolve-latest.outputs.tag }}
+          base-image-urls: ${{ steps.images.outputs.urls }}
+
+  # === Deploy to Cloud Run + Run Smoke Tests ===
+  deploy:
+    needs: check
+    permissions:
+      contents: read
+      id-token: write
+      packages: read
+    uses: ./.github/workflows/_deploy-stage-cloud.yml
+    secrets: inherit
+    with:
+      stage: production
+      architecture: ${{ inputs.architecture }}
+      language: ${{ inputs.language }}
+      test-language: ${{ inputs.test-language }}
+      images: ${{ inputs.images }}
+      version: ${{ needs.check.outputs.version }}
+
+  # === Docker Compose deploy (inactive) ===
+  # To deploy production with Docker Compose instead of Cloud Run, delete the `deploy` job above
+  # and uncomment this block. Beware: this is only a zero-cost stand-in for production. The
+  # stack runs on the GitHub runner and is thrown away when the job ends, so nothing persists
+  # and nobody can use it; only the release tags below are real. It needs DOCKERHUB_USERNAME
+  # (var) and DOCKERHUB_TOKEN (secret) instead of the GCP settings. Ports use the language digit
+  # (java=1, dotnet=2, typescript=3), as in _acceptance-stage-docker-compose.yml.
+  # deploy:
+  #   needs: check
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     contents: read
+  #     packages: read
+  #   env:
+  #     COMPOSE_DIR: docker/${{ inputs.test-language || inputs.language }}/${{ inputs.architecture }}
+  #     PORT_DIGIT: ${{ ((inputs.test-language || inputs.language) == 'java' && '1') || ((inputs.test-language || inputs.language) == 'dotnet' && '2') || '3' }}
+  #     UI_HEALTH_PATH: ${{ inputs.architecture == 'monolith' && '/health' || '/' }}
+  #   steps:
+  #     - name: Ensure Environment Variables Defined
+  #       uses: optivem/actions/validate-env-vars-defined@v1
+  #       with:
+  #         names: |
+  #           DOCKERHUB_USERNAME
+  #           DOCKERHUB_TOKEN
+  #       env:
+  #         DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
+  #         DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+  #
+  #     - name: Checkout Repository
+  #       uses: actions/checkout@v6
+  #       with:
+  #         ref: ${{ needs.check.outputs.version }}
+  #
+  #     - name: Log in to Docker Hub
+  #       uses: optivem/actions/docker-login@v1
+  #       with:
+  #         username: ${{ vars.DOCKERHUB_USERNAME }}
+  #         password: ${{ secrets.DOCKERHUB_TOKEN }}
+  #
+  #     - name: Log in to GHCR
+  #       uses: optivem/actions/docker-login@v1
+  #       with:
+  #         registry: ghcr.io
+  #         username: ${{ github.repository_owner }}
+  #         password: ${{ secrets.GHCR_TOKEN }}
+  #
+  #     - name: Simulate Deployment (Production Environment)
+  #       uses: optivem/actions/deploy-docker-compose@v1
+  #       with:
+  #         environment: production
+  #         version: ${{ needs.check.outputs.version }}
+  #         image-urls: ${{ needs.check.outputs.image-urls }}
+  #         service-names: ${{ needs.check.outputs.service-names }}
+  #         compose-file: docker-compose.pipeline.real.yml
+  #         working-directory: ${{ env.COMPOSE_DIR }}
+  #
+  #     - name: Wait for Systems (Simulate Deployment (Production Environment))
+  #       uses: optivem/actions/wait-for-endpoints@v1
+  #       with:
+  #         endpoints: |
+  #           [
+  #             { "name": "MyShop UI", "url": "http://localhost:3${{ env.PORT_DIGIT }}11${{ env.UI_HEALTH_PATH }}" },
+  #             { "name": "MyShop API", "url": "http://localhost:8${{ env.PORT_DIGIT }}11/health" },
+  #             { "name": "ERP", "url": "http://localhost:9${{ env.PORT_DIGIT }}11/erp/health" },
+  #             { "name": "Clock", "url": "http://localhost:9${{ env.PORT_DIGIT }}11/clock/health" }
+  #           ]
+  #         compose-file: docker-compose.pipeline.real.yml
+  #         working-directory: ${{ env.COMPOSE_DIR }}
+  # === End of Docker Compose deploy ===
+
+  # === Release ===
+  # Everything from here on is public and permanent, so it only runs after a green deploy.
+  release:
+    needs: [check, deploy]
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.architecture }}-${{ inputs.language }}-production
+    permissions:
+      contents: write
+      packages: write
+    outputs:
+      version: ${{ steps.promote.outputs.version }}
+      image-urls: ${{ needs.check.outputs.image-urls }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.check.outputs.version }}
+
+      - name: Generate Release Version
+        id: promote
+        uses: optivem/actions/compose-release-version@v1
+        with:
+          prerelease-version: ${{ needs.check.outputs.version }}
+
+      - name: Tag Docker Images with System Release Version
+        id: tag-images
+        uses: optivem/actions/tag-docker-images@v1
+        with:
+          image-urls: ${{ needs.check.outputs.image-urls }}
+          tag: ${{ steps.promote.outputs.version }}
+          registry-username: ${{ github.repository_owner }}
+          token: ${{ secrets.GHCR_TOKEN }}
+
+      - name: Publish Release Tag
+        uses: optivem/actions/publish-tag@v1
+        with:
+          tag: ${{ steps.promote.outputs.version }}
+          token: ${{ secrets.WORKFLOW_TOKEN }}
+
+      # One entry per image, keyed by its RC image URL: multitier components each have their own
+      # VERSION file, a monolith's single image uses the system VERSION file.
+      - name: Compose Component Version Entries
+        id: component-entries
+        env:
+          IMAGES: ${{ inputs.images }}
+          BASE: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}
+          RC: ${{ needs.check.outputs.version }}
+        run: |
+          set -euo pipefail
+          entries=$(jq -c --arg base "$BASE" --arg rc "$RC" --arg arch "$ARCHITECTURE" --arg lang "$LANGUAGE" '
+            [ .[] | {
+                key: "\($base)/\(.):\($rc)",
+                file: (if $arch == "monolith" then "system/monolith/\($lang)/VERSION"
+                       else "system/\($arch)/\(ltrimstr($arch + "-"))/VERSION" end)
+              } ]' <<< "$IMAGES")
+          echo "entries=$entries" >> "$GITHUB_OUTPUT"
+
+      - name: Read Component Base Versions
+        id: read-component-versions
+        uses: optivem/actions/read-base-versions@v1
+        with:
+          entries: ${{ steps.component-entries.outputs.entries }}
+
+      - name: Compose Component Tags
+        id: compose-component-tags
+        uses: optivem/actions/compose-tags@v1
+        with:
+          versions: ${{ steps.read-component-versions.outputs.versions }}
+
+      - name: Tag Docker Images with Component Release Versions
+        uses: optivem/actions/tag-docker-images@v1
+        with:
+          image-tags: ${{ steps.compose-component-tags.outputs.tags }}
+          registry-username: ${{ github.repository_owner }}
+          token: ${{ secrets.GHCR_TOKEN }}
+
+      # Multitier components also get a <image>-v<x.y.z> git tag, which is what
+      # bump-patch-versions watches to bump their VERSION files. A monolith has none.
+      - name: Extract Component Versions for Git Tags
+        id: component-tag-versions
+        if: inputs.architecture == 'multitier'
+        shell: bash
+        env:
+          VERSIONS: ${{ steps.read-component-versions.outputs.versions }}
+          BACKEND: ${{ fromJSON(inputs.images).backend }}
+          FRONTEND: ${{ fromJSON(inputs.images).frontend }}
+        run: |
+          set -euo pipefail
+          backend=$(jq -r --arg img "/${BACKEND}:" '.[] | select(.key | contains($img)) | .version' <<< "$VERSIONS")
+          frontend=$(jq -r --arg img "/${FRONTEND}:" '.[] | select(.key | contains($img)) | .version' <<< "$VERSIONS")
+          [[ -n "$backend" && -n "$frontend" ]] || { echo "::error::Missing component version (backend='$backend', frontend='$frontend')."; exit 1; }
+          echo "backend=$backend" >> "$GITHUB_OUTPUT"
+          echo "frontend=$frontend" >> "$GITHUB_OUTPUT"
+
+      - name: Publish Backend Component Release Tag
+        if: inputs.architecture == 'multitier'
+        uses: optivem/actions/publish-tag@v1
+        with:
+          tag: ${{ fromJSON(inputs.images).backend }}-v${{ steps.component-tag-versions.outputs.backend }}
+          token: ${{ secrets.WORKFLOW_TOKEN }}
+
+      - name: Publish Frontend Component Release Tag
+        if: inputs.architecture == 'multitier'
+        uses: optivem/actions/publish-tag@v1
+        with:
+          tag: ${{ fromJSON(inputs.images).frontend }}-v${{ steps.component-tag-versions.outputs.frontend }}
+          token: ${{ secrets.WORKFLOW_TOKEN }}
+
+      - name: Generate Release Notes
+        id: release-notes
+        uses: optivem/actions/generate-release-notes@v1
+        with:
+          prerelease-version: ${{ needs.check.outputs.version }}
+          release-version: ${{ steps.promote.outputs.version }}
+          artifact-urls: ${{ steps.tag-images.outputs.tagged-image-urls }}
+
+      - name: Create GitHub Release
+        uses: optivem/actions/create-github-release@v1
+        with:
+          tag: ${{ steps.promote.outputs.version }}
+          title: ${{ steps.release-notes.outputs.title }}
+          notes-file: ${{ steps.release-notes.outputs.notes-file }}
+
+  summary:
+    needs: [check, deploy, release]
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+    - name: Summarize Stage
+      uses: optivem/actions/render-system-stage-summary@v1
+      with:
+        stage-name: 'Production Stage'
+        stage-result: >-
+          ${{ (needs.check.result == 'failure' || needs.deploy.result == 'failure' || needs.release.result == 'failure') && 'failure'
+              || (needs.check.result == 'cancelled' || needs.deploy.result == 'cancelled' || needs.release.result == 'cancelled') && 'cancelled'
+              || needs.release.result }}
+        environment: production
+        success-version: ${{ needs.release.outputs.version }}
+        success-artifact-ids: ${{ needs.release.outputs.image-urls }}

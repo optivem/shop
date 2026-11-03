@@ -1,0 +1,240 @@
+name: _qa-stage
+
+# QA stage, shared by every variant: deploys a release candidate created by the cloud
+# acceptance stage (_acceptance-stage.yml) to the QA environment on Cloud Run, runs the smoke
+# tests against it, and records the GitHub deployment to <architecture>-<language>-qa, which is
+# where <architecture>-<language>-qa-signoff.yml looks for the RC to sign off.
+#
+# Callers (<architecture>-<language>-qa-stage.yml) own the dispatch trigger, the workflow name
+# and concurrency (github.workflow resolves to the caller, so a group here would deadlock).
+#
+# Everything per-variant comes from <architecture>-<language>: the tag prefix, the GitHub
+# environment, and the Cloud Run service and database names (see _deploy-stage-cloud.yml).
+#
+# Cloud Run is the active deploy target. A Docker Compose deploy sits below as one commented
+# block; see the note there before switching to it.
+
+on:
+  workflow_call:
+    inputs:
+      architecture:
+        description: 'Architecture: only multitier for now'
+        required: true
+        type: string
+      language:
+        description: 'Language: java, dotnet, or typescript'
+        required: true
+        type: string
+      test-language:
+        description: 'Language of the smoke tests (java, dotnet, or typescript); empty means the same as language'
+        required: false
+        type: string
+        default: ''
+      images:
+        description: 'JSON map of role to GHCR image name: {"frontend":"multitier-frontend-react","backend":"multitier-backend-java"}. The roles are the compose service names.'
+        required: true
+        type: string
+      version:
+        description: 'Release candidate to deploy (e.g., multitier-java-v1.0.0-rc.1); empty deploys the latest RC'
+        required: false
+        type: string
+        default: ''
+
+permissions: {}
+
+env:
+  PREFIX: ${{ inputs.architecture }}-${{ inputs.language }}
+
+jobs:
+  # === Resolve Release Candidate ===
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ inputs.version || steps.resolve-latest.outputs.tag }}
+      image-urls: ${{ steps.resolve-images.outputs.image-urls }}
+      service-names: ${{ steps.images.outputs.services }}
+    steps:
+      - name: Ensure Environment Variables Defined
+        uses: optivem/actions/validate-env-vars-defined@v1
+        with:
+          names: |
+            GCP_PROJECT_ID
+            GCP_REGION
+            GCP_WORKLOAD_IDENTITY_PROVIDER
+            GCP_SERVICE_ACCOUNT
+            SYSTEM_NAME
+            GHCR_TOKEN
+            WORKFLOW_TOKEN
+        env:
+          GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+          GCP_REGION: ${{ vars.GCP_REGION }}
+          GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          GCP_SERVICE_ACCOUNT: ${{ vars.GCP_SERVICE_ACCOUNT }}
+          SYSTEM_NAME: ${{ vars.SYSTEM_NAME }}
+          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+          WORKFLOW_TOKEN: ${{ secrets.WORKFLOW_TOKEN }}
+
+      # Image URLs and compose service names come out in the same order, which is how
+      # deploy-docker-compose pairs them (Docker Compose block below).
+      - name: Expand Image URLs
+        id: images
+        env:
+          IMAGES: ${{ inputs.images }}
+          BASE: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}
+        run: |
+          set -euo pipefail
+          {
+            echo 'urls<<EOF'
+            jq -r --arg base "$BASE" '.[] | "\($base)/\(.)"' <<< "$IMAGES"
+            echo 'EOF'
+            echo 'services<<EOF'
+            jq -r 'keys_unsorted[]' <<< "$IMAGES"
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      # Only the cloud acceptance stage creates <prefix>-v<x.y.z>-rc.N tags.
+      - name: Resolve Latest RC
+        id: resolve-latest
+        if: inputs.version == ''
+        uses: optivem/actions/resolve-latest-prerelease-tag@v1
+        with:
+          tag-prefix: ${{ env.PREFIX }}-v
+
+      - name: Check RC Exists
+        if: inputs.version != ''
+        uses: optivem/actions/validate-tag-exists@v1
+        with:
+          tag: ${{ inputs.version }}
+
+      - name: Compose Docker Image URLs
+        id: resolve-images
+        uses: optivem/actions/compose-docker-image-urls@v1
+        with:
+          tag: ${{ inputs.version || steps.resolve-latest.outputs.tag }}
+          base-image-urls: ${{ steps.images.outputs.urls }}
+
+  # === Deploy to Cloud Run + Run Smoke Tests ===
+  deploy:
+    needs: check
+    permissions:
+      contents: read
+      id-token: write
+      packages: read
+    uses: ./.github/workflows/_deploy-stage-cloud.yml
+    secrets: inherit
+    with:
+      stage: qa
+      architecture: ${{ inputs.architecture }}
+      language: ${{ inputs.language }}
+      test-language: ${{ inputs.test-language }}
+      images: ${{ inputs.images }}
+      version: ${{ needs.check.outputs.version }}
+
+  # === Docker Compose deploy (inactive) ===
+  # To deploy QA with Docker Compose instead of Cloud Run, delete the `deploy` job above and
+  # uncomment this block. Beware: this is only a zero-cost stand-in for a QA environment. The
+  # stack runs on the GitHub runner and is thrown away when the job ends, so nothing persists
+  # and there is nothing for a tester to log in to. It needs DOCKERHUB_USERNAME (var) and
+  # DOCKERHUB_TOKEN (secret) instead of the GCP settings. Ports use the language digit
+  # (java=1, dotnet=2, typescript=3), as in _acceptance-stage-docker-compose.yml.
+  # deploy:
+  #   needs: check
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     contents: read
+  #     packages: read
+  #   env:
+  #     COMPOSE_DIR: docker/${{ inputs.test-language || inputs.language }}/${{ inputs.architecture }}
+  #     PORT_DIGIT: ${{ ((inputs.test-language || inputs.language) == 'java' && '1') || ((inputs.test-language || inputs.language) == 'dotnet' && '2') || '3' }}
+  #     UI_HEALTH_PATH: ${{ inputs.architecture == 'monolith' && '/health' || '/' }}
+  #   steps:
+  #     - name: Ensure Environment Variables Defined
+  #       uses: optivem/actions/validate-env-vars-defined@v1
+  #       with:
+  #         names: |
+  #           DOCKERHUB_USERNAME
+  #           DOCKERHUB_TOKEN
+  #       env:
+  #         DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
+  #         DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+  #
+  #     - name: Checkout Repository
+  #       uses: actions/checkout@v6
+  #       with:
+  #         ref: ${{ needs.check.outputs.version }}
+  #
+  #     - name: Log in to Docker Hub
+  #       uses: optivem/actions/docker-login@v1
+  #       with:
+  #         username: ${{ vars.DOCKERHUB_USERNAME }}
+  #         password: ${{ secrets.DOCKERHUB_TOKEN }}
+  #
+  #     - name: Log in to GHCR
+  #       uses: optivem/actions/docker-login@v1
+  #       with:
+  #         registry: ghcr.io
+  #         username: ${{ github.repository_owner }}
+  #         password: ${{ secrets.GHCR_TOKEN }}
+  #
+  #     - name: Simulate Deployment (QA Environment)
+  #       uses: optivem/actions/deploy-docker-compose@v1
+  #       with:
+  #         environment: qa
+  #         version: ${{ needs.check.outputs.version }}
+  #         image-urls: ${{ needs.check.outputs.image-urls }}
+  #         service-names: ${{ needs.check.outputs.service-names }}
+  #         compose-file: docker-compose.pipeline.real.yml
+  #         working-directory: ${{ env.COMPOSE_DIR }}
+  #
+  #     - name: Wait for Systems (Simulate Deployment (QA Environment))
+  #       uses: optivem/actions/wait-for-endpoints@v1
+  #       with:
+  #         endpoints: |
+  #           [
+  #             { "name": "MyShop UI", "url": "http://localhost:3${{ env.PORT_DIGIT }}11${{ env.UI_HEALTH_PATH }}" },
+  #             { "name": "MyShop API", "url": "http://localhost:8${{ env.PORT_DIGIT }}11/health" },
+  #             { "name": "ERP", "url": "http://localhost:9${{ env.PORT_DIGIT }}11/erp/health" },
+  #             { "name": "Clock", "url": "http://localhost:9${{ env.PORT_DIGIT }}11/clock/health" }
+  #           ]
+  #         compose-file: docker-compose.pipeline.real.yml
+  #         working-directory: ${{ env.COMPOSE_DIR }}
+  # === End of Docker Compose deploy ===
+
+  # === Record QA Deployment ===
+  # <prefix>-qa-signoff.yml resolves the RC to sign off from this environment's deployments.
+  record:
+    needs: [check, deploy]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ needs.check.outputs.version }}
+      image-urls: ${{ needs.check.outputs.image-urls }}
+    steps:
+      - name: Record QA Deployment
+        uses: optivem/actions/create-deployment@v1
+        with:
+          ref: ${{ needs.check.outputs.version }}
+          environment: ${{ env.PREFIX }}-qa
+          token: ${{ secrets.WORKFLOW_TOKEN }}
+
+  summary:
+    needs: [check, deploy, record]
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+    - name: Summarize Stage
+      uses: optivem/actions/render-system-stage-summary@v1
+      with:
+        stage-name: 'QA Stage'
+        stage-result: >-
+          ${{ (needs.check.result == 'failure' || needs.deploy.result == 'failure' || needs.record.result == 'failure') && 'failure'
+              || (needs.check.result == 'cancelled' || needs.deploy.result == 'cancelled' || needs.record.result == 'cancelled') && 'cancelled'
+              || needs.record.result }}
+        environment: qa
+        success-version: ${{ needs.record.outputs.version }}
+        success-artifact-ids: ${{ needs.record.outputs.image-urls }}

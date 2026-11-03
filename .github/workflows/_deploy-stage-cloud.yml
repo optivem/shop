@@ -1,8 +1,9 @@
 name: _deploy-stage-cloud
 
-# QA / production stage on Cloud Run: deploys a release candidate, then runs the smoke tests.
-# Callers own the dispatch trigger, concurrency, RC resolution and what happens after a green
-# deploy (github.workflow resolves to the caller, so a concurrency group here would deadlock).
+# QA / production deploy on Cloud Run: deploys a release candidate, then runs the smoke tests.
+# Called by _qa-stage.yml and _prod-stage.yml, which own RC resolution and what happens after a
+# green deploy; their callers own the dispatch trigger and concurrency (github.workflow resolves
+# to the top-level caller, so a concurrency group here would deadlock).
 #
 # Everything per-variant comes from <architecture>-<language> and <stage>: the GitHub
 # environment, and the service and database names. The realm comes from <stage> (see
@@ -28,6 +29,11 @@ on:
         description: 'Language: java, dotnet, or typescript'
         required: true
         type: string
+      test-language:
+        description: 'Language of the smoke tests (java, dotnet, or typescript); empty means the same as language'
+        required: false
+        type: string
+        default: ''
       images:
         description: 'JSON map of role to GHCR image name: {"frontend":"multitier-frontend-react","backend":"multitier-backend-java"}'
         required: true
@@ -47,6 +53,7 @@ env:
   PREFIX: ${{ inputs.architecture }}-${{ inputs.language }}
   VERSION: ${{ inputs.version }}
   REALM: ${{ inputs.stage == 'production' && 'shop-prod' || 'shop-qa' }}
+  TEST_LANGUAGE: ${{ inputs.test-language || inputs.language }}
 
 jobs:
   # === Copy the RC's Images + Build Cloud-only Images into Artifact Registry ===
@@ -73,6 +80,10 @@ jobs:
           fi
           if [[ "$ARCHITECTURE" != multitier ]]; then
             echo "::error::Architecture '$ARCHITECTURE' has no cloud stage yet."
+            exit 1
+          fi
+          if [[ "$TEST_LANGUAGE" != java && "$TEST_LANGUAGE" != dotnet && "$TEST_LANGUAGE" != typescript ]]; then
+            echo "::error::Unknown test language '$TEST_LANGUAGE'."
             exit 1
           fi
 
@@ -316,7 +327,7 @@ jobs:
           wait-seconds: '10'
           timeout-seconds: '900'
 
-  # === Run Smoke Tests (TypeScript): they need no login, so they work on every stage ===
+  # === Run Smoke Tests (in the test language): they need no login, so they work on every stage ===
   smoke:
     needs: [promote-images, deploy-stack]
     runs-on: ubuntu-latest
@@ -326,8 +337,8 @@ jobs:
       contents: read
       packages: read
     env:
-      GH_OPTIVEM_CONFIG: gh-optivem-${{ inputs.architecture }}-typescript.yaml
-      # Selects test-config-acceptance-real.json; every URL in it is overridden below.
+      GH_OPTIVEM_CONFIG: gh-optivem-${{ inputs.architecture }}-${{ inputs.test-language || inputs.language }}.yaml
+      # Selects the acceptance environment in every test harness; every URL in it is overridden below.
       ENVIRONMENT: acceptance
       REGION: ${{ vars.GCP_REGION }}
       PROJECT_NUMBER: ${{ needs.promote-images.outputs.project-number }}
@@ -358,7 +369,41 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GHCR_TOKEN }}
 
+      - name: Setup Java
+        if: env.TEST_LANGUAGE == 'java'
+        uses: actions/setup-java@v5
+        with:
+          java-version: 21
+          distribution: temurin
+
+      - name: Setup Gradle
+        if: env.TEST_LANGUAGE == 'java'
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Pre-warm Gradle Wrapper (retry transient CDN flakes)
+        if: env.TEST_LANGUAGE == 'java'
+        uses: nick-fields/retry@v4
+        with:
+          timeout_minutes: 5
+          max_attempts: 3
+          command: cd system-test/java && ./gradlew --version
+
+      - name: Setup .NET
+        if: env.TEST_LANGUAGE == 'dotnet'
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Cache NuGet Packages
+        if: env.TEST_LANGUAGE == 'dotnet'
+        uses: actions/cache@v5
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('system-test/dotnet/**/*.csproj') }}
+          restore-keys: nuget-${{ runner.os }}-
+
       - name: Setup Node
+        if: env.TEST_LANGUAGE == 'typescript'
         uses: actions/setup-node@v6
         with:
           node-version: 22.x
@@ -370,7 +415,15 @@ jobs:
         uses: actions/cache@v5
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('system-test/typescript/package-lock.json') }}
+          key: playwright-${{ runner.os }}-${{ (env.TEST_LANGUAGE == 'java' && hashFiles('system-test/java/build.gradle')) || (env.TEST_LANGUAGE == 'dotnet' && hashFiles('system-test/dotnet/**/*.csproj')) || hashFiles('system-test/typescript/package-lock.json') }}
+
+      - name: Compile System Tests
+        # .NET-only pre-build: Java/TS pre-build implicitly via setupCommands.
+        # Required here so playwright.ps1 (in build output) exists for the
+        # suite's testInstallCommand to invoke.
+        if: env.TEST_LANGUAGE == 'dotnet'
+        run: dotnet build
+        working-directory: system-test/dotnet
 
       - name: Install gh-optivem CLI extension
         uses: optivem/actions/install-gh-optivem@v1
@@ -386,7 +439,7 @@ jobs:
       - name: Point systems.yaml at the Deployed Stack
         run: |
           set -euo pipefail
-          cat > "docker/typescript/${ARCHITECTURE}/systems.yaml" <<EOF
+          cat > "docker/${TEST_LANGUAGE}/${ARCHITECTURE}/systems.yaml" <<EOF
           systems:
             - label: real
               composeFile: docker-compose.local.real.yml
