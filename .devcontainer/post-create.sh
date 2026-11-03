@@ -5,8 +5,9 @@ set -euo pipefail
 sudo chown -R "$(id -u):$(id -g)" "$HOME/.config/gcloud" "$HOME/.config/gh"
 # ~/.claude/commands is a read-only bind mount from the host; skip it
 sudo find "$HOME/.claude" -path "$HOME/.claude/commands" -prune -o -exec chown "$(id -u):$(id -g)" {} +
-# The claude-code feature installs as root at build time, so auto-update fails with no_permissions
-sudo chown -R "$(id -u):$(id -g)" "$(npm root -g)/@anthropic-ai/claude-code"
+# The claude-code feature installs as root at build time, so auto-update fails with no_permissions.
+# Chown the @anthropic-ai scope folder too, not just the package: npm writes the new version next to it.
+sudo chown -R "$(id -u):$(id -g)" "$(npm root -g)/@anthropic-ai"
 
 echo "=== Verifying devcontainer tools ==="
 echo ""

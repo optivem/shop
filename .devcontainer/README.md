@@ -61,7 +61,7 @@ Versions are pinned in [devcontainer.json](devcontainer.json). Update in one pla
 
 ## Claude Code
 
-Login state lives in the `shop-claude-config` volume, so it survives rebuilds. `CLAUDE_CONFIG_DIR` points at `~/.claude` so that `.claude.json` (normally in `$HOME`, which is wiped on rebuild) is stored in the volume too. Your host's personal slash commands (`~/.claude/commands`, e.g. `/execute-plan`, `/create-plan`, `/commit`) are bind-mounted read-only on top of it. Edit them on the host; the container sees changes immediately. The host folder must exist before the container starts. The devcontainer feature installs Claude Code as root, so `post-create.sh` gives the package folder to `vscode`; without that, auto-updates fail with `no_permissions` (visible in `claude doctor`).
+Login state lives in the `shop-claude-config` volume, so it survives rebuilds. `CLAUDE_CONFIG_DIR` points at `~/.claude` so that `.claude.json` (normally in `$HOME`, which is wiped on rebuild) is stored in the volume too. Your host's personal slash commands (`~/.claude/commands`, e.g. `/execute-plan`, `/create-plan`, `/commit`) are bind-mounted read-only on top of it. Edit them on the host; the container sees changes immediately. The host folder must exist before the container starts. The devcontainer feature installs Claude Code as root, so `post-create.sh` gives the `@anthropic-ai` scope folder (package included) to `vscode`; without that, auto-updates fail with `no_permissions` (visible in `claude doctor`).
 
 ## Rebuilding after config changes
 
