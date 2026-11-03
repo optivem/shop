@@ -1,5 +1,9 @@
 name: multitier-java-prod-stage
 
+# Production stage: deploys the latest QA-approved release candidate to production on Cloud Run
+# and publishes the release, then bumps the patch versions. To deploy with Docker Compose
+# instead, see the commented block in _prod-stage.yml.
+
 on:
   workflow_dispatch:
     inputs:
@@ -15,254 +19,26 @@ concurrency:
   group: multitier-java-prod-stage
 
 jobs:
-  check:
-    runs-on: ubuntu-latest
+  prod-stage:
     permissions:
-      contents: read
-    outputs:
-      version: ${{ inputs.version || steps.resolve-latest.outputs.tag }}
-      image-urls: ${{ steps.resolve-images.outputs.image-urls }}
-    steps:
-      - name: Ensure Environment Variables Defined
-        uses: optivem/actions/validate-env-vars-defined@v1
-        with:
-          names: |
-            DOCKERHUB_USERNAME
-            DOCKERHUB_TOKEN
-            WORKFLOW_TOKEN
-        env:
-          DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
-          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
-          WORKFLOW_TOKEN: ${{ secrets.WORKFLOW_TOKEN }}
-
-      - name: Checkout Repository
-        if: inputs.version == ''
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
-      - name: Resolve Latest QA-Approved RC
-        id: resolve-latest
-        if: inputs.version == ''
-        uses: optivem/actions/resolve-latest-prerelease-with-status@v1
-        with:
-          tag-prefix: multitier-java-v
-          status-context: qa/signoff
-          token: ${{ secrets.WORKFLOW_TOKEN }}
-
-      - name: Check RC Exists
-        if: inputs.version != ''
-        uses: optivem/actions/validate-tag-exists@v1
-        with:
-          tag: ${{ inputs.version }}
-
-      - name: Check QA Approved
-        id: qa-status
-        if: inputs.version != ''
-        uses: optivem/actions/get-commit-status@v1
-        with:
-          commit-sha: ${{ inputs.version }}
-          context: qa/signoff
-          state: success
-          token: ${{ secrets.WORKFLOW_TOKEN }}
-
-      - name: Verify QA Approved
-        if: inputs.version != '' && steps.qa-status.outputs.state != 'success'
-        shell: bash
-        env:
-          VERSION: ${{ inputs.version }}
-        run: |
-          echo "::error::Version $VERSION has no successful qa/signoff commit-status. Cannot deploy to production."
-          exit 1
-
-      - name: Generate Release Version
-        id: release-version
-        uses: optivem/actions/compose-release-version@v1
-        with:
-          prerelease-version: ${{ inputs.version || steps.resolve-latest.outputs.tag }}
-
-      - name: Check System Release Already Published
-        id: check-release-tag
-        uses: optivem/actions/check-tag-exists@v1
-        with:
-          tag: ${{ steps.release-version.outputs.version }}
-
-      - name: Verify System Release Not Yet Published
-        if: steps.check-release-tag.outputs.exists == 'true'
-        shell: bash
-        env:
-          TAG: ${{ steps.release-version.outputs.version }}
-        run: |
-          echo "::error::Version $TAG is already released. Bump the VERSION file and create a new RC."
-          exit 1
-
-      - name: Compose Docker Image URLs
-        id: resolve-images
-        uses: optivem/actions/compose-docker-image-urls@v1
-        with:
-          tag: ${{ inputs.version || steps.resolve-latest.outputs.tag }}
-          base-image-urls: |
-            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-frontend-react
-            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-backend-java
-
-  run:
-    needs: check
-    if: needs.check.result == 'success'
-    runs-on: ubuntu-latest
-    environment: multitier-java-production
-    permissions:
+      actions: write
       contents: write
+      id-token: write
       packages: write
-    outputs:
-      version: ${{ steps.promote.outputs.version }}
-      image-urls: ${{ needs.check.outputs.image-urls }}
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.check.outputs.version }}
+    uses: ./.github/workflows/_prod-stage.yml
+    secrets: inherit
+    with:
+      architecture: multitier
+      language: java
+      test-language: java
+      images: '{"frontend":"multitier-frontend-react","backend":"multitier-backend-java"}'
+      version: ${{ inputs.version }}
 
-      - name: Log in to Docker Hub
-        uses: optivem/actions/docker-login@v1
-        with:
-          username: ${{ vars.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Log in to GHCR
-        uses: optivem/actions/docker-login@v1
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GHCR_TOKEN }}
-
-      - name: Simulate Deployment (Production Environment)
-        id: deploy
-        uses: optivem/actions/deploy-docker-compose@v1
-        with:
-          environment: production
-          version: ${{ needs.check.outputs.version }}
-          image-urls: ${{ needs.check.outputs.image-urls }}
-          service-names: |
-            frontend
-            backend
-          compose-file: docker-compose.pipeline.real.yml
-          working-directory: docker/java/multitier
-
-      - name: Wait for Systems (Simulate Deployment (Production Environment))
-        uses: optivem/actions/wait-for-endpoints@v1
-        with:
-          endpoints: |
-            [
-              { "name": "MyShop UI", "url": "http://localhost:3111/" },
-              { "name": "MyShop API", "url": "http://localhost:8111/health" },
-              { "name": "ERP", "url": "http://localhost:9111/erp/health" },
-              { "name": "Clock", "url": "http://localhost:9111/clock/health" }
-            ]
-          compose-file: docker-compose.pipeline.real.yml
-          working-directory: docker/java/multitier
-
-      - name: Generate Release Version
-        id: promote
-        uses: optivem/actions/compose-release-version@v1
-        with:
-          prerelease-version: ${{ needs.check.outputs.version }}
-
-      - name: Tag Docker Images with System Release Version
-        id: tag-images
-        uses: optivem/actions/tag-docker-images@v1
-        with:
-          image-urls: ${{ needs.check.outputs.image-urls }}
-          tag: ${{ steps.promote.outputs.version }}
-          token: ${{ secrets.GHCR_TOKEN }}
-
-      - name: Publish Release Tag
-        uses: optivem/actions/publish-tag@v1
-        with:
-          tag: ${{ steps.promote.outputs.version }}
-          token: ${{ secrets.WORKFLOW_TOKEN }}
-
-      - name: Read Component Base Versions
-        id: read-component-versions
-        uses: optivem/actions/read-base-versions@v1
-        with:
-          entries: |
-            [
-              {"key": "ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-backend-java:${{ needs.check.outputs.version }}",
-               "file": "system/multitier/backend-java/VERSION"},
-              {"key": "ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-frontend-react:${{ needs.check.outputs.version }}",
-               "file": "system/multitier/frontend-react/VERSION"}
-            ]
-
-      - name: Compose Component Tags
-        id: compose-component-tags
-        uses: optivem/actions/compose-tags@v1
-        with:
-          versions: ${{ steps.read-component-versions.outputs.versions }}
-
-      - name: Tag Docker Images with Component Release Versions
-        uses: optivem/actions/tag-docker-images@v1
-        with:
-          image-tags: ${{ steps.compose-component-tags.outputs.tags }}
-          token: ${{ secrets.GHCR_TOKEN }}
-
-      - name: Extract Component Versions for Git Tags
-        id: component-tag-versions
-        shell: bash
-        env:
-          VERSIONS: ${{ steps.read-component-versions.outputs.versions }}
-        run: |
-          backend=$(echo "$VERSIONS" | jq -r '.[] | select(.key | contains("multitier-backend-java")) | .version')
-          frontend=$(echo "$VERSIONS" | jq -r '.[] | select(.key | contains("multitier-frontend-react")) | .version')
-          echo "backend=$backend" >> "$GITHUB_OUTPUT"
-          echo "frontend=$frontend" >> "$GITHUB_OUTPUT"
-
-      - name: Publish Backend Component Release Tag
-        uses: optivem/actions/publish-tag@v1
-        with:
-          tag: multitier-backend-java-v${{ steps.component-tag-versions.outputs.backend }}
-          token: ${{ secrets.WORKFLOW_TOKEN }}
-
-      - name: Publish Frontend Component Release Tag
-        uses: optivem/actions/publish-tag@v1
-        with:
-          tag: multitier-frontend-react-v${{ steps.component-tag-versions.outputs.frontend }}
-          token: ${{ secrets.WORKFLOW_TOKEN }}
-
-      - name: Generate Release Notes
-        id: release-notes
-        uses: optivem/actions/generate-release-notes@v1
-        with:
-          prerelease-version: ${{ needs.check.outputs.version }}
-          release-version: ${{ steps.promote.outputs.version }}
-          artifact-urls: ${{ steps.tag-images.outputs.tagged-image-urls }}
-
-      - name: Create GitHub Release
-        uses: optivem/actions/create-github-release@v1
-        with:
-          tag: ${{ steps.promote.outputs.version }}
-          title: ${{ steps.release-notes.outputs.title }}
-          notes-file: ${{ steps.release-notes.outputs.notes-file }}
-
+  # Lives here, not in _prod-stage.yml, because a `uses:` path cannot be built from inputs.
   bump-patch-version:
-    needs: run
-    if: ${{ !failure() && !cancelled() && needs.run.result == 'success' }}
+    needs: prod-stage
+    if: ${{ !failure() && !cancelled() && needs.prod-stage.result == 'success' }}
     permissions:
       contents: write
     uses: ./.github/workflows/multitier-java-bump-patch-version.yml
     secrets: inherit
-
-  summary:
-    needs: [check, run]
-    if: always()
-    runs-on: ubuntu-latest
-    permissions:
-      actions: write
-    steps:
-    - name: Summarize Stage
-      uses: optivem/actions/render-system-stage-summary@v1
-      with:
-        stage-name: 'Production Stage'
-        stage-result: ${{ (needs.check.result == 'failure' || needs.run.result == 'failure') && 'failure' || (needs.check.result == 'cancelled' || needs.run.result == 'cancelled') && 'cancelled' || needs.run.result }}
-        environment: production
-        success-version: ${{ needs.run.outputs.version }}
-        success-artifact-ids: ${{ needs.run.outputs.image-urls }}

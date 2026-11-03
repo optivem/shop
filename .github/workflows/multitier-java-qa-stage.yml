@@ -1,5 +1,10 @@
 name: multitier-java-qa-stage
 
+# QA stage: deploys a release candidate created by the cloud acceptance stage
+# (multitier-java-acceptance-stage.yml) to QA on Cloud Run and records the deployment to the
+# multitier-java-qa environment, where multitier-java-qa-signoff.yml picks it up. To deploy with
+# Docker Compose instead, see the commented block in _qa-stage.yml.
+
 on:
   workflow_dispatch:
     inputs:
@@ -15,122 +20,17 @@ concurrency:
   group: multitier-java-qa-stage
 
 jobs:
-  check:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    outputs:
-      version: ${{ inputs.version || steps.resolve-latest.outputs.tag }}
-      image-urls: ${{ steps.resolve-images.outputs.image-urls }}
-    steps:
-      - name: Ensure Environment Variables Defined
-        uses: optivem/actions/validate-env-vars-defined@v1
-        with:
-          names: |
-            DOCKERHUB_USERNAME
-            DOCKERHUB_TOKEN
-            WORKFLOW_TOKEN
-        env:
-          DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
-          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
-          WORKFLOW_TOKEN: ${{ secrets.WORKFLOW_TOKEN }}
-
-      - name: Resolve Latest RC
-        id: resolve-latest
-        if: inputs.version == ''
-        uses: optivem/actions/resolve-latest-prerelease-tag@v1
-        with:
-          tag-prefix: multitier-java-v
-
-      - name: Check RC Exists
-        if: inputs.version != ''
-        uses: optivem/actions/validate-tag-exists@v1
-        with:
-          tag: ${{ inputs.version }}
-
-      - name: Compose Docker Image URLs
-        id: resolve-images
-        uses: optivem/actions/compose-docker-image-urls@v1
-        with:
-          tag: ${{ inputs.version || steps.resolve-latest.outputs.tag }}
-          base-image-urls: |
-            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-frontend-react
-            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-backend-java
-
-  run:
-    needs: check
-    if: needs.check.result == 'success'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: read
-    outputs:
-      version: ${{ needs.check.outputs.version }}
-      image-urls: ${{ needs.check.outputs.image-urls }}
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.check.outputs.version }}
-
-      - name: Log in to Docker Hub
-        uses: optivem/actions/docker-login@v1
-        with:
-          username: ${{ vars.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Log in to GHCR
-        uses: optivem/actions/docker-login@v1
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GHCR_TOKEN }}
-
-      - name: Simulate Deployment (QA Environment)
-        id: deploy
-        uses: optivem/actions/deploy-docker-compose@v1
-        with:
-          environment: qa
-          version: ${{ needs.check.outputs.version }}
-          image-urls: ${{ needs.check.outputs.image-urls }}
-          service-names: |
-            frontend
-            backend
-          compose-file: docker-compose.pipeline.real.yml
-          working-directory: docker/java/multitier
-
-      - name: Wait for Systems (Simulate Deployment (QA Environment))
-        uses: optivem/actions/wait-for-endpoints@v1
-        with:
-          endpoints: |
-            [
-              { "name": "MyShop UI", "url": "http://localhost:3111/" },
-              { "name": "MyShop API", "url": "http://localhost:8111/health" },
-              { "name": "ERP", "url": "http://localhost:9111/erp/health" },
-              { "name": "Clock", "url": "http://localhost:9111/clock/health" }
-            ]
-          compose-file: docker-compose.pipeline.real.yml
-          working-directory: docker/java/multitier
-
-      - name: Record QA Deployment
-        uses: optivem/actions/create-deployment@v1
-        with:
-          ref: ${{ needs.check.outputs.version }}
-          environment: multitier-java-qa
-          token: ${{ secrets.WORKFLOW_TOKEN }}
-
-  summary:
-    needs: [check, run]
-    if: always()
-    runs-on: ubuntu-latest
+  qa-stage:
     permissions:
       actions: write
-    steps:
-    - name: Summarize Stage
-      uses: optivem/actions/render-system-stage-summary@v1
-      with:
-        stage-name: 'QA Stage'
-        stage-result: ${{ (needs.check.result == 'failure' || needs.run.result == 'failure') && 'failure' || (needs.check.result == 'cancelled' || needs.run.result == 'cancelled') && 'cancelled' || needs.run.result }}
-        environment: qa
-        success-version: ${{ needs.run.outputs.version }}
-        success-artifact-ids: ${{ needs.run.outputs.image-urls }}
+      contents: read
+      id-token: write
+      packages: read
+    uses: ./.github/workflows/_qa-stage.yml
+    secrets: inherit
+    with:
+      architecture: multitier
+      language: java
+      test-language: java
+      images: '{"frontend":"multitier-frontend-react","backend":"multitier-backend-java"}'
+      version: ${{ inputs.version }}
