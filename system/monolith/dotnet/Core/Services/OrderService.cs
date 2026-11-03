@@ -9,6 +9,8 @@ namespace MyCompany.MyShop.Monolith.Core.Services;
 
 public class OrderService
 {
+    private const int MoneyScale = 2;
+    private const int RateScale = 4;
     private static readonly int RestrictedMonth = 12;
     private static readonly int RestrictedDay = 31;
     private static readonly TimeOnly RestrictedTimeStart = new(23, 59);
@@ -73,14 +75,14 @@ public class OrderService
             Country = country,
             Sku = sku,
             Quantity = quantity,
-            UnitPrice = unitPrice,
-            BasePrice = basePrice,
-            DiscountRate = discountRate,
-            DiscountAmount = discountAmount,
-            SubtotalPrice = subtotalPrice,
-            TaxRate = taxRate,
-            TaxAmount = taxAmount,
-            TotalPrice = totalPrice,
+            UnitPrice = RoundMoney(unitPrice),
+            BasePrice = RoundMoney(basePrice),
+            DiscountRate = RoundRate(discountRate),
+            DiscountAmount = RoundMoney(discountAmount),
+            SubtotalPrice = RoundMoney(subtotalPrice),
+            TaxRate = RoundRate(taxRate),
+            TaxAmount = RoundMoney(taxAmount),
+            TotalPrice = RoundMoney(totalPrice),
             Status = OrderStatus.PLACED,
             AppliedCouponCode = appliedCouponCode,
             Owner = user.Subject,
@@ -101,6 +103,12 @@ public class OrderService
 
         return new PlaceOrderResponse { OrderNumber = orderNumber };
     }
+
+    // Intermediate amounts stay exact; each value is rounded exactly once, here, to the scale of the
+    // column it is persisted in (NUMERIC(10,2) for money, NUMERIC(5,4) for rates).
+    private static decimal RoundMoney(decimal value) => Math.Round(value, MoneyScale, MidpointRounding.AwayFromZero);
+
+    private static decimal RoundRate(decimal value) => Math.Round(value, RateScale, MidpointRounding.AwayFromZero);
 
     private async Task<decimal> GetUnitPriceAsync(string sku)
     {

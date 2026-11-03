@@ -35,9 +35,8 @@ This audit was produced by subagents, and **one of them fabricated evidence on i
 
 ## Steps
 
-▶ **Next:** Explicit rounding. *(Coupon race verified closed 2026-11-03: all seven backends use a conditional `UPDATE … WHERE usage_limit IS NULL OR used_count < usage_limit` inside the order-placement transaction since U1 `04d4550d`; no gap, no code change.)*
+▶ **Next:** Don't leak internal error messages in 500 responses. *(Coupon race verified closed and explicit rounding landed 2026-11-03.)*
 
-- [ ] **Explicit rounding** in `monolith/java`, `backend-java`, `monolith/dotnet`, `backend-dotnet`, mirroring `OrderPricing` (HALF_UP, once per field; 2dp amounts, 4dp rates).
 - [ ] **Don't leak internal error messages in 500 responses.** *(Counts corrected 2026-09-17 by direct verification — an earlier draft of this item said "seven backends, none log", and both halves were wrong.)* **Six of seven** leak `detail: "Internal server error: <exception message>"`; `backend-clean-java` already does it right and is the precedent to copy (`GlobalExceptionHandler.java:32`, `GENERAL_ERROR_DETAIL = "An unexpected error occurred. Please try again later."`, returned at `:195`, with a code comment at `:188-190` explaining why the message must not be exposed).
   - **Extra leak in the two legacy Java backends:** `monolith/java:215-217` and `backend-java:212-214` append `" | Root cause: " + rootCauseMessage` on top of the exception message.
   - **Logging is mostly already there** — `monolith/java:212`, `backend-java:209`, `monolith/dotnet:93`, `backend-dotnet:96`, `backend-typescript:127` and `backend-clean-java:191` all call `log.error("Unexpected error occurred", ex)` or equivalent. **`monolith/typescript` is the sole outlier:** it has no central handler at all — six route-level `catch` blocks each call `internalErrorResponse(message)` (`src/lib/errors.ts:65-76`) and nothing anywhere logs, so there the exception is leaked to the client *and* lost server-side. That backend needs logging added, not just the detail genericized.

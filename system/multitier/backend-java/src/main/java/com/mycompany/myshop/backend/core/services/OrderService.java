@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.Month;
@@ -31,6 +32,8 @@ public class OrderService {
     private static final int DEFAULT_PAGE_SIZE = 50;
     private static final int MAX_PAGE_SIZE = 200;
 
+    private static final int MONEY_SCALE = 2;
+    private static final int RATE_SCALE = 4;
     private static final MonthDay YEAR_END_RESTRICTED_MONTH_DAY = MonthDay.of(Month.DECEMBER, 31);
     private static final LocalTime YEAR_END_RESTRICTED_TIME_START = LocalTime.of(23, 59);
 
@@ -87,9 +90,9 @@ public class OrderService {
         var orderNumber = generateOrderNumber();
 
         var order = new Order(orderNumber, orderTimestamp, country,
-                sku, quantity, unitPrice, basePrice,
-                discountRate, discountAmount, subtotalPrice,
-                taxRate, taxAmount, totalPrice, OrderStatus.PLACED,
+                sku, quantity, roundMoney(unitPrice), roundMoney(basePrice),
+                roundRate(discountRate), roundMoney(discountAmount), roundMoney(subtotalPrice),
+                roundRate(taxRate), roundMoney(taxAmount), roundMoney(totalPrice), OrderStatus.PLACED,
                 appliedCouponCode, user.subject(), user.username());
 
         // Increment first: a rejected increment leaves no order behind.
@@ -102,6 +105,16 @@ public class OrderService {
         var response = new PlaceOrderResponse();
         response.setOrderNumber(orderNumber);
         return response;
+    }
+
+    // Intermediate amounts stay exact; each value is rounded exactly once, here, to the scale of the
+    // column it is persisted in (NUMERIC(10,2) for money, NUMERIC(5,4) for rates).
+    private static BigDecimal roundMoney(BigDecimal value) {
+        return value.setScale(MONEY_SCALE, RoundingMode.HALF_UP);
+    }
+
+    private static BigDecimal roundRate(BigDecimal value) {
+        return value.setScale(RATE_SCALE, RoundingMode.HALF_UP);
     }
 
     private BigDecimal getUnitPrice(String sku) {
