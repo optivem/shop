@@ -284,7 +284,8 @@ so this does not loosen commit stage's self-provisioning contract. See
 
 Parity is scoped to products only: the simulator's promotion endpoint is hardcoded and
 its error responses cannot be provoked on demand, so real-mode twins for those are not
-buildable — see `plans/20260717-1015-component-stub-contract-beyond.md` item 4.
+buildable. The real drivers' `returns*` seeding steps are deliberate no-ops (a real system
+cannot be configured); only `returnsProduct` does real work, by POSTing to the simulator.
 
 `external-contract` is currently **backend-java only**. `backend-dotnet` and
 `backend-typescript` still keep their stub-consumability tests inside the `component`

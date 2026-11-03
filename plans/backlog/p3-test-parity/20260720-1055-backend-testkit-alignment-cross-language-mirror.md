@@ -13,11 +13,24 @@ the `system-test` .NET/TypeScript halves where Item 5 reaches them. **Monolith s
 follow-up decisions on top of it are also Java-first. That leaves .NET and TypeScript **further out of
 sync than before the restructure**. CLAUDE.md's "check all languages" rule says they should catch up —
 but only once the Java shape stops moving, so we do not port a vocabulary that is still being argued
-about. Same sequencing as
-`plans/deferred/20260720-1118-component-stub-contract-cross-language-mirror.md`.
+about. Its sibling `20260720-1118-component-stub-contract-cross-language-mirror` was deleted on 2026-11-03
+because its payload (`20260717-1015`) shipped nothing.
 
 **End result:** `backend-dotnet` and `backend-typescript` carry the same driver-port vocabulary and the
 same assertion-overload surface as `backend-java`, with the three languages' testkits in lockstep.
+
+## ▶ Next executable step (resume here)
+
+**Blocked on U6.** Once the merged `money-strings-end-to-end` plan (meta U6) has landed, run Step 1
+(survey) and then Step 2 (driver-port vocabulary mirror). Do not start Step 3 or Step 4.
+
+## Decisions (2026-11-03)
+
+- Run **Steps 1–2 only** (survey + driver-port vocabulary mirror), sequenced **after** U6
+  `money-strings-end-to-end` lands (meta-plan `20261103-1021`, Q-A / Q-P3d).
+- **Steps 3–4 are dropped, or wait for the money merge.** The money plan settles the assertion
+  surface; re-assess Steps 3–4 against what it ships, and delete them if it already covers the
+  .NET/TS halves.
 
 ## Dependency
 
@@ -121,7 +134,3 @@ terminates in a `BigDecimal` compare regardless. Both satisfy decision 1. Do not
 - **Java side has now shipped in full** (`a731fed8`, `735cea6a`, `85c5b65c`): both Java layers carry
   `String` + numeric overloads on every money/rate step, with byte-identical signature sets, and no
   raw-float money comparison remains. Step 3 has a concrete payload to mirror.
-- Distinct from `20260720-1118-component-stub-contract-cross-language-mirror.md`: that file ports
-  specific **stub-contract test items**; this one ports the **testkit vocabulary and assertion
-  surface** underneath them. They touch the same projects and should be sequenced together if both
-  become live.

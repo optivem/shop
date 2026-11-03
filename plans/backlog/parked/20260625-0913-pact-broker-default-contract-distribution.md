@@ -23,8 +23,9 @@
 >   That fix keeps the *current* file-based default green; this plan replaces that default. The path-rewrite
 >   machinery (`copyContracts`, `contractsPathReplacements`, `dotnetContractsPathReplacements`) is retired
 >   here only if OQ-5 removes the fallback.
-> - **Deferred sibling** `plans/deferred/20260616-0830-component-pact-layer-other-multitier-backends.md`
->   (mirror the opt-in component/Pact layer into dotnet+ts backends) — different concern; leave deferred.
+> - **Sibling (done, plan deleted 2026-11-03)** `20260616-0830-component-pact-layer-other-multitier-backends`
+>   (mirror the component/Pact layer into dotnet+ts backends): both now carry component + Pact
+>   provider-verification suites reading `contracts/frontend-backend.json`.
 
 ## TL;DR
 
