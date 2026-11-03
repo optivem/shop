@@ -1,5 +1,7 @@
 # 2026-11-03 10:21 UTC — Plan coordination meta-plan: backlog execution
 
+> 🤖 **Picked up by agent** — `f003112cc63e` at `2026-11-03T20:27:17Z`
+
 
 ## TL;DR
 
@@ -30,7 +32,7 @@ Session wrapped up on 2026-11-03 (about 17:45 UTC). Resume with `/clear`, then `
 **M4 (P2 Steps 3–9): waiting on one user answer.**
 - The P2 Step 3 QA and prod proof passed on the throwaway branch `p2-step3-proof` (commits 991a2cd2 `_qa-stage.yml`/`_prod-stage.yml`; a0b13346, the Step 4 thin callers plus deletion of the `-cloud` twins; 8f1fb7fb, anonymous smoke). Prod run 41671160377 published the real release `multitier-java-v1.0.235`, and VERSION was bumped to 1.0.236.
 - That tripped Step 3's bare-image guard: `multitier-backend-java:v1.5.217` was pushed, but it came with matching git tags, a release and VERSION bumps.
-- **Ask the user: is that the expected release shape? (Recommended: yes.)** If yes: rebase the 3 branch commits onto main, run cloud acceptance on 1.0.236 → QA → signoff → prod on main, delete the `multitier-java-cloud-v1.0.235` tag and release, run `git fetch --prune --prune-tags`, then delete the branch `p2-step3-proof`.
+- **User answered 2026-11-03 20:30 UTC: yes, that is the expected release shape.** So: rebase the 3 branch commits onto main, run cloud acceptance on 1.0.236 → QA → signoff → prod on main, delete the `multitier-java-cloud-v1.0.235` tag and release, run `git fetch --prune --prune-tags`, then delete the branch `p2-step3-proof`.
 - No GHCR versions can be deleted under the guard, because every `*-cloud-v*` version also carries `sha-*`, `v*-rc.*` or `vX.Y.Z` tags.
 - Prod runs stay pre-approved (user, 2026-11-03).
 - Then Steps 5 (start with the .NET `JsonWireMockClient` scheme fix), 6, 6b, 8 and 9. Step 7 moved to `plans/backlog/p1-ci-pipeline/20261103-1536-gh-optivem-scaffolds-single-pipeline.md`.
