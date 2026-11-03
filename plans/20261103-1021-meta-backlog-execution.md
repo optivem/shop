@@ -16,7 +16,16 @@ Session wrapped up on 2026-11-03 (about 17:45 UTC). Resume with `/clear`, then `
 
 **In progress, needs finishing first, before anything is pushed:**
 - **U6 Phase 2 + U7 (#7 steps 1.4/1.5) + #12 Steps 1–2** were implemented together ("implement all, test once", user decision 2026-11-03) in worktree `/workspaces/shop/.claude/worktrees/agent-a4f007858792e70c6`, branch `worktree-agent-a4f007858792e70c6`. It holds the verified Phase 1 commit plus a WIP commit. The final `--sample` sweep was interrupted partway through.
-- Read the ▶ block of `plans/backlog/p2-product-correctness/20261103-1504-money-strings-end-to-end.md` **in that worktree** for which configs passed. Finish the sweep, split the work into per-unit commits, rebase onto main and push. Nothing from it is on main yet.
+- Read the ▶ block of `plans/backlog/p2-product-correctness/20261103-1504-money-strings-end-to-end.md` **in that worktree** for which configs passed. Finish the sweep, split the work into per-unit commits, rebase onto main and push. Nothing from it is on main yet. Backup branches on origin:
+  - `wip/meta-u6-u7` (`5e18fbd9`): the full WIP, Phase 1 + WIP.
+  - `wip/meta-u6-only` (`306a9cf7`) and `wip/meta-u6-u7-code` (`e552b0f4`): code-only snapshots for splitting the work into U6 / U7 / #12 commits.
+- **Sweep status:**
+  - Passed: monolith-java, monolith-java-legacy, multitier-java, multitier-java-legacy, monolith-dotnet, monolith-dotnet-legacy.
+  - Not yet run: multitier-dotnet (aborted), multitier-dotnet-legacy, the 4 TypeScript configs, `compile-all.sh`, and the 4 `component-test run` configs.
+- **Watch for:**
+  - `system-test/typescript` lint fails on 3 pre-existing warnings (follow-ups item 1). Fix that first if a gate lints.
+  - A sub-agent briefly ran `git stash`/`pop` in that worktree, so a lost edit is possible. The rest of the sweep should catch it.
+- **After pushing:** delete the U6 and U7 plans (all their steps are done) and mark U6, U7 and #12 Steps 1–2 done here. Delete the `wip/meta-*` branches.
 
 **M4 (P2 Steps 3–9): waiting on one user answer.**
 - The P2 Step 3 QA and prod proof passed on the throwaway branch `p2-step3-proof` (commits 991a2cd2 `_qa-stage.yml`/`_prod-stage.yml`; a0b13346, the Step 4 thin callers plus deletion of the `-cloud` twins; 8f1fb7fb, anonymous smoke). Prod run 41671160377 published the real release `multitier-java-v1.0.235`, and VERSION was bumped to 1.0.236.
