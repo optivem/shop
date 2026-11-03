@@ -10,37 +10,21 @@ public interface ThenOrder extends ThenStep<ThenOrder> {
 
     ThenOrder hasUnitPrice(String expectedUnitPrice);
 
-    ThenOrder hasUnitPrice(double expectedUnitPrice);
-
     ThenOrder hasBasePrice(String expectedBasePrice);
-
-    ThenOrder hasBasePrice(double expectedBasePrice);
 
     ThenOrder hasDiscountRate(String expectedDiscountRate);
 
-    ThenOrder hasDiscountRate(double expectedDiscountRate);
-
     ThenOrder hasTaxRate(String expectedTaxRate);
-
-    ThenOrder hasTaxRate(double expectedTaxRate);
 
     ThenOrder hasOrderNumberPrefix(String expectedPrefix);
 
     ThenOrder hasDiscountAmount(String expectedDiscountAmount);
 
-    ThenOrder hasDiscountAmount(double expectedDiscountAmount);
-
     ThenOrder hasSubtotalPrice(String expectedSubtotalPrice);
-
-    ThenOrder hasSubtotalPrice(double expectedSubtotalPrice);
 
     ThenOrder hasTaxAmount(String expectedTaxAmount);
 
-    ThenOrder hasTaxAmount(double expectedTaxAmount);
-
     ThenOrder hasTotalPrice(String expectedTotalPrice);
-
-    ThenOrder hasTotalPrice(double expectedTotalPrice);
 
     ThenOrder hasStatus(OrderStatus expectedStatus);
 

@@ -31,10 +31,6 @@ public class GetProductVerification extends ResponseVerification<GetProductRespo
         return this;
     }
 
-    public GetProductVerification price(double expectedPrice) {
-        return price(Converter.toBigDecimal(expectedPrice));
-    }
-
     public GetProductVerification price(String expectedPrice) {
         return price(Converter.toBigDecimal(expectedPrice));
     }

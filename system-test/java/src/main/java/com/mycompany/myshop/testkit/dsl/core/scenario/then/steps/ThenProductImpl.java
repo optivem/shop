@@ -21,12 +21,6 @@ public class ThenProductImpl extends BaseThenStep<Void, VoidVerification> implem
     }
 
     @Override
-    public ThenProductImpl hasPrice(double price) {
-        verification.price(price);
-        return this;
-    }
-
-    @Override
     public ThenProductImpl hasPrice(String price) {
         verification.price(price);
         return this;

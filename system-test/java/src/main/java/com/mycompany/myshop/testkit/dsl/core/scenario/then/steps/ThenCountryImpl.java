@@ -21,12 +21,6 @@ public class ThenCountryImpl extends BaseThenStep<Void, VoidVerification> implem
     }
 
     @Override
-    public ThenCountryImpl hasTaxRate(double taxRate) {
-        verification.taxRate(taxRate);
-        return this;
-    }
-
-    @Override
     public ThenCountryImpl hasTaxRate(String taxRate) {
         verification.taxRate(taxRate);
         return this;

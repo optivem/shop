@@ -42,18 +42,8 @@ public class ThenOrderImpl<R, V extends ResponseVerification<R>>
         return this;
     }
 
-    public ThenOrderImpl<R, V> hasUnitPrice(double expectedUnitPrice) {
-        orderVerification.unitPrice(expectedUnitPrice);
-        return this;
-    }
-
     public ThenOrderImpl<R, V> hasUnitPrice(String expectedUnitPrice) {
         orderVerification.unitPrice(expectedUnitPrice);
-        return this;
-    }
-
-    public ThenOrderImpl<R, V> hasTotalPrice(double expectedTotalPrice) {
-        orderVerification.totalPrice(expectedTotalPrice);
         return this;
     }
 
@@ -83,28 +73,13 @@ public class ThenOrderImpl<R, V extends ResponseVerification<R>>
         return this;
     }
 
-    public ThenOrderImpl<R, V> hasBasePrice(double expectedBasePrice) {
-        orderVerification.basePrice(expectedBasePrice);
-        return this;
-    }
-
     public ThenOrderImpl<R, V> hasBasePrice(String basePrice) {
         orderVerification.basePrice(basePrice);
         return this;
     }
 
-    public ThenOrderImpl<R, V> hasSubtotalPrice(double expectedSubtotalPrice) {
-        orderVerification.subtotalPrice(expectedSubtotalPrice);
-        return this;
-    }
-
     public ThenOrderImpl<R, V> hasSubtotalPrice(String expectedSubtotalPrice) {
         orderVerification.subtotalPrice(expectedSubtotalPrice);
-        return this;
-    }
-
-    public ThenOrderImpl<R, V> hasDiscountAmount(double expectedDiscountAmount) {
-        orderVerification.discountAmount(expectedDiscountAmount);
         return this;
     }
 
@@ -122,11 +97,6 @@ public class ThenOrderImpl<R, V extends ResponseVerification<R>>
         return hasAppliedCoupon(executionResult.getCouponCode());
     }
 
-    public ThenOrderImpl<R, V> hasTaxRate(double expectedTaxRate) {
-        orderVerification.taxRate(expectedTaxRate);
-        return this;
-    }
-
     public ThenOrderImpl<R, V> hasTaxRate(String expectedTaxRate) {
         orderVerification.taxRate(expectedTaxRate);
         return this;
@@ -134,16 +104,6 @@ public class ThenOrderImpl<R, V extends ResponseVerification<R>>
 
     public ThenOrderImpl<R, V> hasTaxAmount(String expectedTaxAmount) {
         orderVerification.taxAmount(expectedTaxAmount);
-        return this;
-    }
-
-    public ThenOrderImpl<R, V> hasTaxAmount(double expectedTaxAmount) {
-        orderVerification.taxAmount(expectedTaxAmount);
-        return this;
-    }
-
-    public ThenOrderImpl<R, V> hasDiscountRate(double expectedDiscountRate) {
-        orderVerification.discountRate(expectedDiscountRate);
         return this;
     }
 

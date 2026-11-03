@@ -22,23 +22,8 @@ public class Converter {
         return from(value, BigDecimal::new);
     }
 
-    public static BigDecimal toBigDecimal(double value) {
-        return BigDecimal.valueOf(value);
-    }
-
     public static String fromBigDecimal(BigDecimal value) {
         return from(value, BigDecimal::toString);
-    }
-
-    /**
-     * Formats a {@code double} as decimal text for the request DTOs, which are String-typed by design
-     * (see {@code PublishCouponRequest}).
-     *
-     * <p>{@code toPlainString()}, never {@code toString()}: the latter emits scientific notation for
-     * small magnitudes (e.g. {@code 1.0E-7}), which the domain's decimal parsing rejects.
-     */
-    public static String fromDouble(double value) {
-        return BigDecimal.valueOf(value).toPlainString();
     }
 
     public static Integer toInteger(String value) {
@@ -61,10 +46,6 @@ public class Converter {
 
     public static String fromInteger(Integer value) {
         return from(value, Object::toString);
-    }
-
-    public static Double toDouble(String value) {
-        return to(value, Double::parseDouble);
     }
 
     public static String fromInstant(Instant value) {

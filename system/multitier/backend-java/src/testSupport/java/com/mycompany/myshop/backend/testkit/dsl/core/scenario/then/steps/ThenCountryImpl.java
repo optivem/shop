@@ -32,11 +32,6 @@ public class ThenCountryImpl<R, V extends ResponseVerification<R>> extends BaseT
     }
 
     @Override
-    public ThenCountryImpl<R, V> hasTaxRate(double expectedTaxRate) {
-        return hasTaxRate(BigDecimal.valueOf(expectedTaxRate));
-    }
-
-    @Override
     public ThenCountryImpl<R, V> hasTaxRate(String expectedTaxRate) {
         return hasTaxRate(new BigDecimal(expectedTaxRate));
     }

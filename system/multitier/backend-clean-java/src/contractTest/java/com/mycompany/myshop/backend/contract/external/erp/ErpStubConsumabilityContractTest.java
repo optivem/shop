@@ -8,7 +8,7 @@ class ErpStubConsumabilityContractTest extends BaseComponentTest {
     @Test
     void stubProductIsConsumableBySut() {
         scenario
-            .given().product().withSku("BOOK-123").withUnitPrice(10.00)
-            .then().product("BOOK-123").hasSku("BOOK-123").hasPrice(10.00);
+            .given().product().withSku("BOOK-123").withUnitPrice("10.00")
+            .then().product("BOOK-123").hasSku("BOOK-123").hasPrice("10.00");
     }
 }

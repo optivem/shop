@@ -31,10 +31,6 @@ public class GetTaxVerification extends ResponseVerification<GetTaxResponse> {
         return this;
     }
 
-    public GetTaxVerification taxRate(double expectedTaxRate) {
-        return taxRate(Converter.toBigDecimal(expectedTaxRate));
-    }
-
     public GetTaxVerification taxRate(String expectedTaxRate) {
         return taxRate(Converter.toBigDecimal(expectedTaxRate));
     }

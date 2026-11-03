@@ -42,66 +42,16 @@ monolith UIs). It lands as one coordinated change set, so `main` is never in a m
 
 ## ▶ Next executable step (resume here)
 
-Step 1. Pre-flight first: `git status` (don't stage `system-test/java/.../wiremock/JsonWireMockClient.java`
-or `deploy-config.yml`; they belong to another session), `git config core.hooksPath .githooks`,
-`gh optivem system stop`, and the meta-plan's pre-execute grep for in-flight markers. Then convert the
-67 numeric-literal call sites in the 14 `system-test/java/src/test` files listed in Step 1 to `String`
-literals and stop at Step 1's gate. Steps 1–4 are Phase 1 (Java DSL); Steps 5–10 are Phase 2 (wire).
-Nothing is pushed until Step 11.
+Step 5. Phase 1 (Steps 1–4, String-only Java test DSLs) is committed locally and **not pushed**: 75
+call sites converted, 113 `double` members deleted, both backend testkit `Converter.java` files
+removed, Javadoc on the three `ViewOrderVerification`s; compile-all, both backend component-test
+configs and `--sample` for monolith-java and monolith-java-legacy were green. Continue in the same
+worktree with Step 5 (Java backends emit strings). Steps 5–9 are built in the working tree and
+committed together at Step 10; nothing is pushed until Step 11. Note for gates: `./gradlew build` in
+`system-test/java` runs the system tests, which need a booted stack; without one, use
+`./gradlew build -x test`.
 
 ## Steps
-
-### Phase 1 — String-only Java test DSLs (#3 Items 1–5)
-
-- [ ] Step 1 — **Convert `system-test/java` call sites to `String` literals (14 files, 67 sites:
-  31 `with*` setup, 36 assertions).** Keep currency scale for amounts (`20.00` → `"20.00"`, `100` →
-  `"100.00"`) and the written form for rates (`0.20` → `"0.20"`). Files under
-  `system-test/java/src/test/java/com/mycompany/myshop/systemtest/`:
-  `latest/acceptance/{PlaceOrderPositiveTest, PlaceOrderPositiveIsolatedTest, ViewOrderPositiveTest, PublishCouponPositiveTest, PublishCouponNegativeTest}.java`,
-  `latest/contract/erp/BaseErpContractTest.java`, `latest/contract/tax/{BaseTaxContractTest, TaxStubContractTest}.java`,
-  `legacy/mod07/e2e/PlaceOrderPositiveTest.java`, `legacy/mod08/e2e/PlaceOrderPositiveTest.java`,
-  `legacy/mod10/acceptance/PlaceOrderPositiveIsolatedTest.java`,
-  `legacy/mod11/contract/erp/BaseErpContractTest.java`, `legacy/mod11/contract/tax/{BaseTaxContractTest, TaxStubContractTest}.java`.
-  Re-enumerate before editing, since counts drift:
-  `grep -rEn '\.(has|with)?(UnitPrice|TotalPrice|BasePrice|SubtotalPrice|DiscountAmount|TaxRate|TaxAmount|DiscountRate|Price|Discount|unitPrice|totalPrice|subtotalPrice|basePrice|discountAmount|taxRate|taxAmount|discountRate|price|couponHasDiscountRate)\(-?[0-9]' system-test/java/src/test`.
-  Gate: `./gradlew compileTestJava` in `system-test/java`.
-- [ ] Step 2 — **Convert the numeric outliers in the backend testkits (4 files, 8 sites).**
-  `system/multitier/backend-java/src/contractTest/java/com/mycompany/myshop/backend/contract/external/erp/ErpStubConsumabilityContractTest.java`
-  and `.../external/tax/TaxStubConsumabilityContractTest.java` (`withUnitPrice(10.00)`, `hasPrice(10.00)`,
-  `withTaxRate(0.09)`, `hasTaxRate(0.09)`), plus the identical pair in
-  `system/multitier/backend-clean-java/src/contractTest/...`. (#3 placed these in `componentTest`; they
-  have since moved to `contractTest`, and clean-java has its own copy.) Gate: compile in each project.
-- [ ] Step 3 — **Delete the numeric overloads and `Converter.fromDouble` (64 files).** The compiler is the
-  safety net: if Steps 1–2 missed a site, it names it.
-  - `system-test/java/src/main/java/com/mycompany/myshop/testkit/` (26 files): the `double` overloads in
-    `dsl/port/given/steps/{GivenCountry, GivenCoupon, GivenProduct, GivenPromotion}`,
-    `dsl/port/then/steps/{ThenOrder, ThenProduct, ThenCountry, ThenCoupon}`,
-    `dsl/port/when/steps/WhenPublishCoupon` and their `*Impl`s under `dsl/core/scenario/{given,then,when}/steps/`;
-    the verification and stub use-cases `dsl/core/usecase/usecases/{ViewOrderVerification, BrowseCouponsVerification}`,
-    `dsl/core/usecase/external/erp/usecases/{GetProductVerification, ReturnsProduct, ReturnsPromotion}`,
-    `dsl/core/usecase/external/tax/usecases/{GetTaxVerification, ReturnsTaxRate}`. In `common/Converter.java`,
-    delete `fromDouble(double)` and `toBigDecimal(double)` (only the overloads call them) and the
-    already-unused `toDouble(String)`. The `BigDecimal` verification forms stay, because they are the
-    internal canonical type.
-  - `system/multitier/backend-java/src/testSupport/.../testkit/` (19 files): the same port/Impl overloads,
-    including the six added in `85c5b65c`. Delete `common/Converter.java` entirely, since `fromDouble` is
-    its only member.
-  - `system/multitier/backend-clean-java/src/testSupport/.../testkit/` (19 files): same as backend-java;
-    its `Converter.java` also holds only `fromDouble`, so delete it. (Not in #3, because clean-java's
-    testkit came later.)
-  - Gate: `./gradlew build` in `system-test/java`, then
-    `gh optivem component-test run -c gh-optivem-multitier-java.yaml` and
-    `gh optivem component-test run -c gh-optivem-multitier-clean-java.yaml` (unit, integration,
-    component, contract and checkstyle).
-- [ ] Step 4 — **Write the rule down, re-run the census, commit Phase 1 locally (3 files + this plan).**
-  Add Javadoc to `ViewOrderVerification` in `system-test/java`, `backend-java` and `backend-clean-java`
-  (`.../dsl/core/usecase/usecases/ViewOrderVerification.java`): money and rates are written as `String`
-  literals, and there is no numeric form. Re-run Step 1's grep over all three trees and over
-  `src/main`/`src/testSupport` for `(double ` and `fromDouble`: expect zero hits outside non-money code.
-  Check that `hasQuantity`/`hasUsageLimit`/`hasUsedCount` are still `int`. Enumerate; don't eyeball.
-  Gates: `./compile-all.sh`, then `--sample` for `gh-optivem-monolith-java.yaml` and
-  `gh-optivem-monolith-java-legacy.yaml` (latest and legacy call sites both changed). Commit locally with
-  a descriptive message, and **don't push**: Phase 2 follows in the same session.
 
 ### Phase 2 — Money on the wire becomes strings (#5)
 

@@ -6,6 +6,13 @@ import com.mycompany.myshop.backend.usecases.queries.order.ViewOrderDetailsRespo
 import com.mycompany.myshop.backend.domain.values.OrderStatus;
 import com.mycompany.myshop.backend.testkit.dsl.core.shared.ResponseVerification;
 
+/**
+ * The persisted order. Money and rates are written as {@code String} literals ({@code "20.00"},
+ * {@code "0.10"}); there is no numeric ({@code double}) form, because a floating-point literal
+ * loses the author's decimal before the DSL sees it. Values are asserted with
+ * {@code isEqualByComparingTo}, so {@code "20.0"} and {@code "20.00"} are the same amount and the
+ * test states the figure the way the domain writes it.
+ */
 public class ViewOrderVerification extends ResponseVerification<ViewOrderDetailsResponse> {
 
     public ViewOrderVerification(ViewOrderDetailsResponse response) {

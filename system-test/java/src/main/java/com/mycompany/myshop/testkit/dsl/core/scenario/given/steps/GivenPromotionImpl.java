@@ -1,6 +1,5 @@
 package com.mycompany.myshop.testkit.dsl.core.scenario.given.steps;
 
-import com.mycompany.myshop.testkit.common.Converter;
 import com.mycompany.myshop.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.given.GivenImpl;
 import com.mycompany.myshop.testkit.dsl.port.given.steps.GivenPromotion;
@@ -22,11 +21,6 @@ public class GivenPromotionImpl extends BaseGivenStep implements GivenPromotion 
     public GivenPromotionImpl withActive(boolean promotionActive) {
         this.promotionActive = promotionActive;
         return this;
-    }
-
-    @Override
-    public GivenPromotionImpl withDiscount(double discount) {
-        return withDiscount(Converter.fromDouble(discount));
     }
 
     @Override

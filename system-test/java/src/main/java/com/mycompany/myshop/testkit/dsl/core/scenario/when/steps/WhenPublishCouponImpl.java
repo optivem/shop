@@ -1,6 +1,5 @@
 package com.mycompany.myshop.testkit.dsl.core.scenario.when.steps;
 
-import com.mycompany.myshop.testkit.common.Converter;
 import com.mycompany.myshop.testkit.dsl.core.scenario.ExecutionResult;
 import com.mycompany.myshop.testkit.dsl.core.scenario.ExecutionResultBuilder;
 import com.mycompany.myshop.testkit.dsl.port.ChannelMode;
@@ -28,11 +27,6 @@ public class WhenPublishCouponImpl extends BaseWhenStep<Void, VoidVerification> 
     public WhenPublishCouponImpl withCouponCode(String couponCode) {
         this.couponCode = couponCode;
         return this;
-    }
-
-    @Override
-    public WhenPublishCouponImpl withDiscountRate(double discountRate) {
-        return withDiscountRate(Converter.fromDouble(discountRate));
     }
 
     @Override

@@ -12,7 +12,7 @@ class PlaceOrderPositiveTest extends BaseE2eTest {
     @TestTemplate
     @Channel({ChannelType.UI, ChannelType.API})
     void shouldPlaceOrderForValidInput() {
-        app.erp().returnsProduct().sku(SKU).unitPrice(20.00).execute()
+        app.erp().returnsProduct().sku(SKU).unitPrice("20.00").execute()
                 .shouldSucceed();
 
         app.myShop().placeOrder().orderNumber(ORDER_NUMBER).sku(SKU).quantity(5).country(COUNTRY).execute()
@@ -25,7 +25,7 @@ class PlaceOrderPositiveTest extends BaseE2eTest {
                 .orderNumber(ORDER_NUMBER)
                 .sku(SKU)
                 .quantity(5)
-                .unitPrice(20.00)
+                .unitPrice("20.00")
                 .status(OrderStatus.PLACED)
                 .totalPriceGreaterThanZero();
     }

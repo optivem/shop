@@ -11,13 +11,13 @@ class PlaceOrderPositiveTest extends BaseE2eTest {
     @Channel({ChannelType.UI, ChannelType.API})
     void shouldPlaceOrderForValidInput() {
         scenario
-                .given().product().withUnitPrice(20.00)
+                .given().product().withUnitPrice("20.00")
                 .when().placeOrder().withQuantity(5)
                 .then().shouldSucceed()
                 .and().order()
                 .hasOrderNumberPrefix("ORD-")
                 .hasQuantity(5)
-                .hasUnitPrice(20.00)
+                .hasUnitPrice("20.00")
                 .hasStatus(OrderStatus.PLACED)
                 .hasTotalPriceGreaterThanZero();
     }

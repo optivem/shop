@@ -6,6 +6,4 @@ public interface GivenPromotion extends GivenStep {
     GivenPromotion withActive(boolean promotionActive);
 
     GivenPromotion withDiscount(String discount);
-
-    GivenPromotion withDiscount(double discount);
 }

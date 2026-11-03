@@ -1,6 +1,5 @@
 package com.mycompany.myshop.testkit.dsl.core.scenario.given.steps;
 
-import com.mycompany.myshop.testkit.common.Converter;
 import com.mycompany.myshop.testkit.dsl.core.scenario.given.GivenImpl;
 import com.mycompany.myshop.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.testkit.dsl.port.given.steps.GivenCountry;
@@ -21,11 +20,6 @@ public class GivenCountryImpl extends BaseGivenStep implements GivenCountry {
     public GivenCountryImpl withCode(String country) {
         this.country = country;
         return this;
-    }
-
-    @Override
-    public GivenCountryImpl withTaxRate(double taxRate) {
-        return withTaxRate(Converter.fromDouble(taxRate));
     }
 
     @Override

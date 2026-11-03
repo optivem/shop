@@ -3,7 +3,6 @@ package com.mycompany.myshop.testkit.dsl.core.usecase.external.erp.usecases;
 import com.mycompany.myshop.testkit.driver.port.external.erp.ErpDriver;
 import com.mycompany.myshop.testkit.driver.port.external.erp.dtos.ReturnsPromotionRequest;
 import com.mycompany.myshop.testkit.dsl.core.usecase.external.erp.usecases.base.BaseErpUseCase;
-import com.mycompany.myshop.testkit.common.Converter;
 import com.mycompany.myshop.testkit.dsl.core.shared.UseCaseResult;
 import com.mycompany.myshop.testkit.dsl.core.shared.UseCaseContext;
 import com.mycompany.myshop.testkit.dsl.core.shared.VoidVerification;
@@ -25,10 +24,6 @@ public class ReturnsPromotion extends BaseErpUseCase<Void, VoidVerification> {
     public ReturnsPromotion withDiscount(String discount) {
         this.discount = discount;
         return this;
-    }
-
-    public ReturnsPromotion withDiscount(double discount) {
-        return withDiscount(Converter.fromDouble(discount));
     }
 
     @Override

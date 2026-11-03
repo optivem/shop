@@ -9,7 +9,7 @@ public abstract class BaseErpContractTest extends BaseExternalSystemContractTest
     @Test
     void shouldBeAbleToGetProduct() {
         assertDoesNotThrow(() -> scenario
-                .given().product().withSku("BOOK-123").withUnitPrice(12.0)
-                .then().product("BOOK-123").hasSku("BOOK-123").hasPrice(12.0));
+                .given().product().withSku("BOOK-123").withUnitPrice("12.00")
+                .then().product("BOOK-123").hasSku("BOOK-123").hasPrice("12.00"));
     }
 }

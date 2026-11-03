@@ -1,6 +1,5 @@
 package com.mycompany.myshop.testkit.dsl.core.usecase.external.tax.usecases;
 
-import com.mycompany.myshop.testkit.common.Converter;
 import com.mycompany.myshop.testkit.dsl.core.shared.UseCaseContext;
 import com.mycompany.myshop.testkit.dsl.core.shared.UseCaseResult;
 import com.mycompany.myshop.testkit.dsl.core.shared.VoidVerification;
@@ -25,10 +24,6 @@ public class ReturnsTaxRate extends BaseTaxUseCase<Void, VoidVerification> {
     public ReturnsTaxRate taxRate(String taxRate) {
         this.taxRate = taxRate;
         return this;
-    }
-
-    public ReturnsTaxRate taxRate(double taxRate) {
-        return taxRate(Converter.fromDouble(taxRate));
     }
 
     @Override

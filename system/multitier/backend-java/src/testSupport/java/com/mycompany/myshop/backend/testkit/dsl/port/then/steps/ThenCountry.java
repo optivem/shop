@@ -7,7 +7,5 @@ import com.mycompany.myshop.backend.testkit.dsl.port.then.steps.base.ThenStep;
  * TaxGateway}. See {@link ThenProduct} for why the read goes through the production gateway.
  */
 public interface ThenCountry extends ThenStep<ThenCountry> {
-    ThenCountry hasTaxRate(double expectedTaxRate);
-
     ThenCountry hasTaxRate(String expectedTaxRate);
 }

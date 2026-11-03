@@ -16,10 +16,10 @@ class PlaceOrderPositiveTest extends BaseAcceptanceTest {
         scenario
                 .given().product()
                     .withSku("BOOK-123")
-                    .withUnitPrice(20.00)
+                    .withUnitPrice("20.00")
                 .and().country()
                     .withCode("US")
-                    .withTaxRate(0.10)
+                    .withTaxRate("0.10")
                 .when().placeOrder()
                     .withSku("BOOK-123")
                     .withQuantity(5)
@@ -44,12 +44,12 @@ class PlaceOrderPositiveTest extends BaseAcceptanceTest {
     void shouldCalculateBasePriceAsProductOfUnitPriceAndQuantity() {
         scenario
                 .given().product()
-                    .withUnitPrice(20.00)
+                    .withUnitPrice("20.00")
                 .when().placeOrder()
                     .withQuantity(5)
                 .then().shouldSucceed()
                 .and().order()
-                    .hasBasePrice(100.00);
+                    .hasBasePrice("100.00");
     }
 
     @Tag("UC-001.2")
@@ -88,13 +88,13 @@ class PlaceOrderPositiveTest extends BaseAcceptanceTest {
         scenario
                 .given().coupon()
                     .withCouponCode("SUMMER2025")
-                    .withDiscountRate(0.15)
+                    .withDiscountRate("0.15")
                 .when().placeOrder()
                     .withCouponCode("SUMMER2025")
                 .then().shouldSucceed()
                 .and().order()
                     .hasAppliedCoupon("SUMMER2025")
-                    .hasDiscountRate(0.15);
+                    .hasDiscountRate("0.15");
     }
 
     @Tag("UC-001.3")
@@ -107,8 +107,8 @@ class PlaceOrderPositiveTest extends BaseAcceptanceTest {
                 .then().shouldSucceed()
                 .and().order()
                     .hasAppliedCoupon(null)
-                    .hasDiscountRate(0.00)
-                    .hasDiscountAmount(0.00);
+                    .hasDiscountRate("0.00")
+                    .hasDiscountAmount("0.00");
     }
 
     @Tag("UC-001.3")
@@ -117,19 +117,19 @@ class PlaceOrderPositiveTest extends BaseAcceptanceTest {
     void subtotalPriceShouldBeCalculatedAsTheBasePriceMinusDiscountAmountWhenWeHaveCoupon() {
         scenario
                 .given().coupon()
-                    .withDiscountRate(0.15)
+                    .withDiscountRate("0.15")
                 .and().product()
-                    .withUnitPrice(20.00)
+                    .withUnitPrice("20.00")
                 .when().placeOrder()
                     .withCouponCode()
                     .withQuantity(5)
                 .then().shouldSucceed()
                 .and().order()
                     .hasAppliedCoupon()
-                    .hasDiscountRate(0.15)
-                    .hasBasePrice(100.00)
-                    .hasDiscountAmount(15.00)
-                    .hasSubtotalPrice(85.00);
+                    .hasDiscountRate("0.15")
+                    .hasBasePrice("100.00")
+                    .hasDiscountAmount("15.00")
+                    .hasSubtotalPrice("85.00");
     }
 
     @Tag("UC-001.3")
@@ -138,14 +138,14 @@ class PlaceOrderPositiveTest extends BaseAcceptanceTest {
     void subtotalPriceShouldBeSameAsBasePriceWhenNoCoupon() {
         scenario
                 .given().product()
-                    .withUnitPrice(20.00)
+                    .withUnitPrice("20.00")
                 .when().placeOrder()
                     .withQuantity(5)
                 .then().shouldSucceed()
                 .and().order()
-                    .hasBasePrice(100.00)
-                    .hasDiscountAmount(0.00)
-                    .hasSubtotalPrice(100.00);
+                    .hasBasePrice("100.00")
+                    .hasDiscountAmount("0.00")
+                    .hasSubtotalPrice("100.00");
     }
 
     @Tag("UC-001.4")
@@ -214,9 +214,9 @@ class PlaceOrderPositiveTest extends BaseAcceptanceTest {
                     .withCountry("DE")
                 .then().shouldSucceed()
                 .and().order()
-                    .hasSubtotalPrice(20.00)
-                    .hasTaxRate(0.19)
-                    .hasTotalPrice(23.80);
+                    .hasSubtotalPrice("20.00")
+                    .hasTaxRate("0.19")
+                    .hasTotalPrice("23.80");
     }
 
     @Tag("UC-001.3")
@@ -226,15 +226,15 @@ class PlaceOrderPositiveTest extends BaseAcceptanceTest {
         scenario
                 .given().coupon()
                     .withCouponCode("DISC10")
-                    .withDiscountRate(0.10)
+                    .withDiscountRate("0.10")
                 .when().placeOrder()
                     .withCouponCode("DISC10")
                 .then().shouldSucceed()
                 .and().order()
-                    .hasSubtotalPrice(18.00)
-                    .hasDiscountRate(0.10)
+                    .hasSubtotalPrice("18.00")
+                    .hasDiscountRate("0.10")
                     .hasAppliedCoupon("DISC10")
-                    .hasTotalPrice(19.26);
+                    .hasTotalPrice("19.26");
     }
 
     @Tag("UC-001.3")
@@ -245,7 +245,7 @@ class PlaceOrderPositiveTest extends BaseAcceptanceTest {
         scenario
                 .given().coupon()
                     .withCouponCode("COMBO10")
-                    .withDiscountRate(0.10)
+                    .withDiscountRate("0.10")
                 .and().country()
                     .withCode("GB")
                     .withTaxRate("0.20")
@@ -254,10 +254,10 @@ class PlaceOrderPositiveTest extends BaseAcceptanceTest {
                     .withCouponCode("COMBO10")
                 .then().shouldSucceed()
                 .and().order()
-                    .hasSubtotalPrice(18.00)
-                    .hasDiscountRate(0.10)
-                    .hasTaxRate(0.20)
+                    .hasSubtotalPrice("18.00")
+                    .hasDiscountRate("0.10")
+                    .hasTaxRate("0.20")
                     .hasAppliedCoupon("COMBO10")
-                    .hasTotalPrice(21.60);
+                    .hasTotalPrice("21.60");
     }
 }

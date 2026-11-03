@@ -7,7 +7,5 @@ public interface GivenCountry extends GivenStep {
 
     GivenCountry withTaxRate(String taxRate);
 
-    GivenCountry withTaxRate(double taxRate);
-
     GivenCountry doesNotExist();
 }

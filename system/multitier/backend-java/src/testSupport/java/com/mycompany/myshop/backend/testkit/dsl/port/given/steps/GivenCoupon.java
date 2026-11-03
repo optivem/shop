@@ -7,8 +7,6 @@ public interface GivenCoupon extends GivenStep {
 
     GivenCoupon withDiscountRate(String discountRate);
 
-    GivenCoupon withDiscountRate(double discountRate);
-
     GivenCoupon withValidFrom(String validFrom);
 
     GivenCoupon withValidTo(String validTo);

@@ -8,7 +8,7 @@ class TaxStubConsumabilityContractTest extends BaseComponentTest {
     @Test
     void stubTaxIsConsumableBySut() {
         scenario
-            .given().country().withCode("US").withTaxRate(0.09)
-            .then().country("US").hasTaxRate(0.09);
+            .given().country().withCode("US").withTaxRate("0.09")
+            .then().country("US").hasTaxRate("0.09");
     }
 }

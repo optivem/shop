@@ -1,6 +1,5 @@
 package com.mycompany.myshop.testkit.dsl.core.scenario.given.steps;
 
-import com.mycompany.myshop.testkit.common.Converter;
 import com.mycompany.myshop.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.given.GivenImpl;
 import com.mycompany.myshop.testkit.dsl.port.given.steps.GivenProduct;
@@ -25,11 +24,6 @@ public class GivenProductImpl extends BaseGivenStep implements GivenProduct {
 
     public GivenProductImpl withUnitPrice(String unitPrice) {
         this.unitPrice = unitPrice;
-        return this;
-    }
-
-    public GivenProductImpl withUnitPrice(double unitPrice) {
-        withUnitPrice(Converter.fromDouble(unitPrice));
         return this;
     }
 

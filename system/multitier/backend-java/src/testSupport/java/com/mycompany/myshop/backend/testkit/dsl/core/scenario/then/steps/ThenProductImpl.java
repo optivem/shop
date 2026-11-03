@@ -40,11 +40,6 @@ public class ThenProductImpl<R, V extends ResponseVerification<R>> extends BaseT
     }
 
     @Override
-    public ThenProductImpl<R, V> hasPrice(double expectedPrice) {
-        return hasPrice(BigDecimal.valueOf(expectedPrice));
-    }
-
-    @Override
     public ThenProductImpl<R, V> hasPrice(String expectedPrice) {
         return hasPrice(new BigDecimal(expectedPrice));
     }

@@ -43,10 +43,10 @@ class PublishCouponNegativeTest extends BaseAcceptanceTest {
         scenario
                 .given().coupon()
                     .withCouponCode("EXISTING-COUPON")
-                    .withDiscountRate(0.10)
+                    .withDiscountRate("0.10")
                 .when().publishCoupon()
                     .withCouponCode("EXISTING-COUPON")
-                    .withDiscountRate(0.20)
+                    .withDiscountRate("0.20")
                 .then().shouldFail()
                     .errorMessage("The request contains one or more validation errors")
                     .fieldErrorMessage("couponCode", "Coupon code EXISTING-COUPON already exists");
@@ -59,7 +59,7 @@ class PublishCouponNegativeTest extends BaseAcceptanceTest {
         scenario
                 .when().publishCoupon()
                     .withCouponCode("INVALID-LIMIT")
-                    .withDiscountRate(0.15)
+                    .withDiscountRate("0.15")
                     .withUsageLimit(usageLimit)
                 .then().shouldFail()
                     .errorMessage("The request contains one or more validation errors")
@@ -73,7 +73,7 @@ class PublishCouponNegativeTest extends BaseAcceptanceTest {
         scenario
                 .when().publishCoupon()
                     .withCouponCode(code)
-                    .withDiscountRate(0.10)
+                    .withDiscountRate("0.10")
                 .then().shouldFail()
                     .errorMessage("The request contains one or more validation errors")
                     .fieldErrorMessage("code", "Coupon code must not be blank");

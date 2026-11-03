@@ -27,10 +27,6 @@ public class BrowseCouponsVerification extends ResponseVerification<BrowseCoupon
         return this;
     }
 
-    public BrowseCouponsVerification couponHasDiscountRate(String couponCodeAlias, double expectedDiscountRate) {
-        return couponHasDiscountRate(couponCodeAlias, Converter.toBigDecimal(expectedDiscountRate));
-    }
-
     public BrowseCouponsVerification couponHasDiscountRate(String couponCodeAlias, String expectedDiscountRate) {
         return couponHasDiscountRate(couponCodeAlias, Converter.toBigDecimal(expectedDiscountRate));
     }

@@ -13,27 +13,27 @@ class PlaceOrderPositiveIsolatedTest extends BaseAcceptanceTest {
     @Channel({ChannelType.UI, ChannelType.API})
     void shouldApplyFullPriceOnWeekday() {
         scenario
-                .given().product().withUnitPrice(20.00)
+                .given().product().withUnitPrice("20.00")
                 .and().promotion().withActive(false)
                 .and().country().withTaxRate("0.00")
                 .and().clock().withWeekday()
                 .when().placeOrder().withQuantity(5)
                 .then().shouldSucceed()
                 .and().order()
-                    .hasTotalPrice(100.00);
+                    .hasTotalPrice("100.00");
     }
 
     @TestTemplate
     @Channel({ChannelType.UI, ChannelType.API})
     void shouldApplyDiscountWhenPromotionIsActive() {
         scenario
-                .given().product().withUnitPrice(20.00)
+                .given().product().withUnitPrice("20.00")
                 .and().promotion().withActive(true).withDiscount("0.5")
                 .and().country().withTaxRate("0.00")
                 .when().placeOrder().withQuantity(5)
                 .then().shouldSucceed()
                 .and().order()
-                    .hasTotalPrice(50.00);
+                    .hasTotalPrice("50.00");
     }
 
     @TestTemplate

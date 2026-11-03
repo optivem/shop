@@ -21,11 +21,6 @@ public class ThenCouponImpl<R, V extends ResponseVerification<R>>
         verification.hasCouponWithCode(couponCode);
     }
 
-    public ThenCouponImpl<R, V> hasDiscountRate(double discountRate) {
-        verification.couponHasDiscountRate(couponCode, discountRate);
-        return this;
-    }
-
     public ThenCouponImpl<R, V> hasDiscountRate(String discountRate) {
         verification.couponHasDiscountRate(couponCode, discountRate);
         return this;

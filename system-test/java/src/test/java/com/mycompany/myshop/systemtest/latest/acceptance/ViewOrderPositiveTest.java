@@ -13,13 +13,13 @@ class ViewOrderPositiveTest extends BaseAcceptanceTest {
         scenario
                 .given().product()
                     .withSku("BOOK-123")
-                    .withUnitPrice(20.00)
+                    .withUnitPrice("20.00")
                 .and().country()
                     .withCode("US")
                     .withTaxRate("0.10")
                 .and().coupon()
                     .withCouponCode("SUMMER2025")
-                    .withDiscountRate(0.10)
+                    .withDiscountRate("0.10")
                 .and().order()
                     .withSku("BOOK-123")
                     .withQuantity(5)
@@ -32,10 +32,10 @@ class ViewOrderPositiveTest extends BaseAcceptanceTest {
                     .hasSku("BOOK-123")
                     .hasQuantity(5)
                     .hasCountry("US")
-                    .hasUnitPrice(20.00)
+                    .hasUnitPrice("20.00")
                     .hasAppliedCoupon("SUMMER2025")
-                    .hasDiscountRate(0.10)
-                    .hasTaxRate(0.10)
+                    .hasDiscountRate("0.10")
+                    .hasTaxRate("0.10")
                     .hasStatus(OrderStatus.PLACED);
     }
 

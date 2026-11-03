@@ -11,6 +11,13 @@ import java.time.Instant;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * Verifies a viewed order. Money and rates are written as {@code String} literals
+ * ({@code "20.00"}, {@code "0.10"}); there is no numeric ({@code double}) form, because a
+ * floating-point literal loses the author's decimal before the DSL sees it. The {@code BigDecimal}
+ * overloads are the internal canonical type the {@code String} forms parse into, and comparison uses
+ * {@code isEqualByComparingTo}, so scale does not matter ({@code "0.1"} equals {@code "0.10"}).
+ */
 public class ViewOrderVerification extends ResponseVerification<ViewOrderResponse> {
     public ViewOrderVerification(ViewOrderResponse response, UseCaseContext context) {
         super(response, context);
@@ -63,10 +70,6 @@ public class ViewOrderVerification extends ResponseVerification<ViewOrderRespons
         return this;
     }
 
-    public ViewOrderVerification unitPrice(double expectedUnitPrice) {
-        return unitPrice(Converter.toBigDecimal(expectedUnitPrice));
-    }
-
     public ViewOrderVerification unitPrice(String expectedUnitPrice) {
         return unitPrice(Converter.toBigDecimal(expectedUnitPrice));
     }
@@ -91,10 +94,6 @@ public class ViewOrderVerification extends ResponseVerification<ViewOrderRespons
         return this;
     }
 
-    public ViewOrderVerification totalPrice(double expectedTotalPrice) {
-        return totalPrice(Converter.toBigDecimal(expectedTotalPrice));
-    }
-
     public ViewOrderVerification totalPrice(String expectedTotalPrice) {
         return totalPrice(Converter.toBigDecimal(expectedTotalPrice));
     }
@@ -115,10 +114,6 @@ public class ViewOrderVerification extends ResponseVerification<ViewOrderRespons
         return this;
     }
 
-    public ViewOrderVerification subtotalPrice(double expectedSubtotalPrice) {
-        return subtotalPrice(Converter.toBigDecimal(expectedSubtotalPrice));
-    }
-
     public ViewOrderVerification subtotalPrice(String expectedSubtotalPrice) {
         return subtotalPrice(Converter.toBigDecimal(expectedSubtotalPrice));
     }
@@ -129,10 +124,6 @@ public class ViewOrderVerification extends ResponseVerification<ViewOrderRespons
                 .withFailMessage("Expected base price to be %s, but was %s", expectedBasePrice, actualBasePrice)
                 .isEqualByComparingTo(expectedBasePrice);
         return this;
-    }
-
-    public ViewOrderVerification basePrice(double expectedBasePrice) {
-        return basePrice(Converter.toBigDecimal(expectedBasePrice));
     }
 
     public ViewOrderVerification basePrice(String expectedBasePrice) {
@@ -147,10 +138,6 @@ public class ViewOrderVerification extends ResponseVerification<ViewOrderRespons
         return this;
     }
 
-    public ViewOrderVerification discountAmount(double expectedDiscountAmount) {
-        return discountAmount(Converter.toBigDecimal(expectedDiscountAmount));
-    }
-
     public ViewOrderVerification discountAmount(String expectedDiscountAmount) {
         return discountAmount(Converter.toBigDecimal(expectedDiscountAmount));
     }
@@ -163,10 +150,6 @@ public class ViewOrderVerification extends ResponseVerification<ViewOrderRespons
         return this;
     }
 
-    public ViewOrderVerification taxRate(double expectedTaxRate) {
-        return taxRate(Converter.toBigDecimal(expectedTaxRate));
-    }
-
     public ViewOrderVerification taxRate(String expectedTaxRate) {
         return taxRate(Converter.toBigDecimal(expectedTaxRate));
     }
@@ -177,10 +160,6 @@ public class ViewOrderVerification extends ResponseVerification<ViewOrderRespons
                 .withFailMessage("Expected tax amount to be %s, but was %s", expectedTaxAmount, actualTaxAmount)
                 .isEqualByComparingTo(expectedTaxAmount);
         return this;
-    }
-
-    public ViewOrderVerification taxAmount(double expectedTaxAmount) {
-        return taxAmount(Converter.toBigDecimal(expectedTaxAmount));
     }
 
     public ViewOrderVerification taxAmount(String expectedTaxAmount) {
@@ -196,10 +175,6 @@ public class ViewOrderVerification extends ResponseVerification<ViewOrderRespons
     }
 
     public ViewOrderVerification discountRate(String expectedDiscountRate) {
-        return discountRate(Converter.toBigDecimal(expectedDiscountRate));
-    }
-
-    public ViewOrderVerification discountRate(double expectedDiscountRate) {
         return discountRate(Converter.toBigDecimal(expectedDiscountRate));
     }
 

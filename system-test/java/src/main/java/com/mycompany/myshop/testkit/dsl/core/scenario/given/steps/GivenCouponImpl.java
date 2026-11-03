@@ -31,11 +31,6 @@ public class GivenCouponImpl extends BaseGivenStep implements GivenCoupon {
     }
 
     @Override
-    public GivenCouponImpl withDiscountRate(double discountRate) {
-        return withDiscountRate(Converter.fromDouble(discountRate));
-    }
-
-    @Override
     public GivenCouponImpl withDiscountRate(String discountRate) {
         this.discountRate = discountRate;
         return this;

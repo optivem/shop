@@ -7,8 +7,6 @@ public interface WhenPublishCoupon extends WhenStep {
 
     WhenPublishCoupon withDiscountRate(String discountRate);
 
-    WhenPublishCoupon withDiscountRate(double discountRate);
-
     WhenPublishCoupon withValidFrom(String validFrom);
 
     WhenPublishCoupon withValidTo(String validTo);
