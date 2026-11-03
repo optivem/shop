@@ -2,7 +2,7 @@
 
 Split out of `20261007-0737-keycloak-auth-and-order-ownership-rollout` (all rollout steps complete; CI green). None of these block anything; pick up opportunistically and remove each item as it is done.
 
-▶ Next (2026-11-03): nothing actionable. The only item left is the deferred .NET route-table / JWKS-retry item; HEAD bypass (`8f70cdcf`) and non-breaking `npm audit fix` in `frontend-react` are done (38 → 25 advisories; the remaining 25 need `--force`/breaking upgrades and are ignored per Q-F 3).
+▶ Next (2026-11-03): nothing actionable. The only item left is the deferred .NET route-table / JWKS-retry item; HEAD bypass (`6fa4882c`) and non-breaking `npm audit fix` in `frontend-react` are done (38 → 25 advisories; the remaining 25 need `--force`/breaking upgrades and are ignored per Q-F 3).
 
 ## Decisions (Q-F, 2026-11-03): resolved
 
