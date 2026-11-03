@@ -293,6 +293,9 @@ jobs:
         run: gh optivem system-test run --suite e2e-api
       - name: e2e-ui
         run: gh optivem system-test run --suite e2e-ui
+      # === Spec Coverage Gate (lenient: blocks only validation errors and Failing criteria) ===
+      - name: spec-gate
+        run: gh optivem spec check --mode lenient
       # === Tag Release Candidate ===
       - name: Read Base System Version
         id: read-version
