@@ -1,19 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Dev Containers copies the host's ~/.gitconfig in, including a Windows host's
-# `gh auth setup-git` helpers ('C:\Program Files\GitHub CLI\gh.exe'), which
-# fail on every push. Swap them for the container's gh, or drop them so VS
-# Code's forwarding helper applies.
-if git config --global --get-regexp '^credential\..*\.helper$' 2>/dev/null | grep -q '\.exe'; then
-  for host in https://github.com https://gist.github.com; do
-    git config --global --unset-all "credential.$host.helper" || true
-  done
-  if gh auth status >/dev/null 2>&1; then
-    gh auth setup-git
-  fi
-fi
-
 # The workspace is shared with the host, and so are the gitignored .NET bin/ and
 # obj/ folders. Output from a host-side restore or build breaks the container:
 # project.assets.json points at host paths (C:\...), so the C# extension can't

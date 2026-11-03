@@ -45,15 +45,30 @@ ensure_state_backend() {
   echo "$bucket"
 }
 
+# Points Application Default Credentials at a quota project, so Terraform stops warning about a missing one.
+# Skipped when there are no ADC (Terraform then runs on the gcloud session token); a failure is not fatal
+set_adc_quota_project() {
+  local project="$1"
+  gcloud auth application-default print-access-token &> /dev/null || return 0
+  if gcloud auth application-default set-quota-project "$project" --quiet > /dev/null; then
+    echo "  ✅ ADC quota project: $project" >&2
+  else
+    echo "  ⚠️  Could not set the ADC quota project to $project (see stderr above); continuing" >&2
+  fi
+}
+
 # Bills Terraform's API calls to the state project. Without this they go to the project behind the
 # credentials' OAuth client, which isn't ours and may not have the API enabled (403 SERVICE_DISABLED).
 # Every API the provider calls must be enabled here too, so run after billing is linked (some require it).
+# ADC move here too: a quota project left over from a torn-down system would fail the calls that ignore the
+# exports. setup-gcp.sh moves them to the system's project once it exists.
 # Not via $(...): the exports must reach the caller's shell
 use_state_project_for_quota() {
   local project="$1"
   gcloud services enable cloudbilling.googleapis.com cloudresourcemanager.googleapis.com serviceusage.googleapis.com \
     iam.googleapis.com artifactregistry.googleapis.com secretmanager.googleapis.com --project="$project" --quiet >&2
   export GOOGLE_BILLING_PROJECT="$project" USER_PROJECT_OVERRIDE=true
+  set_adc_quota_project "$project"
 }
 
 # terraform init against the bucket; migrates a pre-existing local state file into it

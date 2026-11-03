@@ -7,7 +7,16 @@ sudo chown -R "$(id -u):$(id -g)" "$HOME/.config/gcloud" "$HOME/.config/gh"
 sudo find "$HOME/.claude" -path "$HOME/.claude/commands" -prune -o -exec chown "$(id -u):$(id -g)" {} +
 # The claude-code feature installs as root at build time, so auto-update fails with no_permissions.
 # Chown the @anthropic-ai scope folder too, not just the package: npm writes the new version next to it.
+# The bin/claude symlink as well, so the updater can repoint it.
 sudo chown -R "$(id -u):$(id -g)" "$(npm root -g)/@anthropic-ai"
+CLAUDE_BIN="$(npm config get prefix)/bin/claude"
+if [[ -L "$CLAUDE_BIN" ]]; then sudo chown -h "$(id -u):$(id -g)" "$CLAUDE_BIN"; fi
+
+# npm's global prefix is nvm's, which vscode can write to, so this needs no sudo.
+# terraform/neon.sh holds the one pin for neonctl (NEONCTL_VERSION)
+# shellcheck source=terraform/neon.sh
+source terraform/neon.sh
+npm install -g --no-audit --no-fund "neonctl@${NEONCTL_VERSION}"
 
 echo "=== Verifying devcontainer tools ==="
 echo ""
@@ -26,11 +35,13 @@ check() {
 check gh        "gh --version"
 check gcloud    "gcloud --version | head -1"
 check terraform "terraform version | head -1"
+check neonctl   "neonctl --version"
 check docker    "docker --version"
 check node      "node --version"
 check java      "java -version"
 check dotnet    "dotnet --version"
 check pwsh      "pwsh --version"
+check jq        "jq --version"
 check claude    "claude --version"
 
 echo ""
@@ -54,6 +65,7 @@ echo "1. Authenticate:"
 echo "     gh auth login"
 echo "     gcloud auth login --no-launch-browser"
 echo "     gcloud auth application-default login --no-launch-browser"
+echo "     neonctl login   (only to deploy; or export NEON_API_KEY=<key>)"
 echo ""
 echo "2. Optional: Set up cloud infrastructure (GCP)"
 echo "     cd terraform"

@@ -2,12 +2,12 @@
 set -euo pipefail
 
 # Setup Google Cloud infrastructure using Terraform
-# Prerequisite: gcloud and gh CLIs authenticated
+# Prerequisite: gcloud, gh and neonctl authenticated, and a GCP billing account
 # Optional: SYSTEM_NAME=<4-14 chars> overrides the name derived from the repo (prefixes the GCP project, services, secrets, databases)
+# Optional: KC_ADMIN_PASSWORD=<password> sets the Keycloak admin password on first setup (default: generated)
 # Usage: ./setup-gcp.sh [--yes]   (--yes applies Terraform plans that change/destroy resources without asking)
 
 AUTO_APPROVE=false
-ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
 [[ "${1:-}" == "--yes" ]] && AUTO_APPROVE=true
 
 echo "========================================="
@@ -193,7 +193,10 @@ REGION=$(terraform output -raw region)
 WIF_PROVIDER=$(terraform output -raw workload_identity_provider)
 SA_EMAIL=$(terraform output -raw service_account_email)
 SYSTEM=$(terraform output -raw system_name)
-DB_PREFIX="${SYSTEM//-/_}"
+DB_PREFIX="${SYSTEM//-/_}"   # Postgres identifiers can't hold the hyphen: my-shop -> my_shop
+
+# The project exists now, so Application Default Credentials can use it as their quota project
+set_adc_quota_project "$PROJECT_ID"
 
 # Configure GitHub repo with variables
 echo ""
@@ -272,11 +275,12 @@ fi
 if secret_has_version "$SYSTEM-keycloak-admin-password"; then
   echo "  ✅ Keycloak admin password already stored"
 else
-  read -rsp "Choose a Keycloak admin password (hidden, Enter = generate one): " KC_ADMIN_PASSWORD
-  echo ""
-  if [[ -z "$KC_ADMIN_PASSWORD" ]]; then
+  # Nobody types this password (the pipeline reads it from Secret Manager), so generate it unless
+  # KC_ADMIN_PASSWORD is set; a fresh setup then runs without stopping for input
+  if [[ -z "${KC_ADMIN_PASSWORD:-}" ]]; then
     KC_ADMIN_PASSWORD=$(openssl rand -base64 24)
-    echo "  Generated. Read it back with: gcloud secrets versions access latest --secret=$SYSTEM-keycloak-admin-password"
+    echo "  Generated a Keycloak admin password. Read it back with:"
+    echo "    gcloud secrets versions access latest --secret=$SYSTEM-keycloak-admin-password --project=$PROJECT_ID"
   fi
   echo -n "$KC_ADMIN_PASSWORD" | gcloud secrets versions add "$SYSTEM-keycloak-admin-password" --data-file=- --project="$PROJECT_ID" --quiet > /dev/null
   echo "  ✅ Stored $SYSTEM-keycloak-admin-password"
@@ -299,16 +303,6 @@ for s in GHCR_TOKEN WORKFLOW_TOKEN; do
   fi
 done
 
-# Write local config
-cat > "$ROOT_DIR/deploy-config.yml" <<EOF
-deployment-target: cloud-run
-cloud-run:
-  project-id: $PROJECT_ID
-  region: $REGION
-  service-account: $SA_EMAIL
-EOF
-
-echo "  ✅ Written deploy-config.yml"
 echo ""
 
 echo "========================================="

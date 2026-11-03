@@ -113,6 +113,6 @@ else
 fi
 echo "========================================="
 echo ""
-echo "  Not touched: GitHub repo variables/secrets and deploy-config.yml"
+echo "  Not touched: GitHub repo variables/secrets"
 echo "  (run ./teardown-gcp.sh first if you want those cleaned up for shop)."
 [[ ${#FAILED[@]} -eq 0 ]]

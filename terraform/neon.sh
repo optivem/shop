@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Sourced by setup-gcp.sh / teardown-gcp.sh — Neon Postgres via neonctl.
+# .devcontainer/post-create.sh sources it too, so NEONCTL_VERSION is the one pin for neonctl.
 #
 # One Neon project per system, named after it (so setup and teardown find the same one from any machine);
 # credentials go from neonctl straight into Secret Manager, never through Terraform state.

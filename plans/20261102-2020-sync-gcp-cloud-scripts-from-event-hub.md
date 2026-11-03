@@ -18,7 +18,12 @@
 
 ## ▶ Next executable step (resume here)
 
-Step 0, then Step 1. Refresh the side-by-side comparison: fetch each event-hub file with `gh api repos/optivem/event-hub/contents/<path> -H 'Accept: application/vnd.github.raw'`, re-check both repos' last-commit dates, and classify every hunk as described in the Approach. Then merge event-hub's teardown commits `dd19381`, `e1e1269` and `1d4d5b4` into shop's `teardown-gcp.sh`, hunk by hunk. Don't copy the file over. Do drop shop's step 4, which removes `deploy-config.yml` (see Decisions). Gate: `bash -n teardown-gcp.sh` passes, and `./teardown-gcp.sh < /dev/null` stops at the prompt with the right project, Neon project and variable list.
+Everything except the manual checks is done and on `main` (2026-11-03). Only the user can run these; delete this plan once they pass:
+
+1. **Rebuild the devcontainer** (Command Palette → Dev Containers: Rebuild Container) and check that `post-create.sh` installs `neonctl` without sudo errors and reports every tool, including `neonctl` and `jq`, with no `MISSING`.
+2. **On a Windows host**, with the `gh.exe` credential helpers in the Windows `~/.gitconfig`: attach to the container and check that `fix-git-credential-helpers.sh` (now `postAttachCommand`) prints "Fixed …" (or "Removed …" while the container's `gh` isn't logged in), and that `git push` works without the `gh.exe: not found` error.
+3. **Teardown dry run against shop's live project**: `gcloud auth login --no-launch-browser` (the agent's run found the gcloud token expired, so this wasn't run), then `./teardown-gcp.sh < /dev/null`. It must stop at "Type the GCP project ID to confirm" and show the right GCP project, Neon project and GitHub variable list, with no Terraform warning text. Don't confirm unless a real teardown is wanted. If shop is ever torn down, run it again and expect "✅ Nothing to tear down — already clean." and exit 0.
+4. Optional: re-run `./setup-gcp.sh` (it's idempotent) and check the "✅ ADC quota project: <project>" line.
 
 ## Approach: a best-of-both merge, not a copy
 
@@ -65,6 +70,8 @@ The same files have different names in the two repos. Shop's single-pipeline pla
 
 ## Findings (2026-11-02, shop `main` vs event-hub `main`)
 
+Re-checked 2026-11-03 (Step 0): event-hub moved on in `setup-gcp.sh` (`537a6ad` generates the Keycloak admin password instead of prompting, taken; `4254341`/`835a1f9` print the custom domains, left for the custom-domains plan) and in `.devcontainer/post-create.sh` (`75aec36`, its own version of shop's Claude Code chown, combined with shop's). `teardown-everything.sh` exists only in shop and has none of the three teardown bugs; only its `deploy-config.yml` mention changed. Every other finding below still held.
+
 Source of truth for the teardown/ADC part: event-hub's own plan `plans/20261102-2015-sync-gcp-scripts-to-shop.md`.
 
 **To port**
@@ -97,30 +104,17 @@ Source of truth for the teardown/ADC part: event-hub's own plan `plans/20261102-
 
 ## Steps
 
-- [ ] Step 0: Refresh the comparison (cloud files and `.devcontainer/`). Fetch event-hub's current versions of every file in the table above, re-check the last-commit dates, and diff each one against shop. Classify every hunk (a)–(d) as described in the Approach, and update the Findings if anything changed since 2026-11-02.
-- [ ] Step 1: Merge the teardown fixes into `teardown-gcp.sh`. Start from shop's file and work in event-hub's changes (as of `1d4d5b4`) hunk by hunk, keeping anything shop does better:
-  - Read Terraform outputs with `terraform output -json` + `jq` (`.project_id.value // empty`), not `-raw`
-  - With no state project or no `project_id`, don't exit: fall back to `SYSTEM_NAME` or the repo-derived name (same rule as `terraform/main.tf`) and skip the Terraform step with "(skipped: no GCP project in the Terraform state)"
-  - Before confirming, list the GitHub variables that actually exist (`LEFTOVER_VARIABLES`). If there's no project, no Neon project, no variables, print "already clean" and exit 0
-  - Prompt: "Type the GCP project ID to confirm"; with no project, ask for the system name
-  - Drop `--yes` from `gh variable delete`; set `GH_DELETE_FAILED=1` on a real failure and surface it in step 3 and the banner, with a `gh variable delete <name>` hint
-  - Wrap the billing lookup and `terraform destroy` in `if [[ -n "$PROJECT_ID" ]]`, and keep the `cd -` balanced (step 4 relies on it)
-- [ ] Step 2: Port `set_adc_quota_project` into `terraform/state-backend.sh`, call it from `use_state_project_for_quota` and from `setup-gcp.sh` after `DB_PREFIX=`. Update the prerequisite comment at the top of `setup-gcp.sh`.
-- [ ] Step 3: Check `teardown-everything.sh` for the same bugs (`--yes`, `-raw` outputs, `exit 1` on empty state) and fix it the same way.
-- [ ] Step 4: Merge `terraform/README.md`. Take event-hub's newer structure and content (state backend, Neon, prerequisites, naming), and keep or adapt shop's parts: a shop naming table with the variant databases, a setup step list matching shop's merged `setup-gcp.sh`, and teardown via `./teardown-gcp.sh` instead of `terraform destroy`.
-- [ ] Step 4b: Go through the remaining same-day files (`terraform/main.tf`, Keycloak cloud files, `build-cloud-images`, `deploy-keycloak-cloud`) hunk by hunk. Take any general improvement from event-hub, and keep the shop-specific parts. Add anything where shop is ahead to the "back-port to event-hub" list at the end of this plan.
-- [ ] Step 4c: Merge the devcontainer as listed under Findings → Devcontainer: install neonctl and check it, add the `jq` check, settle on one credential-helper mechanism, add `.devcontainer/.gitattributes`, and merge the README sections. Then run `git add --renormalize .devcontainer` and confirm that nothing changes. Regenerate `devcontainer-lock.json` only if features change.
-- [ ] Step 5: Verify: rebuild the devcontainer, and check that `post-create.sh` reports every tool (including `neonctl` and `jq`) and that `git push` works without the `gh.exe` error on a Windows host. `bash -n` on every touched script; `./teardown-gcp.sh < /dev/null` against shop's live project stops at the prompt with the right GCP project, Neon project and variable list and no Terraform warning text. Don't confirm unless a real teardown is wanted. If shop is ever torn down, run teardown again and expect "already clean" + exit 0. Optionally re-run `./setup-gcp.sh` (it's idempotent) to see the ADC line.
-- [ ] Step 6: Commit in shop. The message lists the event-hub commits merged in, and every place where shop's version was kept over event-hub's newer one, with the reason.
+- [ ] Step 5 (user only): the manual checks in the ▶ block above.
 
 ## Back-port to event-hub (shop is ahead)
 
-Collected while merging; to hand over to event-hub as its own plan.
+Collected while merging (2026-11-03); to hand over to event-hub as its own plan.
 
 - `deploy-keycloak-cloud`: `--min-instances 0` on Keycloak (check it against event-hub's cold-start plan first)
-- `.devcontainer/post-create.sh`: `chown` the global `claude-code` install so auto-update works
 - `.devcontainer/devcontainer.json`: pin the `gh` CLI feature version
-- Credential helpers: whichever mechanism wins the Step 4c comparison
+- `.devcontainer/fix-git-credential-helpers.sh`: only repoint the helpers to `!gh auth git-credential` when the container's `gh` is logged in; otherwise just drop them, so VS Code's forwarded credentials apply instead of a `gh` that can't answer
+- `.devcontainer/post-create.sh`: chown the whole `@anthropic-ai` scope folder, not just the package (npm writes the new version next to it), as shop does since `ad349cf1`. event-hub's `75aec36` already chowns the scope folder and the `bin/claude` link; shop took the link chown from it, so the two are now equal on this point
+- `terraform/README.md`: shop's expanded Cost section (`c3fd9b8e`, billed services, what keeps idle cost at ~$0, what would start costing money)
 
 ## Decisions (2026-11-02)
 
