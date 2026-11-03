@@ -38,6 +38,14 @@ public class ThenFailure<TSuccessResponse, TSuccessVerification>
     IThenFailure IThenFailure.FieldErrorMessage(string expectedField, string expectedMessage)
         => FieldErrorMessage(expectedField, expectedMessage);
 
+    public ThenFailure<TSuccessResponse, TSuccessVerification> NoOrderPersisted()
+    {
+        _assertions.Add(v => v.NoOrderPersisted());
+        return this;
+    }
+
+    IThenFailure IThenFailure.NoOrderPersisted() => NoOrderPersisted();
+
     /// <summary>
     /// Returns the failure assertion and for further chaining (e.g. .And().Order().HasStatus(...)).
     /// Enables fluent syntax: await Scenario(...).Then().ShouldFail().ErrorMessage("...").And().Order().HasStatus(...);

@@ -6,5 +6,7 @@ public interface ThenFailure extends ThenStep<ThenFailure> {
     ThenFailure errorMessage(String expectedMessage);
 
     ThenFailure fieldErrorMessage(String expectedField, String expectedMessage);
+
+    ThenFailure noOrderPersisted();
 }
 

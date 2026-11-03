@@ -122,7 +122,9 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
             .then()
             .shouldFail()
             .errorMessage('The request contains one or more validation errors')
-            .fieldErrorMessage('couponCode', 'Coupon code INVALIDCOUPON does not exist');
+            .fieldErrorMessage('couponCode', 'Coupon code INVALIDCOUPON does not exist')
+            .and()
+            .noOrderPersisted();
     });
 
     test('cannotPlaceOrderWithCouponThatHasExceededUsageLimit', async ({ scenario }) => {

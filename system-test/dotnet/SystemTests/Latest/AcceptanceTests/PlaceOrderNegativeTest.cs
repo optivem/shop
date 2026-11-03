@@ -153,7 +153,8 @@ public class PlaceOrderNegativeTest : BaseAcceptanceTest
             .When().PlaceOrder().WithCouponCode("INVALIDCOUPON")
             .Then().ShouldFail()
             .ErrorMessage("The request contains one or more validation errors")
-            .FieldErrorMessage("couponCode", "Coupon code INVALIDCOUPON does not exist");
+            .FieldErrorMessage("couponCode", "Coupon code INVALIDCOUPON does not exist")
+            .NoOrderPersisted();
     }
 
     [Theory]

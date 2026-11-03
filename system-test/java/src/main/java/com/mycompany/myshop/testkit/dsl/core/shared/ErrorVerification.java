@@ -46,4 +46,12 @@ public class ErrorVerification extends ResponseVerification<SystemError> {
 
         return this;
     }
+
+    public ErrorVerification noOrderPersisted() {
+        var error = getResponse();
+        assertThat(error)
+                .withFailMessage("Expected the rejected operation to yield an error response (nothing persisted), but no error was returned")
+                .isNotNull();
+        return this;
+    }
 }

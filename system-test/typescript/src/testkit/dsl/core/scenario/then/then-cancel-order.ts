@@ -124,6 +124,13 @@ export class ThenCancelOrderFailure implements PromiseLike<void> {
     return this;
   }
 
+  noOrderPersisted(): this {
+    this.stage._addErrorAssertion((error) => {
+      expect(error, 'Expected the rejected operation to yield an error response (nothing persisted)').toBeDefined();
+    });
+    return this;
+  }
+
   order(): ThenCancelOrderOrder {
     return new ThenCancelOrderOrder(this.stage);
   }

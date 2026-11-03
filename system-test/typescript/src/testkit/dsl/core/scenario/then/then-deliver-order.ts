@@ -90,6 +90,13 @@ export class ThenDeliverOrderFailure implements PromiseLike<void> {
     return this;
   }
 
+  noOrderPersisted(): this {
+    this.stage._addErrorAssertion((error) => {
+      expect(error, 'Expected the rejected operation to yield an error response (nothing persisted)').toBeDefined();
+    });
+    return this;
+  }
+
   fieldErrorMessage(field: string, message: string): this {
     this.stage._addErrorAssertion((error, useCaseContext) => {
       const expandedMessage = useCaseContext.expandAliases(message);

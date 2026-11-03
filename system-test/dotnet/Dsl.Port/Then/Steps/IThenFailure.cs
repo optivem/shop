@@ -8,6 +8,8 @@ public interface IThenFailure
 
     IThenFailure FieldErrorMessage(string expectedField, string expectedMessage);
 
+    IThenFailure NoOrderPersisted();
+
     IThenFailureAnd And();
 
     TaskAwaiter GetAwaiter();

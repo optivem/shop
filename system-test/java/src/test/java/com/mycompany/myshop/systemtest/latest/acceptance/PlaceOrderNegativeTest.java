@@ -169,7 +169,8 @@ class PlaceOrderNegativeTest extends BaseAcceptanceTest {
                     .withCouponCode("INVALIDCOUPON")
                 .then().shouldFail()
                     .errorMessage("The request contains one or more validation errors")
-                    .fieldErrorMessage("couponCode", "Coupon code INVALIDCOUPON does not exist");
+                    .fieldErrorMessage("couponCode", "Coupon code INVALIDCOUPON does not exist")
+                .and().noOrderPersisted();
     }
 
     @Tag("UC-001.11")

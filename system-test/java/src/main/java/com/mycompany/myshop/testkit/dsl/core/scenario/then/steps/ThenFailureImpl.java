@@ -32,6 +32,11 @@ public class ThenFailureImpl<R, V extends ResponseVerification<R>>
         return this;
     }
 
+    public ThenFailureImpl<R, V> noOrderPersisted() {
+        failureVerification.noOrderPersisted();
+        return this;
+    }
+
     @Override
     public ThenFailureImpl<R, V> and() {
         return this;

@@ -318,6 +318,13 @@ export class ThenFailure implements PromiseLike<void> {
     return this;
   }
 
+  noOrderPersisted(): this {
+    this.stage._addErrorAssertion((error) => {
+      expect(error, 'Expected the rejected operation to yield an error response (nothing persisted)').toBeDefined();
+    });
+    return this;
+  }
+
   and(): this {
     return this;
   }

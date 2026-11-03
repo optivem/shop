@@ -17,6 +17,12 @@ public class SystemErrorFailureVerification : ErrorVerification<SystemError>
         return this;
     }
 
+    public SystemErrorFailureVerification NoOrderPersisted()
+    {
+        Response.ShouldNotBeNull("Expected the rejected operation to yield an error response (nothing persisted), but no error was returned");
+        return this;
+    }
+
     public SystemErrorFailureVerification FieldErrorMessage(string expectedField, string expectedMessage)
     {
         var expandedExpectedField = Context.ExpandAliases(expectedField);
