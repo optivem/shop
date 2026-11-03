@@ -26,26 +26,7 @@ None. All resolved before execution; the acceptance naming below was confirmed o
 
 ## ▶ Next executable step (resume here)
 
-Step 2, "Prove it" only. Step 2's code is committed locally in `b893a9cc` (not pushed): `_acceptance-stage.yml`, `_acceptance-stage-docker-compose.yml`, the three renamed multitier-java callers, and a `docker-compose-acceptance` input on `_prerelease-pipeline.yml` that only `prerelease-pipeline-multitier-java.yml` sets. actionlint (with shellcheck) is clean.
-
-**Blocked until CI can validate `gh-optivem-multitier-java.yaml`:** the `inner-loop:` key from `cf2869ad` is rejected by gh-optivem v1.6.105. Fix that first, through a gh-optivem release that accepts the key or by moving the key out; it is not part of this plan. Then push `b893a9cc`. GitHub only registers the renamed workflow files after the push.
-
-1. **Docker gates (no tag):** `gh workflow run prerelease-pipeline-multitier-java.yml -f level=acceptance -f commit-sha=<sha>`. Use a pinned main SHA whose commit-stage `sha-<sha>` images exist. Pinning makes both gates run, because the unpinned staleness skip doesn't apply. Green means:
-   - `multitier-java-acceptance-stage-docker-compose` succeeds, with the 11 latest suites and sonar run.
-   - `multitier-java-acceptance-stage-docker-compose-legacy` succeeds, with the 26 `modNN-*` suites run and the Playwright 1.64.0 install step run on a cache miss.
-   - The pipeline's `acceptance-stage` job skips the RC check, and `qa-stage`/`qa-signoff` are skipped. With `level=qa` they are skipped too.
-   - **No tag is created:** `git ls-remote --tags origin 'multitier-java-v*-rc.*'` shows the same list before and after.
-2. **Cloud RC owner:** `gh workflow run multitier-java-acceptance-stage.yml -f commit-sha=<same sha>`. Green means:
-   - Deploy, the Java harness and the 11 suites against Cloud Run succeed. This is the first time Java tests run against Cloud Run (Surprise 1).
-   - `publish-tag` creates `multitier-java-v<VERSION>-rc.<run_number>` on `<sha>`.
-   - `verify-rc-tag` resolves that tag, and `sonar` succeeds.
-   - GHCR `multitier-frontend-react` and `multitier-backend-java` carry the same rc tag.
-   - No `multitier-java-cloud-v*` tag is created.
-3. Then tick Step 2 and move on to Step 3.
-
-Notes for the proof:
-- The cloud caller kept the old Docker file's path, so it inherits that workflow's run history and README badge. `get-last-workflow-run` may see an old Docker run, but that only affects unpinned runs.
-- Until Step 3, the meta `tag-meta-rc` manifest needs a QA-approved multitier-java RC at the current VERSION. Getting one takes a manual cloud run, then `multitier-java-qa-stage.yml`, then `multitier-java-qa-signoff.yml`.
+Step 3: do QA and prod for multitier-java (`_qa-stage.yml`, `_prod-stage.yml`). Step 2 was proven on 2026-11-03: the Docker gates were green with no tag (prerelease-pipeline-multitier-java run 41644200045), and cloud acceptance run 41661973939 was green and created `multitier-java-v1.0.235-rc.3268` on `b712cfbb`. QA must resolve that cloud-created RC.
 
 ## Inventory (Step 1 result, 2026-11-02)
 
@@ -120,15 +101,9 @@ All three take `secrets: inherit`. They use `GHCR_TOKEN`, `WORKFLOW_TOKEN` and `
 
 ## Steps
 
-- [ ] Step 2: Prototype acceptance on multitier-java (two tracks, see Outcomes).
-  - **Cloud:** create `_acceptance-stage.yml` (`workflow_call`) from `_acceptance-stage-cloud.yml`. Add a `test-language` input with per-language harness (Surprise 1) and the `sonar` job (Surprise 2). RC prefix becomes `${PREFIX}-v` (not `-cloud`, Surprise 8). Add the "Fail If No RC Tag On SHA" check here. `git mv multitier-java-acceptance-stage-cloud.yml multitier-java-acceptance-stage.yml` (after the Docker file moves out of the way) and rewrite it as a thin caller: `workflow_dispatch` only, `commit-sha` input, a commented-out `schedule:` block with a one-line note.
-  - **Docker:** create `_acceptance-stage-docker-compose.yml` from `multitier-java-acceptance-stage.yml` with `suite-set: latest|legacy`, **remove its RC tagging** (gate only). Rename the two Docker callers to `multitier-java-acceptance-stage-docker-compose.yml` and `multitier-java-acceptance-stage-docker-compose-legacy.yml` (separate thin callers). Drop the legacy hourly cron (it is a pipeline gate now).
-  - **Pipeline:** in `_prerelease-pipeline.yml`, for multitier-java only (flag/input, other flavors unchanged until Step 5), dispatch the `-docker-compose[-legacy]` names, drop the RC check after Docker acceptance and stop auto-dispatching QA. Check `_meta-prerelease-pipeline.yml` still behaves (it will find no new multitier-java RC until cloud is dispatched).
-  - **Prove it:** green Docker latest + legacy via the prerelease pipeline (no tag created), then a green manual cloud run that creates `multitier-java-v<x.y.z>-rc.N`.
-  - Leave the other five flavors on the old files.
 - [ ] Step 3: Do the same for `_qa-stage.yml` and `_prod-stage.yml` on multitier-java: cloud active, Docker deploy/wait commented out in one clearly marked block, proven once on a throwaway branch then allowed to drift. QA resolves only cloud-created RCs and records the deployment to `multitier-java-qa` (Surprise 6). Prod takes Docker's release block as is (Surprise 7). Until cutover, after any cloud prod run, confirm no bare `vX.Y.Z` component image was pushed (`docker manifest inspect ghcr.io/optivem/shop/multitier-backend-java:v<VERSION>` should report not found).
 - [ ] Step 4: Cut over multitier-java. Replace `multitier-java-{qa,prod}-stage{,-cloud}.yml` with one caller each, keeping the Docker filenames (Surprise 10), in one commit so the flavor never has two release owners. Once green, delete the `*-cloud-v*` tags and releases (decided 2026-11-02): on origin only `multitier-java-cloud-v1.0.235` (tag + non-prerelease release); local-only `*-cloud-v*-rc.*` tags go with `git fetch --prune --prune-tags`. Check GHCR for cloud-version images and delete them too.
-- [ ] Step 5: Roll out to the other five flavors, using the same per-flavor single-commit cutover (decided 2026-11-02: one flavor at a time, not all six together). Keep the shared `frontend-react` bumps sequential.
+- [ ] Step 5: Roll out to the other five flavors (for the .NET flavors, first fix `system-test/dotnet/Driver.Adapter/Shared/Client/WireMock/JsonWireMockClient.cs:44`: `$"http://{uri.Host}:{uri.Port}"` loses the https scheme against Cloud Run, so use `$"{uri.Scheme}://{uri.Authority}"`, like Java's fix in `b712cfbb`), using the same per-flavor single-commit cutover (decided 2026-11-02: one flavor at a time, not all six together). Keep the shared `frontend-react` bumps sequential.
 - [ ] Step 6: Cost minimization:
   - Remove every active `schedule:` cron from the cloud stages (cloud acceptance keeps its cron commented out). QA and prod are manual only.
   - Deploy Cloud Run straight from the public GHCR images, which removes Artifact Registry storage entirely (decided 2026-11-02, replacing the Docker Hub idea). Checked 2026-11-02: Cloud Run's docs list public GHCR and Docker Hub images as directly deployable. Cloud Run imports the image once at deploy time ("Container images are not pulled from their container repository when a new Cloud Run instance is started"), so pulls happen once per deploy, not once per instance. The shop GHCR images already allow anonymous pulls (verified for `multitier-backend-java` and `multitier-frontend-react`). All seven app images were verified as anonymously pullable on 2026-11-02. The four shared images (`shop-keycloak`, `shop-db-migrate`, `shop-simulators`, `shop-stubs`) are not on GHCR today: `.github/actions/build-cloud-images` builds them during the cloud run and pushes them only to Artifact Registry. Change that action to publish them to GHCR as public packages instead (`ghcr.io/optivem/shop/shop-*`), with the same git-tree-hash tags and the same build-only-if-missing reuse (decided 2026-11-02). Make Keycloak read `SYSTEM` / `RUN_APP_SUFFIX` (project number and region) when it starts, through Cloud Run env vars, not as build args. Then the public image is generic, can be shared by every project and scaffold, and contains no GCP project details. Set the new packages to public visibility. No Docker Hub publishing is needed, and GitHub doesn't bill public package storage or pulls.
