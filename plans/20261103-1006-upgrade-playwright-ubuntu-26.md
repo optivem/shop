@@ -25,7 +25,8 @@ Step 1: in `system-test/typescript/package.json:36`, change `"@playwright/test":
 - [ ] Step 5 — **Verify locally:** run `./compile-all.sh`. Then run `gh optivem system start` → `system-test setup` → `system-test run --sample` → `system stop` for java, dotnet and typescript (`GH_OPTIVEM_CONFIG=gh-optivem-monolith-<language>.yaml`). The devcontainer runs Ubuntu 24.04, so this can't reproduce the 26.04 failure, but it guards against regressions from the upgrade.
 - [ ] Step 6 — **Verify in CI:** commit and push. Dispatch `meta-prerelease-stage.yml` with `gh workflow run meta-prerelease-stage.yml`, then confirm it goes green and that no logs contain `does not support chromium on ubuntu26.04`.
 
-## Open questions
+## Decisions (resolved before execution)
 
-- If the Java 1.44 → 1.64 jump causes API breakage too large to fix in this plan, should Java go to the minimum supporting version (1.61.x) instead? The other option is to split Java into a follow-up, since Java currently passes on the cache plus fallback. Recommendation: try 1.64.0 first and fall back to 1.61.x only if the breakage is large.
-- The alternative fix, pinning `runs-on: ubuntu-24.04` in all 254 jobs, was rejected: it postpones the problem instead of fixing it. If the upgrade stalls, it could still serve as a stopgap.
+- Java goes to 1.64.0 with no fallback to 1.61.x. Any API breakage gets fixed in Step 3.
+- Pinning `runs-on: ubuntu-24.04` was rejected. It is not used as a stopgap.
+- Step 6 is pre-approved: push to main and dispatch `meta-prerelease-stage.yml` without asking.
