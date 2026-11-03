@@ -215,7 +215,7 @@ jobs:
         with:
           timeout_minutes: 10
           max_attempts: 3
-          command: cd system-test/java && npx playwright@1.44.0 install chromium
+          command: cd system-test/java && npx playwright@1.64.0 install chromium
 
       - name: Install gh-optivem CLI extension
         uses: optivem/actions/install-gh-optivem@v1

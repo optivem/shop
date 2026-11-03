@@ -14,15 +14,10 @@
 
 ## ▶ Next executable step (resume here)
 
-Step 1: in `system-test/typescript/package.json:36`, change `"@playwright/test": "^1.55.0"` to `"^1.64.1"`. Then run `npm install` in `system-test/typescript` to regenerate `package-lock.json`, and confirm that `node_modules/playwright-core` in the lock is ≥ 1.61, ideally 1.64.1. Gate: `npx tsc --noEmit` passes in `system-test/typescript`. This unblocks Step 2.
+Step 6: Steps 1–5 are committed. Step 5 is green: compile-all 7/7, and `--sample` 11/11 for monolith java/dotnet/typescript and multitier typescript. The TS blocker was a stale shared docker image, fixed in 724b989d. Push to main, dispatch `meta-prerelease-stage.yml`, and confirm it's green with no `does not support chromium on ubuntu26.04` in its logs.
 
 ## Steps
 
-- [ ] Step 1 — **TypeScript:** in `system-test/typescript/package.json:36`, change `@playwright/test` to `^1.64.1`. Regenerate `package-lock.json` with `npm install`, verify that the lock resolves playwright-core ≥ 1.61, then run `npx tsc --noEmit`.
-- [ ] Step 2 — **.NET:** bump `Microsoft.Playwright` to `1.64.1` in `system-test/dotnet/Common/Common.csproj:11`, `system-test/dotnet/Driver.Adapter/Driver.Adapter.csproj:12` and `system-test/dotnet/SystemTests/SystemTests.csproj:21`. Then run `dotnet build` in `system-test/dotnet`.
-- [ ] Step 3 — **Java:** bump `com.microsoft.playwright:playwright` to `1.64.0` at `system-test/java/build.gradle:44`. Update the matching `npx playwright@1.44.0 install chromium` pins at `.github/workflows/monolith-java-acceptance-stage-legacy.yml:218` and `.github/workflows/multitier-java-acceptance-stage-legacy.yml:224` to `@1.64.0`. Those pins carry a "bump together with build.gradle:44" comment. Fix any API breakage from the 1.44 → 1.64 jump, then run `./gradlew build` in `system-test/java`.
-- [ ] Step 4 — **Sweep for other pins:** grep the repo, excluding `node_modules`, for any remaining Playwright versions in Dockerfiles, workflows, docs and `mcr.microsoft.com/playwright` image tags, and align them. Playwright cache keys hash `build.gradle` / `package-lock.json`, so they invalidate on their own. Confirm the .NET cache key also changes, or invalidate it.
-- [ ] Step 5 — **Verify locally:** run `./compile-all.sh`. Then run `gh optivem system start` → `system-test setup` → `system-test run --sample` → `system stop` for java, dotnet and typescript (`GH_OPTIVEM_CONFIG=gh-optivem-monolith-<language>.yaml`). The devcontainer runs Ubuntu 24.04, so this can't reproduce the 26.04 failure, but it guards against regressions from the upgrade.
 - [ ] Step 6 — **Verify in CI:** commit and push. Dispatch `meta-prerelease-stage.yml` with `gh workflow run meta-prerelease-stage.yml`, then confirm it goes green and that no logs contain `does not support chromium on ubuntu26.04`.
 
 ## Decisions (resolved before execution)
