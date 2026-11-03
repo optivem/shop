@@ -35,7 +35,9 @@ This audit was produced by subagents, and **one of them fabricated evidence on i
 
 ## Steps
 
-- [ ] **Coupon usage race** — fix in `monolith/java`, `monolith/dotnet`, `backend-java`, `backend-dotnet` (the other two defects need no work; see *Audit findings*).
+▶ **Next:** Explicit rounding. *(Coupon race verified closed 2026-11-03: all seven backends use a conditional `UPDATE … WHERE usage_limit IS NULL OR used_count < usage_limit` inside the order-placement transaction since U1 `04d4550d`; no gap, no code change.)*
+
+- [ ] **Explicit rounding** in `monolith/java`, `backend-java`, `monolith/dotnet`, `backend-dotnet`, mirroring `OrderPricing` (HALF_UP, once per field; 2dp amounts, 4dp rates).
 - [ ] **Don't leak internal error messages in 500 responses.** *(Counts corrected 2026-09-17 by direct verification — an earlier draft of this item said "seven backends, none log", and both halves were wrong.)* **Six of seven** leak `detail: "Internal server error: <exception message>"`; `backend-clean-java` already does it right and is the precedent to copy (`GlobalExceptionHandler.java:32`, `GENERAL_ERROR_DETAIL = "An unexpected error occurred. Please try again later."`, returned at `:195`, with a code comment at `:188-190` explaining why the message must not be exposed).
   - **Extra leak in the two legacy Java backends:** `monolith/java:215-217` and `backend-java:212-214` append `" | Root cause: " + rootCauseMessage` on top of the exception message.
   - **Logging is mostly already there** — `monolith/java:212`, `backend-java:209`, `monolith/dotnet:93`, `backend-dotnet:96`, `backend-typescript:127` and `backend-clean-java:191` all call `log.error("Unexpected error occurred", ex)` or equivalent. **`monolith/typescript` is the sole outlier:** it has no central handler at all — six route-level `catch` blocks each call `internalErrorResponse(message)` (`src/lib/errors.ts:65-76`) and nothing anywhere logs, so there the exception is leaked to the client *and* lost server-side. That backend needs logging added, not just the detail genericized.
@@ -50,6 +52,17 @@ This audit was produced by subagents, and **one of them fabricated evidence on i
 
 ## Resolved decisions
 
+- **Q-C (user, 2026-11-03) — explicit rounding:** add explicit rounding to `monolith/java`,
+  `backend-java`, `monolith/dotnet` and `backend-dotnet`, mirroring `backend-clean-java`'s
+  `OrderPricing` constructor (once per field, HALF_UP, 2dp amounts / 4dp rates), so the rounding
+  rule is visible in code rather than inferred from the DDL.
+- **Q-C (user, 2026-11-03) — coupon race shape:** conditional
+  `UPDATE … WHERE used_count < usage_limit` (same shape as production-readiness 1.2.a). U1 already
+  landed atomic coupon increments (commit `04d4550d`), so the race item is **verify-only**: confirm
+  every backend is fixed and fix only a gap.
+- **Q-C (user, 2026-11-03) — 500 detail text:** adopt
+  `"An unexpected error occurred. Please try again later."` verbatim in the other six backends.
+
 - **Money wire format → strings is split into its own plan** (2026-09-17). Moved to
   `plans/20260917-1928-money-wire-format-strings.md`. *Why:* the audit showed it is a breaking API
   contract change needing net-new serializers in all five Java/.NET backends (nothing exists to
@@ -61,35 +74,3 @@ This audit was produced by subagents, and **one of them fabricated evidence on i
   float round-trip and cast-instead-of-parse validation do not exist outside TypeScript. Evidence in
   *Audit findings*. The original "audit the twins and fix in all three languages" item is therefore
   reduced to the coupon race alone.
-
-## Open questions
-
-Raised by the audit, not yet decided. Recommendations given; resolve with `/refine-plan` before
-executing.
-
-- [ ] **Do the four backends get explicit rounding, or is DB-implicit rounding accepted?**
-      `monolith/java`, `backend-java`, `monolith/dotnet` and `backend-dotnet` never round money in
-      code — correctness rides entirely on Postgres coercing into `NUMERIC(10,2)`/`NUMERIC(5,4)` on
-      INSERT. `backend-clean-java` and TypeScript both round explicitly, once per field, HALF_UP.
-      **Recommendation: add explicit rounding to the four**, mirroring `OrderPricing`'s
-      constructor — the behavior is currently correct only by accident of the column type, an
-      in-memory assertion before persistence would see unrounded values, and for a teaching template
-      the rounding rule should be visible in the code rather than inferred from the DDL.
-      *Counter-argument to weigh:* it is behavior-adjacent, so it needs a system-test run, and it
-      widens this plan beyond the defect it was scoped to.
-- [ ] **Does the coupon race fix copy `backend-clean-java`'s shape, or go language-idiomatic?**
-      Options: (a) port the conditional `UPDATE … WHERE used_count < usage_limit` inside the
-      order-placement transaction to all four — matches both the in-repo precedent and the
-      TypeScript fix; (b) use each platform's idiom (JPA `@Version` optimistic locking, EF Core
-      concurrency token). **Recommendation: (a)**, because the precedent already exists and is
-      already tested in this repo, and one story across five backends is the parity the plan is for.
-      Also decide whether to port `CouponRedemptionConcurrencyIntegrationTest` to the four — it is
-      currently the only concurrency coverage in the repo.
-- [ ] **What exactly does the generic 500 `detail` say?** *Largely answered by precedent* —
-      `backend-clean-java` already uses `"An unexpected error occurred. Please try again later."`
-      **Recommendation: adopt that string verbatim in the other six** rather than inventing a new
-      one, so the fix converges on the existing implementation instead of making `backend-clean-java`
-      the odd one out for a second time. The only thing left to confirm is whether the
-      "Please try again later." half is wanted (it is advice, not diagnosis) or whether all seven
-      should shorten to `"An unexpected error occurred."` — the latter means editing seven files
-      instead of six.
