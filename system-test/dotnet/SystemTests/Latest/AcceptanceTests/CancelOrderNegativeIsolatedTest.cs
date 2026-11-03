@@ -26,7 +26,7 @@ public class CancelOrderNegativeIsolatedTest : BaseAcceptanceTest
             .And().Order().WithStatus(OrderStatus.Placed)
             .When().CancelOrder()
             .Then().ShouldFail()
-            .ErrorMessage("Order cancellation is not allowed on December 31st between 22:00 and 23:00")
+            .ErrorMessage("Order cancellation is not allowed on December 31st between 22:00 and 22:30")
             .And().Order()
             .HasStatus(OrderStatus.Placed);
     }

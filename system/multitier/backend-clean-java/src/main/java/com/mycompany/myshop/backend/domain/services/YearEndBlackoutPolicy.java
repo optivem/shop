@@ -40,7 +40,7 @@ public final class YearEndBlackoutPolicy {
                 && !time.get().isBefore(CANCELLATION_BLOCKED_FROM)
                 && !time.get().isAfter(CANCELLATION_BLOCKED_TO)) {
             throw new ValidationException(new RuleViolation.NotAllowed(
-                    "Order cancellation is not allowed on December 31st between 22:00 and 23:00"));
+                    "Order cancellation is not allowed on December 31st between 22:00 and 22:30"));
         }
     }
 

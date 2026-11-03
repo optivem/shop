@@ -23,7 +23,7 @@ class CancelOrderNegativeIsolatedTest extends BaseAcceptanceTest {
                     .withStatus(OrderStatus.PLACED)
                 .when().cancelOrder()
                 .then().shouldFail()
-                    .errorMessage("Order cancellation is not allowed on December 31st between 22:00 and 23:00")
+                    .errorMessage("Order cancellation is not allowed on December 31st between 22:00 and 22:30")
                 .and().order()
                     .hasStatus(OrderStatus.PLACED);
     }

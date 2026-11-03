@@ -29,6 +29,6 @@ describe('CancelOrder', () => {
     await frontend
       .cancelOrder('ORD-1')
       .execute()
-      .wasRejected('Order cancellation is not allowed on December 31st between 22:00 and 23:00');
+      .wasRejected('Order cancellation is not allowed on December 31st between 22:00 and 22:30');
   });
 });

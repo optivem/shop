@@ -163,7 +163,7 @@ public class OrderService
 
             if (currentTime >= cancelBlackoutStart && currentTime <= cancelBlackoutEnd)
             {
-                throw new ValidationException("Order cancellation is not allowed on December 31st between 22:00 and 23:00");
+                throw new ValidationException("Order cancellation is not allowed on December 31st between 22:00 and 22:30");
             }
         }
 

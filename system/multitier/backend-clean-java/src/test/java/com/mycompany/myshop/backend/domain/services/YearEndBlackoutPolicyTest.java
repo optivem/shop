@@ -14,7 +14,7 @@ class YearEndBlackoutPolicyTest {
     private static final String PLACEMENT_MESSAGE =
             "Orders cannot be placed between 23:59 and 00:00 on December 31st";
     private static final String CANCELLATION_MESSAGE =
-            "Order cancellation is not allowed on December 31st between 22:00 and 23:00";
+            "Order cancellation is not allowed on December 31st between 22:00 and 22:30";
 
     @Test
     void allowsPlacementOnAnOrdinaryDay() {
@@ -64,7 +64,7 @@ class YearEndBlackoutPolicyTest {
     }
 
     @Test
-    void allowsCancellationAfterTheWindowClosesEvenThoughItsMessageClaims2300() {
+    void allowsCancellationAfterTheWindowCloses() {
         assertThatCode(() -> YearEndBlackoutPolicy.requireCancellationAllowed(at("2025-12-31T22:30:01Z")))
                 .doesNotThrowAnyException();
         assertThatCode(() -> YearEndBlackoutPolicy.requireCancellationAllowed(at("2025-12-31T22:45:00Z")))
