@@ -23,6 +23,13 @@ commit-stage workflows. Green-local ⟹ green-commit becomes structurally
 guaranteed (identical commands), not just convention-guaranteed (mirrored
 commands + a source-pointer comment).
 
+## Decisions (2026-11-03, these override the open questions below)
+
+- **Where the actions live: shop-local `.github/actions/`, not `optivem/actions`.** The commands are specific to shop, shop already has local actions there (`build-cloud-images`, `find-flavor-rcs`, …), and this means no cross-repo push or `v1` release. Wherever this plan says `optivem/actions`, read `.github/actions/` in shop.
+- **OQ-A: per-concern actions** (`compile`, `lint`, `unit`, `component`).
+- **OQ-B: the action owns the commands.**
+- **OQ-C (pinning): not applicable.** Local actions are referenced by path (`./.github/actions/<name>`).
+
 ## Scope
 
 - **In:** compile, lint, unit, component/Pact step definitions — the test gates

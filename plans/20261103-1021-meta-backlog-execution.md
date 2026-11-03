@@ -1,5 +1,7 @@
 # 2026-11-03 10:21 UTC — Plan coordination meta-plan: backlog execution
 
+> 🤖 **Picked up by agent** — `531392d34340` at `2026-11-03T10:42:45Z`
+
 ## TL;DR
 
 **Why:** The 18 backlog plans overlap on the same files and contracts, several are already done or obsolete, and most are blocked on user decisions, so they can't safely be picked up in isolation while the cloud deploy plan is active.
@@ -9,7 +11,7 @@
 
 U1-U4 are done and on main (frontend-react is on Vite 7, Vitest 3 and React 19; run `npm ci` there after pulling). U4 item 3 was verified on 2026-11-02: compile-all 7/7, TS legacy sample 26/26, multitier java/dotnet/ts targeted and sample 11/11, monolith java sample 11/11.
 
-Next (2026-11-03): **Step M1** in "Steps" below. Run every step of `plans/20261103-1006-upgrade-playwright-ubuntu-26.md`, following that plan's own rules (all of its decisions are resolved, and its Step 6 push and dispatch are pre-approved). CI is red until it lands, and it must land before M2. U5-U12 are blocked on the user answering Q-A..Q-H (see Blocked on user; "accept all recommendations" unblocks all of them). Once answered, follow the order in Wave 2's last paragraph, starting with `/refine-plan` / `/execute-plan` on U5 (`cross-language-parity-fixes`) and `/create-plan` for the CS1 money merge. The original cloud-deploy plan is no longer in `plans/` (2026-11-02), so re-check C8/C9/C10 before scheduling U7/U8.
+Next (2026-11-03): **Step M1** in "Steps" below. Run every step of `plans/20261103-1006-upgrade-playwright-ubuntu-26.md`, following that plan's own rules (all of its decisions are resolved, and its Step 6 push and dispatch are pre-approved). CI is red until it lands, and it must land before M2. Q-A..Q-H were answered on 2026-11-03 (see "User decisions (2026-11-03)"), and the whole meta (M1–M5) runs autonomously. The original cloud-deploy plan is no longer in `plans/` (2026-11-02), so re-check C8/C9/C10 before scheduling U7/U8.
 
 Open follow-ups found during U4 (not fixed): `npm run lint` in `system-test/typescript` fails `--max-warnings 0` on 3 warnings in `tests/legacy/mod04/e2e/api-authorization-test.spec.ts` (skipped test, two tests without assertions; predates U4). `system-test/java/README.md` still references `AccessControlTest` / `OrderOwnershipTest`, which don't exist.
 
@@ -24,10 +26,28 @@ Read-only analysis of `plans/backlog/p1..p4`. No existing plan was edited. Repo 
 `/execute-plan` on this file runs these steps in order. Each step executes its child plan through a subagent that follows the `/execute-plan` rules for that child: its own gates, its own pre-approvals, item deletion and the child's ▶ block. Delete an M-step here once its child scope is verified done; if the child plan is fully done, the child plan file is deleted too. Then refresh the ▶ block above to name the next M-step. Child plans stay the source of truth for details, so don't copy their items here.
 
 - [ ] Step M1 — **P1 Playwright upgrade:** execute all of `plans/20261103-1006-upgrade-playwright-ubuntu-26.md` (Steps 1–6; Step 6 is pre-approved). Done when that plan file is deleted and `meta-prerelease-stage.yml` is green with no `does not support chromium on ubuntu26.04` in its logs.
-- [ ] Step M2 — **P2 single-pipeline, Step 2 only:** execute Step 2 of `plans/20261102-1855-single-pipeline-deploy-target.md` (multitier-java acceptance tracks). Carry the `@1.64.0` legacy Playwright pin from M1 into `_acceptance-stage-docker-compose.yml`. Gate: Docker latest and legacy green with no tag. The one manual cloud run creates `multitier-java-v<x.y.z>-rc.N`; that RC tag and a few cents of GCP are expected. Stop after Step 2 and hand back, because Step 3 builds on its result.
+- [ ] Step M2 — **P2 single-pipeline, Step 2 only:** execute Step 2 of `plans/20261102-1855-single-pipeline-deploy-target.md` (multitier-java acceptance tracks). Carry the `@1.64.0` legacy Playwright pin from M1 into `_acceptance-stage-docker-compose.yml`. Gate: Docker latest and legacy green with no tag. The one manual cloud run creates `multitier-java-v<x.y.z>-rc.N`; that RC tag and a few cents of GCP are expected. Step 3 builds on its result; per the 2026-11-03 decisions, continue to M3/M4 without a review stop.
 - [ ] Step M3 — **P3 GCP-script sync:** execute `plans/20261102-2020-sync-gcp-cloud-scripts-from-event-hub.md`. It must land before P2 Step 6. It's independent of M2, so it can run in parallel with M2 in a separate session; the files are disjoint as long as P2 stays out of `setup-gcp.sh`/`terraform/`.
-- [ ] Step M4 — **P2 single-pipeline, Steps 3–9:** resume that plan after the user reviews M2. Steps 4 and later delete tags, releases, GHCR images and environments, so honour that plan's gates.
-- [ ] Step M5 — **Backlog U5–U12:** blocked on Q-A..Q-H (see "Blocked on user"). Once they're answered, follow "Suggested run order", step 5.
+- [ ] Step M4 — **P2 single-pipeline, Steps 3–9:** resume that plan after M2 and M3 land. Steps 4 and later delete tags, releases, GHCR images and environments; that is pre-approved with guards (see "User decisions (2026-11-03)").
+- [ ] Step M5 — **Backlog U5–U12:** Q-A..Q-H were answered on 2026-11-03 (see "User decisions (2026-11-03)"). Run in this order: U5 `cross-language-parity-fixes` → U6 (`/create-plan` the merged `money-strings-end-to-end` from #3 + #5, execute it, then delete #3 and #5) → U7 (#7 steps 1.4/1.5) → U9 (#6 remainder) → U10 (#1 then #2, both shop-only) → U12 (p3, narrow). U8 is **deferred**, and U11 is **manual for the user**. Before each child plan runs, write the relevant decisions below into it as resolved, so its own pre-flight gate passes.
+
+## User decisions (2026-11-03): run the whole meta autonomously
+
+The user asked for every question up front so that M1–M5 can run without stopping. These answers override the "Blocked on user" recommendations wherever they differ.
+
+- **Scope:** M1 → M2 → M3 → M4 → M5, all autonomous.
+- **M2's** manual cloud run, its RC tag and the few cents of GCP it costs are expected; no review stop is needed before M4 (the user pre-approved M4).
+- **M4 (P2 Steps 3–9) destructive actions are pre-approved, with guards.** That covers deleting the `multitier-java-cloud-v1.0.235` tag and release, local `*-cloud-v*-rc.*` tags, cloud-version GHCR images and the GitHub environments left unused (e.g. `multitier-java-qa-cloud`), plus manual cloud QA/prod runs and the billing kill-switch. Guards: delete only after that flavor's cutover is green in CI; log every deleted item in the final report; if GHCR pulls fail, revert the switch commit and stop (P2's own rule).
+- **M3 Step 5 manual checks:** automate `bash -n` and `./teardown-gcp.sh < /dev/null` (never confirm). Rebuilding the devcontainer and `git push` from a Windows host go to the user as end-of-run verification; they don't block M3.
+- **No changes to `optivem/actions` in this meta.** Anything that needs that repo goes into a separate plan that says so: `plans/backlog/p1-ci-pipeline/20261103-1042-optivem-actions-retry-release.md` (the `v1` re-point for `cd0432c`). That plan is outside M5.
+- **Q-A:** pursue narrowly, accepting every sub-recommendation (P3a: A; P3b: reject 3, drop 4, then delete #10 and #13; P3c: A, then delete #16; P3d: #12 Steps 1–2 only, after U6). Delete #15 now, and #9 and #11 after a `/review-plan` existence check.
+- **Q-B:** accept all four (delete the numeric DSL overloads; every decimal field, rates included, becomes a string; one coordinated change set; `--sample` system tests pre-approved).
+- **Q-C:** accept all three (explicit rounding mirroring `OrderPricing`; conditional UPDATE, verify-only after U1; the 500 detail text is "An unexpected error occurred. Please try again later.").
+- **Q-D:** accept all five (idempotency per user with a 24 h TTL; the same key with a different body returns 422; optional `page`/`size`, default 50, cap 100, no UI paging; search indexing as is, documented; integration tests for races).
+- **Q-E:** **defer U8** (tax-country); leave its plan in the backlog.
+- **Q-F:** accept all five (actuator/swagger stay authenticated; no auth on the simulators; non-breaking `npm audit fix` only; close the .NET flake bullet; defer the route table and JWKS retry).
+- **Q-G:** #1 uses **shop-local `.github/actions/`** per-concern actions (decisions written into that plan). #2 uses a job-summary warning, applies the same policy to acceptance stages and stays shop only (written into that plan; its Steps 1 and 3 moved to the optivem/actions plan).
+- **Q-H:** #17 SonarLint stays a **manual task for the user**; keep the plan.
 
 ## Active top-level plans (added 2026-11-03)
 
