@@ -52,7 +52,6 @@ export async function POST(
 
     return new NextResponse(null, { status: 204 });
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    return internalErrorResponse(message);
+    return internalErrorResponse(error);
   }
 }

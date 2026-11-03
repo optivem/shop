@@ -10,6 +10,9 @@ public class GlobalExceptionHandler : IExceptionHandler
     private const string ResourceNotFoundTypeUri = "https://api.my-company.com/errors/resource-not-found";
     private const string ConflictTypeUri = "https://api.my-company.com/errors/conflict";
     private const string InternalServerErrorTypeUri = "https://api.my-company.com/errors/internal-server-error";
+    // The exception is logged server-side only. Its message can carry internals (SQL, connection
+    // strings, stack fragments), so the client gets a generic detail instead.
+    private const string GeneralErrorDetail = "An unexpected error occurred. Please try again later.";
 
     private readonly ILogger<GlobalExceptionHandler> _logger;
 
@@ -123,7 +126,7 @@ public class GlobalExceptionHandler : IExceptionHandler
             type = InternalServerErrorTypeUri,
             title = "Internal Server Error",
             status = 500,
-            detail = $"Internal server error: {ex.Message}",
+            detail = GeneralErrorDetail,
             timestamp = DateTime.UtcNow
         };
 

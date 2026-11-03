@@ -160,8 +160,7 @@ export async function POST(request: NextRequest) {
       }
     );
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    return internalErrorResponse(message);
+    return internalErrorResponse(error);
   }
 }
 
@@ -188,7 +187,6 @@ export async function GET(request: NextRequest) {
       })),
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    return internalErrorResponse(message);
+    return internalErrorResponse(error);
   }
 }

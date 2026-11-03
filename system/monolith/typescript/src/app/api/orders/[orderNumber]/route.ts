@@ -39,7 +39,6 @@ export async function GET(
       status: order.status,
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    return internalErrorResponse(message);
+    return internalErrorResponse(error);
   }
 }

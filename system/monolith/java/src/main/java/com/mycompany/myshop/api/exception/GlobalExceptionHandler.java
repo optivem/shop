@@ -29,6 +29,7 @@ import java.util.regex.Pattern;
 @RestControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
+    private static final String GENERAL_ERROR_DETAIL = "An unexpected error occurred. Please try again later.";
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
     private static final Pattern CLASS_NAME_PATTERN = Pattern.compile(
             "(com\\.mycompany\\.myshop\\.core\\.dtos\\.[^\\[\\]\"\\s\\)]+)");
@@ -226,30 +227,18 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ProblemDetail> handleGeneralException(Exception ex) {
+        // The exception is logged server-side only. Its message (and its root cause's) can carry
+        // internals such as SQL or connection details, so the client gets a generic detail instead.
         log.error("Unexpected error occurred", ex);
-
-        String rootCauseMessage = getRootCauseMessage(ex);
-        String fullMessage = "Internal server error: " + ex.getMessage();
-        if (rootCauseMessage != null && !rootCauseMessage.equals(ex.getMessage())) {
-            fullMessage += " | Root cause: " + rootCauseMessage;
-        }
 
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
                 HttpStatus.INTERNAL_SERVER_ERROR,
-                fullMessage
+                GENERAL_ERROR_DETAIL
         );
         problemDetail.setType(URI.create(internalServerErrorTypeUri));
         problemDetail.setTitle("Internal Server Error");
         problemDetail.setProperty(PROP_TIMESTAMP, Instant.now());
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(problemDetail);
-    }
-
-    private String getRootCauseMessage(Throwable ex) {
-        Throwable cause = ex;
-        while (cause.getCause() != null) {
-            cause = cause.getCause();
-        }
-        return cause.getMessage();
     }
 }

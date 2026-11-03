@@ -29,7 +29,6 @@ export async function GET(
       usedCount: coupon.used_count,
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    return internalErrorResponse(message);
+    return internalErrorResponse(error);
   }
 }

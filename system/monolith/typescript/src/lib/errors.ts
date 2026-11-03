@@ -101,13 +101,18 @@ export function forbiddenResponse() {
   );
 }
 
-export function internalErrorResponse(message: string) {
+// The exception is logged server-side only. Its message can carry internals (SQL, connection
+// strings, stack fragments), so the client gets a generic detail instead.
+const GENERAL_ERROR_DETAIL = 'An unexpected error occurred. Please try again later.';
+
+export function internalErrorResponse(error: unknown) {
+  console.error('Unexpected error occurred', error);
   return NextResponse.json(
     {
       type: `${BASE_URL}/internal-server-error`,
       title: 'Internal Server Error',
       status: 500,
-      detail: `Internal server error: ${message}`,
+      detail: GENERAL_ERROR_DETAIL,
       timestamp: new Date().toISOString(),
     },
     { status: 500 }

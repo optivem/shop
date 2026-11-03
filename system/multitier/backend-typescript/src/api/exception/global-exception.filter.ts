@@ -24,6 +24,10 @@ const CONFLICT_TYPE_URI = `${PROBLEM_TYPE_BASE_URI}/conflict`;
 const UNAUTHORIZED_TYPE_URI = `${PROBLEM_TYPE_BASE_URI}/unauthorized`;
 const FORBIDDEN_TYPE_URI = `${PROBLEM_TYPE_BASE_URI}/forbidden`;
 const INTERNAL_SERVER_ERROR_TYPE_URI = `${PROBLEM_TYPE_BASE_URI}/internal-server-error`;
+// The exception is logged server-side only. Its message can carry internals (SQL, connection
+// strings, stack fragments), so the client gets a generic detail instead.
+const GENERAL_ERROR_DETAIL =
+  'An unexpected error occurred. Please try again later.';
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
@@ -181,7 +185,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       type: INTERNAL_SERVER_ERROR_TYPE_URI,
       title: 'Internal Server Error',
       status: 500,
-      detail: `Internal server error: ${error.message}`,
+      detail: GENERAL_ERROR_DETAIL,
       timestamp: new Date().toISOString(),
     };
     response.status(500).type('application/problem+json').json(body);

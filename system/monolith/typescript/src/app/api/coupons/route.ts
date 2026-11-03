@@ -29,8 +29,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ code }, { status: 201 });
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    return internalErrorResponse(message);
+    return internalErrorResponse(error);
   }
 }
 
@@ -48,7 +47,6 @@ export async function GET() {
       })),
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    return internalErrorResponse(message);
+    return internalErrorResponse(error);
   }
 }
