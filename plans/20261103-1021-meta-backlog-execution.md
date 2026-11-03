@@ -21,6 +21,7 @@ Session paused on 2026-11-03 at about 22:10 UTC, at the user's request. Resume w
   - `ea3f8bbf` Phase 1: the Java DSLs become String-only (verified earlier)
   - `5de80d5a` the big WIP: U6 Phase 2, U7, #12 1–2
   - `ce548adb` fix for the 3 pre-existing `system-test/typescript` lint warnings, plus follow-up plan edits
+- **Status check (2026-11-03, Windows checkout):** the worktree dir `/workspaces/shop/.claude/worktrees/meta-u6-u7` is gone here (git lists it as prunable), but local branch `meta-u6-u7` is intact at `ce548adb`. Run `git worktree prune`, then work from that branch (check it out in the main checkout, no new worktree). Main is clean at `10ef6b15`; nothing from U6 Phase 2/U7/#12 is on main yet.
 - **`ce548adb` exists only locally.** The force-push updating `origin/wip/meta-u6-u7` was blocked by the permission classifier, so origin still has the old `5e18fbd9`, which lacks the rebase and the lint fix. If the worktree disappears, rebuild from `origin/wip/meta-u6-u7` and redo the lint fix: 3 lines in `system-test/typescript/eslint.config.mjs`.
 - **Test status on the current tree:**
   - `--sample`: all 12 configs passed. Six passed on 2026-11-03 before the pause; on 2026-11-03 between 20:40 and 21:55 UTC: multitier-dotnet, multitier-dotnet-legacy, monolith-typescript, monolith-typescript-legacy, multitier-typescript and multitier-typescript-legacy.
