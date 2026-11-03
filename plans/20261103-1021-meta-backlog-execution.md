@@ -1,6 +1,5 @@
 # 2026-11-03 10:21 UTC — Plan coordination meta-plan: backlog execution
 
-> 🤖 **Picked up by agent** — `531392d34340` at `2026-11-03T10:42:45Z`
 
 ## TL;DR
 
@@ -11,7 +10,23 @@
 
 U1-U4 are done and on main (frontend-react is on Vite 7, Vitest 3 and React 19; run `npm ci` there after pulling). U4 item 3 was verified on 2026-11-02: compile-all 7/7, TS legacy sample 26/26, multitier java/dotnet/ts targeted and sample 11/11, monolith java sample 11/11.
 
-Next (2026-11-03): **Step M4** (P2 Steps 3–9), plus the rest of M5: U6 is in progress, and U9, U10 and U12's #12 come after U6. M1, M2, M3, U5 and U12 are done.
+Session wrapped up on 2026-11-03 (about 17:45 UTC). Resume with `/clear`, then `/execute-plan plans/20261103-1021-meta-backlog-execution.md`.
+
+**Done:** M1, M2 and M3 (4 manual checks for the user remain in the GCP-sync plan's ▶ block), plus U5, U9 and U12 (#12 Steps 1–2 still pending, see below).
+
+**In progress, needs finishing first, before anything is pushed:**
+- **U6 Phase 2 + U7 (#7 steps 1.4/1.5) + #12 Steps 1–2** were implemented together ("implement all, test once", user decision 2026-11-03) in worktree `/workspaces/shop/.claude/worktrees/agent-a4f007858792e70c6`, branch `worktree-agent-a4f007858792e70c6`. It holds the verified Phase 1 commit plus a WIP commit. The final `--sample` sweep was interrupted partway through.
+- Read the ▶ block of `plans/backlog/p2-product-correctness/20261103-1504-money-strings-end-to-end.md` **in that worktree** for which configs passed. Finish the sweep, split the work into per-unit commits, rebase onto main and push. Nothing from it is on main yet.
+
+**M4 (P2 Steps 3–9): waiting on one user answer.**
+- The P2 Step 3 QA and prod proof passed on the throwaway branch `p2-step3-proof` (commits 991a2cd2 `_qa-stage.yml`/`_prod-stage.yml`; a0b13346, the Step 4 thin callers plus deletion of the `-cloud` twins; 8f1fb7fb, anonymous smoke). Prod run 41671160377 published the real release `multitier-java-v1.0.235`, and VERSION was bumped to 1.0.236.
+- That tripped Step 3's bare-image guard: `multitier-backend-java:v1.5.217` was pushed, but it came with matching git tags, a release and VERSION bumps.
+- **Ask the user: is that the expected release shape? (Recommended: yes.)** If yes: rebase the 3 branch commits onto main, run cloud acceptance on 1.0.236 → QA → signoff → prod on main, delete the `multitier-java-cloud-v1.0.235` tag and release, run `git fetch --prune --prune-tags`, then delete the branch `p2-step3-proof`.
+- No GHCR versions can be deleted under the guard, because every `*-cloud-v*` version also carries `sha-*`, `v*-rc.*` or `vX.Y.Z` tags.
+- Prod runs stay pre-approved (user, 2026-11-03).
+- Then Steps 5 (start with the .NET `JsonWireMockClient` scheme fix), 6, 6b, 8 and 9. Step 7 moved to `plans/backlog/p1-ci-pipeline/20261103-1536-gh-optivem-scaffolds-single-pipeline.md`.
+
+**After M4:** U10 (#1 then #2, shop-only). U8 is deferred, and U11 is manual for the user.
 
 Follow-ups found during the run (not fixed) are in `plans/backlog/p2-product-correctness/20261103-1336-meta-run-followups.md`. The removed inner-loop keys get re-added via `plans/backlog/p1-ci-pipeline/20261103-1335-readd-inner-loop-pilot-config.md`.
 
