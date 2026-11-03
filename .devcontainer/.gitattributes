@@ -1,2 +1,0 @@
-# These files run inside the Linux container, even on a Windows checkout
-* text eol=lf
