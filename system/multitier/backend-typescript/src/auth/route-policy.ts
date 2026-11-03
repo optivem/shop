@@ -42,7 +42,9 @@ export function normalisePath(rawUrl: string): string {
 }
 
 export function accessFor(method: string, rawUrl: string): Access {
-  const m = method.toUpperCase();
+  // Express answers HEAD with the GET handler, so HEAD has to get the GET rule too.
+  const upper = method.toUpperCase();
+  const m = upper === 'HEAD' ? 'GET' : upper;
   const path = normalisePath(rawUrl);
   const match = POLICIES.find(
     (p) => (p.method === '*' || p.method === m) && p.path.test(path),

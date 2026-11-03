@@ -51,11 +51,12 @@ public class SecurityConfig {
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                // Spring MVC answers HEAD with the GET handler, so every GET rule has to cover HEAD as well.
                 .requestMatchers(HttpMethod.GET, "/health").permitAll()
+                .requestMatchers(HttpMethod.HEAD, "/health").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/orders/{orderNumber}/deliver").hasRole(ADMIN)
                 .requestMatchers(HttpMethod.POST, "/api/orders").hasRole(CUSTOMER)
-                .requestMatchers(HttpMethod.POST, "/api/coupons").hasRole(ADMIN)
-                .requestMatchers(HttpMethod.GET, "/api/coupons").hasRole(ADMIN)
+                .requestMatchers("/api/coupons").hasRole(ADMIN)
                 .requestMatchers("/api/admin/**").hasRole(ADMIN)
                 .anyRequest().authenticated())
             .oauth2ResourceServer(oauth -> oauth

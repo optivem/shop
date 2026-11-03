@@ -2,7 +2,7 @@
 
 Split out of `20261007-0737-keycloak-auth-and-order-ownership-rollout` (all rollout steps complete; CI green). None of these block anything; pick up opportunistically and remove each item as it is done.
 
-▶ Next (2026-11-03, meta U9): fix the Java/TypeScript HEAD bypass, then run the non-breaking `npm audit fix`. The .NET route-table item stays deferred.
+▶ Next (2026-11-03, meta U9): run the non-breaking `npm audit fix` in `frontend-react`. The .NET route-table item stays deferred. (HEAD bypass fixed in Java monolith, backend-java and backend-typescript.)
 
 ## Decisions (Q-F, 2026-11-03): resolved
 
@@ -15,7 +15,6 @@ Split out of `20261007-0737-keycloak-auth-and-order-ownership-rollout` (all roll
 ## Follow-ups
 
 - ⏳ Deferred: not needed for a teaching template (2026-11-03). .NET backend: access rules are controller attributes, not a central table; unknown routes return 404 not 401; no route-enumeration test; JWKS fetch has no retry.
-- Java `SecurityConfig` (monolith + backend-java): the admin rule for coupons matches `HttpMethod.GET` only, but Spring MVC routes HEAD to GET handlers, so `HEAD /api/coupons` as CUSTOMER returns 200 and runs `browseCoupons` instead of 403. Likewise `/health` needs auth on HEAD. Found by the route-enumeration work in `SecurityConfigTest`; unfixed because it is a production change. Likely fix: drop the method from the GET coupon matcher or add HEAD, then add the HEAD case to `SecurityConfigTest`.
 - `npm audit` warnings after adding `oidc-client-ts` / `react-oidc-context`; not addressed.
 
 ## Context to keep

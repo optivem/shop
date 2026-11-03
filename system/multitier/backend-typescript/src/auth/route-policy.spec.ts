@@ -3,6 +3,7 @@ import { accessFor, normalisePath } from './route-policy';
 describe('route policy', () => {
   it.each([
     ['GET', '/health', 'public'],
+    ['HEAD', '/health', 'public'],
     ['OPTIONS', '/api/orders', 'public'],
     ['GET', '/api/orders', 'authenticated'],
     ['POST', '/api/orders', 'customer'],
@@ -10,6 +11,7 @@ describe('route policy', () => {
     ['POST', '/api/orders/ORD-1/cancel', 'authenticated'],
     ['POST', '/api/orders/ORD-1/deliver', 'admin'],
     ['GET', '/api/coupons', 'admin'],
+    ['HEAD', '/api/coupons', 'admin'],
     ['POST', '/api/coupons', 'admin'],
     ['POST', '/api/admin/recall/BOOK-123', 'admin'],
     ['GET', '/api/admin/anything', 'admin'],

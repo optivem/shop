@@ -7,6 +7,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.head;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrlPattern;
@@ -154,6 +155,12 @@ class SecurityConfigTest {
         mockMvc.perform(get("/health")).andExpect(status().isOk());
     }
 
+    /** Spring MVC routes HEAD to GET handlers, so the GET rules must hold for HEAD too. */
+    @Test
+    void healthIsPublicOnHead() throws Exception {
+        mockMvc.perform(head("/health")).andExpect(status().isOk());
+    }
+
     @Test
     void apiWithoutCredentialsReturnsUnauthorizedProblemDetail() throws Exception {
         mockMvc.perform(get("/api/orders"))
@@ -177,6 +184,12 @@ class SecurityConfigTest {
         mockMvc.perform(get("/api/coupons").with(customerToken()))
             .andExpect(status().isForbidden())
             .andExpect(jsonPath("$.status").value(403));
+    }
+
+    @Test
+    void customerTokenCannotBrowseCouponsOnHead() throws Exception {
+        mockMvc.perform(head("/api/coupons").with(customerToken()))
+            .andExpect(status().isForbidden());
     }
 
     @Test

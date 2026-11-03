@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.head;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -141,6 +142,12 @@ class SecurityConfigTest {
         mockMvc.perform(get("/health")).andExpect(status().isOk());
     }
 
+    /** Spring MVC routes HEAD to GET handlers, so the GET rules must hold for HEAD too. */
+    @Test
+    void healthIsPublicOnHead() throws Exception {
+        mockMvc.perform(head("/health")).andExpect(status().isOk());
+    }
+
     @Test
     void ordersWithoutTokenReturnsUnauthorizedProblemDetail() throws Exception {
         mockMvc.perform(get("/api/orders"))
@@ -159,6 +166,12 @@ class SecurityConfigTest {
         mockMvc.perform(get("/api/coupons").with(customer()))
             .andExpect(status().isForbidden())
             .andExpect(jsonPath("$.status").value(403));
+    }
+
+    @Test
+    void customerCannotBrowseCouponsOnHead() throws Exception {
+        mockMvc.perform(head("/api/coupons").with(customer()))
+            .andExpect(status().isForbidden());
     }
 
     @Test

@@ -106,11 +106,12 @@ public class SecurityConfig {
                 .ignoringRequestMatchers(bearerRequests))
             .addFilterAfter(new CsrfCookieFilter(), CsrfFilter.class)
             .authorizeHttpRequests(auth -> auth
+                // Spring MVC answers HEAD with the GET handler, so every GET rule has to cover HEAD as well.
                 .requestMatchers(HttpMethod.GET, "/health").permitAll()
+                .requestMatchers(HttpMethod.HEAD, "/health").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/orders/{orderNumber}/deliver").hasRole(ADMIN)
                 .requestMatchers(HttpMethod.POST, "/api/orders").hasRole(CUSTOMER)
-                .requestMatchers(HttpMethod.POST, "/api/coupons").hasRole(ADMIN)
-                .requestMatchers(HttpMethod.GET, "/api/coupons").hasRole(ADMIN)
+                .requestMatchers("/api/coupons").hasRole(ADMIN)
                 .requestMatchers("/api/admin/**").hasRole(ADMIN)
                 .requestMatchers("/admin-coupons").hasRole(ADMIN)
                 .requestMatchers("/new-order").hasRole(CUSTOMER)
