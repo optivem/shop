@@ -34,8 +34,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
  * exist to remove. Extracting private {@code stubClock}/{@code stubProduct} helpers here would
  * already be half the refactor, and would make this a dishonest "before".
  *
- * <p>The URLs and JSON bodies are byte-identical to what the stub drivers register, so the two twins
- * are behaviour-neutral with respect to each other — the difference is vocabulary, not effect.
+ * <p>The URLs and JSON bodies are a frozen snapshot of the pre-DSL wire format, not a guaranteed
+ * byte-for-byte copy of what the stub drivers register today. Nothing checks that the two stay in
+ * step: the stub-fidelity suite ({@code contract/external/}) guards the stub drivers only, and this
+ * twin deliberately bypasses them. When a stub driver's URL or JSON changes, update the inline stubs
+ * here by hand, or this "before" will quietly teach a wire format the real system no longer sends.
  *
  * <p>Unlike the {@code component/legacy/} twins, which are self-contained and can be a representative
  * subset, this one is driven by the pact file: pact-jvm replays every interaction and fails on a
