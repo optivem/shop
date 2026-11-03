@@ -328,6 +328,9 @@ jobs:
           timeout-seconds: '900'
 
   # === Run Smoke Tests (in the test language): they need no login, so they work on every stage ===
+  # They run anonymously on purpose. The test harnesses only request tokens from the test realm
+  # (`shop`), whose tokens a QA/production backend (realm shop-qa/shop-prod) rejects with 401,
+  # so KEYCLOAK_URL[_REAL] must stay unset here (see the systems.yaml step).
   smoke:
     needs: [promote-images, deploy-stack]
     runs-on: ubuntu-latest
@@ -354,7 +357,7 @@ jobs:
             echo "ERP_API_BASE_URL_REAL=$(url "${p}-sim")/erp"
             echo "CLOCK_API_BASE_URL_REAL=$(url "${p}-sim")/clock"
             echo "TAX_API_BASE_URL_REAL=$(url "${p}-sim")/tax"
-            echo "KEYCLOAK_URL=$(url "${SYSTEM}-keycloak")"
+            echo "KEYCLOAK_BASE_URL=$(url "${SYSTEM}-keycloak")"
           } >> "$GITHUB_ENV"
 
       - name: Checkout Release Candidate
@@ -436,6 +439,8 @@ jobs:
 
       # `system-test run` health-probes systems.yaml, so the checkout's copy must name the
       # deployed stack, not localhost. composeFile is required by the loader but unused.
+      # The realm is not named "Keycloak": `system-test run` exports KEYCLOAK_URL_<LABEL> for a
+      # component of that name, which would switch the harness to token acquisition.
       - name: Point systems.yaml at the Deployed Stack
         run: |
           set -euo pipefail
@@ -449,8 +454,8 @@ jobs:
                   url: ${MYSHOP_UI_BASE_URL_REAL}
                 - name: Backend API
                   url: ${MYSHOP_API_BASE_URL_REAL}/health
-                - name: Keycloak
-                  url: ${KEYCLOAK_URL}/realms/${REALM}
+                - name: Keycloak Realm
+                  url: ${KEYCLOAK_BASE_URL}/realms/${REALM}
               externalSystems:
                 - name: ERP API
                   url: ${ERP_API_BASE_URL_REAL}/health
