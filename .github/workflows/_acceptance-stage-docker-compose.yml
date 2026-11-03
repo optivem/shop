@@ -1,0 +1,587 @@
+name: _acceptance-stage-docker-compose
+
+# Docker Compose acceptance gate, shared by every variant. It deploys the commit-stage images
+# to Docker Compose stacks (real + stub) on the runner, which are thrown away after the run,
+# and runs the system tests against them. It is a gate only: it creates no RC tag and tags no
+# images. The RC tag is owned by the cloud acceptance stage (_acceptance-stage.yml), which is
+# dispatched manually on a commit that passed this gate.
+#
+# Callers own the dispatch trigger, the workflow name and concurrency (github.workflow resolves
+# to the caller, so a group here would collide with the caller's and deadlock). There is one
+# caller per suite set, so a project can drop legacy by deleting its legacy caller:
+#   <architecture>-<language>-acceptance-stage-docker-compose.yml         (suite-set: latest)
+#   <architecture>-<language>-acceptance-stage-docker-compose-legacy.yml  (suite-set: legacy)
+#
+# Everything per-variant comes from <architecture>-<language> and the test language: the
+# compose directory docker/<test-language>/<architecture>, the host ports (language digit:
+# java=1, dotnet=2, typescript=3), the gh-optivem config and the VERSION file.
+
+on:
+  workflow_call:
+    inputs:
+      architecture:
+        description: 'Architecture: multitier or monolith'
+        required: true
+        type: string
+      language:
+        description: 'Language: java, dotnet, or typescript'
+        required: true
+        type: string
+      test-language:
+        description: 'Language of the system tests (java, dotnet, or typescript); empty means the same as language'
+        required: false
+        type: string
+        default: ''
+      images:
+        description: 'JSON map of role to GHCR image name: {"frontend":"multitier-frontend-react","backend":"multitier-backend-java"} or {"system":"monolith-system-java"}. The roles are the compose service names.'
+        required: true
+        type: string
+      commit-sha:
+        description: 'Git SHA to test (leave empty for latest image)'
+        required: false
+        type: string
+        default: ''
+      suite-set:
+        description: 'Suites to run: latest or legacy. Legacy skips the release gate and sonar.'
+        required: false
+        type: string
+        default: 'latest'
+
+permissions: {}
+
+env:
+  COMMIT_SHA: ${{ inputs.commit-sha || github.sha }}
+  ARCHITECTURE: ${{ inputs.architecture }}
+  PREFIX: ${{ inputs.architecture }}-${{ inputs.language }}
+  VERSION_FILE: system/${{ inputs.architecture }}/${{ inputs.language }}/VERSION
+  TEST_LANGUAGE: ${{ inputs.test-language || inputs.language }}
+  COMPOSE_DIR: docker/${{ inputs.test-language || inputs.language }}/${{ inputs.architecture }}
+  # Host-port digit of the compose stack: UI 3d11/3d12, API 8d11/8d12, external 9d11/9d12, Keycloak 8d91/8d92 (real/stub).
+  PORT_DIGIT: ${{ ((inputs.test-language || inputs.language) == 'java' && '1') || ((inputs.test-language || inputs.language) == 'dotnet' && '2') || '3' }}
+  # Multitier's frontend serves / without a health route; monolith exposes /health.
+  UI_HEALTH_PATH: ${{ inputs.architecture == 'monolith' && '/health' || '/' }}
+
+jobs:
+  # === Gate: Artifacts Exist? ===
+  preflight:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: read
+    outputs:
+      image-urls: ${{ steps.images.outputs.urls }}
+      service-names: ${{ steps.images.outputs.services }}
+      artifacts-exist: ${{ steps.check-artifacts.outputs.results && !contains(steps.check-artifacts.outputs.results, '"exists":false') }}
+      skip-reason: ${{ steps.check-artifacts.outputs.results && contains(steps.check-artifacts.outputs.results, '"exists":false') && 'Not all artifacts published yet — waiting for the commit stage to produce every image.' || '' }}
+    steps:
+      - name: Check Inputs Are Supported
+        env:
+          SUITE_SET: ${{ inputs.suite-set }}
+        run: |
+          if [[ "$ARCHITECTURE" != multitier && "$ARCHITECTURE" != monolith ]]; then
+            echo "::error::Unknown architecture '$ARCHITECTURE'."
+            exit 1
+          fi
+          if [[ "$TEST_LANGUAGE" != java && "$TEST_LANGUAGE" != dotnet && "$TEST_LANGUAGE" != typescript ]]; then
+            echo "::error::Unknown test language '$TEST_LANGUAGE'."
+            exit 1
+          fi
+          if [[ "$SUITE_SET" != latest && "$SUITE_SET" != legacy ]]; then
+            echo "::error::Unknown suite-set '$SUITE_SET' (expected latest or legacy)."
+            exit 1
+          fi
+
+      # Image URLs and compose service names come out in the same order, which is how
+      # deploy-docker-compose pairs them.
+      - name: Expand Image URLs
+        id: images
+        env:
+          IMAGES: ${{ inputs.images }}
+          BASE: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}
+        run: |
+          set -euo pipefail
+          {
+            echo 'urls<<EOF'
+            jq -r --arg base "$BASE" '.[] | "\($base)/\(.)"' <<< "$IMAGES"
+            echo 'EOF'
+            echo 'services<<EOF'
+            jq -r 'keys_unsorted[]' <<< "$IMAGES"
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Check Container Packages Exist
+        id: check-artifacts
+        uses: optivem/actions/check-ghcr-packages-exist@v1
+        with:
+          image-urls: ${{ steps.images.outputs.urls }}
+          token: ${{ secrets.GHCR_TOKEN }}
+
+  # === Should Run? ===
+  check:
+    needs: preflight
+    if: needs.preflight.outputs.artifacts-exist == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    outputs:
+      should-run: ${{ steps.gate.outputs.should-run }}
+      skip-reason: ${{ steps.gate.outputs.skip-reason }}
+      image-digest-urls: ${{ steps.find-latest.outputs.image-digest-urls }}
+      latest-updated-at: ${{ steps.find-latest.outputs.latest-updated-at }}
+      last-run-at: ${{ steps.last-run.outputs.timestamp }}
+    steps:
+      - name: Ensure Environment Variables Defined
+        uses: optivem/actions/validate-env-vars-defined@v1
+        with:
+          names: |
+            DOCKERHUB_USERNAME
+            DOCKERHUB_TOKEN
+        env:
+          DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          ref: ${{ env.COMMIT_SHA }}
+
+      # Latest only: the legacy suites never gated a release.
+      - name: Read Base Version
+        if: inputs.suite-set == 'latest'
+        id: read-base-version
+        uses: optivem/actions/read-base-version@v1
+        with:
+          file: ${{ env.VERSION_FILE }}
+
+      - name: Check System Release Already Published
+        if: inputs.suite-set == 'latest'
+        id: check-tag
+        uses: optivem/actions/check-tag-exists@v1
+        with:
+          tag: ${{ env.PREFIX }}-v${{ steps.read-base-version.outputs.base-version }}
+
+      - name: Log in to GHCR
+        uses: optivem/actions/docker-login@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GHCR_TOKEN }}
+
+      - name: Resolve Docker Image Digests
+        id: find-latest
+        uses: optivem/actions/resolve-docker-image-digests@v1
+        with:
+          base-image-urls: ${{ needs.preflight.outputs.image-urls }}
+          tag: ${{ inputs.commit-sha && format('sha-{0}', inputs.commit-sha) || 'latest' }}
+
+      - name: Get Last Workflow Run
+        id: last-run
+        uses: optivem/actions/get-last-workflow-run@v1
+        with:
+          workflow-name: ${{ github.workflow }}
+
+      - name: Check for New Artifacts Since Last Run
+        id: artifacts-changed
+        uses: optivem/actions/check-timestamp-newer@v1
+        with:
+          latest: ${{ steps.find-latest.outputs.latest-updated-at }}
+          since: ${{ steps.last-run.outputs.timestamp }}
+
+      # RC tags come from the cloud acceptance stage; they still mark the last accepted test code.
+      - name: Detect Test Changes Since Last RC
+        id: test-changes
+        uses: optivem/actions/check-changes-since-tag@v1
+        with:
+          tag-patterns: ${{ env.PREFIX }}-v*-rc.*
+          paths: |
+            system-test/${{ env.TEST_LANGUAGE }}
+            .github/workflows/${{ env.PREFIX }}-acceptance-stage-docker-compose${{ inputs.suite-set == 'legacy' && '-legacy' || '' }}.yml
+            .github/workflows/_acceptance-stage-docker-compose.yml
+
+      - name: Evaluate Run Gate
+        id: gate
+        uses: optivem/actions/evaluate-run-gate@v1
+        with:
+          skip-conditions: |
+            [
+              {"when": ${{ steps.check-tag.outputs.exists == 'true' }}, "reason": "Release in progress — version already tagged, awaiting post-release VERSION bump."},
+              {"when": ${{ inputs.commit-sha == '' && steps.artifacts-changed.outputs.newer != 'true' && steps.test-changes.outputs.changed != 'true' }}, "reason": "No new artifacts since last run AND no test/workflow changes since last RC tag." }
+            ]
+
+  run:
+    needs: [preflight, check]
+    if: needs.check.outputs.should-run == 'true'
+    runs-on: ubuntu-latest
+    # A hung suite must fail fast instead of burning GitHub's 6h job limit.
+    timeout-minutes: 90
+    permissions:
+      contents: read
+      packages: read
+    env:
+      GH_OPTIVEM_CONFIG: gh-optivem-${{ inputs.architecture }}-${{ inputs.test-language || inputs.language }}${{ inputs.suite-set == 'legacy' && '-legacy' || '' }}.yaml
+      # Enables token acquisition in the system tests (opt-in; unset => no auth).
+      KEYCLOAK_URL_REAL: http://localhost:8${{ ((inputs.test-language || inputs.language) == 'java' && '1') || ((inputs.test-language || inputs.language) == 'dotnet' && '2') || '3' }}91
+      KEYCLOAK_URL_STUB: http://localhost:8${{ ((inputs.test-language || inputs.language) == 'java' && '1') || ((inputs.test-language || inputs.language) == 'dotnet' && '2') || '3' }}92
+      # Selects the acceptance environment in every test harness: Environment.ACCEPTANCE (Java,
+      # no -Denvironment), Environment.Acceptance (.NET, no override) and
+      # test-config-acceptance-{stub,real}.json (TypeScript configuration-loader.ts).
+      ENVIRONMENT: acceptance
+    steps:
+      # === Checkout Code ===
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          ref: ${{ env.COMMIT_SHA }}
+
+      # Authenticated pulls get higher Docker Hub rate limits (anonymous pulls are throttled on shared-IP runners).
+      - name: Log in to Docker Hub
+        uses: optivem/actions/docker-login@v1
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Log in to GHCR
+        uses: optivem/actions/docker-login@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GHCR_TOKEN }}
+
+      # === Deploy: Real External Systems ===
+      - name: Simulate Deployment (Real External Systems)
+        uses: optivem/actions/deploy-docker-compose@v1
+        with:
+          environment: acceptance
+          version: ${{ env.COMMIT_SHA }}
+          image-urls: ${{ needs.check.outputs.image-digest-urls }}
+          service-names: ${{ needs.preflight.outputs.service-names }}
+          compose-file: docker-compose.pipeline.real.yml
+          working-directory: ${{ env.COMPOSE_DIR }}
+
+      - name: Wait for Systems (Simulate Deployment (Real External Systems))
+        uses: optivem/actions/wait-for-endpoints@v1
+        with:
+          endpoints: |
+            [
+              { "name": "MyShop UI", "url": "http://localhost:3${{ env.PORT_DIGIT }}11${{ env.UI_HEALTH_PATH }}" },
+              { "name": "MyShop API", "url": "http://localhost:8${{ env.PORT_DIGIT }}11/health" },
+              { "name": "ERP", "url": "http://localhost:9${{ env.PORT_DIGIT }}11/erp/health" },
+              { "name": "Clock", "url": "http://localhost:9${{ env.PORT_DIGIT }}11/clock/health" }
+            ]
+          compose-file: docker-compose.pipeline.real.yml
+          working-directory: ${{ env.COMPOSE_DIR }}
+
+      # === Deploy: Stub External Systems ===
+      - name: Simulate Deployment (Stub External Systems)
+        uses: optivem/actions/deploy-docker-compose@v1
+        with:
+          environment: acceptance
+          version: ${{ env.COMMIT_SHA }}
+          image-urls: ${{ needs.check.outputs.image-digest-urls }}
+          service-names: ${{ needs.preflight.outputs.service-names }}
+          compose-file: docker-compose.pipeline.stub.yml
+          working-directory: ${{ env.COMPOSE_DIR }}
+
+      - name: Wait for Systems (Simulate Deployment (Stub External Systems))
+        uses: optivem/actions/wait-for-endpoints@v1
+        with:
+          endpoints: |
+            [
+              { "name": "MyShop UI", "url": "http://localhost:3${{ env.PORT_DIGIT }}12${{ env.UI_HEALTH_PATH }}" },
+              { "name": "MyShop API", "url": "http://localhost:8${{ env.PORT_DIGIT }}12/health" },
+              { "name": "ERP", "url": "http://localhost:9${{ env.PORT_DIGIT }}12/erp/health" },
+              { "name": "Clock", "url": "http://localhost:9${{ env.PORT_DIGIT }}12/clock/health" }
+            ]
+          compose-file: docker-compose.pipeline.stub.yml
+          working-directory: ${{ env.COMPOSE_DIR }}
+
+      # === Setup Test Harness ===
+      - name: Setup Java
+        if: env.TEST_LANGUAGE == 'java'
+        uses: actions/setup-java@v5
+        with:
+          java-version: 21
+          distribution: temurin
+
+      - name: Setup Gradle
+        if: env.TEST_LANGUAGE == 'java'
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Pre-warm Gradle Wrapper (retry transient CDN flakes)
+        if: env.TEST_LANGUAGE == 'java'
+        uses: nick-fields/retry@v4
+        with:
+          timeout_minutes: 5
+          max_attempts: 3
+          command: cd system-test/java && ./gradlew --version
+
+      - name: Setup .NET
+        if: env.TEST_LANGUAGE == 'dotnet'
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Cache NuGet Packages
+        if: env.TEST_LANGUAGE == 'dotnet'
+        uses: actions/cache@v5
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('system-test/dotnet/**/*.csproj') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      - name: Setup Node
+        if: env.TEST_LANGUAGE == 'typescript'
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22.x
+          cache: 'npm'
+          cache-dependency-path: system-test/typescript/package-lock.json
+
+      - name: Cache Playwright Browsers
+        id: cache-playwright
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ (env.TEST_LANGUAGE == 'java' && hashFiles('system-test/java/build.gradle')) || (env.TEST_LANGUAGE == 'dotnet' && hashFiles('system-test/dotnet/**/*.csproj')) || hashFiles('system-test/typescript/package-lock.json') }}
+
+      - name: Compile System Tests
+        # .NET-only pre-build: Java/TS pre-build implicitly via setupCommands.
+        # Required here so playwright.ps1 (in build output) exists for the
+        # suite's testInstallCommand and the legacy browser install to invoke.
+        if: env.TEST_LANGUAGE == 'dotnet'
+        run: dotnet build
+        working-directory: system-test/dotnet
+
+      # Legacy only (the latest suites install the browser through their own setup).
+      # Playwright version pinned to match system-test/java/build.gradle:44 (source of truth; bump both together)
+      - name: Install Playwright Browser (retry transient CDN flakes)
+        if: inputs.suite-set == 'legacy' && env.TEST_LANGUAGE == 'java' && steps.cache-playwright.outputs.cache-hit != 'true'
+        uses: nick-fields/retry@v4
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          command: cd system-test/java && npx playwright@1.64.0 install chromium
+
+      - name: Install Playwright Browser
+        if: inputs.suite-set == 'legacy' && env.TEST_LANGUAGE == 'dotnet' && steps.cache-playwright.outputs.cache-hit != 'true'
+        working-directory: system-test/dotnet
+        run: pwsh SystemTests/bin/Debug/net8.0/playwright.ps1 install chromium
+
+      - name: Install gh-optivem CLI extension
+        uses: optivem/actions/install-gh-optivem@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      # `gh optivem system-test setup` runs the setupCommands block once for the whole batch
+      # (Java: gradle clean + compileJava + compileTestJava; .NET: dotnet clean + build;
+      # TypeScript: npm ci + playwright install); the per-suite steps then run against the
+      # prepared workspace. One step per suite keeps a per-suite green/red checkmark in the UI.
+      # The SUT itself was already brought up earlier by the Simulate Deployment / Wait for
+      # Systems steps, so no `gh optivem system start` is needed.
+      - name: Setup Test Harness
+        run: gh optivem system-test setup
+
+      # === Latest Suites ===
+      # === Run Smoke Tests ===
+      - name: smoke-stub
+        if: inputs.suite-set == 'latest'
+        run: gh optivem system-test run --suite smoke-stub
+      - name: smoke-real
+        if: inputs.suite-set == 'latest'
+        run: gh optivem system-test run --suite smoke-real
+      # === Run Acceptance Tests ===
+      - name: acceptance-parallel-api
+        if: inputs.suite-set == 'latest'
+        run: gh optivem system-test run --suite acceptance-parallel-api
+      - name: acceptance-parallel-ui
+        if: inputs.suite-set == 'latest'
+        run: gh optivem system-test run --suite acceptance-parallel-ui
+      - name: acceptance-isolated-api
+        if: inputs.suite-set == 'latest'
+        run: gh optivem system-test run --suite acceptance-isolated-api
+      - name: acceptance-isolated-ui
+        if: inputs.suite-set == 'latest'
+        run: gh optivem system-test run --suite acceptance-isolated-ui
+      # === Run Contract Tests ===
+      - name: contract-stub
+        if: inputs.suite-set == 'latest'
+        run: gh optivem system-test run --suite contract-stub
+      - name: contract-stub-isolated
+        if: inputs.suite-set == 'latest'
+        run: gh optivem system-test run --suite contract-stub-isolated
+      - name: contract-real
+        if: inputs.suite-set == 'latest'
+        run: gh optivem system-test run --suite contract-real
+      # === Run E2E Tests ===
+      - name: e2e-api
+        if: inputs.suite-set == 'latest'
+        run: gh optivem system-test run --suite e2e-api
+      - name: e2e-ui
+        if: inputs.suite-set == 'latest'
+        run: gh optivem system-test run --suite e2e-ui
+      # === Spec Coverage Gate (lenient: blocks only validation errors and Failing criteria) ===
+      # Only monolith-java runs it today (carried over from monolith-java-acceptance-stage.yml).
+      - name: spec-gate
+        if: inputs.suite-set == 'latest' && inputs.architecture == 'monolith' && env.TEST_LANGUAGE == 'java'
+        run: gh optivem spec check --mode lenient
+
+      # === Legacy Suites ===
+      - name: mod02-smoke
+        if: inputs.suite-set == 'legacy'
+        run: gh optivem system-test run --suite mod02-smoke
+      - name: mod03-e2e
+        if: inputs.suite-set == 'legacy'
+        run: gh optivem system-test run --suite mod03-e2e
+      - name: mod04-smoke
+        if: inputs.suite-set == 'legacy'
+        run: gh optivem system-test run --suite mod04-smoke
+      - name: mod04-e2e
+        if: inputs.suite-set == 'legacy'
+        run: gh optivem system-test run --suite mod04-e2e
+      - name: mod05-smoke
+        if: inputs.suite-set == 'legacy'
+        run: gh optivem system-test run --suite mod05-smoke
+      - name: mod05-e2e
+        if: inputs.suite-set == 'legacy'
+        run: gh optivem system-test run --suite mod05-e2e
+      - name: mod06-smoke
+        if: inputs.suite-set == 'legacy'
+        run: gh optivem system-test run --suite mod06-smoke
+      - name: mod06-e2e-api
+        if: inputs.suite-set == 'legacy'
+        run: gh optivem system-test run --suite mod06-e2e-api
+      - name: mod06-e2e-ui
+        if: inputs.suite-set == 'legacy'
+        run: gh optivem system-test run --suite mod06-e2e-ui
+      - name: mod07-smoke
+        if: inputs.suite-set == 'legacy'
+        run: gh optivem system-test run --suite mod07-smoke
+      - name: mod07-e2e-api
+        if: inputs.suite-set == 'legacy'
+        run: gh optivem system-test run --suite mod07-e2e-api
+      - name: mod07-e2e-ui
+        if: inputs.suite-set == 'legacy'
+        run: gh optivem system-test run --suite mod07-e2e-ui
+      - name: mod08-smoke
+        if: inputs.suite-set == 'legacy'
+        run: gh optivem system-test run --suite mod08-smoke
+      - name: mod08-e2e-api
+        if: inputs.suite-set == 'legacy'
+        run: gh optivem system-test run --suite mod08-e2e-api
+      - name: mod08-e2e-ui
+        if: inputs.suite-set == 'legacy'
+        run: gh optivem system-test run --suite mod08-e2e-ui
+      - name: mod09-smoke-stub
+        if: inputs.suite-set == 'legacy'
+        run: gh optivem system-test run --suite mod09-smoke-stub
+      - name: mod09-smoke-real
+        if: inputs.suite-set == 'legacy'
+        run: gh optivem system-test run --suite mod09-smoke-real
+      - name: mod10-acceptance-api
+        if: inputs.suite-set == 'legacy'
+        run: gh optivem system-test run --suite mod10-acceptance-api
+      - name: mod10-acceptance-ui
+        if: inputs.suite-set == 'legacy'
+        run: gh optivem system-test run --suite mod10-acceptance-ui
+      - name: mod10-acceptance-isolated-api
+        if: inputs.suite-set == 'legacy'
+        run: gh optivem system-test run --suite mod10-acceptance-isolated-api
+      - name: mod10-acceptance-isolated-ui
+        if: inputs.suite-set == 'legacy'
+        run: gh optivem system-test run --suite mod10-acceptance-isolated-ui
+      - name: mod11-contract-stub
+        if: inputs.suite-set == 'legacy'
+        run: gh optivem system-test run --suite mod11-contract-stub
+      - name: mod11-contract-stub-isolated
+        if: inputs.suite-set == 'legacy'
+        run: gh optivem system-test run --suite mod11-contract-stub-isolated
+      - name: mod11-contract-real
+        if: inputs.suite-set == 'legacy'
+        run: gh optivem system-test run --suite mod11-contract-real
+      - name: mod11-e2e-api
+        if: inputs.suite-set == 'legacy'
+        run: gh optivem system-test run --suite mod11-e2e-api
+      - name: mod11-e2e-ui
+        if: inputs.suite-set == 'legacy'
+        run: gh optivem system-test run --suite mod11-e2e-ui
+
+  # === Run Static Code Analysis ===
+  # Latest only. It does not depend on the deploy target, so the cloud stage runs it too.
+  sonar:
+    needs: run
+    if: inputs.suite-set == 'latest'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          ref: ${{ env.COMMIT_SHA }}
+
+      - name: Setup Java
+        if: env.TEST_LANGUAGE == 'java'
+        uses: actions/setup-java@v5
+        with:
+          java-version: 21
+          distribution: temurin
+
+      - name: Setup Gradle
+        if: env.TEST_LANGUAGE == 'java'
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Pre-warm Gradle Wrapper (retry transient CDN flakes)
+        if: env.TEST_LANGUAGE == 'java'
+        uses: nick-fields/retry@v4
+        with:
+          timeout_minutes: 5
+          max_attempts: 3
+          command: cd system-test/java && ./gradlew --version
+
+      - name: Setup .NET
+        if: env.TEST_LANGUAGE == 'dotnet'
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Setup Node
+        if: env.TEST_LANGUAGE == 'typescript'
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22.x
+          cache: 'npm'
+          cache-dependency-path: system-test/typescript/package-lock.json
+
+      - name: Run Sonar Analysis
+        uses: optivem/actions/retry@v1
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          working-directory: system-test/${{ env.TEST_LANGUAGE }}
+          command: bash ./run-sonar.sh
+
+  summary:
+    needs: [preflight, check, run, sonar]
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+    - name: Summarize Stage
+      uses: optivem/actions/render-system-stage-summary@v1
+      with:
+        stage-name: ${{ inputs.suite-set == 'legacy' && 'Acceptance Stage (Docker Compose, Legacy)' || 'Acceptance Stage (Docker Compose)' }}
+        stage-result: >-
+          ${{ (needs.preflight.result == 'failure' || needs.check.result == 'failure' || needs.run.result == 'failure') && 'failure'
+              || (needs.preflight.result == 'cancelled' || needs.check.result == 'cancelled' || needs.run.result == 'cancelled') && 'cancelled'
+              || needs.run.result }}
+        environment: acceptance
+        # Gate only: no RC version is computed, so report the image tag that was tested.
+        success-version: ${{ inputs.commit-sha && format('sha-{0}', inputs.commit-sha) || 'latest' }}
+        skipped-reason: ${{ needs.preflight.outputs.skip-reason || needs.check.outputs.skip-reason }}
+        latest-artifact-ids: ${{ needs.check.outputs.image-digest-urls }}
+        latest-updated-at: ${{ needs.check.outputs.latest-updated-at }}
+        last-run-at: ${{ needs.check.outputs.last-run-at }}

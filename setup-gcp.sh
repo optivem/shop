@@ -322,6 +322,6 @@ if (( ${#MISSING_GH_SECRETS[@]} > 0 )); then
   echo ""
 fi
 echo "  Next steps:"
-echo "    - Trigger workflow: gh workflow run multitier-java-acceptance-stage-cloud.yml"
+echo "    - Trigger workflow: gh workflow run multitier-java-acceptance-stage.yml"
 echo "    - To tear down:    ./teardown-gcp.sh   (GCP project, Neon project, GitHub variables)"
 echo ""

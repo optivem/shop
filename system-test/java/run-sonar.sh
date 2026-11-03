@@ -3,8 +3,8 @@
 #
 # Local helper that pushes a SonarCloud analysis using your personal token.
 # CI runs the same analysis (auto-retried in CI via optivem/actions) from monolith-java-acceptance-stage.yml and
-# multitier-java-acceptance-stage.yml after tests finish; this script is for
-# manual runs.
+# multitier-java's acceptance stages (_acceptance-stage-docker-compose.yml and
+# _acceptance-stage.yml) after tests finish; this script is for manual runs.
 # Project key: optivem_shop-tests-java (config in build.gradle).
 # Get token: https://sonarcloud.io/account/security
 #
