@@ -7,7 +7,7 @@
 
 ## ▶ Next executable step (resume here)
 
-**Item 1**: with the user's OK, push the already-committed shop commit `32e90dcb` to `main`, then run Item 1's runtime check. The other items follow in order.
+**Item 1**: `32e90dcb` is already on `main`; run Item 1's attended runtime check and check the CI run it triggered. The other items follow in order.
 
 ## Rules
 
@@ -17,7 +17,7 @@
 
 ## Items
 
-1. - [ ] **Push shop `32e90dcb`** (gh-optivem plan `plans/backlog/p2-atdd-quality/20260620-0806-no-order-persisted-fanout-prevention.md`, scoped to place/cancel order). It is committed locally and compile-checked only. After the push, run the attended runtime check of `cannotPlaceOrderWithNonExistentCoupon` on monolith plus multitier × 3 languages. Then do that plan's Step 6 (restore #68's criterion).
+1. - [ ] **Verify shop `32e90dcb`** (gh-optivem plan `plans/backlog/p2-atdd-quality/20260620-0806-no-order-persisted-fanout-prevention.md`, scoped to place/cancel order). Already pushed to `main` on 2026-11-03 by an accidental workspace sweep, compile-checked only. Run the attended runtime check of `cannotPlaceOrderWithNonExistentCoupon` on monolith plus multitier × 3 languages. Then do that plan's Step 6 (restore #68's criterion).
 
 2. - [ ] **Gradle `--warning-mode none`** in `system-test/java/tests*.yaml` (gh-optivem plan `plans/backlog/p2-atdd-quality/20260608-2109-failure-capture-head-window.md`, step 6). Part of the decided Option C (head+tail capture plus `--warning-mode none`). Verify via the rehearsal named in that plan.
 
