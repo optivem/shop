@@ -2,7 +2,7 @@
 
 Split out of `20261007-0737-keycloak-auth-and-order-ownership-rollout` (all rollout steps complete; CI green). None of these block anything; pick up opportunistically and remove each item as it is done.
 
-▶ Next (2026-11-03, meta U9): run the non-breaking `npm audit fix` in `frontend-react`. The .NET route-table item stays deferred. (HEAD bypass fixed in Java monolith, backend-java and backend-typescript.)
+▶ Next (2026-11-03): nothing actionable. The only item left is the deferred .NET route-table / JWKS-retry item; HEAD bypass (`8f70cdcf`) and non-breaking `npm audit fix` in `frontend-react` are done (38 → 25 advisories; the remaining 25 need `--force`/breaking upgrades and are ignored per Q-F 3).
 
 ## Decisions (Q-F, 2026-11-03): resolved
 
@@ -15,7 +15,6 @@ Split out of `20261007-0737-keycloak-auth-and-order-ownership-rollout` (all roll
 ## Follow-ups
 
 - ⏳ Deferred: not needed for a teaching template (2026-11-03). .NET backend: access rules are controller attributes, not a central table; unknown routes return 404 not 401; no route-enumeration test; JWKS fetch has no retry.
-- `npm audit` warnings after adding `oidc-client-ts` / `react-oidc-context`; not addressed.
 
 ## Context to keep
 
