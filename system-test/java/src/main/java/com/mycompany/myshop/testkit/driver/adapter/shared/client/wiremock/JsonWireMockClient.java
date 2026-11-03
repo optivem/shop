@@ -31,9 +31,31 @@ public class JsonWireMockClient {
     private final List<UUID> stubIds = new ArrayList<>();
 
     public JsonWireMockClient(String baseUrl) {
-        var url = URI.create(baseUrl);
-        this.wireMock = new WireMock(url.getHost(), url.getPort());
+        this.wireMock = createWireMock(URI.create(baseUrl));
         this.objectMapper = createObjectMapper();
+    }
+
+    // Honour the base URL's scheme and default port: in the cloud the stubs are an HTTPS
+    // Cloud Run service with no explicit port (e.g. https://<svc>.run.app/erp), so the
+    // admin API must be called over https on 443, not http on the URI's -1 "no port".
+    // Only the origin is used: the WireMock admin API lives at /__admin on the root,
+    // whatever stub path prefix (/erp, /clock, /tax) the base URL carries.
+    private static WireMock createWireMock(URI url) {
+        var scheme = url.getScheme() != null ? url.getScheme() : "http";
+        var explicitPort = url.getPort();
+        var builder = WireMock.create()
+            .scheme(scheme)
+            .host(url.getHost())
+            .port(explicitPort != -1 ? explicitPort : defaultPort(scheme));
+        if (explicitPort == -1) {
+            // Keep the Host header portless, as a browser/curl would send it to the front end.
+            builder.hostHeader(url.getHost());
+        }
+        return builder.build();
+    }
+
+    private static int defaultPort(String scheme) {
+        return "https".equalsIgnoreCase(scheme) ? 443 : 80;
     }
 
     private static ObjectMapper createObjectMapper() {
