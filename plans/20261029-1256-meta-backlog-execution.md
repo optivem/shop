@@ -9,7 +9,7 @@
 
 U1-U4 are done and on main (frontend-react is on Vite 7, Vitest 3 and React 19; run `npm ci` there after pulling). U4 item 3 was verified on 2026-11-02: compile-all 7/7, TS legacy sample 26/26, multitier java/dotnet/ts targeted and sample 11/11, monolith java sample 11/11.
 
-Next: no autonomous unit remains. U5-U12 are blocked on the user answering Q-A..Q-H (see Blocked on user; "accept all recommendations" unblocks all of them). Once answered, follow the order in Wave 2's last paragraph, starting with `/refine-plan` / `/execute-plan` on U5 (`cross-language-parity-fixes`) and `/create-plan` for the CS1 money merge. The original cloud-deploy plan is no longer in `plans/` (2026-11-02), so re-check C8/C9/C10 before scheduling U7/U8.
+Next (2026-11-03): run **P1, the Playwright upgrade** (`/execute-plan plans/20261103-1006-upgrade-playwright-ubuntu-26.md`) before anything else. CI is red without it, and it must land before single-pipeline Step 2 (see "Active top-level plans" below). After that, no autonomous backlog unit remains. U5-U12 are blocked on the user answering Q-A..Q-H (see Blocked on user; "accept all recommendations" unblocks all of them). Once answered, follow the order in Wave 2's last paragraph, starting with `/refine-plan` / `/execute-plan` on U5 (`cross-language-parity-fixes`) and `/create-plan` for the CS1 money merge. The original cloud-deploy plan is no longer in `plans/` (2026-11-02), so re-check C8/C9/C10 before scheduling U7/U8.
 
 Open follow-ups found during U4 (not fixed): `npm run lint` in `system-test/typescript` fails `--max-warnings 0` on 3 warnings in `tests/legacy/mod04/e2e/api-authorization-test.spec.ts` (skipped test, two tests without assertions; predates U4). `system-test/java/README.md` still references `AccessControlTest` / `OrderOwnershipTest`, which don't exist.
 
@@ -18,6 +18,22 @@ Scope decisions for the run: the `20261030-1822-template-cloud-deploy-all-varian
 Found by U4, not fixed (production): a React user pasting an order-details URL lands on home, because tokens are in memory and the deep link is dropped across the login redirect. `.NET` `cancelOrder` is still `CHANNEL_MODE=static`, so its UI test silently uses the API.
 
 Read-only analysis of `plans/backlog/p1..p4`. No existing plan was edited. Repo state was spot-checked (grep/ls) to find stale premises.
+
+## Active top-level plans (added 2026-11-03)
+
+These plans live in `plans/`, not `plans/backlog/`, and take priority over every backlog unit below.
+
+| ID | Plan | State | Files it owns |
+|---|---|---|---|
+| P1 | `20261103-1006-upgrade-playwright-ubuntu-26` | Not started; all decisions resolved; Step 6 (push + dispatch `meta-prerelease-stage.yml`) pre-approved | `system-test/typescript/{package.json,package-lock.json}`, `system-test/dotnet/{Common,Driver.Adapter,SystemTests}/*.csproj`, `system-test/java/build.gradle`, the `npx playwright@` pins in `{monolith,multitier}-java-acceptance-stage-legacy.yml` (`:218`, `:224`), plus any pins found by its Step 4 sweep |
+| P2 | `20261102-1855-single-pipeline-deploy-target` | Paused before Step 2 (naming confirmed 2026-11-03; no marker) | `*-acceptance-stage*.yml`, `*-{qa,prod}-stage*.yml`, `_acceptance-stage*.yml`, `_prerelease-pipeline.yml`, `_deploy-stage-cloud.yml`, `terraform/`, `setup-gcp.sh` |
+| P3 | `20261102-2020-sync-gcp-cloud-scripts-from-event-hub` | Not started | `setup-gcp.sh`, `teardown-gcp.sh`, `terraform/**`, `deploy-config.yml` |
+
+**Order: P1 first, then P2 Step 2.**
+- **P1 → P2 (hard).** `meta-prerelease-stage.yml` has been red since 2026-11-02 10:33, because .NET and TypeScript can't install chromium on Ubuntu 26.04. P2 Step 2 can't be proven until the Docker acceptance gates are green.
+- **P1 / P2 file collision.** P1 Step 3 edits `multitier-java-acceptance-stage-legacy.yml:224`, and P2 Step 2 `git mv`s that file to `multitier-java-acceptance-stage-docker-compose-legacy.yml` and rewrites it as a thin caller. Landing P1 first means P2 carries the `@1.64.0` pin into the new reusable `_acceptance-stage-docker-compose.yml` and doesn't lose it. If P2 goes first instead, P1 must re-target its pin edits to the new files. The same applies later to `monolith-java-acceptance-stage-legacy.yml:218` during P2 Step 5.
+- **P2 / P3 (soft).** Both touch `setup-gcp.sh` and `terraform/` (P2 Step 6 adds the kill-switch and GHCR images; P3 merges event-hub fixes). Serialise P3 before P2 Step 6, so the kill-switch is built on the merged scripts. They are independent of P1.
+- **P1 vs backlog.** P1 changes only dependency versions in `system-test/*`, not driver code, so C12 (U4 driver edits) is unaffected. It holds the docker lock for its Step 5 `--sample` gates, so the shared-resource rule applies.
 
 ## Plans analysed
 
@@ -201,7 +217,7 @@ Run before any wave:
 
 1. `grep -l "PICKUP\|in-flight\|claimed by\|Picked up by agent" plans/*.md plans/backlog/*/*.md` — on 2026-10-29 this matched the cloud plan (real "Picked up by agent" marker) and `tax-real-parity-contract-test.md` (false positive: the word appears in prose). Any new hit means another agent is in flight; stop and ask.
 2. `git status` — at analysis time `.github/workflows/multitier-java-acceptance-stage-cloud.yml`, `plans/20261029-1316-deploy-shop-cloud-run.md` and `terraform/README.md` were modified by the cloud plan. Do not touch or stage those.
-3. The original cloud plan is finished and deleted (2026-10-31); cloud work continues in `plans/20261030-1822-template-cloud-deploy-all-variants.md`, which is what "the cloud plan" means from here on. It is **active**: do not edit its files, and get user OK before pushing while one of its cloud runs is in progress.
+3. The cloud plans `20261029-1316-deploy-shop-cloud-run` and `20261030-1822-template-cloud-deploy-all-variants` are gone. From 2026-11-03, "the cloud plan" means P2 (`20261102-1855-single-pipeline-deploy-target`); C8/C9/C10 now apply to it. Don't edit its files, and get the user's OK before pushing while one of its cloud runs is in progress. Run P1 (Playwright) before any wave (see "Active top-level plans").
 4. `git config core.hooksPath .githooks` is set (repo CLAUDE.md).
 5. No docker stack running (`gh optivem system stop`) before the first system-test gate; rebuild images with `--no-cache` if UI tests time out on `aria-label="SKU"`.
 
