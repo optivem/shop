@@ -4,11 +4,8 @@ using Driver.Port.Dtos.Error;
 
 namespace Driver.Port;
 
-public interface IMyShopDriver : IAsyncDisposable
+public interface IMyShopDriver : IAsyncDisposable, IActingUserSelector
 {
-    /// <summary>Selects who subsequent operations are performed as.</summary>
-    void ActAs(UserIdentity identity);
-
     Task<Result<GoToMyShopResponse, SystemError>> GoToMyShopAsync(GoToMyShopRequest request);
     Task<Result<PlaceOrderResponse, SystemError>> PlaceOrderAsync(PlaceOrderRequest request);
     Task<Result<CancelOrderResponse, SystemError>> CancelOrderAsync(CancelOrderRequest request);

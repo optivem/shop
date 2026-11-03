@@ -3,6 +3,8 @@ name: my-shop-real
 services:
 
   system:
+    # Per-language tag: the project name above is shared by every language, so the default image name would be too.
+    image: my-shop-typescript-monolith-system:local
     build:
       context: ../../../system/monolith/typescript
       dockerfile: Dockerfile

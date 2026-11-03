@@ -19,10 +19,7 @@ import com.mycompany.myshop.testkit.driver.port.dtos.ViewOrderRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.ViewOrderResponse;
 import com.mycompany.myshop.testkit.common.Result;
 
-public interface MyShopDriver extends AutoCloseable {
-    /** Selects who subsequent operations are performed as. */
-    void actAs(UserIdentity identity);
-
+public interface MyShopDriver extends AutoCloseable, ActingUserSelector {
     Result<GoToMyShopResponse, SystemError> goToMyShop(GoToMyShopRequest request);
 
     Result<PlaceOrderResponse, SystemError> placeOrder(PlaceOrderRequest request);

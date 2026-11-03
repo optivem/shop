@@ -20,6 +20,8 @@ services:
       - app-network
 
   backend:
+    # Per-language tag: the project name above is shared by every language, so the default image name would be too.
+    image: my-shop-dotnet-multitier-backend:local
     build:
       context: ../../../system/multitier/backend-dotnet
       dockerfile: Dockerfile

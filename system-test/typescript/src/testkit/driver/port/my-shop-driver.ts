@@ -1,4 +1,5 @@
 import type { Result } from '../../common/result.js';
+import type { ActingUserSelector } from './acting-user-selector.js';
 import type { AsyncCloseable } from './async-closeable.js';
 import type { GoToMyShopRequest } from './dtos/GoToMyShopRequest.js';
 import type { GoToMyShopResponse } from './dtos/GoToMyShopResponse.js';
@@ -13,15 +14,12 @@ import type { ViewOrderResponse } from './dtos/ViewOrderResponse.js';
 import type { SystemError } from './dtos/errors/SystemError.js';
 import type { BrowseOrderHistoryRequest } from './dtos/BrowseOrderHistoryRequest.js';
 import type { BrowseOrderHistoryResponse } from './dtos/BrowseOrderHistoryResponse.js';
-import type { UserIdentity } from './user-identity.js';
 import type { PublishCouponRequest } from './dtos/PublishCouponRequest.js';
 import type { PublishCouponResponse } from './dtos/PublishCouponResponse.js';
 import type { BrowseCouponsRequest } from './dtos/BrowseCouponsRequest.js';
 import type { BrowseCouponsResponse } from './dtos/BrowseCouponsResponse.js';
 
-export interface MyShopDriver extends AsyncCloseable {
-  /** Selects who subsequent operations are performed as. */
-  actAs(identity: UserIdentity): void;
+export interface MyShopDriver extends AsyncCloseable, ActingUserSelector {
   goToMyShop(request: GoToMyShopRequest): Promise<Result<GoToMyShopResponse, SystemError>>;
   placeOrder(request: PlaceOrderRequest): Promise<Result<PlaceOrderResponse, SystemError>>;
   cancelOrder(request: CancelOrderRequest): Promise<Result<CancelOrderResponse, SystemError>>;
