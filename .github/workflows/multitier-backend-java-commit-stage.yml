@@ -11,6 +11,7 @@ on:
         - '.github/actions/lint/**'
         - '.github/actions/unit/**'
         - '.github/actions/component/**'
+        - '.github/actions/sonar-scan/**'
   pull_request:
     branches: [ "main" ]
     paths:
@@ -21,6 +22,7 @@ on:
         - '.github/actions/lint/**'
         - '.github/actions/unit/**'
         - '.github/actions/component/**'
+        - '.github/actions/sonar-scan/**'
   workflow_dispatch:
     inputs:
       commit-sha:
@@ -143,9 +145,13 @@ jobs:
       # Reuses main classes from "Compile Code" + the unit-test jacoco report: "Run Unit Tests"
       # runs ./gradlew test via the CLI (finalizedBy jacocoTestReport); the later suites do not
       # regenerate it, so coverage stays unit-only.
+      # A SonarCloud outage (HTTP 5xx after every retry) skips analysis with a job-summary
+      # warning instead of failing the stage; any other failure still fails it. See
+      # .github/actions/sonar-scan.
       - name: Run Code Analysis
-        uses: optivem/actions/retry@v1
+        uses: ./.github/actions/sonar-scan
         with:
+          label: Run Code Analysis
           working-directory: system/multitier/backend-java
           command: ./gradlew sonar --info -Dsonar.scanner.skipJreProvisioning=true
 

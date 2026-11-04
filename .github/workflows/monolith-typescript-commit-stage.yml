@@ -11,6 +11,7 @@ on:
         - '.github/actions/lint/**'
         - '.github/actions/unit/**'
         - '.github/actions/component/**'
+        - '.github/actions/sonar-scan/**'
   pull_request:
     branches: [ "main" ]
     paths:
@@ -21,6 +22,7 @@ on:
         - '.github/actions/lint/**'
         - '.github/actions/unit/**'
         - '.github/actions/component/**'
+        - '.github/actions/sonar-scan/**'
   workflow_dispatch:
     inputs:
       commit-sha:
@@ -135,11 +137,15 @@ jobs:
           project: system/monolith/typescript
 
       # === Run Static Code Analysis ===
+      # A SonarCloud outage (HTTP 5xx after every retry) skips analysis with a job-summary
+      # warning instead of failing the stage; any other failure still fails it. See
+      # .github/actions/sonar-scan.
       - name: Run Code Analysis
-        uses: optivem/actions/retry@v1
+        uses: ./.github/actions/sonar-scan
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
+          label: Run Code Analysis
           working-directory: system/monolith/typescript
           command: bash ./run-sonar.sh
 

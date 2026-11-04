@@ -1,0 +1,72 @@
+name: 'Run a SonarCloud step, surviving a SonarCloud outage'
+description: |
+  Runs one SonarCloud-invoking command (scanner run, dotnet-sonarscanner
+  begin/end) through optivem/actions/retry@v1 and decides what a failure means:
+
+  - The retry wrapper exhausted every attempt and the last attempt failed on an
+    HTTP 5xx from the server: SonarCloud is down. The step passes with a
+    warning annotation and a job-summary warning, and sets `skipped=true`.
+    Some commits then land without analysis; that is the accepted cost.
+  - Any other failure (a 4xx or auth error, a misconfigured project, a scanner
+    or build error, a failed quality gate): the step fails, as before.
+
+  Shared by every commit stage and acceptance stage that talks to SonarCloud,
+  so the outage policy has one source of truth. Plan:
+  plans/backlog/p1-ci-pipeline/20260917-1949-sonar-outage-survives-commit-stage.md.
+
+inputs:
+  command:
+    description: 'The SonarCloud command to run, as a shell command string.'
+    required: true
+  working-directory:
+    description: 'Directory to run the command in. Defaults to the repo root.'
+    required: false
+    default: '.'
+  label:
+    description: 'Short name of this step for the warning, e.g. "Code analysis" or "Begin Sonar Analysis".'
+    required: false
+    default: 'SonarCloud analysis'
+  retry-attempts:
+    description: 'How many attempts optivem/actions/retry@v1 makes before giving up. Must match that action (4 as of v1).'
+    required: false
+    default: '4'
+
+outputs:
+  skipped:
+    description: "'true' when the step was skipped because SonarCloud returned 5xx on every attempt, else 'false'."
+    value: ${{ steps.verdict.outputs.skipped }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Prepare
+      id: prep
+      shell: bash
+      run: |
+        set -euo pipefail
+        log=$(mktemp "${RUNNER_TEMP:-/tmp}/sonar-scan.XXXXXX")
+        {
+          echo "attempt=${GITHUB_ACTION_PATH}/attempt.sh"
+          echo "log=$log"
+        } >> "$GITHUB_OUTPUT"
+
+    - name: Run with retry
+      id: scan
+      continue-on-error: true
+      uses: optivem/actions/retry@v1
+      env:
+        SONAR_SCAN_COMMAND: ${{ inputs.command }}
+        SONAR_SCAN_LOG: ${{ steps.prep.outputs.log }}
+      with:
+        working-directory: ${{ inputs.working-directory }}
+        command: bash "${{ steps.prep.outputs.attempt }}"
+
+    - name: Classify the result
+      id: verdict
+      shell: bash
+      env:
+        OUTCOME: ${{ steps.scan.outcome }}
+        SONAR_SCAN_LOG: ${{ steps.prep.outputs.log }}
+        LABEL: ${{ inputs.label }}
+        RETRY_ATTEMPTS: ${{ inputs.retry-attempts }}
+      run: bash "${GITHUB_ACTION_PATH}/classify.sh"

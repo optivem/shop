@@ -13,12 +13,14 @@
 
 ## ▶ Next executable step (resume here)
 
-All decisions are resolved (2026-11-03). Run `/refine-plan` on this file to write concrete per-file edits for Step 2, then `/execute-plan`. All work is in **shop** only: no changes to `optivem/actions` (the `v1` re-point and the retry inputs moved to `20261103-1042-optivem-actions-retry-release.md`). Implement the outage rule in shop's workflows around the existing `optivem/actions/retry@v1` calls, e.g. by detecting `exhausted N attempts` against a 5xx.
+The commit stages are done (2026-11-04, local commit, not pushed during the GitHub incident): the shop-local action `.github/actions/sonar-scan` wraps `optivem/actions/retry@v1` and passes with a warning annotation plus a job-summary warning only when the retry wrapper gave up after all its attempts and the last one failed on an HTTP 5xx. Every other failure still fails the step. All 7 commit stages use it; in the two .NET ones, `Build for Sonar` and `End Sonar Analysis` are skipped when `Begin Sonar Analysis` was skipped. Next: the acceptance stages (Step 2 below), then the CI proof (Step 4).
+
+Note: none of shop's scanners waits for the quality gate (no `sonar.qualitygate.wait`), so a "quality-gate failure" is not a step failure today. Any scanner failure that is not a 5xx outage (4xx/auth, bad project key, build error) still fails.
 
 ## Steps
 
-- [ ] Step 2: (Depends on the policy decision.) Apply the chosen change to every Sonar-invoking step — `Run Code Analysis` / `Begin Sonar Analysis` / `Build for Sonar` / `End Sonar Analysis` in the commit stages, and `Run Sonar Analysis` in the six acceptance stages. Keep the files structurally identical across languages for `workflow-comparator` parity.
-- [ ] Step 4: Verify. `actionlint` on the changed workflows; then re-run a real commit stage and confirm the Sonar step behaves as decided.
+- [ ] Step 2: Replace `optivem/actions/retry@v1` with `./.github/actions/sonar-scan` (`label: Run Sonar Analysis`) in the `Run Sonar Analysis` step of the acceptance stages: `_acceptance-stage.yml`, `_acceptance-stage-docker-compose.yml`, and `{monolith-dotnet,monolith-java,monolith-typescript,multitier-dotnet,multitier-typescript}-acceptance-stage.yml`. Keep the files structurally identical across languages for `workflow-comparator` parity.
+- [ ] Step 4: Verify in CI after the push. `actionlint` is green locally, and the action's logic was simulated locally against the real `retry@v1` scripts (5xx outage → skipped with a warning; 401, build error, timeouts only, and 500-then-401 → fail; 500-then-success → pass). In CI: confirm that one Java, one .NET and one TypeScript commit stage still run analysis green (`skipped=false`, no warning), and one acceptance stage too. The outage branch can only be proven by a real SonarCloud outage, or by a throwaway dispatch whose `sonar.host.url` points at a host that always answers 503.
 
 ## Resolved decisions
 

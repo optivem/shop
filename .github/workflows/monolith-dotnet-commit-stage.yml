@@ -11,6 +11,7 @@ on:
         - '.github/actions/lint/**'
         - '.github/actions/unit/**'
         - '.github/actions/component/**'
+        - '.github/actions/sonar-scan/**'
   pull_request:
     branches: [ "main" ]
     paths:
@@ -21,6 +22,7 @@ on:
         - '.github/actions/lint/**'
         - '.github/actions/unit/**'
         - '.github/actions/component/**'
+        - '.github/actions/sonar-scan/**'
   workflow_dispatch:
     inputs:
       commit-sha:
@@ -136,21 +138,31 @@ jobs:
         with:
           command: dotnet tool install --global dotnet-sonarscanner
 
+      # A SonarCloud outage (HTTP 5xx after every retry) skips analysis with a job-summary
+      # warning instead of failing the stage; any other failure still fails it. See
+      # .github/actions/sonar-scan.
       - name: Begin Sonar Analysis
+        id: sonar-begin
         # Ignore list extends multitier-backend-dotnet with e4 (css:S4654 wwwroot)
         # and e5 (csharpsquid:S1186 Pages/**) — Razor Pages-specific rules that
         # do not apply to the API-only backend.
-        run: |
-          dotnet sonarscanner begin /k:"optivem_shop-monolith-dotnet" /n:"shop-monolith-dotnet" /o:"optivem" /d:sonar.token="${SONAR_TOKEN}" /d:sonar.issue.ignore.multicriteria=e1,e2,e3,e4,e5,e6,e7 /d:sonar.issue.ignore.multicriteria.e1.ruleKey=csharpsquid:S2699 /d:sonar.issue.ignore.multicriteria.e1.resourceKey="Tests/**" /d:sonar.issue.ignore.multicriteria.e2.ruleKey=csharpsquid:S1118 /d:sonar.issue.ignore.multicriteria.e2.resourceKey="Program.cs" /d:sonar.issue.ignore.multicriteria.e3.ruleKey=csharpsquid:S2068 /d:sonar.issue.ignore.multicriteria.e3.resourceKey="appsettings.json" /d:sonar.issue.ignore.multicriteria.e4.ruleKey=css:S4654 /d:sonar.issue.ignore.multicriteria.e4.resourceKey="wwwroot/**" /d:sonar.issue.ignore.multicriteria.e5.ruleKey=csharpsquid:S1186 /d:sonar.issue.ignore.multicriteria.e5.resourceKey="Pages/**" /d:sonar.issue.ignore.multicriteria.e6.ruleKey=csharpsquid:S1075 /d:sonar.issue.ignore.multicriteria.e6.resourceKey="**/*" /d:sonar.issue.ignore.multicriteria.e7.ruleKey=csharpsquid:S3267 /d:sonar.issue.ignore.multicriteria.e7.resourceKey="**/*"
-        working-directory: system/monolith/dotnet
+        uses: ./.github/actions/sonar-scan
+        with:
+          label: Begin Sonar Analysis
+          working-directory: system/monolith/dotnet
+          command: >-
+            dotnet sonarscanner begin /k:"optivem_shop-monolith-dotnet" /n:"shop-monolith-dotnet" /o:"optivem" /d:sonar.token="${SONAR_TOKEN}" /d:sonar.issue.ignore.multicriteria=e1,e2,e3,e4,e5,e6,e7 /d:sonar.issue.ignore.multicriteria.e1.ruleKey=csharpsquid:S2699 /d:sonar.issue.ignore.multicriteria.e1.resourceKey="Tests/**" /d:sonar.issue.ignore.multicriteria.e2.ruleKey=csharpsquid:S1118 /d:sonar.issue.ignore.multicriteria.e2.resourceKey="Program.cs" /d:sonar.issue.ignore.multicriteria.e3.ruleKey=csharpsquid:S2068 /d:sonar.issue.ignore.multicriteria.e3.resourceKey="appsettings.json" /d:sonar.issue.ignore.multicriteria.e4.ruleKey=css:S4654 /d:sonar.issue.ignore.multicriteria.e4.resourceKey="wwwroot/**" /d:sonar.issue.ignore.multicriteria.e5.ruleKey=csharpsquid:S1186 /d:sonar.issue.ignore.multicriteria.e5.resourceKey="Pages/**" /d:sonar.issue.ignore.multicriteria.e6.ruleKey=csharpsquid:S1075 /d:sonar.issue.ignore.multicriteria.e6.resourceKey="**/*" /d:sonar.issue.ignore.multicriteria.e7.ruleKey=csharpsquid:S3267 /d:sonar.issue.ignore.multicriteria.e7.resourceKey="**/*"
 
       - name: Build for Sonar
+        if: steps.sonar-begin.outputs.skipped != 'true'
         run: dotnet build
         working-directory: system/monolith/dotnet
 
       - name: End Sonar Analysis
-        uses: optivem/actions/retry@v1
+        if: steps.sonar-begin.outputs.skipped != 'true'
+        uses: ./.github/actions/sonar-scan
         with:
+          label: End Sonar Analysis
           working-directory: system/monolith/dotnet
           command: dotnet sonarscanner end /d:sonar.token="${SONAR_TOKEN}"
 
