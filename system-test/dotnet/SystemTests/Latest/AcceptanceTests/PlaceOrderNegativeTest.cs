@@ -189,7 +189,7 @@ public class PlaceOrderNegativeTest : BaseAcceptanceTest
         await Scenario(channel)
             .Given().Order().WithIdempotencyKey("ORDER-KEY").WithQuantity("1")
             .And().LoggedInAsCustomer()
-            .When().PlaceOrder().WithIdempotencyKey("ORDER-KEY").WithQuantity("2")
+            .When().PlaceOrder().WithOrderNumber("SECOND-ORDER").WithIdempotencyKey("ORDER-KEY").WithQuantity("2")
             .Then().ShouldFail()
             .ErrorMessage("Idempotency-Key has already been used with a different request");
     }

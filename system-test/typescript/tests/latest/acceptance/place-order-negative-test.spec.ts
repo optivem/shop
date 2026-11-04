@@ -212,6 +212,7 @@ forChannels(ChannelType.API)(() => {
             .loggedInAsCustomer()
             .when()
             .placeOrder()
+            .withOrderNumber('SECOND-ORDER')
             .withIdempotencyKey('ORDER-KEY')
             .withQuantity('2')
             .then()

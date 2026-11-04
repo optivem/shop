@@ -284,12 +284,7 @@ export default function AdminCouponsPage() {
               </output>
             </div>
           )}
-          {!loading && coupons.length === 0 && (
-            <div className="text-center py-3 text-muted">
-              <p>No coupons found</p>
-            </div>
-          )}
-          {!loading && coupons.length > 0 && (
+          {!loading && (
             <div className="table-responsive">
               <table
                 className="table table-striped table-hover"
@@ -306,16 +301,24 @@ export default function AdminCouponsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {coupons.map((coupon) => (
-                    <tr key={coupon.code}>
-                      <td>{coupon.code}</td>
-                      <td>{(Number(coupon.discountRate) * 100).toFixed(2)}%</td>
-                      <td>{formatDate(coupon.validFrom)}</td>
-                      <td>{formatValidTo(coupon.validTo)}</td>
-                      <td>{formatUsageLimit(coupon.usageLimit)}</td>
-                      <td>{coupon.usedCount}</td>
+                  {coupons.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="text-center py-3 text-muted">
+                        No coupons found
+                      </td>
                     </tr>
-                  ))}
+                  ) : (
+                    coupons.map((coupon) => (
+                      <tr key={coupon.code}>
+                        <td>{coupon.code}</td>
+                        <td>{(Number(coupon.discountRate) * 100).toFixed(2)}%</td>
+                        <td>{formatDate(coupon.validFrom)}</td>
+                        <td>{formatValidTo(coupon.validTo)}</td>
+                        <td>{formatUsageLimit(coupon.usageLimit)}</td>
+                        <td>{coupon.usedCount}</td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>

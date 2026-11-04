@@ -215,6 +215,7 @@ class PlaceOrderNegativeTest extends BaseAcceptanceTest {
                     .withQuantity("1")
                 .and().loggedInAsCustomer()
                 .when().placeOrder()
+                    .withOrderNumber("SECOND-ORDER")
                     .withIdempotencyKey("ORDER-KEY")
                     .withQuantity("2")
                 .then().shouldFail()

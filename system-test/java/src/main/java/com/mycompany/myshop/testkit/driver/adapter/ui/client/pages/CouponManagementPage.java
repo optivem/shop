@@ -32,6 +32,9 @@ public class CouponManagementPage extends BasePage {
     private static final String TABLE_CELL_VALID_TO_SELECTOR = "table.table tbody tr td:nth-child(4)";
     private static final String TABLE_CELL_USAGE_LIMIT_SELECTOR = "table.table tbody tr td:nth-child(5)";
     private static final String TABLE_CELL_USED_COUNT_SELECTOR = "table.table tbody tr td:nth-child(6)";
+    // The list has finished loading once it shows either a coupon row or its empty-state row
+    private static final String TABLE_DATA_OR_EMPTY_SELECTOR =
+            TABLE_CELL_DISCOUNT_SELECTOR + ", table.table tbody tr td:has-text(\"No coupons found\") >> nth=0";
 
     // Display text constants
     private static final String PERCENT_SYMBOL = "%";
@@ -72,6 +75,12 @@ public class CouponManagementPage extends BasePage {
     public List<BrowseCouponsResponse.CouponDto> readCoupons() {
         // Wait for table to appear/refresh after operations like PublishCoupon
         pageClient.waitForVisible(COUPONS_TABLE_SELECTOR);
+        pageClient.waitForVisible(TABLE_DATA_OR_EMPTY_SELECTOR);
+
+        // An empty list renders a single "No coupons found" row, which has no discount cell
+        if (pageClient.readAllTextContentsNoWait(TABLE_CELL_DISCOUNT_SELECTOR).isEmpty()) {
+            return new ArrayList<>();
+        }
 
         var coupons = new ArrayList<BrowseCouponsResponse.CouponDto>();
         // Use readAllTextContentsWithoutWait to avoid strict mode violations

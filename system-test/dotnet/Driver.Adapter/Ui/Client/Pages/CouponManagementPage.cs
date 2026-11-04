@@ -30,6 +30,10 @@ public class CouponManagementPage : BasePage
     private const string TableCellUsageLimitSelector = "table.table tbody tr td:nth-child(5)";
     private const string TableCellUsedCountSelector = "table.table tbody tr td:nth-child(6)";
 
+    // The list has finished loading once it shows either a coupon row or its empty-state row
+    private const string TableDataOrEmptySelector =
+        TableCellDiscountSelector + ", table.table tbody tr td:has-text(\"No coupons found\") >> nth=0";
+
     // Display text constants
     private const string PercentSymbol = "%";
     private const string TextImmediate = "Immediate";
@@ -76,6 +80,13 @@ public class CouponManagementPage : BasePage
     {
         // Wait for table to appear/refresh after operations like PublishCoupon
         await PageClient.WaitForVisibleAsync(CouponsTableSelector);
+        await PageClient.WaitForVisibleAsync(TableDataOrEmptySelector);
+
+        // An empty list renders a single "No coupons found" row, which has no discount cell
+        if ((await PageClient.ReadAllTextContentsNoWaitAsync(TableCellDiscountSelector)).Count == 0)
+        {
+            return new List<CouponDto>();
+        }
 
         var coupons = new List<CouponDto>();
         // Use readAllTextContents to avoid strict mode violations
