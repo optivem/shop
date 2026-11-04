@@ -11,9 +11,14 @@ import com.mycompany.myshop.backend.testkit.driver.port.external.erp.ErpDriver;
 /**
  * Low-level ERP stub driver: registers WireMock mappings against a supplied {@link WireMock} client.
  * Wrapping a client (rather than a {@code WireMockServer}) lets one driver type point at either the
- * in-process component-test server or the in-process narrow-integration server. The URLs and JSON
- * bodies are byte-identical to {@code BaseComponentTest}'s {@code stub*} helpers, so switching a
- * test to the DSL is behaviour-neutral.
+ * in-process component-test server or the in-process narrow-integration server.
+ *
+ * <p>The URLs and JSON bodies have the same shape as the raw WireMock stubs the {@code legacy/}
+ * component and integration twins inline, which is what makes their side-by-side "before/after"
+ * comparison fair. That is a convention, not a guarantee: nothing checks that the two stay in step.
+ * The stub-fidelity suite ({@code contract/external/}) guards this driver against the SUT's
+ * gateways, not against the twins. If you change a URL or JSON body here, update the twins' inline
+ * stubs by hand.
  */
 public class ErpStubDriver implements ErpDriver {
 

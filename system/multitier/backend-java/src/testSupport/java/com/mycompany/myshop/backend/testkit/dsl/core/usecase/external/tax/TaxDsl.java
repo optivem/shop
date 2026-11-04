@@ -15,8 +15,9 @@ import com.mycompany.myshop.backend.testkit.dsl.core.usecase.external.tax.usecas
  * app.tax().failsForCountry().country("US").status(500).body("Internal Server Error").execute();
  * }</pre>
  *
- * <p>Rates are passed as {@code String} so the stubbed JSON is byte-identical to the raw WireMock
- * the {@code legacy/} tests inline.
+ * <p>Rates are passed as {@code String} so a test controls the exact JSON number text (e.g.
+ * {@code 0.10}, not {@code 0.1}) and can match the raw WireMock the {@code legacy/} tests inline.
+ * Matching it is up to the test: nothing checks it.
  */
 public class TaxDsl {
 

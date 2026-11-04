@@ -21,8 +21,9 @@ import com.mycompany.myshop.backend.testkit.dsl.core.usecase.external.erp.usecas
  * app.erp().failsForPromotion().status(503).body("Service Unavailable").execute();
  * }</pre>
  *
- * <p>Prices and discounts are passed as {@code String} so the stubbed JSON is byte-identical to the
- * raw WireMock the {@code legacy/} tests inline.
+ * <p>Prices and discounts are passed as {@code String} so a test controls the exact JSON number
+ * text (e.g. {@code 10.00}, not {@code 10.0}) and can match the raw WireMock the {@code legacy/}
+ * tests inline. Matching it is up to the test: nothing checks it.
  */
 public class ErpDsl {
 

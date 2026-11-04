@@ -9,8 +9,9 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import com.mycompany.myshop.backend.testkit.driver.port.external.clock.ClockDriver;
 
 /**
- * Low-level Clock stub driver. Registers the mapping against a supplied {@link WireMock} client; the
- * URL and JSON body are byte-identical to {@code BaseComponentTest#stubClock}.
+ * Low-level Clock stub driver. Registers the mapping against a supplied {@link WireMock} client.
+ * The URL and JSON body have the same shape as the raw WireMock stubs the {@code legacy/} twins
+ * inline, but nothing checks that they stay in step; see {@code ErpStubDriver}.
  */
 public class ClockStubDriver implements ClockDriver {
 
