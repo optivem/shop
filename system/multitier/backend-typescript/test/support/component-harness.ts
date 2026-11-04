@@ -182,27 +182,30 @@ export class ComponentHarness {
   }
 
   // --- External-system stub helpers (shared by component tests and provider states) ---
+  // Named after the backend-java testkit's ClockDriver / ErpDriver / TaxDriver ports (returnsTime,
+  // returnsProduct, ...): the names describe what the external system answers, which stays true for
+  // a real implementor, not that it is a stub.
 
-  stubClock(isoInstant: string): void {
+  returnsTime(isoInstant: string): void {
     this.clock.stub('GET', '/api/time', 200, { time: isoInstant });
   }
 
-  stubProduct(sku: string, price: number): void {
+  returnsProduct(sku: string, price: number): void {
     this.erp.stub('GET', `/api/products/${sku}`, 200, { id: sku, price });
   }
 
-  stubProductMissing(sku: string): void {
+  returnsNoProduct(sku: string): void {
     this.erp.stub('GET', `/api/products/${sku}`, 404);
   }
 
-  stubPromotion(active: boolean, discount: number): void {
+  returnsPromotion(active: boolean, discount: number): void {
     this.erp.stub('GET', '/api/promotion', 200, {
       promotionActive: active,
       discount,
     });
   }
 
-  stubTax(country: string, rate: number): void {
+  returnsTaxRate(country: string, rate: number): void {
     this.tax.stub('GET', `/api/countries/${country}`, 200, {
       id: country,
       countryName: country,
@@ -210,7 +213,7 @@ export class ComponentHarness {
     });
   }
 
-  stubTaxMissing(country: string): void {
+  returnsNoTaxRate(country: string): void {
     this.tax.stub('GET', `/api/countries/${country}`, 404);
   }
 }

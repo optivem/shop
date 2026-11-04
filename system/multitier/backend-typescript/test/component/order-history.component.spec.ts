@@ -20,10 +20,10 @@ describe('Order History (component)', () => {
   });
 
   const placeOrder = async (customer = 'customer-a'): Promise<string> => {
-    harness.stubClock('2026-03-10T12:00:00Z');
-    harness.stubProduct('BOOK-123', 10.0);
-    harness.stubPromotion(false, 1.0);
-    harness.stubTax('US', 0.1);
+    harness.returnsTime('2026-03-10T12:00:00Z');
+    harness.returnsProduct('BOOK-123', 10.0);
+    harness.returnsPromotion(false, 1.0);
+    harness.returnsTaxRate('US', 0.1);
 
     const placed = await (await harness.customerApi(customer))
       .post('/api/orders')

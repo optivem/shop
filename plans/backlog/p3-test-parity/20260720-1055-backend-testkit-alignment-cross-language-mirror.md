@@ -21,38 +21,48 @@ same assertion-overload surface as `backend-java`, with the three languages' tes
 
 ## ▶ Next executable step (resume here)
 
-**Blocked on U6.** Once the merged `money-strings-end-to-end` plan (meta U6) has landed, run Step 1
-(survey) and then Step 2 (driver-port vocabulary mirror). Do not start Step 3 or Step 4.
+Steps 1–2 are done (2026-11-03). Step 3 is narrowed to the `system-test` .NET/TS halves and is **not
+scheduled** by meta-plan `20261103-1021` (Q-P3d ran Steps 1–2 only); pick it up only on a new
+decision. Step 4 follows Step 3.
 
 ## Decisions (2026-11-03)
 
 - Run **Steps 1–2 only** (survey + driver-port vocabulary mirror), sequenced **after** U6
-  `money-strings-end-to-end` lands (meta-plan `20261103-1021`, Q-A / Q-P3d).
-- **Steps 3–4 are dropped, or wait for the money merge.** The money plan settles the assertion
-  surface; re-assess Steps 3–4 against what it ships, and delete them if it already covers the
-  .NET/TS halves.
+  `money-strings-end-to-end` lands (meta-plan `20261103-1021`, Q-A / Q-P3d). Done.
+- **Steps 3–4 re-assessed against what U6 shipped:** U6 did not touch the .NET/TS DSL surfaces, so
+  Step 3 is not covered by it and stays, narrowed by the survey below.
 
-## Dependency
+## Survey result (Step 1, 2026-11-03)
 
-**Blocked**, and additionally **unsurveyed** — the .NET and TypeScript harnesses have not been looked
-at once since the restructure. The first deliverable is therefore a survey, not a port: it is entirely
-possible those harnesses are structurally different enough that parts of the Java payload do not apply.
-Do not commit to full convergence before Step 1 reports.
+Only Java has a backend testkit. `backend-java` and `backend-clean-java` match (driver ports
+`ErpDriver` / `TaxDriver` / `ClockDriver` / `MyShopDriver`, SUT readers, scenario DSL with Given /
+When / Then stages and `Then*` steps; clean-java has simulator clients in place of `ErpRealDriver`).
+
+| Item | Java | .NET (`backend-dotnet/Tests`) | TS (`backend-typescript/test`) |
+|---|---|---|---|
+| External-system driver ports | yes | no: private helpers in `Contract/BackendPactVerificationTest.cs` | no: public methods on `test/support/component-harness.ts` `ComponentHarness` |
+| `returns*` / `returnsNo*` stubs | yes | yes, renamed in Step 2 | yes, renamed in Step 2 (money params still `number`) |
+| `failsFor*`, `goTo*`, `assume()...shouldBeRunning()` | yes | missing (integration tests use generic path stubs, like Java's legacy twin) | missing (same) |
+| `MyShopDriver` / SUT readers | yes | missing (raw `HttpClient` + local helpers) | missing (supertest agents) |
+| Scenario DSL, `Then*` steps | yes, money/rates `String` | missing; inline `Assert`, string-typed `AssertWireString` | missing; inline `expect(...).toBe('20.00')` |
+
+Step 2 renamed .NET `StubClock`/`StubProduct`/`StubPromotion`/`StubNoProduct`/`StubTax`/`StubNoTax` and
+TS `stubClock`/`stubProduct`/`stubPromotion`/`stubProductMissing`/`stubTax`/`stubTaxMissing` to
+`returnsTime`/`returnsProduct`/`returnsPromotion`/`returnsNoProduct`/`returnsTaxRate`/`returnsNoTaxRate`.
+
+So the backend half of Step 3 has nothing to port: neither harness has assertion overloads, and their
+inline assertions already compare wire strings. Converging the harness *shape* (extracting driver
+ports and a DSL) is new work, not a mirror, and is out of this plan.
 
 ## Steps
 
-- [ ] Step 1: **Survey** `backend-dotnet` and `backend-typescript` test support against the
-      restructured `backend-java` one. Enumerate concretely (per the CLAUDE.md consistency-check rule):
-      every driver port + method, every `Then*` step + signature, side by side across the three
-      languages. Output is a gap table, not a verdict. **This step sizes the rest of the file.**
-- [ ] Step 2: **Driver-port vocabulary mirror** (from source plan Item 1). Java renames the ten
-      stub-programming methods on `ErpDriver` / `TaxDriver` / `ClockDriver` to match their DSL callers
-      (`stubProduct` → `returnsProduct`, `stubTaxError` → `failsForCountry`, …). Apply the equivalent
-      rename in .NET and TypeScript — only where Step 1 confirms the same port shape exists.
-- [ ] Step 3: **Assertion-overload rollout** (from source plan Item 5). Java converges on
-      `String`-canonical money/rate assertions with `double` as a delegating convenience
-      (`BigDecimal.toPlainString()` equivalent per language). Mirror in .NET and TypeScript, including
-      the `system-test` halves. **Additive only — nothing is deleted, so no call site changes.**
+- [ ] Step 3: **Port the String-only surface to the `system-test` .NET/TS halves** (from source plan
+      Item 5, as settled by U6). Java's money/rate assertions take `String` only. Delete the .NET/TS
+      numeric overloads (`IThenOrder.HasUnitPrice(decimal)` and its siblings, TS `hasUnitPrice(number)`,
+      the `string | number` params) and convert their call sites to strings. Optional, backend side:
+      `ComponentHarness.returnsProduct` / `returnsPromotion` / `returnsTaxRate` take `number`; moving
+      them to `string` needs a raw-body `StubServer` variant so the stub wire keeps the numeric
+      literal Java's `ErpStubDriver` writes.
 - [ ] Step 4: **Cross-language consistency check** — re-run the Step 1 enumeration and confirm parity;
       flag anything present in one language and missing in another. Never conclude "no changes needed"
       from a quick read.
@@ -87,8 +97,8 @@ Comparison must be **value-based, not representation-based** — `isEqualByCompa
 so `0.10` equals `0.1`. Scale is decided by the SUT's serialization, not the test, so a
 scale-sensitive compare is a latent failure. This is what the `GetTax.taxRate` defect was.
 
-**2. Preferred surface form — what the test author types.**
-**`String`, documented as the default**, with the numeric form available as a labelled convenience.
+**2. Surface form — what the test author types.**
+**`String`, the only surface** (U6 deleted the numeric convenience; see below).
 
 The reason is not precision loss in the DSL — there is none for realistic money values. It is that
 `hasTotalPrice(120.00)` has **already** become a `double` at the language level before any DSL code
@@ -107,19 +117,15 @@ since it is the only surface form meaning the same thing in all three languages.
 | | Target |
 |---|---|
 | Internal comparison | Exact decimal type per language, value-based compare. **TS: normalized string compare** |
-| Preferred surface | `String` — documented default in all three languages |
-| Numeric surface (`double`/`decimal`/`number`) | Available everywhere, labelled convenience, **not** the example form |
+| Only surface | `String` — in all three languages |
+| Numeric surface (`double`/`decimal`/`number`) | none (deleted in Java; .NET/TS port the deletion) |
 | Request DTOs | `String` always — non-negotiable; negative tests must be able to send `"abc"`, `"-0.5"` |
 
-~~**Guidance, not enforcement.** The numeric overloads stay.~~ **⚠️ Under review — see
-`plans/20260722-1216-string-only-money-surface.md`.** A call-site census taken the same day showed
-`backend-java` is already 25:2 in favour of `String` (so the numeric overloads there have almost no
-callers) while `system-test/java` is 31:0 the other way. That plan proposes **enforcement**: delete
-the numeric surface entirely, leaving one form to mirror instead of two.
-
-**Resolve that plan before running Step 3** — it decides whether this mirror ports one surface form or
-two, and doing it after the mirror triples the churn. Everything else in this *Agreed target* section
-stands regardless.
+**Enforcement, not guidance (settled by U6, 2026-11-03).** `money-strings-end-to-end` deleted the
+numeric overloads and `Converter.fromDouble` from `system-test/java`, `backend-java` and
+`backend-clean-java`, so a numeric literal such as `hasTotalPrice(120.00)` no longer compiles, and it put
+money and rates on the wire as fixed-scale JSON strings (`"20.00"`, `"0.2000"`) in all seven backends.
+Step 3 therefore ports one surface form, not two.
 
 **Note the per-layer split in Java is compatible with this, not an exception to it.**
 `system-test/java` is `BigDecimal`-canonical; `backend-java` is `String`-canonical *by documented

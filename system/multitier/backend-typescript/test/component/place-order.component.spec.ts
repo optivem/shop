@@ -56,10 +56,10 @@ describe('Place Order (component)', () => {
   };
 
   it('computes totals from price, promotion and tax', async () => {
-    harness.stubClock('2026-03-10T12:00:00Z');
-    harness.stubProduct('BOOK-123', 10.0);
-    harness.stubPromotion(false, 1.0);
-    harness.stubTax('US', 0.1);
+    harness.returnsTime('2026-03-10T12:00:00Z');
+    harness.returnsProduct('BOOK-123', 10.0);
+    harness.returnsPromotion(false, 1.0);
+    harness.returnsTaxRate('US', 0.1);
 
     const order = await placeAndFetch({
       sku: 'BOOK-123',
@@ -76,10 +76,10 @@ describe('Place Order (component)', () => {
   });
 
   it('applies an active promotion discount', async () => {
-    harness.stubClock('2026-03-10T12:00:00Z');
-    harness.stubProduct('BOOK-123', 10.0);
-    harness.stubPromotion(true, 0.9);
-    harness.stubTax('US', 0.1);
+    harness.returnsTime('2026-03-10T12:00:00Z');
+    harness.returnsProduct('BOOK-123', 10.0);
+    harness.returnsPromotion(true, 0.9);
+    harness.returnsTaxRate('US', 0.1);
 
     const order = await placeAndFetch({
       sku: 'BOOK-123',
@@ -104,10 +104,10 @@ describe('Place Order (component)', () => {
       }),
     );
 
-    harness.stubClock('2026-03-10T12:00:00Z');
-    harness.stubProduct('BOOK-123', 10.0);
-    harness.stubPromotion(false, 1.0);
-    harness.stubTax('US', 0.1);
+    harness.returnsTime('2026-03-10T12:00:00Z');
+    harness.returnsProduct('BOOK-123', 10.0);
+    harness.returnsPromotion(false, 1.0);
+    harness.returnsTaxRate('US', 0.1);
 
     const order = await placeAndFetch({
       sku: 'BOOK-123',
@@ -124,7 +124,7 @@ describe('Place Order (component)', () => {
   });
 
   it('rejects an order during the New Year blackout', async () => {
-    harness.stubClock('2026-12-31T23:59:00Z');
+    harness.returnsTime('2026-12-31T23:59:00Z');
 
     const customer = await harness.customerApi();
     const response = await customer
@@ -135,8 +135,8 @@ describe('Place Order (component)', () => {
   });
 
   it('rejects an unknown product', async () => {
-    harness.stubClock('2026-03-10T12:00:00Z');
-    harness.stubProductMissing('MISSING-1');
+    harness.returnsTime('2026-03-10T12:00:00Z');
+    harness.returnsNoProduct('MISSING-1');
 
     const customer = await harness.customerApi();
     const response = await customer
@@ -157,10 +157,10 @@ describe('Place Order (component)', () => {
         usedCount: 0,
       }),
     );
-    harness.stubClock('2026-03-10T12:00:00Z');
-    harness.stubProduct('BOOK-123', 10.0);
-    harness.stubPromotion(false, 1.0);
-    harness.stubTax('US', 0.1);
+    harness.returnsTime('2026-03-10T12:00:00Z');
+    harness.returnsProduct('BOOK-123', 10.0);
+    harness.returnsPromotion(false, 1.0);
+    harness.returnsTaxRate('US', 0.1);
 
     const customer = await harness.customerApi();
     const responses = await Promise.all(

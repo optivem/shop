@@ -195,46 +195,46 @@ public class BackendPactVerificationTest : IAsyncLifetime
         switch (state)
         {
             case "product BOOK-123 exists and US is taxable":
-                StubClock("2026-03-10T12:00:00Z");
-                StubProduct("BOOK-123", "10.00");
-                StubPromotion(false, "1.0");
-                StubTax("US", "0.10");
+                ReturnsTime("2026-03-10T12:00:00Z");
+                ReturnsProduct("BOOK-123", "10.00");
+                ReturnsPromotion(false, "1.0");
+                ReturnsTaxRate("US", "0.10");
                 break;
 
             case "order placement is blocked by the New Year blackout":
-                StubClock("2026-12-31T23:59:00Z");
+                ReturnsTime("2026-12-31T23:59:00Z");
                 break;
 
             // Everything the order needs is in place — the coupon is the one thing missing, so the
             // rejection the frontend renders is the coupon's and not something else failing first.
             // ResetState empties the coupon table, so nothing has to be un-seeded.
             case "coupon INVALIDCOUPON does not exist":
-                StubClock("2026-03-10T12:00:00Z");
-                StubProduct("BOOK-123", "10.00");
-                StubPromotion(false, "1.0");
-                StubTax("US", "0.10");
+                ReturnsTime("2026-03-10T12:00:00Z");
+                ReturnsProduct("BOOK-123", "10.00");
+                ReturnsPromotion(false, "1.0");
+                ReturnsTaxRate("US", "0.10");
                 break;
 
             // ERP is the one that says a SKU is not a product. The clock still has to answer: it is
             // consulted before the product is looked up.
             case "product NON-EXISTENT-SKU-12345 does not exist":
-                StubClock("2026-03-10T12:00:00Z");
-                StubNoProduct("NON-EXISTENT-SKU-12345");
+                ReturnsTime("2026-03-10T12:00:00Z");
+                ReturnsNoProduct("NON-EXISTENT-SKU-12345");
                 break;
 
             // The product must resolve for the country to be the thing that fails — Tax is consulted
             // only after ERP has answered.
             case "product BOOK-123 exists and XX is not taxable":
-                StubClock("2026-03-10T12:00:00Z");
-                StubProduct("BOOK-123", "10.00");
-                StubPromotion(false, "1.0");
-                StubNoTax("XX");
+                ReturnsTime("2026-03-10T12:00:00Z");
+                ReturnsProduct("BOOK-123", "10.00");
+                ReturnsPromotion(false, "1.0");
+                ReturnsNoTaxRate("XX");
                 break;
 
             // 22:15 on December 31st — inside the cancellation blackout, with a cancellable order to
             // aim at.
             case "order cancellation is blocked by the New Year blackout":
-                StubClock("2026-12-31T22:15:00Z");
+                ReturnsTime("2026-12-31T22:15:00Z");
                 _db.Orders.Add(SampleOrder("ORD-1"));
                 _db.SaveChanges();
                 break;
@@ -248,7 +248,7 @@ public class BackendPactVerificationTest : IAsyncLifetime
             // touches the order (the blackout is decided first), so the clock is stubbed here too —
             // at a date well clear of the blackout, which is what makes the cancellation succeed.
             case "order ORD-1 is placed":
-                StubClock("2026-03-10T12:00:00Z");
+                ReturnsTime("2026-03-10T12:00:00Z");
                 _db.Orders.Add(SampleOrder("ORD-1"));
                 _db.SaveChanges();
                 break;
@@ -278,10 +278,10 @@ public class BackendPactVerificationTest : IAsyncLifetime
                 break;
 
             case "coupon SAVE10 exists":
-                StubClock("2026-03-10T12:00:00Z");
-                StubProduct("BOOK-123", "10.00");
-                StubPromotion(false, "1.0");
-                StubTax("US", "0.10");
+                ReturnsTime("2026-03-10T12:00:00Z");
+                ReturnsProduct("BOOK-123", "10.00");
+                ReturnsPromotion(false, "1.0");
+                ReturnsTaxRate("US", "0.10");
                 _db.Coupons.Add(new Coupon
                 {
                     Code = "SAVE10",
@@ -297,19 +297,22 @@ public class BackendPactVerificationTest : IAsyncLifetime
         }
     }
 
-    private void StubClock(string isoInstant) =>
+    // Named after the backend-java testkit's ClockDriver / ErpDriver / TaxDriver ports (returnsTime,
+    // returnsProduct, ...): the names describe what the external system answers, which stays true for
+    // a real implementor, not that it is a stub.
+    private void ReturnsTime(string isoInstant) =>
         _clock.Given(Request.Create().WithPath("/api/time").UsingGet())
               .RespondWith(Response.Create().WithStatusCode(200)
                   .WithBody($"{{\"time\":\"{isoInstant}\"}}")
                   .WithHeader("Content-Type", "application/json"));
 
-    private void StubProduct(string sku, string price) =>
+    private void ReturnsProduct(string sku, string price) =>
         _erp.Given(Request.Create().WithPath($"/api/products/{sku}").UsingGet())
             .RespondWith(Response.Create().WithStatusCode(200)
                 .WithBody($"{{\"id\":\"{sku}\",\"price\":{price}}}")
                 .WithHeader("Content-Type", "application/json"));
 
-    private void StubPromotion(bool active, string discount) =>
+    private void ReturnsPromotion(bool active, string discount) =>
         _erp.Given(Request.Create().WithPath("/api/promotion").UsingGet())
             .RespondWith(Response.Create().WithStatusCode(200)
                 .WithBody($"{{\"promotionActive\":{active.ToString().ToLower()},\"discount\":{discount}}}")
@@ -317,15 +320,15 @@ public class BackendPactVerificationTest : IAsyncLifetime
 
     // An unknown product / an untaxed country, programmed as deliberately as a known one: both
     // external systems answer 404, which is what the gateways turn into the rejection.
-    private void StubNoProduct(string sku) =>
+    private void ReturnsNoProduct(string sku) =>
         _erp.Given(Request.Create().WithPath($"/api/products/{sku}").UsingGet())
             .RespondWith(Response.Create().WithStatusCode(404));
 
-    private void StubNoTax(string country) =>
+    private void ReturnsNoTaxRate(string country) =>
         _tax.Given(Request.Create().WithPath($"/api/countries/{country}").UsingGet())
             .RespondWith(Response.Create().WithStatusCode(404));
 
-    private void StubTax(string country, string rate) =>
+    private void ReturnsTaxRate(string country, string rate) =>
         _tax.Given(Request.Create().WithPath($"/api/countries/{country}").UsingGet())
             .RespondWith(Response.Create().WithStatusCode(200)
                 .WithBody($"{{\"id\":\"{country}\",\"countryName\":\"{country}\",\"taxRate\":{rate}}}")

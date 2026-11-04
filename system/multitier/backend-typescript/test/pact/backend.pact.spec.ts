@@ -58,15 +58,15 @@ describe('Backend Pact Provider Verification', () => {
       stateHandlers: {
         'product BOOK-123 exists and US is taxable': async () => {
           await harness.resetState();
-          harness.stubClock('2026-03-10T12:00:00Z');
-          harness.stubProduct('BOOK-123', 10.0);
-          harness.stubPromotion(false, 1.0);
-          harness.stubTax('US', 0.1);
+          harness.returnsTime('2026-03-10T12:00:00Z');
+          harness.returnsProduct('BOOK-123', 10.0);
+          harness.returnsPromotion(false, 1.0);
+          harness.returnsTaxRate('US', 0.1);
         },
 
         'order placement is blocked by the New Year blackout': async () => {
           await harness.resetState();
-          harness.stubClock('2026-12-31T23:59:00Z');
+          harness.returnsTime('2026-12-31T23:59:00Z');
         },
 
         // Everything the order needs is in place — the coupon is the one thing missing, so the
@@ -74,35 +74,35 @@ describe('Backend Pact Provider Verification', () => {
         // resetState empties the coupon table, so nothing has to be un-seeded.
         'coupon INVALIDCOUPON does not exist': async () => {
           await harness.resetState();
-          harness.stubClock('2026-03-10T12:00:00Z');
-          harness.stubProduct('BOOK-123', 10.0);
-          harness.stubPromotion(false, 1.0);
-          harness.stubTax('US', 0.1);
+          harness.returnsTime('2026-03-10T12:00:00Z');
+          harness.returnsProduct('BOOK-123', 10.0);
+          harness.returnsPromotion(false, 1.0);
+          harness.returnsTaxRate('US', 0.1);
         },
 
         // ERP is the one that says a SKU is not a product. The clock still has to answer: it is
         // consulted before the product is looked up.
         'product NON-EXISTENT-SKU-12345 does not exist': async () => {
           await harness.resetState();
-          harness.stubClock('2026-03-10T12:00:00Z');
-          harness.stubProductMissing('NON-EXISTENT-SKU-12345');
+          harness.returnsTime('2026-03-10T12:00:00Z');
+          harness.returnsNoProduct('NON-EXISTENT-SKU-12345');
         },
 
         // The product must resolve for the country to be the thing that fails — Tax is consulted
         // only after ERP has answered.
         'product BOOK-123 exists and XX is not taxable': async () => {
           await harness.resetState();
-          harness.stubClock('2026-03-10T12:00:00Z');
-          harness.stubProduct('BOOK-123', 10.0);
-          harness.stubPromotion(false, 1.0);
-          harness.stubTaxMissing('XX');
+          harness.returnsTime('2026-03-10T12:00:00Z');
+          harness.returnsProduct('BOOK-123', 10.0);
+          harness.returnsPromotion(false, 1.0);
+          harness.returnsNoTaxRate('XX');
         },
 
         // 22:15 on December 31st — inside the cancellation blackout, with a cancellable order to
         // aim at.
         'order cancellation is blocked by the New Year blackout': async () => {
           await harness.resetState();
-          harness.stubClock('2026-12-31T22:15:00Z');
+          harness.returnsTime('2026-12-31T22:15:00Z');
           await harness.orderRepo.save(
             harness.orderRepo.create({
               ...sampleOrder(),
@@ -126,7 +126,7 @@ describe('Backend Pact Provider Verification', () => {
         // well clear of the blackout, which is what makes the cancellation succeed.
         'order ORD-1 is placed': async () => {
           await harness.resetState();
-          harness.stubClock('2026-03-10T12:00:00Z');
+          harness.returnsTime('2026-03-10T12:00:00Z');
           await harness.orderRepo.save(
             harness.orderRepo.create({
               ...sampleOrder(),
@@ -178,10 +178,10 @@ describe('Backend Pact Provider Verification', () => {
 
         'coupon SAVE10 exists': async () => {
           await harness.resetState();
-          harness.stubClock('2026-03-10T12:00:00Z');
-          harness.stubProduct('BOOK-123', 10.0);
-          harness.stubPromotion(false, 1.0);
-          harness.stubTax('US', 0.1);
+          harness.returnsTime('2026-03-10T12:00:00Z');
+          harness.returnsProduct('BOOK-123', 10.0);
+          harness.returnsPromotion(false, 1.0);
+          harness.returnsTaxRate('US', 0.1);
           await harness.couponRepo.save(
             harness.couponRepo.create({
               code: 'SAVE10',

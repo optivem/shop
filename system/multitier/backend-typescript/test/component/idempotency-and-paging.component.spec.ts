@@ -18,10 +18,10 @@ describe('Idempotency and paging (component)', () => {
 
   beforeEach(async () => {
     await harness.resetState();
-    harness.stubClock('2026-03-10T12:00:00Z');
-    harness.stubProduct('BOOK-123', 10.0);
-    harness.stubPromotion(false, 1.0);
-    harness.stubTax('US', 0.1);
+    harness.returnsTime('2026-03-10T12:00:00Z');
+    harness.returnsProduct('BOOK-123', 10.0);
+    harness.returnsPromotion(false, 1.0);
+    harness.returnsTaxRate('US', 0.1);
   });
 
   const place = async (body: object, key?: string) => {
@@ -94,7 +94,7 @@ describe('Idempotency and paging (component)', () => {
 
   it('reports the paging envelope with defaults, newest order first', async () => {
     const older = (await place(ORDER)).body as { orderNumber: string };
-    harness.stubClock('2026-03-11T12:00:00Z');
+    harness.returnsTime('2026-03-11T12:00:00Z');
     const newer = (await place(ORDER)).body as { orderNumber: string };
 
     const response = await harness.adminApi().get('/api/orders');
