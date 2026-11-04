@@ -1,4 +1,4 @@
-name: _deploy-stage-cloud
+name: _deploy-stage
 
 # QA / production deploy on Cloud Run: deploys a release candidate, then runs the smoke tests.
 # Called by _qa-stage.yml and _prod-stage.yml, which own RC resolution and what happens after a
@@ -12,7 +12,7 @@ name: _deploy-stage-cloud
 #
 # Two checkouts on purpose: the RC tag for the migrations, simulators and smoke tests, so a stage
 # runs what the RC was tested with, and the workflow's own commit for Keycloak, shared by all
-# (see build-cloud-images).
+# (see build-shared-images).
 #
 # Cloud Run deploys straight from public GHCR: the RC's images by their RC tag, and the shared
 # images from ghcr.io/<owner>/<repo>/shop-*, tagged by git tree hash (GHCR keeps them, so a
@@ -165,7 +165,7 @@ jobs:
 
       - name: Build and Push Shared Images
         id: shared
-        uses: ./.github/actions/build-cloud-images
+        uses: ./.github/actions/build-shared-images
         with:
           registry: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}
           source-path: source
@@ -206,7 +206,7 @@ jobs:
         uses: google-github-actions/setup-gcloud@v3
 
       - name: Deploy Keycloak to Cloud Run
-        uses: ./.github/actions/deploy-keycloak-cloud
+        uses: ./.github/actions/deploy-keycloak
         with:
           image: ${{ needs.promote-images.outputs.keycloak-image }}
           system: ${{ vars.SYSTEM_NAME }}

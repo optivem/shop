@@ -9,7 +9,7 @@ name: _qa-stage
 # and concurrency (github.workflow resolves to the caller, so a group here would deadlock).
 #
 # Everything per-variant comes from <architecture>-<language>: the tag prefix, the GitHub
-# environment, and the Cloud Run service and database names (see _deploy-stage-cloud.yml).
+# environment, and the Cloud Run service and database names (see _deploy-stage.yml).
 #
 # Cloud Run is the active deploy target. A Docker Compose deploy sits below as one commented
 # block; see the note there before switching to it.
@@ -122,7 +122,7 @@ jobs:
       contents: read
       id-token: write
       packages: read
-    uses: ./.github/workflows/_deploy-stage-cloud.yml
+    uses: ./.github/workflows/_deploy-stage.yml
     secrets: inherit
     with:
       stage: qa

@@ -175,7 +175,7 @@ jobs:
       contents: read
       id-token: write
       packages: read
-    uses: ./.github/workflows/_deploy-stage-cloud.yml
+    uses: ./.github/workflows/_deploy-stage.yml
     secrets: inherit
     with:
       stage: production

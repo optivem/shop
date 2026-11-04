@@ -57,16 +57,18 @@ Re-check the dates when executing: either repo may have moved on.
 
 ## Shop ↔ event-hub file names
 
-The same files have different names in the two repos. Shop's single-pipeline plan (`20261102-1855-single-pipeline-deploy-target.md`, Step 6b) drops "cloud" from shop's names, so match files by this table, not by path:
+The same files have different names in the two repos. Shop's single-pipeline plan (`20261102-1855-single-pipeline-deploy-target.md`, Step 6b) dropped "cloud" from shop's names (done locally on 2026-11-04, pending its post-outage bundle test), so match files by this table, not by path. Older notes in this plan still use the old shop names (left column).
 
-| Shop today | Shop after single-pipeline Step 6b | event-hub |
+| Shop before Step 6b | Shop now | event-hub |
 |---|---|---|
-| `.github/workflows/_deploy-stage-cloud.yml` | `_deploy-stage.yml` | `.github/workflows/_deploy-cloud-run.yml` |
-| `.github/workflows/_acceptance-stage-cloud.yml` | `_acceptance-stage.yml` | (in `acceptance-stage.yml`) |
-| `.github/actions/deploy-keycloak-cloud` | `deploy-keycloak` | `deploy-keycloak-cloud` |
-| `.github/actions/build-cloud-images` | `build-shared-images` | `build-cloud-images` |
-| `docker/keycloak/Dockerfile.cloud` | `Dockerfile` | `Dockerfile.cloud` |
-| `docker/keycloak/cloud-realm.jq` | `acceptance-realm.jq` | `cloud-realm.jq` |
+| `.github/workflows/_deploy-stage-cloud.yml` | `.github/workflows/_deploy-stage.yml` | `.github/workflows/_deploy-cloud-run.yml` |
+| `.github/workflows/_acceptance-stage-cloud.yml` | `.github/workflows/_acceptance-stage.yml` | (in `acceptance-stage.yml`) |
+| `.github/actions/deploy-keycloak-cloud` | `.github/actions/deploy-keycloak` | `deploy-keycloak-cloud` |
+| `.github/actions/build-cloud-images` | `.github/actions/build-shared-images` | `build-cloud-images` |
+| `docker/keycloak/Dockerfile.cloud` | `docker/keycloak/Dockerfile` | `Dockerfile.cloud` |
+| `docker/keycloak/cloud-realm.jq` | `docker/keycloak/acceptance-realm.jq` | `cloud-realm.jq` |
+
+Shop's versions also differ in content since Step 6: `build-shared-images` publishes the four shared images to public GHCR (`ghcr.io/<owner>/<repo>/shop-*`) and checks they are anonymously pullable, Cloud Run deploys straight from GHCR, and the Keycloak realms hold `${SYSTEM}`/`${RUN_APP_SUFFIX}` placeholders that Keycloak resolves from the container env (`deploy-keycloak` sets them), so the image takes no build args. Shop also has a billing kill-switch (`terraform/billing-kill-switch.tf`). Compare event-hub's files against these, not against the old shop ones.
 
 ## Findings (2026-11-02, shop `main` vs event-hub `main`)
 

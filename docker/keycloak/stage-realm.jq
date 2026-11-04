@@ -2,7 +2,7 @@
 # All variants, not only those deployed today: an imported realm is never updated, so URLs added later wouldn't apply.
 # Inputs: --arg realm <realm name>, --arg stage <qa|production>, --arg system <system>,
 #         --arg suffix <project-number>.<region>.run.app
-# Service names must match _deploy-stage-cloud.yml.
+# Service names must match _deploy-stage.yml.
 include "redirects";
 
 def urls(service): [{lang: ("java", "dotnet", "typescript")} | "https://\(service)-\($suffix)"];

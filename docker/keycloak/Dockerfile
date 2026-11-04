@@ -9,7 +9,7 @@
 # The URLs hold ${SYSTEM} and ${RUN_APP_SUFFIX} placeholders, which Keycloak resolves from the
 # container's environment when it imports the realms. So the image has no project details in it:
 # one public image (ghcr.io/<owner>/<repo>/shop-keycloak) serves every project and scaffold.
-# Runtime env: SYSTEM, RUN_APP_SUFFIX (<project-number>.<region>.run.app); see deploy-keycloak-cloud.
+# Runtime env: SYSTEM, RUN_APP_SUFFIX (<project-number>.<region>.run.app); see deploy-keycloak.
 # Build context: docker/keycloak. Local compose keeps using the stock image with shop-realm.json.
 FROM alpine:3.20 AS realm
 RUN apk add --no-cache jq

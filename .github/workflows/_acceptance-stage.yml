@@ -227,7 +227,7 @@ jobs:
       simulators-image: ${{ steps.shared.outputs.simulators }}
       stubs-image: ${{ steps.shared.outputs.stubs }}
     steps:
-      # The workflow's own commit, for the local actions and Keycloak (see build-cloud-images).
+      # The workflow's own commit, for the local actions and Keycloak (see build-shared-images).
       - name: Checkout Repository
         uses: actions/checkout@v6
 
@@ -286,7 +286,7 @@ jobs:
 
       - name: Build and Push Shared Images
         id: shared
-        uses: ./.github/actions/build-cloud-images
+        uses: ./.github/actions/build-shared-images
         with:
           registry: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}
           source-path: source
@@ -315,7 +315,7 @@ jobs:
         uses: google-github-actions/setup-gcloud@v3
 
       - name: Deploy Keycloak to Cloud Run
-        uses: ./.github/actions/deploy-keycloak-cloud
+        uses: ./.github/actions/deploy-keycloak
         with:
           image: ${{ needs.promote-images.outputs.keycloak-image }}
           system: ${{ vars.SYSTEM_NAME }}
