@@ -8,6 +8,7 @@ This directory contains the Terraform configuration and helper scripts that set 
 - **Secret Manager** for the database credentials and the Keycloak admin password
 - **IAM bindings** for GitHub Actions deployment
 - **Neon Postgres** project with one database per variant (created by `neonctl`, not Terraform)
+- **Billing kill-switch**: a budget, a Pub/Sub topic and a Cloud Function that unlinks billing at about €1 (see [Cost](#cost))
 
 ## Quick Start
 
@@ -77,9 +78,9 @@ Every name derives from the GitHub repo, or from the `SYSTEM_NAME` environment v
 | GCP project | `shop-<random 6 hex>` |
 | Neon project | `shop` |
 | Secrets | `shop-db`, `shop-keycloak-admin-password` |
-| Databases | `shop_<arch>_<language>_<real\|stub>` for every variant (`multitier`/`monolith` × `java`/`dotnet`/`typescript`, e.g. `shop_multitier_java_real`), `shop_multitier_java_qa`, `shop_multitier_java_production`, `shop_keycloak` |
+| Databases | `shop_<arch>_<language>_<real\|stub\|qa\|production>` for every variant (`multitier`/`monolith` × `java`/`dotnet`/`typescript`, e.g. `shop_multitier_java_real`), `shop_keycloak` |
 
-Hyphens are valid in GCP names but not in unquoted Postgres identifiers, so database names replace them with underscores. The system name is limited to 14 characters because it prefixes Cloud Run service names, which are limited to 49 (e.g. `<system>-multitier-typescript-real-frontend`).
+Hyphens are valid in GCP names but not in unquoted Postgres identifiers, so database names replace them with underscores. The system name is limited to 14 characters because it prefixes Cloud Run service names, which are limited to 49 (e.g. `<system>-multitier-typescript-real-frontend`). The longest names, `<system>-multitier-typescript-production-{frontend,backend}`, leave only 8 (12 for multitier-dotnet): Terraform warns at plan time and the deploy fails early with the name if it's longer. The names can't simply be shortened, because the imported Keycloak realms hold redirect URIs built from them.
 
 ## Variables
 
@@ -89,6 +90,7 @@ Hyphens are valid in GCP names but not in unquoted Postgres identifiers, so data
 | `github_repo` | GitHub repo in `owner/repo` format | Yes | `myorg/shop` |
 | `billing_account_id` | GCP billing account ID | Yes | `01ABCD-EFGHIJ-KLMNOP` |
 | `system_name` | Overrides the name derived from the repo (4-14 chars) | No | `shop` |
+| `billing_kill_switch_amount` | Monthly cost (billing account currency) at which billing is unlinked; `BILLING_KILL_SWITCH_AMOUNT` for `./setup-gcp.sh` | No | `1` |
 
 Find your billing account ID:
 ```bash
@@ -146,33 +148,34 @@ Google Cloud Project
 
 Google Cloud bills **per resource, by usage**. Each service has its own meter (time, storage, requests, data transferred), and the charges add up on the billing account linked to the project. There is no flat fee. Many services have a monthly free tier, counted per billing account.
 
-**Total estimated cost**: ~$0/month at demo scale.
+**In normal use the project costs $0**, and a **kill-switch** caps the worst case at about €1 a month plus a few cents. Strictly guaranteed $0 isn't possible on GCP: budget data lags usage by hours, so spending can run on a little before the kill-switch fires. The Docker Compose acceptance gates run on GitHub's runners and never touch GCP; they are the always-free path.
 
-### What is billed
+### What drives the cost
 
-| Service | What you pay for | Free tier (per month) |
+| Driver | When it happens | Why it stays at $0 |
 |---|---|---|
-| **Cloud Run** (request-based billing, the default) | vCPU-seconds and GiB-seconds, but **only while an instance is handling a request** (rounded up to 100 ms), plus a per-request fee | 180,000 vCPU-seconds, 360,000 GiB-seconds, 2M requests |
-| **Cloud Run** (instance-based billing, or `min-instances > 0`) | The instance's **whole lifetime**, even when idle | Same pool as above |
-| **Artifact Registry** | GB stored per month (~$0.10/GB after the free amount) | 0.5 GB |
-| **Secret Manager** | ~$0.06 per active secret version per location, plus access operations (~$0.03 per 10,000) | 6 versions, 10,000 accesses |
-| **Network egress** | Data leaving Google to the internet (responses to browsers and test runners); traffic coming in is free | Small allowance (~1 GiB from North America regions) |
-| **Cloud Logging** | Log data ingested above the free amount | 50 GiB per project |
-| **IAM, Workload Identity Federation, service accounts, enabled APIs, the project itself** | Free | — |
+| **Cloud Run** requests (vCPU-s, GiB-s, requests) | Only while a cloud stage runs tests or someone uses QA/production. Every cloud stage is manual (`workflow_dispatch`); the cloud acceptance cron is commented out, and QA/prod have none. | Request-based billing: an instance is billed only while it handles a request, and every service scales to zero (`--min-instances 0`). The free tier is 180,000 vCPU-s, 360,000 GiB-s and 2M requests a month. A cloud acceptance run keeps roughly 5–7 services (Keycloak, two stacks of system or backend+frontend, simulators, stubs) busy for the length of its suites, about 5,000–10,000 vCPU-s at 1 vCPU, so a few dozen runs a month fit. QA and production runs are only a deploy plus smoke tests. |
+| **Network egress** | Responses leaving Google: pages and API responses to the test runners and browsers, and Cloud Run's queries to Neon (AWS us-east-2), which also leave Google. | The free allowance is about 1 GiB a month from North America. Database traffic is a few MB per run; UI suites loading the frontend bundle are the larger part. Past the allowance, egress costs about $0.12/GiB, i.e. cents. |
+| **Image storage** | — | None: Cloud Run deploys the public GHCR images directly (`ghcr.io/<owner>/<repo>/...`, including the shared `shop-*` images), and Cloud Run imports an image once per deploy, not per instance. GitHub doesn't bill public package storage or pulls. The only Artifact Registry storage left is the kill-switch function's build image (a few MB, 0.5 GB free). Until the old `app-images` repository is removed from `main.tf` (held back until several cloud runs have deployed from GHCR), the cloud stages still copy images into it, unused, within its cleanup policy. |
+| **Secret Manager** | Every deploy reads `<system>-db`. | 2 secret versions (6 free) and a few accesses per run (10,000 free). |
+| **Cloud Logging** | Cloud Run request and container logs. | 50 GiB per project free. |
+| **Kill-switch** (budget, Pub/Sub, Cloud Function) | A few budget notifications a day. | Budgets are free; Pub/Sub carries a few KB (10 GiB free); the function runs a few times a day (2M invocations free), and its source zip sits in a small Cloud Storage bucket (5 GB free). |
+| **IAM, Workload Identity Federation, service accounts, enabled APIs, the project itself** | — | Free. |
 
-### Not on the GCP bill
+Not on the GCP bill: **Neon Postgres** bills through the Neon account (free plan; see `neon.sh`), and **image builds** run in GitHub Actions, not Cloud Build. (The kill-switch function's one-off build does run in Cloud Build, within its free minutes.)
 
-- **Neon Postgres** bills separately through the Neon account (see `neon.sh`).
-- **Image builds** run in GitHub Actions, not Cloud Build, so there is no Cloud Build charge.
+### Kill-switch
 
-### What keeps idle cost at ~$0
+`billing-kill-switch.tf` creates a budget on this project at `billing_kill_switch_amount` (default 1, in the billing account's currency, so about €1 for a EUR account). Every budget update goes to a Pub/Sub topic, and the `billing-kill-switch` Cloud Function **unlinks the project from its billing account** as soon as the month's cost passes the budget. That stops everything billable in the project: Cloud Run services stop serving, and the cloud stages fail until billing is back.
 
-- **Scale to zero**: the shared cloud stages (`_acceptance-stage.yml`, `_deploy-stage-cloud.yml`) deploy every service with `--min-instances 0`. You pay nothing between requests; the trade-off is a cold start on the first request (Keycloak's is the slowest).
-- **Small `max-instances`**: 1–2 in the shared cloud stages. This caps the cost of a traffic spike or a runaway test.
-- **Image cleanup**: the `app-images` repository's cleanup policy (`main.tf`) keeps the 10 newest versions of each image plus every `production-*` tag, and deletes the rest once they are a day old. With many images this can still go past the 0.5 GB free tier, but at ~$0.10/GB the overage is cents.
-- **Few secret versions**: one shared `<system>-db` JSON secret plus `<system>-keycloak-admin-password`, 2 versions in total; only 6 are free.
-- **Budget alerts**: create two on the billing account (Billing > Budgets & alerts), at €5 and €20 per month, alerting at 50/90/100%. Budgets **only alert; they do not stop spending**.
-- **Reset**: `./teardown-gcp.sh` destroys everything; `./setup-gcp.sh` recreates it.
+- **To restore billing**, re-run `./setup-gcp.sh`: Terraform links the billing account again (it shows as a change to confirm). Raise the limit first (`BILLING_KILL_SWITCH_AMOUNT=5 ./setup-gcp.sh`), or wait for the next month, because the budget still counts this month's cost and the next notification would unlink it again.
+- Google may delete resources of a project that stays without billing for a long time; `./setup-gcp.sh` recreates the GCP side.
+- Keep the two **budget alerts** on the billing account (Billing > Budgets & alerts), at €5 and €20 per month, alerting at 50/90/100%. They cover every project on the account and only alert.
+
+### Scale and limits
+
+- **Scale to zero**: every service is deployed with `--min-instances 0`. The trade-off is a cold start on the first request (Keycloak's is the slowest).
+- **Small `max-instances`**: 1–2 per service, so a traffic spike or a runaway test can't fan out.
 
 ### Stages
 
@@ -180,11 +183,10 @@ Every flavor has manual QA and production stages (`<flavor>-{qa,prod}-stage.yml`
 
 ### What would start costing money
 
-- Setting `min-instances ≥ 1` on any service: one always-on instance costs a few dollars a month or more.
-- Switching a service to instance-based ("CPU always allocated") billing.
-- Images piling up if the cleanup policy stops working.
-- More secret versions than the free 6.
+- Uncommenting the cloud acceptance cron (`<flavor>-acceptance-stage.yml`): hourly runs would use up the Cloud Run free tier within days, and the kill-switch would then stop the project.
+- Setting `min-instances ≥ 1` on any service, or switching a service to instance-based ("CPU always allocated") billing: one always-on instance costs a few dollars a month or more.
 - Heavy system-test traffic or large responses going past the egress or logging free tiers.
+- More secret versions than the free 6.
 
 Prices and free tiers change. Check the [Cloud Run pricing page](https://cloud.google.com/run/pricing) and the project's **Billing → Reports** for current figures.
 
