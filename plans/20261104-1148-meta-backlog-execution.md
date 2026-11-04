@@ -2,6 +2,18 @@
 
 > Consolidated on 2026-11-04 11:48 UTC (was `20261103-1021-meta-backlog-execution.md`). It now also coordinates the top-level plans added after it: `20261103-1049-gh-optivem-driven-shop-changes` (P4) and `20261104-0839-permanent-acc-e2e-environments` (P5). It's the single meta-plan for everything in `plans/`.
 
+## ⚠️ First: check GitHub status (every session, before any push, dispatch or CI check)
+
+GitHub was degraded on 2026-11-04 (and the user may still see it degraded from their side). Run this before pushing, dispatching a workflow or judging a red run:
+
+```bash
+curl -s https://www.githubstatus.com/api/v2/summary.json | jq -r '"Overall: \(.status.description)", (.components[] | select(.name|test("Actions|Git Operations|Packages|API Requests")) | "\(.name): \(.status)"), (.incidents[] | "Incident: \(.name) [\(.status)]")'
+```
+
+- Continue only if **Actions**, **Git Operations**, **Packages** and **API Requests** all say `operational` and there's no open incident. Also look at https://www.githubstatus.com, because the API can lag behind it.
+- If anything is degraded, do local-only work (code, compile, `--sample` system tests, plan edits) and don't push or dispatch. Don't count a red CI run as a real failure until it has been re-run with GitHub operational.
+- Packages matters too: cloud runs pull the GHCR images, and `build-shared-images` pushes them.
+
 ## TL;DR
 
 **Why:** The top-level plans in `plans/` and the backlog plans overlap on the same files, contracts, cloud stages and docker lock. Several were already done or obsolete, and most needed user decisions, so they can't safely be picked up in isolation while the cloud plan (P2) is active.
