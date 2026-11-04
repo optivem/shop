@@ -116,7 +116,7 @@ flowchart TD
 |---|---|
 | Gate: artifacts exist? | `preflight` job |
 | Should Run? | `check` job (as the gate's, plus Check Commit on Main) |
-| Build Shared Images | `shared-images` job (`.github/actions/build-shared-images`) |
+| Build Shared Images | `promote-images` job (`.github/actions/build-shared-images`) |
 | Deploy: Keycloak | `deploy-keycloak` job (`.github/actions/deploy-keycloak`) |
 | Deploy: Real / Stub Stacks | `deploy-stack` job (matrix `real`, `stub`) |
 | Run System Tests | `run` job: Resolve System URLs, checkout, harness setup, Point systems.yaml at the Deployed Stack, one step per suite |
