@@ -1,10 +1,11 @@
-# 2026-11-03 10:21 UTC — Plan coordination meta-plan: backlog execution
+# 2026-11-04 11:48 UTC — Plan coordination meta-plan: all active plans + backlog execution
 
+> Consolidated on 2026-11-04 11:48 UTC (was `20261103-1021-meta-backlog-execution.md`). It now also coordinates the top-level plans added after it: `20261103-1049-gh-optivem-driven-shop-changes` (P4) and `20261104-0839-permanent-acc-e2e-environments` (P5). It's the single meta-plan for everything in `plans/`.
 
 ## TL;DR
 
-**Why:** The 18 backlog plans overlap on the same files and contracts, several are already done or obsolete, and most are blocked on user decisions, so they can't safely be picked up in isolation while the cloud deploy plan is active.
-**End result:** The backlog runs in a safe order: obsolete plans deleted, the two money plans merged, autonomous work done in two waves, and decision-gated work following once the user answers Q-A..Q-H, with no conflicting edits or docker clashes.
+**Why:** The top-level plans in `plans/` and the backlog plans overlap on the same files, contracts, cloud stages and docker lock. Several were already done or obsolete, and most needed user decisions, so they can't safely be picked up in isolation while the cloud plan (P2) is active.
+**End result:** Every active plan runs in a safe order from this one file: P2's bundle test first, then the plans that build on its cloud stages (P5) and the shop changes requested by gh-optivem (P4), with the backlog units following. No conflicting edits, no docker clashes, and no pushes during a cloud run.
 
 ## ▶ Next executable step (resume here)
 
@@ -27,11 +28,15 @@ U1-U4 are done and on main (frontend-react is on Vite 7, Vitest 3 and React 19; 
 
 **After M4:** U10 (#1 then #2, shop-only). U8 is deferred, and U11 is manual for the user. **U10 #1 is done locally, not pushed** (2026-11-04, GitHub incident): shop-local `compile`, `lint`, `unit` and `component` actions under `.github/actions/`, called by the 7 `*-commit-stage.yml` and the `local` job in `_prerelease-pipeline.yml`; the child plan is deleted. **CI proof still owed for #1, after the outage:** push, then confirm each of the 7 commit stages is green with the same suites as before (the push triggers them through the new `.github/actions/<concern>/**` paths), and dispatch `meta-prerelease-dry-run.yml` (or a `prerelease-pipeline-*` run with `level: local`) for one monolith and one multitier flavor to confirm the `local` job runs the four actions green. New in `local`: backend-java now also runs `external-contract-real`, and every flavor runs the frontend `unit` suite, as the commit stages do. **U10 #2 is done locally too** (sonar-outage plan deleted): a SonarCloud step that the `retry@v1` wrapper gives up on after all its attempts, with an HTTP 5xx on the last one, now passes with a warning annotation and a job-summary warning, in the 7 commit stages and the 7 acceptance-stage Sonar steps; any other failure still fails. **CI proof still owed for #2:** in the same post-outage runs, confirm one Java, one .NET and one TypeScript commit stage and one acceptance stage run Sonar green with no skip warning. The outage branch was simulated locally against the real `retry@v1` scripts; proving it in CI needs a real SonarCloud outage, or a throwaway dispatch whose `sonar.host.url` points at a host that always answers 503. Note: no shop scanner waits for the quality gate (`sonar.qualitygate.wait` is unset), so a gate verdict doesn't fail a step today.
 
+**After M4 (new, 2026-11-04 consolidation):** M6 (P4, gh-optivem-driven shop changes) can start as soon as no cloud run is in progress. It needs only the docker lock, and it asks before each push. M7 (P5, permanent acc/e2e environments) waits for the user's answers to its open questions (`/refine-plan` on it), and its edits wait until M4's bundle test is fully done, because it edits P2's `_acceptance-stage.yml`, `multitier-java-acceptance-stage.yml` and `setup-gcp.sh`.
+
 Follow-ups found during the run (not fixed) are in `plans/backlog/p2-product-correctness/20261103-1336-meta-run-followups.md`. The removed inner-loop keys get re-added via `plans/backlog/p1-ci-pipeline/20261103-1335-readd-inner-loop-pilot-config.md`.
 
 Scope decisions for the run: the `20261030-1822-template-cloud-deploy-all-variants` plan is another agent's, so stay out of its files; push each verified unit, unless a cloud run is in progress; U5-U12 stay blocked on Q-A..Q-H (confirmed 2026-10-31). Commit with `--paths`, and don't use `git pull --autostash` while another agent shares the checkout. Commit plan edits before running `gh optivem commit`: an uncommitted plan file blocks its `pull --rebase`.
 
-Read-only analysis of `plans/backlog/p1..p4`. No existing plan was edited. Repo state was spot-checked (grep/ls) to find stale premises.
+**Cross-repo plans (outside this meta, by the "no other repos" rule):** `plans/backlog/p1-ci-pipeline/20261103-1042-optivem-actions-retry-release.md` (optivem/actions `v1`), `20261103-1335-readd-inner-loop-pilot-config.md` (needs a gh-optivem release first) and `20261103-1536-gh-optivem-scaffolds-single-pipeline.md` (gh-optivem scaffolds; waits for P2 Steps 5–6b to be final, which they now are locally, plus the bundle test). They are listed here only so that nothing in `plans/` goes untracked.
+
+The original analysis (2026-10-29..11-03) was read-only over `plans/backlog/p1..p4`, with repo state spot-checked (grep/ls) for stale premises. The sections below it are kept as the record of decisions; the tables reflect that date unless marked refreshed.
 
 ## Steps (execute via this meta-plan)
 
@@ -42,6 +47,8 @@ Read-only analysis of `plans/backlog/p1..p4`. No existing plan was edited. Repo 
 - [x] Step M3 — **P3 GCP-script sync:** agent work landed in `33c832c8` (2026-11-03). The child plan stays because 4 manual checks remain for the user (devcontainer rebuild, Windows `git push`, `teardown-gcp.sh` dry run after `gcloud auth login`, optional `setup-gcp.sh` re-run); see its ▶ block. Local gcloud credentials had expired, so the teardown dry run couldn't be automated.
 - [ ] Step M4 — **P2 single-pipeline, Steps 3–9:** resume that plan after M2 and M3 land. Steps 4 and later delete tags, releases, GHCR images and environments; that is pre-approved with guards (see "User decisions (2026-11-03)").
 - [ ] Step M5 — **Backlog U5–U12:** Q-A..Q-H were answered on 2026-11-03 (see "User decisions (2026-11-03)"). **Done:** U5 `cross-language-parity-fixes` (`c16a196e`..`fa80388c`, 2026-11-03); U6 `money-strings-end-to-end` (`c6812e1c`, `97249d81`, 2026-11-04; plan deleted); U7 #7 steps 1.4/1.5 (`137167f2`, 2026-11-04; the chunk-1 child plan is deleted, the purge of expired idempotency keys is parent item 1.8); U9 (#6 remainder); U12 (p3, narrow: `cbda81b9`, `5ce4b101`, plus #12 Steps 1–2 in `287a1498`). **U10 done locally, not pushed** (2026-11-04): #1 composite stage-check actions and #2 `.github/actions/sonar-scan` in all commit and acceptance stages; both child plans are deleted. **Remaining:** U10's CI proof (see the ▶ block). U8 is **deferred**, and U11 is **manual for the user**. Before each child plan runs, write the relevant decisions below into it as resolved, so its own pre-flight gate passes.
+- [ ] Step M6 — **P4 gh-optivem-driven shop changes** (`plans/20261103-1049-gh-optivem-driven-shop-changes.md`): Items 1 → 2 → 3 → 4, serially (all use the rehearsal/docker lock; 1–3 touch `system-test/java`). Item 1 (`32e90dcb`) is already on main and needs only its attended runtime check. The child's rule "ask before every push to shop `main`" still applies; its reference to the cloud-deploy plan `20261029-1316` now means P2. Don't push while a P2 cloud run is in progress.
+- [ ] Step M7 — **P5 permanent acceptance/E2E environments** (`plans/20261104-0839-permanent-acc-e2e-environments.md`): design only today. It has 7 open questions for the user (stack ↔ domain mapping, "permanent" meaning, which variant, order vs. the custom-domains follow-up, domain mapping vs. load balancer, multitier backend URL, concurrency), so run `/refine-plan` on it first. Its Steps 3–8 edit P2-owned files and need cloud runs: start them only after M4's bundle test is fully done (commit B applied, Step 8 deletions done). Step 2 (DNS) is manual for the user.
 
 ## User decisions (2026-11-03): run the whole meta autonomously
 
@@ -61,17 +68,26 @@ The user asked for every question up front so that M1–M5 can run without stopp
 - **Q-G:** #1 uses **shop-local `.github/actions/`** per-concern actions (decisions written into that plan). #2 uses a job-summary warning, applies the same policy to acceptance stages and stays shop only (written into that plan; its Steps 1 and 3 moved to the optivem/actions plan).
 - **Q-H:** #17 SonarLint stays a **manual task for the user**; keep the plan.
 
-## Active top-level plans (added 2026-11-03)
+## Active top-level plans (added 2026-11-03, refreshed 2026-11-04)
 
 These plans live in `plans/`, not `plans/backlog/`, and take priority over every backlog unit below.
 
-| ID | Plan | State | Files it owns |
-|---|---|---|---|
-| P1 | `20261103-1006-upgrade-playwright-ubuntu-26` | Not started; all decisions resolved; Step 6 (push + dispatch `meta-prerelease-stage.yml`) pre-approved | `system-test/typescript/{package.json,package-lock.json}`, `system-test/dotnet/{Common,Driver.Adapter,SystemTests}/*.csproj`, `system-test/java/build.gradle`, the `npx playwright@` pins in `{monolith,multitier}-java-acceptance-stage-legacy.yml` (`:218`, `:224`), plus any pins found by its Step 4 sweep |
-| P2 | `20261102-1855-single-pipeline-deploy-target` | Paused before Step 2 (naming confirmed 2026-11-03; no marker) | `*-acceptance-stage*.yml`, `*-{qa,prod}-stage*.yml`, `_acceptance-stage*.yml`, `_prerelease-pipeline.yml`, `_deploy-stage-cloud.yml`, `terraform/`, `setup-gcp.sh` |
-| P3 | `20261102-2020-sync-gcp-cloud-scripts-from-event-hub` | Not started | `setup-gcp.sh`, `teardown-gcp.sh`, `terraform/**`, `deploy-config.yml` |
+| ID | Plan | Meta step | State (2026-11-04) | Files it owns |
+|---|---|---|---|---|
+| P1 | `20261103-1006-upgrade-playwright-ubuntu-26` | M1 | **Done, plan deleted** | — |
+| P2 | `20261102-1855-single-pipeline-deploy-target` | M2, M4 | Steps 2–6b and 9 on main; bundle test in progress (item 1 done) | `*-acceptance-stage*.yml`, `*-{qa,prod}-stage*.yml`, `_acceptance-stage*.yml`, `_prerelease-pipeline.yml`, `_deploy-stage-cloud.yml`, `terraform/`, `setup-gcp.sh` |
+| P3 | `20261102-2020-sync-gcp-cloud-scripts-from-event-hub` | M3 | Agent work done; 4 manual checks for the user remain | `setup-gcp.sh`, `teardown-gcp.sh`, `terraform/**`, `.devcontainer/**` |
+| P4 | `20261103-1049-gh-optivem-driven-shop-changes` | M6 | Not started (Item 1's code is on main, runtime check owed) | `system-test/java/**` (Items 1–3, incl. `tests*.yaml`), `system/monolith/java` ERP gateway + new `ProductApiController` (Item 3), all `gh-optivem-*.yaml` stack configs + a new JSONPlaceholder external system (Item 4) |
+| P5 | `20261104-0839-permanent-acc-e2e-environments` | M7 | Design only; 7 open questions | `_acceptance-stage.yml` (`deploy-stack`, `Resolve System URLs`, `deploy-keycloak-cloud`), `multitier-java-acceptance-stage.yml`, `setup-gcp.sh`, `docs/` + README |
 
-**Order: P1 first, then P2 Step 2.**
+**Order between P2, P4 and P5 (added 2026-11-04):**
+- **P2 → P5 (hard).** P5 edits P2-owned files (`_acceptance-stage.yml`, the multitier-java cloud acceptance caller, `setup-gcp.sh`), and its proof (Step 8) is a cloud acceptance run. Start P5's edits only after P2's bundle test is done, so a red run has one cause.
+- **P2 / P4 (shared resource, not files).** P4 doesn't touch P2's files, but each P4 push to main triggers commit stages and changes the images that cloud acceptance deploys. Don't push P4 while a P2 cloud run is in progress. P4's rehearsals take the docker lock, and so do P2's Docker gate checks when run locally; one at a time.
+- **P4 Item 4 vs P2 (soft).** Item 4 adds an external system to every `gh-optivem-*.yaml`; if it needs a cloud service too, that lands in P2's footprint and waits for P2.
+- **P4 vs backlog (soft).** P4 Items 1–3 touch `system-test/java` drivers, the same area as C12 (U4 done) and #12 Steps 3–4 (blocked). No live collision today.
+- **P3 vs P5 (soft).** Both touch `setup-gcp.sh`; P3's remaining work is manual checks only, so no edit collision.
+
+**Historical order (2026-11-03, done): P1 first, then P2 Step 2.**
 - **P1 → P2 (hard).** `meta-prerelease-stage.yml` has been red since 2026-11-02 10:33, because .NET and TypeScript can't install chromium on Ubuntu 26.04. P2 Step 2 can't be proven until the Docker acceptance gates are green.
 - **P1 / P2 file collision.** P1 Step 3 edits `multitier-java-acceptance-stage-legacy.yml:224`, and P2 Step 2 `git mv`s that file to `multitier-java-acceptance-stage-docker-compose-legacy.yml` and rewrites it as a thin caller. Landing P1 first means P2 carries the `@1.64.0` pin into the new reusable `_acceptance-stage-docker-compose.yml` and doesn't lose it. If P2 goes first instead, P1 must re-target its pin edits to the new files. The same applies later to `monolith-java-acceptance-stage-legacy.yml:218` during P2 Step 5.
 - **P2 / P3 (soft).** Both touch `setup-gcp.sh` and `terraform/` (P2 Step 6 adds the kill-switch and GHCR images; P3 merges event-hub fixes). Serialise P3 before P2 Step 6, so the kill-switch is built on the merged scripts. They are independent of P1.
@@ -255,7 +271,7 @@ Answering "accept all recommendations" unblocks the whole section.
 
 ## Pre-execute checks
 
-Run before any wave:
+Run before any wave or M-step:
 
 1. `grep -l "PICKUP\|in-flight\|claimed by\|Picked up by agent" plans/*.md plans/backlog/*/*.md` — on 2026-10-29 this matched the cloud plan (real "Picked up by agent" marker) and `tax-real-parity-contract-test.md` (false positive: the word appears in prose). Any new hit means another agent is in flight; stop and ask.
 2. `git status` — at analysis time `.github/workflows/multitier-java-acceptance-stage-cloud.yml`, `plans/20261029-1316-deploy-shop-cloud-run.md` and `terraform/README.md` were modified by the cloud plan. Do not touch or stage those.
@@ -274,5 +290,5 @@ Run before any wave:
 ## Out of scope
 
 - `plans/backlog/after-cloud-deploy/*` (pinned-sha gate, QA smoke tests, test-order alignment, production-readiness-gaps parent) and `plans/backlog/parked/*` — not read; blocked on or separate from the cloud plan.
-- Editing any existing plan, running `/execute-plan`, committing or pushing.
+- Work in other repos (`optivem/actions`, `optivem/gh-optivem`, event-hub): see "Cross-repo plans" above.
 - Content of the `optivem/actions` repo beyond confirming the sibling checkout exists.

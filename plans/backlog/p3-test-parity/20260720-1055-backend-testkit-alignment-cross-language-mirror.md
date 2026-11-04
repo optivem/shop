@@ -22,13 +22,13 @@ same assertion-overload surface as `backend-java`, with the three languages' tes
 ## ▶ Next executable step (resume here)
 
 Steps 1–2 are done (2026-11-03). Step 3 is narrowed to the `system-test` .NET/TS halves and is **not
-scheduled** by meta-plan `20261103-1021` (Q-P3d ran Steps 1–2 only); pick it up only on a new
+scheduled** by meta-plan `20261104-1148` (was `20261103-1021`) (Q-P3d ran Steps 1–2 only); pick it up only on a new
 decision. Step 4 follows Step 3.
 
 ## Decisions (2026-11-03)
 
 - Run **Steps 1–2 only** (survey + driver-port vocabulary mirror), sequenced **after** U6
-  `money-strings-end-to-end` lands (meta-plan `20261103-1021`, Q-A / Q-P3d). Done.
+  `money-strings-end-to-end` lands (meta-plan `20261104-1148` (was `20261103-1021`), Q-A / Q-P3d). Done.
 - **Steps 3–4 re-assessed against what U6 shipped:** U6 did not touch the .NET/TS DSL surfaces, so
   Step 3 is not covered by it and stays, narrowed by the survey below.
 
