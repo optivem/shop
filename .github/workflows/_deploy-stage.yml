@@ -60,20 +60,15 @@ env:
   TEST_LANGUAGE: ${{ inputs.test-language || inputs.language }}
 
 jobs:
-  # === Build Shared Images into GHCR (+ the old Artifact Registry copies, unused) ===
-  # The Artifact Registry copies below are no longer deployed from. They stay until several cloud
-  # runs have deployed from GHCR, so switching back is one revert (plan 20261102-1855, Step 6).
-  promote-images:
+  # === Build Shared Images into GHCR ===
+  shared-images:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     environment: ${{ inputs.architecture }}-${{ inputs.language }}-${{ inputs.stage }}
     permissions:
       contents: read
-      id-token: write
     outputs:
-      registry: ${{ steps.registry.outputs.registry }}
-      tag: ${{ steps.registry.outputs.tag }}
-      project-number: ${{ steps.registry.outputs.project-number }}
+      project-number: ${{ steps.project.outputs.project-number }}
       db-migrate-image: ${{ steps.shared.outputs.db-migrate }}
       keycloak-image: ${{ steps.shared.outputs.keycloak }}
       simulators-image: ${{ steps.shared.outputs.simulators }}
@@ -102,15 +97,6 @@ jobs:
           ref: ${{ inputs.version }}
           path: source
 
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v3
-        with:
-          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
-
-      - name: Setup Cloud SDK
-        uses: google-github-actions/setup-gcloud@v3
-
       - name: Log in to GHCR
         uses: optivem/actions/docker-login@v1
         with:
@@ -118,37 +104,16 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GHCR_TOKEN }}
 
-      - name: Resolve Registry
-        id: registry
+      - name: Resolve Project Number
+        id: project
         env:
-          PROJECT: ${{ vars.GCP_PROJECT_ID }}
-          REGION: ${{ vars.GCP_REGION }}
           WIF_PROVIDER: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
         run: |
           # The deployer SA has no resourcemanager.projects.get; the provider
           # name is projects/<number>/locations/global/..., so read it from there.
           PROJECT_NUMBER=$(cut -d/ -f2 <<< "$WIF_PROVIDER")
           [[ "$PROJECT_NUMBER" =~ ^[0-9]+$ ]] || { echo "::error::Cannot parse project number from GCP_WORKLOAD_IDENTITY_PROVIDER"; exit 1; }
-          {
-            echo "registry=${REGION}-docker.pkg.dev/${PROJECT}/app-images"
-            # The stage prefix is what keeps production images through the registry cleanup (terraform/main.tf)
-            echo "tag=${STAGE}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
-            echo "project-number=${PROJECT_NUMBER}"
-          } >> "$GITHUB_OUTPUT"
-          gcloud auth configure-docker "${REGION}-docker.pkg.dev" --quiet
-
-      # Unused since the GHCR switch; removed in the follow-up commit.
-      - name: Copy RC Images (GHCR to Artifact Registry)
-        env:
-          REGISTRY: ${{ steps.registry.outputs.registry }}
-          TAG: ${{ steps.registry.outputs.tag }}
-          IMAGES: ${{ inputs.images }}
-          BASE: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}
-        run: |
-          set -euo pipefail
-          jq -r '.[]' <<< "$IMAGES" | while read -r name; do
-            docker buildx imagetools create -t "${REGISTRY}/${name}:${TAG}" "${BASE}/${name}:${VERSION}"
-          done
+          echo "project-number=${PROJECT_NUMBER}" >> "$GITHUB_OUTPUT"
 
       - name: List RC Images
         id: rc-images
@@ -171,21 +136,9 @@ jobs:
           source-path: source
           public-images: ${{ steps.rc-images.outputs.refs }}
 
-      # Unused since the GHCR switch; removed in the follow-up commit.
-      - name: Tag Simulators Image for This Stage
-        id: keep-simulators
-        env:
-          REGISTRY: ${{ steps.registry.outputs.registry }}
-          TAG: ${{ steps.registry.outputs.tag }}
-          IMAGE: ${{ steps.shared.outputs.simulators }}
-        run: |
-          set -euo pipefail
-          docker buildx imagetools create -t "${REGISTRY}/shop-simulators:${TAG}" "$IMAGE"
-          echo "image=${REGISTRY}/shop-simulators:${TAG}" >> "$GITHUB_OUTPUT"
-
   # === Deploy: Keycloak (shared by all variants) ===
   deploy-keycloak:
-    needs: promote-images
+    needs: shared-images
     runs-on: ubuntu-latest
     timeout-minutes: 30
     environment: ${{ inputs.architecture }}-${{ inputs.language }}-${{ inputs.stage }}
@@ -208,15 +161,15 @@ jobs:
       - name: Deploy Keycloak to Cloud Run
         uses: ./.github/actions/deploy-keycloak
         with:
-          image: ${{ needs.promote-images.outputs.keycloak-image }}
+          image: ${{ needs.shared-images.outputs.keycloak-image }}
           system: ${{ vars.SYSTEM_NAME }}
           project: ${{ vars.GCP_PROJECT_ID }}
-          project-number: ${{ needs.promote-images.outputs.project-number }}
+          project-number: ${{ needs.shared-images.outputs.project-number }}
           region: ${{ vars.GCP_REGION }}
 
   # === Deploy: Stage Stack ===
   deploy-stack:
-    needs: [promote-images, deploy-keycloak]
+    needs: [shared-images, deploy-keycloak]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     environment: ${{ inputs.architecture }}-${{ inputs.language }}-${{ inputs.stage }}
@@ -226,14 +179,14 @@ jobs:
     env:
       REGION: ${{ vars.GCP_REGION }}
       PROJECT: ${{ vars.GCP_PROJECT_ID }}
-      PROJECT_NUMBER: ${{ needs.promote-images.outputs.project-number }}
+      PROJECT_NUMBER: ${{ needs.shared-images.outputs.project-number }}
       # The RC's images, straight from GHCR.
       IMAGE_BASE: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}
       BACKEND_IMAGE: ${{ fromJSON(inputs.images).backend }}
       FRONTEND_IMAGE: ${{ fromJSON(inputs.images).frontend }}
       SYSTEM_IMAGE: ${{ fromJSON(inputs.images).system }}
-      MIGRATE_IMAGE: ${{ needs.promote-images.outputs.db-migrate-image }}
-      SIM_IMAGE: ${{ needs.promote-images.outputs.simulators-image }}
+      MIGRATE_IMAGE: ${{ needs.shared-images.outputs.db-migrate-image }}
+      SIM_IMAGE: ${{ needs.shared-images.outputs.simulators-image }}
     steps:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v3
@@ -407,7 +360,7 @@ jobs:
   # (`shop`), whose tokens a QA/production backend (realm shop-qa/shop-prod) rejects with 401,
   # so KEYCLOAK_URL[_REAL] must stay unset here (see the systems.yaml step).
   smoke:
-    needs: [promote-images, deploy-stack]
+    needs: [shared-images, deploy-stack]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     environment: ${{ inputs.architecture }}-${{ inputs.language }}-${{ inputs.stage }}
@@ -419,7 +372,7 @@ jobs:
       # Selects the acceptance environment in every test harness; every URL in it is overridden below.
       ENVIRONMENT: acceptance
       REGION: ${{ vars.GCP_REGION }}
-      PROJECT_NUMBER: ${{ needs.promote-images.outputs.project-number }}
+      PROJECT_NUMBER: ${{ needs.shared-images.outputs.project-number }}
     steps:
       - name: Resolve System URLs
         run: |
