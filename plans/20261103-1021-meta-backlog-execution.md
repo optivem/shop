@@ -10,30 +10,13 @@
 
 U1-U4 are done and on main (frontend-react is on Vite 7, Vitest 3 and React 19; run `npm ci` there after pulling). U4 item 3 was verified on 2026-11-02: compile-all 7/7, TS legacy sample 26/26, multitier java/dotnet/ts targeted and sample 11/11, monolith java sample 11/11.
 
-Session paused on 2026-11-03 at about 22:10 UTC, at the user's request. Resume with `/clear`, then `/execute-plan plans/20261103-1021-meta-backlog-execution.md`.
+**Standing rule (user, 2026-11-03): no new branches or worktrees.** Work directly on main, verify each unit, push it, then start the next.
 
-**Standing rule (user, 2026-11-03): no new branches or worktrees.** Work directly on main, verify each unit, push it, then start the next. The branches below are the last ones. Once their contents are on main, delete them.
+**Done:** M1, M2 and M3 (4 manual checks for the user remain in the GCP-sync plan's ▶ block), plus U5, U6, U7, U9 and U12 (including #12 Steps 1–2). U6/U7/#12 landed on main on 2026-11-04 as `c6812e1c` (Phase 1), `97249d81` (U6 Phase 2 + TS lint fix), `137167f2` (U7) and `287a1498` (#12 Steps 1–2); verified with compile-all, the 4 multitier component-test configs and `--sample` on all 12 configs.
 
-**Done:** M1, M2 and M3 (4 manual checks for the user remain in the GCP-sync plan's ▶ block), plus U5, U9 and U12 (#12 Steps 1–2 still pending, see below).
+**Pending user OK (do not do without it):** delete the leftover WIP refs `wip/meta-u6-u7`, `wip/meta-u6-only`, `wip/meta-u6-u7-code` (local and origin), the local branch `meta-u6-u7` if present, and the locked worktree `.claude/worktrees/agent-a4f007858792e70c6` (branch `worktree-agent-a4f007858792e70c6`). Their contents are on main.
 
-**Do this first: land U6 Phase 2 + U7 (#7 steps 1.4/1.5) + #12 Steps 1–2 on main.**
-- Where it is: worktree `/workspaces/shop/.claude/worktrees/meta-u6-u7`, branch `meta-u6-u7`. That's 3 commits on top of `origin/main` `5b7203ca`:
-  - `ea3f8bbf` Phase 1: the Java DSLs become String-only (verified earlier)
-  - `5de80d5a` the big WIP: U6 Phase 2, U7, #12 1–2
-  - `ce548adb` fix for the 3 pre-existing `system-test/typescript` lint warnings, plus follow-up plan edits
-- **Status check (2026-11-03, Windows checkout):** the worktree dir `/workspaces/shop/.claude/worktrees/meta-u6-u7` is gone here (git lists it as prunable), but local branch `meta-u6-u7` is intact at `ce548adb`. Run `git worktree prune`, then work from that branch (check it out in the main checkout, no new worktree). Main is clean at `10ef6b15`; nothing from U6 Phase 2/U7/#12 is on main yet.
-- **`ce548adb` exists only locally.** The force-push updating `origin/wip/meta-u6-u7` was blocked by the permission classifier, so origin still has the old `5e18fbd9`, which lacks the rebase and the lint fix. If the worktree disappears, rebuild from `origin/wip/meta-u6-u7` and redo the lint fix: 3 lines in `system-test/typescript/eslint.config.mjs`.
-- **Test status on the current tree:**
-  - `--sample`: all 12 configs passed. Six passed on 2026-11-03 before the pause; on 2026-11-03 between 20:40 and 21:55 UTC: multitier-dotnet, multitier-dotnet-legacy, monolith-typescript, monolith-typescript-legacy, multitier-typescript and multitier-typescript-legacy.
-  - Component test `multitier-java`: passed, 83/83.
-- **Still to run:**
-  - `bash compile-all.sh` (`./compile-all.sh` failed with "Permission denied" in the worktree because the exec bit is missing; run it via `bash`).
-  - `gh optivem component-test run -c gh-optivem-<x>.yaml` for multitier-clean-java, multitier-dotnet and multitier-typescript. This was stopped partway, during multitier-java's contractTest re-run.
-- **Then:**
-  1. Rewrite the branch as per-unit commits on top of `origin/main`: Phase 1, U6 Phase 2, U7, #12, then bookkeeping. Split the WIP using the snapshot diffs: U6 = `origin/wip/meta-u6-only` (`306a9cf7`) vs `2f3c9cd9`; U7 = `origin/wip/meta-u6-u7-code` (`e552b0f4`) vs `306a9cf7`; whatever remains is #12 plus plan edits. The lint fix goes with U6.
-  2. Bookkeeping: delete `plans/backlog/p2-product-correctness/20261103-1504-money-strings-end-to-end.md` and `.../20261009-1545-production-readiness-chunk1-data-correctness.md` if all their steps are done. Mark U6, U7 and #12 1–2 done in M5.
-  3. Check that no cloud deploy run is in progress, then `git push origin HEAD:main`.
-  4. Delete `origin/wip/meta-u6-u7`, `wip/meta-u6-only` and `wip/meta-u6-u7-code`, the worktree, and the local branch `meta-u6-u7`.
+**Do this next: M4.**
 
 **M4 (P2 Steps 3–9): unblocked, answer recorded below.**
 - The P2 Step 3 QA and prod proof passed on the throwaway branch `p2-step3-proof` (commits 991a2cd2 `_qa-stage.yml`/`_prod-stage.yml`; a0b13346, the Step 4 thin callers plus deletion of the `-cloud` twins; 8f1fb7fb, anonymous smoke). Prod run 41671160377 published the real release `multitier-java-v1.0.235`, and VERSION was bumped to 1.0.236.
@@ -59,7 +42,7 @@ Read-only analysis of `plans/backlog/p1..p4`. No existing plan was edited. Repo 
 - [x] Step M2 — **P2 Step 2:** done on 2026-11-03 (`b893a9cc`; the Java cloud WireMock fix is `b712cfbb`). Docker gates were green with no tag (run 41644200045), and cloud run 41661973939 created `multitier-java-v1.0.235-rc.3268`.
 - [x] Step M3 — **P3 GCP-script sync:** agent work landed in `33c832c8` (2026-11-03). The child plan stays because 4 manual checks remain for the user (devcontainer rebuild, Windows `git push`, `teardown-gcp.sh` dry run after `gcloud auth login`, optional `setup-gcp.sh` re-run); see its ▶ block. Local gcloud credentials had expired, so the teardown dry run couldn't be automated.
 - [ ] Step M4 — **P2 single-pipeline, Steps 3–9:** resume that plan after M2 and M3 land. Steps 4 and later delete tags, releases, GHCR images and environments; that is pre-approved with guards (see "User decisions (2026-11-03)").
-- [ ] Step M5 — **Backlog U5–U12:** Q-A..Q-H were answered on 2026-11-03 (see "User decisions (2026-11-03)"). U5 `cross-language-parity-fixes` is **done** (`c16a196e`..`fa80388c`, 2026-11-03; the plan is deleted). Run the rest in this order: U6 (`/create-plan` the merged `money-strings-end-to-end` from #3 + #5, execute it, then delete #3 and #5) → U7 (#7 steps 1.4/1.5) → U9 (#6 remainder) → U10 (#1 then #2, both shop-only) → U12 (p3, narrow): **done** 2026-11-03 (`cbda81b9`, `5ce4b101`); only #12 Steps 1–2 remain, after U6. U8 is **deferred**, and U11 is **manual for the user**. Before each child plan runs, write the relevant decisions below into it as resolved, so its own pre-flight gate passes.
+- [ ] Step M5 — **Backlog U5–U12:** Q-A..Q-H were answered on 2026-11-03 (see "User decisions (2026-11-03)"). **Done:** U5 `cross-language-parity-fixes` (`c16a196e`..`fa80388c`, 2026-11-03); U6 `money-strings-end-to-end` (`c6812e1c`, `97249d81`, 2026-11-04; plan deleted); U7 #7 steps 1.4/1.5 (`137167f2`, 2026-11-04; the chunk-1 child plan is deleted, the purge of expired idempotency keys is parent item 1.8); U9 (#6 remainder); U12 (p3, narrow: `cbda81b9`, `5ce4b101`, plus #12 Steps 1–2 in `287a1498`). **Remaining:** U10 (#1 then #2, both shop-only), after M4. U8 is **deferred**, and U11 is **manual for the user**. Before each child plan runs, write the relevant decisions below into it as resolved, so its own pre-flight gate passes.
 
 ## User decisions (2026-11-03): run the whole meta autonomously
 

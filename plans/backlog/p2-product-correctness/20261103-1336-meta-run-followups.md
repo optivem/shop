@@ -7,11 +7,10 @@
 
 ## ▶ Next executable step (resume here)
 
-Item 1: run `npm run lint` in `system-test/typescript` and fix the 3 `--max-warnings 0` warnings in `tests/legacy/mod04/e2e/api-authorization-test.spec.ts`.
+Item 2: fix the stale README references.
 
 ## Items
 
-- [ ] 1. **TS lint fails `--max-warnings 0`** in `system-test/typescript`: 3 warnings in `tests/legacy/mod04/e2e/api-authorization-test.spec.ts` (one skipped test, two tests without assertions). These were already there before U4.
 - [ ] 2. **Stale README references:** `system-test/java/README.md` still mentions `AccessControlTest` / `OrderOwnershipTest`, which don't exist. Check the .NET/TS READMEs for the same.
 - [ ] 3. **React deep link lost across login (production bug):** a frontend-react user who pastes an order-details URL lands on home. Tokens are held in memory, so the deep link is dropped across the login redirect. Keep the target route through the Keycloak redirect (e.g. `redirectUri`/state), and add a UI test for it. The Next.js monolith frontend isn't affected, because it uses cookie sessions and `returnTo`.
 - [ ] 4. **.NET `cancelOrder` UI test silently uses the API:** the .NET cancel-order UI path is still `CHANNEL_MODE=static`. Make it exercise the UI like Java/TS, or document why not.

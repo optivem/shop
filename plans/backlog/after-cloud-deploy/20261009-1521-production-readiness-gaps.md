@@ -20,7 +20,7 @@
 
 ## ▶ Next executable step (resume here)
 
-Chunk 1, step 1.1: confirm in Java that `OrderService.placeOrder` has no `@Transactional` (it should span `orderRepository.save` and `couponService.incrementUsageCount`). Write a failing integration test first (the repo has `integrationTest` and Testcontainers). The test makes the coupon increment fail and asserts that no order row is persisted. Then add `@Transactional`. Gate: `./gradlew build` and `./gradlew integrationTest` pass in `system/monolith/java`. This unblocks 1.2 (atomic coupon increment). Run the 1.1 check against the multitier Java backend too, since it has its own service.
+Chunk 1 steps 1.1–1.6 are done. Next: Chunk 1 step 1.7 (Java-only `@Data` replacement) or 1.8 (expired idempotency-key purge), or Chunk 0.1 before Chunks 2–6.
 
 ## Steps
 
@@ -30,14 +30,9 @@ Each chunk is independently executable, and the chunks can be done in any order.
 - [ ] 0.1 Check whether each Java finding also applies in `system/monolith/{dotnet,typescript}` and `system/multitier/backend-{java,dotnet,typescript}` (transactions, coupon race, versioning, idempotency, pagination, gateway resilience, actuator/health exposure, secret defaults, dev settings). Record a finding-by-language table at the top of this plan, so the later chunks only touch what is actually broken.
 
 ### Chunk 1 — Data correctness (ATDD scenarios)
-Child plan: `20261009-1545-production-readiness-chunk1-data-correctness.md` (detailed steps live there).
-- [ ] 1.1 `@Transactional` on `placeOrder` (and equivalents in .NET/TS: a unit of work or DB transaction around the order save and coupon increment).
-- [ ] 1.2 Atomic coupon usage increment: `UPDATE coupons SET used_count = used_count + 1 WHERE code = ? AND (usage_limit IS NULL OR used_count < usage_limit)`, and reject the order when no row is updated. Add a concurrency acceptance scenario ("concurrent orders can't exceed the coupon limit").
-- [ ] 1.3 Optimistic locking: add a `version` column through a Flyway migration (expand-only) and `@Version` on `Order`. Map the conflict to a 409 ProblemDetail.
-- [ ] 1.4 Idempotency: an `Idempotency-Key` header on `POST /api/orders`, a keyed table with a unique constraint, and replay of the stored response. Decide the TTL and scope (per user).
-- [ ] 1.5 Pagination (page, size, stable sort) on order history and coupon list, plus an index or search strategy for order-number search (drop the leading wildcard or use `pg_trgm`). Note the DTO and test-kit impact: request DTOs stay string-only.
-- [ ] 1.6 Order-number safety: confirm `generateOrderNumber` is collision-safe and not guessable. Confirm that `/orders/{n}` enforces the owner check for non-admin users.
+Steps 1.1–1.6 are done (2026-11-03); the child plan `20261009-1545-production-readiness-chunk1-data-correctness.md` is deleted. The decisions (idempotency per user with a 24 h TTL, 422 on a reused key with a different body, optional 1-based `page`/`size` with default 50 and cap 100, `LIKE '%x%'` search accepted as is) live in the code and its tests.
 - [ ] 1.7 Replace Lombok `@Data` on JPA entities with explicit id-based `equals`/`hashCode` (Java only).
+- [ ] 1.8 Scheduled purge of expired `idempotency_keys` rows (older than 24 h). Today an expired row is only replaced on its next use; this is an ops item.
 
 ### Chunk 2 — Resilience
 - [ ] 2.1 One shared, pooled HTTP client bean (timeouts configurable, not hardcoded 10s) instead of a client per gateway call. Add the .NET `HttpClientFactory` and the TS equivalent.
