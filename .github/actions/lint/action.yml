@@ -1,0 +1,39 @@
+name: 'Lint project'
+description: |
+  Stage check: run a project's linter (checkstyle, dotnet format or eslint).
+
+  Shared by the `local` job in _prerelease-pipeline.yml and every
+  *-commit-stage.yml, so both stages run the identical command. Edit the
+  command here, not in a caller.
+
+  Requires: the language runtime set up and, for npm projects, node_modules
+  installed (the compile action does that).
+
+inputs:
+  project:
+    description: 'Project directory, e.g. system/monolith/java or system/multitier/frontend-react.'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Lint
+      shell: bash
+      working-directory: ${{ inputs.project }}
+      env:
+        PROJECT: ${{ inputs.project }}
+      run: |
+        set -euo pipefail
+        case "$PROJECT" in
+          system/monolith/java|system/multitier/backend-java)
+            ./gradlew checkstyleAll ;;
+          system/monolith/dotnet)
+            dotnet format MyCompany.MyShop.Monolith.sln --verify-no-changes ;;
+          system/multitier/backend-dotnet)
+            dotnet format MyCompany.MyShop.Backend.slnx --verify-no-changes ;;
+          system/monolith/typescript|system/multitier/backend-typescript|system/multitier/frontend-react)
+            npm run lint ;;
+          *)
+            echo "::error::lint: unknown project '$PROJECT'. Add it to .github/actions/lint/action.yml."
+            exit 1 ;;
+        esac

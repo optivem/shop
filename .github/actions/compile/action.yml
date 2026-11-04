@@ -1,0 +1,46 @@
+name: 'Compile project'
+description: |
+  Stage check: install a project's dependencies and compile its production and
+  test sources. Runs the project's setupCommands then compileCommands from its
+  component-tests.yaml through the gh-optivem CLI.
+
+  Shared by the `local` job in _prerelease-pipeline.yml and every
+  *-commit-stage.yml, so both stages run the identical command. Edit the
+  command here, not in a caller.
+
+  Requires: the gh-optivem CLI extension installed, the language runtime set
+  up, and GH_OPTIVEM_CONFIG set to a config that declares the project.
+  Run this before the lint, unit and component actions: their commands rely on
+  the dependencies installed here.
+
+inputs:
+  project:
+    description: 'Project directory, e.g. system/monolith/java or system/multitier/backend-dotnet.'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Compile
+      shell: bash
+      env:
+        PROJECT: ${{ inputs.project }}
+      run: |
+        set -euo pipefail
+        case "$PROJECT" in
+          system/monolith/java|system/monolith/dotnet|system/monolith/typescript)
+            args=() ;;
+          system/multitier/backend-java|system/multitier/backend-dotnet|system/multitier/backend-typescript)
+            args=(--component backend) ;;
+          system/multitier/frontend-react)
+            args=(--component frontend) ;;
+          *)
+            echo "::error::compile: unknown project '$PROJECT'. Add it to .github/actions/compile/action.yml."
+            exit 1 ;;
+        esac
+        echo "::group::component-test setup ${args[*]}"
+        gh optivem component-test setup "${args[@]}"
+        echo "::endgroup::"
+        echo "::group::component-test compile ${args[*]}"
+        gh optivem component-test compile "${args[@]}"
+        echo "::endgroup::"

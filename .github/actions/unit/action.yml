@@ -1,0 +1,39 @@
+name: 'Run unit tests'
+description: |
+  Stage check: run a project's `unit` suite from its component-tests.yaml
+  through the gh-optivem CLI. A suite marked `pending` there is skipped by the
+  CLI.
+
+  Shared by the `local` job in _prerelease-pipeline.yml and every
+  *-commit-stage.yml, so both stages run the identical command. Edit the
+  command here, not in a caller.
+
+  Requires: the compile action has run for the same project in this job, and
+  GH_OPTIVEM_CONFIG is set to a config that declares the project.
+
+inputs:
+  project:
+    description: 'Project directory, e.g. system/monolith/java or system/multitier/backend-dotnet.'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Unit tests
+      shell: bash
+      env:
+        PROJECT: ${{ inputs.project }}
+      run: |
+        set -euo pipefail
+        case "$PROJECT" in
+          system/monolith/java|system/monolith/dotnet|system/monolith/typescript)
+            args=() ;;
+          system/multitier/backend-java|system/multitier/backend-dotnet|system/multitier/backend-typescript)
+            args=(--component backend) ;;
+          system/multitier/frontend-react)
+            args=(--component frontend) ;;
+          *)
+            echo "::error::unit: unknown project '$PROJECT'. Add it to .github/actions/unit/action.yml."
+            exit 1 ;;
+        esac
+        gh optivem component-test run "${args[@]}" --suite unit

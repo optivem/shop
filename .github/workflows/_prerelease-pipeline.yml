@@ -148,45 +148,48 @@ jobs:
           cache: true
           cache-dependency-path: '**/*.csproj'
 
-      # Compile source — monolith
-      - name: Compile System (monolith, typescript)
-        if: inputs.architecture == 'monolith' && inputs.language == 'typescript'
-        run: npm ci && npx tsc --noEmit
-        working-directory: system/monolith/typescript
+      # Install the gh-optivem CLI extension. The extension provides the
+      # `gh optivem component-test`, `gh optivem system start` and
+      # `gh optivem system-test run` subcommands used by the stage-check actions
+      # below and to bring up the docker-compose stacks and run the test suites.
+      - name: Install gh-optivem CLI extension
+        uses: optivem/actions/install-gh-optivem@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Compile System (monolith, java)
-        if: inputs.architecture == 'monolith' && inputs.language == 'java'
-        run: ./gradlew compileJava compileTestJava
-        working-directory: system/monolith/java
+      # === Commit-stage checks: compile, lint, unit, component ===
+      # The same .github/actions/<concern> actions every *-commit-stage.yml calls,
+      # with the same project selector, so a green local runs exactly the commit
+      # stage's gates and cannot drift from them. Run before `system start` so they
+      # fail fast and the component suites never collide on ports with the
+      # real+stub stack. Uses the job-level GH_OPTIVEM_CONFIG.
+      - name: Compile (monolith)
+        if: inputs.architecture == 'monolith'
+        uses: ./.github/actions/compile
+        with:
+          project: system/monolith/${{ inputs.language }}
 
-      - name: Compile System (monolith, dotnet)
-        if: inputs.architecture == 'monolith' && inputs.language == 'dotnet'
-        run: dotnet build
-        working-directory: system/monolith/dotnet
-
-      # Compile source — multitier backend
-      - name: Compile Backend (multitier, typescript)
-        if: inputs.architecture == 'multitier' && inputs.language == 'typescript'
-        run: npm ci && npx tsc --noEmit
-        working-directory: system/multitier/backend-typescript
-
-      - name: Compile Backend (multitier, java)
-        if: inputs.architecture == 'multitier' && inputs.language == 'java'
-        run: ./gradlew compileJava compileTestJava
-        working-directory: system/multitier/backend-java
-
-      - name: Compile Backend (multitier, dotnet)
-        if: inputs.architecture == 'multitier' && inputs.language == 'dotnet'
-        run: dotnet build
-        working-directory: system/multitier/backend-dotnet
-
-      # Compile source — multitier frontend
-      - name: Compile Frontend (multitier)
+      - name: Compile (multitier backend)
         if: inputs.architecture == 'multitier'
-        run: npm ci && npm run build
+        uses: ./.github/actions/compile
+        with:
+          project: system/multitier/backend-${{ inputs.language }}
+
+      # The frontend runs in every multitier config (OQ-2b: true superset).
+      - name: Compile (multitier frontend)
+        if: inputs.architecture == 'multitier'
+        uses: ./.github/actions/compile
+        with:
+          project: system/multitier/frontend-react
+
+      # Local-only extra: the production bundle. The frontend commit stage builds
+      # it inside the Docker image, which local does not build.
+      - name: Build Frontend Bundle (multitier)
+        if: inputs.architecture == 'multitier'
+        run: npm run build
         working-directory: system/multitier/frontend-react
 
-      # Compile system tests
+      # Compile system tests (local-only: no commit stage builds them).
       - name: Compile System Tests (typescript)
         if: inputs.language == 'typescript'
         run: npm ci && npx tsc --noEmit
@@ -202,138 +205,62 @@ jobs:
         run: dotnet build
         working-directory: system-test/dotnet
 
-      # === Lint (commit-stage parity) ===
-      # Mirror the "Run Linter" step from each <prefix>-commit-stage.yml so a
-      # green local guarantees a green commit. Run before `system start` to fail
-      # fast. Source: the "Run Linter" step in each named *-commit-stage.yml.
-      - name: Run Linter (monolith, typescript)
-        if: inputs.architecture == 'monolith' && inputs.language == 'typescript'
-        run: npm run lint
-        working-directory: system/monolith/typescript
+      - name: Run Linter (monolith)
+        if: inputs.architecture == 'monolith'
+        uses: ./.github/actions/lint
+        with:
+          project: system/monolith/${{ inputs.language }}
 
-      - name: Run Linter (monolith, java)
-        if: inputs.architecture == 'monolith' && inputs.language == 'java'
-        run: ./gradlew checkstyleAll
-        working-directory: system/monolith/java
+      - name: Run Linter (multitier backend)
+        if: inputs.architecture == 'multitier'
+        uses: ./.github/actions/lint
+        with:
+          project: system/multitier/backend-${{ inputs.language }}
 
-      - name: Run Linter (monolith, dotnet)
-        if: inputs.architecture == 'monolith' && inputs.language == 'dotnet'
-        run: dotnet format MyCompany.MyShop.Monolith.sln --verify-no-changes
-        working-directory: system/monolith/dotnet
-
-      - name: Run Linter (multitier backend, typescript)
-        if: inputs.architecture == 'multitier' && inputs.language == 'typescript'
-        run: npm run lint
-        working-directory: system/multitier/backend-typescript
-
-      - name: Run Linter (multitier backend, java)
-        if: inputs.architecture == 'multitier' && inputs.language == 'java'
-        run: ./gradlew checkstyleAll
-        working-directory: system/multitier/backend-java
-
-      - name: Run Linter (multitier backend, dotnet)
-        if: inputs.architecture == 'multitier' && inputs.language == 'dotnet'
-        run: dotnet format MyCompany.MyShop.Backend.slnx --verify-no-changes
-        working-directory: system/multitier/backend-dotnet
-
-      # Frontend lint runs in every multitier config (OQ-2b: true superset).
-      # Source: multitier-frontend-react-commit-stage.yml (run -> Run Linter).
+      # The frontend runs in every multitier config (OQ-2b: true superset).
       - name: Run Linter (multitier frontend)
         if: inputs.architecture == 'multitier'
-        run: npm run lint
-        working-directory: system/multitier/frontend-react
-
-      # === Unit Tests (commit-stage parity) ===
-      # Mirror the "Run Unit Tests" step from each <prefix>-commit-stage.yml.
-      # Frontend-react has no unit step (build + lint + component only).
-      - name: Run Unit Tests (monolith, typescript)
-        if: inputs.architecture == 'monolith' && inputs.language == 'typescript'
-        run: npm test
-        working-directory: system/monolith/typescript
-
-      - name: Run Unit Tests (monolith, java)
-        if: inputs.architecture == 'monolith' && inputs.language == 'java'
-        run: ./gradlew test
-        working-directory: system/monolith/java
-
-      - name: Run Unit Tests (monolith, dotnet)
-        if: inputs.architecture == 'monolith' && inputs.language == 'dotnet'
-        run: dotnet test
-        working-directory: system/monolith/dotnet
-
-      - name: Run Unit Tests (multitier backend, typescript)
-        if: inputs.architecture == 'multitier' && inputs.language == 'typescript'
-        run: npm test
-        working-directory: system/multitier/backend-typescript
-
-      - name: Run Unit Tests (multitier backend, java)
-        if: inputs.architecture == 'multitier' && inputs.language == 'java'
-        run: ./gradlew test
-        working-directory: system/multitier/backend-java
-
-      # Verbatim mirror of multitier-backend-dotnet-commit-stage.yml: unit only,
-      # filtered to the Unit namespace (integration/component/Pact run separately).
-      - name: Run Unit Tests (multitier backend, dotnet)
-        if: inputs.architecture == 'multitier' && inputs.language == 'dotnet'
-        run: dotnet test --filter "FullyQualifiedName~MyCompany.MyShop.Backend.Tests.Unit"
-        working-directory: system/multitier/backend-dotnet
-
-      # Install the gh-optivem CLI extension. The extension provides the
-      # `gh optivem system start` and `gh optivem system-test run` subcommands
-      # used to bring up the docker-compose stacks and run the test suites.
-      - name: Install gh-optivem CLI extension
-        uses: optivem/actions/install-gh-optivem@v1
+        uses: ./.github/actions/lint
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          project: system/multitier/frontend-react
 
-      # === Component Tests (commit-stage parity) ===
-      # Mirror the component-tests job from each <prefix>-commit-stage.yml. Run
-      # BEFORE `system start` (OQ-1a) so they fail fast and never collide on
-      # ports with the real+stub stack. Uses the job-level GH_OPTIVEM_CONFIG.
-      # Source: the component-tests job in each named *-commit-stage.yml.
-      - name: Run Component Tests (monolith, typescript)
-        if: inputs.architecture == 'monolith' && inputs.language == 'typescript'
-        run: |
-          gh optivem component-test setup
-          gh optivem component-test run
+      - name: Run Unit Tests (monolith)
+        if: inputs.architecture == 'monolith'
+        uses: ./.github/actions/unit
+        with:
+          project: system/monolith/${{ inputs.language }}
 
-      - name: Run Component Tests (monolith, java)
-        if: inputs.architecture == 'monolith' && inputs.language == 'java'
-        run: |
-          gh optivem component-test setup
-          gh optivem component-test run
-
-      - name: Run Component Tests (monolith, dotnet)
-        if: inputs.architecture == 'monolith' && inputs.language == 'dotnet'
-        run: |
-          gh optivem component-test setup
-          gh optivem component-test run
-
-      - name: Run Component Tests (multitier backend, typescript)
-        if: inputs.architecture == 'multitier' && inputs.language == 'typescript'
-        run: |
-          gh optivem component-test setup --component backend
-          gh optivem component-test run --component backend
-
-      - name: Run Component Tests (multitier backend, java)
-        if: inputs.architecture == 'multitier' && inputs.language == 'java'
-        run: |
-          gh optivem component-test setup --component backend
-          gh optivem component-test run --component backend
-
-      - name: Run Component Tests (multitier backend, dotnet)
-        if: inputs.architecture == 'multitier' && inputs.language == 'dotnet'
-        run: |
-          gh optivem component-test setup --component backend
-          gh optivem component-test run --component backend
-
-      # Frontend component tests run in every multitier config (OQ-2b: true
-      # superset). Source: multitier-frontend-react-commit-stage.yml.
-      - name: Run Component Tests (multitier frontend)
+      - name: Run Unit Tests (multitier backend)
         if: inputs.architecture == 'multitier'
-        run: |
-          gh optivem component-test setup --component frontend
-          gh optivem component-test run --component frontend
+        uses: ./.github/actions/unit
+        with:
+          project: system/multitier/backend-${{ inputs.language }}
+
+      # The frontend runs in every multitier config (OQ-2b: true superset).
+      - name: Run Unit Tests (multitier frontend)
+        if: inputs.architecture == 'multitier'
+        uses: ./.github/actions/unit
+        with:
+          project: system/multitier/frontend-react
+
+      - name: Run Component-Level Suites (monolith)
+        if: inputs.architecture == 'monolith'
+        uses: ./.github/actions/component
+        with:
+          project: system/monolith/${{ inputs.language }}
+
+      - name: Run Component-Level Suites (multitier backend)
+        if: inputs.architecture == 'multitier'
+        uses: ./.github/actions/component
+        with:
+          project: system/multitier/backend-${{ inputs.language }}
+
+      # The frontend runs in every multitier config (OQ-2b: true superset).
+      - name: Run Component-Level Suites (multitier frontend)
+        if: inputs.architecture == 'multitier'
+        uses: ./.github/actions/component
+        with:
+          project: system/multitier/frontend-react
 
       # Bring up the docker-compose stacks (real + stub) and wait for health.
       - name: Start system

@@ -7,12 +7,20 @@ on:
         - 'system/multitier/frontend-react/**'
         - '!system/multitier/frontend-react/VERSION'
         - '.github/workflows/multitier-frontend-react-commit-stage.yml'
+        - '.github/actions/compile/**'
+        - '.github/actions/lint/**'
+        - '.github/actions/unit/**'
+        - '.github/actions/component/**'
   pull_request:
     branches: [ "main" ]
     paths:
         - 'system/multitier/frontend-react/**'
         - '!system/multitier/frontend-react/VERSION'
         - '.github/workflows/multitier-frontend-react-commit-stage.yml'
+        - '.github/actions/compile/**'
+        - '.github/actions/lint/**'
+        - '.github/actions/unit/**'
+        - '.github/actions/component/**'
   workflow_dispatch:
     inputs:
       commit-sha:
@@ -98,26 +106,28 @@ jobs:
       # compileCommands in component-tests.yaml, i.e. `npm run typecheck` = `tsc --noEmit`) so a
       # type error fails fast before the gating suites.
       - name: Compile Code
-        run: gh optivem component-test compile --component frontend
+        uses: ./.github/actions/compile
+        with:
+          project: system/multitier/frontend-react
 
       # === Run Test Pyramid (gates the image) ===
       # Suites are selected from system/multitier/frontend-react/component-tests.yaml via the
       # gh-optivem CLI, so the suite→command mapping has a single source of truth. They run
       # in pyramid order ahead of Build/Push, so a red suite blocks the Docker image.
       # Frontend is the consumer side — no provider-verification suite.
-      # One setup covers every suite (it runs the component's suite-agnostic setupCommands).
-
-      - name: Set Up Component Test Harness
-        run: gh optivem component-test setup --component frontend
+      # The compile, unit, component and lint commands live in .github/actions/<concern>, shared
+      # with the `local` job in _prerelease-pipeline.yml, so the two stages cannot drift. The
+      # compile action runs the component's setupCommands first; one setup covers every suite.
 
       - name: Run Unit Tests
-        run: gh optivem component-test run --component frontend --suite unit
+        uses: ./.github/actions/unit
+        with:
+          project: system/multitier/frontend-react
 
-      - name: Run Narrow Integration Tests
-        run: gh optivem component-test run --component frontend --suite integration
-
-      - name: Run Component Tests
-        run: gh optivem component-test run --component frontend --suite component
+      - name: Run Component-Level Suites
+        uses: ./.github/actions/component
+        with:
+          project: system/multitier/frontend-react
 
       # === Push Contract to Backend Repo ===
       - name: Push contract to backend repo
@@ -144,8 +154,9 @@ jobs:
 
       # === Run Linter ===
       - name: Run Linter
-        run: npm run lint
-        working-directory: system/multitier/frontend-react
+        uses: ./.github/actions/lint
+        with:
+          project: system/multitier/frontend-react
 
       # === Run Static Code Analysis ===
       - name: Run Code Analysis
