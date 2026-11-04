@@ -3,7 +3,8 @@ set -euo pipefail
 
 # Setup Google Cloud infrastructure using Terraform
 # Prerequisite: gcloud, gh and neonctl authenticated, and a GCP billing account
-# Optional: SYSTEM_NAME=<4-14 chars> overrides the name derived from the repo (prefixes the GCP project, services, secrets, databases)
+# Optional: SYSTEM_NAME=<4-14 chars> overrides the name derived from the repo (prefixes the GCP project, services, secrets, databases).
+#   Keep it to 8 chars or fewer to deploy multitier-typescript to production (12 for multitier-dotnet): Cloud Run caps service names at 49.
 # Optional: KC_ADMIN_PASSWORD=<password> sets the Keycloak admin password on first setup (default: generated)
 # Usage: ./setup-gcp.sh [--yes]   (--yes applies Terraform plans that change/destroy resources without asking)
 
@@ -228,8 +229,10 @@ ensure_neon() {
 
   local existing db
   existing=$(neon_cli databases list --project-id "$NEON_PROJECT_ID" -o json | neon_items databases | jq -r '.[].name')
-  for db in "${DB_PREFIX}"_{multitier,monolith}_{java,dotnet,typescript}_{real,stub} \
-    "${DB_PREFIX}"_multitier_java_{qa,production} "${DB_PREFIX}_keycloak"; do
+  # Acceptance has a real and a stub stack per flavor; QA and production one each. Legacy suites run on
+  # Docker Compose only, so they need no databases here.
+  for db in "${DB_PREFIX}"_{multitier,monolith}_{java,dotnet,typescript}_{real,stub,qa,production} \
+    "${DB_PREFIX}_keycloak"; do
     if grep -qx "$db" <<< "$existing"; then
       echo "  ✅ Database $db exists"
     else

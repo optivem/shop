@@ -22,7 +22,7 @@ on:
   workflow_call:
     inputs:
       architecture:
-        description: 'Architecture: only multitier for now'
+        description: 'Architecture: multitier or monolith'
         required: true
         type: string
       language:
@@ -35,7 +35,7 @@ on:
         type: string
         default: ''
       images:
-        description: 'JSON map of role to GHCR image name: {"frontend":"multitier-frontend-react","backend":"multitier-backend-java"}. The roles are the compose service names.'
+        description: 'JSON map of role to GHCR image name: {"frontend":"multitier-frontend-react","backend":"multitier-backend-java"} or {"system":"monolith-system-java"}. The roles are the compose service names.'
         required: true
         type: string
       version:

@@ -1,8 +1,17 @@
 # GCP Project
 # Named after the GitHub repo (or var.system_name), so scaffolded systems each get their own project.
-# Max 14 chars: it prefixes Cloud Run service names (49-char limit), e.g. <system>-multitier-typescript-real-frontend
+# Max 14 chars: it prefixes Cloud Run service names (49-char limit), e.g. <system>-multitier-typescript-real-frontend.
+# The longest names, <system>-multitier-typescript-production-{frontend,backend}, leave 8 chars; the
+# deploy workflows fail early with the offending name, and the check below warns at plan time.
 locals {
   system_name = var.system_name != "" ? var.system_name : trim(substr(replace(lower(element(split("/", var.github_repo), 1)), "/[^a-z0-9-]/", "-"), 0, 14), "-")
+}
+
+check "cloud_run_service_name_length" {
+  assert {
+    condition     = length(local.system_name) <= 8
+    error_message = "system_name '${local.system_name}' is longer than 8 chars: <system>-multitier-typescript-production-frontend would exceed Cloud Run's 49-char service name limit, so multitier-typescript production deploys (and above 12 chars, multitier-dotnet ones) will fail. Set a shorter SYSTEM_NAME if you need them."
+  }
 }
 
 resource "google_project" "this" {
