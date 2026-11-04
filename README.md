@@ -9,7 +9,7 @@ A catalog of project templates organized by two independent dimensions: **system
 [![meta-prerelease-stage](https://github.com/optivem/shop/actions/workflows/meta-prerelease-stage.yml/badge.svg?event=schedule)](https://github.com/optivem/shop/actions/workflows/meta-prerelease-stage.yml)
 [![meta-release-stage](https://github.com/optivem/shop/actions/workflows/meta-release-stage.yml/badge.svg?event=push)](https://github.com/optivem/shop/actions/workflows/meta-release-stage.yml)
 
-**meta-prerelease-stage** — runs the prerelease pipeline (local → commit → acceptance → QA) across all languages and architectures; tags the SHA as `meta-v<VERSION>-rc.<N>` on success. Does not release to production.
+**meta-prerelease-stage** — runs the prerelease pipeline (local → commit → Docker Compose acceptance gates) across all languages and architectures; tags the SHA as `meta-v<VERSION>-rc.<N>` on success. Does not release to production. Flavor RCs come only from the manually dispatched cloud acceptance stages (see [Acceptance Stage](docs/pipeline/acceptance-stage.md)).
 **meta-release-stage** — takes a meta-rc tag, orchestrates production releases across all 6 flavor prod-stages, tags `meta-v<VERSION>`, and bumps the root meta VERSION via `bump-patch-version-meta`. Each flavor's prod-stage bumps its own per-system VERSION (`system/<arch>/<lang>/VERSION`) post-release. This is the single canonical release path.
 
 ## Cleanup
@@ -165,4 +165,8 @@ The `.github/workflows/` directory contains runnable pipelines for all 6 matched
 [![prod-stage](https://github.com/optivem/shop/actions/workflows/multitier-typescript-prod-stage.yml/badge.svg?branch=main)](https://github.com/optivem/shop/actions/workflows/multitier-typescript-prod-stage.yml)
 
 - **Commit stages** trigger automatically on push via path filters
-- **Acceptance/QA/Prod stages** are workflow_dispatch (manual trigger)
+- **Docker Compose acceptance gates** (`acceptance-stage-docker-compose`, `-legacy`) run in every prerelease pipeline run, on the GitHub runner. They are free and tag nothing
+- **Cloud acceptance stage** (`acceptance-stage`, Cloud Run) is manual; run it on a commit that passed both gates. It is the only workflow that creates release candidates
+- **QA, QA sign-off and production stages** are manual and deploy to Cloud Run; each has a commented-out Docker Compose alternative, which is only a zero-cost stand-in
+
+Details: [Commit Stage](docs/pipeline/commit-stage.md), [Acceptance Stage](docs/pipeline/acceptance-stage.md) (including why legacy is a separate, deletable workflow), [QA and Production Stages](docs/pipeline/qa-and-prod-stages.md), and the cloud setup and [cost model](terraform/README.md#cost).
