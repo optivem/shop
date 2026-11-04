@@ -89,7 +89,7 @@ You can also pass a **group alias** to `--suite`: `acceptance` runs every accept
 
 The API client acquires Keycloak access tokens (password grant, client `shop-system-test`, realm `shop`) and sends them as the `Authorization` header.
 
-Required for the latest acceptance suites (a missing URL fails them with a configuration error); set `KEYCLOAK_URL_REAL` / `KEYCLOAK_URL_STUB` (per external-system mode) or `KEYCLOAK_URL` (fallback), e.g. `KEYCLOAK_URL_REAL=http://localhost:8291` and `KEYCLOAK_URL_STUB=http://localhost:8292` for the local .NET multitier stack. The identity scenarios (marked `[RequiresKeycloakTheory]`).
+Required for the latest acceptance suites (a missing URL fails them with a configuration error); set `KEYCLOAK_URL_REAL` / `KEYCLOAK_URL_STUB` (per external-system mode) or `KEYCLOAK_URL` (fallback), e.g. `KEYCLOAK_URL_REAL=http://localhost:8291` and `KEYCLOAK_URL_STUB=http://localhost:8292` for the local .NET multitier stack. The identity scenarios live in the use-case acceptance tests (e.g. `ViewOrderNegativeTest`, `CancelOrderNegativeTest`, `BrowseOrderHistoryPositiveTest`) and use the DSL steps `LoggedInAsCustomer(...)` / `LoggedInAsAdmin()` / `NotLoggedIn()` / `PlacedByCustomer(...)`; the legacy `Mod04` e2e `ApiAuthorizationTest` exercises the API client's identities directly.
 
 Each driver operation picks its default user: admin-only operations (deliver order, publish and browse coupons) use `admin1` and everything else uses `customer1`; the API client on its own calls as `customer1`. A test can override this with `apiClient.As(ApiIdentity.Anonymous | Customer | Admin)`.
 

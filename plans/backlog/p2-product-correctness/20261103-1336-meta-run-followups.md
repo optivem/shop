@@ -7,11 +7,10 @@
 
 ## ▶ Next executable step (resume here)
 
-Item 2: fix the stale README references.
+Item 3: keep the React deep link across login.
 
 ## Items
 
-- [ ] 2. **Stale README references:** `system-test/java/README.md` still mentions `AccessControlTest` / `OrderOwnershipTest`, which don't exist. Check the .NET/TS READMEs for the same.
 - [ ] 3. **React deep link lost across login (production bug):** a frontend-react user who pastes an order-details URL lands on home. Tokens are held in memory, so the deep link is dropped across the login redirect. Keep the target route through the Keycloak redirect (e.g. `redirectUri`/state), and add a UI test for it. The Next.js monolith frontend isn't affected, because it uses cookie sessions and `returnTo`.
 - [ ] 4. **.NET `cancelOrder` UI test silently uses the API:** the .NET cancel-order UI path is still `CHANNEL_MODE=static`. Make it exercise the UI like Java/TS, or document why not.
 - [ ] 5. **UI drivers only work against their own language's SUT:** order-details routes differ (`/order-details/{n}` in Java vs `/order-details?orderNumber=…` in Next.js). If `.github/workflows/cross-lang-system-verification.yml` runs one language's UI tests against another's monolith, the order-details UI tests fail there. Decide: unify the routes, or keep cross-lang UI runs within a language. Found by the M1 fix in `16012a4e`.
