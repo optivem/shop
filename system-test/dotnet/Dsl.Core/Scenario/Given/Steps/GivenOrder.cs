@@ -15,6 +15,7 @@ public class GivenOrder : BaseGiven, IGivenOrder
     private string? _quantity;
     private string? _country;
     private string? _couponCodeAlias;
+    private string? _idempotencyKey;
     private OrderStatus _status;
     private readonly GivenStage _given;
     private string? _placedByAlias;
@@ -77,6 +78,14 @@ public class GivenOrder : BaseGiven, IGivenOrder
 
     IGivenOrder IGivenOrder.WithCouponCode(string? couponCode) => WithCouponCode(couponCode);
 
+    public GivenOrder WithIdempotencyKey(string? idempotencyKey)
+    {
+        _idempotencyKey = idempotencyKey;
+        return this;
+    }
+
+    IGivenOrder IGivenOrder.WithIdempotencyKey(string? idempotencyKey) => WithIdempotencyKey(idempotencyKey);
+
     public GivenOrder PlacedByCustomer()
     {
         _placedByAlias = null;
@@ -136,6 +145,7 @@ public class GivenOrder : BaseGiven, IGivenOrder
             .Quantity(_quantity)
             .Country(_country)
             .CouponCode(_couponCodeAlias)
+            .IdempotencyKey(_idempotencyKey)
             .Execute())
             .ShouldSucceed();
 

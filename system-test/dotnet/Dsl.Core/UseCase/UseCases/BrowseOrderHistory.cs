@@ -8,6 +8,8 @@ namespace Dsl.Core.UseCase.UseCases;
 public class BrowseOrderHistory : BaseMyShopUseCase<BrowseOrderHistoryResponse, BrowseOrderHistoryVerification>
 {
     private string? _orderNumberResultAlias;
+    private string? _page;
+    private string? _size;
 
     public BrowseOrderHistory(IMyShopDriver driver, UseCaseContext context)
         : base(driver, context)
@@ -20,10 +22,22 @@ public class BrowseOrderHistory : BaseMyShopUseCase<BrowseOrderHistoryResponse, 
         return this;
     }
 
+    public BrowseOrderHistory Page(string? page)
+    {
+        _page = page;
+        return this;
+    }
+
+    public BrowseOrderHistory Size(string? size)
+    {
+        _size = size;
+        return this;
+    }
+
     public override async Task<MyShopUseCaseResult<BrowseOrderHistoryResponse, BrowseOrderHistoryVerification>> Execute()
     {
         var orderNumber = _context.GetResultValue(_orderNumberResultAlias);
-        var request = new BrowseOrderHistoryRequest { OrderNumber = orderNumber };
+        var request = new BrowseOrderHistoryRequest { OrderNumber = orderNumber, Page = _page, Size = _size };
 
         var result = await _driver.BrowseOrderHistoryAsync(request);
 

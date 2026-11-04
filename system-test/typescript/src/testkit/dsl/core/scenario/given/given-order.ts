@@ -39,6 +39,11 @@ export class GivenOrder implements IGivenOrder {
     return this;
   }
 
+  withIdempotencyKey(idempotencyKey: string): this {
+    this.config.idempotencyKey = idempotencyKey;
+    return this;
+  }
+
   /** The order is placed by the customer known in this scenario by the given alias, or by the default customer (customer1) when no alias is given. */
   placedByCustomer(alias?: string): this {
     if (alias === undefined) {

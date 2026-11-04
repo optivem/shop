@@ -7,6 +7,8 @@ import { assertNotAwaited } from '../assert-not-awaited.js';
 
 export class WhenBrowseOrderHistory {
   private orderNumber: string = DEFAULTS.ORDER_NUMBER;
+  private page: string | null = null;
+  private size: string | null = null;
 
   constructor(
     private readonly app: AppContext,
@@ -19,10 +21,20 @@ export class WhenBrowseOrderHistory {
     return this;
   }
 
+  withPage(page: string): this {
+    this.page = page;
+    return this;
+  }
+
+  withSize(size: string): this {
+    this.size = size;
+    return this;
+  }
+
   then(): ThenBrowseOrderHistoryResultStage;
   then(...args: unknown[]): ThenBrowseOrderHistoryResultStage {
     assertNotAwaited(args);
     this.ctx.markExecuted();
-    return new ThenBrowseOrderHistoryResultStage(this.app, this.ctx, this.useCaseContext, this.orderNumber);
+    return new ThenBrowseOrderHistoryResultStage(this.app, this.ctx, this.useCaseContext, this.orderNumber, this.page, this.size);
   }
 }

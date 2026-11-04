@@ -73,6 +73,16 @@ public class ThenOrderImpl<R, V extends ResponseVerification<R>>
         return this;
     }
 
+    public ThenOrderImpl<R, V> hasOrderNumber(String orderNumber) {
+        orderVerification.orderNumber(orderNumber);
+        return this;
+    }
+
+    public ThenOrderImpl<R, V> doesNotHaveOrderNumber(String orderNumber) {
+        orderVerification.orderNumberIsNot(orderNumber);
+        return this;
+    }
+
     public ThenOrderImpl<R, V> hasBasePrice(String basePrice) {
         orderVerification.basePrice(basePrice);
         return this;

@@ -20,6 +20,16 @@ export class BrowseOrderHistoryVerification extends ResponseVerification<BrowseO
     return this;
   }
 
+  isEmpty(): this {
+    expect(this.listedOrderNumbers(), 'Order history page should be empty').toHaveLength(0);
+    return this;
+  }
+
+  totalElements(expectedTotalElements: number): this {
+    expect(this.getResponse().totalElements, 'Order history total elements').toBe(expectedTotalElements);
+    return this;
+  }
+
   private listedOrderNumbers(): string[] {
     expect(this.getResponse(), 'Response should not be null').not.toBeNull();
     expect(this.getResponse().orders, 'Orders list should not be null').toBeDefined();

@@ -6,6 +6,11 @@ import { Coupon } from '../entities/coupon.entity';
 import { PublishCouponRequest } from '../dtos/publish-coupon-request.dto';
 import { ValidationException } from '../exceptions/validation.exception';
 import { ClockGateway } from './external/clock.gateway';
+import { PageSpec } from './page-spec';
+import type {
+  BrowseCouponsItemResponse,
+  BrowseCouponsResponse,
+} from '../dtos/browse-coupons-response.dto';
 
 @Injectable()
 export class CouponService {
@@ -113,8 +118,35 @@ export class CouponService {
     await this.couponRepository.save(coupon);
   }
 
-  async getAllCoupons(): Promise<Coupon[]> {
-    return this.couponRepository.find();
+  /** One page of coupons, newest first, so a freshly published coupon is on the first page. */
+  async browseCoupons(
+    page?: string,
+    size?: string,
+  ): Promise<BrowseCouponsResponse> {
+    const pageSpec = PageSpec.of(page, size);
+    const totalElements = await this.couponRepository.count();
+    const coupons = pageSpec.isPastEnd(totalElements)
+      ? []
+      : await this.couponRepository.find({
+          order: { id: 'DESC' },
+          skip: pageSpec.offset(),
+          take: pageSpec.size,
+        });
+    const items: BrowseCouponsItemResponse[] = coupons.map((c) => ({
+      code: c.code,
+      discountRate: c.discountRate,
+      validFrom: c.validFrom ? new Date(c.validFrom).toISOString() : null,
+      validTo: c.validTo ? new Date(c.validTo).toISOString() : null,
+      usageLimit: c.usageLimit,
+      usedCount: c.usedCount,
+    }));
+    return {
+      coupons: items,
+      page: pageSpec.page,
+      size: pageSpec.size,
+      totalElements,
+      totalPages: pageSpec.totalPages(totalElements),
+    };
   }
 
   private throwCouponValidationException(

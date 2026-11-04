@@ -13,6 +13,7 @@ public class PlaceOrder : BaseMyShopUseCase<PlaceOrderResponse, PlaceOrderVerifi
     private string? _quantity;
     private string? _country;
     private string? _couponCode;
+    private string? _idempotencyKeyAlias;
 
     public PlaceOrder(IMyShopDriver driver, UseCaseContext context)
         : base(driver, context)
@@ -54,11 +55,20 @@ public class PlaceOrder : BaseMyShopUseCase<PlaceOrderResponse, PlaceOrderVerifi
         return this;
     }
 
+    public PlaceOrder IdempotencyKey(string? idempotencyKeyAlias)
+    {
+        _idempotencyKeyAlias = idempotencyKeyAlias;
+        return this;
+    }
+
     public override async Task<MyShopUseCaseResult<PlaceOrderResponse, PlaceOrderVerification>> Execute()
     {
         var sku = _context.GetParamValue(_skuParamAlias);
         var country = _context.GetParamValueOrLiteral(_country);
         var couponCode = _context.GetParamValue(_couponCode);
+        // Keys are the shop's own data, so the alias always maps to a scenario-unique value: tests share a
+        // database, and two scenarios reusing a literal key would replay each other's orders.
+        var idempotencyKey = _context.GetParamValue(_idempotencyKeyAlias);
 
         var request = new PlaceOrderRequest
         {
@@ -66,6 +76,7 @@ public class PlaceOrder : BaseMyShopUseCase<PlaceOrderResponse, PlaceOrderVerifi
             Quantity = _quantity,
             Country = country,
             CouponCode = couponCode,
+            IdempotencyKey = idempotencyKey,
         };
 
         var result = await _driver.PlaceOrderAsync(request);

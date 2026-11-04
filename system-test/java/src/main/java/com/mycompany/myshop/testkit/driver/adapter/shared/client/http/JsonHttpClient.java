@@ -15,6 +15,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.concurrent.ExecutionException;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -79,6 +80,11 @@ public class JsonHttpClient<E> implements AutoCloseable {
         return getResultOrFailure(httpResponse, responseType);
     }
     
+    public <T> Result<T, E> post(String path, Object request, Map<String, String> headers, Class<T> responseType) {
+        var httpResponse = doPost(path, request, headers);
+        return getResultOrFailure(httpResponse, responseType);
+    }
+
     public Result<Void, E> post(String path, Object request) {
         var httpResponse = doPost(path, request);
         return getResultOrFailure(httpResponse, Void.class);
@@ -148,11 +154,17 @@ public class JsonHttpClient<E> implements AutoCloseable {
     }
 
     private HttpResponse<String> doPost(String path, Object request) {
+        return doPost(path, request, Map.of());
+    }
+
+    private HttpResponse<String> doPost(String path, Object request, Map<String, String> headers) {
         var uri = getUri(path);
         var jsonBody = serializeRequest(request);
 
-        var httpRequest = requestBuilder(uri)
-                .header(CONTENT_TYPE, APPLICATION_JSON)
+        var builder = requestBuilder(uri)
+                .header(CONTENT_TYPE, APPLICATION_JSON);
+        headers.forEach(builder::header);
+        var httpRequest = builder
                 .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
                 .build();
 

@@ -9,6 +9,7 @@ export interface GivenOrder {
   withQuantity(quantity: string | number): GivenOrder;
   withCountry(country: string): GivenOrder;
   withCouponCode(couponCode: string | null): GivenOrder;
+  withIdempotencyKey(idempotencyKey: string): GivenOrder;
   /** The order is placed by the customer known in this scenario by the given alias, or by the default customer (customer1) when no alias is given. */
   placedByCustomer(alias?: string): GivenOrder;
   withStatus(status: OrderStatus): GivenOrder;

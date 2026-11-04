@@ -7,6 +7,8 @@ import { BrowseOrderHistoryVerification } from './BrowseOrderHistoryVerification
 
 export class BrowseOrderHistory extends BaseMyShopUseCase<BrowseOrderHistoryResponse, BrowseOrderHistoryVerification> {
   private _orderNumber = '';
+  private _page?: string;
+  private _size?: string;
 
   constructor(driver: MyShopDriver, context: UseCaseContext) {
     super(driver, context);
@@ -17,9 +19,19 @@ export class BrowseOrderHistory extends BaseMyShopUseCase<BrowseOrderHistoryResp
     return this;
   }
 
+  page(page: string): this {
+    this._page = page;
+    return this;
+  }
+
+  size(size: string): this {
+    this._size = size;
+    return this;
+  }
+
   async execute(): Promise<UseCaseResult<BrowseOrderHistoryResponse, BrowseOrderHistoryVerification>> {
     const resolved = this.context.getResultValue(this._orderNumber) ?? this._orderNumber;
-    const result = await this.driver.browseOrderHistory({ orderNumber: resolved });
+    const result = await this.driver.browseOrderHistory({ orderNumber: resolved, page: this._page, size: this._size });
 
     return new UseCaseResult(
       result,

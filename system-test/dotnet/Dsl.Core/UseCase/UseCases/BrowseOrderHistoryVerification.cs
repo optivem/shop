@@ -25,6 +25,18 @@ public class BrowseOrderHistoryVerification : ResponseVerification<BrowseOrderHi
         return this;
     }
 
+    public BrowseOrderHistoryVerification IsEmpty()
+    {
+        ListedOrderNumbers().ShouldBeEmpty("Order history page should be empty");
+        return this;
+    }
+
+    public BrowseOrderHistoryVerification TotalElements(long expectedTotalElements)
+    {
+        Response.TotalElements.ShouldBe(expectedTotalElements, "Order history total elements");
+        return this;
+    }
+
     private List<string?> ListedOrderNumbers()
     {
         Response.ShouldNotBeNull("Response should not be null");

@@ -47,3 +47,39 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
             .containsOrder(DEFAULTS.ORDER_NUMBER);
     });
 });
+
+forChannels(ChannelType.API)(() => {
+    test('firstPageShouldReportTheTotalNumberOfMatchingOrders', async ({ scenario }) => {
+        await scenario
+            .given()
+            .order()
+            .placedByCustomer()
+            .and()
+            .loggedInAsCustomer()
+            .when()
+            .browseOrderHistory()
+            .withPage('1')
+            .withSize('1')
+            .then()
+            .shouldSucceed()
+            .orderHistory()
+            .containsOrder(DEFAULTS.ORDER_NUMBER)
+            .hasTotalElements(1);
+    });
+
+    test('pagePastTheLastShouldBeEmpty', async ({ scenario }) => {
+        await scenario
+            .given()
+            .order()
+            .placedByCustomer()
+            .and()
+            .loggedInAsCustomer()
+            .when()
+            .browseOrderHistory()
+            .withPage('2')
+            .then()
+            .shouldSucceed()
+            .orderHistory()
+            .isEmpty();
+    });
+});

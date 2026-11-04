@@ -7,6 +7,16 @@ namespace MyCompany.MyShop.Backend.Core.Dtos;
 public class BrowseOrderHistoryResponse
 {
     public List<BrowseOrderHistoryItemResponse> Orders { get; set; } = new();
+
+    /// <summary>The 1-based page that was served, which is the default when the request left it out.</summary>
+    public int Page { get; set; }
+
+    /// <summary>The page size that was served, which is the default when the request left it out.</summary>
+    public int Size { get; set; }
+
+    public long TotalElements { get; set; }
+
+    public int TotalPages { get; set; }
 }
 
 public class BrowseOrderHistoryItemResponse

@@ -18,6 +18,7 @@ public class PlaceOrder : BaseWhen<PlaceOrderResponse, PlaceOrderVerification>, 
     private string? _quantity;
     private string? _country;
     private string? _couponCode;
+    private string? _idempotencyKey;
 
     public PlaceOrder(UseCaseDsl app, ScenarioDsl scenario, Func<Task> ensureGiven) : base(app, scenario, ensureGiven)
     {
@@ -82,6 +83,14 @@ public class PlaceOrder : BaseWhen<PlaceOrderResponse, PlaceOrderVerification>, 
 
     IWhenPlaceOrder IWhenPlaceOrder.WithCouponCode() => WithCouponCode();
 
+    public PlaceOrder WithIdempotencyKey(string? idempotencyKey)
+    {
+        _idempotencyKey = idempotencyKey;
+        return this;
+    }
+
+    IWhenPlaceOrder IWhenPlaceOrder.WithIdempotencyKey(string? idempotencyKey) => WithIdempotencyKey(idempotencyKey);
+
     protected override async Task<ExecutionResult<PlaceOrderResponse, PlaceOrderVerification>> Execute(UseCaseDsl app)
     {
         var shop = await app.MyShop(ChannelMode.Dynamic, Channel);
@@ -91,6 +100,7 @@ public class PlaceOrder : BaseWhen<PlaceOrderResponse, PlaceOrderVerification>, 
             .Quantity(_quantity)
             .Country(_country)
             .CouponCode(_couponCode)
+            .IdempotencyKey(_idempotencyKey)
             .Execute();
 
         return new ExecutionResultBuilder<PlaceOrderResponse, PlaceOrderVerification>(result)

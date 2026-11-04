@@ -10,6 +10,7 @@ export class WhenPlaceOrder {
   private quantity: string | null = DEFAULTS.QUANTITY;
   private country: string | null = DEFAULTS.COUNTRY;
   private couponCode: string | null = null;
+  private idempotencyKey: string | null = null;
 
   constructor(
     private readonly app: AppContext,
@@ -44,10 +45,15 @@ export class WhenPlaceOrder {
     return this;
   }
 
+  withIdempotencyKey(idempotencyKey: string): this {
+    this.idempotencyKey = idempotencyKey;
+    return this;
+  }
+
   then(): ThenResultStage;
   then(...args: unknown[]): ThenResultStage {
     assertNotAwaited(args);
     this.ctx.markExecuted();
-    return new ThenResultStage(this.app, this.ctx, this.useCaseContext, this.sku, this.quantity, this.country, this.couponCode);
+    return new ThenResultStage(this.app, this.ctx, this.useCaseContext, this.sku, this.quantity, this.country, this.couponCode, this.idempotencyKey);
   }
 }

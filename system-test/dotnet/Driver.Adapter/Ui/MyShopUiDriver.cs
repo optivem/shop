@@ -72,6 +72,7 @@ public class MyShopUiDriver : IMyShopDriver
 
     public async Task<Result<PlaceOrderResponse, SystemError>> PlaceOrderAsync(PlaceOrderRequest request)
     {
+        RequireNotSet("Idempotency-Key", request.IdempotencyKey);
         if (_anonymous)
         {
             return await LoginRequiredAsync<PlaceOrderResponse>("/new-order");
@@ -238,6 +239,8 @@ public class MyShopUiDriver : IMyShopDriver
 
     public async Task<Result<BrowseOrderHistoryResponse, SystemError>> BrowseOrderHistoryAsync(BrowseOrderHistoryRequest request)
     {
+        RequireNotSet("page", request.Page);
+        RequireNotSet("size", request.Size);
         if (_anonymous)
         {
             return await LoginRequiredAsync<BrowseOrderHistoryResponse>("/order-history");
@@ -289,6 +292,8 @@ public class MyShopUiDriver : IMyShopDriver
 
     public async Task<Result<BrowseCouponsResponse, SystemError>> BrowseCouponsAsync(BrowseCouponsRequest request)
     {
+        RequireNotSet("page", request.Page);
+        RequireNotSet("size", request.Size);
         if (_anonymous)
         {
             return await LoginRequiredAsync<BrowseCouponsResponse>("/admin-coupons");
@@ -438,5 +443,14 @@ public class MyShopUiDriver : IMyShopDriver
         OrderHistory,
         OrderDetails,
         CouponManagement
+    }
+
+    // The UI has no control for this input (no idempotency key, no paging controls): API-channel scenarios only.
+    private static void RequireNotSet(string input, string? value)
+    {
+        if (value != null)
+        {
+            throw new NotSupportedException($"The UI channel cannot send '{input}'; run this scenario on the API channel only");
+        }
     }
 }

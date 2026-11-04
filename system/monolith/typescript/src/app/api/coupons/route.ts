@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import Decimal from 'decimal.js';
-import { insertCoupon, findAllCoupons, findCouponByCode } from '@/lib/db';
+import { insertCoupon, findAllCoupons, countCoupons, findCouponByCode } from '@/lib/db';
+import { isPastEnd, pageEnvelope, resolvePage } from '@/lib/paging';
 import { badRequestResponse, validationErrorResponse, internalErrorResponse } from '@/lib/errors';
 import { isRecord } from '@/lib/type-guards';
 import { parsePublishCouponRequest } from '@/lib/validation';
@@ -33,9 +34,18 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const coupons = await findAllCoupons();
+    const params = request.nextUrl.searchParams;
+    const pageResolution = resolvePage(params.get('page'), params.get('size'));
+    if (!pageResolution.ok) {
+      return validationErrorResponse(pageResolution.errors);
+    }
+    const pageSpec = pageResolution.value;
+    const totalElements = await countCoupons();
+    const coupons = isPastEnd(pageSpec, totalElements)
+      ? []
+      : await findAllCoupons({ limit: pageSpec.size, offset: pageSpec.offset });
     return jsonResponseWithDecimals({
       coupons: coupons.map((c) => ({
         code: c.code,
@@ -45,6 +55,7 @@ export async function GET() {
         usageLimit: c.usage_limit,
         usedCount: c.used_count,
       })),
+      ...pageEnvelope(pageSpec, totalElements),
     });
   } catch (error) {
     return internalErrorResponse(error);

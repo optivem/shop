@@ -205,4 +205,19 @@ class PlaceOrderNegativeTest extends BaseAcceptanceTest {
                 .then().shouldFail()
                     .errorMessage(PERMISSION_DENIED);
     }
+
+    @TestTemplate
+    @Channel(ChannelType.API)
+    void shouldRejectReusingAnIdempotencyKeyForADifferentOrder() {
+        scenario
+                .given().order()
+                    .withIdempotencyKey("ORDER-KEY")
+                    .withQuantity("1")
+                .and().loggedInAsCustomer()
+                .when().placeOrder()
+                    .withIdempotencyKey("ORDER-KEY")
+                    .withQuantity("2")
+                .then().shouldFail()
+                    .errorMessage("Idempotency-Key has already been used with a different request");
+    }
 }

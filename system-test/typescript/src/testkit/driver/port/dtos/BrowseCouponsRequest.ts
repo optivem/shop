@@ -1,1 +1,4 @@
-export type BrowseCouponsRequest = Record<string, never>;
+export interface BrowseCouponsRequest {
+  page?: string | null;
+  size?: string | null;
+}

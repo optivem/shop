@@ -1,5 +1,6 @@
 package com.mycompany.myshop.backend.core.services;
 
+import com.mycompany.myshop.backend.core.dtos.BrowseCouponsResponse;
 import com.mycompany.myshop.backend.core.entities.Coupon;
 import com.mycompany.myshop.backend.core.exceptions.ValidationException;
 import com.mycompany.myshop.backend.core.repositories.CouponRepository;
@@ -80,8 +81,34 @@ public class CouponService {
         return couponRepository.save(coupon);
     }
 
-    public List<Coupon> getAllCoupons() {
-        return couponRepository.findAll();
+    @Transactional(readOnly = true)
+    public BrowseCouponsResponse browseCoupons(Integer page, Integer size) {
+        var pageSpec = PageSpec.of(page, size);
+        var totalElements = couponRepository.count();
+        List<Coupon> window = pageSpec.reaches(totalElements)
+                ? couponRepository.findPage(pageSpec.toPageable())
+                : List.of();
+
+        var items = window.stream()
+                .map(coupon -> {
+                    var item = new BrowseCouponsResponse.BrowseCouponsItemResponse();
+                    item.setCode(coupon.getCode());
+                    item.setDiscountRate(coupon.getDiscountRate());
+                    item.setValidFrom(coupon.getValidFrom());
+                    item.setValidTo(coupon.getValidTo());
+                    item.setUsageLimit(coupon.getUsageLimit());
+                    item.setUsedCount(coupon.getUsedCount());
+                    return item;
+                })
+                .toList();
+
+        var result = new BrowseCouponsResponse();
+        result.setCoupons(items);
+        result.setPage(pageSpec.page());
+        result.setSize(pageSpec.size());
+        result.setTotalElements(totalElements);
+        result.setTotalPages(pageSpec.totalPages(totalElements));
+        return result;
     }
 
     private void throwCouponValidationException(String messageFormat, String couponCode) {

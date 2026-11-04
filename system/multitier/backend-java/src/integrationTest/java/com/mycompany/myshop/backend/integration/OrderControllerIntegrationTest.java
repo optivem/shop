@@ -2,6 +2,8 @@ package com.mycompany.myshop.backend.integration;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -18,10 +20,13 @@ import com.mycompany.myshop.backend.core.dtos.PlaceOrderResponse;
 import com.mycompany.myshop.backend.core.dtos.ViewOrderDetailsResponse;
 import com.mycompany.myshop.backend.core.entities.OrderStatus;
 import com.mycompany.myshop.backend.core.exceptions.NotExistValidationException;
+import com.mycompany.myshop.backend.core.services.IdempotencyKeyStore;
+import com.mycompany.myshop.backend.core.services.IdempotentOrderService;
 import com.mycompany.myshop.backend.core.services.OrderService;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.MockMvcBuilderCustomizer;
@@ -40,7 +45,7 @@ import org.springframework.test.web.servlet.MockMvc;
 // an internal seam, not an external system.
 @WebMvcTest(OrderController.class)
 @ActiveProfiles("test")
-@Import({SecurityConfig.class, ProblemDetailSecurityHandlers.class,
+@Import({SecurityConfig.class, ProblemDetailSecurityHandlers.class, IdempotentOrderService.class,
     OrderControllerIntegrationTest.AdminRequests.class})
 class OrderControllerIntegrationTest {
 
@@ -63,6 +68,11 @@ class OrderControllerIntegrationTest {
     @MockitoBean
     private OrderService orderService;
 
+    // IdempotentOrderService is real (imported), so POST /api/orders still reaches the OrderService
+    // mock; its store is mocked and, unstubbed, finds no stored response.
+    @MockitoBean
+    private IdempotencyKeyStore idempotencyKeyStore;
+
     @Test
     void placeOrderReturnsCreated() throws Exception {
         var response = new PlaceOrderResponse();
@@ -75,6 +85,37 @@ class OrderControllerIntegrationTest {
             .andExpect(status().isCreated())
             .andExpect(header().string("Location", "/api/orders/ORD-001"))
             .andExpect(jsonPath("$.orderNumber").value("ORD-001"));
+    }
+
+    // A replay answers from the stored response: same status, same Location, same body, and the
+    // order service is never asked to place a second order.
+    @Test
+    void placeOrderWithUsedIdempotencyKeyReplaysStoredResponse() throws Exception {
+        var stored = new PlaceOrderResponse();
+        stored.setOrderNumber("ORD-001");
+        when(idempotencyKeyStore.findReplay(any(), eq(PlaceOrderResponse.class)))
+            .thenReturn(Optional.of(new IdempotencyKeyStore.StoredResponse<>(201, stored)));
+
+        mockMvc.perform(post("/api/orders")
+                .header("Idempotency-Key", "key-1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"sku\":\"BOOK-123\",\"quantity\":2,\"country\":\"US\"}"))
+            .andExpect(status().isCreated())
+            .andExpect(header().string("Location", "/api/orders/ORD-001"))
+            .andExpect(jsonPath("$.orderNumber").value("ORD-001"));
+
+        verify(orderService, never()).placeOrder(any(), any(), any());
+        verify(orderService, never()).placeOrder(any(), any());
+    }
+
+    @Test
+    void placeOrderWithTooLongIdempotencyKeyReturnsUnprocessableEntity() throws Exception {
+        mockMvc.perform(post("/api/orders")
+                .header("Idempotency-Key", "k".repeat(256))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"sku\":\"BOOK-123\",\"quantity\":2,\"country\":\"US\"}"))
+            .andExpect(status().isUnprocessableEntity())
+            .andExpect(jsonPath("$.errors[0].field").value("Idempotency-Key"));
     }
 
     @Test

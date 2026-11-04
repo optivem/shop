@@ -8,8 +8,8 @@ import com.mycompany.myshop.testkit.driver.adapter.api.client.dtos.errors.Proble
 import com.mycompany.myshop.testkit.driver.adapter.shared.client.http.JsonHttpClient;
 import com.mycompany.myshop.testkit.common.Result;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 public class OrderController {
     private static final String ENDPOINT = "/api/orders";
@@ -20,19 +20,28 @@ public class OrderController {
         this.httpClient = httpClient;
     }
 
+    private static final String IDEMPOTENCY_KEY_HEADER = "Idempotency-Key";
+
     public Result<PlaceOrderResponse, ProblemDetailResponse> placeOrder(PlaceOrderRequest request) {
-        return httpClient.post(ENDPOINT, request, PlaceOrderResponse.class);
+        var idempotencyKey = request.getIdempotencyKey();
+        if (idempotencyKey == null) {
+            return httpClient.post(ENDPOINT, request, PlaceOrderResponse.class);
+        }
+        return httpClient.post(ENDPOINT, request, Map.of(IDEMPOTENCY_KEY_HEADER, idempotencyKey), PlaceOrderResponse.class);
     }
 
     public Result<ViewOrderResponse, ProblemDetailResponse> viewOrder(String orderNumber) {
         return httpClient.get(ENDPOINT + "/" + orderNumber, ViewOrderResponse.class);
     }
 
-    public Result<BrowseOrderHistoryResponse, ProblemDetailResponse> browseOrderHistory(String orderNumber) {
-        var path = orderNumber == null || orderNumber.isBlank()
-                ? ENDPOINT
-                : ENDPOINT + "?orderNumber=" + URLEncoder.encode(orderNumber, StandardCharsets.UTF_8);
-        return httpClient.get(path, BrowseOrderHistoryResponse.class);
+    public Result<BrowseOrderHistoryResponse, ProblemDetailResponse> browseOrderHistory(String orderNumber, String page, String size) {
+        var query = new LinkedHashMap<String, String>();
+        if (orderNumber != null && !orderNumber.isBlank()) {
+            query.put("orderNumber", orderNumber);
+        }
+        query.put("page", page);
+        query.put("size", size);
+        return httpClient.get(ENDPOINT + QueryString.of(query), BrowseOrderHistoryResponse.class);
     }
 
     public Result<Void, ProblemDetailResponse> cancelOrder(String orderNumber) {

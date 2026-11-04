@@ -18,6 +18,8 @@ public interface IGivenOrder : IGivenStep
 
     IGivenOrder WithCouponCode(string? couponCode);
 
+    IGivenOrder WithIdempotencyKey(string? idempotencyKey);
+
     /// <summary>The order is placed by the default customer (customer1).</summary>
     IGivenOrder PlacedByCustomer();
 

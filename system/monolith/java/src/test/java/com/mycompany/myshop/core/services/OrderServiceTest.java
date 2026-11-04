@@ -2,6 +2,8 @@ package com.mycompany.myshop.core.services;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -14,6 +16,7 @@ import com.mycompany.myshop.core.dtos.external.TaxDetailsResponse;
 import com.mycompany.myshop.core.entities.Order;
 import com.mycompany.myshop.core.entities.OrderStatus;
 import com.mycompany.myshop.core.exceptions.NotExistValidationException;
+import com.mycompany.myshop.core.exceptions.ValidationException;
 import com.mycompany.myshop.core.repositories.OrderRepository;
 import com.mycompany.myshop.core.services.external.ClockGateway;
 import com.mycompany.myshop.core.services.external.ErpGateway;
@@ -28,6 +31,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Pageable;
 
 @ExtendWith(MockitoExtension.class)
 class OrderServiceTest {
@@ -48,6 +52,8 @@ class OrderServiceTest {
     private ClockGateway clockGateway;
     @Mock
     private CouponService couponService;
+    @Mock
+    private IdempotencyKeyStore idempotencyKeyStore;
 
     @InjectMocks
     private OrderService orderService;
@@ -152,34 +158,73 @@ class OrderServiceTest {
 
     @Test
     void browseOrderHistoryForCustomerListsOnlyOwnOrders() {
-        when(orderRepository.findByOwnerOrderByOrderTimestampDesc("customer-sub"))
+        when(orderRepository.countByOwner("customer-sub")).thenReturn(1L);
+        when(orderRepository.findPageByOwner(eq("customer-sub"), any(Pageable.class)))
                 .thenReturn(List.of(placedOrder("ORD-001", "customer-sub")));
 
-        var response = orderService.browseOrderHistory(null, CUSTOMER);
+        var response = orderService.browseOrderHistory(null, null, null, CUSTOMER);
 
         assertThat(response.getOrders()).extracting("orderNumber").containsExactly("ORD-001");
-        verify(orderRepository, never()).findAllByOrderByOrderTimestampDesc();
+        verify(orderRepository, never()).findPage(any(Pageable.class));
     }
 
     @Test
     void browseOrderHistoryForCustomerWithFilterListsOnlyOwnMatchingOrders() {
-        when(orderRepository.findByOwnerAndOrderNumberContainingIgnoreCase("customer-sub", "001"))
+        when(orderRepository.countByOwnerAndOrderNumberContaining("customer-sub", "001")).thenReturn(1L);
+        when(orderRepository.findPageByOwnerAndOrderNumberContaining(eq("customer-sub"), eq("001"), any(Pageable.class)))
                 .thenReturn(List.of(placedOrder("ORD-001", "customer-sub")));
 
-        var response = orderService.browseOrderHistory(" 001 ", CUSTOMER);
+        var response = orderService.browseOrderHistory(" 001 ", null, null, CUSTOMER);
 
         assertThat(response.getOrders()).extracting("orderNumber").containsExactly("ORD-001");
-        verify(orderRepository, never()).findByOrderNumberContainingIgnoreCaseOrderByOrderTimestampDesc("001");
+        verify(orderRepository, never()).findPageByOrderNumberContaining(eq("001"), any(Pageable.class));
     }
 
     @Test
     void browseOrderHistoryForAdminListsAllOrdersWithCustomer() {
-        when(orderRepository.findAllByOrderByOrderTimestampDesc())
+        when(orderRepository.count()).thenReturn(1L);
+        when(orderRepository.findPage(any(Pageable.class)))
                 .thenReturn(List.of(placedOrder("ORD-001", "customer-sub")));
 
-        var response = orderService.browseOrderHistory(null, ADMIN);
+        var response = orderService.browseOrderHistory(null, null, null, ADMIN);
 
         assertThat(response.getOrders()).extracting("customer").containsExactly("customer1");
+    }
+
+    @Test
+    void browseOrderHistoryReadsTheRequestedPageAndReportsTheTotals() {
+        when(orderRepository.count()).thenReturn(26L);
+        when(orderRepository.findPage(any(Pageable.class))).thenReturn(List.of(placedOrder("ORD-021", "customer-sub")));
+
+        var response = orderService.browseOrderHistory(null, 3, 10, ADMIN);
+
+        var pageable = ArgumentCaptor.forClass(Pageable.class);
+        verify(orderRepository).findPage(pageable.capture());
+        assertThat(pageable.getValue().getOffset()).isEqualTo(20);
+        assertThat(pageable.getValue().getPageSize()).isEqualTo(10);
+        assertThat(response.getPage()).isEqualTo(3);
+        assertThat(response.getSize()).isEqualTo(10);
+        assertThat(response.getTotalElements()).isEqualTo(26);
+        assertThat(response.getTotalPages()).isEqualTo(3);
+    }
+
+    @Test
+    void browseOrderHistoryPastTheLastPageIsEmptyWithoutReadingRows() {
+        when(orderRepository.count()).thenReturn(3L);
+
+        var response = orderService.browseOrderHistory(null, 2_000_000_000, 100, ADMIN);
+
+        assertThat(response.getOrders()).isEmpty();
+        assertThat(response.getTotalElements()).isEqualTo(3);
+        verify(orderRepository, never()).findPage(any(Pageable.class));
+    }
+
+    @Test
+    void browseOrderHistoryRejectsASizeAboveTheCap() {
+        var thrown = catchThrowable(() -> orderService.browseOrderHistory(null, null, 101, ADMIN));
+
+        assertThat(thrown).isInstanceOf(ValidationException.class).hasMessage("Page size must be between 1 and 100");
+        assertThat(((ValidationException) thrown).getFieldName()).isEqualTo("size");
     }
 
     private Order placedOrder(String orderNumber, String owner) {

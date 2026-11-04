@@ -158,6 +158,22 @@ public abstract class BaseThenResultOrder<TSuccessResponse, TSuccessVerification
 
     IThenOrder IThenOrder.HasOrderNumberPrefix(string expectedPrefix) => HasOrderNumberPrefix(expectedPrefix);
 
+    public TDerived HasOrderNumber(string orderNumber)
+    {
+        _verifications.Add(v => v.OrderNumber(orderNumber));
+        return Self;
+    }
+
+    IThenOrder IThenOrder.HasOrderNumber(string orderNumber) => HasOrderNumber(orderNumber);
+
+    public TDerived DoesNotHaveOrderNumber(string orderNumber)
+    {
+        _verifications.Add(v => v.OrderNumberIsNot(orderNumber));
+        return Self;
+    }
+
+    IThenOrder IThenOrder.DoesNotHaveOrderNumber(string orderNumber) => DoesNotHaveOrderNumber(orderNumber);
+
     public TDerived HasSku(string expectedSku)
     {
         _verifications.Add(v => v.Sku(expectedSku));

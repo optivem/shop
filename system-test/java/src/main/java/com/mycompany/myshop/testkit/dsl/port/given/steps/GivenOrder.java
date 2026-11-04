@@ -16,6 +16,8 @@ public interface GivenOrder extends GivenStep {
 
     GivenOrder withCouponCode(String couponCode);
 
+    GivenOrder withIdempotencyKey(String idempotencyKey);
+
     /** The order is placed by the default customer (customer1). */
     GivenOrder placedByCustomer();
 

@@ -32,6 +32,22 @@ public class ThenSuccessOrderHistory<TSuccessResponse, TSuccessVerification> : I
 
     IThenOrderHistory IThenOrderHistory.DoesNotContainOrder(string orderNumber) => DoesNotContainOrder(orderNumber);
 
+    public ThenSuccessOrderHistory<TSuccessResponse, TSuccessVerification> IsEmpty()
+    {
+        _verifications.Add(v => v.IsEmpty());
+        return this;
+    }
+
+    IThenOrderHistory IThenOrderHistory.IsEmpty() => IsEmpty();
+
+    public ThenSuccessOrderHistory<TSuccessResponse, TSuccessVerification> HasTotalElements(int expectedTotalElements)
+    {
+        _verifications.Add(v => v.TotalElements(expectedTotalElements));
+        return this;
+    }
+
+    IThenOrderHistory IThenOrderHistory.HasTotalElements(int expectedTotalElements) => HasTotalElements(expectedTotalElements);
+
     public TaskAwaiter GetAwaiter() => Execute().GetAwaiter();
 
     private async Task Execute()

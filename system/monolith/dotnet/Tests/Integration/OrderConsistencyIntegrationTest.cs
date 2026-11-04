@@ -92,6 +92,60 @@ public class OrderConsistencyIntegrationTest : AbstractIntegrationTest
         Assert.Equal(OrderStatus.DELIVERED, (await check.Orders.SingleAsync(o => o.OrderNumber == number)).Status);
     }
 
+    [Fact]
+    public async Task ConcurrentFirstUsesOfTheSameKeyCreateExactlyOneOrder()
+    {
+        await CreateCoupon("SAVE10", 100);
+
+        var orderNumbers = await Task.WhenAll(Enumerable.Range(0, 8).Select(async _ =>
+        {
+            await using var db = NewDbContext();
+            return (await NewOrderService(db).PlaceOrderAsync(Request("SAVE10"), Customer, "race-key")).OrderNumber;
+        }));
+
+        Assert.Single(orderNumbers.Distinct());
+        Assert.Equal(1, await DbContext.Orders.CountAsync());
+        Assert.Equal(1, await DbContext.IdempotencyKeys.CountAsync());
+        Assert.Equal(1, (await DbContext.Coupons.AsNoTracking().SingleAsync(c => c.Code == "SAVE10")).UsedCount);
+    }
+
+    [Fact]
+    public async Task ReplayReturnsTheStoredOrderAndConflictingReplayIsRejected()
+    {
+        var first = await NewOrderService(DbContext).PlaceOrderAsync(Request(null), Customer, "key-1");
+        await using var other = NewDbContext();
+
+        var replay = await NewOrderService(other).PlaceOrderAsync(Request(null), Customer, "key-1");
+        var conflict = await Assert.ThrowsAsync<ValidationException>(
+            () => NewOrderService(other).PlaceOrderAsync(Request("SAVE10"), Customer, "key-1"));
+
+        Assert.Equal(first.OrderNumber, replay.OrderNumber);
+        Assert.Equal("Idempotency-Key has already been used with a different request", conflict.Message);
+        Assert.Equal(1, await DbContext.Orders.CountAsync());
+    }
+
+    [Fact]
+    public async Task OrderHistoryIsPagedInTheDatabaseNewestFirst()
+    {
+        var service = NewOrderService(DbContext);
+        var placed = new List<string>();
+        for (var i = 0; i < 5; i++)
+        {
+            placed.Add((await service.PlaceOrderAsync(Request(null), Customer)).OrderNumber);
+        }
+
+        var page1 = await service.BrowseOrderHistoryAsync(null, Customer, 1, 2);
+        var page3 = await service.BrowseOrderHistoryAsync(null, Customer, 3, 2);
+        var past = await service.BrowseOrderHistoryAsync(null, Customer, 4, 2);
+
+        // Placed one after another, so newest first is the reverse of placing order.
+        Assert.Equal([placed[4], placed[3]], page1.Orders.Select(o => o.OrderNumber));
+        Assert.Equal([placed[0]], page3.Orders.Select(o => o.OrderNumber));
+        Assert.Empty(past.Orders);
+        Assert.Equal(5, page1.TotalElements);
+        Assert.Equal(3, page1.TotalPages);
+    }
+
     private sealed class FailOnOrderInsert : SaveChangesInterceptor
     {
         public override ValueTask<InterceptionResult<int>> SavingChangesAsync(

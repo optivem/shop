@@ -9,4 +9,8 @@ export interface BrowseCouponItem {
 
 export interface BrowseCouponsResponse {
   coupons: BrowseCouponItem[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
 }

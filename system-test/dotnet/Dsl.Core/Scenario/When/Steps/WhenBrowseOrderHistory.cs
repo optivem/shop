@@ -11,6 +11,8 @@ namespace Dsl.Core.Scenario.When.Steps;
 public class WhenBrowseOrderHistory : BaseWhen<BrowseOrderHistoryResponse, BrowseOrderHistoryVerification>, IWhenBrowseOrderHistory
 {
     private string? _orderNumber;
+    private string? _page;
+    private string? _size;
 
     public WhenBrowseOrderHistory(UseCaseDsl app, ScenarioDsl scenario, Func<Task> ensureGiven)
         : base(app, scenario, ensureGiven)
@@ -26,11 +28,29 @@ public class WhenBrowseOrderHistory : BaseWhen<BrowseOrderHistoryResponse, Brows
 
     IWhenBrowseOrderHistory IWhenBrowseOrderHistory.WithOrderNumber(string? orderNumber) => WithOrderNumber(orderNumber);
 
+    public WhenBrowseOrderHistory WithPage(string? page)
+    {
+        _page = page;
+        return this;
+    }
+
+    IWhenBrowseOrderHistory IWhenBrowseOrderHistory.WithPage(string? page) => WithPage(page);
+
+    public WhenBrowseOrderHistory WithSize(string? size)
+    {
+        _size = size;
+        return this;
+    }
+
+    IWhenBrowseOrderHistory IWhenBrowseOrderHistory.WithSize(string? size) => WithSize(size);
+
     protected override async Task<ExecutionResult<BrowseOrderHistoryResponse, BrowseOrderHistoryVerification>> Execute(UseCaseDsl app)
     {
         var shop = await app.MyShop(ChannelMode.Dynamic, Channel);
         var result = await shop.BrowseOrderHistory()
             .OrderNumber(_orderNumber)
+            .Page(_page)
+            .Size(_size)
             .Execute();
 
         return new ExecutionResultBuilder<BrowseOrderHistoryResponse, BrowseOrderHistoryVerification>(result)

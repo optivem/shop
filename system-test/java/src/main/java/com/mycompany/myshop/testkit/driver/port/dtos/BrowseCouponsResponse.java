@@ -15,6 +15,10 @@ import java.util.List;
 @AllArgsConstructor
 public class BrowseCouponsResponse {
     private List<CouponDto> coupons;
+    private int page;
+    private int size;
+    private long totalElements;
+    private int totalPages;
 
     @Data
     @Builder

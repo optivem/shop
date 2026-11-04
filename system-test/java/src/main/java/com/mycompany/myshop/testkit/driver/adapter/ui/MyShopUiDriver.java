@@ -82,6 +82,7 @@ public class MyShopUiDriver implements MyShopDriver {
 
     @Override
     public Result<PlaceOrderResponse, SystemError> placeOrder(PlaceOrderRequest request) {
+        requireNotSet("Idempotency-Key", request.getIdempotencyKey());
         if (anonymous) {
             return loginRequired("/new-order");
         }
@@ -213,6 +214,8 @@ public class MyShopUiDriver implements MyShopDriver {
 
     @Override
     public Result<BrowseOrderHistoryResponse, SystemError> browseOrderHistory(BrowseOrderHistoryRequest request) {
+        requireNotSet("page", request.getPage());
+        requireNotSet("size", request.getSize());
         if (anonymous) {
             return loginRequired("/order-history");
         }
@@ -259,6 +262,8 @@ public class MyShopUiDriver implements MyShopDriver {
 
     @Override
     public Result<BrowseCouponsResponse, SystemError> browseCoupons(BrowseCouponsRequest request) {
+        requireNotSet("page", request.getPage());
+        requireNotSet("size", request.getSize());
         if (anonymous) {
             return loginRequired("/admin-coupons");
         }
@@ -276,6 +281,15 @@ public class MyShopUiDriver implements MyShopDriver {
                 .build();
 
         return success(response);
+    }
+
+    // --- unsupported inputs ---
+
+    /** The UI has no control for this input (no idempotency key, no paging controls): API-channel scenarios only. */
+    private static void requireNotSet(String input, String value) {
+        if (value != null) {
+            throw new UnsupportedOperationException("The UI channel cannot send '" + input + "'; run this scenario on the API channel only");
+        }
     }
 
     // --- identity ---

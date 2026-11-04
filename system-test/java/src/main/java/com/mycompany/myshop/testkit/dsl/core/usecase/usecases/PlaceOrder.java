@@ -13,6 +13,7 @@ public class PlaceOrder extends BaseMyShopUseCase<PlaceOrderResponse, PlaceOrder
     private String quantity;
     private String countryAlias;
     private String couponCodeAlias;
+    private String idempotencyKeyAlias;
 
     public PlaceOrder(MyShopDriver driver, UseCaseContext context) {
         super(driver, context);
@@ -47,17 +48,26 @@ public class PlaceOrder extends BaseMyShopUseCase<PlaceOrderResponse, PlaceOrder
         return this;
     }
 
+    public PlaceOrder idempotencyKey(String idempotencyKeyAlias) {
+        this.idempotencyKeyAlias = idempotencyKeyAlias;
+        return this;
+    }
+
     @Override
     public UseCaseResult<PlaceOrderResponse, PlaceOrderVerification> execute() {
         var sku = context.getParamValue(skuParamAlias);
         var country = context.getParamValueOrLiteral(countryAlias);
         var couponCode = context.getParamValue(couponCodeAlias);
+        // Keys are the shop's own data, so the alias always maps to a scenario-unique value: tests share a
+        // database, and two scenarios reusing a literal key would replay each other's orders.
+        var idempotencyKey = context.getParamValue(idempotencyKeyAlias);
 
         var request = PlaceOrderRequest.builder()
                 .sku(sku)
                 .quantity(quantity)
                 .country(country)
                 .couponCode(couponCode)
+                .idempotencyKey(idempotencyKey)
                 .build();
 
         var result = driver.placeOrder(request);

@@ -17,6 +17,8 @@ export class ThenBrowseOrderHistoryResultStage implements PromiseLike<void> {
     private readonly ctx: ScenarioContext,
     private readonly useCaseContext: UseCaseContext,
     private readonly orderNumber: string,
+    private readonly page: string | null = null,
+    private readonly size: string | null = null,
   ) {}
 
   shouldSucceed(): ThenBrowseOrderHistorySuccess {
@@ -47,7 +49,7 @@ export class ThenBrowseOrderHistoryResultStage implements PromiseLike<void> {
     await arrangeGiven(this.app, this.ctx, this.useCaseContext);
 
     const orderNumber = this.useCaseContext.getResultValue(this.orderNumber);
-    const result = await this.app.myShop('dynamic').browseOrderHistory({ orderNumber });
+    const result = await this.app.myShop('dynamic').browseOrderHistory({ orderNumber, page: this.page, size: this.size });
 
     if (this._expectSuccess) {
       expect(result.success, JSON.stringify(result)).toBe(true);
@@ -108,6 +110,20 @@ export class ThenBrowseOrderHistoryOrderHistory implements PromiseLike<void> {
     this.stage._addHistoryAssertion((history, useCaseContext) => {
       const unexpected = useCaseContext.getResultValue(orderNumber);
       expect(listedOrderNumbers(history), `Order history should not contain order '${unexpected}'`).not.toContain(unexpected);
+    });
+    return this;
+  }
+
+  isEmpty(): this {
+    this.stage._addHistoryAssertion((history) => {
+      expect(listedOrderNumbers(history), 'Order history page should be empty').toHaveLength(0);
+    });
+    return this;
+  }
+
+  hasTotalElements(expectedTotalElements: number): this {
+    this.stage._addHistoryAssertion((history) => {
+      expect(history.totalElements, 'Order history total elements').toBe(expectedTotalElements);
     });
     return this;
   }

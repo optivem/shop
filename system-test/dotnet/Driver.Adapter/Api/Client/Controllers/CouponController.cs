@@ -19,6 +19,6 @@ public class CouponController
     public Task<Result<VoidValue, ProblemDetailResponse>> PublishCouponAsync(PublishCouponRequest request)
         => _httpClient.PostAsync(Endpoint, request);
 
-    public Task<Result<BrowseCouponsResponse, ProblemDetailResponse>> BrowseCouponsAsync()
-        => _httpClient.GetAsync<BrowseCouponsResponse>(Endpoint);
+    public Task<Result<BrowseCouponsResponse, ProblemDetailResponse>> BrowseCouponsAsync(string? page, string? size)
+        => _httpClient.GetAsync<BrowseCouponsResponse>(Endpoint + QueryString.Of(("page", page), ("size", size)));
 }

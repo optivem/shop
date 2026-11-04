@@ -181,4 +181,16 @@ public class PlaceOrderNegativeTest : BaseAcceptanceTest
             .Then().ShouldFail()
             .ErrorMessage(PermissionDenied);
     }
+
+    [Theory]
+    [ChannelData(ChannelType.API)]
+    public async Task ShouldRejectReusingAnIdempotencyKeyForADifferentOrder(Channel channel)
+    {
+        await Scenario(channel)
+            .Given().Order().WithIdempotencyKey("ORDER-KEY").WithQuantity("1")
+            .And().LoggedInAsCustomer()
+            .When().PlaceOrder().WithIdempotencyKey("ORDER-KEY").WithQuantity("2")
+            .Then().ShouldFail()
+            .ErrorMessage("Idempotency-Key has already been used with a different request");
+    }
 }

@@ -15,6 +15,8 @@ export class ThenBrowseCouponsResultStage implements PromiseLike<void> {
     private readonly app: AppContext,
     private readonly ctx: ScenarioContext,
     private readonly useCaseContext: UseCaseContext,
+    private readonly page: string | null = null,
+    private readonly size: string | null = null,
   ) {}
 
   shouldSucceed(): ThenBrowseCouponsSuccess {
@@ -51,7 +53,7 @@ export class ThenBrowseCouponsResultStage implements PromiseLike<void> {
 
     this.app.actAs(this.ctx.loggedInIdentity());
 
-    const result = await this.app.myShop('dynamic').browseCoupons({});
+    const result = await this.app.myShop('dynamic').browseCoupons({ page: this.page, size: this.size });
     if (this._expectSuccess) {
       expect(result.success, JSON.stringify(result)).toBe(true);
       if (result.success) {

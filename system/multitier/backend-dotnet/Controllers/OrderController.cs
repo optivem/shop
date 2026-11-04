@@ -18,17 +18,20 @@ public class OrderController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> BrowseOrderHistory([FromQuery] string? orderNumber)
+    public async Task<IActionResult> BrowseOrderHistory([FromQuery] string? orderNumber, [FromQuery] int? page, [FromQuery] int? size)
     {
-        var response = await _orderService.BrowseOrderHistoryAsync(orderNumber, CurrentUserResolver.Resolve(User));
+        var response = await _orderService.BrowseOrderHistoryAsync(orderNumber, CurrentUserResolver.Resolve(User), page, size);
         return Ok(response);
     }
 
     [Authorize(Roles = Roles.Customer)]
     [HttpPost]
-    public async Task<IActionResult> PlaceOrder([FromBody] PlaceOrderRequest request)
+    public async Task<IActionResult> PlaceOrder(
+        [FromBody] PlaceOrderRequest request,
+        [FromHeader(Name = OrderService.IdempotencyKeyField)] string? idempotencyKey)
     {
-        var response = await _orderService.PlaceOrderAsync(request, CurrentUserResolver.Resolve(User));
+        // A replay answers exactly like the first call: 201, the same Location and the same body.
+        var response = await _orderService.PlaceOrderAsync(request, CurrentUserResolver.Resolve(User), idempotencyKey);
         return Created($"/api/orders/{response.OrderNumber}", response);
     }
 

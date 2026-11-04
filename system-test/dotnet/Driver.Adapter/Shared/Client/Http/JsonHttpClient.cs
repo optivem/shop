@@ -67,6 +67,9 @@ public class JsonHttpClient<E> : IDisposable
     public async Task<Result<T, E>> PostAsync<T>(string path, object request)
         => await GetResultOrFailureAsync<T>(await DoPostAsync(path, request));
 
+    public async Task<Result<T, E>> PostAsync<T>(string path, object request, IReadOnlyDictionary<string, string> headers)
+        => await GetResultOrFailureAsync<T>(await DoPostAsync(path, request, headers));
+
     public async Task<Result<VoidValue, E>> PostAsync(string path, object request)
         => await GetResultOrFailureAsync<VoidValue>(await DoPostAsync(path, request));
 
@@ -99,7 +102,10 @@ public class JsonHttpClient<E> : IDisposable
         return new Uri(_baseUrl + path);
     }
 
-    private async Task<HttpResponseMessage> DoPostAsync(string path, object request)
+    private Task<HttpResponseMessage> DoPostAsync(string path, object request)
+        => DoPostAsync(path, request, new Dictionary<string, string>());
+
+    private async Task<HttpResponseMessage> DoPostAsync(string path, object request, IReadOnlyDictionary<string, string> headers)
     {
         var uri = GetUri(path);
         var jsonBody = SerializeRequest(request);
@@ -107,6 +113,10 @@ public class JsonHttpClient<E> : IDisposable
         {
             Content = new StringContent(jsonBody, Encoding.UTF8, ApplicationJson)
         };
+        foreach (var (name, value) in headers)
+        {
+            httpRequest.Headers.Add(name, value);
+        }
         return await SendRequest(httpRequest);
     }
 

@@ -105,7 +105,7 @@ public class MyShopApiDriver implements MyShopDriver {
     @Override
     public Result<BrowseOrderHistoryResponse, SystemError> browseOrderHistory(BrowseOrderHistoryRequest request) {
         runAs(TestUser.CUSTOMER);
-        return apiClient.orders().browseOrderHistory(request.getOrderNumber()).mapError(SystemErrorMapper::from);
+        return apiClient.orders().browseOrderHistory(request.getOrderNumber(), request.getPage(), request.getSize()).mapError(SystemErrorMapper::from);
     }
 
     @Override
@@ -119,6 +119,6 @@ public class MyShopApiDriver implements MyShopDriver {
     @Override
     public Result<BrowseCouponsResponse, SystemError> browseCoupons(BrowseCouponsRequest request) {
         runAs(TestUser.ADMIN);
-        return apiClient.coupons().browseCoupons().mapError(SystemErrorMapper::from);
+        return apiClient.coupons().browseCoupons(request.getPage(), request.getSize()).mapError(SystemErrorMapper::from);
     }
 }

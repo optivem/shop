@@ -46,4 +46,34 @@ class BrowseOrderHistoryPositiveTest extends BaseAcceptanceTest {
                     .orderHistory()
                         .containsOrder(DEFAULT_ORDER_NUMBER);
     }
+
+    @TestTemplate
+    @Channel(ChannelType.API)
+    void firstPageShouldReportTheTotalNumberOfMatchingOrders() {
+        scenario
+                .given().order()
+                    .placedByCustomer()
+                .and().loggedInAsCustomer()
+                .when().browseOrderHistory()
+                    .withPage("1")
+                    .withSize("1")
+                .then().shouldSucceed()
+                    .orderHistory()
+                        .containsOrder(DEFAULT_ORDER_NUMBER)
+                        .hasTotalElements(1);
+    }
+
+    @TestTemplate
+    @Channel(ChannelType.API)
+    void pagePastTheLastShouldBeEmpty() {
+        scenario
+                .given().order()
+                    .placedByCustomer()
+                .and().loggedInAsCustomer()
+                .when().browseOrderHistory()
+                    .withPage("2")
+                .then().shouldSucceed()
+                    .orderHistory()
+                        .isEmpty();
+    }
 }

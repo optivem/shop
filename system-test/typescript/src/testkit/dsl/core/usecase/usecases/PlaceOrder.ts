@@ -12,6 +12,7 @@ export class PlaceOrder extends BaseMyShopUseCase<PlaceOrderResponse, PlaceOrder
   private _countryAlias?: string;
   private _couponCodeAlias?: string;
   private _orderNumberResultAlias?: string;
+  private _idempotencyKeyAlias?: string;
 
   constructor(driver: MyShopDriver, context: UseCaseContext) {
     super(driver, context);
@@ -42,6 +43,11 @@ export class PlaceOrder extends BaseMyShopUseCase<PlaceOrderResponse, PlaceOrder
     return this;
   }
 
+  idempotencyKey(idempotencyKeyAlias: string): this {
+    this._idempotencyKeyAlias = idempotencyKeyAlias;
+    return this;
+  }
+
   async execute(): Promise<UseCaseResult<PlaceOrderResponse, PlaceOrderVerification>> {
     const sku = this.context.getParamValue(this._skuAlias);
     const country = this.context.getParamValueOrLiteral(this._countryAlias);
@@ -52,6 +58,8 @@ export class PlaceOrder extends BaseMyShopUseCase<PlaceOrderResponse, PlaceOrder
       quantity: String(this._quantity),
       country: country ?? '',
       couponCode: couponCode ?? undefined,
+      // Keys are the shop's own data, so the alias always maps to a scenario-unique value.
+      idempotencyKey: this.context.getParamValue(this._idempotencyKeyAlias),
     };
     const result = await this.driver.placeOrder(request);
 

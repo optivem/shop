@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -35,22 +36,8 @@ public class CouponApiController {
     }
 
     @GetMapping
-    public BrowseCouponsResponse browseCoupons() {
-        var items = couponService.getAllCoupons().stream()
-                .map(coupon -> {
-                    var response = new BrowseCouponsResponse.BrowseCouponsItemResponse();
-                    response.setCode(coupon.getCode());
-                    response.setDiscountRate(coupon.getDiscountRate());
-                    response.setValidFrom(coupon.getValidFrom());
-                    response.setValidTo(coupon.getValidTo());
-                    response.setUsageLimit(coupon.getUsageLimit());
-                    response.setUsedCount(coupon.getUsedCount());
-                    return response;
-                })
-                .toList();
-
-        var result = new BrowseCouponsResponse();
-        result.setCoupons(items);
-        return result;
+    public BrowseCouponsResponse browseCoupons(@RequestParam(required = false) Integer page,
+                                               @RequestParam(required = false) Integer size) {
+        return couponService.browseCoupons(page, size);
     }
 }

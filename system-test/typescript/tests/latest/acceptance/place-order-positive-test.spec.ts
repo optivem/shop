@@ -1,5 +1,6 @@
 import { test, forChannels, ChannelType } from './base/fixtures.js';
 import { OrderStatus } from '../../../src/testkit/common/dtos.js';
+import { DEFAULTS } from '../../../src/testkit/dsl/core/scenario/defaults.js';
 
 forChannels(ChannelType.UI, ChannelType.API)(() => {
     test('shouldBeAbleToPlaceOrderForValidInput', async ({ scenario }) => {
@@ -290,5 +291,41 @@ forChannels(ChannelType.API)(() => {
             .hasTaxRate(0.2)
             .hasAppliedCoupon(comboCode)
             .hasTotalPrice('21.60');
+    });
+});
+
+forChannels(ChannelType.API)(() => {
+    test('replayingAnOrderWithTheSameIdempotencyKeyShouldReturnTheOriginalOrder', async ({ scenario }) => {
+        await scenario
+            .given()
+            .order()
+            .withIdempotencyKey('ORDER-KEY')
+            .and()
+            .loggedInAsCustomer()
+            .when()
+            .placeOrder()
+            .withOrderNumber('REPLAYED-ORDER')
+            .withIdempotencyKey('ORDER-KEY')
+            .then()
+            .shouldSucceed()
+            .and()
+            .order()
+            .hasOrderNumber(DEFAULTS.ORDER_NUMBER);
+    });
+
+    test('placingTheSameOrderTwiceWithoutAnIdempotencyKeyShouldCreateTwoOrders', async ({ scenario }) => {
+        await scenario
+            .given()
+            .order()
+            .and()
+            .loggedInAsCustomer()
+            .when()
+            .placeOrder()
+            .withOrderNumber('SECOND-ORDER')
+            .then()
+            .shouldSucceed()
+            .and()
+            .order()
+            .doesNotHaveOrderNumber(DEFAULTS.ORDER_NUMBER);
     });
 });

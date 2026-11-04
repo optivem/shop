@@ -8,6 +8,8 @@ import com.optivem.testing.DataSource;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.TestTemplate;
 
+import static com.mycompany.myshop.testkit.dsl.core.scenario.ScenarioDefaults.DEFAULT_ORDER_NUMBER;
+
 class PlaceOrderPositiveTest extends BaseAcceptanceTest {
     @Tag("UC-001.1")
     @TestTemplate
@@ -259,5 +261,33 @@ class PlaceOrderPositiveTest extends BaseAcceptanceTest {
                     .hasTaxRate("0.20")
                     .hasAppliedCoupon("COMBO10")
                     .hasTotalPrice("21.60");
+    }
+
+    @TestTemplate
+    @Channel(ChannelType.API)
+    void replayingAnOrderWithTheSameIdempotencyKeyShouldReturnTheOriginalOrder() {
+        scenario
+                .given().order()
+                    .withIdempotencyKey("ORDER-KEY")
+                .and().loggedInAsCustomer()
+                .when().placeOrder()
+                    .withOrderNumber("REPLAYED-ORDER")
+                    .withIdempotencyKey("ORDER-KEY")
+                .then().shouldSucceed()
+                .and().order()
+                    .hasOrderNumber(DEFAULT_ORDER_NUMBER);
+    }
+
+    @TestTemplate
+    @Channel(ChannelType.API)
+    void placingTheSameOrderTwiceWithoutAnIdempotencyKeyShouldCreateTwoOrders() {
+        scenario
+                .given().order()
+                .and().loggedInAsCustomer()
+                .when().placeOrder()
+                    .withOrderNumber("SECOND-ORDER")
+                .then().shouldSucceed()
+                .and().order()
+                    .doesNotHaveOrderNumber(DEFAULT_ORDER_NUMBER);
     }
 }

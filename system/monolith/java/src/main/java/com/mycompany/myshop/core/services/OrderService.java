@@ -29,6 +29,9 @@ import java.util.UUID;
 @Service
 public class OrderService {
 
+    /** The status a successful place-order answers with (201 Created); stored with an idempotency key. */
+    public static final int PLACE_ORDER_STATUS = 201;
+
     private static final int MONEY_SCALE = 2;
     private static final int RATE_SCALE = 4;
     private static final MonthDay YEAR_END_RESTRICTED_MONTH_DAY = MonthDay.of(Month.DECEMBER, 31);
@@ -39,17 +42,30 @@ public class OrderService {
     private final TaxGateway taxGateway;
     private final ClockGateway clockGateway;
     private final CouponService couponService;
+    private final IdempotencyKeyStore idempotencyKeyStore;
 
-    public OrderService(OrderRepository orderRepository, ErpGateway erpGateway, TaxGateway taxGateway, ClockGateway clockGateway, CouponService couponService) {
+    public OrderService(OrderRepository orderRepository, ErpGateway erpGateway, TaxGateway taxGateway, ClockGateway clockGateway,
+                        CouponService couponService, IdempotencyKeyStore idempotencyKeyStore) {
         this.orderRepository = orderRepository;
         this.erpGateway = erpGateway;
         this.taxGateway = taxGateway;
         this.clockGateway = clockGateway;
         this.couponService = couponService;
+        this.idempotencyKeyStore = idempotencyKeyStore;
     }
 
     @Transactional
     public PlaceOrderResponse placeOrder(PlaceOrderRequest request, CurrentUser user) {
+        return placeOrder(request, user, null);
+    }
+
+    /**
+     * Places the order and, when the request carried an {@code Idempotency-Key}, records the response
+     * under that key in the same transaction: either both the order and the key row commit, or
+     * neither does.
+     */
+    @Transactional
+    public PlaceOrderResponse placeOrder(PlaceOrderRequest request, CurrentUser user, IdempotencyKeyStore.Claim claim) {
         var sku = request.getSku();
         var quantity = request.getQuantity();
         var country = request.getCountry();
@@ -92,15 +108,22 @@ public class OrderService {
                 roundRate(taxRate), roundMoney(taxAmount), roundMoney(totalPrice), OrderStatus.PLACED,
                 appliedCouponCode, user.subject(), user.username());
 
-        // Increment first: a rejected increment leaves no order behind.
+        var response = new PlaceOrderResponse();
+        response.setOrderNumber(orderNumber);
+
+        // The key row goes in first: a concurrent first use of the same key then fails on its unique
+        // index before it touches the coupon, and its transaction rolls back with nothing changed.
+        if (claim != null) {
+            idempotencyKeyStore.record(claim, PLACE_ORDER_STATUS, response);
+        }
+
+        // Increment next: a rejected increment leaves no order behind.
         if (appliedCouponCode != null) {
             couponService.incrementUsageCount(appliedCouponCode);
         }
 
         orderRepository.save(order);
 
-        var response = new PlaceOrderResponse();
-        response.setOrderNumber(orderNumber);
         return response;
     }
 
@@ -177,17 +200,33 @@ public class OrderService {
         orderRepository.save(order);
     }
 
-    public BrowseOrderHistoryResponse browseOrderHistory(String orderNumberFilter, CurrentUser user) {
-        List<Order> orders;
+    @Transactional(readOnly = true)
+    public BrowseOrderHistoryResponse browseOrderHistory(String orderNumberFilter, Integer page, Integer size, CurrentUser user) {
+        var pageSpec = PageSpec.of(page, size);
         var hasFilter = orderNumberFilter != null && !orderNumberFilter.trim().isEmpty();
+        var filter = hasFilter ? orderNumberFilter.trim() : null;
+
+        long totalElements;
         if (user.admin()) {
-            orders = hasFilter
-                    ? orderRepository.findByOrderNumberContainingIgnoreCaseOrderByOrderTimestampDesc(orderNumberFilter.trim())
-                    : orderRepository.findAllByOrderByOrderTimestampDesc();
+            totalElements = hasFilter ? orderRepository.countByOrderNumberContaining(filter) : orderRepository.count();
         } else {
-            orders = hasFilter
-                    ? orderRepository.findByOwnerAndOrderNumberContainingIgnoreCase(user.subject(), orderNumberFilter.trim())
-                    : orderRepository.findByOwnerOrderByOrderTimestampDesc(user.subject());
+            totalElements = hasFilter
+                    ? orderRepository.countByOwnerAndOrderNumberContaining(user.subject(), filter)
+                    : orderRepository.countByOwner(user.subject());
+        }
+
+        List<Order> orders = List.of();
+        if (pageSpec.reaches(totalElements)) {
+            var pageable = pageSpec.toPageable();
+            if (user.admin()) {
+                orders = hasFilter
+                        ? orderRepository.findPageByOrderNumberContaining(filter, pageable)
+                        : orderRepository.findPage(pageable);
+            } else {
+                orders = hasFilter
+                        ? orderRepository.findPageByOwnerAndOrderNumberContaining(user.subject(), filter, pageable)
+                        : orderRepository.findPageByOwner(user.subject(), pageable);
+            }
         }
 
         var items = orders.stream()
@@ -208,6 +247,10 @@ public class OrderService {
 
         var result = new BrowseOrderHistoryResponse();
         result.setOrders(items);
+        result.setPage(pageSpec.page());
+        result.setSize(pageSpec.size());
+        result.setTotalElements(totalElements);
+        result.setTotalPages(pageSpec.totalPages(totalElements));
         return result;
     }
 

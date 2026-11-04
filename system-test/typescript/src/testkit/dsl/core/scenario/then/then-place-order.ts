@@ -27,6 +27,7 @@ export class ThenResultStage implements PromiseLike<void> {
     private readonly quantity: string | null,
     private readonly country: string | null = DEFAULTS.COUNTRY,
     private readonly couponCode: string | null = null,
+    private readonly idempotencyKey: string | null = null,
   ) {}
 
   shouldSucceed(): ThenSuccess {
@@ -110,6 +111,8 @@ export class ThenResultStage implements PromiseLike<void> {
       quantity: this.quantity,
       country: resolvedCountry,
       couponCode: resolvedCouponCode,
+      // Keys are the shop's own data, so the alias always maps to a scenario-unique value.
+      idempotencyKey: this.useCaseContext.getParamValue(this.idempotencyKey),
     });
 
     if (this._expectSuccess) {
@@ -191,6 +194,21 @@ export class ThenOrder implements PromiseLike<void> {
   hasOrderNumberPrefix(prefix: string): this {
     this.stage._addOrderAssertion((order) => {
       expect(order.orderNumber.startsWith(prefix)).toBe(true);
+    });
+    return this;
+  }
+
+  hasOrderNumber(orderNumber: string): this {
+    this.stage._addOrderAssertion((order) => {
+      expect(order.orderNumber).toBe(this.stage.useCaseContext.getResultValue(orderNumber));
+    });
+    return this;
+  }
+
+  doesNotHaveOrderNumber(orderNumber: string): this {
+    this.stage._addOrderAssertion((order) => {
+      const other = this.stage.useCaseContext.getResultValue(orderNumber);
+      expect(order.orderNumber, `Expected order number to differ from '${other}'`).not.toBe(other);
     });
     return this;
   }

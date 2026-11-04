@@ -40,6 +40,8 @@ export interface OrderConfig {
   quantity: string;
   country: string;
   couponCode: string | null;
+  /** Alias of the Idempotency-Key the order is placed with; undefined means no key. */
+  idempotencyKey?: string;
   status: OrderStatus;
   orderNumber?: string;
   /** Alias of the customer who places the order; undefined means the default customer. */

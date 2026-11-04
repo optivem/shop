@@ -94,9 +94,22 @@ public class CouponService
         await _dbContext.SaveChangesAsync();
     }
 
-    public async Task<List<Coupon>> GetAllCouponsAsync()
+    /// <summary>One page of coupons, newest first, and how many there are in total.</summary>
+    public async Task<(List<Coupon> Coupons, long TotalElements)> BrowseCouponsAsync(int page, int size)
     {
-        return await _dbContext.Coupons.ToListAsync();
+        var totalElements = await _dbContext.Coupons.LongCountAsync();
+        var offset = (long)(page - 1) * size;
+        if (offset >= totalElements)
+        {
+            return (new List<Coupon>(), totalElements);
+        }
+
+        var coupons = await _dbContext.Coupons
+            .OrderByDescending(c => c.Id)
+            .Skip((int)offset)
+            .Take(size)
+            .ToListAsync();
+        return (coupons, totalElements);
     }
 
     private static void ThrowCouponValidationException(string messageFormat, string couponCode)

@@ -20,6 +20,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -27,6 +28,8 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -44,6 +47,8 @@ class OrderServiceTest {
     private ClockGateway clockGateway;
     @Mock
     private CouponService couponService;
+    @Mock
+    private IdempotencyKeyStore idempotencyKeyStore;
 
     @InjectMocks
     private OrderService orderService;
@@ -252,23 +257,88 @@ class OrderServiceTest {
 
     @Test
     void browseOrderHistoryForCustomerListsOnlyOwnOrders() {
-        when(orderRepository.findByOwnerOrderByOrderTimestampDesc("customer-sub"))
+        when(orderRepository.countByOwner("customer-sub")).thenReturn(1L);
+        when(orderRepository.findPageByOwner(eq("customer-sub"), any(Pageable.class)))
                 .thenReturn(java.util.List.of(placedOrder("ORD-001")));
 
         var response = orderService.browseOrderHistory(null, null, null, CUSTOMER);
 
         assertThat(response.getOrders()).extracting("orderNumber").containsExactly("ORD-001");
-        verify(orderRepository, never()).findAllByOrderByOrderTimestampDesc();
+        verify(orderRepository, never()).findPage(any(Pageable.class));
     }
 
     @Test
     void browseOrderHistoryForAdminListsAllOrdersWithCustomer() {
-        when(orderRepository.findAllByOrderByOrderTimestampDesc())
+        when(orderRepository.count()).thenReturn(1L);
+        when(orderRepository.findPage(any(Pageable.class)))
                 .thenReturn(java.util.List.of(placedOrder("ORD-001")));
 
         var response = orderService.browseOrderHistory(null, null, null, ADMIN);
 
         assertThat(response.getOrders()).extracting("customer").containsExactly("customer1");
+    }
+
+    @Test
+    void browseOrderHistoryReadsTheRequestedPageAndReportsTheTotals() {
+        when(orderRepository.count()).thenReturn(26L);
+        when(orderRepository.findPage(any(Pageable.class))).thenReturn(java.util.List.of(placedOrder("ORD-021")));
+
+        var response = orderService.browseOrderHistory(null, 3, 10, ADMIN);
+
+        var pageable = ArgumentCaptor.forClass(Pageable.class);
+        verify(orderRepository).findPage(pageable.capture());
+        assertThat(pageable.getValue().getOffset()).isEqualTo(20);
+        assertThat(pageable.getValue().getPageSize()).isEqualTo(10);
+        assertThat(response.getPage()).isEqualTo(3);
+        assertThat(response.getSize()).isEqualTo(10);
+        assertThat(response.getTotalElements()).isEqualTo(26);
+        assertThat(response.getTotalPages()).isEqualTo(3);
+    }
+
+    @Test
+    void browseOrderHistoryPastTheLastPageIsEmptyWithoutReadingRows() {
+        when(orderRepository.count()).thenReturn(3L);
+
+        var response = orderService.browseOrderHistory(null, 2_000_000_000, 100, ADMIN);
+
+        assertThat(response.getOrders()).isEmpty();
+        assertThat(response.getTotalElements()).isEqualTo(3);
+        verify(orderRepository, never()).findPage(any(Pageable.class));
+    }
+
+    @Test
+    void browseOrderHistoryRejectsASizeAboveTheCap() {
+        var thrown = catchThrowable(() -> orderService.browseOrderHistory(null, null, 101, ADMIN));
+
+        assertThat(thrown).isInstanceOf(ValidationException.class).hasMessage("Page size must be between 1 and 100");
+        assertThat(((ValidationException) thrown).getFieldName()).isEqualTo("size");
+    }
+
+    @Test
+    void placeOrderWithClaimRecordsTheResponseUnderTheKey() {
+        givenNormalTime();
+        givenProductExists("BOOK-123", new BigDecimal("10.00"));
+        givenNoPromotion();
+        givenNoDiscount();
+        givenTaxRate("US", new BigDecimal("0.10"));
+        var claim = new IdempotencyKeyStore.Claim("customer-sub", "key-1", "hash");
+
+        var response = orderService.placeOrder(buildRequest("BOOK-123", 2, "US"), CUSTOMER, claim);
+
+        verify(idempotencyKeyStore).record(claim, 201, response);
+    }
+
+    @Test
+    void placeOrderWithoutClaimRecordsNothing() {
+        givenNormalTime();
+        givenProductExists("BOOK-123", new BigDecimal("10.00"));
+        givenNoPromotion();
+        givenNoDiscount();
+        givenTaxRate("US", new BigDecimal("0.10"));
+
+        orderService.placeOrder(buildRequest("BOOK-123", 2, "US"), CUSTOMER);
+
+        verify(idempotencyKeyStore, never()).record(any(), org.mockito.ArgumentMatchers.anyInt(), any());
     }
 
     private void givenNormalTime() {

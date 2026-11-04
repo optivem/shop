@@ -34,9 +34,13 @@ public class OrderController
 
 
 
-    public Task<Result<PlaceOrderResponse, ProblemDetailResponse>> PlaceOrderAsync(PlaceOrderRequest request)
+    private const string IdempotencyKeyHeader = "Idempotency-Key";
 
-        => _httpClient.PostAsync<PlaceOrderResponse>(Endpoint, request);
+    public Task<Result<PlaceOrderResponse, ProblemDetailResponse>> PlaceOrderAsync(PlaceOrderRequest request)
+        => request.IdempotencyKey == null
+            ? _httpClient.PostAsync<PlaceOrderResponse>(Endpoint, request)
+            : _httpClient.PostAsync<PlaceOrderResponse>(Endpoint, request,
+                new Dictionary<string, string> { [IdempotencyKeyHeader] = request.IdempotencyKey });
 
 
 
@@ -46,10 +50,11 @@ public class OrderController
 
 
 
-    public Task<Result<BrowseOrderHistoryResponse, ProblemDetailResponse>> BrowseOrderHistoryAsync(string? orderNumber)
-        => _httpClient.GetAsync<BrowseOrderHistoryResponse>(string.IsNullOrWhiteSpace(orderNumber)
-            ? Endpoint
-            : $"{Endpoint}?orderNumber={Uri.EscapeDataString(orderNumber)}");
+    public Task<Result<BrowseOrderHistoryResponse, ProblemDetailResponse>> BrowseOrderHistoryAsync(string? orderNumber, string? page, string? size)
+        => _httpClient.GetAsync<BrowseOrderHistoryResponse>(Endpoint + QueryString.Of(
+            ("orderNumber", string.IsNullOrWhiteSpace(orderNumber) ? null : orderNumber),
+            ("page", page),
+            ("size", size)));
 
     public Task<Result<VoidValue, ProblemDetailResponse>> CancelOrderAsync(string? orderNumber)
         => _httpClient.PostAsync($"{Endpoint}/{orderNumber}/cancel");

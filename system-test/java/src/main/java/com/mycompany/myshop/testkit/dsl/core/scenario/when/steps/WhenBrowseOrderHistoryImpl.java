@@ -13,6 +13,8 @@ import com.mycompany.myshop.testkit.dsl.core.usecase.usecases.BrowseOrderHistory
 
 public class WhenBrowseOrderHistoryImpl extends BaseWhenStep<BrowseOrderHistoryResponse, BrowseOrderHistoryVerification> implements WhenBrowseOrderHistory {
     private String orderNumber;
+    private String page;
+    private String size;
 
     public WhenBrowseOrderHistoryImpl(UseCaseDsl app, ScenarioDslImpl scenario) {
         super(app, scenario);
@@ -24,10 +26,22 @@ public class WhenBrowseOrderHistoryImpl extends BaseWhenStep<BrowseOrderHistoryR
         return this;
     }
 
+    public WhenBrowseOrderHistoryImpl withPage(String page) {
+        this.page = page;
+        return this;
+    }
+
+    public WhenBrowseOrderHistoryImpl withSize(String size) {
+        this.size = size;
+        return this;
+    }
+
     @Override
     protected ExecutionResult<BrowseOrderHistoryResponse, BrowseOrderHistoryVerification> execute(UseCaseDsl app) {
         var result = app.myShop(ChannelMode.DYNAMIC).browseOrderHistory()
                 .orderNumber(orderNumber)
+                .page(page)
+                .size(size)
                 .execute();
 
         return new ExecutionResultBuilder<>(result)

@@ -17,4 +17,6 @@ public interface IWhenPlaceOrder : IWhenStep
     IWhenPlaceOrder WithCouponCode(string? couponCode);
 
     IWhenPlaceOrder WithCouponCode();
+
+    IWhenPlaceOrder WithIdempotencyKey(string? idempotencyKey);
 }

@@ -11,6 +11,9 @@ import type { ErpGateway } from './external/erp.gateway';
 import type { TaxGateway } from './external/tax.gateway';
 import type { ClockGateway } from './external/clock.gateway';
 import type { CouponService } from './coupon.service';
+import { IdempotencyKeyStore } from './idempotency-key.store';
+import { IdempotencyKey } from '../entities/idempotency-key.entity';
+import { QueryFailedError } from 'typeorm';
 import type { CurrentUser } from '../../auth/current-user';
 
 const CUSTOMER: CurrentUser = {
@@ -36,7 +39,7 @@ const DEC_31_CANCEL_BLACKOUT = new Date('2025-12-31T22:15:00Z');
 describe('OrderService', () => {
   let service: OrderService;
   let orderRepository: jest.Mocked<
-    Pick<Repository<Order>, 'save' | 'update' | 'findOne' | 'find'>
+    Pick<Repository<Order>, 'save' | 'update' | 'findOne' | 'find' | 'count'>
   > & {
     manager: Pick<EntityManager, 'transaction' | 'withRepository'>;
   };
@@ -46,6 +49,9 @@ describe('OrderService', () => {
   let clockGateway: jest.Mocked<Pick<ClockGateway, 'getCurrentTime'>>;
   let taxGateway: jest.Mocked<Pick<TaxGateway, 'getTaxDetails'>>;
   let couponService: jest.Mocked<Pick<CouponService, 'getDiscount'>>;
+  let idempotencyKeys: jest.Mocked<
+    Pick<IdempotencyKeyStore, 'find' | 'findLive' | 'claim'>
+  >;
 
   beforeEach(() => {
     orderRepository = {
@@ -53,6 +59,7 @@ describe('OrderService', () => {
       update: jest.fn().mockResolvedValue({ affected: 1 }),
       findOne: jest.fn(),
       find: jest.fn(),
+      count: jest.fn().mockResolvedValue(1),
       // Runs the transaction inline against the same mocked repository.
       manager: {
         transaction: jest.fn(
@@ -69,6 +76,11 @@ describe('OrderService', () => {
     clockGateway = { getCurrentTime: jest.fn() };
     taxGateway = { getTaxDetails: jest.fn() };
     couponService = { getDiscount: jest.fn() };
+    idempotencyKeys = {
+      find: jest.fn().mockResolvedValue(null),
+      findLive: jest.fn().mockResolvedValue(null),
+      claim: jest.fn().mockResolvedValue(undefined),
+    };
 
     service = new OrderService(
       orderRepository as unknown as Repository<Order>,
@@ -76,6 +88,7 @@ describe('OrderService', () => {
       clockGateway as unknown as ClockGateway,
       taxGateway as unknown as TaxGateway,
       couponService as unknown as CouponService,
+      idempotencyKeys as unknown as IdempotencyKeyStore,
     );
   });
 
@@ -257,6 +270,210 @@ describe('OrderService', () => {
       expect(result.orders[0]?.customer).toBe('customer1');
     });
   });
+
+  describe('placeOrder with an Idempotency-Key', () => {
+    beforeEach(() => {
+      givenNormalTime();
+      givenProductExists('BOOK-123', 10);
+      givenNoPromotion();
+      givenNoDiscount();
+      givenTaxRate('US', 0.1);
+      orderRepository.save.mockResolvedValue({} as Order);
+    });
+
+    it('places the order and claims the key in the same transaction', async () => {
+      const response = await service.placeOrder(
+        buildRequest('BOOK-123', 2, 'US'),
+        CUSTOMER,
+        'key-1',
+      );
+
+      expect(idempotencyKeys.claim).toHaveBeenCalledWith(
+        {
+          owner: CUSTOMER.subject,
+          key: 'key-1',
+          fingerprint: IdempotencyKeyStore.fingerprint(
+            buildRequest('BOOK-123', 2, 'US'),
+          ),
+        },
+        201,
+        JSON.stringify({ orderNumber: response.orderNumber }),
+        expect.any(Date),
+        expect.anything(),
+      );
+      expect(orderRepository.save).toHaveBeenCalledTimes(1);
+    });
+
+    it.each([undefined, '', '   '])(
+      'treats a missing or blank key (%p) as no key',
+      async (key) => {
+        await service.placeOrder(
+          buildRequest('BOOK-123', 2, 'US'),
+          CUSTOMER,
+          key,
+        );
+
+        expect(idempotencyKeys.findLive).not.toHaveBeenCalled();
+        expect(idempotencyKeys.claim).not.toHaveBeenCalled();
+        expect(orderRepository.save).toHaveBeenCalledTimes(1);
+      },
+    );
+
+    it('replays the stored response for the same key and request', async () => {
+      idempotencyKeys.findLive.mockResolvedValue(
+        storedKey(buildRequest('BOOK-123', 2, 'US'), 'ORD-ORIGINAL'),
+      );
+
+      const response = await service.placeOrder(
+        buildRequest('BOOK-123', 2, 'US'),
+        CUSTOMER,
+        'key-1',
+      );
+
+      expect(response.orderNumber).toBe('ORD-ORIGINAL');
+      expect(orderRepository.save).not.toHaveBeenCalled();
+      expect(erpGateway.getProductDetails).not.toHaveBeenCalled();
+    });
+
+    it('rejects the same key with a different request', async () => {
+      idempotencyKeys.findLive.mockResolvedValue(
+        storedKey(buildRequest('BOOK-123', 1, 'US'), 'ORD-ORIGINAL'),
+      );
+
+      const error = await service
+        .placeOrder(buildRequest('BOOK-123', 2, 'US'), CUSTOMER, 'key-1')
+        .catch((e: unknown) => e);
+
+      expect(error).toBeInstanceOf(ValidationException);
+      expect((error as ValidationException).fieldName).toBeNull();
+      expect((error as ValidationException).message).toBe(
+        'Idempotency-Key has already been used with a different request',
+      );
+      expect(orderRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('rejects a key longer than 255 characters on the header field', async () => {
+      const error = await service
+        .placeOrder(
+          buildRequest('BOOK-123', 2, 'US'),
+          CUSTOMER,
+          'k'.repeat(256),
+        )
+        .catch((e: unknown) => e);
+
+      expect(error).toBeInstanceOf(ValidationException);
+      expect((error as ValidationException).fieldName).toBe('Idempotency-Key');
+      expect((error as ValidationException).message).toBe(
+        'Idempotency-Key must be at most 255 characters',
+      );
+    });
+
+    it('answers from the winning row when a concurrent request claimed the key first', async () => {
+      idempotencyKeys.claim.mockRejectedValue(uniqueViolation());
+      idempotencyKeys.find.mockResolvedValue(
+        storedKey(buildRequest('BOOK-123', 2, 'US'), 'ORD-WINNER'),
+      );
+
+      const response = await service.placeOrder(
+        buildRequest('BOOK-123', 2, 'US'),
+        CUSTOMER,
+        'key-1',
+      );
+
+      expect(response.orderNumber).toBe('ORD-WINNER');
+      expect(orderRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('rethrows a failure that is not a key conflict, so the key stays free', async () => {
+      orderRepository.save.mockRejectedValue(new Error('insert failed'));
+
+      await expect(
+        service.placeOrder(
+          buildRequest('BOOK-123', 2, 'US'),
+          CUSTOMER,
+          'key-1',
+        ),
+      ).rejects.toThrow('insert failed');
+      expect(idempotencyKeys.find).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('browseOrderHistory paging', () => {
+    it('defaults to the first page of 50, newest first, and reports the totals', async () => {
+      orderRepository.count.mockResolvedValue(120);
+      orderRepository.find.mockResolvedValue([placedOrder('ORD-001')]);
+
+      const result = await service.browseOrderHistory(undefined, ADMIN);
+
+      expect(orderRepository.find).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          order: { orderTimestamp: 'DESC', id: 'DESC' },
+          skip: 0,
+          take: 50,
+        }),
+      );
+      expect(result).toMatchObject({
+        page: 1,
+        size: 50,
+        totalElements: 120,
+        totalPages: 3,
+      });
+    });
+
+    it('skips the row query for a page past the end', async () => {
+      orderRepository.count.mockResolvedValue(3);
+
+      const result = await service.browseOrderHistory(
+        undefined,
+        ADMIN,
+        '2',
+        '10',
+      );
+
+      expect(orderRepository.find).not.toHaveBeenCalled();
+      expect(result.orders).toEqual([]);
+      expect(result).toMatchObject({ page: 2, size: 10, totalPages: 1 });
+    });
+
+    it.each([
+      ['0', undefined, 'page', 'Page must be 1 or greater'],
+      ['abc', undefined, 'page', 'Page must be 1 or greater'],
+      [undefined, '0', 'size', 'Page size must be between 1 and 100'],
+      [undefined, '101', 'size', 'Page size must be between 1 and 100'],
+    ])(
+      'rejects page %p / size %p on field %s',
+      async (page, size, field, message) => {
+        const error = await service
+          .browseOrderHistory(undefined, ADMIN, page, size)
+          .catch((e: unknown) => e);
+
+        expect(error).toBeInstanceOf(ValidationException);
+        expect((error as ValidationException).fieldName).toBe(field);
+        expect((error as ValidationException).message).toBe(message);
+      },
+    );
+  });
+
+  function storedKey(
+    request: PlaceOrderRequest,
+    orderNumber: string,
+  ): IdempotencyKey {
+    const row = new IdempotencyKey();
+    row.owner = CUSTOMER.subject;
+    row.key = 'key-1';
+    row.requestHash = IdempotencyKeyStore.fingerprint(request);
+    row.responseStatus = 201;
+    row.responseBody = JSON.stringify({ orderNumber });
+    row.createdAt = NORMAL_TIME;
+    return row;
+  }
+
+  function uniqueViolation(): QueryFailedError {
+    return new QueryFailedError('INSERT', [], {
+      code: '23505',
+      constraint: 'uq_idempotency_keys_owner_key',
+    } as unknown as Error);
+  }
 
   function givenNormalTime() {
     clockGateway.getCurrentTime.mockResolvedValue(NORMAL_TIME);

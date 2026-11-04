@@ -32,9 +32,10 @@ public class CouponController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> BrowseCoupons()
+    public async Task<IActionResult> BrowseCoupons([FromQuery] int? page, [FromQuery] int? size)
     {
-        var coupons = await _couponService.GetAllCouponsAsync();
+        var (requestedPage, requestedSize) = OrderService.ResolvePage(page, size);
+        var (coupons, totalElements) = await _couponService.BrowseCouponsAsync(requestedPage, requestedSize);
         var items = coupons.Select(c => new BrowseCouponsItemResponse
         {
             Code = c.Code,
@@ -45,6 +46,13 @@ public class CouponController : ControllerBase
             UsedCount = c.UsedCount
         }).ToList();
 
-        return Ok(new BrowseCouponsResponse { Coupons = items });
+        return Ok(new BrowseCouponsResponse
+        {
+            Coupons = items,
+            Page = requestedPage,
+            Size = requestedSize,
+            TotalElements = totalElements,
+            TotalPages = OrderService.TotalPages(totalElements, requestedSize)
+        });
     }
 }

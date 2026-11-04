@@ -200,3 +200,22 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
             .errorMessage(ErrorMessages.PERMISSION_DENIED);
     });
 });
+
+forChannels(ChannelType.API)(() => {
+    test('shouldRejectReusingAnIdempotencyKeyForADifferentOrder', async ({ scenario }) => {
+        await scenario
+            .given()
+            .order()
+            .withIdempotencyKey('ORDER-KEY')
+            .withQuantity('1')
+            .and()
+            .loggedInAsCustomer()
+            .when()
+            .placeOrder()
+            .withIdempotencyKey('ORDER-KEY')
+            .withQuantity('2')
+            .then()
+            .shouldFail()
+            .errorMessage('Idempotency-Key has already been used with a different request');
+    });
+});

@@ -16,8 +16,8 @@ export class JsonHttpClient<E> {
     return this.handleResponse<T>(response);
   }
 
-  async post<T>(path: string, body?: unknown): Promise<Result<T, E>> {
-    return this.handleResponse<T>(await this.doPost(path, body));
+  async post<T>(path: string, body?: unknown, headers: Record<string, string> = {}): Promise<Result<T, E>> {
+    return this.handleResponse<T>(await this.doPost(path, body, headers));
   }
 
   async getVoid(path: string): Promise<Result<void, E>> {
@@ -34,10 +34,10 @@ export class JsonHttpClient<E> {
     return fetch(`${this.baseUrl}${path}`, { headers: await this.authHeaders() });
   }
 
-  private async doPost(path: string, body: unknown): Promise<Response> {
+  private async doPost(path: string, body: unknown, headers: Record<string, string> = {}): Promise<Response> {
     return fetch(`${this.baseUrl}${path}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...(await this.authHeaders()) },
+      headers: { 'Content-Type': 'application/json', ...headers, ...(await this.authHeaders()) },
       body: body === undefined ? undefined : JSON.stringify(body),
     });
   }

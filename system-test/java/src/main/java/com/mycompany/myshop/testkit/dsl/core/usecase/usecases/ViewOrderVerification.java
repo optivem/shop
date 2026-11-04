@@ -32,6 +32,15 @@ public class ViewOrderVerification extends ResponseVerification<ViewOrderRespons
         return this;
     }
 
+    public ViewOrderVerification orderNumberIsNot(String orderNumberResultAlias) {
+        var otherOrderNumber = getContext().getResultValue(orderNumberResultAlias);
+        var actualOrderNumber = getResponse().getOrderNumber();
+        assertThat(actualOrderNumber)
+                .withFailMessage("Expected order number to differ from '%s', but it was the same", otherOrderNumber)
+                .isNotEqualTo(otherOrderNumber);
+        return this;
+    }
+
     public ViewOrderVerification sku(String skuParamAlias) {
         var expectedSku = getContext().getParamValue(skuParamAlias);
         var actualSku = getResponse().getSku();

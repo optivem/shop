@@ -11,4 +11,8 @@ export class BrowseCouponsItemResponse {
 
 export class BrowseCouponsResponse {
   coupons!: BrowseCouponsItemResponse[];
+  page!: number;
+  size!: number;
+  totalElements!: number;
+  totalPages!: number;
 }

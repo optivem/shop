@@ -22,6 +22,14 @@ public class ViewOrderVerification : ResponseVerification<ViewOrderResponse>
         return this;
     }
 
+    public ViewOrderVerification OrderNumberIsNot(string orderNumberResultAlias)
+    {
+        var otherOrderNumber = Context.GetResultValue(orderNumberResultAlias);
+        Response.OrderNumber.ShouldNotBe(otherOrderNumber,
+            $"Expected order number to differ from '{otherOrderNumber}', but it was the same");
+        return this;
+    }
+
     public ViewOrderVerification Sku(string skuParamAlias)
     {
         var expectedSku = Context.GetParamValue(skuParamAlias);

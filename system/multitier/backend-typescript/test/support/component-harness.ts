@@ -12,6 +12,7 @@ import { AppModule } from '../../src/app.module';
 import { configureApp } from '../../src/configure-app';
 import { Order } from '../../src/core/entities/order.entity';
 import { Coupon } from '../../src/core/entities/coupon.entity';
+import { IdempotencyKey } from '../../src/core/entities/idempotency-key.entity';
 import { applyMigrations } from './migrations';
 import { TEST_AUDIENCE, TEST_ISSUER, TestIdp } from './test-idp';
 import request from 'supertest';
@@ -75,6 +76,7 @@ export class ComponentHarness {
   dataSource!: DataSource;
   orderRepo!: Repository<Order>;
   couponRepo!: Repository<Coupon>;
+  idempotencyKeyRepo!: Repository<IdempotencyKey>;
   private postgres!: StartedPostgreSqlContainer;
   private readonly erp = new StubServer();
   private readonly tax = new StubServer();
@@ -133,6 +135,7 @@ export class ComponentHarness {
     this.dataSource = moduleRef.get(DataSource);
     this.orderRepo = this.dataSource.getRepository(Order);
     this.couponRepo = this.dataSource.getRepository(Coupon);
+    this.idempotencyKeyRepo = this.dataSource.getRepository(IdempotencyKey);
   }
 
   async stop(): Promise<void> {
@@ -153,6 +156,7 @@ export class ComponentHarness {
     this.clock.reset();
     await this.orderRepo.clear();
     await this.couponRepo.clear();
+    await this.idempotencyKeyRepo.clear();
   }
 
   baseUrl(): string {

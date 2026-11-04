@@ -9,6 +9,10 @@ import java.util.List;
 @Data
 public class BrowseCouponsResponse {
     private List<BrowseCouponsItemResponse> coupons;
+    private int page;
+    private int size;
+    private long totalElements;
+    private int totalPages;
 
     @Data
     public static class BrowseCouponsItemResponse {

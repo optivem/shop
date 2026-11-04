@@ -276,6 +276,175 @@ public class OrderServiceTest : IDisposable
         Assert.Equal(OrderStatus.CANCELLED, saved.Status);
     }
 
+    [Fact]
+    public async Task PlaceOrder_WithoutIdempotencyKeyPlacesAnOrderPerCall()
+    {
+        GivenAnOrderCanBePlaced();
+
+        var first = await _service.PlaceOrderAsync(BuildRequest("BOOK-123", 2, "US"), Alice);
+        var second = await _service.PlaceOrderAsync(BuildRequest("BOOK-123", 2, "US"), Alice, "  ");
+
+        Assert.NotEqual(first.OrderNumber, second.OrderNumber);
+        Assert.Equal(2, await _dbContext.Orders.CountAsync());
+        Assert.Equal(0, await _dbContext.IdempotencyKeys.CountAsync());
+    }
+
+    [Fact]
+    public async Task PlaceOrder_ReplayWithSameKeyAndRequestReturnsTheStoredOrder()
+    {
+        GivenAnOrderCanBePlaced();
+
+        var first = await _service.PlaceOrderAsync(BuildRequest("BOOK-123", 2, "US"), Alice, "key-1");
+        var replay = await _service.PlaceOrderAsync(BuildRequest("BOOK-123", 2, "US"), Alice, "key-1");
+
+        Assert.Equal(first.OrderNumber, replay.OrderNumber);
+        Assert.Equal(1, await _dbContext.Orders.CountAsync());
+        var stored = await _dbContext.IdempotencyKeys.SingleAsync();
+        Assert.Equal("sub-alice", stored.Owner);
+        Assert.Equal(201, stored.ResponseStatus);
+    }
+
+    [Fact]
+    public async Task PlaceOrder_ReplayDoesNotRedeemTheCouponAgain()
+    {
+        GivenAnOrderCanBePlaced();
+        _couponMock.Setup(c => c.GetDiscountAsync("SAVE10")).ReturnsAsync(0.10m);
+        var request = BuildRequest("BOOK-123", 2, "US");
+        request.CouponCode = "SAVE10";
+
+        await _service.PlaceOrderAsync(request, Alice, "key-1");
+        await _service.PlaceOrderAsync(request, Alice, "key-1");
+
+        _couponMock.Verify(c => c.IncrementUsageCountAsync("SAVE10"), Times.Once);
+    }
+
+    [Fact]
+    public async Task PlaceOrder_SameKeyWithDifferentRequestIsRejected()
+    {
+        GivenAnOrderCanBePlaced();
+        await _service.PlaceOrderAsync(BuildRequest("BOOK-123", 2, "US"), Alice, "key-1");
+
+        var ex = await Assert.ThrowsAsync<ValidationException>(
+            () => _service.PlaceOrderAsync(BuildRequest("BOOK-123", 3, "US"), Alice, "key-1"));
+
+        Assert.Null(ex.FieldName);
+        Assert.Equal("Idempotency-Key has already been used with a different request", ex.Message);
+        Assert.Equal(1, await _dbContext.Orders.CountAsync());
+    }
+
+    [Fact]
+    public async Task PlaceOrder_SameKeyFromAnotherCustomerIsAnotherOrder()
+    {
+        GivenAnOrderCanBePlaced();
+
+        var alices = await _service.PlaceOrderAsync(BuildRequest("BOOK-123", 2, "US"), Alice, "key-1");
+        var bobs = await _service.PlaceOrderAsync(BuildRequest("BOOK-123", 2, "US"), Bob, "key-1");
+
+        Assert.NotEqual(alices.OrderNumber, bobs.OrderNumber);
+        Assert.Equal(2, await _dbContext.Orders.CountAsync());
+    }
+
+    [Fact]
+    public async Task PlaceOrder_ExpiredKeyIsReplacedByANewOrder()
+    {
+        GivenAnOrderCanBePlaced();
+        var first = await _service.PlaceOrderAsync(BuildRequest("BOOK-123", 2, "US"), Alice, "key-1");
+        (await _dbContext.IdempotencyKeys.SingleAsync()).CreatedAt = DateTime.UtcNow.AddHours(-25);
+        await _dbContext.SaveChangesAsync();
+
+        var second = await _service.PlaceOrderAsync(BuildRequest("BOOK-123", 3, "US"), Alice, "key-1");
+
+        Assert.NotEqual(first.OrderNumber, second.OrderNumber);
+        var stored = await _dbContext.IdempotencyKeys.SingleAsync();
+        Assert.Contains(second.OrderNumber, stored.ResponseBody);
+    }
+
+    [Fact]
+    public async Task PlaceOrder_FailedRequestLeavesTheKeyFree()
+    {
+        GivenNormalTime();
+        GivenNoPromotion();
+        GivenNoDiscount();
+        GivenTaxRate("US", 0.10m);
+        _erpMock.Setup(e => e.GetProductDetailsAsync("UNKNOWN")).ReturnsAsync((ErpProductDetailsResponse?)null);
+
+        await Assert.ThrowsAsync<ValidationException>(
+            () => _service.PlaceOrderAsync(BuildRequest("UNKNOWN", 1, "US"), Alice, "key-1"));
+
+        Assert.Equal(0, await _dbContext.IdempotencyKeys.CountAsync());
+    }
+
+    [Fact]
+    public async Task PlaceOrder_KeyLongerThan255CharactersIsRejected()
+    {
+        var ex = await Assert.ThrowsAsync<ValidationException>(
+            () => _service.PlaceOrderAsync(BuildRequest("BOOK-123", 1, "US"), Alice, new string('k', 256)));
+
+        Assert.Equal("Idempotency-Key", ex.FieldName);
+        Assert.Equal("Idempotency-Key must be at most 255 characters", ex.Message);
+    }
+
+    [Fact]
+    public async Task BrowseOrderHistory_DefaultsToTheFirstPageOf50()
+    {
+        await SeedOrder("ORD-A", OrderStatus.PLACED, "sub-alice", "alice");
+
+        var response = await _service.BrowseOrderHistoryAsync(null, Alice);
+
+        Assert.Equal(1, response.Page);
+        Assert.Equal(50, response.Size);
+        Assert.Equal(1, response.TotalElements);
+        Assert.Equal(1, response.TotalPages);
+    }
+
+    [Fact]
+    public async Task BrowseOrderHistory_PagesNewestFirst()
+    {
+        for (var i = 1; i <= 5; i++)
+        {
+            await SeedOrderAt($"ORD-{i}", NormalTime.AddMinutes(i));
+        }
+
+        var page2 = await _service.BrowseOrderHistoryAsync(null, Admin, 2, 2);
+
+        Assert.Equal(["ORD-3", "ORD-2"], page2.Orders.Select(o => o.OrderNumber));
+        Assert.Equal(5, page2.TotalElements);
+        Assert.Equal(3, page2.TotalPages);
+    }
+
+    [Fact]
+    public async Task BrowseOrderHistory_PagePastTheLastIsEmpty()
+    {
+        await SeedOrder("ORD-A", OrderStatus.PLACED, "sub-alice", "alice");
+
+        var response = await _service.BrowseOrderHistoryAsync(null, Alice, int.MaxValue, 100);
+
+        Assert.Empty(response.Orders);
+        Assert.Equal(1, response.TotalElements);
+    }
+
+    [Theory]
+    [InlineData(0, null, "page", "Page must be 1 or greater")]
+    [InlineData(null, 0, "size", "Page size must be between 1 and 100")]
+    [InlineData(null, 101, "size", "Page size must be between 1 and 100")]
+    public async Task BrowseOrderHistory_RejectsAnInvalidPage(int? page, int? size, string field, string message)
+    {
+        var ex = await Assert.ThrowsAsync<ValidationException>(
+            () => _service.BrowseOrderHistoryAsync(null, Alice, page, size));
+
+        Assert.Equal(field, ex.FieldName);
+        Assert.Equal(message, ex.Message);
+    }
+
+    private void GivenAnOrderCanBePlaced()
+    {
+        GivenNormalTime();
+        GivenProductExists("BOOK-123", 10.00m);
+        GivenNoPromotion();
+        GivenNoDiscount();
+        GivenTaxRate("US", 0.10m);
+    }
+
     private void GivenNormalTime() =>
         _clockMock.Setup(g => g.GetCurrentTimeAsync()).ReturnsAsync(NormalTime);
 
@@ -318,6 +487,14 @@ public class OrderServiceTest : IDisposable
             Owner = owner,
             OwnerName = ownerName
         });
+        await _dbContext.SaveChangesAsync();
+    }
+
+    private async Task SeedOrderAt(string orderNumber, DateTime orderTimestamp)
+    {
+        await SeedOrder(orderNumber, OrderStatus.PLACED);
+        var order = await _dbContext.Orders.SingleAsync(o => o.OrderNumber == orderNumber);
+        order.OrderTimestamp = orderTimestamp;
         await _dbContext.SaveChangesAsync();
     }
 

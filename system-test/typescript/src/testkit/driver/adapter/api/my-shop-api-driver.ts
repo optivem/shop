@@ -82,7 +82,7 @@ export class MyShopApiDriver implements MyShopDriver {
   }
 
   async browseOrderHistory(request: BrowseOrderHistoryRequest): Promise<Result<BrowseOrderHistoryResponse, SystemError>> {
-    return this.runAs(TestUsers.CUSTOMER).orders().browseOrderHistory(request.orderNumber);
+    return this.runAs(TestUsers.CUSTOMER).orders().browseOrderHistory(request.orderNumber, request.page, request.size);
   }
 
   async publishCoupon(request: PublishCouponRequest): Promise<Result<PublishCouponResponse, SystemError>> {
@@ -91,8 +91,8 @@ export class MyShopApiDriver implements MyShopDriver {
     return failure(result.error);
   }
 
-  async browseCoupons(_request: BrowseCouponsRequest): Promise<Result<BrowseCouponsResponse, SystemError>> {
-    return this.runAs(TestUsers.ADMIN).coupons().browseCoupons();
+  async browseCoupons(request: BrowseCouponsRequest): Promise<Result<BrowseCouponsResponse, SystemError>> {
+    return this.runAs(TestUsers.ADMIN).coupons().browseCoupons(request.page, request.size);
   }
 
   async close(): Promise<void> {

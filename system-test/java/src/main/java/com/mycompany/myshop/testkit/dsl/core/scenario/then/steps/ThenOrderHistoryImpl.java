@@ -31,6 +31,18 @@ public class ThenOrderHistoryImpl<R, V extends ResponseVerification<R>>
     }
 
     @Override
+    public ThenOrderHistoryImpl<R, V> isEmpty() {
+        verification.isEmpty();
+        return this;
+    }
+
+    @Override
+    public ThenOrderHistoryImpl<R, V> hasTotalElements(int expectedTotalElements) {
+        verification.totalElements(expectedTotalElements);
+        return this;
+    }
+
+    @Override
     public ThenOrderHistoryImpl<R, V> and() {
         return this;
     }

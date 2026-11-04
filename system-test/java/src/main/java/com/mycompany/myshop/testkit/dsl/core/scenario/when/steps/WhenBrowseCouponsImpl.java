@@ -10,14 +10,29 @@ import com.mycompany.myshop.testkit.dsl.port.ChannelMode;
 import com.mycompany.myshop.testkit.dsl.port.when.steps.WhenBrowseCoupons;
 
 public class WhenBrowseCouponsImpl extends BaseWhenStep<BrowseCouponsResponse, BrowseCouponsVerification> implements WhenBrowseCoupons {
+    private String page;
+    private String size;
 
     public WhenBrowseCouponsImpl(UseCaseDsl app, ScenarioDslImpl scenario) {
         super(app, scenario);
     }
 
+    public WhenBrowseCouponsImpl withPage(String page) {
+        this.page = page;
+        return this;
+    }
+
+    public WhenBrowseCouponsImpl withSize(String size) {
+        this.size = size;
+        return this;
+    }
+
     @Override
     protected ExecutionResult<BrowseCouponsResponse, BrowseCouponsVerification> execute(UseCaseDsl app) {
-        var result = app.myShop(ChannelMode.DYNAMIC).browseCoupons().execute();
+        var result = app.myShop(ChannelMode.DYNAMIC).browseCoupons()
+                .page(page)
+                .size(size)
+                .execute();
         return new ExecutionResultBuilder<>(result).build();
     }
 }

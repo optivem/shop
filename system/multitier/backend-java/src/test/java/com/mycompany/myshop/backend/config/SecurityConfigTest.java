@@ -25,6 +25,8 @@ import java.util.stream.Stream;
 
 import com.mycompany.myshop.backend.core.dtos.PlaceOrderResponse;
 import com.mycompany.myshop.backend.core.services.CouponService;
+import com.mycompany.myshop.backend.core.services.IdempotencyKeyStore;
+import com.mycompany.myshop.backend.core.services.IdempotentOrderService;
 import com.mycompany.myshop.backend.core.services.OrderService;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
@@ -67,7 +69,7 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
 @WebMvcTest
 @ActiveProfiles("test")
 @TestPropertySource(properties = "allowed.origins=http://app.test")
-@Import({SecurityConfig.class, ProblemDetailSecurityHandlers.class, CorsConfig.class})
+@Import({SecurityConfig.class, ProblemDetailSecurityHandlers.class, CorsConfig.class, IdempotentOrderService.class})
 class SecurityConfigTest {
 
     private static final String APPLICATION_PACKAGE = "com.mycompany.myshop.backend";
@@ -104,6 +106,11 @@ class SecurityConfigTest {
 
     @MockitoBean
     private OrderService orderService;
+
+    // IdempotentOrderService is real (imported), so POST /api/orders still reaches the OrderService
+    // mock; its store is mocked and, unstubbed, finds no stored response.
+    @MockitoBean
+    private IdempotencyKeyStore idempotencyKeyStore;
 
     @MockitoBean
     private CouponService couponService;

@@ -9,8 +9,12 @@ public class AppDbContext : DbContext
     {
     }
 
+    /// <summary>The unique constraint on (owner, idempotency_key); a violation means a concurrent first use won.</summary>
+    public const string IdempotencyKeyUniqueConstraint = "uq_idempotency_keys_owner_key";
+
     public DbSet<Order> Orders { get; set; } = null!;
     public DbSet<Coupon> Coupons { get; set; } = null!;
+    public DbSet<IdempotencyKey> IdempotencyKeys { get; set; } = null!;
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
@@ -52,6 +56,13 @@ public class AppDbContext : DbContext
         {
             entity.HasIndex(e => e.Code).IsUnique();
             entity.Property(e => e.UsedCount).HasDefaultValueSql("0");
+        });
+
+        modelBuilder.Entity<IdempotencyKey>(entity =>
+        {
+            entity.HasIndex(e => new { e.Owner, e.Key }).IsUnique().HasDatabaseName(IdempotencyKeyUniqueConstraint);
+            entity.HasIndex(e => e.CreatedAt).HasDatabaseName("idx_idempotency_keys_created_at");
+            entity.Property(e => e.ResponseBody).HasColumnType("text");
         });
     }
 }

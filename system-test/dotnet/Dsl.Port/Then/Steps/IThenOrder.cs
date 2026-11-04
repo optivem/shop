@@ -58,5 +58,11 @@ public interface IThenOrder
 
     IThenOrder HasOrderNumberPrefix(string expectedPrefix);
 
+    /// <summary>The order is the one known in this scenario by the given order-number alias.</summary>
+    IThenOrder HasOrderNumber(string orderNumber);
+
+    /// <summary>The order is not the one known in this scenario by the given order-number alias.</summary>
+    IThenOrder DoesNotHaveOrderNumber(string orderNumber);
+
     TaskAwaiter GetAwaiter();
 }

@@ -87,7 +87,7 @@ public class MyShopApiDriver : IMyShopDriver
             .MapErrorAsync(MapError);
 
     public Task<Result<BrowseOrderHistoryResponse, SystemError>> BrowseOrderHistoryAsync(BrowseOrderHistoryRequest request)
-        => RunAs(TestUser.Customer).Orders().BrowseOrderHistoryAsync(request.OrderNumber)
+        => RunAs(TestUser.Customer).Orders().BrowseOrderHistoryAsync(request.OrderNumber, request.Page, request.Size)
             .MapErrorAsync(MapError);
 
     public Task<Result<PublishCouponResponse, SystemError>> PublishCouponAsync(PublishCouponRequest request)
@@ -96,6 +96,6 @@ public class MyShopApiDriver : IMyShopDriver
             .MapAsync(_ => new PublishCouponResponse());
 
     public Task<Result<BrowseCouponsResponse, SystemError>> BrowseCouponsAsync(BrowseCouponsRequest request)
-        => RunAs(TestUser.Admin).Coupons().BrowseCouponsAsync()
+        => RunAs(TestUser.Admin).Coupons().BrowseCouponsAsync(request.Page, request.Size)
             .MapErrorAsync(MapError);
 }

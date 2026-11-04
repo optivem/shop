@@ -6,5 +6,6 @@ export interface WhenPlaceOrder {
   withQuantity(quantity: string | number): this;
   withCountry(country: string): this;
   withCouponCode(couponCode?: string | null): this;
+  withIdempotencyKey(idempotencyKey: string): this;
   then(): ThenResultStage;
 }

@@ -10,6 +10,10 @@ export interface ThenOrder extends PromiseLike<void> {
   hasStatus(expectedStatus: OrderStatus): this;
   hasTotalPriceGreaterThanZero(): this;
   hasOrderNumberPrefix(expectedPrefix: string): this;
+  /** The order is the one known in this scenario by the given order-number alias. */
+  hasOrderNumber(orderNumber: string): this;
+  /** The order is not the one known in this scenario by the given order-number alias. */
+  doesNotHaveOrderNumber(orderNumber: string): this;
   hasDiscountRate(expectedDiscountRate: number): this;
   hasDiscountAmount(expectedDiscountAmount: string | number): this;
   hasAppliedCoupon(expectedCouponCode?: string | null): this;

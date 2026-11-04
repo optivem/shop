@@ -1,10 +1,7 @@
-import { Body, Controller, Get, HttpCode, Post } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Post, Query } from '@nestjs/common';
 import { CouponService } from '../../core/services/coupon.service';
 import { PublishCouponRequest } from '../../core/dtos/publish-coupon-request.dto';
-import {
-  BrowseCouponsItemResponse,
-  BrowseCouponsResponse,
-} from '../../core/dtos/browse-coupons-response.dto';
+import { BrowseCouponsResponse } from '../../core/dtos/browse-coupons-response.dto';
 
 @Controller('api/coupons')
 export class CouponController {
@@ -17,16 +14,10 @@ export class CouponController {
   }
 
   @Get()
-  async browseCoupons(): Promise<BrowseCouponsResponse> {
-    const coupons = await this.couponService.getAllCoupons();
-    const items: BrowseCouponsItemResponse[] = coupons.map((c) => ({
-      code: c.code,
-      discountRate: c.discountRate,
-      validFrom: c.validFrom ? new Date(c.validFrom).toISOString() : null,
-      validTo: c.validTo ? new Date(c.validTo).toISOString() : null,
-      usageLimit: c.usageLimit,
-      usedCount: c.usedCount,
-    }));
-    return { coupons: items };
+  async browseCoupons(
+    @Query('page') page?: string,
+    @Query('size') size?: string,
+  ): Promise<BrowseCouponsResponse> {
+    return this.couponService.browseCoupons(page, size);
   }
 }

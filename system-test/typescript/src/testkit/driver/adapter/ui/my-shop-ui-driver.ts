@@ -61,6 +61,7 @@ export class MyShopUiDriver implements MyShopDriver {
   }
 
   async placeOrder(request: PlaceOrderRequest): Promise<Result<PlaceOrderResponse, SystemError>> {
+    requireNotSet('Idempotency-Key', request.idempotencyKey);
     if (this.anonymous) return this.loginRequired('/new-order');
 
     await this.runAs(TestUsers.CUSTOMER);
@@ -162,6 +163,8 @@ export class MyShopUiDriver implements MyShopDriver {
   }
 
   async browseOrderHistory(request: BrowseOrderHistoryRequest): Promise<Result<BrowseOrderHistoryResponse, SystemError>> {
+    requireNotSet('page', request.page);
+    requireNotSet('size', request.size);
     if (this.anonymous) return this.loginRequired('/order-history');
 
     await this.runAs(TestUsers.CUSTOMER);
@@ -206,7 +209,9 @@ export class MyShopUiDriver implements MyShopDriver {
     return failure(notificationResult.error);
   }
 
-  async browseCoupons(_request: BrowseCouponsRequest): Promise<Result<BrowseCouponsResponse, SystemError>> {
+  async browseCoupons(request: BrowseCouponsRequest): Promise<Result<BrowseCouponsResponse, SystemError>> {
+    requireNotSet('page', request.page);
+    requireNotSet('size', request.size);
     if (this.anonymous) return this.loginRequired('/admin-coupons');
 
     await this.runAs(TestUsers.ADMIN);
@@ -217,7 +222,7 @@ export class MyShopUiDriver implements MyShopDriver {
     await couponPage.clickRefreshCouponList();
     const rows = await couponPage.getCouponRows();
 
-    return success({ coupons: rows });
+    return success({ coupons: rows } as BrowseCouponsResponse);
   }
 
   async close(): Promise<void> {
@@ -264,5 +269,12 @@ export class MyShopUiDriver implements MyShopDriver {
   /** An explicitly requested identity wins; otherwise the operation runs as its default user. */
   private async runAs(operationDefault: TestUser): Promise<void> {
     await this.client.switchUser(this.requestedUser ?? operationDefault);
+  }
+}
+
+/** The UI has no control for this input (no idempotency key, no paging controls): API-channel scenarios only. */
+function requireNotSet(input: string, value: string | null | undefined): void {
+  if (value !== null && value !== undefined) {
+    throw new Error(`The UI channel cannot send '${input}'; run this scenario on the API channel only`);
   }
 }

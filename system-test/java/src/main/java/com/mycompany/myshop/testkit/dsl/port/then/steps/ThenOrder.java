@@ -24,6 +24,12 @@ public interface ThenOrder extends ThenStep<ThenOrder> {
 
     ThenOrder hasOrderNumberPrefix(String expectedPrefix);
 
+    /** The order is the one known in this scenario by the given order-number alias. */
+    ThenOrder hasOrderNumber(String orderNumber);
+
+    /** The order is not the one known in this scenario by the given order-number alias. */
+    ThenOrder doesNotHaveOrderNumber(String orderNumber);
+
     ThenOrder hasDiscountRate(String expectedDiscountRate);
 
     ThenOrder hasDiscountAmount(String expectedDiscountAmount);

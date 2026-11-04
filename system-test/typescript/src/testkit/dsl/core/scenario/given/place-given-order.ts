@@ -25,6 +25,7 @@ export async function placeGivenOrder(
       quantity: order.quantity,
       country: useCaseContext.getParamValueOrLiteral(order.country),
       couponCode: useCaseContext.getParamValue(order.couponCode),
+      idempotencyKey: useCaseContext.getParamValue(order.idempotencyKey),
     });
     expect(placeResult.success, `Given order '${alias}' could not be placed: ${JSON.stringify(placeResult)}`).toBe(true);
     if (!placeResult.success) return;

@@ -9,6 +9,8 @@ import com.mycompany.myshop.testkit.driver.port.dtos.BrowseOrderHistoryResponse;
 
 public class BrowseOrderHistory extends BaseMyShopUseCase<BrowseOrderHistoryResponse, BrowseOrderHistoryVerification> {
     private String orderNumberResultAlias;
+    private String page;
+    private String size;
 
     public BrowseOrderHistory(MyShopDriver driver, UseCaseContext context) {
         super(driver, context);
@@ -19,11 +21,25 @@ public class BrowseOrderHistory extends BaseMyShopUseCase<BrowseOrderHistoryResp
         return this;
     }
 
+    public BrowseOrderHistory page(String page) {
+        this.page = page;
+        return this;
+    }
+
+    public BrowseOrderHistory size(String size) {
+        this.size = size;
+        return this;
+    }
+
     @Override
     public UseCaseResult<BrowseOrderHistoryResponse, BrowseOrderHistoryVerification> execute() {
         var orderNumber = context.getResultValue(orderNumberResultAlias);
 
-        var request = BrowseOrderHistoryRequest.builder().orderNumber(orderNumber).build();
+        var request = BrowseOrderHistoryRequest.builder()
+                .orderNumber(orderNumber)
+                .page(page)
+                .size(size)
+                .build();
         var result = driver.browseOrderHistory(request);
 
         return new UseCaseResult<>(result, context, BrowseOrderHistoryVerification::new);

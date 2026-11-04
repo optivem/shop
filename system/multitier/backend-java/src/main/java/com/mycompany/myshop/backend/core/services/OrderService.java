@@ -24,13 +24,13 @@ import java.time.LocalTime;
 import java.time.Month;
 import java.time.MonthDay;
 import java.time.ZoneId;
+import java.util.List;
 
 @Service
 public class OrderService {
 
-    private static final int FIRST_PAGE = 1;
-    private static final int DEFAULT_PAGE_SIZE = 50;
-    private static final int MAX_PAGE_SIZE = 200;
+    /** The status a successful place-order answers with (201 Created); stored with an idempotency key. */
+    public static final int PLACE_ORDER_STATUS = 201;
 
     private static final int MONEY_SCALE = 2;
     private static final int RATE_SCALE = 4;
@@ -42,17 +42,30 @@ public class OrderService {
     private final TaxGateway taxGateway;
     private final ClockGateway clockGateway;
     private final CouponService couponService;
+    private final IdempotencyKeyStore idempotencyKeyStore;
 
-    public OrderService(OrderRepository orderRepository, ErpGateway erpGateway, TaxGateway taxGateway, ClockGateway clockGateway, CouponService couponService) {
+    public OrderService(OrderRepository orderRepository, ErpGateway erpGateway, TaxGateway taxGateway, ClockGateway clockGateway,
+                        CouponService couponService, IdempotencyKeyStore idempotencyKeyStore) {
         this.orderRepository = orderRepository;
         this.erpGateway = erpGateway;
         this.taxGateway = taxGateway;
         this.clockGateway = clockGateway;
         this.couponService = couponService;
+        this.idempotencyKeyStore = idempotencyKeyStore;
     }
 
     @Transactional
     public PlaceOrderResponse placeOrder(PlaceOrderRequest request, CurrentUser user) {
+        return placeOrder(request, user, null);
+    }
+
+    /**
+     * Places the order and, when the request carried an {@code Idempotency-Key}, records the response
+     * under that key in the same transaction: either both the order and the key row commit, or
+     * neither does.
+     */
+    @Transactional
+    public PlaceOrderResponse placeOrder(PlaceOrderRequest request, CurrentUser user, IdempotencyKeyStore.Claim claim) {
         var sku = request.getSku();
         var quantity = request.getQuantity();
         var country = request.getCountry();
@@ -95,15 +108,22 @@ public class OrderService {
                 roundRate(taxRate), roundMoney(taxAmount), roundMoney(totalPrice), OrderStatus.PLACED,
                 appliedCouponCode, user.subject(), user.username());
 
-        // Increment first: a rejected increment leaves no order behind.
+        var response = new PlaceOrderResponse();
+        response.setOrderNumber(orderNumber);
+
+        // The key row goes in first: a concurrent first use of the same key then fails on its unique
+        // index before it touches the coupon, and its transaction rolls back with nothing changed.
+        if (claim != null) {
+            idempotencyKeyStore.record(claim, PLACE_ORDER_STATUS, response);
+        }
+
+        // Increment next: a rejected increment leaves no order behind.
         if (appliedCouponCode != null) {
             couponService.incrementUsageCount(appliedCouponCode);
         }
 
         orderRepository.save(order);
 
-        var response = new PlaceOrderResponse();
-        response.setOrderNumber(orderNumber);
         return response;
     }
 
@@ -202,34 +222,34 @@ public class OrderService {
         orderRepository.save(order);
     }
 
+    @Transactional(readOnly = true)
     public BrowseOrderHistoryResponse browseOrderHistory(String orderNumberFilter, Integer page, Integer size, CurrentUser user) {
-        if (page != null && page < FIRST_PAGE) {
-            throw new ValidationException("page", "Page must be " + FIRST_PAGE + " or greater");
-        }
-        if (size != null && (size < 1 || size > MAX_PAGE_SIZE)) {
-            throw new ValidationException("size", "Page size must be between 1 and " + MAX_PAGE_SIZE);
-        }
-        var requestedPage = page == null ? FIRST_PAGE : page;
-        var requestedSize = size == null ? DEFAULT_PAGE_SIZE : size;
-
-        java.util.List<Order> orders;
+        var pageSpec = PageSpec.of(page, size);
         var hasFilter = orderNumberFilter != null && !orderNumberFilter.trim().isEmpty();
+        var filter = hasFilter ? orderNumberFilter.trim() : null;
+
+        long totalElements;
         if (user.admin()) {
-            orders = hasFilter
-                    ? orderRepository.findByOrderNumberContainingIgnoreCaseOrderByOrderTimestampDesc(orderNumberFilter.trim())
-                    : orderRepository.findAllByOrderByOrderTimestampDesc();
+            totalElements = hasFilter ? orderRepository.countByOrderNumberContaining(filter) : orderRepository.count();
         } else {
-            orders = hasFilter
-                    ? orderRepository.findByOwnerAndOrderNumberContainingIgnoreCase(user.subject(), orderNumberFilter.trim())
-                    : orderRepository.findByOwnerOrderByOrderTimestampDesc(user.subject());
+            totalElements = hasFilter
+                    ? orderRepository.countByOwnerAndOrderNumberContaining(user.subject(), filter)
+                    : orderRepository.countByOwner(user.subject());
         }
 
-        // The client asked for one page. The repository has no method that takes one, so every
-        // matching row was already read, sorted and hydrated above, and the window is cut here.
-        var totalElements = orders.size();
-        var from = Math.min((long) (requestedPage - FIRST_PAGE) * requestedSize, totalElements);
-        var to = Math.min(from + requestedSize, totalElements);
-        var window = orders.subList((int) from, (int) to);
+        List<Order> window = List.of();
+        if (pageSpec.reaches(totalElements)) {
+            var pageable = pageSpec.toPageable();
+            if (user.admin()) {
+                window = hasFilter
+                        ? orderRepository.findPageByOrderNumberContaining(filter, pageable)
+                        : orderRepository.findPage(pageable);
+            } else {
+                window = hasFilter
+                        ? orderRepository.findPageByOwnerAndOrderNumberContaining(user.subject(), filter, pageable)
+                        : orderRepository.findPageByOwner(user.subject(), pageable);
+            }
+        }
 
         var items = window.stream()
                 .map(order -> {
@@ -249,10 +269,10 @@ public class OrderService {
 
         var result = new BrowseOrderHistoryResponse();
         result.setOrders(items);
-        result.setPage(requestedPage);
-        result.setSize(requestedSize);
+        result.setPage(pageSpec.page());
+        result.setSize(pageSpec.size());
         result.setTotalElements(totalElements);
-        result.setTotalPages((int) Math.ceil((double) totalElements / requestedSize));
+        result.setTotalPages(pageSpec.totalPages(totalElements));
         return result;
     }
 

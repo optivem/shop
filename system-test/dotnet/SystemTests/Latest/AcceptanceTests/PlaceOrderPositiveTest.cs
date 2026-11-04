@@ -1,3 +1,4 @@
+using static Dsl.Core.Scenario.ScenarioDefaults;
 using SystemTests.Latest.AcceptanceTests.Base;
 using Dsl.Core.UseCase;
 using Driver.Port.Dtos;
@@ -215,5 +216,31 @@ public class PlaceOrderPositiveTest : BaseAcceptanceTest
             .HasTaxRate(0.20m)
             .HasAppliedCoupon("COMBO10")
             .HasTotalPrice(21.60m);
+    }
+
+    [Theory]
+    [ChannelData(ChannelType.API)]
+    public async Task ReplayingAnOrderWithTheSameIdempotencyKeyShouldReturnTheOriginalOrder(Channel channel)
+    {
+        await Scenario(channel)
+            .Given().Order().WithIdempotencyKey("ORDER-KEY")
+            .And().LoggedInAsCustomer()
+            .When().PlaceOrder().WithOrderNumber("REPLAYED-ORDER").WithIdempotencyKey("ORDER-KEY")
+            .Then().ShouldSucceed()
+            .And().Order()
+            .HasOrderNumber(DefaultOrderNumber);
+    }
+
+    [Theory]
+    [ChannelData(ChannelType.API)]
+    public async Task PlacingTheSameOrderTwiceWithoutAnIdempotencyKeyShouldCreateTwoOrders(Channel channel)
+    {
+        await Scenario(channel)
+            .Given().Order()
+            .And().LoggedInAsCustomer()
+            .When().PlaceOrder().WithOrderNumber("SECOND-ORDER")
+            .Then().ShouldSucceed()
+            .And().Order()
+            .DoesNotHaveOrderNumber(DefaultOrderNumber);
     }
 }

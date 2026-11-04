@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Headers,
   HttpCode,
   Param,
   Post,
@@ -22,8 +23,10 @@ export class OrderController {
   async browseOrderHistory(
     @Caller() user: CurrentUser,
     @Query('orderNumber') orderNumber?: string,
+    @Query('page') page?: string,
+    @Query('size') size?: string,
   ) {
-    return this.orderService.browseOrderHistory(orderNumber, user);
+    return this.orderService.browseOrderHistory(orderNumber, user, page, size);
   }
 
   @Post()
@@ -31,8 +34,14 @@ export class OrderController {
     @Body() request: PlaceOrderRequest,
     @Caller() user: CurrentUser,
     @Res({ passthrough: true }) res: Response,
+    @Headers('idempotency-key') idempotencyKey?: string,
   ): Promise<PlaceOrderResponse> {
-    const response = await this.orderService.placeOrder(request, user);
+    // A replay answers 201 with the stored body, so the Location is the original order's.
+    const response = await this.orderService.placeOrder(
+      request,
+      user,
+      idempotencyKey,
+    );
     res.header('Location', `/api/orders/${response.orderNumber}`);
     return response;
   }

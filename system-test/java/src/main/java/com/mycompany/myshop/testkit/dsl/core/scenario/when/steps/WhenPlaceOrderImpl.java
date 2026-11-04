@@ -18,6 +18,7 @@ public class WhenPlaceOrderImpl extends BaseWhenStep<PlaceOrderResponse, PlaceOr
     private String quantity;
     private String country;
     private String couponCode;
+    private String idempotencyKey;
 
     public WhenPlaceOrderImpl(UseCaseDsl app, ScenarioDslImpl scenario) {
         super(app, scenario);
@@ -61,6 +62,11 @@ public class WhenPlaceOrderImpl extends BaseWhenStep<PlaceOrderResponse, PlaceOr
         return withCouponCode(DEFAULT_COUPON_CODE);
     }
 
+    public WhenPlaceOrderImpl withIdempotencyKey(String idempotencyKey) {
+        this.idempotencyKey = idempotencyKey;
+        return this;
+    }
+
     @Override
     protected ExecutionResult<PlaceOrderResponse, PlaceOrderVerification> execute(UseCaseDsl app) {
         var result = app.myShop(ChannelMode.DYNAMIC).placeOrder()
@@ -69,6 +75,7 @@ public class WhenPlaceOrderImpl extends BaseWhenStep<PlaceOrderResponse, PlaceOr
                 .quantity(quantity)
                 .country(country)
                 .couponCode(couponCode)
+                .idempotencyKey(idempotencyKey)
                 .execute();
 
         return new ExecutionResultBuilder<>(result)

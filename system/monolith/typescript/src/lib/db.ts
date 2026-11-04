@@ -25,7 +25,7 @@ const pool = new Pool({
 });
 
 // Either the pool or a client checked out for a transaction.
-type Queryable = Pool | PoolClient;
+export type Queryable = Pool | PoolClient;
 
 export async function inTransaction<T>(work: (db: Queryable) => Promise<T>): Promise<T> {
   const client = await pool.connect();
@@ -115,10 +115,15 @@ export async function findByOrderNumber(orderNumber: string): Promise<OrderRow |
   return result.rows[0] ?? null;
 }
 
-// `owner` restricts the history to one customer's orders; null (admin) lists every order.
-export async function findAllOrders(orderNumberFilter?: string, owner: string | null = null): Promise<OrderRow[]> {
+/** One page of rows: LIMIT/OFFSET. Omitted, every matching row is read. */
+export interface RowWindow {
+  limit: number;
+  offset: number;
+}
+
+function orderConditions(orderNumberFilter: string | undefined, owner: string | null) {
   const conditions: string[] = [];
-  const params: string[] = [];
+  const params: (string | number)[] = [];
   if (orderNumberFilter) {
     params.push(`%${orderNumberFilter}%`);
     conditions.push(`LOWER(order_number) LIKE LOWER($${params.length})`);
@@ -128,11 +133,37 @@ export async function findAllOrders(orderNumberFilter?: string, owner: string | 
     conditions.push(`owner = $${params.length}`);
   }
   const where = conditions.length > 0 ? ` WHERE ${conditions.join(' AND ')}` : '';
+  return { where, params };
+}
+
+function windowClause(params: (string | number)[], window?: RowWindow): string {
+  if (!window) {
+    return '';
+  }
+  params.push(window.limit, window.offset);
+  return ` LIMIT $${params.length - 1} OFFSET $${params.length}`;
+}
+
+// `owner` restricts the history to one customer's orders; null (admin) lists every order. Newest
+// first, with the id as the tie-break so pages are stable.
+export async function findAllOrders(
+  orderNumberFilter?: string,
+  owner: string | null = null,
+  window?: RowWindow
+): Promise<OrderRow[]> {
+  const { where, params } = orderConditions(orderNumberFilter, owner);
   const result = await pool.query<OrderRow>(
-    `SELECT * FROM orders${where} ORDER BY order_timestamp DESC`,
+    `SELECT * FROM orders${where} ORDER BY order_timestamp DESC, id DESC${windowClause(params, window)}`,
     params
   );
   return result.rows;
+}
+
+// The same predicate as findAllOrders, counted: the total a paged response reports.
+export async function countOrders(orderNumberFilter?: string, owner: string | null = null): Promise<number> {
+  const { where, params } = orderConditions(orderNumberFilter, owner);
+  const result = await pool.query<{ count: string }>(`SELECT COUNT(*) AS count FROM orders${where}`, params);
+  return Number(result.rows[0]?.count ?? 0);
 }
 
 // Another customer's order is reported as missing, so its existence is not revealed. Orders without an
@@ -190,9 +221,67 @@ export async function tryIncrementCouponUsage(code: string, db: Queryable = pool
   return result.rowCount === 1;
 }
 
-export async function findAllCoupons(): Promise<CouponRow[]> {
-  const result = await pool.query<CouponRow>('SELECT * FROM coupons ORDER BY id');
+// Newest first, so a freshly published coupon is always on the first page.
+export async function findAllCoupons(window?: RowWindow): Promise<CouponRow[]> {
+  const params: (string | number)[] = [];
+  const result = await pool.query<CouponRow>(
+    `SELECT * FROM coupons ORDER BY id DESC${windowClause(params, window)}`,
+    params
+  );
   return result.rows;
+}
+
+export async function countCoupons(): Promise<number> {
+  const result = await pool.query<{ count: string }>('SELECT COUNT(*) AS count FROM coupons');
+  return Number(result.rows[0]?.count ?? 0);
+}
+
+export interface IdempotencyKeyRow {
+  owner: string;
+  idempotency_key: string;
+  request_hash: string;
+  response_status: number;
+  response_body: string;
+  created_at: Date;
+}
+
+const IDEMPOTENCY_KEY_UNIQUE_CONSTRAINT = 'uq_idempotency_keys_owner_key';
+
+export async function findIdempotencyKey(owner: string, key: string, db: Queryable = pool): Promise<IdempotencyKeyRow | null> {
+  const result = await db.query<IdempotencyKeyRow>(
+    'SELECT owner, idempotency_key, request_hash, response_status, response_body, created_at FROM idempotency_keys WHERE owner = $1 AND idempotency_key = $2',
+    [owner, key]
+  );
+  return result.rows[0] ?? null;
+}
+
+// Removes this key's row only if it expired (created at or before the cutoff); a live row is kept.
+export async function deleteExpiredIdempotencyKey(owner: string, key: string, cutoff: Date, db: Queryable = pool): Promise<void> {
+  await db.query(
+    'DELETE FROM idempotency_keys WHERE owner = $1 AND idempotency_key = $2 AND created_at <= $3',
+    [owner, key, cutoff]
+  );
+}
+
+export async function insertIdempotencyKey(row: {
+  owner: string;
+  key: string;
+  requestHash: string;
+  responseStatus: number;
+  responseBody: string;
+  createdAt: Date;
+}, db: Queryable = pool): Promise<void> {
+  await db.query(
+    `INSERT INTO idempotency_keys (owner, idempotency_key, request_hash, response_status, response_body, created_at)
+     VALUES ($1, $2, $3, $4, $5, $6)`,
+    [row.owner, row.key, row.requestHash, row.responseStatus, row.responseBody, row.createdAt]
+  );
+}
+
+/** Unique-index violation on (owner, idempotency_key): a concurrent request with the same key won. */
+export function isIdempotencyKeyConflict(error: unknown): boolean {
+  const pgError = error as { code?: string; constraint?: string } | null;
+  return pgError?.code === '23505' && pgError?.constraint === IDEMPOTENCY_KEY_UNIQUE_CONSTRAINT;
 }
 
 // Releases the connection pool. Tests must call this before stopping a

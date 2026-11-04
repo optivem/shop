@@ -6,12 +6,25 @@ import { BaseMyShopUseCase } from './base/BaseMyShopUseCase.js';
 import { BrowseCouponsVerification } from './BrowseCouponsVerification.js';
 
 export class BrowseCoupons extends BaseMyShopUseCase<BrowseCouponsResponse, BrowseCouponsVerification> {
+  private _page?: string;
+  private _size?: string;
+
   constructor(driver: MyShopDriver, context: UseCaseContext) {
     super(driver, context);
   }
 
+  page(page: string): this {
+    this._page = page;
+    return this;
+  }
+
+  size(size: string): this {
+    this._size = size;
+    return this;
+  }
+
   async execute(): Promise<UseCaseResult<BrowseCouponsResponse, BrowseCouponsVerification>> {
-    const result = await this.driver.browseCoupons({});
+    const result = await this.driver.browseCoupons({ page: this._page, size: this._size });
 
     return new UseCaseResult(
       result,

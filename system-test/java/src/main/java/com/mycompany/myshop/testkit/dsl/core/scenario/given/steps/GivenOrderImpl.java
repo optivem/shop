@@ -15,6 +15,7 @@ public class GivenOrderImpl extends BaseGivenStep implements GivenOrder {
     private String quantity;
     private String country;
     private String couponCodeAlias;
+    private String idempotencyKey;
     private OrderStatus status;
     private final GivenImpl given;
     private String placedByAlias;
@@ -57,6 +58,11 @@ public class GivenOrderImpl extends BaseGivenStep implements GivenOrder {
 
     public GivenOrderImpl withCouponCode(String couponCodeAlias) {
         this.couponCodeAlias = couponCodeAlias;
+        return this;
+    }
+
+    public GivenOrderImpl withIdempotencyKey(String idempotencyKey) {
+        this.idempotencyKey = idempotencyKey;
         return this;
     }
 
@@ -108,6 +114,7 @@ public class GivenOrderImpl extends BaseGivenStep implements GivenOrder {
                 .quantity(quantity)
                 .country(country)
                 .couponCode(couponCodeAlias)
+                .idempotencyKey(idempotencyKey)
                 .execute()
                 .shouldSucceed();
 

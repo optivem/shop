@@ -15,6 +15,12 @@ export class ViewOrderVerification extends ResponseVerification<ViewOrderRespons
     return this;
   }
 
+  orderNumberIsNot(aliasOrValue: string): this {
+    const other = this.getContext().getResultValue(aliasOrValue);
+    expect(this.getResponse().orderNumber, `Expected order number to differ from '${other}'`).not.toBe(other);
+    return this;
+  }
+
   sku(skuAlias: string): this {
     const expected = this.getContext().getParamValue(skuAlias);
     expect(this.getResponse().sku).toBe(expected);

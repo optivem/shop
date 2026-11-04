@@ -20,6 +20,12 @@ import { ErpGateway } from './external/erp.gateway';
 import { ClockGateway } from './external/clock.gateway';
 import { TaxGateway } from './external/tax.gateway';
 import { CouponService } from './coupon.service';
+import {
+  IdempotencyKeyStore,
+  type IdempotencyScope,
+} from './idempotency-key.store';
+import { PageSpec } from './page-spec';
+import type { IdempotencyKey } from '../entities/idempotency-key.entity';
 import type { CurrentUser } from '../../auth/current-user';
 
 @Injectable()
@@ -36,11 +42,73 @@ export class OrderService {
     private readonly clockGateway: ClockGateway,
     private readonly taxGateway: TaxGateway,
     private readonly couponService: CouponService,
+    private readonly idempotencyKeys: IdempotencyKeyStore,
   ) {}
 
+  private static readonly CREATED = 201;
+
+  /**
+   * Places an order. With an Idempotency-Key, a repeat of the same request inside 24 hours answers
+   * with the stored response instead of placing a second order, and the same key with a different
+   * request is rejected. Without one it behaves as before.
+   */
   async placeOrder(
     request: PlaceOrderRequest,
     user: CurrentUser,
+    rawIdempotencyKey?: string,
+  ): Promise<PlaceOrderResponse> {
+    const key = IdempotencyKeyStore.normalize(rawIdempotencyKey);
+    if (key === null) {
+      return this.placeNewOrder(request, user, null);
+    }
+
+    const scope: IdempotencyScope = {
+      owner: user.subject ?? '',
+      key,
+      fingerprint: IdempotencyKeyStore.fingerprint(request),
+    };
+    const stored = await this.idempotencyKeys.findLive(
+      scope.owner,
+      scope.key,
+      new Date(),
+    );
+    if (stored) {
+      return OrderService.answerFromStored(stored, scope.fingerprint);
+    }
+
+    try {
+      return await this.placeNewOrder(request, user, scope);
+    } catch (error) {
+      // A concurrent request with the same key committed first; this one rolled back and placed
+      // nothing, so it answers from the winner's row.
+      if (!IdempotencyKeyStore.isKeyConflict(error)) {
+        throw error;
+      }
+      const winner = await this.idempotencyKeys.find(scope.owner, scope.key);
+      if (!winner) {
+        throw error;
+      }
+      return OrderService.answerFromStored(winner, scope.fingerprint);
+    }
+  }
+
+  private static answerFromStored(
+    stored: IdempotencyKey,
+    fingerprint: string,
+  ): PlaceOrderResponse {
+    if (stored.requestHash !== fingerprint) {
+      throw new ValidationException(IdempotencyKeyStore.MSG_KEY_REUSED);
+    }
+    return Object.assign(
+      new PlaceOrderResponse(),
+      JSON.parse(stored.responseBody) as PlaceOrderResponse,
+    );
+  }
+
+  private async placeNewOrder(
+    request: PlaceOrderRequest,
+    user: CurrentUser,
+    idempotency: IdempotencyScope | null,
   ): Promise<PlaceOrderResponse> {
     const sku = request.sku;
     const quantity = request.quantity;
@@ -109,17 +177,28 @@ export class OrderService {
     order.owner = user.subject;
     order.ownerName = user.username;
 
-    // The coupon use is claimed in the same transaction as the insert, so a failed insert does not
-    // use up the coupon.
+    const response = new PlaceOrderResponse();
+    response.orderNumber = orderNumber;
+
+    // The idempotency key, the coupon use and the order commit together, so a failure leaves none
+    // of them behind. The key goes first: a concurrent request with the same key fails on its
+    // unique index before it can touch the coupon.
     await this.orderRepository.manager.transaction(async (manager) => {
+      if (idempotency) {
+        await this.idempotencyKeys.claim(
+          idempotency,
+          OrderService.CREATED,
+          JSON.stringify(response),
+          new Date(),
+          manager,
+        );
+      }
       if (appliedCouponCode) {
         await this.couponService.claimUsage(appliedCouponCode, manager);
       }
       await manager.withRepository(this.orderRepository).save(order);
     });
 
-    const response = new PlaceOrderResponse();
-    response.orderNumber = orderNumber;
     return response;
   }
 
@@ -231,15 +310,25 @@ export class OrderService {
   async browseOrderHistory(
     orderNumberFilter: string | undefined,
     user: CurrentUser,
+    page?: string,
+    size?: string,
   ): Promise<BrowseOrderHistoryResponse> {
+    const pageSpec = PageSpec.of(page, size);
     const filter = orderNumberFilter?.trim();
-    const orders = await this.orderRepository.find({
-      where: {
-        ...(filter ? { orderNumber: ILike(`%${filter}%`) } : {}),
-        ...(user.admin ? {} : { owner: user.subject }),
-      },
-      order: { orderTimestamp: 'DESC' },
-    });
+    const where = {
+      ...(filter ? { orderNumber: ILike(`%${filter}%`) } : {}),
+      ...(user.admin ? {} : { owner: user.subject }),
+    };
+    // Paged in the database: a COUNT over the same predicate, then one page of rows.
+    const totalElements = await this.orderRepository.count({ where });
+    const orders = pageSpec.isPastEnd(totalElements)
+      ? []
+      : await this.orderRepository.find({
+          where,
+          order: { orderTimestamp: 'DESC', id: 'DESC' },
+          skip: pageSpec.offset(),
+          take: pageSpec.size,
+        });
 
     const items = orders.map((order) => {
       const item = new BrowseOrderHistoryItemResponse();
@@ -257,6 +346,10 @@ export class OrderService {
 
     const result = new BrowseOrderHistoryResponse();
     result.orders = items;
+    result.page = pageSpec.page;
+    result.size = pageSpec.size;
+    result.totalElements = totalElements;
+    result.totalPages = pageSpec.totalPages(totalElements);
     return result;
   }
 

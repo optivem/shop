@@ -6,4 +6,8 @@ public interface ThenOrderHistory extends ThenStep<ThenOrderHistory> {
     ThenOrderHistory containsOrder(String orderNumber);
 
     ThenOrderHistory doesNotContainOrder(String orderNumber);
+
+    ThenOrderHistory isEmpty();
+
+    ThenOrderHistory hasTotalElements(int expectedTotalElements);
 }

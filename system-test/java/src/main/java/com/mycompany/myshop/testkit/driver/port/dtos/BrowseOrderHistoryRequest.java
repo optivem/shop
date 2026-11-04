@@ -11,4 +11,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class BrowseOrderHistoryRequest {
     private String orderNumber;
+    private String page;
+    private String size;
 }

@@ -7,6 +7,7 @@ import {
 import * as fs from 'fs';
 import * as path from 'path';
 import type * as DbModule from '../lib/db';
+import type * as IdempotentOrderModule from '../lib/idempotent-order';
 
 // Canonical schema — the same migrations Flyway applies for the Java backend
 // (system/db/migrations). Applied to the throwaway container so the test
@@ -41,6 +42,7 @@ async function applyMigrations(
 describe('db adapter [integration]', () => {
   let postgres: StartedPostgreSqlContainer;
   let db: typeof DbModule;
+  let idempotent: typeof IdempotentOrderModule;
 
   beforeAll(async () => {
     postgres = await new PostgreSqlContainer('postgres:16-alpine')
@@ -60,6 +62,7 @@ describe('db adapter [integration]', () => {
     process.env.POSTGRES_DB_PASSWORD = postgres.getPassword();
 
     db = await import('../lib/db');
+    idempotent = await import('../lib/idempotent-order');
   }, 120_000);
 
   afterAll(async () => {
@@ -172,5 +175,116 @@ describe('db adapter [integration]', () => {
     ).rejects.toThrow('insert failed');
 
     expect((await db.findCouponByCode('ROLLBACK-1'))?.used_count).toBe(0);
+  });
+
+  const pagedOrder = (orderNumber: string, orderTimestamp: Date, owner = 'sub-page') => ({
+    orderNumber,
+    orderTimestamp,
+    country: 'US',
+    sku: 'BOOK-123',
+    quantity: 1,
+    unitPrice: new Decimal('10.0'),
+    basePrice: new Decimal('10.0'),
+    discountRate: new Decimal('0'),
+    discountAmount: new Decimal('0'),
+    subtotalPrice: new Decimal('10.0'),
+    taxRate: new Decimal('0.1'),
+    taxAmount: new Decimal('1.0'),
+    totalPrice: new Decimal('11.0'),
+    appliedCouponCode: null,
+    status: 'PLACED' as const,
+    owner,
+    ownerName: owner,
+  });
+
+  it('pages orders newest first with an id tie-break, stable across pages', async () => {
+    const base = Date.parse('2027-01-01T00:00:00Z');
+    for (let i = 0; i < 5; i++) {
+      // The last two share a timestamp, so the id decides their order.
+      await db.insertOrder(pagedOrder(`ORD-PAGE-${i}`, new Date(base + Math.min(i, 3) * 60_000)));
+    }
+
+    const pages = await Promise.all(
+      [0, 2, 4].map((offset) => db.findAllOrders(undefined, 'sub-page', { limit: 2, offset }))
+    );
+    const pastEnd = await db.findAllOrders(undefined, 'sub-page', { limit: 2, offset: 6 });
+
+    expect(pages.flat().map((o) => o.order_number)).toEqual([
+      'ORD-PAGE-4', 'ORD-PAGE-3', 'ORD-PAGE-2', 'ORD-PAGE-1', 'ORD-PAGE-0',
+    ]);
+    expect(await db.countOrders(undefined, 'sub-page')).toBe(5);
+    expect(await db.countOrders('page-4', 'sub-page')).toBe(1);
+    expect(pastEnd).toEqual([]);
+  });
+
+  it('pages coupons newest first', async () => {
+    for (const code of ['PAGE-C-1', 'PAGE-C-2', 'PAGE-C-3']) {
+      await db.insertCoupon({ code, discountRate: new Decimal('0.1') });
+    }
+
+    const firstTwo = (await db.findAllCoupons({ limit: 2, offset: 0 })).map((c) => c.code);
+
+    expect(firstTwo).toEqual(['PAGE-C-3', 'PAGE-C-2']);
+    expect(await db.countCoupons()).toBeGreaterThanOrEqual(3);
+  });
+
+  it('concurrent requests with the same key place exactly one order and use the coupon once', async () => {
+    await db.insertCoupon({ code: 'RACE-KEY', discountRate: new Decimal('0.1'), usageLimit: 5 });
+    const scope = { owner: 'sub-race', key: 'race-key', fingerprint: 'fp-1' };
+
+    const outcomes = await Promise.all(
+      Array.from({ length: 8 }, (_, i) => {
+        const orderNumber = `ORD-RACE-${i}`;
+        return idempotent.placeIdempotently(
+          scope,
+          { status: 201, body: JSON.stringify({ orderNumber }) },
+          async (tx) => {
+            if (!(await db.tryIncrementCouponUsage('RACE-KEY', tx))) throw new Error('limit');
+            await db.insertOrder(pagedOrder(orderNumber, new Date('2027-02-01T00:00:00Z'), 'sub-race'), tx);
+          }
+        );
+      })
+    );
+
+    expect(outcomes.filter((o) => o.kind === 'placed')).toHaveLength(1);
+    expect(outcomes.filter((o) => o.kind === 'replay')).toHaveLength(7);
+    expect(await db.countOrders('ORD-RACE')).toBe(1);
+    expect((await db.findCouponByCode('RACE-KEY'))?.used_count).toBe(1);
+    const stored = await db.findIdempotencyKey('sub-race', 'race-key');
+    const placedNumber = (JSON.parse(stored?.response_body ?? '{}') as { orderNumber: string }).orderNumber;
+    expect(await db.findByOrderNumber(placedNumber)).not.toBeNull();
+  });
+
+  it('answers a replay from the stored row and rejects a different request with the same key', async () => {
+    const scope = { owner: 'sub-replay', key: 'key-1', fingerprint: 'fp-a' };
+    await idempotent.placeIdempotently(scope, { status: 201, body: '{"orderNumber":"ORD-R-1"}' }, async (tx) => {
+      await db.insertOrder(pagedOrder('ORD-R-1', new Date('2027-03-01T00:00:00Z'), 'sub-replay'), tx);
+    });
+
+    expect(await idempotent.findStoredAnswer(scope)).toEqual({ kind: 'replay', status: 201, body: '{"orderNumber":"ORD-R-1"}' });
+    expect(await idempotent.findStoredAnswer({ ...scope, fingerprint: 'fp-b' })).toEqual({ kind: 'conflict' });
+    expect(await idempotent.findStoredAnswer({ ...scope, owner: 'sub-other' })).toBeNull();
+  });
+
+  it('leaves the key free when the request fails, and replaces an expired key', async () => {
+    const scope = { owner: 'sub-fail', key: 'key-1', fingerprint: 'fp-a' };
+    await expect(
+      idempotent.placeIdempotently(scope, { status: 201, body: '{}' }, () =>
+        Promise.reject(new Error('insert failed'))
+      )
+    ).rejects.toThrow('insert failed');
+    expect(await db.findIdempotencyKey('sub-fail', 'key-1')).toBeNull();
+
+    await db.insertIdempotencyKey({
+      owner: 'sub-fail', key: 'old', requestHash: 'stale', responseStatus: 201,
+      responseBody: '{"orderNumber":"ORD-OLD"}', createdAt: new Date(Date.now() - 25 * 60 * 60 * 1000),
+    });
+    const expiredScope = { owner: 'sub-fail', key: 'old', fingerprint: 'fp-new' };
+    expect(await idempotent.findStoredAnswer(expiredScope)).toBeNull();
+    const outcome = await idempotent.placeIdempotently(
+      expiredScope, { status: 201, body: '{"orderNumber":"ORD-NEW"}' }, () => Promise.resolve()
+    );
+    expect(outcome).toEqual({ kind: 'placed' });
+    expect((await db.findIdempotencyKey('sub-fail', 'old'))?.request_hash).toBe('fp-new');
   });
 });

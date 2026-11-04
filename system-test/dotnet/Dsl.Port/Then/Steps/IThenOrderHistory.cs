@@ -8,5 +8,9 @@ public interface IThenOrderHistory
 
     IThenOrderHistory DoesNotContainOrder(string orderNumber);
 
+    IThenOrderHistory IsEmpty();
+
+    IThenOrderHistory HasTotalElements(int expectedTotalElements);
+
     TaskAwaiter GetAwaiter();
 }

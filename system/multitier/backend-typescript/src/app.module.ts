@@ -15,6 +15,8 @@ import { ClockGateway } from './core/services/external/clock.gateway';
 import { TaxGateway } from './core/services/external/tax.gateway';
 import { Order } from './core/entities/order.entity';
 import { Coupon } from './core/entities/coupon.entity';
+import { IdempotencyKey } from './core/entities/idempotency-key.entity';
+import { IdempotencyKeyStore } from './core/services/idempotency-key.store';
 import { AuthGuard } from './auth/auth.guard';
 import { loadAuthConfig } from './auth/auth.config';
 import { JwtVerifier } from './auth/jwt-verifier';
@@ -56,13 +58,13 @@ function parsePort(value: string): number {
           database,
           username,
           password,
-          entities: [Order, Coupon],
+          entities: [Order, Coupon, IdempotencyKey],
           synchronize: false,
           logging: configService.get<string>('NODE_ENV') !== 'production',
         };
       },
     }),
-    TypeOrmModule.forFeature([Order, Coupon]),
+    TypeOrmModule.forFeature([Order, Coupon, IdempotencyKey]),
   ],
   controllers: [
     AppController,
@@ -75,6 +77,7 @@ function parsePort(value: string): number {
     AppService,
     OrderService,
     CouponService,
+    IdempotencyKeyStore,
     ErpGateway,
     ClockGateway,
     TaxGateway,

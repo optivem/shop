@@ -5,6 +5,7 @@ import com.mycompany.myshop.testkit.driver.adapter.shared.client.http.JsonHttpCl
 import com.mycompany.myshop.testkit.driver.port.dtos.BrowseCouponsResponse;
 import com.mycompany.myshop.testkit.driver.port.dtos.PublishCouponRequest;
 import com.mycompany.myshop.testkit.common.Result;
+import java.util.LinkedHashMap;
 
 public class CouponController {
     private static final String ENDPOINT = "/api/coupons";
@@ -19,7 +20,10 @@ public class CouponController {
         return httpClient.post(ENDPOINT, request);
     }
 
-    public Result<BrowseCouponsResponse, ProblemDetailResponse> browseCoupons() {
-        return httpClient.get(ENDPOINT, BrowseCouponsResponse.class);
+    public Result<BrowseCouponsResponse, ProblemDetailResponse> browseCoupons(String page, String size) {
+        var query = new LinkedHashMap<String, String>();
+        query.put("page", page);
+        query.put("size", size);
+        return httpClient.get(ENDPOINT + QueryString.of(query), BrowseCouponsResponse.class);
     }
 }

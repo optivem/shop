@@ -42,4 +42,28 @@ public class BrowseOrderHistoryPositiveTest : BaseAcceptanceTest
             .Then().ShouldSucceed()
             .OrderHistory().ContainsOrder(DefaultOrderNumber);
     }
+
+    [Theory]
+    [ChannelData(ChannelType.API)]
+    public async Task FirstPageShouldReportTheTotalNumberOfMatchingOrders(Channel channel)
+    {
+        await Scenario(channel)
+            .Given().Order().PlacedByCustomer()
+            .And().LoggedInAsCustomer()
+            .When().BrowseOrderHistory().WithPage("1").WithSize("1")
+            .Then().ShouldSucceed()
+            .OrderHistory().ContainsOrder(DefaultOrderNumber).HasTotalElements(1);
+    }
+
+    [Theory]
+    [ChannelData(ChannelType.API)]
+    public async Task PagePastTheLastShouldBeEmpty(Channel channel)
+    {
+        await Scenario(channel)
+            .Given().Order().PlacedByCustomer()
+            .And().LoggedInAsCustomer()
+            .When().BrowseOrderHistory().WithPage("2")
+            .Then().ShouldSucceed()
+            .OrderHistory().IsEmpty();
+    }
 }

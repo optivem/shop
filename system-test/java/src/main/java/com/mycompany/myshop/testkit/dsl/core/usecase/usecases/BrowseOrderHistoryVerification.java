@@ -29,6 +29,20 @@ public class BrowseOrderHistoryVerification extends ResponseVerification<BrowseO
         return this;
     }
 
+    public BrowseOrderHistoryVerification isEmpty() {
+        assertThat(listedOrderNumbers())
+                .as("Order history page should be empty")
+                .isEmpty();
+        return this;
+    }
+
+    public BrowseOrderHistoryVerification totalElements(long expectedTotalElements) {
+        assertThat(getResponse().getTotalElements())
+                .as("Order history total elements")
+                .isEqualTo(expectedTotalElements);
+        return this;
+    }
+
     private List<String> listedOrderNumbers() {
         assertThat(getResponse())
                 .as("Response should not be null")

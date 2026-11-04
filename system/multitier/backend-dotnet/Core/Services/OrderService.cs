@@ -1,4 +1,9 @@
+using System.Globalization;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using MyCompany.MyShop.Backend.Core.Dtos;
 using MyCompany.MyShop.Backend.Core.Entities;
 using MyCompany.MyShop.Backend.Core.Exceptions;
@@ -15,6 +20,22 @@ public class OrderService
     private static readonly int RestrictedDay = 31;
     private static readonly TimeOnly RestrictedTimeStart = new(23, 59);
 
+    public const string IdempotencyKeyField = "Idempotency-Key";
+    private const int MaxIdempotencyKeyLength = 255;
+    private static readonly TimeSpan IdempotencyKeyTtl = TimeSpan.FromHours(24);
+    private const string MsgIdempotencyKeyTooLong = "Idempotency-Key must be at most 255 characters";
+    private const string MsgIdempotencyKeyReused = "Idempotency-Key has already been used with a different request";
+
+    public const int FirstPage = 1;
+    public const int DefaultPageSize = 50;
+    public const int MaxPageSize = 100;
+    private const string FieldPage = "page";
+    private const string FieldSize = "size";
+    private static readonly string MsgInvalidPage = $"Page must be {FirstPage} or greater";
+    private static readonly string MsgInvalidSize = $"Page size must be between 1 and {MaxPageSize}";
+
+    private static readonly JsonSerializerOptions StoredResponseJson = new(JsonSerializerDefaults.Web);
+
     private readonly AppDbContext _dbContext;
     private readonly ErpGateway _erpGateway;
     private readonly TaxGateway _taxGateway;
@@ -30,7 +51,49 @@ public class OrderService
         _couponService = couponService;
     }
 
-    public async Task<PlaceOrderResponse> PlaceOrderAsync(PlaceOrderRequest request, CurrentUser user)
+    /// <summary>
+    /// Places an order. With an <paramref name="idempotencyKey"/>, a repeat of the same request by the same
+    /// caller within 24 hours answers with the stored response instead of placing a second order, and a
+    /// repeat with a different request is rejected. Only successes are stored, so a failed request leaves
+    /// the key free for a corrected retry.
+    /// </summary>
+    public async Task<PlaceOrderResponse> PlaceOrderAsync(PlaceOrderRequest request, CurrentUser user, string? idempotencyKey = null)
+    {
+        var key = string.IsNullOrWhiteSpace(idempotencyKey) ? null : idempotencyKey;
+        if (key == null)
+        {
+            return await PlaceNewOrderAsync(request, user, null);
+        }
+
+        if (key.Length > MaxIdempotencyKeyLength)
+        {
+            throw new ValidationException(IdempotencyKeyField, MsgIdempotencyKeyTooLong);
+        }
+
+        var claim = new IdempotencyClaim(user.Subject ?? string.Empty, key, Fingerprint(request));
+
+        var stored = await FindStoredKeyAsync(claim);
+        if (stored != null && !IsExpired(stored))
+        {
+            return Replay(stored, claim);
+        }
+
+        try
+        {
+            return await PlaceNewOrderAsync(request, user, claim with { Expired = stored });
+        }
+        catch (DbUpdateException ex) when (IsIdempotencyKeyConflict(ex))
+        {
+            // A concurrent first use of the same key committed first; its transaction holds the order, ours
+            // rolled back. Answer as the replay we turned out to be.
+            _dbContext.ChangeTracker.Clear();
+            var winner = await FindStoredKeyAsync(claim)
+                ?? throw new InvalidOperationException("Idempotency key conflict without a stored key", ex);
+            return Replay(winner, claim);
+        }
+    }
+
+    private async Task<PlaceOrderResponse> PlaceNewOrderAsync(PlaceOrderRequest request, CurrentUser user, IdempotencyClaim? claim)
     {
         var sku = request.Sku!;
         var quantity = request.Quantity!.Value;
@@ -89,9 +152,18 @@ public class OrderService
             OwnerName = user.Username
         };
 
+        var response = new PlaceOrderResponse { OrderNumber = orderNumber };
+
         await using var transaction = await _dbContext.Database.BeginTransactionAsync();
 
-        // Increment first: a rejected increment leaves no order behind.
+        // The key row goes in first: a concurrent first use of the same key then waits on the unique
+        // constraint and fails, before it has redeemed a coupon or written an order.
+        if (claim != null)
+        {
+            await StoreKeyAsync(claim, response);
+        }
+
+        // Increment next: a rejected increment leaves no order behind.
         if (appliedCouponCode != null)
         {
             await _couponService.IncrementUsageCountAsync(appliedCouponCode);
@@ -101,7 +173,66 @@ public class OrderService
         await _dbContext.SaveChangesAsync();
         await transaction.CommitAsync();
 
-        return new PlaceOrderResponse { OrderNumber = orderNumber };
+        return response;
+    }
+
+    private sealed record IdempotencyClaim(string Owner, string Key, string RequestHash)
+    {
+        /// <summary>A stored row for the same key that has outlived its TTL and is replaced by this use.</summary>
+        public IdempotencyKey? Expired { get; init; }
+    }
+
+    private Task<IdempotencyKey?> FindStoredKeyAsync(IdempotencyClaim claim) =>
+        _dbContext.IdempotencyKeys.FirstOrDefaultAsync(k => k.Owner == claim.Owner && k.Key == claim.Key);
+
+    private static bool IsExpired(IdempotencyKey stored) => stored.CreatedAt <= DateTime.UtcNow - IdempotencyKeyTtl;
+
+    private async Task StoreKeyAsync(IdempotencyClaim claim, PlaceOrderResponse response)
+    {
+        if (claim.Expired != null)
+        {
+            _dbContext.IdempotencyKeys.Remove(claim.Expired);
+            await _dbContext.SaveChangesAsync();
+        }
+
+        _dbContext.IdempotencyKeys.Add(new IdempotencyKey
+        {
+            Owner = claim.Owner,
+            Key = claim.Key,
+            RequestHash = claim.RequestHash,
+            ResponseStatus = StatusCodes.Status201Created,
+            ResponseBody = JsonSerializer.Serialize(response, StoredResponseJson),
+            CreatedAt = DateTime.UtcNow
+        });
+        await _dbContext.SaveChangesAsync();
+    }
+
+    private static PlaceOrderResponse Replay(IdempotencyKey stored, IdempotencyClaim claim)
+    {
+        if (stored.RequestHash != claim.RequestHash)
+        {
+            throw new ValidationException(MsgIdempotencyKeyReused);
+        }
+
+        return JsonSerializer.Deserialize<PlaceOrderResponse>(stored.ResponseBody, StoredResponseJson)!;
+    }
+
+    private static bool IsIdempotencyKeyConflict(DbUpdateException ex) =>
+        ex.InnerException is PostgresException
+        {
+            SqlState: PostgresErrorCodes.UniqueViolation,
+            ConstraintName: AppDbContext.IdempotencyKeyUniqueConstraint
+        };
+
+    /// <summary>SHA-256 (hex) over the request fields exactly as received, null as empty, joined by newlines.</summary>
+    private static string Fingerprint(PlaceOrderRequest request)
+    {
+        var canonical = string.Join('\n',
+            request.Sku ?? string.Empty,
+            request.Quantity?.ToString(CultureInfo.InvariantCulture) ?? string.Empty,
+            request.Country ?? string.Empty,
+            request.CouponCode ?? string.Empty);
+        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(canonical))).ToLowerInvariant();
     }
 
     // Intermediate amounts stay exact; each value is rounded exactly once, here, to the scale of the
@@ -207,8 +338,10 @@ public class OrderService
         await _dbContext.SaveChangesAsync();
     }
 
-    public async Task<BrowseOrderHistoryResponse> BrowseOrderHistoryAsync(string? orderNumberFilter, CurrentUser user)
+    public async Task<BrowseOrderHistoryResponse> BrowseOrderHistoryAsync(string? orderNumberFilter, CurrentUser user, int? page = null, int? size = null)
     {
+        var (requestedPage, requestedSize) = ResolvePage(page, size);
+
         var query = _dbContext.Orders.AsQueryable();
 
         if (!user.Admin)
@@ -222,9 +355,16 @@ public class OrderService
             query = query.Where(o => EF.Functions.ILike(o.OrderNumber, $"%{filter}%"));
         }
 
-        var orders = await query
-            .OrderByDescending(o => o.OrderTimestamp)
-            .ToListAsync();
+        var totalElements = await query.LongCountAsync();
+        var offset = (long)(requestedPage - FirstPage) * requestedSize;
+        var orders = offset >= totalElements
+            ? new List<Order>()
+            : await query
+                .OrderByDescending(o => o.OrderTimestamp)
+                .ThenByDescending(o => o.Id)
+                .Skip((int)offset)
+                .Take(requestedSize)
+                .ToListAsync();
 
         var items = orders.Select(order => new BrowseOrderHistoryItemResponse
         {
@@ -239,8 +379,34 @@ public class OrderService
             Customer = order.OwnerName
         }).ToList();
 
-        return new BrowseOrderHistoryResponse { Orders = items };
+        return new BrowseOrderHistoryResponse
+        {
+            Orders = items,
+            Page = requestedPage,
+            Size = requestedSize,
+            TotalElements = totalElements,
+            TotalPages = TotalPages(totalElements, requestedSize)
+        };
     }
+
+    /// <summary>Validates an optional 1-based page and page size, and fills in the defaults.</summary>
+    public static (int Page, int Size) ResolvePage(int? page, int? size)
+    {
+        if (page is < FirstPage)
+        {
+            throw new ValidationException(FieldPage, MsgInvalidPage);
+        }
+
+        if (size is < 1 or > MaxPageSize)
+        {
+            throw new ValidationException(FieldSize, MsgInvalidSize);
+        }
+
+        return (page ?? FirstPage, size ?? DefaultPageSize);
+    }
+
+    /// <summary>Ceiling division; an empty list is zero pages.</summary>
+    public static int TotalPages(long totalElements, int size) => (int)((totalElements + size - 1) / size);
 
     public async Task<ViewOrderDetailsResponse> GetOrderAsync(string orderNumber, CurrentUser user)
     {

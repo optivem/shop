@@ -29,7 +29,7 @@ public record PageSpec(int page, int size) {
     // The ceiling exists because "how many rows may one request cost?" is a question the caller is
     // not allowed to answer. Without it, ?size=1000000 is the unbounded read all over again,
     // wearing a page's clothes.
-    public static final int MAX_SIZE = 200;
+    public static final int MAX_SIZE = 100;
 
     public static boolean isValidPage(Integer requestedPage) {
         return requestedPage == null || requestedPage >= FIRST_PAGE;

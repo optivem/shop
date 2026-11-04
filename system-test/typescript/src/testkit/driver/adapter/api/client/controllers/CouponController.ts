@@ -5,6 +5,7 @@ import type { SystemError } from '../../../../port/dtos/errors/SystemError.js';
 import { JsonHttpClient } from '../../../shared/client/http/json-http-client.js';
 import type { BearerTokenSource } from '../../../shared/client/http/bearer-token-source.js';
 import { SystemErrorMapper } from '../../SystemErrorMapper.js';
+import { queryString } from './query-string.js';
 
 export class CouponController {
   private static readonly ENDPOINT = '/api/coupons';
@@ -19,7 +20,7 @@ export class CouponController {
     return this.httpClient.postVoid(CouponController.ENDPOINT, request);
   }
 
-  browseCoupons(): Promise<Result<BrowseCouponsResponse, SystemError>> {
-    return this.httpClient.get<BrowseCouponsResponse>(CouponController.ENDPOINT);
+  browseCoupons(page?: string | null, size?: string | null): Promise<Result<BrowseCouponsResponse, SystemError>> {
+    return this.httpClient.get<BrowseCouponsResponse>(`${CouponController.ENDPOINT}${queryString({ page, size })}`);
   }
 }

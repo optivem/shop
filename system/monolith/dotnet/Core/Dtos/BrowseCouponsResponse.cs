@@ -6,6 +6,16 @@ namespace MyCompany.MyShop.Monolith.Core.Dtos;
 public class BrowseCouponsResponse
 {
     public List<BrowseCouponsItemResponse> Coupons { get; set; } = new();
+
+    /// <summary>The 1-based page that was served, which is the default when the request left it out.</summary>
+    public int Page { get; set; }
+
+    /// <summary>The page size that was served, which is the default when the request left it out.</summary>
+    public int Size { get; set; }
+
+    public long TotalElements { get; set; }
+
+    public int TotalPages { get; set; }
 }
 
 public class BrowseCouponsItemResponse

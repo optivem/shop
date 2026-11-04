@@ -15,4 +15,8 @@ export class BrowseOrderHistoryItemResponse {
 
 export class BrowseOrderHistoryResponse {
   orders!: BrowseOrderHistoryItemResponse[];
+  page!: number;
+  size!: number;
+  totalElements!: number;
+  totalPages!: number;
 }
