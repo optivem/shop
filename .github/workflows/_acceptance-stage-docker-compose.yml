@@ -555,11 +555,15 @@ jobs:
           cache: 'npm'
           cache-dependency-path: system-test/typescript/package-lock.json
 
+      # A SonarCloud outage (HTTP 5xx after every retry) skips analysis with a job-summary
+      # warning instead of failing the stage; any other failure still fails it. See
+      # .github/actions/sonar-scan.
       - name: Run Sonar Analysis
-        uses: optivem/actions/retry@v1
+        uses: ./.github/actions/sonar-scan
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
+          label: Run Sonar Analysis
           working-directory: system-test/${{ env.TEST_LANGUAGE }}
           command: bash ./run-sonar.sh
 
