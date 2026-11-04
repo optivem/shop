@@ -152,14 +152,14 @@
             document.getElementById('detailSku').textContent = order.sku;
             document.getElementById('detailQuantity').textContent = order.quantity;
             document.getElementById('detailCountry').textContent = order.country;
-            document.getElementById('detailUnitPrice').textContent = '$' + order.unitPrice.toFixed(2);
-            document.getElementById('detailBasePrice').textContent = '$' + order.basePrice.toFixed(2);
-            document.getElementById('detailDiscountRate').textContent = (order.discountRate * 100).toFixed(2) + '%';
-            document.getElementById('detailDiscountAmount').textContent = '$' + order.discountAmount.toFixed(2);
-            document.getElementById('detailSubtotalPrice').textContent = '$' + order.subtotalPrice.toFixed(2);
-            document.getElementById('detailTaxRate').textContent = (order.taxRate * 100).toFixed(2) + '%';
-            document.getElementById('detailTaxAmount').textContent = '$' + order.taxAmount.toFixed(2);
-            document.getElementById('detailTotalPrice').textContent = '$' + order.totalPrice.toFixed(2);
+            document.getElementById('detailUnitPrice').textContent = '$' + order.unitPrice;
+            document.getElementById('detailBasePrice').textContent = '$' + order.basePrice;
+            document.getElementById('detailDiscountRate').textContent = (Number(order.discountRate) * 100).toFixed(2) + '%';
+            document.getElementById('detailDiscountAmount').textContent = '$' + order.discountAmount;
+            document.getElementById('detailSubtotalPrice').textContent = '$' + order.subtotalPrice;
+            document.getElementById('detailTaxRate').textContent = (Number(order.taxRate) * 100).toFixed(2) + '%';
+            document.getElementById('detailTaxAmount').textContent = '$' + order.taxAmount;
+            document.getElementById('detailTotalPrice').textContent = '$' + order.totalPrice;
             document.getElementById('detailAppliedCouponCode').textContent = order.appliedCouponCode || 'None';
 
             var isTerminal = order.status === 'CANCELLED' || order.status === 'DELIVERED';

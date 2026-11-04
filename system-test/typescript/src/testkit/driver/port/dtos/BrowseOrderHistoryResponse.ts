@@ -4,7 +4,7 @@ export interface BrowseOrderHistoryOrderItem {
   sku: string;
   country: string;
   quantity: number;
-  totalPrice: number;
+  totalPrice: string;
   status: string;
   appliedCouponCode?: string | null;
   customer?: string;

@@ -2,6 +2,7 @@ import { expect } from '@playwright/test';
 import type { ViewOrderResponse } from '../../../../driver/port/dtos/ViewOrderResponse.js';
 import { ResponseVerification } from '../../shared/response-verification.js';
 import type { UseCaseContext } from '../../shared/use-case-context.js';
+import { Converter } from '../../../../common/converter.js';
 
 export class ViewOrderVerification extends ResponseVerification<ViewOrderResponse> {
   constructor(response: ViewOrderResponse, context: UseCaseContext) {
@@ -25,23 +26,23 @@ export class ViewOrderVerification extends ResponseVerification<ViewOrderRespons
     return this;
   }
 
-  unitPrice(unitPrice: number): this {
-    expect(this.getResponse().unitPrice).toBe(unitPrice);
+  unitPrice(unitPrice: string | number): this {
+    expect(Converter.normalizeDecimalOrNull(this.getResponse().unitPrice)).toBe(Converter.normalizeDecimal(unitPrice));
     return this;
   }
 
-  basePrice(basePrice: number): this {
-    expect(this.getResponse().basePrice).toBe(basePrice);
+  basePrice(basePrice: string | number): this {
+    expect(Converter.normalizeDecimalOrNull(this.getResponse().basePrice)).toBe(Converter.normalizeDecimal(basePrice));
     return this;
   }
 
-  totalPrice(totalPrice: number): this {
-    expect(this.getResponse().totalPrice).toBe(totalPrice);
+  totalPrice(totalPrice: string | number): this {
+    expect(Converter.normalizeDecimalOrNull(this.getResponse().totalPrice)).toBe(Converter.normalizeDecimal(totalPrice));
     return this;
   }
 
   totalPriceGreaterThanZero(): this {
-    expect(this.getResponse().totalPrice).toBeGreaterThan(0);
+    expect(Number(this.getResponse().totalPrice)).toBeGreaterThan(0);
     return this;
   }
 

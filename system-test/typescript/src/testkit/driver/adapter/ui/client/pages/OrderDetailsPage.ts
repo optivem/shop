@@ -3,6 +3,7 @@ import { success, failure } from '../../../../../common/result.js';
 import type { SystemError } from '../../../../port/dtos/errors/SystemError.js';
 import { BasePage, PAGE_TIMEOUT_MS } from './BasePage.js';
 import { nonEmptyOr } from '../../../../../common/fallback.js';
+import { Converter } from '../../../../../common/converter.js';
 
 const ORDER_LOADED_SELECTOR = "[aria-label='Display Order Number']:visible";
 const ORDER_NOT_FOUND_SELECTOR = "p:has-text('Order not found'):visible";
@@ -71,68 +72,68 @@ export class OrderDetailsPage extends BasePage {
     return Number.parseInt(text, 10);
   }
 
-  async getUnitPrice(): Promise<number> {
+  async getUnitPrice(): Promise<string> {
     const text = nonEmptyOr(
       (await this.page.locator("[aria-label='Display Unit Price']").textContent({ timeout: PAGE_TIMEOUT_MS }))?.trim(),
       '0',
     );
-    return Number.parseFloat(text.replace('$', ''));
+    return Converter.fromDisplayedAmount(text);
   }
 
-  async getBasePrice(): Promise<number> {
+  async getBasePrice(): Promise<string> {
     const text = nonEmptyOr(
       (await this.page.locator("[aria-label='Display Base Price']").textContent({ timeout: PAGE_TIMEOUT_MS }))?.trim(),
       '0',
     );
-    return Number.parseFloat(text.replace('$', ''));
+    return Converter.fromDisplayedAmount(text);
   }
 
-  async getDiscountRate(): Promise<number> {
+  async getDiscountRate(): Promise<string> {
     const text = nonEmptyOr(
       (await this.page.locator("[aria-label='Display Discount Rate']").textContent({ timeout: PAGE_TIMEOUT_MS }))?.trim(),
       '0',
     );
-    return Number.parseFloat(text.replace('%', '')) / 100;
+    return Converter.fromDisplayedPercent(text);
   }
 
-  async getDiscountAmount(): Promise<number> {
+  async getDiscountAmount(): Promise<string> {
     const text = nonEmptyOr(
       (await this.page.locator("[aria-label='Display Discount Amount']").textContent({ timeout: PAGE_TIMEOUT_MS }))?.trim(),
       '0',
     );
-    return Number.parseFloat(text.replace('$', ''));
+    return Converter.fromDisplayedAmount(text);
   }
 
-  async getSubtotalPrice(): Promise<number> {
+  async getSubtotalPrice(): Promise<string> {
     const text = nonEmptyOr(
       (await this.page.locator("[aria-label='Display Subtotal Price']").textContent({ timeout: PAGE_TIMEOUT_MS }))?.trim(),
       '0',
     );
-    return Number.parseFloat(text.replace('$', ''));
+    return Converter.fromDisplayedAmount(text);
   }
 
-  async getTaxRate(): Promise<number> {
+  async getTaxRate(): Promise<string> {
     const text = nonEmptyOr(
       (await this.page.locator("[aria-label='Display Tax Rate']").textContent({ timeout: PAGE_TIMEOUT_MS }))?.trim(),
       '0',
     );
-    return Number.parseFloat(text.replace('%', '')) / 100;
+    return Converter.fromDisplayedPercent(text);
   }
 
-  async getTaxAmount(): Promise<number> {
+  async getTaxAmount(): Promise<string> {
     const text = nonEmptyOr(
       (await this.page.locator("[aria-label='Display Tax Amount']").textContent({ timeout: PAGE_TIMEOUT_MS }))?.trim(),
       '0',
     );
-    return Number.parseFloat(text.replace('$', ''));
+    return Converter.fromDisplayedAmount(text);
   }
 
-  async getTotalPrice(): Promise<number> {
+  async getTotalPrice(): Promise<string> {
     const text = nonEmptyOr(
       (await this.page.locator("[aria-label='Display Total Price']").textContent({ timeout: PAGE_TIMEOUT_MS }))?.trim(),
       '0',
     );
-    return Number.parseFloat(text.replace('$', ''));
+    return Converter.fromDisplayedAmount(text);
   }
 
   async getCountry(): Promise<string> {

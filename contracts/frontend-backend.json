@@ -19,7 +19,7 @@
           "coupons": [
             {
               "code": "SAVE10",
-              "discountRate": 0.2,
+              "discountRate": "0.2000",
               "usageLimit": 100,
               "usedCount": 0
             }
@@ -51,7 +51,8 @@
               "combine": "AND",
               "matchers": [
                 {
-                  "match": "decimal"
+                  "match": "regex",
+                  "regex": "^-?\\d+\\.\\d{4}$"
                 }
               ]
             },
@@ -100,7 +101,7 @@
               "quantity": 2,
               "sku": "BOOK-123",
               "status": "PLACED",
-              "totalPrice": 22
+              "totalPrice": "22.00"
             }
           ]
         },
@@ -170,7 +171,8 @@
               "combine": "AND",
               "matchers": [
                 {
-                  "match": "decimal"
+                  "match": "regex",
+                  "regex": "^-?\\d+\\.\\d{2}$"
                 }
               ]
             }
@@ -434,7 +436,7 @@
       "request": {
         "body": {
           "code": "SAVE10",
-          "discountRate": 0.2
+          "discountRate": "0.2"
         },
         "headers": {
           "Content-Type": "application/json"
@@ -460,20 +462,20 @@
       "response": {
         "body": {
           "appliedCouponCode": null,
-          "basePrice": 20,
+          "basePrice": "20.00",
           "country": "US",
-          "discountAmount": 0,
-          "discountRate": 0,
+          "discountAmount": "0.00",
+          "discountRate": "0.0000",
           "orderNumber": "ORD-1",
           "orderTimestamp": "2026-03-10T12:00:00Z",
           "quantity": 2,
           "sku": "BOOK-123",
           "status": "CANCELLED",
-          "subtotalPrice": 20,
-          "taxAmount": 2,
-          "taxRate": 0.1,
-          "totalPrice": 22,
-          "unitPrice": 10
+          "subtotalPrice": "20.00",
+          "taxAmount": "2.00",
+          "taxRate": "0.1000",
+          "totalPrice": "22.00",
+          "unitPrice": "10.00"
         },
         "headers": {
           "Content-Type": "application/json"
@@ -484,7 +486,8 @@
               "combine": "AND",
               "matchers": [
                 {
-                  "match": "decimal"
+                  "match": "regex",
+                  "regex": "^-?\\d+\\.\\d{2}$"
                 }
               ]
             },
@@ -500,7 +503,8 @@
               "combine": "AND",
               "matchers": [
                 {
-                  "match": "decimal"
+                  "match": "regex",
+                  "regex": "^-?\\d+\\.\\d{2}$"
                 }
               ]
             },
@@ -508,7 +512,8 @@
               "combine": "AND",
               "matchers": [
                 {
-                  "match": "decimal"
+                  "match": "regex",
+                  "regex": "^-?\\d+\\.\\d{4}$"
                 }
               ]
             },
@@ -540,7 +545,8 @@
               "combine": "AND",
               "matchers": [
                 {
-                  "match": "decimal"
+                  "match": "regex",
+                  "regex": "^-?\\d+\\.\\d{2}$"
                 }
               ]
             },
@@ -548,7 +554,8 @@
               "combine": "AND",
               "matchers": [
                 {
-                  "match": "decimal"
+                  "match": "regex",
+                  "regex": "^-?\\d+\\.\\d{2}$"
                 }
               ]
             },
@@ -556,7 +563,8 @@
               "combine": "AND",
               "matchers": [
                 {
-                  "match": "decimal"
+                  "match": "regex",
+                  "regex": "^-?\\d+\\.\\d{4}$"
                 }
               ]
             },
@@ -564,7 +572,8 @@
               "combine": "AND",
               "matchers": [
                 {
-                  "match": "decimal"
+                  "match": "regex",
+                  "regex": "^-?\\d+\\.\\d{2}$"
                 }
               ]
             },
@@ -572,7 +581,8 @@
               "combine": "AND",
               "matchers": [
                 {
-                  "match": "decimal"
+                  "match": "regex",
+                  "regex": "^-?\\d+\\.\\d{2}$"
                 }
               ]
             }
@@ -597,20 +607,20 @@
       "response": {
         "body": {
           "appliedCouponCode": null,
-          "basePrice": 20,
+          "basePrice": "20.00",
           "country": "US",
-          "discountAmount": 0,
-          "discountRate": 0,
+          "discountAmount": "0.00",
+          "discountRate": "0.0000",
           "orderNumber": "ORD-1",
           "orderTimestamp": "2026-03-10T12:00:00Z",
           "quantity": 2,
           "sku": "BOOK-123",
           "status": "DELIVERED",
-          "subtotalPrice": 20,
-          "taxAmount": 2,
-          "taxRate": 0.1,
-          "totalPrice": 22,
-          "unitPrice": 10
+          "subtotalPrice": "20.00",
+          "taxAmount": "2.00",
+          "taxRate": "0.1000",
+          "totalPrice": "22.00",
+          "unitPrice": "10.00"
         },
         "headers": {
           "Content-Type": "application/json"
@@ -621,7 +631,8 @@
               "combine": "AND",
               "matchers": [
                 {
-                  "match": "decimal"
+                  "match": "regex",
+                  "regex": "^-?\\d+\\.\\d{2}$"
                 }
               ]
             },
@@ -637,7 +648,8 @@
               "combine": "AND",
               "matchers": [
                 {
-                  "match": "decimal"
+                  "match": "regex",
+                  "regex": "^-?\\d+\\.\\d{2}$"
                 }
               ]
             },
@@ -645,7 +657,8 @@
               "combine": "AND",
               "matchers": [
                 {
-                  "match": "decimal"
+                  "match": "regex",
+                  "regex": "^-?\\d+\\.\\d{4}$"
                 }
               ]
             },
@@ -677,7 +690,8 @@
               "combine": "AND",
               "matchers": [
                 {
-                  "match": "decimal"
+                  "match": "regex",
+                  "regex": "^-?\\d+\\.\\d{2}$"
                 }
               ]
             },
@@ -685,7 +699,8 @@
               "combine": "AND",
               "matchers": [
                 {
-                  "match": "decimal"
+                  "match": "regex",
+                  "regex": "^-?\\d+\\.\\d{2}$"
                 }
               ]
             },
@@ -693,7 +708,8 @@
               "combine": "AND",
               "matchers": [
                 {
-                  "match": "decimal"
+                  "match": "regex",
+                  "regex": "^-?\\d+\\.\\d{4}$"
                 }
               ]
             },
@@ -701,7 +717,8 @@
               "combine": "AND",
               "matchers": [
                 {
-                  "match": "decimal"
+                  "match": "regex",
+                  "regex": "^-?\\d+\\.\\d{2}$"
                 }
               ]
             },
@@ -709,7 +726,8 @@
               "combine": "AND",
               "matchers": [
                 {
-                  "match": "decimal"
+                  "match": "regex",
+                  "regex": "^-?\\d+\\.\\d{2}$"
                 }
               ]
             }
@@ -734,20 +752,20 @@
       "response": {
         "body": {
           "appliedCouponCode": null,
-          "basePrice": 20,
+          "basePrice": "20.00",
           "country": "US",
-          "discountAmount": 0,
-          "discountRate": 0,
+          "discountAmount": "0.00",
+          "discountRate": "0.0000",
           "orderNumber": "ORD-1",
           "orderTimestamp": "2026-03-10T12:00:00Z",
           "quantity": 2,
           "sku": "BOOK-123",
           "status": "PLACED",
-          "subtotalPrice": 20,
-          "taxAmount": 2,
-          "taxRate": 0.1,
-          "totalPrice": 22,
-          "unitPrice": 10
+          "subtotalPrice": "20.00",
+          "taxAmount": "2.00",
+          "taxRate": "0.1000",
+          "totalPrice": "22.00",
+          "unitPrice": "10.00"
         },
         "headers": {
           "Content-Type": "application/json"
@@ -758,7 +776,8 @@
               "combine": "AND",
               "matchers": [
                 {
-                  "match": "decimal"
+                  "match": "regex",
+                  "regex": "^-?\\d+\\.\\d{2}$"
                 }
               ]
             },
@@ -774,7 +793,8 @@
               "combine": "AND",
               "matchers": [
                 {
-                  "match": "decimal"
+                  "match": "regex",
+                  "regex": "^-?\\d+\\.\\d{2}$"
                 }
               ]
             },
@@ -782,7 +802,8 @@
               "combine": "AND",
               "matchers": [
                 {
-                  "match": "decimal"
+                  "match": "regex",
+                  "regex": "^-?\\d+\\.\\d{4}$"
                 }
               ]
             },
@@ -814,7 +835,8 @@
               "combine": "AND",
               "matchers": [
                 {
-                  "match": "decimal"
+                  "match": "regex",
+                  "regex": "^-?\\d+\\.\\d{2}$"
                 }
               ]
             },
@@ -822,7 +844,8 @@
               "combine": "AND",
               "matchers": [
                 {
-                  "match": "decimal"
+                  "match": "regex",
+                  "regex": "^-?\\d+\\.\\d{2}$"
                 }
               ]
             },
@@ -830,7 +853,8 @@
               "combine": "AND",
               "matchers": [
                 {
-                  "match": "decimal"
+                  "match": "regex",
+                  "regex": "^-?\\d+\\.\\d{4}$"
                 }
               ]
             },
@@ -838,7 +862,8 @@
               "combine": "AND",
               "matchers": [
                 {
-                  "match": "decimal"
+                  "match": "regex",
+                  "regex": "^-?\\d+\\.\\d{2}$"
                 }
               ]
             },
@@ -846,7 +871,8 @@
               "combine": "AND",
               "matchers": [
                 {
-                  "match": "decimal"
+                  "match": "regex",
+                  "regex": "^-?\\d+\\.\\d{2}$"
                 }
               ]
             }

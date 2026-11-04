@@ -1,3 +1,6 @@
+using System.Text.Json.Serialization;
+using MyCompany.MyShop.Monolith.Core.Dtos.Json;
+
 namespace MyCompany.MyShop.Monolith.Core.Dtos;
 
 public class BrowseCouponsResponse
@@ -8,6 +11,7 @@ public class BrowseCouponsResponse
 public class BrowseCouponsItemResponse
 {
     public string Code { get; set; } = null!;
+    [JsonConverter(typeof(RateJsonConverter))]
     public decimal DiscountRate { get; set; }
     public DateTime? ValidFrom { get; set; }
     public DateTime? ValidTo { get; set; }

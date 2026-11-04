@@ -31,6 +31,8 @@ function isArrayOf<T>(guard: Guard<T>): Guard<T[]> {
 
 const isString = (value: unknown): value is string => typeof value === 'string';
 const isNumber = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value);
+// Money and rates arrive as decimal strings ("20.00", "0.2000"), never as JSON numbers.
+const isDecimalString = (value: unknown): value is string => isString(value) && /^-?\d+(\.\d+)?$/.test(value);
 const isStringOrNull = (value: unknown) => value === null || isString(value);
 const isOptionalString = (value: unknown) => value == null || isString(value);
 const isNumberOrNull = (value: unknown) => value === null || isNumber(value);
@@ -44,14 +46,14 @@ export const isViewOrderDetailsResponse = hasShape<ViewOrderDetailsResponse>({
   country: isString,
   sku: isString,
   quantity: isNumber,
-  unitPrice: isNumber,
-  basePrice: isNumber,
-  discountRate: isNumber,
-  discountAmount: isNumber,
-  subtotalPrice: isNumber,
-  taxRate: isNumber,
-  taxAmount: isNumber,
-  totalPrice: isNumber,
+  unitPrice: isDecimalString,
+  basePrice: isDecimalString,
+  discountRate: isDecimalString,
+  discountAmount: isDecimalString,
+  subtotalPrice: isDecimalString,
+  taxRate: isDecimalString,
+  taxAmount: isDecimalString,
+  totalPrice: isDecimalString,
   appliedCouponCode: isStringOrNull,
   status: isOrderStatus,
 });
@@ -64,7 +66,7 @@ export const isBrowseOrderHistoryResponse = hasShape<BrowseOrderHistoryResponse>
       country: isString,
       sku: isString,
       quantity: isNumber,
-      totalPrice: isNumber,
+      totalPrice: isDecimalString,
       appliedCouponCode: isStringOrNull,
       status: isOrderStatus,
       customer: isOptionalString,
@@ -76,7 +78,7 @@ export const isBrowseCouponsResponse = hasShape<BrowseCouponsResponse>({
   coupons: isArrayOf(
     hasShape<BrowseCouponsItemResponse>({
       code: isString,
-      discountRate: isNumber,
+      discountRate: isDecimalString,
       validFrom: isOptionalString,
       validTo: isOptionalString,
       usageLimit: isNumberOrNull,

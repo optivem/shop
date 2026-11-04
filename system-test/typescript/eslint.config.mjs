@@ -19,10 +19,11 @@ export default defineConfig(
             'playwright/expect-expect': [
                 'warn',
                 {
-                    assertFunctionNames: ['shouldSucceed', 'shouldFail', 'shouldBeRunning'],
+                    assertFunctionNames: ['shouldSucceed', 'shouldFail', 'shouldBeRunning', 'assertThatResult'],
                     assertFunctionPatterns: ['^has[A-Z]'],
                 },
             ],
+            'playwright/no-skipped-test': ['warn', { allowConditional: true }],
         },
     },
     {

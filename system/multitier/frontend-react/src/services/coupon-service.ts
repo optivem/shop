@@ -9,7 +9,7 @@ const API_BASE_URL = '/api/coupons';
 // produce no body, so the result carries no data.
 export async function createCoupon(
   code: string,
-  discountRate: number,
+  discountRate: string | null,
   validFrom: string | null,
   validTo: string | null,
   usageLimit: number | null

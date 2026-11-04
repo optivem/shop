@@ -27,14 +27,14 @@ export interface ViewOrderDetailsResponse {
   country: string;
   sku: string;
   quantity: number;
-  unitPrice: number;
-  basePrice: number;
-  discountRate: number;
-  discountAmount: number;
-  subtotalPrice: number;
-  taxRate: number;
-  taxAmount: number;
-  totalPrice: number;
+  unitPrice: string;
+  basePrice: string;
+  discountRate: string;
+  discountAmount: string;
+  subtotalPrice: string;
+  taxRate: string;
+  taxAmount: string;
+  totalPrice: string;
   appliedCouponCode: string | null;
   status: OrderStatus;
 }
@@ -46,7 +46,7 @@ export interface BrowseOrderHistoryItemResponse {
   country: string;
   sku: string;
   quantity: number;
-  totalPrice: number;
+  totalPrice: string;
   appliedCouponCode: string | null;
   status: OrderStatus;
   customer?: string | null; // owner of the order; only some backends report it
@@ -63,7 +63,7 @@ export const UNLIMITED_USAGE_LIMIT = 2147483647;
 
 export interface PublishCouponRequest {
   code: string;
-  discountRate: number;
+  discountRate: string | null;
   validFrom?: string;
   validTo?: string;
   usageLimit?: number;
@@ -71,7 +71,7 @@ export interface PublishCouponRequest {
 
 export interface BrowseCouponsItemResponse {
   code: string;
-  discountRate: number;
+  discountRate: string;
   validFrom?: string | null;
   validTo?: string | null;
   usageLimit: number | null;
@@ -84,7 +84,7 @@ export interface BrowseCouponsResponse {
 
 export interface GetCouponResponse {
   code: string;
-  discountRate: number;
+  discountRate: string;
   validFrom?: string;
   validTo?: string;
   usageLimit: number | null;

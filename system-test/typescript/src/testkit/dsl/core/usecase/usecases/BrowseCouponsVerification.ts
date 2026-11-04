@@ -5,6 +5,7 @@ import type {
 } from '../../../../driver/port/dtos/BrowseCouponsResponse.js';
 import { ResponseVerification } from '../../shared/response-verification.js';
 import type { UseCaseContext } from '../../shared/use-case-context.js';
+import { Converter } from '../../../../common/converter.js';
 
 export class BrowseCouponsVerification extends ResponseVerification<BrowseCouponsResponse> {
   constructor(response: BrowseCouponsResponse, context: UseCaseContext) {
@@ -16,9 +17,9 @@ export class BrowseCouponsVerification extends ResponseVerification<BrowseCoupon
     return this;
   }
 
-  couponHasDiscountRate(couponCodeAlias: string, expectedDiscountRate: number): this {
+  couponHasDiscountRate(couponCodeAlias: string, expectedDiscountRate: string | number): this {
     const coupon = this.findCouponByCode(couponCodeAlias);
-    expect(coupon.discountRate).toBe(expectedDiscountRate);
+    expect(Converter.normalizeDecimalOrNull(coupon.discountRate)).toBe(Converter.normalizeDecimal(expectedDiscountRate));
     return this;
   }
 

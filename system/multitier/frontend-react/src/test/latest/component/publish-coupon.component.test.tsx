@@ -21,8 +21,8 @@ const { backend, frontend } = componentHarness();
 describe('PublishCoupon', () => {
   it('confirms the coupon when the backend accepts it', async () => {
     backend.returnsCoupons();
-    backend.acceptsPublishedCoupon('SAVE10', 0.2);
+    backend.acceptsPublishedCoupon('SAVE10', '0.2');
 
-    await frontend.publishCoupon().withCode('SAVE10').withDiscountRate(0.2).execute().succeeded();
+    await frontend.publishCoupon().withCode('SAVE10').withDiscountRate('0.2').execute().succeeded();
   });
 });

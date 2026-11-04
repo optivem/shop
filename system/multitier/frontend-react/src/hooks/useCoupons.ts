@@ -53,7 +53,8 @@ export function useCoupons() {
 
     const result = await createCoupon(
       formData.code,
-      Number.parseFloat(formData.discountRate),
+      // Rates travel as decimal strings; a blank input still sends null, as before.
+      formData.discountRate.trim() === '' ? null : formData.discountRate.trim(),
       validFrom,
       validTo,
       formData.usageLimit ? Number.parseInt(formData.usageLimit) : null

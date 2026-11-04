@@ -20,8 +20,6 @@ const DECIMAL_FIELDS: Record<string, number> = {
   totalPrice: 2,
 };
 
-const SENTINEL = '__DECIMAL_';
-
 function toDecimal(value: unknown): Decimal | null {
   if (Decimal.isDecimal(value)) {
     return value.isFinite() ? value : null;
@@ -51,8 +49,8 @@ function markDecimals(obj: unknown): unknown {
       const scale = DECIMAL_FIELDS[key];
       const decimal = scale === undefined ? null : toDecimal(value);
       if (scale !== undefined && decimal !== null) {
-        result[key] =
-          `${SENTINEL}${decimal.toFixed(scale, Decimal.ROUND_HALF_UP)}${SENTINEL}`;
+        // Money and rates go on the wire as fixed-scale decimal strings, e.g. "20.00" and "0.2000".
+        result[key] = decimal.toFixed(scale, Decimal.ROUND_HALF_UP);
       } else {
         result[key] = markDecimals(value);
       }
@@ -63,11 +61,6 @@ function markDecimals(obj: unknown): unknown {
   return obj;
 }
 
-const SENTINEL_REGEX = new RegExp(
-  String.raw`"${SENTINEL}(-?[\d.]+)${SENTINEL}"`,
-  'g',
-);
-
 @Injectable()
 export class DecimalFormatInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
@@ -77,15 +70,13 @@ export class DecimalFormatInterceptor implements NestInterceptor {
           return data;
         }
 
-        const marked = markDecimals(data);
-        const json = JSON.stringify(marked);
-        const formatted = json.replaceAll(SENTINEL_REGEX, '$1');
+        const json = JSON.stringify(markDecimals(data));
 
         // Hand the pre-serialised JSON back to Nest, which sends it: a string body goes out via
         // res.send() verbatim, keeping the Content-Type set here instead of re-serialising it.
         const response = context.switchToHttp().getResponse<Response>();
         response.setHeader('Content-Type', 'application/json; charset=utf-8');
-        return formatted;
+        return json;
       }),
     );
   }

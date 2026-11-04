@@ -257,43 +257,43 @@ function OrderDetailsContent() {
                 <div className="col-md-6 mb-3">
                   <strong>Unit Price:</strong>
                   <p aria-label="Display Unit Price">
-                    ${order.unitPrice.toFixed(2)}
+                    ${order.unitPrice}
                   </p>
                 </div>
                 <div className="col-md-6 mb-3">
                   <strong>Base Price:</strong>
                   <p aria-label="Display Base Price">
-                    ${order.basePrice.toFixed(2)}
+                    ${order.basePrice}
                   </p>
                 </div>
                 <div className="col-md-6 mb-3">
                   <strong>Discount Rate:</strong>
                   <p aria-label="Display Discount Rate">
-                    {(order.discountRate * 100).toFixed(2)}%
+                    {(Number(order.discountRate) * 100).toFixed(2)}%
                   </p>
                 </div>
                 <div className="col-md-6 mb-3">
                   <strong>Discount Amount:</strong>
                   <p aria-label="Display Discount Amount">
-                    ${order.discountAmount.toFixed(2)}
+                    ${order.discountAmount}
                   </p>
                 </div>
                 <div className="col-md-6 mb-3">
                   <strong>Subtotal Price:</strong>
                   <p aria-label="Display Subtotal Price">
-                    ${order.subtotalPrice.toFixed(2)}
+                    ${order.subtotalPrice}
                   </p>
                 </div>
                 <div className="col-md-6 mb-3">
                   <strong>Tax Rate:</strong>
                   <p aria-label="Display Tax Rate">
-                    {(order.taxRate * 100).toFixed(2)}%
+                    {(Number(order.taxRate) * 100).toFixed(2)}%
                   </p>
                 </div>
                 <div className="col-md-6 mb-3">
                   <strong>Tax Amount:</strong>
                   <p aria-label="Display Tax Amount">
-                    ${order.taxAmount.toFixed(2)}
+                    ${order.taxAmount}
                   </p>
                 </div>
                 <div className="col-md-6 mb-3">
@@ -302,7 +302,7 @@ function OrderDetailsContent() {
                     className="fs-5 fw-bold"
                     aria-label="Display Total Price"
                   >
-                    ${order.totalPrice.toFixed(2)}
+                    ${order.totalPrice}
                   </p>
                 </div>
                 <div className="col-md-6 mb-3">

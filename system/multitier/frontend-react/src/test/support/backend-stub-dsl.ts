@@ -74,7 +74,7 @@ export class BackendStubDsl {
     this.driver.stub(browseCouponsInteraction());
   }
 
-  acceptsPublishedCoupon(code: string, discountRate: number): void {
+  acceptsPublishedCoupon(code: string, discountRate: string): void {
     this.driver.stub(publishCouponInteraction({ code, discountRate }));
   }
 }

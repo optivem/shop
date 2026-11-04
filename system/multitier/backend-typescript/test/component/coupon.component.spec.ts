@@ -23,7 +23,7 @@ describe('Coupon (component)', () => {
     const publish = await harness
       .adminApi()
       .post('/api/coupons')
-      .send({ code: 'SAVE10', discountRate: 0.2, usageLimit: 100 });
+      .send({ code: 'SAVE10', discountRate: '0.2', usageLimit: 100 });
     expect(publish.status).toBe(204);
 
     const browse = await harness.adminApi().get('/api/coupons');

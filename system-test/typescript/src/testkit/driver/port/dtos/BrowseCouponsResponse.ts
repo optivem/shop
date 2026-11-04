@@ -1,6 +1,6 @@
 export interface BrowseCouponItem {
   code: string;
-  discountRate: number;
+  discountRate: string;
   validFrom?: string;
   validTo?: string;
   usageLimit?: number;

@@ -31,11 +31,11 @@ describe('Place Order (component)', () => {
   }
 
   interface OrderDetails {
-    basePrice: number;
-    subtotalPrice: number;
-    discountAmount: number;
-    taxAmount: number;
-    totalPrice: number;
+    basePrice: string;
+    subtotalPrice: string;
+    discountAmount: string;
+    taxAmount: string;
+    totalPrice: string;
     status: string;
     appliedCouponCode: string | null;
   }
@@ -67,10 +67,10 @@ describe('Place Order (component)', () => {
       country: 'US',
     });
 
-    expect(Number(order.basePrice)).toBeCloseTo(20.0); // 10.00 x 2
-    expect(Number(order.subtotalPrice)).toBeCloseTo(20.0); // no promo, no coupon
-    expect(Number(order.taxAmount)).toBeCloseTo(2.0); // 20.00 x 0.10
-    expect(Number(order.totalPrice)).toBeCloseTo(22.0); // 20.00 + 2.00
+    expect(order.basePrice).toBe('20.00'); // 10.00 x 2
+    expect(order.subtotalPrice).toBe('20.00'); // no promo, no coupon
+    expect(order.taxAmount).toBe('2.00'); // 20.00 x 0.10
+    expect(order.totalPrice).toBe('22.00'); // 20.00 + 2.00
     expect(order.status).toBe('PLACED');
     expect(order.appliedCouponCode).toBeNull();
   });
@@ -87,9 +87,9 @@ describe('Place Order (component)', () => {
       country: 'US',
     });
 
-    expect(Number(order.subtotalPrice)).toBeCloseTo(18.0); // 20.00 x 0.9
-    expect(Number(order.taxAmount)).toBeCloseTo(1.8); // 18.00 x 0.10
-    expect(Number(order.totalPrice)).toBeCloseTo(19.8);
+    expect(order.subtotalPrice).toBe('18.00'); // 20.00 x 0.9
+    expect(order.taxAmount).toBe('1.80'); // 18.00 x 0.10
+    expect(order.totalPrice).toBe('19.80');
   });
 
   it('applies a coupon discount', async () => {
@@ -116,10 +116,10 @@ describe('Place Order (component)', () => {
       couponCode: 'SAVE20',
     });
 
-    expect(Number(order.discountAmount)).toBeCloseTo(4.0); // 20.00 x 0.20
-    expect(Number(order.subtotalPrice)).toBeCloseTo(16.0);
-    expect(Number(order.taxAmount)).toBeCloseTo(1.6); // 16.00 x 0.10
-    expect(Number(order.totalPrice)).toBeCloseTo(17.6);
+    expect(order.discountAmount).toBe('4.00'); // 20.00 x 0.20
+    expect(order.subtotalPrice).toBe('16.00');
+    expect(order.taxAmount).toBe('1.60'); // 16.00 x 0.10
+    expect(order.totalPrice).toBe('17.60');
     expect(order.appliedCouponCode).toBe('SAVE20');
   });
 

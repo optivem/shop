@@ -9,6 +9,7 @@ import type { UseCaseContext } from '../../shared/use-case-context.js';
 import type { AppContext } from '../app-context.js';
 import type { ScenarioContext } from '../scenario-context.js';
 import { arrangeGiven } from '../given/arrange-given.js';
+import { Converter } from '../../../../common/converter.js';
 
 export class ThenResultStage implements PromiseLike<void> {
   private _expectSuccess = true;
@@ -180,9 +181,9 @@ export class ThenOrder implements PromiseLike<void> {
     return this;
   }
 
-  hasUnitPrice(expectedUnitPrice: number): this {
+  hasUnitPrice(expectedUnitPrice: string | number): this {
     this.stage._addOrderAssertion((order) => {
-      expect(order.unitPrice).toBe(expectedUnitPrice);
+      expect(Converter.normalizeDecimalOrNull(order.unitPrice)).toBe(Converter.normalizeDecimal(expectedUnitPrice));
     });
     return this;
   }
@@ -203,49 +204,49 @@ export class ThenOrder implements PromiseLike<void> {
 
   hasTotalPrice(totalPrice: string | number): this {
     this.stage._addOrderAssertion((order) => {
-      expect(order.totalPrice).toBe(Number(totalPrice));
+      expect(Converter.normalizeDecimalOrNull(order.totalPrice)).toBe(Converter.normalizeDecimal(totalPrice));
     });
     return this;
   }
 
   hasTotalPriceGreaterThanZero(): this {
     this.stage._addOrderAssertion((order) => {
-      expect(order.totalPrice).toBeGreaterThan(0);
+      expect(Number(order.totalPrice)).toBeGreaterThan(0);
     });
     return this;
   }
 
   hasSubtotalPrice(subtotalPrice: string | number): this {
     this.stage._addOrderAssertion((order) => {
-      expect(order.subtotalPrice).toBe(Number(subtotalPrice));
+      expect(Converter.normalizeDecimalOrNull(order.subtotalPrice)).toBe(Converter.normalizeDecimal(subtotalPrice));
     });
     return this;
   }
 
   hasTaxRate(taxRate: string | number): this {
     this.stage._addOrderAssertion((order) => {
-      expect(order.taxRate).toBe(Number(taxRate));
+      expect(Converter.normalizeDecimalOrNull(order.taxRate)).toBe(Converter.normalizeDecimal(taxRate));
     });
     return this;
   }
 
   hasTaxAmount(taxAmount: string | number): this {
     this.stage._addOrderAssertion((order) => {
-      expect(order.taxAmount).toBe(Number(taxAmount));
+      expect(Converter.normalizeDecimalOrNull(order.taxAmount)).toBe(Converter.normalizeDecimal(taxAmount));
     });
     return this;
   }
 
-  hasDiscountRate(rate: number): this {
+  hasDiscountRate(rate: string | number): this {
     this.stage._addOrderAssertion((order) => {
-      expect(order.discountRate).toBe(rate);
+      expect(Converter.normalizeDecimalOrNull(order.discountRate)).toBe(Converter.normalizeDecimal(rate));
     });
     return this;
   }
 
   hasDiscountAmount(discountAmount: string | number): this {
     this.stage._addOrderAssertion((order) => {
-      expect(order.discountAmount).toBe(Number(discountAmount));
+      expect(Converter.normalizeDecimalOrNull(order.discountAmount)).toBe(Converter.normalizeDecimal(discountAmount));
     });
     return this;
   }
@@ -264,7 +265,7 @@ export class ThenOrder implements PromiseLike<void> {
 
   hasBasePrice(basePrice: string | number): this {
     this.stage._addOrderAssertion((order) => {
-      expect(order.basePrice).toBe(Number(basePrice));
+      expect(Converter.normalizeDecimalOrNull(order.basePrice)).toBe(Converter.normalizeDecimal(basePrice));
     });
     return this;
   }
@@ -347,9 +348,9 @@ export class ThenCoupon implements PromiseLike<void> {
     return this;
   }
 
-  hasDiscountRate(rate: number): this {
+  hasDiscountRate(rate: string | number): this {
     this.stage._addCouponAssertion(this.code, (coupon) => {
-      expect(coupon.discountRate).toBe(rate);
+      expect(Converter.normalizeDecimalOrNull(coupon.discountRate)).toBe(Converter.normalizeDecimal(rate));
     });
     return this;
   }

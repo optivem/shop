@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+using MyCompany.MyShop.Monolith.Core.Dtos.Json;
 using MyCompany.MyShop.Monolith.Core.Entities;
 
 namespace MyCompany.MyShop.Monolith.Core.Dtos;
@@ -14,6 +16,7 @@ public class BrowseOrderHistoryItemResponse
     public string Sku { get; set; } = null!;
     public string Country { get; set; } = null!;
     public int Quantity { get; set; }
+    [JsonConverter(typeof(MoneyJsonConverter))]
     public decimal TotalPrice { get; set; }
     public OrderStatus Status { get; set; }
     public string? AppliedCouponCode { get; set; }

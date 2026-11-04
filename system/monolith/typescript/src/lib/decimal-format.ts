@@ -12,13 +12,6 @@ const DECIMAL_FIELDS: Record<string, number> = {
   totalPrice: 2,
 };
 
-const SENTINEL = '__DECIMAL_';
-
-const SENTINEL_REGEX = new RegExp(
-  String.raw`"${SENTINEL}(-?[\d.]+)${SENTINEL}"`,
-  'g',
-);
-
 function markDecimals(obj: unknown): unknown {
   if (obj === null || obj === undefined) {
     return obj;
@@ -33,8 +26,8 @@ function markDecimals(obj: unknown): unknown {
     for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
       const scale = DECIMAL_FIELDS[key];
       if (scale !== undefined && Decimal.isDecimal(value)) {
-        // Format straight from the exact Decimal (never via a float) into the fixed-scale JSON number shape.
-        result[key] = `${SENTINEL}${value.toFixed(scale, Decimal.ROUND_HALF_UP)}${SENTINEL}`;
+        // Format straight from the exact Decimal (never via a float) into a fixed-scale JSON string.
+        result[key] = value.toFixed(scale, Decimal.ROUND_HALF_UP);
       } else {
         result[key] = markDecimals(value);
       }
@@ -49,11 +42,9 @@ export function jsonResponseWithDecimals(
   data: unknown,
   init?: { status?: number; headers?: Record<string, string> },
 ): NextResponse {
-  const marked = markDecimals(data);
-  const json = JSON.stringify(marked);
-  const formatted = json.replaceAll(SENTINEL_REGEX, '$1');
+  const json = JSON.stringify(markDecimals(data));
 
-  return new NextResponse(formatted, {
+  return new NextResponse(json, {
     status: init?.status ?? 200,
     headers: {
       'Content-Type': 'application/json; charset=utf-8',

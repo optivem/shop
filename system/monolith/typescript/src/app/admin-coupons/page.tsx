@@ -67,7 +67,8 @@ export default function AdminCouponsPage() {
 
     const body: Record<string, unknown> = {
       code,
-      discountRate: Number.parseFloat(discountRate),
+      // Rates travel as decimal strings; a blank input still sends null, as before.
+      discountRate: discountRate.trim() === "" ? null : discountRate.trim(),
     };
 
     if (validFrom.trim()) {
@@ -308,7 +309,7 @@ export default function AdminCouponsPage() {
                   {coupons.map((coupon) => (
                     <tr key={coupon.code}>
                       <td>{coupon.code}</td>
-                      <td>{(coupon.discountRate * 100).toFixed(2)}%</td>
+                      <td>{(Number(coupon.discountRate) * 100).toFixed(2)}%</td>
                       <td>{formatDate(coupon.validFrom)}</td>
                       <td>{formatValidTo(coupon.validTo)}</td>
                       <td>{formatUsageLimit(coupon.usageLimit)}</td>

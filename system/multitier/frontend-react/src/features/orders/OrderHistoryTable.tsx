@@ -73,7 +73,7 @@ export function OrderHistoryTable({
       }),
       columnHelper.accessor('totalPrice', {
         header: 'Total Price',
-        cell: (info) => `$${info.getValue().toFixed(2)}`,
+        cell: (info) => `$${info.getValue()}`,
       }),
       columnHelper.accessor('appliedCouponCode', {
         header: 'Coupon Code',

@@ -260,7 +260,7 @@ class CancelOrderOutcome {
 
 class PublishCouponCommand {
   private code = 'SAVE10';
-  private discountRate = 0.2;
+  private discountRate = '0.2';
 
   constructor(private readonly driver: DriverHandle) {}
 
@@ -269,7 +269,7 @@ class PublishCouponCommand {
     return this;
   }
 
-  withDiscountRate(discountRate: number): this {
+  withDiscountRate(discountRate: string): this {
     this.discountRate = discountRate;
     return this;
   }

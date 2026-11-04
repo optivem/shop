@@ -5,7 +5,7 @@ import { screen } from '@testing-library/react';
 import { AdminCoupons } from '../../../pages/AdminCoupons';
 import { renderWithProviders, routeApiTo } from '../../test-utils';
 
-const { like, eachLike, integer, decimal } = MatchersV3;
+const { like, eachLike, integer, regex } = MatchersV3;
 
 const provider = new PactV3({
   consumer: 'frontend',
@@ -29,7 +29,7 @@ describe('AdminCoupons', () => {
         body: {
           coupons: eachLike({
             code: like('SAVE10'),
-            discountRate: decimal(0.2),
+            discountRate: regex(String.raw`^-?\d+\.\d{4}$`, '0.2000'),
             usageLimit: integer(100),
             usedCount: integer(0),
           }),

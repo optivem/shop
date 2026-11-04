@@ -23,8 +23,8 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
         const order = assertThatResult(viewResult).getValue();
         expect(order.sku).toBe(sku);
         expect(order.quantity).toBe(5);
-        expect(order.unitPrice).toBe(20);
+        expect(order.unitPrice).toBe('20.00');
         expect(order.status).toBe('PLACED');
-        expect(order.totalPrice).toBeGreaterThan(0);
+        expect(Number(order.totalPrice)).toBeGreaterThan(0);
     });
 });

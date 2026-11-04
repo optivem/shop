@@ -31,11 +31,11 @@ describe('coupon gateway narrow integration', () => {
   });
 
   it('publishes a coupon via createCoupon directly', async () => {
-    provider.addInteraction(publishCouponInteraction({ code: 'SAVE10', discountRate: 0.2 }));
+    provider.addInteraction(publishCouponInteraction({ code: 'SAVE10', discountRate: '0.2' }));
 
     await provider.executeTest(async (mockserver) => {
       routeApiTo(mockserver.url);
-      const result = await createCoupon('SAVE10', 0.2, null, null, null);
+      const result = await createCoupon('SAVE10', '0.2', null, null, null);
 
       expect(result.success).toBe(true);
     });

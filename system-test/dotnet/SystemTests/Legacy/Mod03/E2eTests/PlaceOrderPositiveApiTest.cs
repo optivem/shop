@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using System.Text;
 using System.Text.Json;
@@ -51,9 +52,9 @@ public class PlaceOrderPositiveApiTest : BaseE2eTest
         order.GetProperty("orderNumber").GetString().ShouldBe(orderNumber);
         order.GetProperty("sku").GetString().ShouldBe(sku);
         order.GetProperty("quantity").GetInt32().ShouldBe(5);
-        order.GetProperty("unitPrice").GetDecimal().ShouldBe(20.00m);
-        order.GetProperty("basePrice").GetDecimal().ShouldBe(100.00m);
-        order.GetProperty("totalPrice").GetDecimal().ShouldBeGreaterThan(0);
+        order.GetProperty("unitPrice").GetString().ShouldBe("20.00");
+        order.GetProperty("basePrice").GetString().ShouldBe("100.00");
+        decimal.Parse(order.GetProperty("totalPrice").GetString()!, CultureInfo.InvariantCulture).ShouldBeGreaterThan(0);
         order.GetProperty("status").GetString().ShouldBe("PLACED");
     }
 }

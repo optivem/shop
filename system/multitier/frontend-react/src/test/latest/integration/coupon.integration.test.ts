@@ -14,8 +14,8 @@ describe('coupon gateway narrow integration', () => {
   });
 
   it('publishes a coupon via the gateway directly', async () => {
-    backend.acceptsPublishedCoupon('SAVE10', 0.2);
+    backend.acceptsPublishedCoupon('SAVE10', '0.2');
 
-    await frontend.publishCoupon().withCode('SAVE10').withDiscountRate(0.2).execute().succeeded();
+    await frontend.publishCoupon().withCode('SAVE10').withDiscountRate('0.2').execute().succeeded();
   });
 });

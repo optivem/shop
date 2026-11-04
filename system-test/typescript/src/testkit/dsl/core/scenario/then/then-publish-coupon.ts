@@ -4,6 +4,7 @@ import type { BrowseCouponItem } from '../../../../driver/port/dtos/BrowseCoupon
 import type { UseCaseContext } from '../../shared/use-case-context.js';
 import type { AppContext } from '../app-context.js';
 import type { ScenarioContext } from '../scenario-context.js';
+import { Converter } from '../../../../common/converter.js';
 
 export class ThenPublishCouponResultStage implements PromiseLike<void> {
   private _expectSuccess = true;
@@ -137,9 +138,9 @@ export class ThenPublishCouponCoupon implements PromiseLike<void> {
     private readonly code: string,
   ) {}
 
-  hasDiscountRate(rate: number): this {
+  hasDiscountRate(rate: string | number): this {
     this.stage._addCouponAssertion(this.code, (coupon) => {
-      expect(coupon.discountRate).toBe(rate);
+      expect(Converter.normalizeDecimalOrNull(coupon.discountRate)).toBe(Converter.normalizeDecimal(rate));
     });
     return this;
   }

@@ -31,7 +31,7 @@ export function CouponTable({ coupons, isLoading, error, getCouponStatus, onRefr
       }),
       columnHelper.accessor('discountRate', {
         header: 'Discount Rate',
-        cell: (info) => `${(info.getValue() * 100).toFixed(2)}%`,
+        cell: (info) => `${(Number(info.getValue()) * 100).toFixed(2)}%`,
       }),
       columnHelper.accessor('validFrom', {
         header: 'Valid From',

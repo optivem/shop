@@ -72,7 +72,7 @@ export class UiFrontendDriver implements FrontendDriver {
     expect(row).not.toBeNull();
     const rowScope = within(row as HTMLElement);
     if (expected.totalPrice !== undefined) {
-      expect(rowScope.getByText(`$${expected.totalPrice.toFixed(2)}`)).toBeInTheDocument();
+      expect(rowScope.getByText(`$${expected.totalPrice}`)).toBeInTheDocument();
     }
     if (expected.status !== undefined) {
       expect(rowScope.getByText(expected.status)).toBeInTheDocument();
@@ -156,7 +156,7 @@ export class UiFrontendDriver implements FrontendDriver {
   // The coupon admin screen loads the coupon table AND hosts the create form, so publishing a
   // coupon from the UI necessarily reads the coupons too — a spec here stages both interactions.
   // The code field arrives pre-filled with a generated code, so it is cleared before typing.
-  async publishCoupon(code: string, discountRate: number): Promise<void> {
+  async publishCoupon(code: string, discountRate: string): Promise<void> {
     this.publishedCode = code;
     renderWithProviders(<AdminCoupons />);
     await this.fill('Coupon Code', code);
@@ -164,7 +164,7 @@ export class UiFrontendDriver implements FrontendDriver {
     // are not valid floating-point numbers, which the browser (and jsdom) sanitizes back to an
     // empty string mid-keystroke. One change event sets the final value directly, bypassing that.
     fireEvent.change(screen.getByLabelText('Discount Rate'), {
-      target: { value: String(discountRate) },
+      target: { value: discountRate },
     });
     await this.user.click(screen.getByRole('button', { name: 'Create Coupon' }));
   }

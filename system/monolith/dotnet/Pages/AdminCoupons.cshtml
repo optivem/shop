@@ -121,7 +121,7 @@
                 var row = document.createElement('tr');
                 row.innerHTML =
                     '<td>' + c.code + '</td>' +
-                    '<td>' + (c.discountRate * 100).toFixed(0) + '%</td>' +
+                    '<td>' + (Number(c.discountRate) * 100).toFixed(0) + '%</td>' +
                     '<td>' + (c.validFrom ? formatDate(c.validFrom) : 'Immediate') + '</td>' +
                     '<td>' + (c.validTo ? formatDate(c.validTo) : 'Never') + '</td>' +
                     '<td>' + formatUsageLimit(c.usageLimit) + '</td>' +
@@ -163,7 +163,7 @@
 
         var body = {
             code: document.getElementById('couponCode').value,
-            discountRate: parseFloat(document.getElementById('discountRate').value)
+            discountRate: document.getElementById('discountRate').value || null
         };
 
         var validFrom = document.getElementById('validFrom').value;

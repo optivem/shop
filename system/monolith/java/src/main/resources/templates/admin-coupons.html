@@ -151,7 +151,7 @@
                 coupons.forEach(function(coupon) {
                     html += '<tr>';
                     html += '<td>' + coupon.code + '</td>';
-                    html += '<td>' + (coupon.discountRate * 100).toFixed(2) + '%</td>';
+                    html += '<td>' + (Number(coupon.discountRate) * 100).toFixed(2) + '%</td>';
                     html += '<td>' + formatDate(coupon.validFrom) + '</td>';
                     html += '<td>' + formatValidTo(coupon.validTo) + '</td>';
                     html += '<td>' + formatUsageLimit(coupon.usageLimit) + '</td>';
@@ -175,7 +175,8 @@
             btn.textContent = 'Creating...';
 
             var code = document.getElementById('code').value;
-            var discountRate = parseFloat(document.getElementById('discountRate').value);
+            var discountRateValue = document.getElementById('discountRate').value;
+            var discountRate = discountRateValue.trim() ? discountRateValue.trim() : null;
             var validFrom = document.getElementById('validFrom').value;
             var validTo = document.getElementById('validTo').value;
             var usageLimit = document.getElementById('usageLimit').value;

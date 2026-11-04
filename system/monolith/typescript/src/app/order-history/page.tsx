@@ -160,7 +160,7 @@ export default function OrderHistoryPage() {
                         </td>
                         <td>{order.sku}</td>
                         <td>{order.quantity}</td>
-                        <td>${order.totalPrice.toFixed(2)}</td>
+                        <td>${order.totalPrice}</td>
                         <td>
                           <span className={`status-${order.status}`}>
                             {order.status}

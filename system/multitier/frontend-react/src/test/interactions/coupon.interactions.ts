@@ -1,7 +1,10 @@
 import { MatchersV3 } from '@pact-foundation/pact';
 import type { V3Interaction } from '@pact-foundation/pact';
 
-const { like, eachLike, integer, decimal } = MatchersV3;
+const { like, eachLike, integer, regex } = MatchersV3;
+
+// Rates travel as decimal strings with a fixed scale of 4dp.
+const RATE = String.raw`^-?\d+\.\d{4}$`;
 
 export function browseCouponsInteraction(): V3Interaction {
   return {
@@ -14,7 +17,7 @@ export function browseCouponsInteraction(): V3Interaction {
       body: {
         coupons: eachLike({
           code: like('SAVE10'),
-          discountRate: decimal(0.2),
+          discountRate: regex(RATE, '0.2000'),
           usageLimit: integer(100),
           usedCount: integer(0),
         }),
@@ -25,7 +28,7 @@ export function browseCouponsInteraction(): V3Interaction {
 
 interface PublishCouponParams {
   code: string;
-  discountRate: number;
+  discountRate: string;
 }
 
 export function publishCouponInteraction({ code, discountRate }: PublishCouponParams): V3Interaction {

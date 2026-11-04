@@ -95,7 +95,7 @@ export class GatewayFrontendDriver implements FrontendDriver {
     }
   }
 
-  async publishCoupon(code: string, discountRate: number): Promise<void> {
+  async publishCoupon(code: string, discountRate: string): Promise<void> {
     this.lastPublish = await createCoupon(code, discountRate, null, null, null);
   }
 

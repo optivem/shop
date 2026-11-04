@@ -40,6 +40,6 @@ export interface FrontendDriver {
   cancelWasRejected(message: string): Promise<void>;
 
   // publish coupon (both levels)
-  publishCoupon(code: string, discountRate: number): Promise<void>;
+  publishCoupon(code: string, discountRate: string): Promise<void>;
   succeeded(): Promise<void>;
 }

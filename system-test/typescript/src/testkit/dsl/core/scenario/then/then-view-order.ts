@@ -6,6 +6,7 @@ import type { UseCaseContext } from '../../shared/use-case-context.js';
 import type { AppContext } from '../app-context.js';
 import type { ScenarioContext } from '../scenario-context.js';
 import { arrangeGiven } from '../given/arrange-given.js';
+import { Converter } from '../../../../common/converter.js';
 
 export class ThenViewOrderResultStage implements PromiseLike<void> {
   private _expectSuccess = true;
@@ -117,56 +118,56 @@ export class ThenViewOrderOrder implements PromiseLike<void> {
 
   hasUnitPrice(expectedUnitPrice: string | number): this {
     this.stage._addOrderAssertion((order) => {
-      expect(order.unitPrice).toBe(Number(expectedUnitPrice));
+      expect(Converter.normalizeDecimalOrNull(order.unitPrice)).toBe(Converter.normalizeDecimal(expectedUnitPrice));
     });
     return this;
   }
 
   hasBasePrice(basePrice: string | number): this {
     this.stage._addOrderAssertion((order) => {
-      expect(order.basePrice).toBe(Number(basePrice));
+      expect(Converter.normalizeDecimalOrNull(order.basePrice)).toBe(Converter.normalizeDecimal(basePrice));
     });
     return this;
   }
 
   hasDiscountRate(discountRate: string | number): this {
     this.stage._addOrderAssertion((order) => {
-      expect(order.discountRate).toBe(Number(discountRate));
+      expect(Converter.normalizeDecimalOrNull(order.discountRate)).toBe(Converter.normalizeDecimal(discountRate));
     });
     return this;
   }
 
   hasDiscountAmount(discountAmount: string | number): this {
     this.stage._addOrderAssertion((order) => {
-      expect(order.discountAmount).toBe(Number(discountAmount));
+      expect(Converter.normalizeDecimalOrNull(order.discountAmount)).toBe(Converter.normalizeDecimal(discountAmount));
     });
     return this;
   }
 
   hasSubtotalPrice(subtotalPrice: string | number): this {
     this.stage._addOrderAssertion((order) => {
-      expect(order.subtotalPrice).toBe(Number(subtotalPrice));
+      expect(Converter.normalizeDecimalOrNull(order.subtotalPrice)).toBe(Converter.normalizeDecimal(subtotalPrice));
     });
     return this;
   }
 
   hasTaxRate(taxRate: string | number): this {
     this.stage._addOrderAssertion((order) => {
-      expect(order.taxRate).toBe(Number(taxRate));
+      expect(Converter.normalizeDecimalOrNull(order.taxRate)).toBe(Converter.normalizeDecimal(taxRate));
     });
     return this;
   }
 
   hasTaxAmount(taxAmount: string | number): this {
     this.stage._addOrderAssertion((order) => {
-      expect(order.taxAmount).toBe(Number(taxAmount));
+      expect(Converter.normalizeDecimalOrNull(order.taxAmount)).toBe(Converter.normalizeDecimal(taxAmount));
     });
     return this;
   }
 
   hasTotalPrice(totalPrice: string | number): this {
     this.stage._addOrderAssertion((order) => {
-      expect(order.totalPrice).toBe(Number(totalPrice));
+      expect(Converter.normalizeDecimalOrNull(order.totalPrice)).toBe(Converter.normalizeDecimal(totalPrice));
     });
     return this;
   }

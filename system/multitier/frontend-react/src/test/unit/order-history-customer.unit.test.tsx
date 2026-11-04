@@ -10,7 +10,7 @@ const order = (overrides: Partial<BrowseOrderHistoryItemResponse> = {}): BrowseO
   country: 'US',
   sku: 'SKU-1',
   quantity: 1,
-  totalPrice: 10,
+  totalPrice: '10.00',
   appliedCouponCode: null,
   status: 'PLACED',
   ...overrides,

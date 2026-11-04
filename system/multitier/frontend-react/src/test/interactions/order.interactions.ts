@@ -13,7 +13,11 @@ import { MatchersV3 } from '@pact-foundation/pact';
 import type { V3Interaction } from '@pact-foundation/pact';
 import { OrderStatus } from '../../types/api.types';
 
-const { like, eachLike, integer, decimal } = MatchersV3;
+const { like, eachLike, integer, regex } = MatchersV3;
+
+// Money and rates travel as decimal strings with a fixed scale: amounts at 2dp, rates at 4dp.
+const MONEY = String.raw`^-?\d+\.\d{2}$`;
+const RATE = String.raw`^-?\d+\.\d{4}$`;
 
 interface PlaceOrderParams {
   sku: string;
@@ -69,7 +73,7 @@ export function browseOrderHistoryInteraction(): V3Interaction {
           country: like('US'),
           sku: like('BOOK-123'),
           quantity: integer(2),
-          totalPrice: decimal(22),
+          totalPrice: regex(MONEY, '22.00'),
           appliedCouponCode: null,
           status: like('PLACED'),
         }),
@@ -96,14 +100,14 @@ export function viewOrderDetailsInteraction(
         country: like('US'),
         sku: like('BOOK-123'),
         quantity: integer(2),
-        unitPrice: decimal(10),
-        basePrice: decimal(20),
-        discountRate: decimal(0),
-        discountAmount: decimal(0),
-        subtotalPrice: decimal(20),
-        taxRate: decimal(0.1),
-        taxAmount: decimal(2),
-        totalPrice: decimal(22),
+        unitPrice: regex(MONEY, '10.00'),
+        basePrice: regex(MONEY, '20.00'),
+        discountRate: regex(RATE, '0.0000'),
+        discountAmount: regex(MONEY, '0.00'),
+        subtotalPrice: regex(MONEY, '20.00'),
+        taxRate: regex(RATE, '0.1000'),
+        taxAmount: regex(MONEY, '2.00'),
+        totalPrice: regex(MONEY, '22.00'),
         appliedCouponCode: null,
         // Exact (not like): the frontend BRANCHES on this value, so the contract must fail if the
         // backend ever stops returning this exact status — that's the drift the branch depends on.

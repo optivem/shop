@@ -24,7 +24,7 @@ test('shouldPlaceOrderForValidInput', async ({ myShopApiClient, erpClient }) => 
     expect(order.orderNumber).toBe(placedOrder.orderNumber);
     expect(order.sku).toBe(sku);
     expect(order.quantity).toBe(5);
-    expect(order.unitPrice).toBe(20);
-    expect(order.totalPrice).toBeGreaterThan(0);
+    expect(order.unitPrice).toBe('20.00');
+    expect(Number(order.totalPrice)).toBeGreaterThan(0);
     expect(order.status).toBe('PLACED');
 });
