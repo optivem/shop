@@ -7,12 +7,16 @@ name: _deploy-stage-cloud
 #
 # Everything per-variant comes from <architecture>-<language> and <stage>: the GitHub
 # environment, and the service and database names. The realm comes from <stage> (see
-# docker/keycloak/Dockerfile.cloud). Monolith deploys one system service, multitier a backend
+# docker/keycloak/Dockerfile). Monolith deploys one system service, multitier a backend
 # and a frontend, as in _acceptance-stage.yml.
 #
 # Two checkouts on purpose: the RC tag for the migrations, simulators and smoke tests, so a stage
 # runs what the RC was tested with, and the workflow's own commit for Keycloak, shared by all
 # (see build-cloud-images).
+#
+# Cloud Run deploys straight from public GHCR: the RC's images by their RC tag, and the shared
+# images from ghcr.io/<owner>/<repo>/shop-*, tagged by git tree hash (GHCR keeps them, so a
+# production revision's images never expire).
 
 on:
   workflow_call:
@@ -56,7 +60,9 @@ env:
   TEST_LANGUAGE: ${{ inputs.test-language || inputs.language }}
 
 jobs:
-  # === Copy the RC's Images + Build Cloud-only Images into Artifact Registry ===
+  # === Build Shared Images into GHCR (+ the old Artifact Registry copies, unused) ===
+  # The Artifact Registry copies below are no longer deployed from. They stay until several cloud
+  # runs have deployed from GHCR, so switching back is one revert (plan 20261102-1855, Step 6).
   promote-images:
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -70,7 +76,7 @@ jobs:
       project-number: ${{ steps.registry.outputs.project-number }}
       db-migrate-image: ${{ steps.shared.outputs.db-migrate }}
       keycloak-image: ${{ steps.shared.outputs.keycloak }}
-      simulators-image: ${{ steps.keep-simulators.outputs.image }}
+      simulators-image: ${{ steps.shared.outputs.simulators }}
     steps:
       - name: Check Stage Is Supported
         run: |
@@ -131,7 +137,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
           gcloud auth configure-docker "${REGION}-docker.pkg.dev" --quiet
 
-      # Manifest copy keeps the digest the acceptance stage tested.
+      # Unused since the GHCR switch; removed in the follow-up commit.
       - name: Copy RC Images (GHCR to Artifact Registry)
         env:
           REGISTRY: ${{ steps.registry.outputs.registry }}
@@ -144,16 +150,28 @@ jobs:
             docker buildx imagetools create -t "${REGISTRY}/${name}:${TAG}" "${BASE}/${name}:${VERSION}"
           done
 
-      - name: Build and Push Cloud-only Images
+      - name: List RC Images
+        id: rc-images
+        env:
+          IMAGES: ${{ inputs.images }}
+          BASE: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}
+        run: |
+          set -euo pipefail
+          {
+            echo 'refs<<EOF'
+            jq -r --arg base "$BASE" --arg v "$VERSION" '.[] | "\($base)/\(.):\($v)"' <<< "$IMAGES"
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Build and Push Shared Images
         id: shared
         uses: ./.github/actions/build-cloud-images
         with:
-          registry: ${{ steps.registry.outputs.registry }}
-          system: ${{ vars.SYSTEM_NAME }}
-          region: ${{ vars.GCP_REGION }}
-          project-number: ${{ steps.registry.outputs.project-number }}
+          registry: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}
           source-path: source
+          public-images: ${{ steps.rc-images.outputs.refs }}
 
+      # Unused since the GHCR switch; removed in the follow-up commit.
       - name: Tag Simulators Image for This Stage
         id: keep-simulators
         env:
@@ -209,8 +227,8 @@ jobs:
       REGION: ${{ vars.GCP_REGION }}
       PROJECT: ${{ vars.GCP_PROJECT_ID }}
       PROJECT_NUMBER: ${{ needs.promote-images.outputs.project-number }}
-      REGISTRY: ${{ needs.promote-images.outputs.registry }}
-      TAG: ${{ needs.promote-images.outputs.tag }}
+      # The RC's images, straight from GHCR.
+      IMAGE_BASE: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}
       BACKEND_IMAGE: ${{ fromJSON(inputs.images).backend }}
       FRONTEND_IMAGE: ${{ fromJSON(inputs.images).frontend }}
       SYSTEM_IMAGE: ${{ fromJSON(inputs.images).system }}
@@ -329,7 +347,7 @@ jobs:
               AUTH_AUDIENCE:"shop-backend", AUTH_CLIENT_SECRET:"shop-monolith-test-secret",
               SERVER_FORWARDHEADERSSTRATEGY:"native", ASPNETCORE_FORWARDEDHEADERS_ENABLED:"true"}' > "$env_file"
           gcloud run deploy "$SYSTEM_SERVICE" \
-            --image "${REGISTRY}/${SYSTEM_IMAGE}:${TAG}" --region "$REGION" --project "$PROJECT" \
+            --image "${IMAGE_BASE}/${SYSTEM_IMAGE}:${VERSION}" --region "$REGION" --project "$PROJECT" \
             --service-account "$SA" --port 8080 --memory 1Gi --cpu 1 --cpu-boost \
             --min-instances 0 --max-instances 1 --allow-unauthenticated \
             --env-vars-file "$env_file"
@@ -354,7 +372,7 @@ jobs:
               AUTH_JWK_SET_URI:($issuer + "/protocol/openid-connect/certs"),
               AUTH_AUDIENCE:"shop-backend"}' > "$env_file"
           gcloud run deploy "$BACKEND_NAME" \
-            --image "${REGISTRY}/${BACKEND_IMAGE}:${TAG}" --region "$REGION" --project "$PROJECT" \
+            --image "${IMAGE_BASE}/${BACKEND_IMAGE}:${VERSION}" --region "$REGION" --project "$PROJECT" \
             --service-account "$SA" --port 8081 --memory 1Gi --cpu 1 --cpu-boost \
             --min-instances 0 --max-instances 2 --allow-unauthenticated \
             --env-vars-file "$env_file"
@@ -365,7 +383,7 @@ jobs:
         run: |
           set -euo pipefail
           gcloud run deploy "$FRONTEND_NAME" \
-            --image "${REGISTRY}/${FRONTEND_IMAGE}:${TAG}" --region "$REGION" --project "$PROJECT" \
+            --image "${IMAGE_BASE}/${FRONTEND_IMAGE}:${VERSION}" --region "$REGION" --project "$PROJECT" \
             --service-account "$SA" --port 3000 \
             --min-instances 0 --max-instances 2 --allow-unauthenticated \
             --set-env-vars "BACKEND_API_URL=${BACKEND_URL},KEYCLOAK_URL=${KEYCLOAK_URL},KEYCLOAK_REALM=${REALM},KEYCLOAK_CLIENT_ID=shop-frontend"

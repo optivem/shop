@@ -14,10 +14,11 @@ name: _acceptance-stage
 # tag prefix, service and database names, and system/<architecture>/<language>/VERSION.
 # The test harness, gh-optivem config and systems.yaml come from the test language.
 #
-# Shared images (Keycloak, db-migrate, simulators, stubs) are tagged by the git tree hash of
-# their build context, so a run that changes nothing reuses them and Keycloak is not
-# redeployed. That keeps one variant from restarting Keycloak under another's tests, and
-# keeps those images from using up the registry's 10 versions per image.
+# Cloud Run deploys straight from public GHCR: the tested images by digest, and the shared
+# images (Keycloak, db-migrate, simulators, stubs) from ghcr.io/<owner>/<repo>/shop-*. The
+# shared images are tagged by the git tree hash of their build context, so a run that changes
+# nothing reuses them and Keycloak is not redeployed. That keeps one variant from restarting
+# Keycloak under another's tests.
 
 on:
   workflow_call:
@@ -205,7 +206,9 @@ jobs:
               {"when": ${{ inputs.commit-sha == '' && steps.artifacts-changed.outputs.newer != 'true' && steps.test-changes.outputs.changed != 'true' }}, "reason": "No new artifacts since last run AND no test/workflow changes since last RC tag." }
             ]
 
-  # === Copy Tested Images + Build Cloud-only Images into Artifact Registry ===
+  # === Build Shared Images into GHCR (+ the old Artifact Registry copy, unused) ===
+  # The Artifact Registry copy below is no longer deployed from. It stays until several cloud
+  # runs have deployed from GHCR, so switching back is one revert (plan 20261102-1855, Step 6).
   promote-images:
     needs: check
     if: needs.check.outputs.should-run == 'true'
@@ -268,7 +271,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
           gcloud auth configure-docker "${REGION}-docker.pkg.dev" --quiet
 
-      # Manifest copy keeps the tested digest.
+      # Unused since the GHCR switch; removed in the follow-up commit.
       - name: Copy Tested Images (GHCR to Artifact Registry)
         env:
           REGISTRY: ${{ steps.registry.outputs.registry }}
@@ -281,15 +284,13 @@ jobs:
             docker buildx imagetools create -t "${REGISTRY}/${name%%@*}:${TAG}" "$url"
           done
 
-      - name: Build and Push Cloud-only Images
+      - name: Build and Push Shared Images
         id: shared
         uses: ./.github/actions/build-cloud-images
         with:
-          registry: ${{ steps.registry.outputs.registry }}
-          system: ${{ vars.SYSTEM_NAME }}
-          region: ${{ vars.GCP_REGION }}
-          project-number: ${{ steps.registry.outputs.project-number }}
+          registry: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}
           source-path: source
+          public-images: ${{ needs.check.outputs.image-digest-urls }}
 
   # === Deploy: Keycloak (shared by all variants) ===
   deploy-keycloak:
@@ -324,7 +325,7 @@ jobs:
 
   # === Deploy: Real / Stub Stacks ===
   deploy-stack:
-    needs: [promote-images, deploy-keycloak]
+    needs: [check, promote-images, deploy-keycloak]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     environment: ${{ inputs.architecture }}-${{ inputs.language }}-acceptance
@@ -345,8 +346,8 @@ jobs:
       REGION: ${{ vars.GCP_REGION }}
       PROJECT: ${{ vars.GCP_PROJECT_ID }}
       PROJECT_NUMBER: ${{ needs.promote-images.outputs.project-number }}
-      REGISTRY: ${{ needs.promote-images.outputs.registry }}
-      TAG: ${{ needs.promote-images.outputs.tag }}
+      # The tested images, by digest, straight from GHCR.
+      IMAGE_DIGEST_URLS: ${{ needs.check.outputs.image-digest-urls }}
       BACKEND_IMAGE: ${{ fromJSON(inputs.images).backend }}
       FRONTEND_IMAGE: ${{ fromJSON(inputs.images).frontend }}
       SYSTEM_IMAGE: ${{ fromJSON(inputs.images).system }}
@@ -369,6 +370,18 @@ jobs:
         run: |
           set -euo pipefail
           url() { echo "https://$1-${PROJECT_NUMBER}.${REGION}.run.app"; }
+          # image_ref <image name> <variable>: sets <variable> to the tested image's digest URL.
+          image_ref() {
+            local ref
+            ref="$(jq -r --arg n "/$1@" '.[] | select(contains($n))' <<< "$IMAGE_DIGEST_URLS")"
+            [[ -n "$ref" ]] || { echo "::error::No tested image for $1 in ${IMAGE_DIGEST_URLS}"; exit 1; }
+            printf -v "$2" '%s' "$ref"
+          }
+          if [[ "$ARCHITECTURE" == monolith ]]; then
+            image_ref "$SYSTEM_IMAGE" system_ref
+          else
+            image_ref "$BACKEND_IMAGE" backend_ref; image_ref "$FRONTEND_IMAGE" frontend_ref
+          fi
           p="${SYSTEM}-${PREFIX}-${STACK}"
           db_name="${SYSTEM//-/_}_${PREFIX//-/_}_${STACK}"
           {
@@ -380,11 +393,14 @@ jobs:
             echo "KEYCLOAK_URL=$(url "${SYSTEM}-keycloak")"
             if [[ "$ARCHITECTURE" == monolith ]]; then
               echo "SYSTEM_SERVICE=${p}"
+              echo "SYSTEM_IMAGE_REF=${system_ref}"
               echo "UI_HEALTH_URL=$(url "${p}")/health"
               echo "API_HEALTH_URL=$(url "${p}")/health"
             else
               echo "BACKEND_NAME=${p}-backend"
               echo "FRONTEND_NAME=${p}-frontend"
+              echo "BACKEND_IMAGE_REF=${backend_ref}"
+              echo "FRONTEND_IMAGE_REF=${frontend_ref}"
               echo "BACKEND_URL=$(url "${p}-backend")"
               echo "FRONTEND_URL=$(url "${p}-frontend")"
               echo "UI_HEALTH_URL=$(url "${p}-frontend")/"
@@ -451,7 +467,7 @@ jobs:
               AUTH_AUDIENCE:"shop-backend", AUTH_CLIENT_SECRET:"shop-monolith-test-secret",
               SERVER_FORWARDHEADERSSTRATEGY:"native", ASPNETCORE_FORWARDEDHEADERS_ENABLED:"true"}' > "$env_file"
           gcloud run deploy "$SYSTEM_SERVICE" \
-            --image "${REGISTRY}/${SYSTEM_IMAGE}:${TAG}" --region "$REGION" --project "$PROJECT" \
+            --image "$SYSTEM_IMAGE_REF" --region "$REGION" --project "$PROJECT" \
             --service-account "$SA" --port 8080 --memory 1Gi --cpu 1 --cpu-boost \
             --min-instances 0 --max-instances 1 --allow-unauthenticated \
             --env-vars-file "$env_file"
@@ -476,7 +492,7 @@ jobs:
               AUTH_JWK_SET_URI:($kc + "/realms/shop/protocol/openid-connect/certs"),
               AUTH_AUDIENCE:"shop-backend"}' > "$env_file"
           gcloud run deploy "$BACKEND_NAME" \
-            --image "${REGISTRY}/${BACKEND_IMAGE}:${TAG}" --region "$REGION" --project "$PROJECT" \
+            --image "$BACKEND_IMAGE_REF" --region "$REGION" --project "$PROJECT" \
             --service-account "$SA" --port 8081 --memory 1Gi --cpu 1 --cpu-boost \
             --min-instances 0 --max-instances 2 --allow-unauthenticated \
             --env-vars-file "$env_file"
@@ -487,7 +503,7 @@ jobs:
         run: |
           set -euo pipefail
           gcloud run deploy "$FRONTEND_NAME" \
-            --image "${REGISTRY}/${FRONTEND_IMAGE}:${TAG}" --region "$REGION" --project "$PROJECT" \
+            --image "$FRONTEND_IMAGE_REF" --region "$REGION" --project "$PROJECT" \
             --service-account "$SA" --port 3000 \
             --min-instances 0 --max-instances 2 --allow-unauthenticated \
             --set-env-vars "BACKEND_API_URL=${BACKEND_URL},KEYCLOAK_URL=${KEYCLOAK_URL},KEYCLOAK_REALM=shop,KEYCLOAK_CLIENT_ID=shop-frontend"

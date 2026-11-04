@@ -2,7 +2,9 @@ name: 'Deploy Keycloak to Cloud Run'
 description: >-
   Deploys the one Keycloak every variant and stage shares, and waits for all its realms.
   Redeploys only when the image, a setting or the db credentials changed, so one workflow
-  doesn't restart Keycloak under another's tests. Needs gcloud authenticated.
+  doesn't restart Keycloak under another's tests. Passes SYSTEM and RUN_APP_SUFFIX, which the
+  image's realm files use as placeholders for the Cloud Run URLs (docker/keycloak/Dockerfile).
+  Needs gcloud authenticated.
 
 inputs:
   image:
@@ -44,8 +46,9 @@ runs:
           --arg host "$(url "${SYSTEM}-keycloak")" \
           --arg dburl "jdbc:postgresql://${db_host}:${db_port}/${SYSTEM//-/_}_keycloak?sslmode=require" \
           --arg dbuser "$db_user" --arg dbpass "$db_password" \
+          --arg system "$SYSTEM" --arg suffix "${PROJECT_NUMBER}.${REGION}.run.app" \
           '{KC_HOSTNAME:$host, KC_DB_URL:$dburl, KC_DB_USERNAME:$dbuser, KC_DB_PASSWORD:$dbpass,
-            KC_BOOTSTRAP_ADMIN_USERNAME:"admin"}' > "$env_file"
+            KC_BOOTSTRAP_ADMIN_USERNAME:"admin", SYSTEM:$system, RUN_APP_SUFFIX:$suffix}' > "$env_file"
         args=(--image "$IMAGE" --region "$REGION" --project "$PROJECT"
           --service-account "runtime@${PROJECT}.iam.gserviceaccount.com"
           --port 8080 --memory 1Gi --cpu 1 --cpu-boost

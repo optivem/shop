@@ -176,7 +176,7 @@ Google Cloud bills **per resource, by usage**. Each service has its own meter (t
 
 ### Stages
 
-Every flavor has manual QA and production stages (`<flavor>-{qa,prod}-stage.yml`, thin callers of `_qa-stage.yml` / `_prod-stage.yml`). Each has its own services and database, and shares the one Keycloak through its own realm (`shop-qa`, `shop-prod`; see `docker/keycloak/Dockerfile.cloud`). `shop-prod` has no test client and no users, so add real users in the Keycloak admin console.
+Every flavor has manual QA and production stages (`<flavor>-{qa,prod}-stage.yml`, thin callers of `_qa-stage.yml` / `_prod-stage.yml`). Each has its own services and database, and shares the one Keycloak through its own realm (`shop-qa`, `shop-prod`; see `docker/keycloak/Dockerfile`). `shop-prod` has no test client and no users, so add real users in the Keycloak admin console.
 
 ### What would start costing money
 

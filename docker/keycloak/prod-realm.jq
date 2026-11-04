@@ -1,4 +1,4 @@
-# Hardens a stage realm for production (see Dockerfile.cloud): only the SPA client, no test users,
+# Hardens a stage realm for production (see Dockerfile): only the SPA client, no test users,
 # no localhost URLs, and none of the test realm's weak settings. prod-realm-check.jq enforces this.
 def no_localhost: map(select(contains("localhost") | not));
 

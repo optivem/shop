@@ -1,27 +1,24 @@
-name: 'Build Cloud-only Images'
+name: 'Build Shared Images'
 description: >-
-  Builds the shared images into Artifact Registry, tagged by the git tree hash of their build
-  context and only built when that tag is missing. Needs a registry login and a checkout.
+  Builds the shared images (db-migrate, Keycloak, simulators, stubs) into GHCR as public packages,
+  tagged by the git tree hash of their build context and only built when that tag is missing.
+  Cloud Run pulls them, and the images in public-images, anonymously, so this fails early when
+  any of them is not publicly pullable. Needs a GHCR login with write:packages and a checkout.
   Keycloak always comes from the checkout at the workspace root, never from source-path: every
   variant and stage shares one instance, so an older source must not roll its realms back.
 
 inputs:
   registry:
-    description: 'Artifact Registry path: <region>-docker.pkg.dev/<project>/app-images'
-    required: true
-  system:
-    description: 'System name, baked into the Keycloak realms'
-    required: true
-  region:
-    description: 'GCP region, baked into the Keycloak realms'
-    required: true
-  project-number:
-    description: 'GCP project number, baked into the Keycloak realms'
+    description: 'GHCR path the shared images go to: ghcr.io/<owner>/<repo>'
     required: true
   source-path:
     description: 'Checkout holding the db-migrate, simulators and stubs sources for the version under test'
     required: false
     default: '.'
+  public-images:
+    description: 'Other image references that Cloud Run will pull, one per line or as a JSON array; checked for anonymous pull too'
+    required: false
+    default: ''
 
 outputs:
   db-migrate:
@@ -45,9 +42,9 @@ runs:
       shell: bash
       env:
         REGISTRY: ${{ inputs.registry }}
-        SYSTEM: ${{ inputs.system }}
-        RUN_APP_SUFFIX: ${{ inputs.project-number }}.${{ inputs.region }}.run.app
         SOURCE: ${{ inputs.source-path }}
+        # Links each new package to this repository, so it shows up under the repo's packages.
+        SOURCE_LABEL: org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
       run: |
         set -euo pipefail
         build() {
@@ -58,12 +55,51 @@ runs:
           if docker manifest inspect "$ref" > /dev/null 2>&1; then
             echo "Reusing ${ref}"
           else
-            docker build -t "$ref" "$@" "${root}/${context}" && docker push "$ref"
+            docker build -t "$ref" --label "$SOURCE_LABEL" "$@" "${root}/${context}" && docker push "$ref"
           fi
           echo "${name#shop-}=${ref}" >> "$GITHUB_OUTPUT"
         }
         build shop-db-migrate "$SOURCE" system/db
-        build shop-keycloak . docker/keycloak -f docker/keycloak/Dockerfile.cloud \
-          --build-arg "SYSTEM=${SYSTEM}" --build-arg "RUN_APP_SUFFIX=${RUN_APP_SUFFIX}"
+        build shop-keycloak . docker/keycloak
         build shop-simulators "$SOURCE" external-systems/simulators
         build shop-stubs "$SOURCE" external-systems/stubs
+
+    # Cloud Run deploys public GHCR images directly, with no credentials. A package GHCR created
+    # private (the default for a new package unless it inherits the repo's visibility) would only
+    # fail later, in gcloud run deploy, so check every image here the way Cloud Run pulls it.
+    - name: Check Images Are Publicly Pullable
+      shell: bash
+      env:
+        SHARED: |
+          ${{ steps.build.outputs.db-migrate }}
+          ${{ steps.build.outputs.keycloak }}
+          ${{ steps.build.outputs.simulators }}
+          ${{ steps.build.outputs.stubs }}
+        PUBLIC_IMAGES: ${{ inputs.public-images }}
+        OWNER: ${{ github.repository_owner }}
+      run: |
+        set -euo pipefail
+        extra="$PUBLIC_IMAGES"
+        if [[ "$(sed 's/^[[:space:]]*//' <<< "$extra" | head -c1)" == "[" ]]; then extra="$(jq -r '.[]' <<< "$extra")"; fi
+        IMAGES="${SHARED}"$'\n'"${extra}"
+        accept="application/vnd.oci.image.index.v1+json, application/vnd.oci.image.manifest.v1+json"
+        accept+=", application/vnd.docker.distribution.manifest.list.v2+json, application/vnd.docker.distribution.manifest.v2+json"
+        failed=0
+        while read -r ref; do
+          ref="$(xargs <<< "$ref")"
+          [[ -z "$ref" ]] && continue
+          rest="${ref#ghcr.io/}"
+          [[ "$rest" == "$ref" ]] && { echo "Not on GHCR, skipping: ${ref}"; continue; }
+          if [[ "$rest" == *@* ]]; then path="${rest%@*}"; reference="${rest#*@}"; else path="${rest%:*}"; reference="${rest##*:}"; fi
+          token="$(curl -sS "https://ghcr.io/token?scope=repository:${path}:pull" | jq -r '.token // empty')"
+          code="$(curl -sS -o /dev/null -w '%{http_code}' -H "Authorization: Bearer ${token}" -H "Accept: ${accept}" \
+            "https://ghcr.io/v2/${path}/manifests/${reference}")"
+          if [[ "$code" == 200 ]]; then
+            echo "Public: ${ref}"
+          else
+            package="${path#*/}"
+            echo "::error::${ref} is not anonymously pullable (HTTP ${code}). Make the package public: https://github.com/orgs/${OWNER}/packages/container/${package//\//%2F}/settings (Danger Zone > Change visibility)."
+            failed=1
+          fi
+        done <<< "$IMAGES"
+        exit "$failed"

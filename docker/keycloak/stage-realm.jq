@@ -1,4 +1,4 @@
-# Turns shop-realm.json into a stage's realm, with every variant's URLs for that stage (see Dockerfile.cloud).
+# Turns shop-realm.json into a stage's realm, with every variant's URLs for that stage (see Dockerfile).
 # All variants, not only those deployed today: an imported realm is never updated, so URLs added later wouldn't apply.
 # Inputs: --arg realm <realm name>, --arg stage <qa|production>, --arg system <system>,
 #         --arg suffix <project-number>.<region>.run.app

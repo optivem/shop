@@ -321,7 +321,7 @@ if (( ${#MISSING_GH_SECRETS[@]} > 0 )); then
   for s in "${MISSING_GH_SECRETS[@]}"; do
     echo "    gh secret set $s"
   done
-  echo "    (GHCR_TOKEN: PAT with read:packages; WORKFLOW_TOKEN: PAT with repo + workflow)"
+  echo "    (GHCR_TOKEN: PAT with write:packages, which the cloud stages use to tag images and publish the shared shop-* images; WORKFLOW_TOKEN: PAT with repo + workflow)"
   echo ""
 fi
 echo "  Next steps:"

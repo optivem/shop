@@ -1,5 +1,6 @@
-# Adds every variant's Cloud Run URLs to the realm (see Dockerfile.cloud).
-# Inputs: --arg system <system>, --arg suffix <project-number>.<region>.run.app
+# Turns shop-realm.json into the acceptance realm, with every variant's Cloud Run URLs (see Dockerfile).
+# Inputs: --arg system <system>, --arg suffix <project-number>.<region>.run.app (the Dockerfile passes
+# the ${SYSTEM} / ${RUN_APP_SUFFIX} placeholders, which Keycloak resolves at import)
 # Service names must match the cloud workflows.
 include "redirects";
 
