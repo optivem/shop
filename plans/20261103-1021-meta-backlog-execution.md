@@ -14,14 +14,14 @@ U1-U4 are done and on main (frontend-react is on Vite 7, Vitest 3 and React 19; 
 
 **Done:** M1, M2 and M3 (4 manual checks for the user remain in the GCP-sync plan's ▶ block), plus U5, U6, U7, U9 and U12 (including #12 Steps 1–2). U6/U7/#12 landed on main on 2026-11-04 as `c6812e1c` (Phase 1), `97249d81` (U6 Phase 2 + TS lint fix), `137167f2` (U7) and `287a1498` (#12 Steps 1–2); verified with compile-all, the 4 multitier component-test configs and `--sample` on all 12 configs.
 
-**Pending user OK (do not do without it):** delete the leftover WIP refs `wip/meta-u6-u7`, `wip/meta-u6-only`, `wip/meta-u6-u7-code` (local and origin), the local branch `meta-u6-u7` if present, and the locked worktree `.claude/worktrees/agent-a4f007858792e70c6` (branch `worktree-agent-a4f007858792e70c6`). Their contents are on main.
+**Branch cleanup done (2026-11-04):** `wip/meta-u6-u7`, `wip/meta-u6-only`, `wip/meta-u6-u7-code`, `p2-step3-proof` and the agent worktrees were checked as merged into main (ancestry or identical content) and deleted, locally and on origin. Only `main` remains. **Standing rule:** as soon as a branch's work is verified on main, delete it, and don't create new branches.
 
 **Do this next: M4.**
 
 **M4 (P2 Steps 3–9): unblocked, answer recorded below.**
 - The P2 Step 3 QA and prod proof passed on the throwaway branch `p2-step3-proof` (commits 991a2cd2 `_qa-stage.yml`/`_prod-stage.yml`; a0b13346, the Step 4 thin callers plus deletion of the `-cloud` twins; 8f1fb7fb, anonymous smoke). Prod run 41671160377 published the real release `multitier-java-v1.0.235`, and VERSION was bumped to 1.0.236.
 - That tripped Step 3's bare-image guard: `multitier-backend-java:v1.5.217` was pushed, but it came with matching git tags, a release and VERSION bumps.
-- **User answered 2026-11-03 20:30 UTC: yes, that is the expected release shape.** Start M4 only after the U6/U7/#12 work is on main. Put the 3 `p2-step3-proof` commits onto main (no new branch), and delete `p2-step3-proof` once they're on main. Then: rebase the 3 branch commits onto main, run cloud acceptance on 1.0.236 → QA → signoff → prod on main, delete the `multitier-java-cloud-v1.0.235` tag and release, run `git fetch --prune --prune-tags`, then delete the branch `p2-step3-proof`.
+- **User answered 2026-11-03 20:30 UTC: yes, that is the expected release shape.** The 3 `p2-step3-proof` commits are on main as `7de297b0`, `b3995ef8` and `f25a96b8` (2026-11-04; `lint-workflows` green), and the branch is deleted. **Next:** run cloud acceptance on 1.0.236 → QA → signoff → prod on main, then delete the `multitier-java-cloud-v1.0.235` tag and release and run `git fetch --prune --prune-tags`. Wait for GitHub Actions to be operational before starting the chain (a GitHub incident was ongoing on 2026-11-04 from 09:53 UTC).
 - No GHCR versions can be deleted under the guard, because every `*-cloud-v*` version also carries `sha-*`, `v*-rc.*` or `vX.Y.Z` tags.
 - Prod runs stay pre-approved (user, 2026-11-03).
 - Then Steps 5 (start with the .NET `JsonWireMockClient` scheme fix), 6, 6b, 8 and 9. Step 7 moved to `plans/backlog/p1-ci-pipeline/20261103-1536-gh-optivem-scaffolds-single-pipeline.md`.
