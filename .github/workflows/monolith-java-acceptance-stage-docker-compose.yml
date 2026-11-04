@@ -1,0 +1,36 @@
+name: monolith-java-acceptance-stage-docker-compose
+
+# Docker Compose acceptance gate, latest suites. Runs on every prerelease pipeline run against
+# the commit-stage images on the runner. Gate only: it creates no RC tag (the cloud
+# monolith-java-acceptance-stage.yml does).
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # Run every hour
+  workflow_dispatch:
+    inputs:
+      commit-sha:
+        description: 'Git SHA to test (leave empty for latest image)'
+        required: false
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: monolith-java-acceptance-stage-docker-compose
+
+jobs:
+  acceptance-stage:
+    permissions:
+      actions: write
+      contents: read
+      packages: read
+    uses: ./.github/workflows/_acceptance-stage-docker-compose.yml
+    secrets: inherit
+    with:
+      architecture: monolith
+      language: java
+      test-language: java
+      images: '{"system":"monolith-system-java"}'
+      commit-sha: ${{ inputs.commit-sha }}
+      suite-set: latest

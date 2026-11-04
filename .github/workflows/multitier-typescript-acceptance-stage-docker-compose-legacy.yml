@@ -1,0 +1,34 @@
+name: multitier-typescript-acceptance-stage-docker-compose-legacy
+
+# Docker Compose acceptance gate, legacy suites. Dispatched by the prerelease pipeline (no cron).
+# Gate only: no RC tag. Legacy never runs on cloud. A project that drops legacy deletes this file
+# and the acceptance-stage-legacy job from its prerelease pipeline.
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit-sha:
+        description: 'Git SHA to test (leave empty for latest image)'
+        required: false
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: multitier-typescript-acceptance-stage-docker-compose-legacy
+
+jobs:
+  acceptance-stage:
+    permissions:
+      actions: write
+      contents: read
+      packages: read
+    uses: ./.github/workflows/_acceptance-stage-docker-compose.yml
+    secrets: inherit
+    with:
+      architecture: multitier
+      language: typescript
+      test-language: typescript
+      images: '{"frontend":"multitier-frontend-react","backend":"multitier-backend-typescript"}'
+      commit-sha: ${{ inputs.commit-sha }}
+      suite-set: legacy

@@ -47,13 +47,13 @@ jobs:
         test-lang: [java, dotnet, typescript]
         system-lang: [java, dotnet, typescript]
         exclude:
-          # Same-lang combos are covered by <arch>-<lang>-acceptance-stage.yml.
+          # Same-lang combos are covered by <arch>-<lang>-acceptance-stage-docker-compose.yml.
           - { test-lang: java,       system-lang: java }
           - { test-lang: dotnet,     system-lang: dotnet }
           - { test-lang: typescript, system-lang: typescript }
         include:
           # Per (arch, system-lang) image set + compose service names.
-          # Mirrors the per-(arch, lang)-acceptance-stage.yml deployments.
+          # Mirrors the per-(arch, lang)-acceptance-stage-docker-compose.yml deployments.
           - arch: monolith
             system-lang: java
             sut-base-image-urls: |

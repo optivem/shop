@@ -58,6 +58,4 @@ jobs:
       skip-local-stage: ${{ inputs.skip-local-stage == true }}
       skip-commit-stage: ${{ inputs.skip-commit-stage == true }}
       skip-acceptance-legacy: ${{ inputs.skip-acceptance-legacy == true }}
-      # Docker Compose gates only; the RC comes from the manually dispatched multitier-java-acceptance-stage.yml (cloud).
-      docker-compose-acceptance: true
       commit-sha: ${{ inputs.commit-sha }}

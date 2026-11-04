@@ -49,7 +49,7 @@ gh auth login
 gcloud auth login --no-launch-browser
 neonctl login
 ./setup-gcp.sh
-gh workflow run monolith-typescript-acceptance-stage-cloud.yml
+gh workflow run monolith-typescript-acceptance-stage.yml
 ```
 
 What each step does:
@@ -57,7 +57,7 @@ What each step does:
 - `gcloud auth login --no-launch-browser` — authenticates Google Cloud CLI (prints a link to open in the host browser)
 - `neonctl login` — authenticates the Neon CLI. If the browser flow doesn't work in the container, `export NEON_API_KEY=<key>` instead. The login is not kept across rebuilds
 - `./setup-gcp.sh` — creates the GCP and Neon projects, enables APIs, configures Workload Identity Federation, sets GitHub repo variables
-- `gh workflow run …` — triggers the acceptance-stage workflow against the newly provisioned cloud infra
+- `gh workflow run …` — triggers the cloud acceptance stage (Cloud Run) against the newly provisioned infra; it creates the release candidate that QA deploys
 
 To tear everything down later: `./teardown-gcp.sh`
 

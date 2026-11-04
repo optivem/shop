@@ -35,13 +35,10 @@ on:
         required: false
         type: boolean
         default: false
-      docker-compose-acceptance:
-        description: 'Dispatch the <prefix>-acceptance-stage-docker-compose[-legacy].yml gates and stop after them: no RC check, no QA. RCs come from the manually dispatched cloud <prefix>-acceptance-stage.yml. Per-flavor switch until every flavor is cut over.'
-        required: false
-        type: boolean
-        default: false
       level:
-        description: 'Verification level: local, commit, acceptance, or qa'
+        # qa runs the same jobs as acceptance: QA needs an RC, and only the manually dispatched
+        # cloud <prefix>-acceptance-stage.yml creates one, so the pipeline stops at the gates.
+        description: 'Verification level: local, commit, acceptance, or qa (qa = acceptance; QA is dispatched manually)'
         required: false
         type: string
         default: 'qa'
@@ -318,52 +315,26 @@ jobs:
           workflow: ${{ matrix.workflow }}
           workflow-inputs: '{"commit-sha": "${{ inputs.commit-sha }}"}'
 
+  # The Docker Compose gates: they tag nothing. The RC comes from the cloud acceptance stage
+  # (<prefix>-acceptance-stage.yml), dispatched manually on a commit that passed both gates;
+  # it also checks that the tested SHA carries the RC tag.
   acceptance-stage:
     needs: [check-version, local, commit-stage]
     if: ${{ always() && inputs.level != 'local' && inputs.level != 'commit' && needs.check-version.result == 'success' && (inputs.skip-local-stage || needs.local.result == 'success') && (inputs.skip-commit-stage || needs.commit-stage.result == 'success') }}
     runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.get-version.outputs.tag }}
     permissions:
       contents: read
       actions: write
     steps:
       - uses: optivem/actions/trigger-and-wait-for-workflow@v1
         with:
-          # docker-compose-acceptance: the non-tagging Docker Compose gate; otherwise the
-          # flavor's old Docker acceptance stage, which tags the RC.
-          workflow: ${{ inputs.prefix }}-acceptance-stage${{ inputs.docker-compose-acceptance && '-docker-compose' || '' }}.yml
+          workflow: ${{ inputs.prefix }}-acceptance-stage-docker-compose.yml
           poll-interval: '180'
           timeout-seconds: '7200'
           workflow-inputs: '{"commit-sha": "${{ inputs.commit-sha }}"}'
 
-      # Resolve the rc tag that actually points at the tested SHA — whether our
-      # dispatched run created it or an earlier pinned run of the same SHA did.
-      # The pinned dispatch above always runs its tests and tags this SHA: the
-      # acceptance-stage staleness skip applies to unpinned runs only. So the
-      # hourly cron moving `latest` on to a newer commit no longer starves this
-      # step of a tag. A re-run re-tests the SHA and adds a higher rc tag; we
-      # resolve the highest, so that is harmless.
-      # Skipped for docker-compose-acceptance: the gate tags nothing; the cloud acceptance
-      # stage creates the RC and runs this check itself.
-      - id: get-version
-        if: ${{ !inputs.docker-compose-acceptance }}
-        uses: optivem/actions/resolve-latest-tag-from-sha@v1
-        with:
-          commit-sha: ${{ env.COMMIT_SHA }}
-          pattern: ${{ inputs.prefix }}-v${{ needs.check-version.outputs.base-version }}-rc.*
-
-      - name: Fail If No RC Tag On SHA
-        if: ${{ !inputs.docker-compose-acceptance && steps.get-version.outputs.tag == '' }}
-        shell: bash
-        env:
-          PATTERN: ${{ inputs.prefix }}-v${{ needs.check-version.outputs.base-version }}-rc.*
-          SHA: ${{ env.COMMIT_SHA }}
-        run: |
-          echo "::error::No rc tag matching '$PATTERN' found on $SHA — acceptance-stage produced no tag and none was pre-existing."
-          exit 1
-
-  # Parallel with acceptance-stage; qa-stage waits on both.
+  # Parallel with acceptance-stage. A project that drops legacy deletes this job and its
+  # <prefix>-acceptance-stage-docker-compose-legacy.yml caller.
   acceptance-stage-legacy:
     needs: [check-version, local, commit-stage]
     if: ${{ always() && inputs.level != 'local' && inputs.level != 'commit' && !inputs.skip-acceptance-legacy && needs.check-version.result == 'success' && (inputs.skip-local-stage || needs.local.result == 'success') && (inputs.skip-commit-stage || needs.commit-stage.result == 'success') }}
@@ -374,42 +345,16 @@ jobs:
     steps:
       - uses: optivem/actions/trigger-and-wait-for-workflow@v1
         with:
-          workflow: ${{ inputs.prefix }}-acceptance-stage${{ inputs.docker-compose-acceptance && '-docker-compose' || '' }}-legacy.yml
+          workflow: ${{ inputs.prefix }}-acceptance-stage-docker-compose-legacy.yml
           poll-interval: '180'
           timeout-seconds: '7200'
           workflow-inputs: '{"commit-sha": "${{ inputs.commit-sha }}"}'
 
-  # Not for docker-compose-acceptance: no RC exists until the cloud acceptance stage is
-  # dispatched manually, so the automatic chain stops at the Docker Compose gates.
-  qa-stage:
-    needs: [acceptance-stage, acceptance-stage-legacy]
-    if: ${{ always() && inputs.level == 'qa' && !inputs.docker-compose-acceptance && needs.acceptance-stage.result == 'success' && contains(fromJSON('["success","skipped"]'), needs.acceptance-stage-legacy.result) }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      actions: write
-    steps:
-      - uses: optivem/actions/trigger-and-wait-for-workflow@v1
-        with:
-          workflow: ${{ inputs.prefix }}-qa-stage.yml
-          poll-interval: '90'
-          timeout-seconds: '3600'
-          workflow-inputs: '{"version": "${{ needs.acceptance-stage.outputs.version }}"}'
-
-  qa-signoff:
-    needs: [acceptance-stage, qa-stage]
-    if: ${{ always() && inputs.level == 'qa' && needs.qa-stage.result == 'success' }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      actions: write
-    steps:
-      - uses: optivem/actions/trigger-and-wait-for-workflow@v1
-        with:
-          workflow: ${{ inputs.prefix }}-qa-signoff.yml
-          poll-interval: '90'
-          workflow-inputs: '{"version": "${{ needs.acceptance-stage.outputs.version }}", "result": "approved"}'
-
+  # Note: qa-stage and qa-signoff are not part of the pipeline either. They need an RC, which
+  # only the manually dispatched cloud <prefix>-acceptance-stage.yml creates (cost control), so
+  # the automatic chain stops at the Docker Compose gates. Run <prefix>-qa-stage.yml and
+  # <prefix>-qa-signoff.yml by hand after the cloud acceptance stage.
+  #
   # Note: prod-stage is intentionally NOT part of the pipeline.
   # Production releases are orchestrated externally via meta-release-stage (for full releases)
   # or via direct workflow_dispatch on the per-flavor *-prod-stage.yml workflows.

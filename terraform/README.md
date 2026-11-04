@@ -167,8 +167,8 @@ Google Cloud bills **per resource, by usage**. Each service has its own meter (t
 
 ### What keeps idle cost at ~$0
 
-- **Scale to zero**: the shared cloud stages (`_acceptance-stage-cloud.yml`, `_deploy-stage-cloud.yml`) deploy every service with `--min-instances 0`; the per-variant QA/prod stage workflows don't pass the flag and rely on Cloud Run's default of 0. You pay nothing between requests; the trade-off is a cold start on the first request (Keycloak's is the slowest).
-- **Small `max-instances`**: 1–2 in the shared cloud stages, 3 in the per-variant QA/prod stages. This caps the cost of a traffic spike or a runaway test.
+- **Scale to zero**: the shared cloud stages (`_acceptance-stage.yml`, `_deploy-stage-cloud.yml`) deploy every service with `--min-instances 0`. You pay nothing between requests; the trade-off is a cold start on the first request (Keycloak's is the slowest).
+- **Small `max-instances`**: 1–2 in the shared cloud stages. This caps the cost of a traffic spike or a runaway test.
 - **Image cleanup**: the `app-images` repository's cleanup policy (`main.tf`) keeps the 10 newest versions of each image plus every `production-*` tag, and deletes the rest once they are a day old. With many images this can still go past the 0.5 GB free tier, but at ~$0.10/GB the overage is cents.
 - **Few secret versions**: one shared `<system>-db` JSON secret plus `<system>-keycloak-admin-password`, 2 versions in total; only 6 are free.
 - **Budget alerts**: create two on the billing account (Billing > Budgets & alerts), at €5 and €20 per month, alerting at 50/90/100%. Budgets **only alert; they do not stop spending**.
@@ -176,7 +176,7 @@ Google Cloud bills **per resource, by usage**. Each service has its own meter (t
 
 ### Stages
 
-multitier-java has manual QA and production stages (`multitier-java-{qa,prod}-stage-cloud.yml`). Each has its own services and database, and shares the one Keycloak through its own realm (`shop-qa`, `shop-prod`; see `docker/keycloak/Dockerfile.cloud`). `shop-prod` has no test client and no users, so add real users in the Keycloak admin console.
+Every flavor has manual QA and production stages (`<flavor>-{qa,prod}-stage.yml`, thin callers of `_qa-stage.yml` / `_prod-stage.yml`). Each has its own services and database, and shares the one Keycloak through its own realm (`shop-qa`, `shop-prod`; see `docker/keycloak/Dockerfile.cloud`). `shop-prod` has no test client and no users, so add real users in the Keycloak admin console.
 
 ### What would start costing money
 
