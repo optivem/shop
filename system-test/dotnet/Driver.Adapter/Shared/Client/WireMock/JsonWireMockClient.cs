@@ -41,7 +41,11 @@ public class JsonWireMockClient : IDisposable
     private JsonWireMockClient(string baseUrl, JsonSerializerOptions jsonOptions)
     {
         var uri = new Uri(baseUrl);
-        _wireMockBaseUrl = $"http://{uri.Host}:{uri.Port}";
+        // Honour the base URL's scheme and default port: in the cloud the stubs are an HTTPS
+        // Cloud Run service with no explicit port (e.g. https://<svc>.run.app/erp). Authority
+        // omits the default port, matching what a browser/curl sends to the front end. Only the
+        // origin is used: the admin API lives at /__admin on the root, whatever stub prefix.
+        _wireMockBaseUrl = $"{uri.Scheme}://{uri.Authority}";
         _httpClient = new HttpClient()
         {
             BaseAddress = uri,
