@@ -4,3 +4,5 @@
 *.tfstate
 *.tfstate.*
 tfplan
+# archive_file output (billing-kill-switch.tf)
+.build/

@@ -66,7 +66,9 @@ set_adc_quota_project() {
 use_state_project_for_quota() {
   local project="$1"
   gcloud services enable cloudbilling.googleapis.com cloudresourcemanager.googleapis.com serviceusage.googleapis.com \
-    iam.googleapis.com artifactregistry.googleapis.com secretmanager.googleapis.com --project="$project" --quiet >&2
+    iam.googleapis.com artifactregistry.googleapis.com secretmanager.googleapis.com \
+    billingbudgets.googleapis.com pubsub.googleapis.com cloudfunctions.googleapis.com storage.googleapis.com \
+    --project="$project" --quiet >&2
   export GOOGLE_BILLING_PROJECT="$project" USER_PROJECT_OVERRIDE=true
   set_adc_quota_project "$project"
 }

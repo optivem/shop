@@ -24,3 +24,14 @@ variable "billing_account_id" {
   description = "GCP billing account ID"
   type        = string
 }
+
+variable "billing_kill_switch_amount" {
+  description = "Monthly cost (in the billing account's currency) at which the kill-switch unlinks the project from billing"
+  type        = number
+  default     = 1
+
+  validation {
+    condition     = var.billing_kill_switch_amount >= 1 && floor(var.billing_kill_switch_amount) == var.billing_kill_switch_amount
+    error_message = "billing_kill_switch_amount must be a whole number of at least 1."
+  }
+}

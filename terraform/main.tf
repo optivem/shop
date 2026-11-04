@@ -41,6 +41,14 @@ resource "google_project_service" "required_apis" {
     "iamcredentials.googleapis.com",
     "iam.googleapis.com",
     "cloudresourcemanager.googleapis.com",
+    # Billing kill-switch (billing-kill-switch.tf)
+    "billingbudgets.googleapis.com",
+    "cloudbilling.googleapis.com",
+    "pubsub.googleapis.com",
+    "cloudfunctions.googleapis.com",
+    "cloudbuild.googleapis.com",
+    "eventarc.googleapis.com",
+    "storage.googleapis.com",
   ])
 
   project            = google_project.this.project_id
