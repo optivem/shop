@@ -1,7 +1,5 @@
 # 2026-11-04 11:48 UTC — Plan coordination meta-plan: all active plans + backlog execution
 
-> 🤖 **Picked up by agent** — `531392d34340` at `2026-11-04T19:24:17Z`
-
 > Consolidated on 2026-11-04 11:48 UTC (was `20261103-1021-meta-backlog-execution.md`). It now also coordinates the top-level plans added after it: `20261103-1049-gh-optivem-driven-shop-changes` (P4) and `20261104-0839-permanent-acc-e2e-environments` (P5). It's the single meta-plan for everything in `plans/`.
 
 ## ⚠️ First: check GitHub status (every session, before any push, dispatch or CI check)
@@ -31,7 +29,7 @@ U1-U4 are done and on main (frontend-react is on Vite 7, Vitest 3 and React 19; 
 
 **Branch cleanup done (2026-11-04):** `wip/meta-u6-u7`, `wip/meta-u6-only`, `wip/meta-u6-u7-code`, `p2-step3-proof` and the agent worktrees were checked as merged into main (ancestry or identical content) and deleted, locally and on origin. Only `main` remains. **Standing rule:** as soon as a branch's work is verified on main, delete it, and don't create new branches.
 
-**Do this next: M4, P2 bundle item 3 (status 2026-11-04 ~17:30 UTC).** Items 1–2 are done (lint + all 7 commit stages green on `1e5ef9de`). The first item-3 dispatch of all six `prerelease-pipeline-<flavor>.yml` (level `acceptance`) was red, from two U7 test/UI regressions. Fixes are on main in `8566496e` but compile-checked only. Resume from P2's bundle item 3: run the local system tests, push, re-dispatch. **U10 CI proof so far:** #1, the `local` job ran the four shop-local actions green on the 4 Java/.NET flavors (TS flavors' `local` was red only from the coupons regression); #2, Sonar is green with no skip warning in the Java, .NET and TS commit stages (runs 41819967650, 41819969609, 41819967941). The acceptance-stage half is still owed, on the first cloud acceptance run.
+**Do this next: M4, P2 bundle item 4 (status 2026-11-04 ~21:10 UTC).** Item 3 is done: all six Docker gates were green on `57cee830` with no RC tag, and the U7 fixes were verified locally in 3 languages. Item 4's first cloud run 41911888859 stopped at the GHCR pull check, because the four `shop/shop-*` packages are private. **First ask the user whether they've made them public**; then re-run 41911888859 and drive the multitier-java chain (acceptance → QA → sign-off → prod), then items 5–7. The user approved items 3–7 in full, including item 6 (commit B and the `setup-gcp.sh` Artifact Registry deletions); M6 waits for a later session. **U10 CI proof so far:** #1, the `local` job is green on all 6 flavors (run 41895190274); #2, Sonar is green with no skip warning in the Java, .NET and TS commit stages (runs 41819967650, 41819969609, 41819967941). The acceptance-stage half is still owed, on the first cloud acceptance run that gets as far as `sonar`.
 
 **M4 (P2 Steps 3–9): done locally, pending the P2 bundle test.**
 - Steps 3–4 (multitier-java QA/prod cutover) are on main as `7de297b0`, `b3995ef8`, `f25a96b8` (proven on the deleted `p2-step3-proof` branch; the user confirmed the release shape on 2026-11-03).
