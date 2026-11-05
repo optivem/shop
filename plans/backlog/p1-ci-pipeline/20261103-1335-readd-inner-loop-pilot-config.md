@@ -14,10 +14,11 @@ Step 1: in `optivem/gh-optivem`, check whether `TierSpec` (package `projectconfi
 ## Steps
 
 - [ ] Step 1 — **gh-optivem (other repo):** add (or finish) `inner-loop` (`mode: test-after`, …) and `paths.component-test` on `TierSpec`, and publish a release. If this work already has a gh-optivem plan, follow that plan instead.
-- [ ] Step 2 — **shop:** restore the keys under `system.backend` in `gh-optivem-multitier-java.yaml`, exactly as they were in `cf2869ad`:
+- [ ] Step 2 — **shop:** restore the keys under `system.backend` in `gh-optivem-multitier-java.yaml`, as they were in `cf2869ad`, plus the `mutation-threshold` set from the first nightly baseline (see Notes):
   ```yaml
           inner-loop:
               mode: test-after
+              mutation-threshold: 50
           paths:
               component-test: system/multitier/backend-java/src/componentTest/java/com/mycompany/myshop/backend
   ```
@@ -26,3 +27,4 @@ Step 1: in `optivem/gh-optivem`, check whether `TierSpec` (package `projectconfi
 ## Notes
 
 - CI installs gh-optivem via `optivem/actions/install-gh-optivem@v1`. Confirm it picks up the new release (latest vs a pinned version) before pushing Step 2.
+- **Mutation threshold 50 (set 2026-11-05).** First full baseline from `multitier-backend-java-mutation-nightly` (run 41993634354, `--all`, gh-optivem main): 307 mutants, 164 killed = **53%**; 71 no-coverage; test strength 69%; line coverage of mutated classes 77%; PIT run 4m57s. The threshold sits just below the baseline so the changed-class gate starts green on current code; ratchet it up as the nightly score rises. It cannot go into the config before Step 1's release (the released CLI rejects `inner-loop`).
