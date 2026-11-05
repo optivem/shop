@@ -1,0 +1,93 @@
+name: multitier-backend-java-mutation-nightly
+
+# Nightly full mutation baseline for the backend-java inner-loop pilot (test-after mode).
+# Runs the component's `mutation` suite (PIT, killed by the component tests) over the WHOLE
+# backend via `gh optivem component-test mutation --component backend --all`, outside the
+# agent loop. The per-ticket gate in the ATDD flow only mutates changed classes; this job
+# tracks the full-backend score that `inner-loop.mutation-threshold` is set from.
+# Report-only: no threshold is applied here, so the job fails only if the build/suite breaks.
+
+on:
+  schedule:
+    - cron: '0 2 * * *'  # Daily 02:00 UTC, off-peak from the hourly/daily acceptance runs
+  workflow_dispatch:
+    inputs:
+      gh-optivem-ref:
+        description: 'gh-optivem ref to build from source (empty = latest release)'
+        required: false
+        type: string
+        default: 'main'
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+env:
+  # `component-test mutation` is not in a published gh-optivem release yet (v1.6.105 lacks it), so
+  # the job builds gh-optivem from source. Once a release ships it, set this default to '' to use
+  # the latest release like every other workflow.
+  GH_OPTIVEM_REF: ${{ inputs.gh-optivem-ref || 'main' }}
+
+jobs:
+  mutation:
+    runs-on: ubuntu-latest
+    # Full-backend PIT over the Testcontainers-backed component suite is slow; bound it well
+    # below GitHub's 6h job limit.
+    timeout-minutes: 120
+    permissions:
+      contents: read
+    env:
+      GH_OPTIVEM_CONFIG: gh-optivem-multitier-java.yaml
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          java-version: 21
+          distribution: temurin
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Pre-warm Gradle Wrapper (retry transient CDN flakes)
+        uses: nick-fields/retry@v4
+        with:
+          timeout_minutes: 5
+          max_attempts: 3
+          command: cd system/multitier/backend-java && ./gradlew --version
+
+      - name: Install gh-optivem CLI Extension
+        uses: optivem/actions/install-gh-optivem@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ env.GH_OPTIVEM_REF }}
+
+      - name: Compile Code
+        uses: ./.github/actions/compile
+        with:
+          project: system/multitier/backend-java
+
+      - name: Run Full Mutation Baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh optivem component-test mutation --component backend --all | tee "$RUNNER_TEMP/mutation.txt"
+          {
+            echo '## Mutation baseline (backend-java, full)'
+            echo '```'
+            grep -E '^(Mutation score|Mutation run took|Surviving mutants)' "$RUNNER_TEMP/mutation.txt" || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload PIT Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pit-report-backend-java
+          path: system/multitier/backend-java/build/reports/pitest/
+          if-no-files-found: ignore
+          retention-days: 14
