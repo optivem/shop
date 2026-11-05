@@ -206,10 +206,8 @@ jobs:
               {"when": ${{ inputs.commit-sha == '' && steps.artifacts-changed.outputs.newer != 'true' && steps.test-changes.outputs.changed != 'true' }}, "reason": "No new artifacts since last run AND no test/workflow changes since last RC tag." }
             ]
 
-  # === Build Shared Images into GHCR (+ the old Artifact Registry copy, unused) ===
-  # The Artifact Registry copy below is no longer deployed from. It stays until several cloud
-  # runs have deployed from GHCR, so switching back is one revert (plan 20261102-1855, Step 6).
-  promote-images:
+  # === Build Shared Images into GHCR ===
+  shared-images:
     needs: check
     if: needs.check.outputs.should-run == 'true'
     runs-on: ubuntu-latest
@@ -217,11 +215,8 @@ jobs:
     environment: ${{ inputs.architecture }}-${{ inputs.language }}-acceptance
     permissions:
       contents: read
-      id-token: write
     outputs:
-      registry: ${{ steps.registry.outputs.registry }}
-      tag: ${{ steps.registry.outputs.tag }}
-      project-number: ${{ steps.registry.outputs.project-number }}
+      project-number: ${{ steps.project.outputs.project-number }}
       db-migrate-image: ${{ steps.shared.outputs.db-migrate }}
       keycloak-image: ${{ steps.shared.outputs.keycloak }}
       simulators-image: ${{ steps.shared.outputs.simulators }}
@@ -237,15 +232,6 @@ jobs:
           ref: ${{ env.COMMIT_SHA }}
           path: source
 
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v3
-        with:
-          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
-
-      - name: Setup Cloud SDK
-        uses: google-github-actions/setup-gcloud@v3
-
       - name: Log in to GHCR
         uses: optivem/actions/docker-login@v1
         with:
@@ -253,36 +239,16 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GHCR_TOKEN }}
 
-      - name: Resolve Registry
-        id: registry
+      - name: Resolve Project Number
+        id: project
         env:
-          PROJECT: ${{ vars.GCP_PROJECT_ID }}
-          REGION: ${{ vars.GCP_REGION }}
           WIF_PROVIDER: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
         run: |
           # The deployer SA has no resourcemanager.projects.get; the provider
           # name is projects/<number>/locations/global/..., so read it from there.
           PROJECT_NUMBER=$(cut -d/ -f2 <<< "$WIF_PROVIDER")
           [[ "$PROJECT_NUMBER" =~ ^[0-9]+$ ]] || { echo "::error::Cannot parse project number from GCP_WORKLOAD_IDENTITY_PROVIDER"; exit 1; }
-          {
-            echo "registry=${REGION}-docker.pkg.dev/${PROJECT}/app-images"
-            echo "tag=${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
-            echo "project-number=${PROJECT_NUMBER}"
-          } >> "$GITHUB_OUTPUT"
-          gcloud auth configure-docker "${REGION}-docker.pkg.dev" --quiet
-
-      # Unused since the GHCR switch; removed in the follow-up commit.
-      - name: Copy Tested Images (GHCR to Artifact Registry)
-        env:
-          REGISTRY: ${{ steps.registry.outputs.registry }}
-          TAG: ${{ steps.registry.outputs.tag }}
-          IMAGE_URLS: ${{ needs.check.outputs.image-digest-urls }}
-        run: |
-          set -euo pipefail
-          jq -r '.[]' <<< "$IMAGE_URLS" | while read -r url; do
-            name="${url##*/}"
-            docker buildx imagetools create -t "${REGISTRY}/${name%%@*}:${TAG}" "$url"
-          done
+          echo "project-number=${PROJECT_NUMBER}" >> "$GITHUB_OUTPUT"
 
       - name: Build and Push Shared Images
         id: shared
@@ -294,7 +260,7 @@ jobs:
 
   # === Deploy: Keycloak (shared by all variants) ===
   deploy-keycloak:
-    needs: promote-images
+    needs: shared-images
     runs-on: ubuntu-latest
     timeout-minutes: 30
     environment: ${{ inputs.architecture }}-${{ inputs.language }}-acceptance
@@ -317,15 +283,15 @@ jobs:
       - name: Deploy Keycloak to Cloud Run
         uses: ./.github/actions/deploy-keycloak
         with:
-          image: ${{ needs.promote-images.outputs.keycloak-image }}
+          image: ${{ needs.shared-images.outputs.keycloak-image }}
           system: ${{ vars.SYSTEM_NAME }}
           project: ${{ vars.GCP_PROJECT_ID }}
-          project-number: ${{ needs.promote-images.outputs.project-number }}
+          project-number: ${{ needs.shared-images.outputs.project-number }}
           region: ${{ vars.GCP_REGION }}
 
   # === Deploy: Real / Stub Stacks ===
   deploy-stack:
-    needs: [check, promote-images, deploy-keycloak]
+    needs: [check, shared-images, deploy-keycloak]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     environment: ${{ inputs.architecture }}-${{ inputs.language }}-acceptance
@@ -345,16 +311,16 @@ jobs:
     env:
       REGION: ${{ vars.GCP_REGION }}
       PROJECT: ${{ vars.GCP_PROJECT_ID }}
-      PROJECT_NUMBER: ${{ needs.promote-images.outputs.project-number }}
+      PROJECT_NUMBER: ${{ needs.shared-images.outputs.project-number }}
       # The tested images, by digest, straight from GHCR.
       IMAGE_DIGEST_URLS: ${{ needs.check.outputs.image-digest-urls }}
       BACKEND_IMAGE: ${{ fromJSON(inputs.images).backend }}
       FRONTEND_IMAGE: ${{ fromJSON(inputs.images).frontend }}
       SYSTEM_IMAGE: ${{ fromJSON(inputs.images).system }}
-      MIGRATE_IMAGE: ${{ needs.promote-images.outputs.db-migrate-image }}
+      MIGRATE_IMAGE: ${{ needs.shared-images.outputs.db-migrate-image }}
       STACK: ${{ matrix.stack }}
       EXT_SERVICE: ${{ matrix.ext-service }}
-      EXT_IMAGE: ${{ matrix.stack == 'real' && needs.promote-images.outputs.simulators-image || needs.promote-images.outputs.stubs-image }}
+      EXT_IMAGE: ${{ matrix.stack == 'real' && needs.shared-images.outputs.simulators-image || needs.shared-images.outputs.stubs-image }}
       EXT_PORT: ${{ matrix.ext-port }}
     steps:
       - name: Authenticate to Google Cloud
@@ -524,7 +490,7 @@ jobs:
 
   # === Run System Tests ===
   run:
-    needs: [check, promote-images, deploy-stack]
+    needs: [check, shared-images, deploy-stack]
     if: needs.check.outputs.should-run == 'true'
     runs-on: ubuntu-latest
     # A hung suite must fail fast instead of burning GitHub's 6h job limit.
@@ -538,7 +504,7 @@ jobs:
       # Selects the acceptance environment in every test harness; every URL in it is overridden below.
       ENVIRONMENT: acceptance
       REGION: ${{ vars.GCP_REGION }}
-      PROJECT_NUMBER: ${{ needs.promote-images.outputs.project-number }}
+      PROJECT_NUMBER: ${{ needs.shared-images.outputs.project-number }}
     outputs:
       version: ${{ steps.rc-version.outputs.version }}
       image-urls: ${{ steps.tag-images.outputs.tagged-image-urls }}
@@ -855,7 +821,7 @@ jobs:
           command: bash ./run-sonar.sh
 
   summary:
-    needs: [preflight, check, promote-images, deploy-keycloak, deploy-stack, run, publish-tag, verify-rc-tag, sonar]
+    needs: [preflight, check, shared-images, deploy-keycloak, deploy-stack, run, publish-tag, verify-rc-tag, sonar]
     if: always()
     runs-on: ubuntu-latest
     permissions:
@@ -866,8 +832,8 @@ jobs:
       with:
         stage-name: 'Acceptance Stage (Cloud Run)'
         stage-result: >-
-          ${{ (needs.preflight.result == 'failure' || needs.check.result == 'failure' || needs.promote-images.result == 'failure' || needs.deploy-keycloak.result == 'failure' || needs.deploy-stack.result == 'failure' || needs.run.result == 'failure' || needs.publish-tag.result == 'failure' || needs.verify-rc-tag.result == 'failure') && 'failure'
-              || (needs.preflight.result == 'cancelled' || needs.check.result == 'cancelled' || needs.promote-images.result == 'cancelled' || needs.deploy-keycloak.result == 'cancelled' || needs.deploy-stack.result == 'cancelled' || needs.run.result == 'cancelled' || needs.publish-tag.result == 'cancelled' || needs.verify-rc-tag.result == 'cancelled') && 'cancelled'
+          ${{ (needs.preflight.result == 'failure' || needs.check.result == 'failure' || needs.shared-images.result == 'failure' || needs.deploy-keycloak.result == 'failure' || needs.deploy-stack.result == 'failure' || needs.run.result == 'failure' || needs.publish-tag.result == 'failure' || needs.verify-rc-tag.result == 'failure') && 'failure'
+              || (needs.preflight.result == 'cancelled' || needs.check.result == 'cancelled' || needs.shared-images.result == 'cancelled' || needs.deploy-keycloak.result == 'cancelled' || needs.deploy-stack.result == 'cancelled' || needs.run.result == 'cancelled' || needs.publish-tag.result == 'cancelled' || needs.verify-rc-tag.result == 'cancelled') && 'cancelled'
               || needs.run.result }}
         environment: acceptance
         success-version: ${{ needs.check.outputs.on-main == 'true' && needs.run.outputs.version || 'not computed — non-main run' }}

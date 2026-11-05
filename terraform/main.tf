@@ -36,6 +36,7 @@ resource "random_id" "project_suffix" {
 resource "google_project_service" "required_apis" {
   for_each = toset([
     "run.googleapis.com",
+    # The kill-switch function's build image (billing-kill-switch.tf); the app images come from GHCR.
     "artifactregistry.googleapis.com",
     "secretmanager.googleapis.com",
     "iamcredentials.googleapis.com",
@@ -54,44 +55,6 @@ resource "google_project_service" "required_apis" {
   project            = google_project.this.project_id
   service            = each.value
   disable_on_destroy = false
-}
-
-# Artifact Registry repository
-resource "google_artifact_registry_repository" "app_images" {
-  project       = google_project.this.project_id
-  location      = var.region
-  repository_id = "app-images"
-  format        = "DOCKER"
-
-  # KEEP wins over DELETE, so each image name keeps its 10 newest versions. 10 because the shared
-  # shop-* images are rebuilt by every variant's run: fewer could drop an image a variant still runs.
-  # Production images keep a production-* tag, because acceptance runs would otherwise evict them.
-  cleanup_policy_dry_run = false
-  cleanup_policies {
-    id     = "keep-production"
-    action = "KEEP"
-    condition {
-      tag_state    = "TAGGED"
-      tag_prefixes = ["production-"]
-    }
-  }
-  cleanup_policies {
-    id     = "keep-last-10"
-    action = "KEEP"
-    most_recent_versions {
-      keep_count = 10
-    }
-  }
-  cleanup_policies {
-    id     = "delete-the-rest"
-    action = "DELETE"
-    condition {
-      tag_state  = "ANY"
-      older_than = "86400s"
-    }
-  }
-
-  depends_on = [google_project_service.required_apis]
 }
 
 # Workload Identity Pool
@@ -155,12 +118,6 @@ resource "google_project_iam_member" "github_run_admin" {
 resource "google_project_iam_member" "github_sa_user" {
   project = google_project.this.project_id
   role    = "roles/iam.serviceAccountUser"
-  member  = local.github_deployer_member
-}
-
-resource "google_project_iam_member" "github_artifact_registry_writer" {
-  project = google_project.this.project_id
-  role    = "roles/artifactregistry.writer"
   member  = local.github_deployer_member
 }
 
