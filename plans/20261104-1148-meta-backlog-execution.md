@@ -1,4 +1,5 @@
 # 2026-11-04 11:48 UTC — Plan coordination meta-plan: all active plans + backlog execution
+> 🤖 **Picked up by agent** — `6899cd142dd3` at `2026-11-05T08:24:53Z`
 
 > Consolidated on 2026-11-04 11:48 UTC (was `20261103-1021-meta-backlog-execution.md`). It now also coordinates the top-level plans added after it: `20261103-1049-gh-optivem-driven-shop-changes` (P4) and `20261104-0839-permanent-acc-e2e-environments` (P5). It's the single meta-plan for everything in `plans/`.
 
@@ -29,7 +30,7 @@ U1-U4 are done and on main (frontend-react is on Vite 7, Vitest 3 and React 19; 
 
 **Branch cleanup done (2026-11-04):** `wip/meta-u6-u7`, `wip/meta-u6-only`, `wip/meta-u6-u7-code`, `p2-step3-proof` and the agent worktrees were checked as merged into main (ancestry or identical content) and deleted, locally and on origin. Only `main` remains. **Standing rule:** as soon as a branch's work is verified on main, delete it, and don't create new branches.
 
-**Do this next: M4, P2 bundle item 4 (status 2026-11-05 ~07:55 UTC).** The GHCR packages are public. Cloud acceptance (re-run 41911888859) is green and created `multitier-java-v1.0.236-rc.3270`; QA run 41989504550 is green and recorded to `multitier-java-qa`. **Next:** QA sign-off (approved), then prod. The sign-off dispatch needs the user's go-ahead in-session, because the auto-mode classifier blocks it as a production deploy. Then items 5–7. **U10 CI proof is complete:** #1, the `local` job is green on all 6 flavors (run 41895190274); #2, Sonar is green with no skip warning in the commit stages (runs 41819967650, 41819969609, 41819967941) and the cloud acceptance stage (41911888859). M6 waits for a later session.
+**Do this next: M4, P2 bundle item 5 (status 2026-11-05 ~08:40 UTC).** Item 4 is done: `multitier-java-v1.0.236` released (sign-off 41994939110 picked rc.3270, prod 41995040998 green, bump commits on main). User go-ahead (2026-11-05, in-session) covers sign-off and prod dispatches for all six flavors. **Next:** cloud acceptance → QA → sign-off → prod for the other five flavors, one at a time, then items 6–7. **U10 CI proof is complete:** #1, the `local` job is green on all 6 flavors (run 41895190274); #2, Sonar is green with no skip warning in the commit stages (runs 41819967650, 41819969609, 41819967941) and the cloud acceptance stage (41911888859). M6 waits for a later session.
 
 **M4 (P2 Steps 3–9): done locally, pending the P2 bundle test.**
 - Steps 3–4 (multitier-java QA/prod cutover) are on main as `7de297b0`, `b3995ef8`, `f25a96b8` (proven on the deleted `p2-step3-proof` branch; the user confirmed the release shape on 2026-11-03).
