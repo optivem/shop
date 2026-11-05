@@ -63,7 +63,7 @@ To tear everything down later: `./teardown-gcp.sh`
 
 ## Pinned tool versions
 
-Versions are pinned in [devcontainer.json](devcontainer.json), except `neonctl`, which is pinned by `NEONCTL_VERSION` in [terraform/neon.sh](../terraform/neon.sh). Update in one place; every dev and CI gets the same env.
+Versions are pinned in [devcontainer.json](devcontainer.json), except `neonctl`, which is pinned by `NEONCTL_VERSION` in [terraform/neon.sh](../terraform/neon.sh), and Claude Code, which `post-create.sh` installs at `latest` and which then auto-updates. Update in one place; every dev and CI gets the same env.
 
 | Tool      | Version |
 |-----------|---------|
@@ -78,7 +78,7 @@ Versions are pinned in [devcontainer.json](devcontainer.json), except `neonctl`,
 
 ## Claude Code
 
-Login state lives in the `shop-claude-config` volume, so it survives rebuilds. `CLAUDE_CONFIG_DIR` points at `~/.claude` so that `.claude.json` (normally in `$HOME`, which is wiped on rebuild) is stored in the volume too. Your host's personal slash commands (`~/.claude/commands`, e.g. `/execute-plan`, `/create-plan`, `/commit`) are bind-mounted read-only on top of it. Edit them on the host; the container sees changes immediately. The host folder must exist before the container starts. The devcontainer feature installs Claude Code as root, so `post-create.sh` gives the `@anthropic-ai` scope folder (package included) to `vscode`; without that, auto-updates fail with `no_permissions` (visible in `claude doctor`).
+Login state lives in the `shop-claude-config` volume, so it survives rebuilds. `CLAUDE_CONFIG_DIR` points at `~/.claude` so that `.claude.json` (normally in `$HOME`, which is wiped on rebuild) is stored in the volume too. Your host's personal slash commands (`~/.claude/commands`, e.g. `/execute-plan`, `/create-plan`, `/commit`) are bind-mounted read-only on top of it. Edit them on the host; the container sees changes immediately. The host folder must exist before the container starts. `post-create.sh` installs Claude Code with `npm install -g` as `vscode`, not through the devcontainer feature: features install as root, and Claude Code's auto-updater then fails with `no_permissions` (visible in `claude doctor`). Installed as `vscode`, it keeps itself up to date, hence `latest` in the table above.
 
 ## Rebuilding after config changes
 

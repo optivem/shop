@@ -5,14 +5,10 @@ set -euo pipefail
 sudo chown -R "$(id -u):$(id -g)" "$HOME/.config/gcloud" "$HOME/.config/gh"
 # ~/.claude/commands is a read-only bind mount from the host; skip it
 sudo find "$HOME/.claude" -path "$HOME/.claude/commands" -prune -o -exec chown "$(id -u):$(id -g)" {} +
-# The claude-code feature installs as root at build time, so auto-update fails with no_permissions.
-# Chown the @anthropic-ai scope folder too, not just the package: npm writes the new version next to it.
-# The bin/claude symlink as well, so the updater can repoint it.
-sudo chown -R "$(id -u):$(id -g)" "$(npm root -g)/@anthropic-ai"
-CLAUDE_BIN="$(npm config get prefix)/bin/claude"
-if [[ -L "$CLAUDE_BIN" ]]; then sudo chown -h "$(id -u):$(id -g)" "$CLAUDE_BIN"; fi
-
-# npm's global prefix is nvm's, which vscode can write to, so this needs no sudo.
+# npm's global prefix is nvm's, which vscode can write to, so these need no sudo.
+# Claude Code is installed here rather than by a devcontainer feature, because features install as root
+# and Claude Code's auto-updater then fails with no_permissions. Owned by vscode, it updates itself.
+npm install -g --no-audit --no-fund @anthropic-ai/claude-code
 # terraform/neon.sh holds the one pin for neonctl (NEONCTL_VERSION)
 # shellcheck source=terraform/neon.sh
 source terraform/neon.sh

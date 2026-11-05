@@ -25,8 +25,7 @@
     "ghcr.io/devcontainers/features/dotnet:2": {
       "version": "8.0"
     },
-    "ghcr.io/devcontainers/features/powershell:1": {},
-    "ghcr.io/anthropics/devcontainer-features/claude-code:1": {}
+    "ghcr.io/devcontainers/features/powershell:1": {}
   },
   "customizations": {
     "vscode": {
