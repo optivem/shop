@@ -55,7 +55,9 @@ env:
   ARCHITECTURE: ${{ inputs.architecture }}
   STAGE: ${{ inputs.stage }}
   PREFIX: ${{ inputs.architecture }}-${{ inputs.language }}
-  VERSION: ${{ inputs.version }}
+  # Not VERSION: MSBuild reads env vars as properties, and $(Version) = an RC tag breaks the .NET
+  # smoke harness's NuGet restore ("not a valid version string").
+  RC_VERSION: ${{ inputs.version }}
   REALM: ${{ inputs.stage == 'production' && 'shop-prod' || 'shop-qa' }}
   TEST_LANGUAGE: ${{ inputs.test-language || inputs.language }}
 
@@ -147,7 +149,7 @@ jobs:
         run: |
           set -euo pipefail
           jq -r '.[]' <<< "$IMAGES" | while read -r name; do
-            docker buildx imagetools create -t "${REGISTRY}/${name}:${TAG}" "${BASE}/${name}:${VERSION}"
+            docker buildx imagetools create -t "${REGISTRY}/${name}:${TAG}" "${BASE}/${name}:${RC_VERSION}"
           done
 
       - name: List RC Images
@@ -159,7 +161,7 @@ jobs:
           set -euo pipefail
           {
             echo 'refs<<EOF'
-            jq -r --arg base "$BASE" --arg v "$VERSION" '.[] | "\($base)/\(.):\($v)"' <<< "$IMAGES"
+            jq -r --arg base "$BASE" --arg v "$RC_VERSION" '.[] | "\($base)/\(.):\($v)"' <<< "$IMAGES"
             echo 'EOF'
           } >> "$GITHUB_OUTPUT"
 
@@ -347,7 +349,7 @@ jobs:
               AUTH_AUDIENCE:"shop-backend", AUTH_CLIENT_SECRET:"shop-monolith-test-secret",
               SERVER_FORWARDHEADERSSTRATEGY:"native", ASPNETCORE_FORWARDEDHEADERS_ENABLED:"true"}' > "$env_file"
           gcloud run deploy "$SYSTEM_SERVICE" \
-            --image "${IMAGE_BASE}/${SYSTEM_IMAGE}:${VERSION}" --region "$REGION" --project "$PROJECT" \
+            --image "${IMAGE_BASE}/${SYSTEM_IMAGE}:${RC_VERSION}" --region "$REGION" --project "$PROJECT" \
             --service-account "$SA" --port 8080 --memory 1Gi --cpu 1 --cpu-boost \
             --min-instances 0 --max-instances 1 --allow-unauthenticated \
             --env-vars-file "$env_file"
@@ -372,7 +374,7 @@ jobs:
               AUTH_JWK_SET_URI:($issuer + "/protocol/openid-connect/certs"),
               AUTH_AUDIENCE:"shop-backend"}' > "$env_file"
           gcloud run deploy "$BACKEND_NAME" \
-            --image "${IMAGE_BASE}/${BACKEND_IMAGE}:${VERSION}" --region "$REGION" --project "$PROJECT" \
+            --image "${IMAGE_BASE}/${BACKEND_IMAGE}:${RC_VERSION}" --region "$REGION" --project "$PROJECT" \
             --service-account "$SA" --port 8081 --memory 1Gi --cpu 1 --cpu-boost \
             --min-instances 0 --max-instances 2 --allow-unauthenticated \
             --env-vars-file "$env_file"
@@ -383,7 +385,7 @@ jobs:
         run: |
           set -euo pipefail
           gcloud run deploy "$FRONTEND_NAME" \
-            --image "${IMAGE_BASE}/${FRONTEND_IMAGE}:${VERSION}" --region "$REGION" --project "$PROJECT" \
+            --image "${IMAGE_BASE}/${FRONTEND_IMAGE}:${RC_VERSION}" --region "$REGION" --project "$PROJECT" \
             --service-account "$SA" --port 3000 \
             --min-instances 0 --max-instances 2 --allow-unauthenticated \
             --set-env-vars "BACKEND_API_URL=${BACKEND_URL},KEYCLOAK_URL=${KEYCLOAK_URL},KEYCLOAK_REALM=${REALM},KEYCLOAK_CLIENT_ID=shop-frontend"
