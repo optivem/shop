@@ -42,7 +42,7 @@
 
 setupCommands:
   - name: Clean Build
-    command: .\gradlew.bat clean compileJava compileTestJava
+    command: .\gradlew.bat clean compileJava compileTestJava --warning-mode none
 testFilter: --tests '*.<test>'
 testFilterJoin: repeat
 suiteGroups:
@@ -52,74 +52,74 @@ suiteGroups:
 suites:
   - id: smoke-stub
     name: latest - Smoke (stub)
-    command: .\gradlew.bat test -Dversion=latest -Dtype=smoke -DexternalSystemMode=stub
+    command: .\gradlew.bat test --warning-mode none -Dversion=latest -Dtype=smoke -DexternalSystemMode=stub
     path: .
     testReportPath: build/reports/tests/test/index.html
     sampleTest: shouldBeAbleToGoToClock
   - id: smoke-real
     name: latest - Smoke (real)
-    command: .\gradlew.bat test -Dversion=latest -Dtype=smoke -DexternalSystemMode=real
+    command: .\gradlew.bat test --warning-mode none -Dversion=latest -Dtype=smoke -DexternalSystemMode=real
     path: .
     testReportPath: build/reports/tests/test/index.html
     sampleTest: shouldBeAbleToGoToClock
   - id: acceptance-parallel-api
     name: latest - Acceptance Parallel (stub) - API
-    command: .\gradlew.bat test -Dversion=latest -Dtype=acceptance -DexcludeTags=isolated -Dchannel=API -PtestResultsDir=test-results/parallel-api
+    command: .\gradlew.bat test --warning-mode none -Dversion=latest -Dtype=acceptance -DexcludeTags=isolated -Dchannel=API -PtestResultsDir=test-results/parallel-api
     path: .
     testReportPath: build/reports/tests/test/index.html
     testCountPath: build/test-results/parallel-api
     sampleTest: shouldBeAbleToPlaceOrderForValidInput
   - id: acceptance-parallel-ui
     name: latest - Acceptance Parallel (stub) - UI
-    command: .\gradlew.bat test -Dversion=latest -Dtype=acceptance -DexcludeTags=isolated -Dchannel=UI -DchannelMode=static -PtestResultsDir=test-results/parallel-ui
+    command: .\gradlew.bat test --warning-mode none -Dversion=latest -Dtype=acceptance -DexcludeTags=isolated -Dchannel=UI -DchannelMode=static -PtestResultsDir=test-results/parallel-ui
     path: .
     testReportPath: build/reports/tests/test/index.html
     testCountPath: build/test-results/parallel-ui
     sampleTest: shouldBeAbleToPlaceOrderForValidInput
   - id: acceptance-isolated-api
     name: latest - Acceptance Isolated (stub) - API
-    command: .\gradlew.bat test -Dversion=latest -Dtype=acceptance -DincludeTags=isolated -Dchannel=API -PtestResultsDir=test-results/isolated-api
+    command: .\gradlew.bat test --warning-mode none -Dversion=latest -Dtype=acceptance -DincludeTags=isolated -Dchannel=API -PtestResultsDir=test-results/isolated-api
     path: .
     testReportPath: build/reports/tests/test/index.html
     testCountPath: build/test-results/isolated-api
     sampleTest: shouldRecordPlacementTimestamp
   - id: acceptance-isolated-ui
     name: latest - Acceptance Isolated (stub) - UI
-    command: .\gradlew.bat test -Dversion=latest -Dtype=acceptance -DincludeTags=isolated -Dchannel=UI -DchannelMode=static -PtestResultsDir=test-results/isolated-ui
+    command: .\gradlew.bat test --warning-mode none -Dversion=latest -Dtype=acceptance -DincludeTags=isolated -Dchannel=UI -DchannelMode=static -PtestResultsDir=test-results/isolated-ui
     path: .
     testReportPath: build/reports/tests/test/index.html
     testCountPath: build/test-results/isolated-ui
     sampleTest: shouldRecordPlacementTimestamp
   - id: contract-stub
     name: latest - Contract (stub)
-    command: .\gradlew.bat test -Dversion=latest -Dtype=contract -DexcludeTags=isolated -DexternalSystemMode=stub -PtestResultsDir=test-results/stub
+    command: .\gradlew.bat test --warning-mode none -Dversion=latest -Dtype=contract -DexcludeTags=isolated -DexternalSystemMode=stub -PtestResultsDir=test-results/stub
     path: .
     testReportPath: build/reports/tests/test/index.html
     testCountPath: build/test-results/stub
     sampleTest: shouldBeAbleToGetProduct
   - id: contract-stub-isolated
     name: latest - Contract Isolated (stub)
-    command: .\gradlew.bat test -Dversion=latest -Dtype=contract -DincludeTags=isolated -DexternalSystemMode=stub -PtestResultsDir=test-results/stub-isolated
+    command: .\gradlew.bat test --warning-mode none -Dversion=latest -Dtype=contract -DincludeTags=isolated -DexternalSystemMode=stub -PtestResultsDir=test-results/stub-isolated
     path: .
     testReportPath: build/reports/tests/test/index.html
     testCountPath: build/test-results/stub-isolated
     sampleTest: shouldBeAbleToGetConfiguredTime
   - id: contract-real
     name: latest - Contract (real)
-    command: .\gradlew.bat test -Dversion=latest -Dtype=contract -DexternalSystemMode=real -PtestResultsDir=test-results/real
+    command: .\gradlew.bat test --warning-mode none -Dversion=latest -Dtype=contract -DexternalSystemMode=real -PtestResultsDir=test-results/real
     path: .
     testReportPath: build/reports/tests/test/index.html
     testCountPath: build/test-results/real
     sampleTest: shouldBeAbleToGetProduct
   - id: e2e-api
     name: latest - E2E (real) - API
-    command: .\gradlew.bat test -Dversion=latest -Dtype=e2e -Dchannel=API
+    command: .\gradlew.bat test --warning-mode none -Dversion=latest -Dtype=e2e -Dchannel=API
     path: .
     testReportPath: build/reports/tests/test/index.html
     sampleTest: shouldPlaceOrder
   - id: e2e-ui
     name: latest - E2E (real) - UI
-    command: .\gradlew.bat test -Dversion=latest -Dtype=e2e -Dchannel=UI -DchannelMode=static
+    command: .\gradlew.bat test --warning-mode none -Dversion=latest -Dtype=e2e -Dchannel=UI -DchannelMode=static
     path: .
     testReportPath: build/reports/tests/test/index.html
     sampleTest: shouldPlaceOrder
