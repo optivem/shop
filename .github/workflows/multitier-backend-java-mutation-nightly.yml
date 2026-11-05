@@ -13,7 +13,7 @@ on:
   workflow_dispatch:
     inputs:
       gh-optivem-ref:
-        description: 'gh-optivem ref to build from source (empty = latest release)'
+        description: 'gh-optivem ref to build from source'
         required: false
         type: string
         default: 'main'
@@ -26,7 +26,7 @@ concurrency:
 
 env:
   # `component-test mutation` is not in a published gh-optivem release yet (v1.6.105 lacks it), so
-  # the job builds gh-optivem from source. Once a release ships it, set this default to '' to use
+  # the job builds gh-optivem from source. Once a release ships it, set this to '' (and drop the input) to use
   # the latest release like every other workflow.
   GH_OPTIVEM_REF: ${{ inputs.gh-optivem-ref || 'main' }}
 
@@ -60,11 +60,43 @@ jobs:
           max_attempts: 3
           command: cd system/multitier/backend-java && ./gradlew --version
 
-      - name: Install gh-optivem CLI Extension
+      # Released path: the shared action. Source path is inline because the action's source build
+      # runs `gh extension install <abs-path>`, which current gh rejects (only `.` installs a local dir).
+      - name: Install gh-optivem CLI Extension (release)
+        if: ${{ env.GH_OPTIVEM_REF == '' }}
         uses: optivem/actions/install-gh-optivem@v1
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          ref: ${{ env.GH_OPTIVEM_REF }}
+
+      - name: Clone gh-optivem at ref
+        if: ${{ env.GH_OPTIVEM_REF != '' }}
+        uses: nick-fields/retry@v4
+        with:
+          timeout_minutes: 5
+          max_attempts: 3
+          command: >-
+            rm -rf "$RUNNER_TEMP/gh-optivem"
+            && git clone https://github.com/optivem/gh-optivem "$RUNNER_TEMP/gh-optivem"
+            && git -C "$RUNNER_TEMP/gh-optivem" checkout "$GH_OPTIVEM_REF"
+
+      - name: Setup Go
+        if: ${{ env.GH_OPTIVEM_REF != '' }}
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: ${{ runner.temp }}/gh-optivem/go.mod
+          cache: false
+
+      - name: Build and Install gh-optivem from Source
+        if: ${{ env.GH_OPTIVEM_REF != '' }}
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/gh-optivem"
+          go build -o gh-optivem .
+          gh extension install .
+          echo "gh-optivem built from $GH_OPTIVEM_REF @ $(git rev-parse --short HEAD)" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Compile Code
         uses: ./.github/actions/compile
