@@ -5,7 +5,7 @@ run-name: >-
 
 on:
   schedule:
-    - cron: '0 */3 * * *'  # Every 3 hours — gated, only runs if there are new commits since the last run
+    - cron: '0 3 * * *'    # Daily 03:00 UTC — gated, only runs if there are new commits since the last run
     - cron: '0 7 * * 1'    # Mondays 07:00 UTC — weekly heartbeat, runs unconditionally
   workflow_dispatch:
     inputs:
@@ -46,8 +46,8 @@ jobs:
           set -euo pipefail
           if [[ "$EVENT_NAME" == 'workflow_dispatch' ]]; then
             name='manual'
-          elif [[ "$SCHEDULE" == '0 */3 * * *' ]]; then
-            name='gated-3h'
+          elif [[ "$SCHEDULE" == '0 3 * * *' ]]; then
+            name='gated-daily'
           elif [[ "$SCHEDULE" == '0 7 * * 1' ]]; then
             name='weekly-heartbeat'
           else
@@ -139,7 +139,7 @@ jobs:
         with:
           skip-conditions: |
             [
-              {"when": ${{ steps.trigger.outputs.name == 'gated-3h' && steps.real-changes.outputs.has-real-changes != 'true' }}, "reason": "Gated 3-hour run skipped — only VERSION-file bumps (or no changes) since the last meta release. Weekly heartbeat will still fire."}
+              {"when": ${{ steps.trigger.outputs.name == 'gated-daily' && steps.real-changes.outputs.has-real-changes != 'true' }}, "reason": "Gated daily run skipped — only VERSION-file bumps (or no changes) since the last meta release. Weekly heartbeat will still fire."}
             ]
 
   run:
@@ -152,7 +152,10 @@ jobs:
     uses: ./.github/workflows/_meta-prerelease-pipeline.yml
     secrets: inherit
     with:
-      level: qa
+      # Cost control: the daily run stops at the free Docker Compose gates. The weekly
+      # heartbeat and manual dispatch add the cloud chain (cloud acceptance -> QA stage ->
+      # QA sign-off per flavor), which produces the QA-approved RCs tag-meta-rc needs.
+      level: ${{ needs.check.outputs.trigger-name == 'gated-daily' && 'acceptance' || 'qa' }}
       variant: all
       skip-local: false
       fail-fast: ${{ inputs.fail-fast || false }}
@@ -170,8 +173,11 @@ jobs:
     # meta-bump-all and re-pinned downstream verification to the post-bump
     # main HEAD. github.sha would be the pre-bump trigger SHA, which is no
     # longer the SHA that was actually verified.
+    #
+    # Only runs at level qa (not on the daily gated run): the manifest needs a QA-approved RC
+    # per flavor, and only the qa-level cloud chain creates one. See meta-rc-skipped below.
     needs: [check, run]
-    if: ${{ !failure() && !cancelled() && needs.check.outputs.should-run == 'true' && needs.run.outputs.should_run == 'true' }}
+    if: ${{ !failure() && !cancelled() && needs.check.outputs.should-run == 'true' && needs.run.outputs.should_run == 'true' && needs.check.outputs.trigger-name != 'gated-daily' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -251,3 +257,18 @@ jobs:
             cat manifest.json
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
+
+  # The daily run verifies at level acceptance (Docker Compose gates only), which creates no
+  # RCs, so there is nothing to put in a meta-rc. Say so instead of failing tag-meta-rc.
+  meta-rc-skipped:
+    needs: [check, run]
+    if: ${{ !failure() && !cancelled() && needs.check.outputs.should-run == 'true' && needs.check.outputs.trigger-name == 'gated-daily' }}
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - name: Explain Skipped meta-rc
+        shell: bash
+        run: |
+          msg="Daily run verified at level acceptance (Docker Compose gates only). No meta-rc is tagged; the weekly heartbeat (Mon 07:00 UTC) or a manual dispatch runs the cloud chain and tags it."
+          echo "::notice::$msg"
+          echo "$msg" >> "$GITHUB_STEP_SUMMARY"

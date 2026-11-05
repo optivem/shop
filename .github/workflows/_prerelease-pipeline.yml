@@ -36,9 +36,10 @@ on:
         type: boolean
         default: false
       level:
-        # qa runs the same jobs as acceptance: QA needs an RC, and only the manually dispatched
-        # cloud <prefix>-acceptance-stage.yml creates one, so the pipeline stops at the gates.
-        description: 'Verification level: local, commit, acceptance, or qa (qa = acceptance; QA is dispatched manually)'
+        # acceptance stops at the free Docker Compose gates and creates no RC. qa adds the cloud
+        # chain: cloud acceptance (creates the RC), QA stage and QA sign-off. meta-prerelease-stage
+        # passes acceptance on its daily runs and qa on the weekly heartbeat and manual dispatch.
+        description: 'Verification level: local, commit, acceptance (Docker gates only), or qa (adds cloud acceptance, QA stage and QA sign-off)'
         required: false
         type: string
         default: 'qa'
@@ -316,8 +317,8 @@ jobs:
           workflow-inputs: '{"commit-sha": "${{ inputs.commit-sha }}"}'
 
   # The Docker Compose gates: they tag nothing. The RC comes from the cloud acceptance stage
-  # (<prefix>-acceptance-stage.yml), dispatched manually on a commit that passed both gates;
-  # it also checks that the tested SHA carries the RC tag.
+  # (<prefix>-acceptance-stage.yml, the cloud-acceptance-stage job below at level qa, or a
+  # manual dispatch); it also checks that the tested SHA carries the RC tag.
   acceptance-stage:
     needs: [check-version, local, commit-stage]
     if: ${{ always() && inputs.level != 'local' && inputs.level != 'commit' && needs.check-version.result == 'success' && (inputs.skip-local-stage || needs.local.result == 'success') && (inputs.skip-commit-stage || needs.commit-stage.result == 'success') }}
@@ -350,10 +351,74 @@ jobs:
           timeout-seconds: '7200'
           workflow-inputs: '{"commit-sha": "${{ inputs.commit-sha }}"}'
 
-  # Note: qa-stage and qa-signoff are not part of the pipeline either. They need an RC, which
-  # only the manually dispatched cloud <prefix>-acceptance-stage.yml creates (cost control), so
-  # the automatic chain stops at the Docker Compose gates. Run <prefix>-qa-stage.yml and
-  # <prefix>-qa-signoff.yml by hand after the cloud acceptance stage.
+  # === Cloud chain (level qa only) ===
+  # Cost control: meta-prerelease-stage runs level qa only on its weekly heartbeat and on
+  # manual dispatch; its daily runs use level acceptance and stop at the Docker Compose gates
+  # above. The chain runs on a commit that passed both gates and ends with a qa/signoff=success
+  # commit status on the RC, which meta-prerelease-stage's tag-meta-rc manifest requires.
+  cloud-acceptance-stage:
+    needs: [check-version, acceptance-stage, acceptance-stage-legacy]
+    if: ${{ always() && inputs.level == 'qa' && needs.check-version.result == 'success' && needs.acceptance-stage.result == 'success' && contains(fromJSON('["success","skipped"]'), needs.acceptance-stage-legacy.result) }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
+    outputs:
+      rc: ${{ steps.rc.outputs.tag }}
+    steps:
+      # An explicit commit-sha bypasses the stage's "no new artifacts" skip gate, so it always
+      # runs and leaves an RC tag on this SHA.
+      - uses: optivem/actions/trigger-and-wait-for-workflow@v1
+        with:
+          workflow: ${{ inputs.prefix }}-acceptance-stage.yml
+          poll-interval: '180'
+          timeout-seconds: '7200'
+          workflow-inputs: '{"commit-sha": "${{ env.COMMIT_SHA }}"}'
+
+      - name: Resolve RC Tag On SHA
+        id: rc
+        uses: optivem/actions/resolve-latest-tag-from-sha@v1
+        with:
+          commit-sha: ${{ env.COMMIT_SHA }}
+          pattern: ${{ inputs.prefix }}-v${{ needs.check-version.outputs.base-version }}-rc.*
+
+      - name: Fail If No RC Tag On SHA
+        if: steps.rc.outputs.tag == ''
+        shell: bash
+        env:
+          PATTERN: ${{ inputs.prefix }}-v${{ needs.check-version.outputs.base-version }}-rc.*
+        run: |
+          echo "::error::Cloud acceptance finished but no rc tag matching '$PATTERN' is on $COMMIT_SHA."
+          exit 1
+
+  qa-stage:
+    needs: cloud-acceptance-stage
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - uses: optivem/actions/trigger-and-wait-for-workflow@v1
+        with:
+          workflow: ${{ inputs.prefix }}-qa-stage.yml
+          poll-interval: '120'
+          timeout-seconds: '5400'
+          workflow-inputs: '{"version": "${{ needs.cloud-acceptance-stage.outputs.rc }}"}'
+
+  # Automated sign-off: the QA stage's deploy and tests passing is the approval. A human can
+  # still reject an RC afterwards by dispatching <prefix>-qa-signoff.yml with result=rejected.
+  qa-signoff:
+    needs: [cloud-acceptance-stage, qa-stage]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - uses: optivem/actions/trigger-and-wait-for-workflow@v1
+        with:
+          workflow: ${{ inputs.prefix }}-qa-signoff.yml
+          workflow-inputs: '{"version": "${{ needs.cloud-acceptance-stage.outputs.rc }}", "result": "approved"}'
+
   #
   # Note: prod-stage is intentionally NOT part of the pipeline.
   # Production releases are orchestrated externally via meta-release-stage (for full releases)
