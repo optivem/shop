@@ -22,6 +22,12 @@ inputs:
   region:
     description: 'GCP region'
     required: true
+  reconcile-prod-realm:
+    description: >-
+      'true' in the production stage: create or update the shop-prod realm's shop-monolith client
+      through the admin API and set its secret from Secret Manager. Needs the repo checked out.
+    required: false
+    default: 'false'
 
 runs:
   using: 'composite'
@@ -77,3 +83,43 @@ runs:
         max-attempts: '60'
         wait-seconds: '10'
         timeout-seconds: '900'
+
+    # --import-realm skips realms that already exist, so a realm file change never reaches the live
+    # shop-prod. This step applies the shop-monolith client from the same filters the image uses
+    # (stage-realm.jq | prod-realm.jq) and sets its secret, which is never in git or in the image.
+    # Create-or-update only: it never deletes a client or a realm. PUT leaves protocol mappers as they are.
+    - name: Reconcile shop-prod monolith client
+      if: inputs.reconcile-prod-realm == 'true'
+      shell: bash
+      env:
+        SYSTEM: ${{ inputs.system }}
+        PROJECT_NUMBER: ${{ inputs.project-number }}
+        REGION: ${{ inputs.region }}
+      run: |
+        set -euo pipefail
+        suffix="${PROJECT_NUMBER}.${REGION}.run.app"
+        kc="https://${SYSTEM}-keycloak-${suffix}"
+        dir="${GITHUB_WORKSPACE}/docker/keycloak"
+        secret="$(gcloud secrets versions access latest --secret="${SYSTEM}-monolith-client-secret")"
+        echo "::add-mask::${secret}"
+        admin_password="$(gcloud secrets versions access latest --secret="${SYSTEM}-keycloak-admin-password")"
+        echo "::add-mask::${admin_password}"
+        token="$(curl -fsS "${kc}/realms/master/protocol/openid-connect/token" \
+          -d grant_type=password -d client_id=admin-cli -d username=admin \
+          --data-urlencode "password=${admin_password}" | jq -r .access_token)"
+        echo "::add-mask::${token}"
+        client="$(jq -L "$dir" --arg realm shop-prod --arg stage production --arg system "$SYSTEM" --arg suffix "$suffix" \
+            -f "${dir}/stage-realm.jq" "${dir}/shop-realm.json" \
+          | jq -f "${dir}/prod-realm.jq" \
+          | jq -c --arg secret "$secret" '.clients[] | select(.clientId == "shop-monolith") | .secret = $secret')"
+        [[ -n "$client" ]] || { echo "::error::shop-monolith is missing from the production realm filters"; exit 1; }
+        api="${kc}/admin/realms/shop-prod/clients"
+        auth=(-H "Authorization: Bearer ${token}" -H "Content-Type: application/json")
+        id="$(curl -fsS "${auth[@]}" "${api}?clientId=shop-monolith" | jq -r '.[0].id // empty')"
+        if [[ -z "$id" ]]; then
+          curl -fsS "${auth[@]}" -X POST "$api" -d "$client" > /dev/null
+          echo "Created shop-monolith in shop-prod."
+        else
+          curl -fsS "${auth[@]}" -X PUT "${api}/${id}" -d "$(jq -c --arg id "$id" '.id = $id' <<< "$client")" > /dev/null
+          echo "Updated shop-monolith in shop-prod."
+        fi

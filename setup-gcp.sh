@@ -291,6 +291,15 @@ else
   echo "  ✅ Stored $SYSTEM-keycloak-admin-password"
 fi
 
+# Production monolith OIDC client secret: random, never typed or committed. deploy-keycloak sets it on the
+# shop-prod realm's shop-monolith client and the production monolith reads it via --set-secrets.
+if secret_has_version "$SYSTEM-monolith-client-secret"; then
+  echo "  ✅ Monolith production client secret already stored"
+else
+  openssl rand -base64 32 | tr -d '\n' | gcloud secrets versions add "$SYSTEM-monolith-client-secret" --data-file=- --project="$PROJECT_ID" --quiet > /dev/null
+  echo "  ✅ Stored $SYSTEM-monolith-client-secret"
+fi
+
 # GitHub secrets the cloud workflows need (not created by this script)
 echo ""
 MISSING_GH_SECRETS=()
