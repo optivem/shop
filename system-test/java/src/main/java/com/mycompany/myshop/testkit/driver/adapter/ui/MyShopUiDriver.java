@@ -30,6 +30,9 @@ import com.mycompany.myshop.testkit.driver.port.dtos.error.SystemError;
 import com.mycompany.myshop.testkit.common.Result;
 import com.mycompany.myshop.testkit.common.domain.OrderStatus;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+
 import static com.mycompany.myshop.testkit.dsl.core.usecase.commons.SystemResults.failure;
 import static com.mycompany.myshop.testkit.dsl.core.usecase.commons.SystemResults.success;
 
@@ -166,7 +169,7 @@ public class MyShopUiDriver implements MyShopDriver {
     public Result<ViewOrderResponse, SystemError> viewOrder(ViewOrderRequest request) {
         var orderNumber = request.getOrderNumber();
         if (anonymous) {
-            return loginRequired("/order-details/" + orderNumber);
+            return loginRequired("/order-details?orderNumber=" + URLEncoder.encode(orderNumber, StandardCharsets.UTF_8).replace("+", "%20"));
         }
 
         runAs(TestUser.CUSTOMER);

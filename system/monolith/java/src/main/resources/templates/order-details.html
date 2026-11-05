@@ -112,14 +112,13 @@
 
     <script>
         async function loadOrderDetails() {
-            var pathParts = window.location.pathname.split('/');
-            var orderNumber = decodeURIComponent(pathParts[pathParts.length - 1]);
+            var orderNumber = new URLSearchParams(window.location.search).get('orderNumber');
             var loading = document.getElementById('loading');
             var orderDetails = document.getElementById('orderDetails');
             var notFound = document.getElementById('notFound');
             var errorMessage = document.getElementById('errorMessage');
 
-            if (!orderNumber || orderNumber === 'order-details') {
+            if (!orderNumber) {
                 loading.style.display = 'none';
                 notFound.style.display = 'block';
                 return;
@@ -181,8 +180,7 @@
         loadOrderDetails();
 
         document.getElementById('deliverOrderBtn').addEventListener('click', async function() {
-            var pathParts = window.location.pathname.split('/');
-            var orderNumber = decodeURIComponent(pathParts[pathParts.length - 1]);
+            var orderNumber = new URLSearchParams(window.location.search).get('orderNumber');
             var notifications = document.getElementById('notifications');
             var btn = document.getElementById('deliverOrderBtn');
 
@@ -223,8 +221,7 @@
         });
 
         document.getElementById('cancelOrderBtn').addEventListener('click', async function() {
-            var pathParts = window.location.pathname.split('/');
-            var orderNumber = decodeURIComponent(pathParts[pathParts.length - 1]);
+            var orderNumber = new URLSearchParams(window.location.search).get('orderNumber');
             var notifications = document.getElementById('notifications');
             var btn = document.getElementById('cancelOrderBtn');
 

@@ -7,7 +7,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 public class OrderDetailsController {
@@ -18,8 +18,11 @@ public class OrderDetailsController {
         this.orderService = orderService;
     }
 
-    @GetMapping("/order-details/{orderNumber}")
-    public String orderDetails(@PathVariable String orderNumber, Model model, Authentication authentication) {
+    @GetMapping("/order-details")
+    public String orderDetails(@RequestParam(required = false) String orderNumber, Model model, Authentication authentication) {
+        if (orderNumber == null || orderNumber.isBlank()) {
+            return "order-details";
+        }
         try {
             var order = orderService.getOrder(orderNumber, CurrentUserResolver.resolve(authentication));
             model.addAttribute("order", order);

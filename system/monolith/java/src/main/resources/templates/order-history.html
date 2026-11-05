@@ -145,7 +145,7 @@
                         '<td>' + order.quantity + '</td>' +
                         '<td>$' + order.totalPrice + '</td>' +
                         '<td><span class="status-' + order.status + '">' + order.status + '</span></td>' +
-                        '<td><a href="/order-details/' + encodeURIComponent(order.orderNumber) + '">View Details</a></td>';
+                        '<td><a href="/order-details?orderNumber=' + encodeURIComponent(order.orderNumber) + '">View Details</a></td>';
                     tbody.appendChild(row);
                 });
 

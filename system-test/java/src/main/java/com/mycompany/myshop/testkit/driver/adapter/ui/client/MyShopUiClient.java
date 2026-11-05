@@ -101,8 +101,7 @@ public class MyShopUiClient implements AutoCloseable {
     /** Opens an order by its URL, not through the order history. The app must already be open. */
     public OrderDetailsPage openOrderDetailsPage(String orderNumber) {
         var encodedOrderNumber = URLEncoder.encode(orderNumber, StandardCharsets.UTF_8).replace("+", "%20");
-        var path = "/order-details/" + encodedOrderNumber;
-        openDirectly(path, path);
+        openDirectly("/order-details?orderNumber=" + encodedOrderNumber, "/order-details/" + encodedOrderNumber);
         return new OrderDetailsPage(pageClient);
     }
 
