@@ -57,7 +57,7 @@ Re-check the dates when executing: either repo may have moved on.
 
 ## Shop ↔ event-hub file names
 
-The same files have different names in the two repos. Shop's single-pipeline plan (`20261102-1855-single-pipeline-deploy-target.md`, Step 6b) dropped "cloud" from shop's names (done locally on 2026-11-04, pending its post-outage bundle test), so match files by this table, not by path. Older notes in this plan still use the old shop names (left column).
+The same files have different names in the two repos. Shop's single-pipeline plan (`20261102-1855-single-pipeline-deploy-target.md`, Step 6b) dropped "cloud" from shop's names (done and proven 2026-11-06; that plan is deleted), so match files by this table, not by path. Older notes in this plan still use the old shop names (left column).
 
 | Shop before Step 6b | Shop now | event-hub |
 |---|---|---|
