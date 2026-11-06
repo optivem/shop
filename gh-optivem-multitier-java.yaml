@@ -49,6 +49,14 @@ external-systems:
         simulator:
             path: external-systems/simulators
             repo: optivem/shop
+    # Customer directory (CRM): read-only, backed by the public JSONPlaceholder
+    # test instance (https://jsonplaceholder.typicode.com/users). No simulator:
+    # its absence is the test-instance marker. Not called by the system yet.
+    crm:
+        real-kind: test-instance
+        stub:
+            path: external-systems/stubs
+            repo: optivem/shop
     erp:
         real-kind: simulator
         stub:
