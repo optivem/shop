@@ -7,10 +7,13 @@
 
 ## ▶ Next executable step (resume here)
 
+**⏳ Deferred (user, 2026-11-06).** Resume after: `gh auth refresh -h github.com -s project`, a read-only clone of `/workspaces/gh-optivem` with its `.env`, and the user's go-ahead to file the 5c ticket.
+
 **Item 4, step 5c**: author the `crm` story ticket in `optivem/shop`. Then the two rehearsals owed by Items 3 (#65) and 4 (the new ticket). Both need gh-optivem's `implement`, which first needs the `gh` token's `project` scope (`gh auth refresh -h github.com -s project`). Steps 5d and 5f are gh-optivem edits for a gh-optivem session.
 
 ## Rules
 
+- **Pushes to shop `main` made by the rehearsals are pre-approved (user, 2026-11-06)**: the cloud-deploy plan is finished; check GitHub status before each push. This overrides the "ask before every push" below for rehearsal pushes. Filing the 5c ticket in `optivem/shop` is still pending the user's decision (deferred 2026-11-06).
 - Commit only to shop, surgically. Ask before every push to shop `main`: the shop cloud-deploy plan (`20261029-1316-deploy-shop-cloud-run.md`) is active. Don't touch its footprint (`*-cloud.yml`, `terraform/`, Keycloak cloud files).
 - Only one session at a time may run a rehearsal or `gh optivem system start` (shared docker ports).
 - Each item is driven from its gh-optivem child plan, which holds the verification steps. Delete the item here once shipped.
