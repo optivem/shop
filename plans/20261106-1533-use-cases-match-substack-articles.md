@@ -22,7 +22,7 @@
 
 ## ▶ Next executable step (resume here)
 
-Only the deferred Step 5 remains (UC-001.14, ERP unavailable). It needs a user decision: approve production error handling (a 503 with a dedicated message) plus an \"ERP unavailable\" test kit step in all three languages, best split into its own plan. Steps 1 to 3 are done; the Gherkin criteria already include the `@UC-001.14 @narrative-5a` scenario.
+Only the deferred Step 5 remains (UC-001.14, ERP unavailable). It needs a user decision: approve production error handling (a 503 with a dedicated message) plus an "ERP unavailable" test kit step in all three languages, best split into its own plan. Steps 1 to 3 are done; the Gherkin criteria already include the `@UC-001.14 @narrative-5a` scenario.
 
 ## Steps
 
