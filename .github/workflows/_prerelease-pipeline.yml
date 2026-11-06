@@ -391,8 +391,12 @@ jobs:
           echo "::error::Cloud acceptance finished but no rc tag matching '$PATTERN' is on $COMMIT_SHA."
           exit 1
 
+  # always(): without it the implicit success() also checks skipped ancestors (local / commit-stage
+  # are skipped when meta-prerelease passes skip-local-stage / skip-commit-stage), so QA and the
+  # sign-off never ran and tag-meta-rc found no QA-approved RC (meta-prerelease 42058033769, 42224541232).
   qa-stage:
     needs: cloud-acceptance-stage
+    if: ${{ always() && needs.cloud-acceptance-stage.result == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -409,6 +413,7 @@ jobs:
   # still reject an RC afterwards by dispatching <prefix>-qa-signoff.yml with result=rejected.
   qa-signoff:
     needs: [cloud-acceptance-stage, qa-stage]
+    if: ${{ always() && needs.cloud-acceptance-stage.result == 'success' && needs.qa-stage.result == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
