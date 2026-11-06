@@ -6,6 +6,8 @@ import com.mycompany.myshop.testkit.driver.adapter.shared.client.http.JsonHttpCl
 import com.mycompany.myshop.testkit.common.Closer;
 import com.mycompany.myshop.testkit.common.Result;
 
+import java.util.List;
+
 public abstract class BaseErpClient implements AutoCloseable {
     private static final String HEALTH_ENDPOINT = "/health";
     private static final String PRODUCTS_ENDPOINT = "/api/products";
@@ -27,5 +29,10 @@ public abstract class BaseErpClient implements AutoCloseable {
 
     public Result<ExtProductDetailsResponse, ExtErpErrorResponse> getProduct(String sku) {
         return httpClient.get(PRODUCTS_ENDPOINT + "/" + sku, ExtProductDetailsResponse.class);
+    }
+
+    public Result<List<ExtProductDetailsResponse>, ExtErpErrorResponse> getProducts() {
+        return httpClient.get(PRODUCTS_ENDPOINT, ExtProductDetailsResponse[].class)
+                .map(List::of);
     }
 }

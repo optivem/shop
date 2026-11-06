@@ -1,5 +1,6 @@
 package com.mycompany.myshop.core.services.external;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mycompany.myshop.core.dtos.external.ErpGetPromotionResponse;
 import com.mycompany.myshop.core.dtos.external.ErpProductDetailsResponse;
@@ -11,12 +12,15 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.List;
 import java.util.Optional;
 
 @Service
 public class ErpGateway {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final TypeReference<List<ErpProductDetailsResponse>> PRODUCT_LIST_TYPE = new TypeReference<>() {
+    };
 
     @Value("${erp.url}")
     private String erpUrl;
@@ -88,6 +92,38 @@ public class ErpGateway {
         } catch (Exception e) {
             throw new IllegalStateException("Failed to fetch product details for SKU: " + sku
                     + " from URL: " + url
+                    + ". Error: " + e.getClass().getSimpleName() + ": " + e.getMessage(), e);
+        }
+    }
+
+    public List<ErpProductDetailsResponse> getProducts() {
+        var url = erpUrl + "/api/products";
+
+        try {
+            var httpClient = HttpClient.newBuilder()
+                    .connectTimeout(Duration.ofSeconds(10))
+                    .build();
+
+            var request = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .timeout(Duration.ofSeconds(10))
+                    .GET()
+                    .build();
+
+            var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() != 200) {
+                throw new IllegalStateException("ERP API returned status " + response.statusCode()
+                        + " for product list. URL: " + url + ". Response: " + response.body());
+            }
+
+            return OBJECT_MAPPER.readValue(response.body(), PRODUCT_LIST_TYPE);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Failed to fetch product list from URL: " + url
+                    + ". Error: " + e.getClass().getSimpleName() + ": " + e.getMessage(), e);
+        } catch (Exception e) {
+            throw new IllegalStateException("Failed to fetch product list from URL: " + url
                     + ". Error: " + e.getClass().getSimpleName() + ": " + e.getMessage(), e);
         }
     }

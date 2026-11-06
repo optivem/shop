@@ -7,7 +7,7 @@
 
 ## ▶ Next executable step (resume here)
 
-**Item 1**: `32e90dcb` is already on `main`; run Item 1's attended runtime check and check the CI run it triggered. The other items follow in order.
+**Item 4**: register the JSONPlaceholder customer directory in the stack configs. Then the two rehearsals owed by Items 3 and 4 (both need gh-optivem's `implement`, see each item).
 
 ## Rules
 
@@ -17,20 +17,12 @@
 
 ## Items
 
-1. - [ ] **Verify shop `32e90dcb`** (gh-optivem plan `plans/backlog/p2-atdd-quality/20260620-0806-no-order-persisted-fanout-prevention.md`, scoped to place/cancel order). Already pushed to `main` on 2026-11-03 by an accidental workspace sweep, compile-checked only. Run the attended runtime check of `cannotPlaceOrderWithNonExistentCoupon` on monolith plus multitier × 3 languages. Then do that plan's Step 6 (restore #68's criterion).
+Items 1 and 2 are done: Item 1's runtime check (`cannotPlaceOrderWithNonExistentCoupon`, monolith and multitier × 3 languages) was green on 2026-11-05 and re-run green on monolith-java on 2026-11-06; its Step 6 (restore #68's criterion) is Human-only and gated in the gh-optivem plan. Item 2 shipped as `de90fbe7` and its gh-optivem plan is closed (C1 rehearsal passed 2026-11-05).
 
-2. - [ ] **Gradle `--warning-mode none`** in `system-test/java/tests*.yaml` (gh-optivem plan `plans/backlog/p2-atdd-quality/20260608-2109-failure-capture-head-window.md`, step 6). Part of the decided Option C (head+tail capture plus `--warning-mode none`). Verify via the rehearsal named in that plan.
-
-3. - [ ] **Enumerable ERP product-list path, Java only** (gh-optivem plan `plans/backlog/p2-atdd-quality/20260613-1950-view-product-list-erp-list-gap.md`, Option A). Its Items 1–5, in order:
-   - `ErpStubClient.configureGetProducts` (stub `GET /erp/api/products`);
-   - `returnsProducts` / `given().products(...)` on the ERP driver (leave `given().product()` unchanged);
-   - `shouldBeAbleToListProducts()` in `BaseErpContractTest`;
-   - `ErpGateway.getProducts()`;
-   - new `ProductApiController` with `GET /api/products` (pass-through, no migration).
-   Dotnet and typescript variants are a separate follow-up plan. Rehearse #65 on `gh-optivem-monolith-java.yaml`.
+3. - [ ] **Enumerable ERP product-list path, Java only** (gh-optivem plan `plans/backlog/p2-atdd-quality/20260613-1950-view-product-list-erp-list-gap.md`, Option A). **Shop side done (2026-11-06, see `git log -- system/monolith/java/src/main/java/com/mycompany/myshop/api/controller/ProductApiController.java`):** `ErpStubClient.configureGetProducts`, `ErpDriver.getProducts` / `returnsProducts`, `given().products().withProduct(sku, price)` and `then().products().containsProduct(sku, price)` (`given().product()` unchanged; the list replaces the default product), `shouldBeAbleToListProducts()` in `BaseErpContractTest`, `ErpGateway.getProducts()`, `ProductService` and `ProductApiController` (`GET /api/products`, authenticated, pass-through, no migration). Verified: compile-all green; monolith-java `--sample` green; full contract suites (stub and real) green, including the new list contract on both. **Remaining:** rehearse #65 on `gh-optivem-monolith-java.yaml` (`scripts/atdd-rehearsal.sh 65` in gh-optivem). Blocked on the `gh` token's missing `project` scope (`gh auth refresh -h github.com -s project`) and gh-optivem's `.env`; the rehearsal also writes to shop, so run it when no cloud run is in progress. The child plan's reasons 2 and 3 (default product in `WhenImpl.viewProductList`, exact counts on a shared WireMock) concern the DSL the agents write for #65; the new verification asserts on staged SKUs, not counts. Dotnet and typescript variants are a separate follow-up plan.
 
 4. - [ ] **JSONPlaceholder "customer directory" external system** (gh-optivem plan `plans/backlog/p3-tooling-cost/20260617-1001-rehearsal-corpus-testinstance-and-refine.md`, steps 5a onward). Register a read-only `/users`-backed external system, `real-kind: test-instance`, in all stack configs (monolith/multitier × java/dotnet/typescript). Rehearse only under `gh-optivem-monolith-java.yaml`. The refine entry point (6a) is deferred and out of scope.
 
 ## Order and conflicts
 
-Items 1 → 2 → 3 → 4, serial: all four use the rehearsal lock, and 1–3 touch `system-test/java`. Item 3 should start only after Item 1's push is verified.
+Items 3 → 4, serial: both rehearsals use the rehearsal lock.

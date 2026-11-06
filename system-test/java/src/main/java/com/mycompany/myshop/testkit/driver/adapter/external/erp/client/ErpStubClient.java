@@ -7,6 +7,8 @@ import com.mycompany.myshop.testkit.driver.adapter.external.erp.client.dtos.erro
 import com.mycompany.myshop.testkit.common.Result;
 import com.mycompany.myshop.testkit.driver.adapter.shared.client.wiremock.JsonWireMockClient;
 
+import java.util.List;
+
 public class ErpStubClient extends BaseErpClient {
     private static final String ERP_PRODUCTS_ENDPOINT = "/erp/api/products";
     private static final String ERP_PROMOTION_ENDPOINT = "/erp/api/promotion";
@@ -21,6 +23,11 @@ public class ErpStubClient extends BaseErpClient {
     public Result<Void, ExtErpErrorResponse> configureGetProduct(ExtProductDetailsResponse response) {
         var sku = response.getId();
         return wireMockClient.stubGet(ERP_PRODUCTS_ENDPOINT + "/" + sku, HttpStatus.OK, response)
+                .mapError(ExtErpErrorResponse::new);
+    }
+
+    public Result<Void, ExtErpErrorResponse> configureGetProducts(List<ExtProductDetailsResponse> response) {
+        return wireMockClient.stubGet(ERP_PRODUCTS_ENDPOINT, HttpStatus.OK, response)
                 .mapError(ExtErpErrorResponse::new);
     }
 

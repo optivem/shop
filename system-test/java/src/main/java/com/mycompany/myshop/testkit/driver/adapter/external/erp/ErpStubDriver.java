@@ -4,6 +4,7 @@ import com.mycompany.myshop.testkit.driver.adapter.external.erp.client.ErpStubCl
 import com.mycompany.myshop.testkit.driver.adapter.external.erp.client.dtos.ExtGetPromotionResponse;
 import com.mycompany.myshop.testkit.driver.adapter.external.erp.client.dtos.ExtProductDetailsResponse;
 import com.mycompany.myshop.testkit.driver.port.external.erp.dtos.ReturnsProductRequest;
+import com.mycompany.myshop.testkit.driver.port.external.erp.dtos.ReturnsProductsRequest;
 import com.mycompany.myshop.testkit.driver.port.external.erp.dtos.ReturnsPromotionRequest;
 import com.mycompany.myshop.testkit.driver.port.external.erp.dtos.error.ErpErrorResponse;
 import com.mycompany.myshop.testkit.common.Converter;
@@ -26,7 +27,22 @@ public class ErpStubDriver extends BaseErpDriver<ErpStubClient> {
 
     @Override
     public Result<Void, ErpErrorResponse> returnsProduct(ReturnsProductRequest request) {
-        var extProductDetailsResponse = ExtProductDetailsResponse.builder()
+        return client.configureGetProduct(toExtProductDetailsResponse(request))
+                .mapError(ext -> new ErpErrorResponse(ext.getMessage()));
+    }
+
+    @Override
+    public Result<Void, ErpErrorResponse> returnsProducts(ReturnsProductsRequest request) {
+        var extProducts = request.getProducts().stream()
+                .map(ErpStubDriver::toExtProductDetailsResponse)
+                .toList();
+
+        return client.configureGetProducts(extProducts)
+                .mapError(ext -> new ErpErrorResponse(ext.getMessage()));
+    }
+
+    private static ExtProductDetailsResponse toExtProductDetailsResponse(ReturnsProductRequest request) {
+        return ExtProductDetailsResponse.builder()
                 .id(request.getSku())
                 .title("")
                 .description("")
@@ -34,9 +50,6 @@ public class ErpStubDriver extends BaseErpDriver<ErpStubClient> {
                 .category("")
                 .brand("")
                 .build();
-
-        return client.configureGetProduct(extProductDetailsResponse)
-                .mapError(ext -> new ErpErrorResponse(ext.getMessage()));
     }
 
     @Override

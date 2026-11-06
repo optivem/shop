@@ -29,6 +29,7 @@ import com.mycompany.myshop.core.services.CouponService;
 import com.mycompany.myshop.core.services.IdempotencyKeyStore;
 import com.mycompany.myshop.core.services.IdempotentOrderService;
 import com.mycompany.myshop.core.services.OrderService;
+import com.mycompany.myshop.core.services.ProductService;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
@@ -85,6 +86,7 @@ class SecurityConfigTest {
         route("GET", "/api/orders/{orderNumber}", Access.AUTHENTICATED),
         route("POST", "/api/orders/{orderNumber}/cancel", Access.AUTHENTICATED),
         route("POST", "/api/orders/{orderNumber}/deliver", Access.ADMIN_ONLY),
+        route("GET", "/api/products", Access.AUTHENTICATED),
         route("GET", "/api/coupons", Access.ADMIN_ONLY),
         route("POST", "/api/coupons", Access.ADMIN_ONLY),
         route("GET", "/", Access.AUTHENTICATED),
@@ -119,6 +121,9 @@ class SecurityConfigTest {
 
     @MockitoBean
     private CouponService couponService;
+
+    @MockitoBean
+    private ProductService productService;
 
     private static RequestPostProcessor adminToken() {
         return jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN"));

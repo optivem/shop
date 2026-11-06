@@ -10,6 +10,7 @@ import com.mycompany.myshop.testkit.dsl.core.scenario.given.steps.GivenCouponImp
 import com.mycompany.myshop.testkit.dsl.core.scenario.given.steps.GivenCountryImpl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.given.steps.GivenOrderImpl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.given.steps.GivenProductImpl;
+import com.mycompany.myshop.testkit.dsl.core.scenario.given.steps.GivenProductsImpl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.given.steps.GivenPromotionImpl;
 import com.mycompany.myshop.testkit.dsl.port.given.GivenStage;
 import com.mycompany.myshop.testkit.dsl.port.then.ThenStage;
@@ -25,6 +26,7 @@ public class GivenImpl implements GivenStage {
     private GivenClockImpl clock;
     private GivenPromotionImpl promotion;
     private final List<GivenProductImpl> products;
+    private final List<GivenProductsImpl> productLists;
     private final List<GivenOrderImpl> orders;
     private final List<GivenCountryImpl> countries;
     private final List<GivenCouponImpl> coupons;
@@ -40,6 +42,7 @@ public class GivenImpl implements GivenStage {
         this.clock = null;
         this.promotion = new GivenPromotionImpl(this);
         this.products = new ArrayList<>();
+        this.productLists = new ArrayList<>();
         this.orders = new ArrayList<>();
         this.countries = new ArrayList<>();
         this.coupons = new ArrayList<>();
@@ -50,6 +53,14 @@ public class GivenImpl implements GivenStage {
         var product = new GivenProductImpl(this);
         products.add(product);
         return product;
+    }
+
+    /** Stages the ERP product list; it replaces the default product, so a list scenario sees only what it stages. */
+    public GivenProductsImpl products() {
+        defaults.markProduct();
+        var productList = new GivenProductsImpl(this);
+        productLists.add(productList);
+        return productList;
     }
 
     public GivenOrderImpl order() {
@@ -168,6 +179,9 @@ public class GivenImpl implements GivenStage {
     private void setupErp() {
         for (var product : products) {
             product.execute(app);
+        }
+        for (var productList : productLists) {
+            productList.execute(app);
         }
     }
 

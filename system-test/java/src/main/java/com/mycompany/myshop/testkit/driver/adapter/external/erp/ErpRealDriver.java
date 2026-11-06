@@ -3,6 +3,7 @@ package com.mycompany.myshop.testkit.driver.adapter.external.erp;
 import com.mycompany.myshop.testkit.driver.adapter.external.erp.client.ErpRealClient;
 import com.mycompany.myshop.testkit.driver.adapter.external.erp.client.dtos.ExtCreateProductRequest;
 import com.mycompany.myshop.testkit.driver.port.external.erp.dtos.ReturnsProductRequest;
+import com.mycompany.myshop.testkit.driver.port.external.erp.dtos.ReturnsProductsRequest;
 import com.mycompany.myshop.testkit.driver.port.external.erp.dtos.ReturnsPromotionRequest;
 import com.mycompany.myshop.testkit.driver.port.external.erp.dtos.error.ErpErrorResponse;
 import com.mycompany.myshop.testkit.common.Result;
@@ -35,5 +36,18 @@ public class ErpRealDriver extends BaseErpDriver<ErpRealClient> {
 
         return client.createProduct(createProductRequest)
                 .mapError(ext -> new ErpErrorResponse(ext.getMessage()));
+    }
+
+    /** The real ERP lists every product it holds, so staging a list means creating each product in it. */
+    @Override
+    public Result<Void, ErpErrorResponse> returnsProducts(ReturnsProductsRequest request) {
+        for (var product : request.getProducts()) {
+            var result = returnsProduct(product);
+            if (result.isFailure()) {
+                return result;
+            }
+        }
+
+        return Result.success();
     }
 }
