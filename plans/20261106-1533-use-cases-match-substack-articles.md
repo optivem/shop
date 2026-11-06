@@ -7,7 +7,7 @@
 
 ## Outcomes
 
-- `use-case-narratives/place-order.md` holds the narrative exactly as the articles show it: primary actor Customer, secondary actors ERP and Clock, a 9-step main success scenario, and extensions 2a, 3a, 4a, 4b, 5a, 5b and 6a. The old `docs/design/shared/use-case-narrative.md` is gone, or it points to the new file.
+- `docs/use-cases/UC-001-place-order.md` holds the narrative exactly as the articles show it, in place of the two-line `## Main scenario`: primary actor Customer, secondary actors ERP and Clock, a 9-step main success scenario, and extensions 2a, 3a, 4a, 4b, 5a, 5b and 6a. The old `docs/design/shared/use-case-narrative.md` is gone, or it points to the new file.
 - The narrative says ERP everywhere, never SAP.
 - Each acceptance criterion in `docs/use-cases/UC-001-place-order.md` that comes from an extension names that extension: 2a → UC-001.12, 3a → UC-001.13, 4a → UC-001.8, 4b → UC-001.10, 5a → UC-001.14, 5b → UC-001.9, 6a → UC-001.11.
 - The acceptance criteria are in the format the articles show (see open question 1).
@@ -28,9 +28,9 @@ These come first, because the articles and the spec gate disagree. Each one need
 
 ## Steps
 
-- [ ] Step 1: Write `use-case-narratives/place-order.md`. Copy the narrative block verbatim from the legacy coverage draft (the `# Use Case: Place Order` block under "Step 1.2. Generate the use case narrative for the primary use case"). Use the version without Stakeholders, Preconditions, Trigger and guarantees: both drafts dropped those sections on 2026-11-06.
+- [ ] Step 1: Write the narrative into `docs/use-cases/UC-001-place-order.md`, replacing the two-line `## Main scenario`. Copy the narrative block verbatim from the legacy coverage draft (the `# Use Case: Place Order` block under "Step 1.2. Generate the use case narrative for the core use case"). Also add `docs/business-rules/UC-001-place-order.md` with BR-1 to BR-4 from the same step. Use the version without Stakeholders, Preconditions, Trigger and guarantees: both drafts dropped those sections on 2026-11-06.
 - [ ] Step 2: Remove `docs/design/shared/use-case-narrative.md`, or replace its Place Order part with a link to the new file. Keep the template section only if something still uses it (grep the repo first). Update any links to the old path.
-- [ ] Step 3: Rewrite the acceptance criteria in `docs/use-cases/UC-001-place-order.md` in the format decided in open question 1. Keep every ID, UC-001.1 to UC-001.14, unchanged, because the Java tests are tagged with them. Add the narrative references for 2a, 3a, 4b and 6a (see Outcomes). Replace the two-line `## Main scenario` with a link to the narrative.
+- [ ] Step 3: Rewrite the acceptance criteria in `docs/use-cases/UC-001-place-order.md` in the format decided in open question 1. Keep every ID, UC-001.1 to UC-001.14, unchanged, because the Java tests are tagged with them. Add the narrative references for 2a, 3a, 4b and 6a (see Outcomes).
 - [ ] Step 4: If open question 1 is A, the gh-optivem parser change ships first, then this step. If it's B, skip it and change the articles instead.
 - [ ] Step 5: Add a Java acceptance test tagged `@Tag("UC-001.14")` for "ERP unavailable": the customer is told product information can't be retrieved right now. It goes in `PlaceOrderNegativeTest` or `PlaceOrderNegativeIsolatedTest`, whichever already stubs the ERP. Check that no test anywhere is tagged `UC-001.14` before adding one.
 - [ ] Step 6: Run `gh optivem spec` against the shop and check that the gate passes with all 14 criteria found.
