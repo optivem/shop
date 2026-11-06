@@ -86,9 +86,9 @@ echo "⚠️  This will permanently delete:"
 echo ""
 CONFIRM_VALUE="${PROJECT_ID:-$SYSTEM}"
 if [[ -n "$PROJECT_ID" ]]; then
-  read -rp "  Are you sure? Type the GCP project ID to confirm: " CONFIRM
+  read -rp "  Are you sure? Type the GCP project ID to confirm: " CONFIRM || CONFIRM=""
 else
-  read -rp "  Are you sure? Type the system name ($SYSTEM) to confirm: " CONFIRM
+  read -rp "  Are you sure? Type the system name ($SYSTEM) to confirm: " CONFIRM || CONFIRM=""
 fi
 
 if [[ "$CONFIRM" != "$CONFIRM_VALUE" ]]; then
