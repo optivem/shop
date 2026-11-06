@@ -1,6 +1,5 @@
 # 2026-11-06 15:33:50 UTC — Bring the Place Order use case in line with the Substack articles
 
-> 🤖 **Picked up by agent** — `531392d34340` at `2026-11-06T20:23:15Z`
 
 ## TL;DR
 
@@ -23,15 +22,11 @@
 
 ## ▶ Next executable step (resume here)
 
-Step 1: write the narrative and the business rules file (see below). Source: the `# Use Case: Place Order` block under "Step 1.2" in `articles/published/2026-11-06-PAID-ATDD-acceptance-test-coverage-with-ai.md` (read it with `gh api repos/optivem/substack/contents/<path> -H 'Accept: application/vnd.github.raw'`).
+Only the deferred Step 5 remains (UC-001.14, ERP unavailable). It needs a user decision: approve production error handling (a 503 with a dedicated message) plus an \"ERP unavailable\" test kit step in all three languages, best split into its own plan. Steps 1 to 3 are done; the Gherkin criteria already include the `@UC-001.14 @narrative-5a` scenario.
 
 ## Steps
 
-- [ ] Step 1: Write the narrative into `docs/use-cases/UC-001-place-order.md`, replacing the two-line `## Main scenario`. Copy the narrative block verbatim from the coverage article (the `# Use Case: Place Order` block under "Step 1.2. Generate the use case narrative for the core use case"). Also add `docs/business-rules/UC-001-place-order.md` with BR-1 to BR-4 from the same step. Use the version without Stakeholders, Preconditions, Trigger and guarantees: both articles dropped those sections on 2026-11-06.
-- [ ] Step 2: Remove `docs/design/shared/use-case-narrative.md`, or replace its Place Order part with a link to the new file. Keep the template section only if something still uses it (grep the repo first). Update any links to the old path.
-- [ ] Step 3: Rewrite the acceptance criteria in `docs/use-cases/UC-001-place-order.md` as Gherkin scenarios in the articles' format. Keep every ID, UC-001.1 to UC-001.14, unchanged, because the Java tests are tagged with them. Add the narrative tags (see Outcomes).
-- [ ] Step 5: Add a Java acceptance test tagged `@Tag("UC-001.14")` for "ERP unavailable": the customer is told product information can't be retrieved right now. It goes in `PlaceOrderNegativeTest` or `PlaceOrderNegativeIsolatedTest`, whichever already stubs the ERP. Check that no test anywhere is tagged `UC-001.14` before adding one.
-- [ ] Step 7: Tell the substack side which SHOP WORK notes are now done, so they can be removed from both articles: the narrative note and the Gherkin note. Also flag that the "delete criteria once their tests pass" paragraph conflicts with the shop keeping its criteria.
+- [ ] Step 5: Add a Java acceptance test tagged `@Tag("UC-001.14")` for "ERP unavailable": the customer is told product information can't be retrieved right now. It goes in `PlaceOrderNegativeTest` or `PlaceOrderNegativeIsolatedTest`, whichever already stubs the ERP. Check that no test anywhere is tagged `UC-001.14` before adding one. — ⏳ Deferred (blocked, needs user decision): not just a test. Today an unreachable ERP makes `ErpGateway.getProductDetails` throw `IllegalStateException`, and `GlobalExceptionHandler` turns that into a generic 500 ("An unexpected error occurred..."). The test needs: (a) production code: a dedicated exception plus a 503 handler with a "product information can't be retrieved right now" message, and the UI showing it, in the Java, .NET and TypeScript monoliths and multitier backends; (b) test kit: an "ERP unavailable" step through `ErpDriver`, `ErpStubDriver` (a WireMock 503 or fault), `ErpRealDriver`, and the use-case and scenario DSL, in all three languages; (c) the test itself, marked `@Isolated`. Suggest splitting it into its own plan.
 
 ## Out of scope
 
