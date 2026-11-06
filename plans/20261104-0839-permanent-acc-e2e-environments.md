@@ -17,7 +17,7 @@
 
 ## ▶ Next executable step (resume here)
 
-Design only, no mechanical edits yet: settle the open questions below (especially stack ↔ domain mapping, which variant, and ordering against the custom-domains plan) with `/refine-plan` on this file. After that, Step 1 is the first executable unit.
+All decisions are made (see Decisions). Start with Step 1 (read-only lifecycle check). Step 2 (DNS) is done; Steps 3–7 are edits to P2-owned files, allowed now because P2's bundle test is done (2026-11-06). Step 8 is the cloud proof.
 
 ## Steps
 
@@ -31,12 +31,15 @@ Design only, no mechanical edits yet: settle the open questions below (especiall
 - [ ] Step 8: Prove it end to end: dispatch cloud acceptance for the reference variant, check that both URLs serve the new revision with valid TLS, that tests ran against them, and that a second run keeps the same URLs.
 - [ ] Step 9: Docs: README links to `docs/` describing the environments (acc / e2e / qa / prod) and their URLs. No GitHub Pages.
 
-## Open questions
+## Decisions (user, 2026-11-06: accept all recommendations)
 
-- **Stack ↔ domain mapping (inferred):** I assumed `shop-acc` = `stub` stack (acceptance suites) and `shop-e2e` = `real` stack (e2e-api / e2e-ui suites against simulators). Is that right?
-- **"Permanent" meaning (inferred):** the services already persist across runs (no teardown in the workflow). I read "permanent" as *stable named URL that stays up*, not *always-warm (min-instances ≥ 1)*. Correct? Min-instances 1 would cost money and conflict with the ~$0 goal.
-- **Which variant:** only multitier-java (matching the decision that only one reference variant gets custom domains), or all six flavors (which needs a naming scheme like `shop-acc-monolith-dotnet`)?
-- **Ordering vs. the custom-domains plan:** the custom-domains follow-up (QA/prod + `auth.`) waits on event-hub's `20261102-1954-custom-domains-for-cloud-run.md`. Should this plan wait for it, or be folded into it as an extra step?
-- **Mapping mechanism:** Cloud Run domain mappings (free, preview, limited regions) vs. a global HTTPS load balancer (~$18/month, breaks the ~$0 goal). The answer depends on whether `GCP_REGION` supports domain mappings.
-- **Multitier backend URL:** keep the backend on `run.app`, add `api.shop-acc` / `api.shop-e2e` hosts, or route `/api` through the frontend?
-- **Concurrency:** two acceptance runs could redeploy the same permanent services at once. Is the existing workflow `concurrency` group enough, or should it be explicit per environment?
+Open questions: none — all resolved before execution.
+
+- **Stack ↔ domain:** `shop-acc` = `stub` stack (acceptance suites); `shop-e2e` = `real` stack (e2e suites against simulators).
+- **"Permanent":** a stable named URL that stays up; min-instances stays 0 (cold starts are fine, cost stays ~$0).
+- **Variant:** multitier-java only (the reference variant). The other five flavors stay on `run.app`.
+- **Ordering:** don't wait for event-hub's custom-domains plan; use the same opt-in repo-variable pattern (domains unset = no behaviour change).
+- **Mechanism:** Cloud Run domain mappings (free; `us-central1` supports them). No load balancer.
+- **Multitier backend URL:** stays on its `run.app` URL; only the frontend gets the custom domain.
+- **Concurrency:** the existing per-workflow `concurrency` group is enough.
+- **DNS (Step 2) is done by the user (2026-11-06):** `optivem.com` verified for the user's Google account (Search Console, TXT record); CNAMEs `shop-acc` and `shop-e2e` → `ghs.googlehosted.com` resolve publicly. Still to check in Step 7: the deployer SA can create mappings for a domain verified by the user's account (it may need to be added as a verified owner in Search Console, or the mapping created once by the user).
