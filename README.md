@@ -169,4 +169,4 @@ The `.github/workflows/` directory contains runnable pipelines for all 6 matched
 - **Cloud acceptance stage** (`acceptance-stage`, Cloud Run) is manual; run it on a commit that passed both gates. It is the only workflow that creates release candidates
 - **QA, QA sign-off and production stages** are manual and deploy to Cloud Run; each has a commented-out Docker Compose alternative, which is only a zero-cost stand-in
 
-Details: [Commit Stage](docs/pipeline/commit-stage.md), [Acceptance Stage](docs/pipeline/acceptance-stage.md) (including why legacy is a separate, deletable workflow), [QA and Production Stages](docs/pipeline/qa-and-prod-stages.md), and the cloud setup and [cost model](terraform/README.md#cost).
+Details: [Commit Stage](docs/pipeline/commit-stage.md), [Acceptance Stage](docs/pipeline/acceptance-stage.md) (including why legacy is a separate, deletable workflow), [QA and Production Stages](docs/pipeline/qa-and-prod-stages.md), the [Environments](docs/environments.md) (acceptance, E2E, QA, production) and their URLs, and the cloud setup and [cost model](terraform/README.md#cost).
