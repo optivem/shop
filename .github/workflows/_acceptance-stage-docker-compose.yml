@@ -425,7 +425,7 @@ jobs:
       # Only monolith-java runs it today (carried over from monolith-java-acceptance-stage.yml).
       # DISABLED 2026-11-06: docs/use-cases/ now holds Gherkin criteria, which the gh-optivem
       # spec parser can't read yet (it finds zero criteria and passes vacuously).
-      # Re-enable via plans/move-to-gh-optivem/20261106-2030-spec-gate-read-gherkin-criteria.md.
+      # Re-enable via plans/20261106-2030-spec-gate-read-gherkin-criteria.md.
       # - name: spec-gate
       #   if: inputs.suite-set == 'latest' && inputs.architecture == 'monolith' && env.TEST_LANGUAGE == 'java'
       #   run: gh optivem spec check --mode lenient

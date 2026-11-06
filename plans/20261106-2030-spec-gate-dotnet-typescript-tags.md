@@ -15,7 +15,7 @@ Step 1: find out how each language can put a test tag into its JUnit XML as a `<
 - [ ] Step 2: Tag the .NET acceptance tests with the same IDs as the Java tests, one for one (use `system-test/java/.../latest/acceptance/PlaceOrder*Test.java` as the reference).
 - [ ] Step 3: The same for TypeScript.
 - [ ] Step 4: Add the .NET and TypeScript result globs to `results:` in `spec.yaml`. Decide whether the gate should report per language or pooled: pooled lets one language hide another's gap, so check how gh-optivem merges results.
-- [ ] Step 5: Extend the `spec-gate` step's `if:` to all languages. Do this only once the gate is back on (see `plans/move-to-gh-optivem/20261106-2030-spec-gate-read-gherkin-criteria.md`).
+- [ ] Step 5: Extend the `spec-gate` step's `if:` to all languages. Do this only once the gate is back on (see `plans/20261106-2030-spec-gate-read-gherkin-criteria.md`).
 
 ## Notes
 

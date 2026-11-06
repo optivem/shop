@@ -12,13 +12,13 @@
 - The narrative says ERP everywhere, never SAP.
 - The acceptance criteria are Gherkin scenarios tagged `@UC-001.N`, as the articles show them. Each criterion that comes from an extension also carries that extension's tag: 2a → UC-001.12, 3a → UC-001.13, 4a → UC-001.8, 4b → UC-001.10, 5a → UC-001.14, 5b → UC-001.9, 6a → UC-001.11.
 - UC-001.14 (ERP unavailable) has a tagged Java acceptance test.
-- The `spec-gate` step is commented out, with a pointer to the follow-up plan `plans/move-to-gh-optivem/20261106-2030-spec-gate-read-gherkin-criteria.md`. `spec.yaml` stays. (Done.)
+- The `spec-gate` step is commented out, with a pointer to the follow-up plan `plans/20261106-2030-spec-gate-read-gherkin-criteria.md`. `spec.yaml` stays. (Done.)
 
 ## Decisions (resolved 2026-11-06 with the user)
 
-1. **Criteria format:** Gherkin scenarios, as the articles show them. gh-optivem's spec parser (`internal/spec/usecase.go`, `criterionPattern`) only reads bullet lines. A probe showed `gh optivem spec validate` passes with zero criteria found, so the gate would turn into a silent no-op. **Resolution:** comment out the `spec-gate` step in `.github/workflows/_acceptance-stage-docker-compose.yml` and keep `spec.yaml`. A follow-up plan in `plans/move-to-gh-optivem/` teaches the parser Gherkin and turns the step back on. Shop doesn't change gh-optivem directly.
+1. **Criteria format:** Gherkin scenarios, as the articles show them. gh-optivem's spec parser (`internal/spec/usecase.go`, `criterionPattern`) only reads bullet lines. A probe showed `gh optivem spec validate` passes with zero criteria found, so the gate would turn into a silent no-op. **Resolution:** comment out the `spec-gate` step in `.github/workflows/_acceptance-stage-docker-compose.yml` and keep `spec.yaml`. A follow-up plan teaches the parser Gherkin and turns the step back on. Shop doesn't change gh-optivem directly.
 2. **Deleting criteria once their tests pass:** keep the criteria in the shop for now. Tell the substack side about the conflict with the "delete" paragraph.
-3. **.NET/TypeScript tags:** the criteria are already shared by all three languages (`docs/use-cases/`). Only the tests and the gate's `results` input are Java-only, and `results` already accepts a list. Tagging the .NET and TypeScript tests goes in its own plan under `plans/backlog/p3-test-parity/`, not here.
+3. **.NET/TypeScript tags:** the criteria are already shared by all three languages (`docs/use-cases/`). Only the tests and the gate's `results` input are Java-only, and `results` already accepts a list. Tagging the .NET and TypeScript tests goes in its own plan (`plans/20261106-2030-spec-gate-dotnet-typescript-tags.md`), not here.
 
 ## ▶ Next executable step (resume here)
 
