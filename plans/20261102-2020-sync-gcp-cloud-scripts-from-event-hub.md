@@ -24,6 +24,11 @@ Everything except the manual checks is done and on `main` (2026-11-03). Only the
 2. **On a Windows host**, with the `gh.exe` credential helpers in the Windows `~/.gitconfig`: attach to the container and check that `fix-git-credential-helpers.sh` (now `postAttachCommand`) prints "Fixed …" (or "Removed …" while the container's `gh` isn't logged in), and that `git push` works without the `gh.exe: not found` error.
 3. Optional: re-run `./setup-gcp.sh` (it's idempotent) and check the "✅ ADC quota project: <project>" line.
 
+**How to resume after the rebuild (user, 2026-11-06):**
+1. In a terminal in the rebuilt container, run `neonctl --version` (must print a version) and `git push` (must work, or say "Everything up-to-date", with no `gh.exe: not found`). Scroll back through the rebuild output: no `MISSING` and no sudo errors.
+2. Start Claude and type `/execute-plan plans/20261102-2020-sync-gcp-cloud-scripts-from-event-hub.md`. Tell it the results, e.g. "rebuild and Windows git push passed, skip the optional setup-gcp.sh re-run". If something failed, use `/fix-bug <paste the error>` instead.
+3. **Executor:** if checks 1 and 2 passed, delete this plan (check 3 is optional) and commit. Also offer the pending `teardown-gcp.sh` fix: on lines 89 and 91, change `read -rp "..." CONFIRM` to `read -rp "..." CONFIRM || CONFIRM=""`. With `set -euo pipefail`, an EOF on stdin (e.g. `< /dev/null`) currently makes the script exit silently with status 1 instead of printing "  Aborted." and exiting 0. Apply it only if the user says yes.
+
 ## Approach: a best-of-both merge, not a copy
 
 For every file, read **both** versions side by side and write the best merged version for shop. Don't take event-hub's file wholesale and don't keep shop's by default.
