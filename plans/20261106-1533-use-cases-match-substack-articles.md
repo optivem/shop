@@ -2,7 +2,7 @@
 
 ## TL;DR
 
-**Why:** Two paid Substack drafts show Place Order as the reader's worked example: `substack/articles/drafts/2026-11-06-PAID-ATDD-acceptance-test-coverage-on-legacy-fast.md` and `substack/articles/drafts/next/2026-11-06-PAID-ATDD-use-cases-stay-user-stories-go.md`. They show a full use case narrative and Gherkin acceptance criteria. The shop has an older, shorter narrative and one-line bullet criteria. A reader who opens the shop after reading either article finds something different from what the article showed.
+**Why:** Two paid Substack drafts show Place Order as the reader's worked example: `substack/articles/published/2026-11-06-PAID-ATDD-acceptance-test-coverage-with-ai.md` and `substack/articles/drafts/next/2026-11-06-PAID-ATDD-use-cases-stay-user-stories-go.md`. They show a full use case narrative and Gherkin acceptance criteria. The shop has an older, shorter narrative and one-line bullet criteria. A reader who opens the shop after reading either article finds something different from what the article showed.
 **End result:** The shop's Place Order narrative and acceptance criteria match what the articles show, the spec gate still passes, and every acceptance criterion has a tagged test.
 
 ## Outcomes
