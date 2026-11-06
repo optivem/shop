@@ -17,19 +17,22 @@
 
 ## ▶ Next executable step (resume here)
 
-All decisions are made (see Decisions). Start with Step 1 (read-only lifecycle check). Step 2 (DNS) is done; Steps 3–7 are edits to P2-owned files, allowed now because P2's bundle test is done (2026-11-06). Step 8 is the cloud proof.
+Step 8, the cloud proof. Wait until meta-prerelease run 42224541232 has finished and the local P5 commits are pushed. Then:
+
+1. Check the certificates: `gcloud beta run domain-mappings describe --domain shop-acc.optivem.com --region us-central1 --project shop-90b6e2` (and `shop-e2e`) must show `Ready: True`. Then run `ACC_DOMAIN=shop-acc.optivem.com E2E_DOMAIN=shop-e2e.optivem.com ./setup-custom-domains.sh`, which sets the `ACC_DOMAIN` / `E2E_DOMAIN` repo variables only once each mapping is ready (or set them with `gh variable set` after checking Ready yourself).
+2. Dispatch `gh workflow run multitier-java-acceptance-stage.yml` (it is skipped by the run gate unless there are new artifacts or test/workflow changes since the last RC; the P5 commit touches `_acceptance-stage.yml`, so the first run after the push goes ahead).
 
 ## Steps
 
-- [ ] Step 1: Confirm the current lifecycle: show that `_acceptance-stage.yml` service names are stable per variant and stack (`${p}`, `${p}-backend`, `${p}-frontend`), and that no workflow or script deletes them (`teardown-everything.sh` aside). Record the exact service names behind each domain.
-- [ ] Step 2: DNS and domain verification for `optivem.com`: verify domain ownership for the GCP project if not already done, and add CNAME records `shop-acc` and `shop-e2e` → `ghs.googlehosted.com`. Document this as a manual one-time step in `docs/` (the user owns DNS).
-- [ ] Step 3: Add the domain-mapping logic to the shared `_acceptance-stage.yml` (`deploy-stack` job): optional inputs/vars such as `acc-domain` / `e2e-domain`, used only when set. Idempotently ensure a Cloud Run domain mapping (or a load balancer, see open questions) for the stack's public service: frontend for multitier, system for monolith.
-- [ ] Step 4: Wire the reference variant's caller (`multitier-java-acceptance-stage.yml`) to pass the two domains. The other variant callers stay unchanged.
-- [ ] Step 5: Update `Resolve System URLs` in the `run` job so it uses the custom domain when one is set and falls back to `run.app` otherwise. For multitier, decide how the backend URL is exposed (see open questions).
-- [ ] Step 6: Keycloak: add `https://shop-acc.optivem.com/*` and `https://shop-e2e.optivem.com/*` to the client's redirect URIs and web origins in `deploy-keycloak-cloud`, driven by the same vars.
-- [ ] Step 7: Grant the deployer SA the permissions it needs for domain mappings (`run.domainmappings.*`), via `setup-gcp.sh`.
-- [ ] Step 8: Prove it end to end: dispatch cloud acceptance for the reference variant, check that both URLs serve the new revision with valid TLS, that tests ran against them, and that a second run keeps the same URLs.
-- [ ] Step 9: Docs: README links to `docs/` describing the environments (acc / e2e / qa / prod) and their URLs. No GitHub Pages.
+- [ ] Step 8: Prove it end to end. In the run, check: `deploy-keycloak` logs `shop-frontend now accepts: https://shop-acc.optivem.com https://shop-e2e.optivem.com` (later runs: `already accepts`); `deploy-stack` passes `Wait for Custom Domain (stub)` and `(real)`; `run` → `Resolve System URLs` / `Point systems.yaml` show `https://shop-acc.optivem.com` and `https://shop-e2e.optivem.com` as the UI URLs, and the e2e/acceptance UI suites pass (they log in through Keycloak, so this proves the redirect URIs). Afterwards `curl -sI https://shop-acc.optivem.com/` and `https://shop-e2e.optivem.com/` return 200 with a valid certificate. A second dispatch (with `commit-sha` set, to pass the run gate) keeps the same URLs and mapping. If it goes red only because of the domains, delete the two variables to fall back to `run.app`.
+
+## Done (2026-11-06, unpushed until meta-prerelease 42224541232 finishes)
+
+- Step 1: service names are stable per variant and stack (`${SYSTEM}-${PREFIX}-${STACK}[-frontend|-backend|-stubs|-sim]`), redeployed in place by `gcloud run deploy`; no workflow or script deletes them (only `teardown-gcp.sh` / `teardown-everything.sh`, which remove the whole project). Behind the domains: `shop-acc.optivem.com` → `shop-multitier-java-stub-frontend`, `shop-e2e.optivem.com` → `shop-multitier-java-real-frontend` (both exist).
+- Step 2: DNS done by the user; documented as the one-time setup in `docs/environments.md`.
+- Steps 3–6: the mapping is created on the user side, not in the workflow (see Decisions): `setup-custom-domains.sh` (called by `setup-gcp.sh` when `ACC_DOMAIN`/`E2E_DOMAIN` are set) creates the two mappings idempotently and sets the repo variables once each is Ready. `_acceptance-stage.yml` gains `acc-domain` / `e2e-domain` inputs (default empty): the domain is added to the backend's `ALLOWED_ORIGINS` (needed: nginx forwards the browser's `Origin`), a `Wait for Custom Domain` step checks TLS + route, and `Resolve System URLs` uses it as the multitier UI URL; the backend stays on `run.app`; monolith with a domain fails fast. `deploy-keycloak` gains `frontend-origins`: an add-only admin-API reconcile of the `shop` realm's `shop-frontend` client (the realm file never reaches an existing realm). Only `multitier-java-acceptance-stage.yml` passes `vars.ACC_DOMAIN` / `vars.E2E_DOMAIN`. The two mappings were created on 2026-11-06 with the user's gcloud identity (certificates pending at the time).
+- Step 7: dropped. The deployer already has `roles/run.admin` (includes `run.domainmappings.*`); the blocker was domain ownership, not IAM, and the workflow no longer creates mappings.
+- Step 9: `docs/environments.md` (acc / e2e / qa / prod, service names, URLs, one-time setup), linked from README and `docs/pipeline/acceptance-stage.md`.
 
 ## Decisions (user, 2026-11-06: accept all recommendations)
 
@@ -42,4 +45,5 @@ Open questions: none — all resolved before execution.
 - **Mechanism:** Cloud Run domain mappings (free; `us-central1` supports them). No load balancer.
 - **Multitier backend URL:** stays on its `run.app` URL; only the frontend gets the custom domain.
 - **Concurrency:** the existing per-workflow `concurrency` group is enough.
-- **DNS (Step 2) is done by the user (2026-11-06):** `optivem.com` verified for the user's Google account (Search Console, TXT record); CNAMEs `shop-acc` and `shop-e2e` → `ghs.googlehosted.com` resolve publicly. Still to check in Step 7: the deployer SA can create mappings for a domain verified by the user's account (it may need to be added as a verified owner in Search Console, or the mapping created once by the user).
+- **DNS (Step 2) is done by the user (2026-11-06):** `optivem.com` verified for the user's Google account (Search Console, TXT record); CNAMEs `shop-acc` and `shop-e2e` → `ghs.googlehosted.com` resolve publicly.
+- **Who creates the mapping (2026-11-06, during execution):** the user's identity, once, via `setup-custom-domains.sh` — the deployer SA isn't a verified owner, and a mapping on a permanent service survives every redeploy. So the workflow only consumes the domains.
