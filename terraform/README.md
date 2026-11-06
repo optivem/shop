@@ -198,6 +198,36 @@ gcloud auth login
 gcloud auth list
 ```
 
+### Having to `gcloud auth login` every day
+
+**Symptom:** `gcloud` (and so `./setup-gcp.sh` and `./teardown-gcp.sh`) fails with `There was a problem refreshing your current auth tokens: Reauthentication failed`, even though `gcloud auth list` still shows your account. The devcontainer keeps gcloud's credentials on a docker volume, so they survive rebuilds; what expires is the session.
+
+**Cause:** on Google Workspace / Cloud Identity accounts, Google applies a default **16-hour session length** to the Cloud SDK and Cloud Console. It is enforced through Access Context Manager, not the Admin console, so setting **Security → Google Cloud session control → Never require reauthentication** in the Admin console does **not** lift it for `gcloud` (that page is labelled "excluding Cloud SDK").
+
+**Fix (once, as a Workspace admin):**
+
+1. In the Admin console, **Directory → Groups → Create group**, e.g. `gcloud-no-reauth@<your-domain>`. Add the **Security** label, use a restricted access type (not Public, or anyone could join and opt out of reauthentication), set "Who can join" to invited users only, and add yourself as the only member.
+2. Copy the group ID from the browser URL: `admin.google.com/ac/groups/<GROUP_ID>/members`. (`gcloud identity groups describe` needs the Cloud Identity API enabled on a quota project; the URL avoids that.)
+3. Get the organization ID with `gcloud organizations list`, then create the binding:
+   ```bash
+   cat > /tmp/binding.yaml <<'EOF'
+   scopedAccessSettings:
+   - scope: {clientScope: {restrictedClientApplication: {name: Google Cloud SDK}}}
+     activeSettings: {sessionSettings: {sessionLength: 0s, sessionReauthMethod: LOGIN, sessionLengthEnabled: false}}
+   - scope: {clientScope: {restrictedClientApplication: {name: Cloud Console}}}
+     activeSettings: {sessionSettings: {sessionLength: 0s, sessionReauthMethod: LOGIN, sessionLengthEnabled: false}}
+   EOF
+   gcloud access-context-manager cloud-bindings create \
+     --organization=<ORG_ID> --group-key=<GROUP_ID> \
+     --binding-file=/tmp/binding.yaml
+   ```
+   For a daily login instead of none, use `sessionLength: 86400s` and `sessionLengthEnabled: true` in both blocks.
+4. Run `gcloud auth login --no-launch-browser` once more; only new sessions pick up the binding.
+
+**Check it:** `gcloud access-context-manager cloud-bindings list --organization=<ORG_ID>` lists the binding. If `gcloud auth print-access-token` still works more than 16 hours after the login, the fix holds.
+
+**Trade-off:** with reauthentication off, a leaked gcloud refresh token stays valid until revoked (`gcloud auth revoke`, or the user's security page). Keep the group to the people who need it. Source: [Session controls for reauthentication](https://docs.cloud.google.com/access-context-manager/docs/session-controls-for-reauthentication).
+
 ### Billing account not found
 ```bash
 # List all billing accounts
