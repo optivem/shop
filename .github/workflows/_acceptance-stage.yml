@@ -45,6 +45,20 @@ on:
         required: false
         type: string
         default: ''
+      # Custom domains of the permanent acceptance (stub) and E2E (real) environments, multitier only
+      # (docs/environments.md). The domain mapping is made once by setup-custom-domains.sh; here a set
+      # domain only becomes the UI URL the tests use, a CORS and Keycloak origin, and a deploy check.
+      # Empty (the default) keeps everything on run.app.
+      acc-domain:
+        description: 'Custom domain of the stub stack frontend (e.g. shop-acc.example.com); empty means run.app only'
+        required: false
+        type: string
+        default: ''
+      e2e-domain:
+        description: 'Custom domain of the real stack frontend (e.g. shop-e2e.example.com); empty means run.app only'
+        required: false
+        type: string
+        default: ''
 
 permissions: {}
 
@@ -288,6 +302,9 @@ jobs:
           project: ${{ vars.GCP_PROJECT_ID }}
           project-number: ${{ needs.shared-images.outputs.project-number }}
           region: ${{ vars.GCP_REGION }}
+          frontend-origins: >-
+            ${{ inputs.acc-domain && format('https://{0}', inputs.acc-domain) || '' }}
+            ${{ inputs.e2e-domain && format('https://{0}', inputs.e2e-domain) || '' }}
 
   # === Deploy: Real / Stub Stacks ===
   deploy-stack:
@@ -322,6 +339,7 @@ jobs:
       EXT_SERVICE: ${{ matrix.ext-service }}
       EXT_IMAGE: ${{ matrix.stack == 'real' && needs.shared-images.outputs.simulators-image || needs.shared-images.outputs.stubs-image }}
       EXT_PORT: ${{ matrix.ext-port }}
+      DOMAIN: ${{ matrix.stack == 'real' && inputs.e2e-domain || matrix.stack == 'stub' && inputs.acc-domain || '' }}
     steps:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v3
@@ -348,6 +366,9 @@ jobs:
           else
             image_ref "$BACKEND_IMAGE" backend_ref; image_ref "$FRONTEND_IMAGE" frontend_ref
           fi
+          if [[ -n "$DOMAIN" && "$ARCHITECTURE" != multitier ]]; then
+            echo "::error::Custom domains (acc-domain / e2e-domain) are supported for multitier only"; exit 1
+          fi
           p="${SYSTEM}-${PREFIX}-${STACK}"
           db_name="${SYSTEM//-/_}_${PREFIX//-/_}_${STACK}"
           {
@@ -369,6 +390,7 @@ jobs:
               echo "FRONTEND_IMAGE_REF=${frontend_ref}"
               echo "BACKEND_URL=$(url "${p}-backend")"
               echo "FRONTEND_URL=$(url "${p}-frontend")"
+              echo "ALLOWED_ORIGINS=$(url "${p}-frontend")${DOMAIN:+,https://${DOMAIN}}"
               echo "UI_HEALTH_URL=$(url "${p}-frontend")/"
               echo "API_HEALTH_URL=$(url "${p}-backend")/health"
             fi
@@ -449,7 +471,7 @@ jobs:
             --arg host "$DB_HOST" --arg port "$DB_PORT" --arg name "$DB_NAME" \
             --arg user "$DB_USER" --arg pass "$DB_PASSWORD" \
             --arg ext "$EXT_URL" --arg mode "$STACK" \
-            --arg origin "$FRONTEND_URL" --arg kc "$KEYCLOAK_URL" \
+            --arg origin "$ALLOWED_ORIGINS" --arg kc "$KEYCLOAK_URL" \
             '{POSTGRES_DB_HOST:$host, POSTGRES_DB_PORT:$port, POSTGRES_DB_NAME:$name,
               POSTGRES_DB_USER:$user, POSTGRES_DB_PASSWORD:$pass, PGSSLMODE:"require",
               ERP_API_URL:($ext + "/erp"), CLOCK_API_URL:($ext + "/clock"), TAX_API_URL:($ext + "/tax"),
@@ -488,6 +510,19 @@ jobs:
           wait-seconds: '10'
           timeout-seconds: '900'
 
+      # The mapping (setup-custom-domains.sh) routes to the service, so this proves TLS and the route.
+      - name: Wait for Custom Domain (${{ matrix.stack }})
+        if: env.DOMAIN != ''
+        uses: optivem/actions/wait-for-endpoints@v1
+        with:
+          endpoints: |
+            [
+              { "name": "MyShop UI (${{ env.DOMAIN }})", "url": "https://${{ env.DOMAIN }}/" }
+            ]
+          max-attempts: '30'
+          wait-seconds: '10'
+          timeout-seconds: '300'
+
   # === Run System Tests ===
   run:
     needs: [check, shared-images, deploy-stack]
@@ -505,6 +540,8 @@ jobs:
       ENVIRONMENT: acceptance
       REGION: ${{ vars.GCP_REGION }}
       PROJECT_NUMBER: ${{ needs.shared-images.outputs.project-number }}
+      ACC_DOMAIN: ${{ inputs.acc-domain }}
+      E2E_DOMAIN: ${{ inputs.e2e-domain }}
     outputs:
       version: ${{ steps.rc-version.outputs.version }}
       image-urls: ${{ steps.tag-images.outputs.tagged-image-urls }}
@@ -520,7 +557,9 @@ jobs:
             if [[ "$ARCHITECTURE" == monolith ]]; then
               ui="$(url "${p}")"; api="$ui"
             else
-              ui="$(url "${p}-frontend")"; api="$(url "${p}-backend")"
+              # The custom domain, when set, fronts the frontend only; the backend stays on run.app.
+              domain="$([[ "$stack" == real ]] && echo "$E2E_DOMAIN" || echo "$ACC_DOMAIN")"
+              ui="${domain:+https://${domain}}"; ui="${ui:-$(url "${p}-frontend")}"; api="$(url "${p}-backend")"
             fi
             {
               echo "MYSHOP_UI_BASE_URL_${mode}=${ui}"

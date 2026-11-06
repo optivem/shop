@@ -36,3 +36,7 @@ jobs:
       test-language: java
       images: '{"frontend":"multitier-frontend-react","backend":"multitier-backend-java"}'
       commit-sha: ${{ inputs.commit-sha }}
+      # Permanent environments on custom domains (docs/environments.md); unset = run.app only.
+      # setup-custom-domains.sh sets these once the domain mappings are ready.
+      acc-domain: ${{ vars.ACC_DOMAIN }}
+      e2e-domain: ${{ vars.E2E_DOMAIN }}

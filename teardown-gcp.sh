@@ -59,7 +59,7 @@ if [[ -z "$SYSTEM" ]]; then
   SYSTEM="${SYSTEM_NAME:-$(echo "${REPO#*/}" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]/-/g' | cut -c1-14 | sed 's/^-*//; s/-*$//')}"
 fi
 
-GH_VARIABLES=(GCP_PROJECT_ID GCP_REGION GCP_WORKLOAD_IDENTITY_PROVIDER GCP_SERVICE_ACCOUNT SYSTEM_NAME)
+GH_VARIABLES=(GCP_PROJECT_ID GCP_REGION GCP_WORKLOAD_IDENTITY_PROVIDER GCP_SERVICE_ACCOUNT SYSTEM_NAME ACC_DOMAIN E2E_DOMAIN)
 EXISTING_VARIABLES=$(gh variable list --json name -q '.[].name')
 LEFTOVER_VARIABLES=()
 for v in "${GH_VARIABLES[@]}"; do

@@ -7,6 +7,8 @@ set -euo pipefail
 #   Keep it to 8 chars or fewer to deploy multitier-typescript to production (12 for multitier-dotnet): Cloud Run caps service names at 49.
 # Optional: BILLING_KILL_SWITCH_AMOUNT=<whole number, default 1> sets the monthly cost at which billing is unlinked (terraform/billing-kill-switch.tf)
 # Optional: KC_ADMIN_PASSWORD=<password> sets the Keycloak admin password on first setup (default: generated)
+# Optional: ACC_DOMAIN=<domain> / E2E_DOMAIN=<domain> map the permanent acceptance / E2E environments to custom
+#   domains (setup-custom-domains.sh, docs/environments.md); needs the domain verified for your gcloud account
 # Usage: ./setup-gcp.sh [--yes]   (--yes applies Terraform plans that change/destroy resources without asking)
 
 AUTO_APPROVE=false
@@ -298,6 +300,12 @@ if secret_has_version "$SYSTEM-monolith-client-secret"; then
 else
   openssl rand -base64 32 | tr -d '\n' | gcloud secrets versions add "$SYSTEM-monolith-client-secret" --data-file=- --project="$PROJECT_ID" --quiet > /dev/null
   echo "  ✅ Stored $SYSTEM-monolith-client-secret"
+fi
+
+# Custom domains of the permanent acceptance / E2E environments (opt-in; docs/environments.md)
+if [[ -n "${ACC_DOMAIN:-}" || -n "${E2E_DOMAIN:-}" ]]; then
+  echo ""
+  PROJECT_ID="$PROJECT_ID" REGION="$REGION" SYSTEM="$SYSTEM" ../setup-custom-domains.sh   # cwd is terraform/ (see above)
 fi
 
 # GitHub secrets the cloud workflows need (not created by this script)

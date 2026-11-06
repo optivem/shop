@@ -28,6 +28,14 @@ inputs:
       through the admin API and set its secret from Secret Manager. Needs the repo checked out.
     required: false
     default: 'false'
+  frontend-origins:
+    description: >-
+      Extra origins (space-separated, e.g. https://shop-acc.example.com) the acceptance realm's
+      shop-frontend client must accept: added to its redirect URIs, post-logout redirect URIs and web
+      origins through the admin API, because the realm file never reaches a realm that already exists.
+      Add-only and idempotent. Empty (the default) changes nothing.
+    required: false
+    default: ''
 
 runs:
   using: 'composite'
@@ -122,4 +130,47 @@ runs:
         else
           curl -fsS "${auth[@]}" -X PUT "${api}/${id}" -d "$(jq -c --arg id "$id" '.id = $id' <<< "$client")" > /dev/null
           echo "Updated shop-monolith in shop-prod."
+        fi
+
+    # The custom domains of the permanent acceptance / E2E environments (docs/environments.md).
+    # Add-only: never removes a URI, so other variants' run.app URLs stay as the realm file made them.
+    - name: Allow custom-domain origins on shop-frontend
+      if: inputs.frontend-origins != ''
+      shell: bash
+      env:
+        SYSTEM: ${{ inputs.system }}
+        PROJECT_NUMBER: ${{ inputs.project-number }}
+        REGION: ${{ inputs.region }}
+        ORIGINS: ${{ inputs.frontend-origins }}
+      run: |
+        set -euo pipefail
+        # shellcheck disable=SC2086 # ORIGINS is a space-separated list
+        origins="$(printf '%s\n' $ORIGINS | jq -R . | jq -sc 'map(select(. != "") | sub("/+$"; ""))')"
+        for o in $(jq -r '.[]' <<< "$origins"); do
+          [[ "$o" =~ ^https://[a-z0-9.-]+$ ]] || { echo "::error::Not an https origin: $o"; exit 1; }
+        done
+        [[ "$origins" != "[]" ]] || { echo "No frontend origins to add."; exit 0; }
+        kc="https://${SYSTEM}-keycloak-${PROJECT_NUMBER}.${REGION}.run.app"
+        admin_password="$(gcloud secrets versions access latest --secret="${SYSTEM}-keycloak-admin-password")"
+        echo "::add-mask::${admin_password}"
+        token="$(curl -fsS "${kc}/realms/master/protocol/openid-connect/token" \
+          -d grant_type=password -d client_id=admin-cli -d username=admin \
+          --data-urlencode "password=${admin_password}" | jq -r .access_token)"
+        echo "::add-mask::${token}"
+        api="${kc}/admin/realms/shop/clients"
+        auth=(-H "Authorization: Bearer ${token}" -H "Content-Type: application/json")
+        client="$(curl -fsS "${auth[@]}" "${api}?clientId=shop-frontend" | jq -c '.[0] // empty')"
+        [[ -n "$client" ]] || { echo "::error::shop-frontend is missing from the shop realm"; exit 1; }
+        updated="$(jq -c --argjson o "$origins" '
+          ($o | map(. + "/*")) as $patterns
+          | .redirectUris = ((.redirectUris // []) + ($patterns - (.redirectUris // [])))
+          | .webOrigins = ((.webOrigins // []) + ($o - (.webOrigins // [])))
+          | .attributes["post.logout.redirect.uris"] |= (
+              ((. // "") | split("##") | map(select(. != ""))) as $have
+              | $have + ($patterns - $have) | join("##"))' <<< "$client")"
+        if [[ "$(jq -S . <<< "$updated")" == "$(jq -S . <<< "$client")" ]]; then
+          echo "shop-frontend already accepts: ${ORIGINS}"
+        else
+          curl -fsS "${auth[@]}" -X PUT "${api}/$(jq -r .id <<< "$client")" -d "$updated" > /dev/null
+          echo "shop-frontend now accepts: ${ORIGINS}"
         fi
