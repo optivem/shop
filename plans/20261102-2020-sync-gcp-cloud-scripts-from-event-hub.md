@@ -18,12 +18,11 @@
 
 ## ▶ Next executable step (resume here)
 
-Everything except the manual checks is done and on `main` (2026-11-03). Only the user can run these; delete this plan once they pass:
+Everything except the manual checks is done and on `main` (2026-11-03). Only the user can run these; delete this plan once they pass. (The teardown dry run passed on 2026-11-06: right GCP/Neon/GitHub targets, no Terraform warnings; with `< /dev/null` it exits at the `read` without printing the prompt.)
 
 1. **Rebuild the devcontainer** (Command Palette → Dev Containers: Rebuild Container) and check that `post-create.sh` installs `neonctl` without sudo errors and reports every tool, including `neonctl` and `jq`, with no `MISSING`.
 2. **On a Windows host**, with the `gh.exe` credential helpers in the Windows `~/.gitconfig`: attach to the container and check that `fix-git-credential-helpers.sh` (now `postAttachCommand`) prints "Fixed …" (or "Removed …" while the container's `gh` isn't logged in), and that `git push` works without the `gh.exe: not found` error.
-3. **Teardown dry run against shop's live project**: `gcloud auth login --no-launch-browser` (the agent's run found the gcloud token expired, so this wasn't run), then `./teardown-gcp.sh < /dev/null`. It must stop at "Type the GCP project ID to confirm" and show the right GCP project, Neon project and GitHub variable list, with no Terraform warning text. Don't confirm unless a real teardown is wanted. If shop is ever torn down, run it again and expect "✅ Nothing to tear down — already clean." and exit 0.
-4. Optional: re-run `./setup-gcp.sh` (it's idempotent) and check the "✅ ADC quota project: <project>" line.
+3. Optional: re-run `./setup-gcp.sh` (it's idempotent) and check the "✅ ADC quota project: <project>" line.
 
 ## Approach: a best-of-both merge, not a copy
 
