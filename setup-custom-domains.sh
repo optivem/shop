@@ -2,13 +2,15 @@
 set -euo pipefail
 
 # Maps the permanent environments of the reference variant (multitier-typescript) to custom domains:
-# acceptance (stub), E2E (real), QA and production. Sets the repo variables the acceptance, QA
-# and production stages read. See docs/environments.md.
+# acceptance (stub), E2E (real), QA and production. Also maps the one Keycloak every variant and
+# stage shares (KEYCLOAK_DOMAIN). Sets the repo variables the acceptance, QA and production stages
+# read. See docs/environments.md.
 #
 #   ACC_DOMAIN=shop-acc.optivem.com E2E_DOMAIN=shop-e2e.optivem.com \
-#   QA_DOMAIN=shop-qa.optivem.com PROD_DOMAIN=shop.optivem.com ./setup-custom-domains.sh
+#   QA_DOMAIN=shop-qa.optivem.com PROD_DOMAIN=shop.optivem.com \
+#   KEYCLOAK_DOMAIN=shop-auth.optivem.com ./setup-custom-domains.sh
 #
-# setup-gcp.sh calls this when any of the four is set; it can also run on its own.
+# setup-gcp.sh calls this when any of the five is set; it can also run on its own.
 # Any domain may be left unset to skip it. Idempotent: re-run it until all say "ready".
 #
 # Runs as you, not as the CI deployer: Cloud Run only maps a domain for a verified owner of it
@@ -19,7 +21,10 @@ set -euo pipefail
 #   - the parent domain verified in Search Console for your gcloud account (gcloud domains list-user-verified)
 #   - a CNAME <domain> -> ghs.googlehosted.com
 #   - one cloud acceptance run of the reference variant (and a QA / production deploy for QA_DOMAIN /
-#     PROD_DOMAIN), so the services to map exist
+#     PROD_DOMAIN), so the services to map exist; any variant's acceptance run creates Keycloak
+#
+# Setting KEYCLOAK_DOMAIN switches the token issuer of every realm on the next Keycloak deploy:
+# users log in again once, and a backend rejects tokens until it is redeployed (docs/environments.md).
 #
 # The repo variable for a domain is set only once its mapping is Ready (certificate issued), so the
 # stage never targets a domain that doesn't serve yet. Optional overrides: PROJECT_ID,
@@ -38,7 +43,7 @@ REMAP="${REMAP:-}"
 PENDING=0
 
 # Service names must match _acceptance-stage.yml / _deploy-stage.yml (deploy-stack):
-# <system>-<architecture>-<language>-<stack or stage>-frontend
+# <system>-<architecture>-<language>-<stack or stage>-frontend, and <system>-keycloak (deploy-keycloak)
 ensure_mapping() {
   local var="$1" domain="$2" service="$3" workflow="$4" mapped ready
   if [[ -z "$domain" ]]; then
@@ -90,6 +95,7 @@ ensure_mapping ACC_DOMAIN "${ACC_DOMAIN:-}" "${SYSTEM}-${FLAVOR}-stub-frontend" 
 ensure_mapping E2E_DOMAIN "${E2E_DOMAIN:-}" "${SYSTEM}-${FLAVOR}-real-frontend" "${FLAVOR}-acceptance-stage.yml"
 ensure_mapping QA_DOMAIN "${QA_DOMAIN:-}" "${SYSTEM}-${FLAVOR}-qa-frontend" "${FLAVOR}-qa-stage.yml"
 ensure_mapping PROD_DOMAIN "${PROD_DOMAIN:-}" "${SYSTEM}-${FLAVOR}-production-frontend" "${FLAVOR}-prod-stage.yml"
+ensure_mapping KEYCLOAK_DOMAIN "${KEYCLOAK_DOMAIN:-}" "${SYSTEM}-keycloak" "${FLAVOR}-acceptance-stage.yml"
 if (( PENDING )); then
   echo "  Not finished yet; re-run ./setup-custom-domains.sh (same variables) to complete it."
 fi

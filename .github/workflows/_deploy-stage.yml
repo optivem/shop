@@ -60,6 +60,9 @@ permissions: {}
 env:
   # Prefix for Cloud Run services, secrets and databases; set by setup-gcp.sh from the repo name
   SYSTEM: ${{ vars.SYSTEM_NAME }}
+  # Custom domain of the shared Keycloak (setup-custom-domains.sh, docs/environments.md). Empty keeps
+  # Keycloak on run.app. Set: the public URL every backend, frontend and harness uses (the token issuer).
+  KEYCLOAK_DOMAIN: ${{ vars.KEYCLOAK_DOMAIN }}
   ARCHITECTURE: ${{ inputs.architecture }}
   STAGE: ${{ inputs.stage }}
   PREFIX: ${{ inputs.architecture }}-${{ inputs.language }}
@@ -176,6 +179,7 @@ jobs:
           project: ${{ vars.GCP_PROJECT_ID }}
           project-number: ${{ needs.shared-images.outputs.project-number }}
           region: ${{ vars.GCP_REGION }}
+          keycloak-domain: ${{ vars.KEYCLOAK_DOMAIN }}
           reconcile-prod-realm: ${{ inputs.stage == 'production' }}
           frontend-origins: ${{ inputs.domain && format('https://{0}', inputs.domain) || '' }}
           frontend-realm: ${{ env.REALM }}
@@ -220,6 +224,7 @@ jobs:
         run: |
           set -euo pipefail
           url() { echo "https://$1-${PROJECT_NUMBER}.${REGION}.run.app"; }
+          kc_url() { if [[ -n "$KEYCLOAK_DOMAIN" ]]; then echo "https://${KEYCLOAK_DOMAIN}"; else url "${SYSTEM}-keycloak"; fi; }
           p="${SYSTEM}-${PREFIX}-${STAGE}"
           if [[ -n "$DOMAIN" && "$ARCHITECTURE" != multitier ]]; then
             echo "::error::A custom domain is supported for multitier only"; exit 1
@@ -241,7 +246,7 @@ jobs:
             echo "SIM_NAME=${p}-sim"
             echo "MIGRATE_JOB=${p}-migrate"
             echo "SIM_URL=$(url "${p}-sim")"
-            echo "KEYCLOAK_URL=$(url "${SYSTEM}-keycloak")"
+            echo "KEYCLOAK_URL=$(kc_url)"
             if [[ "$ARCHITECTURE" == monolith ]]; then
               echo "SYSTEM_SERVICE=${p}"
               echo "UI_HEALTH_URL=$(url "${p}")/health"
@@ -414,6 +419,7 @@ jobs:
         run: |
           set -euo pipefail
           url() { echo "https://$1-${PROJECT_NUMBER}.${REGION}.run.app"; }
+          kc_url() { if [[ -n "$KEYCLOAK_DOMAIN" ]]; then echo "https://${KEYCLOAK_DOMAIN}"; else url "${SYSTEM}-keycloak"; fi; }
           p="${SYSTEM}-${PREFIX}-${STAGE}"
           if [[ "$ARCHITECTURE" == monolith ]]; then
             ui="$(url "${p}")"; api="$ui"
@@ -427,7 +433,7 @@ jobs:
             echo "ERP_API_BASE_URL_REAL=$(url "${p}-sim")/erp"
             echo "CLOCK_API_BASE_URL_REAL=$(url "${p}-sim")/clock"
             echo "TAX_API_BASE_URL_REAL=$(url "${p}-sim")/tax"
-            echo "KEYCLOAK_BASE_URL=$(url "${SYSTEM}-keycloak")"
+            echo "KEYCLOAK_BASE_URL=$(kc_url)"
           } >> "$GITHUB_ENV"
 
       - name: Checkout Release Candidate

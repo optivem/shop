@@ -66,6 +66,9 @@ env:
   COMMIT_SHA: ${{ inputs.commit-sha || github.sha }}
   # Prefix for Cloud Run services, secrets and databases; set by setup-gcp.sh from the repo name
   SYSTEM: ${{ vars.SYSTEM_NAME }}
+  # Custom domain of the shared Keycloak (setup-custom-domains.sh, docs/environments.md). Empty keeps
+  # Keycloak on run.app. Set: the public URL every backend, frontend and harness uses (the token issuer).
+  KEYCLOAK_DOMAIN: ${{ vars.KEYCLOAK_DOMAIN }}
   ARCHITECTURE: ${{ inputs.architecture }}
   PREFIX: ${{ inputs.architecture }}-${{ inputs.language }}
   VERSION_FILE: system/${{ inputs.architecture }}/${{ inputs.language }}/VERSION
@@ -302,6 +305,7 @@ jobs:
           project: ${{ vars.GCP_PROJECT_ID }}
           project-number: ${{ needs.shared-images.outputs.project-number }}
           region: ${{ vars.GCP_REGION }}
+          keycloak-domain: ${{ vars.KEYCLOAK_DOMAIN }}
           frontend-origins: >-
             ${{ inputs.acc-domain && format('https://{0}', inputs.acc-domain) || '' }}
             ${{ inputs.e2e-domain && format('https://{0}', inputs.e2e-domain) || '' }}
@@ -354,6 +358,7 @@ jobs:
         run: |
           set -euo pipefail
           url() { echo "https://$1-${PROJECT_NUMBER}.${REGION}.run.app"; }
+          kc_url() { if [[ -n "$KEYCLOAK_DOMAIN" ]]; then echo "https://${KEYCLOAK_DOMAIN}"; else url "${SYSTEM}-keycloak"; fi; }
           # image_ref <image name> <variable>: sets <variable> to the tested image's digest URL.
           image_ref() {
             local ref
@@ -377,7 +382,7 @@ jobs:
             echo "EXT_NAME=${p}-${EXT_SERVICE}"
             echo "MIGRATE_JOB=${p}-migrate"
             echo "EXT_URL=$(url "${p}-${EXT_SERVICE}")"
-            echo "KEYCLOAK_URL=$(url "${SYSTEM}-keycloak")"
+            echo "KEYCLOAK_URL=$(kc_url)"
             if [[ "$ARCHITECTURE" == monolith ]]; then
               echo "SYSTEM_SERVICE=${p}"
               echo "SYSTEM_IMAGE_REF=${system_ref}"
@@ -550,6 +555,7 @@ jobs:
         run: |
           set -euo pipefail
           url() { echo "https://$1-${PROJECT_NUMBER}.${REGION}.run.app"; }
+          kc_url() { if [[ -n "$KEYCLOAK_DOMAIN" ]]; then echo "https://${KEYCLOAK_DOMAIN}"; else url "${SYSTEM}-keycloak"; fi; }
           for stack in real stub; do
             p="${SYSTEM}-${PREFIX}-${stack}"
             mode="${stack^^}"
@@ -571,7 +577,7 @@ jobs:
           done
           # One Keycloak serves both stacks. KEYCLOAK_URL_<MODE> enables token acquisition in the
           # Java and .NET harnesses (`system-test run` also exports them from systems.yaml).
-          kc="$(url "${SYSTEM}-keycloak")"
+          kc="$(kc_url)"
           {
             echo "KEYCLOAK_URL=${kc}"
             echo "KEYCLOAK_URL_REAL=${kc}"

@@ -4,7 +4,8 @@ description: >-
   Redeploys only when the image, a setting or the db credentials changed, so one workflow
   doesn't restart Keycloak under another's tests. Passes SYSTEM and RUN_APP_SUFFIX, which the
   image's realm files use as placeholders for the Cloud Run URLs (docker/keycloak/Dockerfile).
-  Needs gcloud authenticated.
+  With keycloak-domain set, that domain becomes Keycloak's public hostname (token issuer, login
+  pages); the admin API calls below stay on run.app either way. Needs gcloud authenticated.
 
 inputs:
   image:
@@ -22,6 +23,13 @@ inputs:
   region:
     description: 'GCP region'
     required: true
+  keycloak-domain:
+    description: >-
+      Custom domain of this Keycloak (vars.KEYCLOAK_DOMAIN, e.g. shop-auth.example.com), mapped by
+      setup-custom-domains.sh. Set: KC_HOSTNAME becomes https://<domain>, so every realm issues tokens
+      with it. Empty (the default) keeps the run.app URL as the hostname, exactly as before.
+    required: false
+    default: ''
   reconcile-prod-realm:
     description: >-
       'true' in the production stage: create or update the shop-prod realm's shop-monolith client
@@ -52,16 +60,25 @@ runs:
         PROJECT: ${{ inputs.project }}
         PROJECT_NUMBER: ${{ inputs.project-number }}
         REGION: ${{ inputs.region }}
+        KEYCLOAK_DOMAIN: ${{ inputs.keycloak-domain }}
       run: |
         set -euo pipefail
         url() { echo "https://$1-${PROJECT_NUMBER}.${REGION}.run.app"; }
+        # The public hostname (issuer, login and redirect URLs). KC_HOSTNAME_BACKCHANNEL_DYNAMIC (image)
+        # keeps run.app requests working, so the admin API steps below never depend on the mapping.
+        if [[ -n "$KEYCLOAK_DOMAIN" ]]; then
+          [[ "$KEYCLOAK_DOMAIN" =~ ^[a-z0-9.-]+$ ]] || { echo "::error::Not a domain: $KEYCLOAK_DOMAIN"; exit 1; }
+          hostname="https://${KEYCLOAK_DOMAIN}"
+        else
+          hostname="$(url "${SYSTEM}-keycloak")"
+        fi
         db="$(gcloud secrets versions access latest --secret="${SYSTEM}-db")"
         db_host="$(jq -r .host <<< "$db")"; db_port="$(jq -r .port <<< "$db")"
         db_user="$(jq -r .user <<< "$db")"; db_password="$(jq -r .password <<< "$db")"
         echo "::add-mask::${db_password}"
         env_file="${RUNNER_TEMP}/keycloak-env.json"
         jq -n \
-          --arg host "$(url "${SYSTEM}-keycloak")" \
+          --arg host "$hostname" \
           --arg dburl "jdbc:postgresql://${db_host}:${db_port}/${SYSTEM//-/_}_keycloak?sslmode=require" \
           --arg dbuser "$db_user" --arg dbpass "$db_password" \
           --arg system "$SYSTEM" --arg suffix "${PROJECT_NUMBER}.${REGION}.run.app" \
@@ -95,6 +112,20 @@ runs:
         max-attempts: '60'
         wait-seconds: '10'
         timeout-seconds: '900'
+
+    # The mapping (setup-custom-domains.sh) routes to the service, so this proves TLS and the route
+    # before any backend is pointed at the domain.
+    - name: Wait for Keycloak custom domain
+      if: inputs.keycloak-domain != ''
+      uses: optivem/actions/wait-for-endpoints@v1
+      with:
+        endpoints: |
+          [
+            {"name": "Keycloak shop (${{ inputs.keycloak-domain }})", "url": "https://${{ inputs.keycloak-domain }}/realms/shop/.well-known/openid-configuration"}
+          ]
+        max-attempts: '30'
+        wait-seconds: '10'
+        timeout-seconds: '300'
 
     # --import-realm skips realms that already exist, so a realm file change never reaches the live
     # shop-prod. This step applies the shop-monolith client from the same filters the image uses
