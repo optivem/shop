@@ -1,7 +1,5 @@
 # 2026-11-06 15:33:50 UTC — Place Order use case matches the Substack articles, with a spec gate that checks all three languages
 
-> 🤖 **Picked up by agent** — `8e8cd7062d0f` at `2026-11-07T11:12:16Z`
-
 > Merged on 2026-11-06 from three plans: this one, `20261106-2030-spec-gate-dotnet-typescript-tags.md` and `20261106-2030-spec-gate-read-gherkin-criteria.md`. The work is split into **parallel tracks** for autonomous execution with subagents (one subagent per track; tracks A, B and C don't touch the same files). Track D joins them at the end.
 
 ## TL;DR
