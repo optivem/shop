@@ -20,6 +20,7 @@ public class ErpStubClient : BaseErpClient
 
     private const string ErpProductsEndpoint = "/erp/api/products";
     private const string ErpPromotionEndpoint = "/erp/api/promotion";
+    private const string ErpApiPattern = "/erp/api/.*";
 
 
 
@@ -58,6 +59,13 @@ public class ErpStubClient : BaseErpClient
     public Task<Result<VoidValue, ExtErpErrorResponse>> ConfigureGetPromotionAsync(ExtGetPromotionResponse response)
 
         => _wireMockClient.StubGetAsync(ErpPromotionEndpoint, HttpStatus.Ok, response)
+
+            .MapErrorAsync(ExtErpErrorResponse.From);
+
+    /// <summary>Every ERP API call answers 503, outranking any product or promotion stubs.</summary>
+    public Task<Result<VoidValue, ExtErpErrorResponse>> ConfigureUnavailableAsync()
+
+        => _wireMockClient.StubGetMatchingAsync(ErpApiPattern, HttpStatus.ServiceUnavailable)
 
             .MapErrorAsync(ExtErpErrorResponse.From);
 

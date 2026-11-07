@@ -21,6 +21,7 @@ namespace Dsl.Core.Scenario.Given
         private readonly List<GivenCoupon> _coupons;
         private readonly DefaultGivens _defaults;
         private GivenClock? _clock;
+        private GivenErp? _erp;
         private GivenPromotion _promotion;
         private readonly CustomerAliases _customers = new();
         private Func<UserIdentity> _loggedIn = () => UserIdentity.Default;
@@ -39,6 +40,14 @@ namespace Dsl.Core.Scenario.Given
             _promotion = new GivenPromotion(this);
             _defaults = new DefaultGivens(app, channel);
         }
+
+        public GivenErp Erp()
+        {
+            _erp = new GivenErp(this);
+            return _erp;
+        }
+
+        IGivenErp IGivenStage.Erp() => Erp();
 
         public GivenProduct Product()
         {
@@ -189,6 +198,11 @@ namespace Dsl.Core.Scenario.Given
             foreach (var product in _products)
             {
                 await product.Execute(_app);
+            }
+
+            if (_erp != null)
+            {
+                await _erp.Execute(_app);
             }
         }
 

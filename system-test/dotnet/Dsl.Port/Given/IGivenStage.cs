@@ -6,6 +6,8 @@ namespace Dsl.Port.Given;
 
 public interface IGivenStage
 {
+    IGivenErp Erp();
+
     IGivenProduct Product();
 
     IGivenOrder Order();

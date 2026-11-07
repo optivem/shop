@@ -13,5 +13,8 @@ public interface IErpDriver : IDisposable, IAsyncDisposable
     Task<Result<VoidValue, ErpErrorResponse>> ReturnsProductAsync(ReturnsProductRequest request);
 
     Task<Result<VoidValue, ErpErrorResponse>> ReturnsPromotionAsync(ReturnsPromotionRequest request);
+
+    /// <summary>Makes the ERP unavailable: every ERP API call fails until the driver is disposed.</summary>
+    Task<Result<VoidValue, ErpErrorResponse>> ReturnsUnavailableAsync();
 }
 

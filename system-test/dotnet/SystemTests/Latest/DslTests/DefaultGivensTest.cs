@@ -72,6 +72,8 @@ public class DefaultGivensTest
 
         public Task<Result<VoidValue, ErpErrorResponse>> ReturnsPromotionAsync(ReturnsPromotionRequest request) => Ok();
 
+        public Task<Result<VoidValue, ErpErrorResponse>> ReturnsUnavailableAsync() => Ok();
+
         private static Task<Result<VoidValue, ErpErrorResponse>> Ok() =>
             Task.FromResult(Result<VoidValue, ErpErrorResponse>.Success(VoidValue.Empty));
 

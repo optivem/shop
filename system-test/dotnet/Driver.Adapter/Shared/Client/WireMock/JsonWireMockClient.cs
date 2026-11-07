@@ -8,6 +8,7 @@ public class JsonWireMockClient : IDisposable
 {
     private const string ContentType = "Content-Type";
     private const string ApplicationJson = "application/json";
+    private const int OutagePriority = 0;
 
     private readonly HttpClient _httpClient;
     private readonly string _wireMockBaseUrl;
@@ -87,6 +88,53 @@ public class JsonWireMockClient : IDisposable
 
     public async Task<Result<VoidValue, string>> StubDeleteAsync(string path, int statusCode)
         => await RegisterStubAsync<object>("DELETE", path, statusCode, null);
+
+    /// <summary>
+    /// Stubs every GET whose path matches <paramref name="pathPattern"/> with a bodyless
+    /// <paramref name="statusCode"/>, at priority 0 so it outranks the priority-1 stubs this client
+    /// registers. Used to take a whole external system down.
+    /// </summary>
+    public async Task<Result<VoidValue, string>> StubGetMatchingAsync(string pathPattern, int statusCode)
+    {
+        try
+        {
+            var mappingRequest = new
+            {
+                priority = OutagePriority,
+                request = new
+                {
+                    method = "GET",
+                    urlPathPattern = pathPattern
+                },
+                response = new
+                {
+                    status = statusCode
+                }
+            };
+
+            var requestJson = JsonSerializer.Serialize(mappingRequest, _jsonOptions);
+            var content = new StringContent(requestJson, System.Text.Encoding.UTF8, ApplicationJson);
+
+            var apiResponse = await _httpClient.PostAsync($"{_wireMockBaseUrl}/__admin/mappings", content);
+            var responseContent = await apiResponse.Content.ReadAsStringAsync();
+
+            if (!apiResponse.IsSuccessStatusCode)
+            {
+                return Result<VoidValue, string>.Failure($"Failed to register stub for GET {pathPattern}: {responseContent}");
+            }
+
+            var responseJson = JsonSerializer.Deserialize<JsonElement>(responseContent);
+            if (responseJson.TryGetProperty("id", out var idElement) && idElement.GetString() is { } id)
+            {
+                _stubIds.Add(id);
+            }
+            return Result<VoidValue, string>.Success(VoidValue.Empty);
+        }
+        catch (Exception ex)
+        {
+            return Result<VoidValue, string>.Failure($"Failed to configure GET stub for {pathPattern}: {ex.Message}");
+        }
+    }
 
     public async Task RemoveStubsAsync()
     {

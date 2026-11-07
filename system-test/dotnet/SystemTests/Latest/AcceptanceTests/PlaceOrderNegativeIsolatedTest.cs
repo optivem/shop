@@ -35,4 +35,17 @@ public class PlaceOrderNegativeIsolatedTest : BaseAcceptanceTest
             .Then().ShouldFail()
             .ErrorMessage("Orders cannot be placed between 23:59 and 00:00 on December 31st");
     }
+
+    [Theory]
+    [Isolated("takes the shared ERP stub down; parallel runs would see every ERP call fail")]
+    [ChannelData(ChannelType.UI, ChannelType.API)]
+    [Trait("tag", "UC-001.14")]
+    public async Task ShouldRejectOrderWhenErpIsUnavailable(Channel channel)
+    {
+        await Scenario(channel)
+            .Given().Erp().Unavailable()
+            .When().PlaceOrder()
+            .Then().ShouldFail()
+            .ErrorMessage("Product information can't be retrieved right now");
+    }
 }

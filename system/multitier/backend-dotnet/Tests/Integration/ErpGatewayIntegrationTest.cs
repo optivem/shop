@@ -2,6 +2,7 @@ using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Configurations;
 using DotNet.Testcontainers.Containers;
 using Microsoft.Extensions.Configuration;
+using MyCompany.MyShop.Backend.Core.Exceptions;
 using MyCompany.MyShop.Backend.Core.Services.External;
 using System.Net.Http.Json;
 using Xunit;
@@ -94,7 +95,7 @@ public class ErpGatewayIntegrationTest : IClassFixture<ErpWireMockFixture>, IAsy
     {
         await StubGetStatusAsync("/api/products/BAD-SKU", 500);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(
+        await Assert.ThrowsAsync<ErpUnavailableException>(
             () => _erpGateway.GetProductDetailsAsync("BAD-SKU"));
     }
 
@@ -114,7 +115,7 @@ public class ErpGatewayIntegrationTest : IClassFixture<ErpWireMockFixture>, IAsy
     {
         await StubGetStatusAsync("/api/promotion", 503);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(
+        await Assert.ThrowsAsync<ErpUnavailableException>(
             () => _erpGateway.GetPromotionDetailsAsync());
     }
 }

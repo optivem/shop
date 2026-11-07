@@ -36,5 +36,12 @@ public class ErpRealDriver : BaseErpDriver<ErpRealClient>
 
     public override Task<Result<VoidValue, ErpErrorResponse>> ReturnsPromotionAsync(ReturnsPromotionRequest request)
         => Task.FromResult(Result.Success<ErpErrorResponse>());
-}
 
+    /// <summary>
+    /// The real ERP cannot be taken down on demand, so this throws rather than silently succeeding,
+    /// which would let an ERP-unavailable test pass for the wrong reason.
+    /// </summary>
+    public override Task<Result<VoidValue, ErpErrorResponse>> ReturnsUnavailableAsync()
+        => throw new NotSupportedException(
+            "ErpRealDriver cannot make the ERP unavailable; run this scenario against the ERP stub");
+}

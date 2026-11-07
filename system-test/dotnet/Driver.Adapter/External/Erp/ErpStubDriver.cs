@@ -51,5 +51,10 @@ public class ErpStubDriver : BaseErpDriver<ErpStubClient>
         return _client.ConfigureGetPromotionAsync(extGetPromotionResponse)
             .MapErrorAsync(error => MapError(error));
     }
-}
 
+    public override Task<Result<VoidValue, ErpErrorResponse>> ReturnsUnavailableAsync()
+    {
+        return _client.ConfigureUnavailableAsync()
+            .MapErrorAsync(error => MapError(error));
+    }
+}

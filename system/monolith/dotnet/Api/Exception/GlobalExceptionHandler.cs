@@ -10,6 +10,8 @@ public class GlobalExceptionHandler : IExceptionHandler
     private const string ResourceNotFoundTypeUri = "https://api.my-company.com/errors/resource-not-found";
     private const string ConflictTypeUri = "https://api.my-company.com/errors/conflict";
     private const string InternalServerErrorTypeUri = "https://api.my-company.com/errors/internal-server-error";
+    private const string ServiceUnavailableTypeUri = "https://api.my-company.com/errors/service-unavailable";
+    private const string ErpUnavailableDetail = "Product information can't be retrieved right now";
     // The exception is logged server-side only. Its message can carry internals (SQL, connection
     // strings, stack fragments), so the client gets a generic detail instead.
     private const string GeneralErrorDetail = "An unexpected error occurred. Please try again later.";
@@ -31,6 +33,10 @@ public class GlobalExceptionHandler : IExceptionHandler
 
             case ValidationException validationEx:
                 await WriteValidationResponse(httpContext, validationEx, cancellationToken);
+                return true;
+
+            case ErpUnavailableException erpEx:
+                await WriteErpUnavailableResponse(httpContext, erpEx, cancellationToken);
                 return true;
 
             case DbUpdateConcurrencyException:
@@ -108,6 +114,27 @@ public class GlobalExceptionHandler : IExceptionHandler
             title = "Conflict",
             status = 409,
             detail = "The resource was modified concurrently, please retry",
+            timestamp = DateTime.UtcNow
+        };
+
+        await httpContext.Response.WriteAsJsonAsync(response, cancellationToken);
+    }
+
+    private async Task WriteErpUnavailableResponse(HttpContext httpContext, ErpUnavailableException ex, CancellationToken cancellationToken)
+    {
+        // The ERP failure details (URL, status, body) are logged server-side only; the client is
+        // told product information is temporarily unavailable.
+        _logger.LogError(ex, "ERP unavailable");
+
+        httpContext.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+        httpContext.Response.ContentType = "application/problem+json";
+
+        var response = new
+        {
+            type = ServiceUnavailableTypeUri,
+            title = "Service Unavailable",
+            status = 503,
+            detail = ErpUnavailableDetail,
             timestamp = DateTime.UtcNow
         };
 

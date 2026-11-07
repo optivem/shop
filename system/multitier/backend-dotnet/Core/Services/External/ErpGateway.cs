@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using MyCompany.MyShop.Backend.Core.Exceptions;
 using MyCompany.MyShop.Backend.Core.Dtos.External;
 
 namespace MyCompany.MyShop.Backend.Core.Services.External;
@@ -35,15 +36,15 @@ public class ErpGateway
             if (!response.IsSuccessStatusCode)
             {
                 var body = await response.Content.ReadAsStringAsync();
-                throw new InvalidOperationException($"ERP API returned status {(int)response.StatusCode} for SKU: {sku}. URL: {url}. Response: {body}");
+                throw new ErpUnavailableException($"ERP API returned status {(int)response.StatusCode} for SKU: {sku}. URL: {url}. Response: {body}");
             }
 
             var content = await response.Content.ReadAsStringAsync();
             return JsonSerializer.Deserialize<ErpProductDetailsResponse>(content, JsonOptions);
         }
-        catch (HttpRequestException e)
+        catch (System.Exception e) when (e is HttpRequestException or TaskCanceledException or JsonException)
         {
-            throw new InvalidOperationException($"Failed to fetch product details for SKU: {sku} from URL: {url}. Error: {e.GetType().Name}: {e.Message}", e);
+            throw new ErpUnavailableException($"Failed to fetch product details for SKU: {sku} from URL: {url}. Error: {e.GetType().Name}: {e.Message}", e);
         }
     }
 
@@ -58,15 +59,15 @@ public class ErpGateway
             if (!response.IsSuccessStatusCode)
             {
                 var body = await response.Content.ReadAsStringAsync();
-                throw new InvalidOperationException($"ERP API returned status {(int)response.StatusCode} for promotion. URL: {url}. Response: {body}");
+                throw new ErpUnavailableException($"ERP API returned status {(int)response.StatusCode} for promotion. URL: {url}. Response: {body}");
             }
 
             var content = await response.Content.ReadAsStringAsync();
             return JsonSerializer.Deserialize<ErpGetPromotionResponse>(content, JsonOptions)!;
         }
-        catch (HttpRequestException e)
+        catch (System.Exception e) when (e is HttpRequestException or TaskCanceledException or JsonException)
         {
-            throw new InvalidOperationException($"Failed to fetch promotion details from URL: {url}. Error: {e.GetType().Name}: {e.Message}", e);
+            throw new ErpUnavailableException($"Failed to fetch promotion details from URL: {url}. Error: {e.GetType().Name}: {e.Message}", e);
         }
     }
 }
