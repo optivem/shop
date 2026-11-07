@@ -84,10 +84,12 @@ runs:
           --arg system "$SYSTEM" --arg suffix "${PROJECT_NUMBER}.${REGION}.run.app" \
           '{KC_HOSTNAME:$host, KC_DB_URL:$dburl, KC_DB_USERNAME:$dbuser, KC_DB_PASSWORD:$dbpass,
             KC_BOOTSTRAP_ADMIN_USERNAME:"admin", SYSTEM:$system, RUN_APP_SUFFIX:$suffix}' > "$env_file"
+        # One instance: Keycloak keeps in-flight logins in local memory and Cloud Run instances can't
+        # cluster, so a second instance makes login form posts fail with expired_code (UI tests hang).
         args=(--image "$IMAGE" --region "$REGION" --project "$PROJECT"
           --service-account "runtime@${PROJECT}.iam.gserviceaccount.com"
           --port 8080 --memory 1Gi --cpu 1 --cpu-boost
-          --min-instances 0 --max-instances 2 --allow-unauthenticated
+          --min-instances 0 --max-instances 1 --allow-unauthenticated
           --set-secrets "KC_BOOTSTRAP_ADMIN_PASSWORD=${SYSTEM}-keycloak-admin-password:latest")
         fingerprint="$(printf '%s\n' "${args[@]}" | cat - "$env_file" | sha256sum | cut -c1-32)"
         deployed="$(gcloud run services describe "${SYSTEM}-keycloak" --region "$REGION" --project "$PROJECT" \
