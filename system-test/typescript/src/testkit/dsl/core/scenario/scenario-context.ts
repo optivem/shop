@@ -57,6 +57,8 @@ export class ScenarioContext {
   hasExplicitProduct = false;
   promotionConfig: PromotionConfig = { promotionActive: DEFAULTS.PROMOTION_ACTIVE, discount: DEFAULTS.PROMOTION_DISCOUNT };
   hasExplicitPromotion = false;
+  /** When set, every ERP call fails, whatever products or promotion are staged. */
+  erpUnavailable = false;
   readonly customers = new CustomerAliases();
   private loggedIn: () => UserIdentity = () => UserIdentity.DEFAULT;
   private loggedInChosen = false;

@@ -1,4 +1,5 @@
 import type { GivenClock } from './steps/given-clock.js';
+import type { GivenErp } from './steps/given-erp.js';
 import type { GivenProduct } from './steps/given-product.js';
 import type { GivenPromotion } from './steps/given-promotion.js';
 import type { GivenCoupon } from './steps/given-coupon.js';
@@ -9,6 +10,7 @@ import type { ThenStage } from '../then/then-stage.js';
 
 export interface GivenStage {
   clock(): GivenClock;
+  erp(): GivenErp;
   product(): GivenProduct;
   promotion(): GivenPromotion;
   coupon(): GivenCoupon;

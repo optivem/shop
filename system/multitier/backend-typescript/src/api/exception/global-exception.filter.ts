@@ -12,6 +12,7 @@ import type { Response } from 'express';
 import { ValidationException } from '../../core/exceptions/validation.exception';
 import { NotExistValidationException } from '../../core/exceptions/not-exist-validation.exception';
 import { ConcurrentModificationException } from '../../core/exceptions/concurrent-modification.exception';
+import { ErpUnavailableException } from '../../core/exceptions/erp-unavailable.exception';
 import { RequestValidationException } from './request-validation.exception';
 
 // Types are built from one short base so line widths (and thus Prettier's
@@ -24,10 +25,14 @@ const CONFLICT_TYPE_URI = `${PROBLEM_TYPE_BASE_URI}/conflict`;
 const UNAUTHORIZED_TYPE_URI = `${PROBLEM_TYPE_BASE_URI}/unauthorized`;
 const FORBIDDEN_TYPE_URI = `${PROBLEM_TYPE_BASE_URI}/forbidden`;
 const INTERNAL_SERVER_ERROR_TYPE_URI = `${PROBLEM_TYPE_BASE_URI}/internal-server-error`;
+const SERVICE_UNAVAILABLE_TYPE_URI = `${PROBLEM_TYPE_BASE_URI}/service-unavailable`;
 // The exception is logged server-side only. Its message can carry internals (SQL, connection
 // strings, stack fragments), so the client gets a generic detail instead.
 const GENERAL_ERROR_DETAIL =
   'An unexpected error occurred. Please try again later.';
+// The ERP failure details (URL, status, body) are logged server-side only.
+const ERP_UNAVAILABLE_DETAIL =
+  "Product information can't be retrieved right now";
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
@@ -43,6 +48,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       this.handleNotExistValidationException(exception, response);
     } else if (exception instanceof ValidationException) {
       this.handleValidationException(exception, response);
+    } else if (exception instanceof ErpUnavailableException) {
+      this.handleErpUnavailableException(exception, response);
     } else if (exception instanceof ConcurrentModificationException) {
       this.handleConflictException(exception, response);
     } else if (exception instanceof UnauthorizedException) {
@@ -111,6 +118,22 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       timestamp: new Date().toISOString(),
     };
     response.status(404).type('application/problem+json').json(body);
+  }
+
+  private handleErpUnavailableException(
+    ex: ErpUnavailableException,
+    response: Response,
+  ) {
+    this.logger.error('ERP unavailable', ex.stack);
+
+    const body = {
+      type: SERVICE_UNAVAILABLE_TYPE_URI,
+      title: 'Service Unavailable',
+      status: 503,
+      detail: ERP_UNAVAILABLE_DETAIL,
+      timestamp: new Date().toISOString(),
+    };
+    response.status(503).type('application/problem+json').json(body);
   }
 
   private handleConflictException(

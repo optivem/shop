@@ -6,6 +6,7 @@ import { WhenStage } from '../when/when-stage.js';
 import { ThenContractStage } from '../then/then-contract.js';
 import { DefaultGivens } from './default-givens.js';
 import { GivenClock } from './given-clock.js';
+import { GivenErp } from './given-erp.js';
 import { GivenProduct } from './given-product.js';
 import { GivenPromotion } from './given-promotion.js';
 import { GivenCoupon } from './given-coupon.js';
@@ -25,6 +26,10 @@ export class GivenStage implements IGivenStage {
   clock(): GivenClock {
     this.ctx.clockConfig = { time: DEFAULTS.CLOCK_TIME };
     return new GivenClock(this, this.ctx.clockConfig);
+  }
+
+  erp(): GivenErp {
+    return new GivenErp(this, this.ctx);
   }
 
   product(): GivenProduct {

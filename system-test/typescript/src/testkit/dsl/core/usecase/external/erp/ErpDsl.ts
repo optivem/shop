@@ -2,6 +2,7 @@ import type { ErpDriver } from '../../../../../driver/port/external/erp/erp-driv
 import type { UseCaseContext } from '../../../shared/use-case-context.js';
 import { ReturnsProduct } from './usecases/ReturnsProduct.js';
 import { ReturnsPromotion } from './usecases/ReturnsPromotion.js';
+import { ReturnsUnavailable } from './usecases/ReturnsUnavailable.js';
 import { GetProduct } from './usecases/GetProduct.js';
 import { GoToErp } from './usecases/GoToErp.js';
 
@@ -21,6 +22,10 @@ export class ErpDsl {
 
   returnsPromotion(): ReturnsPromotion {
     return new ReturnsPromotion(this.driver, this.context);
+  }
+
+  returnsUnavailable(): ReturnsUnavailable {
+    return new ReturnsUnavailable(this.driver, this.context);
   }
 
   getProduct(): GetProduct {

@@ -1,4 +1,4 @@
-import { getProductDetails, getTaxDetails } from '../lib/external';
+import { ErpUnavailableError, getProductDetails, getPromotionDetails, getTaxDetails } from '../lib/external';
 
 function mockFetch(status: number, body: unknown) {
   jest.spyOn(global, 'fetch').mockResolvedValue(new Response(JSON.stringify(body), { status }));
@@ -22,6 +22,23 @@ describe('getProductDetails', () => {
   it('fails with a clear message when the response is malformed', async () => {
     mockFetch(200, { id: 'HP-15', price: '699.99' });
     await expect(getProductDetails('HP-15')).rejects.toThrow('Malformed product details response');
+  });
+
+  it('reports the ERP as unavailable when it answers with an error status', async () => {
+    mockFetch(503, {});
+    await expect(getProductDetails('HP-15')).rejects.toThrow(ErpUnavailableError);
+  });
+
+  it('reports the ERP as unavailable when it cannot be reached', async () => {
+    jest.spyOn(global, 'fetch').mockRejectedValue(new TypeError('fetch failed'));
+    await expect(getProductDetails('HP-15')).rejects.toThrow(ErpUnavailableError);
+  });
+});
+
+describe('getPromotionDetails', () => {
+  it('reports the ERP as unavailable when it answers with an error status', async () => {
+    mockFetch(503, {});
+    await expect(getPromotionDetails()).rejects.toThrow(ErpUnavailableError);
   });
 });
 

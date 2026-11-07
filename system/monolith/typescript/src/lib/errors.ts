@@ -101,6 +101,24 @@ export function forbiddenResponse() {
   );
 }
 
+// The ERP failure details (URL, status, body) are logged server-side only; the client is told
+// product information is temporarily unavailable.
+const ERP_UNAVAILABLE_DETAIL = "Product information can't be retrieved right now";
+
+export function erpUnavailableResponse(error: unknown) {
+  console.error('ERP unavailable', error);
+  return NextResponse.json(
+    {
+      type: `${BASE_URL}/service-unavailable`,
+      title: 'Service Unavailable',
+      status: 503,
+      detail: ERP_UNAVAILABLE_DETAIL,
+      timestamp: new Date().toISOString(),
+    },
+    { status: 503 }
+  );
+}
+
 // The exception is logged server-side only. Its message can carry internals (SQL, connection
 // strings, stack fragments), so the client gets a generic detail instead.
 const GENERAL_ERROR_DETAIL = 'An unexpected error occurred. Please try again later.';

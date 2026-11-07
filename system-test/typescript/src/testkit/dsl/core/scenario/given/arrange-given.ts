@@ -5,7 +5,7 @@ import { DefaultGivens } from './default-givens.js';
 import { placeGivenOrder } from './place-given-order.js';
 
 /**
- * Sets up everything the Given stage declared (clock, tax, promotion, products, coupons, orders), supplying the
+ * Sets up everything the Given stage declared (clock, tax, promotion, products, ERP availability, coupons, orders), supplying the
  * defaults the given orders need, and then selects the identity the scenario action runs as.
  */
 export async function arrangeGiven(app: AppContext, ctx: ScenarioContext, useCaseContext: UseCaseContext): Promise<void> {
@@ -28,6 +28,13 @@ export async function arrangeGiven(app: AppContext, ctx: ScenarioContext, useCas
   for (const productConfig of DefaultGivens.productsFor(ctx)) {
     const sku = useCaseContext.getParamValue(productConfig.sku);
     await app.erpDriver.returnsProduct({ sku, price: productConfig.price });
+  }
+
+  if (ctx.erpUnavailable) {
+    const outage = await app.erpDriver.returnsUnavailable();
+    if (!outage.success) {
+      throw new Error(`Failed to make the ERP unavailable: ${outage.error.message}`);
+    }
   }
 
   for (const couponConfig of DefaultGivens.couponsFor(ctx)) {

@@ -19,6 +19,14 @@ export class ErpRealDriver extends BaseErpDriver<ErpRealClient> {
     return Promise.resolve(success(undefined));
   }
 
+  /**
+   * The real ERP cannot be taken down on demand, so this throws rather than silently succeeding,
+   * which would let an ERP-unavailable test pass for the wrong reason.
+   */
+  returnsUnavailable(): Promise<Result<void, ErpErrorResponse>> {
+    throw new Error('ErpRealDriver cannot make the ERP unavailable; run this scenario against the ERP stub');
+  }
+
   close(): Promise<void> {
     return Promise.resolve();
   }

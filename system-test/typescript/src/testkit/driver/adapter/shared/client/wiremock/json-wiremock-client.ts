@@ -1,3 +1,5 @@
+const OUTAGE_PRIORITY = 1;
+
 export class JsonWireMockClient {
   private readonly adminUrl: string;
   private stubIds: string[] = [];
@@ -23,6 +25,19 @@ export class JsonWireMockClient {
     await this.createStub('DELETE', urlPath, responseBody, statusCode);
   }
 
+  /**
+   * Stubs every GET whose path matches `urlPathPattern` with a bodyless `statusCode`, at priority 1 so
+   * it outranks the default-priority (5) stubs this client registers. Used to take a whole external
+   * system down.
+   */
+  async stubGetMatching(urlPathPattern: string, statusCode: number): Promise<void> {
+    await this.registerMapping({
+      priority: OUTAGE_PRIORITY,
+      request: { method: 'GET', urlPathPattern },
+      response: { status: statusCode },
+    });
+  }
+
   async removeStubs(): Promise<void> {
     for (const id of this.stubIds) {
       await fetch(`${this.adminUrl}/${id}`, { method: 'DELETE' });
@@ -31,20 +46,24 @@ export class JsonWireMockClient {
   }
 
   private async createStub<T>(method: string, urlPath: string, responseBody: T, statusCode: number): Promise<void> {
+    await this.registerMapping({
+      request: {
+        method,
+        urlPath,
+      },
+      response: {
+        status: statusCode,
+        headers: { 'Content-Type': 'application/json' },
+        jsonBody: responseBody,
+      },
+    });
+  }
+
+  private async registerMapping(mapping: object): Promise<void> {
     const response = await fetch(this.adminUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        request: {
-          method,
-          urlPath,
-        },
-        response: {
-          status: statusCode,
-          headers: { 'Content-Type': 'application/json' },
-          jsonBody: responseBody,
-        },
-      }),
+      body: JSON.stringify(mapping),
     });
 
     if (!response.ok) {

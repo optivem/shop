@@ -17,6 +17,7 @@
 - **Track B: .NET and TypeScript tests carry the UC IDs** (one for one with Java, including the e2e `PlaceOrderPositiveTest.shouldPlaceOrder` → UC-001.1; no UC-001.14 yet). All three languages emit the same JUnit shape that gh-optivem `internal/spec/junit.go` reads: `<testcase classname=… name=…><properties><property name="tag" value="UC-001.N"/></properties></testcase>` (it accepts property name `tag` or `criterion`, value `UC-NNN.M`, optional `@`).
   - **.NET:** `[Trait("tag", "UC-001.N")]` on the test method (one per ID). The `JunitXml.TestLogger` package (added to `SystemTests.csproj`) writes every xUnit trait as a testcase property. Each latest suite in `system-test/dotnet/tests.yaml` adds `--logger 'junit;LogFilePath=TestResults/junit/<suite-id>.xml'`, so results land in `system-test/dotnet/SystemTests/TestResults/junit/*.xml`. Names look like `ShouldX(channel: API)`; gh-optivem's `()` stripping merges the channels.
   - **TypeScript:** `test('name', criteria('UC-001.N', …), async …)` with the helper `tests/commons/criteria.ts`, which turns each ID into a `{ type: 'tag', description: id }` annotation. `test.each` / `test.eachAlsoFirstRow` take the same optional details argument (`(name, criteria(…), fn)`; the shop facade `src/testkit/.../playwright/bindTestEach.ts` passes it to every row). Playwright's built-in `junit` reporter (added in `playwright.config.ts`, `outputDir: 'junit-results'`) writes annotations as testcase properties. Each latest suite in `system-test/typescript/tests.yaml` sets `PLAYWRIGHT_JUNIT_OUTPUT_NAME: <suite-id>.xml`, so results land in `system-test/typescript/junit-results/*.xml` (gitignored; not under `test-results/`, which Playwright wipes per run). Note for D: TS testcase names are `[API Channel] › shouldX` (and parameterised rows carry `_param=value`), so channels/rows don't merge into one test as in Java/.NET; each still carries the IDs.
+- **Track A: UC-001.14 (ERP unavailable) in all three languages.** Any ERP failure (error status, unreachable, timeout, malformed body; a 404 product is still a validation error) throws `ErpUnavailableException` (Java, .NET, TS multitier) / `ErpUnavailableError` (TS monolith), which the global handler maps to a **503** problem detail with `detail` "Product information can't be retrieved right now" (type `…/errors/service-unavailable`), in the monoliths and multitier backends (`backend-clean-java` untouched: it already maps gateway failures to its own 502). The UIs already render `detail`, so no frontend change. Test kit: `given().erp().unavailable()` → `ErpDriver.returnsUnavailable()`; the stub driver registers a WireMock 503 on `GET /erp/api/.*` that outranks the per-resource stubs (priority 1 vs default in Java/TS, 0 vs 1 in .NET); the real driver throws (the real ERP can't be taken down). Test: `PlaceOrderNegativeIsolatedTest.shouldRejectOrderWhenErpIsUnavailable` (latest tree only, like the other UC tags), UI + API channels, tagged `@Tag("UC-001.14")` / `[Trait("tag", "UC-001.14")]` / `criteria('UC-001.14')`; the JUnit XML of all three carries `<property name="tag" value="UC-001.14"/>`.
 
 ## Decisions (resolved 2026-11-06 with the user)
 
@@ -31,25 +32,16 @@
 ## Parallel tracks
 
 ```
-A (shop: UC-001.14, production code + test kit) ─┐
+A (shop: UC-001.14, production code + test kit) ✅ done ─┐
 B (shop: .NET/TS criterion tags) ✅ done         ─┼─▶ D (shop: re-enable gate, all languages, verify)
 C (gh-optivem: parse Gherkin + release)          ─┘
 ```
 
-A and C are independent. B is done (see Done); A adds the `UC-001.14` tests already tagged in all three languages. D waits for A and C.
+A, B and C are independent. A and B are done (see Done). D waits for C.
 
 ### ▶ Next executable step (resume here)
 
-Next is Track A (A1), reusing the tag mechanism recorded under Done (Track B) for the new UC-001.14 tests in .NET and TypeScript. Track C is external (gh-optivem session); D waits for A and C's release.
-
-### Track A — UC-001.14 "ERP unavailable" (shop, all languages)
-
-Today an unreachable ERP makes `ErpGateway.getProductDetails` throw `IllegalStateException`, and `GlobalExceptionHandler` turns that into a generic 500 ("An unexpected error occurred...").
-
-- [ ] A1: Production code: add a dedicated exception plus a 503 handler with the "product information can't be retrieved right now" message, and make the UI show it. Do this in the Java, .NET and TypeScript monoliths and multitier backends (and frontends where the message is rendered).
-- [ ] A2: Test kit: add an "ERP unavailable" step through `ErpDriver`, `ErpStubDriver` (a WireMock 503 or fault), `ErpRealDriver`, and the use-case and scenario DSL, in all three languages.
-- [ ] A3: Add the acceptance test, marked `@Isolated`, in `PlaceOrderNegativeTest` or `PlaceOrderNegativeIsolatedTest` (whichever already stubs the ERP). Tag it `@Tag("UC-001.14")` in Java, and with the same ID in .NET and TypeScript, using the mechanism under Done (Track B). First check that no test anywhere is already tagged `UC-001.14`.
-- [ ] A4: Verify: `./compile-all.sh`, then the `--sample` system tests for each language (see CLAUDE.md).
+Track C is external: run it in a gh-optivem session (parse `@UC-NNN.M` Gherkin scenarios, then publish a release). Once that release is out, Track D (D1) re-enables the gate here.
 
 ### Track C — gh-optivem reads Gherkin criteria (other repo)
 

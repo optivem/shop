@@ -37,6 +37,12 @@ export class ErpStubClient extends BaseErpClient {
     return success(undefined);
   }
 
+  /** Every ERP API call answers 503, outranking any product or promotion stubs. */
+  async configureUnavailable(): Promise<Result<void, ErpErrorResponse>> {
+    await this.wireMock.stubGetMatching('/erp/api/.*', 503);
+    return success(undefined);
+  }
+
   async close(): Promise<void> {
     await this.wireMock.removeStubs();
   }

@@ -34,5 +34,17 @@ test.describe('@isolated', () => {
                 .shouldFail()
                 .errorMessage('Orders cannot be placed between 23:59 and 00:00 on December 31st');
         });
+
+        test('shouldRejectOrderWhenErpIsUnavailable', criteria('UC-001.14'), async ({ scenario }) => {
+            await scenario
+                .given()
+                .erp()
+                .unavailable()
+                .when()
+                .placeOrder()
+                .then()
+                .shouldFail()
+                .errorMessage("Product information can't be retrieved right now");
+        });
     });
 });

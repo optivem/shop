@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { ErpProductDetailsResponse } from '../../dtos/external/erp-product-details-response.dto';
 import { ErpGetPromotionResponse } from '../../dtos/external/erp-get-promotion-response.dto';
 import { errorMessage, fetchJson, isNotFound } from './fetch-json';
+import { ErpUnavailableException } from '../../exceptions/erp-unavailable.exception';
 
 @Injectable()
 export class ErpGateway {
@@ -25,7 +26,7 @@ export class ErpGateway {
       if (isNotFound(e)) {
         return null;
       }
-      throw new Error(
+      throw new ErpUnavailableException(
         `Failed to fetch product details for SKU: ${sku}. ${errorMessage(e)}`,
         { cause: e },
       );
@@ -37,9 +38,12 @@ export class ErpGateway {
     try {
       return await fetchJson(url, ErpGetPromotionResponse);
     } catch (e) {
-      throw new Error(`Failed to fetch promotion details. ${errorMessage(e)}`, {
-        cause: e,
-      });
+      throw new ErpUnavailableException(
+        `Failed to fetch promotion details. ${errorMessage(e)}`,
+        {
+          cause: e,
+        },
+      );
     }
   }
 }

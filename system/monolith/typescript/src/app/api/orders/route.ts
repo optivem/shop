@@ -2,12 +2,13 @@ import { type NextRequest, NextResponse } from 'next/server';
 import crypto from 'node:crypto';
 import Decimal from 'decimal.js';
 import { insertOrder, findAllOrders, countOrders, findCouponByCode, tryIncrementCouponUsage } from '@/lib/db';
-import { getCurrentTime, getProductDetails, getPromotionDetails, getTaxDetails } from '@/lib/external';
+import { ErpUnavailableError, getCurrentTime, getProductDetails, getPromotionDetails, getTaxDetails } from '@/lib/external';
 import { parsePlaceOrderRequest } from '@/lib/validation';
 import {
   badRequestResponse,
   validationErrorResponse,
   generalValidationErrorResponse,
+  erpUnavailableResponse,
   internalErrorResponse,
   unauthorizedResponse,
 } from '@/lib/errors';
@@ -214,6 +215,9 @@ export async function POST(request: NextRequest) {
 
     return outcome.kind === 'placed' ? orderCreatedResponse(201, responseBody) : storedAnswerResponse(outcome);
   } catch (error) {
+    if (error instanceof ErpUnavailableError) {
+      return erpUnavailableResponse(error);
+    }
     return internalErrorResponse(error);
   }
 }

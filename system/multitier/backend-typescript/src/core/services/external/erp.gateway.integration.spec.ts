@@ -5,6 +5,7 @@ import {
 } from 'testcontainers';
 import type { ConfigService } from '@nestjs/config';
 import { ErpGateway } from './erp.gateway';
+import { ErpUnavailableException } from '../../exceptions/erp-unavailable.exception';
 
 describe('ErpGateway [integration]', () => {
   let container: StartedTestContainer;
@@ -92,6 +93,9 @@ describe('ErpGateway [integration]', () => {
     await stubGetStatus('/api/products/BAD-SKU', 500);
 
     await expect(erpGateway.getProductDetails('BAD-SKU')).rejects.toThrow(
+      ErpUnavailableException,
+    );
+    await expect(erpGateway.getProductDetails('BAD-SKU')).rejects.toThrow(
       '500',
     );
   });
@@ -111,6 +115,9 @@ describe('ErpGateway [integration]', () => {
   it('getPromotionDetails throws on server error', async () => {
     await stubGetStatus('/api/promotion', 503);
 
+    await expect(erpGateway.getPromotionDetails()).rejects.toThrow(
+      ErpUnavailableException,
+    );
     await expect(erpGateway.getPromotionDetails()).rejects.toThrow('503');
   });
 });
