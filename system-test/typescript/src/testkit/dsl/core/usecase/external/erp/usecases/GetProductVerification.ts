@@ -18,4 +18,24 @@ export class GetProductVerification extends ResponseVerification<GetProductRespo
     expect(this.getResponse().price).toBe(expectedPrice);
     return this;
   }
+
+  title(expectedTitle: string): this {
+    expect(this.getResponse().title).toBe(expectedTitle);
+    return this;
+  }
+
+  description(expectedDescription: string): this {
+    expect(this.getResponse().description).toBe(expectedDescription);
+    return this;
+  }
+
+  category(expectedCategory: string): this {
+    expect(this.getResponse().category).toBe(expectedCategory);
+    return this;
+  }
+
+  brand(expectedBrand: string): this {
+    expect(this.getResponse().brand).toBe(expectedBrand);
+    return this;
+  }
 }

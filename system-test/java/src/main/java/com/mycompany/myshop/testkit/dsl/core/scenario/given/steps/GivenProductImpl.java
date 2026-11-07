@@ -10,6 +10,10 @@ import static com.mycompany.myshop.testkit.dsl.core.scenario.ScenarioDefaults.DE
 public class GivenProductImpl extends BaseGivenStep implements GivenProduct {
     private String sku;
     private String unitPrice;
+    private String title;
+    private String description;
+    private String category;
+    private String brand;
 
     public GivenProductImpl(GivenImpl given) {
         super(given);
@@ -28,10 +32,38 @@ public class GivenProductImpl extends BaseGivenStep implements GivenProduct {
     }
 
     @Override
+    public GivenProductImpl withTitle(String title) {
+        this.title = title;
+        return this;
+    }
+
+    @Override
+    public GivenProductImpl withDescription(String description) {
+        this.description = description;
+        return this;
+    }
+
+    @Override
+    public GivenProductImpl withCategory(String category) {
+        this.category = category;
+        return this;
+    }
+
+    @Override
+    public GivenProductImpl withBrand(String brand) {
+        this.brand = brand;
+        return this;
+    }
+
+    @Override
     public void execute(UseCaseDsl app) {
         app.erp().returnsProduct()
                 .sku(sku)
                 .unitPrice(unitPrice)
+                .title(title)
+                .description(description)
+                .category(category)
+                .brand(brand)
                 .execute()
                 .shouldSucceed();
     }

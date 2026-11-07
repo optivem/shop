@@ -70,6 +70,11 @@ public class DefaultGivensTest
             return Ok();
         }
 
+        public Task<Result<GetProductsResponse, ErpErrorResponse>> GetProductsAsync() =>
+            throw new NotSupportedException();
+
+        public Task<Result<VoidValue, ErpErrorResponse>> ReturnsProductsAsync(ReturnsProductsRequest request) => Ok();
+
         public Task<Result<VoidValue, ErpErrorResponse>> ReturnsPromotionAsync(ReturnsPromotionRequest request) => Ok();
 
         public Task<Result<VoidValue, ErpErrorResponse>> ReturnsUnavailableAsync() => Ok();

@@ -21,6 +21,26 @@ export class GivenProduct implements IGivenProduct {
     return this;
   }
 
+  withTitle(title: string): this {
+    this.config.title = title;
+    return this;
+  }
+
+  withDescription(description: string): this {
+    this.config.description = description;
+    return this;
+  }
+
+  withCategory(category: string): this {
+    this.config.category = category;
+    return this;
+  }
+
+  withBrand(brand: string): this {
+    this.config.brand = brand;
+    return this;
+  }
+
   and(): GivenStage {
     return this.stage;
   }

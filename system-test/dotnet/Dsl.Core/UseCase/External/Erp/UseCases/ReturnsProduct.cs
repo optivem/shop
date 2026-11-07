@@ -11,6 +11,10 @@ public class ReturnsProduct : BaseErpUseCase<VoidValue, VoidVerification>
 {
     private string? _skuParamAlias;
     private string? _unitPrice;
+    private string? _title;
+    private string? _description;
+    private string? _category;
+    private string? _brand;
 
     public ReturnsProduct(IErpDriver driver, UseCaseContext context)
         : base(driver, context)
@@ -34,6 +38,30 @@ public class ReturnsProduct : BaseErpUseCase<VoidValue, VoidVerification>
         return UnitPrice(price.ToString());
     }
 
+    public ReturnsProduct Title(string? title)
+    {
+        _title = title;
+        return this;
+    }
+
+    public ReturnsProduct Description(string? description)
+    {
+        _description = description;
+        return this;
+    }
+
+    public ReturnsProduct Category(string? category)
+    {
+        _category = category;
+        return this;
+    }
+
+    public ReturnsProduct Brand(string? brand)
+    {
+        _brand = brand;
+        return this;
+    }
+
     public override async Task<ErpUseCaseResult<VoidValue, VoidVerification>> Execute()
     {
         var sku = _context.GetParamValue(_skuParamAlias);
@@ -41,7 +69,11 @@ public class ReturnsProduct : BaseErpUseCase<VoidValue, VoidVerification>
         var request = new ReturnsProductRequest
         {
             Sku = sku,
-            Price = _unitPrice
+            Price = _unitPrice,
+            Title = _title,
+            Description = _description,
+            Category = _category,
+            Brand = _brand
         };
 
         var result = await _driver.ReturnsProductAsync(request);

@@ -8,6 +8,7 @@ import { DefaultGivens } from './default-givens.js';
 import { GivenClock } from './given-clock.js';
 import { GivenErp } from './given-erp.js';
 import { GivenProduct } from './given-product.js';
+import { GivenProducts } from './given-products.js';
 import { GivenPromotion } from './given-promotion.js';
 import { GivenCoupon } from './given-coupon.js';
 import { GivenCountry } from './given-country.js';
@@ -37,6 +38,14 @@ export class GivenStage implements IGivenStage {
     this.ctx.productConfigs.push(config);
     this.ctx.hasExplicitProduct = true;
     return new GivenProduct(this, config);
+  }
+
+  /** Stages the ERP product list; it replaces the default product, so a list scenario sees only what it stages. */
+  products(): GivenProducts {
+    const products: ProductConfig[] = [];
+    this.ctx.productListConfigs.push(products);
+    this.ctx.hasExplicitProduct = true;
+    return new GivenProducts(this, products);
   }
 
   promotion(): GivenPromotion {

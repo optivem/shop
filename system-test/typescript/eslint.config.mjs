@@ -20,7 +20,7 @@ export default defineConfig(
                 'warn',
                 {
                     assertFunctionNames: ['shouldSucceed', 'shouldFail', 'shouldBeRunning', 'assertThatResult'],
-                    assertFunctionPatterns: ['^has[A-Z]'],
+                    assertFunctionPatterns: ['^has[A-Z]', '^contains[A-Z]'],
                 },
             ],
             'playwright/no-skipped-test': ['warn', { allowConditional: true }],

@@ -10,6 +10,8 @@ public interface IGivenStage
 
     IGivenProduct Product();
 
+    IGivenProducts Products();
+
     IGivenOrder Order();
 
     IGivenClock Clock();

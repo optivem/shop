@@ -30,6 +30,8 @@ public abstract class BaseThenLookup<TVerification>
 
     public IThenProduct Product(string skuAlias) => new ThenProduct(_app, skuAlias, Execute);
 
+    public IThenProducts Products() => new ThenProducts(_app, Execute);
+
     public IThenCountry Country(string countryAlias) => new ThenCountry(_app, countryAlias, Execute);
 
     public TaskAwaiter GetAwaiter() => Execute().GetAwaiter();

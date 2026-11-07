@@ -8,5 +8,7 @@ public interface IThenStage
 
     IThenProduct Product(string skuAlias);
 
+    IThenProducts Products();
+
     IThenCountry Country(string countryAlias);
 }

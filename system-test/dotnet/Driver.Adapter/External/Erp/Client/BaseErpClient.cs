@@ -76,6 +76,9 @@ public abstract class BaseErpClient : IDisposable
 
         => HttpClient.GetAsync<ExtProductDetailsResponse>($"{ProductsEndpoint}/{sku}");
 
+    public Task<Result<List<ExtProductDetailsResponse>, ExtErpErrorResponse>> GetProductsAsync()
+        => HttpClient.GetAsync<List<ExtProductDetailsResponse>>(ProductsEndpoint);
+
 }
 
 

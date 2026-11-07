@@ -2,6 +2,7 @@ import type { Result } from '../../../../common/result.js';
 import { success } from '../../../../common/result.js';
 import type { ErpErrorResponse } from '../../../port/external/erp/dtos/errors/ErpErrorResponse.js';
 import type { ReturnsProductRequest } from '../../../port/external/erp/dtos/ReturnsProductRequest.js';
+import type { ReturnsProductsRequest } from '../../../port/external/erp/dtos/ReturnsProductsRequest.js';
 import type { ReturnsPromotionRequest } from '../../../port/external/erp/dtos/ReturnsPromotionRequest.js';
 import { BaseErpDriver } from './BaseErpDriver.js';
 import { ErpRealClient } from './client/ErpRealClient.js';
@@ -13,6 +14,15 @@ export class ErpRealDriver extends BaseErpDriver<ErpRealClient> {
 
   async returnsProduct(request: ReturnsProductRequest): Promise<Result<void, ErpErrorResponse>> {
     return this.client.createProduct(request);
+  }
+
+  /** The real ERP lists every product it holds, so staging a list means creating each product in it. */
+  async returnsProducts(request: ReturnsProductsRequest): Promise<Result<void, ErpErrorResponse>> {
+    for (const product of request.products) {
+      const result = await this.returnsProduct(product);
+      if (!result.success) return result;
+    }
+    return success(undefined);
   }
 
   returnsPromotion(_request: ReturnsPromotionRequest): Promise<Result<void, ErpErrorResponse>> {

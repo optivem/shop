@@ -11,6 +11,10 @@ import com.mycompany.myshop.testkit.driver.port.dtos.error.SystemError;
 public class ReturnsProduct extends BaseErpUseCase<Void, VoidVerification> {
     private String skuParamAlias;
     private String unitPrice;
+    private String title;
+    private String description;
+    private String category;
+    private String brand;
 
     public ReturnsProduct(ErpDriver driver, UseCaseContext context) {
         super(driver, context);
@@ -26,6 +30,26 @@ public class ReturnsProduct extends BaseErpUseCase<Void, VoidVerification> {
         return this;
     }
 
+    public ReturnsProduct title(String title) {
+        this.title = title;
+        return this;
+    }
+
+    public ReturnsProduct description(String description) {
+        this.description = description;
+        return this;
+    }
+
+    public ReturnsProduct category(String category) {
+        this.category = category;
+        return this;
+    }
+
+    public ReturnsProduct brand(String brand) {
+        this.brand = brand;
+        return this;
+    }
+
     @Override
     public UseCaseResult<Void, VoidVerification> execute() {
         var sku = context.getParamValue(skuParamAlias);
@@ -33,6 +57,10 @@ public class ReturnsProduct extends BaseErpUseCase<Void, VoidVerification> {
         var request = ReturnsProductRequest.builder()
                 .sku(sku)
                 .price(unitPrice)
+                .title(title)
+                .description(description)
+                .category(category)
+                .brand(brand)
                 .build();
 
         var result = driver.returnsProduct(request);

@@ -29,4 +29,28 @@ public class ThenProduct : BaseThenLookup<GetProductVerification>, IThenProduct
         AddVerification(v => v.Price(price));
         return this;
     }
+
+    public IThenProduct HasTitle(string title)
+    {
+        AddVerification(v => v.Title(title));
+        return this;
+    }
+
+    public IThenProduct HasDescription(string description)
+    {
+        AddVerification(v => v.Description(description));
+        return this;
+    }
+
+    public IThenProduct HasCategory(string category)
+    {
+        AddVerification(v => v.Category(category));
+        return this;
+    }
+
+    public IThenProduct HasBrand(string brand)
+    {
+        AddVerification(v => v.Brand(brand));
+        return this;
+    }
 }

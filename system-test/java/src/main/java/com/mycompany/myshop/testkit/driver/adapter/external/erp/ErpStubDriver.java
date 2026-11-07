@@ -44,11 +44,11 @@ public class ErpStubDriver extends BaseErpDriver<ErpStubClient> {
     private static ExtProductDetailsResponse toExtProductDetailsResponse(ReturnsProductRequest request) {
         return ExtProductDetailsResponse.builder()
                 .id(request.getSku())
-                .title("")
-                .description("")
+                .title(orDefault(request.getTitle(), DEFAULT_TITLE))
+                .description(orDefault(request.getDescription(), DEFAULT_DESCRIPTION))
                 .price(Converter.toBigDecimal(request.getPrice()))
-                .category("")
-                .brand("")
+                .category(orDefault(request.getCategory(), DEFAULT_CATEGORY))
+                .brand(orDefault(request.getBrand(), DEFAULT_BRAND))
                 .build();
     }
 

@@ -16,6 +16,7 @@ namespace Dsl.Core.Scenario.Given
         private readonly UseCaseDsl _app;
         private readonly ScenarioDsl _scenario;
         private readonly List<GivenProduct> _products;
+        private readonly List<GivenProducts> _productLists;
         private readonly List<GivenOrder> _orders;
         private readonly List<GivenCountry> _countries;
         private readonly List<GivenCoupon> _coupons;
@@ -33,6 +34,7 @@ namespace Dsl.Core.Scenario.Given
             _app = app;
             _scenario = scenario;
             _products = new List<GivenProduct>();
+            _productLists = new List<GivenProducts>();
             _orders = new List<GivenOrder>();
             _countries = new List<GivenCountry>();
             _coupons = new List<GivenCoupon>();
@@ -58,6 +60,17 @@ namespace Dsl.Core.Scenario.Given
         }
 
         IGivenProduct IGivenStage.Product() => Product();
+
+        /// <summary>Stages the ERP product list; it replaces the default product, so a list scenario sees only what it stages.</summary>
+        public GivenProducts Products()
+        {
+            _defaults.MarkProduct();
+            var productList = new GivenProducts(this);
+            _productLists.Add(productList);
+            return productList;
+        }
+
+        IGivenProducts IGivenStage.Products() => Products();
 
         public GivenOrder Order()
         {
@@ -198,6 +211,11 @@ namespace Dsl.Core.Scenario.Given
             foreach (var product in _products)
             {
                 await product.Execute(_app);
+            }
+
+            foreach (var productList in _productLists)
+            {
+                await productList.Execute(_app);
             }
 
             if (_erp != null)

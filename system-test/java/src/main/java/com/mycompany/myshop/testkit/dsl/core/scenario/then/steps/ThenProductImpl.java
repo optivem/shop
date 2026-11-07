@@ -27,6 +27,30 @@ public class ThenProductImpl extends BaseThenStep<Void, VoidVerification> implem
     }
 
     @Override
+    public ThenProductImpl hasTitle(String title) {
+        verification.title(title);
+        return this;
+    }
+
+    @Override
+    public ThenProductImpl hasDescription(String description) {
+        verification.description(description);
+        return this;
+    }
+
+    @Override
+    public ThenProductImpl hasCategory(String category) {
+        verification.category(category);
+        return this;
+    }
+
+    @Override
+    public ThenProductImpl hasBrand(String brand) {
+        verification.brand(brand);
+        return this;
+    }
+
+    @Override
     public ThenProductImpl and() {
         return this;
     }

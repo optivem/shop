@@ -28,6 +28,11 @@ public class ThenStageBase : IThenStage
         return new Steps.ThenProduct(_app, skuAlias, EnsureSetup);
     }
 
+    public IThenProducts Products()
+    {
+        return new Steps.ThenProducts(_app, EnsureSetup);
+    }
+
     public IThenCountry Country(string countryAlias)
     {
         return new Steps.ThenCountry(_app, countryAlias, EnsureSetup);

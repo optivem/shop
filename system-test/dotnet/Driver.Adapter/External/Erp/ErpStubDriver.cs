@@ -26,19 +26,28 @@ public class ErpStubDriver : BaseErpDriver<ErpStubClient>
 
     public override Task<Result<VoidValue, ErpErrorResponse>> ReturnsProductAsync(ReturnsProductRequest request)
     {
-        var extProductDetailsResponse = new ExtProductDetailsResponse
-        {
-            Id = request.Sku!,
-            Title = string.Empty,
-            Description = string.Empty,
-            Price = decimal.Parse(request.Price!),
-            Category = string.Empty,
-            Brand = string.Empty
-        };
-
-        return _client.ConfigureGetProductAsync(extProductDetailsResponse)
+        return _client.ConfigureGetProductAsync(ToExtProductDetailsResponse(request))
             .MapErrorAsync(error => MapError(error));
     }
+
+    public override Task<Result<VoidValue, ErpErrorResponse>> ReturnsProductsAsync(ReturnsProductsRequest request)
+    {
+        var extProducts = request.Products.Select(ToExtProductDetailsResponse).ToList();
+
+        return _client.ConfigureGetProductsAsync(extProducts)
+            .MapErrorAsync(error => MapError(error));
+    }
+
+    private static ExtProductDetailsResponse ToExtProductDetailsResponse(ReturnsProductRequest request)
+        => new()
+        {
+            Id = request.Sku!,
+            Title = request.Title ?? DefaultTitle,
+            Description = request.Description ?? DefaultDescription,
+            Price = decimal.Parse(request.Price!),
+            Category = request.Category ?? DefaultCategory,
+            Brand = request.Brand ?? DefaultBrand
+        };
 
     public override Task<Result<VoidValue, ErpErrorResponse>> ReturnsPromotionAsync(ReturnsPromotionRequest request)
     {

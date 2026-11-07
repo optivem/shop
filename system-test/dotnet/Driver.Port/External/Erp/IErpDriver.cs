@@ -10,7 +10,11 @@ public interface IErpDriver : IDisposable, IAsyncDisposable
 
     Task<Result<GetProductResponse, ErpErrorResponse>> GetProductAsync(GetProductRequest request);
 
+    Task<Result<GetProductsResponse, ErpErrorResponse>> GetProductsAsync();
+
     Task<Result<VoidValue, ErpErrorResponse>> ReturnsProductAsync(ReturnsProductRequest request);
+
+    Task<Result<VoidValue, ErpErrorResponse>> ReturnsProductsAsync(ReturnsProductsRequest request);
 
     Task<Result<VoidValue, ErpErrorResponse>> ReturnsPromotionAsync(ReturnsPromotionRequest request);
 

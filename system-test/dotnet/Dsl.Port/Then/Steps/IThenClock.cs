@@ -12,6 +12,8 @@ public interface IThenClock
 
     IThenProduct Product(string skuAlias);
 
+    IThenProducts Products();
+
     IThenCountry Country(string countryAlias);
 
     TaskAwaiter GetAwaiter();

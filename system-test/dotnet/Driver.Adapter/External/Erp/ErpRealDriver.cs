@@ -9,11 +9,6 @@ namespace Driver.Adapter.External.Erp;
 
 public class ErpRealDriver : BaseErpDriver<ErpRealClient>
 {
-    private const string DefaultTitle = "Test Product Title";
-    private const string DefaultDescription = "Test Product Description";
-    private const string DefaultCategory = "Test Category";
-    private const string DefaultBrand = "Test Brand";
-
     public ErpRealDriver(string baseUrl) : base(new ErpRealClient(baseUrl))
     {
     }
@@ -23,15 +18,30 @@ public class ErpRealDriver : BaseErpDriver<ErpRealClient>
         var createProductRequest = new ExtCreateProductRequest
         {
             Id = request.Sku,
-            Title = DefaultTitle,
-            Description = DefaultDescription,
-            Category = DefaultCategory,
-            Brand = DefaultBrand,
+            Title = request.Title ?? DefaultTitle,
+            Description = request.Description ?? DefaultDescription,
+            Category = request.Category ?? DefaultCategory,
+            Brand = request.Brand ?? DefaultBrand,
             Price = request.Price
         };
 
         return _client.CreateProductAsync(createProductRequest)
             .MapErrorAsync(error => MapError(error));
+    }
+
+    /// <summary>The real ERP lists every product it holds, so staging a list means creating each product in it.</summary>
+    public override async Task<Result<VoidValue, ErpErrorResponse>> ReturnsProductsAsync(ReturnsProductsRequest request)
+    {
+        foreach (var product in request.Products)
+        {
+            var result = await ReturnsProductAsync(product);
+            if (result.IsFailure)
+            {
+                return result;
+            }
+        }
+
+        return Result.Success<ErpErrorResponse>();
     }
 
     public override Task<Result<VoidValue, ErpErrorResponse>> ReturnsPromotionAsync(ReturnsPromotionRequest request)

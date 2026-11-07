@@ -8,9 +8,19 @@ public interface IThenProduct
 
     IThenProduct HasPrice(decimal price);
 
+    IThenProduct HasTitle(string title);
+
+    IThenProduct HasDescription(string description);
+
+    IThenProduct HasCategory(string category);
+
+    IThenProduct HasBrand(string brand);
+
     IThenClock Clock();
 
     IThenProduct Product(string skuAlias);
+
+    IThenProducts Products();
 
     IThenCountry Country(string countryAlias);
 

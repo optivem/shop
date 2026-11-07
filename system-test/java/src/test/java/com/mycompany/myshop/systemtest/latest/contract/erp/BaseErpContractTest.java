@@ -14,6 +14,23 @@ public abstract class BaseErpContractTest extends BaseExternalSystemContractTest
     }
 
     @Test
+    void shouldBeAbleToGetProductDetails() {
+        assertDoesNotThrow(() -> scenario
+                .given().product()
+                    .withSku("BOOK-123")
+                    .withUnitPrice("12.00")
+                    .withTitle("Clean Code")
+                    .withDescription("A handbook of agile software craftsmanship")
+                    .withCategory("Books")
+                    .withBrand("Prentice Hall")
+                .then().product("BOOK-123")
+                    .hasTitle("Clean Code")
+                    .hasDescription("A handbook of agile software craftsmanship")
+                    .hasCategory("Books")
+                    .hasBrand("Prentice Hall"));
+    }
+
+    @Test
     void shouldBeAbleToListProducts() {
         assertDoesNotThrow(() -> scenario
                 .given().products()

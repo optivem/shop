@@ -8,4 +8,8 @@ import lombok.Data;
 public class ReturnsProductRequest {
     private String sku;
     private String price;
+    private String title;
+    private String description;
+    private String category;
+    private String brand;
 }

@@ -27,7 +27,15 @@ export async function arrangeGiven(app: AppContext, ctx: ScenarioContext, useCas
 
   for (const productConfig of DefaultGivens.productsFor(ctx)) {
     const sku = useCaseContext.getParamValue(productConfig.sku);
-    await app.erpDriver.returnsProduct({ sku, price: productConfig.price });
+    await app.erpDriver.returnsProduct({ ...productConfig, sku });
+  }
+
+  for (const productList of ctx.productListConfigs) {
+    const products = productList.map((productConfig) => ({ ...productConfig, sku: useCaseContext.getParamValue(productConfig.sku) }));
+    const staged = await app.erpDriver.returnsProducts({ products });
+    if (!staged.success) {
+      throw new Error(`Failed to stage the ERP product list: ${staged.error.message}`);
+    }
   }
 
   if (ctx.erpUnavailable) {

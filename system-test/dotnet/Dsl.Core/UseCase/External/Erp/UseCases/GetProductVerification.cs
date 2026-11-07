@@ -30,7 +30,32 @@ public class GetProductVerification : ResponseVerification<GetProductResponse>
     {
         return Price(decimal.Parse(expectedPrice));
     }
+
+    public GetProductVerification Title(string expectedTitle)
+    {
+        var actualTitle = Response.Title;
+        actualTitle.ShouldBe(expectedTitle, $"Expected title to be '{expectedTitle}', but was '{actualTitle}'");
+        return this;
+    }
+
+    public GetProductVerification Description(string expectedDescription)
+    {
+        var actualDescription = Response.Description;
+        actualDescription.ShouldBe(expectedDescription, $"Expected description to be '{expectedDescription}', but was '{actualDescription}'");
+        return this;
+    }
+
+    public GetProductVerification Category(string expectedCategory)
+    {
+        var actualCategory = Response.Category;
+        actualCategory.ShouldBe(expectedCategory, $"Expected category to be '{expectedCategory}', but was '{actualCategory}'");
+        return this;
+    }
+
+    public GetProductVerification Brand(string expectedBrand)
+    {
+        var actualBrand = Response.Brand;
+        actualBrand.ShouldBe(expectedBrand, $"Expected brand to be '{expectedBrand}', but was '{actualBrand}'");
+        return this;
+    }
 }
-
-
-

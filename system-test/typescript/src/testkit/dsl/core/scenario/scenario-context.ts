@@ -15,6 +15,11 @@ export interface ClockConfig {
 export interface ProductConfig {
   sku: string;
   price: string;
+  /** Unset → the ERP driver's default. */
+  title?: string;
+  description?: string;
+  category?: string;
+  brand?: string;
 }
 
 export interface PromotionConfig {
@@ -51,6 +56,8 @@ export interface OrderConfig {
 export class ScenarioContext {
   clockConfig: ClockConfig | null = null;
   productConfigs: ProductConfig[] = [];
+  /** Each given().products() call stages one ERP product list. */
+  productListConfigs: ProductConfig[][] = [];
   couponConfigs: CouponConfig[] = [];
   countryConfigs: CountryConfig[] = [];
   orderConfigs: OrderConfig[] = [];

@@ -1,7 +1,9 @@
 import { expect } from '@playwright/test';
 import type { GetTimeResponse } from '../../../../driver/port/external/clock/dtos/GetTimeResponse.js';
 import type { GetProductResponse } from '../../../../driver/port/external/erp/dtos/GetProductResponse.js';
+import type { GetProductsResponse } from '../../../../driver/port/external/erp/dtos/GetProductsResponse.js';
 import type { GetTaxResponse } from '../../../../driver/port/external/tax/dtos/GetTaxResponse.js';
+import { GetProductsVerification } from '../../usecase/external/erp/usecases/GetProductsVerification.js';
 import type { UseCaseContext } from '../../shared/use-case-context.js';
 import type { AppContext } from '../app-context.js';
 import type { ScenarioContext } from '../scenario-context.js';
@@ -11,6 +13,7 @@ import type { ThenStage as IThenStage } from '../../../port/then/then-stage.js';
 export class ThenContractStage implements PromiseLike<void>, IThenStage {
   private readonly _clockAssertions: ((time: GetTimeResponse) => void)[] = [];
   private readonly _productAssertions = new Map<string, ((product: GetProductResponse) => void)[]>();
+  private readonly _productListAssertions: ((products: GetProductsResponse) => void)[] = [];
   private readonly _countryAssertions = new Map<string, ((tax: GetTaxResponse) => void)[]>();
   private _executionPromise: Promise<void> | null = null;
 
@@ -28,6 +31,10 @@ export class ThenContractStage implements PromiseLike<void>, IThenStage {
     return new ThenContractProduct(this, sku);
   }
 
+  products(): ThenContractProducts {
+    return new ThenContractProducts(this);
+  }
+
   country(countryCode: string): ThenContractCountry {
     return new ThenContractCountry(this, countryCode);
   }
@@ -40,6 +47,10 @@ export class ThenContractStage implements PromiseLike<void>, IThenStage {
     const assertions = this._productAssertions.get(sku) ?? [];
     assertions.push(fn);
     this._productAssertions.set(sku, assertions);
+  }
+
+  _addProductListAssertion(fn: (products: GetProductsResponse) => void): void {
+    this._productListAssertions.push(fn);
   }
 
   _addCountryAssertion(country: string, fn: (tax: GetTaxResponse) => void): void {
@@ -61,7 +72,13 @@ export class ThenContractStage implements PromiseLike<void>, IThenStage {
 
     for (const pc of this.ctx.productConfigs) {
       const resolvedSku = this.useCaseContext.getParamValue(pc.sku);
-      await this.app.erpDriver.returnsProduct({ sku: resolvedSku, price: pc.price });
+      await this.app.erpDriver.returnsProduct({ ...pc, sku: resolvedSku });
+    }
+
+    for (const productList of this.ctx.productListConfigs) {
+      const products = productList.map((pc) => ({ ...pc, sku: this.useCaseContext.getParamValue(pc.sku) }));
+      const staged = await this.app.erpDriver.returnsProducts({ products });
+      expect(staged.success).toBe(true);
     }
 
     for (const cc of this.ctx.countryConfigs) {
@@ -90,6 +107,15 @@ export class ThenContractStage implements PromiseLike<void>, IThenStage {
     }
   }
 
+  private async _runProductListAssertions(): Promise<void> {
+    if (this._productListAssertions.length === 0) return;
+    const productsResult = await this.app.erpDriver.getProducts();
+    expect(productsResult.success).toBe(true);
+    if (productsResult.success) {
+      for (const fn of this._productListAssertions) fn(productsResult.value);
+    }
+  }
+
   private async _runCountryAssertions(): Promise<void> {
     for (const [countryCode, assertions] of this._countryAssertions) {
       const resolvedCountry = this.useCaseContext.getParamValueOrLiteral(countryCode);
@@ -105,6 +131,7 @@ export class ThenContractStage implements PromiseLike<void>, IThenStage {
     await this._arrange();
     await this._runClockAssertions();
     await this._runProductAssertions();
+    await this._runProductListAssertions();
     await this._runCountryAssertions();
   }
 
@@ -155,6 +182,53 @@ export class ThenContractProduct implements PromiseLike<void> {
   hasPrice(price: number): this {
     this.stage._addProductAssertion(this.sku, (p) => {
       expect(p.price).toBe(price);
+    });
+    return this;
+  }
+
+  hasTitle(title: string): this {
+    this.stage._addProductAssertion(this.sku, (p) => {
+      expect(p.title).toBe(title);
+    });
+    return this;
+  }
+
+  hasDescription(description: string): this {
+    this.stage._addProductAssertion(this.sku, (p) => {
+      expect(p.description).toBe(description);
+    });
+    return this;
+  }
+
+  hasCategory(category: string): this {
+    this.stage._addProductAssertion(this.sku, (p) => {
+      expect(p.category).toBe(category);
+    });
+    return this;
+  }
+
+  hasBrand(brand: string): this {
+    this.stage._addProductAssertion(this.sku, (p) => {
+      expect(p.brand).toBe(brand);
+    });
+    return this;
+  }
+
+  then<TResult1 = void, TResult2 = never>(
+    onfulfilled?: ((value: void) => TResult1 | PromiseLike<TResult1>) | null,
+    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
+  ): PromiseLike<TResult1 | TResult2> {
+    return this.stage.then(onfulfilled, onrejected);
+  }
+}
+
+export class ThenContractProducts implements PromiseLike<void> {
+  constructor(private readonly stage: ThenContractStage) {}
+
+  /** Finds the SKU in the ERP product list and checks its price; the list's size is not asserted (the real ERP lists other products too). */
+  containsProduct(skuAlias: string, price: number | string): this {
+    this.stage._addProductListAssertion((response) => {
+      new GetProductsVerification(response, this.stage.useCaseContext).containsProduct(skuAlias, price);
     });
     return this;
   }
