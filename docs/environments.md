@@ -5,7 +5,7 @@ permanent services with stable names. A run deploys a new revision of the same s
 them, so an environment's URLs stay the same between runs. Services scale to zero (min-instances 0): an
 environment that has been idle answers its first request after a cold start, and costs nothing while idle.
 
-| Environment | Used by | Stack | Reference-variant URL (multitier-java) |
+| Environment | Used by | Stack | Reference-variant URL (multitier-typescript) |
 |---|---|---|---|
 | Acceptance | acceptance suites in the cloud acceptance stage | `stub`: system + stubs | `https://shop-acc.optivem.com` (custom domain, opt-in) |
 | E2E | e2e suites in the cloud acceptance stage | `real`: system + simulators | `https://shop-e2e.optivem.com` (custom domain, opt-in) |
@@ -26,7 +26,7 @@ Keycloak (`<system>-keycloak`), with a realm per stage.
 
 ## Custom domains
 
-Only the reference variant (multitier-java) gets custom domains. Only its frontend is mapped; the
+Only the reference variant (multitier-typescript) gets custom domains. Only its frontend is mapped; the
 backend stays on `run.app`, and the frontend proxies `/api` to it. The other five flavors, and repos
 scaffolded from this one, stay on `run.app` until you opt in.
 
@@ -34,13 +34,13 @@ The domains are opt-in through four repo variables, which `setup-custom-domains.
 
 | Variable | Example | Maps |
 |---|---|---|
-| `ACC_DOMAIN` | `shop-acc.optivem.com` | `<system>-multitier-java-stub-frontend` |
-| `E2E_DOMAIN` | `shop-e2e.optivem.com` | `<system>-multitier-java-real-frontend` |
-| `QA_DOMAIN` | `shop-qa.optivem.com` | `<system>-multitier-java-qa-frontend` |
-| `PROD_DOMAIN` | `shop.optivem.com` | `<system>-multitier-java-production-frontend` |
+| `ACC_DOMAIN` | `shop-acc.optivem.com` | `<system>-multitier-typescript-stub-frontend` |
+| `E2E_DOMAIN` | `shop-e2e.optivem.com` | `<system>-multitier-typescript-real-frontend` |
+| `QA_DOMAIN` | `shop-qa.optivem.com` | `<system>-multitier-typescript-qa-frontend` |
+| `PROD_DOMAIN` | `shop.optivem.com` | `<system>-multitier-typescript-production-frontend` |
 
-If a variable is set, the stage workflow passes it on: `multitier-java-acceptance-stage.yml` (acc, E2E) to
-`_acceptance-stage.yml`, and `multitier-java-qa-stage.yml` / `multitier-java-prod-stage.yml` (QA, production)
+If a variable is set, the stage workflow passes it on: `multitier-typescript-acceptance-stage.yml` (acc, E2E) to
+`_acceptance-stage.yml`, and `multitier-typescript-qa-stage.yml` / `multitier-typescript-prod-stage.yml` (QA, production)
 through `_qa-stage.yml` / `_prod-stage.yml` to `_deploy-stage.yml`. That stage:
 
 - adds the domain to the backend's `ALLOWED_ORIGINS` and, through the Keycloak admin API, to the
@@ -62,7 +62,7 @@ account, and it stays in place across redeploys.
    Check it with `gcloud domains list-user-verified --project=<project>`.
 2. **Add the DNS records.** Add a CNAME for each subdomain, pointing to `ghs.googlehosted.com`
    (e.g. `shop-acc`, `shop-e2e`, `shop-qa` and `shop`).
-3. **Deploy once.** Run the acceptance, QA and production stages of multitier-java once, so the services to map exist.
+3. **Deploy once.** Run the acceptance, QA and production stages of multitier-typescript once, so the services to map exist.
 4. **Map and set the variables:**
 
    ```bash

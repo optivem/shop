@@ -33,8 +33,6 @@ jobs:
       test-language: java
       images: '{"frontend":"multitier-frontend-react","backend":"multitier-backend-java"}'
       version: ${{ inputs.version }}
-      # setup-custom-domains.sh sets this once the domain mapping is ready.
-      domain: ${{ vars.PROD_DOMAIN }}
 
   # Lives here, not in _prod-stage.yml, because a `uses:` path cannot be built from inputs.
   bump-patch-version:

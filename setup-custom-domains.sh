@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Maps the permanent environments of the reference variant (multitier-java) to custom domains:
+# Maps the permanent environments of the reference variant (multitier-typescript) to custom domains:
 # acceptance (stub), E2E (real), QA and production. Sets the repo variables the acceptance, QA
 # and production stages read. See docs/environments.md.
 #
@@ -18,16 +18,23 @@ set -euo pipefail
 # Prerequisites (one-time, by the domain owner):
 #   - the parent domain verified in Search Console for your gcloud account (gcloud domains list-user-verified)
 #   - a CNAME <domain> -> ghs.googlehosted.com
-#   - one cloud acceptance run of multitier-java (and a QA / production deploy for QA_DOMAIN /
+#   - one cloud acceptance run of the reference variant (and a QA / production deploy for QA_DOMAIN /
 #     PROD_DOMAIN), so the services to map exist
 #
 # The repo variable for a domain is set only once its mapping is Ready (certificate issued), so the
 # stage never targets a domain that doesn't serve yet. Optional overrides: PROJECT_ID,
 # REGION, SYSTEM (default: the GCP_PROJECT_ID, GCP_REGION and SYSTEM_NAME repo variables).
+#
+# REMAP=1 moves a domain that is mapped to another service (e.g. after the reference variant
+# changed): it deletes that mapping and creates the new one. Google then issues a new certificate,
+# so the domain doesn't serve for the 15-60 minutes that takes.
 
 PROJECT_ID="${PROJECT_ID:-$(gh variable get GCP_PROJECT_ID)}"
 REGION="${REGION:-$(gh variable get GCP_REGION)}"
 SYSTEM="${SYSTEM:-$(gh variable get SYSTEM_NAME)}"
+# The reference variant; its stage workflows read the *_DOMAIN variables (docs/environments.md).
+FLAVOR=multitier-typescript
+REMAP="${REMAP:-}"
 PENDING=0
 
 # Service names must match _acceptance-stage.yml / _deploy-stage.yml (deploy-stack):
@@ -56,9 +63,15 @@ ensure_mapping() {
       exit 1
     fi
   elif [[ "$mapped" != "$service" ]]; then
-    echo "  ❌ $domain is already mapped to $mapped, not $service. Fix or remove that mapping by hand:"
-    echo "     gcloud beta run domain-mappings describe --domain $domain --region $REGION --project $PROJECT_ID"
-    exit 1
+    if [[ "$REMAP" != 1 ]]; then
+      echo "  ❌ $domain is already mapped to $mapped, not $service."
+      echo "     Re-run with REMAP=1 to move it (it stops serving until the new certificate is issued)."
+      exit 1
+    fi
+    echo "  Moving $domain from $mapped to $service..."
+    gcloud beta run domain-mappings delete --domain "$domain" --region "$REGION" --project "$PROJECT_ID" --quiet > /dev/null
+    gcloud beta run domain-mappings create --domain "$domain" --service "$service" \
+      --region "$REGION" --project "$PROJECT_ID" --quiet > /dev/null
   fi
   ready=$(gcloud beta run domain-mappings describe --domain "$domain" --region "$REGION" --project "$PROJECT_ID" \
     --format=json 2> /dev/null | jq -r '.status.conditions[]? | select(.type == "Ready") | .status' || true)
@@ -73,10 +86,10 @@ ensure_mapping() {
 }
 
 echo "Mapping custom domains (Cloud Run domain mappings, project $PROJECT_ID, $REGION)..."
-ensure_mapping ACC_DOMAIN "${ACC_DOMAIN:-}" "${SYSTEM}-multitier-java-stub-frontend" multitier-java-acceptance-stage.yml
-ensure_mapping E2E_DOMAIN "${E2E_DOMAIN:-}" "${SYSTEM}-multitier-java-real-frontend" multitier-java-acceptance-stage.yml
-ensure_mapping QA_DOMAIN "${QA_DOMAIN:-}" "${SYSTEM}-multitier-java-qa-frontend" multitier-java-qa-stage.yml
-ensure_mapping PROD_DOMAIN "${PROD_DOMAIN:-}" "${SYSTEM}-multitier-java-production-frontend" multitier-java-prod-stage.yml
+ensure_mapping ACC_DOMAIN "${ACC_DOMAIN:-}" "${SYSTEM}-${FLAVOR}-stub-frontend" "${FLAVOR}-acceptance-stage.yml"
+ensure_mapping E2E_DOMAIN "${E2E_DOMAIN:-}" "${SYSTEM}-${FLAVOR}-real-frontend" "${FLAVOR}-acceptance-stage.yml"
+ensure_mapping QA_DOMAIN "${QA_DOMAIN:-}" "${SYSTEM}-${FLAVOR}-qa-frontend" "${FLAVOR}-qa-stage.yml"
+ensure_mapping PROD_DOMAIN "${PROD_DOMAIN:-}" "${SYSTEM}-${FLAVOR}-production-frontend" "${FLAVOR}-prod-stage.yml"
 if (( PENDING )); then
   echo "  Not finished yet; re-run ./setup-custom-domains.sh (same variables) to complete it."
 fi

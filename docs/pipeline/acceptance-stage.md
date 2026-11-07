@@ -107,7 +107,7 @@ flowchart TD
 
 - **Build Shared Images** builds Keycloak, db-migrate, simulators and stubs into public GHCR (`ghcr.io/<owner>/<repo>/shop-*`), only when their tree-hash tag is missing, and checks that every image Cloud Run will pull is anonymously pullable.
 - **Deploy: Keycloak** deploys the one Keycloak every flavor and stage shares, and only redeploys when something changed. **Deploy: Real / Stub Stacks** deploys, per stack, the external systems, runs the database migrations (Neon) and deploys the system (monolith) or backend and frontend (multitier), straight from the tested GHCR digests.
-- **Run System Tests** runs the same latest suites as the gate, in the flavor's test language, against the Cloud Run URLs. When the `ACC_DOMAIN` / `E2E_DOMAIN` repo variables are set, multitier-java's UI tests use its custom domains instead (see [Environments](../environments.md)).
+- **Run System Tests** runs the same latest suites as the gate, in the flavor's test language, against the Cloud Run URLs. When the `ACC_DOMAIN` / `E2E_DOMAIN` repo variables are set, multitier-typescript's UI tests use its custom domains instead (see [Environments](../environments.md)).
 - **Tag Release Candidate**, **Publish Git Tag** and **Verify RC Tag** run on `main` only: the tested images get the `<flavor>-v<x.y.z>-rc.N` tag, the git tag is published, and the run fails if the tested SHA ends up with no RC tag.
 
 ### Diagram ↔ YAML mapping (`_acceptance-stage.yml`)

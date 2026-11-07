@@ -34,3 +34,5 @@ jobs:
       test-language: typescript
       images: '{"frontend":"multitier-frontend-react","backend":"multitier-backend-typescript"}'
       version: ${{ inputs.version }}
+      # setup-custom-domains.sh sets this once the domain mapping is ready.
+      domain: ${{ vars.QA_DOMAIN }}
