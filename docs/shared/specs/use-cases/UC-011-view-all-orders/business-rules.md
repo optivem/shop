@@ -1,6 +1,6 @@
 # Business Rules: View All Orders
 
-Use case: [UC-011 View All Orders](use-case.md). Acceptance criteria: [acceptance-criteria.md](acceptance-criteria.md).
+Use case: [UC-011 View All Orders](use-case-narrative.md). Acceptance criteria: [acceptance-criteria.md](acceptance-criteria.md).
 
 - BR-1. An admin sees every order placed in the shop, whichever customer placed it, newest first (by order date). Each order shows its order number, customer, order date, SKU, quantity, total price and status, and links to its details. The admin can open the details of any customer's order.
 - BR-2. The customer of an order is the username of the customer who placed it. Orders placed before the shop recorded who placed them show "-" as the customer.

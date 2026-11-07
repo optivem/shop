@@ -1,6 +1,6 @@
 # Business Rules: Check Out
 
-Use case: [UC-009 Check Out](use-case.md). Acceptance criteria: [acceptance-criteria.md](acceptance-criteria.md).
+Use case: [UC-009 Check Out](use-case-narrative.md). Acceptance criteria: [acceptance-criteria.md](acceptance-criteria.md).
 
 - BR-1. One order per cart line: checkout places one order per cart line, in cart order, each through UC-001 Place Order with that line's SKU and quantity. Every order of a checkout gets the same shipping address and coupon, and its own order number.
 - BR-2. Tax country: the tax rate of each order is the rate of the shipping address's country (US 0%, DE 19%, GB 20%). Checkout has no separate country field. The order review shows the tax country and its estimated tax rate.

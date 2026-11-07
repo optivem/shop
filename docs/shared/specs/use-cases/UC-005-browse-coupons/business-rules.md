@@ -1,6 +1,6 @@
 # Business Rules: Browse Coupons
 
-Use case: [UC-005 Browse Coupons](use-case.md). Acceptance criteria: [acceptance-criteria.md](acceptance-criteria.md).
+Use case: [UC-005 Browse Coupons](use-case-narrative.md). Acceptance criteria: [acceptance-criteria.md](acceptance-criteria.md).
 
 - BR-1. The coupon list shows every published coupon, newest published first, so a freshly published coupon is always at the top of the first page.
 - BR-2. Each coupon shows its code, discount rate as a percentage with 2 decimals (e.g. 15.00%), valid-from time ("Immediate" when there is none), valid-to time ("Never" when there is none), usage limit ("Unlimited" when there is none) and used count. Times are shown in UTC.

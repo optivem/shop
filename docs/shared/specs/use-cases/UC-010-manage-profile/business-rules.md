@@ -1,6 +1,6 @@
 # Business Rules: Manage Profile
 
-Use case: [UC-010 Manage Profile](use-case.md). Acceptance criteria: [acceptance-criteria.md](acceptance-criteria.md).
+Use case: [UC-010 Manage Profile](use-case-narrative.md). Acceptance criteria: [acceptance-criteria.md](acceptance-criteria.md).
 
 - BR-1. A profile has a first name, last name, email and a shipping address of street, postal code, city and country. The email comes from the sign-in account and can't be changed here. After saving, the profile page shows the saved values.
 - BR-2. First name, last name, street, postal code, city and country are all required. A field that holds only spaces counts as empty.

@@ -1,6 +1,6 @@
 # Business Rules: Publish Coupon
 
-Use case: [UC-004 Publish Coupon](use-case.md). Acceptance criteria: [acceptance-criteria.md](acceptance-criteria.md).
+Use case: [UC-004 Publish Coupon](use-case-narrative.md). Acceptance criteria: [acceptance-criteria.md](acceptance-criteria.md).
 
 - BR-1. The discount rate is a fraction of the price: greater than 0 and at most 1 (0.15 means 15% off, 1.00 means 100% off).
 - BR-2. Valid from and valid to are optional. With no valid-from time the coupon is valid immediately; with no valid-to time it never expires. Validity is not checked when the coupon is published: it is checked against the Clock each time an order uses the coupon (UC-001 Place Order).

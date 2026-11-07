@@ -1,6 +1,6 @@
 # Business Rules: Browse Catalog
 
-Use case: [UC-006 Browse Catalog](use-case.md). Acceptance criteria: [acceptance-criteria.md](acceptance-criteria.md).
+Use case: [UC-006 Browse Catalog](use-case-narrative.md). Acceptance criteria: [acceptance-criteria.md](acceptance-criteria.md).
 
 - BR-1. The catalog lists every product the ERP offers, with the number of products shown. Each product shows its title, brand and price. Prices are in dollars with thousands separators and 2 decimals (e.g. $1,299.99).
 - BR-2. Category filter: the visitor picks one category, or "All" (the default). The categories offered are the ones the catalog's products belong to.

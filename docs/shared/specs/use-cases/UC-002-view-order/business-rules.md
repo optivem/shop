@@ -1,6 +1,6 @@
 # Business Rules: View Order
 
-Use case: [UC-002 View Order](use-case.md). Acceptance criteria: [acceptance-criteria.md](acceptance-criteria.md).
+Use case: [UC-002 View Order](use-case-narrative.md). Acceptance criteria: [acceptance-criteria.md](acceptance-criteria.md).
 
 - BR-1. My orders lists the customer's orders, newest first by the time they were placed. Each order shows its order number, order date, SKU, quantity, total price and status, and links to its details.
 - BR-2. Order number filter: an order matches if the typed text appears anywhere in its order number, ignoring case and surrounding spaces. An empty filter matches every order.

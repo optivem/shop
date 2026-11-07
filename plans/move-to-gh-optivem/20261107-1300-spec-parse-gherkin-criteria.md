@@ -22,7 +22,7 @@ Criteria live in fenced ```` ```gherkin ```` blocks in `docs/shared/specs/use-ca
 docs/shared/specs/use-cases/
   README.md                     ← index (diagram + table), NO front matter
   UC-001-place-order/
-    use-case.md                 ← narrative, NO front matter
+    use-case-narrative.md                 ← narrative, NO front matter
     business-rules.md           ← optional, NO front matter
     acceptance-criteria.md      ← front matter (id, title) + the tagged Gherkin blocks
   UC-002-view-order/
@@ -42,7 +42,7 @@ Tests already report criteria in the shape `internal/spec/junit.go` reads: per-t
   - a scenario with two UC tags → decide: error, or two criteria with the same text. Error is the safer choice (one criterion, one scenario).
 - [ ] Step 2b — **Folder per use case** in `LoadDir` (`internal/spec/usecase.go`):
   - Also read `<specDir>/*/acceptance-criteria.md`, one level deep, sorted by folder name. Each one is a use case, with its front matter (`id`, `title`) and Gherkin parsed as in Step 1.
-  - Skip the other `.md` files inside use-case folders (`use-case.md`, `business-rules.md`).
+  - Skip the other `.md` files inside use-case folders (`use-case-narrative.md`, `business-rules.md`).
   - Don't require front matter on top-level `README.md`. Simplest: skip `README.md` at the top level. A top-level `.md` file with front matter keeps working as today (flat layout), so other repos don't break.
   - Optional check: warn when a folder named `UC-NNN-*` has no `acceptance-criteria.md`, or its front-matter `id` doesn't match the folder's `UC-NNN` prefix.
   - Test with a testdata tree mirroring the layout above: a README with no front matter, one folder with all three files, and one folder without `business-rules.md`. Expect only the criteria from `acceptance-criteria.md` and no front-matter errors.

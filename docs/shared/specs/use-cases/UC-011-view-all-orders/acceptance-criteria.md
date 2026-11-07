@@ -6,7 +6,7 @@ status: planned
 
 # UC-011 View All Orders — Acceptance criteria
 
-Narrative: [use-case.md](use-case.md). Business rules: [business-rules.md](business-rules.md).
+Narrative: [use-case-narrative.md](use-case-narrative.md). Business rules: [business-rules.md](business-rules.md).
 
 Tags: `@UC-011.N` for N = 1 to 5 checks business rule BR-N. Tags from `@UC-011.6` on check an extension, which is also tagged `@narrative-<step><letter>`.
 

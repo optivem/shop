@@ -1,6 +1,6 @@
 # Business Rules: Manage Cart
 
-Use case: [UC-008 Manage Cart](use-case.md). Acceptance criteria: [acceptance-criteria.md](acceptance-criteria.md).
+Use case: [UC-008 Manage Cart](use-case-narrative.md). Acceptance criteria: [acceptance-criteria.md](acceptance-criteria.md).
 
 - BR-1. The cart badge in the header, shown on every page, shows the cart's total quantity (the sum of all line quantities). It is hidden when the cart is empty.
 - BR-2. Adding a product that is already in the cart raises the quantity of its line instead of adding a second line. Adding from the catalog adds quantity 1; adding from the product page adds the chosen quantity. Every add confirms "Added to cart".

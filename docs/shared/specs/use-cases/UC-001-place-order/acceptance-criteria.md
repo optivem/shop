@@ -6,7 +6,7 @@ status: implemented
 
 # UC-001 Place Order — Acceptance criteria
 
-Narrative: [use-case.md](use-case.md). Business rules: [business-rules.md](business-rules.md).
+Narrative: [use-case-narrative.md](use-case-narrative.md). Business rules: [business-rules.md](business-rules.md).
 
 ```gherkin
 Feature: Place Order

@@ -6,7 +6,7 @@ status: planned
 
 # UC-008 Manage Cart — Acceptance criteria
 
-Narrative: [use-case.md](use-case.md). Business rules: [business-rules.md](business-rules.md).
+Narrative: [use-case-narrative.md](use-case-narrative.md). Business rules: [business-rules.md](business-rules.md).
 
 Tags: `@UC-008.N` for N = 1 to 8 checks business rule BR-N. Tags from `@UC-008.9` on check an extension, which is also tagged `@narrative-<step><letter>`.
 

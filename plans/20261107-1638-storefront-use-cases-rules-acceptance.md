@@ -14,7 +14,7 @@ What we get out of this:
   docs/shared/specs/use-cases/
     README.md                     ← index: diagram + table (ID, name, actor), links to each folder
     UC-001-place-order/
-      use-case.md                 ← narrative: actors, main success scenario, extensions
+      use-case-narrative.md                 ← narrative: actors, main success scenario, extensions
       business-rules.md           ← only when the use case has rules
       acceptance-criteria.md      ← front matter (id, title) + tagged Gherkin; what the spec gate reads
     UC-002-view-order/
@@ -71,7 +71,7 @@ Then **Step 8 + Step 9 run in one session together with Step 2 of `plans/2026110
 ## Decisions (resolved 2026-11-07, user approved all recommendations)
 
 - Numbering: existing features first (UC-002 to UC-005), then storefront (UC-006 to UC-011), then UC-012 Deliver Order. All twelve are storefront use cases on one diagram; "existing" only means already built.
-- Each use case is a folder: `use-case.md`, `business-rules.md` (only when there are rules) and `acceptance-criteria.md` (front matter + Gherkin). The index is `use-cases/README.md`.
+- Each use case is a folder: `use-case-narrative.md`, `business-rules.md` (only when there are rules) and `acceptance-criteria.md` (front matter + Gherkin). The index is `use-cases/README.md`.
 - Acceptance criteria granularity: one `@UC-NNN.M` scenario per business rule and per extension, as in UC-001.
 - Gate status: every new `acceptance-criteria.md` gets `status: planned` in its front matter (next to `id`, `title`). The implementation plan flips it to `implemented` when that use case's acceptance tests land. UC-001 is `implemented`. gh-optivem will skip `planned` use cases (C1c). Decided 2026-11-07, see `plans/20261107-1705-meta-storefront-specs-build.md`.
 - Checkout partial failure: the other lines are still placed; the confirmation page shows a per-line result.

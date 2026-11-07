@@ -1,6 +1,6 @@
 # Business Rules: Cancel Order
 
-Use case: [UC-003 Cancel Order](use-case.md). Acceptance criteria: [acceptance-criteria.md](acceptance-criteria.md).
+Use case: [UC-003 Cancel Order](use-case-narrative.md). Acceptance criteria: [acceptance-criteria.md](acceptance-criteria.md).
 
 - BR-1. Cancelling an order sets its status to CANCELLED. Nothing else about the order changes.
 - BR-2. An order that is already cancelled cannot be cancelled again. The order details offer Cancel Order only while the order is PLACED; a cancelled or delivered order shows no Cancel Order option.
