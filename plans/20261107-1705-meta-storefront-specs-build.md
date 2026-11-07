@@ -1,5 +1,6 @@
 # 2026-11-07 17:05 UTC — Plan coordination meta-plan: storefront specs + build
 
+
 **Plans analysed:** 2 in-scope, 1 referenced-only
 
 - In scope: `20261107-1638-storefront-use-cases-rules-acceptance.md` (call it **SPEC**), `20261107-1657-storefront-implementation.md` (call it **BUILD**).
@@ -25,21 +26,15 @@ The orchestrating session runs the Steps below **in order**, one subagent per st
 - **Verify, don't trust:** after each subagent, the orchestrator checks `git log origin/main` and a build/test result before marking the step done.
 - **Failures:** two retries inside the step. Then record the blocker here, stop, and report. Later steps depend on earlier ones.
 - **Stop only at:** the user gates marked 🛑 below, a blocker, or a decision that is expensive to reverse (schema or API forks).
+- **Legacy system tests stay lean (user, 2026-11-07):** new use-case tests go in the latest system tests only. Change legacy only as much as it needs to keep compiling and green. Put this in every subagent brief.
 - **Before each step:** `git fetch && git status -sb`; `grep -ln "Picked up by agent" plans/*.md` (another session on SPEC, BUILD or UC1 → stop and ask); check that the shop pipeline is green (`gh run list -L 10`). A red pipeline gets fixed first (priority: green pipeline).
 
 ## ▶ Next executable step (resume here)
 
-🛑 **Ask upfront:** has the user signed off the prototype (https://claude.ai/artifact/GFfHJ51yWJLVvY8JR4YVmj) and reviewed the specs? No code runs before that (BUILD decision 1). Then run **Step 1**.
+The prototype is signed off and the specs are reviewed (G0 closed 2026-11-07). Step 1 (U2, catalog data path) is done: `a71fb8ae`, `cee2babc`, `b3846cdc`. Run **Step 2** (BUILD Step 9). The user's scope for a session is Steps 2→4, stopping at the 🛑 React gate.
 
 ## Steps
 
-- [ ] **Step 1 — U2: BUILD Step 1 (catalog data path).** One subagent:
-  - the 10 ERP products in the simulator and the stubs;
-  - the list mapping;
-  - ERP contract tests in java, dotnet and typescript;
-  - anonymous `GET /api/products` and `GET /api/products/{sku}` in the six backends.
-
-  Gate: `./compile-all.sh` green, plus `system-test run --sample` for the affected languages.
 - [ ] **Step 2 — BUILD Step 9 (tag the existing use cases' tests: UC-002–005, UC-012).** One subagent. It tags the existing acceptance tests in all three languages, adds the missing ones, and flips those five use cases to `status: implemented`. It runs before Step 3 because both touch the order acceptance tests. Gate: compile, plus sample system tests in all three languages.
 - [ ] **Step 3 — U3: SPEC Step 8, then BUILD Step 2, then SPEC Step 9, as one subagent (atomic).**
   - Amend UC-001 so the country comes from the shipping address. The SPEC Step 8 notes give the exact changes.
@@ -56,6 +51,12 @@ The orchestrating session runs the Steps below **in order**, one subagent per st
 - [ ] **Step 8 — Close out.** When SPEC and BUILD have no open items, delete both plan files (and this one). Report UC1 Track D as the remaining follow-up: it needs gh-optivem C1, C1b and C1c.
 
 Out of scope for this run: UC1 Tracks C and D (gh-optivem, then the gate re-enable). The reference sections below explain why the order is what it is.
+
+## Pre-existing issues found during Step 1 (not caused by it; outside this plan)
+
+- `system-test/dotnet` `DefaultGivensTest.OrderWithoutDeclaredProductShouldCreateDefaultProductAndTaxRateExactlyOnce` throws a NullReferenceException because it passes a null channel. It fails on the previous HEAD too.
+- The .NET monolith's `GlobalExceptionHandler` sends `application/json` instead of `application/problem+json`.
+- Step 1 didn't run the monolith-java legacy `--sample` (its latest sample and contract runs passed, and legacy compiles).
 
 ## Per-plan status snapshot
 

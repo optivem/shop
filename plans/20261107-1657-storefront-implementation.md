@@ -16,19 +16,11 @@ This plan holds **only how to build it**. Look and layout live in the UX spec. B
 
 ## ▶ Next executable step (resume here)
 
-**Gates first:**
-1. The user signs off on the visual prototype. Fold any feedback into the prototype and into `storefront-ux.md`.
-2. The use cases for the step being built are written (plan `20261107-1638`, at least UC-006 for Step 1).
+Step 1 (catalog data path) is done: commits `a71fb8ae`, `cee2babc`, `b3846cdc` (2026-11-07). `GET /api/products` returns a bare array of `{sku,title,description,brand,category,price}` (price is a 2-decimal string); `GET /api/products/{sku}` returns 404 for an unknown SKU and 503 when the ERP is down.
 
-Then **Step 1 (catalog data path)**:
-1. Enrich the three `external-systems/stubs/mappings/erp-products-*.json` with `title`/`description`/`category`/`brand`, copying the values from `external-systems/simulators/mock-server.js`.
-2. Add `erp-products-list.json` for `GET /erp/api/products`.
-3. Add ERP contract tests for the list endpoint in java, dotnet and typescript.
-4. Add an anonymous `GET /api/products` and `GET /api/products/{sku}` to the six backends (spec §6.2).
+Next, per the meta-plan `plans/20261107-1705-meta-storefront-specs-build.md`: **Step 9** (tag the existing order and coupon acceptance tests for UC-002–005 and UC-012, then flip their status). Then Step 2 runs as part of the meta-plan's atomic unit U3. New tests go in the **latest** system tests only. Change legacy only as much as it needs to stay green.
 
-Gate: `./compile-all.sh` green.
-
-Before you start, check that `plans/20261106-1533-use-cases-match-substack-articles.md` (touching UC-001 and the acceptance tests) isn't editing the same ERP contract-test files. If it is, coordinate first.
+Gate: compile, plus the sample system tests in all three languages.
 
 ## Background
 
@@ -45,12 +37,6 @@ Before you start, check that `plans/20261106-1533-use-cases-match-substack-artic
 
 ## Steps
 
-- [ ] **Step 1: Catalog data path** (UC-006, UC-007).
-  - ERP data: grow the catalog to the 10 products in spec §6.1, in both the simulator (`mock-server.js`) and the stubs (one mapping per product plus a list mapping).
-  - ERP stubs: add a `GET /erp/api/products` list mapping and add `title`/`description`/`category`/`brand` to the product mappings. Check that the simulator's json-server list route already serves this.
-  - ERP contract tests: cover the list endpoint and the new fields in all three languages.
-  - Backends: add anonymous `GET /api/products` and `GET /api/products/{sku}` in all six backends (multitier java/dotnet/typescript, monolith java/dotnet/typescript) and extend the `ErpProductDetailsResponse` DTOs. Don't touch `backend-clean-java` unless the spec says so.
-  - Gate: `./compile-all.sh` is green.
 - [ ] **Step 2: Profile, shipping address and admin order filter** (UC-010, UC-011, amended UC-001). The UC-001 plan is in flight and touches the same Place Order code and tests. Before starting, check its status: either wait for its current track to commit, or coordinate so the two don't both edit `PlaceOrderRequest`, `OrderService` and the place-order acceptance tests at the same time.
   - Profile storage: a DB migration plus `GET`/`PUT /api/account/profile`, keyed by the Keycloak subject.
   - An `orders.shipping_address` column. `PlaceOrderRequest` takes the address instead of a free `country`.
