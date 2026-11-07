@@ -39,11 +39,11 @@ A, B and C are independent. A and B are done (see Done). D waits for C.
 
 ### ▶ Next executable step (resume here)
 
-Track C is external: run it in a gh-optivem session (parse `@UC-NNN.M` Gherkin scenarios, then publish a release). Once that release is out, Track D (D1) re-enables the gate here.
+Track C is external: run it in a gh-optivem session (plan: `plans/move-to-gh-optivem/20261107-1300-spec-parse-gherkin-criteria.md`; parse `@UC-NNN.M` Gherkin scenarios, then publish a release). Once that release is out, Track D (D1) re-enables the gate here.
 
 ### Track C — gh-optivem reads Gherkin criteria (other repo)
 
-> ⚠️ Shop never changes gh-optivem. Run this track in a **gh-optivem session**, not from shop. A shop executor marks it as external and waits for the release.
+> ⚠️ Shop never changes gh-optivem. Run this track in a **gh-optivem session**, not from shop. A shop executor marks it as external and waits for the release. The gh-optivem work is written up as `plans/move-to-gh-optivem/20261107-1300-spec-parse-gherkin-criteria.md`; move it into gh-optivem and run it there.
 
 - [ ] C1: In `internal/spec/usecase.go`, also read fenced ```` ```gherkin ```` blocks in use-case markdown. Each `Scenario:` tagged `@UC-NNN.M` becomes a criterion: the ID comes from the tag and the text from the scenario title. Ignore other tags (e.g. `@narrative-4a`), or keep them as metadata. Keep bullet support, and reuse the scenario parsing in `internal/spec/storymerge.go`. Cover these cases in `usecase_test.go`, using shop's UC-001 as a testdata fixture: duplicate IDs across both formats, a scenario with no UC tag, and a scenario with two UC tags. Consider making `validate` warn when a use-case file has zero criteria, since that silent pass is what hid this problem.
 - [ ] C1b (requested 2026-11-07 by `plans/20261107-1638-storefront-use-cases-rules-acceptance.md`): support a folder per use case. Shop is moving to `docs/shared/specs/use-cases/UC-NNN-<name>/{use-case.md, business-rules.md, acceptance-criteria.md}`, with an index `use-cases/README.md` that has no front matter. `LoadDir` should read `<specDir>/*/acceptance-criteria.md`; that file carries the front matter (`id`, `title`) and the Gherkin. Skip top-level `.md` files such as `README.md` (or at least don't require front matter there). Keep reading flat `<specDir>/*.md` if that's cheap, for other repos.
