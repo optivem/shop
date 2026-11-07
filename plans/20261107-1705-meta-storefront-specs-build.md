@@ -5,6 +5,58 @@
 - In scope: `20261107-1638-storefront-use-cases-rules-acceptance.md` (call it **SPEC**), `20261107-1657-storefront-implementation.md` (call it **BUILD**).
 - Referenced-only (not in coordination scope): `20261106-1533-use-cases-match-substack-articles.md` (**UC1**). Both in-scope plans name it as the owner of UC-001 and the spec gate.
 
+## TL;DR
+
+**Why:** The storefront work spans two plans (SPEC `20261107-1638`, BUILD `20261107-1657`) that share files and must interleave. Running them one session at a time by hand is error-prone.
+**End result:** One `/execute-plan` on this file drives both plans to completion through subagents, in the safe order below. The orchestrator owns all plan-file edits.
+
+## How to run
+
+```
+/clear
+/execute-plan plans/20261107-1705-meta-storefront-specs-build.md
+```
+
+The orchestrating session runs the Steps below **in order**, one subagent per step (a fresh `general-purpose` agent, no worktree). Re-run the same two commands to resume after a stop or `/clear`.
+
+**Orchestrator rules:**
+- **Subagents never edit plan files.** After a subagent's step is verified, the orchestrator deletes the finished items from SPEC/BUILD, refreshes their `▶ Next executable step` blocks, deletes the step here, refreshes this file's resume block, then commits and pushes the plan edits.
+- **Each subagent's brief:** the step text below; the relevant SPEC/BUILD step text, read from those files; `CLAUDE.md` (compile with `./compile-all.sh` or a per-project build; sample system tests per affected language); the specs under `docs/shared/specs/use-cases/` (the `@UC-NNN.M` scenarios it must make pass); "commit only your files, never bypass hooks, push only when green".
+- **Verify, don't trust:** after each subagent, the orchestrator checks `git log origin/main` and a build/test result before marking the step done.
+- **Failures:** two retries inside the step. Then record the blocker here, stop, and report. Later steps depend on earlier ones.
+- **Stop only at:** the user gates marked 🛑 below, a blocker, or a decision that is expensive to reverse (schema or API forks).
+- **Before each step:** `git fetch && git status -sb`; `grep -ln "Picked up by agent" plans/*.md` (another session on SPEC, BUILD or UC1 → stop and ask); check that the shop pipeline is green (`gh run list -L 10`). A red pipeline gets fixed first (priority: green pipeline).
+
+## ▶ Next executable step (resume here)
+
+🛑 **Ask upfront:** has the user signed off the prototype (https://claude.ai/artifact/GFfHJ51yWJLVvY8JR4YVmj) and reviewed the specs? No code runs before that (BUILD decision 1). Then run **Step 1**.
+
+## Steps
+
+- [ ] **Step 1 — U2: BUILD Step 1 (catalog data path).** One subagent:
+  - the 10 ERP products in the simulator and the stubs;
+  - the list mapping;
+  - ERP contract tests in java, dotnet and typescript;
+  - anonymous `GET /api/products` and `GET /api/products/{sku}` in the six backends.
+
+  Gate: `./compile-all.sh` green, plus `system-test run --sample` for the affected languages.
+- [ ] **Step 2 — BUILD Step 9 (tag the existing use cases' tests: UC-002–005, UC-012).** One subagent. It tags the existing acceptance tests in all three languages, adds the missing ones, and flips those five use cases to `status: implemented`. It runs before Step 3 because both touch the order acceptance tests. Gate: compile, plus sample system tests in all three languages.
+- [ ] **Step 3 — U3: SPEC Step 8, then BUILD Step 2, then SPEC Step 9, as one subagent (atomic).**
+  - Amend UC-001 so the country comes from the shipping address. The SPEC Step 8 notes give the exact changes.
+  - Build profile storage, the shipping address on orders and `GET /api/orders?customer=`, with acceptance tests for UC-010, UC-011 and the amended UC-001. Retag `@UC-001.10`.
+  - Flip UC-010, UC-011 and UC-001 statuses where their tests now pass.
+  - Then cross-reference: fix storefront-ux.md §4.4 and list the `@UC-NNN.M` scenarios per BUILD step. The subagent may edit the BUILD plan for this cross-reference only.
+
+  Push only when compile and the sample system tests are green in all three languages.
+- [ ] **Step 4 — BUILD Step 3 (React reference implementation)** plus the `openHomePage()` driver change in all three languages. One subagent. Gate: `npx tsc --noEmit`, unit tests, and the multitier sample system tests.
+  - 🛑 **User gate:** stop and ask the user to sign off how React looks (BUILD decision 4). Give them the run command, e.g. `gh optivem system start` with the multitier config.
+- [ ] **Step 5 — BUILD Steps 4, 5, 6 (ports to Next.js, Thymeleaf, Razor).** One subagent per port, **serial**: they share docker ports when running system tests. Gate per port: that monolith's build plus its sample system tests.
+- [ ] **Step 6 — BUILD Step 7 (verify).** One subagent: `./compile-all.sh`, `--sample` for all languages (monolith and multitier), then `./test-all.sh`.
+- [ ] **Step 7 — BUILD Step 8 (acceptance tests for UC-006–009).** One subagent per use case, serial (shared test kit). Each one flips its use case to `status: implemented`. Gate: compile, plus the sample system tests.
+- [ ] **Step 8 — Close out.** When SPEC and BUILD have no open items, delete both plan files (and this one). Report UC1 Track D as the remaining follow-up: it needs gh-optivem C1, C1b and C1c.
+
+Out of scope for this run: UC1 Tracks C and D (gh-optivem, then the gate re-enable). The reference sections below explain why the order is what it is.
+
 ## Per-plan status snapshot
 
 | Plan | Status | Items done / total | Touched files (primary) | Notes |
