@@ -39,7 +39,13 @@ Before you start, check that `plans/20261106-1533-use-cases-match-substack-artic
    - UC-001 and the tests change with it.
    - The Quick order page (`/new-order`, test contract) keeps its Country field until that domain change lands, so tests stay green in between.
 
-   Sequence it after the in-flight UC-001 plan (`20261106-1533-use-cases-match-substack-articles.md`), as its own steps (see Step 2b).
+   Sequenced **now**: Step 2b runs right after Step 2 and before the UI work (Step 3), so checkout is built once against real addresses. The user decided on 2026-11-07 not to wait for the UC-001 plan.
+5. **A bigger catalog.** 10 products in 3 categories (Laptops, Monitors, Accessories), seeded in the ERP simulator and the WireMock stubs (spec §6.1).
+6. **One currency.** Prices are in `$` for every shipping country.
+7. **Profile at checkout (the common pattern).** Checkout never blocks on an empty profile:
+   - With an empty profile, checkout shows the address form directly, with "Save as my default shipping address" ticked by default.
+   - With a saved address, it's preselected, and "Ship to a different address" is available.
+8. **Admin orders.** Admins see every customer's orders on `/order-history` (route and selectors unchanged), with a Customer column and a customer filter.
 
 ## Steps
 
@@ -48,11 +54,13 @@ Before you start, check that `plans/20261106-1533-use-cases-match-substack-artic
 - [x] **Step 1: UX spec.** Written to `docs/design/shared/storefront-ux.md` (it fits the existing `docs/design/shared/` layout better than a new `docs/ux/`) and linked from the README.
   - Finding: today `AuthGate` wraps the whole SPA in `RequireAuth`, and every backend has `anyRequest().authenticated()`. Anonymous browsing therefore also needs the SPA's auth to be per-route, `permitAll` on the catalog endpoints, and the driver change in spec §7.1.
 - [ ] **Step 2: Catalog data path.**
-  - ERP stubs: add a `GET /erp/api/products` list mapping and add `title`/`description`/`category`/`brand` to the three product mappings. Check that the simulator's json-server list route already serves this.
+  - ERP data: grow the catalog to the 10 products in spec §6.1, in both the simulator (`mock-server.js`) and the stubs (one mapping per product plus a list mapping). Keep the existing three SKUs and prices unchanged, because tests depend on them.
+  - ERP stubs: add a `GET /erp/api/products` list mapping and add `title`/`description`/`category`/`brand` to the product mappings. Check that the simulator's json-server list route already serves this.
   - ERP contract tests: cover the list endpoint and the new fields in all three languages.
   - Backends: add anonymous `GET /api/products` and `GET /api/products/{sku}` in all six backends (multitier java/dotnet/typescript, monolith java/dotnet/typescript) and extend the `ErpProductDetailsResponse` DTOs. Don't touch `backend-clean-java` unless the spec says so.
   - Gate: `./compile-all.sh` is green.
-- [ ] **Step 2b: Customer profile and shipping address (domain change, after the UC-001 plan lands).**
+- [ ] **Step 2b: Customer profile and shipping address (domain change, now, before Step 3).** The UC-001 plan is in flight and touches the same Place Order code and tests. Before starting, check its status: either wait for its current track to commit, or coordinate so the two don't both edit `PlaceOrderRequest`, `OrderService` and the place-order acceptance tests at the same time.
+  - Includes the admin customer filter on `/order-history` (`GET /api/orders?customer=`).
   - New use cases: Manage Profile, and Place Order shipping to an address.
   - Profile storage (DB migration plus `GET`/`PUT /api/account/profile`, keyed by the Keycloak subject) and an `orders.shipping_address` column.
   - Place Order takes the tax country from the shipping address.

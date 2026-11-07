@@ -174,6 +174,10 @@ Checkout
   - **All succeed:** clear the cart and go to confirmation.
   - **Some fail:** remove the lines that succeeded from the cart, stay on checkout, and show an error notification listing the failed SKUs with the backend's messages.
 - An empty cart redirects to `/cart`.
+- **Empty profile (first order):** checkout never blocks.
+  - The address form opens directly, with names prefilled from the sign-in account where known.
+  - A **"Save as my default shipping address"** checkbox (`aria-label="Save as Default Address"`) is ticked by default. Placing the order with it ticked writes the address to the profile.
+  - This is the common pattern: collect the address in the flow and offer to remember it, rather than sending the customer to an account page first.
 
 ### 4.5 Order confirmation (`/checkout/confirmation`)
 
@@ -194,7 +198,7 @@ Quick order (`/new-order`), My orders (`/order-history`), Order details and Admi
   - `--shop-radius` `0.5rem`
 - **Type:** the system UI font stack. Prices use tabular numerals.
 - **Product image placeholder:** an inline SVG or CSS tile. The brand name sits in large letters on a tile coloured by a deterministic hash of the brand. Aspect ratio 4:3 on cards, 1:1 on the detail page. No external or hotlinked images; ERP has no image field.
-- **Money:** `$` with thousands separators and 2 decimals, the same formatting the order pages use today.
+- **Money:** `$` with thousands separators and 2 decimals, the same formatting the order pages use today. **One currency for every shipping country** (decided 2026-11-07); no € or £ display.
 - **Accessibility:**
   - every interactive element has an accessible name (the `aria-label`s above)
   - the focus ring is visible
@@ -206,7 +210,21 @@ Quick order (`/new-order`), My orders (`/order-history`), Order details and Admi
 ### 6.1 ERP catalog contract
 
 - `GET /erp/api/products` returns `[{ id, title, description, price, category, brand }]`. The simulator (json-server) already serves this. The WireMock stubs need a new `erp-products-list.json` mapping.
-- `GET /erp/api/products/{sku}` returns the same shape. The stubs need `title`, `description`, `category` and `brand` added to the three product mappings.
+- `GET /erp/api/products/{sku}` returns the same shape. The stubs need `title`, `description`, `category` and `brand` added to each product mapping.
+- **Catalog seed** (10 products in 3 categories), in both the simulator and the stubs. The first three rows exist today, and their SKUs and prices must not change, because tests depend on them.
+
+  | SKU | Title | Brand | Category | Price |
+  |---|---|---|---|---|
+  | `HP-15` | HP Laptop 15 | HP | Laptops | 699.99 |
+  | `DELL-XPS` | Dell XPS 13 | Dell | Laptops | 1299.99 |
+  | `LENOVO-T14` | Lenovo ThinkPad T14 | Lenovo | Laptops | 999.99 |
+  | `ASUS-ZENBOOK-14` | ASUS Zenbook 14 | ASUS | Laptops | 899.99 |
+  | `DELL-U2723QE` | Dell UltraSharp 27 4K | Dell | Monitors | 579.99 |
+  | `LG-27UL500` | LG 27-inch 4K UHD Monitor | LG | Monitors | 299.99 |
+  | `SAMSUNG-S24` | Samsung 24-inch FHD Monitor | Samsung | Monitors | 149.99 |
+  | `LOGI-MX3S` | Logitech MX Master 3S | Logitech | Accessories | 99.99 |
+  | `LOGI-MXKEYS` | Logitech MX Keys | Logitech | Accessories | 109.99 |
+  | `ANKER-HUB-7` | Anker 7-in-1 USB-C Hub | Anker | Accessories | 39.99 |
 - The ERP contract tests cover both endpoints in all three languages.
 
 ### 6.2 Shop catalog API (all six backends, anonymous)
@@ -289,6 +307,7 @@ Decided 2026-11-07. This needs a domain change; see plan Step 2b.
 - **Where it's edited:** `/account` ("My account › Profile & address"). The selectors are `First Name`, `Last Name`, `Street`, `Postal Code`, `City`, `Profile Country` and `Save Profile`.
 - **Tax:** the tax rate comes from the **shipping address country** (today's tax stubs: US 0%, DE 19%, GB 20%). Checkout has no separate country field. Order details show the shipping address alongside `Display Country`.
 - **Quick order (`/new-order`)** keeps its `Country` field, prefilled from the profile, until Place Order takes the address. That keeps the test contract stable during the transition.
+- **Admin orders:** for an admin, `/order-history` lists **every customer's orders**. It has a Customer column (which exists today) and a **customer filter** (`aria-label="Customer Filter"`, "All customers" by default, backed by `GET /api/orders?customer=`). It sits under Admin › All orders in the admin sidebar. The route and the existing selectors are unchanged.
 
 Visual design (clickable prototype of every page): <https://claude.ai/artifact/GFfHJ51yWJLVvY8JR4YVmj>. It's private until shared.
 
