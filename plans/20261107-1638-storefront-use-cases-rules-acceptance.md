@@ -1,5 +1,7 @@
 # 2026-11-07 16:38:37 UTC — Storefront use cases, business rules and acceptance criteria
 
+> 🤖 **Picked up by agent** — `8e8cd7062d0f` at `2026-11-07T16:56:29Z`
+
 ## TL;DR
 
 **Why:** The storefront redesign (`docs/design/shared/storefront-ux.md`, plan `plans/20261107-1112-realistic-eshop-storefront-ux.md`) describes screens, but not the behaviour behind them as use cases. Only UC-001 Place Order has a narrative, business rules and Gherkin acceptance criteria. Without those, the implementation steps (catalog, profile, tax by shipping country, checkout) have no agreed spec to drive ATDD.
@@ -32,24 +34,18 @@ What we get out of this:
 
 ## ▶ Next executable step (resume here)
 
-Step 1: move the specs to the folder-per-use-case layout.
-- `git mv docs/use-cases/UC-001-place-order.md docs/shared/specs/use-cases/UC-001-place-order/use-case.md`, then move its front matter and the `## Acceptance criteria` Gherkin section into `acceptance-criteria.md` in the same folder.
-- `git mv docs/business-rules/UC-001-place-order.md …/UC-001-place-order/business-rules.md`, and fix the BR link in `use-case.md`.
-- `git mv docs/design/shared/use-cases.md docs/shared/specs/use-cases/README.md`.
-- Update the references:
-  - `spec.yaml` (`specDir: docs/shared/specs/use-cases`). Until gh-optivem C1b ships, the gate (already disabled) can't read it; add a comment saying so.
-  - the disabled spec-gate comment in `.github/workflows/_acceptance-stage-docker-compose.yml` (~line 426)
-  - the comment in `system-test/typescript/tests/commons/criteria.ts`
-  - the paths in `plans/20261106-1533-use-cases-match-substack-articles.md`
-- Coordinate first: that plan's agent owns UC-001 and the spec gate (track D will run against `spec.yaml`). Check `git status` and `git log origin/main` for in-flight work on those files.
-- Compile isn't affected (docs, a YAML path and comments only). Commit only these files, then push.
+Step 2: write the index. Rewrite `docs/shared/specs/use-cases/README.md` as the index of all 12 use cases:
+- A Mermaid use-case diagram with the actors Visitor, Customer (a signed-in Visitor), Admin (renamed from "MyShop Owner"), ERP and Clock. Each use-case node links to its folder (e.g. `UC-001-place-order/`); folders that don't exist yet are created in Steps 3–7.
+- A table below it: ID, name, primary actor, link to the folder.
+- The list and IDs are already approved (see Decisions): UC-001 to UC-005 existing, UC-006 to UC-011 storefront, UC-012 Deliver Order (actor confirmed in Step 4). See Step 2 below for each use case's scope.
+- Link the index from the repo `README.md` (relative path).
+- Docs only. Commit only these files, then push.
 
-That unblocks Step 2 (the full diagram).
+That unblocks Step 3 (UC-006 Browse Catalog as the template).
 
 ## Steps
 
 - [x] Step 0: Requested gh-optivem support for the folder layout as C1b in `plans/20261106-1533-use-cases-match-substack-articles.md` Track C.
-- [ ] Step 1: Move the specs to the folder-per-use-case layout and update all references (see Next executable step).
 - [ ] Step 2: Index first. Rewrite `docs/shared/specs/use-cases/README.md` as the index of every use case: a diagram plus a table. Actors: Visitor, Customer (a signed-in Visitor), Admin (renamed from "MyShop Owner"), ERP and Clock. Each node links to its UC file, and the README links to the diagram. User review gate on the list and IDs:
   - Existing:
     - UC-001 Place Order (Customer)
@@ -64,8 +60,10 @@ That unblocks Step 2 (the full diagram).
     - UC-009 Check Out (Customer: sign-in round trip, saved address or a different one, first order with an empty profile and "Save as default" ticked, coupon, one order per cart line through UC-001, partial failure)
     - UC-010 Manage Profile (Customer: name, shipping address, country; tax-country hint)
     - UC-011 View All Orders (Admin: every customer's orders, customer filter)
+  - Added 2026-11-07 (gap found in storefront-ux.md §7, the `Deliver Order` button on order details):
+    - UC-012 Deliver Order (actor confirmed from current code in Step 4)
 - [ ] Step 3: Write UC-006 Browse Catalog as the template-setting example (narrative, rules, Gherkin). Content comes from storefront-ux.md §4 and §6. User review gate.
-- [ ] Step 4: Write the existing use cases UC-002 to UC-005. Write them from current behaviour: read the backends and the existing system tests so the narrative matches what the code does today.
+- [ ] Step 4: Write the existing use cases UC-002 to UC-005 and UC-012. Write them from current behaviour: read the backends and the existing system tests so the narrative matches what the code does today.
 - [ ] Step 5: Write UC-007 and UC-008 (product and cart).
 - [ ] Step 6: Write UC-009 and UC-010 (checkout and profile). This includes the tax-country rule: tax rate = rate of the shipping address's country (US 0%, DE 19%, GB 20%).
 - [ ] Step 7: Write UC-011 (admin all orders).
@@ -73,9 +71,10 @@ That unblocks Step 2 (the full diagram).
 - [ ] Step 9: Link the specs from storefront-ux.md. Cross-reference the storefront UX plan: each of its Steps 2–8 lists the `@UC-NNN.M` scenarios it must make pass.
 - [ ] Step 10: Commit and push only these docs files after each step, never the other agent's work.
 
-## Open questions
+## Decisions (resolved 2026-11-07, user approved all recommendations)
 
-- Numbering: existing features first (UC-002 to UC-005), then the storefront ones (UC-006 to UC-011). Or should the storefront ones come first? Settled at the Step 2 gate.
-- Each use case is a folder: `use-case.md`, `business-rules.md` (only when there are rules) and `acceptance-criteria.md` (front matter + Gherkin). The index is `use-cases/README.md`, because GitHub shows it when someone opens the folder. (Decided 2026-11-07.)
-- Acceptance criteria granularity: one scenario per business rule and extension, as in UC-001 (my default), or a lighter set covering the main paths?
-- Checkout partial failure: if one cart line fails (for example, the coupon hits its limit on the second order), do the other lines still get placed? My default is yes, with a per-line result on the confirmation page.
+- Numbering: existing features first (UC-002 to UC-005), then storefront (UC-006 to UC-011), then UC-012 Deliver Order. All twelve are storefront use cases on one diagram; "existing" only means already built.
+- Each use case is a folder: `use-case.md`, `business-rules.md` (only when there are rules) and `acceptance-criteria.md` (front matter + Gherkin). The index is `use-cases/README.md`.
+- Acceptance criteria granularity: one `@UC-NNN.M` scenario per business rule and per extension, as in UC-001.
+- Checkout partial failure: the other lines are still placed; the confirmation page shows a per-line result.
+- Review gates: the Step 2 list and IDs are approved as written. **Stop after Step 3** so the user reviews UC-006 as the template before Steps 4–7.

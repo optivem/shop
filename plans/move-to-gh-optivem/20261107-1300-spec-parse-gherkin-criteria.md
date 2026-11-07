@@ -4,7 +4,7 @@
 
 ## TL;DR
 
-**Why:** Shop's use-case docs (`docs/use-cases/UC-001-place-order.md`) now write acceptance criteria as Gherkin scenarios tagged `@UC-001.N`, to match the Substack articles. gh-optivem's parser (`internal/spec/usecase.go`, `criterionPattern`) reads only bullet lines (`- UC-001.N: text`), so it finds zero criteria and `gh optivem spec validate` passes silently with `OK`, exit 0. Shop has turned its `spec-gate` step off until this is fixed.
+**Why:** Shop's use-case docs (`docs/shared/specs/use-cases/UC-001-place-order/acceptance-criteria.md`) now write acceptance criteria as Gherkin scenarios tagged `@UC-001.N`, to match the Substack articles. gh-optivem's parser (`internal/spec/usecase.go`, `criterionPattern`) reads only bullet lines (`- UC-001.N: text`), so it finds zero criteria and `gh optivem spec validate` passes silently with `OK`, exit 0. Shop has turned its `spec-gate` step off until this is fixed.
 Shop is also moving to a folder per use case (see below), which `LoadDir` can't see today: it reads only `.md` files directly inside `specDir`.
 **End result:** A published gh-optivem release reads tagged Gherkin scenarios (and bullets) as criteria, in both the flat layout and the folder-per-use-case layout. It warns when a use-case file has no criteria, and finds all 14 criteria in shop's UC-001.
 
@@ -14,7 +14,7 @@ Step 1: in `internal/spec/usecase.go`, add Gherkin parsing next to the bullet pa
 
 ## What shop has now (input format)
 
-Criteria live in fenced ```` ```gherkin ```` blocks in `docs/use-cases/UC-001-place-order.md`. Each `Scenario:` carries an `@UC-001.N` tag, and extension scenarios also carry a narrative tag (e.g. `@narrative-4a`). There are 14 criteria, UC-001.1 to UC-001.14. Copy the shop file as a test fixture.
+Criteria live in fenced ```` ```gherkin ```` blocks in `docs/shared/specs/use-cases/UC-001-place-order/acceptance-criteria.md`. Each `Scenario:` carries an `@UC-001.N` tag, and extension scenarios also carry a narrative tag (e.g. `@narrative-4a`). There are 14 criteria, UC-001.1 to UC-001.14. Copy the shop file as a test fixture.
 
 **Layout change (decided 2026-11-07, shop plan `plans/20261107-1638-storefront-use-cases-rules-acceptance.md`):** shop is moving its specs to one folder per use case, with `spec.yaml` `specDir: docs/shared/specs/use-cases`:
 

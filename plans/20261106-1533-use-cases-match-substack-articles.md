@@ -9,7 +9,7 @@
 
 ## Done
 
-- `docs/use-cases/UC-001-place-order.md` holds the narrative as the articles show it (primary actor Customer, secondary actors ERP and Clock, 9-step main success scenario, extensions 2a, 3a, 4a, 4b, 5a, 5b, 6a), saying ERP everywhere, never SAP.
+- `docs/shared/specs/use-cases/UC-001-place-order/use-case.md` holds the narrative as the articles show it (primary actor Customer, secondary actors ERP and Clock, 9-step main success scenario, extensions 2a, 3a, 4a, 4b, 5a, 5b, 6a), saying ERP everywhere, never SAP.
 - The criteria are Gherkin scenarios tagged `@UC-001.N` plus the extension tag where one applies: 2a → UC-001.12, 3a → UC-001.13, 4a → UC-001.8, 4b → UC-001.10, 5a → UC-001.14, 5b → UC-001.9, 6a → UC-001.11.
 - The `spec-gate` step in `.github/workflows/_acceptance-stage-docker-compose.yml` is commented out, with a pointer to this plan. `spec.yaml` stays.
 - **Track B: .NET and TypeScript tests carry the UC IDs** (one for one with Java, including the e2e `PlaceOrderPositiveTest.shouldPlaceOrder` → UC-001.1; no UC-001.14 yet). All three languages emit the same JUnit shape that gh-optivem `internal/spec/junit.go` reads: `<testcase classname=… name=…><properties><property name="tag" value="UC-001.N"/></properties></testcase>` (it accepts property name `tag` or `criterion`, value `UC-NNN.M`, optional `@`).
@@ -21,7 +21,7 @@
 
 1. **Criteria format:** Gherkin, as the articles show it. The parser gets taught Gherkin (track C); shop doesn't change gh-optivem directly.
 2. **Deleting criteria once their tests pass:** keep the criteria in the shop for now. Tell the substack side about the conflict with the article's "delete" paragraph.
-3. **Criteria are shared:** `docs/use-cases/` serves all three languages. Only the tests and the gate's `results` input are Java-only, and `results` is already a list (`StringList` in gh-optivem `internal/spec/config.go`).
+3. **Criteria are shared:** `docs/shared/specs/use-cases/` serves all three languages. Only the tests and the gate's `results` input are Java-only, and `results` is already a list (`StringList` in gh-optivem `internal/spec/config.go`).
 
 ## Track A scope decision (resolved 2026-11-07: approved)
 

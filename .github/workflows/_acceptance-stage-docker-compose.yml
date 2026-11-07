@@ -423,8 +423,9 @@ jobs:
         run: gh optivem system-test run --suite e2e-ui
       # === Spec Coverage Gate (lenient: blocks only validation errors and Failing criteria) ===
       # Only monolith-java runs it today (carried over from monolith-java-acceptance-stage.yml).
-      # DISABLED 2026-11-06: docs/use-cases/ now holds Gherkin criteria, which the gh-optivem
-      # spec parser can't read yet (it finds zero criteria and passes vacuously).
+      # DISABLED 2026-11-06: docs/shared/specs/use-cases/*/acceptance-criteria.md holds Gherkin
+      # criteria in a folder per use case, which the gh-optivem spec parser can't read yet
+      # (it finds zero criteria and passes vacuously; needs gh-optivem C1 and C1b).
       # Re-enable via plans/20261106-1533-use-cases-match-substack-articles.md (track D).
       # - name: spec-gate
       #   if: inputs.suite-set == 'latest' && inputs.architecture == 'monolith' && env.TEST_LANGUAGE == 'java'

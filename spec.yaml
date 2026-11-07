@@ -1,4 +1,8 @@
-specDir: docs/use-cases
+# Folder per use case: <specDir>/UC-NNN-<name>/acceptance-criteria.md holds the
+# front matter and Gherkin. The gh-optivem spec parser can't read this layout until
+# gh-optivem C1b ships (plans/20261106-1533-use-cases-match-substack-articles.md
+# Track C); the spec gate is disabled until then.
+specDir: docs/shared/specs/use-cases
 results: "system-test/java/build/test-results/**/*.xml"
 exclude:
   - "**/legacy/**"
