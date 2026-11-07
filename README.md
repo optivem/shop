@@ -42,6 +42,8 @@ graph LR
 
 ## Use Cases
 
+All use cases, with their narratives, business rules and acceptance criteria, are indexed in [Use Cases](docs/shared/specs/use-cases/README.md).
+
 ```mermaid
 graph LR
     Customer([Customer])
