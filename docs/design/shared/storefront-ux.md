@@ -164,7 +164,11 @@ Checkout
 └──────────────────────────────────────────┘  └─────────────────────────────┘
 ```
 
-- Fields: country (`aria-label="Checkout Country"`) and coupon (`aria-label="Checkout Coupon Code"`). These labels are deliberately **different** from the Quick order labels (`Country`, `Coupon Code`), so the two pages never collide in a selector.
+- **Shipping address**, which replaces a free country field:
+  - The saved profile address is preselected.
+  - "Ship to a different address" opens a form: `Shipping First Name`, `Shipping Last Name`, `Shipping Street`, `Shipping Postal Code`, `Shipping City`, and `Shipping Country` (a select of US, DE and GB).
+  - The **sales tax country is the shipping address's country** (§8), and the review shows the estimated tax for it.
+- Coupon: `aria-label="Checkout Coupon Code"`. This label is deliberately **different** from the Quick order label (`Coupon Code`), so the two pages never collide in a selector.
 - Button: `aria-label="Place Checkout Order"`.
 - On submit, place one order per cart line (§6.5).
   - **All succeed:** clear the cart and go to confirmation.
@@ -277,7 +281,18 @@ Today `openHomePage()` navigates to `/` and waits for **either** the Keycloak fo
 
 The change lives in `MyShopUiClient` (Java), its .NET and TS equivalents, and `KeycloakUiLogin`. It ships **in the same commit** as the first UI that drops the global login.
 
-## 8. New selectors (for future system tests)
+## 8. Customer profile and tax country
+
+Decided 2026-11-07. This needs a domain change; see plan Step 2b.
+
+- **Profile fields:** first name, last name, email (read-only, from Keycloak), and a shipping address of street, postal code, city and country.
+- **Where it's edited:** `/account` ("My account › Profile & address"). The selectors are `First Name`, `Last Name`, `Street`, `Postal Code`, `City`, `Profile Country` and `Save Profile`.
+- **Tax:** the tax rate comes from the **shipping address country** (today's tax stubs: US 0%, DE 19%, GB 20%). Checkout has no separate country field. Order details show the shipping address alongside `Display Country`.
+- **Quick order (`/new-order`)** keeps its `Country` field, prefilled from the profile, until Place Order takes the address. That keeps the test contract stable during the transition.
+
+Visual design (clickable prototype of every page): <https://claude.ai/artifact/GFfHJ51yWJLVvY8JR4YVmj>. It's private until shared.
+
+## 9. New selectors (for future system tests)
 
 - **Catalog:** `[aria-label='Search Products']`, `[aria-label='Search']`, `article.product-card[aria-label='Product {SKU}']`, `[aria-label='Display Price']`, `[aria-label='Add {SKU} to Cart']`.
 - **Product detail:** `[aria-label='Product Quantity']`, `[aria-label='Add to Cart']`.
