@@ -99,6 +99,8 @@ Edges come from the plans' own wording:
 
 ### Wave 2 — after G0 (2 parallel sessions)
 
+> U1 done 2026-11-07 (commits `3e2ef51b`, `9cd73c0c`, `604affc1`, `03ab09eb`; G0's UC-006 review waived by the user). Only U2 remains in this wave, and it still waits for the prototype sign-off.
+
 **Batch A (parallel-safe, 2 agent sessions):**
 - **U1:** `/execute-plan plans/20261107-1638-storefront-use-cases-rules-acceptance.md` (Steps 4–7). Docs under `docs/shared/specs/use-cases/` only. Fans out to 4 subagents.
 - **U2:** `/execute-plan plans/20261107-1657-storefront-implementation.md` (Step 1 only; stop before Step 2). Touches `external-systems/**` and the six backends' product endpoints.
@@ -129,3 +131,7 @@ Edges come from the plans' own wording:
 - Whether either plan's content is correct (use the plan's own refine cycle).
 - The other active plans (`20261103-1049`, `20261104-1148`). `20261104-1148` is the backlog meta-plan; this one only covers the storefront pair.
 - Actual execution (use `/execute-plan` against each plan in turn).
+
+## Added after U1 (2026-11-07)
+
+- BUILD gained **Step 9** (tag the existing use cases' tests: UC-002 to UC-005 and UC-012). It touches only order and coupon acceptance tests in `system-test/**`. It collides with U3 (the place-order and order tests) and with BUILD Step 8, so run it alone, after U3 and outside U4's Step 8. Or run it before U3 if U3 hasn't started yet.

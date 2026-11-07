@@ -32,22 +32,22 @@ What we get out of this:
 
 ## ▶ Next executable step (resume here)
 
-**Gate: user reviews UC-006 Browse Catalog as the template** (`docs/shared/specs/use-cases/UC-006-browse-catalog/`) before Steps 4–7 copy its format. Points to confirm:
-- Tag convention: `@UC-006.N` = BR-N, extensions numbered after the rules with an extra `@narrative-Xa` tag (UC-001 does not line up this way; decide whether UC-001 should follow in Step 8).
-- Shared `Background:` with an ERP product table (UC-001 has none).
-- Assumptions: search is in scope (§4.1); substring, case-insensitive search; ticked brands OR, none = all; brands/categories not narrowed by each other; name sort case-insensitive; invented product descriptions in the Background; unknown category/sort in the URL not specified.
+**Gate: user review of the written specs** (UC-002 to UC-012, all under `docs/shared/specs/use-cases/`, all `status: planned`). They were written autonomously on 2026-11-07 after the user asked to proceed without the UC-006 review; any correction to UC-006's conventions (tag numbering = BR-N then extensions with `@narrative-Xa`, shared `Background:`) applies to all of them.
 
-Once approved (or corrected in UC-006), run Step 4: write UC-002 View Order, UC-003 Cancel Order, UC-004 Publish Coupon, UC-005 Browse Coupons and UC-012 Deliver Order (actor: Admin — `POST /api/orders/{n}/deliver` is admin-only in every backend; also consider `backend-clean-java`'s admin `POST /orders/sweep-deliveries`, which uses the Clock) from current backend code and system tests, in UC-006's format. Steps 4–7 write disjoint folders and can run as parallel subagents.
+Then **Step 8 + Step 9 run in one session together with Step 2 of `plans/20261107-1657-storefront-implementation.md`** (unit U3 of `plans/20261107-1705-meta-storefront-specs-build.md`): amend UC-001, build the domain change, then cross-reference. Push only once `./compile-all.sh` and the sample system tests are green. Check first that `plans/20261106-1533-…` has no in-flight shop work (it owns UC-001's tags).
 
 ## Steps
 
 - [x] Step 0: Requested gh-optivem support for the folder layout as C1b in `plans/20261106-1533-use-cases-match-substack-articles.md` Track C.
-- [ ] Step 4: Write the existing use cases UC-002 to UC-005 and UC-012. Write them from current behaviour: read the backends and the existing system tests so the narrative matches what the code does today.
-- [ ] Step 5: Write UC-007 and UC-008 (product and cart).
-- [ ] Step 6: Write UC-009 and UC-010 (checkout and profile). This includes the tax-country rule: tax rate = rate of the shipping address's country (US 0%, DE 19%, GB 20%).
-- [ ] Step 7: Write UC-011 (admin all orders).
-- [ ] Step 8: Amend UC-001. Country comes from the shipping address. Replace "4b country is missing" with an address-country extension, and update BR-3 and the affected `@UC-001.*` scenarios. Coordinate with `plans/20261106-1533-use-cases-match-substack-articles.md` first, since that plan's agent owns UC-001.
-- [ ] Step 9: Link the specs from storefront-ux.md. Cross-reference `plans/20261107-1657-storefront-implementation.md`: each of its steps lists the `@UC-NNN.M` scenarios it must make pass.
+- [ ] Step 8: Amend UC-001. Country comes from the shipping address. Replace "4b country is missing" with an address-country extension, and update BR-3 and the affected `@UC-001.*` scenarios. Coordinate with `plans/20261106-1533-use-cases-match-substack-articles.md` first, since that plan's agent owns UC-001. To stay consistent with UC-009/UC-010 (as written):
+  - Main step 1 takes a shipping address (first name, last name, street, postal code, city, country) instead of a country.
+  - 4b becomes: incomplete address, or country not US/DE/GB, is rejected; `@UC-001.10` moves from the country checks to the address checks (the tests tagged `@UC-001.10` in all three languages change in BUILD Step 2).
+  - BR-3: tax = subtotal × rate of the shipping address's country. The `@UC-001.4` examples (today UK 0.09, US 0.20) change to the tax stubs US 0.00, DE 0.19, GB 0.20, and GB instead of UK.
+  - The order stores and shows the shipping address (UC-009 scenarios check it).
+  - Keep UC-001's rejection messages for unknown coupon, coupon usage limit and unknown SKU (UC-009 quotes them), or update UC-009 too.
+  - Quick order keeps its Country field, prefilled from the profile (storefront-ux.md §8).
+  - Decide whether UC-001's tags move to UC-006's convention (`@UC-001.N` = BR-N); if so, renumber the tests' tags in the same commit.
+- [ ] Step 9: Link the specs from storefront-ux.md. Also fix §4.4: it says a partial checkout failure keeps the customer on checkout with an error; the decided behaviour (UC-009 8a/8b) is that the other lines are placed and the confirmation shows a per-line result, and only if every line fails does the customer stay on checkout. Cross-reference `plans/20261107-1657-storefront-implementation.md`: each of its steps lists the `@UC-NNN.M` scenarios it must make pass.
 - [ ] Step 10: Commit and push only these docs files after each step, never the other agent's work.
 
 ## Use-case list (approved 2026-11-07; index in `docs/shared/specs/use-cases/README.md`)
@@ -75,4 +75,14 @@ Once approved (or corrected in UC-006), run Step 4: write UC-002 View Order, UC-
 - Acceptance criteria granularity: one `@UC-NNN.M` scenario per business rule and per extension, as in UC-001.
 - Gate status: every new `acceptance-criteria.md` gets `status: planned` in its front matter (next to `id`, `title`). The implementation plan flips it to `implemented` when that use case's acceptance tests land. UC-001 is `implemented`. gh-optivem will skip `planned` use cases (C1c). Decided 2026-11-07, see `plans/20261107-1705-meta-storefront-specs-build.md`.
 - Checkout partial failure: the other lines are still placed; the confirmation page shows a per-line result.
-- Review gates: the Step 2 list and IDs are approved as written. **Stop after Step 3** so the user reviews UC-006 as the template before Steps 4–7.
+- Review gates: the Step 2 list and IDs are approved as written. The UC-006 template review was waived when the user asked to work autonomously (2026-11-07); the user reviews all specs together instead.
+
+## Findings from writing the specs (2026-11-07, for follow-up outside this plan)
+
+Cross-language differences in current behaviour, found while writing UC-002 to UC-005 and UC-012. The specs state only the common behaviour:
+- Cancelling a delivered order: `backend-clean-java` refuses it; every other backend allows it through the API (only already-cancelled is checked). The UIs hide Cancel once delivered.
+- Coupon with valid-to before valid-from: Java monolith and backend-java throw an unmapped `IllegalArgumentException` (probably a 500); .NET and TypeScript don't check at all.
+- Deliver Order button: the Java monolith's order-details page shows it to customers (the server then refuses); React shows it only to admins.
+- React's coupon list has an extra Status column computed from browser time rather than the Clock.
+- `backend-clean-java`'s BrowseOrderHistory has no owner/admin scoping and no customer field (UC-011 BR-5).
+- UC-002 to UC-005 and UC-012 describe behaviour that is already built, but no test carries their `@UC-NNN.M` tags, so they stay `status: planned` until tests are tagged (added as a step to the implementation plan).
