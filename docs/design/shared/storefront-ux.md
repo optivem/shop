@@ -11,7 +11,7 @@ The shared UX spec for all four MyShop UIs:
 
 All four implement the same routes, page anatomy and selector contract. Where server-side and client-side rendering have to differ (the cart store, how a redirect happens), this doc says so.
 
-Plan: [`plans/20261107-1112-realistic-eshop-storefront-ux.md`](../../../plans/20261107-1112-realistic-eshop-storefront-ux.md).
+Implementation plan: [`plans/20261107-1657-storefront-implementation.md`](../../../plans/20261107-1657-storefront-implementation.md).
 
 ## 1. Goals and non-goals
 

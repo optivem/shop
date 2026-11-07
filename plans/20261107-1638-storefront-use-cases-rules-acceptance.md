@@ -4,7 +4,7 @@
 
 ## TL;DR
 
-**Why:** The storefront redesign (`docs/design/shared/storefront-ux.md`, plan `plans/20261107-1112-realistic-eshop-storefront-ux.md`) describes screens, but not the behaviour behind them as use cases. Only UC-001 Place Order has a narrative, business rules and Gherkin acceptance criteria. Without those, the implementation steps (catalog, profile, tax by shipping country, checkout) have no agreed spec to drive ATDD.
+**Why:** The storefront redesign (`docs/design/shared/storefront-ux.md`, implementation plan `plans/20261107-1657-storefront-implementation.md`) describes screens, but not the behaviour behind them as use cases. Only UC-001 Place Order has a narrative, business rules and Gherkin acceptance criteria. Without those, the implementation steps (catalog, profile, tax by shipping country, checkout) have no agreed spec to drive ATDD.
 **End result:** Every storefront use case has a narrative (main success scenario plus extensions), numbered business rules and tagged Gherkin acceptance criteria, in the same format as UC-001. All specs live under `docs/shared/specs/`, with the use-case diagram as their index. UC-001 is amended so tax uses the shipping country.
 
 ## Outcomes
@@ -29,7 +29,7 @@ What we get out of this:
 - Numbered business rules for each use case that has rules (catalog filtering and sorting, cart quantities, address validation, tax country, one order per cart line, admin visibility, cancel window, coupon validity).
 - Gherkin acceptance criteria in each use case, tagged `@UC-NNN.M`, so later implementation steps can turn them into acceptance tests one scenario at a time.
 - UC-001 is amended: the country comes from the shipping address, not a typed-in field. Its rules and scenarios are updated to match, in coordination with the in-flight UC-001 plan.
-- The storefront UX plan's Steps 2–8 each point to the use cases and scenarios they implement.
+- The storefront implementation plan's steps each point to the use cases and scenarios they implement.
 - Docs only: no code changes.
 
 ## ▶ Next executable step (resume here)
@@ -68,7 +68,7 @@ That unblocks Step 3 (UC-006 Browse Catalog as the template).
 - [ ] Step 6: Write UC-009 and UC-010 (checkout and profile). This includes the tax-country rule: tax rate = rate of the shipping address's country (US 0%, DE 19%, GB 20%).
 - [ ] Step 7: Write UC-011 (admin all orders).
 - [ ] Step 8: Amend UC-001. Country comes from the shipping address. Replace "4b country is missing" with an address-country extension, and update BR-3 and the affected `@UC-001.*` scenarios. Coordinate with `plans/20261106-1533-use-cases-match-substack-articles.md` first, since that plan's agent owns UC-001.
-- [ ] Step 9: Link the specs from storefront-ux.md. Cross-reference the storefront UX plan: each of its Steps 2–8 lists the `@UC-NNN.M` scenarios it must make pass.
+- [ ] Step 9: Link the specs from storefront-ux.md. Cross-reference `plans/20261107-1657-storefront-implementation.md`: each of its steps lists the `@UC-NNN.M` scenarios it must make pass.
 - [ ] Step 10: Commit and push only these docs files after each step, never the other agent's work.
 
 ## Decisions (resolved 2026-11-07, user approved all recommendations)
