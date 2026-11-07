@@ -13,29 +13,33 @@
 - **Checkout.** `/checkout` requires login: an anonymous visitor goes to Keycloak and comes back to checkout. It collects the country and an optional coupon, shows an order review with price, discount and tax, and places the order(s). Then it shows an order confirmation page with the order number(s) and a link to "My orders".
 - **Account and admin are separated from shopping.** "My orders" (the current order history and order details) sits under the account menu. Coupon management sits under an "Admin" link that only admins see.
 - **Real catalog data.** The shop backends expose an anonymous `GET /api/products` and `GET /api/products/{sku}`, fed by the ERP (title, description, category, brand, price). The ERP simulator already has these fields. The WireMock stubs gain a list mapping and the enriched fields.
-- **The test contract is kept.** Every selector the system-test UI drivers use still works: the `aria-label`s on New Order, Order History, Order Details and Coupons, plus the `a[href='/new-order']`, `a[href='/order-history']` and `a[href='/admin-coupons']` links reachable from `/`. The existing E2E suites pass in all three languages without driver changes.
-- **One documented UX spec.** `docs/ux/storefront.md` lists the sitemap, the routes, a wireframe per page, the visual tokens and the selector contract. All four UIs are built against it.
+- **The test contract is kept.** Every selector the system-test UI drivers use still works (spec §7). The existing E2E suites pass in all three languages after **one small driver change**: `openHomePage()` clicks "Sign In" when a login is configured (spec §7.1). That change is unavoidable. Today the whole app forces login, so the driver waits for either the Keycloak form or `a[href='/order-history']`. A public storefront shows neither to a fresh session.
+- **One documented UX spec.** [`docs/design/shared/storefront-ux.md`](../docs/design/shared/storefront-ux.md) lists the sitemap, the routes, a wireframe per page, the visual tokens and the selector contract. It's linked from the README, and all four UIs are built against it.
 
 ## ▶ Next executable step (resume here)
 
-**Step 1 — write the UX spec `docs/ux/storefront.md`** (documentation only, no code). It contains:
-1. The sitemap and route table for both shopper and admin flows, with the auth requirement on each route.
-2. An ASCII wireframe per page: Home/catalog, Product detail, Cart, Checkout, Order confirmation, plus the restyled My orders and Admin pages.
-3. The header and footer anatomy and the visual tokens: a Bootstrap 5 base (already used everywhere), a brand colour, card style, and an image placeholder generated from brand and title, with no external images.
-4. The **selector contract**: the full list of selectors from `system-test/java/**/driver/adapter/ui/client/**` (plus the .NET and TS equivalents) that must survive. New elements use `aria-label`s in the same style.
-5. The catalog API shape (`GET /api/products`, `GET /api/products/{sku}`) and the ERP list contract.
+**Waiting for the user to review the spec** at `docs/design/shared/storefront-ux.md` and to settle the open question on checkout semantics. Once approved, start **Step 2 (catalog data path)**:
+1. Enrich the three `external-systems/stubs/mappings/erp-products-*.json` with `title`/`description`/`category`/`brand`, copying the values from `external-systems/simulators/mock-server.js`.
+2. Add `erp-products-list.json` for `GET /erp/api/products`.
+3. Add ERP contract tests for the list endpoint in java, dotnet and typescript.
+4. Add an anonymous `GET /api/products` and `GET /api/products/{sku}` to the six backends (spec §6.2).
 
-Link it from the README. Stop here and let the user review the spec before Step 2: it's the shared reference for four UIs, so changing it later costs four times as much.
+Gate: `./compile-all.sh` green.
+
+Before you start, check that `plans/20261106-1533-use-cases-match-substack-articles.md` (active, touching UC-001 and the acceptance tests) isn't editing the same ERP contract-test files. If it is, coordinate first.
 
 ## Steps
 
-- [ ] **Step 1: UX spec.** Write `docs/ux/storefront.md` as described above and link it from the README.
+- [x] **Step 1: UX spec.** Written to `docs/design/shared/storefront-ux.md` (it fits the existing `docs/design/shared/` layout better than a new `docs/ux/`) and linked from the README.
+  - Finding: today `AuthGate` wraps the whole SPA in `RequireAuth`, and every backend has `anyRequest().authenticated()`. Anonymous browsing therefore also needs the SPA's auth to be per-route, `permitAll` on the catalog endpoints, and the driver change in spec §7.1.
 - [ ] **Step 2: Catalog data path.**
   - ERP stubs: add a `GET /erp/api/products` list mapping and add `title`/`description`/`category`/`brand` to the three product mappings. Check that the simulator's json-server list route already serves this.
   - ERP contract tests: cover the list endpoint and the new fields in all three languages.
   - Backends: add anonymous `GET /api/products` and `GET /api/products/{sku}` in all six backends (multitier java/dotnet/typescript, monolith java/dotnet/typescript) and extend the `ErpProductDetailsResponse` DTOs. Don't touch `backend-clean-java` unless the spec says so.
   - Gate: `./compile-all.sh` is green.
 - [ ] **Step 3: React reference implementation** (`system/multitier/frontend-react`).
+  - Make auth per-route: `AuthGate` loads the session silently, and `RequireAuth` wraps only `/checkout*`, `/new-order`, `/order-*` and `/admin-*` (spec §2).
+  - In the same commit, change `openHomePage()` to click "Sign In" in the Java, .NET and TS UI drivers (spec §7.1).
   - New `StoreLayout` (header with search, cart badge and account menu; footer).
   - Pages: `Catalog` (the new `/`), `ProductDetail`, `Cart`, `Checkout`, `OrderConfirmation`.
   - `CartContext` backed by `localStorage` (wrapped in try/catch).

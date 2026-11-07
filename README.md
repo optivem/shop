@@ -57,6 +57,10 @@ graph LR
     PlaceOrder --> Clock
 ```
 
+## UX
+
+The four UIs share one storefront UX spec: [Storefront UX](docs/design/shared/storefront-ux.md). It covers routes, page wireframes, visual tokens, and the selector contract the system-test UI drivers depend on.
+
 ## System Templates
 
 Pick based on your architecture and language:
