@@ -6,7 +6,16 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   fullyParallel: true,
   workers: process.env.CI ? 2 : 4,
-  reporter: [['./channel-list-reporter.ts'], ['html', { open: 'never' }], ['json']],
+  // junit: per-suite file (tests.yaml sets PLAYWRIGHT_JUNIT_OUTPUT_NAME) in its own
+  // folder, so one run's suites don't overwrite each other and Playwright's
+  // test-results/ cleanup doesn't wipe them. Each `tag` annotation (see
+  // tests/commons/criteria.ts) becomes a <property name="tag"> for the spec gate.
+  reporter: [
+    ['./channel-list-reporter.ts'],
+    ['html', { open: 'never' }],
+    ['json'],
+    ['junit', { outputDir: 'junit-results', fileName: 'results.xml' }],
+  ],
   use: {
     trace: 'on-first-retry',
     timezoneId: 'UTC',

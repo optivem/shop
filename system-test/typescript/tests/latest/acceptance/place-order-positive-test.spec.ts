@@ -1,9 +1,10 @@
 import { test, forChannels, ChannelType } from './base/fixtures.js';
 import { OrderStatus } from '../../../src/testkit/common/dtos.js';
 import { DEFAULTS } from '../../../src/testkit/dsl/core/scenario/defaults.js';
+import { criteria } from '../../commons/criteria.js';
 
 forChannels(ChannelType.UI, ChannelType.API)(() => {
-    test('shouldBeAbleToPlaceOrderForValidInput', async ({ scenario }) => {
+    test('shouldBeAbleToPlaceOrderForValidInput', criteria('UC-001.1'), async ({ scenario }) => {
         await scenario
             .given()
             .product()
@@ -22,7 +23,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
             .shouldSucceed();
     });
 
-    test('orderPrefixShouldBeORD', async ({ scenario }) => {
+    test('orderPrefixShouldBeORD', criteria('UC-001.1'), async ({ scenario }) => {
         await scenario
             .when()
             .placeOrder()
@@ -33,7 +34,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
             .hasOrderNumberPrefix('ORD-');
     });
 
-    test('orderStatusShouldBePlacedAfterPlacingOrder', async ({ scenario }) => {
+    test('orderStatusShouldBePlacedAfterPlacingOrder', criteria('UC-001.1'), async ({ scenario }) => {
         await scenario
             .when()
             .placeOrder()
@@ -44,7 +45,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
             .hasStatus(OrderStatus.PLACED);
     });
 
-    test('shouldCalculateBasePriceAsProductOfUnitPriceAndQuantity', async ({ scenario }) => {
+    test('shouldCalculateBasePriceAsProductOfUnitPriceAndQuantity', criteria('UC-001.2'), async ({ scenario }) => {
         await scenario
             .given()
             .product()
@@ -68,6 +69,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
 
     test.eachAlsoFirstRow(basePriceCases)(
         'shouldPlaceOrderWithCorrectBasePriceParameterized_unitPrice=$unitPrice_quantity=$quantity',
+        criteria('UC-001.2'),
         async ({ scenario, unitPrice, quantity, basePrice }) => {
             await scenario
                 .given()
@@ -84,7 +86,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
         },
     );
 
-    test('discountRateShouldBeAppliedForCoupon', async ({ scenario }) => {
+    test('discountRateShouldBeAppliedForCoupon', criteria('UC-001.3'), async ({ scenario }) => {
         const code = 'SUMMER2025';
         await scenario
             .given()
@@ -102,7 +104,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
             .hasDiscountRate(0.15);
     });
 
-    test('discountRateShouldBeNotAppliedWhenThereIsNoCoupon', async ({ scenario }) => {
+    test('discountRateShouldBeNotAppliedWhenThereIsNoCoupon', criteria('UC-001.3'), async ({ scenario }) => {
         await scenario
             .when()
             .placeOrder()
@@ -116,7 +118,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
             .hasDiscountAmount('0.00');
     });
 
-    test('subtotalPriceShouldBeCalculatedAsTheBasePriceMinusDiscountAmountWhenWeHaveCoupon', async ({ scenario }) => {
+    test('subtotalPriceShouldBeCalculatedAsTheBasePriceMinusDiscountAmountWhenWeHaveCoupon', criteria('UC-001.3'), async ({ scenario }) => {
         await scenario
             .given()
             .coupon()
@@ -139,7 +141,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
             .hasSubtotalPrice('85.00');
     });
 
-    test('subtotalPriceShouldBeSameAsBasePriceWhenNoCoupon', async ({ scenario }) => {
+    test('subtotalPriceShouldBeSameAsBasePriceWhenNoCoupon', criteria('UC-001.3'), async ({ scenario }) => {
         await scenario
             .given()
             .product()
@@ -163,6 +165,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
 
     test.eachAlsoFirstRow(taxRateCases)(
         'correctTaxRateShouldBeUsedBasedOnCountry_country=$country',
+        criteria('UC-001.4'),
         async ({ scenario, country, taxRate }) => {
             await scenario
                 .given()
@@ -187,6 +190,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
 
     test.eachAlsoFirstRow(totalPriceCases)(
         'totalPriceShouldBeSubtotalPricePlusTaxAmount_country=$country',
+        criteria('UC-001.4'),
         async ({ scenario, country, taxRate, subtotalPrice, expectedTaxAmount, expectedTotalPrice }) => {
             await scenario
                 .given()
@@ -211,7 +215,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
         },
     );
 
-    test('couponUsageCountHasBeenIncrementedAfterItsBeenUsed', async ({ scenario }) => {
+    test('couponUsageCountHasBeenIncrementedAfterItsBeenUsed', criteria('UC-001.5'), async ({ scenario }) => {
         const code = 'SUMMER2025';
         await scenario
             .given()
@@ -229,7 +233,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
 });
 
 forChannels(ChannelType.API)(() => {
-    test('orderTotalShouldIncludeTax', async ({ scenario }) => {
+    test('orderTotalShouldIncludeTax', criteria('UC-001.4'), async ({ scenario }) => {
         await scenario
             .given()
             .country()
@@ -247,7 +251,7 @@ forChannels(ChannelType.API)(() => {
             .hasTotalPrice('23.80');
     });
 
-    test('orderTotalShouldReflectCouponDiscount', async ({ scenario }) => {
+    test('orderTotalShouldReflectCouponDiscount', criteria('UC-001.3'), async ({ scenario }) => {
         const couponCode = 'DISC10';
         await scenario
             .given()
@@ -267,7 +271,7 @@ forChannels(ChannelType.API)(() => {
             .hasTotalPrice('19.26');
     });
 
-    test('orderTotalShouldApplyCouponDiscountAndTax', async ({ scenario }) => {
+    test('orderTotalShouldApplyCouponDiscountAndTax', criteria('UC-001.3', 'UC-001.4'), async ({ scenario }) => {
         const comboCode = 'COMBO10';
         await scenario
             .given()

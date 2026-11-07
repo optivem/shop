@@ -12,6 +12,7 @@ public class PlaceOrderPositiveTest : BaseAcceptanceTest
 {
     [Theory]
     [ChannelData(ChannelType.UI, ChannelType.API)]
+    [Trait("tag", "UC-001.1")]
     public async Task ShouldBeAbleToPlaceOrderForValidInput(Channel channel)
     {
         await Scenario(channel)
@@ -23,6 +24,7 @@ public class PlaceOrderPositiveTest : BaseAcceptanceTest
 
     [Theory]
     [ChannelData(ChannelType.UI, ChannelType.API)]
+    [Trait("tag", "UC-001.1")]
     public async Task OrderStatusShouldBePlacedAfterPlacingOrder(Channel channel)
     {
         await Scenario(channel)
@@ -34,6 +36,7 @@ public class PlaceOrderPositiveTest : BaseAcceptanceTest
 
     [Theory]
     [ChannelData(ChannelType.UI, ChannelType.API)]
+    [Trait("tag", "UC-001.2")]
     public async Task ShouldCalculateBasePriceAsProductOfUnitPriceAndQuantity(Channel channel)
     {
         await Scenario(channel)
@@ -50,6 +53,7 @@ public class PlaceOrderPositiveTest : BaseAcceptanceTest
     [ChannelInlineData("10.00", 3, "30.00")]
     [ChannelInlineData("15.50", 4, "62.00")]
     [ChannelInlineData("99.99", 1, "99.99")]
+    [Trait("tag", "UC-001.2")]
     public async Task ShouldPlaceOrderWithCorrectBasePriceParameterized(Channel channel, string unitPrice, int quantity, string basePrice)
     {
         await Scenario(channel)
@@ -62,6 +66,7 @@ public class PlaceOrderPositiveTest : BaseAcceptanceTest
 
     [Theory]
     [ChannelData(ChannelType.UI, ChannelType.API)]
+    [Trait("tag", "UC-001.1")]
     public async Task OrderPrefixShouldBeORD(Channel channel)
     {
         await Scenario(channel)
@@ -73,6 +78,7 @@ public class PlaceOrderPositiveTest : BaseAcceptanceTest
 
     [Theory]
     [ChannelData(ChannelType.UI, ChannelType.API)]
+    [Trait("tag", "UC-001.3")]
     public async Task DiscountRateShouldBeAppliedForCoupon(Channel channel)
     {
         await Scenario(channel)
@@ -86,6 +92,7 @@ public class PlaceOrderPositiveTest : BaseAcceptanceTest
 
     [Theory]
     [ChannelData(ChannelType.UI, ChannelType.API)]
+    [Trait("tag", "UC-001.3")]
     public async Task DiscountRateShouldBeNotAppliedWhenThereIsNoCoupon(Channel channel)
     {
         await Scenario(channel)
@@ -99,6 +106,7 @@ public class PlaceOrderPositiveTest : BaseAcceptanceTest
 
     [Theory]
     [ChannelData(ChannelType.UI, ChannelType.API)]
+    [Trait("tag", "UC-001.3")]
     public async Task SubtotalPriceShouldBeCalculatedAsTheBasePriceMinusDiscountAmountWhenWeHaveCoupon(Channel channel)
     {
         await Scenario(channel)
@@ -116,6 +124,7 @@ public class PlaceOrderPositiveTest : BaseAcceptanceTest
 
     [Theory]
     [ChannelData(ChannelType.UI, ChannelType.API)]
+    [Trait("tag", "UC-001.3")]
     public async Task SubtotalPriceShouldBeSameAsBasePriceWhenNoCoupon(Channel channel)
     {
         await Scenario(channel)
@@ -132,6 +141,7 @@ public class PlaceOrderPositiveTest : BaseAcceptanceTest
     [ChannelData(ChannelType.API, AlsoForFirstRow = new[] { ChannelType.UI })]
     [ChannelInlineData("UK", 0.09)]
     [ChannelInlineData("US", 0.20)]
+    [Trait("tag", "UC-001.4")]
     public async Task CorrectTaxRateShouldBeUsedBasedOnCountry(Channel channel, string country, double taxRate)
     {
         await Scenario(channel)
@@ -146,6 +156,7 @@ public class PlaceOrderPositiveTest : BaseAcceptanceTest
     [ChannelData(ChannelType.API, AlsoForFirstRow = new[] { ChannelType.UI })]
     [ChannelInlineData("UK", 0.09, "50.00", "4.50", "54.50")]
     [ChannelInlineData("US", 0.20, "100.00", "20.00", "120.00")]
+    [Trait("tag", "UC-001.4")]
     public async Task TotalPriceShouldBeSubtotalPricePlusTaxAmount(Channel channel, string country, double taxRate, string subtotalPrice, string expectedTaxAmount, string expectedTotalPrice)
     {
         await Scenario(channel)
@@ -162,6 +173,7 @@ public class PlaceOrderPositiveTest : BaseAcceptanceTest
 
     [Theory]
     [ChannelData(ChannelType.UI, ChannelType.API)]
+    [Trait("tag", "UC-001.5")]
     public async Task CouponUsageCountHasBeenIncrementedAfterItsBeenUsed(Channel channel)
     {
         await Scenario(channel)
@@ -174,6 +186,7 @@ public class PlaceOrderPositiveTest : BaseAcceptanceTest
 
     [Theory]
     [ChannelData(ChannelType.API)]
+    [Trait("tag", "UC-001.4")]
     public async Task OrderTotalShouldIncludeTax(Channel channel)
     {
         await Scenario(channel)
@@ -188,6 +201,7 @@ public class PlaceOrderPositiveTest : BaseAcceptanceTest
 
     [Theory]
     [ChannelData(ChannelType.API)]
+    [Trait("tag", "UC-001.3")]
     public async Task OrderTotalShouldReflectCouponDiscount(Channel channel)
     {
         await Scenario(channel)
@@ -203,6 +217,8 @@ public class PlaceOrderPositiveTest : BaseAcceptanceTest
 
     [Theory]
     [ChannelData(ChannelType.API)]
+    [Trait("tag", "UC-001.3")]
+    [Trait("tag", "UC-001.4")]
     public async Task OrderTotalShouldApplyCouponDiscountAndTax(Channel channel)
     {
         await Scenario(channel)

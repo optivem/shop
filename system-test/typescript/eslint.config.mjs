@@ -6,7 +6,7 @@ import tseslint from 'typescript-eslint';
 
 export default defineConfig(
     {
-        ignores: ['playwright-report/**', 'test-results/**', 'dist/**'],
+        ignores: ['playwright-report/**', 'test-results/**', 'junit-results/**', 'dist/**'],
     },
     js.configs.recommended,
     ...tseslint.configs.recommendedTypeChecked,

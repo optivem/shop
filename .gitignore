@@ -14,6 +14,7 @@ __pycache__/
 # Playwright
 playwright-report/
 test-results/
+junit-results/
 
 # Claude
 .claude/settings.local.json

@@ -1,5 +1,7 @@
 # 2026-11-06 15:33:50 UTC — Place Order use case matches the Substack articles, with a spec gate that checks all three languages
 
+> 🤖 **Picked up by agent** — `8e8cd7062d0f` at `2026-11-07T11:12:16Z`
+
 > Merged on 2026-11-06 from three plans: this one, `20261106-2030-spec-gate-dotnet-typescript-tags.md` and `20261106-2030-spec-gate-read-gherkin-criteria.md`. The work is split into **parallel tracks** for autonomous execution with subagents (one subagent per track; tracks A, B and C don't touch the same files). Track D joins them at the end.
 
 ## TL;DR
@@ -12,6 +14,9 @@
 - `docs/use-cases/UC-001-place-order.md` holds the narrative as the articles show it (primary actor Customer, secondary actors ERP and Clock, 9-step main success scenario, extensions 2a, 3a, 4a, 4b, 5a, 5b, 6a), saying ERP everywhere, never SAP.
 - The criteria are Gherkin scenarios tagged `@UC-001.N` plus the extension tag where one applies: 2a → UC-001.12, 3a → UC-001.13, 4a → UC-001.8, 4b → UC-001.10, 5a → UC-001.14, 5b → UC-001.9, 6a → UC-001.11.
 - The `spec-gate` step in `.github/workflows/_acceptance-stage-docker-compose.yml` is commented out, with a pointer to this plan. `spec.yaml` stays.
+- **Track B: .NET and TypeScript tests carry the UC IDs** (one for one with Java, including the e2e `PlaceOrderPositiveTest.shouldPlaceOrder` → UC-001.1; no UC-001.14 yet). All three languages emit the same JUnit shape that gh-optivem `internal/spec/junit.go` reads: `<testcase classname=… name=…><properties><property name="tag" value="UC-001.N"/></properties></testcase>` (it accepts property name `tag` or `criterion`, value `UC-NNN.M`, optional `@`).
+  - **.NET:** `[Trait("tag", "UC-001.N")]` on the test method (one per ID). The `JunitXml.TestLogger` package (added to `SystemTests.csproj`) writes every xUnit trait as a testcase property. Each latest suite in `system-test/dotnet/tests.yaml` adds `--logger 'junit;LogFilePath=TestResults/junit/<suite-id>.xml'`, so results land in `system-test/dotnet/SystemTests/TestResults/junit/*.xml`. Names look like `ShouldX(channel: API)`; gh-optivem's `()` stripping merges the channels.
+  - **TypeScript:** `test('name', criteria('UC-001.N', …), async …)` with the helper `tests/commons/criteria.ts`, which turns each ID into a `{ type: 'tag', description: id }` annotation. `test.each` / `test.eachAlsoFirstRow` take the same optional details argument (`(name, criteria(…), fn)`; the shop facade `src/testkit/.../playwright/bindTestEach.ts` passes it to every row). Playwright's built-in `junit` reporter (added in `playwright.config.ts`, `outputDir: 'junit-results'`) writes annotations as testcase properties. Each latest suite in `system-test/typescript/tests.yaml` sets `PLAYWRIGHT_JUNIT_OUTPUT_NAME: <suite-id>.xml`, so results land in `system-test/typescript/junit-results/*.xml` (gitignored; not under `test-results/`, which Playwright wipes per run). Note for D: TS testcase names are `[API Channel] › shouldX` (and parameterised rows carry `_param=value`), so channels/rows don't merge into one test as in Java/.NET; each still carries the IDs.
 
 ## Decisions (resolved 2026-11-06 with the user)
 
@@ -19,23 +24,23 @@
 2. **Deleting criteria once their tests pass:** keep the criteria in the shop for now. Tell the substack side about the conflict with the article's "delete" paragraph.
 3. **Criteria are shared:** `docs/use-cases/` serves all three languages. Only the tests and the gate's `results` input are Java-only, and `results` is already a list (`StringList` in gh-optivem `internal/spec/config.go`).
 
-## Open decision (ask upfront, before starting)
+## Track A scope decision (resolved 2026-11-07: approved)
 
-- **Track A scope:** Approve production error handling for an unreachable ERP: a dedicated exception plus a **503** with the message "product information can't be retrieved right now", shown in the UI, in the Java, .NET and TypeScript monoliths and multitier backends. Plus an "ERP unavailable" test kit step in all three languages. Recommendation: approve. Without it, UC-001.14 can't have a meaningful test, and the gate (track D) can never reach 14 of 14.
+- **Track A scope:** Approved production error handling for an unreachable ERP: a dedicated exception plus a **503** with the message "product information can't be retrieved right now", shown in the UI, in the Java, .NET and TypeScript monoliths and multitier backends. Plus an "ERP unavailable" test kit step in all three languages. Recommendation: approve. Without it, UC-001.14 can't have a meaningful test, and the gate (track D) can never reach 14 of 14.
 
 ## Parallel tracks
 
 ```
 A (shop: UC-001.14, production code + test kit) ─┐
-B (shop: .NET/TS criterion tags)                 ─┼─▶ D (shop: re-enable gate, all languages, verify)
+B (shop: .NET/TS criterion tags) ✅ done         ─┼─▶ D (shop: re-enable gate, all languages, verify)
 C (gh-optivem: parse Gherkin + release)          ─┘
 ```
 
-A, B and C are independent and can run as parallel subagents. File overlap: A and B both touch .NET and TypeScript acceptance tests. A adds new `UC-001.14` test methods, and B tags existing methods. To avoid edit conflicts, either B leaves the `UC-001.14` test to A (A adds it already tagged in all three languages), or B runs after A's test-file edits. D waits for all three.
+A and C are independent. B is done (see Done); A adds the `UC-001.14` tests already tagged in all three languages. D waits for A and C.
 
 ### ▶ Next executable step (resume here)
 
-Ask the open decision. Then start A (if approved), B and C in parallel.
+Next is Track A (A1), reusing the tag mechanism recorded under Done (Track B) for the new UC-001.14 tests in .NET and TypeScript. Track C is external (gh-optivem session); D waits for A and C's release.
 
 ### Track A — UC-001.14 "ERP unavailable" (shop, all languages)
 
@@ -43,15 +48,8 @@ Today an unreachable ERP makes `ErpGateway.getProductDetails` throw `IllegalStat
 
 - [ ] A1: Production code: add a dedicated exception plus a 503 handler with the "product information can't be retrieved right now" message, and make the UI show it. Do this in the Java, .NET and TypeScript monoliths and multitier backends (and frontends where the message is rendered).
 - [ ] A2: Test kit: add an "ERP unavailable" step through `ErpDriver`, `ErpStubDriver` (a WireMock 503 or fault), `ErpRealDriver`, and the use-case and scenario DSL, in all three languages.
-- [ ] A3: Add the acceptance test, marked `@Isolated`, in `PlaceOrderNegativeTest` or `PlaceOrderNegativeIsolatedTest` (whichever already stubs the ERP). Tag it `@Tag("UC-001.14")` in Java, and with the same ID in .NET and TypeScript, using the mechanism B1 finds. If B1 isn't done yet, leave .NET and TypeScript untagged and B tags them later. First check that no test anywhere is already tagged `UC-001.14`.
+- [ ] A3: Add the acceptance test, marked `@Isolated`, in `PlaceOrderNegativeTest` or `PlaceOrderNegativeIsolatedTest` (whichever already stubs the ERP). Tag it `@Tag("UC-001.14")` in Java, and with the same ID in .NET and TypeScript, using the mechanism under Done (Track B). First check that no test anywhere is already tagged `UC-001.14`.
 - [ ] A4: Verify: `./compile-all.sh`, then the `--sample` system tests for each language (see CLAUDE.md).
-
-### Track B — Tag .NET and TypeScript acceptance tests (shop)
-
-- [ ] B1: Investigate. Java uses `@Tag("UC-001.N")`. Work out the .NET equivalent (e.g. xUnit `[Trait]` or NUnit `[Category]`, plus a JUnit logger that writes properties) and the TypeScript one (the test runner's tag or annotation, plus a JUnit reporter with properties). Check the exact property name gh-optivem `internal/spec/junit.go` expects. Compare with the Java output in `system-test/java/build/test-results/**/*.xml`. Reading gh-optivem is fine; don't change it.
-- [ ] B2: Tag the .NET acceptance tests with the same IDs as the Java tests, one for one. The reference is `system-test/java/.../latest/acceptance/PlaceOrder*Test.java`.
-- [ ] B3: The same for TypeScript.
-- [ ] B4: Verify: compile, then run the `--sample` system tests for .NET and TypeScript, and check that the JUnit XML contains the tag properties.
 
 ### Track C — gh-optivem reads Gherkin criteria (other repo)
 

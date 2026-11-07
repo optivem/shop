@@ -1,9 +1,10 @@
 import { test, forChannels, ChannelType } from './base/fixtures.js';
+import { criteria } from '../../commons/criteria.js';
 
 test.describe('@isolated', () => {
     test.describe.configure({ mode: 'serial' });
     forChannels(ChannelType.UI, ChannelType.API)(() => {
-        test('shouldRecordPlacementTimestamp', async ({ scenario }) => {
+        test('shouldRecordPlacementTimestamp', criteria('UC-001.6'), async ({ scenario }) => {
             await scenario
                 .given()
                 .clock()
@@ -17,7 +18,7 @@ test.describe('@isolated', () => {
                 .hasTime('2026-01-15T10:30:00Z');
         });
 
-        test('shouldApplyFullPriceWithoutPromotion', async ({ scenario }) => {
+        test('shouldApplyFullPriceWithoutPromotion', criteria('UC-001.7'), async ({ scenario }) => {
             await scenario
                 .given()
                 .product()
@@ -38,7 +39,7 @@ test.describe('@isolated', () => {
                 .hasTotalPrice('100.00');
         });
 
-        test('shouldApplyDiscountWhenPromotionIsActive', async ({ scenario }) => {
+        test('shouldApplyDiscountWhenPromotionIsActive', criteria('UC-001.7'), async ({ scenario }) => {
             await scenario
                 .given()
                 .product()

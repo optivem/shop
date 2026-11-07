@@ -12,6 +12,7 @@ public class PlaceOrderNegativeIsolatedTest : BaseAcceptanceTest
     [Theory]
     [Isolated("mutates the shared wall clock to a coupon-expiry time; parallel runs would clash on the clock")]
     [ChannelData(ChannelType.UI, ChannelType.API)]
+    [Trait("tag", "UC-001.11")]
     public async Task CannotPlaceOrderWithExpiredCoupon(Channel channel)
     {
         await Scenario(channel)
@@ -25,6 +26,7 @@ public class PlaceOrderNegativeIsolatedTest : BaseAcceptanceTest
 
     [Theory]
     [ChannelData(ChannelType.UI, ChannelType.API)]
+    [Trait("tag", "UC-001.13")]
     public async Task ShouldRejectOrderPlacedAtYearEnd(Channel channel)
     {
         await Scenario(channel)

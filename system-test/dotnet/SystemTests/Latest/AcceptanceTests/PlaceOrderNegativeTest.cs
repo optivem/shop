@@ -10,6 +10,7 @@ public class PlaceOrderNegativeTest : BaseAcceptanceTest
 {
     [Theory]
     [ChannelData(ChannelType.UI, ChannelType.API)]
+    [Trait("tag", "UC-001.8")]
     public async Task ShouldRejectOrderWithInvalidQuantity(Channel channel)
     {
         await Scenario(channel)
@@ -21,6 +22,7 @@ public class PlaceOrderNegativeTest : BaseAcceptanceTest
 
     [Theory]
     [ChannelData(ChannelType.UI, ChannelType.API)]
+    [Trait("tag", "UC-001.9")]
     public async Task ShouldRejectOrderWithNonExistentSku(Channel channel)
     {
         await Scenario(channel)
@@ -32,6 +34,7 @@ public class PlaceOrderNegativeTest : BaseAcceptanceTest
 
     [Theory]
     [ChannelData(ChannelType.UI, ChannelType.API)]
+    [Trait("tag", "UC-001.8")]
     public async Task ShouldRejectOrderWithNegativeQuantity(Channel channel)
     {
         await Scenario(channel)
@@ -43,6 +46,7 @@ public class PlaceOrderNegativeTest : BaseAcceptanceTest
 
     [Theory]
     [ChannelData(ChannelType.UI, ChannelType.API)]
+    [Trait("tag", "UC-001.8")]
     public async Task ShouldRejectOrderWithZeroQuantity(Channel channel)
     {
         await Scenario(channel)
@@ -55,6 +59,7 @@ public class PlaceOrderNegativeTest : BaseAcceptanceTest
     [Theory]
     [ChannelData(ChannelType.API, AlsoForFirstRow = new[] { ChannelType.UI })]
     [ChannelClassData(typeof(EmptyArgumentsProvider))]
+    [Trait("tag", "UC-001.9")]
     public async Task ShouldRejectOrderWithEmptySku(Channel channel, string sku)
     {
         await Scenario(channel)
@@ -67,6 +72,7 @@ public class PlaceOrderNegativeTest : BaseAcceptanceTest
     [Theory]
     [ChannelData(ChannelType.API, AlsoForFirstRow = new[] { ChannelType.UI })]
     [ChannelClassData(typeof(EmptyArgumentsProvider))]
+    [Trait("tag", "UC-001.8")]
     public async Task ShouldRejectOrderWithEmptyQuantity(Channel channel, string emptyQuantity)
     {
         await Scenario(channel)
@@ -80,6 +86,7 @@ public class PlaceOrderNegativeTest : BaseAcceptanceTest
     [ChannelData(ChannelType.API, AlsoForFirstRow = new[] { ChannelType.UI })]
     [ChannelInlineData("3.5")]
     [ChannelInlineData("lala")]
+    [Trait("tag", "UC-001.8")]
     public async Task ShouldRejectOrderWithNonIntegerQuantity(Channel channel, string nonIntegerQuantity)
     {
         await Scenario(channel)
@@ -92,6 +99,7 @@ public class PlaceOrderNegativeTest : BaseAcceptanceTest
     [Theory]
     [ChannelData(ChannelType.API, AlsoForFirstRow = new[] { ChannelType.UI })]
     [ChannelClassData(typeof(EmptyArgumentsProvider))]
+    [Trait("tag", "UC-001.10")]
     public async Task ShouldRejectOrderWithEmptyCountry(Channel channel, string emptyCountry)
     {
         await Scenario(channel)
@@ -103,6 +111,7 @@ public class PlaceOrderNegativeTest : BaseAcceptanceTest
 
     [Theory]
     [ChannelData(ChannelType.UI, ChannelType.API)]
+    [Trait("tag", "UC-001.10")]
     public async Task ShouldRejectOrderWithInvalidCountry(Channel channel)
     {
         await Scenario(channel)
@@ -114,6 +123,7 @@ public class PlaceOrderNegativeTest : BaseAcceptanceTest
 
     [Theory]
     [ChannelData(ChannelType.API)]
+    [Trait("tag", "UC-001.8")]
     public async Task ShouldRejectOrderWithNullQuantity(Channel channel)
     {
         await Scenario(channel)
@@ -125,6 +135,7 @@ public class PlaceOrderNegativeTest : BaseAcceptanceTest
 
     [Theory]
     [ChannelData(ChannelType.API)]
+    [Trait("tag", "UC-001.9")]
     public async Task ShouldRejectOrderWithNullSku(Channel channel)
     {
         await Scenario(channel)
@@ -136,6 +147,7 @@ public class PlaceOrderNegativeTest : BaseAcceptanceTest
 
     [Theory]
     [ChannelData(ChannelType.API)]
+    [Trait("tag", "UC-001.10")]
     public async Task ShouldRejectOrderWithNullCountry(Channel channel)
     {
         await Scenario(channel)
@@ -147,6 +159,7 @@ public class PlaceOrderNegativeTest : BaseAcceptanceTest
 
     [Theory]
     [ChannelData(ChannelType.UI, ChannelType.API)]
+    [Trait("tag", "UC-001.11")]
     public async Task CannotPlaceOrderWithNonExistentCoupon(Channel channel)
     {
         await Scenario(channel)
@@ -159,6 +172,7 @@ public class PlaceOrderNegativeTest : BaseAcceptanceTest
 
     [Theory]
     [ChannelData(ChannelType.UI, ChannelType.API)]
+    [Trait("tag", "UC-001.11")]
     public async Task CannotPlaceOrderWithCouponThatHasExceededUsageLimit(Channel channel)
     {
         await Scenario(channel)
@@ -173,6 +187,7 @@ public class PlaceOrderNegativeTest : BaseAcceptanceTest
 
     [Theory]
     [ChannelData(ChannelType.UI, ChannelType.API)]
+    [Trait("tag", "UC-001.12")]
     public async Task AdminShouldNotBeAbleToPlaceOrder(Channel channel)
     {
         await Scenario(channel)

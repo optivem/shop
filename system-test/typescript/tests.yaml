@@ -56,6 +56,7 @@ suites:
     command: npx playwright test --project=smoke-test tests/latest/smoke
     env:
       EXTERNAL_SYSTEM_MODE: stub
+      PLAYWRIGHT_JUNIT_OUTPUT_NAME: smoke-stub.xml
     path: .
     testReportPath: playwright-report/index.html
     sampleTest: shouldBeAbleToGoToMyShop
@@ -64,6 +65,7 @@ suites:
     command: npx playwright test --project=smoke-test tests/latest/smoke
     env:
       EXTERNAL_SYSTEM_MODE: real
+      PLAYWRIGHT_JUNIT_OUTPUT_NAME: smoke-real.xml
     path: .
     testReportPath: playwright-report/index.html
     sampleTest: shouldBeAbleToGoToMyShop
@@ -74,6 +76,7 @@ suites:
       CHANNEL: API
       EXTERNAL_SYSTEM_MODE: stub
       PLAYWRIGHT_JSON_OUTPUT_NAME: playwright-report/parallel-api.json
+      PLAYWRIGHT_JUNIT_OUTPUT_NAME: acceptance-parallel-api.xml
     path: .
     testReportPath: playwright-report/index.html
     testCountPath: playwright-report/parallel-api.json
@@ -86,6 +89,7 @@ suites:
       CHANNEL_MODE: static
       EXTERNAL_SYSTEM_MODE: stub
       PLAYWRIGHT_JSON_OUTPUT_NAME: playwright-report/parallel-ui.json
+      PLAYWRIGHT_JUNIT_OUTPUT_NAME: acceptance-parallel-ui.xml
     path: .
     testReportPath: playwright-report/index.html
     testCountPath: playwright-report/parallel-ui.json
@@ -97,6 +101,7 @@ suites:
       CHANNEL: API
       EXTERNAL_SYSTEM_MODE: stub
       PLAYWRIGHT_JSON_OUTPUT_NAME: playwright-report/isolated-api.json
+      PLAYWRIGHT_JUNIT_OUTPUT_NAME: acceptance-isolated-api.xml
     path: .
     testReportPath: playwright-report/index.html
     testCountPath: playwright-report/isolated-api.json
@@ -109,6 +114,7 @@ suites:
       CHANNEL_MODE: static
       EXTERNAL_SYSTEM_MODE: stub
       PLAYWRIGHT_JSON_OUTPUT_NAME: playwright-report/isolated-ui.json
+      PLAYWRIGHT_JUNIT_OUTPUT_NAME: acceptance-isolated-ui.xml
     path: .
     testReportPath: playwright-report/index.html
     testCountPath: playwright-report/isolated-ui.json
@@ -119,6 +125,7 @@ suites:
     env:
       EXTERNAL_SYSTEM_MODE: stub
       PLAYWRIGHT_JSON_OUTPUT_NAME: playwright-report/results.json
+      PLAYWRIGHT_JUNIT_OUTPUT_NAME: contract-stub.xml
     path: .
     testReportPath: playwright-report/index.html
     testCountPath: playwright-report/results.json
@@ -129,6 +136,7 @@ suites:
     env:
       EXTERNAL_SYSTEM_MODE: stub
       PLAYWRIGHT_JSON_OUTPUT_NAME: playwright-report/results.json
+      PLAYWRIGHT_JUNIT_OUTPUT_NAME: contract-stub-isolated.xml
     path: .
     testReportPath: playwright-report/index.html
     testCountPath: playwright-report/results.json
@@ -139,6 +147,7 @@ suites:
     env:
       EXTERNAL_SYSTEM_MODE: real
       PLAYWRIGHT_JSON_OUTPUT_NAME: playwright-report/results.json
+      PLAYWRIGHT_JUNIT_OUTPUT_NAME: contract-real.xml
     path: .
     testReportPath: playwright-report/index.html
     testCountPath: playwright-report/results.json
@@ -148,6 +157,7 @@ suites:
     command: npx playwright test --project=e2e-test tests/latest/e2e
     env:
       CHANNEL: API
+      PLAYWRIGHT_JUNIT_OUTPUT_NAME: e2e-api.xml
     path: .
     testReportPath: playwright-report/index.html
     sampleTest: shouldPlaceOrder
@@ -157,6 +167,7 @@ suites:
     env:
       CHANNEL: UI
       CHANNEL_MODE: static
+      PLAYWRIGHT_JUNIT_OUTPUT_NAME: e2e-ui.xml
     path: .
     testReportPath: playwright-report/index.html
     sampleTest: shouldPlaceOrder

@@ -9,6 +9,7 @@ public class PlaceOrderPositiveIsolatedTest : BaseAcceptanceTest
 {
     [Theory]
     [ChannelData(ChannelType.UI, ChannelType.API)]
+    [Trait("tag", "UC-001.6")]
     public async Task ShouldRecordPlacementTimestamp(Channel channel)
     {
         await Scenario(channel)
@@ -21,6 +22,7 @@ public class PlaceOrderPositiveIsolatedTest : BaseAcceptanceTest
 
     [Theory]
     [ChannelData(ChannelType.UI, ChannelType.API)]
+    [Trait("tag", "UC-001.7")]
     public async Task ShouldApplyFullPriceWithoutPromotion(Channel channel)
     {
         await Scenario(channel)
@@ -35,6 +37,7 @@ public class PlaceOrderPositiveIsolatedTest : BaseAcceptanceTest
 
     [Theory]
     [ChannelData(ChannelType.UI, ChannelType.API)]
+    [Trait("tag", "UC-001.7")]
     public async Task ShouldApplyDiscountWhenPromotionIsActive(Channel channel)
     {
         await Scenario(channel)

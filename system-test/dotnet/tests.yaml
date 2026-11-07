@@ -59,7 +59,7 @@ suiteGroups:
 suites:
   - id: smoke-stub
     name: latest - Smoke (stub)
-    command: dotnet test --filter 'FullyQualifiedName~.Latest.SmokeTests' -e EXTERNAL_SYSTEM_MODE=stub --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
+    command: dotnet test --filter 'FullyQualifiedName~.Latest.SmokeTests' -e EXTERNAL_SYSTEM_MODE=stub --logger 'trx;LogFileName=testResults.trx' --logger 'junit;LogFilePath=TestResults/junit/smoke-stub.xml' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
     path: SystemTests
     testReportPath: SystemTests/TestResults/testResults.html
     testCountPath: TestResults/testResults.trx
@@ -68,7 +68,7 @@ suites:
       - pwsh bin/Debug/net8.0/playwright.ps1 install
   - id: smoke-real
     name: latest - Smoke (real)
-    command: dotnet test --filter 'FullyQualifiedName~.Latest.SmokeTests' -e EXTERNAL_SYSTEM_MODE=real --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
+    command: dotnet test --filter 'FullyQualifiedName~.Latest.SmokeTests' -e EXTERNAL_SYSTEM_MODE=real --logger 'trx;LogFileName=testResults.trx' --logger 'junit;LogFilePath=TestResults/junit/smoke-real.xml' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
     path: SystemTests
     testReportPath: SystemTests/TestResults/testResults.html
     testCountPath: TestResults/testResults.trx
@@ -77,14 +77,14 @@ suites:
       - pwsh bin/Debug/net8.0/playwright.ps1 install
   - id: acceptance-parallel-api
     name: latest - Acceptance Parallel (stub) - API
-    command: dotnet test --filter 'FullyQualifiedName~.Latest.AcceptanceTests&Category!=isolated' -e CHANNEL=API --logger 'trx;LogFileName=parallel-api.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
+    command: dotnet test --filter 'FullyQualifiedName~.Latest.AcceptanceTests&Category!=isolated' -e CHANNEL=API --logger 'trx;LogFileName=parallel-api.trx' --logger 'junit;LogFilePath=TestResults/junit/acceptance-parallel-api.xml' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
     path: SystemTests
     testReportPath: SystemTests/TestResults/testResults.html
     testCountPath: TestResults/parallel-api.trx
     sampleTest: ShouldBeAbleToPlaceOrderForValidInput
   - id: acceptance-parallel-ui
     name: latest - Acceptance Parallel (stub) - UI
-    command: dotnet test --filter 'FullyQualifiedName~.Latest.AcceptanceTests&Category!=isolated' -e CHANNEL=UI -e CHANNEL_MODE=static --logger 'trx;LogFileName=parallel-ui.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
+    command: dotnet test --filter 'FullyQualifiedName~.Latest.AcceptanceTests&Category!=isolated' -e CHANNEL=UI -e CHANNEL_MODE=static --logger 'trx;LogFileName=parallel-ui.trx' --logger 'junit;LogFilePath=TestResults/junit/acceptance-parallel-ui.xml' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
     path: SystemTests
     testReportPath: SystemTests/TestResults/testResults.html
     testCountPath: TestResults/parallel-ui.trx
@@ -93,14 +93,14 @@ suites:
       - pwsh bin/Debug/net8.0/playwright.ps1 install
   - id: acceptance-isolated-api
     name: latest - Acceptance Isolated (stub) - API
-    command: dotnet test --filter 'FullyQualifiedName~.Latest.AcceptanceTests&Category=isolated' -e CHANNEL=API --logger 'trx;LogFileName=isolated-api.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
+    command: dotnet test --filter 'FullyQualifiedName~.Latest.AcceptanceTests&Category=isolated' -e CHANNEL=API --logger 'trx;LogFileName=isolated-api.trx' --logger 'junit;LogFilePath=TestResults/junit/acceptance-isolated-api.xml' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
     path: SystemTests
     testReportPath: SystemTests/TestResults/testResults.html
     testCountPath: TestResults/isolated-api.trx
     sampleTest: ShouldRecordPlacementTimestamp
   - id: acceptance-isolated-ui
     name: latest - Acceptance Isolated (stub) - UI
-    command: dotnet test --filter 'FullyQualifiedName~.Latest.AcceptanceTests&Category=isolated' -e CHANNEL=UI -e CHANNEL_MODE=static --logger 'trx;LogFileName=isolated-ui.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
+    command: dotnet test --filter 'FullyQualifiedName~.Latest.AcceptanceTests&Category=isolated' -e CHANNEL=UI -e CHANNEL_MODE=static --logger 'trx;LogFileName=isolated-ui.trx' --logger 'junit;LogFilePath=TestResults/junit/acceptance-isolated-ui.xml' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
     path: SystemTests
     testReportPath: SystemTests/TestResults/testResults.html
     testCountPath: TestResults/isolated-ui.trx
@@ -109,28 +109,28 @@ suites:
       - pwsh bin/Debug/net8.0/playwright.ps1 install
   - id: contract-stub
     name: latest - Contract (stub)
-    command: dotnet test --filter 'FullyQualifiedName~.Latest.ExternalSystemContractTests&FullyQualifiedName~Stub&Category!=isolated' --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
+    command: dotnet test --filter 'FullyQualifiedName~.Latest.ExternalSystemContractTests&FullyQualifiedName~Stub&Category!=isolated' --logger 'trx;LogFileName=testResults.trx' --logger 'junit;LogFilePath=TestResults/junit/contract-stub.xml' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
     path: SystemTests
     testReportPath: SystemTests/TestResults/testResults.html
     testCountPath: TestResults/testResults.trx
     sampleTest: ShouldBeAbleToGetTime
   - id: contract-stub-isolated
     name: latest - Contract Isolated (stub)
-    command: dotnet test --filter 'FullyQualifiedName~.Latest.ExternalSystemContractTests&FullyQualifiedName~Stub&Category=isolated' --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
+    command: dotnet test --filter 'FullyQualifiedName~.Latest.ExternalSystemContractTests&FullyQualifiedName~Stub&Category=isolated' --logger 'trx;LogFileName=testResults.trx' --logger 'junit;LogFilePath=TestResults/junit/contract-stub-isolated.xml' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
     path: SystemTests
     testReportPath: SystemTests/TestResults/testResults.html
     testCountPath: TestResults/testResults.trx
     sampleTest: ShouldBeAbleToGetConfiguredTime
   - id: contract-real
     name: latest - Contract (real)
-    command: dotnet test --filter 'FullyQualifiedName~.Latest.ExternalSystemContractTests&FullyQualifiedName~Real' --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
+    command: dotnet test --filter 'FullyQualifiedName~.Latest.ExternalSystemContractTests&FullyQualifiedName~Real' --logger 'trx;LogFileName=testResults.trx' --logger 'junit;LogFilePath=TestResults/junit/contract-real.xml' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
     path: SystemTests
     testReportPath: SystemTests/TestResults/testResults.html
     testCountPath: TestResults/testResults.trx
     sampleTest: ShouldBeAbleToGetTime
   - id: e2e-api
     name: latest - E2E (real) - API
-    command: dotnet test --filter 'FullyQualifiedName~.Latest.E2eTests' -e CHANNEL=API --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
+    command: dotnet test --filter 'FullyQualifiedName~.Latest.E2eTests' -e CHANNEL=API --logger 'trx;LogFileName=testResults.trx' --logger 'junit;LogFilePath=TestResults/junit/e2e-api.xml' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
     path: SystemTests
     testReportPath: SystemTests/TestResults/testResults.html
     testCountPath: TestResults/testResults.trx
@@ -139,7 +139,7 @@ suites:
       - pwsh bin/Debug/net8.0/playwright.ps1 install
   - id: e2e-ui
     name: latest - E2E (real) - UI
-    command: dotnet test --filter 'FullyQualifiedName~.Latest.E2eTests' -e CHANNEL=UI -e CHANNEL_MODE=static --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
+    command: dotnet test --filter 'FullyQualifiedName~.Latest.E2eTests' -e CHANNEL=UI -e CHANNEL_MODE=static --logger 'trx;LogFileName=testResults.trx' --logger 'junit;LogFilePath=TestResults/junit/e2e-ui.xml' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
     path: SystemTests
     testReportPath: SystemTests/TestResults/testResults.html
     testCountPath: TestResults/testResults.trx

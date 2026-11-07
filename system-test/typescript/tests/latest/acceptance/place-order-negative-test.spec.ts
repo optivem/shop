@@ -1,9 +1,10 @@
 import { test, forChannels, ChannelType } from './base/fixtures.js';
 import { ErrorMessages } from '../../commons/constants/error-messages.js';
 import { emptyArguments } from '../../commons/providers/empty-arguments-provider.js';
+import { criteria } from '../../commons/criteria.js';
 
 forChannels(ChannelType.UI, ChannelType.API)(() => {
-    test('shouldRejectOrderWithInvalidQuantity', async ({ scenario }) => {
+    test('shouldRejectOrderWithInvalidQuantity', criteria('UC-001.8'), async ({ scenario }) => {
         await scenario
             .when()
             .placeOrder()
@@ -16,6 +17,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
 
     test.eachAlsoFirstRow(['3.5', 'lala'])(
         'shouldRejectOrderWithNonIntegerQuantity_$qty',
+        criteria('UC-001.8'),
         async ({ scenario, qty }) => {
             await scenario
                 .when()
@@ -28,7 +30,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
         },
     );
 
-    test('shouldRejectOrderWithNonExistentSku', async ({ scenario }) => {
+    test('shouldRejectOrderWithNonExistentSku', criteria('UC-001.9'), async ({ scenario }) => {
         await scenario
             .when()
             .placeOrder()
@@ -41,6 +43,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
 
     test.eachAlsoFirstRow(emptyArguments)(
         'shouldRejectOrderWithEmptySku_"$sku"',
+        criteria('UC-001.9'),
         async ({ scenario, sku }) => {
             await scenario
                 .when()
@@ -53,7 +56,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
         },
     );
 
-    test('shouldRejectOrderWithNegativeQuantity', async ({ scenario }) => {
+    test('shouldRejectOrderWithNegativeQuantity', criteria('UC-001.8'), async ({ scenario }) => {
         await scenario
             .when()
             .placeOrder()
@@ -64,7 +67,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
             .fieldErrorMessage('quantity', 'Quantity must be positive');
     });
 
-    test('shouldRejectOrderWithZeroQuantity', async ({ scenario }) => {
+    test('shouldRejectOrderWithZeroQuantity', criteria('UC-001.8'), async ({ scenario }) => {
         await scenario
             .when()
             .placeOrder()
@@ -77,6 +80,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
 
     test.eachAlsoFirstRow(emptyArguments)(
         'shouldRejectOrderWithEmptyQuantity_"$emptyQuantity"',
+        criteria('UC-001.8'),
         async ({ scenario, emptyQuantity }) => {
             await scenario
                 .when()
@@ -91,6 +95,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
 
     test.eachAlsoFirstRow(emptyArguments)(
         'shouldRejectOrderWithEmptyCountry_"$emptyCountry"',
+        criteria('UC-001.10'),
         async ({ scenario, emptyCountry }) => {
             await scenario
                 .when()
@@ -103,7 +108,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
         },
     );
 
-    test('shouldRejectOrderWithInvalidCountry', async ({ scenario }) => {
+    test('shouldRejectOrderWithInvalidCountry', criteria('UC-001.10'), async ({ scenario }) => {
         await scenario
             .when()
             .placeOrder()
@@ -114,7 +119,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
             .fieldErrorMessage('country', 'Country does not exist: XX');
     });
 
-    test('cannotPlaceOrderWithNonExistentCoupon', async ({ scenario }) => {
+    test('cannotPlaceOrderWithNonExistentCoupon', criteria('UC-001.11'), async ({ scenario }) => {
         await scenario
             .when()
             .placeOrder()
@@ -127,7 +132,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
             .noOrderPersisted();
     });
 
-    test('cannotPlaceOrderWithCouponThatHasExceededUsageLimit', async ({ scenario }) => {
+    test('cannotPlaceOrderWithCouponThatHasExceededUsageLimit', criteria('UC-001.11'), async ({ scenario }) => {
         await scenario
             .given()
             .coupon()
@@ -153,7 +158,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
 });
 
 forChannels(ChannelType.API)(() => {
-    test('shouldRejectOrderWithNullQuantity', async ({ scenario }) => {
+    test('shouldRejectOrderWithNullQuantity', criteria('UC-001.8'), async ({ scenario }) => {
         await scenario
             .when()
             .placeOrder()
@@ -164,7 +169,7 @@ forChannels(ChannelType.API)(() => {
             .fieldErrorMessage('quantity', 'Quantity must not be empty');
     });
 
-    test('shouldRejectOrderWithNullSku', async ({ scenario }) => {
+    test('shouldRejectOrderWithNullSku', criteria('UC-001.9'), async ({ scenario }) => {
         await scenario
             .when()
             .placeOrder()
@@ -175,7 +180,7 @@ forChannels(ChannelType.API)(() => {
             .fieldErrorMessage('sku', 'SKU must not be empty');
     });
 
-    test('shouldRejectOrderWithNullCountry', async ({ scenario }) => {
+    test('shouldRejectOrderWithNullCountry', criteria('UC-001.10'), async ({ scenario }) => {
         await scenario
             .when()
             .placeOrder()
@@ -189,7 +194,7 @@ forChannels(ChannelType.API)(() => {
 });
 
 forChannels(ChannelType.UI, ChannelType.API)(() => {
-    test('adminShouldNotBeAbleToPlaceOrder', async ({ scenario }) => {
+    test('adminShouldNotBeAbleToPlaceOrder', criteria('UC-001.12'), async ({ scenario }) => {
         await scenario
             .given()
             .loggedInAsAdmin()
