@@ -9,15 +9,20 @@
 
 What we get out of this:
 
-- All specs live in one place, `docs/shared/specs/`:
+- All specs live in one place, a folder per use case:
   ```
-  docs/shared/specs/
-    use-case-diagram.md      ← the index: every use case, existing and new
-    use-cases/UC-NNN-<name>.md
-    business-rules/UC-NNN-<name>.md
+  docs/shared/specs/use-cases/
+    README.md                     ← index: diagram + table (ID, name, actor), links to each folder
+    UC-001-place-order/
+      use-case.md                 ← narrative: actors, main success scenario, extensions
+      business-rules.md           ← only when the use case has rules
+      acceptance-criteria.md      ← front matter (id, title) + tagged Gherkin; what the spec gate reads
+    UC-002-view-order/
+      ...
   ```
-  `docs/use-cases/`, `docs/business-rules/` and `docs/design/shared/use-cases.md` move there (with `git mv`), and all references are updated.
-- `use-case-diagram.md` shows every use case, existing and storefront, with Visitor, Customer and Admin actors (plus ERP and Clock). It's linked from the README, and each use case on it links to its UC file.
+  The existing `docs/use-cases/UC-001-place-order.md` is split into the UC-001 folder (with `git mv` for the narrative). `docs/business-rules/UC-001-place-order.md` moves in as `business-rules.md`, and `docs/design/shared/use-cases.md` becomes `README.md`. All references are updated.
+- The spec gate reads the new layout. That needs gh-optivem to read `<specDir>/*/acceptance-criteria.md`, requested as C1b in the Place Order plan's Track C. The gate stays off until then, so nothing breaks in between.
+- `README.md` shows every use case, existing and storefront, with Visitor, Customer and Admin actors (plus ERP and Clock). It's linked from the README, and each use case on it links to its UC file.
 - A narrative for every use case on the diagram, using UC-001's format: front matter, actors, Main Success Scenario, Extensions. That includes the existing but undocumented ones (Cancel Order, View Order, Publish Coupon, Browse Coupons).
 - Numbered business rules for each use case that has rules (catalog filtering and sorting, cart quantities, address validation, tax country, one order per cart line, admin visibility, cancel window, coupon validity).
 - Gherkin acceptance criteria in each use case, tagged `@UC-NNN.M`, so later implementation steps can turn them into acceptance tests one scenario at a time.
@@ -27,10 +32,12 @@ What we get out of this:
 
 ## ▶ Next executable step (resume here)
 
-Step 1: move the specs to `docs/shared/specs/`.
-- `git mv` these: `docs/use-cases` → `docs/shared/specs/use-cases`, `docs/business-rules` → `docs/shared/specs/business-rules`, `docs/design/shared/use-cases.md` → `docs/shared/specs/use-case-diagram.md`.
+Step 1: move the specs to the folder-per-use-case layout.
+- `git mv docs/use-cases/UC-001-place-order.md docs/shared/specs/use-cases/UC-001-place-order/use-case.md`, then move its front matter and the `## Acceptance criteria` Gherkin section into `acceptance-criteria.md` in the same folder.
+- `git mv docs/business-rules/UC-001-place-order.md …/UC-001-place-order/business-rules.md`, and fix the BR link in `use-case.md`.
+- `git mv docs/design/shared/use-cases.md docs/shared/specs/use-cases/README.md`.
 - Update the references:
-  - `spec.yaml` (`specDir: docs/shared/specs/use-cases`)
+  - `spec.yaml` (`specDir: docs/shared/specs/use-cases`). Until gh-optivem C1b ships, the gate (already disabled) can't read it; add a comment saying so.
   - the disabled spec-gate comment in `.github/workflows/_acceptance-stage-docker-compose.yml` (~line 426)
   - the comment in `system-test/typescript/tests/commons/criteria.ts`
   - the paths in `plans/20261106-1533-use-cases-match-substack-articles.md`
@@ -41,8 +48,9 @@ That unblocks Step 2 (the full diagram).
 
 ## Steps
 
-- [ ] Step 1: Move the specs to `docs/shared/specs/` and update all references (see Next executable step).
-- [ ] Step 2: Diagram first. Rewrite `docs/shared/specs/use-case-diagram.md` as the index of every use case. Actors: Visitor, Customer (a signed-in Visitor), Admin (renamed from "MyShop Owner"), ERP and Clock. Each node links to its UC file, and the README links to the diagram. User review gate on the list and IDs:
+- [x] Step 0: Requested gh-optivem support for the folder layout as C1b in `plans/20261106-1533-use-cases-match-substack-articles.md` Track C.
+- [ ] Step 1: Move the specs to the folder-per-use-case layout and update all references (see Next executable step).
+- [ ] Step 2: Index first. Rewrite `docs/shared/specs/use-cases/README.md` as the index of every use case: a diagram plus a table. Actors: Visitor, Customer (a signed-in Visitor), Admin (renamed from "MyShop Owner"), ERP and Clock. Each node links to its UC file, and the README links to the diagram. User review gate on the list and IDs:
   - Existing:
     - UC-001 Place Order (Customer)
     - UC-002 View Order (Customer: my orders, order details)
@@ -68,5 +76,6 @@ That unblocks Step 2 (the full diagram).
 ## Open questions
 
 - Numbering: existing features first (UC-002 to UC-005), then the storefront ones (UC-006 to UC-011). Or should the storefront ones come first? Settled at the Step 2 gate.
+- Each use case is a folder: `use-case.md`, `business-rules.md` (only when there are rules) and `acceptance-criteria.md` (front matter + Gherkin). The index is `use-cases/README.md`, because GitHub shows it when someone opens the folder. (Decided 2026-11-07.)
 - Acceptance criteria granularity: one scenario per business rule and extension, as in UC-001 (my default), or a lighter set covering the main paths?
 - Checkout partial failure: if one cart line fails (for example, the coupon hits its limit on the second order), do the other lines still get placed? My default is yes, with a per-line result on the confirmation page.
