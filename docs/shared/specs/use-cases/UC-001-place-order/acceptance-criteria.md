@@ -1,6 +1,7 @@
 ---
 id: UC-001
 title: Place Order
+status: implemented
 ---
 
 # UC-001 Place Order — Acceptance criteria

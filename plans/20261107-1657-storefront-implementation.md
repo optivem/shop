@@ -41,6 +41,7 @@ Before you start, check that `plans/20261106-1533-use-cases-match-substack-artic
 2. **The domain change goes before the UI.** Profile and shipping address (Step 2) land right after the catalog (Step 1) and before any UI step, so checkout is built once against real addresses. The user decided not to wait for the UC-001 plan.
 3. **Tests stay green throughout.** The Quick order page (`/new-order`, test contract) keeps its Country field until the domain change lands. The existing three SKUs and prices stay unchanged.
 4. **React first, then port.** React is the reference implementation (Step 3). Get a sign-off on how it looks, then port to the three monoliths.
+5. **Flip the spec status when tests land.** When a step makes a use case's acceptance scenarios pass in all three languages, change `status: planned` to `status: implemented` in that use case's `acceptance-criteria.md` in the same commit, so the spec gate starts enforcing it (decided 2026-11-07, `plans/20261107-1705-meta-storefront-specs-build.md`).
 
 ## Steps
 

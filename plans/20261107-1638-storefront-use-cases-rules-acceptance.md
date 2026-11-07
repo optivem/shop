@@ -73,5 +73,6 @@ Once approved (or corrected in UC-006), run Step 4: write UC-002 View Order, UC-
 - Numbering: existing features first (UC-002 to UC-005), then storefront (UC-006 to UC-011), then UC-012 Deliver Order. All twelve are storefront use cases on one diagram; "existing" only means already built.
 - Each use case is a folder: `use-case.md`, `business-rules.md` (only when there are rules) and `acceptance-criteria.md` (front matter + Gherkin). The index is `use-cases/README.md`.
 - Acceptance criteria granularity: one `@UC-NNN.M` scenario per business rule and per extension, as in UC-001.
+- Gate status: every new `acceptance-criteria.md` gets `status: planned` in its front matter (next to `id`, `title`). The implementation plan flips it to `implemented` when that use case's acceptance tests land. UC-001 is `implemented`. gh-optivem will skip `planned` use cases (C1c). Decided 2026-11-07, see `plans/20261107-1705-meta-storefront-specs-build.md`.
 - Checkout partial failure: the other lines are still placed; the confirmation page shows a per-line result.
 - Review gates: the Step 2 list and IDs are approved as written. **Stop after Step 3** so the user reviews UC-006 as the template before Steps 4–7.
