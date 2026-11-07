@@ -1,7 +1,5 @@
 # 2026-11-07 19:36:19 UTC — Custom domain for the shared Keycloak
 
-> 🤖 **Picked up by agent** — `8e8cd7062d0f` at `2026-11-07T20:04:47Z`
-
 ## TL;DR
 
 **Why:** The frontends now live on custom domains (`shop-acc`, `shop-e2e`, `shop-qa`, `shop.optivem.com`, all multitier-typescript), but login still bounces users to `https://shop-keycloak-108735428179.us-central1.run.app/...`. That raw Cloud Run URL looks untrustworthy on a sign-in page and leaks the project number.
