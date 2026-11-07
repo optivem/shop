@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Maps the permanent acceptance (stub) and E2E (real) environments of the reference variant
-# (multitier-java) to custom domains, and sets the repo variables the acceptance stage reads.
-# See docs/environments.md.
+# Maps the permanent environments of the reference variant (multitier-java) to custom domains:
+# acceptance (stub), E2E (real), QA and production. Sets the repo variables the acceptance, QA
+# and production stages read. See docs/environments.md.
 #
-#   ACC_DOMAIN=shop-acc.optivem.com E2E_DOMAIN=shop-e2e.optivem.com ./setup-custom-domains.sh
+#   ACC_DOMAIN=shop-acc.optivem.com E2E_DOMAIN=shop-e2e.optivem.com \
+#   QA_DOMAIN=shop-qa.optivem.com PROD_DOMAIN=shop.optivem.com ./setup-custom-domains.sh
 #
-# setup-gcp.sh calls this when ACC_DOMAIN or E2E_DOMAIN is set; it can also run on its own.
-# Either domain may be left unset to skip it. Idempotent: re-run it until both say "ready".
+# setup-gcp.sh calls this when any of the four is set; it can also run on its own.
+# Any domain may be left unset to skip it. Idempotent: re-run it until all say "ready".
 #
 # Runs as you, not as the CI deployer: Cloud Run only maps a domain for a verified owner of it
 # (Search Console), and the deployer service account isn't one. The mapping is made once and
@@ -17,10 +18,11 @@ set -euo pipefail
 # Prerequisites (one-time, by the domain owner):
 #   - the parent domain verified in Search Console for your gcloud account (gcloud domains list-user-verified)
 #   - a CNAME <domain> -> ghs.googlehosted.com
-#   - one cloud acceptance run of multitier-java, so the services to map exist
+#   - one cloud acceptance run of multitier-java (and a QA / production deploy for QA_DOMAIN /
+#     PROD_DOMAIN), so the services to map exist
 #
 # The repo variable for a domain is set only once its mapping is Ready (certificate issued), so the
-# acceptance stage never targets a domain that doesn't serve yet. Optional overrides: PROJECT_ID,
+# stage never targets a domain that doesn't serve yet. Optional overrides: PROJECT_ID,
 # REGION, SYSTEM (default: the GCP_PROJECT_ID, GCP_REGION and SYSTEM_NAME repo variables).
 
 PROJECT_ID="${PROJECT_ID:-$(gh variable get GCP_PROJECT_ID)}"
@@ -28,16 +30,17 @@ REGION="${REGION:-$(gh variable get GCP_REGION)}"
 SYSTEM="${SYSTEM:-$(gh variable get SYSTEM_NAME)}"
 PENDING=0
 
-# Service names must match _acceptance-stage.yml (deploy-stack): <system>-<architecture>-<language>-<stack>-frontend
+# Service names must match _acceptance-stage.yml / _deploy-stage.yml (deploy-stack):
+# <system>-<architecture>-<language>-<stack or stage>-frontend
 ensure_mapping() {
-  local var="$1" domain="$2" service="$3" mapped ready
+  local var="$1" domain="$2" service="$3" workflow="$4" mapped ready
   if [[ -z "$domain" ]]; then
     echo "  (skipped $var: not set)"
     return 0
   fi
   if ! gcloud run services describe "$service" --region "$REGION" --project "$PROJECT_ID" --format='value(metadata.name)' &> /dev/null; then
     echo "  ⏳ $domain: service $service doesn't exist yet."
-    echo "     Run the cloud acceptance stage once (gh workflow run multitier-java-acceptance-stage.yml), then re-run this script."
+    echo "     Run it once (gh workflow run $workflow), then re-run this script."
     PENDING=1
     return 0
   fi
@@ -70,8 +73,10 @@ ensure_mapping() {
 }
 
 echo "Mapping custom domains (Cloud Run domain mappings, project $PROJECT_ID, $REGION)..."
-ensure_mapping ACC_DOMAIN "${ACC_DOMAIN:-}" "${SYSTEM}-multitier-java-stub-frontend"
-ensure_mapping E2E_DOMAIN "${E2E_DOMAIN:-}" "${SYSTEM}-multitier-java-real-frontend"
+ensure_mapping ACC_DOMAIN "${ACC_DOMAIN:-}" "${SYSTEM}-multitier-java-stub-frontend" multitier-java-acceptance-stage.yml
+ensure_mapping E2E_DOMAIN "${E2E_DOMAIN:-}" "${SYSTEM}-multitier-java-real-frontend" multitier-java-acceptance-stage.yml
+ensure_mapping QA_DOMAIN "${QA_DOMAIN:-}" "${SYSTEM}-multitier-java-qa-frontend" multitier-java-qa-stage.yml
+ensure_mapping PROD_DOMAIN "${PROD_DOMAIN:-}" "${SYSTEM}-multitier-java-production-frontend" multitier-java-prod-stage.yml
 if (( PENDING )); then
   echo "  Not finished yet; re-run ./setup-custom-domains.sh (same variables) to complete it."
 fi

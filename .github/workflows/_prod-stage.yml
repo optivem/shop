@@ -43,6 +43,11 @@ on:
         required: false
         type: string
         default: ''
+      domain:
+        description: 'Custom domain of the frontend (multitier only, docs/environments.md); empty means run.app only'
+        required: false
+        type: string
+        default: ''
 
 permissions: {}
 
@@ -184,6 +189,7 @@ jobs:
       test-language: ${{ inputs.test-language }}
       images: ${{ inputs.images }}
       version: ${{ needs.check.outputs.version }}
+      domain: ${{ inputs.domain }}
 
   # === Docker Compose deploy (inactive) ===
   # To deploy production with Docker Compose instead of Cloud Run, delete the `deploy` job above

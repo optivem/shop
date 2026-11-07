@@ -46,6 +46,14 @@ on:
         description: 'Release candidate: both the git tag and the GHCR image tag'
         required: true
         type: string
+      # Custom domain of this stage's frontend, multitier only (docs/environments.md). The domain
+      # mapping is made once by setup-custom-domains.sh; here a set domain only becomes a CORS and
+      # Keycloak origin, a deploy check, and the UI URL the smoke tests use. Empty keeps run.app only.
+      domain:
+        description: 'Custom domain of the frontend (e.g. shop-qa.example.com); empty means run.app only'
+        required: false
+        type: string
+        default: ''
 
 permissions: {}
 
@@ -169,6 +177,8 @@ jobs:
           project-number: ${{ needs.shared-images.outputs.project-number }}
           region: ${{ vars.GCP_REGION }}
           reconcile-prod-realm: ${{ inputs.stage == 'production' }}
+          frontend-origins: ${{ inputs.domain && format('https://{0}', inputs.domain) || '' }}
+          frontend-realm: ${{ env.REALM }}
 
   # === Deploy: Stage Stack ===
   deploy-stack:
@@ -190,6 +200,7 @@ jobs:
       SYSTEM_IMAGE: ${{ fromJSON(inputs.images).system }}
       MIGRATE_IMAGE: ${{ needs.shared-images.outputs.db-migrate-image }}
       SIM_IMAGE: ${{ needs.shared-images.outputs.simulators-image }}
+      DOMAIN: ${{ inputs.domain }}
     steps:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v3
@@ -210,6 +221,9 @@ jobs:
           set -euo pipefail
           url() { echo "https://$1-${PROJECT_NUMBER}.${REGION}.run.app"; }
           p="${SYSTEM}-${PREFIX}-${STAGE}"
+          if [[ -n "$DOMAIN" && "$ARCHITECTURE" != multitier ]]; then
+            echo "::error::A custom domain is supported for multitier only"; exit 1
+          fi
           if [[ "$ARCHITECTURE" == monolith ]]; then
             services=("${p}" "${p}-sim")
           else
@@ -323,7 +337,7 @@ jobs:
           jq -n \
             --arg host "$DB_HOST" --arg port "$DB_PORT" --arg name "$DB_NAME" \
             --arg user "$DB_USER" --arg pass "$DB_PASSWORD" \
-            --arg ext "$SIM_URL" --arg origin "$FRONTEND_URL" \
+            --arg ext "$SIM_URL" --arg origin "${FRONTEND_URL}${DOMAIN:+,https://${DOMAIN}}" \
             --arg issuer "${KEYCLOAK_URL}/realms/${REALM}" \
             '{POSTGRES_DB_HOST:$host, POSTGRES_DB_PORT:$port, POSTGRES_DB_NAME:$name,
               POSTGRES_DB_USER:$user, POSTGRES_DB_PASSWORD:$pass, PGSSLMODE:"require",
@@ -363,6 +377,19 @@ jobs:
           wait-seconds: '10'
           timeout-seconds: '900'
 
+      # The mapping (setup-custom-domains.sh) routes to the service, so this proves TLS and the route.
+      - name: Wait for Custom Domain
+        if: env.DOMAIN != ''
+        uses: optivem/actions/wait-for-endpoints@v1
+        with:
+          endpoints: |
+            [
+              { "name": "MyShop UI (${{ env.DOMAIN }})", "url": "https://${{ env.DOMAIN }}/" }
+            ]
+          max-attempts: '30'
+          wait-seconds: '10'
+          timeout-seconds: '300'
+
   # === Run Smoke Tests (in the test language): they need no login, so they work on every stage ===
   # They run anonymously on purpose. The test harnesses only request tokens from the test realm
   # (`shop`), whose tokens a QA/production backend (realm shop-qa/shop-prod) rejects with 401,
@@ -381,6 +408,7 @@ jobs:
       ENVIRONMENT: acceptance
       REGION: ${{ vars.GCP_REGION }}
       PROJECT_NUMBER: ${{ needs.shared-images.outputs.project-number }}
+      DOMAIN: ${{ inputs.domain }}
     steps:
       - name: Resolve System URLs
         run: |
@@ -390,7 +418,8 @@ jobs:
           if [[ "$ARCHITECTURE" == monolith ]]; then
             ui="$(url "${p}")"; api="$ui"
           else
-            ui="$(url "${p}-frontend")"; api="$(url "${p}-backend")"
+            # The custom domain, when set, fronts the frontend only; the backend stays on run.app.
+            ui="${DOMAIN:+https://${DOMAIN}}"; ui="${ui:-$(url "${p}-frontend")}"; api="$(url "${p}-backend")"
           fi
           {
             echo "MYSHOP_UI_BASE_URL_REAL=${ui}"

@@ -30,12 +30,16 @@ inputs:
     default: 'false'
   frontend-origins:
     description: >-
-      Extra origins (space-separated, e.g. https://shop-acc.example.com) the acceptance realm's
+      Extra origins (space-separated, e.g. https://shop-acc.example.com) the frontend-realm's
       shop-frontend client must accept: added to its redirect URIs, post-logout redirect URIs and web
       origins through the admin API, because the realm file never reaches a realm that already exists.
       Add-only and idempotent. Empty (the default) changes nothing.
     required: false
     default: ''
+  frontend-realm:
+    description: 'Realm whose shop-frontend client gets frontend-origins: shop (acceptance), shop-qa or shop-prod'
+    required: false
+    default: 'shop'
 
 runs:
   using: 'composite'
@@ -141,7 +145,7 @@ runs:
           echo "Updated shop-monolith in shop-prod."
         fi
 
-    # The custom domains of the permanent acceptance / E2E environments (docs/environments.md).
+    # The custom domains of the permanent environments (docs/environments.md).
     # Add-only: never removes a URI, so other variants' run.app URLs stay as the realm file made them.
     - name: Allow custom-domain origins on shop-frontend
       if: inputs.frontend-origins != ''
@@ -151,6 +155,7 @@ runs:
         PROJECT_NUMBER: ${{ inputs.project-number }}
         REGION: ${{ inputs.region }}
         ORIGINS: ${{ inputs.frontend-origins }}
+        REALM: ${{ inputs.frontend-realm }}
       run: |
         set -euo pipefail
         # shellcheck disable=SC2086 # ORIGINS is a space-separated list
@@ -166,10 +171,11 @@ runs:
           -d grant_type=password -d client_id=admin-cli -d username=admin \
           --data-urlencode "password=${admin_password}" | jq -r .access_token)"
         echo "::add-mask::${token}"
-        api="${kc}/admin/realms/shop/clients"
+        [[ "$REALM" =~ ^shop(-qa|-prod)?$ ]] || { echo "::error::Unknown realm: $REALM"; exit 1; }
+        api="${kc}/admin/realms/${REALM}/clients"
         auth=(-H "Authorization: Bearer ${token}" -H "Content-Type: application/json")
         client="$(curl -fsS "${auth[@]}" "${api}?clientId=shop-frontend" | jq -c '.[0] // empty')"
-        [[ -n "$client" ]] || { echo "::error::shop-frontend is missing from the shop realm"; exit 1; }
+        [[ -n "$client" ]] || { echo "::error::shop-frontend is missing from the ${REALM} realm"; exit 1; }
         updated="$(jq -c --argjson o "$origins" '
           ($o | map(. + "/*")) as $patterns
           | .redirectUris = ((.redirectUris // []) + ($patterns - (.redirectUris // [])))
@@ -178,8 +184,8 @@ runs:
               ((. // "") | split("##") | map(select(. != ""))) as $have
               | $have + ($patterns - $have) | join("##"))' <<< "$client")"
         if [[ "$(jq -S . <<< "$updated")" == "$(jq -S . <<< "$client")" ]]; then
-          echo "shop-frontend already accepts: ${ORIGINS}"
+          echo "shop-frontend (${REALM}) already accepts: ${ORIGINS}"
         else
           curl -fsS "${auth[@]}" -X PUT "${api}/$(jq -r .id <<< "$client")" -d "$updated" > /dev/null
-          echo "shop-frontend now accepts: ${ORIGINS}"
+          echo "shop-frontend (${REALM}) now accepts: ${ORIGINS}"
         fi
