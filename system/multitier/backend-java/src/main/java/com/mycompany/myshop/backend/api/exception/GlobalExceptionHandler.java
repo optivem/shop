@@ -1,5 +1,6 @@
 package com.mycompany.myshop.backend.api.exception;
 
+import com.mycompany.myshop.backend.core.exceptions.ErpUnavailableException;
 import com.mycompany.myshop.backend.core.exceptions.NotExistValidationException;
 import com.mycompany.myshop.backend.core.exceptions.ValidationException;
 import com.mycompany.myshop.backend.core.validation.TypeValidationMessageExtractor;
@@ -28,6 +29,7 @@ import java.util.regex.Pattern;
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     private static final String GENERAL_ERROR_DETAIL = "An unexpected error occurred. Please try again later.";
+    private static final String ERP_UNAVAILABLE_DETAIL = "Product information can't be retrieved right now";
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
     private static final Pattern CLASS_NAME_PATTERN = Pattern.compile("(com\\.mycompany\\.myshop\\.backend\\.core\\.dtos\\.[^\\[\\]\"\\s\\)]+)");
 
@@ -52,6 +54,9 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @Value("${error.types.internal-server-error}")
     private String internalServerErrorTypeUri;
+
+    @Value("${error.types.service-unavailable}")
+    private String serviceUnavailableTypeUri;
 
     @ExceptionHandler(ValidationException.class)
     public ResponseEntity<ProblemDetail> handleValidationException(ValidationException ex) {
@@ -96,6 +101,23 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         problemDetail.setProperty(PROP_TIMESTAMP, Instant.now());
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problemDetail);
+    }
+
+    @ExceptionHandler(ErpUnavailableException.class)
+    public ResponseEntity<ProblemDetail> handleErpUnavailable(ErpUnavailableException ex) {
+        // The ERP failure details (URL, status, body) are logged server-side only; the client is
+        // told product information is temporarily unavailable.
+        log.error("ERP unavailable", ex);
+
+        var problemDetail = ProblemDetail.forStatusAndDetail(
+                HttpStatus.SERVICE_UNAVAILABLE,
+                ERP_UNAVAILABLE_DETAIL
+        );
+        problemDetail.setType(URI.create(serviceUnavailableTypeUri));
+        problemDetail.setTitle("Service Unavailable");
+        problemDetail.setProperty(PROP_TIMESTAMP, Instant.now());
+
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(problemDetail);
     }
 
     @ExceptionHandler(ObjectOptimisticLockingFailureException.class)

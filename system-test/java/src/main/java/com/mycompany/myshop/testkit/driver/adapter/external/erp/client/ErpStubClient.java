@@ -12,6 +12,8 @@ import java.util.List;
 public class ErpStubClient extends BaseErpClient {
     private static final String ERP_PRODUCTS_ENDPOINT = "/erp/api/products";
     private static final String ERP_PROMOTION_ENDPOINT = "/erp/api/promotion";
+    private static final String ERP_API_PATTERN = "/erp/api/.*";
+    private static final int OUTAGE_PRIORITY = 1;
 
     private final JsonWireMockClient wireMockClient;
 
@@ -33,6 +35,12 @@ public class ErpStubClient extends BaseErpClient {
 
     public Result<Void, ExtErpErrorResponse> configureGetPromotion(ExtGetPromotionResponse response) {
         return wireMockClient.stubGet(ERP_PROMOTION_ENDPOINT, HttpStatus.OK, response)
+                .mapError(ExtErpErrorResponse::new);
+    }
+
+    /** Every ERP API call answers 503, outranking any product or promotion stubs. */
+    public Result<Void, ExtErpErrorResponse> configureUnavailable() {
+        return wireMockClient.stubGetMatching(ERP_API_PATTERN, HttpStatus.SERVICE_UNAVAILABLE, OUTAGE_PRIORITY)
                 .mapError(ExtErpErrorResponse::new);
     }
 

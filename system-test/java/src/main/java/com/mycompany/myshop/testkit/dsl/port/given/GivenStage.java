@@ -3,6 +3,7 @@ package com.mycompany.myshop.testkit.dsl.port.given;
 import com.mycompany.myshop.testkit.dsl.port.given.steps.GivenClock;
 import com.mycompany.myshop.testkit.dsl.port.given.steps.GivenCoupon;
 import com.mycompany.myshop.testkit.dsl.port.given.steps.GivenCountry;
+import com.mycompany.myshop.testkit.dsl.port.given.steps.GivenErp;
 import com.mycompany.myshop.testkit.dsl.port.given.steps.GivenOrder;
 import com.mycompany.myshop.testkit.dsl.port.given.steps.GivenProduct;
 import com.mycompany.myshop.testkit.dsl.port.given.steps.GivenProducts;
@@ -12,6 +13,8 @@ import com.mycompany.myshop.testkit.dsl.port.when.WhenStage;
 
 public interface GivenStage {
     GivenClock clock();
+
+    GivenErp erp();
 
     GivenProduct product();
 

@@ -3,6 +3,7 @@ package com.mycompany.myshop.backend.core.services.external;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mycompany.myshop.backend.core.dtos.external.ErpGetPromotionResponse;
 import com.mycompany.myshop.backend.core.dtos.external.ErpProductDetailsResponse;
+import com.mycompany.myshop.backend.core.exceptions.ErpUnavailableException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -41,17 +42,19 @@ public class ErpGateway {
             var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() != 200) {
-                throw new IllegalStateException("ERP API returned status " + response.statusCode()
+                throw new ErpUnavailableException("ERP API returned status " + response.statusCode()
                         + " for promotion. URL: " + url + ". Response: " + response.body());
             }
 
             return OBJECT_MAPPER.readValue(response.body(), ErpGetPromotionResponse.class);
+        } catch (ErpUnavailableException e) {
+            throw e;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new IllegalStateException("Failed to fetch promotion details from URL: " + url
+            throw new ErpUnavailableException("Failed to fetch promotion details from URL: " + url
                     + ". Error: " + e.getClass().getSimpleName() + ": " + e.getMessage(), e);
         } catch (Exception e) {
-            throw new IllegalStateException("Failed to fetch promotion details from URL: " + url
+            throw new ErpUnavailableException("Failed to fetch promotion details from URL: " + url
                     + ". Error: " + e.getClass().getSimpleName() + ": " + e.getMessage(), e);
         }
     }
@@ -77,19 +80,21 @@ public class ErpGateway {
             }
 
             if (response.statusCode() != 200) {
-                throw new IllegalStateException("ERP API returned status " + response.statusCode() +
+                throw new ErpUnavailableException("ERP API returned status " + response.statusCode() +
                         " for SKU: " + sku + ". URL: " + url + ". Response: " + response.body());
             }
 
             var result = OBJECT_MAPPER.readValue(response.body(), ErpProductDetailsResponse.class);
             return Optional.of(result);
+        } catch (ErpUnavailableException e) {
+            throw e;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new IllegalStateException("Failed to fetch product details for SKU: " + sku +
+            throw new ErpUnavailableException("Failed to fetch product details for SKU: " + sku +
                     " from URL: " + url +
                     ". Error: " + e.getClass().getSimpleName() + ": " + e.getMessage(), e);
         } catch (Exception e) {
-            throw new IllegalStateException("Failed to fetch product details for SKU: " + sku +
+            throw new ErpUnavailableException("Failed to fetch product details for SKU: " + sku +
                     " from URL: " + url +
                     ". Error: " + e.getClass().getSimpleName() + ": " + e.getMessage(), e);
         }

@@ -8,6 +8,7 @@ import com.mycompany.myshop.testkit.dsl.core.scenario.then.ThenImpl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.given.steps.GivenClockImpl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.given.steps.GivenCouponImpl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.given.steps.GivenCountryImpl;
+import com.mycompany.myshop.testkit.dsl.core.scenario.given.steps.GivenErpImpl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.given.steps.GivenOrderImpl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.given.steps.GivenProductImpl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.given.steps.GivenProductsImpl;
@@ -24,6 +25,7 @@ public class GivenImpl implements GivenStage {
     private final UseCaseDsl app;
     private final ScenarioDslImpl scenario;
     private GivenClockImpl clock;
+    private GivenErpImpl erp;
     private GivenPromotionImpl promotion;
     private final List<GivenProductImpl> products;
     private final List<GivenProductsImpl> productLists;
@@ -46,6 +48,12 @@ public class GivenImpl implements GivenStage {
         this.orders = new ArrayList<>();
         this.countries = new ArrayList<>();
         this.coupons = new ArrayList<>();
+    }
+
+    @Override
+    public GivenErpImpl erp() {
+        erp = new GivenErpImpl(this);
+        return erp;
     }
 
     public GivenProductImpl product() {
@@ -182,6 +190,9 @@ public class GivenImpl implements GivenStage {
         }
         for (var productList : productLists) {
             productList.execute(app);
+        }
+        if (erp != null) {
+            erp.execute(app);
         }
     }
 

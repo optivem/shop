@@ -35,3 +35,4 @@ error:
     bad-request: ${error.types.base-url}/bad-request
     conflict: ${error.types.base-url}/conflict
     internal-server-error: ${error.types.base-url}/internal-server-error
+    service-unavailable: ${error.types.base-url}/service-unavailable

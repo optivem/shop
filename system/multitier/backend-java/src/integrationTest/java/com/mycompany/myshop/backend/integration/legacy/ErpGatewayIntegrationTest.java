@@ -8,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
+import com.mycompany.myshop.backend.core.exceptions.ErpUnavailableException;
 import com.mycompany.myshop.backend.core.services.external.ErpGateway;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -70,7 +71,7 @@ class ErpGatewayIntegrationTest {
             .willReturn(aResponse().withStatus(500).withBody("Internal Server Error")));
 
         assertThatThrownBy(() -> erpGateway.getProductDetails("BAD-SKU"))
-            .isInstanceOf(IllegalStateException.class)
+            .isInstanceOf(ErpUnavailableException.class)
             .hasMessageContaining("500");
     }
 
@@ -91,7 +92,7 @@ class ErpGatewayIntegrationTest {
             .willReturn(aResponse().withStatus(503).withBody("Service Unavailable")));
 
         assertThatThrownBy(() -> erpGateway.getPromotionDetails())
-            .isInstanceOf(IllegalStateException.class)
+            .isInstanceOf(ErpUnavailableException.class)
             .hasMessageContaining("503");
     }
 }

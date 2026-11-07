@@ -21,4 +21,7 @@ public interface ErpDriver extends AutoCloseable {
     Result<Void, ErpErrorResponse> returnsProducts(ReturnsProductsRequest request);
 
     Result<Void, ErpErrorResponse> returnsPromotion(ReturnsPromotionRequest request);
+
+    /** Makes the ERP unavailable: every ERP API call fails until the driver is closed. */
+    Result<Void, ErpErrorResponse> returnsUnavailable();
 }

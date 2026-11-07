@@ -7,7 +7,7 @@ import com.optivem.testing.Isolated;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.TestTemplate;
 
-@Isolated("mutates the shared wall clock to year-end and coupon-expiry times; parallel runs would clash on the clock")
+@Isolated("mutates the shared wall clock to year-end and coupon-expiry times, and takes the shared ERP stub down; parallel runs would clash on the clock and the ERP")
 class PlaceOrderNegativeIsolatedTest extends BaseAcceptanceTest {
     @Tag("UC-001.13")
     @TestTemplate
@@ -37,5 +37,17 @@ class PlaceOrderNegativeIsolatedTest extends BaseAcceptanceTest {
                 .then().shouldFail()
                     .errorMessage("The request contains one or more validation errors")
                     .fieldErrorMessage("couponCode", "Coupon code SUMMER2023 has expired");
+    }
+
+    @Tag("UC-001.14")
+    @TestTemplate
+    @Channel({ChannelType.UI, ChannelType.API})
+    void shouldRejectOrderWhenErpIsUnavailable() {
+        scenario
+                .given().erp()
+                    .unavailable()
+                .when().placeOrder()
+                .then().shouldFail()
+                    .errorMessage("Product information can't be retrieved right now");
     }
 }

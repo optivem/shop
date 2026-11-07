@@ -62,4 +62,10 @@ public class ErpStubDriver extends BaseErpDriver<ErpStubClient> {
         return client.configureGetPromotion(extPromotionResponse)
                 .mapError(ext -> new ErpErrorResponse(ext.getMessage()));
     }
+
+    @Override
+    public Result<Void, ErpErrorResponse> returnsUnavailable() {
+        return client.configureUnavailable()
+                .mapError(ext -> new ErpErrorResponse(ext.getMessage()));
+    }
 }

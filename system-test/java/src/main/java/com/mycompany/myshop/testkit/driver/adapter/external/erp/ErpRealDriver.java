@@ -50,4 +50,14 @@ public class ErpRealDriver extends BaseErpDriver<ErpRealClient> {
 
         return Result.success();
     }
+
+    /**
+     * The real ERP cannot be taken down on demand, so this throws rather than silently succeeding,
+     * which would let an ERP-unavailable test pass for the wrong reason.
+     */
+    @Override
+    public Result<Void, ErpErrorResponse> returnsUnavailable() {
+        throw new UnsupportedOperationException(
+                "ErpRealDriver cannot make the ERP unavailable; run this scenario against the ERP stub");
+    }
 }

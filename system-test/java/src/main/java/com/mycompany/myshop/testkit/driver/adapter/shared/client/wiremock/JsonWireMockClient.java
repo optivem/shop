@@ -20,6 +20,7 @@ import java.util.function.Supplier;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 
 public class JsonWireMockClient {
     private static final String CONTENT_TYPE = "Content-Type";
@@ -97,6 +98,34 @@ public class JsonWireMockClient {
         return runOnVirtualThread(() -> performStubRegistrationWithoutBody(path, statusCode, WireMock::delete, "DELETE"));
     }
 
+    /**
+     * Stubs every GET whose path matches {@code pathRegex} with a bodyless {@code statusCode}, at the
+     * given priority (lower wins; stubs registered without one default to 5). Used to take a whole
+     * external system down, so it outranks any per-resource stub registered in the same scenario.
+     */
+    public Result<Void, String> stubGetMatching(String pathRegex, int statusCode, int priority) {
+        return runOnVirtualThread(() -> {
+            var stubMapping = wireMock.register(WireMock.get(urlPathMatching(pathRegex))
+                .atPriority(priority)
+                .willReturn(aResponse()
+                    .withStatus(statusCode)));
+
+            if (stubMapping != null && stubMapping.getUuid() != null) {
+                stubIds.add(stubMapping.getUuid());
+            }
+
+            var registered = wireMock.allStubMappings().getMappings().stream()
+                .anyMatch(m -> "GET".equals(m.getRequest().getMethod().getName())
+                    && pathRegex.equals(m.getRequest().getUrlPathPattern()));
+
+            if (!registered) {
+                return Result.failure("Failed to register stub for GET " + pathRegex);
+            }
+
+            return Result.success();
+        });
+    }
+
     private Result<Void, String> runOnVirtualThread(Supplier<Result<Void, String>> work) {
         try {
             // Execute WireMock operations on virtual thread for non-blocking I/O
@@ -132,7 +161,7 @@ public class JsonWireMockClient {
         var mappings = wireMock.allStubMappings();
         var registered = mappings.getMappings().stream()
             .anyMatch(m -> methodName.equals(m.getRequest().getMethod().getName())
-                && m.getRequest().getUrlPath().equals(path));
+                && path.equals(m.getRequest().getUrlPath()));
 
         if (!registered) {
             return Result.failure("Failed to register stub for " + methodName + " " + path);
@@ -158,7 +187,7 @@ public class JsonWireMockClient {
         var mappings = wireMock.allStubMappings();
         var registered = mappings.getMappings().stream()
             .anyMatch(m -> methodName.equals(m.getRequest().getMethod().getName())
-                && m.getRequest().getUrlPath().equals(path));
+                && path.equals(m.getRequest().getUrlPath()));
 
         if (!registered) {
             return Result.failure("Failed to register stub for " + methodName + " " + path);
