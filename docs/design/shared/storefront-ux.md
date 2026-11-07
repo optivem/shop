@@ -20,7 +20,7 @@ Implementation plan: [`plans/20261107-1657-storefront-implementation.md`](../../
 **Non-goals (for now):**
 
 - **Multi-line orders in the domain.** An order is still one SKU and a quantity (`PlaceOrderRequest`). Checkout places one order per cart line (see §6.5).
-- Payments, shipping addresses, wishlists, reviews and ratings, recommendations, accounts beyond Keycloak, and real product photos.
+- Payments, wishlists, reviews and ratings, recommendations, accounts beyond Keycloak, and real product photos.
 
 ## 2. Sitemap and routes
 
@@ -155,12 +155,14 @@ Shopping cart (2 items)
 
 ```
 Checkout
-┌ 1. Delivery country ─────────────────────┐  ┌ Order review ───────────────┐
-│ Country [ US ▾ ]                         │  │ HP Laptop 15 × 2  $1,399.98 │
-├ 2. Coupon (optional) ────────────────────┤  │ Dell XPS 13 × 1   $1,299.99 │
-│ Code [          ]                        │  │ Subtotal          $2,699.97 │
-├──────────────────────────────────────────┤  │ Discount and tax are worked │
-│ [ Place order ]                          │  │ out per order when placed   │
+┌ 1. Shipping address ─────────────────────┐  ┌ Order review ───────────────┐
+│ (•) Ana Novak, Main St 1, 10115 Berlin,  │  │ HP Laptop 15 × 2  $1,399.98 │
+│     DE                                   │  │ Dell XPS 13 × 1   $1,299.99 │
+│ ( ) Ship to a different address          │  │ Subtotal          $2,699.97 │
+├ 2. Coupon (optional) ────────────────────┤  │ Est. tax (DE)               │
+│ Code [          ]                        │  │ Discount and tax are worked │
+├──────────────────────────────────────────┤  │ out per order when placed   │
+│ [ Place order ]                          │  │                             │
 └──────────────────────────────────────────┘  └─────────────────────────────┘
 ```
 
@@ -246,7 +248,7 @@ The server-rendered monoliths call their own service layer directly; the HTTP AP
 
 ### 6.5 Checkout semantics
 
-The domain supports one SKU per order, so checkout calls the existing place-order use case **once per cart line**, in cart order, with the same country and coupon. Each line gets its own order number. A coupon with a usage limit may therefore apply to only some lines, and the confirmation shows what actually happened.
+The domain supports one SKU per order, so checkout calls the existing place-order use case **once per cart line**, in cart order, with the same shipping address and coupon. Each line gets its own order number. A coupon with a usage limit may therefore apply to only some lines, and the confirmation shows what actually happened.
 
 Multi-line orders are a separate follow-up plan (it changes UC-001, the schema and every test).
 
@@ -301,7 +303,7 @@ The change lives in `MyShopUiClient` (Java), its .NET and TS equivalents, and `K
 
 ## 8. Customer profile and tax country
 
-Decided 2026-11-07. This needs a domain change; see plan Step 2b.
+Decided 2026-11-07. This needs a domain change; see Step 2 of the [implementation plan](../../../plans/20261107-1657-storefront-implementation.md).
 
 - **Profile fields:** first name, last name, email (read-only, from Keycloak), and a shipping address of street, postal code, city and country.
 - **Where it's edited:** `/account` ("My account › Profile & address"). The selectors are `First Name`, `Last Name`, `Street`, `Postal Code`, `City`, `Profile Country` and `Save Profile`.
