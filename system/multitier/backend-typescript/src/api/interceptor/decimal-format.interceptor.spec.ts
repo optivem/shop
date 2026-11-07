@@ -32,6 +32,16 @@ describe('DecimalFormatInterceptor', () => {
     expect(body).toBe('{"unitPrice":"20.00","totalPrice":"10.01"}');
   });
 
+  it('writes a catalog product price as a JSON string with two decimals', async () => {
+    const { body } = await bodyOf([
+      { sku: 'BOOK-123', price: new Decimal('12') },
+      { sku: 'BOOK-456', price: 15.5 },
+    ]);
+    expect(body).toBe(
+      '[{"sku":"BOOK-123","price":"12.00"},{"sku":"BOOK-456","price":"15.50"}]',
+    );
+  });
+
   it('writes rate fields as JSON strings with four decimals', async () => {
     const { body } = await bodyOf({
       discountRate: new Decimal('0.2'),

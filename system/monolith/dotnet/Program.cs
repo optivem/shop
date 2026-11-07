@@ -55,6 +55,7 @@ builder.Services.AddScoped<ClockGateway>();
 builder.Services.AddScoped<TaxGateway>();
 builder.Services.AddScoped<CouponService>();
 builder.Services.AddScoped<OrderService>();
+builder.Services.AddScoped<ProductService>();
 
 // Register exception handler
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();

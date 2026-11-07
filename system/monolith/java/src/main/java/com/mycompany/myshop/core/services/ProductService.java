@@ -1,9 +1,12 @@
 package com.mycompany.myshop.core.services;
 
-import com.mycompany.myshop.core.dtos.ViewProductListResponse;
+import com.mycompany.myshop.core.dtos.ViewProductDetailsResponse;
 import com.mycompany.myshop.core.dtos.external.ErpProductDetailsResponse;
+import com.mycompany.myshop.core.exceptions.NotExistValidationException;
 import com.mycompany.myshop.core.services.external.ErpGateway;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 /** Products are owned by the ERP; MyShop only proxies its catalog. */
 @Service
@@ -15,18 +18,26 @@ public class ProductService {
         this.erpGateway = erpGateway;
     }
 
-    public ViewProductListResponse viewProductList() {
-        var response = new ViewProductListResponse();
-        response.setProducts(erpGateway.getProducts().stream()
-                .map(ProductService::toItem)
-                .toList());
-        return response;
+    public List<ViewProductDetailsResponse> browseProducts() {
+        return erpGateway.getProducts().stream()
+                .map(ProductService::toResponse)
+                .toList();
     }
 
-    private static ViewProductListResponse.ViewProductListItemResponse toItem(ErpProductDetailsResponse product) {
-        var item = new ViewProductListResponse.ViewProductListItemResponse();
-        item.setSku(product.getId());
-        item.setPrice(product.getPrice());
-        return item;
+    public ViewProductDetailsResponse viewProduct(String sku) {
+        return erpGateway.getProductDetails(sku)
+                .map(ProductService::toResponse)
+                .orElseThrow(() -> new NotExistValidationException("Product " + sku + " does not exist."));
+    }
+
+    private static ViewProductDetailsResponse toResponse(ErpProductDetailsResponse product) {
+        var response = new ViewProductDetailsResponse();
+        response.setSku(product.getId());
+        response.setTitle(product.getTitle());
+        response.setDescription(product.getDescription());
+        response.setBrand(product.getBrand());
+        response.setCategory(product.getCategory());
+        response.setPrice(product.getPrice());
+        return response;
     }
 }

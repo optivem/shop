@@ -86,7 +86,8 @@ class SecurityConfigTest {
         route("GET", "/api/orders/{orderNumber}", Access.AUTHENTICATED),
         route("POST", "/api/orders/{orderNumber}/cancel", Access.AUTHENTICATED),
         route("POST", "/api/orders/{orderNumber}/deliver", Access.ADMIN_ONLY),
-        route("GET", "/api/products", Access.AUTHENTICATED),
+        route("GET", "/api/products", Access.PUBLIC),
+        route("GET", "/api/products/{sku}", Access.PUBLIC),
         route("GET", "/api/coupons", Access.ADMIN_ONLY),
         route("POST", "/api/coupons", Access.ADMIN_ONLY),
         route("GET", "/", Access.AUTHENTICATED),
@@ -171,6 +172,16 @@ class SecurityConfigTest {
     @Test
     void healthIsPublicOnHead() throws Exception {
         mockMvc.perform(head("/health")).andExpect(status().isOk());
+    }
+
+    @Test
+    void anonymousCanBrowseProducts() throws Exception {
+        mockMvc.perform(get("/api/products")).andExpect(status().isOk());
+    }
+
+    @Test
+    void anonymousCanViewProduct() throws Exception {
+        mockMvc.perform(get("/api/products/HP-15")).andExpect(status().isOk());
     }
 
     @Test

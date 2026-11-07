@@ -9,7 +9,18 @@ const EXTERNAL_SYSTEM_MODE = () => envOrDefault('EXTERNAL_SYSTEM_MODE', 'real');
 // Only the fields the monolith uses are required; anything else in the response is ignored.
 const timeSchema = z.object({ time: z.iso.datetime({ offset: true }) });
 
-const productDetailsSchema = z.object({ price: z.number() });
+// ERP product JSON: {id, title, description, price, category, brand}. Order placement needs only the price;
+// the catalog endpoints pass the descriptive fields through.
+const productDetailsSchema = z.object({
+  id: z.string().optional(),
+  title: z.string().optional(),
+  description: z.string().optional(),
+  price: z.number(),
+  category: z.string().optional(),
+  brand: z.string().optional(),
+});
+
+const productListSchema = z.array(productDetailsSchema);
 
 const promotionDetailsSchema = z.object({ promotionActive: z.boolean(), discount: z.number() });
 
@@ -70,6 +81,16 @@ export async function getProductDetails(sku: string): Promise<ErpProductDetails 
       throw new Error(`Failed to fetch product details: ${response.status}`);
     }
     return parseResponse(response, productDetailsSchema, 'product details');
+  });
+}
+
+export async function getProducts(): Promise<ErpProductDetails[]> {
+  return fromErp(async () => {
+    const response = await fetchExternal(`${ERP_API_URL()}/api/products`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch products: ${response.status}`);
+    }
+    return parseResponse(response, productListSchema, 'product list');
   });
 }
 

@@ -28,6 +28,7 @@ import java.util.Map;
 public class MoneyJsonModule extends SimpleModule {
 
     static final Map<String, Integer> DECIMAL_FIELDS = Map.of(
+            "price", 2,
             "unitPrice", 2,
             "basePrice", 2,
             "discountRate", 4,

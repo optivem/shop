@@ -194,6 +194,15 @@ export class ComponentHarness {
     this.erp.stub('GET', `/api/products/${sku}`, 200, { id: sku, price });
   }
 
+  returnsProducts(products: { sku: string; price: number }[]): void {
+    this.erp.stub(
+      'GET',
+      '/api/products',
+      200,
+      products.map(({ sku, price }) => ({ id: sku, price })),
+    );
+  }
+
   returnsNoProduct(sku: string): void {
     this.erp.stub('GET', `/api/products/${sku}`, 404);
   }

@@ -28,6 +28,7 @@ import com.mycompany.myshop.backend.core.services.CouponService;
 import com.mycompany.myshop.backend.core.services.IdempotencyKeyStore;
 import com.mycompany.myshop.backend.core.services.IdempotentOrderService;
 import com.mycompany.myshop.backend.core.services.OrderService;
+import com.mycompany.myshop.backend.core.services.ProductService;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
@@ -85,6 +86,8 @@ class SecurityConfigTest {
         route("GET", "/api/orders/{orderNumber}", Access.AUTHENTICATED),
         route("POST", "/api/orders/{orderNumber}/cancel", Access.AUTHENTICATED),
         route("POST", "/api/orders/{orderNumber}/deliver", Access.ADMIN_ONLY),
+        route("GET", "/api/products", Access.PUBLIC),
+        route("GET", "/api/products/{sku}", Access.PUBLIC),
         route("GET", "/api/coupons", Access.ADMIN_ONLY),
         route("POST", "/api/coupons", Access.ADMIN_ONLY),
         route("POST", "/api/admin/recall/{sku}", Access.ADMIN_ONLY));
@@ -114,6 +117,9 @@ class SecurityConfigTest {
 
     @MockitoBean
     private CouponService couponService;
+
+    @MockitoBean
+    private ProductService productService;
 
     private static RequestPostProcessor admin() {
         return jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN"));
@@ -153,6 +159,16 @@ class SecurityConfigTest {
     @Test
     void healthIsPublicOnHead() throws Exception {
         mockMvc.perform(head("/health")).andExpect(status().isOk());
+    }
+
+    @Test
+    void anonymousCanBrowseProducts() throws Exception {
+        mockMvc.perform(get("/api/products")).andExpect(status().isOk());
+    }
+
+    @Test
+    void anonymousCanViewProduct() throws Exception {
+        mockMvc.perform(get("/api/products/HP-15")).andExpect(status().isOk());
     }
 
     @Test

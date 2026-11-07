@@ -7,8 +7,10 @@ import { AppService } from './app.service';
 import { HealthController } from './api/controller/health.controller';
 import { OrderController } from './api/controller/order.controller';
 import { CouponController } from './api/controller/coupon.controller';
+import { ProductController } from './api/controller/product.controller';
 import { AdminController } from './api/controller/admin.controller';
 import { OrderService } from './core/services/order.service';
+import { ProductService } from './core/services/product.service';
 import { CouponService } from './core/services/coupon.service';
 import { ErpGateway } from './core/services/external/erp.gateway';
 import { ClockGateway } from './core/services/external/clock.gateway';
@@ -72,11 +74,13 @@ function parsePort(value: string): number {
     OrderController,
     CouponController,
     AdminController,
+    ProductController,
   ],
   providers: [
     AppService,
     OrderService,
     CouponService,
+    ProductService,
     IdempotencyKeyStore,
     ErpGateway,
     ClockGateway,

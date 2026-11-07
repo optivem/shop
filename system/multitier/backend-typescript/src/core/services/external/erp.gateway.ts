@@ -2,7 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ErpProductDetailsResponse } from '../../dtos/external/erp-product-details-response.dto';
 import { ErpGetPromotionResponse } from '../../dtos/external/erp-get-promotion-response.dto';
-import { errorMessage, fetchJson, isNotFound } from './fetch-json';
+import {
+  errorMessage,
+  fetchJson,
+  fetchJsonArray,
+  isNotFound,
+} from './fetch-json';
 import { ErpUnavailableException } from '../../exceptions/erp-unavailable.exception';
 
 @Injectable()
@@ -28,6 +33,18 @@ export class ErpGateway {
       }
       throw new ErpUnavailableException(
         `Failed to fetch product details for SKU: ${sku}. ${errorMessage(e)}`,
+        { cause: e },
+      );
+    }
+  }
+
+  async getProducts(): Promise<ErpProductDetailsResponse[]> {
+    const url = `${this.erpUrl}/api/products`;
+    try {
+      return await fetchJsonArray(url, ErpProductDetailsResponse);
+    } catch (e) {
+      throw new ErpUnavailableException(
+        `Failed to fetch products. ${errorMessage(e)}`,
         { cause: e },
       );
     }

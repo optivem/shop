@@ -9,6 +9,8 @@ describe('decide', () => {
     ['GET', '/login'],
     ['GET', '/login/callback'],
     ['POST', '/logout'],
+    ['GET', '/api/products'],
+    ['GET', '/api/products/BOOK-123'],
   ])('%s %s is public', (method, path) => {
     expect(decide(method, path, null)).toBe('allow');
   });
@@ -20,6 +22,8 @@ describe('decide', () => {
     ['GET', '/api/orders/ORD-1'],
     ['POST', '/api/orders/ORD-1/cancel'],
     ['GET', '/api/unknown-route'],
+    ['POST', '/api/products'],
+    ['DELETE', '/api/products/BOOK-123'],
   ])('%s %s needs authentication but no particular role', (method, path) => {
     expect(decide(method, path, null)).toBe('unauthenticated');
     expect(decide(method, path, customer)).toBe('allow');

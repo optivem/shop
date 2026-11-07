@@ -9,5 +9,9 @@ import java.math.BigDecimal;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ErpProductDetailsResponse {
     private String id;
+    private String title;
+    private String description;
     private BigDecimal price;
+    private String category;
+    private String brand;
 }

@@ -45,6 +45,15 @@ describe('AuthGuard', () => {
     expect(verify).not.toHaveBeenCalled();
   });
 
+  it.each(['/api/products', '/api/products/BOOK-123'])(
+    'lets anonymous GET %s through to the catalog',
+    async (url) => {
+      const { context } = contextFor('GET', url);
+      await expect(guard.canActivate(context)).resolves.toBe(true);
+      expect(verify).not.toHaveBeenCalled();
+    },
+  );
+
   it('rejects a missing token with 401', async () => {
     const { context } = contextFor('GET', '/api/orders');
     await expect(guard.canActivate(context)).rejects.toBeInstanceOf(

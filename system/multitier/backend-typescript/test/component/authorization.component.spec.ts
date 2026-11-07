@@ -26,6 +26,24 @@ describe('Authorization (component)', () => {
     expect((await call('get', '/health')).status).toBe(200);
   });
 
+  it('anonymous callers can browse the product catalog', async () => {
+    harness.returnsProducts([{ sku: 'BOOK-123', price: 12 }]);
+    const response = await call('get', '/api/products');
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual([
+      expect.objectContaining({ sku: 'BOOK-123', price: '12.00' }),
+    ]);
+  });
+
+  it('anonymous callers can view a product', async () => {
+    harness.returnsProduct('BOOK-123', 12);
+    const response = await call('get', '/api/products/BOOK-123');
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual(
+      expect.objectContaining({ sku: 'BOOK-123', price: '12.00' }),
+    );
+  });
+
   it('orders without a token returns 401 as a problem detail', async () => {
     const response = await call('get', '/api/orders');
 

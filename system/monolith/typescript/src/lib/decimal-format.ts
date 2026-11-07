@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import Decimal from 'decimal.js';
 
 const DECIMAL_FIELDS: Record<string, number> = {
+  price: 2,
   unitPrice: 2,
   basePrice: 2,
   discountRate: 4,

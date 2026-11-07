@@ -9,6 +9,12 @@ export interface Principal {
 
 const PUBLIC_PATHS = new Set(['/health', '/login', '/login/callback', '/logout']);
 
+// The product catalog is public: anonymous visitors may browse and view products (read-only).
+const PUBLIC_RULES: readonly ((method: string, path: string) => boolean)[] = [
+  (method, path) => method === 'GET' && path === '/api/products',
+  (method, path) => method === 'GET' && /^\/api\/products\/[^/]+$/.test(path),
+];
+
 const ADMIN_ONLY: readonly ((method: string, path: string) => boolean)[] = [
   (method, path) => method === 'POST' && /^\/api\/orders\/[^/]+\/deliver$/.test(path),
   (_method, path) => path === '/api/coupons',
@@ -27,7 +33,7 @@ const CUSTOMER_ONLY: readonly ((method: string, path: string) => boolean)[] = [
  * authenticated principal, so a new route is protected until a rule opens it up.
  */
 export function decide(method: string, path: string, principal: Principal | null): Decision {
-  if (PUBLIC_PATHS.has(path)) {
+  if (PUBLIC_PATHS.has(path) || PUBLIC_RULES.some((rule) => rule(method, path))) {
     return 'allow';
   }
   if (!principal) {

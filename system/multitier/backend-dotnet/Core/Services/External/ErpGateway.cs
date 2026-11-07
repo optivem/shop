@@ -48,6 +48,29 @@ public class ErpGateway
         }
     }
 
+    public virtual async Task<List<ErpProductDetailsResponse>> GetProductsAsync()
+    {
+        var url = $"{_erpUrl}/api/products";
+
+        try
+        {
+            var response = await _httpClient.GetAsync(url);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var body = await response.Content.ReadAsStringAsync();
+                throw new ErpUnavailableException($"ERP API returned status {(int)response.StatusCode} for product list. URL: {url}. Response: {body}");
+            }
+
+            var content = await response.Content.ReadAsStringAsync();
+            return JsonSerializer.Deserialize<List<ErpProductDetailsResponse>>(content, JsonOptions) ?? new List<ErpProductDetailsResponse>();
+        }
+        catch (System.Exception e) when (e is HttpRequestException or TaskCanceledException or JsonException)
+        {
+            throw new ErpUnavailableException($"Failed to fetch product list from URL: {url}. Error: {e.GetType().Name}: {e.Message}", e);
+        }
+    }
+
     public virtual async Task<ErpGetPromotionResponse> GetPromotionDetailsAsync()
     {
         var url = $"{_erpUrl}/api/promotion";

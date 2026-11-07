@@ -16,6 +16,11 @@ describe('route policy', () => {
     ['POST', '/api/admin/recall/BOOK-123', 'admin'],
     ['GET', '/api/admin/anything', 'admin'],
     ['DELETE', '/api/admin', 'admin'],
+    ['GET', '/api/products', 'public'],
+    ['HEAD', '/api/products', 'public'],
+    ['GET', '/api/products/BOOK-123', 'public'],
+    ['POST', '/api/products', 'authenticated'],
+    ['DELETE', '/api/products/BOOK-123', 'authenticated'],
   ])('%s %s is %s', (method, path, expected) => {
     expect(accessFor(method, path)).toBe(expected);
   });
