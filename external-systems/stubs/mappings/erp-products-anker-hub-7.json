@@ -1,0 +1,20 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/erp/api/products/ANKER-HUB-7"
+  },
+  "response": {
+    "status": 200,
+    "jsonBody": {
+      "id": "ANKER-HUB-7",
+      "title": "Anker 7-in-1 USB-C Hub",
+      "description": "USB-C hub with HDMI, USB-A, SD card reader and power delivery",
+      "price": 39.99,
+      "category": "Accessories",
+      "brand": "Anker"
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

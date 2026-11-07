@@ -64,6 +64,62 @@ const erpRouter = jsonServer.router({
       price: 999.99,
       category: "Laptops",
       brand: "Lenovo"
+    },
+    {
+      id: "ASUS-ZENBOOK-14",
+      title: "ASUS Zenbook 14",
+      description: "14-inch OLED ultrabook with Intel Core Ultra 7 processor",
+      price: 899.99,
+      category: "Laptops",
+      brand: "ASUS"
+    },
+    {
+      id: "DELL-U2723QE",
+      title: "Dell UltraSharp 27 4K",
+      description: "27-inch 4K IPS monitor with USB-C hub",
+      price: 579.99,
+      category: "Monitors",
+      brand: "Dell"
+    },
+    {
+      id: "LG-27UL500",
+      title: "LG 27-inch 4K UHD Monitor",
+      description: "27-inch 4K UHD IPS monitor with HDR10",
+      price: 299.99,
+      category: "Monitors",
+      brand: "LG"
+    },
+    {
+      id: "SAMSUNG-S24",
+      title: "Samsung 24-inch FHD Monitor",
+      description: "24-inch Full HD monitor with slim bezels",
+      price: 149.99,
+      category: "Monitors",
+      brand: "Samsung"
+    },
+    {
+      id: "LOGI-MX3S",
+      title: "Logitech MX Master 3S",
+      description: "Wireless performance mouse with quiet clicks",
+      price: 99.99,
+      category: "Accessories",
+      brand: "Logitech"
+    },
+    {
+      id: "LOGI-MXKEYS",
+      title: "Logitech MX Keys",
+      description: "Wireless illuminated keyboard for Mac and PC",
+      price: 109.99,
+      category: "Accessories",
+      brand: "Logitech"
+    },
+    {
+      id: "ANKER-HUB-7",
+      title: "Anker 7-in-1 USB-C Hub",
+      description: "USB-C hub with HDMI, USB-A, SD card reader and power delivery",
+      price: 39.99,
+      category: "Accessories",
+      brand: "Anker"
     }
   ]
 });

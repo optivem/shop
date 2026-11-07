@@ -7,7 +7,11 @@
     "status": 200,
     "jsonBody": {
       "id": "DELL-XPS",
-      "price": 1299.99
+      "title": "Dell XPS 13",
+      "description": "13.3-inch ultrabook with Intel Core i7 processor",
+      "price": 1299.99,
+      "category": "Laptops",
+      "brand": "Dell"
     },
     "headers": {
       "Content-Type": "application/json"

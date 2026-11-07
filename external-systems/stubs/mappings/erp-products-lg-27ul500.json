@@ -1,0 +1,20 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/erp/api/products/LG-27UL500"
+  },
+  "response": {
+    "status": 200,
+    "jsonBody": {
+      "id": "LG-27UL500",
+      "title": "LG 27-inch 4K UHD Monitor",
+      "description": "27-inch 4K UHD IPS monitor with HDR10",
+      "price": 299.99,
+      "category": "Monitors",
+      "brand": "LG"
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

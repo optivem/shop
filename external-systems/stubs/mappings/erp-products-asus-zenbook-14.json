@@ -1,0 +1,20 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/erp/api/products/ASUS-ZENBOOK-14"
+  },
+  "response": {
+    "status": 200,
+    "jsonBody": {
+      "id": "ASUS-ZENBOOK-14",
+      "title": "ASUS Zenbook 14",
+      "description": "14-inch OLED ultrabook with Intel Core Ultra 7 processor",
+      "price": 899.99,
+      "category": "Laptops",
+      "brand": "ASUS"
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

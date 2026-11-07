@@ -1,0 +1,20 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/erp/api/products/DELL-U2723QE"
+  },
+  "response": {
+    "status": 200,
+    "jsonBody": {
+      "id": "DELL-U2723QE",
+      "title": "Dell UltraSharp 27 4K",
+      "description": "27-inch 4K IPS monitor with USB-C hub",
+      "price": 579.99,
+      "category": "Monitors",
+      "brand": "Dell"
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

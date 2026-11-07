@@ -7,7 +7,11 @@
     "status": 200,
     "jsonBody": {
       "id": "HP-15",
-      "price": 699.99
+      "title": "HP Laptop 15",
+      "description": "15.6-inch laptop with Intel Core i5 processor",
+      "price": 699.99,
+      "category": "Laptops",
+      "brand": "HP"
     },
     "headers": {
       "Content-Type": "application/json"

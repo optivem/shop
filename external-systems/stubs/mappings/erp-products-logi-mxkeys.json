@@ -1,0 +1,20 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/erp/api/products/LOGI-MXKEYS"
+  },
+  "response": {
+    "status": 200,
+    "jsonBody": {
+      "id": "LOGI-MXKEYS",
+      "title": "Logitech MX Keys",
+      "description": "Wireless illuminated keyboard for Mac and PC",
+      "price": 109.99,
+      "category": "Accessories",
+      "brand": "Logitech"
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

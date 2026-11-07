@@ -1,0 +1,20 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/erp/api/products/LOGI-MX3S"
+  },
+  "response": {
+    "status": 200,
+    "jsonBody": {
+      "id": "LOGI-MX3S",
+      "title": "Logitech MX Master 3S",
+      "description": "Wireless performance mouse with quiet clicks",
+      "price": 99.99,
+      "category": "Accessories",
+      "brand": "Logitech"
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}
