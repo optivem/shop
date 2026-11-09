@@ -1,5 +1,7 @@
 # 2026-11-07 17:05 UTC — Plan coordination meta-plan: storefront specs + build
 
+> 🤖 **Picked up by agent** — `8e8cd7062d0f` at `2026-11-09T10:26:50Z`
+
 
 **Plans analysed:** 2 in-scope, 1 referenced-only
 
@@ -31,11 +33,10 @@ The orchestrating session runs the Steps below **in order**, one subagent per st
 
 ## ▶ Next executable step (resume here)
 
-The prototype is signed off and the specs are reviewed (G0 closed 2026-11-07). Step 1 (U2, catalog data path) is done: `a71fb8ae`, `cee2babc`, `b3846cdc`. Run **Step 2** (BUILD Step 9). The user's scope for a session is Steps 2→4, stopping at the 🛑 React gate.
+The prototype is signed off and the specs are reviewed (G0 closed 2026-11-07). Step 1 (U2) is done (`a71fb8ae`, `cee2babc`, `b3846cdc`). Step 2 (BUILD Step 9) is done (`ac04be12`): only UC-004 flipped, and the remaining gaps are now BUILD Step 10 (queued as Step 7b below). Run **Step 3** (U3) next. The user's scope for a session is Steps 3→4, stopping at the 🛑 React gate.
 
 ## Steps
 
-- [ ] **Step 2 — BUILD Step 9 (tag the existing use cases' tests: UC-002–005, UC-012).** One subagent. It tags the existing acceptance tests in all three languages, adds the missing ones, and flips those five use cases to `status: implemented`. It runs before Step 3 because both touch the order acceptance tests. Gate: compile, plus sample system tests in all three languages.
 - [ ] **Step 3 — U3: SPEC Step 8, then BUILD Step 2, then SPEC Step 9, as one subagent (atomic).**
   - Amend UC-001 so the country comes from the shipping address. The SPEC Step 8 notes give the exact changes.
   - Build profile storage, the shipping address on orders and `GET /api/orders?customer=`, with acceptance tests for UC-010, UC-011 and the amended UC-001. Retag `@UC-001.10`.
@@ -48,6 +49,7 @@ The prototype is signed off and the specs are reviewed (G0 closed 2026-11-07). S
 - [ ] **Step 5 — BUILD Steps 4, 5, 6 (ports to Next.js, Thymeleaf, Razor).** One subagent per port, **serial**: they share docker ports when running system tests. Gate per port: that monolith's build plus its sample system tests.
 - [ ] **Step 6 — BUILD Step 7 (verify).** One subagent: `./compile-all.sh`, `--sample` for all languages (monolith and multitier), then `./test-all.sh`.
 - [ ] **Step 7 — BUILD Step 8 (acceptance tests for UC-006–009).** One subagent per use case, serial (shared test kit). Each one flips its use case to `status: implemented`. Gate: compile, plus the sample system tests.
+- [ ] **Step 7b — BUILD Step 10 (close the Step 9 coverage gaps for UC-002, UC-003, UC-005, UC-012).** One subagent, after Step 7 (the UI-only scenarios UC-003.2 and UC-012.2 belong in Step 7's UI tests). Touches the order and coupon acceptance tests, so never alongside Step 3 or Step 7. Gate: compile, plus the sample system tests.
 - [ ] **Step 8 — Close out.** When SPEC and BUILD have no open items, delete both plan files (and this one). Report UC1 Track D as the remaining follow-up: it needs gh-optivem C1, C1b and C1c.
 
 Out of scope for this run: UC1 Tracks C and D (gh-optivem, then the gate re-enable). The reference sections below explain why the order is what it is.

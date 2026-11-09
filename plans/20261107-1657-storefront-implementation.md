@@ -18,9 +18,11 @@ This plan holds **only how to build it**. Look and layout live in the UX spec. B
 
 Step 1 (catalog data path) is done: commits `a71fb8ae`, `cee2babc`, `b3846cdc` (2026-11-07). `GET /api/products` returns a bare array of `{sku,title,description,brand,category,price}` (price is a 2-decimal string); `GET /api/products/{sku}` returns 404 for an unknown SKU and 503 when the ERP is down.
 
-Next, per the meta-plan `plans/20261107-1705-meta-storefront-specs-build.md`: **Step 9** (tag the existing order and coupon acceptance tests for UC-002–005 and UC-012, then flip their status). Then Step 2 runs as part of the meta-plan's atomic unit U3. New tests go in the **latest** system tests only. Change legacy only as much as it needs to stay green.
+Step 9 (tag the existing UC-002–005, UC-012 tests) is done: commit `ac04be12` (2026-11-09). Only UC-004 flipped to `implemented`; the gaps keeping UC-002, UC-003, UC-005 and UC-012 at `planned` are listed under Step 10.
 
-Gate: compile, plus the sample system tests in all three languages.
+Next, per the meta-plan `plans/20261107-1705-meta-storefront-specs-build.md`: **Step 2** as part of the atomic unit U3 (SPEC Step 8 → BUILD Step 2 → SPEC Step 9). New tests go in the **latest** system tests only. Change legacy only as much as it needs to stay green.
+
+Gate: `./compile-all.sh`, plus the sample system tests in all three languages, before pushing anything.
 
 ## Background
 
@@ -57,4 +59,8 @@ Gate: compile, plus the sample system tests in all three languages.
 - [ ] **Step 6: Port to the Razor monolith** (`system/monolith/dotnet`). Server-side cart in the session, header in `_Layout.cshtml`.
 - [ ] **Step 7: Verify.** `./compile-all.sh`, then `system-test run --sample` for java, dotnet and typescript (monolith and multitier). Then `./test-all.sh` before closing.
 - [ ] **Step 8: Acceptance tests for the UI journeys.** Turn the remaining `@UC-006` to `@UC-011` scenarios into acceptance tests with UI and API channels in all three languages, after the UI exists so they don't collide with the UC-001 spec-gate work.
-- [ ] **Step 9: Tag the existing use cases' tests** (UC-002 View Order, UC-003 Cancel Order, UC-004 Publish Coupon, UC-005 Browse Coupons, UC-012 Deliver Order). Their behaviour is already built but no test carries `@UC-NNN.M` tags. Tag the existing acceptance tests that cover each scenario in all three languages (same mechanism as UC-001: `@Tag` / `[Trait("tag", …)]` / `criteria(…)`), add tests for the scenarios with none, then flip each use case to `status: implemented` (decision 5). Independent of Steps 1–8; touches only `system-test/**` acceptance tests for orders and coupons, so it can run whenever no other step edits those tests. Added 2026-11-07 by `plans/20261107-1638-…`.
+- [ ] **Step 10: Close the coverage gaps left by Step 9** (found 2026-11-09, commit `ac04be12`), then flip UC-002, UC-003, UC-005 and UC-012 to `implemented`. Latest tests only, all three languages.
+  - UC-003.2 and UC-012.2 (which of Cancel/Deliver are offered) are UI-only: cover them in Step 8 with the UI channel.
+  - UC-002.1 ordering + summary fields, UC-002.2 partial/case-insensitive filter, UC-002.3 default page 1 / size 50, UC-002.4 "None" coupon example, UC-002.9 "No orders found" text: need DSL assertions (ordering, summary fields, page size) and a per-test isolated customer (only 2 shared test customers today).
+  - UC-005.1 newest first, UC-005.3 page contents, UC-005.7 no coupons: need list assertions and an isolated coupon set (shared test DB); UC-005.4 is tagged on a 1-order test while the spec uses 2 orders.
+  - Note: "no usage limit" is stored as int-max (2147483647), not null, in every backend; `hasUnlimitedUsage` accepts both.
