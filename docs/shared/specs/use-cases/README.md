@@ -54,7 +54,7 @@ GitHub renders Mermaid without clickable links, so use the table below to open e
 | UC-001 | [Place Order](UC-001-place-order/use-case-narrative.md) | Customer | implemented |
 | UC-002 | [View Order](UC-002-view-order/use-case-narrative.md) | Customer | planned |
 | UC-003 | [Cancel Order](UC-003-cancel-order/use-case-narrative.md) | Customer | planned |
-| UC-004 | [Publish Coupon](UC-004-publish-coupon/use-case-narrative.md) | Admin | planned |
+| UC-004 | [Publish Coupon](UC-004-publish-coupon/use-case-narrative.md) | Admin | implemented |
 | UC-005 | [Browse Coupons](UC-005-browse-coupons/use-case-narrative.md) | Admin | planned |
 | UC-006 | [Browse Catalog](UC-006-browse-catalog/use-case-narrative.md) | Visitor | planned |
 | UC-007 | [View Product](UC-007-view-product/use-case-narrative.md) | Visitor | planned |

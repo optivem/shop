@@ -4,9 +4,11 @@ import com.mycompany.myshop.systemtest.latest.acceptance.base.BaseAcceptanceTest
 import com.mycompany.myshop.testkit.channel.ChannelType;
 import com.mycompany.myshop.testkit.common.domain.OrderStatus;
 import com.optivem.testing.Channel;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.TestTemplate;
 
 class CancelOrderPositiveTest extends BaseAcceptanceTest {
+    @Tag("UC-003.1")
     @TestTemplate
     @Channel({ChannelType.UI, ChannelType.API})
     void shouldHaveCancelledStatusWhenCancelled() {
@@ -18,6 +20,7 @@ class CancelOrderPositiveTest extends BaseAcceptanceTest {
                     .hasStatus(OrderStatus.CANCELLED);
     }
 
+    @Tag("UC-003.4")
     @TestTemplate
     @Channel({ChannelType.UI, ChannelType.API})
     void adminShouldBeAbleToCancelCustomerOrder() {

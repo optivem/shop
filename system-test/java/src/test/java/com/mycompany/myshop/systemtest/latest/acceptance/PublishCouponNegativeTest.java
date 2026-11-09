@@ -4,6 +4,7 @@ import com.mycompany.myshop.systemtest.commons.providers.EmptyArgumentsProvider;
 import com.mycompany.myshop.systemtest.latest.acceptance.base.BaseAcceptanceTest;
 import com.mycompany.myshop.testkit.channel.ChannelType;
 import com.optivem.testing.Channel;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -11,6 +12,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import static com.mycompany.myshop.systemtest.commons.constants.ErrorMessages.PERMISSION_DENIED;
 
 class PublishCouponNegativeTest extends BaseAcceptanceTest {
+    @Tag("UC-004.7")
     @TestTemplate
     @Channel(value = {ChannelType.API}, alsoForFirstRow = ChannelType.UI)
     @ValueSource(strings = {"0.0", "-0.01", "-0.15"})
@@ -24,6 +26,7 @@ class PublishCouponNegativeTest extends BaseAcceptanceTest {
                     .fieldErrorMessage("discountRate", "Discount rate must be greater than 0.00");
     }
 
+    @Tag("UC-004.7")
     @TestTemplate
     @Channel(value = {ChannelType.API}, alsoForFirstRow = ChannelType.UI)
     @ValueSource(strings = {"1.01", "2.00"})
@@ -37,6 +40,7 @@ class PublishCouponNegativeTest extends BaseAcceptanceTest {
                     .fieldErrorMessage("discountRate", "Discount rate must be at most 1.00");
     }
 
+    @Tag("UC-004.9")
     @TestTemplate
     @Channel({ChannelType.UI, ChannelType.API})
     void cannotPublishCouponWithDuplicateCouponCode() {
@@ -49,9 +53,12 @@ class PublishCouponNegativeTest extends BaseAcceptanceTest {
                     .withDiscountRate("0.20")
                 .then().shouldFail()
                     .errorMessage("The request contains one or more validation errors")
-                    .fieldErrorMessage("couponCode", "Coupon code EXISTING-COUPON already exists");
+                    .fieldErrorMessage("couponCode", "Coupon code EXISTING-COUPON already exists")
+                .and().coupon("EXISTING-COUPON")
+                    .hasDiscountRate("0.10");
     }
 
+    @Tag("UC-004.8")
     @TestTemplate
     @Channel(value = {ChannelType.API}, alsoForFirstRow = ChannelType.UI)
     @ValueSource(strings = {"0", "-1", "-100"})
@@ -66,6 +73,7 @@ class PublishCouponNegativeTest extends BaseAcceptanceTest {
                     .fieldErrorMessage("usageLimit", "Usage limit must be positive");
     }
 
+    @Tag("UC-004.6")
     @TestTemplate
     @Channel(ChannelType.API)
     @ArgumentsSource(EmptyArgumentsProvider.class)
@@ -79,6 +87,7 @@ class PublishCouponNegativeTest extends BaseAcceptanceTest {
                     .fieldErrorMessage("code", "Coupon code must not be blank");
     }
 
+    @Tag("UC-004.5")
     @TestTemplate
     @Channel({ChannelType.UI, ChannelType.API})
     void customerShouldNotBeAbleToPublishCoupon() {

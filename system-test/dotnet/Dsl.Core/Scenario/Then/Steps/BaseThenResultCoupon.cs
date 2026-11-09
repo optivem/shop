@@ -60,6 +60,30 @@ public abstract class BaseThenResultCoupon<TSuccessResponse, TSuccessVerificatio
 
     IThenCoupon IThenCoupon.HasUsageLimit(int usageLimit) => HasUsageLimit(usageLimit);
 
+    public TDerived IsValidImmediately()
+    {
+        _verifications.Add((v, code) => v.CouponHasNoValidFrom(code));
+        return Self;
+    }
+
+    IThenCoupon IThenCoupon.IsValidImmediately() => IsValidImmediately();
+
+    public TDerived NeverExpires()
+    {
+        _verifications.Add((v, code) => v.CouponHasNoValidTo(code));
+        return Self;
+    }
+
+    IThenCoupon IThenCoupon.NeverExpires() => NeverExpires();
+
+    public TDerived HasUnlimitedUsage()
+    {
+        _verifications.Add((v, code) => v.CouponHasNoUsageLimit(code));
+        return Self;
+    }
+
+    IThenCoupon IThenCoupon.HasUnlimitedUsage() => HasUnlimitedUsage();
+
     public TDerived HasUsedCount(int expectedUsedCount)
     {
         _verifications.Add((v, code) => v.CouponHasUsedCount(code, expectedUsedCount));

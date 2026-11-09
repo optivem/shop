@@ -1,6 +1,7 @@
 import { test, forChannels, ChannelType } from './base/fixtures.js';
 import { OrderStatus } from '../../../src/testkit/common/dtos.js';
 import { DEFAULTS } from '../../../src/testkit/dsl/core/scenario/defaults.js';
+import { criteria } from '../../commons/criteria.js';
 
 const nonExistentOrderCases = [
     { orderNumber: 'NON-EXISTENT-ORDER-99999', message: 'Order NON-EXISTENT-ORDER-99999 does not exist.' },
@@ -11,6 +12,7 @@ const nonExistentOrderCases = [
 forChannels(ChannelType.API)(() => {
     test.each(nonExistentOrderCases)(
         'shouldNotCancelNonExistentOrder_$orderNumber',
+        criteria('UC-003.6'),
         async ({ scenario, orderNumber, message }) => {
             await scenario
                 .when()
@@ -22,7 +24,7 @@ forChannels(ChannelType.API)(() => {
         },
     );
 
-    test('shouldNotCancelAlreadyCancelledOrder', async ({ scenario }) => {
+    test('shouldNotCancelAlreadyCancelledOrder', criteria('UC-003.7'), async ({ scenario }) => {
         await scenario
             .given()
             .order()
@@ -34,7 +36,7 @@ forChannels(ChannelType.API)(() => {
             .errorMessage('Order has already been cancelled');
     });
 
-    test('cannotCancelNonExistentOrder', async ({ scenario }) => {
+    test('cannotCancelNonExistentOrder', criteria('UC-003.6'), async ({ scenario }) => {
         await scenario
             .when()
             .cancelOrder()
@@ -44,7 +46,7 @@ forChannels(ChannelType.API)(() => {
             .errorMessage('Order non-existent-order-12345 does not exist.');
     });
 
-    test('customerShouldNotBeAbleToCancelAnotherCustomersOrder', async ({ scenario }) => {
+    test('customerShouldNotBeAbleToCancelAnotherCustomersOrder', criteria('UC-003.6'), async ({ scenario }) => {
         await scenario
             .given()
             .order()

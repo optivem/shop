@@ -1,8 +1,9 @@
 import { test, forChannels, ChannelType } from './base/fixtures.js';
 import { OrderStatus } from '../../../src/testkit/common/dtos.js';
+import { criteria } from '../../commons/criteria.js';
 
 forChannels(ChannelType.UI, ChannelType.API)(() => {
-    test('shouldBeAbleToViewOrder', async ({ scenario }) => {
+    test('shouldBeAbleToViewOrder', criteria('UC-002.4', 'UC-002.5'), async ({ scenario }) => {
         await scenario
             .given()
             .product()
@@ -91,3 +92,21 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
             .shouldSucceed();
     });
 });
+
+test.eachAlsoFirstRow([{ status: OrderStatus.DELIVERED }, { status: OrderStatus.CANCELLED }])(
+    'shouldShowTheStatusOfTheOrder_$status',
+    criteria('UC-002.5'),
+    async ({ scenario, status }) => {
+        await scenario
+            .given()
+            .order()
+            .withStatus(status)
+            .when()
+            .viewOrder()
+            .then()
+            .shouldSucceed()
+            .and()
+            .order()
+            .hasStatus(status);
+    },
+);

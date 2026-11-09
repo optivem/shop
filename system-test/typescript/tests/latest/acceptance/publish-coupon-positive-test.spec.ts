@@ -1,7 +1,8 @@
 import { test, forChannels, ChannelType } from './base/fixtures.js';
+import { criteria } from '../../commons/criteria.js';
 
 forChannels(ChannelType.UI, ChannelType.API)(() => {
-    test('shouldBeAbleToPublishValidCoupon', async ({ scenario }) => {
+    test('shouldBeAbleToPublishValidCoupon', criteria('UC-004.2', 'UC-004.3'), async ({ scenario }) => {
         await scenario
             .when()
             .publishCoupon()
@@ -14,7 +15,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
             .shouldSucceed();
     });
 
-    test('shouldBeAbleToPublishCouponWithEmptyOptionalFields', async ({ scenario }) => {
+    test('shouldBeAbleToPublishCouponWithEmptyOptionalFields', criteria('UC-004.2', 'UC-004.3', 'UC-005.2'), async ({ scenario }) => {
         await scenario
             .when()
             .publishCoupon()
@@ -24,10 +25,14 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
             .withValidTo(null)
             .withUsageLimit(null)
             .then()
-            .shouldSucceed();
+            .shouldSucceed()
+            .and().coupon('SUMMER2025')
+            .isValidImmediately()
+            .neverExpires()
+            .hasUnlimitedUsage();
     });
 
-    test('shouldBeAbleToCorrectlySaveCoupon', async ({ scenario }) => {
+    test('shouldBeAbleToCorrectlySaveCoupon', criteria('UC-004.2', 'UC-004.3', 'UC-004.4', 'UC-005.2'), async ({ scenario }) => {
         await scenario
             .when()
             .publishCoupon()
@@ -58,3 +63,19 @@ forChannels(ChannelType.API)(() => {
             .shouldSucceed();
     });
 });
+
+test.eachAlsoFirstRow(['0.01', '0.15', '1.00'])(
+    'shouldAcceptDiscountRateAboveZeroAndUpToOne_$discountRate',
+    criteria('UC-004.1'),
+    async ({ scenario, discountRate }) => {
+        await scenario
+            .when()
+            .publishCoupon()
+            .withCouponCode('SAVE')
+            .withDiscountRate(discountRate)
+            .then()
+            .shouldSucceed()
+            .and().coupon('SAVE')
+            .hasDiscountRate(discountRate);
+    },
+);

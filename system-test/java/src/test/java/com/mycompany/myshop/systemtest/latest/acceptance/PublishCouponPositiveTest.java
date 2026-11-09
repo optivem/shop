@@ -3,9 +3,13 @@ package com.mycompany.myshop.systemtest.latest.acceptance;
 import com.mycompany.myshop.systemtest.latest.acceptance.base.BaseAcceptanceTest;
 import com.mycompany.myshop.testkit.channel.ChannelType;
 import com.optivem.testing.Channel;
+import com.optivem.testing.DataSource;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.TestTemplate;
 
 class PublishCouponPositiveTest extends BaseAcceptanceTest {
+    @Tag("UC-004.2")
+    @Tag("UC-004.3")
     @TestTemplate
     @Channel({ChannelType.UI, ChannelType.API})
     void shouldBeAbleToPublishValidCoupon() {
@@ -19,6 +23,9 @@ class PublishCouponPositiveTest extends BaseAcceptanceTest {
                 .then().shouldSucceed();
     }
 
+    @Tag("UC-004.2")
+    @Tag("UC-004.3")
+    @Tag("UC-005.2")
     @TestTemplate
     @Channel({ChannelType.UI, ChannelType.API})
     void shouldBeAbleToPublishCouponWithEmptyOptionalFields() {
@@ -29,9 +36,17 @@ class PublishCouponPositiveTest extends BaseAcceptanceTest {
                     .withValidFrom(null)
                     .withValidTo(null)
                     .withUsageLimit(null)
-                .then().shouldSucceed();
+                .then().shouldSucceed()
+                .and().coupon("SUMMER2025")
+                    .isValidImmediately()
+                    .neverExpires()
+                    .hasUnlimitedUsage();
     }
 
+    @Tag("UC-004.2")
+    @Tag("UC-004.3")
+    @Tag("UC-004.4")
+    @Tag("UC-005.2")
     @TestTemplate
     @Channel({ChannelType.UI, ChannelType.API})
     void shouldBeAbleToCorrectlySaveCoupon() {
@@ -59,5 +74,21 @@ class PublishCouponPositiveTest extends BaseAcceptanceTest {
                     .withCouponCode("SAVE10")
                     .withDiscountRate("0.10")
                 .then().shouldSucceed();
+    }
+
+    @Tag("UC-004.1")
+    @TestTemplate
+    @Channel(value = {ChannelType.API}, alsoForFirstRow = ChannelType.UI)
+    @DataSource({"0.01"})
+    @DataSource({"0.15"})
+    @DataSource({"1.00"})
+    void shouldAcceptDiscountRateAboveZeroAndUpToOne(String discountRate) {
+        scenario
+                .when().publishCoupon()
+                    .withCouponCode("SAVE")
+                    .withDiscountRate(discountRate)
+                .then().shouldSucceed()
+                .and().coupon("SAVE")
+                    .hasDiscountRate(discountRate);
     }
 }

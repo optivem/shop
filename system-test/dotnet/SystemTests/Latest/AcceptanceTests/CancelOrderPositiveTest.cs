@@ -10,6 +10,7 @@ public class CancelOrderPositiveTest : BaseAcceptanceTest
 {
     [Theory]
     [ChannelData(ChannelType.UI, ChannelType.API)]
+    [Trait("tag", "UC-003.1")]
     public async Task ShouldHaveCancelledStatusWhenCancelled(Channel channel)
     {
         await Scenario(channel)
@@ -22,6 +23,7 @@ public class CancelOrderPositiveTest : BaseAcceptanceTest
 
     [Theory]
     [ChannelData(ChannelType.UI, ChannelType.API)]
+    [Trait("tag", "UC-003.4")]
     public async Task AdminShouldBeAbleToCancelCustomerOrder(Channel channel)
     {
         await Scenario(channel)

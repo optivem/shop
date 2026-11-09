@@ -215,7 +215,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
         },
     );
 
-    test('couponUsageCountHasBeenIncrementedAfterItsBeenUsed', criteria('UC-001.5'), async ({ scenario }) => {
+    test('couponUsageCountHasBeenIncrementedAfterItsBeenUsed', criteria('UC-001.5', 'UC-005.4'), async ({ scenario }) => {
         const code = 'SUMMER2025';
         await scenario
             .given()

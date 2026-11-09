@@ -41,6 +41,21 @@ public class ThenCouponImpl<R, V extends ResponseVerification<R>>
         return this;
     }
 
+    public ThenCouponImpl<R, V> isValidImmediately() {
+        verification.couponHasNoValidFrom(couponCode);
+        return this;
+    }
+
+    public ThenCouponImpl<R, V> neverExpires() {
+        verification.couponHasNoValidTo(couponCode);
+        return this;
+    }
+
+    public ThenCouponImpl<R, V> hasUnlimitedUsage() {
+        verification.couponHasNoUsageLimit(couponCode);
+        return this;
+    }
+
     public ThenCouponImpl<R, V> hasUsedCount(int expectedUsedCount) {
         verification.couponHasUsedCount(couponCode, expectedUsedCount);
         return this;

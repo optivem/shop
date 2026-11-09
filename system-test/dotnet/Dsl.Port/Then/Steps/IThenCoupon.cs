@@ -12,6 +12,15 @@ public interface IThenCoupon
 
     IThenCoupon HasUsageLimit(int usageLimit);
 
+    /// <summary>The coupon has no valid-from time, so it is valid immediately.</summary>
+    IThenCoupon IsValidImmediately();
+
+    /// <summary>The coupon has no valid-to time, so it never expires.</summary>
+    IThenCoupon NeverExpires();
+
+    /// <summary>The coupon has no usage limit.</summary>
+    IThenCoupon HasUnlimitedUsage();
+
     IThenCoupon HasUsedCount(int expectedUsedCount);
 
     TaskAwaiter GetAwaiter();

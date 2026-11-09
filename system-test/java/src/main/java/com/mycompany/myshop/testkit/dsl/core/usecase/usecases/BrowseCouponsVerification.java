@@ -57,6 +57,31 @@ public class BrowseCouponsVerification extends ResponseVerification<BrowseCoupon
         return this;
     }
 
+    public BrowseCouponsVerification couponHasNoValidFrom(String couponCodeAlias) {
+        var coupon = findCouponByCode(couponCodeAlias);
+        assertThat(coupon.getValidFrom())
+                .as("ValidFrom for coupon '%s' (valid immediately)", couponCodeAlias)
+                .isNull();
+        return this;
+    }
+
+    public BrowseCouponsVerification couponHasNoValidTo(String couponCodeAlias) {
+        var coupon = findCouponByCode(couponCodeAlias);
+        assertThat(coupon.getValidTo())
+                .as("ValidTo for coupon '%s' (never expires)", couponCodeAlias)
+                .isNull();
+        return this;
+    }
+
+    public BrowseCouponsVerification couponHasNoUsageLimit(String couponCodeAlias) {
+        var coupon = findCouponByCode(couponCodeAlias);
+        // The system stores "no usage limit" as Integer.MAX_VALUE, which the UI shows as "Unlimited".
+        assertThat(coupon.getUsageLimit())
+                .as("Usage limit for coupon '%s' (unlimited)", couponCodeAlias)
+                .isIn(null, Integer.MAX_VALUE);
+        return this;
+    }
+
     public BrowseCouponsVerification couponHasUsedCount(String couponCode, int expectedUsedCount) {
         var coupon = findCouponByCode(couponCode);
         assertThat(coupon.getUsedCount())

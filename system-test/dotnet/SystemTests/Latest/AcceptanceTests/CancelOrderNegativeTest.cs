@@ -14,6 +14,7 @@ public class CancelOrderNegativeTest : BaseAcceptanceTest
     [ChannelInlineData("NON-EXISTENT-ORDER-99999", "Order NON-EXISTENT-ORDER-99999 does not exist.")]
     [ChannelInlineData("NON-EXISTENT-ORDER-88888", "Order NON-EXISTENT-ORDER-88888 does not exist.")]
     [ChannelInlineData("NON-EXISTENT-ORDER-77777", "Order NON-EXISTENT-ORDER-77777 does not exist.")]
+    [Trait("tag", "UC-003.6")]
     public async Task ShouldNotCancelNonExistentOrder(Channel channel, string orderNumber, string expectedErrorMessage)
     {
         await Scenario(channel)
@@ -24,6 +25,7 @@ public class CancelOrderNegativeTest : BaseAcceptanceTest
 
     [Theory]
     [ChannelData(ChannelType.API)]
+    [Trait("tag", "UC-003.7")]
     public async Task ShouldNotCancelAlreadyCancelledOrder(Channel channel)
     {
         await Scenario(channel)
@@ -35,6 +37,7 @@ public class CancelOrderNegativeTest : BaseAcceptanceTest
 
     [Theory]
     [ChannelData(ChannelType.API)]
+    [Trait("tag", "UC-003.6")]
     public async Task CannotCancelNonExistentOrder(Channel channel)
     {
         await Scenario(channel)
@@ -45,6 +48,7 @@ public class CancelOrderNegativeTest : BaseAcceptanceTest
 
     [Theory]
     [ChannelData(ChannelType.API)]
+    [Trait("tag", "UC-003.6")]
     public async Task CustomerShouldNotBeAbleToCancelAnotherCustomersOrder(Channel channel)
     {
         await Scenario(channel)

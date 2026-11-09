@@ -1,8 +1,9 @@
 import { test, forChannels, ChannelType } from './base/fixtures.js';
 import { OrderStatus } from '../../../src/testkit/common/dtos.js';
+import { criteria } from '../../commons/criteria.js';
 
 forChannels(ChannelType.UI, ChannelType.API)(() => {
-    test('shouldHaveCancelledStatusWhenCancelled', async ({ scenario }) => {
+    test('shouldHaveCancelledStatusWhenCancelled', criteria('UC-003.1'), async ({ scenario }) => {
         await scenario
             .given()
             .order()
@@ -15,7 +16,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
             .hasStatus(OrderStatus.CANCELLED);
     });
 
-    test('adminShouldBeAbleToCancelCustomerOrder', async ({ scenario }) => {
+    test('adminShouldBeAbleToCancelCustomerOrder', criteria('UC-003.4'), async ({ scenario }) => {
         await scenario
             .given()
             .order()

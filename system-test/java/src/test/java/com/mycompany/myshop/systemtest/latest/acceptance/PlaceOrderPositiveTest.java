@@ -191,6 +191,7 @@ class PlaceOrderPositiveTest extends BaseAcceptanceTest {
     }
 
     @Tag("UC-001.5")
+    @Tag("UC-005.4")
     @TestTemplate
     @Channel({ChannelType.UI, ChannelType.API})
     void couponUsageCountHasBeenIncrementedAfterItsBeenUsed() {

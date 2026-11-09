@@ -18,6 +18,7 @@ public class ViewOrderNegativeTest : BaseAcceptanceTest
     [Theory]
     [ChannelData(ChannelType.API, AlsoForFirstRow = new[] { ChannelType.UI })]
     [ChannelMemberData(nameof(NonExistentOrderValues))]
+    [Trait("tag", "UC-002.10")]
     public async Task ShouldNotBeAbleToViewNonExistentOrder(Channel channel, string orderNumber, string expectedErrorMessage)
     {
         await Scenario(channel)
@@ -28,6 +29,7 @@ public class ViewOrderNegativeTest : BaseAcceptanceTest
 
     [Theory]
     [ChannelData(ChannelType.UI, ChannelType.API)]
+    [Trait("tag", "UC-002.6")]
     public async Task CustomerShouldNotBeAbleToViewAnotherCustomersOrder(Channel channel)
     {
         await Scenario(channel)
@@ -40,6 +42,7 @@ public class ViewOrderNegativeTest : BaseAcceptanceTest
 
     [Theory]
     [ChannelData(ChannelType.UI, ChannelType.API)]
+    [Trait("tag", "UC-002.7")]
     public async Task AnonymousShouldNotBeAbleToViewOrder(Channel channel)
     {
         await Scenario(channel)

@@ -3,6 +3,7 @@ package com.mycompany.myshop.systemtest.latest.acceptance;
 import com.mycompany.myshop.systemtest.latest.acceptance.base.BaseAcceptanceTest;
 import com.mycompany.myshop.testkit.channel.ChannelType;
 import com.optivem.testing.Channel;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -21,6 +22,7 @@ class ViewOrderNegativeTest extends BaseAcceptanceTest {
         );
     }
 
+    @Tag("UC-002.10")
     @TestTemplate
     @Channel(value = {ChannelType.API}, alsoForFirstRow = ChannelType.UI)
     @MethodSource("provideNonExistentOrderValues")
@@ -32,6 +34,7 @@ class ViewOrderNegativeTest extends BaseAcceptanceTest {
                     .errorMessage(expectedErrorMessage);
     }
 
+    @Tag("UC-002.6")
     @TestTemplate
     @Channel({ChannelType.UI, ChannelType.API})
     void customerShouldNotBeAbleToViewAnotherCustomersOrder() {
@@ -44,6 +47,7 @@ class ViewOrderNegativeTest extends BaseAcceptanceTest {
                     .errorMessage("Order " + DEFAULT_ORDER_NUMBER + " does not exist.");
     }
 
+    @Tag("UC-002.7")
     @TestTemplate
     @Channel({ChannelType.UI, ChannelType.API})
     void anonymousShouldNotBeAbleToViewOrder() {

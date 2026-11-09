@@ -1,7 +1,7 @@
 ---
 id: UC-004
 title: Publish Coupon
-status: planned
+status: implemented
 ---
 
 # UC-004 Publish Coupon — Acceptance criteria

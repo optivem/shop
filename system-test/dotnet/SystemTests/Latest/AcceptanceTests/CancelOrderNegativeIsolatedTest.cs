@@ -19,6 +19,7 @@ public class CancelOrderNegativeIsolatedTest : BaseAcceptanceTest
     [ChannelInlineData("2025-12-31T22:15:00Z")]
     [ChannelInlineData("2028-12-31T22:29:59Z")]
     [ChannelInlineData("2021-12-31T22:30:00Z")]
+    [Trait("tag", "UC-003.5")]
     public async Task CannotCancelAnOrderOn31stDecBetween2200And2230(Channel channel, string timeIso)
     {
         await Scenario(channel)

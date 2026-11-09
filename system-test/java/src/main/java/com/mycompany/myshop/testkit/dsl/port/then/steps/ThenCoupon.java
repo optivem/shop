@@ -11,5 +11,14 @@ public interface ThenCoupon extends ThenStep<ThenCoupon> {
 
     ThenCoupon hasUsageLimit(int usageLimit);
 
+    /** The coupon has no valid-from time, so it is valid immediately. */
+    ThenCoupon isValidImmediately();
+
+    /** The coupon has no valid-to time, so it never expires. */
+    ThenCoupon neverExpires();
+
+    /** The coupon has no usage limit. */
+    ThenCoupon hasUnlimitedUsage();
+
     ThenCoupon hasUsedCount(int expectedUsedCount);
 }

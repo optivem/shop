@@ -4,9 +4,13 @@ import com.mycompany.myshop.systemtest.latest.acceptance.base.BaseAcceptanceTest
 import com.mycompany.myshop.testkit.channel.ChannelType;
 import com.mycompany.myshop.testkit.common.domain.OrderStatus;
 import com.optivem.testing.Channel;
+import com.optivem.testing.DataSource;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.TestTemplate;
 
 class ViewOrderPositiveTest extends BaseAcceptanceTest {
+    @Tag("UC-002.4")
+    @Tag("UC-002.5")
     @TestTemplate
     @Channel({ChannelType.UI, ChannelType.API})
     void shouldBeAbleToViewOrder() {
@@ -81,5 +85,20 @@ class ViewOrderPositiveTest extends BaseAcceptanceTest {
                 .and().loggedInAsAdmin()
                 .when().viewOrder()
                 .then().shouldSucceed();
+    }
+
+    @Tag("UC-002.5")
+    @TestTemplate
+    @Channel(value = {ChannelType.API}, alsoForFirstRow = ChannelType.UI)
+    @DataSource({"DELIVERED"})
+    @DataSource({"CANCELLED"})
+    void shouldShowTheStatusOfTheOrder(String status) {
+        scenario
+                .given().order()
+                    .withStatus(status)
+                .when().viewOrder()
+                .then().shouldSucceed()
+                .and().order()
+                    .hasStatus(OrderStatus.valueOf(status));
     }
 }

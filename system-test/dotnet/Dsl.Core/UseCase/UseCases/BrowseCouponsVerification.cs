@@ -48,6 +48,28 @@ public class BrowseCouponsVerification : ResponseVerification<BrowseCouponsRespo
         return this;
     }
 
+    public BrowseCouponsVerification CouponHasNoValidFrom(string couponCodeAlias)
+    {
+        var coupon = FindCouponByCode(couponCodeAlias);
+        coupon.ValidFrom.ShouldBeNull($"Expected coupon '{couponCodeAlias}' to have no validFrom (valid immediately)");
+        return this;
+    }
+
+    public BrowseCouponsVerification CouponHasNoValidTo(string couponCodeAlias)
+    {
+        var coupon = FindCouponByCode(couponCodeAlias);
+        coupon.ValidTo.ShouldBeNull($"Expected coupon '{couponCodeAlias}' to have no validTo (never expires)");
+        return this;
+    }
+
+    public BrowseCouponsVerification CouponHasNoUsageLimit(string couponCodeAlias)
+    {
+        var coupon = FindCouponByCode(couponCodeAlias);
+        // The system stores "no usage limit" as int.MaxValue, which the UI shows as "Unlimited".
+        (coupon.UsageLimit is null or int.MaxValue).ShouldBeTrue($"Expected coupon '{couponCodeAlias}' to have no usage limit (unlimited), but was {coupon.UsageLimit}");
+        return this;
+    }
+
     public BrowseCouponsVerification CouponHasUsedCount(string couponCode, int expectedUsedCount)
     {
         var coupon = FindCouponByCode(couponCode);

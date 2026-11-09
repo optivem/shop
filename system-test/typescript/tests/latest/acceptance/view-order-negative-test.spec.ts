@@ -1,6 +1,7 @@
 import { test, forChannels, ChannelType } from './base/fixtures.js';
 import { ErrorMessages } from '../../commons/constants/error-messages.js';
 import { DEFAULTS } from '../../../src/testkit/dsl/core/scenario/defaults.js';
+import { criteria } from '../../commons/criteria.js';
 
 const nonExistentOrderCases = [
     { orderNumber: 'NON-EXISTENT-ORDER-99999', message: 'Order NON-EXISTENT-ORDER-99999 does not exist.' },
@@ -10,6 +11,7 @@ const nonExistentOrderCases = [
 
 test.eachAlsoFirstRow(nonExistentOrderCases)(
     'shouldNotBeAbleToViewNonExistentOrder_$orderNumber',
+    criteria('UC-002.10'),
     async ({ scenario, orderNumber, message }) => {
         await scenario
             .when()
@@ -22,7 +24,7 @@ test.eachAlsoFirstRow(nonExistentOrderCases)(
 );
 
 forChannels(ChannelType.UI, ChannelType.API)(() => {
-    test('customerShouldNotBeAbleToViewAnotherCustomersOrder', async ({ scenario }) => {
+    test('customerShouldNotBeAbleToViewAnotherCustomersOrder', criteria('UC-002.6'), async ({ scenario }) => {
         await scenario
             .given()
             .order()
@@ -38,7 +40,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
 });
 
 forChannels(ChannelType.UI, ChannelType.API)(() => {
-    test('anonymousShouldNotBeAbleToViewOrder', async ({ scenario }) => {
+    test('anonymousShouldNotBeAbleToViewOrder', criteria('UC-002.7'), async ({ scenario }) => {
         await scenario
             .given()
             .notLoggedIn()

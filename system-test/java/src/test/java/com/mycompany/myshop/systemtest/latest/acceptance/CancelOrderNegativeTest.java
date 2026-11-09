@@ -5,11 +5,13 @@ import com.mycompany.myshop.testkit.channel.ChannelType;
 import com.mycompany.myshop.testkit.common.domain.OrderStatus;
 import com.optivem.testing.Channel;
 import com.optivem.testing.DataSource;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.TestTemplate;
 
 import static com.mycompany.myshop.testkit.dsl.core.scenario.ScenarioDefaults.DEFAULT_ORDER_NUMBER;
 
 class CancelOrderNegativeTest extends BaseAcceptanceTest {
+    @Tag("UC-003.6")
     @TestTemplate
     @Channel({ChannelType.API})
     @DataSource({"NON-EXISTENT-ORDER-99999", "Order NON-EXISTENT-ORDER-99999 does not exist."})
@@ -23,6 +25,7 @@ class CancelOrderNegativeTest extends BaseAcceptanceTest {
                     .errorMessage(expectedErrorMessage);
     }
 
+    @Tag("UC-003.7")
     @TestTemplate
     @Channel({ChannelType.API})
     void shouldNotCancelAlreadyCancelledOrder() {
@@ -34,6 +37,7 @@ class CancelOrderNegativeTest extends BaseAcceptanceTest {
                     .errorMessage("Order has already been cancelled");
     }
 
+    @Tag("UC-003.6")
     @TestTemplate
     @Channel({ChannelType.API})
     void cannotCancelNonExistentOrder() {
@@ -44,6 +48,7 @@ class CancelOrderNegativeTest extends BaseAcceptanceTest {
                     .errorMessage("Order non-existent-order-12345 does not exist.");
     }
 
+    @Tag("UC-003.6")
     @TestTemplate
     @Channel({ChannelType.API})
     void customerShouldNotBeAbleToCancelAnotherCustomersOrder() {

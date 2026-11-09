@@ -3,11 +3,14 @@ package com.mycompany.myshop.systemtest.latest.acceptance;
 import com.mycompany.myshop.systemtest.latest.acceptance.base.BaseAcceptanceTest;
 import com.mycompany.myshop.testkit.channel.ChannelType;
 import com.optivem.testing.Channel;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.TestTemplate;
 
 import static com.mycompany.myshop.testkit.dsl.core.scenario.ScenarioDefaults.DEFAULT_ORDER_NUMBER;
 
 class BrowseOrderHistoryPositiveTest extends BaseAcceptanceTest {
+    @Tag("UC-002.1")
+    @Tag("UC-002.2")
     @TestTemplate
     @Channel({ChannelType.UI, ChannelType.API})
     void customerShouldSeeOwnOrderInHistory() {
@@ -47,6 +50,7 @@ class BrowseOrderHistoryPositiveTest extends BaseAcceptanceTest {
                         .containsOrder(DEFAULT_ORDER_NUMBER);
     }
 
+    @Tag("UC-002.3")
     @TestTemplate
     @Channel(ChannelType.API)
     void firstPageShouldReportTheTotalNumberOfMatchingOrders() {
@@ -63,6 +67,7 @@ class BrowseOrderHistoryPositiveTest extends BaseAcceptanceTest {
                         .hasTotalElements(1);
     }
 
+    @Tag("UC-002.3")
     @TestTemplate
     @Channel(ChannelType.API)
     void pagePastTheLastShouldBeEmpty() {

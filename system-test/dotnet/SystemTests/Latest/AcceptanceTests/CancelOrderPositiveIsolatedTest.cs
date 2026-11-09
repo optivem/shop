@@ -18,6 +18,7 @@ public class CancelOrderPositiveIsolatedTest : BaseAcceptanceTest
     [ChannelInlineData("2024-12-31T22:30:01Z")]
     [ChannelInlineData("2024-12-31T10:00:00Z")]
     [ChannelInlineData("2025-01-01T22:15:00Z")]
+    [Trait("tag", "UC-003.3")]
     public async Task ShouldBeAbleToCancelOrderOutsideOfBlackoutPeriod31stDecBetween2200And2230(Channel channel, string timeIso)
     {
         await Scenario(channel)

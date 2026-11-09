@@ -174,6 +174,7 @@ public class PlaceOrderPositiveTest : BaseAcceptanceTest
     [Theory]
     [ChannelData(ChannelType.UI, ChannelType.API)]
     [Trait("tag", "UC-001.5")]
+    [Trait("tag", "UC-005.4")]
     public async Task CouponUsageCountHasBeenIncrementedAfterItsBeenUsed(Channel channel)
     {
         await Scenario(channel)

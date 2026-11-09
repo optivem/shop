@@ -1,5 +1,6 @@
 import { test } from './base/fixtures.js';
 import { OrderStatus } from '../../../src/testkit/common/dtos.js';
+import { criteria } from '../../commons/criteria.js';
 
 const timesInsideBlackout = [
     '2024-12-31T22:00:00Z',
@@ -15,6 +16,7 @@ test.describe('@isolated', () => {
     test.describe.configure({ mode: 'serial' });
     test.eachAlsoFirstRow(timesInsideBlackout)(
         'cannotCancelAnOrderOn31stDecBetween2200And2230_$time',
+        criteria('UC-003.5'),
         async ({ scenario, time }) => {
             await scenario
                 .given()

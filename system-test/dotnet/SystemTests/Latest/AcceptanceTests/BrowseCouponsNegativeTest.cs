@@ -9,6 +9,7 @@ public class BrowseCouponsNegativeTest : BaseAcceptanceTest
 {
     [Theory]
     [ChannelData(ChannelType.UI, ChannelType.API)]
+    [Trait("tag", "UC-005.5")]
     public async Task CustomerShouldNotBeAbleToBrowseCoupons(Channel channel)
     {
         await Scenario(channel)
@@ -20,6 +21,7 @@ public class BrowseCouponsNegativeTest : BaseAcceptanceTest
 
     [Theory]
     [ChannelData(ChannelType.API)]
+    [Trait("tag", "UC-005.6")]
     public async Task ShouldRejectPageSizeAboveTheCap(Channel channel)
     {
         await Scenario(channel)
@@ -31,6 +33,7 @@ public class BrowseCouponsNegativeTest : BaseAcceptanceTest
 
     [Theory]
     [ChannelData(ChannelType.API)]
+    [Trait("tag", "UC-005.6")]
     public async Task ShouldRejectPageBelowTheFirst(Channel channel)
     {
         await Scenario(channel)

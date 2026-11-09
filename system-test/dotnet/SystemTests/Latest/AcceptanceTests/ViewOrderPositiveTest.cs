@@ -9,6 +9,8 @@ public class ViewOrderPositiveTest : BaseAcceptanceTest
 {
     [Theory]
     [ChannelData(ChannelType.UI, ChannelType.API)]
+    [Trait("tag", "UC-002.4")]
+    [Trait("tag", "UC-002.5")]
     public async Task ShouldBeAbleToViewOrder(Channel channel)
     {
         await Scenario(channel)
@@ -72,5 +74,20 @@ public class ViewOrderPositiveTest : BaseAcceptanceTest
             .And().LoggedInAsAdmin()
             .When().ViewOrder()
             .Then().ShouldSucceed();
+    }
+
+    [Theory]
+    [ChannelData(ChannelType.API, AlsoForFirstRow = new[] { ChannelType.UI })]
+    [ChannelInlineData(OrderStatus.Delivered)]
+    [ChannelInlineData(OrderStatus.Cancelled)]
+    [Trait("tag", "UC-002.5")]
+    public async Task ShouldShowTheStatusOfTheOrder(Channel channel, OrderStatus status)
+    {
+        await Scenario(channel)
+            .Given().Order().WithStatus(status)
+            .When().ViewOrder()
+            .Then().ShouldSucceed()
+            .And().Order()
+            .HasStatus(status);
     }
 }

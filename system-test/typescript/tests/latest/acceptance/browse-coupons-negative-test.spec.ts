@@ -1,8 +1,9 @@
 import { test, forChannels, ChannelType } from './base/fixtures.js';
 import { ErrorMessages } from '../../commons/constants/error-messages.js';
+import { criteria } from '../../commons/criteria.js';
 
 forChannels(ChannelType.UI, ChannelType.API)(() => {
-    test('customerShouldNotBeAbleToBrowseCoupons', async ({ scenario }) => {
+    test('customerShouldNotBeAbleToBrowseCoupons', criteria('UC-005.5'), async ({ scenario }) => {
         await scenario
             .given()
             .loggedInAsCustomer()
@@ -15,7 +16,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
 });
 
 forChannels(ChannelType.API)(() => {
-    test('shouldRejectPageSizeAboveTheCap', async ({ scenario }) => {
+    test('shouldRejectPageSizeAboveTheCap', criteria('UC-005.6'), async ({ scenario }) => {
         await scenario
             .when()
             .browseCoupons()
@@ -26,7 +27,7 @@ forChannels(ChannelType.API)(() => {
             .fieldErrorMessage('size', 'Page size must be between 1 and 100');
     });
 
-    test('shouldRejectPageBelowTheFirst', async ({ scenario }) => {
+    test('shouldRejectPageBelowTheFirst', criteria('UC-005.6'), async ({ scenario }) => {
         await scenario
             .when()
             .browseCoupons()

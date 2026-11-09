@@ -102,6 +102,7 @@ export class ThenPublishCouponResultStage implements PromiseLike<void> {
       if (!result.success) {
         for (const fn of this._errorAssertions) fn(result.error, this.useCaseContext);
       }
+      await this._runCouponAssertions();
     }
   }
 
@@ -166,6 +167,28 @@ export class ThenPublishCouponCoupon implements PromiseLike<void> {
     return this;
   }
 
+  isValidImmediately(): this {
+    this.stage._addCouponAssertion(this.code, (coupon) => {
+      expect(coupon.validFrom ?? null, 'validFrom (valid immediately)').toBeNull();
+    });
+    return this;
+  }
+
+  neverExpires(): this {
+    this.stage._addCouponAssertion(this.code, (coupon) => {
+      expect(coupon.validTo ?? null, 'validTo (never expires)').toBeNull();
+    });
+    return this;
+  }
+
+  hasUnlimitedUsage(): this {
+    this.stage._addCouponAssertion(this.code, (coupon) => {
+      // The system stores "no usage limit" as 2147483647 (int max), which the UI shows as "Unlimited".
+      expect([null, 2147483647], 'usageLimit (unlimited)').toContain(coupon.usageLimit ?? null);
+    });
+    return this;
+  }
+
   hasUsedCount(count: number): this {
     this.stage._addCouponAssertion(this.code, (coupon) => {
       expect(coupon.usedCount).toBe(count);
@@ -186,6 +209,10 @@ export class ThenPublishCouponFailure implements PromiseLike<void> {
 
   and(): this {
     return this;
+  }
+
+  coupon(code: string): ThenPublishCouponCoupon {
+    return new ThenPublishCouponCoupon(this.stage, code);
   }
 
   errorMessage(expected: string): this {

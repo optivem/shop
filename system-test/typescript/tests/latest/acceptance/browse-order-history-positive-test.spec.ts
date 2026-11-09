@@ -1,8 +1,9 @@
 import { test, forChannels, ChannelType } from './base/fixtures.js';
 import { DEFAULTS } from '../../../src/testkit/dsl/core/scenario/defaults.js';
+import { criteria } from '../../commons/criteria.js';
 
 forChannels(ChannelType.UI, ChannelType.API)(() => {
-    test('customerShouldSeeOwnOrderInHistory', async ({ scenario }) => {
+    test('customerShouldSeeOwnOrderInHistory', criteria('UC-002.1', 'UC-002.2'), async ({ scenario }) => {
         await scenario
             .given()
             .order()
@@ -49,7 +50,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
 });
 
 forChannels(ChannelType.API)(() => {
-    test('firstPageShouldReportTheTotalNumberOfMatchingOrders', async ({ scenario }) => {
+    test('firstPageShouldReportTheTotalNumberOfMatchingOrders', criteria('UC-002.3'), async ({ scenario }) => {
         await scenario
             .given()
             .order()
@@ -67,7 +68,7 @@ forChannels(ChannelType.API)(() => {
             .hasTotalElements(1);
     });
 
-    test('pagePastTheLastShouldBeEmpty', async ({ scenario }) => {
+    test('pagePastTheLastShouldBeEmpty', criteria('UC-002.3'), async ({ scenario }) => {
         await scenario
             .given()
             .order()
