@@ -17,6 +17,9 @@ import type { PublishCouponRequest } from '../../port/dtos/PublishCouponRequest.
 import type { PublishCouponResponse } from '../../port/dtos/PublishCouponResponse.js';
 import type { BrowseCouponsRequest } from '../../port/dtos/BrowseCouponsRequest.js';
 import type { BrowseCouponsResponse } from '../../port/dtos/BrowseCouponsResponse.js';
+import type { ViewProfileRequest } from '../../port/dtos/ViewProfileRequest.js';
+import type { ViewProfileResponse } from '../../port/dtos/ViewProfileResponse.js';
+import type { UpdateProfileRequest } from '../../port/dtos/UpdateProfileRequest.js';
 import type { MyShopDriver } from '../../port/my-shop-driver.js';
 import type { UserIdentity } from '../../port/user-identity.js';
 import { TestUsers, testCustomer, type TestUser } from '../shared/client/http/test-user.js';
@@ -82,7 +85,9 @@ export class MyShopApiDriver implements MyShopDriver {
   }
 
   async browseOrderHistory(request: BrowseOrderHistoryRequest): Promise<Result<BrowseOrderHistoryResponse, SystemError>> {
-    return this.runAs(TestUsers.CUSTOMER).orders().browseOrderHistory(request.orderNumber, request.page, request.size);
+    return this.runAs(TestUsers.CUSTOMER)
+      .orders()
+      .browseOrderHistory(request.orderNumber, request.page, request.size, request.customer);
   }
 
   async publishCoupon(request: PublishCouponRequest): Promise<Result<PublishCouponResponse, SystemError>> {
@@ -93,6 +98,14 @@ export class MyShopApiDriver implements MyShopDriver {
 
   async browseCoupons(request: BrowseCouponsRequest): Promise<Result<BrowseCouponsResponse, SystemError>> {
     return this.runAs(TestUsers.ADMIN).coupons().browseCoupons(request.page, request.size);
+  }
+
+  async viewProfile(_request: ViewProfileRequest): Promise<Result<ViewProfileResponse, SystemError>> {
+    return this.runAs(TestUsers.CUSTOMER).profile().viewProfile();
+  }
+
+  async updateProfile(request: UpdateProfileRequest): Promise<Result<ViewProfileResponse, SystemError>> {
+    return this.runAs(TestUsers.CUSTOMER).profile().updateProfile(request);
   }
 
   async close(): Promise<void> {

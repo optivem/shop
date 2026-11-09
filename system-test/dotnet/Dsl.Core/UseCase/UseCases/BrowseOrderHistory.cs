@@ -10,6 +10,7 @@ public class BrowseOrderHistory : BaseMyShopUseCase<BrowseOrderHistoryResponse, 
     private string? _orderNumberResultAlias;
     private string? _page;
     private string? _size;
+    private string? _customer;
 
     public BrowseOrderHistory(IMyShopDriver driver, UseCaseContext context)
         : base(driver, context)
@@ -34,10 +35,17 @@ public class BrowseOrderHistory : BaseMyShopUseCase<BrowseOrderHistoryResponse, 
         return this;
     }
 
+    /// <summary>The username of the customer whose orders an admin filters on.</summary>
+    public BrowseOrderHistory Customer(string? customerUsername)
+    {
+        _customer = customerUsername;
+        return this;
+    }
+
     public override async Task<MyShopUseCaseResult<BrowseOrderHistoryResponse, BrowseOrderHistoryVerification>> Execute()
     {
         var orderNumber = _context.GetResultValue(_orderNumberResultAlias);
-        var request = new BrowseOrderHistoryRequest { OrderNumber = orderNumber, Page = _page, Size = _size };
+        var request = new BrowseOrderHistoryRequest { OrderNumber = orderNumber, Page = _page, Size = _size, Customer = _customer };
 
         var result = await _driver.BrowseOrderHistoryAsync(request);
 

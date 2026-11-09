@@ -150,7 +150,7 @@ class PlaceOrderPositiveTest extends BaseAcceptanceTest {
                     .hasSubtotalPrice("100.00");
     }
 
-    @Tag("UC-001.4")
+    @Tag("UC-001.16")
     @TestTemplate
     @Channel(value = {ChannelType.API}, alsoForFirstRow = ChannelType.UI)
     @DataSource({"UK", "0.09"})
@@ -167,7 +167,7 @@ class PlaceOrderPositiveTest extends BaseAcceptanceTest {
                     .hasTaxRate(taxRate);
     }
 
-    @Tag("UC-001.4")
+    @Tag("UC-001.16")
     @TestTemplate
     @Channel(value = {ChannelType.API}, alsoForFirstRow = ChannelType.UI)
     @DataSource({"UK", "0.09", "50.00", "4.50", "54.50"})
@@ -205,7 +205,7 @@ class PlaceOrderPositiveTest extends BaseAcceptanceTest {
                     .hasUsedCount(1);
     }
 
-    @Tag("UC-001.4")
+    @Tag("UC-001.16")
     @TestTemplate
     @Channel(ChannelType.API)
     void orderTotalShouldIncludeTax() {
@@ -241,7 +241,7 @@ class PlaceOrderPositiveTest extends BaseAcceptanceTest {
     }
 
     @Tag("UC-001.3")
-    @Tag("UC-001.4")
+    @Tag("UC-001.16")
     @TestTemplate
     @Channel(ChannelType.API)
     void orderTotalShouldApplyCouponDiscountAndTax() {
@@ -290,5 +290,55 @@ class PlaceOrderPositiveTest extends BaseAcceptanceTest {
                 .then().shouldSucceed()
                 .and().order()
                     .doesNotHaveOrderNumber(DEFAULT_ORDER_NUMBER);
+    }
+
+    @Tag("UC-001.4")
+    @TestTemplate
+    @Channel(ChannelType.API)
+    @DataSource({"US", "0.00", "100.00", "0.00", "100.00"})
+    @DataSource({"DE", "0.19", "50.00", "9.50", "59.50"})
+    @DataSource({"GB", "0.20", "100.00", "20.00", "120.00"})
+    void shouldApplyTaxRateOfShippingAddressCountry(String country, String taxRate, String unitPrice, String taxAmount, String total) {
+        scenario
+                .given().country()
+                    .withCode(country)
+                    .withTaxRate(taxRate)
+                .and().product()
+                    .withUnitPrice(unitPrice)
+                .when().placeOrder()
+                    .withQuantity(1)
+                    .withShippingCountry(country)
+                .then().shouldSucceed()
+                .and().order()
+                    .hasTaxRate(taxRate)
+                    .hasTaxAmount(taxAmount)
+                    .hasTotalPrice(total)
+                    .hasCountry(country);
+    }
+
+    @Tag("UC-001.15")
+    @TestTemplate
+    @Channel(ChannelType.API)
+    void shouldStoreShippingAddressWithOrder() {
+        scenario
+                .given().country()
+                    .withCode("DE")
+                .when().placeOrder()
+                    .withShippingAddress("Ana", "Novak", "Main St 1", "10115", "Berlin", "DE")
+                .then().shouldSucceed()
+                .and().order()
+                    .hasShippingAddress("Ana", "Novak", "Main St 1", "10115", "Berlin", "DE")
+                    .hasCountry("DE");
+    }
+
+    @Tag("UC-001.16")
+    @TestTemplate
+    @Channel(ChannelType.API)
+    void quickOrderShouldHaveNoShippingAddress() {
+        scenario
+                .when().placeOrder()
+                .then().shouldSucceed()
+                .and().order()
+                    .hasNoShippingAddress();
     }
 }

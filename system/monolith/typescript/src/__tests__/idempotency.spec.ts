@@ -27,6 +27,15 @@ describe('requestFingerprint', () => {
     expect(requestFingerprint({ ...order, couponCode: 'SAVE10' })).not.toBe(requestFingerprint(order));
     expect(requestFingerprint({ ...order, quantity: 3 })).not.toBe(requestFingerprint(order));
   });
+
+  it('includes the shipping address', () => {
+    const address = { firstName: 'Ana', lastName: 'Novak', street: 'Main St 1', postalCode: '10115', city: 'Berlin', country: 'DE' };
+    const withAddress = { sku: 'BOOK-123', quantity: 2, country: null, shippingAddress: address };
+    expect(requestFingerprint(withAddress)).not.toBe(requestFingerprint({ ...withAddress, shippingAddress: null }));
+    expect(requestFingerprint(withAddress)).not.toBe(
+      requestFingerprint({ ...withAddress, shippingAddress: { ...address, city: 'Munich' } })
+    );
+  });
 });
 
 describe('isExpired', () => {

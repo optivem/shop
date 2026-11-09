@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import type { FieldError } from './errors';
+import type { ShippingAddress } from './db';
 
 // Idempotent POST /api/orders: keys are scoped per caller and live 24 hours from first use.
 export const IDEMPOTENCY_KEY_HEADER = 'Idempotency-Key';
@@ -21,14 +22,22 @@ export function resolveIdempotencyKey(rawKey: string | null | undefined): KeyRes
   return { ok: true, key: rawKey };
 }
 
-/** SHA-256 (hex) over sku, quantity, country and coupon code as bound, null as empty, joined by \n. */
+/**
+ * SHA-256 (hex) over sku, quantity, country and coupon code as bound, then the shipping address fields when
+ * there is one, null as empty, joined by \n.
+ */
 export function requestFingerprint(request: {
   sku: string;
   quantity: number;
-  country: string;
+  country?: string | null;
   couponCode?: string | null;
+  shippingAddress?: ShippingAddress | null;
 }): string {
-  const parts = [request.sku, request.quantity, request.country, request.couponCode].map((value) =>
+  const address = request.shippingAddress;
+  const addressParts = address
+    ? [address.firstName, address.lastName, address.street, address.postalCode, address.city, address.country]
+    : [];
+  const parts = [request.sku, request.quantity, request.country, request.couponCode, ...addressParts].map((value) =>
     value === undefined || value === null ? '' : String(value)
   );
   return crypto.createHash('sha256').update(parts.join('\n')).digest('hex');

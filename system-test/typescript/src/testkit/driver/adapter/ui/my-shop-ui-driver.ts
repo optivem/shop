@@ -22,6 +22,9 @@ import type { PublishCouponRequest } from '../../port/dtos/PublishCouponRequest.
 import type { PublishCouponResponse } from '../../port/dtos/PublishCouponResponse.js';
 import type { BrowseCouponsRequest } from '../../port/dtos/BrowseCouponsRequest.js';
 import type { BrowseCouponsResponse } from '../../port/dtos/BrowseCouponsResponse.js';
+import type { ViewProfileRequest } from '../../port/dtos/ViewProfileRequest.js';
+import type { ViewProfileResponse } from '../../port/dtos/ViewProfileResponse.js';
+import type { UpdateProfileRequest } from '../../port/dtos/UpdateProfileRequest.js';
 import type { MyShopDriver } from '../../port/my-shop-driver.js';
 import { TestUsers, testCustomer, type TestUser } from '../shared/client/http/test-user.js';
 import { AUTHENTICATION_REQUIRED, MyShopUiClient, PERMISSION_DENIED } from './client/MyShopUiClient.js';
@@ -62,6 +65,9 @@ export class MyShopUiDriver implements MyShopDriver {
 
   async placeOrder(request: PlaceOrderRequest): Promise<Result<PlaceOrderResponse, SystemError>> {
     requireNotSet('Idempotency-Key', request.idempotencyKey);
+    if (request.shippingAddress !== undefined && request.shippingAddress !== null) {
+      throw notSupportedByUiYet('Placing an order with a shipping address');
+    }
     if (this.anonymous) return this.loginRequired('/new-order');
 
     await this.runAs(TestUsers.CUSTOMER);
@@ -165,6 +171,9 @@ export class MyShopUiDriver implements MyShopDriver {
   async browseOrderHistory(request: BrowseOrderHistoryRequest): Promise<Result<BrowseOrderHistoryResponse, SystemError>> {
     requireNotSet('page', request.page);
     requireNotSet('size', request.size);
+    if (request.customer !== undefined && request.customer !== null) {
+      throw notSupportedByUiYet('The order history customer filter');
+    }
     if (this.anonymous) return this.loginRequired('/order-history');
 
     await this.runAs(TestUsers.CUSTOMER);
@@ -225,6 +234,14 @@ export class MyShopUiDriver implements MyShopDriver {
     return success({ coupons: rows } as BrowseCouponsResponse);
   }
 
+  viewProfile(_request: ViewProfileRequest): Promise<Result<ViewProfileResponse, SystemError>> {
+    return Promise.reject(notSupportedByUiYet('Viewing the profile'));
+  }
+
+  updateProfile(_request: UpdateProfileRequest): Promise<Result<ViewProfileResponse, SystemError>> {
+    return Promise.reject(notSupportedByUiYet('Updating the profile'));
+  }
+
   async close(): Promise<void> {
     await this.client.close();
   }
@@ -270,6 +287,11 @@ export class MyShopUiDriver implements MyShopDriver {
   private async runAs(operationDefault: TestUser): Promise<void> {
     await this.client.switchUser(this.requestedUser ?? operationDefault);
   }
+}
+
+/** The UI has no screen for this yet (BUILD Steps 3-6): API-channel scenarios only. */
+function notSupportedByUiYet(feature: string): Error {
+  return new Error(`${feature} is not supported by the UI channel yet; run this scenario on the API channel only`);
 }
 
 /** The UI has no control for this input (no idempotency key, no paging controls): API-channel scenarios only. */

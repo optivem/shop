@@ -5,6 +5,8 @@ import type { WhenBrowseOrderHistory } from './steps/when-browse-order-history.j
 import type { WhenViewOrder } from './steps/when-view-order.js';
 import type { WhenPublishCoupon } from './steps/when-publish-coupon.js';
 import type { WhenBrowseCoupons } from './steps/when-browse-coupons.js';
+import type { WhenViewProfile } from './steps/when-view-profile.js';
+import type { WhenUpdateProfile } from './steps/when-update-profile.js';
 
 export interface WhenStage {
   placeOrder(): WhenPlaceOrder;
@@ -14,4 +16,6 @@ export interface WhenStage {
   browseOrderHistory(): WhenBrowseOrderHistory;
   publishCoupon(): WhenPublishCoupon;
   browseCoupons(): WhenBrowseCoupons;
+  viewProfile(): WhenViewProfile;
+  updateProfile(): WhenUpdateProfile;
 }

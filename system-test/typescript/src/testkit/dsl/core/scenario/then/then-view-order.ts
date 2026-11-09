@@ -193,6 +193,28 @@ export class ThenViewOrderOrder implements PromiseLike<void> {
     return this;
   }
 
+  /** The country is an alias, resolved the same way as hasCountry. */
+  hasShippingAddress(firstName: string, lastName: string, street: string, postalCode: string, city: string, country: string): this {
+    this.stage._addOrderAssertion((order) => {
+      expect(order.shippingAddress, 'Order shipping address').toEqual({
+        firstName,
+        lastName,
+        street,
+        postalCode,
+        city,
+        country: this.stage.useCaseContext.getParamValueOrLiteral(country),
+      });
+    });
+    return this;
+  }
+
+  hasNoShippingAddress(): this {
+    this.stage._addOrderAssertion((order) => {
+      expect(order.shippingAddress ?? null, 'Order shipping address').toBeNull();
+    });
+    return this;
+  }
+
   then<TResult1 = void, TResult2 = never>(
     onfulfilled?: ((value: void) => TResult1 | PromiseLike<TResult1>) | null,
     onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,

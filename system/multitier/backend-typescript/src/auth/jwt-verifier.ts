@@ -5,6 +5,10 @@ export interface AuthenticatedUser {
   subject: string;
   username: string;
   roles: string[];
+  /** The `email`, `given_name` and `family_name` claims; null when the token does not carry them. */
+  email: string | null;
+  givenName: string | null;
+  familyName: string | null;
 }
 
 /**
@@ -34,8 +38,15 @@ export class JwtVerifier {
       subject,
       username: typeof preferred === 'string' ? preferred : subject,
       roles: realmRoles(payload),
+      email: stringClaim(payload.email),
+      givenName: stringClaim(payload.given_name),
+      familyName: stringClaim(payload.family_name),
     };
   }
+}
+
+function stringClaim(value: unknown): string | null {
+  return typeof value === 'string' ? value : null;
 }
 
 function realmRoles(payload: Record<string, unknown>): string[] {

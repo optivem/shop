@@ -33,6 +33,17 @@ public class ThenSuccess<TSuccessResponse, TSuccessVerification>
 
     IThenOrderHistory IThenSuccess.OrderHistory() => OrderHistory();
 
+    /// <summary>Verifies the profile the executed operation (view or update profile) answered with.</summary>
+    public IThenProfile Profile()
+    {
+        return new Steps.ThenProfile(_thenClause.App, () => Task.CompletedTask, async () =>
+        {
+            var result = await _thenClause.GetExecutionResult();
+            return result.Result.ShouldSucceed() as Dsl.Core.UseCase.UseCases.ViewProfileVerification
+                ?? throw new InvalidOperationException("Cannot verify profile: the executed operation did not answer with a profile");
+        });
+    }
+
     /// <summary>
     /// When awaited with no further chaining, runs the success verification.
     /// </summary>

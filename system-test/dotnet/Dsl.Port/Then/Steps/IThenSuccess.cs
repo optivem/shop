@@ -8,5 +8,8 @@ public interface IThenSuccess
 
     IThenOrderHistory OrderHistory();
 
+    /// <summary>The profile the executed operation answered with.</summary>
+    IThenProfile Profile();
+
     TaskAwaiter GetAwaiter();
 }

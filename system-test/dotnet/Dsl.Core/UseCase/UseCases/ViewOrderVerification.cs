@@ -230,6 +230,26 @@ public class ViewOrderVerification : ResponseVerification<ViewOrderResponse>
         return this;
     }
 
+    public ViewOrderVerification ShippingAddress(string firstName, string lastName, string street, string postalCode, string city, string countryAlias)
+    {
+        var expectedCountry = Context.GetParamValueOrLiteral(countryAlias);
+        var actual = Response.ShippingAddress;
+        actual.ShouldNotBeNull("Expected the order to have a shipping address, but it had none");
+        actual.FirstName.ShouldBe(firstName, $"Expected shipping first name '{firstName}', but got '{actual.FirstName}'");
+        actual.LastName.ShouldBe(lastName, $"Expected shipping last name '{lastName}', but got '{actual.LastName}'");
+        actual.Street.ShouldBe(street, $"Expected shipping street '{street}', but got '{actual.Street}'");
+        actual.PostalCode.ShouldBe(postalCode, $"Expected shipping postal code '{postalCode}', but got '{actual.PostalCode}'");
+        actual.City.ShouldBe(city, $"Expected shipping city '{city}', but got '{actual.City}'");
+        actual.Country.ShouldBe(expectedCountry, $"Expected shipping country '{expectedCountry}', but got '{actual.Country}'");
+        return this;
+    }
+
+    public ViewOrderVerification NoShippingAddress()
+    {
+        Response.ShippingAddress.ShouldBeNull("Expected the order to have no shipping address, but it had one");
+        return this;
+    }
+
     public ViewOrderVerification OrderNumberHasPrefix(string expectedPrefix)
     {
         Response.OrderNumber.ShouldStartWith(expectedPrefix, Case.Sensitive,

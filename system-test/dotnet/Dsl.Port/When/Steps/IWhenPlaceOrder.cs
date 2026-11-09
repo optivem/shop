@@ -19,4 +19,22 @@ public interface IWhenPlaceOrder : IWhenStep
     IWhenPlaceOrder WithCouponCode();
 
     IWhenPlaceOrder WithIdempotencyKey(string? idempotencyKey);
+
+    /// <summary>Ships the order to the default address (Ana Novak, Main St 1, 10115 Berlin, default country) instead of a Quick-order country.</summary>
+    IWhenPlaceOrder WithShippingAddress();
+
+    /// <summary>Ships the order to this address; the country is an alias like <see cref="WithCountry"/>.</summary>
+    IWhenPlaceOrder WithShippingAddress(string? firstName, string? lastName, string? street, string? postalCode, string? city, string? country);
+
+    IWhenPlaceOrder WithShippingFirstName(string? firstName);
+
+    IWhenPlaceOrder WithShippingLastName(string? lastName);
+
+    IWhenPlaceOrder WithShippingStreet(string? street);
+
+    IWhenPlaceOrder WithShippingPostalCode(string? postalCode);
+
+    IWhenPlaceOrder WithShippingCity(string? city);
+
+    IWhenPlaceOrder WithShippingCountry(string? country);
 }

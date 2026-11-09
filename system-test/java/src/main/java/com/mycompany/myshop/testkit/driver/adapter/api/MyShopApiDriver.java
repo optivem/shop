@@ -19,6 +19,9 @@ import com.mycompany.myshop.testkit.driver.port.dtos.PublishCouponRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.PublishCouponResponse;
 import com.mycompany.myshop.testkit.driver.port.dtos.ViewOrderRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.ViewOrderResponse;
+import com.mycompany.myshop.testkit.driver.port.dtos.UpdateProfileRequest;
+import com.mycompany.myshop.testkit.driver.port.dtos.ViewProfileRequest;
+import com.mycompany.myshop.testkit.driver.port.dtos.ViewProfileResponse;
 import com.mycompany.myshop.testkit.driver.port.MyShopDriver;
 import com.mycompany.myshop.testkit.driver.adapter.shared.client.http.TestUser;
 import com.mycompany.myshop.testkit.driver.port.UserIdentity;
@@ -105,7 +108,7 @@ public class MyShopApiDriver implements MyShopDriver {
     @Override
     public Result<BrowseOrderHistoryResponse, SystemError> browseOrderHistory(BrowseOrderHistoryRequest request) {
         runAs(TestUser.CUSTOMER);
-        return apiClient.orders().browseOrderHistory(request.getOrderNumber(), request.getPage(), request.getSize()).mapError(SystemErrorMapper::from);
+        return apiClient.orders().browseOrderHistory(request.getOrderNumber(), request.getCustomer(), request.getPage(), request.getSize()).mapError(SystemErrorMapper::from);
     }
 
     @Override
@@ -120,5 +123,17 @@ public class MyShopApiDriver implements MyShopDriver {
     public Result<BrowseCouponsResponse, SystemError> browseCoupons(BrowseCouponsRequest request) {
         runAs(TestUser.ADMIN);
         return apiClient.coupons().browseCoupons(request.getPage(), request.getSize()).mapError(SystemErrorMapper::from);
+    }
+
+    @Override
+    public Result<ViewProfileResponse, SystemError> viewProfile(ViewProfileRequest request) {
+        runAs(TestUser.CUSTOMER);
+        return apiClient.profile().viewProfile().mapError(SystemErrorMapper::from);
+    }
+
+    @Override
+    public Result<ViewProfileResponse, SystemError> updateProfile(UpdateProfileRequest request) {
+        runAs(TestUser.CUSTOMER);
+        return apiClient.profile().updateProfile(request).mapError(SystemErrorMapper::from);
     }
 }

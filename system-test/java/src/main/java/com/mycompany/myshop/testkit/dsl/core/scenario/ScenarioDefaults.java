@@ -18,6 +18,14 @@ public final class ScenarioDefaults {
     public static final String DEFAULT_COUNTRY = "US";
     public static final OrderStatus DEFAULT_ORDER_STATUS = OrderStatus.PLACED;
 
+    // Shipping address / profile defaults (the shipping address country defaults to DEFAULT_COUNTRY)
+    public static final String DEFAULT_FIRST_NAME = "Ana";
+    public static final String DEFAULT_LAST_NAME = "Novak";
+    public static final String DEFAULT_STREET = "Main St 1";
+    public static final String DEFAULT_POSTAL_CODE = "10115";
+    public static final String DEFAULT_CITY = "Berlin";
+    public static final String DEFAULT_PROFILE_COUNTRY = "DE";
+
     // Promotion defaults
     public static final boolean DEFAULT_PROMOTION_ACTIVE = false;
     public static final String DEFAULT_PROMOTION_DISCOUNT = "1.00";

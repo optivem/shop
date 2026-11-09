@@ -24,6 +24,7 @@ class BrowseOrderHistoryPositiveTest extends BaseAcceptanceTest {
                         .containsOrder(DEFAULT_ORDER_NUMBER);
     }
 
+    @Tag("UC-011.1")
     @TestTemplate
     @Channel({ChannelType.UI, ChannelType.API})
     void adminShouldSeeCustomerOrderInHistory() {
@@ -37,6 +38,7 @@ class BrowseOrderHistoryPositiveTest extends BaseAcceptanceTest {
                         .containsOrder(DEFAULT_ORDER_NUMBER);
     }
 
+    @Tag("UC-011.1")
     @TestTemplate
     @Channel({ChannelType.UI, ChannelType.API})
     void adminShouldSeeAnotherCustomersOrderInHistory() {
@@ -80,5 +82,43 @@ class BrowseOrderHistoryPositiveTest extends BaseAcceptanceTest {
                 .then().shouldSucceed()
                     .orderHistory()
                         .isEmpty();
+    }
+
+    @Tag("UC-011.3")
+    @Tag("UC-011.4")
+    @TestTemplate
+    @Channel(ChannelType.API)
+    void adminShouldSeeOrderOfChosenCustomer() {
+        scenario
+                .given().order()
+                    .withOrderNumber("ORD-A")
+                    .placedByCustomer("A")
+                .and().loggedInAsAdmin()
+                .when().browseOrderHistory()
+                    .withCustomer("A")
+                    .withOrderNumber("ORD-A")
+                .then().shouldSucceed()
+                    .orderHistory()
+                        .containsOrder("ORD-A");
+    }
+
+    @Tag("UC-011.5")
+    @TestTemplate
+    @Channel(ChannelType.API)
+    void customerFilterShouldBeIgnoredForCustomer() {
+        scenario
+                .given().order()
+                    .withOrderNumber("ORD-A")
+                    .placedByCustomer("A")
+                .and().order()
+                    .withOrderNumber("ORD-B")
+                    .placedByCustomer("B")
+                .and().loggedInAsCustomer("A")
+                .when().browseOrderHistory()
+                    .withCustomer("B")
+                    .withOrderNumber("ORD-A")
+                .then().shouldSucceed()
+                    .orderHistory()
+                        .containsOrder("ORD-A");
     }
 }

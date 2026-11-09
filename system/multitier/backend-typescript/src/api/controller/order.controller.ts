@@ -25,8 +25,15 @@ export class OrderController {
     @Query('orderNumber') orderNumber?: string,
     @Query('page') page?: string,
     @Query('size') size?: string,
+    @Query('customer') customer?: string,
   ) {
-    return this.orderService.browseOrderHistory(orderNumber, user, page, size);
+    return this.orderService.browseOrderHistory(
+      orderNumber,
+      user,
+      page,
+      size,
+      customer,
+    );
   }
 
   @Post()

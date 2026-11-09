@@ -74,13 +74,28 @@ public class IdempotencyKeyStore {
         return new Claim(owner, key, fingerprint(request));
     }
 
-    /** SHA-256 (hex) over sku, quantity, country and couponCode as received, null as empty, joined by a newline. */
+    /**
+     * SHA-256 (hex) over sku, quantity, country and couponCode as received, null as empty, joined by a
+     * newline; a shipping address appends its six fields the same way (so a request without one keeps
+     * the fingerprint it always had).
+     */
     static String fingerprint(PlaceOrderRequest request) {
         var canonical = String.join(FINGERPRINT_SEPARATOR,
                 Objects.toString(request.getSku(), ""),
                 Objects.toString(request.getQuantity(), ""),
                 Objects.toString(request.getCountry(), ""),
                 Objects.toString(request.getCouponCode(), ""));
+        var address = request.getShippingAddress();
+        if (address != null) {
+            canonical = String.join(FINGERPRINT_SEPARATOR, canonical,
+                    "shippingAddress",
+                    Objects.toString(address.getFirstName(), ""),
+                    Objects.toString(address.getLastName(), ""),
+                    Objects.toString(address.getStreet(), ""),
+                    Objects.toString(address.getPostalCode(), ""),
+                    Objects.toString(address.getCity(), ""),
+                    Objects.toString(address.getCountry(), ""));
+        }
         try {
             var digest = MessageDigest.getInstance("SHA-256").digest(canonical.getBytes(StandardCharsets.UTF_8));
             return HexFormat.of().formatHex(digest);

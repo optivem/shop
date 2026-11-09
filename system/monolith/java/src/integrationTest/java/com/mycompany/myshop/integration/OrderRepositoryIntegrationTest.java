@@ -3,10 +3,13 @@ package com.mycompany.myshop.integration;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.mycompany.myshop.AbstractIntegrationTest;
+import com.mycompany.myshop.core.entities.Address;
 import com.mycompany.myshop.core.entities.Coupon;
+import com.mycompany.myshop.core.entities.CustomerProfile;
 import com.mycompany.myshop.core.entities.Order;
 import com.mycompany.myshop.core.entities.OrderStatus;
 import com.mycompany.myshop.core.repositories.CouponRepository;
+import com.mycompany.myshop.core.repositories.CustomerProfileRepository;
 import com.mycompany.myshop.core.repositories.OrderRepository;
 import com.mycompany.myshop.core.services.PageSpec;
 import java.math.BigDecimal;
@@ -32,10 +35,14 @@ class OrderRepositoryIntegrationTest extends AbstractIntegrationTest {
     @Autowired
     private CouponRepository couponRepository;
 
+    @Autowired
+    private CustomerProfileRepository customerProfileRepository;
+
     @BeforeEach
     void clearOrders() {
         orderRepository.deleteAll();
         couponRepository.deleteAll();
+        customerProfileRepository.deleteAll();
     }
 
     @Test
@@ -129,5 +136,59 @@ class OrderRepositoryIntegrationTest extends AbstractIntegrationTest {
                 new BigDecimal("10.00"), new BigDecimal("10.00"), new BigDecimal("0.0000"), new BigDecimal("0.00"),
                 new BigDecimal("10.00"), new BigDecimal("0.1000"), new BigDecimal("1.00"), new BigDecimal("11.00"),
                 OrderStatus.PLACED, null, owner, "user");
+    }
+
+    // Shipping address (JSONB), the admin customer filter on owner_name, and customer profiles.
+
+    @Test
+    void shippingAddressRoundTripsThroughTheJsonColumn() {
+        var withAddress = ownedBy("ORD-001", "customer1");
+        withAddress.setShippingAddress(new Address("Ana", "Novak", "Main St 1", "10115", "Berlin", "DE"));
+        orderRepository.save(withAddress);
+        orderRepository.save(ownedBy("ORD-002", "customer1"));
+
+        assertThat(orderRepository.findByOrderNumber("ORD-001").orElseThrow().getShippingAddress())
+                .isEqualTo(new Address("Ana", "Novak", "Main St 1", "10115", "Berlin", "DE"));
+        assertThat(orderRepository.findByOrderNumber("ORD-002").orElseThrow().getShippingAddress()).isNull();
+    }
+
+    @Test
+    void customerFilterMatchesTheOwnerNameExactly() {
+        orderRepository.save(ownedBy("ORD-A1", "customer1"));
+        orderRepository.save(ownedBy("ORD-A2", "customer1"));
+        orderRepository.save(ownedBy("ORD-B1", "customer2"));
+        var pageable = PageSpec.of(null, null).toPageable();
+
+        assertThat(orderRepository.countByOwnerName("customer1")).isEqualTo(2);
+        assertThat(orderRepository.findPageByOwnerName("customer1", pageable))
+                .extracting(Order::getOrderNumber).containsExactlyInAnyOrder("ORD-A1", "ORD-A2");
+        assertThat(orderRepository.countByOwnerName("customer")).isZero();
+        assertThat(orderRepository.countByOwnerNameAndOrderNumberContaining("customer1", "b1")).isZero();
+        assertThat(orderRepository.findPageByOwnerNameAndOrderNumberContaining("customer2", "b1", pageable))
+                .extracting(Order::getOrderNumber).containsExactly("ORD-B1");
+    }
+
+    @Test
+    void profileIsStoredAndFoundByOwner() {
+        var profile = new CustomerProfile("customer-sub");
+        profile.setFirstName("Ana");
+        profile.setLastName("Novak");
+        profile.setStreet("Main St 1");
+        profile.setPostalCode("10115");
+        profile.setCity("Berlin");
+        profile.setCountry("DE");
+        profile.setUpdatedAt(Instant.parse("2026-11-09T12:00:00Z"));
+        customerProfileRepository.save(profile);
+
+        var found = customerProfileRepository.findByOwner("customer-sub").orElseThrow();
+        assertThat(found.getCity()).isEqualTo("Berlin");
+        assertThat(customerProfileRepository.findByOwner("other-sub")).isEmpty();
+    }
+
+    /** An order placed by the named customer (owner_name), for the admin customer filter. */
+    private static Order ownedBy(String orderNumber, String ownerName) {
+        var order = order(orderNumber, ownerName + "-sub");
+        order.setOwnerName(ownerName);
+        return order;
     }
 }

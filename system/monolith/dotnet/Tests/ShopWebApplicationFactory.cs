@@ -42,18 +42,23 @@ public sealed class ShopWebApplicationFactory : WebApplicationFactory<Program>
         });
     }
 
-    public string CreateToken(string role, string audience = Audience, TimeSpan? lifetime = null)
+    public string CreateToken(
+        string role,
+        string audience = Audience,
+        TimeSpan? lifetime = null,
+        string subject = "test-user",
+        IReadOnlyDictionary<string, string>? extraClaims = null)
     {
         var now = DateTime.UtcNow;
         var token = new JwtSecurityToken(
             issuer: Issuer,
             audience: audience,
-            claims:
-            [
-                new Claim("sub", "test-user"),
+            claims: new[]
+            {
+                new Claim("sub", subject),
                 new Claim("preferred_username", "tester"),
                 new Claim("realm_access", $"{{\"roles\":[\"{role}\"]}}", JsonClaimValueTypes.Json),
-            ],
+            }.Concat((extraClaims ?? new Dictionary<string, string>()).Select(c => new Claim(c.Key, c.Value))),
             notBefore: now.AddMinutes(-10),
             expires: now.Add(lifetime ?? TimeSpan.FromMinutes(5)),
             signingCredentials: new SigningCredentials(_key, SecurityAlgorithms.RsaSha256));

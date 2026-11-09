@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using MyCompany.MyShop.Monolith.Core.Dtos.Validation;
 
 namespace MyCompany.MyShop.Monolith.Core.Dtos;
 
@@ -11,8 +12,12 @@ public class PlaceOrderRequest
     [Range(1, int.MaxValue, ErrorMessage = "Quantity must be positive")]
     public int? Quantity { get; set; }
 
-    [Required(ErrorMessage = "Country must not be empty")]
+    /// <summary>The Quick-order tax country; ignored (and not required) when a shipping address is given.</summary>
+    [RequiredUnlessShippingAddress(ErrorMessage = "Country must not be empty")]
     public string? Country { get; set; }
 
     public string? CouponCode { get; set; }
+
+    /// <summary>Optional; when present its country is the tax country and the address is stored with the order.</summary>
+    public ShippingAddress? ShippingAddress { get; set; }
 }

@@ -37,6 +37,7 @@ export async function GET(
       totalPrice: new Decimal(order.total_price),
       appliedCouponCode: order.applied_coupon_code,
       status: order.status,
+      shippingAddress: order.shipping_address ?? null,
     });
   } catch (error) {
     return internalErrorResponse(error);

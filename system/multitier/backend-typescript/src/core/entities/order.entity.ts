@@ -2,6 +2,7 @@ import Decimal from 'decimal.js';
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 import { OrderStatus } from './order-status.enum';
 import { numericTransformer } from './numeric.transformer';
+import type { ShippingAddress } from '../dtos/shipping-address.dto';
 
 @Entity('orders')
 export class Order {
@@ -155,4 +156,13 @@ export class Order {
     default: null,
   })
   ownerName!: string | null;
+
+  /** The address the order ships to; null for Quick orders and orders that predate addresses. */
+  @Column({
+    name: 'shipping_address',
+    type: 'jsonb',
+    nullable: true,
+    default: null,
+  })
+  shippingAddress!: ShippingAddress | null;
 }

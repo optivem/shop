@@ -4,7 +4,9 @@ import com.mycompany.myshop.core.dtos.BrowseOrderHistoryResponse;
 import com.mycompany.myshop.core.dtos.CurrentUser;
 import com.mycompany.myshop.core.dtos.PlaceOrderRequest;
 import com.mycompany.myshop.core.dtos.PlaceOrderResponse;
+import com.mycompany.myshop.core.dtos.ShippingAddress;
 import com.mycompany.myshop.core.dtos.ViewOrderDetailsResponse;
+import com.mycompany.myshop.core.entities.Address;
 import com.mycompany.myshop.core.entities.Order;
 import com.mycompany.myshop.core.entities.OrderStatus;
 import com.mycompany.myshop.core.exceptions.NotExistValidationException;
@@ -13,6 +15,7 @@ import com.mycompany.myshop.core.repositories.OrderRepository;
 import com.mycompany.myshop.core.services.external.ClockGateway;
 import com.mycompany.myshop.core.services.external.ErpGateway;
 import com.mycompany.myshop.core.services.external.TaxGateway;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -68,8 +71,11 @@ public class OrderService {
     public PlaceOrderResponse placeOrder(PlaceOrderRequest request, CurrentUser user, IdempotencyKeyStore.Claim claim) {
         var sku = request.getSku();
         var quantity = request.getQuantity();
-        var country = request.getCountry();
         var couponCode = request.getCouponCode();
+        // With a shipping address, its country is the tax country and the top-level one is ignored.
+        var shippingAddress = request.getShippingAddress() == null ? null : request.getShippingAddress().trimmed();
+        var country = shippingAddress != null ? shippingAddress.getCountry() : request.getCountry();
+        var countryField = shippingAddress != null ? "shippingAddress.country" : "country";
 
         var orderTimestamp = clockGateway.getCurrentTime();
 
@@ -94,7 +100,7 @@ public class OrderService {
         var discountAmount = promotedPrice.multiply(discountRate);
         var subtotalPrice = promotedPrice.subtract(discountAmount);
 
-        var taxRate = getTaxRate(country);
+        var taxRate = getTaxRate(country, countryField);
         var taxAmount = subtotalPrice.multiply(taxRate);
         var totalPrice = subtotalPrice.add(taxAmount);
 
@@ -107,6 +113,9 @@ public class OrderService {
                 roundRate(discountRate), roundMoney(discountAmount), roundMoney(subtotalPrice),
                 roundRate(taxRate), roundMoney(taxAmount), roundMoney(totalPrice), OrderStatus.PLACED,
                 appliedCouponCode, user.subject(), user.username());
+        if (shippingAddress != null) {
+            order.setShippingAddress(toAddress(shippingAddress));
+        }
 
         var response = new PlaceOrderResponse();
         response.setOrderNumber(orderNumber);
@@ -146,10 +155,10 @@ public class OrderService {
         return productDetails.get().getPrice();
     }
 
-    private BigDecimal getTaxRate(String country) {
+    private BigDecimal getTaxRate(String country, String countryField) {
         var countryDetails = taxGateway.getTaxDetails(country);
         if (countryDetails.isEmpty()) {
-            throw new ValidationException("country", "Country does not exist: " + country);
+            throw new ValidationException(countryField, "Country does not exist: " + country);
         }
 
         return countryDetails.get().getTaxRate();
@@ -200,33 +209,23 @@ public class OrderService {
         orderRepository.save(order);
     }
 
+    /**
+     * One page of order history. A customer sees only their own orders; an admin sees everyone's,
+     * optionally narrowed to one customer (by username, exact match). {@code customerFilter} is
+     * ignored for a customer. Either filter blank means no filter.
+     */
     @Transactional(readOnly = true)
-    public BrowseOrderHistoryResponse browseOrderHistory(String orderNumberFilter, Integer page, Integer size, CurrentUser user) {
+    public BrowseOrderHistoryResponse browseOrderHistory(String orderNumberFilter, String customerFilter,
+                                                         Integer page, Integer size, CurrentUser user) {
         var pageSpec = PageSpec.of(page, size);
-        var hasFilter = orderNumberFilter != null && !orderNumberFilter.trim().isEmpty();
-        var filter = hasFilter ? orderNumberFilter.trim() : null;
+        var orderNumber = trimToNull(orderNumberFilter);
+        var customer = user.admin() ? trimToNull(customerFilter) : null;
 
-        long totalElements;
-        if (user.admin()) {
-            totalElements = hasFilter ? orderRepository.countByOrderNumberContaining(filter) : orderRepository.count();
-        } else {
-            totalElements = hasFilter
-                    ? orderRepository.countByOwnerAndOrderNumberContaining(user.subject(), filter)
-                    : orderRepository.countByOwner(user.subject());
-        }
+        var totalElements = countOrders(user, customer, orderNumber);
 
         List<Order> orders = List.of();
         if (pageSpec.reaches(totalElements)) {
-            var pageable = pageSpec.toPageable();
-            if (user.admin()) {
-                orders = hasFilter
-                        ? orderRepository.findPageByOrderNumberContaining(filter, pageable)
-                        : orderRepository.findPage(pageable);
-            } else {
-                orders = hasFilter
-                        ? orderRepository.findPageByOwnerAndOrderNumberContaining(user.subject(), filter, pageable)
-                        : orderRepository.findPageByOwner(user.subject(), pageable);
-            }
+            orders = findOrderPage(user, customer, orderNumber, pageSpec.toPageable());
         }
 
         var items = orders.stream()
@@ -254,6 +253,40 @@ public class OrderService {
         return result;
     }
 
+    private long countOrders(CurrentUser user, String customer, String orderNumber) {
+        if (!user.admin()) {
+            return orderNumber != null
+                    ? orderRepository.countByOwnerAndOrderNumberContaining(user.subject(), orderNumber)
+                    : orderRepository.countByOwner(user.subject());
+        }
+        if (customer != null) {
+            return orderNumber != null
+                    ? orderRepository.countByOwnerNameAndOrderNumberContaining(customer, orderNumber)
+                    : orderRepository.countByOwnerName(customer);
+        }
+        return orderNumber != null ? orderRepository.countByOrderNumberContaining(orderNumber) : orderRepository.count();
+    }
+
+    private List<Order> findOrderPage(CurrentUser user, String customer, String orderNumber, Pageable pageable) {
+        if (!user.admin()) {
+            return orderNumber != null
+                    ? orderRepository.findPageByOwnerAndOrderNumberContaining(user.subject(), orderNumber, pageable)
+                    : orderRepository.findPageByOwner(user.subject(), pageable);
+        }
+        if (customer != null) {
+            return orderNumber != null
+                    ? orderRepository.findPageByOwnerNameAndOrderNumberContaining(customer, orderNumber, pageable)
+                    : orderRepository.findPageByOwnerName(customer, pageable);
+        }
+        return orderNumber != null
+                ? orderRepository.findPageByOrderNumberContaining(orderNumber, pageable)
+                : orderRepository.findPage(pageable);
+    }
+
+    private static String trimToNull(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
+    }
+
     public ViewOrderDetailsResponse getOrder(String orderNumber, CurrentUser user) {
         var order = findAccessibleOrder(orderNumber, user);
 
@@ -273,6 +306,7 @@ public class OrderService {
         response.setStatus(order.getStatus());
         response.setCountry(order.getCountry());
         response.setAppliedCouponCode(order.getAppliedCouponCode());
+        response.setShippingAddress(toShippingAddress(order.getShippingAddress()));
 
         return response;
     }
@@ -282,6 +316,19 @@ public class OrderService {
         return orderRepository.findByOrderNumber(orderNumber)
                 .filter(order -> user.admin() || user.subject().equals(order.getOwner()))
                 .orElseThrow(() -> new NotExistValidationException("Order " + orderNumber + " does not exist."));
+    }
+
+    private static ShippingAddress toShippingAddress(Address address) {
+        if (address == null) {
+            return null;
+        }
+        return new ShippingAddress(address.getFirstName(), address.getLastName(), address.getStreet(),
+                address.getPostalCode(), address.getCity(), address.getCountry());
+    }
+
+    private static Address toAddress(ShippingAddress address) {
+        return new Address(address.getFirstName(), address.getLastName(), address.getStreet(),
+                address.getPostalCode(), address.getCity(), address.getCountry());
     }
 
     private String generateOrderNumber() {

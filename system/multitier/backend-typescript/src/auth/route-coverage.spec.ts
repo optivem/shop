@@ -5,6 +5,7 @@ import { CouponController } from '../api/controller/coupon.controller';
 import { HealthController } from '../api/controller/health.controller';
 import { OrderController } from '../api/controller/order.controller';
 import { ProductController } from '../api/controller/product.controller';
+import { ProfileController } from '../api/controller/profile.controller';
 import { AppController } from '../app.controller';
 import { accessFor, type Access } from './route-policy';
 
@@ -24,6 +25,8 @@ const EXPECTED: Record<string, Access> = {
   'POST /api/admin/recall/:sku': 'admin',
   'GET /api/products': 'public',
   'GET /api/products/:sku': 'public',
+  'GET /api/account/profile': 'authenticated',
+  'PUT /api/account/profile': 'authenticated',
 };
 
 type Ctor = new (...args: never[]) => object;
@@ -53,6 +56,7 @@ describe('route policy covers every controller route', () => {
     CouponController,
     AdminController,
     ProductController,
+    ProfileController,
   ].flatMap((c) => routesOf(c as unknown as Ctor));
 
   it('has an expected access for each discovered route and nothing stale', () => {

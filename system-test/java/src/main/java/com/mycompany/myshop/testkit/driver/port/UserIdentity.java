@@ -21,6 +21,17 @@ public record UserIdentity(Kind kind, int customerIndex) {
     public static final UserIdentity ANONYMOUS = new UserIdentity(Kind.ANONYMOUS, -1);
     public static final UserIdentity ADMIN = new UserIdentity(Kind.ADMIN, -1);
 
+    /**
+     * The sign-in username of this customer identity (customer1, customer2, ...), as the identity provider's
+     * test realm defines it; used where the system takes a customer by username (the admin customer filter).
+     */
+    public String username() {
+        if (kind != Kind.CUSTOMER) {
+            throw new IllegalStateException("Only a customer identity has a customer username; this is " + kind);
+        }
+        return "customer" + (customerIndex + 1);
+    }
+
     /** The test customer at the given zero-based position. */
     public static UserIdentity customer(int customerIndex) {
         if (customerIndex < 0 || customerIndex >= CUSTOMER_COUNT) {

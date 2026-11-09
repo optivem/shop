@@ -1,12 +1,19 @@
 package com.mycompany.myshop.backend.core.dtos;
 
+import com.mycompany.myshop.backend.core.validation.CountryRequiredWithoutShippingAddress;
 import com.mycompany.myshop.backend.core.validation.TypeValidationMessage;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.Data;
 
+/**
+ * With a {@link #shippingAddress} the tax country is the address's country and the top-level
+ * {@link #country} is ignored; without one (Quick order) the top-level country is required.
+ */
 @Data
+@CountryRequiredWithoutShippingAddress
 public class PlaceOrderRequest {
     @NotBlank(message = "SKU must not be empty")
     private String sku;
@@ -16,8 +23,10 @@ public class PlaceOrderRequest {
     @TypeValidationMessage("Quantity must be an integer")
     private Integer quantity;
 
-    @NotBlank(message = "Country must not be empty")
     private String country;
 
     private String couponCode;
+
+    @Valid
+    private ShippingAddress shippingAddress;
 }

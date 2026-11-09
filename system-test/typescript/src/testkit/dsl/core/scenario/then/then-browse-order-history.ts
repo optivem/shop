@@ -19,6 +19,7 @@ export class ThenBrowseOrderHistoryResultStage implements PromiseLike<void> {
     private readonly orderNumber: string,
     private readonly page: string | null = null,
     private readonly size: string | null = null,
+    private readonly customer: (() => string) | null = null,
   ) {}
 
   shouldSucceed(): ThenBrowseOrderHistorySuccess {
@@ -49,7 +50,8 @@ export class ThenBrowseOrderHistoryResultStage implements PromiseLike<void> {
     await arrangeGiven(this.app, this.ctx, this.useCaseContext);
 
     const orderNumber = this.useCaseContext.getResultValue(this.orderNumber);
-    const result = await this.app.myShop('dynamic').browseOrderHistory({ orderNumber, page: this.page, size: this.size });
+    const customer = this.customer ? this.customer() : null;
+    const result = await this.app.myShop('dynamic').browseOrderHistory({ orderNumber, page: this.page, size: this.size, customer });
 
     if (this._expectSuccess) {
       expect(result.success, JSON.stringify(result)).toBe(true);

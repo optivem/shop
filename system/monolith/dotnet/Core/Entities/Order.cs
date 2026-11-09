@@ -87,4 +87,11 @@ public class Order
     [MaxLength(255)]
     [Column("owner_name")]
     public string? OwnerName { get; set; }
+
+    /// <summary>
+    /// The shipping address as a JSON object {firstName, lastName, street, postalCode, city, country};
+    /// null for Quick orders (country only) and for orders that predate addresses.
+    /// </summary>
+    [Column("shipping_address", TypeName = "jsonb")]
+    public string? ShippingAddress { get; set; }
 }

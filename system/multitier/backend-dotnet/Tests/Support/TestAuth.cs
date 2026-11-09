@@ -30,6 +30,15 @@ public static class TestAuth
 
     public static string CustomerTokenFor(string subject) => CreateToken(["CUSTOMER"], subject: subject);
 
+    /// <summary>A customer token carrying the account's email and given / family name, as Keycloak issues them.</summary>
+    public static string CustomerTokenWithAccount(string subject, string email, string givenName, string familyName) =>
+        CreateToken(["CUSTOMER"], subject: subject, extraClaims: new Dictionary<string, string>
+        {
+            ["email"] = email,
+            ["given_name"] = givenName,
+            ["family_name"] = familyName,
+        });
+
     /// <summary>Points the backend at the test key and the test issuer / audience.</summary>
     public static IWebHostBuilder UseTestAuth(this IWebHostBuilder builder)
     {
@@ -50,7 +59,8 @@ public static class TestAuth
         string audience = Audience,
         DateTime? expires = null,
         SecurityKey? signingKey = null,
-        string subject = "test-user")
+        string subject = "test-user",
+        IReadOnlyDictionary<string, string>? extraClaims = null)
     {
         var realmAccess = new Dictionary<string, object> { ["roles"] = roles };
         var now = DateTime.UtcNow;
@@ -61,7 +71,9 @@ public static class TestAuth
             NotBefore = now.AddMinutes(-10),
             IssuedAt = now.AddMinutes(-10),
             Expires = expires ?? now.AddHours(1),
-            Subject = new ClaimsIdentity([new Claim("sub", subject), new Claim("preferred_username", subject)]),
+            Subject = new ClaimsIdentity(
+                new[] { new Claim("sub", subject), new Claim("preferred_username", subject) }
+                    .Concat((extraClaims ?? new Dictionary<string, string>()).Select(c => new Claim(c.Key, c.Value)))),
             Claims = new Dictionary<string, object> { ["realm_access"] = realmAccess },
             SigningCredentials = new SigningCredentials(signingKey ?? SigningKey, SecurityAlgorithms.RsaSha256),
         };

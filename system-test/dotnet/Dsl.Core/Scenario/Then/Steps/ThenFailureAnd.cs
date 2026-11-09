@@ -42,6 +42,11 @@ public class ThenFailureAnd<TSuccessResponse, TSuccessVerification>
         return new Steps.ThenCountry(_thenClause.App, countryAlias, VerifyFailure);
     }
 
+    public IThenProfile Profile()
+    {
+        return Steps.ThenProfile.Refetched(_thenClause.App, _thenClause.Channel!, VerifyFailure);
+    }
+
     private async Task VerifyFailure()
     {
         var result = await _thenClause.GetExecutionResult();

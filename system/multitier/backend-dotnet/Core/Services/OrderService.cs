@@ -34,6 +34,9 @@ public class OrderService
     private static readonly string MsgInvalidPage = $"Page must be {FirstPage} or greater";
     private static readonly string MsgInvalidSize = $"Page size must be between 1 and {MaxPageSize}";
 
+    private const string FieldCountry = "country";
+    private const string FieldShippingAddressCountry = "shippingAddress.country";
+
     private static readonly JsonSerializerOptions StoredResponseJson = new(JsonSerializerDefaults.Web);
 
     private readonly AppDbContext _dbContext;
@@ -97,7 +100,10 @@ public class OrderService
     {
         var sku = request.Sku!;
         var quantity = request.Quantity!.Value;
-        var country = request.Country!;
+        // With a shipping address its (trimmed) country is the tax country and the top-level one is ignored.
+        var shippingAddress = request.ShippingAddress?.Trimmed();
+        var country = shippingAddress != null ? shippingAddress.Country! : request.Country!;
+        var countryField = shippingAddress != null ? FieldShippingAddressCountry : FieldCountry;
         var couponCode = request.CouponCode;
 
         var orderTimestamp = await _clockGateway.GetCurrentTimeAsync();
@@ -123,7 +129,7 @@ public class OrderService
         var discountAmount = promotedPrice * discountRate;
         var subtotalPrice = promotedPrice - discountAmount;
 
-        var taxRate = await GetTaxRateAsync(country);
+        var taxRate = await GetTaxRateAsync(country, countryField);
         var taxAmount = subtotalPrice * taxRate;
         var totalPrice = subtotalPrice + taxAmount;
 
@@ -149,7 +155,8 @@ public class OrderService
             Status = OrderStatus.PLACED,
             AppliedCouponCode = appliedCouponCode,
             Owner = user.Subject,
-            OwnerName = user.Username
+            OwnerName = user.Username,
+            ShippingAddress = shippingAddress == null ? null : JsonSerializer.Serialize(shippingAddress, StoredResponseJson)
         };
 
         var response = new PlaceOrderResponse { OrderNumber = orderNumber };
@@ -224,14 +231,28 @@ public class OrderService
             ConstraintName: AppDbContext.IdempotencyKeyUniqueConstraint
         };
 
-    /// <summary>SHA-256 (hex) over the request fields exactly as received, null as empty, joined by newlines.</summary>
+    /// <summary>
+    /// SHA-256 (hex) over the request fields exactly as received, null as empty, joined by newlines. The shipping
+    /// address fields are appended only when an address is given, so a Quick order hashes as it always has.
+    /// </summary>
     private static string Fingerprint(PlaceOrderRequest request)
     {
-        var canonical = string.Join('\n',
+        var fields = new List<string>
+        {
             request.Sku ?? string.Empty,
             request.Quantity?.ToString(CultureInfo.InvariantCulture) ?? string.Empty,
             request.Country ?? string.Empty,
-            request.CouponCode ?? string.Empty);
+            request.CouponCode ?? string.Empty
+        };
+        if (request.ShippingAddress is { } address)
+        {
+            fields.AddRange(new[]
+            {
+                address.FirstName, address.LastName, address.Street, address.PostalCode, address.City, address.Country
+            }.Select(field => field ?? string.Empty));
+        }
+
+        var canonical = string.Join('\n', fields);
         return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(canonical))).ToLowerInvariant();
     }
 
@@ -252,12 +273,12 @@ public class OrderService
         return productDetails.Price;
     }
 
-    private async Task<decimal> GetTaxRateAsync(string country)
+    private async Task<decimal> GetTaxRateAsync(string country, string countryField)
     {
         var taxDetails = await _taxGateway.GetTaxDetailsAsync(country);
         if (taxDetails == null)
         {
-            throw new ValidationException("country", $"Country does not exist: {country}");
+            throw new ValidationException(countryField, $"Country does not exist: {country}");
         }
 
         return taxDetails.TaxRate;
@@ -338,7 +359,12 @@ public class OrderService
         await _dbContext.SaveChangesAsync();
     }
 
-    public async Task<BrowseOrderHistoryResponse> BrowseOrderHistoryAsync(string? orderNumberFilter, CurrentUser user, int? page = null, int? size = null)
+    /// <summary>
+    /// A page of orders, newest first. A customer sees only their own; an admin sees all, optionally narrowed to
+    /// one customer (<paramref name="customerFilter"/> matches the owner's username exactly; ignored for customers).
+    /// </summary>
+    public async Task<BrowseOrderHistoryResponse> BrowseOrderHistoryAsync(
+        string? orderNumberFilter, CurrentUser user, int? page = null, int? size = null, string? customerFilter = null)
     {
         var (requestedPage, requestedSize) = ResolvePage(page, size);
 
@@ -347,6 +373,11 @@ public class OrderService
         if (!user.Admin)
         {
             query = query.Where(o => o.Owner == user.Subject);
+        }
+        else if (!string.IsNullOrWhiteSpace(customerFilter))
+        {
+            var customer = customerFilter.Trim();
+            query = query.Where(o => o.OwnerName == customer);
         }
 
         if (!string.IsNullOrWhiteSpace(orderNumberFilter))
@@ -428,7 +459,10 @@ public class OrderService
             TotalPrice = order.TotalPrice,
             Status = order.Status,
             Country = order.Country,
-            AppliedCouponCode = order.AppliedCouponCode
+            AppliedCouponCode = order.AppliedCouponCode,
+            ShippingAddress = order.ShippingAddress == null
+                ? null
+                : JsonSerializer.Deserialize<ShippingAddress>(order.ShippingAddress, StoredResponseJson)
         };
     }
 

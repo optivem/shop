@@ -17,6 +17,9 @@ import com.mycompany.myshop.testkit.driver.port.dtos.PublishCouponRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.PublishCouponResponse;
 import com.mycompany.myshop.testkit.driver.port.dtos.ViewOrderRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.ViewOrderResponse;
+import com.mycompany.myshop.testkit.driver.port.dtos.UpdateProfileRequest;
+import com.mycompany.myshop.testkit.driver.port.dtos.ViewProfileRequest;
+import com.mycompany.myshop.testkit.driver.port.dtos.ViewProfileResponse;
 import com.mycompany.myshop.testkit.common.Result;
 
 public interface MyShopDriver extends AutoCloseable, ActingUserSelector {
@@ -35,4 +38,8 @@ public interface MyShopDriver extends AutoCloseable, ActingUserSelector {
     Result<PublishCouponResponse, SystemError> publishCoupon(PublishCouponRequest request);
 
     Result<BrowseCouponsResponse, SystemError> browseCoupons(BrowseCouponsRequest request);
+
+    Result<ViewProfileResponse, SystemError> viewProfile(ViewProfileRequest request);
+
+    Result<ViewProfileResponse, SystemError> updateProfile(UpdateProfileRequest request);
 }

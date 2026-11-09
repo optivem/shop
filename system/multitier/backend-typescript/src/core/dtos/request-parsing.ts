@@ -83,3 +83,11 @@ export function IsDecimalAtMost(
     options,
   );
 }
+
+// Text fields that are stored as typed, minus surrounding spaces: blank (or only spaces) is missing.
+export function TrimmedText(): PropertyDecorator {
+  return Transform(({ value }) => {
+    const present = blankAsMissing(value);
+    return typeof present === 'string' ? present.trim() : present;
+  });
+}

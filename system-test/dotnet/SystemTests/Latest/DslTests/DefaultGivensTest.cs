@@ -136,6 +136,12 @@ public class DefaultGivensTest
         public Task<Result<BrowseCouponsResponse, SystemError>> BrowseCouponsAsync(BrowseCouponsRequest request) =>
             throw new NotSupportedException();
 
+        public Task<Result<ViewProfileResponse, SystemError>> ViewProfileAsync(ViewProfileRequest request) =>
+            throw new NotSupportedException();
+
+        public Task<Result<ViewProfileResponse, SystemError>> UpdateProfileAsync(UpdateProfileRequest request) =>
+            throw new NotSupportedException();
+
         public ValueTask DisposeAsync() => ValueTask.CompletedTask;
     }
 }

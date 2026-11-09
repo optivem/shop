@@ -3,7 +3,10 @@ using MyCompany.MyShop.Backend.Core.Dtos;
 
 namespace MyCompany.MyShop.Backend.Api.Security;
 
-/// <summary>Resolves the caller from the authenticated principal (the token's <c>sub</c> and <c>preferred_username</c>).</summary>
+/// <summary>
+/// Resolves the caller from the authenticated principal (the token's <c>sub</c>, <c>preferred_username</c>,
+/// <c>email</c>, <c>given_name</c> and <c>family_name</c>; inbound claim mapping is off, so the names are as issued).
+/// </summary>
 public static class CurrentUserResolver
 {
     public static CurrentUser Resolve(ClaimsPrincipal principal) =>
@@ -11,5 +14,8 @@ public static class CurrentUserResolver
             principal.FindFirst("sub")?.Value
                 ?? throw new InvalidOperationException("Authenticated principal has no sub claim."),
             principal.FindFirst("preferred_username")?.Value,
-            principal.IsInRole(Roles.Admin));
+            principal.IsInRole(Roles.Admin),
+            principal.FindFirst("email")?.Value,
+            principal.FindFirst("given_name")?.Value,
+            principal.FindFirst("family_name")?.Value);
 }

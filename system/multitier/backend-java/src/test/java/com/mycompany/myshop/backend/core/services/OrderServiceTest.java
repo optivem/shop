@@ -3,9 +3,11 @@ package com.mycompany.myshop.backend.core.services;
 import com.mycompany.myshop.backend.core.dtos.CurrentUser;
 import com.mycompany.myshop.backend.core.dtos.PlaceOrderRequest;
 import com.mycompany.myshop.backend.core.dtos.PlaceOrderResponse;
+import com.mycompany.myshop.backend.core.dtos.ShippingAddress;
 import com.mycompany.myshop.backend.core.dtos.external.ErpGetPromotionResponse;
 import com.mycompany.myshop.backend.core.dtos.external.ErpProductDetailsResponse;
 import com.mycompany.myshop.backend.core.dtos.external.TaxDetailsResponse;
+import com.mycompany.myshop.backend.core.entities.Address;
 import com.mycompany.myshop.backend.core.entities.Order;
 import com.mycompany.myshop.backend.core.entities.OrderStatus;
 import com.mycompany.myshop.backend.core.exceptions.NotExistValidationException;
@@ -28,6 +30,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.assertj.core.api.Assertions.catchThrowableOfType;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
@@ -261,7 +264,7 @@ class OrderServiceTest {
         when(orderRepository.findPageByOwner(eq("customer-sub"), any(Pageable.class)))
                 .thenReturn(java.util.List.of(placedOrder("ORD-001")));
 
-        var response = orderService.browseOrderHistory(null, null, null, CUSTOMER);
+        var response = orderService.browseOrderHistory(null, null, null, null, CUSTOMER);
 
         assertThat(response.getOrders()).extracting("orderNumber").containsExactly("ORD-001");
         verify(orderRepository, never()).findPage(any(Pageable.class));
@@ -273,7 +276,7 @@ class OrderServiceTest {
         when(orderRepository.findPage(any(Pageable.class)))
                 .thenReturn(java.util.List.of(placedOrder("ORD-001")));
 
-        var response = orderService.browseOrderHistory(null, null, null, ADMIN);
+        var response = orderService.browseOrderHistory(null, null, null, null, ADMIN);
 
         assertThat(response.getOrders()).extracting("customer").containsExactly("customer1");
     }
@@ -283,7 +286,7 @@ class OrderServiceTest {
         when(orderRepository.count()).thenReturn(26L);
         when(orderRepository.findPage(any(Pageable.class))).thenReturn(java.util.List.of(placedOrder("ORD-021")));
 
-        var response = orderService.browseOrderHistory(null, 3, 10, ADMIN);
+        var response = orderService.browseOrderHistory(null, null, 3, 10, ADMIN);
 
         var pageable = ArgumentCaptor.forClass(Pageable.class);
         verify(orderRepository).findPage(pageable.capture());
@@ -299,7 +302,7 @@ class OrderServiceTest {
     void browseOrderHistoryPastTheLastPageIsEmptyWithoutReadingRows() {
         when(orderRepository.count()).thenReturn(3L);
 
-        var response = orderService.browseOrderHistory(null, 2_000_000_000, 100, ADMIN);
+        var response = orderService.browseOrderHistory(null, null, 2_000_000_000, 100, ADMIN);
 
         assertThat(response.getOrders()).isEmpty();
         assertThat(response.getTotalElements()).isEqualTo(3);
@@ -308,7 +311,7 @@ class OrderServiceTest {
 
     @Test
     void browseOrderHistoryRejectsASizeAboveTheCap() {
-        var thrown = catchThrowable(() -> orderService.browseOrderHistory(null, null, 101, ADMIN));
+        var thrown = catchThrowable(() -> orderService.browseOrderHistory(null, null, null, 101, ADMIN));
 
         assertThat(thrown).isInstanceOf(ValidationException.class).hasMessage("Page size must be between 1 and 100");
         assertThat(((ValidationException) thrown).getFieldName()).isEqualTo("size");
@@ -339,6 +342,71 @@ class OrderServiceTest {
         orderService.placeOrder(buildRequest("BOOK-123", 2, "US"), CUSTOMER);
 
         verify(idempotencyKeyStore, never()).record(any(), org.mockito.ArgumentMatchers.anyInt(), any());
+    }
+
+    @Test
+    void placeOrderWithShippingAddressTaxesByAddressCountryAndStoresTrimmedAddress() {
+        givenNormalTime();
+        givenProductExists("BOOK-123", new BigDecimal("50.00"));
+        givenNoPromotion();
+        givenNoDiscount();
+        givenTaxRate("DE", new BigDecimal("0.19"));
+
+        var request = buildRequest("BOOK-123", 1, "US");
+        request.setShippingAddress(new ShippingAddress(" Ana ", "Novak", "Main St 1 ", "10115", "Berlin", " DE "));
+        orderService.placeOrder(request, CUSTOMER);
+
+        var captor = ArgumentCaptor.forClass(Order.class);
+        verify(orderRepository).save(captor.capture());
+        var order = captor.getValue();
+        assertThat(order.getCountry()).isEqualTo("DE");
+        assertThat(order.getTaxRate()).isEqualByComparingTo("0.19");
+        assertThat(order.getTotalPrice()).isEqualByComparingTo("59.50");
+        assertThat(order.getShippingAddress()).isEqualTo(new Address("Ana", "Novak", "Main St 1", "10115", "Berlin", "DE"));
+    }
+
+    @Test
+    void placeOrderWithoutShippingAddressStoresNoAddress() {
+        givenNormalTime();
+        givenProductExists("BOOK-123", new BigDecimal("10.00"));
+        givenNoPromotion();
+        givenNoDiscount();
+        givenTaxRate("US", new BigDecimal("0.10"));
+
+        orderService.placeOrder(buildRequest("BOOK-123", 1, "US"), CUSTOMER);
+
+        var captor = ArgumentCaptor.forClass(Order.class);
+        verify(orderRepository).save(captor.capture());
+        assertThat(captor.getValue().getShippingAddress()).isNull();
+    }
+
+    @Test
+    void placeOrderWithUnknownShippingCountryReportsTheAddressField() {
+        givenNormalTime();
+        givenProductExists("BOOK-123", new BigDecimal("10.00"));
+        givenNoPromotion();
+        givenNoDiscount();
+        when(taxGateway.getTaxDetails("XX")).thenReturn(Optional.empty());
+
+        var request = buildRequest("BOOK-123", 1, null);
+        request.setShippingAddress(new ShippingAddress("Ana", "Novak", "Main St 1", "10115", "Berlin", "XX"));
+        var thrown = catchThrowableOfType(ValidationException.class, () -> orderService.placeOrder(request, CUSTOMER));
+
+        assertThat(thrown.getFieldName()).isEqualTo("shippingAddress.country");
+        assertThat(thrown).hasMessage("Country does not exist: XX");
+        verify(orderRepository, never()).save(any());
+    }
+
+    @Test
+    void getOrderReturnsTheShippingAddressOrNull() {
+        var withAddress = placedOrder("ORD-001");
+        withAddress.setShippingAddress(new Address("Ana", "Novak", "Main St 1", "10115", "Berlin", "DE"));
+        when(orderRepository.findByOrderNumber("ORD-001")).thenReturn(Optional.of(withAddress));
+        when(orderRepository.findByOrderNumber("ORD-002")).thenReturn(Optional.of(placedOrder("ORD-002")));
+
+        assertThat(orderService.getOrder("ORD-001", CUSTOMER).getShippingAddress())
+                .isEqualTo(new ShippingAddress("Ana", "Novak", "Main St 1", "10115", "Berlin", "DE"));
+        assertThat(orderService.getOrder("ORD-002", CUSTOMER).getShippingAddress()).isNull();
     }
 
     private void givenNormalTime() {

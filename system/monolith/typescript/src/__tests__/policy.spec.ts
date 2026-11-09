@@ -24,6 +24,8 @@ describe('decide', () => {
     ['GET', '/api/unknown-route'],
     ['POST', '/api/products'],
     ['DELETE', '/api/products/BOOK-123'],
+    ['GET', '/api/account/profile'],
+    ['PUT', '/api/account/profile'],
   ])('%s %s needs authentication but no particular role', (method, path) => {
     expect(decide(method, path, null)).toBe('unauthenticated');
     expect(decide(method, path, customer)).toBe('allow');

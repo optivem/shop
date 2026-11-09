@@ -18,9 +18,11 @@ public class OrderController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> BrowseOrderHistory([FromQuery] string? orderNumber, [FromQuery] int? page, [FromQuery] int? size)
+    public async Task<IActionResult> BrowseOrderHistory(
+        [FromQuery] string? orderNumber, [FromQuery] int? page, [FromQuery] int? size, [FromQuery] string? customer)
     {
-        var response = await _orderService.BrowseOrderHistoryAsync(orderNumber, CurrentUserResolver.Resolve(User), page, size);
+        var response = await _orderService.BrowseOrderHistoryAsync(
+            orderNumber, CurrentUserResolver.Resolve(User), page, size, customer);
         return Ok(response);
     }
 

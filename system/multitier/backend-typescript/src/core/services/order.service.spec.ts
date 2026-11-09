@@ -3,6 +3,7 @@ import type { EntityManager, Repository } from 'typeorm';
 import { Order } from '../entities/order.entity';
 import { OrderStatus } from '../entities/order-status.enum';
 import { PlaceOrderRequest } from '../dtos/place-order-request.dto';
+import { ShippingAddressRequest } from '../dtos/shipping-address.dto';
 import { ValidationException } from '../exceptions/validation.exception';
 import { ConcurrentModificationException } from '../exceptions/concurrent-modification.exception';
 import { NotExistValidationException } from '../exceptions/not-exist-validation.exception';
@@ -20,16 +21,25 @@ const CUSTOMER: CurrentUser = {
   subject: 'sub-customer',
   username: 'customer1',
   admin: false,
+  email: null,
+  firstName: null,
+  lastName: null,
 };
 const OTHER_CUSTOMER: CurrentUser = {
   subject: 'sub-other',
   username: 'customer2',
   admin: false,
+  email: null,
+  firstName: null,
+  lastName: null,
 };
 const ADMIN: CurrentUser = {
   subject: 'sub-admin',
   username: 'admin1',
   admin: true,
+  email: null,
+  firstName: null,
+  lastName: null,
 };
 
 const NORMAL_TIME = new Date('2025-06-15T10:00:00Z');
@@ -143,6 +153,97 @@ describe('OrderService', () => {
 
       expect(error).toBeInstanceOf(ValidationException);
       expect((error as ValidationException).fieldName).toBe('country');
+    });
+  });
+
+  describe('placeOrder with a shipping address', () => {
+    const address = {
+      firstName: 'Ana',
+      lastName: 'Novak',
+      street: 'Main St 1',
+      postalCode: '10115',
+      city: 'Berlin',
+      country: 'DE',
+    };
+
+    function addressRequest(): PlaceOrderRequest {
+      const request = new PlaceOrderRequest();
+      request.sku = 'BOOK-123';
+      request.quantity = 1;
+      request.shippingAddress = Object.assign(
+        new ShippingAddressRequest(),
+        address,
+      );
+      return request;
+    }
+
+    it("taxes at the address's country and stores the address", async () => {
+      givenNormalTime();
+      givenProductExists('BOOK-123', 50);
+      givenNoPromotion();
+      givenNoDiscount();
+      givenTaxRate('DE', 0.19);
+
+      await service.placeOrder(addressRequest(), CUSTOMER);
+
+      expect(taxGateway.getTaxDetails).toHaveBeenCalledWith('DE');
+      const [saved] = orderRepository.save.mock.calls.at(-1) ?? [];
+      const order = saved as Order;
+      expect(order.country).toBe('DE');
+      expect(order.shippingAddress).toEqual(address);
+      expect(order.totalPrice.toFixed(2)).toBe('59.50');
+    });
+
+    it('reports an unknown address country on shippingAddress.country', async () => {
+      givenNormalTime();
+      givenProductExists('BOOK-123', 50);
+      givenNoPromotion();
+      givenNoDiscount();
+      taxGateway.getTaxDetails.mockResolvedValue(null);
+
+      const error = await service
+        .placeOrder(addressRequest(), CUSTOMER)
+        .catch((e: unknown) => e);
+
+      expect(error).toBeInstanceOf(ValidationException);
+      expect((error as ValidationException).fieldName).toBe(
+        'shippingAddress.country',
+      );
+      expect((error as ValidationException).message).toBe(
+        'Country does not exist: DE',
+      );
+    });
+
+    it('stores no address for a Quick order', async () => {
+      givenNormalTime();
+      givenProductExists('BOOK-123', 10);
+      givenNoPromotion();
+      givenNoDiscount();
+      givenTaxRate('US', 0.1);
+
+      await service.placeOrder(buildRequest('BOOK-123', 2, 'US'), CUSTOMER);
+
+      const [saved] = orderRepository.save.mock.calls.at(-1) ?? [];
+      expect((saved as Order).shippingAddress).toBeNull();
+    });
+
+    it('fingerprints the address, so a changed address is a different request', () => {
+      const changed = addressRequest();
+      if (changed.shippingAddress) changed.shippingAddress.city = 'Munich';
+      expect(IdempotencyKeyStore.fingerprint(changed)).not.toBe(
+        IdempotencyKeyStore.fingerprint(addressRequest()),
+      );
+    });
+
+    it('returns the address in the order details', async () => {
+      const order = placedOrder('ORD-001');
+      order.owner = CUSTOMER.subject;
+      order.shippingAddress = address;
+      orderRepository.findOne.mockResolvedValue(order);
+
+      const details = await service.getOrder('ORD-001', CUSTOMER);
+
+      expect(details.shippingAddress).toEqual(address);
     });
   });
 
@@ -268,6 +369,59 @@ describe('OrderService', () => {
         expect.objectContaining({ where: {} }),
       );
       expect(result.orders[0]?.customer).toBe('customer1');
+    });
+  });
+
+  describe('browseOrderHistory customer filter', () => {
+    it("filters an admin's history by the chosen customer's username", async () => {
+      orderRepository.find.mockResolvedValue([]);
+
+      await service.browseOrderHistory(
+        'ORD-1',
+        ADMIN,
+        undefined,
+        undefined,
+        '  customer2 ',
+      );
+
+      const where = {
+        orderNumber: expect.anything() as unknown,
+        ownerName: 'customer2',
+      };
+      expect(orderRepository.count).toHaveBeenLastCalledWith({ where });
+      expect(orderRepository.find).toHaveBeenLastCalledWith(
+        expect.objectContaining({ where }),
+      );
+    });
+
+    it('treats a blank customer filter as no filter', async () => {
+      orderRepository.find.mockResolvedValue([]);
+
+      await service.browseOrderHistory(
+        undefined,
+        ADMIN,
+        undefined,
+        undefined,
+        '   ',
+      );
+
+      expect(orderRepository.count).toHaveBeenLastCalledWith({ where: {} });
+    });
+
+    it('ignores the customer filter for a customer', async () => {
+      orderRepository.find.mockResolvedValue([]);
+
+      await service.browseOrderHistory(
+        undefined,
+        CUSTOMER,
+        undefined,
+        undefined,
+        'customer2',
+      );
+
+      expect(orderRepository.count).toHaveBeenLastCalledWith({
+        where: { owner: CUSTOMER.subject },
+      });
     });
   });
 

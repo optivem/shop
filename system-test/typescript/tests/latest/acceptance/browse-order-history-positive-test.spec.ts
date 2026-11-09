@@ -18,7 +18,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
             .containsOrder(DEFAULTS.ORDER_NUMBER);
     });
 
-    test('adminShouldSeeCustomerOrderInHistory', async ({ scenario }) => {
+    test('adminShouldSeeCustomerOrderInHistory', criteria('UC-011.1'), async ({ scenario }) => {
         await scenario
             .given()
             .order()
@@ -33,7 +33,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
             .containsOrder(DEFAULTS.ORDER_NUMBER);
     });
 
-    test('adminShouldSeeAnotherCustomersOrderInHistory', async ({ scenario }) => {
+    test('adminShouldSeeAnotherCustomersOrderInHistory', criteria('UC-011.1'), async ({ scenario }) => {
         await scenario
             .given()
             .order()
@@ -82,5 +82,47 @@ forChannels(ChannelType.API)(() => {
             .shouldSucceed()
             .orderHistory()
             .isEmpty();
+    });
+});
+
+forChannels(ChannelType.API)(() => {
+    test('adminShouldSeeOrderOfChosenCustomer', criteria('UC-011.3', 'UC-011.4'), async ({ scenario }) => {
+        await scenario
+            .given()
+            .order()
+            .withOrderNumber('ORD-A')
+            .placedByCustomer('A')
+            .and()
+            .loggedInAsAdmin()
+            .when()
+            .browseOrderHistory()
+            .withCustomer('A')
+            .withOrderNumber('ORD-A')
+            .then()
+            .shouldSucceed()
+            .orderHistory()
+            .containsOrder('ORD-A');
+    });
+
+    test('customerFilterShouldBeIgnoredForCustomer', criteria('UC-011.5'), async ({ scenario }) => {
+        await scenario
+            .given()
+            .order()
+            .withOrderNumber('ORD-A')
+            .placedByCustomer('A')
+            .and()
+            .order()
+            .withOrderNumber('ORD-B')
+            .placedByCustomer('B')
+            .and()
+            .loggedInAsCustomer('A')
+            .when()
+            .browseOrderHistory()
+            .withCustomer('B')
+            .withOrderNumber('ORD-A')
+            .then()
+            .shouldSucceed()
+            .orderHistory()
+            .containsOrder('ORD-A');
     });
 });

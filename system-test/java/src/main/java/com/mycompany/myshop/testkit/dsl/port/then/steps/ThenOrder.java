@@ -43,4 +43,10 @@ public interface ThenOrder extends ThenStep<ThenOrder> {
     ThenOrder hasTaxRate(String expectedTaxRate);
 
     ThenOrder hasTaxAmount(String expectedTaxAmount);
+
+    /** The country is resolved like {@link #hasCountry(String)}. */
+    ThenOrder hasShippingAddress(String firstName, String lastName, String street, String postalCode,
+                                 String city, String country);
+
+    ThenOrder hasNoShippingAddress();
 }

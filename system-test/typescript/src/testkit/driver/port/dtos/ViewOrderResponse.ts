@@ -1,3 +1,5 @@
+import type { ShippingAddress } from './ShippingAddress.js';
+
 export interface ViewOrderResponse {
   orderNumber: string;
   orderTimestamp: string;
@@ -14,4 +16,6 @@ export interface ViewOrderResponse {
   country?: string;
   appliedCouponCode?: string | null;
   status: string;
+  /** Null for an order placed without an address (Quick order); not read by the UI channel. */
+  shippingAddress?: ShippingAddress | null;
 }

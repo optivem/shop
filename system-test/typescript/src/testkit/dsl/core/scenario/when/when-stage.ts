@@ -8,6 +8,8 @@ import { WhenBrowseOrderHistory } from './when-browse-order-history.js';
 import { WhenViewOrder } from './when-view-order.js';
 import { WhenPublishCoupon } from './when-publish-coupon.js';
 import { WhenBrowseCoupons } from './when-browse-coupons.js';
+import { WhenViewProfile } from './when-view-profile.js';
+import { WhenUpdateProfile } from './when-update-profile.js';
 
 export class WhenStage {
   constructor(
@@ -42,5 +44,13 @@ export class WhenStage {
 
   browseCoupons(): WhenBrowseCoupons {
     return new WhenBrowseCoupons(this.app, this.ctx, this.useCaseContext);
+  }
+
+  viewProfile(): WhenViewProfile {
+    return new WhenViewProfile(this.app, this.ctx, this.useCaseContext);
+  }
+
+  updateProfile(): WhenUpdateProfile {
+    return new WhenUpdateProfile(this.app, this.ctx, this.useCaseContext);
   }
 }

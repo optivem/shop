@@ -23,6 +23,7 @@ public class BrowseOrderHistoryPositiveTest : BaseAcceptanceTest
 
     [Theory]
     [ChannelData(ChannelType.UI, ChannelType.API)]
+    [Trait("tag", "UC-011.1")]
     public async Task AdminShouldSeeCustomerOrderInHistory(Channel channel)
     {
         await Scenario(channel)
@@ -35,6 +36,7 @@ public class BrowseOrderHistoryPositiveTest : BaseAcceptanceTest
 
     [Theory]
     [ChannelData(ChannelType.UI, ChannelType.API)]
+    [Trait("tag", "UC-011.1")]
     public async Task AdminShouldSeeAnotherCustomersOrderInHistory(Channel channel)
     {
         await Scenario(channel)
@@ -69,5 +71,33 @@ public class BrowseOrderHistoryPositiveTest : BaseAcceptanceTest
             .When().BrowseOrderHistory().WithPage("2")
             .Then().ShouldSucceed()
             .OrderHistory().IsEmpty();
+    }
+
+    [Theory]
+    [ChannelData(ChannelType.API)]
+    [Trait("tag", "UC-011.3")]
+    [Trait("tag", "UC-011.4")]
+    public async Task AdminShouldSeeOrderOfChosenCustomer(Channel channel)
+    {
+        await Scenario(channel)
+            .Given().Order().WithOrderNumber("ORD-A").PlacedByCustomer("A")
+            .And().LoggedInAsAdmin()
+            .When().BrowseOrderHistory().WithCustomer("A").WithOrderNumber("ORD-A")
+            .Then().ShouldSucceed()
+            .OrderHistory().ContainsOrder("ORD-A");
+    }
+
+    [Theory]
+    [ChannelData(ChannelType.API)]
+    [Trait("tag", "UC-011.5")]
+    public async Task CustomerFilterShouldBeIgnoredForCustomer(Channel channel)
+    {
+        await Scenario(channel)
+            .Given().Order().WithOrderNumber("ORD-A").PlacedByCustomer("A")
+            .And().Order().WithOrderNumber("ORD-B").PlacedByCustomer("B")
+            .And().LoggedInAsCustomer("A")
+            .When().BrowseOrderHistory().WithCustomer("B").WithOrderNumber("ORD-A")
+            .Then().ShouldSucceed()
+            .OrderHistory().ContainsOrder("ORD-A");
     }
 }

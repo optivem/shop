@@ -44,6 +44,22 @@ describe('JwtVerifier', () => {
       subject: 'user-1',
       username: 'alice',
       roles: ['ADMIN', 'CUSTOMER'],
+      email: null,
+      givenName: null,
+      familyName: null,
+    });
+  });
+
+  it('maps the email and name claims', async () => {
+    const token = await sign({
+      email: 'alice@example.com',
+      given_name: 'Alice',
+      family_name: 'Smith',
+    });
+    await expect(verifier.verify(token)).resolves.toMatchObject({
+      email: 'alice@example.com',
+      givenName: 'Alice',
+      familyName: 'Smith',
     });
   });
 

@@ -3,19 +3,32 @@ import type { AppContext } from '../app-context.js';
 import type { ScenarioContext } from '../scenario-context.js';
 import { DefaultGivens } from './default-givens.js';
 import { placeGivenOrder } from './place-given-order.js';
+import { saveGivenProfile } from './save-given-profile.js';
+
+export interface ArrangeGivenOptions {
+  /** Stage only the declared givens, not the defaults an order action needs (used by profile actions). */
+  declaredOnly?: boolean;
+}
 
 /**
- * Sets up everything the Given stage declared (clock, tax, promotion, products, ERP availability, coupons, orders), supplying the
+ * Sets up everything the Given stage declared (clock, tax, promotion, products, ERP availability, coupons, orders, profiles), supplying the
  * defaults the given orders need, and then selects the identity the scenario action runs as.
  */
-export async function arrangeGiven(app: AppContext, ctx: ScenarioContext, useCaseContext: UseCaseContext): Promise<void> {
+export async function arrangeGiven(
+  app: AppContext,
+  ctx: ScenarioContext,
+  useCaseContext: UseCaseContext,
+  options: ArrangeGivenOptions = {},
+): Promise<void> {
   ctx.reserveDefaultCustomerIfUsed();
+  // Profile actions never touch the ERP or tax service: without given orders, only what was declared is staged.
+  const declaredOnly = options.declaredOnly === true && ctx.orderConfigs.length === 0;
 
   if (ctx.clockConfig) {
     await app.clockDriver.returnsTime({ time: ctx.clockConfig.time });
   }
 
-  for (const countryConfig of DefaultGivens.countriesFor(ctx)) {
+  for (const countryConfig of declaredOnly ? ctx.countryConfigs : DefaultGivens.countriesFor(ctx)) {
     const country = useCaseContext.getParamValueOrLiteral(countryConfig.country);
     await app.taxDriver.returnsTaxRate({ country, taxRate: countryConfig.taxRate });
   }
@@ -25,7 +38,7 @@ export async function arrangeGiven(app: AppContext, ctx: ScenarioContext, useCas
     discount: ctx.promotionConfig.discount,
   });
 
-  for (const productConfig of DefaultGivens.productsFor(ctx)) {
+  for (const productConfig of declaredOnly ? (ctx.hasExplicitProduct ? ctx.productConfigs : []) : DefaultGivens.productsFor(ctx)) {
     const sku = useCaseContext.getParamValue(productConfig.sku);
     await app.erpDriver.returnsProduct({ ...productConfig, sku });
   }
@@ -57,6 +70,10 @@ export async function arrangeGiven(app: AppContext, ctx: ScenarioContext, useCas
 
   for (const orderConfig of ctx.orderConfigs) {
     await placeGivenOrder(app, ctx, useCaseContext, orderConfig);
+  }
+
+  for (const profileConfig of ctx.profileConfigs) {
+    await saveGivenProfile(app, ctx, profileConfig);
   }
 
   app.actAs(ctx.loggedInIdentity());

@@ -12,6 +12,8 @@ import jakarta.persistence.Version;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -85,6 +87,11 @@ public class Order {
 
     @Column(name = "owner_name", nullable = true)
     private String ownerName;
+
+    /** The address the order was placed with; null for Quick orders (country only) and older orders. */
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "shipping_address", nullable = true)
+    private Address shippingAddress;
 
     @Version
     @Column(name = "version", nullable = false)

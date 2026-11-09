@@ -126,6 +126,17 @@ public class ThenOrderImpl<R, V extends ResponseVerification<R>>
         return hasAppliedCoupon(expectedCouponCode);
     }
 
+    public ThenOrderImpl<R, V> hasShippingAddress(String firstName, String lastName, String street, String postalCode,
+                                                  String city, String country) {
+        orderVerification.shippingAddress(firstName, lastName, street, postalCode, city, country);
+        return this;
+    }
+
+    public ThenOrderImpl<R, V> hasNoShippingAddress() {
+        orderVerification.noShippingAddress();
+        return this;
+    }
+
     @Override
     public ThenOrderImpl<R, V> and() {
         return this;

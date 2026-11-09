@@ -21,6 +21,8 @@ describe('route policy', () => {
     ['GET', '/api/products/BOOK-123', 'public'],
     ['POST', '/api/products', 'authenticated'],
     ['DELETE', '/api/products/BOOK-123', 'authenticated'],
+    ['GET', '/api/account/profile', 'authenticated'],
+    ['PUT', '/api/account/profile', 'authenticated'],
   ])('%s %s is %s', (method, path, expected) => {
     expect(accessFor(method, path)).toBe(expected);
   });

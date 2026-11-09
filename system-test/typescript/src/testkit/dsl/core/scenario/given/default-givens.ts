@@ -1,5 +1,5 @@
 import { DEFAULTS } from '../defaults.js';
-import type { CountryConfig, CouponConfig, ProductConfig, ScenarioContext } from '../scenario-context.js';
+import type { CountryConfig, CouponConfig, ProductConfig, ProfileConfig, ScenarioContext } from '../scenario-context.js';
 
 /** Single owner of which default givens a scenario gets; values come only from DEFAULTS. */
 export const DefaultGivens = {
@@ -9,6 +9,17 @@ export const DefaultGivens = {
 
   country(): CountryConfig {
     return { country: DEFAULTS.COUNTRY, taxRate: DEFAULTS.TAX_RATE };
+  },
+
+  profile(): ProfileConfig {
+    return {
+      firstName: DEFAULTS.FIRST_NAME,
+      lastName: DEFAULTS.LAST_NAME,
+      street: DEFAULTS.STREET,
+      postalCode: DEFAULTS.POSTAL_CODE,
+      city: DEFAULTS.CITY,
+      country: DEFAULTS.PROFILE_COUNTRY,
+    };
   },
 
   coupon(): CouponConfig {

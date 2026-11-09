@@ -3,7 +3,9 @@ package com.mycompany.myshop.systemtest.latest.acceptance;
 import com.mycompany.myshop.systemtest.commons.providers.EmptyArgumentsProvider;
 import com.mycompany.myshop.systemtest.latest.acceptance.base.BaseAcceptanceTest;
 import com.mycompany.myshop.testkit.channel.ChannelType;
+import com.mycompany.myshop.testkit.dsl.port.when.steps.WhenPlaceOrder;
 import com.optivem.testing.Channel;
+import com.optivem.testing.DataSource;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.params.provider.ArgumentsSource;
@@ -99,7 +101,7 @@ class PlaceOrderNegativeTest extends BaseAcceptanceTest {
                     .fieldErrorMessage("quantity", "Quantity must be an integer");
     }
 
-    @Tag("UC-001.10")
+    @Tag("UC-001.16")
     @TestTemplate
     @Channel(value = {ChannelType.API}, alsoForFirstRow = ChannelType.UI)
     @ArgumentsSource(EmptyArgumentsProvider.class)
@@ -112,7 +114,7 @@ class PlaceOrderNegativeTest extends BaseAcceptanceTest {
                     .fieldErrorMessage("country", "Country must not be empty");
     }
 
-    @Tag("UC-001.10")
+    @Tag("UC-001.16")
     @TestTemplate
     @Channel({ChannelType.UI, ChannelType.API})
     void shouldRejectOrderWithInvalidCountry() {
@@ -148,7 +150,7 @@ class PlaceOrderNegativeTest extends BaseAcceptanceTest {
                     .fieldErrorMessage("sku", "SKU must not be empty");
     }
 
-    @Tag("UC-001.10")
+    @Tag("UC-001.16")
     @TestTemplate
     @Channel({ChannelType.API})
     void shouldRejectOrderWithNullCountry() {
@@ -220,5 +222,59 @@ class PlaceOrderNegativeTest extends BaseAcceptanceTest {
                     .withQuantity("2")
                 .then().shouldFail()
                     .errorMessage("Idempotency-Key has already been used with a different request");
+    }
+
+    @Tag("UC-001.10")
+    @TestTemplate
+    @Channel(ChannelType.API)
+    @DataSource({"firstName", "First name is required"})
+    @DataSource({"lastName", "Last name is required"})
+    @DataSource({"street", "Street is required"})
+    @DataSource({"postalCode", "Postal code is required"})
+    @DataSource({"city", "City is required"})
+    @DataSource({"country", "Country is required"})
+    void shouldRejectOrderWithIncompleteShippingAddress(String field, String message) {
+        var placeOrder = scenario
+                .when().placeOrder();
+        withShippingField(placeOrder, field, "")
+                .then().shouldFail()
+                    .errorMessage("The request contains one or more validation errors")
+                    .fieldErrorMessage("shippingAddress." + field, message);
+    }
+
+    @Tag("UC-001.10")
+    @TestTemplate
+    @Channel(ChannelType.API)
+    void shouldRejectOrderWithShippingAddressFieldOfOnlySpaces() {
+        scenario
+                .when().placeOrder()
+                    .withShippingCity("   ")
+                .then().shouldFail()
+                    .errorMessage("The request contains one or more validation errors")
+                    .fieldErrorMessage("shippingAddress.city", "City is required");
+    }
+
+    @Tag("UC-001.10")
+    @TestTemplate
+    @Channel(ChannelType.API)
+    void shouldRejectOrderShippedToUnsupportedCountry() {
+        scenario
+                .when().placeOrder()
+                    .withShippingCountry("XX")
+                .then().shouldFail()
+                    .errorMessage("The request contains one or more validation errors")
+                    .fieldErrorMessage("shippingAddress.country", "Country does not exist: XX");
+    }
+
+    private static WhenPlaceOrder withShippingField(WhenPlaceOrder placeOrder, String field, String value) {
+        return switch (field) {
+            case "firstName" -> placeOrder.withShippingFirstName(value);
+            case "lastName" -> placeOrder.withShippingLastName(value);
+            case "street" -> placeOrder.withShippingStreet(value);
+            case "postalCode" -> placeOrder.withShippingPostalCode(value);
+            case "city" -> placeOrder.withShippingCity(value);
+            case "country" -> placeOrder.withShippingCountry(value);
+            default -> throw new IllegalArgumentException("Unknown shipping address field: " + field);
+        };
     }
 }

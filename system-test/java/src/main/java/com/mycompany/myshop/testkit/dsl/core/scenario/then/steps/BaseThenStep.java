@@ -34,6 +34,10 @@ public abstract class BaseThenStep<R, V extends ResponseVerification<R>> {
         return new ThenOrderHistoryImpl<>(app, executionResult, successVerification);
     }
 
+    public ThenProfileImpl<R, V> profile() {
+        return new ThenProfileImpl<>(app, executionResult, successVerification, true);
+    }
+
     public ThenClockImpl clock() {
         var verification = app.clock().getTime().execute().shouldSucceed();
         return new ThenClockImpl(app, executionResult, verification);

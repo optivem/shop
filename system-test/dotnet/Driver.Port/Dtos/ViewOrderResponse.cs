@@ -19,4 +19,5 @@ public class ViewOrderResponse
     public required OrderStatus Status { get; set; }
     public required string Country { get; set; }
     public string? AppliedCouponCode { get; set; }
+    public ShippingAddress? ShippingAddress { get; set; }
 }

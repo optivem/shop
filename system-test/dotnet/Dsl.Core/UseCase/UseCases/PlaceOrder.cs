@@ -14,6 +14,7 @@ public class PlaceOrder : BaseMyShopUseCase<PlaceOrderResponse, PlaceOrderVerifi
     private string? _country;
     private string? _couponCode;
     private string? _idempotencyKeyAlias;
+    private Driver.Port.Dtos.ShippingAddress? _shippingAddress;
 
     public PlaceOrder(IMyShopDriver driver, UseCaseContext context)
         : base(driver, context)
@@ -55,6 +56,21 @@ public class PlaceOrder : BaseMyShopUseCase<PlaceOrderResponse, PlaceOrderVerifi
         return this;
     }
 
+    /// <summary>Ships the order to this address; the country is an alias like <see cref="Country"/>. Null fields stay null.</summary>
+    public PlaceOrder ShippingAddress(string? firstName, string? lastName, string? street, string? postalCode, string? city, string? countryAlias)
+    {
+        _shippingAddress = new Driver.Port.Dtos.ShippingAddress
+        {
+            FirstName = firstName,
+            LastName = lastName,
+            Street = street,
+            PostalCode = postalCode,
+            City = city,
+            Country = countryAlias,
+        };
+        return this;
+    }
+
     public PlaceOrder IdempotencyKey(string? idempotencyKeyAlias)
     {
         _idempotencyKeyAlias = idempotencyKeyAlias;
@@ -77,6 +93,15 @@ public class PlaceOrder : BaseMyShopUseCase<PlaceOrderResponse, PlaceOrderVerifi
             Country = country,
             CouponCode = couponCode,
             IdempotencyKey = idempotencyKey,
+            ShippingAddress = _shippingAddress == null ? null : new Driver.Port.Dtos.ShippingAddress
+            {
+                FirstName = _shippingAddress.FirstName,
+                LastName = _shippingAddress.LastName,
+                Street = _shippingAddress.Street,
+                PostalCode = _shippingAddress.PostalCode,
+                City = _shippingAddress.City,
+                Country = _context.GetParamValueOrLiteral(_shippingAddress.Country),
+            },
         };
 
         var result = await _driver.PlaceOrderAsync(request);

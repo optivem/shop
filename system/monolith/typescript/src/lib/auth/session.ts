@@ -12,6 +12,10 @@ export interface Session {
   subject: string;
   name: string;
   roles: string[];
+  /** The account's `email`, `given_name` and `family_name` claims; null when the ID token has none. */
+  email: string | null;
+  givenName: string | null;
+  familyName: string | null;
   /** Kept only so logout can tell Keycloak which session to end. */
   idToken: string;
 }
@@ -76,9 +80,17 @@ export async function openSession(token: string | undefined): Promise<Session | 
   return {
     subject: p.subject,
     name: p.name,
+    email: optionalString(p.email),
+    givenName: optionalString(p.givenName),
+    familyName: optionalString(p.familyName),
     idToken: p.idToken,
     roles: p.roles.filter((r): r is string => typeof r === 'string'),
   };
+}
+
+// Sessions sealed before the name/email claims were kept simply have none.
+function optionalString(value: unknown): string | null {
+  return typeof value === 'string' ? value : null;
 }
 
 export async function openLoginState(token: string | undefined): Promise<LoginState | null> {

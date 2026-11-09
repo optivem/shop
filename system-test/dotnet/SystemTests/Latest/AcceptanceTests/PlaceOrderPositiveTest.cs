@@ -141,7 +141,7 @@ public class PlaceOrderPositiveTest : BaseAcceptanceTest
     [ChannelData(ChannelType.API, AlsoForFirstRow = new[] { ChannelType.UI })]
     [ChannelInlineData("UK", 0.09)]
     [ChannelInlineData("US", 0.20)]
-    [Trait("tag", "UC-001.4")]
+    [Trait("tag", "UC-001.16")]
     public async Task CorrectTaxRateShouldBeUsedBasedOnCountry(Channel channel, string country, double taxRate)
     {
         await Scenario(channel)
@@ -156,7 +156,7 @@ public class PlaceOrderPositiveTest : BaseAcceptanceTest
     [ChannelData(ChannelType.API, AlsoForFirstRow = new[] { ChannelType.UI })]
     [ChannelInlineData("UK", 0.09, "50.00", "4.50", "54.50")]
     [ChannelInlineData("US", 0.20, "100.00", "20.00", "120.00")]
-    [Trait("tag", "UC-001.4")]
+    [Trait("tag", "UC-001.16")]
     public async Task TotalPriceShouldBeSubtotalPricePlusTaxAmount(Channel channel, string country, double taxRate, string subtotalPrice, string expectedTaxAmount, string expectedTotalPrice)
     {
         await Scenario(channel)
@@ -187,7 +187,7 @@ public class PlaceOrderPositiveTest : BaseAcceptanceTest
 
     [Theory]
     [ChannelData(ChannelType.API)]
-    [Trait("tag", "UC-001.4")]
+    [Trait("tag", "UC-001.16")]
     public async Task OrderTotalShouldIncludeTax(Channel channel)
     {
         await Scenario(channel)
@@ -219,7 +219,7 @@ public class PlaceOrderPositiveTest : BaseAcceptanceTest
     [Theory]
     [ChannelData(ChannelType.API)]
     [Trait("tag", "UC-001.3")]
-    [Trait("tag", "UC-001.4")]
+    [Trait("tag", "UC-001.16")]
     public async Task OrderTotalShouldApplyCouponDiscountAndTax(Channel channel)
     {
         await Scenario(channel)
@@ -259,5 +259,51 @@ public class PlaceOrderPositiveTest : BaseAcceptanceTest
             .Then().ShouldSucceed()
             .And().Order()
             .DoesNotHaveOrderNumber(DefaultOrderNumber);
+    }
+
+    [Theory]
+    [ChannelData(ChannelType.API)]
+    [ChannelInlineData("US", "0.00", "100.00", "0.00", "100.00")]
+    [ChannelInlineData("DE", "0.19", "50.00", "9.50", "59.50")]
+    [ChannelInlineData("GB", "0.20", "100.00", "20.00", "120.00")]
+    [Trait("tag", "UC-001.4")]
+    public async Task ShouldApplyTaxRateOfShippingAddressCountry(Channel channel, string country, string taxRate, string unitPrice, string taxAmount, string total)
+    {
+        await Scenario(channel)
+            .Given().Country().WithCode(country).WithTaxRate(taxRate)
+            .And().Product().WithUnitPrice(unitPrice)
+            .When().PlaceOrder().WithQuantity(1).WithShippingCountry(country)
+            .Then().ShouldSucceed()
+            .And().Order()
+            .HasTaxRate(taxRate)
+            .HasTaxAmount(taxAmount)
+            .HasTotalPrice(total)
+            .HasCountry(country);
+    }
+
+    [Theory]
+    [ChannelData(ChannelType.API)]
+    [Trait("tag", "UC-001.15")]
+    public async Task ShouldStoreShippingAddressWithOrder(Channel channel)
+    {
+        await Scenario(channel)
+            .Given().Country().WithCode("DE")
+            .When().PlaceOrder().WithShippingAddress("Ana", "Novak", "Main St 1", "10115", "Berlin", "DE")
+            .Then().ShouldSucceed()
+            .And().Order()
+            .HasShippingAddress("Ana", "Novak", "Main St 1", "10115", "Berlin", "DE")
+            .HasCountry("DE");
+    }
+
+    [Theory]
+    [ChannelData(ChannelType.API)]
+    [Trait("tag", "UC-001.16")]
+    public async Task QuickOrderShouldHaveNoShippingAddress(Channel channel)
+    {
+        await Scenario(channel)
+            .When().PlaceOrder()
+            .Then().ShouldSucceed()
+            .And().Order()
+            .HasNoShippingAddress();
     }
 }

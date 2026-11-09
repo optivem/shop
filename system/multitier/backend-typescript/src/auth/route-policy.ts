@@ -26,6 +26,9 @@ const POLICIES: readonly RoutePolicy[] = [
   { method: 'POST', path: /^\/api\/coupons$/, access: 'admin' },
   { method: 'GET', path: /^\/api\/coupons$/, access: 'admin' },
   { method: '*', path: /^\/api\/admin(\/.*)?$/, access: 'admin' },
+  // Any signed-in user manages their own profile (keyed by the token subject).
+  { method: 'GET', path: /^\/api\/account\/profile$/, access: 'authenticated' },
+  { method: 'PUT', path: /^\/api\/account\/profile$/, access: 'authenticated' },
 ];
 
 export const DEFAULT_ACCESS: Access = 'authenticated';

@@ -27,6 +27,7 @@ import {
 import { PageSpec } from './page-spec';
 import type { IdempotencyKey } from '../entities/idempotency-key.entity';
 import type { CurrentUser } from '../../auth/current-user';
+import { toShippingAddress } from '../dtos/shipping-address.dto';
 
 @Injectable()
 export class OrderService {
@@ -112,7 +113,14 @@ export class OrderService {
   ): Promise<PlaceOrderResponse> {
     const sku = request.sku;
     const quantity = request.quantity;
-    const country = request.country;
+    // With a shipping address the tax country is the address's; the top-level country is ignored.
+    const shippingAddress = request.shippingAddress
+      ? toShippingAddress(request.shippingAddress)
+      : null;
+    const country = shippingAddress ? shippingAddress.country : request.country;
+    const countryField = shippingAddress
+      ? 'shippingAddress.country'
+      : 'country';
     const couponCode = request.couponCode;
 
     const orderTimestamp = await this.clockGateway.getCurrentTime();
@@ -150,7 +158,7 @@ export class OrderService {
     const discountAmount = promotedPrice.mul(discountRate);
     const subtotalPrice = promotedPrice.sub(discountAmount);
 
-    const taxRate = await this.getTaxRate(country);
+    const taxRate = await this.getTaxRate(country, countryField);
     const taxAmount = subtotalPrice.mul(taxRate);
     const totalPrice = subtotalPrice.add(taxAmount);
 
@@ -176,6 +184,7 @@ export class OrderService {
     order.appliedCouponCode = appliedCouponCode ?? null;
     order.owner = user.subject;
     order.ownerName = user.username;
+    order.shippingAddress = shippingAddress;
 
     const response = new PlaceOrderResponse();
     response.orderNumber = orderNumber;
@@ -224,11 +233,11 @@ export class OrderService {
     return new Decimal(productDetails.price);
   }
 
-  private async getTaxRate(country: string): Promise<Decimal> {
+  private async getTaxRate(country: string, field: string): Promise<Decimal> {
     const taxDetails = await this.taxGateway.getTaxDetails(country);
     if (taxDetails === null) {
       throw new ValidationException(
-        'country',
+        field,
         `Country does not exist: ${country}`,
       );
     }
@@ -307,17 +316,24 @@ export class OrderService {
     await this.updateStatus(order, OrderStatus.CANCELLED);
   }
 
+  /**
+   * A customer always sees only their own orders; an admin sees every order, or with `customer` only
+   * the orders placed under that username (exact match). The customer filter is ignored for customers.
+   */
   async browseOrderHistory(
     orderNumberFilter: string | undefined,
     user: CurrentUser,
     page?: string,
     size?: string,
+    customerFilter?: string,
   ): Promise<BrowseOrderHistoryResponse> {
     const pageSpec = PageSpec.of(page, size);
     const filter = orderNumberFilter?.trim();
+    const customer = user.admin ? customerFilter?.trim() : undefined;
     const where = {
       ...(filter ? { orderNumber: ILike(`%${filter}%`) } : {}),
       ...(user.admin ? {} : { owner: user.subject }),
+      ...(customer ? { ownerName: customer } : {}),
     };
     // Paged in the database: a COUNT over the same predicate, then one page of rows.
     const totalElements = await this.orderRepository.count({ where });
@@ -375,6 +391,7 @@ export class OrderService {
     response.status = order.status;
     response.country = order.country;
     response.appliedCouponCode = order.appliedCouponCode;
+    response.shippingAddress = order.shippingAddress ?? null;
     return response;
   }
 

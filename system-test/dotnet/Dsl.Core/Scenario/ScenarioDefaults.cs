@@ -38,6 +38,14 @@ public static class ScenarioDefaults
     public const string DefaultValidTo = "2024-12-31T23:59:59Z";
     public const string DefaultUsageLimit = "1000";
 
+    // Profile / shipping address defaults (the shipping address country defaults to DefaultCountry)
+    public const string DefaultFirstName = "Ana";
+    public const string DefaultLastName = "Novak";
+    public const string DefaultStreet = "Main St 1";
+    public const string DefaultPostalCode = "10115";
+    public const string DefaultCity = "Berlin";
+    public const string DefaultProfileCountry = "DE";
+
     public const string? Empty = null;
 }
 

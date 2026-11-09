@@ -18,6 +18,9 @@ import type { PublishCouponRequest } from './dtos/PublishCouponRequest.js';
 import type { PublishCouponResponse } from './dtos/PublishCouponResponse.js';
 import type { BrowseCouponsRequest } from './dtos/BrowseCouponsRequest.js';
 import type { BrowseCouponsResponse } from './dtos/BrowseCouponsResponse.js';
+import type { ViewProfileRequest } from './dtos/ViewProfileRequest.js';
+import type { ViewProfileResponse } from './dtos/ViewProfileResponse.js';
+import type { UpdateProfileRequest } from './dtos/UpdateProfileRequest.js';
 
 export interface MyShopDriver extends AsyncCloseable, ActingUserSelector {
   goToMyShop(request: GoToMyShopRequest): Promise<Result<GoToMyShopResponse, SystemError>>;
@@ -28,4 +31,7 @@ export interface MyShopDriver extends AsyncCloseable, ActingUserSelector {
   browseOrderHistory(request: BrowseOrderHistoryRequest): Promise<Result<BrowseOrderHistoryResponse, SystemError>>;
   publishCoupon(request: PublishCouponRequest): Promise<Result<PublishCouponResponse, SystemError>>;
   browseCoupons(request: BrowseCouponsRequest): Promise<Result<BrowseCouponsResponse, SystemError>>;
+  viewProfile(request: ViewProfileRequest): Promise<Result<ViewProfileResponse, SystemError>>;
+  /** Saves the profile; the response is the saved profile, the same shape viewProfile returns. */
+  updateProfile(request: UpdateProfileRequest): Promise<Result<ViewProfileResponse, SystemError>>;
 }

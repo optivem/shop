@@ -65,6 +65,7 @@ builder.Services.AddScoped<ClockGateway>();
 builder.Services.AddScoped<TaxGateway>();
 builder.Services.AddScoped<CouponService>();
 builder.Services.AddScoped<OrderService>();
+builder.Services.AddScoped<ProfileService>();
 builder.Services.AddScoped<ProductService>();
 
 // Configure JWT bearer authentication and authorization

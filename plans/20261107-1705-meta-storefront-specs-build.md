@@ -1,7 +1,5 @@
 # 2026-11-07 17:05 UTC — Plan coordination meta-plan: storefront specs + build
 
-> 🤖 **Picked up by agent** — `8e8cd7062d0f` at `2026-11-09T10:26:50Z`
-
 
 **Plans analysed:** 2 in-scope, 1 referenced-only
 
@@ -33,17 +31,11 @@ The orchestrating session runs the Steps below **in order**, one subagent per st
 
 ## ▶ Next executable step (resume here)
 
-The prototype is signed off and the specs are reviewed (G0 closed 2026-11-07). Step 1 (U2) is done (`a71fb8ae`, `cee2babc`, `b3846cdc`). Step 2 (BUILD Step 9) is done (`ac04be12`): only UC-004 flipped, and the remaining gaps are now BUILD Step 10 (queued as Step 7b below). Run **Step 3** (U3) next. The user's scope for a session is Steps 3→4, stopping at the 🛑 React gate.
+The prototype is signed off and the specs are reviewed (G0 closed 2026-11-07). Step 1 (U2) is done (`a71fb8ae`, `cee2babc`, `b3846cdc`). Step 2 (BUILD Step 9) is done (`ac04be12`): only UC-004 flipped, and the remaining gaps are now BUILD Step 10 (queued as Step 7b below). Step 3 (U3) is committed (see the U3 commit): compile and the sample system tests are green in all three languages. UC-010 and UC-011 stay `planned` until their full acceptance tests have been run (only `--sample` ran); run them and flip the statuses, then run **Step 4**. The user's scope for a session is Steps 3→4, stopping at the 🛑 React gate.
 
 ## Steps
 
-- [ ] **Step 3 — U3: SPEC Step 8, then BUILD Step 2, then SPEC Step 9, as one subagent (atomic).**
-  - Amend UC-001 so the country comes from the shipping address. The SPEC Step 8 notes give the exact changes.
-  - Build profile storage, the shipping address on orders and `GET /api/orders?customer=`, with acceptance tests for UC-010, UC-011 and the amended UC-001. Retag `@UC-001.10`.
-  - Flip UC-010, UC-011 and UC-001 statuses where their tests now pass.
-  - Then cross-reference: fix storefront-ux.md §4.4 and list the `@UC-NNN.M` scenarios per BUILD step. The subagent may edit the BUILD plan for this cross-reference only.
-
-  Push only when compile and the sample system tests are green in all three languages.
+- [ ] **Step 3 remainder — flip UC-010 / UC-011.** Run their full acceptance tests in all three languages; flip to `status: implemented` where green.
 - [ ] **Step 4 — BUILD Step 3 (React reference implementation)** plus the `openHomePage()` driver change in all three languages. One subagent. Gate: `npx tsc --noEmit`, unit tests, and the multitier sample system tests.
   - 🛑 **User gate:** stop and ask the user to sign off how React looks (BUILD decision 4). Give them the run command, e.g. `gh optivem system start` with the multitier config.
 - [ ] **Step 5 — BUILD Steps 4, 5, 6 (ports to Next.js, Thymeleaf, Razor).** One subagent per port, **serial**: they share docker ports when running system tests. Gate per port: that monolith's build plus its sample system tests.

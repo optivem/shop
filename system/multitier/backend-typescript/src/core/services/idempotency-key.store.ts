@@ -51,13 +51,27 @@ export class IdempotencyKeyStore {
     return rawKey;
   }
 
-  /** SHA-256 (hex) over sku, quantity, country and coupon code as bound, null as empty, joined by \n. */
+  /**
+   * SHA-256 (hex) over sku, quantity, country and coupon code as bound, then the shipping address
+   * fields when there is one, null as empty, joined by \n.
+   */
   static fingerprint(request: PlaceOrderRequest): string {
+    const address = request.shippingAddress;
     const parts = [
       request.sku,
       request.quantity,
       request.country,
       request.couponCode,
+      ...(address
+        ? [
+            address.firstName,
+            address.lastName,
+            address.street,
+            address.postalCode,
+            address.city,
+            address.country,
+          ]
+        : []),
     ].map((value) =>
       value === undefined || value === null ? '' : String(value),
     );

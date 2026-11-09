@@ -1,5 +1,6 @@
 package com.mycompany.myshop.testkit.dsl.core.usecase.usecases;
 
+import com.mycompany.myshop.testkit.driver.port.dtos.ShippingAddress;
 import com.mycompany.myshop.testkit.driver.port.dtos.ViewOrderResponse;
 import com.mycompany.myshop.testkit.common.domain.OrderStatus;
 import com.mycompany.myshop.testkit.dsl.core.shared.ResponseVerification;
@@ -193,6 +194,32 @@ public class ViewOrderVerification extends ResponseVerification<ViewOrderRespons
         assertThat(actualCouponCode)
                 .withFailMessage("Expected applied coupon code to be '%s', but was '%s'", expectedCouponCode, actualCouponCode)
                 .isEqualTo(expectedCouponCode);
+        return this;
+    }
+
+    /** The order's shipping address; the country is an alias, resolved like {@link #country(String)}. */
+    public ViewOrderVerification shippingAddress(String firstName, String lastName, String street, String postalCode,
+                                                 String city, String countryAlias) {
+        var expected = ShippingAddress.builder()
+                .firstName(firstName)
+                .lastName(lastName)
+                .street(street)
+                .postalCode(postalCode)
+                .city(city)
+                .country(getContext().getParamValueOrLiteral(countryAlias))
+                .build();
+        var actual = getResponse().getShippingAddress();
+        assertThat(actual)
+                .withFailMessage("Expected shipping address to be %s, but was %s", expected, actual)
+                .isEqualTo(expected);
+        return this;
+    }
+
+    public ViewOrderVerification noShippingAddress() {
+        var actual = getResponse().getShippingAddress();
+        assertThat(actual)
+                .withFailMessage("Expected the order to have no shipping address, but it was %s", actual)
+                .isNull();
         return this;
     }
 

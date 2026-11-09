@@ -19,6 +19,13 @@ public class WhenPlaceOrderImpl extends BaseWhenStep<PlaceOrderResponse, PlaceOr
     private String country;
     private String couponCode;
     private String idempotencyKey;
+    private boolean shippingAddressMode;
+    private String shippingFirstName = DEFAULT_FIRST_NAME;
+    private String shippingLastName = DEFAULT_LAST_NAME;
+    private String shippingStreet = DEFAULT_STREET;
+    private String shippingPostalCode = DEFAULT_POSTAL_CODE;
+    private String shippingCity = DEFAULT_CITY;
+    private String shippingCountry = DEFAULT_COUNTRY;
 
     public WhenPlaceOrderImpl(UseCaseDsl app, ScenarioDslImpl scenario) {
         super(app, scenario);
@@ -67,16 +74,67 @@ public class WhenPlaceOrderImpl extends BaseWhenStep<PlaceOrderResponse, PlaceOr
         return this;
     }
 
+    public WhenPlaceOrderImpl withShippingAddress() {
+        this.shippingAddressMode = true;
+        return this;
+    }
+
+    public WhenPlaceOrderImpl withShippingAddress(String firstName, String lastName, String street, String postalCode,
+                                                  String city, String country) {
+        return withShippingFirstName(firstName)
+                .withShippingLastName(lastName)
+                .withShippingStreet(street)
+                .withShippingPostalCode(postalCode)
+                .withShippingCity(city)
+                .withShippingCountry(country);
+    }
+
+    public WhenPlaceOrderImpl withShippingFirstName(String firstName) {
+        this.shippingFirstName = firstName;
+        return withShippingAddress();
+    }
+
+    public WhenPlaceOrderImpl withShippingLastName(String lastName) {
+        this.shippingLastName = lastName;
+        return withShippingAddress();
+    }
+
+    public WhenPlaceOrderImpl withShippingStreet(String street) {
+        this.shippingStreet = street;
+        return withShippingAddress();
+    }
+
+    public WhenPlaceOrderImpl withShippingPostalCode(String postalCode) {
+        this.shippingPostalCode = postalCode;
+        return withShippingAddress();
+    }
+
+    public WhenPlaceOrderImpl withShippingCity(String city) {
+        this.shippingCity = city;
+        return withShippingAddress();
+    }
+
+    public WhenPlaceOrderImpl withShippingCountry(String country) {
+        this.shippingCountry = country;
+        return withShippingAddress();
+    }
+
     @Override
     protected ExecutionResult<PlaceOrderResponse, PlaceOrderVerification> execute(UseCaseDsl app) {
-        var result = app.myShop(ChannelMode.DYNAMIC).placeOrder()
+        var placeOrder = app.myShop(ChannelMode.DYNAMIC).placeOrder()
                 .orderNumber(orderNumber)
                 .sku(sku)
                 .quantity(quantity)
-                .country(country)
                 .couponCode(couponCode)
-                .idempotencyKey(idempotencyKey)
-                .execute();
+                .idempotencyKey(idempotencyKey);
+        if (shippingAddressMode) {
+            // In address mode the tax country is the address's; no top-level country is sent.
+            placeOrder.shippingAddress(shippingFirstName, shippingLastName, shippingStreet, shippingPostalCode,
+                    shippingCity, shippingCountry);
+        } else {
+            placeOrder.country(country);
+        }
+        var result = placeOrder.execute();
 
         return new ExecutionResultBuilder<>(result)
                 .orderNumber(orderNumber)

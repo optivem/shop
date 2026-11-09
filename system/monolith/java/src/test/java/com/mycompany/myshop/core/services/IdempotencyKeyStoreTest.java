@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mycompany.myshop.core.dtos.CurrentUser;
 import com.mycompany.myshop.core.dtos.PlaceOrderRequest;
 import com.mycompany.myshop.core.dtos.PlaceOrderResponse;
+import com.mycompany.myshop.core.dtos.ShippingAddress;
 import com.mycompany.myshop.core.entities.IdempotencyKey;
 import com.mycompany.myshop.core.exceptions.ValidationException;
 import com.mycompany.myshop.core.repositories.IdempotencyKeyRepository;
@@ -70,6 +71,18 @@ class IdempotencyKeyStoreTest {
                 .hasSize(64);
         assertThat(IdempotencyKeyStore.fingerprint(request("BOOK-123", 3)))
                 .isNotEqualTo(IdempotencyKeyStore.fingerprint(request("BOOK-123", 2)));
+    }
+
+    @Test
+    void fingerprintIncludesTheShippingAddress() {
+        var withAddress = request("BOOK-123", 2);
+        withAddress.setShippingAddress(new ShippingAddress("Ana", "Novak", "Main St 1", "10115", "Berlin", "DE"));
+        var otherAddress = request("BOOK-123", 2);
+        otherAddress.setShippingAddress(new ShippingAddress("Ana", "Novak", "Main St 2", "10115", "Berlin", "DE"));
+
+        assertThat(IdempotencyKeyStore.fingerprint(withAddress))
+                .isNotEqualTo(IdempotencyKeyStore.fingerprint(request("BOOK-123", 2)))
+                .isNotEqualTo(IdempotencyKeyStore.fingerprint(otherAddress));
     }
 
     @Test

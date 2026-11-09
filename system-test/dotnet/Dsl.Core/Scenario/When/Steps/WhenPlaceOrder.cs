@@ -19,6 +19,13 @@ public class PlaceOrder : BaseWhen<PlaceOrderResponse, PlaceOrderVerification>, 
     private string? _country;
     private string? _couponCode;
     private string? _idempotencyKey;
+    private bool _shipsToAddress;
+    private string? _shippingFirstName;
+    private string? _shippingLastName;
+    private string? _shippingStreet;
+    private string? _shippingPostalCode;
+    private string? _shippingCity;
+    private string? _shippingCountry;
 
     public PlaceOrder(UseCaseDsl app, ScenarioDsl scenario, Func<Task> ensureGiven) : base(app, scenario, ensureGiven)
     {
@@ -91,17 +98,117 @@ public class PlaceOrder : BaseWhen<PlaceOrderResponse, PlaceOrderVerification>, 
 
     IWhenPlaceOrder IWhenPlaceOrder.WithIdempotencyKey(string? idempotencyKey) => WithIdempotencyKey(idempotencyKey);
 
+    public PlaceOrder WithShippingAddress()
+    {
+        ShipToAddress();
+        return this;
+    }
+
+    IWhenPlaceOrder IWhenPlaceOrder.WithShippingAddress() => WithShippingAddress();
+
+    public PlaceOrder WithShippingAddress(string? firstName, string? lastName, string? street, string? postalCode, string? city, string? country)
+    {
+        ShipToAddress();
+        _shippingFirstName = firstName;
+        _shippingLastName = lastName;
+        _shippingStreet = street;
+        _shippingPostalCode = postalCode;
+        _shippingCity = city;
+        _shippingCountry = country;
+        return this;
+    }
+
+    IWhenPlaceOrder IWhenPlaceOrder.WithShippingAddress(string? firstName, string? lastName, string? street, string? postalCode, string? city, string? country)
+        => WithShippingAddress(firstName, lastName, street, postalCode, city, country);
+
+    public PlaceOrder WithShippingFirstName(string? firstName)
+    {
+        ShipToAddress();
+        _shippingFirstName = firstName;
+        return this;
+    }
+
+    IWhenPlaceOrder IWhenPlaceOrder.WithShippingFirstName(string? firstName) => WithShippingFirstName(firstName);
+
+    public PlaceOrder WithShippingLastName(string? lastName)
+    {
+        ShipToAddress();
+        _shippingLastName = lastName;
+        return this;
+    }
+
+    IWhenPlaceOrder IWhenPlaceOrder.WithShippingLastName(string? lastName) => WithShippingLastName(lastName);
+
+    public PlaceOrder WithShippingStreet(string? street)
+    {
+        ShipToAddress();
+        _shippingStreet = street;
+        return this;
+    }
+
+    IWhenPlaceOrder IWhenPlaceOrder.WithShippingStreet(string? street) => WithShippingStreet(street);
+
+    public PlaceOrder WithShippingPostalCode(string? postalCode)
+    {
+        ShipToAddress();
+        _shippingPostalCode = postalCode;
+        return this;
+    }
+
+    IWhenPlaceOrder IWhenPlaceOrder.WithShippingPostalCode(string? postalCode) => WithShippingPostalCode(postalCode);
+
+    public PlaceOrder WithShippingCity(string? city)
+    {
+        ShipToAddress();
+        _shippingCity = city;
+        return this;
+    }
+
+    IWhenPlaceOrder IWhenPlaceOrder.WithShippingCity(string? city) => WithShippingCity(city);
+
+    public PlaceOrder WithShippingCountry(string? country)
+    {
+        ShipToAddress();
+        _shippingCountry = country;
+        return this;
+    }
+
+    IWhenPlaceOrder IWhenPlaceOrder.WithShippingCountry(string? country) => WithShippingCountry(country);
+
+    /// <summary>Switches to address mode (once), starting from the default address; no top-level country is then sent.</summary>
+    private void ShipToAddress()
+    {
+        if (_shipsToAddress)
+        {
+            return;
+        }
+
+        _shipsToAddress = true;
+        _shippingFirstName = DefaultFirstName;
+        _shippingLastName = DefaultLastName;
+        _shippingStreet = DefaultStreet;
+        _shippingPostalCode = DefaultPostalCode;
+        _shippingCity = DefaultCity;
+        _shippingCountry = DefaultCountry;
+    }
+
     protected override async Task<ExecutionResult<PlaceOrderResponse, PlaceOrderVerification>> Execute(UseCaseDsl app)
     {
         var shop = await app.MyShop(ChannelMode.Dynamic, Channel);
-        var result = await shop.PlaceOrder()
+        var placeOrder = shop.PlaceOrder()
             .OrderNumber(_orderNumber)
             .Sku(_sku)
             .Quantity(_quantity)
-            .Country(_country)
+            .Country(_shipsToAddress ? null : _country)
             .CouponCode(_couponCode)
-            .IdempotencyKey(_idempotencyKey)
-            .Execute();
+            .IdempotencyKey(_idempotencyKey);
+        if (_shipsToAddress)
+        {
+            placeOrder.ShippingAddress(_shippingFirstName, _shippingLastName, _shippingStreet,
+                _shippingPostalCode, _shippingCity, _shippingCountry);
+        }
+
+        var result = await placeOrder.Execute();
 
         return new ExecutionResultBuilder<PlaceOrderResponse, PlaceOrderVerification>(result)
             .OrderNumber(_orderNumber)

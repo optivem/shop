@@ -13,6 +13,7 @@ import com.mycompany.myshop.testkit.dsl.core.scenario.given.steps.GivenOrderImpl
 import com.mycompany.myshop.testkit.dsl.core.scenario.given.steps.GivenProductImpl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.given.steps.GivenProductsImpl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.given.steps.GivenPromotionImpl;
+import com.mycompany.myshop.testkit.dsl.core.scenario.given.steps.GivenProfileImpl;
 import com.mycompany.myshop.testkit.dsl.port.given.GivenStage;
 import com.mycompany.myshop.testkit.dsl.port.then.ThenStage;
 import com.mycompany.myshop.testkit.dsl.core.scenario.when.WhenImpl;
@@ -32,6 +33,7 @@ public class GivenImpl implements GivenStage {
     private final List<GivenOrderImpl> orders;
     private final List<GivenCountryImpl> countries;
     private final List<GivenCouponImpl> coupons;
+    private final List<GivenProfileImpl> profiles;
     private final DefaultGivens defaults;
     private final CustomerAliases customers = new CustomerAliases();
     private Supplier<UserIdentity> loggedIn = () -> UserIdentity.DEFAULT;
@@ -48,6 +50,7 @@ public class GivenImpl implements GivenStage {
         this.orders = new ArrayList<>();
         this.countries = new ArrayList<>();
         this.coupons = new ArrayList<>();
+        this.profiles = new ArrayList<>();
     }
 
     @Override
@@ -103,6 +106,12 @@ public class GivenImpl implements GivenStage {
         return coupon;
     }
 
+    public GivenProfileImpl profile() {
+        var profile = new GivenProfileImpl(this);
+        profiles.add(profile);
+        return profile;
+    }
+
     @Override
     public GivenImpl loggedInAsCustomer() {
         customers.reserveDefaultCustomer();
@@ -148,7 +157,23 @@ public class GivenImpl implements GivenStage {
 
     public WhenImpl when() {
         setup();
-        return new WhenImpl(app, scenario, defaults);
+        return new WhenImpl(app, scenario, defaults, customerResolver());
+    }
+
+    /** Resolves aliases named in the when stage (e.g. a customer filter) against this scenario's customers. */
+    private CustomerResolver customerResolver() {
+        return new CustomerResolver() {
+            @Override
+            public UserIdentity defaultCustomer() {
+                return GivenImpl.this.defaultCustomer();
+            }
+
+            @Override
+            public UserIdentity customer(String alias) {
+                registerCustomer(alias);
+                return resolveCustomer(alias);
+            }
+        };
     }
 
     public ThenStage then() {
@@ -168,7 +193,8 @@ public class GivenImpl implements GivenStage {
 
     /** Operations with no explicit customer run as the default customer, so customer1 must stay theirs. */
     private void reserveDefaultCustomerIfUsed() {
-        if (!loggedInChosen || orders.stream().anyMatch(GivenOrderImpl::isPlacedByDefaultCustomer)) {
+        if (!loggedInChosen || orders.stream().anyMatch(GivenOrderImpl::isPlacedByDefaultCustomer)
+                || profiles.stream().anyMatch(GivenProfileImpl::isSavedByDefaultCustomer)) {
             customers.reserveDefaultCustomer();
         }
     }
@@ -205,6 +231,13 @@ public class GivenImpl implements GivenStage {
     private void setupMyShop() {
         setupCoupons();
         setupOrders();
+        setupProfiles();
+    }
+
+    private void setupProfiles() {
+        for (var profile : profiles) {
+            profile.execute(app);
+        }
     }
 
     private void setupCoupons() {

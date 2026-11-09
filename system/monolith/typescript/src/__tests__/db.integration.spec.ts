@@ -128,14 +128,20 @@ describe('db adapter [integration]', () => {
     await db.insertOrder(order('ORD-OWN-A', 'sub-a', 'customer-a'));
     await db.insertOrder(order('ORD-OWN-B', 'sub-b', 'customer-b'));
 
-    const mine = (await db.findAllOrders(undefined, 'sub-a')).map((o) => o.order_number);
-    const filtered = (await db.findAllOrders('own-b', 'sub-a')).map((o) => o.order_number);
-    const all = (await db.findAllOrders('ORD-OWN')).map((o) => o.order_number);
+    const mine = (await db.findAllOrders({ owner: 'sub-a' })).map((o) => o.order_number);
+    const filtered = (await db.findAllOrders({ orderNumber: 'own-b', owner: 'sub-a' })).map((o) => o.order_number);
+    const all = (await db.findAllOrders({ orderNumber: 'ORD-OWN' })).map((o) => o.order_number);
 
     expect(mine).toContain('ORD-OWN-A');
     expect(mine).not.toContain('ORD-OWN-B');
     expect(filtered).toEqual([]);
     expect(all).toEqual(expect.arrayContaining(['ORD-OWN-A', 'ORD-OWN-B']));
+
+    const chosen = (await db.findAllOrders({ orderNumber: 'ORD-OWN', ownerName: 'customer-b' })).map(
+      (o) => o.order_number
+    );
+    expect(chosen).toEqual(['ORD-OWN-B']);
+    expect(await db.countOrders({ orderNumber: 'ORD-OWN', ownerName: 'customer-b' })).toBe(1);
 
     const admin = { subject: 'sub-admin', admin: true };
     const customerA = { subject: 'sub-a', admin: false };
@@ -205,16 +211,41 @@ describe('db adapter [integration]', () => {
     }
 
     const pages = await Promise.all(
-      [0, 2, 4].map((offset) => db.findAllOrders(undefined, 'sub-page', { limit: 2, offset }))
+      [0, 2, 4].map((offset) => db.findAllOrders({ owner: 'sub-page' }, { limit: 2, offset }))
     );
-    const pastEnd = await db.findAllOrders(undefined, 'sub-page', { limit: 2, offset: 6 });
+    const pastEnd = await db.findAllOrders({ owner: 'sub-page' }, { limit: 2, offset: 6 });
 
     expect(pages.flat().map((o) => o.order_number)).toEqual([
       'ORD-PAGE-4', 'ORD-PAGE-3', 'ORD-PAGE-2', 'ORD-PAGE-1', 'ORD-PAGE-0',
     ]);
-    expect(await db.countOrders(undefined, 'sub-page')).toBe(5);
-    expect(await db.countOrders('page-4', 'sub-page')).toBe(1);
+    expect(await db.countOrders({ owner: 'sub-page' })).toBe(5);
+    expect(await db.countOrders({ orderNumber: 'page-4', owner: 'sub-page' })).toBe(1);
     expect(pastEnd).toEqual([]);
+  });
+
+  it('stores the shipping address as JSONB and reads it back parsed', async () => {
+    const address = {
+      firstName: 'Ana', lastName: 'Novak', street: 'Main St 1', postalCode: '10115', city: 'Berlin', country: 'DE',
+    };
+    await db.insertOrder({ ...pagedOrder('ORD-ADDR-1', new Date('2027-03-01T00:00:00Z'), 'sub-addr'), shippingAddress: address });
+    await db.insertOrder(pagedOrder('ORD-ADDR-2', new Date('2027-03-01T00:00:00Z'), 'sub-addr'));
+
+    expect((await db.findByOrderNumber('ORD-ADDR-1'))?.shipping_address).toEqual(address);
+    expect((await db.findByOrderNumber('ORD-ADDR-2'))?.shipping_address).toBeNull();
+  });
+
+  it('upserts one profile per owner', async () => {
+    const profile = {
+      owner: 'sub-profile', firstName: 'Ana', lastName: 'Novak', street: 'Main St 1', postalCode: '10115',
+      city: 'Berlin', country: 'DE',
+    };
+    expect(await db.findCustomerProfile('sub-profile')).toBeNull();
+
+    await db.upsertCustomerProfile(profile);
+    const updated = await db.upsertCustomerProfile({ ...profile, city: 'London', country: 'GB' });
+
+    expect(updated).toMatchObject({ owner: 'sub-profile', city: 'London', country: 'GB' });
+    expect(await db.findCustomerProfile('sub-profile')).toMatchObject({ first_name: 'Ana', city: 'London' });
   });
 
   it('pages coupons newest first', async () => {
@@ -248,7 +279,7 @@ describe('db adapter [integration]', () => {
 
     expect(outcomes.filter((o) => o.kind === 'placed')).toHaveLength(1);
     expect(outcomes.filter((o) => o.kind === 'replay')).toHaveLength(7);
-    expect(await db.countOrders('ORD-RACE')).toBe(1);
+    expect(await db.countOrders({ orderNumber: 'ORD-RACE' })).toBe(1);
     expect((await db.findCouponByCode('RACE-KEY'))?.used_count).toBe(1);
     const stored = await db.findIdempotencyKey('sub-race', 'race-key');
     const placedNumber = (JSON.parse(stored?.response_body ?? '{}') as { orderNumber: string }).orderNumber;

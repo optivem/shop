@@ -50,11 +50,12 @@ public class OrderController
 
 
 
-    public Task<Result<BrowseOrderHistoryResponse, ProblemDetailResponse>> BrowseOrderHistoryAsync(string? orderNumber, string? page, string? size)
+    public Task<Result<BrowseOrderHistoryResponse, ProblemDetailResponse>> BrowseOrderHistoryAsync(string? orderNumber, string? page, string? size, string? customer = null)
         => _httpClient.GetAsync<BrowseOrderHistoryResponse>(Endpoint + QueryString.Of(
             ("orderNumber", string.IsNullOrWhiteSpace(orderNumber) ? null : orderNumber),
             ("page", page),
-            ("size", size)));
+            ("size", size),
+            ("customer", customer)));
 
     public Task<Result<VoidValue, ProblemDetailResponse>> CancelOrderAsync(string? orderNumber)
         => _httpClient.PostAsync($"{Endpoint}/{orderNumber}/cancel");

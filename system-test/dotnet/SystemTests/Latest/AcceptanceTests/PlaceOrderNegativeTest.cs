@@ -3,6 +3,7 @@ using SystemTests.Commons.Providers;
 using SystemTests.Latest.AcceptanceTests.Base;
 using Dsl.Core.UseCase;
 using Optivem.Testing;
+using Dsl.Port.When.Steps;
 
 namespace SystemTests.Latest.AcceptanceTests;
 
@@ -99,7 +100,7 @@ public class PlaceOrderNegativeTest : BaseAcceptanceTest
     [Theory]
     [ChannelData(ChannelType.API, AlsoForFirstRow = new[] { ChannelType.UI })]
     [ChannelClassData(typeof(EmptyArgumentsProvider))]
-    [Trait("tag", "UC-001.10")]
+    [Trait("tag", "UC-001.16")]
     public async Task ShouldRejectOrderWithEmptyCountry(Channel channel, string emptyCountry)
     {
         await Scenario(channel)
@@ -111,7 +112,7 @@ public class PlaceOrderNegativeTest : BaseAcceptanceTest
 
     [Theory]
     [ChannelData(ChannelType.UI, ChannelType.API)]
-    [Trait("tag", "UC-001.10")]
+    [Trait("tag", "UC-001.16")]
     public async Task ShouldRejectOrderWithInvalidCountry(Channel channel)
     {
         await Scenario(channel)
@@ -147,7 +148,7 @@ public class PlaceOrderNegativeTest : BaseAcceptanceTest
 
     [Theory]
     [ChannelData(ChannelType.API)]
-    [Trait("tag", "UC-001.10")]
+    [Trait("tag", "UC-001.16")]
     public async Task ShouldRejectOrderWithNullCountry(Channel channel)
     {
         await Scenario(channel)
@@ -208,4 +209,56 @@ public class PlaceOrderNegativeTest : BaseAcceptanceTest
             .Then().ShouldFail()
             .ErrorMessage("Idempotency-Key has already been used with a different request");
     }
+
+    [Theory]
+    [ChannelData(ChannelType.API)]
+    [ChannelInlineData("firstName", "First name is required")]
+    [ChannelInlineData("lastName", "Last name is required")]
+    [ChannelInlineData("street", "Street is required")]
+    [ChannelInlineData("postalCode", "Postal code is required")]
+    [ChannelInlineData("city", "City is required")]
+    [ChannelInlineData("country", "Country is required")]
+    [Trait("tag", "UC-001.10")]
+    public async Task ShouldRejectOrderWithIncompleteShippingAddress(Channel channel, string field, string message)
+    {
+        await WithShippingField(Scenario(channel).When().PlaceOrder(), field, "")
+            .Then().ShouldFail()
+            .ErrorMessage("The request contains one or more validation errors")
+            .FieldErrorMessage($"shippingAddress.{field}", message);
+    }
+
+    [Theory]
+    [ChannelData(ChannelType.API)]
+    [Trait("tag", "UC-001.10")]
+    public async Task ShouldRejectOrderWithShippingAddressFieldOfOnlySpaces(Channel channel)
+    {
+        await Scenario(channel)
+            .When().PlaceOrder().WithShippingCity("   ")
+            .Then().ShouldFail()
+            .ErrorMessage("The request contains one or more validation errors")
+            .FieldErrorMessage("shippingAddress.city", "City is required");
+    }
+
+    [Theory]
+    [ChannelData(ChannelType.API)]
+    [Trait("tag", "UC-001.10")]
+    public async Task ShouldRejectOrderShippedToUnsupportedCountry(Channel channel)
+    {
+        await Scenario(channel)
+            .When().PlaceOrder().WithShippingCountry("XX")
+            .Then().ShouldFail()
+            .ErrorMessage("The request contains one or more validation errors")
+            .FieldErrorMessage("shippingAddress.country", "Country does not exist: XX");
+    }
+
+    private static IWhenPlaceOrder WithShippingField(IWhenPlaceOrder placeOrder, string field, string value) => field switch
+    {
+        "firstName" => placeOrder.WithShippingFirstName(value),
+        "lastName" => placeOrder.WithShippingLastName(value),
+        "street" => placeOrder.WithShippingStreet(value),
+        "postalCode" => placeOrder.WithShippingPostalCode(value),
+        "city" => placeOrder.WithShippingCity(value),
+        "country" => placeOrder.WithShippingCountry(value),
+        _ => throw new ArgumentOutOfRangeException(nameof(field), field, "Not a shipping address field")
+    };
 }

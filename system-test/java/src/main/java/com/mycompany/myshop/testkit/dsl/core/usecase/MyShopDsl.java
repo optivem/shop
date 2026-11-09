@@ -9,7 +9,9 @@ import com.mycompany.myshop.testkit.dsl.core.usecase.usecases.DeliverOrder;
 import com.mycompany.myshop.testkit.dsl.core.usecase.usecases.GoToMyShop;
 import com.mycompany.myshop.testkit.dsl.core.usecase.usecases.PlaceOrder;
 import com.mycompany.myshop.testkit.dsl.core.usecase.usecases.PublishCoupon;
+import com.mycompany.myshop.testkit.dsl.core.usecase.usecases.UpdateProfile;
 import com.mycompany.myshop.testkit.dsl.core.usecase.usecases.ViewOrder;
+import com.mycompany.myshop.testkit.dsl.core.usecase.usecases.ViewProfile;
 import com.mycompany.myshop.testkit.common.Closer;
 import com.mycompany.myshop.testkit.dsl.core.shared.UseCaseContext;
 
@@ -63,5 +65,13 @@ public class MyShopDsl implements Closeable {
 
     public BrowseCoupons browseCoupons() {
         return new BrowseCoupons(driver, context);
+    }
+
+    public ViewProfile viewProfile() {
+        return new ViewProfile(driver, context);
+    }
+
+    public UpdateProfile updateProfile() {
+        return new UpdateProfile(driver, context);
     }
 }

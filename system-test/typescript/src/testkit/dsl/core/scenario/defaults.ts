@@ -19,4 +19,11 @@ export const DEFAULTS = {
   VALID_TO: '2024-12-31T23:59:59Z',
   USAGE_LIMIT: '1000',
   EMPTY: null,
+  FIRST_NAME: 'Ana',
+  LAST_NAME: 'Novak',
+  STREET: 'Main St 1',
+  POSTAL_CODE: '10115',
+  CITY: 'Berlin',
+  /** The profile only accepts US, DE or GB, so its country is a literal, not an alias. */
+  PROFILE_COUNTRY: 'DE',
 };

@@ -67,4 +67,46 @@ public class BrowseOrderHistoryNegativeTest : BaseAcceptanceTest
             .Then().ShouldSucceed()
             .OrderHistory().IsEmpty();
     }
+
+    [Theory]
+    [ChannelData(ChannelType.API)]
+    [Trait("tag", "UC-011.3")]
+    public async Task AdminCustomerFilterShouldExcludeOtherCustomersOrders(Channel channel)
+    {
+        await Scenario(channel)
+            .Given().Order().WithOrderNumber("ORD-A").PlacedByCustomer("A")
+            .And().Order().WithOrderNumber("ORD-B").PlacedByCustomer("B")
+            .And().LoggedInAsAdmin()
+            .When().BrowseOrderHistory().WithCustomer("A").WithOrderNumber("ORD-B")
+            .Then().ShouldSucceed()
+            .OrderHistory().DoesNotContainOrder("ORD-B");
+    }
+
+    [Theory]
+    [ChannelData(ChannelType.API)]
+    [Trait("tag", "UC-011.8")]
+    public async Task AdminShouldSeeNoOrdersWhenNoOrderMatchesFilters(Channel channel)
+    {
+        await Scenario(channel)
+            .Given().Order().WithOrderNumber("ORD-A").PlacedByCustomer("A")
+            .And().Order().WithOrderNumber("ORD-B").PlacedByCustomer("B")
+            .And().LoggedInAsAdmin()
+            .When().BrowseOrderHistory().WithCustomer("A").WithOrderNumber("ORD-B")
+            .Then().ShouldSucceed()
+            .OrderHistory().IsEmpty();
+    }
+
+    [Theory]
+    [ChannelData(ChannelType.API)]
+    [Trait("tag", "UC-011.5")]
+    public async Task CustomerShouldNotSeeAnotherCustomersOrdersThroughCustomerFilter(Channel channel)
+    {
+        await Scenario(channel)
+            .Given().Order().WithOrderNumber("ORD-A").PlacedByCustomer("A")
+            .And().Order().WithOrderNumber("ORD-B").PlacedByCustomer("B")
+            .And().LoggedInAsCustomer("A")
+            .When().BrowseOrderHistory().WithCustomer("B").WithOrderNumber("ORD-B")
+            .Then().ShouldSucceed()
+            .OrderHistory().DoesNotContainOrder("ORD-B");
+    }
 }

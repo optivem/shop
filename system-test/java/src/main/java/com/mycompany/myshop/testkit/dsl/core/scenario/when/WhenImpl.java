@@ -2,6 +2,7 @@ package com.mycompany.myshop.testkit.dsl.core.scenario.when;
 
 import com.mycompany.myshop.testkit.dsl.core.ScenarioDslImpl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.DefaultGivens;
+import com.mycompany.myshop.testkit.dsl.core.scenario.given.CustomerResolver;
 import com.mycompany.myshop.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.when.steps.WhenBrowseCouponsImpl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.when.steps.WhenBrowseOrderHistoryImpl;
@@ -11,17 +12,25 @@ import com.mycompany.myshop.testkit.dsl.core.scenario.when.steps.WhenPlaceOrderI
 import com.mycompany.myshop.testkit.dsl.core.scenario.when.steps.WhenPublishCouponImpl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.when.steps.BaseWhenStep;
 import com.mycompany.myshop.testkit.dsl.core.scenario.when.steps.WhenViewOrderImpl;
+import com.mycompany.myshop.testkit.dsl.core.scenario.when.steps.WhenUpdateProfileImpl;
+import com.mycompany.myshop.testkit.dsl.core.scenario.when.steps.WhenViewProfileImpl;
 import com.mycompany.myshop.testkit.dsl.port.when.WhenStage;
 
 public class WhenImpl implements WhenStage {
     private final UseCaseDsl app;
     private final ScenarioDslImpl scenario;
     private final DefaultGivens defaults;
+    private final CustomerResolver customers;
 
-    public WhenImpl(UseCaseDsl app, ScenarioDslImpl scenario, DefaultGivens defaults) {
+    public WhenImpl(UseCaseDsl app, ScenarioDslImpl scenario, DefaultGivens defaults, CustomerResolver customers) {
         this.app = app;
         this.scenario = scenario;
         this.defaults = defaults;
+        this.customers = customers;
+    }
+
+    public WhenImpl(UseCaseDsl app, ScenarioDslImpl scenario, DefaultGivens defaults) {
+        this(app, scenario, defaults, CustomerResolver.standalone());
     }
 
     public WhenImpl(UseCaseDsl app, ScenarioDslImpl scenario) {
@@ -30,6 +39,11 @@ public class WhenImpl implements WhenStage {
 
     private void ensureDefaults() {
         defaults.ensure(true);
+    }
+
+    /** Profile steps don't touch the ERP or tax service, so only the givens' own dependents are created. */
+    private void ensureDefaultsForProfile() {
+        defaults.ensure(false);
     }
 
     public WhenPlaceOrderImpl placeOrder() {
@@ -54,7 +68,7 @@ public class WhenImpl implements WhenStage {
 
     public WhenBrowseOrderHistoryImpl browseOrderHistory() {
         ensureDefaults();
-        return new WhenBrowseOrderHistoryImpl(app, scenario);
+        return new WhenBrowseOrderHistoryImpl(app, scenario, customers);
     }
 
     public WhenPublishCouponImpl publishCoupon() {
@@ -65,6 +79,16 @@ public class WhenImpl implements WhenStage {
     public WhenBrowseCouponsImpl browseCoupons() {
         ensureDefaults();
         return new WhenBrowseCouponsImpl(app, scenario);
+    }
+
+    public WhenViewProfileImpl viewProfile() {
+        ensureDefaultsForProfile();
+        return new WhenViewProfileImpl(app, scenario);
+    }
+
+    public WhenUpdateProfileImpl updateProfile() {
+        ensureDefaultsForProfile();
+        return new WhenUpdateProfileImpl(app, scenario);
     }
 
 }

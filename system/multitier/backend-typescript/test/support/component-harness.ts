@@ -13,6 +13,7 @@ import { configureApp } from '../../src/configure-app';
 import { Order } from '../../src/core/entities/order.entity';
 import { Coupon } from '../../src/core/entities/coupon.entity';
 import { IdempotencyKey } from '../../src/core/entities/idempotency-key.entity';
+import { CustomerProfile } from '../../src/core/entities/customer-profile.entity';
 import { applyMigrations } from './migrations';
 import { TEST_AUDIENCE, TEST_ISSUER, TestIdp } from './test-idp';
 import request from 'supertest';
@@ -77,6 +78,7 @@ export class ComponentHarness {
   orderRepo!: Repository<Order>;
   couponRepo!: Repository<Coupon>;
   idempotencyKeyRepo!: Repository<IdempotencyKey>;
+  customerProfileRepo!: Repository<CustomerProfile>;
   private postgres!: StartedPostgreSqlContainer;
   private readonly erp = new StubServer();
   private readonly tax = new StubServer();
@@ -136,6 +138,7 @@ export class ComponentHarness {
     this.orderRepo = this.dataSource.getRepository(Order);
     this.couponRepo = this.dataSource.getRepository(Coupon);
     this.idempotencyKeyRepo = this.dataSource.getRepository(IdempotencyKey);
+    this.customerProfileRepo = this.dataSource.getRepository(CustomerProfile);
   }
 
   async stop(): Promise<void> {
@@ -157,6 +160,7 @@ export class ComponentHarness {
     await this.orderRepo.clear();
     await this.couponRepo.clear();
     await this.idempotencyKeyRepo.clear();
+    await this.customerProfileRepo.clear();
   }
 
   baseUrl(): string {

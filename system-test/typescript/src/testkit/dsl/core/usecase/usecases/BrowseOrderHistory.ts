@@ -9,6 +9,7 @@ export class BrowseOrderHistory extends BaseMyShopUseCase<BrowseOrderHistoryResp
   private _orderNumber = '';
   private _page?: string;
   private _size?: string;
+  private _customer?: string;
 
   constructor(driver: MyShopDriver, context: UseCaseContext) {
     super(driver, context);
@@ -29,9 +30,20 @@ export class BrowseOrderHistory extends BaseMyShopUseCase<BrowseOrderHistoryResp
     return this;
   }
 
+  /** Username of the customer whose orders an admin wants to see. */
+  customer(username: string): this {
+    this._customer = username;
+    return this;
+  }
+
   async execute(): Promise<UseCaseResult<BrowseOrderHistoryResponse, BrowseOrderHistoryVerification>> {
     const resolved = this.context.getResultValue(this._orderNumber) ?? this._orderNumber;
-    const result = await this.driver.browseOrderHistory({ orderNumber: resolved, page: this._page, size: this._size });
+    const result = await this.driver.browseOrderHistory({
+      orderNumber: resolved,
+      page: this._page,
+      size: this._size,
+      customer: this._customer,
+    });
 
     return new UseCaseResult(
       result,

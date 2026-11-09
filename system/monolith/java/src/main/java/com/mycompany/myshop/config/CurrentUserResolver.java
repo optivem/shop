@@ -10,6 +10,9 @@ public final class CurrentUserResolver {
     private static final String ROLE_ADMIN = "ROLE_ADMIN";
     private static final String ROLE_CUSTOMER = "ROLE_CUSTOMER";
     private static final String USERNAME_CLAIM = "preferred_username";
+    private static final String EMAIL_CLAIM = "email";
+    private static final String GIVEN_NAME_CLAIM = "given_name";
+    private static final String FAMILY_NAME_CLAIM = "family_name";
 
     private CurrentUserResolver() {
     }
@@ -18,10 +21,13 @@ public final class CurrentUserResolver {
         var admin = isAdmin(authentication);
         var principal = authentication.getPrincipal();
         if (principal instanceof Jwt jwt) {
-            return new CurrentUser(jwt.getSubject(), jwt.getClaimAsString(USERNAME_CLAIM), admin);
+            return new CurrentUser(jwt.getSubject(), jwt.getClaimAsString(USERNAME_CLAIM), admin,
+                    jwt.getClaimAsString(EMAIL_CLAIM), jwt.getClaimAsString(GIVEN_NAME_CLAIM), jwt.getClaimAsString(FAMILY_NAME_CLAIM));
         }
         if (principal instanceof OidcUser oidcUser) {
-            return new CurrentUser(oidcUser.getSubject(), oidcUser.getClaimAsString(USERNAME_CLAIM), admin);
+            return new CurrentUser(oidcUser.getSubject(), oidcUser.getClaimAsString(USERNAME_CLAIM), admin,
+                    oidcUser.getClaimAsString(EMAIL_CLAIM), oidcUser.getClaimAsString(GIVEN_NAME_CLAIM),
+                    oidcUser.getClaimAsString(FAMILY_NAME_CLAIM));
         }
         throw new IllegalStateException("Unsupported principal type: " + principal.getClass().getName());
     }

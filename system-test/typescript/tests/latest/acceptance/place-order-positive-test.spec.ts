@@ -165,7 +165,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
 
     test.eachAlsoFirstRow(taxRateCases)(
         'correctTaxRateShouldBeUsedBasedOnCountry_country=$country',
-        criteria('UC-001.4'),
+        criteria('UC-001.16'),
         async ({ scenario, country, taxRate }) => {
             await scenario
                 .given()
@@ -190,7 +190,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
 
     test.eachAlsoFirstRow(totalPriceCases)(
         'totalPriceShouldBeSubtotalPricePlusTaxAmount_country=$country',
-        criteria('UC-001.4'),
+        criteria('UC-001.16'),
         async ({ scenario, country, taxRate, subtotalPrice, expectedTaxAmount, expectedTotalPrice }) => {
             await scenario
                 .given()
@@ -233,7 +233,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
 });
 
 forChannels(ChannelType.API)(() => {
-    test('orderTotalShouldIncludeTax', criteria('UC-001.4'), async ({ scenario }) => {
+    test('orderTotalShouldIncludeTax', criteria('UC-001.16'), async ({ scenario }) => {
         await scenario
             .given()
             .country()
@@ -271,7 +271,7 @@ forChannels(ChannelType.API)(() => {
             .hasTotalPrice('19.26');
     });
 
-    test('orderTotalShouldApplyCouponDiscountAndTax', criteria('UC-001.3', 'UC-001.4'), async ({ scenario }) => {
+    test('orderTotalShouldApplyCouponDiscountAndTax', criteria('UC-001.3', 'UC-001.16'), async ({ scenario }) => {
         const comboCode = 'COMBO10';
         await scenario
             .given()
@@ -331,5 +331,68 @@ forChannels(ChannelType.API)(() => {
             .and()
             .order()
             .doesNotHaveOrderNumber(DEFAULTS.ORDER_NUMBER);
+    });
+});
+
+forChannels(ChannelType.API)(() => {
+    const shippingTaxCases = [
+        { country: 'US', taxRate: '0.00', unitPrice: '100.00', taxAmount: '0.00', total: '100.00' },
+        { country: 'DE', taxRate: '0.19', unitPrice: '50.00', taxAmount: '9.50', total: '59.50' },
+        { country: 'GB', taxRate: '0.20', unitPrice: '100.00', taxAmount: '20.00', total: '120.00' },
+    ];
+
+    test.each(shippingTaxCases)(
+        'shouldApplyTaxRateOfShippingAddressCountry_country=$country',
+        criteria('UC-001.4'),
+        async ({ scenario, country, taxRate, unitPrice, taxAmount, total }) => {
+            await scenario
+                .given()
+                .country()
+                .withCode(country)
+                .withTaxRate(taxRate)
+                .and()
+                .product()
+                .withUnitPrice(unitPrice)
+                .when()
+                .placeOrder()
+                .withQuantity(1)
+                .withShippingCountry(country)
+                .then()
+                .shouldSucceed()
+                .and()
+                .order()
+                .hasTaxRate(taxRate)
+                .hasTaxAmount(taxAmount)
+                .hasTotalPrice(total)
+                .hasCountry(country);
+        },
+    );
+
+    test('shouldStoreShippingAddressWithOrder', criteria('UC-001.15'), async ({ scenario }) => {
+        await scenario
+            .given()
+            .country()
+            .withCode('DE')
+            .withTaxRate('0.19')
+            .when()
+            .placeOrder()
+            .withShippingAddress('Ana', 'Novak', 'Main St 1', '10115', 'Berlin', 'DE')
+            .then()
+            .shouldSucceed()
+            .and()
+            .order()
+            .hasShippingAddress('Ana', 'Novak', 'Main St 1', '10115', 'Berlin', 'DE')
+            .hasCountry('DE');
+    });
+
+    test('quickOrderShouldHaveNoShippingAddress', criteria('UC-001.16'), async ({ scenario }) => {
+        await scenario
+            .when()
+            .placeOrder()
+            .then()
+            .shouldSucceed()
+            .and()
+            .order()
+            .hasNoShippingAddress();
     });
 });

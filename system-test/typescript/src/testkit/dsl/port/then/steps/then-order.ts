@@ -19,4 +19,7 @@ export interface ThenOrder extends PromiseLike<void> {
   hasAppliedCoupon(expectedCouponCode?: string | null): this;
   hasTaxRate(expectedTaxRate: string | number): this;
   hasTaxAmount(expectedTaxAmount: string | number): this;
+  hasCountry(expectedCountry: string): this;
+  hasShippingAddress(firstName: string, lastName: string, street: string, postalCode: string, city: string, country: string): this;
+  hasNoShippingAddress(): this;
 }

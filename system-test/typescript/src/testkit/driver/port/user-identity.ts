@@ -18,6 +18,10 @@ export const UserIdentity = {
   /** No credentials at all. */
   ANONYMOUS: { kind: 'ANONYMOUS' },
   ADMIN: { kind: 'ADMIN' },
+  /** The username of the test customer at the given zero-based position (0 = customer1). */
+  customerUsername(customerIndex: number): string {
+    return `customer${customerIndex + 1}`;
+  },
   /** The test customer at the given zero-based position. */
   customer(customerIndex: number): UserIdentity {
     if (!Number.isInteger(customerIndex) || customerIndex < 0 || customerIndex >= CUSTOMER_COUNT) {

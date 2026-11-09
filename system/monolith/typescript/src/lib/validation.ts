@@ -1,6 +1,7 @@
 import Decimal from 'decimal.js';
 import { z } from 'zod';
 import type { FieldError } from './errors';
+import { isRecord } from './type-guards';
 
 export type ValidationResult<T> = { ok: true; value: T } | { ok: false; errors: FieldError[] };
 
@@ -31,6 +32,29 @@ function optionalDateTime(message: string) {
   return z.preprocess(blankAsMissing, z.iso.datetime({ offset: true, error: message }).transform((s) => new Date(s)).nullish());
 }
 
+// Text stored as typed, minus surrounding spaces; blank (or only spaces) is missing.
+function trimmedText(message: string) {
+  return requiredText(message).transform((s) => s.trim());
+}
+
+export const PROFILE_COUNTRIES = ['US', 'DE', 'GB'] as const;
+export const PROFILE_COUNTRY_UNSUPPORTED = 'Country must be US, DE or GB';
+
+// The name and address fields shared by an order's shipping address and the customer profile.
+const addressFields = {
+  firstName: trimmedText('First name is required'),
+  lastName: trimmedText('Last name is required'),
+  street: trimmedText('Street is required'),
+  postalCode: trimmedText('Postal code is required'),
+  city: trimmedText('City is required'),
+};
+
+// Any non-empty country: it goes through the tax lookup, which reports an unknown one.
+const shippingAddressSchema = z.object({
+  ...addressFields,
+  country: trimmedText('Country is required'),
+});
+
 const placeOrderSchema = z.object({
   sku: requiredText('SKU must not be empty'),
   quantity: z.preprocess(
@@ -40,8 +64,19 @@ const placeOrderSchema = z.object({
       .int({ error: 'Quantity must be an integer' })
       .positive({ error: 'Quantity must be positive' })
   ),
-  country: requiredText('Country must not be empty').transform((s) => s.trim()),
+  // Required only without a shipping address: checked in parsePlaceOrderRequest.
+  country: z.unknown().optional(),
   couponCode: z.preprocess(blankAsMissing, z.string({ error: 'Coupon code must be a string' }).nullish()),
+  shippingAddress: z
+    .object(shippingAddressSchema.shape, { error: 'Shipping address must be an object' })
+    .nullish(),
+});
+
+const updateProfileSchema = z.object({
+  ...addressFields,
+  country: trimmedText('Country is required').pipe(
+    z.enum(PROFILE_COUNTRIES, { error: PROFILE_COUNTRY_UNSUPPORTED })
+  ),
 });
 
 const publishCouponSchema = z.object({
@@ -68,11 +103,50 @@ const publishCouponSchema = z.object({
   ),
 });
 
-export type PlaceOrderInput = z.infer<typeof placeOrderSchema>;
+type ParsedPlaceOrder = z.infer<typeof placeOrderSchema>;
+export type ShippingAddressInput = z.infer<typeof shippingAddressSchema>;
+export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
+
+/** With a shipping address the tax country is the address's; without one the top-level country is required. */
+export type PlaceOrderInput = Omit<ParsedPlaceOrder, 'country' | 'shippingAddress'> &
+  (
+    | { country: string; shippingAddress: null }
+    | { country: null; shippingAddress: ShippingAddressInput }
+  );
 export type PublishCouponInput = z.infer<typeof publishCouponSchema>;
 
+const quickOrderCountrySchema = z.object({
+  country: requiredText('Country must not be empty').transform((s) => s.trim()),
+});
+
+function hasShippingAddress(body: unknown): boolean {
+  return isRecord(body) && body.shippingAddress !== undefined && body.shippingAddress !== null;
+}
+
 export function parsePlaceOrderRequest(body: unknown): ValidationResult<PlaceOrderInput> {
-  return parse(placeOrderSchema, body);
+  const result = parse(placeOrderSchema, body);
+  // With a shipping address the top-level country is ignored; without one it is required.
+  const country = hasShippingAddress(body) ? null : parse(quickOrderCountrySchema, body);
+  const errors = [...(result.ok ? [] : result.errors)];
+  if (country && !country.ok) {
+    // Reported where the schema declares it: after sku and quantity.
+    const index = errors.findIndex((e) => e.field !== 'sku' && e.field !== 'quantity');
+    errors.splice(index === -1 ? errors.length : index, 0, ...country.errors);
+  }
+  if (!result.ok || (country && !country.ok) || errors.length > 0) {
+    return { ok: false, errors };
+  }
+  const { shippingAddress, ...rest } = result.value;
+  if (country) {
+    return { ok: true, value: { ...rest, country: country.value.country, shippingAddress: null } };
+  }
+  return shippingAddress
+    ? { ok: true, value: { ...rest, country: null, shippingAddress } }
+    : { ok: false, errors };
+}
+
+export function parseUpdateProfileRequest(body: unknown): ValidationResult<UpdateProfileInput> {
+  return parse(updateProfileSchema, body);
 }
 
 export function parsePublishCouponRequest(body: unknown): ValidationResult<PublishCouponInput> {

@@ -24,6 +24,9 @@ import com.mycompany.myshop.testkit.driver.port.dtos.PublishCouponRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.PublishCouponResponse;
 import com.mycompany.myshop.testkit.driver.port.dtos.ViewOrderRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.ViewOrderResponse;
+import com.mycompany.myshop.testkit.driver.port.dtos.UpdateProfileRequest;
+import com.mycompany.myshop.testkit.driver.port.dtos.ViewProfileRequest;
+import com.mycompany.myshop.testkit.driver.port.dtos.ViewProfileResponse;
 import com.mycompany.myshop.testkit.driver.port.MyShopDriver;
 import com.mycompany.myshop.testkit.driver.port.UserIdentity;
 import com.mycompany.myshop.testkit.driver.port.dtos.error.SystemError;
@@ -86,6 +89,7 @@ public class MyShopUiDriver implements MyShopDriver {
     @Override
     public Result<PlaceOrderResponse, SystemError> placeOrder(PlaceOrderRequest request) {
         requireNotSet("Idempotency-Key", request.getIdempotencyKey());
+        requireNotSet("shippingAddress", request.getShippingAddress());
         if (anonymous) {
             return loginRequired("/new-order");
         }
@@ -219,6 +223,7 @@ public class MyShopUiDriver implements MyShopDriver {
     public Result<BrowseOrderHistoryResponse, SystemError> browseOrderHistory(BrowseOrderHistoryRequest request) {
         requireNotSet("page", request.getPage());
         requireNotSet("size", request.getSize());
+        requireNotSet("customer", request.getCustomer());
         if (anonymous) {
             return loginRequired("/order-history");
         }
@@ -286,10 +291,27 @@ public class MyShopUiDriver implements MyShopDriver {
         return success(response);
     }
 
+    @Override
+    public Result<ViewProfileResponse, SystemError> viewProfile(ViewProfileRequest request) {
+        throw unsupportedOperation("viewProfile");
+    }
+
+    @Override
+    public Result<ViewProfileResponse, SystemError> updateProfile(UpdateProfileRequest request) {
+        throw unsupportedOperation("updateProfile");
+    }
+
     // --- unsupported inputs ---
 
-    /** The UI has no control for this input (no idempotency key, no paging controls): API-channel scenarios only. */
-    private static void requireNotSet(String input, String value) {
+    private static UnsupportedOperationException unsupportedOperation(String operation) {
+        return new UnsupportedOperationException(operation + " is not supported by the UI channel yet; run this scenario on the API channel only");
+    }
+
+    /**
+     * The UI has no control for this input (no idempotency key, no paging controls, no shipping address, no
+     * customer filter yet): API-channel scenarios only.
+     */
+    private static void requireNotSet(String input, Object value) {
         if (value != null) {
             throw new UnsupportedOperationException("The UI channel cannot send '" + input + "'; run this scenario on the API channel only");
         }

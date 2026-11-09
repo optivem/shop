@@ -436,6 +436,117 @@ public class OrderServiceTest : IDisposable
         Assert.Equal(message, ex.Message);
     }
 
+    [Fact]
+    public async Task PlaceOrder_WithShippingAddressChargesTaxOfTheAddressCountryAndStoresTheTrimmedAddress()
+    {
+        GivenAnOrderCanBePlaced();
+        GivenTaxRate("DE", 0.19m);
+        var request = BuildRequest("BOOK-123", 2, "US");
+        request.ShippingAddress = new ShippingAddress
+        {
+            FirstName = " Ana ", LastName = "Novak", Street = "Main St 1 ", PostalCode = "10115", City = "Berlin", Country = " DE"
+        };
+
+        var response = await _service.PlaceOrderAsync(request, Alice);
+
+        var saved = await _dbContext.Orders.SingleAsync(o => o.OrderNumber == response.OrderNumber);
+        Assert.Equal("DE", saved.Country);
+        Assert.Equal(0.19m, saved.TaxRate);
+        Assert.Equal(3.80m, saved.TaxAmount);
+        Assert.Equal(23.80m, saved.TotalPrice);
+        Assert.Equal(
+            "{\"firstName\":\"Ana\",\"lastName\":\"Novak\",\"street\":\"Main St 1\",\"postalCode\":\"10115\",\"city\":\"Berlin\",\"country\":\"DE\"}",
+            saved.ShippingAddress);
+
+        var details = await _service.GetOrderAsync(response.OrderNumber, Alice);
+        Assert.NotNull(details.ShippingAddress);
+        Assert.Equal("Ana", details.ShippingAddress!.FirstName);
+        Assert.Equal("Main St 1", details.ShippingAddress.Street);
+        Assert.Equal("DE", details.ShippingAddress.Country);
+    }
+
+    [Fact]
+    public async Task PlaceOrder_WithShippingAddressToUnknownCountryIsAShippingAddressCountryError()
+    {
+        GivenAnOrderCanBePlaced();
+        _taxMock.Setup(g => g.GetTaxDetailsAsync("XX")).ReturnsAsync((TaxDetailsResponse?)null);
+        var request = BuildRequest("BOOK-123", 1, "US");
+        request.ShippingAddress = Address("XX");
+
+        var ex = await Assert.ThrowsAsync<ValidationException>(() => _service.PlaceOrderAsync(request, Alice));
+
+        Assert.Equal("shippingAddress.country", ex.FieldName);
+        Assert.Equal("Country does not exist: XX", ex.Message);
+    }
+
+    [Fact]
+    public async Task PlaceOrder_QuickOrderHasNoShippingAddress()
+    {
+        GivenAnOrderCanBePlaced();
+
+        var response = await _service.PlaceOrderAsync(BuildRequest("BOOK-123", 2, "US"), Alice);
+
+        Assert.Null((await _dbContext.Orders.SingleAsync()).ShippingAddress);
+        Assert.Null((await _service.GetOrderAsync(response.OrderNumber, Alice)).ShippingAddress);
+    }
+
+    [Fact]
+    public async Task PlaceOrder_SameKeyWithADifferentShippingAddressIsRejected()
+    {
+        GivenAnOrderCanBePlaced();
+        GivenTaxRate("DE", 0.19m);
+        GivenTaxRate("GB", 0.20m);
+        var first = BuildRequest("BOOK-123", 2, "US");
+        first.ShippingAddress = Address("DE");
+        await _service.PlaceOrderAsync(first, Alice, "key-1");
+
+        var second = BuildRequest("BOOK-123", 2, "US");
+        second.ShippingAddress = Address("GB");
+        var ex = await Assert.ThrowsAsync<ValidationException>(() => _service.PlaceOrderAsync(second, Alice, "key-1"));
+
+        Assert.Equal("Idempotency-Key has already been used with a different request", ex.Message);
+    }
+
+    [Fact]
+    public async Task BrowseOrderHistory_AdminCustomerFilterShowsOnlyThatCustomersOrders()
+    {
+        await SeedOrder("ORD-ALICE", OrderStatus.PLACED, Alice.Subject, Alice.Username);
+        await SeedOrder("ORD-BOB", OrderStatus.PLACED, Bob.Subject, Bob.Username);
+
+        var response = await _service.BrowseOrderHistoryAsync(null, Admin, customerFilter: " alice ");
+
+        Assert.Equal(["ORD-ALICE"], response.Orders.Select(o => o.OrderNumber));
+        Assert.Equal(1, response.TotalElements);
+        Assert.Equal(1, response.TotalPages);
+    }
+
+    [Fact]
+    public async Task BrowseOrderHistory_BlankCustomerFilterIsNoFilter()
+    {
+        await SeedOrder("ORD-ALICE", OrderStatus.PLACED, Alice.Subject, Alice.Username);
+        await SeedOrder("ORD-BOB", OrderStatus.PLACED, Bob.Subject, Bob.Username);
+
+        var response = await _service.BrowseOrderHistoryAsync(null, Admin, customerFilter: "  ");
+
+        Assert.Equal(2, response.TotalElements);
+    }
+
+    [Fact]
+    public async Task BrowseOrderHistory_CustomerFilterIsIgnoredForACustomer()
+    {
+        await SeedOrder("ORD-ALICE", OrderStatus.PLACED, Alice.Subject, Alice.Username);
+        await SeedOrder("ORD-BOB", OrderStatus.PLACED, Bob.Subject, Bob.Username);
+
+        var response = await _service.BrowseOrderHistoryAsync(null, Alice, customerFilter: "bob");
+
+        Assert.Equal(["ORD-ALICE"], response.Orders.Select(o => o.OrderNumber));
+    }
+
+    private static ShippingAddress Address(string country) => new()
+    {
+        FirstName = "Ana", LastName = "Novak", Street = "Main St 1", PostalCode = "10115", City = "Berlin", Country = country
+    };
+
     private void GivenAnOrderCanBePlaced()
     {
         GivenNormalTime();

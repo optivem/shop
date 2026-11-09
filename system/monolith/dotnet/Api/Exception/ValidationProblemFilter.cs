@@ -132,14 +132,13 @@ public class ValidationProblemFilter : IActionFilter
         return false;
     }
 
+    /// <summary>JSON path of the field, camelCase per segment: <c>ShippingAddress.FirstName</c> -> <c>shippingAddress.firstName</c>.</summary>
     private static string NormalizeFieldName(string key)
     {
         if (key.StartsWith("$."))
             key = key[2..];
 
-        if (key.Length > 0)
-            key = char.ToLower(key[0]) + key[1..];
-
-        return key;
+        return string.Join('.', key.Split('.').Select(segment =>
+            segment.Length > 0 ? char.ToLower(segment[0]) + segment[1..] : segment));
     }
 }

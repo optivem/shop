@@ -17,4 +17,7 @@ public interface IThenSuccessAnd
     IThenCoupon Coupon(string couponCode);
 
     IThenCoupon Coupon();
+
+    /// <summary>The acting user's profile, fetched afresh.</summary>
+    IThenProfile Profile();
 }

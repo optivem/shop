@@ -1,7 +1,9 @@
 package com.mycompany.myshop.systemtest.architecture;
 
 import com.tngtech.archunit.core.domain.JavaClasses;
+import com.tngtech.archunit.core.domain.JavaField;
 import com.tngtech.archunit.core.domain.JavaMethod;
+import com.tngtech.archunit.core.domain.JavaModifier;
 import com.tngtech.archunit.core.domain.JavaParameterizedType;
 import com.tngtech.archunit.core.domain.JavaType;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
@@ -31,15 +33,18 @@ class ArchitectureRulesTest {
             .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
             .importPackages("com.mycompany.myshop.testkit");
 
-    /** A1 — request DTOs in the driver port expose only String fields. */
+    /**
+     * A1 — request DTOs in the driver port expose only String fields, or a nested value DTO from the driver port
+     * (e.g. a shipping address) whose own fields are all String.
+     */
     @Test
     void requestDtosDeclareOnlyStringFields() {
         ArchRule rule = fields()
                 .that().areDeclaredInClassesThat(
                         resideInAPackage("..driver.port.dtos..").and(simpleNameEndingWith("Request")))
                 .and().areNotStatic()
-                .should().haveRawType(String.class)
-                .as("Request DTOs in driver.port.dtos must declare only String fields");
+                .should(beStringOrStringOnlyPortDto())
+                .as("Request DTOs in driver.port.dtos must declare only String fields (or String-only nested port DTOs)");
 
         rule.check(TESTKIT);
     }
@@ -78,6 +83,25 @@ class ArchitectureRulesTest {
                 .as("Every MyShopDriver method must take a single *Request and return Result<*Response, …>");
 
         rule.check(TESTKIT);
+    }
+
+    private static ArchCondition<JavaField> beStringOrStringOnlyPortDto() {
+        return new ArchCondition<>("have raw type String, or a driver.port.dtos type with only String fields") {
+            @Override
+            public void check(JavaField field, ConditionEvents events) {
+                var type = field.getRawType();
+                boolean ok = type.isEquivalentTo(String.class)
+                        || (resideInAPackage("..driver.port.dtos..").test(type)
+                            && type.getFields().stream()
+                                .filter(nested -> !nested.getModifiers().contains(JavaModifier.STATIC))
+                                .allMatch(nested -> nested.getRawType().isEquivalentTo(String.class)));
+                if (!ok) {
+                    events.add(SimpleConditionEvent.violated(field,
+                            field.getFullName() + " has type " + type.getName()
+                                    + " (expected String or a String-only driver.port.dtos type)"));
+                }
+            }
+        };
     }
 
     private static ArchCondition<JavaMethod> returnOwningClassOrVoid() {

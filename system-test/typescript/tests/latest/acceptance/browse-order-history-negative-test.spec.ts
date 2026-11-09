@@ -68,3 +68,71 @@ forChannels(ChannelType.API)(() => {
             .isEmpty();
     });
 });
+
+forChannels(ChannelType.API)(() => {
+    test('adminCustomerFilterShouldExcludeOtherCustomersOrders', criteria('UC-011.3'), async ({ scenario }) => {
+        await scenario
+            .given()
+            .order()
+            .withOrderNumber('ORD-A')
+            .placedByCustomer('A')
+            .and()
+            .order()
+            .withOrderNumber('ORD-B')
+            .placedByCustomer('B')
+            .and()
+            .loggedInAsAdmin()
+            .when()
+            .browseOrderHistory()
+            .withCustomer('A')
+            .withOrderNumber('ORD-B')
+            .then()
+            .shouldSucceed()
+            .orderHistory()
+            .doesNotContainOrder('ORD-B');
+    });
+
+    test('adminShouldSeeNoOrdersWhenNoOrderMatchesFilters', criteria('UC-011.8'), async ({ scenario }) => {
+        await scenario
+            .given()
+            .order()
+            .withOrderNumber('ORD-A')
+            .placedByCustomer('A')
+            .and()
+            .order()
+            .withOrderNumber('ORD-B')
+            .placedByCustomer('B')
+            .and()
+            .loggedInAsAdmin()
+            .when()
+            .browseOrderHistory()
+            .withCustomer('A')
+            .withOrderNumber('ORD-B')
+            .then()
+            .shouldSucceed()
+            .orderHistory()
+            .isEmpty();
+    });
+
+    test('customerShouldNotSeeAnotherCustomersOrdersThroughCustomerFilter', criteria('UC-011.5'), async ({ scenario }) => {
+        await scenario
+            .given()
+            .order()
+            .withOrderNumber('ORD-A')
+            .placedByCustomer('A')
+            .and()
+            .order()
+            .withOrderNumber('ORD-B')
+            .placedByCustomer('B')
+            .and()
+            .loggedInAsCustomer('A')
+            .when()
+            .browseOrderHistory()
+            .withCustomer('B')
+            .withOrderNumber('ORD-B')
+            .then()
+            .shouldSucceed()
+            .orderHistory()
+            .doesNotContainOrder('ORD-B');
+    });
+});

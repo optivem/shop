@@ -71,4 +71,61 @@ class BrowseOrderHistoryNegativeTest extends BaseAcceptanceTest {
                     .orderHistory()
                         .isEmpty();
     }
+
+    @Tag("UC-011.3")
+    @TestTemplate
+    @Channel(ChannelType.API)
+    void adminCustomerFilterShouldExcludeOtherCustomersOrders() {
+        scenario
+                .given().order()
+                    .withOrderNumber("ORD-A")
+                    .placedByCustomer("A")
+                .and().order()
+                    .withOrderNumber("ORD-B")
+                    .placedByCustomer("B")
+                .and().loggedInAsAdmin()
+                .when().browseOrderHistory()
+                    .withCustomer("A")
+                    .withOrderNumber("ORD-B")
+                .then().shouldSucceed()
+                    .orderHistory()
+                        .doesNotContainOrder("ORD-B");
+    }
+
+    @Tag("UC-011.8")
+    @TestTemplate
+    @Channel(ChannelType.API)
+    void adminShouldSeeNoOrdersWhenNoOrderMatchesFilters() {
+        scenario
+                .given().order()
+                    .withOrderNumber("ORD-B")
+                    .placedByCustomer("B")
+                .and().loggedInAsAdmin()
+                .when().browseOrderHistory()
+                    .withCustomer("A")
+                    .withOrderNumber("ORD-B")
+                .then().shouldSucceed()
+                    .orderHistory()
+                        .isEmpty();
+    }
+
+    @Tag("UC-011.5")
+    @TestTemplate
+    @Channel(ChannelType.API)
+    void customerShouldNotSeeAnotherCustomersOrdersThroughCustomerFilter() {
+        scenario
+                .given().order()
+                    .withOrderNumber("ORD-A")
+                    .placedByCustomer("A")
+                .and().order()
+                    .withOrderNumber("ORD-B")
+                    .placedByCustomer("B")
+                .and().loggedInAsCustomer("A")
+                .when().browseOrderHistory()
+                    .withCustomer("B")
+                    .withOrderNumber("ORD-B")
+                .then().shouldSucceed()
+                    .orderHistory()
+                        .doesNotContainOrder("ORD-B");
+    }
 }

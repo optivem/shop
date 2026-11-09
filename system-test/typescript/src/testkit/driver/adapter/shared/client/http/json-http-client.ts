@@ -20,6 +20,15 @@ export class JsonHttpClient<E> {
     return this.handleResponse<T>(await this.doPost(path, body, headers));
   }
 
+  async put<T>(path: string, body?: unknown): Promise<Result<T, E>> {
+    const response = await fetch(`${this.baseUrl}${path}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', ...(await this.authHeaders()) },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+    return this.handleResponse<T>(response);
+  }
+
   async getVoid(path: string): Promise<Result<void, E>> {
     const response = await this.doGet(path);
     return response.ok ? success(undefined) : failure(await this.readError(response));

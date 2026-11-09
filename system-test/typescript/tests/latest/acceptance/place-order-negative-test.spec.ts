@@ -2,6 +2,7 @@ import { test, forChannels, ChannelType } from './base/fixtures.js';
 import { ErrorMessages } from '../../commons/constants/error-messages.js';
 import { emptyArguments } from '../../commons/providers/empty-arguments-provider.js';
 import { criteria } from '../../commons/criteria.js';
+import { DEFAULTS } from '../../../src/testkit/dsl/core/scenario/defaults.js';
 
 forChannels(ChannelType.UI, ChannelType.API)(() => {
     test('shouldRejectOrderWithInvalidQuantity', criteria('UC-001.8'), async ({ scenario }) => {
@@ -95,7 +96,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
 
     test.eachAlsoFirstRow(emptyArguments)(
         'shouldRejectOrderWithEmptyCountry_"$emptyCountry"',
-        criteria('UC-001.10'),
+        criteria('UC-001.16'),
         async ({ scenario, emptyCountry }) => {
             await scenario
                 .when()
@@ -108,7 +109,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
         },
     );
 
-    test('shouldRejectOrderWithInvalidCountry', criteria('UC-001.10'), async ({ scenario }) => {
+    test('shouldRejectOrderWithInvalidCountry', criteria('UC-001.16'), async ({ scenario }) => {
         await scenario
             .when()
             .placeOrder()
@@ -180,7 +181,7 @@ forChannels(ChannelType.API)(() => {
             .fieldErrorMessage('sku', 'SKU must not be empty');
     });
 
-    test('shouldRejectOrderWithNullCountry', criteria('UC-001.10'), async ({ scenario }) => {
+    test('shouldRejectOrderWithNullCountry', criteria('UC-001.16'), async ({ scenario }) => {
         await scenario
             .when()
             .placeOrder()
@@ -223,5 +224,62 @@ forChannels(ChannelType.API)(() => {
             .then()
             .shouldFail()
             .errorMessage('Idempotency-Key has already been used with a different request');
+    });
+});
+
+forChannels(ChannelType.API)(() => {
+    const incompleteAddressCases = [
+        { field: 'firstName', message: 'First name is required' },
+        { field: 'lastName', message: 'Last name is required' },
+        { field: 'street', message: 'Street is required' },
+        { field: 'postalCode', message: 'Postal code is required' },
+        { field: 'city', message: 'City is required' },
+        { field: 'country', message: 'Country is required' },
+    ] as const;
+
+    test.each(incompleteAddressCases)(
+        'shouldRejectOrderWithIncompleteShippingAddress_field=$field',
+        criteria('UC-001.10'),
+        async ({ scenario, field, message }) => {
+            const address = {
+                firstName: DEFAULTS.FIRST_NAME,
+                lastName: DEFAULTS.LAST_NAME,
+                street: DEFAULTS.STREET,
+                postalCode: DEFAULTS.POSTAL_CODE,
+                city: DEFAULTS.CITY,
+                country: DEFAULTS.COUNTRY,
+                [field]: '',
+            };
+            await scenario
+                .when()
+                .placeOrder()
+                .withShippingAddress(address.firstName, address.lastName, address.street, address.postalCode, address.city, address.country)
+                .then()
+                .shouldFail()
+                .errorMessage('The request contains one or more validation errors')
+                .fieldErrorMessage(`shippingAddress.${field}`, message);
+        },
+    );
+
+    test('shouldRejectOrderWithShippingAddressFieldOfOnlySpaces', criteria('UC-001.10'), async ({ scenario }) => {
+        await scenario
+            .when()
+            .placeOrder()
+            .withShippingCity('   ')
+            .then()
+            .shouldFail()
+            .errorMessage('The request contains one or more validation errors')
+            .fieldErrorMessage('shippingAddress.city', 'City is required');
+    });
+
+    test('shouldRejectOrderShippedToUnsupportedCountry', criteria('UC-001.10'), async ({ scenario }) => {
+        await scenario
+            .when()
+            .placeOrder()
+            .withShippingCountry('XX')
+            .then()
+            .shouldFail()
+            .errorMessage('The request contains one or more validation errors')
+            .fieldErrorMessage('shippingAddress.country', 'Country does not exist: XX');
     });
 });

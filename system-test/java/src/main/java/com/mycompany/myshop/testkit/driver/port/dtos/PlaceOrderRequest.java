@@ -15,6 +15,8 @@ public class PlaceOrderRequest {
     private String quantity;
     private String country;
     private String couponCode;
+    /** With an address, its country is the tax country and the top-level country is not needed. */
+    private ShippingAddress shippingAddress;
     /** Sent as the {@code Idempotency-Key} header, never in the body; null means no header. */
     @JsonIgnore
     private String idempotencyKey;

@@ -34,10 +34,13 @@ public class OrderController {
         return httpClient.get(ENDPOINT + "/" + orderNumber, ViewOrderResponse.class);
     }
 
-    public Result<BrowseOrderHistoryResponse, ProblemDetailResponse> browseOrderHistory(String orderNumber, String page, String size) {
+    public Result<BrowseOrderHistoryResponse, ProblemDetailResponse> browseOrderHistory(String orderNumber, String customer, String page, String size) {
         var query = new LinkedHashMap<String, String>();
         if (orderNumber != null && !orderNumber.isBlank()) {
             query.put("orderNumber", orderNumber);
+        }
+        if (customer != null) {
+            query.put("customer", customer);
         }
         query.put("page", page);
         query.put("size", size);

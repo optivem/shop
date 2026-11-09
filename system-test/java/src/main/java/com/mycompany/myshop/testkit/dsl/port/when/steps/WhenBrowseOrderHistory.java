@@ -8,4 +8,10 @@ public interface WhenBrowseOrderHistory extends WhenStep {
     WhenBrowseOrderHistory withPage(String page);
 
     WhenBrowseOrderHistory withSize(String size);
+
+    /** Filters by the default customer (customer1); only an admin's history is filtered. */
+    WhenBrowseOrderHistory withCustomer();
+
+    /** Filters by the customer known in this scenario by the given alias; only an admin's history is filtered. */
+    WhenBrowseOrderHistory withCustomer(String customerAlias);
 }

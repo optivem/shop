@@ -7,7 +7,8 @@ import type { GetTimeResponse } from '../../../../driver/port/external/clock/dto
 import { DEFAULTS } from '../defaults.js';
 import type { UseCaseContext } from '../../shared/use-case-context.js';
 import type { AppContext } from '../app-context.js';
-import type { ScenarioContext } from '../scenario-context.js';
+import type { ScenarioContext, ShippingAddressConfig } from '../scenario-context.js';
+import type { ShippingAddress } from '../../../../driver/port/dtos/ShippingAddress.js';
 import { arrangeGiven } from '../given/arrange-given.js';
 import { Converter } from '../../../../common/converter.js';
 
@@ -28,6 +29,7 @@ export class ThenResultStage implements PromiseLike<void> {
     private readonly country: string | null = DEFAULTS.COUNTRY,
     private readonly couponCode: string | null = null,
     private readonly idempotencyKey: string | null = null,
+    private readonly shippingAddress: ShippingAddressConfig | null = null,
   ) {}
 
   shouldSucceed(): ThenSuccess {
@@ -103,13 +105,16 @@ export class ThenResultStage implements PromiseLike<void> {
     await arrangeGiven(this.app, this.ctx, this.useCaseContext);
 
     const resolvedSku = this.useCaseContext.getParamValue(this.sku);
-    const resolvedCountry = this.useCaseContext.getParamValueOrLiteral(this.country);
     const resolvedCouponCode = this.useCaseContext.getParamValue(this.couponCode);
+    // In address mode the tax country is the address's, so no top-level country is sent.
+    const shippingAddress = this.resolveShippingAddress();
+    const resolvedCountry = shippingAddress ? undefined : this.useCaseContext.getParamValueOrLiteral(this.country);
 
     const result = await this.app.myShop('dynamic').placeOrder({
       sku: resolvedSku,
       quantity: this.quantity,
       country: resolvedCountry,
+      shippingAddress,
       couponCode: resolvedCouponCode,
       // Keys are the shop's own data, so the alias always maps to a scenario-unique value.
       idempotencyKey: this.useCaseContext.getParamValue(this.idempotencyKey),
@@ -126,6 +131,14 @@ export class ThenResultStage implements PromiseLike<void> {
       if (result.success) return;
       for (const fn of this._errorAssertions) fn(result.error, this.useCaseContext);
     }
+  }
+
+  private resolveShippingAddress(): ShippingAddress | null {
+    if (!this.shippingAddress) return null;
+    return {
+      ...this.shippingAddress,
+      country: this.useCaseContext.getParamValueOrLiteral(this.shippingAddress.country) ?? this.shippingAddress.country,
+    };
   }
 
   then<TResult1 = void, TResult2 = never>(
@@ -284,6 +297,35 @@ export class ThenOrder implements PromiseLike<void> {
   hasBasePrice(basePrice: string | number): this {
     this.stage._addOrderAssertion((order) => {
       expect(Converter.normalizeDecimalOrNull(order.basePrice)).toBe(Converter.normalizeDecimal(basePrice));
+    });
+    return this;
+  }
+
+  hasCountry(expectedCountry: string): this {
+    this.stage._addOrderAssertion((order) => {
+      expect(order.country).toBe(this.stage.useCaseContext.getParamValueOrLiteral(expectedCountry));
+    });
+    return this;
+  }
+
+  /** The country is an alias, resolved the same way as the one the order was placed with. */
+  hasShippingAddress(firstName: string, lastName: string, street: string, postalCode: string, city: string, country: string): this {
+    this.stage._addOrderAssertion((order) => {
+      expect(order.shippingAddress, 'Order shipping address').toEqual({
+        firstName,
+        lastName,
+        street,
+        postalCode,
+        city,
+        country: this.stage.useCaseContext.getParamValueOrLiteral(country),
+      });
+    });
+    return this;
+  }
+
+  hasNoShippingAddress(): this {
+    this.stage._addOrderAssertion((order) => {
+      expect(order.shippingAddress ?? null, 'Order shipping address').toBeNull();
     });
     return this;
   }

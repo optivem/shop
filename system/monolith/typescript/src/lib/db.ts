@@ -42,6 +42,16 @@ export async function inTransaction<T>(work: (db: Queryable) => Promise<T>): Pro
   }
 }
 
+/** orders.shipping_address (JSONB): the address an order ships to. */
+export interface ShippingAddress {
+  firstName: string;
+  lastName: string;
+  street: string;
+  postalCode: string;
+  city: string;
+  country: string;
+}
+
 export interface OrderRow {
   id: number;
   order_number: string;
@@ -62,6 +72,8 @@ export interface OrderRow {
   /** Token subject of the customer who placed the order; null for orders that predate ownership. */
   owner: string | null;
   owner_name: string | null;
+  /** Null for Quick orders and orders that predate addresses; node-postgres returns JSONB parsed. */
+  shipping_address: ShippingAddress | null;
   /** Optimistic-locking counter; BIGINT, so node-postgres returns it as a string. */
   version: string;
 }
@@ -94,15 +106,17 @@ export async function insertOrder(order: {
   status: OrderStatus;
   owner: string;
   ownerName: string;
+  shippingAddress?: ShippingAddress | null;
 }, db: Queryable = pool): Promise<void> {
   await db.query(
-    `INSERT INTO orders (order_number, order_timestamp, country, sku, quantity, unit_price, base_price, discount_rate, discount_amount, subtotal_price, tax_rate, tax_amount, total_price, applied_coupon_code, status, owner, owner_name)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)`,
+    `INSERT INTO orders (order_number, order_timestamp, country, sku, quantity, unit_price, base_price, discount_rate, discount_amount, subtotal_price, tax_rate, tax_amount, total_price, applied_coupon_code, status, owner, owner_name, shipping_address)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)`,
     [
       order.orderNumber, order.orderTimestamp, order.country, order.sku, order.quantity,
       money(order.unitPrice), money(order.basePrice), rate(order.discountRate), money(order.discountAmount),
       money(order.subtotalPrice), rate(order.taxRate), money(order.taxAmount), money(order.totalPrice),
-      order.appliedCouponCode, order.status, order.owner, order.ownerName
+      order.appliedCouponCode, order.status, order.owner, order.ownerName,
+      order.shippingAddress ? JSON.stringify(order.shippingAddress) : null
     ]
   );
 }
@@ -121,16 +135,31 @@ export interface RowWindow {
   offset: number;
 }
 
-function orderConditions(orderNumberFilter: string | undefined, owner: string | null) {
+/**
+ * Which orders a history lists: `orderNumber` matches as a case-insensitive substring; `owner` (token subject)
+ * restricts to one customer's orders, null or absent (admin) lists every order; `ownerName` matches the
+ * username exactly (the admin customer filter).
+ */
+export interface OrderFilter {
+  orderNumber?: string;
+  owner?: string | null;
+  ownerName?: string;
+}
+
+function orderConditions(filter: OrderFilter) {
   const conditions: string[] = [];
   const params: (string | number)[] = [];
-  if (orderNumberFilter) {
-    params.push(`%${orderNumberFilter}%`);
+  if (filter.orderNumber) {
+    params.push(`%${filter.orderNumber}%`);
     conditions.push(`LOWER(order_number) LIKE LOWER($${params.length})`);
   }
-  if (owner !== null) {
-    params.push(owner);
+  if (filter.owner !== null && filter.owner !== undefined) {
+    params.push(filter.owner);
     conditions.push(`owner = $${params.length}`);
+  }
+  if (filter.ownerName) {
+    params.push(filter.ownerName);
+    conditions.push(`owner_name = $${params.length}`);
   }
   const where = conditions.length > 0 ? ` WHERE ${conditions.join(' AND ')}` : '';
   return { where, params };
@@ -144,14 +173,9 @@ function windowClause(params: (string | number)[], window?: RowWindow): string {
   return ` LIMIT $${params.length - 1} OFFSET $${params.length}`;
 }
 
-// `owner` restricts the history to one customer's orders; null (admin) lists every order. Newest
-// first, with the id as the tie-break so pages are stable.
-export async function findAllOrders(
-  orderNumberFilter?: string,
-  owner: string | null = null,
-  window?: RowWindow
-): Promise<OrderRow[]> {
-  const { where, params } = orderConditions(orderNumberFilter, owner);
+// Newest first, with the id as the tie-break so pages are stable.
+export async function findAllOrders(filter: OrderFilter = {}, window?: RowWindow): Promise<OrderRow[]> {
+  const { where, params } = orderConditions(filter);
   const result = await pool.query<OrderRow>(
     `SELECT * FROM orders${where} ORDER BY order_timestamp DESC, id DESC${windowClause(params, window)}`,
     params
@@ -160,8 +184,8 @@ export async function findAllOrders(
 }
 
 // The same predicate as findAllOrders, counted: the total a paged response reports.
-export async function countOrders(orderNumberFilter?: string, owner: string | null = null): Promise<number> {
-  const { where, params } = orderConditions(orderNumberFilter, owner);
+export async function countOrders(filter: OrderFilter = {}): Promise<number> {
+  const { where, params } = orderConditions(filter);
   const result = await pool.query<{ count: string }>(`SELECT COUNT(*) AS count FROM orders${where}`, params);
   return Number(result.rows[0]?.count ?? 0);
 }
@@ -282,6 +306,53 @@ export async function insertIdempotencyKey(row: {
 export function isIdempotencyKeyConflict(error: unknown): boolean {
   const pgError = error as { code?: string; constraint?: string } | null;
   return pgError?.code === '23505' && pgError?.constraint === IDEMPOTENCY_KEY_UNIQUE_CONSTRAINT;
+}
+
+export interface CustomerProfileRow {
+  owner: string;
+  first_name: string;
+  last_name: string;
+  street: string;
+  postal_code: string;
+  city: string;
+  country: string;
+  updated_at: Date;
+}
+
+const PROFILE_COLUMNS = 'owner, first_name, last_name, street, postal_code, city, country, updated_at';
+
+export async function findCustomerProfile(owner: string): Promise<CustomerProfileRow | null> {
+  const result = await pool.query<CustomerProfileRow>(
+    `SELECT ${PROFILE_COLUMNS} FROM customer_profiles WHERE owner = $1`,
+    [owner]
+  );
+  return result.rows[0] ?? null;
+}
+
+// One profile per customer: inserts it, or replaces the existing one in the same statement.
+export async function upsertCustomerProfile(profile: {
+  owner: string;
+  firstName: string;
+  lastName: string;
+  street: string;
+  postalCode: string;
+  city: string;
+  country: string;
+}): Promise<CustomerProfileRow> {
+  const result = await pool.query<CustomerProfileRow>(
+    `INSERT INTO customer_profiles (owner, first_name, last_name, street, postal_code, city, country, updated_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, now())
+     ON CONFLICT (owner) DO UPDATE SET
+       first_name = EXCLUDED.first_name, last_name = EXCLUDED.last_name, street = EXCLUDED.street,
+       postal_code = EXCLUDED.postal_code, city = EXCLUDED.city, country = EXCLUDED.country, updated_at = now()
+     RETURNING ${PROFILE_COLUMNS}`,
+    [profile.owner, profile.firstName, profile.lastName, profile.street, profile.postalCode, profile.city, profile.country]
+  );
+  const row = result.rows[0];
+  if (!row) {
+    throw new Error('Profile upsert returned no row');
+  }
+  return row;
 }
 
 // Releases the connection pool. Tests must call this before stopping a

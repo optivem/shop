@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import * as client from 'openid-client';
 import { oidcConfiguration, publicBaseUrl } from '@/lib/auth/oidc';
-import { realmRoles } from '@/lib/auth/bearer';
+import { realmRoles, stringClaim } from '@/lib/auth/bearer';
 import {
   LOGIN_COOKIE,
   SESSION_COOKIE,
@@ -41,6 +41,9 @@ export async function GET(request: NextRequest) {
         subject: claims.sub,
         name,
         roles: realmRoles(claims.realm_access),
+        email: stringClaim(claims.email),
+        givenName: stringClaim(claims.given_name),
+        familyName: stringClaim(claims.family_name),
         idToken: tokens.id_token,
       }),
       sessionCookieOptions

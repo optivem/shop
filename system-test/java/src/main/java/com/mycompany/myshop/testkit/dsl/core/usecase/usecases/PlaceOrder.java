@@ -2,6 +2,7 @@ package com.mycompany.myshop.testkit.dsl.core.usecase.usecases;
 
 import com.mycompany.myshop.testkit.driver.port.dtos.PlaceOrderRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.PlaceOrderResponse;
+import com.mycompany.myshop.testkit.driver.port.dtos.ShippingAddress;
 import com.mycompany.myshop.testkit.driver.port.MyShopDriver;
 import com.mycompany.myshop.testkit.dsl.core.usecase.usecases.base.BaseMyShopUseCase;
 import com.mycompany.myshop.testkit.dsl.core.shared.UseCaseResult;
@@ -14,6 +15,7 @@ public class PlaceOrder extends BaseMyShopUseCase<PlaceOrderResponse, PlaceOrder
     private String countryAlias;
     private String couponCodeAlias;
     private String idempotencyKeyAlias;
+    private ShippingAddress shippingAddress;
 
     public PlaceOrder(MyShopDriver driver, UseCaseContext context) {
         super(driver, context);
@@ -53,6 +55,23 @@ public class PlaceOrder extends BaseMyShopUseCase<PlaceOrderResponse, PlaceOrder
         return this;
     }
 
+    /**
+     * Places the order with a shipping address (the tax country is then the address's country). The
+     * country is an alias, resolved like {@link #country(String)}; the other fields are literals.
+     */
+    public PlaceOrder shippingAddress(String firstName, String lastName, String street, String postalCode,
+                                      String city, String countryAlias) {
+        this.shippingAddress = ShippingAddress.builder()
+                .firstName(firstName)
+                .lastName(lastName)
+                .street(street)
+                .postalCode(postalCode)
+                .city(city)
+                .country(countryAlias)
+                .build();
+        return this;
+    }
+
     @Override
     public UseCaseResult<PlaceOrderResponse, PlaceOrderVerification> execute() {
         var sku = context.getParamValue(skuParamAlias);
@@ -68,6 +87,7 @@ public class PlaceOrder extends BaseMyShopUseCase<PlaceOrderResponse, PlaceOrder
                 .country(country)
                 .couponCode(couponCode)
                 .idempotencyKey(idempotencyKey)
+                .shippingAddress(resolveShippingAddress())
                 .build();
 
         var result = driver.placeOrder(request);
@@ -82,5 +102,14 @@ public class PlaceOrder extends BaseMyShopUseCase<PlaceOrderResponse, PlaceOrder
         }
 
         return new UseCaseResult<>(result, context, PlaceOrderVerification::new);
+    }
+
+    private ShippingAddress resolveShippingAddress() {
+        if (shippingAddress == null) {
+            return null;
+        }
+        return shippingAddress.toBuilder()
+                .country(context.getParamValueOrLiteral(shippingAddress.getCountry()))
+                .build();
     }
 }

@@ -1,20 +1,97 @@
 import Decimal from 'decimal.js';
-import { parsePlaceOrderRequest, parsePublishCouponRequest } from '../lib/validation';
+import { parsePlaceOrderRequest, parsePublishCouponRequest, parseUpdateProfileRequest } from '../lib/validation';
 
 const validOrder = { sku: 'BOOK-123', quantity: 2, country: 'US' };
 const validCoupon = { code: 'SAVE10', discountRate: '0.10' };
+const validAddress = {
+  firstName: 'Ana',
+  lastName: 'Novak',
+  street: 'Main St 1',
+  postalCode: '10115',
+  city: 'Berlin',
+  country: 'DE',
+};
+const requiredMessages: [string, string][] = [
+  ['firstName', 'First name is required'],
+  ['lastName', 'Last name is required'],
+  ['street', 'Street is required'],
+  ['postalCode', 'Postal code is required'],
+  ['city', 'City is required'],
+  ['country', 'Country is required'],
+];
+
+describe('parsePlaceOrderRequest with a shipping address', () => {
+  const addressOrder = { sku: 'BOOK-123', quantity: 1 };
+
+  it('ignores the top-level country and trims the address', () => {
+    expect(
+      parsePlaceOrderRequest({ ...addressOrder, country: '', shippingAddress: { ...validAddress, city: ' Berlin ' } })
+    ).toEqual({ ok: true, value: { ...addressOrder, country: null, shippingAddress: validAddress } });
+  });
+
+  it.each(requiredMessages)('reports an empty shippingAddress.%s', (field, message) => {
+    for (const value of [undefined, null, '', '   ']) {
+      expect(parsePlaceOrderRequest({ ...addressOrder, shippingAddress: { ...validAddress, [field]: value } })).toEqual({
+        ok: false,
+        errors: [{ field: `shippingAddress.${field}`, message }],
+      });
+    }
+  });
+
+  it('reports address errors together with the other field errors', () => {
+    const result = parsePlaceOrderRequest({ sku: '', quantity: 1, shippingAddress: { ...validAddress, street: '', city: '' } });
+    expect(result).toEqual({
+      ok: false,
+      errors: [
+        { field: 'sku', message: 'SKU must not be empty' },
+        { field: 'shippingAddress.street', message: 'Street is required' },
+        { field: 'shippingAddress.city', message: 'City is required' },
+      ],
+    });
+  });
+
+  it('still requires the country when the address is null', () => {
+    expect(parsePlaceOrderRequest({ ...addressOrder, shippingAddress: null })).toEqual({
+      ok: false,
+      errors: [{ field: 'country', message: 'Country must not be empty' }],
+    });
+  });
+});
+
+describe('parseUpdateProfileRequest', () => {
+  it('trims every field', () => {
+    expect(parseUpdateProfileRequest({ ...validAddress, firstName: ' Ana ', country: ' DE ' })).toEqual({
+      ok: true,
+      value: validAddress,
+    });
+  });
+
+  it('reports every missing field, treating only spaces as empty', () => {
+    expect(parseUpdateProfileRequest({ firstName: '   ', lastName: null, street: '' })).toEqual({
+      ok: false,
+      errors: requiredMessages.map(([field, message]) => ({ field, message })),
+    });
+  });
+
+  it.each(['FR', 'de', 'XX'])('rejects the unsupported country %p', (country) => {
+    expect(parseUpdateProfileRequest({ ...validAddress, country })).toEqual({
+      ok: false,
+      errors: [{ field: 'country', message: 'Country must be US, DE or GB' }],
+    });
+  });
+});
 
 describe('parsePlaceOrderRequest', () => {
   it('accepts numeric strings and trims the country', () => {
     expect(parsePlaceOrderRequest({ ...validOrder, quantity: '5', country: ' US ' })).toEqual({
       ok: true,
-      value: { sku: 'BOOK-123', quantity: 5, country: 'US' },
+      value: { sku: 'BOOK-123', quantity: 5, country: 'US', shippingAddress: null },
     });
   });
 
   it('treats a blank coupon code as absent', () => {
     const result = parsePlaceOrderRequest({ ...validOrder, couponCode: '  ' });
-    expect(result).toEqual({ ok: true, value: validOrder });
+    expect(result).toEqual({ ok: true, value: { ...validOrder, shippingAddress: null } });
   });
 
   it.each([undefined, null, '', '   '])('reports an empty quantity (%p)', (quantity) => {

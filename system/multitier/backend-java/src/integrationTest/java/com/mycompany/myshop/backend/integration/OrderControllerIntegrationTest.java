@@ -130,7 +130,7 @@ class OrderControllerIntegrationTest {
     void browseOrderHistoryReturnsOk() throws Exception {
         var response = new BrowseOrderHistoryResponse();
         response.setOrders(List.of());
-        when(orderService.browseOrderHistory(any(), any(), any(), any())).thenReturn(response);
+        when(orderService.browseOrderHistory(any(), any(), any(), any(), any())).thenReturn(response);
 
         mockMvc.perform(get("/api/orders"))
             .andExpect(status().isOk());

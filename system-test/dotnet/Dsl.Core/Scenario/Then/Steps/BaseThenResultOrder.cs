@@ -254,6 +254,23 @@ public abstract class BaseThenResultOrder<TSuccessResponse, TSuccessVerification
 
     IThenOrder IThenOrder.HasTotalPriceGreaterThanZero() => HasTotalPriceGreaterThanZero();
 
+    public TDerived HasShippingAddress(string firstName, string lastName, string street, string postalCode, string city, string country)
+    {
+        _verifications.Add(v => v.ShippingAddress(firstName, lastName, street, postalCode, city, country));
+        return Self;
+    }
+
+    IThenOrder IThenOrder.HasShippingAddress(string firstName, string lastName, string street, string postalCode, string city, string country)
+        => HasShippingAddress(firstName, lastName, street, postalCode, city, country);
+
+    public TDerived HasNoShippingAddress()
+    {
+        _verifications.Add(v => v.NoShippingAddress());
+        return Self;
+    }
+
+    IThenOrder IThenOrder.HasNoShippingAddress() => HasNoShippingAddress();
+
     public TaskAwaiter GetAwaiter() => Execute().GetAwaiter();
 
     private async Task Execute()

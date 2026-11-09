@@ -22,6 +22,8 @@ public interface IGivenStage
 
     IGivenCoupon Coupon();
 
+    IGivenProfile Profile();
+
     /// <summary>Logs in as the default customer (customer1).</summary>
     IGivenStage LoggedInAsCustomer();
 

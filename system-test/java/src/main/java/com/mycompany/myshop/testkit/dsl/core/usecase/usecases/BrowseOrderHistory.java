@@ -11,6 +11,7 @@ public class BrowseOrderHistory extends BaseMyShopUseCase<BrowseOrderHistoryResp
     private String orderNumberResultAlias;
     private String page;
     private String size;
+    private String customer;
 
     public BrowseOrderHistory(MyShopDriver driver, UseCaseContext context) {
         super(driver, context);
@@ -31,6 +32,12 @@ public class BrowseOrderHistory extends BaseMyShopUseCase<BrowseOrderHistoryResp
         return this;
     }
 
+    /** The customer filter: a customer's username, sent as is. */
+    public BrowseOrderHistory customer(String customer) {
+        this.customer = customer;
+        return this;
+    }
+
     @Override
     public UseCaseResult<BrowseOrderHistoryResponse, BrowseOrderHistoryVerification> execute() {
         var orderNumber = context.getResultValue(orderNumberResultAlias);
@@ -39,6 +46,7 @@ public class BrowseOrderHistory extends BaseMyShopUseCase<BrowseOrderHistoryResp
                 .orderNumber(orderNumber)
                 .page(page)
                 .size(size)
+                .customer(customer)
                 .build();
         var result = driver.browseOrderHistory(request);
 

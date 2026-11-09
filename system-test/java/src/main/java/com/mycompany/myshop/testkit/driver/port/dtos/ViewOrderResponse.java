@@ -30,4 +30,6 @@ public class ViewOrderResponse {
     private BigDecimal totalPrice;
     private OrderStatus status;
     private String appliedCouponCode;
+    /** Null for an order placed without one (Quick order). */
+    private ShippingAddress shippingAddress;
 }

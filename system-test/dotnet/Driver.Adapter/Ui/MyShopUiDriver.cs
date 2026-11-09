@@ -73,6 +73,7 @@ public class MyShopUiDriver : IMyShopDriver
     public async Task<Result<PlaceOrderResponse, SystemError>> PlaceOrderAsync(PlaceOrderRequest request)
     {
         RequireNotSet("Idempotency-Key", request.IdempotencyKey);
+        RequireNotSet("shippingAddress", request.ShippingAddress);
         if (_anonymous)
         {
             return await LoginRequiredAsync<PlaceOrderResponse>("/new-order");
@@ -241,6 +242,7 @@ public class MyShopUiDriver : IMyShopDriver
     {
         RequireNotSet("page", request.Page);
         RequireNotSet("size", request.Size);
+        RequireNotSet("customer", request.Customer);
         if (_anonymous)
         {
             return await LoginRequiredAsync<BrowseOrderHistoryResponse>("/order-history");
@@ -446,7 +448,13 @@ public class MyShopUiDriver : IMyShopDriver
     }
 
     // The UI has no control for this input (no idempotency key, no paging controls): API-channel scenarios only.
-    private static void RequireNotSet(string input, string? value)
+    public Task<Result<ViewProfileResponse, SystemError>> ViewProfileAsync(ViewProfileRequest request)
+        => throw new NotSupportedException("Viewing the profile is not supported by the UI channel yet; run this scenario on the API channel only");
+
+    public Task<Result<ViewProfileResponse, SystemError>> UpdateProfileAsync(UpdateProfileRequest request)
+        => throw new NotSupportedException("Updating the profile is not supported by the UI channel yet; run this scenario on the API channel only");
+
+    private static void RequireNotSet(string input, object? value)
     {
         if (value != null)
         {

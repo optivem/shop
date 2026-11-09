@@ -8,6 +8,7 @@ import com.mycompany.myshop.testkit.dsl.port.given.steps.GivenOrder;
 import com.mycompany.myshop.testkit.dsl.port.given.steps.GivenProduct;
 import com.mycompany.myshop.testkit.dsl.port.given.steps.GivenProducts;
 import com.mycompany.myshop.testkit.dsl.port.given.steps.GivenPromotion;
+import com.mycompany.myshop.testkit.dsl.port.given.steps.GivenProfile;
 import com.mycompany.myshop.testkit.dsl.port.then.ThenStage;
 import com.mycompany.myshop.testkit.dsl.port.when.WhenStage;
 
@@ -27,6 +28,8 @@ public interface GivenStage {
     GivenCountry country();
 
     GivenCoupon coupon();
+
+    GivenProfile profile();
 
     /** Logs in as the default customer (customer1). */
     GivenStage loggedInAsCustomer();

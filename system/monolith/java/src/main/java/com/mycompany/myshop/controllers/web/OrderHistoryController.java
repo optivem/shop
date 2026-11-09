@@ -20,7 +20,7 @@ public class OrderHistoryController {
     @GetMapping("/order-history")
     public String orderHistory(@RequestParam(required = false) String orderNumber, Model model,
                                Authentication authentication) {
-        var response = orderService.browseOrderHistory(orderNumber, null, null, CurrentUserResolver.resolve(authentication));
+        var response = orderService.browseOrderHistory(orderNumber, null, null, null, CurrentUserResolver.resolve(authentication));
         model.addAttribute("orders", response.getOrders());
         model.addAttribute("admin", CurrentUserResolver.isAdmin(authentication));
         model.addAttribute("filter", orderNumber != null ? orderNumber : "");

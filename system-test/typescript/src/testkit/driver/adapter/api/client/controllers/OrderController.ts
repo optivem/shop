@@ -35,11 +35,13 @@ export class OrderController {
     orderNumber: string,
     page?: string | null,
     size?: string | null,
+    customer?: string | null,
   ): Promise<Result<BrowseOrderHistoryResponse, SystemError>> {
     const query = queryString({
       orderNumber: orderNumber.trim() === '' ? null : orderNumber,
       page,
       size,
+      customer,
     });
     return this.httpClient.get<BrowseOrderHistoryResponse>(`${OrderController.ENDPOINT}${query}`);
   }

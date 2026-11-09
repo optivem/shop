@@ -22,18 +22,26 @@ public class ArchitectureRulesTest
             typeof(Dsl.Core.UseCase.UseCases.ViewOrderVerification).Assembly)
         .Build();
 
-    // A1 — request DTOs in the driver port expose only string members.
+    // A1 — request DTOs in the driver port expose only string members, or a nested driver-port DTO that
+    // itself exposes only string members (e.g. PlaceOrderRequest.ShippingAddress).
     [Fact]
     [Trait("Category", "Architecture")]
     public void RequestDtosDeclareOnlyStringMembers()
     {
+        static bool IsString(IType type) => type.Name == "String";
+
+        static bool IsStringOnlyDto(IType type) =>
+            type is Class nested
+            && nested.Namespace.FullName == "Driver.Port.Dtos"
+            && nested.GetPropertyMembers().All(p => IsString(p.Type));
+
         IArchRule rule = Classes().That()
             .ResideInNamespace("Driver.Port.Dtos").And()
             .HaveNameEndingWith("Request")
             .Should().FollowCustomCondition(cls =>
             {
                 var nonString = cls.GetPropertyMembers()
-                    .Where(p => p.Type.Name != "String")
+                    .Where(p => !IsString(p.Type) && !IsStringOnlyDto(p.Type))
                     .ToList();
                 var pass = nonString.Count == 0;
                 var failure = pass

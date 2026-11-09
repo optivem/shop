@@ -17,4 +17,8 @@ public interface IWhenStage
     IWhenPublishCoupon PublishCoupon();
 
     IWhenBrowseCoupons BrowseCoupons();
+
+    IWhenViewProfile ViewProfile();
+
+    IWhenUpdateProfile UpdateProfile();
 }

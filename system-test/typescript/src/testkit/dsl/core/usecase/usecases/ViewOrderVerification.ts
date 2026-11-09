@@ -1,5 +1,6 @@
 import { expect } from '@playwright/test';
 import type { ViewOrderResponse } from '../../../../driver/port/dtos/ViewOrderResponse.js';
+import type { ShippingAddress } from '../../../../driver/port/dtos/ShippingAddress.js';
 import { ResponseVerification } from '../../shared/response-verification.js';
 import type { UseCaseContext } from '../../shared/use-case-context.js';
 import { Converter } from '../../../../common/converter.js';
@@ -60,6 +61,20 @@ export class ViewOrderVerification extends ResponseVerification<ViewOrderRespons
   country(countryAlias: string): this {
     const expected = this.getContext().getParamValueOrLiteral(countryAlias);
     expect(this.getResponse().country).toBe(expected);
+    return this;
+  }
+
+  /** The address's country is an alias, resolved like country(). */
+  shippingAddress(expected: ShippingAddress): this {
+    expect(this.getResponse().shippingAddress, 'Order shipping address').toEqual({
+      ...expected,
+      country: this.getContext().getParamValueOrLiteral(expected.country),
+    });
+    return this;
+  }
+
+  noShippingAddress(): this {
+    expect(this.getResponse().shippingAddress ?? null, 'Order shipping address').toBeNull();
     return this;
   }
 }

@@ -49,10 +49,10 @@ Scenario: Should apply no discount when there is no coupon
   And the subtotal is 100.00
 
 @UC-001.4
-Scenario Outline: Should apply the tax rate of the country
+Scenario Outline: Should apply the tax rate of the shipping address's country
   Given country <country> has tax rate <tax rate>
   And a product with unit price <subtotal>
-  When the customer places an order with quantity 1 for country <country>
+  When the customer places an order with quantity 1 shipped to an address in <country>
   Then the order is placed successfully
   And the tax rate is <tax rate>
   And the tax amount is <tax>
@@ -60,8 +60,9 @@ Scenario Outline: Should apply the tax rate of the country
 
   Examples:
     | country | tax rate | subtotal | tax   | total  |
-    | UK      | 0.09     | 50.00    | 4.50  | 54.50  |
-    | US      | 0.20     | 100.00   | 20.00 | 120.00 |
+    | US      | 0.00     | 100.00   | 0.00  | 100.00 |
+    | DE      | 0.19     | 50.00    | 9.50  | 59.50  |
+    | GB      | 0.20     | 100.00   | 20.00 | 120.00 |
 
 @UC-001.5
 Scenario: Should increment coupon usage count after it is used
@@ -127,16 +128,31 @@ Scenario: Should reject order with missing SKU
   And the customer is told "SKU must not be empty"
 
 @UC-001.10 @narrative-4b
-Scenario: Should reject order with invalid country
-  When the customer places an order with country "XX"
+Scenario Outline: Should reject order with an incomplete shipping address
+  When the customer places an order shipped to an address with an empty <field>
   Then the order is rejected
-  And the customer is told "Country does not exist: XX"
+  And the customer is told "<message>"
+
+  Examples:
+    | field       | message                 |
+    | first name  | First name is required  |
+    | last name   | Last name is required   |
+    | street      | Street is required      |
+    | postal code | Postal code is required |
+    | city        | City is required        |
+    | country     | Country is required     |
 
 @UC-001.10 @narrative-4b
-Scenario: Should reject order with missing country
-  When the customer places an order with no country
+Scenario: Should treat a shipping address field of only spaces as empty
+  When the customer places an order shipped to an address with city "   "
   Then the order is rejected
-  And the customer is told "Country must not be empty"
+  And the customer is told "City is required"
+
+@UC-001.10 @narrative-4b
+Scenario: Should reject order shipped to a country that is not supported
+  When the customer places an order shipped to an address in country "XX"
+  Then the order is rejected
+  And the customer is told "Country does not exist: XX"
 
 @UC-001.11 @narrative-6a
 Scenario: Should reject order with non-existent coupon
@@ -181,4 +197,32 @@ Scenario: Should reject order when ERP is unavailable
   When the customer places an order
   Then the order is rejected
   And the customer is told product information can't be retrieved right now
+
+@UC-001.15
+Scenario: Should store the shipping address with the order
+  When the customer places an order shipped to "Ana Novak, Main St 1, 10115 Berlin, DE"
+  Then the order is placed successfully
+  And the order has shipping address "Ana Novak, Main St 1, 10115 Berlin, DE"
+  And the order country is DE
+
+@UC-001.16 @narrative-1a
+Scenario: Should apply the tax rate of the country entered on Quick order
+  Given country DE has tax rate 0.19
+  And a product with unit price 20.00
+  When the customer places a Quick order with quantity 1 for country DE
+  Then the order is placed successfully
+  And the tax rate is 0.19
+  And the total price is 23.80
+
+@UC-001.16 @narrative-1a
+Scenario: Should reject a Quick order with a country that is not supported
+  When the customer places a Quick order for country "XX"
+  Then the order is rejected
+  And the customer is told "Country does not exist: XX"
+
+@UC-001.16 @narrative-1a
+Scenario: Should reject a Quick order with no country
+  When the customer places a Quick order with no country
+  Then the order is rejected
+  And the customer is told "Country must not be empty"
 ```

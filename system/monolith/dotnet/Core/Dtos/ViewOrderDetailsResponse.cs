@@ -29,4 +29,6 @@ public class ViewOrderDetailsResponse
     public OrderStatus Status { get; set; }
     public string Country { get; set; } = null!;
     public string? AppliedCouponCode { get; set; }
+    /// <summary>The address the order was placed with; null for Quick orders.</summary>
+    public ShippingAddress? ShippingAddress { get; set; }
 }

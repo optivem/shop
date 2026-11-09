@@ -2,6 +2,7 @@ import { type ArgumentMetadata, BadRequestException } from '@nestjs/common';
 import Decimal from 'decimal.js';
 import { PlaceOrderRequest } from '../../core/dtos/place-order-request.dto';
 import { PublishCouponRequest } from '../../core/dtos/publish-coupon-request.dto';
+import { UpdateProfileRequest } from '../../core/dtos/update-profile-request.dto';
 import { RequestValidationPipe } from './request-validation.pipe';
 import { RequestValidationException } from './request-validation.exception';
 
@@ -28,6 +29,22 @@ async function fieldErrors(
 
 const validOrder = { sku: 'BOOK-123', quantity: 2, country: 'US' };
 const validCoupon = { code: 'SAVE10', discountRate: '0.10' };
+const validAddress = {
+  firstName: 'Ana',
+  lastName: 'Novak',
+  street: 'Main St 1',
+  postalCode: '10115',
+  city: 'Berlin',
+  country: 'DE',
+};
+const requiredMessages: [string, string][] = [
+  ['firstName', 'First name is required'],
+  ['lastName', 'Last name is required'],
+  ['street', 'Street is required'],
+  ['postalCode', 'Postal code is required'],
+  ['city', 'City is required'],
+  ['country', 'Country is required'],
+];
 
 describe('request validation pipe', () => {
   describe('PlaceOrderRequest', () => {
@@ -254,6 +271,104 @@ describe('request validation pipe', () => {
           usageLimit,
         });
         expect(errors.map((e) => e.field)).toEqual(['usageLimit']);
+      },
+    );
+  });
+
+  describe('PlaceOrderRequest with a shipping address', () => {
+    const addressOrder = { sku: 'BOOK-123', quantity: 1 };
+
+    it('does not require the top-level country and trims the address', async () => {
+      const parsed = (await parse(PlaceOrderRequest, {
+        ...addressOrder,
+        shippingAddress: { ...validAddress, city: '  Berlin  ' },
+      })) as PlaceOrderRequest;
+      expect(parsed.country).toBeUndefined();
+      expect(parsed.shippingAddress).toEqual(
+        expect.objectContaining({ ...validAddress, city: 'Berlin' }),
+      );
+    });
+
+    it.each(requiredMessages)(
+      'reports an empty shippingAddress.%s',
+      async (field, message) => {
+        for (const value of [undefined, null, '', '   ']) {
+          expect(
+            await fieldErrors(PlaceOrderRequest, {
+              ...addressOrder,
+              shippingAddress: { ...validAddress, [field]: value },
+            }),
+          ).toEqual([
+            { field: `shippingAddress.${field}`, message, code: null },
+          ]);
+        }
+      },
+    );
+
+    it('reports address errors together with the other field errors', async () => {
+      const errors = await fieldErrors(PlaceOrderRequest, {
+        sku: '',
+        quantity: 1,
+        shippingAddress: { ...validAddress, street: '', city: '' },
+      });
+      expect(errors.map((e) => e.field).sort()).toEqual([
+        'shippingAddress.city',
+        'shippingAddress.street',
+        'sku',
+      ]);
+    });
+
+    it('still requires the country without an address', async () => {
+      expect(
+        await fieldErrors(PlaceOrderRequest, {
+          ...addressOrder,
+          shippingAddress: null,
+        }),
+      ).toEqual([
+        { field: 'country', message: 'Country must not be empty', code: null },
+      ]);
+    });
+  });
+
+  describe('UpdateProfileRequest', () => {
+    it('trims every field', async () => {
+      await expect(
+        parse(UpdateProfileRequest, { ...validAddress, firstName: ' Ana ' }),
+      ).resolves.toEqual(
+        Object.assign(new UpdateProfileRequest(), validAddress),
+      );
+    });
+
+    it('reports every missing field, treating only spaces as empty', async () => {
+      const errors = await fieldErrors(UpdateProfileRequest, {
+        firstName: '   ',
+        lastName: null,
+        street: '',
+      });
+      expect(errors).toEqual(
+        expect.arrayContaining(
+          requiredMessages.map(([field, message]) => ({
+            field,
+            message,
+            code: null,
+          })),
+        ),
+      );
+      expect(errors).toHaveLength(6);
+    });
+
+    it.each(['FR', 'de', 'XX'])(
+      'rejects the unsupported country %p',
+      async (country) => {
+        expect(
+          await fieldErrors(UpdateProfileRequest, { ...validAddress, country }),
+        ).toEqual([
+          {
+            field: 'country',
+            message: 'Country must be US, DE or GB',
+            code: null,
+          },
+        ]);
       },
     );
   });

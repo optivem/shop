@@ -15,6 +15,7 @@ public class AppDbContext : DbContext
     public DbSet<Order> Orders { get; set; } = null!;
     public DbSet<Coupon> Coupons { get; set; } = null!;
     public DbSet<IdempotencyKey> IdempotencyKeys { get; set; } = null!;
+    public DbSet<CustomerProfile> CustomerProfiles { get; set; } = null!;
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
@@ -63,6 +64,12 @@ public class AppDbContext : DbContext
             entity.HasIndex(e => new { e.Owner, e.Key }).IsUnique().HasDatabaseName(IdempotencyKeyUniqueConstraint);
             entity.HasIndex(e => e.CreatedAt).HasDatabaseName("idx_idempotency_keys_created_at");
             entity.Property(e => e.ResponseBody).HasColumnType("text");
+        });
+
+        modelBuilder.Entity<CustomerProfile>(entity =>
+        {
+            entity.HasIndex(e => e.Owner).IsUnique().HasDatabaseName("uq_customer_profiles_owner");
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("now()");
         });
     }
 }

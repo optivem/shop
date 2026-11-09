@@ -20,6 +20,7 @@ namespace Dsl.Core.Scenario.Given
         private readonly List<GivenOrder> _orders;
         private readonly List<GivenCountry> _countries;
         private readonly List<GivenCoupon> _coupons;
+        private readonly List<GivenProfile> _profiles = [];
         private readonly DefaultGivens _defaults;
         private GivenClock? _clock;
         private GivenErp? _erp;
@@ -118,6 +119,15 @@ namespace Dsl.Core.Scenario.Given
 
         IGivenCoupon IGivenStage.Coupon() => Coupon();
 
+        public GivenProfile Profile()
+        {
+            var profileBuilder = new GivenProfile(this);
+            _profiles.Add(profileBuilder);
+            return profileBuilder;
+        }
+
+        IGivenProfile IGivenStage.Profile() => Profile();
+
         public GivenStage LoggedInAsCustomer()
         {
             _customers.ReserveDefaultCustomer();
@@ -160,7 +170,7 @@ namespace Dsl.Core.Scenario.Given
 
         public WhenStage When()
         {
-            return new WhenStage(Channel, _app, _scenario, _defaults, SetupGiven);
+            return new WhenStage(Channel, _app, _scenario, _defaults, SetupGiven, ResolveCustomer);
         }
 
         IWhenStage IGivenStage.When() => When();
@@ -186,7 +196,7 @@ namespace Dsl.Core.Scenario.Given
         /// <summary>Operations with no explicit customer run as the default customer, so customer1 must stay theirs.</summary>
         private void ReserveDefaultCustomerIfUsed()
         {
-            if (!_loggedInChosen || _orders.Any(o => o.IsPlacedByDefaultCustomer))
+            if (!_loggedInChosen || _orders.Any(o => o.IsPlacedByDefaultCustomer) || _profiles.Any(p => p.IsSavedByDefaultCustomer))
             {
                 _customers.ReserveDefaultCustomer();
             }
@@ -236,6 +246,15 @@ namespace Dsl.Core.Scenario.Given
         {
             await SetupCoupons();
             await SetupOrders();
+            await SetupProfiles();
+        }
+
+        private async Task SetupProfiles()
+        {
+            foreach (var profile in _profiles)
+            {
+                await profile.Execute(_app);
+            }
         }
 
         private async Task SetupCoupons()

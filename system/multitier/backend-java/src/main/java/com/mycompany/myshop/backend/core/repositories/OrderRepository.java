@@ -42,4 +42,17 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     @Query("SELECT COUNT(o) FROM Order o WHERE o.owner = :owner AND LOWER(o.orderNumber) LIKE LOWER(CONCAT('%', :orderNumber, '%'))")
     long countByOwnerAndOrderNumberContaining(@Param("owner") String owner, @Param("orderNumber") String orderNumber);
+
+    // The admin customer filter matches owner_name exactly (idx_orders_owner_name serves it).
+
+    @Query("SELECT o FROM Order o WHERE o.ownerName = :ownerName ORDER BY o.orderTimestamp DESC, o.id DESC")
+    List<Order> findPageByOwnerName(@Param("ownerName") String ownerName, Pageable pageable);
+
+    long countByOwnerName(String ownerName);
+
+    @Query("SELECT o FROM Order o WHERE o.ownerName = :ownerName AND LOWER(o.orderNumber) LIKE LOWER(CONCAT('%', :orderNumber, '%')) ORDER BY o.orderTimestamp DESC, o.id DESC")
+    List<Order> findPageByOwnerNameAndOrderNumberContaining(@Param("ownerName") String ownerName, @Param("orderNumber") String orderNumber, Pageable pageable);
+
+    @Query("SELECT COUNT(o) FROM Order o WHERE o.ownerName = :ownerName AND LOWER(o.orderNumber) LIKE LOWER(CONCAT('%', :orderNumber, '%'))")
+    long countByOwnerNameAndOrderNumberContaining(@Param("ownerName") String ownerName, @Param("orderNumber") String orderNumber);
 }

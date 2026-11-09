@@ -30,12 +30,25 @@ export class RequestValidationPipe extends ValidationPipe {
 }
 
 function toException(errors: ValidationError[]): RequestValidationException {
-  return new RequestValidationException(errors.flatMap(toFieldError));
+  return new RequestValidationException(
+    errors.flatMap((error) => toFieldErrors(error, '')),
+  );
+}
+
+// A nested object's field errors are reported under its dotted path (shippingAddress.city).
+function toFieldErrors(error: ValidationError, prefix: string): FieldError[] {
+  const own = toFieldError(error, prefix);
+  if (own.length > 0) {
+    return own;
+  }
+  return (error.children ?? []).flatMap((child) =>
+    toFieldErrors(child, `${prefix}${error.property}.`),
+  );
 }
 
 // One error per field. class-validator does not report failed constraints in declaration order,
 // so the most fundamental failure is picked explicitly: missing, then wrong type, then wrong value.
-function toFieldError(error: ValidationError): FieldError[] {
+function toFieldError(error: ValidationError, prefix: string): FieldError[] {
   const constraints = Object.entries(error.constraints ?? {});
   const isTypeMismatch = (key: string) => {
     const context: unknown = error.contexts?.[key];
@@ -57,7 +70,7 @@ function toFieldError(error: ValidationError): FieldError[] {
   }
   return [
     {
-      field: error.property,
+      field: `${prefix}${error.property}`,
       message,
       code: isTypeMismatch(key) ? 'TYPE_MISMATCH' : null,
       rejectedValue: null,

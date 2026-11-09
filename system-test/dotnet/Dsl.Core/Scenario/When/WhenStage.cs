@@ -3,6 +3,7 @@ using Dsl.Port.When;
 using Dsl.Port.When.Steps;
 using Optivem.Testing;
 using Driver.Adapter;
+using Driver.Port;
 
 namespace Dsl.Core.Scenario.When
 {
@@ -12,14 +13,17 @@ namespace Dsl.Core.Scenario.When
         private readonly ScenarioDsl _scenario;
         private readonly DefaultGivens _defaults;
         private readonly Func<Task>? _givenSetup;
+        private readonly Func<string, UserIdentity>? _resolveCustomer;
 
-        public WhenStage(Channel? channel, UseCaseDsl app, ScenarioDsl scenario, DefaultGivens defaults, Func<Task>? givenSetup = null)
+        public WhenStage(Channel? channel, UseCaseDsl app, ScenarioDsl scenario, DefaultGivens defaults, Func<Task>? givenSetup = null,
+            Func<string, UserIdentity>? resolveCustomer = null)
             : base(channel)
         {
             _app = app;
             _scenario = scenario;
             _defaults = defaults;
             _givenSetup = givenSetup;
+            _resolveCustomer = resolveCustomer;
         }
 
         public WhenStage(Channel? channel, UseCaseDsl app, ScenarioDsl scenario)
@@ -35,6 +39,17 @@ namespace Dsl.Core.Scenario.When
             }
 
             await _defaults.EnsureAsync(whenStepRuns: true);
+        }
+
+        // Profile steps don't touch the ERP or tax service, so only the givens' own dependents are created.
+        private async Task EnsureGivenForProfile()
+        {
+            if (_givenSetup != null)
+            {
+                await _givenSetup();
+            }
+
+            await _defaults.EnsureAsync(whenStepRuns: false);
         }
 
         public PlaceOrder PlaceOrder()
@@ -60,7 +75,7 @@ namespace Dsl.Core.Scenario.When
 
         public WhenBrowseOrderHistory BrowseOrderHistory()
         {
-            return new WhenBrowseOrderHistory(_app, _scenario, () => EnsureGiven());
+            return new WhenBrowseOrderHistory(_app, _scenario, () => EnsureGiven(), _resolveCustomer);
         }
 
         IWhenBrowseOrderHistory IWhenStage.BrowseOrderHistory() => BrowseOrderHistory();
@@ -85,5 +100,19 @@ namespace Dsl.Core.Scenario.When
         }
 
         IWhenBrowseCoupons IWhenStage.BrowseCoupons() => BrowseCoupons();
+
+        public WhenViewProfile ViewProfile()
+        {
+            return new WhenViewProfile(_app, _scenario, () => EnsureGivenForProfile());
+        }
+
+        IWhenViewProfile IWhenStage.ViewProfile() => ViewProfile();
+
+        public WhenUpdateProfile UpdateProfile()
+        {
+            return new WhenUpdateProfile(_app, _scenario, () => EnsureGivenForProfile());
+        }
+
+        IWhenUpdateProfile IWhenStage.UpdateProfile() => UpdateProfile();
     }
 }

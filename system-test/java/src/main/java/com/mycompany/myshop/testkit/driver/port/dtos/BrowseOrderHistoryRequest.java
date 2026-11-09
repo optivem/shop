@@ -13,4 +13,6 @@ public class BrowseOrderHistoryRequest {
     private String orderNumber;
     private String page;
     private String size;
+    /** Admin filter: the customer's username; ignored for a customer. */
+    private String customer;
 }

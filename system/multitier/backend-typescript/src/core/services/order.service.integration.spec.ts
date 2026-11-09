@@ -24,11 +24,17 @@ const CUSTOMER: CurrentUser = {
   subject: 'sub-customer',
   username: 'customer1',
   admin: false,
+  email: null,
+  firstName: null,
+  lastName: null,
 };
 const ADMIN: CurrentUser = {
   subject: 'sub-admin',
   username: 'admin1',
   admin: true,
+  email: null,
+  firstName: null,
+  lastName: null,
 };
 
 /**

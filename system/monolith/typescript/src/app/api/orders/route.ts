@@ -1,7 +1,14 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import crypto from 'node:crypto';
 import Decimal from 'decimal.js';
-import { insertOrder, findAllOrders, countOrders, findCouponByCode, tryIncrementCouponUsage } from '@/lib/db';
+import {
+  insertOrder,
+  findAllOrders,
+  countOrders,
+  findCouponByCode,
+  tryIncrementCouponUsage,
+  type OrderFilter,
+} from '@/lib/db';
 import { ErpUnavailableError, getCurrentTime, getProductDetails, getPromotionDetails, getTaxDetails } from '@/lib/external';
 import { parsePlaceOrderRequest } from '@/lib/validation';
 import {
@@ -105,8 +112,11 @@ export async function POST(request: NextRequest) {
     if (!parsed.ok) {
       return validationErrorResponse(parsed.errors);
     }
-    const { sku, quantity, country } = parsed.value;
+    const { sku, quantity, shippingAddress } = parsed.value;
     const couponCode = parsed.value.couponCode ?? null;
+    // With a shipping address the tax country is the address's; the top-level country is ignored.
+    const country = shippingAddress ? shippingAddress.country : parsed.value.country;
+    const countryField = shippingAddress ? 'shippingAddress.country' : 'country';
 
     // With an Idempotency-Key, a repeat of the same request inside 24 hours answers with the stored
     // response instead of placing a second order; the same key with a different request is rejected.
@@ -119,7 +129,7 @@ export async function POST(request: NextRequest) {
       : {
         owner: caller.subject ?? '',
         key: keyResolution.key,
-        fingerprint: requestFingerprint({ sku, quantity, country, couponCode }),
+        fingerprint: requestFingerprint({ sku, quantity, country: parsed.value.country, couponCode, shippingAddress }),
       };
     if (scope) {
       const stored = await findStoredAnswer(scope);
@@ -163,7 +173,7 @@ export async function POST(request: NextRequest) {
     const taxDetails = await getTaxDetails(country);
     if (!taxDetails) {
       return validationErrorResponse([
-        { field: 'country', message: `Country does not exist: ${country}` },
+        { field: countryField, message: `Country does not exist: ${country}` },
       ]);
     }
     const taxRate = new Decimal(taxDetails.taxRate);
@@ -202,6 +212,7 @@ export async function POST(request: NextRequest) {
             status: 'PLACED',
             owner: caller.subject,
             ownerName: caller.username,
+            shippingAddress,
           },
           db
         );
@@ -222,6 +233,11 @@ export async function POST(request: NextRequest) {
   }
 }
 
+function blankAsUndefined(value: string | null): string | undefined {
+  const trimmed = value?.trim();
+  return trimmed === undefined || trimmed === '' ? undefined : trimmed;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const caller = await resolveCaller(request);
@@ -234,13 +250,17 @@ export async function GET(request: NextRequest) {
       return validationErrorResponse(pageResolution.errors);
     }
     const pageSpec = pageResolution.value;
-    const orderNumberFilter = params.get('orderNumber') ?? undefined;
-    const owner = caller.admin ? null : caller.subject;
+    // A customer always sees only their own orders; an admin may narrow to one customer's username.
+    const filter: OrderFilter = {
+      orderNumber: params.get('orderNumber') ?? undefined,
+      owner: caller.admin ? null : caller.subject,
+      ownerName: caller.admin ? blankAsUndefined(params.get('customer')) : undefined,
+    };
     // Paged in the database: a COUNT over the same predicate, then one page of rows.
-    const totalElements = await countOrders(orderNumberFilter, owner);
+    const totalElements = await countOrders(filter);
     const orders = isPastEnd(pageSpec, totalElements)
       ? []
-      : await findAllOrders(orderNumberFilter, owner, { limit: pageSpec.size, offset: pageSpec.offset });
+      : await findAllOrders(filter, { limit: pageSpec.size, offset: pageSpec.offset });
 
     return jsonResponseWithDecimals({
       orders: orders.map((o) => ({

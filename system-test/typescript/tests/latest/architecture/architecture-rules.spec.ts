@@ -21,21 +21,38 @@ function pathOf(filePath: string): string {
   return filePath.replace(/\\/g, '/');
 }
 
-// A1 — request DTOs in the driver port expose only string members.
+// A1 — request DTOs in the driver port expose only string members. A member may also be a nested port DTO
+// (e.g. ShippingAddress) whose own members are all strings, so request values are strings all the way down.
+function nonStringParts(typeText: string, allowed: ReadonlySet<string>): string[] {
+  return typeText
+    .split('|')
+    .map((s) => s.trim())
+    .filter((s) => s !== 'null' && s !== 'undefined')
+    .filter((s) => s !== 'string' && !allowed.has(s));
+}
+
 function findA1Violations(): string[] {
   const violations: string[] = [];
   const dtoFiles = sourceFiles.filter((sf) => pathOf(sf.getFilePath()).includes('/driver/port/dtos/'));
+  const interfaces = dtoFiles.flatMap((sf) => sf.getInterfaces());
+  const stringOnlyDtos = new Set(
+    interfaces
+      .filter((iface) => !iface.getName().endsWith('Request'))
+      .filter((iface) =>
+        iface.getProperties().every((prop) => {
+          const typeText = prop.getTypeNode()?.getText() ?? prop.getType().getText();
+          return nonStringParts(typeText, new Set()).length === 0;
+        }),
+      )
+      .map((iface) => iface.getName()),
+  );
 
   for (const sf of dtoFiles) {
     for (const iface of sf.getInterfaces()) {
       if (!iface.getName().endsWith('Request')) continue;
       for (const prop of iface.getProperties()) {
         const typeText = prop.getTypeNode()?.getText() ?? prop.getType().getText();
-        const nonString = typeText
-          .split('|')
-          .map((s) => s.trim())
-          .filter((s) => s !== 'null' && s !== 'undefined')
-          .filter((s) => s !== 'string');
+        const nonString = nonStringParts(typeText, stringOnlyDtos);
         if (nonString.length > 0) {
           violations.push(`${iface.getName()}.${prop.getName()}: ${typeText}`);
         }

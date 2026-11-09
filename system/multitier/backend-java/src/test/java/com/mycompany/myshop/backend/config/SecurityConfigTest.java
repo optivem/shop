@@ -29,6 +29,7 @@ import com.mycompany.myshop.backend.core.services.IdempotencyKeyStore;
 import com.mycompany.myshop.backend.core.services.IdempotentOrderService;
 import com.mycompany.myshop.backend.core.services.OrderService;
 import com.mycompany.myshop.backend.core.services.ProductService;
+import com.mycompany.myshop.backend.core.services.ProfileService;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
@@ -90,6 +91,8 @@ class SecurityConfigTest {
         route("GET", "/api/products/{sku}", Access.PUBLIC),
         route("GET", "/api/coupons", Access.ADMIN_ONLY),
         route("POST", "/api/coupons", Access.ADMIN_ONLY),
+        route("GET", "/api/account/profile", Access.AUTHENTICATED),
+        route("PUT", "/api/account/profile", Access.AUTHENTICATED),
         route("POST", "/api/admin/recall/{sku}", Access.ADMIN_ONLY));
 
     private static HttpServer jwksServer;
@@ -120,6 +123,9 @@ class SecurityConfigTest {
 
     @MockitoBean
     private ProductService productService;
+
+    @MockitoBean
+    private ProfileService profileService;
 
     private static RequestPostProcessor admin() {
         return jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN"));
@@ -177,6 +183,18 @@ class SecurityConfigTest {
             .andExpect(status().isUnauthorized())
             .andExpect(jsonPath("$.status").value(401))
             .andExpect(jsonPath("$.title").value("Unauthorized"));
+    }
+
+    @Test
+    void anonymousCannotViewProfile() throws Exception {
+        mockMvc.perform(get("/api/account/profile"))
+            .andExpect(status().isUnauthorized())
+            .andExpect(jsonPath("$.status").value(401));
+    }
+
+    @Test
+    void customerCanViewProfile() throws Exception {
+        mockMvc.perform(get("/api/account/profile").with(customer())).andExpect(status().isOk());
     }
 
     @Test

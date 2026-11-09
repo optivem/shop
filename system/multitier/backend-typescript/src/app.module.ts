@@ -9,15 +9,18 @@ import { OrderController } from './api/controller/order.controller';
 import { CouponController } from './api/controller/coupon.controller';
 import { ProductController } from './api/controller/product.controller';
 import { AdminController } from './api/controller/admin.controller';
+import { ProfileController } from './api/controller/profile.controller';
 import { OrderService } from './core/services/order.service';
 import { ProductService } from './core/services/product.service';
 import { CouponService } from './core/services/coupon.service';
+import { ProfileService } from './core/services/profile.service';
 import { ErpGateway } from './core/services/external/erp.gateway';
 import { ClockGateway } from './core/services/external/clock.gateway';
 import { TaxGateway } from './core/services/external/tax.gateway';
 import { Order } from './core/entities/order.entity';
 import { Coupon } from './core/entities/coupon.entity';
 import { IdempotencyKey } from './core/entities/idempotency-key.entity';
+import { CustomerProfile } from './core/entities/customer-profile.entity';
 import { IdempotencyKeyStore } from './core/services/idempotency-key.store';
 import { AuthGuard } from './auth/auth.guard';
 import { loadAuthConfig } from './auth/auth.config';
@@ -60,13 +63,13 @@ function parsePort(value: string): number {
           database,
           username,
           password,
-          entities: [Order, Coupon, IdempotencyKey],
+          entities: [Order, Coupon, IdempotencyKey, CustomerProfile],
           synchronize: false,
           logging: configService.get<string>('NODE_ENV') !== 'production',
         };
       },
     }),
-    TypeOrmModule.forFeature([Order, Coupon, IdempotencyKey]),
+    TypeOrmModule.forFeature([Order, Coupon, IdempotencyKey, CustomerProfile]),
   ],
   controllers: [
     AppController,
@@ -75,12 +78,14 @@ function parsePort(value: string): number {
     CouponController,
     AdminController,
     ProductController,
+    ProfileController,
   ],
   providers: [
     AppService,
     OrderService,
     CouponService,
     ProductService,
+    ProfileService,
     IdempotencyKeyStore,
     ErpGateway,
     ClockGateway,

@@ -1,7 +1,7 @@
 import { DEFAULTS } from '../defaults.js';
 import type { UseCaseContext } from '../../shared/use-case-context.js';
 import type { AppContext } from '../app-context.js';
-import type { ScenarioContext, ProductConfig, CouponConfig, CountryConfig, OrderConfig } from '../scenario-context.js';
+import type { ScenarioContext, ProductConfig, CouponConfig, CountryConfig, OrderConfig, ProfileConfig } from '../scenario-context.js';
 import { WhenStage } from '../when/when-stage.js';
 import { ThenContractStage } from '../then/then-contract.js';
 import { DefaultGivens } from './default-givens.js';
@@ -13,6 +13,7 @@ import { GivenPromotion } from './given-promotion.js';
 import { GivenCoupon } from './given-coupon.js';
 import { GivenCountry } from './given-country.js';
 import { GivenOrder } from './given-order.js';
+import { GivenProfile } from './given-profile.js';
 import type { GivenStage as IGivenStage } from '../../../port/given/given-stage.js';
 import { UserIdentity } from '../../../../driver/port/user-identity.js';
 import { assertNotAwaited } from '../assert-not-awaited.js';
@@ -75,6 +76,12 @@ export class GivenStage implements IGivenStage {
     };
     this.ctx.orderConfigs.push(config);
     return new GivenOrder(this, config, this.ctx.customers);
+  }
+
+  profile(): GivenProfile {
+    const config: ProfileConfig = DefaultGivens.profile();
+    this.ctx.profileConfigs.push(config);
+    return new GivenProfile(this, config, this.ctx.customers);
   }
 
   /** Logs in as the customer known in this scenario by the given alias, or as the default customer (customer1) when no alias is given. */

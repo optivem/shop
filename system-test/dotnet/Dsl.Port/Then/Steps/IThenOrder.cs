@@ -64,5 +64,10 @@ public interface IThenOrder
     /// <summary>The order is not the one known in this scenario by the given order-number alias.</summary>
     IThenOrder DoesNotHaveOrderNumber(string orderNumber);
 
+    /// <summary>The order ships to this address; the country is resolved like <see cref="HasCountry"/>.</summary>
+    IThenOrder HasShippingAddress(string firstName, string lastName, string street, string postalCode, string city, string country);
+
+    IThenOrder HasNoShippingAddress();
+
     TaskAwaiter GetAwaiter();
 }

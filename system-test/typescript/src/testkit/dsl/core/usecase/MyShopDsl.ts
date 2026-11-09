@@ -8,6 +8,8 @@ import { BrowseCoupons } from './usecases/BrowseCoupons.js';
 import { BrowseOrderHistory } from './usecases/BrowseOrderHistory.js';
 import { PublishCoupon } from './usecases/PublishCoupon.js';
 import { GoToMyShop } from './usecases/GoToMyShop.js';
+import { ViewProfile } from './usecases/ViewProfile.js';
+import { UpdateProfile } from './usecases/UpdateProfile.js';
 
 export class MyShopDsl {
   constructor(
@@ -45,6 +47,14 @@ export class MyShopDsl {
 
   publishCoupon(): PublishCoupon {
     return new PublishCoupon(this.driver, this.context);
+  }
+
+  viewProfile(): ViewProfile {
+    return new ViewProfile(this.driver, this.context);
+  }
+
+  updateProfile(): UpdateProfile {
+    return new UpdateProfile(this.driver, this.context);
   }
 
   async close(): Promise<void> {
