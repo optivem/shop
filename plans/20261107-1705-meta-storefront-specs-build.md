@@ -1,5 +1,7 @@
 # 2026-11-07 17:05 UTC — Plan coordination meta-plan: storefront specs + build
 
+> 🤖 **Picked up by agent** — `8e8cd7062d0f` at `2026-11-10T07:47:59Z`
+
 
 **Plans analysed:** 2 in-scope, 1 referenced-only
 
@@ -31,16 +33,17 @@ The orchestrating session runs the Steps below **in order**, one subagent per st
 
 ## ▶ Next executable step (resume here)
 
-The prototype is signed off and the specs are reviewed (G0 closed 2026-11-07). Step 1 (U2) is done (`a71fb8ae`, `cee2babc`, `b3846cdc`). Step 2 (BUILD Step 9) is done (`ac04be12`): only UC-004 flipped, and the remaining gaps are now BUILD Step 10 (queued as Step 7b below). Step 3 (U3) is committed (see the U3 commit): compile and the sample system tests are green in all three languages. UC-010 and UC-011 stay `planned` until their full acceptance tests have been run (only `--sample` ran); run them and flip the statuses, then run **Step 4**. The user's scope for a session is Steps 3→4, stopping at the 🛑 React gate.
+The prototype is signed off and the specs are reviewed (G0 closed 2026-11-07). Steps 1–3 are done (U2, BUILD Step 9, U3). The Step 3 remainder was checked on 2026-11-10: the UC-010/011 tagged tests pass the full latest acceptance suites in all three languages. Both use cases still have untagged scenarios, so they stay `planned` and flip in **Step 7** (BUILD Step 8 already lists them). Next is **Step 4** (React reference implementation), which stops at the 🛑 React gate.
+
+Before Step 4, check the pipeline. As of 2026-11-10 the meta-prerelease pipeline is red only because the `WORKFLOW_TOKEN` secret is rejected ("Invalid username or token"), so every acceptance stage's `publish-tag` fails. The user has to rotate the PAT; no code change fixes it.
 
 ## Steps
 
-- [ ] **Step 3 remainder — flip UC-010 / UC-011.** Run their full acceptance tests in all three languages; flip to `status: implemented` where green.
 - [ ] **Step 4 — BUILD Step 3 (React reference implementation)** plus the `openHomePage()` driver change in all three languages. One subagent. Gate: `npx tsc --noEmit`, unit tests, and the multitier sample system tests.
   - 🛑 **User gate:** stop and ask the user to sign off how React looks (BUILD decision 4). Give them the run command, e.g. `gh optivem system start` with the multitier config.
 - [ ] **Step 5 — BUILD Steps 4, 5, 6 (ports to Next.js, Thymeleaf, Razor).** One subagent per port, **serial**: they share docker ports when running system tests. Gate per port: that monolith's build plus its sample system tests.
 - [ ] **Step 6 — BUILD Step 7 (verify).** One subagent: `./compile-all.sh`, `--sample` for all languages (monolith and multitier), then `./test-all.sh`.
-- [ ] **Step 7 — BUILD Step 8 (acceptance tests for UC-006–009).** One subagent per use case, serial (shared test kit). Each one flips its use case to `status: implemented`. Gate: compile, plus the sample system tests.
+- [ ] **Step 7 — BUILD Step 8 (acceptance tests for UC-006–011).** UC-010/011 have only their API scenarios tagged; this step adds the untagged ones and flips them. One subagent per use case, serial (shared test kit). Each one flips its use case to `status: implemented`. Gate: compile, plus the sample system tests.
 - [ ] **Step 7b — BUILD Step 10 (close the Step 9 coverage gaps for UC-002, UC-003, UC-005, UC-012).** One subagent, after Step 7 (the UI-only scenarios UC-003.2 and UC-012.2 belong in Step 7's UI tests). Touches the order and coupon acceptance tests, so never alongside Step 3 or Step 7. Gate: compile, plus the sample system tests.
 - [ ] **Step 8 — Close out.** When SPEC and BUILD have no open items, delete both plan files (and this one). Report UC1 Track D as the remaining follow-up: it needs gh-optivem C1, C1b and C1c.
 
