@@ -13,6 +13,13 @@ public class TaxStubDriver : BaseTaxDriver<TaxStubClient>
     {
     }
 
+    public override async ValueTask DisposeAsync()
+    {
+        await _client.RemoveStubsAsync();
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
     public override Task<Result<VoidValue, TaxErrorResponse>> ReturnsTaxRateAsync(ReturnsTaxRateRequest request)
     {
         var country = request.Country!;

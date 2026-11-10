@@ -4,7 +4,7 @@ using Driver.Port.External.Tax.Dtos.Error;
 
 namespace Driver.Port.External.Tax;
 
-public interface ITaxDriver : IDisposable
+public interface ITaxDriver : IDisposable, IAsyncDisposable
 {
     Task<Result<VoidValue, TaxErrorResponse>> GoToTaxAsync();
     Task<Result<GetTaxResponse, TaxErrorResponse>> GetTaxRateAsync(string? country);

@@ -31,7 +31,7 @@ export class JsonWireMockClient {
    * system down.
    */
   async stubGetMatching(urlPathPattern: string, statusCode: number): Promise<void> {
-    await this.registerMapping({
+    await this.registerMapping(`GET ${urlPathPattern}`, {
       priority: OUTAGE_PRIORITY,
       request: { method: 'GET', urlPathPattern },
       response: { status: statusCode },
@@ -46,7 +46,7 @@ export class JsonWireMockClient {
   }
 
   private async createStub<T>(method: string, urlPath: string, responseBody: T, statusCode: number): Promise<void> {
-    await this.registerMapping({
+    await this.registerMapping(`${method} ${urlPath}`, {
       request: {
         method,
         urlPath,
@@ -59,7 +59,7 @@ export class JsonWireMockClient {
     });
   }
 
-  private async registerMapping(mapping: object): Promise<void> {
+  private async registerMapping(description: string, mapping: object): Promise<void> {
     const response = await fetch(this.adminUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -67,12 +67,25 @@ export class JsonWireMockClient {
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to create WireMock stub: ${response.status} ${response.statusText}`);
+      throw new Error(`Failed to register stub for ${description}: ${response.status} ${response.statusText} ${await response.text()}`);
     }
 
     const body = await response.json() as { id?: string };
-    if (body.id) {
-      this.stubIds.push(body.id);
+    if (!body.id) {
+      throw new Error(`Failed to register stub for ${description}: WireMock returned no mapping id`);
+    }
+    this.stubIds.push(body.id);
+
+    await this.verifyRegistered(description, body.id);
+  }
+
+  /** Reads the new stub back, so a stub the server did not keep fails here, at registration. */
+  private async verifyRegistered(description: string, id: string): Promise<void> {
+    const readBack = await fetch(`${this.adminUrl}/${id}`);
+    if (!readBack.ok) {
+      throw new Error(
+        `Failed to register stub for ${description}: stub ${id} is not visible on read-back (${readBack.status} ${readBack.statusText} ${await readBack.text()})`,
+      );
     }
   }
 }

@@ -6,11 +6,15 @@ namespace Driver.Adapter.Shared.Client.Http;
 /// <summary>
 /// Acquires access tokens with the password grant (test realm only). Tokens are cached per
 /// Keycloak instance and user for the lifetime of the process and refreshed shortly before expiry.
+/// A transport failure or a 5xx is retried a few times, since Keycloak can drop connections under
+/// parallel test load; a 4xx (e.g. bad credentials) is a definitive answer and fails at once.
 /// </summary>
 public sealed class KeycloakTokenProvider
 {
     private const string ClientId = "shop-system-test";
     private static readonly TimeSpan ExpiryMargin = TimeSpan.FromSeconds(30);
+    private const int MaxAttempts = 3;
+    private static readonly TimeSpan RetryDelay = TimeSpan.FromMilliseconds(500);
     private static readonly ConcurrentDictionary<string, KeycloakTokenProvider> Providers = new();
     private static readonly HttpClient SharedHttpClient = new();
 
@@ -53,6 +57,22 @@ public sealed class KeycloakTokenProvider
 
     private async Task<CachedToken> FetchTokenAsync(TestUser user)
     {
+        for (var attempt = 1; ; attempt++)
+        {
+            try
+            {
+                return await FetchTokenOnceAsync(user);
+            }
+            catch (TransientTokenException e) when (attempt < MaxAttempts)
+            {
+                Console.Error.WriteLine($"[Keycloak] attempt {attempt}/{MaxAttempts} failed, retrying: {e.Message}");
+                await Task.Delay(RetryDelay * attempt);
+            }
+        }
+    }
+
+    private async Task<CachedToken> FetchTokenOnceAsync(TestUser user)
+    {
         var form = new FormUrlEncodedContent(new Dictionary<string, string>
         {
             ["grant_type"] = "password",
@@ -66,12 +86,17 @@ public sealed class KeycloakTokenProvider
         {
             response = await SharedHttpClient.PostAsync(_tokenUri, form);
         }
-        catch (HttpRequestException e)
+        catch (Exception e) when (e is HttpRequestException or TaskCanceledException)
         {
-            throw new InvalidOperationException($"Failed to acquire token for {user.Username()} from {_tokenUri}", e);
+            throw new TransientTokenException($"Failed to acquire token for {user.Username()} from {_tokenUri}: {e.Message}", e);
         }
 
         var body = await response.Content.ReadAsStringAsync();
+        if ((int)response.StatusCode >= 500)
+        {
+            throw new TransientTokenException(
+                $"Failed to acquire token for {user.Username()} from {_tokenUri}: HTTP {(int)response.StatusCode} {body}", null);
+        }
         if (!response.IsSuccessStatusCode)
         {
             throw new InvalidOperationException(
@@ -84,4 +109,8 @@ public sealed class KeycloakTokenProvider
         var expiresAt = DateTimeOffset.UtcNow.AddSeconds(expiresIn) - ExpiryMargin;
         return new CachedToken(root.GetProperty("access_token").GetString()!, expiresAt);
     }
+
+    /// <summary>A failure worth retrying; after the last attempt it surfaces as is.</summary>
+    private sealed class TransientTokenException(string message, Exception? inner)
+        : InvalidOperationException(message, inner);
 }

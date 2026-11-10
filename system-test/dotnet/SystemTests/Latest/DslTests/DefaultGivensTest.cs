@@ -22,14 +22,15 @@ namespace SystemTests.Latest.DslTests;
 // Runs without Docker: the DSL is wired to recording fake drivers.
 public class DefaultGivensTest
 {
-    [Fact]
-    public async Task OrderWithoutDeclaredProductShouldCreateDefaultProductAndTaxRateExactlyOnce()
+    [Theory]
+    [ChannelData(ChannelType.API)]
+    public async Task OrderWithoutDeclaredProductShouldCreateDefaultProductAndTaxRateExactlyOnce(Channel channel)
     {
         var erp = new RecordingErpDriver();
         var tax = new RecordingTaxDriver();
         await using var app = CreateApp(erp, tax, new FakeMyShopDriver());
 
-        await new ScenarioDsl(null, app)
+        await new ScenarioDsl(channel, app)
             .Given().Order()
             .When().PlaceOrder().WithOrderNumber("WHEN-ORDER")
             .Then().ShouldSucceed();
@@ -105,6 +106,7 @@ public class DefaultGivensTest
             Task.FromResult(Result<VoidValue, TaxErrorResponse>.Success(VoidValue.Empty));
 
         public void Dispose() { }
+        public ValueTask DisposeAsync() => ValueTask.CompletedTask;
     }
 
     private sealed class FakeMyShopDriver : IMyShopDriver

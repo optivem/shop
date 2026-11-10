@@ -131,6 +131,10 @@ public class MyShopUiDriver implements MyShopDriver {
 
     @Override
     public Result<CancelOrderResponse, SystemError> cancelOrder(CancelOrderRequest request) {
+        if (anonymous) {
+            return loginRequiredForOrder(request.getOrderNumber());
+        }
+
         runAs(TestUser.CUSTOMER);
         var viewResult = viewOrder(ViewOrderRequest.builder().orderNumber(request.getOrderNumber()).build());
 
@@ -151,6 +155,10 @@ public class MyShopUiDriver implements MyShopDriver {
 
     @Override
     public Result<DeliverOrderResponse, SystemError> deliverOrder(DeliverOrderRequest request) {
+        if (anonymous) {
+            return loginRequiredForOrder(request.getOrderNumber());
+        }
+
         runAs(TestUser.ADMIN);
         var viewResult = viewOrder(ViewOrderRequest.builder().orderNumber(request.getOrderNumber()).build());
 
@@ -177,9 +185,7 @@ public class MyShopUiDriver implements MyShopDriver {
     public Result<ViewOrderResponse, SystemError> viewOrder(ViewOrderRequest request) {
         var orderNumber = request.getOrderNumber();
         if (anonymous) {
-            var encodedOrderNumber = URLEncoder.encode(orderNumber, StandardCharsets.UTF_8).replace("+", "%20");
-            client.assertLoginRequiredFor("/order-details?orderNumber=" + encodedOrderNumber, "/order-details/" + encodedOrderNumber);
-            return failure(MyShopUiClient.AUTHENTICATION_REQUIRED);
+            return loginRequiredForOrder(orderNumber);
         }
 
         runAs(TestUser.CUSTOMER);
@@ -391,6 +397,12 @@ public class MyShopUiDriver implements MyShopDriver {
 
     private <T> Result<T, SystemError> loginRequired(String path) {
         client.assertLoginRequiredFor(path);
+        return failure(MyShopUiClient.AUTHENTICATION_REQUIRED);
+    }
+
+    private <T> Result<T, SystemError> loginRequiredForOrder(String orderNumber) {
+        var encodedOrderNumber = URLEncoder.encode(orderNumber, StandardCharsets.UTF_8).replace("+", "%20");
+        client.assertLoginRequiredFor("/order-details?orderNumber=" + encodedOrderNumber, "/order-details/" + encodedOrderNumber);
         return failure(MyShopUiClient.AUTHENTICATION_REQUIRED);
     }
 

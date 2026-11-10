@@ -132,7 +132,8 @@ public class UseCaseDsl : IAsyncDisposable
         if (_erp != null)
             await _erp.DisposeAsync();
 
-        _tax?.Dispose();
+        if (_tax != null)
+            await _tax.DisposeAsync();
 
         if (_clock != null)
             await _clock.DisposeAsync();

@@ -3,6 +3,11 @@ import type { TestUser } from './test-user.js';
 const CLIENT_ID = 'shop-system-test';
 const EXPIRY_MARGIN_MS = 30_000;
 const DEFAULT_EXPIRES_IN_SECONDS = 60;
+const MAX_ATTEMPTS = 3;
+const RETRY_DELAY_MS = 500;
+
+/** A failure worth retrying; after the last attempt it surfaces as is. */
+class TransientTokenError extends Error {}
 
 interface CachedToken {
   value: string;
@@ -12,6 +17,8 @@ interface CachedToken {
 /**
  * Acquires access tokens with the password grant (test realm only). Tokens are cached per
  * Keycloak instance and user for the lifetime of the process and refreshed shortly before expiry.
+ * A transport failure or a 5xx is retried a few times, since Keycloak can drop connections under
+ * parallel test load; a 4xx (e.g. bad credentials) is a definitive answer and fails at once.
  */
 export class KeycloakTokenProvider {
   private static readonly providers = new Map<string, KeycloakTokenProvider>();
@@ -49,16 +56,41 @@ export class KeycloakTokenProvider {
   }
 
   private async fetchToken(user: TestUser): Promise<CachedToken> {
-    const response = await fetch(this.tokenUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        grant_type: 'password',
-        client_id: CLIENT_ID,
-        username: user.username,
-        password: user.password,
-      }),
-    });
+    for (let attempt = 1; ; attempt++) {
+      try {
+        return await this.fetchTokenOnce(user);
+      } catch (e) {
+        if (!(e instanceof TransientTokenError) || attempt >= MAX_ATTEMPTS) throw e;
+        console.error(`[Keycloak] attempt ${attempt}/${MAX_ATTEMPTS} failed, retrying: ${e.message}`);
+        await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS * attempt));
+      }
+    }
+  }
+
+  private async fetchTokenOnce(user: TestUser): Promise<CachedToken> {
+    let response: Response;
+    try {
+      response = await fetch(this.tokenUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          grant_type: 'password',
+          client_id: CLIENT_ID,
+          username: user.username,
+          password: user.password,
+        }),
+      });
+    } catch (e) {
+      const cause = e instanceof Error && e.cause ? ` (${String(e.cause)})` : '';
+      throw new TransientTokenError(`Failed to acquire token for ${user.username} from ${this.tokenUrl}: ${String(e)}${cause}`, {
+        cause: e,
+      });
+    }
+    if (response.status >= 500) {
+      throw new TransientTokenError(
+        `Failed to acquire token for ${user.username} from ${this.tokenUrl}: HTTP ${response.status} ${await response.text()}`,
+      );
+    }
     if (!response.ok) {
       throw new Error(
         `Failed to acquire token for ${user.username} from ${this.tokenUrl}: HTTP ${response.status} ${await response.text()}`,

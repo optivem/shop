@@ -20,4 +20,13 @@ public class TaxStubClient : BaseTaxClient
     public Task<Result<VoidValue, ExtTaxErrorResponse>> ConfigureGetCountryAsync(ExtGetCountryResponse response)
         => _wireMockClient.StubGetAsync($"{TaxCountriesEndpoint}/{response.Id}", HttpStatus.Ok, response)
             .MapErrorAsync(ExtTaxErrorResponse.From);
+
+    public Task RemoveStubsAsync() => _wireMockClient.RemoveStubsAsync();
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+            _wireMockClient?.Dispose();
+        base.Dispose(disposing);
+    }
 }

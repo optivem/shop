@@ -114,6 +114,11 @@ public class MyShopUiDriver : IMyShopDriver
 
     public async Task<Result<CancelOrderResponse, SystemError>> CancelOrderAsync(CancelOrderRequest request)
     {
+        if (_anonymous)
+        {
+            return await LoginRequiredForOrderAsync<CancelOrderResponse>(request.OrderNumber);
+        }
+
         await RunAsAsync(TestUser.Customer);
         var viewResult = await ViewOrderAsync(new ViewOrderRequest { OrderNumber = request.OrderNumber });
         if (viewResult.IsFailure)
@@ -151,6 +156,11 @@ public class MyShopUiDriver : IMyShopDriver
 
     public async Task<Result<DeliverOrderResponse, SystemError>> DeliverOrderAsync(DeliverOrderRequest request)
     {
+        if (_anonymous)
+        {
+            return await LoginRequiredForOrderAsync<DeliverOrderResponse>(request.OrderNumber);
+        }
+
         await RunAsAsync(TestUser.Admin);
         var viewResult = await ViewOrderAsync(new ViewOrderRequest { OrderNumber = request.OrderNumber });
         if (viewResult.IsFailure)
@@ -190,9 +200,7 @@ public class MyShopUiDriver : IMyShopDriver
     {
         if (_anonymous)
         {
-            var encodedOrderNumber = Uri.EscapeDataString(request.OrderNumber ?? string.Empty);
-            await _client.AssertLoginRequiredForAsync($"/order-details?orderNumber={encodedOrderNumber}", $"/order-details/{encodedOrderNumber}");
-            return Failure<ViewOrderResponse>(MyShopUiClient.AuthenticationRequired);
+            return await LoginRequiredForOrderAsync<ViewOrderResponse>(request.OrderNumber);
         }
 
         await RunAsAsync(TestUser.Customer);
@@ -422,6 +430,13 @@ public class MyShopUiDriver : IMyShopDriver
     private async Task<Result<T, SystemError>> LoginRequiredAsync<T>(string path)
     {
         await _client.AssertLoginRequiredForAsync(path);
+        return Failure<T>(MyShopUiClient.AuthenticationRequired);
+    }
+
+    private async Task<Result<T, SystemError>> LoginRequiredForOrderAsync<T>(string? orderNumber)
+    {
+        var encodedOrderNumber = Uri.EscapeDataString(orderNumber ?? string.Empty);
+        await _client.AssertLoginRequiredForAsync($"/order-details?orderNumber={encodedOrderNumber}", $"/order-details/{encodedOrderNumber}");
         return Failure<T>(MyShopUiClient.AuthenticationRequired);
     }
 

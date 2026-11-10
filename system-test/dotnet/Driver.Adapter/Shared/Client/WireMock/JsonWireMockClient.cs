@@ -123,12 +123,7 @@ public class JsonWireMockClient : IDisposable
                 return Result<VoidValue, string>.Failure($"Failed to register stub for GET {pathPattern}: {responseContent}");
             }
 
-            var responseJson = JsonSerializer.Deserialize<JsonElement>(responseContent);
-            if (responseJson.TryGetProperty("id", out var idElement) && idElement.GetString() is { } id)
-            {
-                _stubIds.Add(id);
-            }
-            return Result<VoidValue, string>.Success(VoidValue.Empty);
+            return await TrackAndVerifyAsync($"GET {pathPattern}", responseContent);
         }
         catch (Exception ex)
         {
@@ -143,6 +138,29 @@ public class JsonWireMockClient : IDisposable
             await _httpClient.DeleteAsync($"{_wireMockBaseUrl}/__admin/mappings/{id}");
         }
         _stubIds.Clear();
+    }
+
+    /// <summary>
+    /// Records the new stub's id for removal, then reads the stub back, so a stub the server did not
+    /// keep fails here, at registration.
+    /// </summary>
+    private async Task<Result<VoidValue, string>> TrackAndVerifyAsync(string description, string registrationResponse)
+    {
+        var responseJson = JsonSerializer.Deserialize<JsonElement>(registrationResponse);
+        if (!responseJson.TryGetProperty("id", out var idElement) || idElement.GetString() is not { } id)
+        {
+            return Result<VoidValue, string>.Failure($"Failed to register stub for {description}: WireMock returned no mapping id: {registrationResponse}");
+        }
+        _stubIds.Add(id);
+
+        var readBack = await _httpClient.GetAsync($"{_wireMockBaseUrl}/__admin/mappings/{id}");
+        if (!readBack.IsSuccessStatusCode)
+        {
+            var readBackContent = await readBack.Content.ReadAsStringAsync();
+            return Result<VoidValue, string>.Failure($"Failed to register stub for {description}: stub {id} is not visible on read-back ({(int)readBack.StatusCode} {readBack.ReasonPhrase}): {readBackContent}");
+        }
+
+        return Result<VoidValue, string>.Success(VoidValue.Empty);
     }
 
     private async Task<Result<VoidValue, string>> RegisterStubAsync<T>(string method, string path, int statusCode, T? responseBody)
@@ -187,16 +205,7 @@ public class JsonWireMockClient : IDisposable
             if (apiResponse.IsSuccessStatusCode)
             {
                 var responseContent = await apiResponse.Content.ReadAsStringAsync();
-                var responseJson = JsonSerializer.Deserialize<JsonElement>(responseContent);
-                if (responseJson.TryGetProperty("id", out var idElement))
-                {
-                    var id = idElement.GetString();
-                    if (id != null)
-                    {
-                        _stubIds.Add(id);
-                    }
-                }
-                return Result<VoidValue, string>.Success(VoidValue.Empty);
+                return await TrackAndVerifyAsync($"{method} {path}", responseContent);
             }
             else
             {
