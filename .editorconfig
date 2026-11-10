@@ -1,0 +1,7 @@
+# Pin C# line endings to LF so `dotnet format --verify-no-changes` gives the same answer on Windows
+# and on the Linux CI runners (without this it falls back to the platform default, CRLF on Windows).
+# Matches `* text=auto eol=lf` in .gitattributes. system-test/dotnet has its own root .editorconfig.
+root = true
+
+[*.cs]
+end_of_line = lf

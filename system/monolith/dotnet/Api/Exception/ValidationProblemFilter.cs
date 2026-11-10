@@ -46,9 +46,13 @@ public class ValidationProblemFilter : IActionFilter
                 errors
             };
 
-            context.Result = new ObjectResult(problemDetail)
+            // Emit RFC 7807 application/problem+json (matching GlobalExceptionHandler and the
+            // Java/TS providers). A plain ObjectResult would content-negotiate to application/json.
+            context.Result = new ContentResult
             {
-                StatusCode = StatusCodes.Status422UnprocessableEntity
+                StatusCode = StatusCodes.Status422UnprocessableEntity,
+                ContentType = "application/problem+json",
+                Content = JsonSerializer.Serialize(problemDetail)
             };
         }
     }

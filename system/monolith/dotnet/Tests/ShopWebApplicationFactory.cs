@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using MyCompany.MyShop.Monolith.Api.Security;
@@ -36,7 +37,9 @@ public sealed class ShopWebApplicationFactory : WebApplicationFactory<Program>
                 d => d.ServiceType == typeof(DbContextOptions<AppDbContext>));
             if (descriptor != null)
                 services.Remove(descriptor);
-            services.AddDbContext<AppDbContext>(options => options.UseInMemoryDatabase("TestDb"));
+            // Placing an order opens a transaction, which the in-memory database doesn't support and only warns about.
+            services.AddDbContext<AppDbContext>(options => options.UseInMemoryDatabase("TestDb")
+                .ConfigureWarnings(w => w.Ignore(InMemoryEventId.TransactionIgnoredWarning)));
 
             services.AddSingleton<IJwksKeyProvider>(new FixedKeyProvider(_key));
         });

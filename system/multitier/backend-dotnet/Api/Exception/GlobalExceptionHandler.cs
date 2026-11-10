@@ -109,7 +109,6 @@ public class GlobalExceptionHandler : IExceptionHandler
     private static async Task WriteConflictResponse(HttpContext httpContext, CancellationToken cancellationToken)
     {
         httpContext.Response.StatusCode = StatusCodes.Status409Conflict;
-        httpContext.Response.ContentType = ProblemJsonContentType;
 
         var response = new
         {
@@ -120,7 +119,8 @@ public class GlobalExceptionHandler : IExceptionHandler
             timestamp = DateTime.UtcNow
         };
 
-        await httpContext.Response.WriteAsJsonAsync(response, cancellationToken);
+        await httpContext.Response.WriteAsJsonAsync(
+            response, options: (JsonSerializerOptions?)null, contentType: ProblemJsonContentType, cancellationToken);
     }
 
     private async Task WriteErpUnavailableResponse(HttpContext httpContext, ErpUnavailableException ex, CancellationToken cancellationToken)

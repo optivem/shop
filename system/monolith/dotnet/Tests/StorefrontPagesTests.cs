@@ -3,13 +3,10 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MyCompany.MyShop.Monolith.Core.Dtos;
 using MyCompany.MyShop.Monolith.Core.Services.External;
-using MyCompany.MyShop.Monolith.Data;
 using Xunit;
 
 namespace MyCompany.MyShop.Monolith.Tests;
@@ -40,11 +37,6 @@ public partial class StorefrontPagesTests : IClassFixture<ShopWebApplicationFact
             services.AddScoped(sp => new ErpGateway(new HttpClient(stub), sp.GetRequiredService<IConfiguration>()));
             services.AddScoped(sp => new TaxGateway(new HttpClient(stub), sp.GetRequiredService<IConfiguration>()));
             services.AddScoped(sp => new ClockGateway(new HttpClient(stub), sp.GetRequiredService<IConfiguration>()));
-            // Placing an order opens a transaction, which the in-memory database only warns about.
-            var options = services.Single(d => d.ServiceType == typeof(DbContextOptions<AppDbContext>));
-            services.Remove(options);
-            services.AddDbContext<AppDbContext>(db => db.UseInMemoryDatabase("StorefrontPagesTests")
-                .ConfigureWarnings(w => w.Ignore(InMemoryEventId.TransactionIgnoredWarning)));
         }));
         var client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
         if (role != null)

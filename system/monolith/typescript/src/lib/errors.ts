@@ -2,6 +2,17 @@ import { NextResponse } from 'next/server';
 
 const BASE_URL = 'https://api.my-company.example/errors';
 
+// RFC 7807 problem details go out as application/problem+json, matching the Java and .NET
+// backends. NextResponse.json only defaults Content-Type to application/json when none is set.
+const PROBLEM_JSON_CONTENT_TYPE = 'application/problem+json';
+
+function problemResponse(body: Record<string, unknown>, init: { status: number; headers?: Record<string, string> }) {
+  return NextResponse.json(body, {
+    ...init,
+    headers: { ...init.headers, 'Content-Type': PROBLEM_JSON_CONTENT_TYPE },
+  });
+}
+
 export interface FieldError {
   field: string;
   message: string;
@@ -10,7 +21,7 @@ export interface FieldError {
 }
 
 export function badRequestResponse(detail: string) {
-  return NextResponse.json(
+  return problemResponse(
     {
       type: `${BASE_URL}/bad-request`,
       title: 'Bad Request',
@@ -23,7 +34,7 @@ export function badRequestResponse(detail: string) {
 }
 
 export function validationErrorResponse(errors: FieldError[]) {
-  return NextResponse.json(
+  return problemResponse(
     {
       type: `${BASE_URL}/validation-error`,
       title: 'Validation Error',
@@ -37,7 +48,7 @@ export function validationErrorResponse(errors: FieldError[]) {
 }
 
 export function generalValidationErrorResponse(detail: string) {
-  return NextResponse.json(
+  return problemResponse(
     {
       type: `${BASE_URL}/validation-error`,
       title: 'Validation Error',
@@ -50,7 +61,7 @@ export function generalValidationErrorResponse(detail: string) {
 }
 
 export function notFoundResponse(detail: string) {
-  return NextResponse.json(
+  return problemResponse(
     {
       type: `${BASE_URL}/resource-not-found`,
       title: 'Resource Not Found',
@@ -63,7 +74,7 @@ export function notFoundResponse(detail: string) {
 }
 
 export function conflictResponse() {
-  return NextResponse.json(
+  return problemResponse(
     {
       type: `${BASE_URL}/conflict`,
       title: 'Conflict',
@@ -76,7 +87,7 @@ export function conflictResponse() {
 }
 
 export function unauthorizedResponse(detail: string) {
-  return NextResponse.json(
+  return problemResponse(
     {
       type: `${BASE_URL}/unauthorized`,
       title: 'Unauthorized',
@@ -89,7 +100,7 @@ export function unauthorizedResponse(detail: string) {
 }
 
 export function forbiddenResponse() {
-  return NextResponse.json(
+  return problemResponse(
     {
       type: `${BASE_URL}/forbidden`,
       title: 'Forbidden',
@@ -107,7 +118,7 @@ const ERP_UNAVAILABLE_DETAIL = "Product information can't be retrieved right now
 
 export function erpUnavailableResponse(error: unknown) {
   console.error('ERP unavailable', error);
-  return NextResponse.json(
+  return problemResponse(
     {
       type: `${BASE_URL}/service-unavailable`,
       title: 'Service Unavailable',
@@ -125,7 +136,7 @@ const GENERAL_ERROR_DETAIL = 'An unexpected error occurred. Please try again lat
 
 export function internalErrorResponse(error: unknown) {
   console.error('Unexpected error occurred', error);
-  return NextResponse.json(
+  return problemResponse(
     {
       type: `${BASE_URL}/internal-server-error`,
       title: 'Internal Server Error',

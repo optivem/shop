@@ -90,8 +90,6 @@ Even with #2 fixed, a long-lived local stack accumulates any stubs a crashed or 
 ### 8. Older pre-existing issues (moved here from the storefront meta-plan)
 
 - **8a.** `system-test/dotnet` `DefaultGivensTest.OrderWithoutDeclaredProductShouldCreateDefaultProductAndTaxRateExactlyOnce` throws a NullReferenceException because it passes a null channel. It fails on older commits too. It is not in the CI filter (`.Latest.AcceptanceTests`), which is why CI doesn't show it. **Recommended: do**, by fixing the test's channel setup. A test that always fails locally and is hidden from CI is worse than no test.
-- **8b.** The .NET monolith's `GlobalExceptionHandler` sends `application/json` instead of `application/problem+json`. **Recommended: do**, and check the other five backends for the same content type.
-- **8c.** The storefront Step 1 run never ran the monolith-java **legacy** `--sample`. Its latest sample and contract runs passed, and legacy compiles. **Recommended: drop.** The storefront meta-plan's Step 6 runs `./test-all.sh`, which covers legacy.
 
 ### 11. Fix local `gcloud`
 
@@ -119,16 +117,6 @@ With `output: "standalone"`, `next start` warns that it doesn't work, and the st
 
 `system/monolith/java` `SecurityConfigTest` is 496 lines, against checkstyle's 500-line limit, so the Thymeleaf port had to put new security tests in `StorefrontPagesTest`.
 - **Recommended: defer.** Splitting it by area (public routes, customer routes, admin routes) is a refactor with no behaviour change. Do it the next time someone has to add a security test.
-
-### 18. `dotnet format --verify-no-changes` flags an untouched file on Windows
-
-`system/monolith/dotnet` `Api/Security/AuthenticationExtensions.cs` lines 62–68 fail the whitespace rule on Windows (it wants CRLF before the chained `.AddPolicyScheme` calls). CI runs on Linux. Found in the Razor port, 2026-11-10.
-- **Recommended: do, small.** Pin `end_of_line = lf` in `.editorconfig` for C# files, so local and CI lint agree on Windows and Linux.
-
-### 19. `ShopWebApplicationFactory` (.NET monolith tests) fails any HTTP test that places an order
-
-The in-memory database raises `TransactionIgnoredWarning` as an error when `OrderService` opens a transaction. The Razor port's page tests work around it locally.
-- **Recommended: do.** Configure the factory to ignore that warning (`ConfigureWarnings(w => w.Ignore(InMemoryEventId.TransactionIgnoredWarning))`) and remove the workaround.
 
 ### 20. Local runs depend on the machine's timezone
 
