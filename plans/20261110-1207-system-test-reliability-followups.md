@@ -95,3 +95,19 @@ After `28b1aaf9` (React per-route auth), the anonymous "view order" UI check ope
 
 The TypeScript driver also used the order-details URL for anonymous cancel and deliver order, so it was fixed there. .NET and Java weren't checked for those two paths.
 - **Recommended: do, with #12.** It's a quick read of the three drivers to confirm the anonymous cancel and deliver checks open a URL React actually routes.
+
+### 14. `npm audit` vulnerabilities in the Next.js monolith
+
+`npm ci` in `system/monolith/typescript` reports `npm audit` vulnerabilities. They are pre-existing, found during the Next.js port on 2026-11-10.
+- **Recommended: do, as a triage.** Run `npm audit` in every Node project (the monolith, frontend-react, the multitier TS backend, system-test/typescript, external-systems). Fix the high and critical findings that have a non-breaking upgrade, and defer the rest with a note.
+
+### 15. `next start` doesn't work with `output: "standalone"` locally
+
+With `output: "standalone"`, `next start` warns that it doesn't work, and the standalone server serves no `/_next/static` unless that folder is copied in. Docker is fine, because the Dockerfile copies it. It only affects running the monolith outside Docker.
+- **Recommended: defer.** No documented workflow runs it outside Docker. If one appears, add an npm script that copies the static folder or runs `node .next/standalone/server.js`.
+
+### 16. `system-test run --sample` output lacks per-suite counts for some suites
+
+In TypeScript runs, only some suites print a JSON summary (the `expected` and `unexpected` counts). The acceptance suites print a Playwright list instead, so there is no uniform pass/fail line per suite to read off. This is a gh-optivem change.
+- **Recommended: do, in gh-optivem.** Have `system-test run` print one summary line per suite (`<suite>: passed N, failed M, skipped K`) for every language, and a final table. That makes local gates and subagent reports reliable to read.
+

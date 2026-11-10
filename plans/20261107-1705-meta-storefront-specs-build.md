@@ -42,7 +42,7 @@ Next is **Step 5**: port to Next.js first (BUILD Step 4), then Thymeleaf, then R
 - `c068ab47` capped the external-systems Cloud Run service at 1 instance. With 2, WireMock's in-memory stubs were split between instances. `monolith-dotnet-acceptance-stage` is green (42816400736).
 - The commit after it made the anonymous login-required UI checks use the React route `/order-details/:n`. `multitier-dotnet-acceptance-stage` is green (42825072988).
 
-Step 5 is in progress: the Next.js port (BUILD Step 4) is running in a subagent, then Thymeleaf, then Razor. Details and related ideas: `plans/20261110-1207-system-test-reliability-followups.md`.
+Step 5 is in progress. The Next.js port (BUILD Step 4) is done (`50ff7ee4`). Next is Thymeleaf (BUILD Step 5), then Razor (BUILD Step 6). Details and related ideas: `plans/20261110-1207-system-test-reliability-followups.md`.
 
 ## Open questions
 
