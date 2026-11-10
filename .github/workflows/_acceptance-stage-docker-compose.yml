@@ -511,6 +511,22 @@ jobs:
         if: inputs.suite-set == 'legacy'
         run: gh optivem system-test run --suite mod11-e2e-ui
 
+      # === Keep Evidence on Failure ===
+      # Stub server journal + mappings and the container logs of both stacks, so a red run can be
+      # diagnosed after the runner (and its throwaway stacks) is gone. Diagnostic only: never
+      # changes the job's verdict.
+      - name: Collect Failure Evidence
+        if: failure()
+        continue-on-error: true
+        uses: ./.github/actions/collect-failure-evidence
+        with:
+          artifact-name: failure-evidence-${{ env.PREFIX }}-${{ env.TEST_LANGUAGE }}-${{ inputs.suite-set }}
+          wiremock-url: http://localhost:9${{ env.PORT_DIGIT }}12
+          compose-dir: ${{ env.COMPOSE_DIR }}
+          compose-files: |
+            docker-compose.pipeline.real.yml
+            docker-compose.pipeline.stub.yml
+
   # === Run Static Code Analysis ===
   # Latest only. It does not depend on the deploy target, so the cloud stage runs it too.
   sonar:

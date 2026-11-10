@@ -1,13 +1,15 @@
 # 2026-11-10 12:07 UTC — System-test reliability follow-ups
 
+> 🤖 **Picked up by agent** — `Valentina_Desk` at `2026-11-10T21:02:26Z`
+
 ## TL;DR
 
 **Why:** The storefront work turned up a set of system-test problems that are not part of building the storefront: an intermittent .NET CI failure with no root cause, failed CI runs that keep no evidence, leaked fake-server data, language gaps in the test kit, unreliable local .NET runs, and three older issues. None of them blocks the storefront, but together they make a red pipeline slow to diagnose and a local run hard to trust as a gate.
-**End result:** Each idea below has a decision (do, defer or drop). The accepted ones are done, and the pipeline keeps enough evidence that the next intermittent failure can be diagnosed from one run.
+**End result:** A failed acceptance stage uploads the stub journal, mappings and container logs, so the next intermittent failure can be diagnosed from one run. No language leaks dynamic stubs, and .NET/TS verify each stub after registering it, as Java does. The deploy-stage simulators run on one instance. The cloud stage is proven to test the current frontend image, and pushing to `main` mid-run no longer breaks `meta-prerelease-stage`. Locally, `test-all.sh` rebuilds images, stops each stack (also when cut off), and its memory limits are documented. .NET runs no longer flake on Keycloak tokens or fail always-red hidden tests, and lint agrees on Windows and Linux. All backends send `application/problem+json`, and the Node projects' high/critical `npm audit` findings are fixed or noted. Six ideas stay deferred (#5, #15, #17, #20, #21, #26) and two are dropped (#8c, #10). Unchanged: no production code behaviour apart from #8b's content type, and no new infrastructure cost.
 
 ## ▶ Next executable step (resume here)
 
-Review and decision first: the user goes through the ideas below and marks each one **do**, **defer** or **drop** (run `/refine-plan plans/20261110-1207-system-test-reliability-followups.md` to go through them one at a time with recommendations). Then `/execute-plan` this file.
+All 27 ideas are decided (see "Resolved decisions"). Start with **#1, keep evidence on failure**: add one shared on-failure step to `.github/workflows/_acceptance-stage-*.yml`, checking the composite actions in the sibling `optivem/actions` repo first. It should upload `/__admin/requests`, `/__admin/mappings` and `docker compose logs` as artifacts. Then #2 + #3, then the rest of the Do list in order. #11 is user-side, and #16 becomes a gh-optivem plan.
 
 Don't run it alongside the storefront meta-plan's (`plans/20261107-1705-meta-storefront-specs-build.md`) Steps 5–7 if an idea touches `system-test/**` and a port subagent is running system tests at the same time: they share docker ports and the test kit.
 
@@ -19,15 +21,40 @@ Don't run it alongside the storefront meta-plan's (`plans/20261107-1705-meta-sto
 - **Ruled out on the way:** shared-profile leaks (the backend takes the country from the request, `system/monolith/dotnet/Core/Services/OrderService.cs:105`), DSL ordering, cross-test stub deletion, static stub files, and WireMock itself.
 - **Lesson:** a failure that shows only in the cloud stage and never in docker-compose points at the cloud infrastructure. #1 (keep evidence) would have shown the request landing on a stub server with no matching mapping.
 
+## Resolved decisions
+
+Decided by the user on 2026-11-10: #1–#3 one at a time, then "I automatically approve of all of your suggestions" for #4–#27. Each one takes the recommendation written in its idea below.
+
+**Do (21):**
+- **#1 keep failure evidence:** first.
+- **#2 .NET tax-stub leak.**
+- **#3 Java/TS leak check:** with #2.
+- **#4 stub read-back (.NET, TS):** after #1.
+- **#6 local .NET restore:** a small check. If it's a setup gap, raise a gh-optivem plan.
+- **#7 Windows parallel runs:** option (b), retry Keycloak token acquisition, then measure again.
+- **#8a `DefaultGivensTest` null channel:** fix the test.
+- **#8b problem+json content type:** fix .NET, and check the other five backends.
+- **#9 deploy-stage simulators:** cap at `--max-instances 1`.
+- **#11 local gcloud:** set `CLOUDSDK_PYTHON` on both machines (user-side).
+- **#12 stale image, or the UI case missing from the cloud stage:** soon.
+- **#13 anonymous cancel/deliver parity:** with #12.
+- **#14 `npm audit` triage:** across every Node project.
+- **#16 per-suite summary line:** in gh-optivem, as its own plan there.
+- **#18 `.editorconfig` LF for C#.**
+- **#19 `ShopWebApplicationFactory`:** ignore `TransactionIgnoredWarning`.
+- **#22 document the low-memory workaround:** in CONTRIBUTING.md.
+- **#23 `test-all.sh` stops stacks:** after each language.
+- **#24 `test-all.sh --restart` passthrough.**
+- **#25 `test-all.sh` EXIT trap:** with #23.
+- **#27 meta dispatch matches the child run without `head_sha`.**
+
+**Defer:** #5 (stub reset at suite start), #15 (`next start` standalone), #17 (split `SecurityConfigTest`), #20 (non-UTC CI timezone), #21 (HTML logger control character), #26 (RC tag push; revisit only if it recurs).
+
+**Drop:** #8c (covered by `test-all.sh` legacy runs), #10 (`_stubIds` thread safety; theoretical).
+
 ## Ideas to decide
 
-Each idea has a recommendation. Mark it **do / defer / drop**.
-
-### 1. Keep evidence when an acceptance stage fails
-
-On failure, have the acceptance-stage workflows upload as artifacts the stub server's request journal (`/__admin/requests`), its current mappings (`/__admin/mappings`), and the stub and system container logs (`docker compose logs`). Today a failed run has no artifacts, which is why the .NET failure couldn't be diagnosed.
-- **Recommended: do, first.** The .NET failure was found without it, but only after two long investigations. Evidence on failure helps every future red run in every language.
-- Files: `.github/workflows/_acceptance-stage-*.yml` (one shared step if possible; check the shared composite actions in the sibling `optivem/actions` repo first).
+Each idea has a recommendation, and every one is decided (see "Resolved decisions").
 
 ### 2. Fix the .NET tax-stub leak
 
@@ -70,11 +97,6 @@ Even with #2 fixed, a long-lived local stack accumulates any stubs a crashed or 
 - **8a.** `system-test/dotnet` `DefaultGivensTest.OrderWithoutDeclaredProductShouldCreateDefaultProductAndTaxRateExactlyOnce` throws a NullReferenceException because it passes a null channel. It fails on older commits too. It is not in the CI filter (`.Latest.AcceptanceTests`), which is why CI doesn't show it. **Recommended: do**, by fixing the test's channel setup. A test that always fails locally and is hidden from CI is worse than no test.
 - **8b.** The .NET monolith's `GlobalExceptionHandler` sends `application/json` instead of `application/problem+json`. **Recommended: do**, and check the other five backends for the same content type.
 - **8c.** The storefront Step 1 run never ran the monolith-java **legacy** `--sample`. Its latest sample and contract runs passed, and legacy compiles. **Recommended: drop.** The storefront meta-plan's Step 6 runs `./test-all.sh`, which covers legacy.
-
-### 9. Cap the deploy-stage simulators at one instance too
-
-`.github/workflows/_deploy-stage.yml:270` deploys the simulators (json-server, with products held in memory) with `--max-instances 2`. Any QA or prod-stage test that creates ERP products has the same split-state risk that broke the .NET acceptance stage.
-- **Recommended: do.** It is the same one-line fix with the same reasoning, at no added cost (`min-instances 0`).
 
 ### 10. Make `JsonWireMockClient._stubIds` thread-safe (.NET)
 
@@ -136,7 +158,6 @@ The .NET admin-coupons bug (fixed in storefront Step 6) was only caught because 
 `dotnet test` prints `Html Logger Error : '', hexadecimal value 0x1A, is an invalid character.` The run still passes, but the HTML report may be incomplete. Something in the test output (a log line or test name) contains a control character.
 - **Recommended: defer.** It is cosmetic. Look into it if anyone relies on the HTML report.
 
-
 ### 22. `test-all.sh` gets killed on low memory in Claude Code
 
 During storefront Step 6 (2026-11-10), `./test-all.sh -a multitier` was killed by Claude Code's background-shell memory reaper partway through dotnet/Latest. It had started with about 7.6 GB free. This is the second kill. `-a monolith` finished in 44 minutes.
@@ -161,3 +182,7 @@ In storefront Step 6 (2026-11-10), the `test-all.sh -a multitier` run reported a
 
 `meta-prerelease-stage` run 42660796447 (2026-11-09 17:03, `ac04be12`) failed all six pipelines in `verify / cloud-acceptance-stage` with `Failed to push tag monolith-java-v1.0.237-rc.3363 (remote: , local: ac04be12…)`. The tests weren't the cause. The next runs on 2026-11-10 pushed tags for monolith without a problem, so it looks transient (a race between parallel tag pushes, or a GitHub hiccup), but the empty `remote:` field hides the real error.
 - **Recommended: investigate if it recurs.** Make the tag-push step print git's stderr and retry once on a non-fast-forward or a network error.
+
+### 27. A push to `main` during `meta-prerelease-stage` fails the run
+In run 42885354673 (2026-11-10, `3f4840cc`), a plan-only commit was pushed to `main` while the run was starting. The `multitier-frontend-react-commit-stage.yml` it dispatched ran on the new head (`e8e471a1`, run 42885508265, green), and the parent failed with `Failed to locate dispatched run … (sha=3f4840cc …) within 120s`. Because of that, the pipeline, cross-language and tag jobs were skipped. Any push during the run's dispatch window, even a docs-only one, wastes a ~2.5 h run.
+- **Recommended: do.** Make the dispatch-and-wait step find the child run by a unique run name or correlation input, not by `head_sha`. Or pin the dispatch to the resolved sha. Until then, don't push to `main` while a meta run is dispatching.

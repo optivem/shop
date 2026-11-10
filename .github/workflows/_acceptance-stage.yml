@@ -577,6 +577,8 @@ jobs:
               echo "ERP_API_BASE_URL_${mode}=${ext}/erp"
               echo "CLOCK_API_BASE_URL_${mode}=${ext}/clock"
               echo "TAX_API_BASE_URL_${mode}=${ext}/tax"
+              # Base of the external-systems service; the stub stack's is WireMock (failure evidence).
+              echo "EXTERNAL_BASE_URL_${mode}=${ext}"
             } >> "$GITHUB_ENV"
           done
           # One Keycloak serves both stacks. KEYCLOAK_URL_<MODE> enables token acquisition in the
@@ -731,6 +733,21 @@ jobs:
         run: gh optivem system-test run --suite e2e-api
       - name: e2e-ui
         run: gh optivem system-test run --suite e2e-ui
+
+      # === Keep Evidence on Failure ===
+      # The stub server's journal + mappings, fetched from the deployed stub-stack external-systems
+      # service (WireMock, unauthenticated). Cloud Run container logs are not collected here: this
+      # job has no GCP credentials. Read them in Cloud Logging, or with `gcloud logging read
+      # 'resource.type="cloud_run_revision"' --project <project>`. Diagnostic only: never changes
+      # the job's verdict.
+      - name: Collect Failure Evidence
+        if: failure()
+        continue-on-error: true
+        uses: ./.github/actions/collect-failure-evidence
+        with:
+          artifact-name: failure-evidence-${{ env.PREFIX }}-${{ env.TEST_LANGUAGE }}-cloud
+          wiremock-url: ${{ env.EXTERNAL_BASE_URL_STUB }}
+
       # === Tag Release Candidate ===
       - name: Read Base System Version
         id: read-version

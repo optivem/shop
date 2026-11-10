@@ -1,0 +1,98 @@
+name: 'Collect acceptance-stage failure evidence'
+description: |
+  Diagnostic step for the failure path of an acceptance stage. It saves what a
+  red run needs for diagnosis and uploads it as one artifact:
+
+  - From the WireMock stub server (when `wiremock-url` is set): the request
+    journal (/__admin/requests), the unmatched requests
+    (/__admin/requests/unmatched) and the current mappings (/__admin/mappings).
+  - From Docker Compose (when `compose-files` is set): `docker compose ps -a`
+    and `docker compose logs` for each file, run in `compose-dir`.
+
+  Every fetch is best effort: a stub server that is down, or a stack that never
+  came up, is recorded as a warning in the evidence and the step carries on
+  with the rest. Callers run it with `if: failure()` (and may add
+  `continue-on-error: true`), so it never changes the stage's verdict.
+  Shared by _acceptance-stage.yml (Cloud Run) and
+  _acceptance-stage-docker-compose.yml.
+
+inputs:
+  artifact-name:
+    description: 'Name of the uploaded artifact. The run attempt is appended so a re-run does not collide.'
+    required: true
+  wiremock-url:
+    description: 'Base URL of the WireMock stub server, without /__admin (e.g. http://localhost:9112). Empty skips the stub evidence.'
+    required: false
+    default: ''
+  compose-dir:
+    description: 'Directory holding the Docker Compose files.'
+    required: false
+    default: '.'
+  compose-files:
+    description: 'Newline-separated Docker Compose files (relative to compose-dir) to collect ps/logs for. Empty skips the container evidence.'
+    required: false
+    default: ''
+  retention-days:
+    description: 'How long the artifact is kept.'
+    required: false
+    default: '14'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Collect Evidence
+      shell: bash
+      env:
+        WIREMOCK_URL: ${{ inputs.wiremock-url }}
+        COMPOSE_DIR: ${{ inputs.compose-dir }}
+        COMPOSE_FILES: ${{ inputs.compose-files }}
+        EVIDENCE_DIR: ${{ runner.temp }}/failure-evidence
+      run: |
+        set -uo pipefail
+        mkdir -p "$EVIDENCE_DIR"
+        problems=0
+
+        # fetch <admin path> <output file>: stderr stays visible in the log.
+        fetch() {
+          local url="${WIREMOCK_URL%/}/__admin/$1"
+          echo "Fetching ${url}"
+          if ! curl -sS --fail-with-body --max-time 60 -o "${EVIDENCE_DIR}/$2" "$url"; then
+            echo "::warning::Could not fetch ${url} (stub server down or unreachable?)"
+            echo "fetch failed: ${url}" >> "${EVIDENCE_DIR}/errors.txt"
+            problems=$((problems + 1))
+          fi
+        }
+
+        if [[ -n "$WIREMOCK_URL" ]]; then
+          fetch requests stub-requests.json
+          fetch requests/unmatched stub-requests-unmatched.json
+          fetch mappings stub-mappings.json
+        fi
+
+        while IFS= read -r file; do
+          file="$(echo "$file" | xargs)"
+          [[ -z "$file" ]] && continue
+          base="$(basename "$file" .yml)"
+          echo "Collecting containers of ${COMPOSE_DIR}/${file}"
+          if ! (cd "$COMPOSE_DIR" && docker compose -f "$file" ps -a) > "${EVIDENCE_DIR}/${base}.ps.txt"; then
+            echo "::warning::docker compose ps failed for ${file}"
+            echo "compose ps failed: ${file}" >> "${EVIDENCE_DIR}/errors.txt"
+            problems=$((problems + 1))
+          fi
+          if ! (cd "$COMPOSE_DIR" && docker compose -f "$file" logs --no-color --timestamps) > "${EVIDENCE_DIR}/${base}.logs.txt"; then
+            echo "::warning::docker compose logs failed for ${file}"
+            echo "compose logs failed: ${file}" >> "${EVIDENCE_DIR}/errors.txt"
+            problems=$((problems + 1))
+          fi
+        done <<< "$COMPOSE_FILES"
+
+        echo "Collected evidence (${problems} problem(s)):"
+        ls -la "$EVIDENCE_DIR"
+
+    - name: Upload Evidence
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.artifact-name }}-attempt-${{ github.run_attempt }}
+        path: ${{ runner.temp }}/failure-evidence
+        retention-days: ${{ inputs.retention-days }}
+        if-no-files-found: warn

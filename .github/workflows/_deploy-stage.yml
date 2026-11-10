@@ -261,13 +261,16 @@ jobs:
             fi
           } >> "$GITHUB_ENV"
 
+      # One instance: the simulators (json-server) keep their products in memory. With a second
+      # instance, a product a test creates on one instance is missing on the other once load makes
+      # Cloud Run scale out (same split-state failure fixed in _acceptance-stage.yml, c068ab47).
       - name: Deploy External Systems
         run: |
           set -euo pipefail
           gcloud run deploy "$SIM_NAME" \
             --image "$SIM_IMAGE" --region "$REGION" --project "$PROJECT" \
             --service-account "$SA" --port 9000 --memory 1Gi \
-            --min-instances 0 --max-instances 2 --allow-unauthenticated
+            --min-instances 0 --max-instances 1 --allow-unauthenticated
 
       - name: Read DB Credentials
         run: |
