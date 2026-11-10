@@ -111,3 +111,8 @@ With `output: "standalone"`, `next start` warns that it doesn't work, and the st
 In TypeScript runs, only some suites print a JSON summary (the `expected` and `unexpected` counts). The acceptance suites print a Playwright list instead, so there is no uniform pass/fail line per suite to read off. This is a gh-optivem change.
 - **Recommended: do, in gh-optivem.** Have `system-test run` print one summary line per suite (`<suite>: passed N, failed M, skipped K`) for every language, and a final table. That makes local gates and subagent reports reliable to read.
 
+### 17. `SecurityConfigTest` (Java monolith) is at the checkstyle file-length limit
+
+`system/monolith/java` `SecurityConfigTest` is 496 lines, against checkstyle's 500-line limit, so the Thymeleaf port had to put new security tests in `StorefrontPagesTest`.
+- **Recommended: defer.** Splitting it by area (public routes, customer routes, admin routes) is a refactor with no behaviour change. Do it the next time someone has to add a security test.
+

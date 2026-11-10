@@ -24,7 +24,9 @@ Step 2 (profile, shipping address, admin order filter) is done: commits `f1ca8b7
 
 Step 4 (Next.js port) is done: commit `50ff7ee4` (2026-11-10). The cart is kept in a `myshop_cart` cookie (spec §6.3). Confirmation links use the monolith route `/order-details?orderNumber=`. No driver changes were needed.
 
-Next, per the meta-plan `plans/20261107-1705-meta-storefront-specs-build.md`: **Step 5, port to the Thymeleaf monolith** (`system/monolith/java`). Mirror React (`28b1aaf9`) and the Next.js port (`50ff7ee4`). Gate: that monolith's `./gradlew build`, plus `--sample` and the full latest UI acceptance suites with `gh-optivem-monolith-java.yaml` (start with `gh optivem system start --restart`). New tests go in the **latest** system tests only.
+Step 5 (Thymeleaf port) is done: commit `960fc2cd` (2026-11-10). The cart lives in the `HttpSession` and checkout is rendered on the server. No driver changes were needed.
+
+Next, per the meta-plan `plans/20261107-1705-meta-storefront-specs-build.md`: **Step 6, port to the Razor monolith** (`system/monolith/dotnet`). Mirror React (`28b1aaf9`), Next.js (`50ff7ee4`) and Thymeleaf (`960fc2cd`). Gate: `dotnet build`, plus `--sample` and the full latest UI acceptance suites with `gh-optivem-monolith-dotnet.yaml` (start with `gh optivem system start --restart`).
 
 ## Background
 
@@ -41,8 +43,6 @@ Next, per the meta-plan `plans/20261107-1705-meta-storefront-specs-build.md`: **
 
 ## Steps
 
-- [ ] **Step 5: Port to the Thymeleaf monolith** (`system/monolith/java`). Server-side cart in the session, header partial in `layout.html`.
-  - Scenarios: the same list as Step 3, in this UI.
 - [ ] **Step 6: Port to the Razor monolith** (`system/monolith/dotnet`). Server-side cart in the session, header in `_Layout.cshtml`.
   - Scenarios: the same list as Step 3, in this UI.
 - [ ] **Step 7: Verify.** `./compile-all.sh`, then `system-test run --sample` for java, dotnet and typescript (monolith and multitier). Then `./test-all.sh` before closing.
@@ -50,6 +50,8 @@ Next, per the meta-plan `plans/20261107-1705-meta-storefront-specs-build.md`: **
 - [ ] **Step 8: Acceptance tests for the UI journeys.** Turn the remaining `@UC-006` to `@UC-011` scenarios into acceptance tests with UI and API channels in all three languages, after the UI exists so they don't collide with the UC-001 spec-gate work.
   - Scenarios: `@UC-006.1`–`.10`, `@UC-007.1`–`.7`, `@UC-008.1`–`.11`, `@UC-009.1`–`.13`; the UI-only UC-010 and UC-011 scenarios listed under Step 3; `@UC-011.2` ("-" customer; needs an order with no recorded owner); `@UC-003.2`, `@UC-012.2`. Then flip UC-006 to UC-011 to `implemented`.
   - Caveat from the Next.js port: its product 404 page (`@UC-007.5`) renders the "Product not found" body only in the browser (Next.js 15 behaviour). The server HTML doesn't include it, so assert it through Playwright, not a raw HTTP fetch.
+  - Caveat from the monolith ports: checkout address errors show as plain messages under "Please correct the shipping address." (for example "City is required"), not as `field: message`. If the Step 8 drivers reuse `BasePage.getResult()`, which parses `field: message`, they need to handle that in every UI.
+  - Caveat: in the monoliths, `@UC-008.8` (the cart survives across visits) holds only within one browser session, because the cart lives in the server session or a cookie (spec §6.3). React keeps it in `localStorage`.
 - [ ] **Step 10: Close the coverage gaps left by Step 9** (found 2026-11-09, commit `ac04be12`), then flip UC-002, UC-003, UC-005 and UC-012 to `implemented`. Latest tests only, all three languages.
   - Scenarios: `@UC-002.1`, `@UC-002.2`, `@UC-002.3`, `@UC-002.4`, `@UC-002.9`, `@UC-005.1`, `@UC-005.3`, `@UC-005.4`, `@UC-005.7` (plus `@UC-003.2` and `@UC-012.2` via Step 8).
   - UC-003.2 and UC-012.2 (which of Cancel/Deliver are offered) are UI-only: cover them in Step 8 with the UI channel.
