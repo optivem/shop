@@ -1,6 +1,5 @@
 # 2026-11-07 17:05 UTC — Plan coordination meta-plan: storefront specs + build
 
-> 🤖 **Picked up by agent** — `ValentinaLaptop` at `2026-11-10T10:16:44Z`
 
 
 **Plans analysed:** 2 in-scope, 1 referenced-only
@@ -30,7 +29,6 @@ The orchestrating session runs the Steps below **in order**, one subagent per st
 - **Stop only at:** the user gates marked 🛑 below, a blocker, or a decision that is expensive to reverse (schema or API forks).
 - **Record incidental issues (user, 2026-11-10):** any issue a step finds that isn't storefront work (flaky tests, test-kit gaps, CI evidence, local-run problems, pre-existing bugs) goes into `plans/20261110-1207-system-test-reliability-followups.md` as a new numbered idea with a recommendation. Don't fix it inside the step, and don't add it here. Storefront-specific issues stay in this plan or in BUILD. Put this in every subagent brief, and have subagents report such issues back so the orchestrator records them.
 - **Legacy system tests stay lean (user, 2026-11-07):** new use-case tests go in the latest system tests only. Change legacy only as much as it needs to keep compiling and green. Put this in every subagent brief.
-- **Before each step:** `git fetch && git status -sb`; `grep -ln "Picked up by agent" plans/*.md` (another session on SPEC, BUILD or UC1 → stop and ask); check that the shop pipeline is green (`gh run list -L 10`). A red pipeline gets fixed first (priority: green pipeline).
 
 ## ▶ Next executable step (resume here)
 
@@ -185,7 +183,6 @@ Edges come from the plans' own wording:
 ## Pre-execute checks (apply before any wave starts)
 
 - `git fetch && git status -sb`. Origin is the source of truth (two machines).
-- `grep -ln "Picked up by agent" plans/*.md`. Today only `20261104-1148-meta-backlog-execution.md` has a marker.
 - `git stash list`. Two leftover `autostash` entries from the SPEC Step 1–3 run. `stash@{0}` was already checked as redundant and `stash@{1}` wasn't; look at both before dropping them.
 
 ## Out of scope of this meta-plan
