@@ -37,10 +37,16 @@ The prototype is signed off and the specs are reviewed (G0 closed 2026-11-07). S
 
 **Step 4's work is done and its local gate passed (2026-11-10): commit `28b1aaf9`.** frontend-react tsc, lint and 111 unit tests pass; multitier `--sample` (11 suites) passes in Java, .NET and TypeScript; monolith-java `--sample` passes. Not checked: each UC-006..011 scenario against the UI line by line, and whether `src/test` interaction tests cover the new pages. The only remaining part of Step 4 is the 🛑 **user sign-off on how React looks**. Next after sign-off: **Step 5**.
 
-To view it (stale-image trap: remove the old frontend images first):
+To view it (stale-image trap, see Open questions #1; until resolved remove the old frontend images first):
 `docker rmi -f my-shop-real-frontend my-shop-stub-frontend`, then `GH_OPTIVEM_CONFIG=gh-optivem-multitier-java.yaml gh optivem system start`, open http://localhost:3311 (customer1 / customer1-test-password; admin1 / admin1-test-password), then `gh optivem system stop`.
 
 The `WORKFLOW_TOKEN` was rotated on 2026-11-10 and `publish-tag` passes again. A fresh meta-prerelease run, 42792803006, was dispatched; check that it is green before Step 4.
+
+## Open questions
+
+1. **Stale Docker images (found in Step 4, 2026-11-10).** Plain `gh optivem system start` runs `docker compose up -d` with no `--build` (`gh-optivem/internal/build/runner/system.go:217`), so it silently reuses old images. The 5-week-old `my-shop-real-frontend`/`my-shop-stub-frontend` caused false multitier failures until they were removed with `docker rmi -f`. `system start --restart` adds `--build` and `system build --rebuild` does `--no-cache`, but neither is the default.
+   - **Recommended:** (a) in this plan and in the subagent briefs for Steps 5–7, replace `docker rmi` and plain `start` with `gh optivem system start --restart` (check first that it rebuilds when only source changed). (b) Separately, raise a gh-optivem plan: make plain `start` build, or warn when an image is older than its source.
+   - **Alternative:** keep `docker rmi -f` as a manual step. Rejected: it is easy to forget and the failure mode is misleading.
 
 ## Steps
 
