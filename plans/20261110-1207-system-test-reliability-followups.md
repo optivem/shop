@@ -11,19 +11,13 @@ Review and decision first: the user goes through the ideas below and marks each 
 
 Don't run it alongside the storefront meta-plan's (`plans/20261107-1705-meta-storefront-specs-build.md`) Steps 5–7 if an idea touches `system-test/**` and a port subagent is running system tests at the same time: they share docker ports and the test kit.
 
-## Background: the intermittent .NET failure (found 2026-11-10)
+## Background: the .NET "does not exist" failures (found 2026-11-10, root cause fixed)
 
-- **Symptom:** only in CI, and only sometimes, 1–3 of the 119 .NET API acceptance tests fail with `Product does not exist for SKU: DEFAULT-SKU-…`. The ERP stub returns 404 for a SKU the test had just registered successfully. The set of failing tests differs from run to run: run 42803428175 (multitier) failed 3, run 42805123156 (monolith) failed 1. Java and TypeScript pass.
-- **First seen** on `9da17ffc`, the first build that includes `f1ca8b7d` (profile, shipping address, `GET /api/orders?customer=`). The earlier `2e1eec96` runs failed only at `publish-tag` (the token problem), not in the tests.
-- **Did not reproduce** in 13 local monolith-dotnet runs of the same suite.
-- **Ruled out:**
-  - DSL ordering: the default product is registered and awaited before the order is placed (`DefaultGivens.EnsureAsync`, `GivenStage.SetupGiven`, `WhenStage.EnsureGiven`).
-  - Cross-test deletion: each test removes only its own stub ids, and there is no reset or delete-all anywhere.
-  - Static stub files: all exact-path, with no catch-all 404.
-  - The backend's ERP lookup: it returns "does not exist" only on a 404, and it is unchanged in the range.
-  - WireMock 3.10.0 itself: its add/remove source was read, and a stress test (60 threads, 2,700 cycles) lost no stubs.
-  - The compose stub service: identical in the dotnet and java pipeline compose files.
-- **Circumstantial:** in 42803428175 the failures came 10–11 s into the run, when most parallel tests are finishing and removing their stubs.
+- **Symptom:** from `9da17ffc` onwards, the cloud .NET acceptance stages failed on every attempt (4 of 4). Several API tests per run failed with `Product does not exist for SKU: DEFAULT-SKU-…` or `Country does not exist: UK-…`. Java and TypeScript passed, and so did the .NET docker-compose stages.
+- **Root cause:** `.github/workflows/_acceptance-stage.yml` deployed the external-systems Cloud Run service (WireMock stubs, json-server simulator) with `--max-instances 2`. Both keep their state in memory, separately on each instance. Under parallel test load Cloud Run scaled out, so a stub a test registered on one instance was missing when the backend's lookup landed on the other. `f1ca8b7d` added many .NET tests, which pushed the load over the scale-out threshold.
+- **Fix:** capped at `--max-instances 1` (commit `c068ab47`, 2026-11-10), following the precedent of the monolith deploy, which is already capped at 1 for its in-memory session state. Cloud Run instance counts were not checked directly, because local `gcloud` is broken (see #11).
+- **Ruled out on the way:** shared-profile leaks (the backend takes the country from the request, `system/monolith/dotnet/Core/Services/OrderService.cs:105`), DSL ordering, cross-test stub deletion, static stub files, and WireMock itself.
+- **Lesson:** a failure that shows only in the cloud stage and never in docker-compose points at the cloud infrastructure. #1 (keep evidence) would have shown the request landing on a stub server with no matching mapping.
 
 ## Ideas to decide
 
@@ -32,7 +26,7 @@ Each idea has a recommendation. Mark it **do / defer / drop**.
 ### 1. Keep evidence when an acceptance stage fails
 
 On failure, have the acceptance-stage workflows upload as artifacts the stub server's request journal (`/__admin/requests`), its current mappings (`/__admin/mappings`), and the stub and system container logs (`docker compose logs`). Today a failed run has no artifacts, which is why the .NET failure couldn't be diagnosed.
-- **Recommended: do, first.** It is the only idea that can find the real cause of the .NET failure, and it helps every future red run in every language.
+- **Recommended: do, first.** The .NET failure was found without it, but only after two long investigations. Evidence on failure helps every future red run in every language.
 - Files: `.github/workflows/_acceptance-stage-*.yml` (one shared step if possible; check the shared composite actions in the sibling `optivem/actions` repo first).
 
 ### 2. Fix the .NET tax-stub leak
@@ -49,7 +43,7 @@ After a full acceptance run in each language, list the stub server's mappings. O
 ### 4. Read back each stub after registering it (.NET and TypeScript)
 
 Java's `JsonWireMockClient` re-lists the stubs after registering one and fails if the new stub isn't visible. The .NET and TypeScript clients don't.
-- **Recommended: do, after #1.** It brings the languages to parity, and if the .NET failure is a registration race it would surface as a clear error instead of a misleading "product does not exist". Not a proven fix, so don't close the .NET failure on it alone.
+- **Recommended: do, after #1.** It brings the languages to parity and turns a missing stub into a clear error at registration. Note: it would **not** have caught the instance split, because the read-back can land on the same instance as the registration.
 
 ### 5. Reset the stub server at the start of a suite run
 
@@ -76,3 +70,18 @@ Even with #2 fixed, a long-lived local stack accumulates any stubs a crashed or 
 - **8a.** `system-test/dotnet` `DefaultGivensTest.OrderWithoutDeclaredProductShouldCreateDefaultProductAndTaxRateExactlyOnce` throws a NullReferenceException because it passes a null channel. It fails on older commits too. It is not in the CI filter (`.Latest.AcceptanceTests`), which is why CI doesn't show it. **Recommended: do**, by fixing the test's channel setup. A test that always fails locally and is hidden from CI is worse than no test.
 - **8b.** The .NET monolith's `GlobalExceptionHandler` sends `application/json` instead of `application/problem+json`. **Recommended: do**, and check the other five backends for the same content type.
 - **8c.** The storefront Step 1 run never ran the monolith-java **legacy** `--sample`. Its latest sample and contract runs passed, and legacy compiles. **Recommended: drop.** The storefront meta-plan's Step 6 runs `./test-all.sh`, which covers legacy.
+
+### 9. Cap the deploy-stage simulators at one instance too
+
+`.github/workflows/_deploy-stage.yml:270` deploys the simulators (json-server, with products held in memory) with `--max-instances 2`. Any QA or prod-stage test that creates ERP products has the same split-state risk that broke the .NET acceptance stage.
+- **Recommended: do.** It is the same one-line fix with the same reasoning, at no added cost (`min-instances 0`).
+
+### 10. Make `JsonWireMockClient._stubIds` thread-safe (.NET)
+
+`system-test/dotnet/Driver.Adapter/Shared/Client/WireMock/JsonWireMockClient.cs:16` is a plain `List<string>`. It is safe today because each test registers stubs one after another, but it would break if a driver ever registered stubs concurrently.
+- **Recommended: drop**, unless concurrent registration is planned. Today the risk is only theoretical.
+
+### 11. Fix local `gcloud`
+
+Local `gcloud` fails because it doesn't support Python 3.13. It needs `CLOUDSDK_PYTHON` pointing at Python 3.8–3.12. That blocked checking the Cloud Run instance counts directly.
+- **Recommended: do, once per machine.** Set `CLOUDSDK_PYTHON` in your shell profile on both machines. Note it in `CONTRIBUTING.md` if other contributors use `gcloud`.

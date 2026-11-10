@@ -38,7 +38,7 @@ Steps 1–4 are done (U2, BUILD Step 9, U3, React). The user signed off how Reac
 
 Next is **Step 5**: port to Next.js first (BUILD Step 4), then Thymeleaf, then Razor, one subagent per port, serial. Not yet checked from Step 4: each UC-006..011 scenario against the React UI line by line, and whether `src/test` interaction tests cover the new pages. Fold that check into Step 6.
 
-**Before Step 5, the pipeline must be green.** `multitier-dotnet-acceptance-stage` has failed since 2026-11-09 (runs on `2e1eec96` and `9da17ffc`). 3 of 119 API tests fail with `Product does not exist for SKU: DEFAULT-SKU-…`: `DiscountRateShouldBeNotAppliedWhenThereIsNoCoupon`, `AdminShouldSeeOrderOfChosenCustomer`, `AdminShouldSeeNoOrdersWhenNoOrderMatchesFilters`. This was investigated on 2026-11-10: it did not reproduce locally, it is intermittent in CI, and no root cause was found. The failed jobs were re-run. If the re-runs pass, Step 5 goes ahead. The flake and the other reliability issues are tracked in `plans/20261110-1207-system-test-reliability-followups.md`.
+**Before Step 5, the pipeline must be green.** The .NET cloud acceptance stages failed from `9da17ffc` onwards. Root cause: the external-systems Cloud Run service could scale to 2 instances, which split WireMock's in-memory stubs between them. Fixed in `c068ab47` (`--max-instances 1`). Verification runs dispatched: 42816400736 (monolith-dotnet) and 42816408496 (multitier-dotnet). When both are green, start Step 5. Details and related ideas: `plans/20261110-1207-system-test-reliability-followups.md`.
 
 ## Open questions
 
