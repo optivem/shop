@@ -173,7 +173,9 @@ public class MyShopUiDriver implements MyShopDriver {
     public Result<ViewOrderResponse, SystemError> viewOrder(ViewOrderRequest request) {
         var orderNumber = request.getOrderNumber();
         if (anonymous) {
-            return loginRequired("/order-details?orderNumber=" + URLEncoder.encode(orderNumber, StandardCharsets.UTF_8).replace("+", "%20"));
+            var encodedOrderNumber = URLEncoder.encode(orderNumber, StandardCharsets.UTF_8).replace("+", "%20");
+            client.assertLoginRequiredFor("/order-details?orderNumber=" + encodedOrderNumber, "/order-details/" + encodedOrderNumber);
+            return failure(MyShopUiClient.AUTHENTICATION_REQUIRED);
         }
 
         runAs(TestUser.CUSTOMER);

@@ -102,7 +102,7 @@ export class MyShopUiDriver implements MyShopDriver {
 
   async viewOrder(request: ViewOrderRequest): Promise<Result<ViewOrderResponse, SystemError>> {
     if (this.anonymous) {
-      return this.loginRequired(`/order-details?orderNumber=${encodeURIComponent(request.orderNumber)}`);
+      return this.loginRequiredForOrder(request.orderNumber);
     }
 
     await this.runAs(TestUsers.CUSTOMER);
@@ -132,7 +132,7 @@ export class MyShopUiDriver implements MyShopDriver {
 
   async cancelOrder(request: CancelOrderRequest): Promise<Result<CancelOrderResponse, SystemError>> {
     if (this.anonymous) {
-      return this.loginRequired(`/order-details?orderNumber=${encodeURIComponent(request.orderNumber)}`);
+      return this.loginRequiredForOrder(request.orderNumber);
     }
 
     await this.runAs(TestUsers.CUSTOMER);
@@ -149,7 +149,7 @@ export class MyShopUiDriver implements MyShopDriver {
 
   async deliverOrder(request: DeliverOrderRequest): Promise<Result<DeliverOrderResponse, SystemError>> {
     if (this.anonymous) {
-      return this.loginRequired(`/order-details?orderNumber=${encodeURIComponent(request.orderNumber)}`);
+      return this.loginRequiredForOrder(request.orderNumber);
     }
 
     await this.runAs(TestUsers.ADMIN);
@@ -248,6 +248,12 @@ export class MyShopUiDriver implements MyShopDriver {
 
   private async loginRequired<T>(path: string): Promise<Result<T, SystemError>> {
     await this.client.assertLoginRequiredFor(path);
+    return failure({ message: AUTHENTICATION_REQUIRED, fieldErrors: [] });
+  }
+
+  private async loginRequiredForOrder<T>(orderNumber: string): Promise<Result<T, SystemError>> {
+    const encodedOrderNumber = encodeURIComponent(orderNumber);
+    await this.client.assertLoginRequiredFor(`/order-details?orderNumber=${encodedOrderNumber}`, `/order-details/${encodedOrderNumber}`);
     return failure({ message: AUTHENTICATION_REQUIRED, fieldErrors: [] });
   }
 

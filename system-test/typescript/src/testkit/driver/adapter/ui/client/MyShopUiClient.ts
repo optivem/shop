@@ -87,15 +87,22 @@ export class MyShopUiClient {
     );
   }
 
-  /** Opens `path` in a throwaway session that never logs in, and requires the app to send it to the login form. */
-  async assertLoginRequiredFor(path: string): Promise<void> {
+  /**
+   * Opens `serverPath` in a throwaway session that never logs in, and requires the app to send it to the login form.
+   * The React frontend matches no route for a server path that differs from its own route (`singlePageAppRoute`),
+   * so it would never ask to log in: it is moved to that route instead.
+   */
+  async assertLoginRequiredFor(serverPath: string, singlePageAppRoute: string = serverPath): Promise<void> {
     if (!this.login) {
       throw new Error('Anonymous access can only be exercised against a system with a login');
     }
     const anonymousContext = await this.browser.newContext();
     try {
       const anonymousPage = await anonymousContext.newPage();
-      await anonymousPage.goto(`${this.baseUrl}${path}`);
+      await anonymousPage.goto(`${this.baseUrl}${serverPath}`);
+      if (singlePageAppRoute !== serverPath && (await anonymousPage.locator(SINGLE_PAGE_APP_ROOT_SELECTOR).count()) > 0) {
+        await anonymousPage.goto(`${this.baseUrl}${singlePageAppRoute}`);
+      }
       await this.login.waitForLoginForm(anonymousPage);
     } finally {
       await anonymousContext.close();

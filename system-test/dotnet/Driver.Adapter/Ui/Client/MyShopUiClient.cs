@@ -203,7 +203,13 @@ public class MyShopUiClient : IAsyncDisposable
     }
 
     /// <summary>Opens <paramref name="path"/> in a throwaway session that never logs in, and requires the app to send it to the login form.</summary>
-    public async Task AssertLoginRequiredForAsync(string path)
+    public Task AssertLoginRequiredForAsync(string path) => AssertLoginRequiredForAsync(path, path);
+
+    /// <summary>
+    /// Like <see cref="AssertLoginRequiredForAsync(string)"/>, for a page whose React route differs from its
+    /// server-rendered path: the React frontend matches no route for the server path, so it would never ask to log in.
+    /// </summary>
+    public async Task AssertLoginRequiredForAsync(string serverPath, string singlePageAppRoute)
     {
         if (_login == null)
         {
@@ -212,7 +218,11 @@ public class MyShopUiClient : IAsyncDisposable
 
         await using var anonymousContext = await _browser.NewContextAsync();
         var anonymousPage = await anonymousContext.NewPageAsync();
-        await anonymousPage.GotoAsync(_baseUrl + path);
+        await anonymousPage.GotoAsync(_baseUrl + serverPath);
+        if (singlePageAppRoute != serverPath && await anonymousPage.Locator(SinglePageAppRootSelector).CountAsync() > 0)
+        {
+            await anonymousPage.GotoAsync(_baseUrl + singlePageAppRoute);
+        }
         await _login.WaitForLoginFormAsync(anonymousPage);
     }
 

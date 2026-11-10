@@ -85,3 +85,13 @@ Even with #2 fixed, a long-lived local stack accumulates any stubs a crashed or 
 
 Local `gcloud` fails because it doesn't support Python 3.13. It needs `CLOUDSDK_PYTHON` pointing at Python 3.8–3.12. That blocked checking the Cloud Run instance counts directly.
 - **Recommended: do, once per machine.** Set `CLOUDSDK_PYTHON` in your shell profile on both machines. Note it in `CONTRIBUTING.md` if other contributors use `gcloud`.
+
+### 12. Why did multitier Java and TypeScript pass with the broken anonymous view-order URL?
+
+After `28b1aaf9` (React per-route auth), the anonymous "view order" UI check opened `/order-details?orderNumber=…`, which matches no React route, so no login redirect happened. .NET timed out on it (run 42816408496). The test kit was fixed in all three languages on 2026-11-10. But the multitier Java (42805210051) and TypeScript (42803565635) acceptance stages **passed** on commits that already contained `28b1aaf9`. Either they ran an older frontend image, or the UI case didn't run there.
+- **Recommended: do, soon.** If the cloud stage can run a stale frontend image, every UI result there is suspect. It is the CI twin of the local stale-image trap (`gh-optivem/plans/20261110-1115-system-start-stale-images.md`). Check which frontend image digest each run deployed, and whether `AnonymousShouldNotBeAbleToViewOrder(UI)` appears in their test results.
+
+### 13. Anonymous cancel and deliver order: language parity
+
+The TypeScript driver also used the order-details URL for anonymous cancel and deliver order, so it was fixed there. .NET and Java weren't checked for those two paths.
+- **Recommended: do, with #12.** It's a quick read of the three drivers to confirm the anonymous cancel and deliver checks open a URL React actually routes.

@@ -190,7 +190,9 @@ public class MyShopUiDriver : IMyShopDriver
     {
         if (_anonymous)
         {
-            return await LoginRequiredAsync<ViewOrderResponse>($"/order-details?orderNumber={Uri.EscapeDataString(request.OrderNumber ?? string.Empty)}");
+            var encodedOrderNumber = Uri.EscapeDataString(request.OrderNumber ?? string.Empty);
+            await _client.AssertLoginRequiredForAsync($"/order-details?orderNumber={encodedOrderNumber}", $"/order-details/{encodedOrderNumber}");
+            return Failure<ViewOrderResponse>(MyShopUiClient.AuthenticationRequired);
         }
 
         await RunAsAsync(TestUser.Customer);

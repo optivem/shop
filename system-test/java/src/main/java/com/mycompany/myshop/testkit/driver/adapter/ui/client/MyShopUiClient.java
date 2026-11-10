@@ -117,12 +117,23 @@ public class MyShopUiClient implements AutoCloseable {
 
     /** Opens {@code path} in a throwaway session that never logs in, and requires the app to send it to the login form. */
     public void assertLoginRequiredFor(String path) {
+        assertLoginRequiredFor(path, path);
+    }
+
+    /**
+     * Like {@link #assertLoginRequiredFor(String)}, for a page whose React route differs from its server-rendered path:
+     * the React frontend matches no route for the server path, so it would never ask to log in.
+     */
+    public void assertLoginRequiredFor(String serverPath, String singlePageAppRoute) {
         if (login == null) {
             throw new IllegalStateException("Anonymous access can only be exercised against a system with a login");
         }
         try (var anonymousContext = browser.newContext()) {
             var anonymousPage = anonymousContext.newPage();
-            anonymousPage.navigate(baseUrl + path);
+            anonymousPage.navigate(baseUrl + serverPath);
+            if (!singlePageAppRoute.equals(serverPath) && anonymousPage.locator(SINGLE_PAGE_APP_ROOT_SELECTOR).count() > 0) {
+                anonymousPage.navigate(baseUrl + singlePageAppRoute);
+            }
             login.waitForLoginForm(anonymousPage);
         }
     }
