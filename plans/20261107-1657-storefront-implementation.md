@@ -26,7 +26,9 @@ Step 4 (Next.js port) is done: commit `50ff7ee4` (2026-11-10). The cart is kept 
 
 Step 5 (Thymeleaf port) is done: commit `960fc2cd` (2026-11-10). The cart lives in the `HttpSession` and checkout is rendered on the server. No driver changes were needed.
 
-Next, per the meta-plan `plans/20261107-1705-meta-storefront-specs-build.md`: **Step 6, port to the Razor monolith** (`system/monolith/dotnet`). Mirror React (`28b1aaf9`), Next.js (`50ff7ee4`) and Thymeleaf (`960fc2cd`). Gate: `dotnet build`, plus `--sample` and the full latest UI acceptance suites with `gh-optivem-monolith-dotnet.yaml` (start with `gh optivem system start --restart`).
+Step 6 (Razor port) is done: commit `e1e923b4` (2026-11-10). All three monolith ports are done, with no driver changes.
+
+Next, per the meta-plan: **Step 7 (verify)**. First fix the pre-existing .NET admin-coupons timezone bug: `system/monolith/dotnet/Pages/AdminCoupons.cshtml:163,166` must append `'Z'` as Java and TS do, otherwise `ShouldBeAbleToCorrectlySaveCoupon(UI)` fails on non-UTC machines. Then run `./compile-all.sh`, `--sample` for java/dotnet/typescript (monolith and multitier), and `./test-all.sh`.
 
 ## Background
 
@@ -43,8 +45,6 @@ Next, per the meta-plan `plans/20261107-1705-meta-storefront-specs-build.md`: **
 
 ## Steps
 
-- [ ] **Step 6: Port to the Razor monolith** (`system/monolith/dotnet`). Server-side cart in the session, header in `_Layout.cshtml`.
-  - Scenarios: the same list as Step 3, in this UI.
 - [ ] **Step 7: Verify.** `./compile-all.sh`, then `system-test run --sample` for java, dotnet and typescript (monolith and multitier). Then `./test-all.sh` before closing.
   - Scenarios: none new; every tagged `@UC-NNN.M` test stays green.
 - [ ] **Step 8: Acceptance tests for the UI journeys.** Turn the remaining `@UC-006` to `@UC-011` scenarios into acceptance tests with UI and API channels in all three languages, after the UI exists so they don't collide with the UC-001 spec-gate work.

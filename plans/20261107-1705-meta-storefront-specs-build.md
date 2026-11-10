@@ -42,7 +42,7 @@ Next is **Step 5**: port to Next.js first (BUILD Step 4), then Thymeleaf, then R
 - `c068ab47` capped the external-systems Cloud Run service at 1 instance. With 2, WireMock's in-memory stubs were split between instances. `monolith-dotnet-acceptance-stage` is green (42816400736).
 - The commit after it made the anonymous login-required UI checks use the React route `/order-details/:n`. `multitier-dotnet-acceptance-stage` is green (42825072988).
 
-Step 5 is in progress. The Next.js port (BUILD Step 4, `50ff7ee4`) and the Thymeleaf port (BUILD Step 5, `960fc2cd`) are done. Next is Razor (BUILD Step 6). Details and related ideas: `plans/20261110-1207-system-test-reliability-followups.md`.
+Step 5 is in progress. Step 5 is done: Next.js (`50ff7ee4`), Thymeleaf (`960fc2cd`) and Razor (`e1e923b4`). Next is **Step 6 (verify)**. It starts with the pre-existing .NET admin-coupons timezone fix (`AdminCoupons.cshtml:163,166` must append `'Z'`, as Java and TS do), which otherwise fails `ShouldBeAbleToCorrectlySaveCoupon(UI)` on CET machines. Details and related ideas: `plans/20261110-1207-system-test-reliability-followups.md`.
 
 ## Open questions
 
@@ -52,7 +52,6 @@ Step 5 is in progress. The Next.js port (BUILD Step 4, `50ff7ee4`) and the Thyme
 
 ## Steps
 
-- [ ] **Step 5 — BUILD Steps 4, 5, 6 (ports to Next.js, Thymeleaf, Razor).** One subagent per port, **serial**: they share docker ports when running system tests. Gate per port: that monolith's build plus its sample system tests.
 - [ ] **Step 6 — BUILD Step 7 (verify).** One subagent: `./compile-all.sh`, `--sample` for all languages (monolith and multitier), then `./test-all.sh`.
 - [ ] **Step 7 — BUILD Step 8 (acceptance tests for UC-006–011).** UC-010/011 have only their API scenarios tagged; this step adds the untagged ones and flips them. One subagent per use case, serial (shared test kit). Each one flips its use case to `status: implemented`. Gate: compile, plus the sample system tests.
 - [ ] **Step 7b — BUILD Step 10 (close the Step 9 coverage gaps for UC-002, UC-003, UC-005, UC-012).** One subagent, after Step 7 (the UI-only scenarios UC-003.2 and UC-012.2 belong in Step 7's UI tests). Touches the order and coupon acceptance tests, so never alongside Step 3 or Step 7. Gate: compile, plus the sample system tests.
