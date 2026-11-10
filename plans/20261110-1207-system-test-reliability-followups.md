@@ -78,11 +78,6 @@ Even with #2 fixed, a long-lived local stack accumulates any stubs a crashed or 
 - **Recommended: defer.** #2 and #3 remove the known leaks. Revisit if leftovers still pile up.
 - Note: a reset at suite start must never run while another suite is using the same stub server.
 
-### 6. Make the local .NET setup reliable
-
-`gh optivem system-test setup` for dotnet failed with NETSDK1064 (GraphQL.Analyzers 8.2.1 missing) until `dotnet restore --force` was run.
-- **Recommended: do, as a small check.** Find out whether it is a stale local package cache (fix once on this machine) or something setup should handle (a gh-optivem change, so raise a gh-optivem plan).
-
 ### 7. Make local parallel runs reliable on Windows
 
 6 of the 13 local .NET runs failed for other reasons: 30 s timeouts with "An existing connection was forcibly closed by the remote host", or "Failed to acquire token for admin1" from Keycloak. That looks like Windows Docker networking under parallel load. Until it's fixed, a local run can't confirm a fix, which breaks CLAUDE.md's "reproduce locally first" rule.
@@ -98,25 +93,17 @@ Even with #2 fixed, a long-lived local stack accumulates any stubs a crashed or 
 - **8b.** The .NET monolith's `GlobalExceptionHandler` sends `application/json` instead of `application/problem+json`. **Recommended: do**, and check the other five backends for the same content type.
 - **8c.** The storefront Step 1 run never ran the monolith-java **legacy** `--sample`. Its latest sample and contract runs passed, and legacy compiles. **Recommended: drop.** The storefront meta-plan's Step 6 runs `./test-all.sh`, which covers legacy.
 
-### 10. Make `JsonWireMockClient._stubIds` thread-safe (.NET)
-
-`system-test/dotnet/Driver.Adapter/Shared/Client/WireMock/JsonWireMockClient.cs:16` is a plain `List<string>`. It is safe today because each test registers stubs one after another, but it would break if a driver ever registered stubs concurrently.
-- **Recommended: drop**, unless concurrent registration is planned. Today the risk is only theoretical.
-
 ### 11. Fix local `gcloud`
 
 Local `gcloud` fails because it doesn't support Python 3.13. It needs `CLOUDSDK_PYTHON` pointing at Python 3.8–3.12. That blocked checking the Cloud Run instance counts directly.
 - **Recommended: do, once per machine.** Set `CLOUDSDK_PYTHON` in your shell profile on both machines. Note it in `CONTRIBUTING.md` if other contributors use `gcloud`.
 
-### 12. Why did multitier Java and TypeScript pass with the broken anonymous view-order URL?
-
-After `28b1aaf9` (React per-route auth), the anonymous "view order" UI check opened `/order-details?orderNumber=…`, which matches no React route, so no login redirect happened. .NET timed out on it (run 42816408496). The test kit was fixed in all three languages on 2026-11-10. But the multitier Java (42805210051) and TypeScript (42803565635) acceptance stages **passed** on commits that already contained `28b1aaf9`. Either they ran an older frontend image, or the UI case didn't run there.
-- **Recommended: do, soon.** If the cloud stage can run a stale frontend image, every UI result there is suspect. It is the CI twin of the local stale-image trap (`gh-optivem/plans/20261110-1115-system-start-stale-images.md`). Check which frontend image digest each run deployed, and whether `AnonymousShouldNotBeAbleToViewOrder(UI)` appears in their test results.
-
 ### 13. Anonymous cancel and deliver order: language parity
 
-The TypeScript driver also used the order-details URL for anonymous cancel and deliver order, so it was fixed there. .NET and Java weren't checked for those two paths.
-- **Recommended: do, with #12.** It's a quick read of the three drivers to confirm the anonymous cancel and deliver checks open a URL React actually routes.
+Checked 2026-11-10. The URL is fine in .NET and Java: both go through `ViewOrder`'s anonymous branch, which falls back to the React route `/order-details/{n}`. But both call `RunAs(Customer/Admin)` **before** that branch, so an anonymous cancel/deliver first signs a real user in. The TypeScript driver (`my-shop-ui-driver.ts:142-144, 159-161`) checks `anonymous` first, which is the correct shape. No acceptance test covers anonymous cancel or deliver in any language.
+- .NET: `system-test/dotnet/Driver.Adapter/Ui/MyShopUiDriver.cs:117` (cancel), `:154` (deliver), anonymous branch `:191-195`.
+- Java: `system-test/java/src/main/java/com/mycompany/myshop/testkit/driver/adapter/ui/MyShopUiDriver.java:134` (cancel), `:154` (deliver), anonymous branch `:179-183`.
+- **Fix (blocked until the storefront `system-test/**` work is committed):** extract a `LoginRequiredForOrder(orderNumber)` helper from `ViewOrder`'s anonymous branch (mirroring TS `loginRequiredForOrder`), call it at the very top of `CancelOrder` / `DeliverOrder` before `RunAs`, and have `ViewOrder` use it too.
 
 ### 14. `npm audit` vulnerabilities in the Next.js monolith
 
@@ -127,11 +114,6 @@ The TypeScript driver also used the order-details URL for anonymous cancel and d
 
 With `output: "standalone"`, `next start` warns that it doesn't work, and the standalone server serves no `/_next/static` unless that folder is copied in. Docker is fine, because the Dockerfile copies it. It only affects running the monolith outside Docker.
 - **Recommended: defer.** No documented workflow runs it outside Docker. If one appears, add an npm script that copies the static folder or runs `node .next/standalone/server.js`.
-
-### 16. `system-test run --sample` output lacks per-suite counts for some suites
-
-In TypeScript runs, only some suites print a JSON summary (the `expected` and `unexpected` counts). The acceptance suites print a Playwright list instead, so there is no uniform pass/fail line per suite to read off. This is a gh-optivem change.
-- **Recommended: do, in gh-optivem.** Have `system-test run` print one summary line per suite (`<suite>: passed N, failed M, skipped K`) for every language, and a final table. That makes local gates and subagent reports reliable to read.
 
 ### 17. `SecurityConfigTest` (Java monolith) is at the checkstyle file-length limit
 
@@ -166,3 +148,9 @@ The .NET admin-coupons bug (fixed in storefront Step 6) was only caught because 
 ### 27. A push to `main` during `meta-prerelease-stage` fails the run
 In run 42885354673 (2026-11-10, `3f4840cc`), a plan-only commit was pushed to `main` while the run was starting. The `multitier-frontend-react-commit-stage.yml` it dispatched ran on the new head (`e8e471a1`, run 42885508265, green), and the parent failed with `Failed to locate dispatched run … (sha=3f4840cc …) within 120s`. Because of that, the pipeline, cross-language and tag jobs were skipped. Any push during the run's dispatch window, even a docs-only one, wastes a ~2.5 h run.
 - **Recommended: do.** Make the dispatch-and-wait step find the child run by a unique run name or correlation input, not by `head_sha`. Or pin the dispatch to the resolved sha. Until then, don't push to `main` while a meta run is dispatching.
+
+### 28. Show the tested commit in acceptance-stage run names
+
+Found while checking #12 (2026-11-10): the multitier Java/TS runs that "passed despite `28b1aaf9`" had actually tested `b3138b79`, an older commit passed as `inputs.commit-sha`. The run list shows `headSha` (the ref the workflow file came from), which misleads anyone reading results.
+- **Recommended: do (cheap).** Add `run-name:` to the `*-acceptance-stage*.yml` callers that includes `inputs.commit-sha` (falling back to `github.sha` when empty).
+
