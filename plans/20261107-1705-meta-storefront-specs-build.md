@@ -40,7 +40,9 @@ Steps 1–5 are done. UC-010/011 stay `planned` and flip in **Step 7**.
 - `./test-all.sh -a monolith` passed with 0 failures for all three languages, latest and legacy.
 - `system start --restart` was confirmed to rebuild images.
 
-**Blocker:** an orphaned `test-all.sh -a multitier` (PID 64508, with no parent) was still running. The agent's attempt to kill it was denied. The user kills it: `taskkill /PID 64508 /T /F`, then `docker ps`, then `gh optivem system stop` for any multitier config still up.
+**Orphan blocker cleared (2026-11-10 19:05 UTC):** PID 64508 is gone. The multitier-typescript stack is still up.
+
+**CI (2026-11-10):** `meta-prerelease-stage` has been red since 2026-11-09 17:03. The latest red run (42802680555, at `c32dae84`) failed only multitier: `anonymousShouldNotBeAbleToViewOrder [UI]` timed out on `#kc-login`. That run predates the fix `a3622182`. Locally, the multitier-typescript UI suites pass at HEAD (58 + 15). Run 42885354673 was dispatched on `3f4840cc` to confirm. If it's green, it's strong evidence for Step 6's multitier part.
 
 **Then:** run `./test-all.sh -a multitier -l <lang>` for dotnet, java and typescript, one at a time. Before each, `system start --restart` and stop. After each, `system stop`. Ideally run them from a terminal outside Claude Code (memory reaper, followup ideas 22–25). Once it's green, Step 6 is done, so delete it and BUILD Step 7, then do Step 7.
 

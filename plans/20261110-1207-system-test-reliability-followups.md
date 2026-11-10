@@ -156,3 +156,8 @@ This is the same root cause as `gh-optivem/plans/20261110-1115-system-start-stal
 
 In storefront Step 6 (2026-11-10), the `test-all.sh -a multitier` run reported as "killed on low memory" kept running with no parent (PID 64508), and its output was lost. Its containers stayed up, and it blocked any clean rerun.
 - **Recommended: do (with 23).** Add `trap 'gh optivem system stop' EXIT INT TERM` for each phase in `test-all.sh`, so a cut-off run at least tears its stack down. Run long suites outside Claude Code (see 22).
+
+### 26. Cloud acceptance stage failed to push the RC tag
+
+`meta-prerelease-stage` run 42660796447 (2026-11-09 17:03, `ac04be12`) failed all six pipelines in `verify / cloud-acceptance-stage` with `Failed to push tag monolith-java-v1.0.237-rc.3363 (remote: , local: ac04be12…)`. The tests weren't the cause. The next runs on 2026-11-10 pushed tags for monolith without a problem, so it looks transient (a race between parallel tag pushes, or a GitHub hiccup), but the empty `remote:` field hides the real error.
+- **Recommended: investigate if it recurs.** Make the tag-push step print git's stderr and retry once on a non-fast-forward or a network error.
