@@ -28,7 +28,7 @@ Step 5 (Thymeleaf port) is done: commit `960fc2cd` (2026-11-10). The cart lives 
 
 Step 6 (Razor port) is done: commit `e1e923b4` (2026-11-10). All three monolith ports are done, with no driver changes.
 
-Next, per the meta-plan: **Step 7 (verify)**. First fix the pre-existing .NET admin-coupons timezone bug: `system/monolith/dotnet/Pages/AdminCoupons.cshtml:163,166` must append `'Z'` as Java and TS do, otherwise `ShouldBeAbleToCorrectlySaveCoupon(UI)` fails on non-UTC machines. Then run `./compile-all.sh`, `--sample` for java/dotnet/typescript (monolith and multitier), and `./test-all.sh`.
+Next, per the meta-plan: **Step 7 (verify)** is partly done. The .NET coupon timezone fix (`e00edf16`) is in and `compile-all` passes. The six `--sample` runs and `./test-all.sh -a monolith` / `-a multitier` remain (they were stopped on low memory).
 
 ## Background
 

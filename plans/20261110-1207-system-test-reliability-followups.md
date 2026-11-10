@@ -131,3 +131,8 @@ The in-memory database raises `TransactionIgnoredWarning` as an error when `Orde
 The .NET admin-coupons bug (fixed in storefront Step 6) was only caught because this machine is set to CET, while CI runners are UTC. Other timezone bugs would also pass CI unnoticed.
 - **Recommended: defer, but consider.** One option is to run one CI UI job with a non-UTC browser timezone (Playwright `timezoneId`, e.g. `Europe/Berlin`), so timezone bugs show up in CI.
 
+### 21. .NET test runs print an HTML logger error
+
+`dotnet test` prints `Html Logger Error : '', hexadecimal value 0x1A, is an invalid character.` The run still passes, but the HTML report may be incomplete. Something in the test output (a log line or test name) contains a control character.
+- **Recommended: defer.** It is cosmetic. Look into it if anyone relies on the HTML report.
+

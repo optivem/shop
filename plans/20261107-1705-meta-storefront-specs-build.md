@@ -42,7 +42,15 @@ Next is **Step 5**: port to Next.js first (BUILD Step 4), then Thymeleaf, then R
 - `c068ab47` capped the external-systems Cloud Run service at 1 instance. With 2, WireMock's in-memory stubs were split between instances. `monolith-dotnet-acceptance-stage` is green (42816400736).
 - The commit after it made the anonymous login-required UI checks use the React route `/order-details/:n`. `multitier-dotnet-acceptance-stage` is green (42825072988).
 
-Step 5 is in progress. Step 5 is done: Next.js (`50ff7ee4`), Thymeleaf (`960fc2cd`) and Razor (`e1e923b4`). Next is **Step 6 (verify)**. It starts with the pre-existing .NET admin-coupons timezone fix (`AdminCoupons.cshtml:163,166` must append `'Z'`, as Java and TS do), which otherwise fails `ShouldBeAbleToCorrectlySaveCoupon(UI)` on CET machines. Details and related ideas: `plans/20261110-1207-system-test-reliability-followups.md`.
+Step 5 is in progress. Step 5 is done: Next.js (`50ff7ee4`), Thymeleaf (`960fc2cd`) and Razor (`e1e923b4`). **Step 6 (verify) is partly done (2026-11-10):**
+- The .NET admin-coupons timezone fix is committed (`e00edf16`), and `ShouldBeAbleToCorrectlySaveCoupon(UI)` passes locally.
+- `./compile-all.sh` passes (all 7 configs).
+
+**Remaining:**
+- The six `--sample` runs. They were stopped by Claude Code on low memory before any test ran.
+- `./test-all.sh -a monolith` and `./test-all.sh -a multitier`.
+
+**Before resuming, free memory** (close other apps), or start Claude Code with `CLAUDE_CODE_DISABLE_BG_SHELL_PRESSURE_REAP=1`. Run `gh optivem system start --restart` for each config before `test-all.sh`, because it uses plain `start`. Details and related ideas: `plans/20261110-1207-system-test-reliability-followups.md`.
 
 ## Open questions
 
