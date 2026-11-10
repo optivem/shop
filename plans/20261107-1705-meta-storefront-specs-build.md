@@ -32,29 +32,23 @@ The orchestrating session runs the Steps below **in order**, one subagent per st
 
 ## ▶ Next executable step (resume here)
 
-Steps 1–4 are done (U2, BUILD Step 9, U3, React). The user signed off how React looks on 2026-11-10 (commit `28b1aaf9`). UC-010/011 stay `planned` and flip in **Step 7**.
+Steps 1–5 are done. UC-010/011 stay `planned` and flip in **Step 7**.
 
-Next is **Step 5**: port to Next.js first (BUILD Step 4), then Thymeleaf, then Razor, one subagent per port, serial. Not yet checked from Step 4: each UC-006..011 scenario against the React UI line by line, and whether `src/test` interaction tests cover the new pages. Fold that check into Step 6.
+**Step 6 (verify) needs only `./test-all.sh -a multitier`.** Done on 2026-11-10 at HEAD `319a7122`:
+- `compile-all` passed.
+- All six `--sample` configs (monolith and multitier × java, dotnet, typescript) passed 11/11.
+- `./test-all.sh -a monolith` passed with 0 failures for all three languages, latest and legacy.
+- `system start --restart` was confirmed to rebuild images.
 
-**The pipeline is green again (2026-11-10).** Two fixes:
-- `c068ab47` capped the external-systems Cloud Run service at 1 instance. With 2, WireMock's in-memory stubs were split between instances. `monolith-dotnet-acceptance-stage` is green (42816400736).
-- The commit after it made the anonymous login-required UI checks use the React route `/order-details/:n`. `multitier-dotnet-acceptance-stage` is green (42825072988).
+**Blocker:** an orphaned `test-all.sh -a multitier` (PID 64508, with no parent) was still running. The agent's attempt to kill it was denied. The user kills it: `taskkill /PID 64508 /T /F`, then `docker ps`, then `gh optivem system stop` for any multitier config still up.
 
-Step 5 is in progress. Step 5 is done: Next.js (`50ff7ee4`), Thymeleaf (`960fc2cd`) and Razor (`e1e923b4`). **Step 6 (verify) is partly done (2026-11-10):**
-- The .NET admin-coupons timezone fix is committed (`e00edf16`), and `ShouldBeAbleToCorrectlySaveCoupon(UI)` passes locally.
-- `./compile-all.sh` passes (all 7 configs).
+**Then:** run `./test-all.sh -a multitier -l <lang>` for dotnet, java and typescript, one at a time. Before each, `system start --restart` and stop. After each, `system stop`. Ideally run them from a terminal outside Claude Code (memory reaper, followup ideas 22–25). Once it's green, Step 6 is done, so delete it and BUILD Step 7, then do Step 7.
 
-**Remaining:**
-- The six `--sample` runs. They were stopped by Claude Code on low memory before any test ran.
-- `./test-all.sh -a monolith` and `./test-all.sh -a multitier`.
-
-**Before resuming, free memory** (close other apps), or start Claude Code with `CLAUDE_CODE_DISABLE_BG_SHELL_PRESSURE_REAP=1`. Run `gh optivem system start --restart` for each config before `test-all.sh`, because it uses plain `start`. Details and related ideas: `plans/20261110-1207-system-test-reliability-followups.md`.
+Also fold into Step 7: check each UC-006..011 scenario against the React UI line by line, and check whether the `src/test` interaction tests cover the new pages.
 
 ## Open questions
 
-1. **Stale Docker images (found in Step 4, 2026-11-10).** Plain `gh optivem system start` runs `docker compose up -d` with no `--build` (`gh-optivem/internal/build/runner/system.go:217`), so it silently reuses old images. The 5-week-old `my-shop-real-frontend`/`my-shop-stub-frontend` caused false multitier failures until they were removed with `docker rmi -f`. `system start --restart` adds `--build` and `system build --rebuild` does `--no-cache`, but neither is the default.
-   - **Recommended:** (a) in this plan and in the subagent briefs for Steps 5–7, replace `docker rmi` and plain `start` with `gh optivem system start --restart` (check first that it rebuilds when only source changed). (b) Raised 2026-11-10 as `gh-optivem/plans/20261110-1115-system-start-stale-images.md` (make plain `start` build, or warn when an image is older than its source).
-   - **Alternative:** keep `docker rmi -f` as a manual step. Rejected: it is easy to forget and the failure mode is misleading.
+None open. **Resolved 2026-11-10 (user):** stale Docker images. Steps 6–7 start every stack with `gh optivem system start --restart`, never plain `start` or a manual `docker rmi`. The gh-optivem fix is tracked in `gh-optivem/plans/20261110-1115-system-start-stale-images.md`. The user also gave a blanket yes for local system-test runs and per-step commits for this run.
 
 ## Steps
 

@@ -136,3 +136,23 @@ The .NET admin-coupons bug (fixed in storefront Step 6) was only caught because 
 `dotnet test` prints `Html Logger Error : '', hexadecimal value 0x1A, is an invalid character.` The run still passes, but the HTML report may be incomplete. Something in the test output (a log line or test name) contains a control character.
 - **Recommended: defer.** It is cosmetic. Look into it if anyone relies on the HTML report.
 
+
+### 22. `test-all.sh` gets killed on low memory in Claude Code
+
+During storefront Step 6 (2026-11-10), `./test-all.sh -a multitier` was killed by Claude Code's background-shell memory reaper partway through dotnet/Latest. It had started with about 7.6 GB free. This is the second kill. `-a monolith` finished in 44 minutes.
+- **Recommended: do (cheap).** Run multitier one language at a time (`-l <lang>`), or from a terminal outside Claude Code, or start Claude Code with `CLAUDE_CODE_DISABLE_BG_SHELL_PRESSURE_REAP=1`. Write this down in CONTRIBUTING.md next to `test-all.sh`.
+
+### 23. `test-all.sh` never stops stacks, and all languages share one compose project name
+
+`test-all.sh` never runs `system stop`, either between languages or at the end, so stacks stay up and use memory. All languages also share the compose project names `my-shop-stub` / `my-shop-real`, so two configs running at once recreate each other's containers. That's how a spurious `keycloak ... exited (137)` happened in Step 6.
+- **Recommended: do.** Add `gh optivem system stop` after each language in `test-all.sh`. Optionally, give each language its own compose project name so runs can't collide.
+
+### 24. `test-all.sh` uses a plain `system start`, which can reuse stale images
+
+This is the same root cause as `gh-optivem/plans/20261110-1115-system-start-stale-images.md`. `system start --restart` was confirmed to rebuild (`up -d --build --force-recreate`).
+- **Recommended: do.** Add an opt-in `--restart` flag that `test-all.sh` passes through to `system start`, until gh-optivem fixes plain `start`.
+
+### 25. A Bash call that Claude Code kills leaves `test-all.sh` running as an orphan
+
+In storefront Step 6 (2026-11-10), the `test-all.sh -a multitier` run reported as "killed on low memory" kept running with no parent (PID 64508), and its output was lost. Its containers stayed up, and it blocked any clean rerun.
+- **Recommended: do (with 23).** Add `trap 'gh optivem system stop' EXIT INT TERM` for each phase in `test-all.sh`, so a cut-off run at least tears its stack down. Run long suites outside Claude Code (see 22).
