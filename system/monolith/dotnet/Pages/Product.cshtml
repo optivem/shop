@@ -1,0 +1,82 @@
+@page "/products/{sku}"
+@model MyCompany.MyShop.Monolith.Pages.ProductModel
+@using MyCompany.MyShop.Monolith.Pages.Storefront
+@inject StoreChrome Chrome
+@{
+    var product = Model.Product;
+    ViewData["Title"] = Model.IsNotFound ? "Product not found" : product?.Title ?? "Product";
+}
+@* `/products/{sku}` (storefront-ux §4.2, UC-007): one product's details, with a quantity and "Add to cart". *@
+@if (Model.IsNotFound)
+{
+    @* The 404 page of an unknown SKU (UC-007 2a). *@
+    <div class="text-center py-5">
+        <h1 class="h3">Product not found</h1>
+        <p class="text-muted">We couldn't find a product with that SKU.</p>
+        <a href="/" class="btn btn-primary" aria-label="Back to Catalog">Back to the catalog</a>
+    </div>
+}
+else if (product == null)
+{
+    <div class="alert alert-danger" role="alert">@IndexModel.ProductsUnavailable</div>
+}
+else
+{
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Home</a></li>
+            <li class="breadcrumb-item"><a href="@StoreChrome.CategoryHref(product.Category ?? string.Empty)">@product.Category</a></li>
+            <li class="breadcrumb-item active" aria-current="page">@product.Title</li>
+        </ol>
+    </nav>
+
+    <div class="row g-4">
+        <div class="col-md-5">
+            <partial name="_ProductImage" model="@(new ProductImage(product.Brand, "square"))" />
+        </div>
+        <div class="col-md-7">
+            <h1 class="h2" aria-label="Product Title">@product.Title</h1>
+            <p class="text-muted">
+                by <span aria-label="Product Brand">@product.Brand</span> ·
+                <span aria-label="Product Category">@product.Category</span> · SKU
+                <span aria-label="Product SKU">@product.Sku</span>
+            </p>
+            <p class="price fs-3 fw-bold" aria-label="Display Price">@Money.Format(product.Price)</p>
+            <form method="post" action="/cart/add" asp-antiforgery="true" class="d-flex flex-wrap align-items-center gap-3 mb-4">
+                <input type="hidden" name="sku" value="@product.Sku">
+                <input type="hidden" name="returnUrl" value="@Chrome.ReturnUrl">
+                <label for="product-quantity" class="form-label mb-0">Qty</label>
+                <div class="input-group quantity-stepper">
+                    <button type="button" class="btn btn-outline-secondary" aria-label="Decrease Quantity"
+                            data-step="-1">−</button>
+                    <input id="product-quantity" name="quantity" type="text" inputmode="numeric"
+                           class="form-control text-center" aria-label="Product Quantity" value="1">
+                    <button type="button" class="btn btn-outline-secondary" aria-label="Increase Quantity"
+                            data-step="1">+</button>
+                </div>
+                <button type="submit" class="btn btn-primary" aria-label="Add to Cart">Add to cart</button>
+            </form>
+            <hr>
+            <p aria-label="Product Description">@product.Description</p>
+            <p class="text-muted small mb-0">✓ Ships in 1–2 business days · ✓ 30-day returns</p>
+        </div>
+    </div>
+}
+
+@section Scripts {
+<script>
+    (function () {
+        // The stepper moves by 1 within 1..99; a typed quantity is checked by the server when added.
+        var input = document.getElementById('product-quantity');
+        if (!input) return;
+        document.querySelectorAll('[data-step]').forEach(function (button) {
+            button.addEventListener('click', function () {
+                var current = /^\d+$/.test(input.value.trim()) ? Number(input.value.trim()) : 1;
+                if (current < 1 || current > 99) current = 1;
+                var next = Math.min(99, Math.max(1, current + Number(button.getAttribute('data-step'))));
+                input.value = String(next);
+            });
+        });
+    })();
+</script>
+}

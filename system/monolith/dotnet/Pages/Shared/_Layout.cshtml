@@ -1,12 +1,21 @@
+@using MyCompany.MyShop.Monolith.Pages.Storefront
+@inject StoreChrome Chrome
+@{
+    var storeUser = Chrome.User;
+    var cartCount = Chrome.CartCount;
+    var categories = await Chrome.CategoriesAsync();
+    var notice = Chrome.TakeNotice();
+    var title = ViewData["Title"] as string;
+}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - MyCompany.MyShop.Monolith</title>
+    <title>@(string.IsNullOrEmpty(title) ? "MyShop" : title + " · MyShop")</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/MyCompany.MyShop.Monolith.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/storefront.css" asp-append-version="true" />
     <script>
         // Same-origin state-changing fetch() calls carry the CSRF token the server sets in the XSRF-TOKEN cookie.
         (function () {
@@ -37,37 +46,120 @@
     </style>
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-            <div class="container">
-                <a class="navbar-brand" href="/">MyShop</a>
-                @if (User.Identity?.IsAuthenticated == true)
+<div class="store d-flex flex-column min-vh-100">
+    @* The header on every page (storefront-ux §3): logo, search, cart, sign-in state, categories and account links. *@
+    <header class="store-header">
+        <div class="store-header-top">
+            <div class="container d-flex flex-wrap align-items-center gap-3 py-2">
+                <a class="store-logo" href="/"><span class="store-logo-mark" aria-hidden="true">■</span> MyShop</a>
+                <form class="store-search d-flex flex-grow-1" method="get" action="/" role="search">
+                    <input type="search" name="q" class="form-control" placeholder="Search products…"
+                           aria-label="Search Products" value="@(ViewData[StoreChrome.SearchQueryKey] as string)">
+                    <button type="submit" class="btn btn-light ms-2" aria-label="Search">Search</button>
+                </form>
+                <div class="d-flex align-items-center gap-3 ms-auto">
+                    <a class="store-header-link" href="/cart" aria-label="Cart">
+                        <span aria-hidden="true">🛒</span> Cart
+                        <span aria-live="polite">@if (cartCount > 0)
+                            {<span class="badge rounded-pill bg-warning text-dark ms-1" aria-label="Cart Item Count">@cartCount</span>}</span>
+                    </a>
+                    @if (storeUser != null)
+                    {
+                        <form method="post" action="/logout" class="d-flex align-items-center">
+                            <a class="store-header-link me-3" href="/account" data-testid="username" title="My account">@storeUser.Username</a>
+                            <button type="submit" class="btn btn-outline-light btn-sm">Logout</button>
+                            @Html.AntiForgeryToken()
+                        </form>
+                    }
+                    else
+                    {
+                        <a class="store-header-link" href="@Chrome.SignInHref" aria-label="Sign In">Sign in</a>
+                    }
+                </div>
+            </div>
+        </div>
+        <nav class="store-header-nav" aria-label="Store navigation">
+            <div class="container d-flex flex-wrap align-items-center gap-3 py-1">
+                <a class="store-nav-link" href="/">All products</a>
+                @foreach (var category in categories)
                 {
-                    <form method="post" action="/logout" class="d-flex align-items-center ms-auto">
-                        <span class="navbar-text me-3">@User.Identity.Name</span>
-                        <button type="submit" class="btn btn-outline-light btn-sm">Logout</button>
-                        @Html.AntiForgeryToken()
-                    </form>
+                    <a class="store-nav-link" href="@StoreChrome.CategoryHref(category)">@category</a>
+                }
+                @if (storeUser != null)
+                {
+                    <div class="d-flex flex-wrap gap-3 ms-auto">
+                        @if (storeUser.CanPlaceOrder)
+                        {
+                            <a class="store-nav-link" href="/new-order">Quick order</a>
+                        }
+                        <a class="store-nav-link" href="/order-history">@(storeUser.Admin ? "All orders" : "My orders")</a>
+                        @if (storeUser.Admin)
+                        {
+                            <a class="store-nav-link" href="/admin-coupons">Admin</a>
+                        }
+                    </div>
                 }
             </div>
         </nav>
     </header>
-    <div class="container mt-4">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2025 - MyCompany.MyShop.Monolith - <a href="/privacy">Privacy</a>
+    <main role="main" class="container mt-4 pb-3 flex-grow-1">
+        @* The storefront's notification banner, with the same markup as the order pages' own notifications. *@
+        @if (notice != null)
+        {
+            <div class="notification @notice.Type" role="alert" data-notification-id="@notice.Id">
+                @if (notice.IsError)
+                {
+                    <div class="error-message">@notice.Message</div>
+                    @foreach (var fieldError in notice.FieldErrors)
+                    {
+                        <div class="field-error">@fieldError</div>
+                    }
+                }
+                else
+                {
+                    @notice.Message
+                }
+            </div>
+        }
+
+        @RenderBody()
+    </main>
+
+    @* Static footer: Shop, Help, and the demo-store note (storefront-ux §3). *@
+    <footer class="store-footer mt-5">
+        <div class="container py-4">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <h2 class="h6">Shop</h2>
+                    <ul class="list-unstyled mb-0">
+                        <li><a href="/">All products</a></li>
+                        @foreach (var category in categories)
+                        {
+                            <li><a href="@StoreChrome.CategoryHref(category)">@category</a></li>
+                        }
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h2 class="h6">Help</h2>
+                    <ul class="list-unstyled mb-0">
+                        <li><a href="#shipping">Shipping</a></li>
+                        <li><a href="#returns">Returns</a></li>
+                        <li><a href="#contact">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <p class="mb-0">© MyShop · demo store for the Optivem ATDD course</p>
+                </div>
+            </div>
         </div>
     </footer>
+</div>
 
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="~/js/site.js" asp-append-version="true"></script>
 
-    @await RenderSectionAsync("Scripts", required: false)
+@await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

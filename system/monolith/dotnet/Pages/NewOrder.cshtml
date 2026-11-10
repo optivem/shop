@@ -1,13 +1,14 @@
 @page "/new-order"
 @model MyCompany.MyShop.Monolith.Pages.NewOrderModel
 @{
-    ViewData["Title"] = "New Order";
+    ViewData["Title"] = "Quick order";
+    Layout = "_AccountLayout";
 }
 
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
         <li class="breadcrumb-item"><a href="/">Home</a></li>
-        <li class="breadcrumb-item active" aria-current="page">New Order</li>
+        <li class="breadcrumb-item active" aria-current="page">Quick order</li>
     </ol>
 </nav>
 
@@ -31,7 +32,7 @@
                     </div>
                     <div class="mb-3">
                         <label for="country" class="form-label">Country:</label>
-                        <input type="text" class="form-control" id="country" placeholder="Enter country code" aria-label="Country">
+                        <input type="text" class="form-control" id="country" placeholder="Enter country code" aria-label="Country" value="@Model.DefaultCountry">
                     </div>
                     <div class="mb-3">
                         <label for="couponCode" class="form-label">Coupon Code (optional):</label>

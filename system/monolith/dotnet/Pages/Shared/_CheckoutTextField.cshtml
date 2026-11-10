@@ -1,0 +1,13 @@
+@using MyCompany.MyShop.Monolith.Pages.Storefront
+@model CheckoutTextField
+@* One text input of the checkout address form, with its error under it. *@
+<div class="@Model.ColClass">
+    <label for="@("shipping-" + Model.Field)" class="form-label">@Model.Label</label>
+    <input type="text" id="@("shipping-" + Model.Field)" name="@Model.Field" value="@Model.Value"
+           class="form-control@(Model.Error != null ? " is-invalid" : null)" aria-label="@Model.AriaLabel"
+           aria-invalid="@(Model.Error != null ? "true" : null)">
+    @if (Model.Error != null)
+    {
+        <div class="invalid-feedback">@Model.Error</div>
+    }
+</div>

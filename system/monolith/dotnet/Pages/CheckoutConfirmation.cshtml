@@ -1,0 +1,60 @@
+@page "/checkout/confirmation"
+@model MyCompany.MyShop.Monolith.Pages.CheckoutConfirmationModel
+@{
+    ViewData["Title"] = "Order confirmation";
+    var result = Model.Result;
+    var placed = result?.Placed ?? [];
+    var rejected = result?.Rejected ?? [];
+}
+@* `/checkout/confirmation` (storefront-ux §4.5): the orders just placed (and, after a partial failure, the rejected lines). *@
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">Home</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Order confirmation</li>
+    </ol>
+</nav>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        @if (placed.Count > 0)
+        {
+            <h1 class="h3">Thank you for your order!</h1>
+            <p>@(placed.Count == 1 ? "Your order has been placed:" : $"Your {placed.Count} orders have been placed:")</p>
+            <ul aria-label="Confirmed Orders">
+                @foreach (var line in placed)
+                {
+                    <li>
+                        <a href="@("/order-details?orderNumber=" + Uri.EscapeDataString(line.OrderNumber))"
+                           aria-label="@("Confirmed Order " + line.OrderNumber)">@line.OrderNumber</a>
+                        <span class="text-muted">(@line.Sku × @line.Quantity)</span>
+                    </li>
+                }
+            </ul>
+        }
+        else
+        {
+            <h1 class="h3">No recent order</h1>
+        }
+
+        @if (rejected.Count > 0)
+        {
+            <div class="alert alert-warning" aria-label="Rejected Lines">
+                <p class="mb-2">These items were not ordered and are still in your cart:</p>
+                <ul class="mb-0">
+                    @foreach (var line in rejected)
+                    {
+                        <li aria-label="@("Rejected Line " + line.Sku)">
+                            <strong>@line.Sku</strong>:
+                            <span aria-label="@("Rejection Reason " + line.Sku)">@line.Reason</span>
+                        </li>
+                    }
+                </ul>
+            </div>
+        }
+
+        <div class="d-flex gap-3 mt-3">
+            <a href="/order-history" class="btn btn-primary">View my orders</a>
+            <a href="/" class="btn btn-outline-secondary">Continue shopping</a>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,10 @@
+@using MyCompany.MyShop.Monolith.Pages.Storefront
+@model ProductImage
+@*
+  Product image placeholder: the ERP has no image field, so each product gets a tile with its brand name,
+  coloured by a deterministic hash of the brand (storefront-ux §5). No external images.
+*@
+<div class="product-image product-image-@Model.Shape" style="background-color: @BrandColour.Of(Model.Brand)" role="img"
+     aria-label="@(Model.Brand + " product image")">
+    <span>@((Model.Brand ?? string.Empty).ToUpperInvariant())</span>
+</div>

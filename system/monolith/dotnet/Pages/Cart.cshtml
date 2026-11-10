@@ -1,0 +1,137 @@
+@page "/cart/{handler?}"
+@model MyCompany.MyShop.Monolith.Pages.CartModel
+@using MyCompany.MyShop.Monolith.Pages.Storefront
+@{
+    ViewData["Title"] = "Cart";
+    var lines = Model.Lines;
+}
+@* `/cart` (storefront-ux §4.3, UC-008): the cart lines at current catalog prices, quantity changes, removal and the subtotal. *@
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">Home</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Cart</li>
+    </ol>
+</nav>
+
+<h1 class="h3 mb-4">
+    Shopping cart
+    @if (lines.Count > 0)
+    {
+        <span aria-label="Cart Line Count">(@lines.Count @(lines.Count == 1 ? "item" : "items"))</span>
+    }
+</h1>
+
+@if (lines.Count == 0)
+{
+    <div class="text-center py-5">
+        <p class="lead">Your cart is empty.</p>
+        <a href="/" class="btn btn-primary">Start shopping</a>
+    </div>
+}
+else if (Model.Unavailable)
+{
+    <div class="alert alert-danger" role="alert">@IndexModel.ProductsUnavailable</div>
+}
+else
+{
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="table-responsive">
+                <table class="table align-middle cart-table" aria-label="Cart Lines">
+                    <thead>
+                    <tr>
+                        <th scope="col">Product</th>
+                        <th scope="col" class="text-end">Unit price</th>
+                        <th scope="col">Quantity</th>
+                        <th scope="col" class="text-end">Line total</th>
+                        <th scope="col"><span class="visually-hidden">Remove</span></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @for (var index = 0; index < lines.Count; index++)
+                    {
+                        var line = lines[index];
+                        <tr aria-label="@("Cart Line " + line.Sku)">
+                            <td>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="cart-thumb">
+                                        <partial name="_ProductImage" model="@(new ProductImage(line.Product?.Brand ?? line.Sku, "card"))" />
+                                    </div>
+                                    <div>
+                                        @if (line.Product != null)
+                                        {
+                                            <a href="@StoreChrome.ProductHref(line.Sku)" aria-label="@("Title " + line.Sku)">@line.Product.Title</a>
+                                        }
+                                        else
+                                        {
+                                            <span aria-label="@("Title " + line.Sku)">@line.Sku</span>
+                                            <div class="small text-danger">No longer available</div>
+                                        }
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-end price" aria-label="@("Unit Price " + line.Sku)">@(line.Product != null ? Money.Format(line.Product.Price) : "-")</td>
+                            <td>
+                                @* [-][ n ][+]: the buttons move by 1 within 1..99; a typed quantity is committed on change or Enter. *@
+                                <div class="input-group input-group-sm quantity-stepper">
+                                    <button type="submit" class="btn btn-outline-secondary" form="@("decrease-" + index)"
+                                            aria-label="@("Decrease Quantity for " + line.Sku)">−</button>
+                                    <input type="text" inputmode="numeric" name="quantity" class="form-control text-center cart-quantity"
+                                           form="@("quantity-" + index)" aria-label="@("Quantity for " + line.Sku)" value="@line.Quantity">
+                                    <button type="submit" class="btn btn-outline-secondary" form="@("increase-" + index)"
+                                            aria-label="@("Increase Quantity for " + line.Sku)">+</button>
+                                </div>
+                                <form id="@("quantity-" + index)" method="post" action="/cart/update" asp-antiforgery="true" class="d-none">
+                                    <input type="hidden" name="sku" value="@line.Sku">
+                                </form>
+                                <form id="@("decrease-" + index)" method="post" action="/cart/update" asp-antiforgery="true" class="d-none">
+                                    <input type="hidden" name="sku" value="@line.Sku">
+                                    <input type="hidden" name="quantity" value="@line.Decreased">
+                                </form>
+                                <form id="@("increase-" + index)" method="post" action="/cart/update" asp-antiforgery="true" class="d-none">
+                                    <input type="hidden" name="sku" value="@line.Sku">
+                                    <input type="hidden" name="quantity" value="@line.Increased">
+                                </form>
+                            </td>
+                            <td class="text-end price" aria-label="@("Line Total " + line.Sku)">@Money.Format(line.LineTotal)</td>
+                            <td class="text-end">
+                                <form method="post" action="/cart/remove" asp-antiforgery="true">
+                                    <input type="hidden" name="sku" value="@line.Sku">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger"
+                                            aria-label="@("Remove " + line.Sku)">✕</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+            <a href="/">← Continue shopping</a>
+        </div>
+        <div class="col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 class="h5">Order summary</h2>
+                    <div class="d-flex justify-content-between">
+                        <span>Subtotal</span>
+                        <span class="price fw-bold" aria-label="Cart Subtotal">@Money.Format(Model.Subtotal)</span>
+                    </div>
+                    <p class="text-muted small mt-2">Tax and discounts are calculated at checkout.</p>
+                    <a href="/checkout" class="btn btn-primary w-100" aria-label="Proceed to Checkout">Proceed to checkout</a>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+<script>
+    // A typed quantity is committed when it changes (blur) or on Enter; the server keeps the old one if it is invalid.
+    document.querySelectorAll('.cart-quantity').forEach(function (input) {
+        input.addEventListener('change', function () {
+            var form = input.form;
+            if (form.requestSubmit) { form.requestSubmit(); } else { form.submit(); }
+        });
+    });
+</script>
+}

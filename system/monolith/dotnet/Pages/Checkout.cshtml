@@ -1,0 +1,152 @@
+@page "/checkout"
+@model MyCompany.MyShop.Monolith.Pages.CheckoutModel
+@using System.Text.Json
+@using MyCompany.MyShop.Monolith.Pages.Storefront
+@{
+    ViewData["Title"] = "Checkout";
+    var saved = Model.SavedAddress;
+    var address = Model.Address;
+    var taxRates = ShippingAddresses.EstimatedTaxRates.Keys.ToDictionary(country => country, ShippingAddresses.EstimatedTaxRate);
+}
+@* `/checkout` (storefront-ux §4.4, UC-009): shipping address, optional coupon and the order review. *@
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">Home</a></li>
+        <li class="breadcrumb-item"><a href="/cart">Cart</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Checkout</li>
+    </ol>
+</nav>
+
+<h1 class="h3 mb-4">Checkout</h1>
+<form class="row g-4" method="post" action="/checkout" asp-antiforgery="true" novalidate id="checkoutForm">
+    <div class="col-lg-7">
+        <section class="card shadow-sm mb-4" aria-label="Shipping Address">
+            <div class="card-body">
+                <h2 class="h5">1. Shipping address</h2>
+                @if (saved != null)
+                {
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="addressChoice" id="address-saved" value="saved"
+                               aria-label="Use Saved Address" checked="@(Model.Choice == CheckoutModel.Saved)"
+                               data-country="@saved.Country">
+                        <label class="form-check-label" for="address-saved" aria-label="Saved Address">@ShippingAddresses.Format(saved)</label>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="radio" name="addressChoice" id="address-other" value="other"
+                               aria-label="Ship to a Different Address" checked="@(Model.Choice == CheckoutModel.Other)">
+                        <label class="form-check-label" for="address-other">Ship to a different address</label>
+                    </div>
+                }
+                else
+                {
+                    <input type="hidden" name="addressChoice" value="other">
+                }
+
+                <div id="addressForm" class="@(Model.Choice == CheckoutModel.Saved ? "d-none" : null)">
+                    <div class="row g-3">
+                        <partial name="_CheckoutTextField" model="@(new CheckoutTextField("firstName", "First name", "Shipping First Name", address.FirstName, "col-md-6", Model.FieldError("firstName")))" />
+                        <partial name="_CheckoutTextField" model="@(new CheckoutTextField("lastName", "Last name", "Shipping Last Name", address.LastName, "col-md-6", Model.FieldError("lastName")))" />
+                        <partial name="_CheckoutTextField" model="@(new CheckoutTextField("street", "Street", "Shipping Street", address.Street, "col-12", Model.FieldError("street")))" />
+                        <partial name="_CheckoutTextField" model="@(new CheckoutTextField("postalCode", "Postal code", "Shipping Postal Code", address.PostalCode, "col-md-4", Model.FieldError("postalCode")))" />
+                        <partial name="_CheckoutTextField" model="@(new CheckoutTextField("city", "City", "Shipping City", address.City, "col-md-4", Model.FieldError("city")))" />
+                        @{ var countryError = Model.FieldError("country"); }
+                        <div class="col-md-4">
+                            <label for="shipping-country" class="form-label">Country</label>
+                            <select id="shipping-country" name="country" aria-label="Shipping Country"
+                                    class="form-select@(countryError != null ? " is-invalid" : null)"
+                                    aria-invalid="@(countryError != null ? "true" : null)">
+                                <option value="">Select a country</option>
+                                @foreach (var country in ShippingAddresses.Countries)
+                                {
+                                    <option value="@country" selected="@(address.Country == country)">@country</option>
+                                }
+                            </select>
+                            @if (countryError != null)
+                            {
+                                <div class="invalid-feedback">@countryError</div>
+                            }
+                        </div>
+                    </div>
+                    @if (Model.FirstOrder)
+                    {
+                        <div class="form-check mt-3">
+                            <input class="form-check-input" type="checkbox" id="save-as-default" name="saveAsDefault" value="true"
+                                   aria-label="Save as Default Address" checked="@Model.SaveAsDefault">
+                            <label class="form-check-label" for="save-as-default">Save as my default shipping address</label>
+                        </div>
+                    }
+                </div>
+            </div>
+        </section>
+        <section class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h2 class="h5">2. Coupon (optional)</h2>
+                <label for="checkout-coupon" class="form-label">Code</label>
+                <input id="checkout-coupon" name="couponCode" type="text" class="form-control"
+                       aria-label="Checkout Coupon Code" value="@Model.CouponCode">
+            </div>
+        </section>
+        <button type="submit" class="btn btn-primary btn-lg" aria-label="Place Checkout Order" id="placeCheckoutOrder">
+            Place order
+        </button>
+    </div>
+    <div class="col-lg-5">
+        <section class="card shadow-sm" aria-label="Order Review">
+            <div class="card-body">
+                <h2 class="h5">Order review</h2>
+                <ul class="list-unstyled mb-3">
+                    @foreach (var line in Model.Lines)
+                    {
+                        <li class="d-flex justify-content-between" aria-label="@("Review Line " + line.Sku)">
+                            <span>
+                                @(line.Product?.Title ?? line.Sku)
+                                × <span aria-label="@("Review Quantity " + line.Sku)">@line.Quantity</span>
+                            </span>
+                            <span class="price" aria-label="@("Review Line Total " + line.Sku)">@Money.Format(line.LineTotal)</span>
+                        </li>
+                    }
+                </ul>
+                <div class="d-flex justify-content-between fw-bold border-top pt-2">
+                    <span>Subtotal</span>
+                    <span class="price" aria-label="Review Subtotal">@Money.Format(Model.Subtotal)</span>
+                </div>
+                <div class="d-flex justify-content-between mt-2">
+                    <span>Est. tax (<span aria-label="Tax Country" id="taxCountry">@Model.TaxCountry</span>)</span>
+                    <span aria-label="Estimated Tax Rate" id="taxRate">@Model.TaxRate</span>
+                </div>
+                <p class="text-muted small mt-3 mb-0">Discount and tax are worked out per order when it is placed.</p>
+            </div>
+        </section>
+    </div>
+</form>
+
+@section Scripts {
+<script>
+    (function () {
+        var taxRates = @Html.Raw(JsonSerializer.Serialize(taxRates));
+        var form = document.getElementById('checkoutForm');
+        var addressForm = document.getElementById('addressForm');
+        var saved = document.getElementById('address-saved');
+        var country = document.getElementById('shipping-country');
+
+        // The review's estimated tax follows the chosen shipping address's country (UC-009 BR-2).
+        function refresh() {
+            var useSaved = saved && saved.checked;
+            addressForm.classList.toggle('d-none', !!useSaved);
+            var code = (useSaved ? saved.getAttribute('data-country') : country.value || '').trim();
+            document.getElementById('taxCountry').textContent = code || '-';
+            document.getElementById('taxRate').textContent = taxRates[code] || '-';
+        }
+
+        form.querySelectorAll('input[name="addressChoice"]').forEach(function (radio) {
+            radio.addEventListener('change', refresh);
+        });
+        country.addEventListener('change', refresh);
+        form.addEventListener('submit', function () {
+            var button = document.getElementById('placeCheckoutOrder');
+            button.disabled = true;
+            button.textContent = 'Placing order...';
+        });
+    })();
+</script>
+}

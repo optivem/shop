@@ -7,6 +7,7 @@ using MyCompany.MyShop.Monolith.Api.Security;
 using MyCompany.MyShop.Monolith.Core.Services;
 using MyCompany.MyShop.Monolith.Core.Services.External;
 using MyCompany.MyShop.Monolith.Data;
+using MyCompany.MyShop.Monolith.Pages.Storefront;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -58,6 +59,24 @@ builder.Services.AddScoped<OrderService>();
 builder.Services.AddScoped<ProfileService>();
 builder.Services.AddScoped<ProductService>();
 
+// The storefront (storefront-ux §6.3): the cart lives in the server session, whose ID travels only in an
+// HttpOnly cookie (never in page links). The session cookie is independent of the sign-in cookie, so the cart
+// survives sign-in.
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.Cookie.Name = "myshop.session";
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+    options.Cookie.SameSite = SameSiteMode.Lax;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+});
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<CatalogCache>();
+builder.Services.AddScoped<StoreChrome>();
+builder.Services.AddScoped<CheckoutPlacer>();
+
 // Register exception handler
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
@@ -82,12 +101,18 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseSession();
+
 app.UseAuthentication();
 app.UseShopCsrfProtection();
 app.UseAuthorization();
 
 app.MapRazorPages();
 app.MapControllers();
+
+// The header's "Sign in" link (storefront-ux §6.4). The route requires a login, so an anonymous visitor is sent to
+// Keycloak and, once signed in, comes back here and on to returnUrl (default "/"); a signed-in visitor goes straight there.
+app.MapGet("/sign-in", (string? returnUrl) => Results.Redirect(ReturnUrls.Safe(returnUrl)));
 
 app.MapPost("/logout", async (HttpContext context) =>
 {

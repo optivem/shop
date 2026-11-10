@@ -2,6 +2,7 @@
 @model MyCompany.MyShop.Monolith.Pages.OrderDetailsModel
 @{
     ViewData["Title"] = "Order Details";
+    Layout = "_AccountLayout";
 }
 
 <nav aria-label="breadcrumb">
@@ -51,6 +52,10 @@
                 <div class="col-md-6 mb-3">
                     <strong>Country:</strong>
                     <p id="detailCountry" aria-label="Display Country"></p>
+                </div>
+                <div class="col-md-6 mb-3" id="detailShippingAddressBlock" style="display: none;">
+                    <strong>Shipping Address:</strong>
+                    <p id="detailShippingAddress" aria-label="Display Shipping Address"></p>
                 </div>
                 <div class="col-md-6 mb-3">
                     <strong>Unit Price:</strong>
@@ -152,6 +157,12 @@
             document.getElementById('detailSku').textContent = order.sku;
             document.getElementById('detailQuantity').textContent = order.quantity;
             document.getElementById('detailCountry').textContent = order.country;
+            var address = order.shippingAddress;
+            if (address) {
+                document.getElementById('detailShippingAddress').textContent = address.firstName + ' ' + address.lastName + ', '
+                    + address.street + ', ' + address.postalCode + ' ' + address.city + ', ' + address.country;
+                document.getElementById('detailShippingAddressBlock').style.display = '';
+            }
             document.getElementById('detailUnitPrice').textContent = '$' + order.unitPrice;
             document.getElementById('detailBasePrice').textContent = '$' + order.basePrice;
             document.getElementById('detailDiscountRate').textContent = (Number(order.discountRate) * 100).toFixed(2) + '%';

@@ -1,29 +1,43 @@
 @page "/order-history"
 @model MyCompany.MyShop.Monolith.Pages.OrderHistoryModel
 @{
-    ViewData["Title"] = "Order History";
     var isAdmin = User.IsInRole("ADMIN");
+    var listTitle = isAdmin ? "All orders" : "My orders";
+    ViewData["Title"] = listTitle;
+    Layout = "_AccountLayout";
 }
 
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
         <li class="breadcrumb-item"><a href="/">Home</a></li>
-        <li class="breadcrumb-item active" aria-current="page">Order History</li>
+        @if (isAdmin) { <li class="breadcrumb-item">Admin</li> }
+        <li class="breadcrumb-item active" aria-current="page">@listTitle</li>
     </ol>
 </nav>
+
+<h2>@listTitle</h2>
 
 <div class="card shadow">
     <div class="card-header bg-primary text-white">
         <h4 class="mb-0">Order History</h4>
     </div>
     <div class="card-body">
-        <div class="row mb-3">
-            <div class="col-md-8">
+        <div class="row mb-3 g-3">
+            @if (isAdmin)
+            {
+                <div class="col-md-4">
+                    <label for="customerFilter" class="form-label">Customer:</label>
+                    <select id="customerFilter" class="form-select" aria-label="Customer Filter">
+                        <option value="">All customers</option>
+                    </select>
+                </div>
+            }
+            <div class="@(isAdmin ? "col-md-5" : "col-md-8")">
                 <label for="orderNumberFilter" class="form-label">Filter by Order Number:</label>
                 <input type="text" class="form-control" id="orderNumberFilter"
                        placeholder="Enter order number..." aria-label="Order Number">
             </div>
-            <div class="col-md-4 d-flex align-items-end">
+            <div class="@(isAdmin ? "col-md-3" : "col-md-4") d-flex align-items-end">
                 <button class="btn btn-secondary w-100" id="refreshBtn"
                         aria-label="Refresh Order List">
                     Refresh
@@ -90,6 +104,53 @@
 @section Scripts {
 <script>
     var isAdmin = @(isAdmin ? "true" : "false");
+    // The admin list is paged; the customer filter offers the customers found on its pages, up to this many.
+    var MAX_CUSTOMER_PAGES = 50;
+
+    function ordersUrl(params) {
+        var query = new URLSearchParams();
+        if (params.orderNumber) query.set('orderNumber', params.orderNumber);
+        if (params.customer) query.set('customer', params.customer);
+        if (params.page !== undefined) query.set('page', String(params.page));
+        var search = query.toString();
+        return search ? '/api/orders?' + search : '/api/orders';
+    }
+
+    function selectedCustomer() {
+        var select = document.getElementById('customerFilter');
+        return select ? select.value : '';
+    }
+
+    /** Offers every customer who has placed orders, from every page of the unfiltered admin list (UC-011). */
+    async function loadCustomers() {
+        var select = document.getElementById('customerFilter');
+        var customers = [];
+        var totalPages = 1;
+        try {
+            for (var page = 1; page <= Math.min(totalPages, MAX_CUSTOMER_PAGES); page++) {
+                var response = await fetch(ordersUrl({ page: page }));
+                if (!response.ok) break;
+                var data = await response.json();
+                (data.orders || []).forEach(function (order) {
+                    if (order.customer && customers.indexOf(order.customer) < 0) customers.push(order.customer);
+                });
+                totalPages = data.totalPages || 1;
+            }
+        } catch (err) {
+            return;
+        }
+        var chosen = select.value;
+        if (chosen && customers.indexOf(chosen) < 0) customers.push(chosen);
+        customers.sort(function (a, b) { return a.localeCompare(b); });
+        select.innerHTML = '<option value="">All customers</option>';
+        customers.forEach(function (customer) {
+            var option = document.createElement('option');
+            option.value = customer;
+            option.textContent = customer;
+            select.appendChild(option);
+        });
+        select.value = chosen;
+    }
 
     async function loadOrders() {
         var filter = document.getElementById('orderNumberFilter').value.trim();
@@ -106,10 +167,7 @@
         refreshBtn.disabled = true;
 
         try {
-            var url = '/api/orders';
-            if (filter) {
-                url += '?orderNumber=' + encodeURIComponent(filter);
-            }
+            var url = ordersUrl({ orderNumber: filter, customer: selectedCustomer() });
 
             var response = await fetch(url);
             var data = await response.json();
@@ -160,6 +218,11 @@
     document.getElementById('orderNumberFilter').addEventListener('keypress', function(e) {
         if (e.key === 'Enter') loadOrders();
     });
+
+    if (isAdmin) {
+        document.getElementById('customerFilter').addEventListener('change', loadOrders);
+        loadCustomers();
+    }
 
     loadOrders();
 </script>

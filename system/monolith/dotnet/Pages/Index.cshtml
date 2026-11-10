@@ -1,43 +1,127 @@
 @page
 @model IndexModel
+@using MyCompany.MyShop.Monolith.Pages.Storefront
+@inject StoreChrome Chrome
 @{
-    ViewData["Title"] = "Home page";
+    ViewData["Title"] = null;
+    var query = Model.Query;
+    var shownCount = Model.Unavailable ? 0 : Model.Shown.Count;
 }
+@* `/` (storefront-ux §4.1, UC-006): browse, search, filter and sort the catalog; add a product with quantity 1. *@
+<section class="store-hero rounded p-4 p-md-5 mb-4">
+    <h1 class="display-6 fw-bold">New season laptops</h1>
+    <p class="lead mb-3">Free shipping over $1,000</p>
+    <a href="/?category=Laptops" class="btn btn-warning">Shop</a>
+</section>
+<div class="row">
+    <aside class="col-lg-3 mb-3">
+        <button type="button" class="btn btn-outline-secondary w-100 d-lg-none mb-3" aria-expanded="false"
+                id="filtersToggle">Filters</button>
+        @* A plain GET form: the query lives in the page address (BR-7), so a filtered view can be bookmarked. *@
+        <form id="catalogQuery" method="get" action="/" class="catalog-filters d-none d-lg-block">
+            <input type="hidden" name="q" value="@query.Q">
+            <fieldset class="mb-4" aria-label="Category Filter">
+                <legend class="h6">Category</legend>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="category" id="category-all" value=""
+                           checked="@(query.Category.Length == 0)">
+                    <label class="form-check-label" for="category-all">All</label>
+                </div>
+                @foreach (var category in Model.FilterCategories)
+                {
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="category" id="@("category-" + category)"
+                               value="@category" checked="@(query.Category == category)">
+                        <label class="form-check-label" for="@("category-" + category)">@category</label>
+                    </div>
+                }
+            </fieldset>
+            <fieldset class="mb-4" aria-label="Brand Filter">
+                <legend class="h6">Brand</legend>
+                @foreach (var brand in Model.FilterBrands)
+                {
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="brand" id="@("brand-" + brand)"
+                               value="@brand" checked="@query.IsBrandTicked(brand)">
+                        <label class="form-check-label" for="@("brand-" + brand)">@brand</label>
+                    </div>
+                }
+            </fieldset>
+            <noscript><button type="submit" class="btn btn-outline-primary btn-sm">Apply filters</button></noscript>
+        </form>
+    </aside>
+    <section class="col-lg-9" aria-label="Catalog">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <span aria-label="Product Count">@shownCount @(shownCount == 1 && !Model.Unavailable ? "product" : "products")</span>
+            <div class="d-flex align-items-center gap-2">
+                <label for="catalog-sort" class="form-label mb-0">Sort:</label>
+                <select id="catalog-sort" name="sort" form="catalogQuery" class="form-select form-select-sm w-auto"
+                        aria-label="Sort">
+                    @foreach (var option in CatalogQuery.SortOptions)
+                    {
+                        <option value="@option.Value" selected="@(query.Sort == option.Value)">@option.Label</option>
+                    }
+                </select>
+            </div>
+        </div>
 
-<div class="jumbotron bg-light p-5 rounded">
-    <h1 class="display-4">Welcome to MyShop!</h1>
-    <p class="lead">Your modern e-commerce solution</p>
-    <hr class="my-4" />
-    <div class="row mt-4">
-        @if (User.IsInRole("CUSTOMER"))
+        @if (Model.Unavailable)
         {
-        <div class="col-md-4 mb-3">
-            <div class="card h-100">
-                <div class="card-body">
-                    <h5 class="card-title">New Order</h5>
-                    <p class="card-text">Place a new order with our easy-to-use interface</p>
-                    <a class="btn btn-primary" href="/new-order">New Order</a>
-                </div>
-            </div>
-        </div>
+            <div class="alert alert-danger" role="alert">@IndexModel.ProductsUnavailable</div>
         }
-        <div class="col-md-4 mb-3">
-            <div class="card h-100">
-                <div class="card-body">
-                    <h5 class="card-title">Order History</h5>
-                    <p class="card-text">View and manage your past orders</p>
-                    <a class="btn btn-primary" href="/order-history">View Orders</a>
-                </div>
+        else if (Model.Shown.Count == 0)
+        {
+            <div class="text-center py-5">
+                <p class="lead">No products match your search.</p>
+                <a href="/" class="btn btn-outline-primary" aria-label="Clear Filters">Clear filters</a>
             </div>
-        </div>
-        <div class="col-md-4 mb-3">
-            <div class="card h-100">
-                <div class="card-body">
-                    <h5 class="card-title">Coupon Management</h5>
-                    <p class="card-text">Admin panel for managing discount coupons</p>
-                    <a class="btn btn-primary" href="/admin-coupons">Manage Coupons</a>
-                </div>
+        }
+        else
+        {
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4 g-4" aria-label="Product List">
+                @foreach (var product in Model.Shown)
+                {
+                    <div class="col">
+                        @* One catalog tile: image and title link to the product page; "Add to cart" adds quantity 1. *@
+                        <article class="product-card card h-100" aria-label="@("Product " + product.Sku)">
+                            <a href="@StoreChrome.ProductHref(product.Sku)" tabindex="-1" aria-hidden="true">
+                                <partial name="_ProductImage" model="@(new ProductImage(product.Brand, "card"))" />
+                            </a>
+                            <div class="card-body d-flex flex-column">
+                                <h3 class="h6 card-title mb-1">
+                                    <a href="@StoreChrome.ProductHref(product.Sku)" class="product-title-link"
+                                       aria-label="Product Title">@product.Title</a>
+                                </h3>
+                                <div class="text-muted small mb-2" aria-label="Product Brand">@product.Brand</div>
+                                <div class="price fw-bold mb-3" aria-label="Display Price">@Money.Format(product.Price)</div>
+                                <form method="post" action="/cart/add" asp-antiforgery="true" class="mt-auto">
+                                    <input type="hidden" name="sku" value="@product.Sku">
+                                    <input type="hidden" name="quantity" value="1">
+                                    <input type="hidden" name="returnUrl" value="@Chrome.ReturnUrl">
+                                    <button type="submit" class="btn btn-primary w-100"
+                                            aria-label="@("Add " + product.Sku + " to Cart")">Add to cart</button>
+                                </form>
+                            </div>
+                        </article>
+                    </div>
+                }
             </div>
-        </div>
-    </div>
+        }
+    </section>
 </div>
+
+@section Scripts {
+<script>
+    (function () {
+        var form = document.getElementById('catalogQuery');
+        // Filters apply as soon as they change, like the other storefronts.
+        form.addEventListener('change', function () { form.submit(); });
+        document.getElementById('catalog-sort').addEventListener('change', function () { form.submit(); });
+        var toggle = document.getElementById('filtersToggle');
+        toggle.addEventListener('click', function () {
+            var open = form.classList.toggle('d-none');
+            toggle.setAttribute('aria-expanded', String(!open));
+        });
+    })();
+</script>
+}

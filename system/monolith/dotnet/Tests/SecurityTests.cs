@@ -35,10 +35,16 @@ public class SecurityTests : IClassFixture<ShopWebApplicationFactory>
         Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
     }
 
-    [Fact]
-    public async Task Page_WithoutSession_RedirectsToKeycloak()
+    [Theory]
+    [InlineData("/new-order")]
+    [InlineData("/order-history")]
+    [InlineData("/admin-coupons")]
+    [InlineData("/account")]
+    [InlineData("/checkout")]
+    [InlineData("/sign-in?returnUrl=%2Fcart")]
+    public async Task Page_WithoutSession_RedirectsToKeycloak(string path)
     {
-        var response = await Client().GetAsync("/");
+        var response = await Client().GetAsync(path);
         Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
         var location = response.Headers.Location!.ToString();
         Assert.StartsWith(ShopWebApplicationFactory.Issuer + "/protocol/openid-connect/auth", location);
