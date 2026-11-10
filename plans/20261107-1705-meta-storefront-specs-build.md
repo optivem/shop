@@ -33,14 +33,11 @@ The orchestrating session runs the Steps below **in order**, one subagent per st
 
 ## ▶ Next executable step (resume here)
 
-The prototype is signed off and the specs are reviewed (G0 closed 2026-11-07). Steps 1–3 are done (U2, BUILD Step 9, U3). The Step 3 remainder was checked on 2026-11-10: the UC-010/011 tagged tests pass the full latest acceptance suites in all three languages. Both use cases still have untagged scenarios, so they stay `planned` and flip in **Step 7** (BUILD Step 8 already lists them). Next is **Step 4** (React reference implementation), which stops at the 🛑 React gate.
+Steps 1–4 are done (U2, BUILD Step 9, U3, React). The user signed off how React looks on 2026-11-10 (commit `28b1aaf9`). UC-010/011 stay `planned` and flip in **Step 7**.
 
-**Step 4's work is done and its local gate passed (2026-11-10): commit `28b1aaf9`.** frontend-react tsc, lint and 111 unit tests pass; multitier `--sample` (11 suites) passes in Java, .NET and TypeScript; monolith-java `--sample` passes. Not checked: each UC-006..011 scenario against the UI line by line, and whether `src/test` interaction tests cover the new pages. The only remaining part of Step 4 is the 🛑 **user sign-off on how React looks**. Next after sign-off: **Step 5**.
+Next is **Step 5**: port to Next.js first (BUILD Step 4), then Thymeleaf, then Razor, one subagent per port, serial. Not yet checked from Step 4: each UC-006..011 scenario against the React UI line by line, and whether `src/test` interaction tests cover the new pages. Fold that check into Step 6.
 
-To view it (stale-image trap, see Open questions #1; until resolved remove the old frontend images first):
-`docker rmi -f my-shop-real-frontend my-shop-stub-frontend`, then `GH_OPTIVEM_CONFIG=gh-optivem-multitier-java.yaml gh optivem system start`, open http://localhost:3311 (customer1 / customer1-test-password; admin1 / admin1-test-password), then `gh optivem system stop`.
-
-The `WORKFLOW_TOKEN` was rotated on 2026-11-10 and `publish-tag` passes again. A fresh meta-prerelease run, 42792803006, was dispatched; check that it is green before Step 4.
+**Before Step 5, the pipeline must be green.** `multitier-dotnet-acceptance-stage` has failed since 2026-11-09 (runs on `2e1eec96` and `9da17ffc`). 3 of 119 API tests fail with `Product does not exist for SKU: DEFAULT-SKU-…`: `DiscountRateShouldBeNotAppliedWhenThereIsNoCoupon`, `AdminShouldSeeOrderOfChosenCustomer`, `AdminShouldSeeNoOrdersWhenNoOrderMatchesFilters`. Fix it per CLAUDE.md "Fixing Failing Workflows": reproduce locally (needs the user's OK), check all three languages, then fix. Also check that meta-prerelease run 42792803006 is green.
 
 ## Open questions
 
@@ -50,8 +47,6 @@ The `WORKFLOW_TOKEN` was rotated on 2026-11-10 and `publish-tag` passes again. A
 
 ## Steps
 
-- [ ] **Step 4 — BUILD Step 3 (React reference implementation)** plus the `openHomePage()` driver change in all three languages. One subagent. Gate: `npx tsc --noEmit`, unit tests, and the multitier sample system tests.
-  - 🛑 **User gate:** stop and ask the user to sign off how React looks (BUILD decision 4). Give them the run command, e.g. `gh optivem system start` with the multitier config.
 - [ ] **Step 5 — BUILD Steps 4, 5, 6 (ports to Next.js, Thymeleaf, Razor).** One subagent per port, **serial**: they share docker ports when running system tests. Gate per port: that monolith's build plus its sample system tests.
 - [ ] **Step 6 — BUILD Step 7 (verify).** One subagent: `./compile-all.sh`, `--sample` for all languages (monolith and multitier), then `./test-all.sh`.
 - [ ] **Step 7 — BUILD Step 8 (acceptance tests for UC-006–011).** UC-010/011 have only their API scenarios tagged; this step adds the untagged ones and flips them. One subagent per use case, serial (shared test kit). Each one flips its use case to `status: implemented`. Gate: compile, plus the sample system tests.

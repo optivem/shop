@@ -20,9 +20,9 @@ Step 1 (catalog data path) is done: commits `a71fb8ae`, `cee2babc`, `b3846cdc` (
 
 Step 9 (tag the existing UC-002–005, UC-012 tests) is done: commit `ac04be12` (2026-11-09). Only UC-004 flipped to `implemented`; the gaps keeping UC-002, UC-003, UC-005 and UC-012 at `planned` are listed under Step 10.
 
-Next, per the meta-plan `plans/20261107-1705-meta-storefront-specs-build.md`: **Step 2** as part of the atomic unit U3 (SPEC Step 8 → BUILD Step 2 → SPEC Step 9). New tests go in the **latest** system tests only. Change legacy only as much as it needs to stay green.
+Step 2 (profile, shipping address, admin order filter) is done: commits `f1ca8b7d`, `1974f323` (U3). Step 3 (React reference implementation) is done: commit `28b1aaf9`; the user signed off how it looks on 2026-11-10.
 
-Gate: `./compile-all.sh`, plus the sample system tests in all three languages, before pushing anything.
+Next, per the meta-plan `plans/20261107-1705-meta-storefront-specs-build.md`: **Step 4, port to the Next.js monolith** (`system/monolith/typescript`). Use React (`system/multitier/frontend-react`) as the reference: same routes, same markup contract. Gate: that monolith's build plus `gh optivem system-test run --sample` with `gh-optivem-monolith-typescript.yaml` (start with `gh optivem system start --restart` so images are rebuilt). New tests go in the **latest** system tests only. Change legacy only as much as it needs to stay green.
 
 ## Background
 
@@ -39,23 +39,6 @@ Gate: `./compile-all.sh`, plus the sample system tests in all three languages, b
 
 ## Steps
 
-- [ ] **Step 2: Profile, shipping address and admin order filter** (UC-010, UC-011, amended UC-001). The UC-001 plan is in flight and touches the same Place Order code and tests. Before starting, check its status: either wait for its current track to commit, or coordinate so the two don't both edit `PlaceOrderRequest`, `OrderService` and the place-order acceptance tests at the same time.
-  - Profile storage: a DB migration plus `GET`/`PUT /api/account/profile`, keyed by the Keycloak subject.
-  - An `orders.shipping_address` column. `PlaceOrderRequest` takes the address instead of a free `country`.
-  - `GET /api/orders?customer=` for the admin filter.
-  - Acceptance tests for these use cases' scenarios in all three languages.
-  - Scenarios (API channel): `@UC-001.4`, `@UC-001.10`, `@UC-001.15`, `@UC-001.16` (retagged Quick-order country tests); `@UC-010.1`, `@UC-010.2`, `@UC-010.3` (unsupported country), `@UC-010.5` (privacy), `@UC-010.8`; `@UC-011.1` (admin sees every customer's orders), `@UC-011.3` (customer filter), `@UC-011.4`, `@UC-011.5`, `@UC-011.8` (no match). The UI-only rest of UC-010 and UC-011 moves to Step 8.
-- [ ] **Step 3: React reference implementation** (`system/multitier/frontend-react`; UC-006 to UC-011).
-  - Make auth per-route: `AuthGate` loads the session silently, and `RequireAuth` wraps only the signed-in routes in spec §2.
-  - In the same commit, change `openHomePage()` to click "Sign In" in the Java, .NET and TS UI drivers (spec §7.1).
-  - New `StoreLayout` (spec §3).
-  - Pages from spec §4: `Catalog` (the new `/`), `ProductDetail`, `Cart`, `Checkout`, `OrderConfirmation`, `Account`.
-  - `CartContext` backed by `localStorage`, wrapped in try/catch (spec §6.3).
-  - Move the admin and order pages under the account and admin navigation, keeping their routes and `aria-label`s.
-  - Keep the `/new-order` page working (tests use it) and reachable from `/`.
-  - Add unit and interaction tests under `src/test`.
-  - Gate: `npx tsc --noEmit`, the unit tests, and the multitier sample system tests.
-  - Scenarios it must make passable through the UI (their tests land in Step 8): all of `@UC-006.*`, `@UC-007.*`, `@UC-008.*`, `@UC-009.*`; `@UC-010.1` (email read-only), `@UC-010.3` (country choices), `@UC-010.4`, `@UC-010.5` (checkout preselect, Quick order prefill), `@UC-010.6`, `@UC-010.7`; `@UC-011.1` (link to details), `@UC-011.3` (filter options; needs a way to list the customers who have ordered, which Step 2 did not add), `@UC-011.6`, `@UC-011.7`, `@UC-011.8` (reset filters); `@UC-003.2`, `@UC-012.2`. Existing `@UC-001`–`@UC-005`, `@UC-012` UI tests stay green.
 - [ ] **Step 4: Port to the Next.js monolith** (`system/monolith/typescript`). Same routes and same markup contract.
   - Scenarios: the same list as Step 3, in this UI.
 - [ ] **Step 5: Port to the Thymeleaf monolith** (`system/monolith/java`). Server-side cart in the session, header partial in `layout.html`.
