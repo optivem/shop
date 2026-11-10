@@ -30,8 +30,25 @@ Useful flags:
 
 - `-l dotnet,java` — run only a subset of languages
 - `-a multitier` — run against the multitier architecture instead of monolith
+- `--restart` — pass `--restart` through to `gh optivem system start`, so
+  changed services are rebuilt/recreated instead of reusing possibly stale
+  images (opt-in; the default is a plain `system start`)
+
+After each phase (latest, then legacy, per language) the script runs
+`gh optivem system stop` with that phase's config, so stacks don't pile up and
+eat memory. A trap does the same if the run is cut off (Ctrl+C / SIGTERM), and
+the script's exit code is preserved.
 
 This is the preferred entry point for verifying cross-language changes.
+
+**Low memory / running from Claude Code.** `./test-all.sh -a multitier` can be
+killed partway through by Claude Code's background-shell memory reaper (seen
+twice, even starting with ~7.6 GB free; `-a monolith` finishes). Any one of
+these avoids it:
+
+- run multitier one language at a time: `./test-all.sh -a multitier -l <lang>`
+- run it from a terminal outside Claude Code
+- start Claude Code with `CLAUDE_CODE_DISABLE_BG_SHELL_PRESSURE_REAP=1`
 
 ### Single language — `gh optivem system-test run`
 
