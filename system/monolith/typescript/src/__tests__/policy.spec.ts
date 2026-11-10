@@ -11,13 +11,18 @@ describe('decide', () => {
     ['POST', '/logout'],
     ['GET', '/api/products'],
     ['GET', '/api/products/BOOK-123'],
+    ['GET', '/'],
+    ['GET', '/products/HP-15'],
+    ['GET', '/cart'],
+    ['GET', '/sign-in'],
   ])('%s %s is public', (method, path) => {
     expect(decide(method, path, null)).toBe('allow');
   });
 
   it.each([
-    ['GET', '/'],
     ['GET', '/order-history'],
+    ['GET', '/account'],
+    ['GET', '/order-details'],
     ['GET', '/api/orders'],
     ['GET', '/api/orders/ORD-1'],
     ['POST', '/api/orders/ORD-1/cancel'],
@@ -35,6 +40,8 @@ describe('decide', () => {
   it.each([
     ['POST', '/api/orders'],
     ['GET', '/new-order'],
+    ['GET', '/checkout'],
+    ['GET', '/checkout/confirmation'],
   ])('%s %s is CUSTOMER only', (method, path) => {
     expect(decide(method, path, null)).toBe('unauthenticated');
     expect(decide(method, path, customer)).toBe('allow');

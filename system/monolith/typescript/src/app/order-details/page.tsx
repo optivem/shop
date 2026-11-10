@@ -3,6 +3,8 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { AccountLayout } from "@/components/StoreLayout";
+import { formatAddress } from "@/lib/storefront/shipping";
 import {
   formatFieldErrors,
   orderDetailSchema,
@@ -154,20 +156,6 @@ function OrderDetailsContent() {
 
   return (
     <>
-      <nav aria-label="breadcrumb">
-        <ol className="breadcrumb">
-          <li className="breadcrumb-item">
-            <Link href="/">Home</Link>
-          </li>
-          <li className="breadcrumb-item">
-            <Link href="/order-history">Order History</Link>
-          </li>
-          <li className="breadcrumb-item active" aria-current="page">
-            Order Details
-          </li>
-        </ol>
-      </nav>
-
       {notification && (
         <div
           role="alert"
@@ -250,6 +238,12 @@ function OrderDetailsContent() {
                   <strong>Country:</strong>
                   <p aria-label="Display Country">{order.country}</p>
                 </div>
+                {order.shippingAddress && (
+                  <div className="col-md-6 mb-3">
+                    <strong>Shipping Address:</strong>
+                    <p aria-label="Display Shipping Address">{formatAddress(order.shippingAddress)}</p>
+                  </div>
+                )}
                 <div className="col-md-6 mb-3">
                   <strong>Quantity:</strong>
                   <p aria-label="Display Quantity">{order.quantity}</p>
@@ -349,21 +343,29 @@ function OrderDetailsContent() {
   );
 }
 
+const BREADCRUMBS = [
+  { label: "Home", path: "/" },
+  { label: "Order History", path: "/order-history" },
+  { label: "Order Details" },
+];
+
 export default function OrderDetailsPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="text-center py-5">
-          <output>
-            <div className="spinner-border text-primary">
-              <span className="visually-hidden">Loading...</span>
-            </div>
-          </output>
-          <p className="mt-3">Loading...</p>
-        </div>
-      }
-    >
-      <OrderDetailsContent />
-    </Suspense>
+    <AccountLayout title="Order Details" breadcrumbs={BREADCRUMBS}>
+      <Suspense
+        fallback={
+          <div className="text-center py-5">
+            <output>
+              <div className="spinner-border text-primary">
+                <span className="visually-hidden">Loading...</span>
+              </div>
+            </output>
+            <p className="mt-3">Loading...</p>
+          </div>
+        }
+      >
+        <OrderDetailsContent />
+      </Suspense>
+    </AccountLayout>
   );
 }

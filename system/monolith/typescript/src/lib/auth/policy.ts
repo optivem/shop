@@ -7,12 +7,15 @@ export interface Principal {
   roles: readonly string[];
 }
 
-const PUBLIC_PATHS = new Set(['/health', '/login', '/login/callback', '/logout']);
+const PUBLIC_PATHS = new Set(['/health', '/login', '/login/callback', '/logout', '/sign-in']);
 
-// The product catalog is public: anonymous visitors may browse and view products (read-only).
+// The product catalog is public: anonymous visitors may browse and view products (read-only), and the
+// storefront pages around it (catalog, product pages, cart) never ask to sign in (storefront-ux §2).
 const PUBLIC_RULES: readonly ((method: string, path: string) => boolean)[] = [
   (method, path) => method === 'GET' && path === '/api/products',
   (method, path) => method === 'GET' && /^\/api\/products\/[^/]+$/.test(path),
+  (method, path) => method === 'GET' && (path === '/' || path === '/cart'),
+  (method, path) => method === 'GET' && /^\/products\/[^/]+$/.test(path),
 ];
 
 const ADMIN_ONLY: readonly ((method: string, path: string) => boolean)[] = [
@@ -26,6 +29,7 @@ const ADMIN_ONLY: readonly ((method: string, path: string) => boolean)[] = [
 const CUSTOMER_ONLY: readonly ((method: string, path: string) => boolean)[] = [
   (method, path) => method === 'POST' && path === '/api/orders',
   (_method, path) => path === '/new-order',
+  (_method, path) => path === '/checkout' || path === '/checkout/confirmation',
 ];
 
 /**

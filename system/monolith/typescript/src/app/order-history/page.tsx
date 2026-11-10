@@ -2,25 +2,57 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { AccountLayout } from "@/components/StoreLayout";
+import { useSession } from "@/components/StorefrontProviders";
 import { ordersResponseSchema, parseJson, readErrorData, type Order } from "@/lib/api-types";
 
+// The admin list is paged; the customer filter offers the customers found on its pages, up to this many.
+const MAX_CUSTOMER_PAGES = 50;
+
+function ordersUrl(params: { orderNumber?: string; customer?: string; page?: number }): string {
+  const query = new URLSearchParams();
+  if (params.orderNumber) query.set("orderNumber", params.orderNumber);
+  if (params.customer) query.set("customer", params.customer);
+  if (params.page !== undefined) query.set("page", String(params.page));
+  const search = query.toString();
+  return search ? `/api/orders?${search}` : "/api/orders";
+}
+
+const mergeCustomers = (known: string[], more: string[]) => [...new Set([...known, ...more])].sort((a, b) => a.localeCompare(b));
+
+/** The customers who have placed orders, from every page of the unfiltered admin list. */
+async function collectAllCustomers(): Promise<string[]> {
+  const customers: string[] = [];
+  let totalPages = 1;
+  for (let page = 1; page <= Math.min(totalPages, MAX_CUSTOMER_PAGES); page++) {
+    const response = await fetch(ordersUrl({ page }));
+    if (!response.ok) break;
+    const data = await parseJson(response, ordersResponseSchema);
+    customers.push(...data.orders.map((order) => order.customer).filter((customer): customer is string => !!customer));
+    totalPages = data.totalPages ?? 1;
+  }
+  return customers;
+}
+
+/**
+ * Order History page: My orders for a customer, Admin › All orders for an admin (UC-002, UC-011).
+ * Filters by order number; an admin can also filter by the customer who placed the order.
+ */
 export default function OrderHistoryPage() {
+  const isAdmin = useSession()?.isAdmin ?? false;
   const [filter, setFilter] = useState("");
+  const [customer, setCustomer] = useState("");
+  const [customers, setCustomers] = useState<string[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadOrders = useCallback(async (orderNumberFilter?: string) => {
+  const loadOrders = useCallback(async (orderNumberFilter?: string, customerFilter?: string) => {
     setLoading(true);
     setError(null);
 
     try {
-      let url = "/api/orders";
-      if (orderNumberFilter) {
-        url += `?orderNumber=${encodeURIComponent(orderNumberFilter)}`;
-      }
-
-      const response = await fetch(url);
+      const response = await fetch(ordersUrl({ orderNumber: orderNumberFilter, customer: customerFilter }));
 
       if (!response.ok) {
         const data = await readErrorData(response);
@@ -41,37 +73,71 @@ export default function OrderHistoryPage() {
     }
   }, []);
 
-  // The API reports the customer only to admins, so its presence is what turns the column on.
-  const showCustomer = orders.some((order) => order.customer !== undefined);
+  // Admins see who placed each order (UC-011); the API reports the customer only to admins.
+  const showCustomer = isAdmin || orders.some((order) => order.customer !== undefined);
 
   useEffect(() => {
     void loadOrders();
   }, [loadOrders]);
 
+  useEffect(() => {
+    if (!isAdmin) return;
+    let ignore = false;
+    void collectAllCustomers()
+      .then((found) => {
+        if (!ignore) setCustomers((known) => mergeCustomers(known, found));
+      })
+      .catch(() => undefined);
+    return () => {
+      ignore = true;
+    };
+  }, [isAdmin]);
+
   function handleRefresh() {
-    void loadOrders(filter || undefined);
+    void loadOrders(filter || undefined, customer || undefined);
   }
 
-  return (
-    <>
-      <nav aria-label="breadcrumb">
-        <ol className="breadcrumb">
-          <li className="breadcrumb-item">
-            <Link href="/">Home</Link>
-          </li>
-          <li className="breadcrumb-item active" aria-current="page">
-            Order History
-          </li>
-        </ol>
-      </nav>
+  function handleCustomerChange(value: string) {
+    setCustomer(value);
+    void loadOrders(filter || undefined, value || undefined);
+  }
 
+  // The chosen customer stays offered even before the list of customers has arrived.
+  const customerOptions = customer && !customers.includes(customer) ? mergeCustomers(customers, [customer]) : customers;
+
+  return (
+    <AccountLayout
+      title={isAdmin ? "All orders" : "My orders"}
+      breadcrumbs={[{ label: "Home", path: "/" }, ...(isAdmin ? [{ label: "Admin" }, { label: "All orders" }] : [{ label: "My orders" }])]}
+    >
       <div className="card shadow">
         <div className="card-header bg-primary text-white">
           <h4 className="mb-0">Order History</h4>
         </div>
         <div className="card-body">
-          <div className="row mb-3">
-            <div className="col-md-8">
+          <div className="row mb-3 g-3">
+            {isAdmin && (
+              <div className="col-md-4">
+                <label htmlFor="customerFilter" className="form-label">
+                  Customer:
+                </label>
+                <select
+                  id="customerFilter"
+                  className="form-select"
+                  aria-label="Customer Filter"
+                  value={customer}
+                  onChange={(e) => handleCustomerChange(e.target.value)}
+                >
+                  <option value="">All customers</option>
+                  {customerOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            <div className={isAdmin ? "col-md-5" : "col-md-8"}>
               <label htmlFor="orderNumberFilter" className="form-label">
                 Filter by Order Number:
               </label>
@@ -88,7 +154,7 @@ export default function OrderHistoryPage() {
                 aria-label="Order Number"
               />
             </div>
-            <div className="col-md-4 d-flex align-items-end">
+            <div className={`${isAdmin ? "col-md-3" : "col-md-4"} d-flex align-items-end`}>
               <button
                 className="btn btn-secondary w-100"
                 onClick={handleRefresh}
@@ -182,6 +248,6 @@ export default function OrderHistoryPage() {
           )}
         </div>
       </div>
-    </>
+    </AccountLayout>
   );
 }

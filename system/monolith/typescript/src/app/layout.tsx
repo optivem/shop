@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { cookies } from "next/headers";
+import { StorefrontProviders, type SessionUser } from "@/components/StorefrontProviders";
+import { ADMIN, CUSTOMER } from "@/lib/auth/policy";
 import { SESSION_COOKIE, openSession } from "@/lib/auth/session";
+import { CART_COOKIE, parseCart } from "@/lib/storefront/cart-cookie";
+import { loadCatalog } from "@/lib/storefront/catalog-server";
 import "./globals.css";
 
 // Same-origin state-changing fetch() calls carry a custom header, which the server requires for
@@ -29,7 +32,14 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = await openSession((await cookies()).get(SESSION_COOKIE)?.value);
+  const cookieStore = await cookies();
+  const session = await openSession(cookieStore.get(SESSION_COOKIE)?.value);
+  const user: SessionUser | null = session
+    ? { username: session.name, isAdmin: session.roles.includes(ADMIN), canPlaceOrder: session.roles.includes(CUSTOMER) }
+    : null;
+  // The header shows the catalog's categories on every page; an unavailable ERP leaves them out.
+  const catalog = await loadCatalog();
+  const cart = parseCart(cookieStore.get(CART_COOKIE)?.value);
 
   return (
     <html lang="en">
@@ -41,22 +51,9 @@ export default async function RootLayout({
         />
       </head>
       <body>
-        <nav className="navbar navbar-expand-lg navbar-dark bg-primary">
-          <div className="container">
-            <Link className="navbar-brand" href="/">
-              MyShop
-            </Link>
-            {session && (
-              <form method="post" action="/logout" className="d-flex align-items-center ms-auto">
-                <span className="navbar-text me-3">{session.name}</span>
-                <button type="submit" className="btn btn-outline-light btn-sm">
-                  Logout
-                </button>
-              </form>
-            )}
-          </div>
-        </nav>
-        <div className="container mt-4">{children}</div>
+        <StorefrontProviders session={user} products={catalog.products} catalogUnavailable={catalog.unavailable} cart={cart}>
+          {children}
+        </StorefrontProviders>
         <script
           src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
           async

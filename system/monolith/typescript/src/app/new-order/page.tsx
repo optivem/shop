@@ -1,8 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
+import { useEffect, useState } from "react";
+import { AccountLayout, LoadingSpinner } from "@/components/StoreLayout";
 import { formatFieldErrors, parseJson, placeOrderResponseSchema, readErrorData } from "@/lib/api-types";
+import { viewProfile } from "@/lib/storefront/api-client";
+
+const DEFAULT_COUNTRY = "US";
+const BREADCRUMBS = [{ label: "Home", path: "/" }, { label: "Quick order" }];
 
 function buildOrderBody(sku: string, quantity: string, country: string, couponCode: string): Record<string, unknown> {
   const body: Record<string, unknown> = {};
@@ -21,10 +25,36 @@ function buildOrderBody(sku: string, quantity: string, country: string, couponCo
   return body;
 }
 
+/**
+ * `/new-order`: Quick order, with its Country prefilled from the customer's saved profile (UC-001 1a, UC-010 BR-5).
+ * The form only appears once the profile is read, so a prefill can never overwrite what the customer types.
+ */
 export default function NewOrderPage() {
+  const [initialCountry, setInitialCountry] = useState<string | null>(null);
+
+  useEffect(() => {
+    let ignore = false;
+    void viewProfile().then((result) => {
+      if (ignore) return;
+      const saved = result.success ? (result.data.country?.trim() ?? "") : "";
+      setInitialCountry(saved === "" ? DEFAULT_COUNTRY : saved);
+    });
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  return (
+    <AccountLayout title="Quick order" breadcrumbs={BREADCRUMBS}>
+      {initialCountry === null ? <LoadingSpinner message="Loading..." /> : <NewOrderForm initialCountry={initialCountry} />}
+    </AccountLayout>
+  );
+}
+
+function NewOrderForm({ initialCountry }: Readonly<{ initialCountry: string }>) {
   const [sku, setSku] = useState("");
   const [quantity, setQuantity] = useState("");
-  const [country, setCountry] = useState("");
+  const [country, setCountry] = useState(initialCountry);
   const [couponCode, setCouponCode] = useState("");
   const [notification, setNotification] = useState<{
     type: "success" | "error";
@@ -84,17 +114,6 @@ export default function NewOrderPage() {
 
   return (
     <>
-      <nav aria-label="breadcrumb">
-        <ol className="breadcrumb">
-          <li className="breadcrumb-item">
-            <Link href="/">Home</Link>
-          </li>
-          <li className="breadcrumb-item active" aria-current="page">
-            New Order
-          </li>
-        </ol>
-      </nav>
-
       {notification && (
         <div
           role="alert"

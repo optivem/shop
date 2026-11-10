@@ -30,6 +30,17 @@ export const orderDetailSchema = z.object({
   totalPrice: z.string(),
   appliedCouponCode: z.string().nullable(),
   status: z.enum(ORDER_STATUSES),
+  // Absent for Quick orders and older orders.
+  shippingAddress: z
+    .object({
+      firstName: z.string(),
+      lastName: z.string(),
+      street: z.string(),
+      postalCode: z.string(),
+      city: z.string(),
+      country: z.string(),
+    })
+    .nullish(),
 });
 
 export const ordersResponseSchema = z.object({
@@ -44,6 +55,7 @@ export const ordersResponseSchema = z.object({
       customer: z.string().nullish(),
     })
   ),
+  totalPages: z.number().nullish(),
 });
 
 export const couponsResponseSchema = z.object({
@@ -61,10 +73,33 @@ export const couponsResponseSchema = z.object({
 
 export const placeOrderResponseSchema = z.object({ orderNumber: z.string() });
 
+export const productSchema = z.object({
+  sku: z.string(),
+  title: z.string().nullish(),
+  description: z.string().nullish(),
+  brand: z.string().nullish(),
+  category: z.string().nullish(),
+  price: z.string(),
+});
+
+export const productsResponseSchema = z.array(productSchema);
+
+export const profileResponseSchema = z.object({
+  firstName: z.string().nullish(),
+  lastName: z.string().nullish(),
+  email: z.string().nullish(),
+  street: z.string().nullish(),
+  postalCode: z.string().nullish(),
+  city: z.string().nullish(),
+  country: z.string().nullish(),
+});
+
 export type ErrorData = z.infer<typeof errorDataSchema>;
 export type OrderDetail = z.infer<typeof orderDetailSchema>;
 export type Order = z.infer<typeof ordersResponseSchema>['orders'][number];
 export type Coupon = z.infer<typeof couponsResponseSchema>['coupons'][number];
+export type ApiProduct = z.infer<typeof productSchema>;
+export type ProfileResponseData = z.infer<typeof profileResponseSchema>;
 
 export async function parseJson<T>(response: Response, schema: z.ZodType<T>): Promise<T> {
   const body: unknown = await response.json();

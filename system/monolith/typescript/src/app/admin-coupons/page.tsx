@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
+import { AccountLayout } from "@/components/StoreLayout";
 import {
   couponsResponseSchema,
   formatFieldErrors,
@@ -23,6 +23,8 @@ function formatUsageLimit(value?: number | null): string {
     return "Unlimited";
   return value.toString();
 }
+
+const BREADCRUMBS = [{ label: "Home", path: "/" }, { label: "Coupon Management" }];
 
 export default function AdminCouponsPage() {
   const [coupons, setCoupons] = useState<Coupon[]>([]);
@@ -124,17 +126,7 @@ export default function AdminCouponsPage() {
   }
 
   return (
-    <>
-      <nav aria-label="breadcrumb">
-        <ol className="breadcrumb">
-          <li className="breadcrumb-item">
-            <Link href="/">Home</Link>
-          </li>
-          <li className="breadcrumb-item active" aria-current="page">
-            Coupon Management
-          </li>
-        </ol>
-      </nav>
+    <AccountLayout title="Coupon Management" breadcrumbs={BREADCRUMBS}>
 
       {notification && (
         <div
@@ -325,6 +317,6 @@ export default function AdminCouponsPage() {
           )}
         </div>
       </div>
-    </>
+    </AccountLayout>
   );
 }
