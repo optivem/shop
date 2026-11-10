@@ -9,7 +9,7 @@
 
 Session 2026-11-10 did #1, #2, #3 (full latest acceptance runs per language on monolith stacks: .NET 363/363, Java 231 passed/0 failed/74 skipped, TS 250/250; afterwards each stub server held only its 18 static mappings, 0 dynamic, so no Java/TS leak), #4, #6, #7 (b) (token retry in all three languages; 0 token failures and 0 retries across the acceptance and sample runs), #8a, #8b, #9, #12, #13, #14 (system-test/typescript high 1 → 0; still deferred, needing a breaking major bump: postcss via next 16 (monolith), `@pact-foundation/pact` 17 (backend-typescript, frontend-react), vitest 5 (frontend-react, critical), and backend-typescript brace-expansion <=1.1.20, pinned by its dependent), #16 (now `gh-optivem/plans/20261110-2109-system-test-per-suite-counts.md`), #18, #19, #22–#25 and #28; #10 and #8c dropped.
 
-**Waiting on the user:** #27's fix is written but **uncommitted** in `../actions/trigger-and-wait-for-workflow/trigger.sh` (+ README). Committing it auto-pushes and moves the floating `v1` tag for every consumer, and on a moved `main` it now warns and continues instead of failing (the child may test a newer sha than the parent tags). Review, then commit via `/commit`. #11 is user-side.
+**Waiting on the user:** #11 is user-side. (#27 committed in `actions` as `1139063`, 2026-11-10.)
 
 **Next executable unit:** #29, re-run `monolith-java-acceptance-stage.yml` and `monolith-dotnet-acceptance-stage.yml` on current `main` (cloud, costs a little; ask the user first) and triage per its recommendation.
 
@@ -48,7 +48,7 @@ Decided by the user on 2026-11-10: #1–#3 one at a time, then "I automatically 
 - **#23 `test-all.sh` stops stacks:** after each language.
 - **#24 `test-all.sh --restart` passthrough.**
 - **#25 `test-all.sh` EXIT trap:** with #23.
-- **#27 meta dispatch matches the child run without `head_sha`.**
+- **#27 meta dispatch matches the child run without `head_sha`:** done (`actions` `1139063`).
 
 **Defer:** #5 (stub reset at suite start), #15 (`next start` standalone), #17 (split `SecurityConfigTest`), #20 (non-UTC CI timezone), #21 (HTML logger control character), #26 (RC tag push; revisit only if it recurs).
 
@@ -94,9 +94,6 @@ The .NET admin-coupons bug (fixed in storefront Step 6) was only caught because 
 `meta-prerelease-stage` run 42660796447 (2026-11-09 17:03, `ac04be12`) failed all six pipelines in `verify / cloud-acceptance-stage` with `Failed to push tag monolith-java-v1.0.237-rc.3363 (remote: , local: ac04be12…)`. The tests weren't the cause. The next runs on 2026-11-10 pushed tags for monolith without a problem, so it looks transient (a race between parallel tag pushes, or a GitHub hiccup), but the empty `remote:` field hides the real error.
 - **Recommended: investigate if it recurs.** Make the tag-push step print git's stderr and retry once on a non-fast-forward or a network error.
 
-### 27. A push to `main` during `meta-prerelease-stage` fails the run
-In run 42885354673 (2026-11-10, `3f4840cc`), a plan-only commit was pushed to `main` while the run was starting. The `multitier-frontend-react-commit-stage.yml` it dispatched ran on the new head (`e8e471a1`, run 42885508265, green), and the parent failed with `Failed to locate dispatched run … (sha=3f4840cc …) within 120s`. Because of that, the pipeline, cross-language and tag jobs were skipped. Any push during the run's dispatch window, even a docs-only one, wastes a ~2.5 h run.
-- **Recommended: do.** Make the dispatch-and-wait step find the child run by a unique run name or correlation input, not by `head_sha`. Or pin the dispatch to the resolved sha. Until then, don't push to `main` while a meta run is dispatching.
 
 ### 29. Cloud-only monolith UI failures in `meta-prerelease-stage` 42888911339
 
