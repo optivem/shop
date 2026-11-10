@@ -8,11 +8,23 @@ export const OrderStatus = {
 
 export type OrderStatus = (typeof OrderStatus)[keyof typeof OrderStatus];
 
+// The address an order ships to; its country is the order's tax country.
+export interface ShippingAddress {
+  firstName: string;
+  lastName: string;
+  street: string;
+  postalCode: string;
+  city: string;
+  country: string;
+}
+
 // API Request types
+// Quick order sends a country; checkout sends a full shipping address instead.
 export interface PlaceOrderRequest {
   sku: string;
   quantity: number;
-  country: string;
+  country?: string;
+  shippingAddress?: ShippingAddress;
   couponCode?: string;
 }
 
@@ -37,6 +49,7 @@ export interface ViewOrderDetailsResponse {
   totalPrice: string;
   appliedCouponCode: string | null;
   status: OrderStatus;
+  shippingAddress?: ShippingAddress | null; // absent for Quick orders and older orders
 }
 
 // Browse Order History types
@@ -54,6 +67,43 @@ export interface BrowseOrderHistoryItemResponse {
 
 export interface BrowseOrderHistoryResponse {
   orders: BrowseOrderHistoryItemResponse[];
+  totalPages?: number; // paging metadata; absent from older backends
+}
+
+export interface BrowseOrderHistoryQuery {
+  orderNumber?: string;
+  customer?: string;
+  page?: number;
+}
+
+// Catalog types (GET /api/products, GET /api/products/{sku})
+export interface Product {
+  sku: string;
+  title: string;
+  description: string;
+  brand: string;
+  category: string;
+  price: string;
+}
+
+// Customer profile types (GET/PUT /api/account/profile)
+export interface ProfileResponse {
+  firstName: string | null;
+  lastName: string | null;
+  email: string | null;
+  street: string | null;
+  postalCode: string | null;
+  city: string | null;
+  country: string | null;
+}
+
+export interface UpdateProfileRequest {
+  firstName: string;
+  lastName: string;
+  street: string;
+  postalCode: string;
+  city: string;
+  country: string;
 }
 
 // Coupon API types

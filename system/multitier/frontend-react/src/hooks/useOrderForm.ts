@@ -5,21 +5,24 @@ import type { OrderFormData } from '../types/form.types';
 import type { PlaceOrderResponse } from '../types/api.types';
 import type { Result } from '../types/result.types';
 
-const INITIAL_FORM: OrderFormData = {
+export const DEFAULT_COUNTRY = 'US';
+
+const initialForm = (country: string): OrderFormData => ({
   sku: '',
   quantity: 0,
   quantityValue: '',
-  country: 'US',
+  country,
   couponCode: '',
-};
+});
 
 /**
  * Custom hook for managing order form state, validation, and submission
  * Handles all business logic for placing orders including client-side validation
+ * @param initialCountry - The country the form starts with (Quick order prefills it from the profile)
  * @returns Form state, submission state, and control functions
  */
-export function useOrderForm() {
-  const [formData, setFormData] = useState<OrderFormData>(INITIAL_FORM);
+export function useOrderForm(initialCountry = DEFAULT_COUNTRY) {
+  const [formData, setFormData] = useState<OrderFormData>(() => initialForm(initialCountry));
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const submitOrder = async (): Promise<Result<PlaceOrderResponse>> => {
@@ -47,7 +50,7 @@ export function useOrderForm() {
 
     if (result.success) {
       // Reset form on success
-      setFormData(INITIAL_FORM);
+      setFormData(initialForm(initialCountry));
     }
 
     return result;
@@ -58,7 +61,7 @@ export function useOrderForm() {
   };
 
   const resetForm = () => {
-    setFormData(INITIAL_FORM);
+    setFormData(initialForm(initialCountry));
   };
 
   return {

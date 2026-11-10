@@ -1,13 +1,6 @@
 import type { ReactNode } from 'react';
-import { Navbar } from './Navbar';
-import { Breadcrumb } from './Breadcrumb';
-import { Notification } from './Notification';
-import { useNotificationContext } from '../contexts/useNotificationContext';
-
-interface BreadcrumbItem {
-  label: string;
-  path?: string;
-}
+import { StoreLayout, type BreadcrumbItem } from './StoreLayout';
+import { AccountNav } from './AccountNav';
 
 interface LayoutProps {
   children: ReactNode;
@@ -16,23 +9,18 @@ interface LayoutProps {
 }
 
 /**
- * Layout wrapper component that provides consistent page structure
- * Includes navbar, notification, and optional breadcrumbs for all pages
- * @param children - Page content to render
- * @param title - Optional page title displayed in navbar
- * @param breadcrumbs - Optional breadcrumb navigation items
+ * Layout of the signed-in area (Quick order, My orders, order details, admin pages, My account): the store
+ * chrome plus the account or admin side navigation. The page content inside keeps its markup and selectors.
  */
 export function Layout({ children, title, breadcrumbs }: Readonly<LayoutProps>) {
-  const { successMessage, error, notificationId } = useNotificationContext();
-
   return (
-    <>
-      <Navbar title={title} />
-      <div className="container mt-4">
-        {breadcrumbs && <Breadcrumb items={breadcrumbs} />}
-        <Notification successMessage={successMessage} error={error} notificationId={notificationId} />
-        {children}
+    <StoreLayout title={title} breadcrumbs={breadcrumbs}>
+      <div className="row">
+        <aside className="col-lg-3">
+          <AccountNav />
+        </aside>
+        <div className="col-lg-9">{children}</div>
       </div>
-    </>
+    </StoreLayout>
   );
 }

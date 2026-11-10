@@ -5,17 +5,18 @@ import { useNotificationContext } from '../contexts/useNotificationContext';
 import { useOrderForm } from '../hooks';
 
 /**
- * New Order page component for placing orders
+ * New Order (Quick order) page component for placing orders by SKU
  * Provides a form interface for customers to submit orders with SKU and quantity
+ * @param initialCountry - The country the form starts with; defaults to US
  */
-export function NewOrder() {
+export function NewOrder({ initialCountry }: Readonly<{ initialCountry?: string }> = {}) {
   const { setSuccess, handleResult } = useNotificationContext();
   const {
     formData,
     updateFormData,
     isSubmitting,
     submitOrder
-  } = useOrderForm();
+  } = useOrderForm(initialCountry);
 
   const handleSubmit = useCallback(async (e: FormEvent) => {
     e.preventDefault();
@@ -25,7 +26,7 @@ export function NewOrder() {
   }, [submitOrder, handleResult, setSuccess]);
 
   return (
-    <Layout title="New Order" breadcrumbs={[{ label: 'Home', path: '/' }, { label: 'New Order' }]}>
+    <Layout title="Quick order" breadcrumbs={[{ label: 'Home', path: '/' }, { label: 'Quick order' }]}>
       <div className="row">
         <div className="col-lg-6 mx-auto">
           <OrderForm

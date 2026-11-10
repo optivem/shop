@@ -9,6 +9,8 @@ public sealed class KeycloakUiLogin
     private const string UsernameSelector = "#username";
     private const string PasswordSelector = "#password";
     private const string SubmitSelector = "#kc-login";
+    /// <summary>The storefront's header link for anonymous visitors; apps that force login on every page never show it.</summary>
+    private const string SignInSelector = "[aria-label='Sign In']";
     private const int TimeoutMilliseconds = 90_000;
 
     private readonly string _keycloakBaseUrl;
@@ -41,11 +43,21 @@ public sealed class KeycloakUiLogin
         return true;
     }
 
-    /// <summary>Waits until either the Keycloak login form or the app-ready selector shows, logging in if needed.</summary>
+    /// <summary>
+    /// Waits until the Keycloak login form, the app-ready selector or the "Sign In" link shows, and logs in if needed.
+    /// An app with an anonymous storefront shows "Sign In" instead of redirecting, so it is clicked to reach the login.
+    /// </summary>
     public async Task EnsureLoggedInAsync(IPage page, string appReadySelector)
     {
-        await page.WaitForSelectorAsync(SubmitSelector + ", " + appReadySelector,
+        await page.WaitForSelectorAsync(SubmitSelector + ", " + appReadySelector + ", " + SignInSelector,
             new PageWaitForSelectorOptions { Timeout = TimeoutMilliseconds });
+        if (!IsLoginPage(page) && !await page.IsVisibleAsync(appReadySelector) && await page.IsVisibleAsync(SignInSelector))
+        {
+            await page.ClickAsync(SignInSelector);
+            // Keycloak shows its form, or sends the browser straight back when it already has a session.
+            await page.WaitForSelectorAsync(SubmitSelector + ", " + appReadySelector,
+                new PageWaitForSelectorOptions { Timeout = TimeoutMilliseconds });
+        }
         if (IsLoginPage(page))
         {
             await LoginAsync(page);

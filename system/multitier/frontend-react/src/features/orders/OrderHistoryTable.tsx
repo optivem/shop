@@ -12,10 +12,19 @@ import { useRoles } from '../../auth/useRoles';
 import { LoadingSpinner, ErrorMessage, SortableHeaderCell } from '../../components';
 import type { BrowseOrderHistoryItemResponse } from '../../types/api.types';
 
+export interface CustomerFilter {
+  /** '' means All customers. */
+  value: string;
+  options: string[];
+  onChange: (customer: string) => void;
+}
+
 export interface OrderHistoryTableProps {
   orders: BrowseOrderHistoryItemResponse[];
   filter: string;
   onFilterChange: (value: string) => void;
+  /** Admins only (UC-011 BR-3); customers never get it. */
+  customerFilter?: CustomerFilter;
   isLoading: boolean;
   error: string | null;
   onRefresh: () => void;
@@ -31,6 +40,7 @@ export function OrderHistoryTable({
   orders,
   filter,
   onFilterChange,
+  customerFilter,
   isLoading,
   error,
   onRefresh
@@ -118,8 +128,29 @@ export function OrderHistoryTable({
         <h4 className="mb-0">Order History</h4>
       </div>
       <div className="card-body">
-        <div className="row mb-3">
-          <div className="col-md-8">
+        <div className="row mb-3 g-3">
+          {customerFilter && (
+            <div className="col-md-4">
+              <label htmlFor="customerFilter" className="form-label">
+                Customer:
+              </label>
+              <select
+                id="customerFilter"
+                className="form-select"
+                aria-label="Customer Filter"
+                value={customerFilter.value}
+                onChange={(e) => customerFilter.onChange(e.target.value)}
+              >
+                <option value="">All customers</option>
+                {customerFilter.options.map((customer) => (
+                  <option key={customer} value={customer}>
+                    {customer}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+          <div className={customerFilter ? 'col-md-5' : 'col-md-8'}>
             <label htmlFor="orderNumberFilter" className="form-label">
               Filter by Order Number:
             </label>
@@ -133,7 +164,7 @@ export function OrderHistoryTable({
               placeholder="Enter order number..."
             />
           </div>
-          <div className="col-md-4 d-flex align-items-end">
+          <div className={`${customerFilter ? 'col-md-3' : 'col-md-4'} d-flex align-items-end`}>
             <button
               className="btn btn-secondary w-100"
               onClick={onRefresh}

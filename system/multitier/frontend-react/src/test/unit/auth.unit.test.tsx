@@ -6,7 +6,8 @@ import { AuthContext, type AuthContextProps } from 'react-oidc-context';
 import { RequireAuth } from '../../auth/AuthGate';
 import { setAccessTokenSource, setUnauthorizedHandler } from '../../auth/access-token';
 import { getAuthConfig, getAuthority } from '../../auth/config';
-import { Navbar } from '../../components/Navbar';
+import { SessionCheckedContext } from '../../auth/session-check';
+import { StoreHeader } from '../../components/StoreHeader';
 import { browseCoupons } from '../../services/coupon-service';
 import { createMockAuth } from '../test-utils';
 
@@ -37,6 +38,35 @@ describe('RequireAuth', () => {
 
     expect(screen.getByText('secret')).toBeInTheDocument();
     expect(signinRedirect).not.toHaveBeenCalled();
+  });
+
+  it('remembers the page to come back to after the login', () => {
+    const signinRedirect = vi.fn().mockResolvedValue(undefined);
+    const auth = createMockAuth({ isAuthenticated: false, user: null, signinRedirect });
+    globalThis.history.replaceState({}, '', '/checkout');
+
+    renderWithAuth(<RequireAuth><div>secret</div></RequireAuth>, auth);
+
+    expect(signinRedirect).toHaveBeenCalledWith({ state: { returnUrl: '/checkout' } });
+    globalThis.history.replaceState({}, '', '/');
+  });
+
+  it('does not redirect while the existing session is still being checked', () => {
+    const signinRedirect = vi.fn().mockResolvedValue(undefined);
+    const auth = createMockAuth({ isAuthenticated: false, user: null, signinRedirect });
+
+    render(
+      <AuthContext.Provider value={auth}>
+        <SessionCheckedContext.Provider value={false}>
+          <MemoryRouter>
+            <RequireAuth><div>secret</div></RequireAuth>
+          </MemoryRouter>
+        </SessionCheckedContext.Provider>
+      </AuthContext.Provider>,
+    );
+
+    expect(signinRedirect).not.toHaveBeenCalled();
+    expect(screen.queryByText('secret')).not.toBeInTheDocument();
   });
 
   it('does not redirect while the login callback is being processed', () => {
@@ -89,12 +119,12 @@ describe('API client authentication', () => {
   });
 });
 
-describe('Navbar user menu', () => {
+describe('header user menu', () => {
   it('shows the username and signs out on logout', async () => {
     const signoutRedirect = vi.fn().mockResolvedValue(undefined);
     const auth = createMockAuth({ signoutRedirect });
 
-    renderWithAuth(<Navbar />, auth);
+    renderWithAuth(<StoreHeader />, auth);
     expect(screen.getByTestId('username')).toHaveTextContent('customer1');
     await userEvent.click(screen.getByRole('button', { name: 'Logout' }));
 

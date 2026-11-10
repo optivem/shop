@@ -1,12 +1,16 @@
 // Centralized exports for all UI components
 export { Layout } from './Layout';
-export { Navbar } from './Navbar';
+export { StoreLayout } from './StoreLayout';
+export { StoreHeader } from './StoreHeader';
+export { StoreFooter } from './StoreFooter';
+export { AccountNav } from './AccountNav';
+export { ProductImage } from './ProductImage';
+export { QuantityStepper } from './QuantityStepper';
 export { Breadcrumb } from './Breadcrumb';
 export { Notification } from './Notification';
 export { LoadingSpinner } from './LoadingSpinner';
 export { ErrorMessage } from './ErrorMessage';
 export { ErrorBoundary } from './ErrorBoundary';
-export { FeatureCard } from './FeatureCard';
 export { DetailField } from './DetailField';
 export { FormInput } from './FormInput';
 export { SubmitButton } from './SubmitButton';

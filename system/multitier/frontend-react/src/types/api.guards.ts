@@ -8,6 +8,8 @@ import type {
   BrowseOrderHistoryItemResponse,
   BrowseOrderHistoryResponse,
   PlaceOrderResponse,
+  ProfileResponse,
+  ShippingAddress,
   ViewOrderDetailsResponse,
 } from './api.types';
 import type { ProblemDetail, ValidationError } from './error.types';
@@ -36,9 +38,21 @@ const isDecimalString = (value: unknown): value is string => isString(value) && 
 const isStringOrNull = (value: unknown) => value === null || isString(value);
 const isOptionalString = (value: unknown) => value == null || isString(value);
 const isNumberOrNull = (value: unknown) => value === null || isNumber(value);
+const isOptionalNumber = (value: unknown) => value == null || isNumber(value);
+// Catalog prices are decimal strings too, but a plain JSON number is accepted so one backend's serializer can't blank the shop.
+const isPrice = (value: unknown) => isDecimalString(value) || isNumber(value);
 const isOrderStatus = (value: unknown): value is OrderStatus => Object.values<unknown>(OrderStatus).includes(value);
 
 export const isPlaceOrderResponse = hasShape<PlaceOrderResponse>({ orderNumber: isString });
+
+const isShippingAddress = hasShape<ShippingAddress>({
+  firstName: isString,
+  lastName: isString,
+  street: isString,
+  postalCode: isString,
+  city: isString,
+  country: isString,
+});
 
 export const isViewOrderDetailsResponse = hasShape<ViewOrderDetailsResponse>({
   orderNumber: isString,
@@ -56,6 +70,7 @@ export const isViewOrderDetailsResponse = hasShape<ViewOrderDetailsResponse>({
   totalPrice: isDecimalString,
   appliedCouponCode: isStringOrNull,
   status: isOrderStatus,
+  shippingAddress: (value) => value == null || isShippingAddress(value),
 });
 
 export const isBrowseOrderHistoryResponse = hasShape<BrowseOrderHistoryResponse>({
@@ -72,6 +87,38 @@ export const isBrowseOrderHistoryResponse = hasShape<BrowseOrderHistoryResponse>
       customer: isOptionalString,
     })
   ),
+  totalPages: isOptionalNumber,
+});
+
+/** A product as the API sends it; product-service normalises the price to a string and the description to ''. */
+export interface ProductPayload {
+  sku: string;
+  title: string;
+  description?: string | null;
+  brand: string;
+  category: string;
+  price: string | number;
+}
+
+export const isProduct = hasShape<ProductPayload>({
+  sku: isString,
+  title: isString,
+  description: isOptionalString,
+  brand: isString,
+  category: isString,
+  price: isPrice,
+});
+
+export const isProductList = isArrayOf(isProduct);
+
+export const isProfileResponse = hasShape<ProfileResponse>({
+  firstName: isOptionalString,
+  lastName: isOptionalString,
+  email: isOptionalString,
+  street: isOptionalString,
+  postalCode: isOptionalString,
+  city: isOptionalString,
+  country: isOptionalString,
 });
 
 export const isBrowseCouponsResponse = hasShape<BrowseCouponsResponse>({

@@ -1,6 +1,7 @@
 import { InMemoryWebStorage, UserManager, WebStorageStateStore } from 'oidc-client-ts';
 import { getAuthConfig, getAuthority, type AuthConfig } from './config';
 import { setAccessTokenSource, setUnauthorizedHandler } from './access-token';
+import { currentPath } from './return-url';
 
 const config = getAuthConfig();
 const origin = globalThis.location.origin;
@@ -16,6 +17,8 @@ function createUserManager(settings: AuthConfig): UserManager {
     response_type: 'code',
     scope: 'openid profile',
     automaticSilentRenew: true,
+    // The silent session check on page load must not hold the header back for long when Keycloak can't answer.
+    silentRequestTimeoutInSeconds: 5,
     userStore: new WebStorageStateStore({ store: new InMemoryWebStorage() }),
   });
 }
@@ -30,6 +33,6 @@ if (userManager) {
   setUnauthorizedHandler(() => {
     if (redirecting) return;
     redirecting = true;
-    void userManager.removeUser().then(() => userManager.signinRedirect());
+    void userManager.removeUser().then(() => userManager.signinRedirect({ state: { returnUrl: currentPath() } }));
   });
 }

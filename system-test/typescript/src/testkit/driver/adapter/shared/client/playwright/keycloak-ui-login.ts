@@ -4,6 +4,8 @@ import { TestUsers, type TestUser } from '../http/test-user.js';
 const USERNAME_SELECTOR = '#username';
 const PASSWORD_SELECTOR = '#password';
 const SUBMIT_SELECTOR = '#kc-login';
+/** The storefront's header link for anonymous visitors; apps that force login on every page never show it. */
+const SIGN_IN_SELECTOR = "[aria-label='Sign In']";
 const TIMEOUT_MS = 30_000;
 
 /** Logs the browser in on the Keycloak login form when the app redirects there. */
@@ -23,9 +25,17 @@ export class KeycloakUiLogin {
     return this.user;
   }
 
-  /** Waits until either the Keycloak login form or the app-ready selector shows, logging in if needed. */
+  /**
+   * Waits until the Keycloak login form, the app-ready selector or the "Sign In" link shows, and logs in if needed.
+   * An app with an anonymous storefront shows "Sign In" instead of redirecting, so it is clicked to reach the login.
+   */
   async ensureLoggedIn(page: Page, appReadySelector: string): Promise<void> {
-    await page.waitForSelector(`${SUBMIT_SELECTOR}, ${appReadySelector}`, { timeout: TIMEOUT_MS });
+    await page.waitForSelector(`${SUBMIT_SELECTOR}, ${appReadySelector}, ${SIGN_IN_SELECTOR}`, { timeout: TIMEOUT_MS });
+    if (!this.isLoginPage(page) && !(await page.isVisible(appReadySelector)) && (await page.isVisible(SIGN_IN_SELECTOR))) {
+      await page.click(SIGN_IN_SELECTOR);
+      // Keycloak shows its form, or sends the browser straight back when it already has a session.
+      await page.waitForSelector(`${SUBMIT_SELECTOR}, ${appReadySelector}`, { timeout: TIMEOUT_MS });
+    }
     if (this.isLoginPage(page)) {
       await this.login(page);
       await page.waitForSelector(appReadySelector, { timeout: TIMEOUT_MS });

@@ -7,6 +7,8 @@ public class KeycloakUiLogin {
     private static final String USERNAME_SELECTOR = "#username";
     private static final String PASSWORD_SELECTOR = "#password";
     private static final String SUBMIT_SELECTOR = "#kc-login";
+    /** The storefront's header link for anonymous visitors; apps that force login on every page never show it. */
+    private static final String SIGN_IN_SELECTOR = "[aria-label='Sign In']";
     private static final int TIMEOUT_MILLISECONDS = 30_000;
 
     private final String keycloakBaseUrl;
@@ -45,10 +47,19 @@ public class KeycloakUiLogin {
         return true;
     }
 
-    /** Waits until either the Keycloak login form or the app-ready selector shows, logging in if needed. */
+    /**
+     * Waits until the Keycloak login form, the app-ready selector or the "Sign In" link shows, and logs in if needed.
+     * An app with an anonymous storefront shows "Sign In" instead of redirecting, so it is clicked to reach the login.
+     */
     public void ensureLoggedIn(Page page, String appReadySelector) {
-        page.waitForSelector(SUBMIT_SELECTOR + ", " + appReadySelector,
+        page.waitForSelector(SUBMIT_SELECTOR + ", " + appReadySelector + ", " + SIGN_IN_SELECTOR,
                 new Page.WaitForSelectorOptions().setTimeout(TIMEOUT_MILLISECONDS));
+        if (!isLoginPage(page) && !page.isVisible(appReadySelector) && page.isVisible(SIGN_IN_SELECTOR)) {
+            page.click(SIGN_IN_SELECTOR);
+            // Keycloak shows its form, or sends the browser straight back when it already has a session.
+            page.waitForSelector(SUBMIT_SELECTOR + ", " + appReadySelector,
+                    new Page.WaitForSelectorOptions().setTimeout(TIMEOUT_MILLISECONDS));
+        }
         if (isLoginPage(page)) {
             login(page);
             page.waitForSelector(appReadySelector,

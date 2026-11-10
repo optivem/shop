@@ -4,7 +4,7 @@ import { Route, Routes } from 'react-router-dom';
 import { RequireAdmin } from '../../auth/RequireAdmin';
 import { RequireCanPlaceOrder } from '../../auth/RequireCanPlaceOrder';
 import { getRolesFromToken } from '../../auth/roles';
-import { Home } from '../../pages/Home';
+import { StoreHeader } from '../../components/StoreHeader';
 import { createMockAuth, renderWithProviders } from '../test-utils';
 
 const customer = () => createMockAuth({}, ['CUSTOMER']);
@@ -18,14 +18,14 @@ describe('getRolesFromToken', () => {
 
 describe('role-aware navigation', () => {
   it('hides coupon management from a customer', () => {
-    renderWithProviders(<Home />, { auth: customer() });
-    expect(screen.getByText('View Orders')).toBeInTheDocument();
-    expect(screen.queryByText('Manage Coupons')).not.toBeInTheDocument();
+    renderWithProviders(<StoreHeader />, { auth: customer() });
+    expect(screen.getByRole('link', { name: 'My orders' })).toHaveAttribute('href', '/order-history');
+    expect(screen.queryByRole('link', { name: 'Admin' })).not.toBeInTheDocument();
   });
 
   it('shows coupon management to an admin', () => {
-    renderWithProviders(<Home />);
-    expect(screen.getByText('Manage Coupons')).toBeInTheDocument();
+    renderWithProviders(<StoreHeader />);
+    expect(screen.getByRole('link', { name: 'Admin' })).toHaveAttribute('href', '/admin-coupons');
   });
 });
 
@@ -58,14 +58,14 @@ describe('place-order access', () => {
   );
 
   it('hides new order from an admin who is not a customer', () => {
-    renderWithProviders(<Home />, { auth: adminOnly() });
-    expect(screen.queryByText('New Order', { selector: 'a' })).not.toBeInTheDocument();
-    expect(screen.getByText('Manage Coupons')).toBeInTheDocument();
+    renderWithProviders(<StoreHeader />, { auth: adminOnly() });
+    expect(screen.queryByRole('link', { name: 'Quick order' })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Admin' })).toBeInTheDocument();
   });
 
   it('shows new order to a customer', () => {
-    renderWithProviders(<Home />, { auth: customer() });
-    expect(screen.getByText('New Order', { selector: 'a' })).toBeInTheDocument();
+    renderWithProviders(<StoreHeader />, { auth: customer() });
+    expect(screen.getByRole('link', { name: 'Quick order' })).toHaveAttribute('href', '/new-order');
   });
 
   it('blocks an admin-only user from the new order route', () => {

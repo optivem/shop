@@ -5,8 +5,7 @@ import { AuthGate } from '../../auth/AuthGate';
 import { RequireAdmin } from '../../auth/RequireAdmin';
 import { getAccessToken } from '../../auth/access-token';
 import { NotificationProvider } from '../../contexts/NotificationContext';
-import { Navbar } from '../../components/Navbar';
-import { Home } from '../../pages/Home';
+import { StoreHeader } from '../../components/StoreHeader';
 import { browseCoupons } from '../../services/coupon-service';
 
 vi.mock('../../auth/user-manager', () => ({ userManager: undefined }));
@@ -36,16 +35,17 @@ describe('auth disabled (no Keycloak configured)', () => {
     expect(new Headers(fetchMock.mock.calls[0]?.[1]?.headers).has('Authorization')).toBe(false);
   });
 
-  it('hides the user menu and logout', () => {
+  it('hides the user menu, logout and sign in', () => {
     render(
       <AuthGate>
         <MemoryRouter>
-          <Navbar />
+          <StoreHeader />
         </MemoryRouter>
       </AuthGate>,
     );
     expect(screen.queryByTestId('username')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Logout' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Sign In' })).not.toBeInTheDocument();
   });
 
   it('shows admin-only UI', () => {
@@ -53,12 +53,12 @@ describe('auth disabled (no Keycloak configured)', () => {
       <AuthGate>
         <NotificationProvider>
           <MemoryRouter>
-            <Home />
+            <StoreHeader />
           </MemoryRouter>
         </NotificationProvider>
       </AuthGate>,
     );
-    expect(screen.getByText('Manage Coupons')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Admin' })).toHaveAttribute('href', '/admin-coupons');
   });
 
   it('lets RequireAdmin through', () => {

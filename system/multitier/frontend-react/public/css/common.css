@@ -46,3 +46,139 @@ body {
 .status-DELIVERED {
     color: #0d6efd;
 }
+
+/* ---- Storefront (docs/design/shared/storefront-ux.md §5) ---- */
+:root {
+    --shop-brand: #1f6feb;
+    --shop-brand-contrast: #ffffff;
+    --shop-accent: #f59e0b;
+    --shop-surface: #ffffff;
+    --shop-muted-surface: #f6f8fa;
+    --shop-text: #1f2328;
+    --shop-muted-text: #59636e;
+    --shop-radius: 0.5rem;
+}
+
+.store {
+    color: var(--shop-text);
+    background-color: var(--shop-muted-surface);
+}
+
+.price {
+    font-variant-numeric: tabular-nums;
+}
+
+:focus-visible {
+    outline: 3px solid var(--shop-accent);
+    outline-offset: 2px;
+}
+
+.store-header-top {
+    background-color: #0b4fb3;
+    color: var(--shop-brand-contrast);
+}
+
+.store-header-nav {
+    background-color: var(--shop-surface);
+    border-bottom: 1px solid #d0d7de;
+}
+
+.store-logo,
+.store-header-link {
+    color: var(--shop-brand-contrast);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.store-logo {
+    font-size: 1.25rem;
+}
+
+.store-logo-mark {
+    color: var(--shop-accent);
+}
+
+.store-logo:hover,
+.store-header-link:hover {
+    color: var(--shop-brand-contrast);
+    text-decoration: underline;
+}
+
+.store-search {
+    max-width: 36rem;
+}
+
+.store-nav-link {
+    color: var(--shop-text);
+    text-decoration: none;
+}
+
+.store-nav-link:hover {
+    color: #0b4fb3;
+    text-decoration: underline;
+}
+
+.store-hero {
+    background: linear-gradient(120deg, #0b4fb3, #1f6feb);
+    color: var(--shop-brand-contrast);
+}
+
+.store-footer {
+    background-color: var(--shop-surface);
+    border-top: 1px solid #d0d7de;
+    color: var(--shop-muted-text);
+}
+
+.store-footer a {
+    color: var(--shop-muted-text);
+}
+
+.product-card {
+    border-radius: var(--shop-radius);
+    overflow: hidden;
+}
+
+.product-title-link {
+    color: var(--shop-text);
+    text-decoration: none;
+}
+
+.product-title-link:hover {
+    text-decoration: underline;
+}
+
+.product-image {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    border-radius: var(--shop-radius);
+}
+
+.product-image-card {
+    aspect-ratio: 4 / 3;
+    font-size: 1.5rem;
+    border-radius: 0;
+}
+
+.product-image-square {
+    aspect-ratio: 1 / 1;
+    font-size: 3rem;
+}
+
+.cart-thumb {
+    width: 4rem;
+    flex-shrink: 0;
+}
+
+.cart-thumb .product-image-card {
+    font-size: 0.75rem;
+    border-radius: 0.25rem;
+}
+
+.quantity-stepper {
+    width: 8.5rem;
+    flex-wrap: nowrap;
+}

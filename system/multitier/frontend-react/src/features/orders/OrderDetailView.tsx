@@ -1,4 +1,5 @@
 import { DetailField } from '../../components/DetailField';
+import { formatAddress } from '../checkout/shipping';
 import type { ViewOrderDetailsResponse } from '../../types/api.types';
 
 export interface OrderDetailViewProps {
@@ -22,6 +23,9 @@ export function OrderDetailView({ order }: Readonly<OrderDetailViewProps>) {
       />
       <DetailField label="SKU" value={order.sku} ariaLabel="Display SKU" />
       <DetailField label="Country" value={order.country} ariaLabel="Display Country" />
+      {order.shippingAddress && (
+        <DetailField label="Shipping Address" value={formatAddress(order.shippingAddress)} ariaLabel="Display Shipping Address" />
+      )}
       <DetailField label="Quantity" value={order.quantity} ariaLabel="Display Quantity" />
       <DetailField label="Unit Price" value={`$${order.unitPrice}`} ariaLabel="Display Unit Price" />
       <DetailField label="Base Price" value={`$${order.basePrice}`} ariaLabel="Display Base Price" />
