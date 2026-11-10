@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::title}, ~{::#page-content}, false)}">
+<head>
+    <title>Cart · MyShop</title>
+</head>
+<body>
+<!-- `/cart` (storefront-ux §4.3, UC-008): the cart lines at current catalog prices, quantity changes, removal and the subtotal. -->
+<div id="page-content">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Home</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Cart</li>
+        </ol>
+    </nav>
+
+    <h1 class="h3 mb-4">
+        Shopping cart
+        <span th:if="${!#lists.isEmpty(lines)}" aria-label="Cart Line Count"
+              th:text="${'(' + #lists.size(lines) + (#lists.size(lines) == 1 ? ' item)' : ' items)')}">(0 items)</span>
+    </h1>
+
+    <div th:if="${#lists.isEmpty(lines)}" class="text-center py-5">
+        <p class="lead">Your cart is empty.</p>
+        <a href="/" class="btn btn-primary">Start shopping</a>
+    </div>
+
+    <div th:if="${!#lists.isEmpty(lines) and unavailable}" class="alert alert-danger" role="alert"
+         th:text="${unavailableMessage}">Products are temporarily unavailable.</div>
+
+    <div th:if="${!#lists.isEmpty(lines) and !unavailable}" class="row g-4">
+        <div class="col-lg-8">
+            <div class="table-responsive">
+                <table class="table align-middle cart-table" aria-label="Cart Lines">
+                    <thead>
+                    <tr>
+                        <th scope="col">Product</th>
+                        <th scope="col" class="text-end">Unit price</th>
+                        <th scope="col">Quantity</th>
+                        <th scope="col" class="text-end">Line total</th>
+                        <th scope="col"><span class="visually-hidden">Remove</span></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="line, iteration : ${lines}" th:attr="aria-label=${'Cart Line ' + line.sku()}">
+                        <td>
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="cart-thumb">
+                                    <div th:replace="~{fragments/product-image :: image(${line.product() != null ? line.product().brand : line.sku()}, 'card')}"></div>
+                                </div>
+                                <div>
+                                    <a th:if="${line.product() != null}"
+                                       th:href="${'/products/' + #uris.escapePathSegment(line.sku())}"
+                                       th:attr="aria-label=${'Title ' + line.sku()}" th:text="${line.product().title}">Title</a>
+                                    <span th:if="${line.product() == null}" th:attr="aria-label=${'Title ' + line.sku()}"
+                                          th:text="${line.sku()}">SKU</span>
+                                    <div th:if="${line.product() == null}" class="small text-danger">No longer available</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="text-end price" th:attr="aria-label=${'Unit Price ' + line.sku()}"
+                            th:text="${line.product() != null ? money.format(line.product().price) : '-'}">$0.00</td>
+                        <td>
+                            <!-- [-][ n ][+]: the buttons move by 1 within 1..99; a typed quantity is committed on change or Enter. -->
+                            <div class="input-group input-group-sm quantity-stepper">
+                                <button type="submit" class="btn btn-outline-secondary"
+                                        th:attr="form=${'decrease-' + iteration.index},aria-label=${'Decrease Quantity for ' + line.sku()}">−</button>
+                                <input type="text" inputmode="numeric" name="quantity" class="form-control text-center cart-quantity"
+                                       th:attr="form=${'quantity-' + iteration.index},aria-label=${'Quantity for ' + line.sku()}"
+                                       th:value="${line.quantity()}">
+                                <button type="submit" class="btn btn-outline-secondary"
+                                        th:attr="form=${'increase-' + iteration.index},aria-label=${'Increase Quantity for ' + line.sku()}">+</button>
+                            </div>
+                            <form th:id="${'quantity-' + iteration.index}" method="post" th:action="@{/cart/update}" class="d-none">
+                                <input type="hidden" name="sku" th:value="${line.sku()}">
+                            </form>
+                            <form th:id="${'decrease-' + iteration.index}" method="post" th:action="@{/cart/update}" class="d-none">
+                                <input type="hidden" name="sku" th:value="${line.sku()}">
+                                <input type="hidden" name="quantity" th:value="${line.decreased()}">
+                            </form>
+                            <form th:id="${'increase-' + iteration.index}" method="post" th:action="@{/cart/update}" class="d-none">
+                                <input type="hidden" name="sku" th:value="${line.sku()}">
+                                <input type="hidden" name="quantity" th:value="${line.increased()}">
+                            </form>
+                        </td>
+                        <td class="text-end price" th:attr="aria-label=${'Line Total ' + line.sku()}"
+                            th:text="${money.format(line.lineTotal())}">$0.00</td>
+                        <td class="text-end">
+                            <form method="post" th:action="@{/cart/remove}">
+                                <input type="hidden" name="sku" th:value="${line.sku()}">
+                                <button type="submit" class="btn btn-sm btn-outline-danger"
+                                        th:attr="aria-label=${'Remove ' + line.sku()}">✕</button>
+                            </form>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <a href="/">← Continue shopping</a>
+        </div>
+        <div class="col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 class="h5">Order summary</h2>
+                    <div class="d-flex justify-content-between">
+                        <span>Subtotal</span>
+                        <span class="price fw-bold" aria-label="Cart Subtotal" th:text="${money.format(subtotal)}">$0.00</span>
+                    </div>
+                    <p class="text-muted small mt-2">Tax and discounts are calculated at checkout.</p>
+                    <a href="/checkout" class="btn btn-primary w-100" aria-label="Proceed to Checkout">Proceed to checkout</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // A typed quantity is committed when it changes (blur) or on Enter; the server keeps the old one if it is invalid.
+        document.querySelectorAll('.cart-quantity').forEach(function (input) {
+            input.addEventListener('change', function () {
+                var form = input.form;
+                if (form.requestSubmit) { form.requestSubmit(); } else { form.submit(); }
+            });
+        });
+    </script>
+</div>
+</body>
+</html>

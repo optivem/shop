@@ -10,7 +10,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.head;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrlPattern;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.io.IOException;
@@ -53,7 +52,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -93,7 +91,17 @@ class SecurityConfigTest {
         route("GET", "/api/account/profile", Access.AUTHENTICATED),
         route("PUT", "/api/account/profile", Access.AUTHENTICATED),
         route("POST", "/api/coupons", Access.ADMIN_ONLY),
-        route("GET", "/", Access.AUTHENTICATED),
+        route("GET", "/", Access.PUBLIC),
+        route("GET", "/products/{sku}", Access.PUBLIC),
+        route("GET", "/cart", Access.PUBLIC),
+        route("POST", "/cart/add", Access.PUBLIC),
+        route("POST", "/cart/update", Access.PUBLIC),
+        route("POST", "/cart/remove", Access.PUBLIC),
+        route("GET", "/checkout", Access.CUSTOMER_ONLY),
+        route("POST", "/checkout", Access.CUSTOMER_ONLY),
+        route("GET", "/checkout/confirmation", Access.CUSTOMER_ONLY),
+        route("GET", "/account", Access.AUTHENTICATED),
+        route("GET", "/sign-in", Access.AUTHENTICATED),
         route("GET", "/new-order", Access.CUSTOMER_ONLY),
         route("POST", "/new-order", Access.CUSTOMER_ONLY),
         route("GET", "/order-history", Access.AUTHENTICATED),
@@ -294,20 +302,6 @@ class SecurityConfigTest {
     void adminTokenCanDeliverOrder() throws Exception {
         mockMvc.perform(post("/api/orders/ORD-1/deliver").with(adminToken()))
             .andExpect(status().isNoContent());
-    }
-
-    @Test
-    void homePageWithoutSessionRedirectsToKeycloakLogin() throws Exception {
-        mockMvc.perform(get("/").accept(MediaType.TEXT_HTML))
-            .andExpect(status().is3xxRedirection())
-            .andExpect(redirectedUrlPattern("**/oauth2/authorization/keycloak"));
-    }
-
-    @Test
-    void homePageWithoutSessionAndWithoutAcceptHeaderRedirectsToKeycloakLogin() throws Exception {
-        mockMvc.perform(get("/"))
-            .andExpect(status().is3xxRedirection())
-            .andExpect(redirectedUrlPattern("**/oauth2/authorization/keycloak"));
     }
 
     @Test

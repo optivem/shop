@@ -25,6 +25,10 @@ spring:
 
 server:
   port: 8080
+  servlet:
+    session:
+      # The storefront cart lives in the session; never put the session ID in page links.
+      tracking-modes: cookie
 
 management:
   endpoints:

@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" th:fragment="layout(title, content)">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:fragment="layout(title, content, account)">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:replace="${title}">hhop</title>
+    <title th:replace="${title}">MyShop</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/storefront.css" rel="stylesheet">
     <script>
         // Same-origin state-changing fetch() calls carry the CSRF token the server sets in the XSRF-TOKEN cookie.
         (function () {
@@ -27,7 +28,6 @@
         .status-PLACED { color: #198754; font-weight: bold; }
         .status-CANCELLED { color: #dc3545; font-weight: bold; }
         .status-DELIVERED { color: #0d6efd; font-weight: bold; }
-        .navbar-brand { font-weight: bold; }
         .notification { padding: 12px; margin-top: 10px; margin-bottom: 16px; border-radius: 4px; font-weight: 600; }
         .notification.success { background: #d1e7dd; color: #0f5132; border: 1px solid #badbcc; }
         .notification.error { background: #f8d7da; color: #842029; border: 1px solid #f5c2c7; }
@@ -37,16 +37,124 @@
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container">
-            <a class="navbar-brand" href="/">hhop</a>
+<div class="store d-flex flex-column min-vh-100">
+    <!-- The header on every page (storefront-ux §3): logo, search, cart, sign-in state, categories and account links. -->
+    <header class="store-header">
+        <div class="store-header-top">
+            <div class="container d-flex flex-wrap align-items-center gap-3 py-2">
+                <a class="store-logo" href="/"><span class="store-logo-mark" aria-hidden="true">■</span> MyShop</a>
+                <form class="store-search d-flex flex-grow-1" method="get" action="/" role="search">
+                    <input type="search" name="q" class="form-control" placeholder="Search products…"
+                           aria-label="Search Products" th:value="${searchQuery}">
+                    <button type="submit" class="btn btn-light ms-2" aria-label="Search">Search</button>
+                </form>
+                <div class="d-flex align-items-center gap-3 ms-auto">
+                    <a class="store-header-link" href="/cart" aria-label="Cart">
+                        <span aria-hidden="true">🛒</span> Cart
+                        <span aria-live="polite"><span th:if="${cartCount != null and cartCount > 0}"
+                                                       class="badge rounded-pill bg-warning text-dark ms-1"
+                                                       aria-label="Cart Item Count" th:text="${cartCount}">0</span></span>
+                    </a>
+                    <form th:if="${storeUser != null}" method="post" th:action="@{/logout}"
+                          class="d-flex align-items-center">
+                        <a class="store-header-link me-3" href="/account" data-testid="username" title="My account"
+                           th:text="${storeUser.username()}">user</a>
+                        <button type="submit" class="btn btn-outline-light btn-sm">Logout</button>
+                    </form>
+                    <a th:if="${storeUser == null}" class="store-header-link"
+                       th:href="${'/sign-in?returnUrl=' + #uris.escapeQueryParam(returnUrl)}" href="/sign-in"
+                       aria-label="Sign In">Sign in</a>
+                </div>
+            </div>
         </div>
-    </nav>
+        <nav class="store-header-nav" aria-label="Store navigation">
+            <div class="container d-flex flex-wrap align-items-center gap-3 py-1">
+                <a class="store-nav-link" href="/">All products</a>
+                <a th:each="category : ${categories}" class="store-nav-link"
+                   th:href="${'/?category=' + #uris.escapeQueryParam(category)}" th:text="${category}">Category</a>
+                <div th:if="${storeUser != null}" class="d-flex flex-wrap gap-3 ms-auto">
+                    <a th:if="${storeUser.canPlaceOrder()}" class="store-nav-link" href="/new-order">Quick order</a>
+                    <a class="store-nav-link" href="/order-history"
+                       th:text="${storeUser.admin()} ? 'All orders' : 'My orders'">My orders</a>
+                    <a th:if="${storeUser.admin()}" class="store-nav-link" href="/admin-coupons">Admin</a>
+                </div>
+            </div>
+        </nav>
+    </header>
 
-    <div class="container mt-4">
-        <div th:replace="${content}">Page content</div>
-    </div>
+    <main class="container mt-4 flex-grow-1">
+        <!-- The storefront's notification banner, with the same markup as the order pages' own notifications. -->
+        <div th:if="${notice != null}" th:class="${'notification ' + notice.type()}" role="alert"
+             th:attr="data-notification-id=${notice.id()}">
+            <th:block th:if="${notice.isError()}">
+                <div class="error-message" th:text="${notice.message()}">Error</div>
+                <div th:each="fieldError : ${notice.fieldErrors()}" class="field-error" th:text="${fieldError}">Field error</div>
+            </th:block>
+            <th:block th:unless="${notice.isError()}" th:text="${notice.message()}">Success</th:block>
+        </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <th:block th:if="${!account}">
+            <div th:replace="${content}">Page content</div>
+        </th:block>
+
+        <!-- The signed-in area (Quick order, My orders, order details, admin pages, My account) adds the side navigation. -->
+        <div th:if="${account}" class="row">
+            <aside class="col-lg-3">
+                <nav th:if="${storeUser != null}" class="account-nav mb-4"
+                     th:attr="aria-label=${storeUser.admin()} ? 'Admin' : 'My account'">
+                    <h2 class="h6 text-uppercase text-muted" th:text="${storeUser.admin()} ? 'Admin' : 'My account'">My account</h2>
+                    <div class="list-group" th:if="${storeUser.admin()}">
+                        <a th:class="${'list-group-item list-group-item-action' + (currentPath == '/order-history' ? ' active' : '')}"
+                           href="/order-history">All orders</a>
+                        <a th:class="${'list-group-item list-group-item-action' + (currentPath == '/admin-coupons' ? ' active' : '')}"
+                           href="/admin-coupons">Coupons</a>
+                    </div>
+                    <div class="list-group" th:unless="${storeUser.admin()}">
+                        <a th:class="${'list-group-item list-group-item-action' + (currentPath == '/order-history' ? ' active' : '')}"
+                           href="/order-history">My orders</a>
+                        <a th:class="${'list-group-item list-group-item-action' + (currentPath == '/account' ? ' active' : '')}"
+                           href="/account">Profile &amp; address</a>
+                        <a th:if="${storeUser.canPlaceOrder()}"
+                           th:class="${'list-group-item list-group-item-action' + (currentPath == '/new-order' ? ' active' : '')}"
+                           href="/new-order">Quick order</a>
+                    </div>
+                </nav>
+            </aside>
+            <div class="col-lg-9">
+                <div th:replace="${content}">Page content</div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Static footer: Shop, Help, and the demo-store note (storefront-ux §3). -->
+    <footer class="store-footer mt-5">
+        <div class="container py-4">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <h2 class="h6">Shop</h2>
+                    <ul class="list-unstyled mb-0">
+                        <li><a href="/">All products</a></li>
+                        <li th:each="category : ${categories}">
+                            <a th:href="${'/?category=' + #uris.escapeQueryParam(category)}" th:text="${category}">Category</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h2 class="h6">Help</h2>
+                    <ul class="list-unstyled mb-0">
+                        <li><a href="#shipping">Shipping</a></li>
+                        <li><a href="#returns">Returns</a></li>
+                        <li><a href="#contact">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <p class="mb-0">© MyShop · demo store for the Optivem ATDD course</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout :: layout(~{::title}, ~{::section})}">
+      th:replace="~{layout :: layout(~{::title}, ~{::section}, true)}">
 <head>
-    <title>New Order</title>
+    <title>Quick order · MyShop</title>
 </head>
 <body>
 <section>
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="/">Home</a></li>
-            <li class="breadcrumb-item active" aria-current="page">New Order</li>
+            <li class="breadcrumb-item active" aria-current="page">Quick order</li>
         </ol>
     </nav>
 
@@ -39,7 +39,8 @@
                         <div class="mb-3">
                             <label for="country" class="form-label">Country:</label>
                             <input type="text" class="form-control" id="country"
-                                   placeholder="Enter country code" aria-label="Country">
+                                   placeholder="Enter country code" aria-label="Country"
+                                   th:value="${defaultCountry}">
                         </div>
                         <div class="mb-3">
                             <label for="couponCode" class="form-label">Coupon Code (optional):</label>

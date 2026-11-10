@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout :: layout(~{::title}, ~{::section})}">
+      th:replace="~{layout :: layout(~{::title}, ~{::section}, true)}">
 <head>
-    <title>Order Details</title>
+    <title>Order Details · MyShop</title>
 </head>
 <body>
 <section>
@@ -57,6 +57,10 @@
                     <div class="col-md-6 mb-3">
                         <strong>Country:</strong>
                         <p aria-label="Display Country" id="detailCountry"></p>
+                    </div>
+                    <div class="col-md-6 mb-3" id="detailShippingAddressBlock" style="display: none;">
+                        <strong>Shipping Address:</strong>
+                        <p aria-label="Display Shipping Address" id="detailShippingAddress"></p>
                     </div>
                     <div class="col-md-6 mb-3">
                         <strong>Unit Price:</strong>
@@ -153,6 +157,12 @@
                 document.getElementById('detailSku').textContent = order.sku;
                 document.getElementById('detailQuantity').textContent = order.quantity;
                 document.getElementById('detailCountry').textContent = order.country;
+                var address = order.shippingAddress;
+                if (address) {
+                    document.getElementById('detailShippingAddress').textContent = address.firstName + ' ' + address.lastName + ', '
+                        + address.street + ', ' + address.postalCode + ' ' + address.city + ', ' + address.country;
+                    document.getElementById('detailShippingAddressBlock').style.display = '';
+                }
                 document.getElementById('detailUnitPrice').textContent = '$' + order.unitPrice;
                 document.getElementById('detailBasePrice').textContent = '$' + order.basePrice;
                 document.getElementById('detailDiscountRate').textContent = (Number(order.discountRate) * 100).toFixed(2) + '%';

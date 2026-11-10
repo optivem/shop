@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::title}, ~{::#page-content}, false)}">
+<head>
+    <title>Checkout · MyShop</title>
+</head>
+<body>
+<!-- `/checkout` (storefront-ux §4.4, UC-009): shipping address, optional coupon and the order review. -->
+<div id="page-content">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Home</a></li>
+            <li class="breadcrumb-item"><a href="/cart">Cart</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Checkout</li>
+        </ol>
+    </nav>
+
+    <h1 class="h3 mb-4">Checkout</h1>
+    <form class="row g-4" method="post" th:action="@{/checkout}" novalidate id="checkoutForm">
+        <div class="col-lg-7">
+            <section class="card shadow-sm mb-4" aria-label="Shipping Address">
+                <div class="card-body">
+                    <h2 class="h5">1. Shipping address</h2>
+                    <th:block th:if="${saved != null}">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="addressChoice" id="address-saved" value="saved"
+                                   aria-label="Use Saved Address" th:checked="${choice == 'saved'}"
+                                   th:attr="data-country=${saved.country}">
+                            <label class="form-check-label" for="address-saved" aria-label="Saved Address"
+                                   th:text="${savedText}">Saved address</label>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="radio" name="addressChoice" id="address-other" value="other"
+                                   aria-label="Ship to a Different Address" th:checked="${choice == 'other'}">
+                            <label class="form-check-label" for="address-other">Ship to a different address</label>
+                        </div>
+                    </th:block>
+                    <input th:if="${saved == null}" type="hidden" name="addressChoice" value="other">
+
+                    <div id="addressForm" th:classappend="${choice == 'saved'} ? 'd-none'">
+                        <div class="row g-3">
+                            <div th:replace="~{checkout :: textField('firstName', 'First name', 'Shipping First Name', ${address.firstName}, 'col-md-6')}"></div>
+                            <div th:replace="~{checkout :: textField('lastName', 'Last name', 'Shipping Last Name', ${address.lastName}, 'col-md-6')}"></div>
+                            <div th:replace="~{checkout :: textField('street', 'Street', 'Shipping Street', ${address.street}, 'col-12')}"></div>
+                            <div th:replace="~{checkout :: textField('postalCode', 'Postal code', 'Shipping Postal Code', ${address.postalCode}, 'col-md-4')}"></div>
+                            <div th:replace="~{checkout :: textField('city', 'City', 'Shipping City', ${address.city}, 'col-md-4')}"></div>
+                            <div class="col-md-4">
+                                <label for="shipping-country" class="form-label">Country</label>
+                                <select id="shipping-country" name="country" aria-label="Shipping Country"
+                                        th:class="${'form-select' + (fieldErrors.containsKey('country') ? ' is-invalid' : '')}"
+                                        th:attr="aria-invalid=${fieldErrors.containsKey('country') ? 'true' : null}">
+                                    <option value="">Select a country</option>
+                                    <option th:each="country : ${countries}" th:value="${country}" th:text="${country}"
+                                            th:selected="${address.country == country}">US</option>
+                                </select>
+                                <div th:if="${fieldErrors.containsKey('country')}" class="invalid-feedback"
+                                     th:text="${fieldErrors.get('country')}">Country is required</div>
+                            </div>
+                        </div>
+                        <div th:if="${firstOrder}" class="form-check mt-3">
+                            <input class="form-check-input" type="checkbox" id="save-as-default" name="saveAsDefault" value="true"
+                                   aria-label="Save as Default Address" th:checked="${saveAsDefault}">
+                            <label class="form-check-label" for="save-as-default">Save as my default shipping address</label>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <section class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h2 class="h5">2. Coupon (optional)</h2>
+                    <label for="checkout-coupon" class="form-label">Code</label>
+                    <input id="checkout-coupon" name="couponCode" type="text" class="form-control"
+                           aria-label="Checkout Coupon Code" th:value="${couponCode}">
+                </div>
+            </section>
+            <button type="submit" class="btn btn-primary btn-lg" aria-label="Place Checkout Order" id="placeCheckoutOrder">
+                Place order
+            </button>
+        </div>
+        <div class="col-lg-5">
+            <section class="card shadow-sm" aria-label="Order Review">
+                <div class="card-body">
+                    <h2 class="h5">Order review</h2>
+                    <ul class="list-unstyled mb-3">
+                        <li th:each="line : ${lines}" class="d-flex justify-content-between"
+                            th:attr="aria-label=${'Review Line ' + line.sku()}">
+                            <span>
+                                <th:block th:text="${line.product() != null ? line.product().title : line.sku()}">Title</th:block>
+                                × <span th:attr="aria-label=${'Review Quantity ' + line.sku()}" th:text="${line.quantity()}">1</span>
+                            </span>
+                            <span class="price" th:attr="aria-label=${'Review Line Total ' + line.sku()}"
+                                  th:text="${money.format(line.lineTotal())}">$0.00</span>
+                        </li>
+                    </ul>
+                    <div class="d-flex justify-content-between fw-bold border-top pt-2">
+                        <span>Subtotal</span>
+                        <span class="price" aria-label="Review Subtotal" th:text="${money.format(subtotal)}">$0.00</span>
+                    </div>
+                    <div class="d-flex justify-content-between mt-2">
+                        <span>Est. tax (<span aria-label="Tax Country" id="taxCountry" th:text="${taxCountry}">-</span>)</span>
+                        <span aria-label="Estimated Tax Rate" id="taxRate" th:text="${taxRate}">-</span>
+                    </div>
+                    <p class="text-muted small mt-3 mb-0">Discount and tax are worked out per order when it is placed.</p>
+                </div>
+            </section>
+        </div>
+    </form>
+
+    <script th:inline="javascript">
+        (function () {
+            var taxRates = /*[[${taxRates}]]*/ {};
+            var form = document.getElementById('checkoutForm');
+            var addressForm = document.getElementById('addressForm');
+            var saved = document.getElementById('address-saved');
+            var country = document.getElementById('shipping-country');
+
+            // The review's estimated tax follows the chosen shipping address's country (UC-009 BR-2).
+            function refresh() {
+                var useSaved = saved && saved.checked;
+                addressForm.classList.toggle('d-none', !!useSaved);
+                var code = (useSaved ? saved.getAttribute('data-country') : country.value || '').trim();
+                document.getElementById('taxCountry').textContent = code || '-';
+                document.getElementById('taxRate').textContent = taxRates[code] || '-';
+            }
+
+            form.querySelectorAll('input[name="addressChoice"]').forEach(function (radio) {
+                radio.addEventListener('change', refresh);
+            });
+            country.addEventListener('change', refresh);
+            form.addEventListener('submit', function () {
+                var button = document.getElementById('placeCheckoutOrder');
+                button.disabled = true;
+                button.textContent = 'Placing order...';
+            });
+        })();
+    </script>
+</div>
+
+<!-- One text input of the address form, with its error under it. -->
+<div th:fragment="textField(field, label, ariaLabel, value, colClass)" th:class="${colClass}">
+    <label th:for="${'shipping-' + field}" class="form-label" th:text="${label}">Label</label>
+    <input type="text" th:id="${'shipping-' + field}" th:name="${field}" th:value="${value}"
+           th:class="${'form-control' + (fieldErrors.containsKey(field) ? ' is-invalid' : '')}"
+           th:attr="aria-label=${ariaLabel},aria-invalid=${fieldErrors.containsKey(field) ? 'true' : null}">
+    <div th:if="${fieldErrors.containsKey(field)}" class="invalid-feedback" th:text="${fieldErrors.get(field)}">Error</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::title}, ~{::#page-content}, false)}">
+<head>
+    <title>Order confirmation · MyShop</title>
+</head>
+<body>
+<!-- `/checkout/confirmation` (storefront-ux §4.5): the orders just placed (and, after a partial failure, the rejected lines). -->
+<div id="page-content">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Home</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Order confirmation</li>
+        </ol>
+    </nav>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <th:block th:if="${result != null and !#lists.isEmpty(result.placed())}">
+                <h1 class="h3">Thank you for your order!</h1>
+                <p th:text="${#lists.size(result.placed()) == 1 ? 'Your order has been placed:' : 'Your ' + #lists.size(result.placed()) + ' orders have been placed:'}">
+                    Your order has been placed:</p>
+                <ul aria-label="Confirmed Orders">
+                    <li th:each="line : ${result.placed()}">
+                        <a th:href="${'/order-details?orderNumber=' + #uris.escapeQueryParam(line.orderNumber())}"
+                           th:attr="aria-label=${'Confirmed Order ' + line.orderNumber()}"
+                           th:text="${line.orderNumber()}">ORD-1</a>
+                        <span class="text-muted" th:text="${'(' + line.sku() + ' × ' + line.quantity() + ')'}">(SKU × 1)</span>
+                    </li>
+                </ul>
+            </th:block>
+            <h1 th:if="${result == null or #lists.isEmpty(result.placed())}" class="h3">No recent order</h1>
+
+            <div th:if="${result != null and !#lists.isEmpty(result.rejected())}" class="alert alert-warning"
+                 aria-label="Rejected Lines">
+                <p class="mb-2">These items were not ordered and are still in your cart:</p>
+                <ul class="mb-0">
+                    <li th:each="line : ${result.rejected()}" th:attr="aria-label=${'Rejected Line ' + line.sku()}">
+                        <strong th:text="${line.sku()}">SKU</strong>:
+                        <span th:attr="aria-label=${'Rejection Reason ' + line.sku()}" th:text="${line.reason()}">Reason</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="d-flex gap-3 mt-3">
+                <a href="/order-history" class="btn btn-primary">View my orders</a>
+                <a href="/" class="btn btn-outline-secondary">Continue shopping</a>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

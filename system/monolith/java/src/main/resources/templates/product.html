@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::title}, ~{::#page-content}, false)}">
+<head>
+    <title th:text="${product != null ? product.title + ' · MyShop' : 'Product · MyShop'}">Product · MyShop</title>
+</head>
+<body>
+<!-- `/products/{sku}` (storefront-ux §4.2, UC-007): one product's details, with a quantity and "Add to cart". -->
+<div id="page-content">
+    <div th:if="${product == null}" class="alert alert-danger" role="alert" th:text="${unavailableMessage}">
+        Products are temporarily unavailable.
+    </div>
+
+    <th:block th:if="${product != null}">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/">Home</a></li>
+                <li class="breadcrumb-item">
+                    <a th:href="${'/?category=' + #uris.escapeQueryParam(product.category)}" th:text="${product.category}">Category</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page" th:text="${product.title}">Product</li>
+            </ol>
+        </nav>
+
+        <div class="row g-4">
+            <div class="col-md-5">
+                <div th:replace="~{fragments/product-image :: image(${product.brand}, 'square')}"></div>
+            </div>
+            <div class="col-md-7">
+                <h1 class="h2" aria-label="Product Title" th:text="${product.title}">Title</h1>
+                <p class="text-muted">
+                    by <span aria-label="Product Brand" th:text="${product.brand}">Brand</span> ·
+                    <span aria-label="Product Category" th:text="${product.category}">Category</span> · SKU
+                    <span aria-label="Product SKU" th:text="${product.sku}">SKU</span>
+                </p>
+                <p class="price fs-3 fw-bold" aria-label="Display Price" th:text="${money.format(product.price)}">$0.00</p>
+                <form method="post" th:action="@{/cart/add}" class="d-flex flex-wrap align-items-center gap-3 mb-4">
+                    <input type="hidden" name="sku" th:value="${product.sku}">
+                    <input type="hidden" name="returnUrl" th:value="${returnUrl}">
+                    <label for="product-quantity" class="form-label mb-0">Qty</label>
+                    <div class="input-group quantity-stepper">
+                        <button type="button" class="btn btn-outline-secondary" aria-label="Decrease Quantity"
+                                data-step="-1">−</button>
+                        <input id="product-quantity" name="quantity" type="text" inputmode="numeric"
+                               class="form-control text-center" aria-label="Product Quantity" value="1">
+                        <button type="button" class="btn btn-outline-secondary" aria-label="Increase Quantity"
+                                data-step="1">+</button>
+                    </div>
+                    <button type="submit" class="btn btn-primary" aria-label="Add to Cart">Add to cart</button>
+                </form>
+                <hr>
+                <p aria-label="Product Description" th:text="${product.description}">Description</p>
+                <p class="text-muted small mb-0">✓ Ships in 1–2 business days · ✓ 30-day returns</p>
+            </div>
+        </div>
+
+        <script>
+            (function () {
+                // The stepper moves by 1 within 1..99; a typed quantity is checked by the server when added.
+                var input = document.getElementById('product-quantity');
+                document.querySelectorAll('[data-step]').forEach(function (button) {
+                    button.addEventListener('click', function () {
+                        var current = /^\d+$/.test(input.value.trim()) ? Number(input.value.trim()) : 1;
+                        if (current < 1 || current > 99) current = 1;
+                        var next = Math.min(99, Math.max(1, current + Number(button.getAttribute('data-step'))));
+                        input.value = String(next);
+                    });
+                });
+            })();
+        </script>
+    </th:block>
+</div>
+</body>
+</html>

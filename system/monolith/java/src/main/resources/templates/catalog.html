@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::title}, ~{::#page-content}, false)}">
+<head>
+    <title>MyShop</title>
+</head>
+<body>
+<!-- `/` (storefront-ux §4.1, UC-006): browse, search, filter and sort the catalog; add a product with quantity 1. -->
+<div id="page-content">
+    <section class="store-hero rounded p-4 p-md-5 mb-4">
+        <h1 class="display-6 fw-bold">New season laptops</h1>
+        <p class="lead mb-3">Free shipping over $1,000</p>
+        <a href="/?category=Laptops" class="btn btn-warning">Shop</a>
+    </section>
+    <div class="row">
+        <aside class="col-lg-3 mb-3">
+            <button type="button" class="btn btn-outline-secondary w-100 d-lg-none mb-3" aria-expanded="false"
+                    id="filtersToggle">Filters</button>
+            <!-- A plain GET form: the query lives in the page address (BR-7), so a filtered view can be bookmarked. -->
+            <form id="catalogQuery" method="get" action="/" class="catalog-filters d-none d-lg-block">
+                <input type="hidden" name="q" th:value="${query.q()}">
+                <fieldset class="mb-4" aria-label="Category Filter">
+                    <legend class="h6">Category</legend>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="category" id="category-all" value=""
+                               th:checked="${query.category() == ''}">
+                        <label class="form-check-label" for="category-all">All</label>
+                    </div>
+                    <div class="form-check" th:each="category : ${filterCategories}">
+                        <input class="form-check-input" type="radio" name="category"
+                               th:id="${'category-' + category}" th:value="${category}"
+                               th:checked="${query.category() == category}">
+                        <label class="form-check-label" th:for="${'category-' + category}" th:text="${category}">Category</label>
+                    </div>
+                </fieldset>
+                <fieldset class="mb-4" aria-label="Brand Filter">
+                    <legend class="h6">Brand</legend>
+                    <div class="form-check" th:each="brand : ${filterBrands}">
+                        <input class="form-check-input" type="checkbox" name="brand"
+                               th:id="${'brand-' + brand}" th:value="${brand}"
+                               th:checked="${query.isBrandTicked(brand)}">
+                        <label class="form-check-label" th:for="${'brand-' + brand}" th:text="${brand}">Brand</label>
+                    </div>
+                </fieldset>
+                <noscript><button type="submit" class="btn btn-outline-primary btn-sm">Apply filters</button></noscript>
+            </form>
+        </aside>
+        <section class="col-lg-9" aria-label="Catalog">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <span aria-label="Product Count"
+                      th:text="${(unavailable ? 0 : #lists.size(shown)) + ((!unavailable and #lists.size(shown) == 1) ? ' product' : ' products')}">0 products</span>
+                <div class="d-flex align-items-center gap-2">
+                    <label for="catalog-sort" class="form-label mb-0">Sort:</label>
+                    <select id="catalog-sort" name="sort" form="catalogQuery" class="form-select form-select-sm w-auto"
+                            aria-label="Sort">
+                        <option th:each="option : ${sortOptions}" th:value="${option.value()}"
+                                th:selected="${query.sort() == option.value()}" th:text="${option.label()}">Featured</option>
+                    </select>
+                </div>
+            </div>
+
+            <div th:if="${unavailable}" class="alert alert-danger" role="alert" th:text="${unavailableMessage}">
+                Products are temporarily unavailable.
+            </div>
+
+            <div th:if="${!unavailable and #lists.isEmpty(shown)}" class="text-center py-5">
+                <p class="lead">No products match your search.</p>
+                <a href="/" class="btn btn-outline-primary" aria-label="Clear Filters">Clear filters</a>
+            </div>
+
+            <div th:if="${!unavailable and !#lists.isEmpty(shown)}"
+                 class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4 g-4" aria-label="Product List">
+                <div class="col" th:each="product : ${shown}">
+                    <!-- One catalog tile: image and title link to the product page; "Add to cart" adds quantity 1. -->
+                    <article class="product-card card h-100" th:attr="aria-label=${'Product ' + product.sku}">
+                        <a th:href="${'/products/' + #uris.escapePathSegment(product.sku)}" tabindex="-1" aria-hidden="true">
+                            <div th:replace="~{fragments/product-image :: image(${product.brand}, 'card')}"></div>
+                        </a>
+                        <div class="card-body d-flex flex-column">
+                            <h3 class="h6 card-title mb-1">
+                                <a th:href="${'/products/' + #uris.escapePathSegment(product.sku)}" class="product-title-link"
+                                   aria-label="Product Title" th:text="${product.title}">Title</a>
+                            </h3>
+                            <div class="text-muted small mb-2" aria-label="Product Brand" th:text="${product.brand}">Brand</div>
+                            <div class="price fw-bold mb-3" aria-label="Display Price" th:text="${money.format(product.price)}">$0.00</div>
+                            <form method="post" th:action="@{/cart/add}" class="mt-auto">
+                                <input type="hidden" name="sku" th:value="${product.sku}">
+                                <input type="hidden" name="quantity" value="1">
+                                <input type="hidden" name="returnUrl" th:value="${returnUrl}">
+                                <button type="submit" class="btn btn-primary w-100"
+                                        th:attr="aria-label=${'Add ' + product.sku + ' to Cart'}">Add to cart</button>
+                            </form>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        (function () {
+            var form = document.getElementById('catalogQuery');
+            // Filters apply as soon as they change, like the other storefronts.
+            form.addEventListener('change', function () { form.submit(); });
+            document.getElementById('catalog-sort').addEventListener('change', function () { form.submit(); });
+            var toggle = document.getElementById('filtersToggle');
+            toggle.addEventListener('click', function () {
+                var open = form.classList.toggle('d-none');
+                toggle.setAttribute('aria-expanded', String(!open));
+            });
+        })();
+    </script>
+</div>
+</body>
+</html>

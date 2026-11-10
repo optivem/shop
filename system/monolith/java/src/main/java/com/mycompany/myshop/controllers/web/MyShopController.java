@@ -5,8 +5,10 @@ import com.mycompany.myshop.core.dtos.PlaceOrderRequest;
 import com.mycompany.myshop.core.dtos.PlaceOrderResponse;
 import com.mycompany.myshop.core.exceptions.ValidationException;
 import com.mycompany.myshop.core.services.OrderService;
+import com.mycompany.myshop.core.services.ProfileService;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -18,16 +20,31 @@ public class MyShopController {
     private static final String ATTR_ERROR = "error";
     private static final String ATTR_QUANTITY = "quantity";
     private static final String REDIRECT_NEW_ORDER = "redirect:/new-order";
+    private static final String DEFAULT_COUNTRY = "US";
 
     private final OrderService orderService;
+    private final ProfileService profileService;
 
-    public MyShopController(OrderService orderService) {
+    public MyShopController(OrderService orderService, ProfileService profileService) {
         this.orderService = orderService;
+        this.profileService = profileService;
     }
 
+    /** Quick order, with its Country prefilled from the customer's saved profile (UC-001 1a, UC-010 BR-5). */
     @GetMapping("/new-order")
-    public String myShop() {
+    public String myShop(Model model, Authentication authentication) {
+        model.addAttribute("defaultCountry", defaultCountry(authentication));
         return "new-order";
+    }
+
+    private String defaultCountry(Authentication authentication) {
+        try {
+            var profile = profileService.getProfile(CurrentUserResolver.resolve(authentication));
+            var saved = profile == null || profile.getCountry() == null ? "" : profile.getCountry().trim();
+            return saved.isEmpty() ? DEFAULT_COUNTRY : saved;
+        } catch (RuntimeException e) {
+            return DEFAULT_COUNTRY;
+        }
     }
 
     @PostMapping("/new-order")

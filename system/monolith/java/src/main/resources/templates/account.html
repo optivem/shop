@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::title}, ~{::section}, true)}">
+<head>
+    <title>My account · MyShop</title>
+</head>
+<body>
+<!-- `/account` (My account › Profile & address, UC-010): name and default shipping address. -->
+<section>
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Home</a></li>
+            <li class="breadcrumb-item">My account</li>
+            <li class="breadcrumb-item active" aria-current="page">Profile &amp; address</li>
+        </ol>
+    </nav>
+
+    <div id="notifications"></div>
+
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">Profile &amp; address</h4>
+        </div>
+        <div class="card-body">
+            <form id="profileForm" novalidate>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label for="profile-firstName" class="form-label">First name</label>
+                        <input id="profile-firstName" type="text" class="form-control" aria-label="First Name"
+                               th:value="${profile.firstName}">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="profile-lastName" class="form-label">Last name</label>
+                        <input id="profile-lastName" type="text" class="form-control" aria-label="Last Name"
+                               th:value="${profile.lastName}">
+                    </div>
+                    <div class="col-12">
+                        <label for="profile-email" class="form-label">Email</label>
+                        <input id="profile-email" type="email" class="form-control" aria-label="Email"
+                               th:value="${profile.email}" readonly disabled>
+                        <div class="form-text">Your email comes from your sign-in account and can't be changed here.</div>
+                    </div>
+                </div>
+                <h5 class="mt-4">Shipping address</h5>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label for="profile-street" class="form-label">Street</label>
+                        <input id="profile-street" type="text" class="form-control" aria-label="Street"
+                               th:value="${profile.street}">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="profile-postalCode" class="form-label">Postal code</label>
+                        <input id="profile-postalCode" type="text" class="form-control" aria-label="Postal Code"
+                               th:value="${profile.postalCode}">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="profile-city" class="form-label">City</label>
+                        <input id="profile-city" type="text" class="form-control" aria-label="City"
+                               th:value="${profile.city}">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="profile-country" class="form-label">Country</label>
+                        <select id="profile-country" class="form-select" aria-label="Profile Country">
+                            <option value="">Select a country</option>
+                            <option th:each="country : ${countries}" th:value="${country}" th:text="${country}"
+                                    th:selected="${profile.country == country}">US</option>
+                        </select>
+                    </div>
+                </div>
+                <p class="form-text mt-3" aria-label="Tax Country Hint">
+                    Sales tax is charged at the rate of your shipping address's country.
+                </p>
+                <button type="submit" class="btn btn-primary" aria-label="Save Profile" id="saveProfileBtn">Save profile</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            var notificationCounter = 0;
+            var fields = ['firstName', 'lastName', 'street', 'postalCode', 'city', 'country'];
+
+            function escapeHtml(text) {
+                var div = document.createElement('div');
+                div.textContent = text == null ? '' : String(text);
+                return div.innerHTML;
+            }
+
+            function showNotification(type, message, fieldErrors) {
+                notificationCounter++;
+                var html = '<div class="notification ' + type + '" role="alert" data-notification-id="' + notificationCounter + '">';
+                if (type === 'error') {
+                    html += '<div class="error-message">' + escapeHtml(message) + '</div>';
+                    (fieldErrors || []).forEach(function (err) {
+                        var fieldPart = err.field ? err.field + ': ' : '';
+                        html += '<div class="field-error">' + escapeHtml(fieldPart + err.message) + '</div>';
+                    });
+                } else {
+                    html += escapeHtml(message);
+                }
+                html += '</div>';
+                document.getElementById('notifications').innerHTML = html;
+            }
+
+            function input(field) {
+                return document.getElementById('profile-' + field);
+            }
+
+            // The backend validates (required fields, spaces count as empty, US/DE/GB) and reports each field to correct.
+            document.getElementById('profileForm').addEventListener('submit', async function (e) {
+                e.preventDefault();
+                var button = document.getElementById('saveProfileBtn');
+                button.disabled = true;
+                button.textContent = 'Saving...';
+                var body = {};
+                fields.forEach(function (field) { body[field] = input(field).value; });
+                try {
+                    var response = await fetch('/api/account/profile', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(body)
+                    });
+                    var data = await response.json();
+                    if (response.ok) {
+                        fields.forEach(function (field) { input(field).value = data[field] || ''; });
+                        input('email').value = data.email || '';
+                        showNotification('success', 'Your profile has been saved.');
+                    } else {
+                        showNotification('error', data.detail || 'Failed to save the profile', data.errors);
+                    }
+                } catch (err) {
+                    showNotification('error', 'Network error: ' + err.message);
+                } finally {
+                    button.disabled = false;
+                    button.textContent = 'Save profile';
+                }
+            });
+        })();
+    </script>
+</section>
+</body>
+</html>

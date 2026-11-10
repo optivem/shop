@@ -64,6 +64,7 @@ public class SecurityConfig {
     private static final String CUSTOMER = "CUSTOMER";
     private static final String REGISTRATION_ID = "keycloak";
     private static final String BEARER_PREFIX = "Bearer ";
+    private static final String[] STOREFRONT_PAGES = {"/", "/products/{sku}", "/cart", "/css/**"};
 
     @Value("${auth.issuer-uri}")
     private String issuerUri;
@@ -112,6 +113,12 @@ public class SecurityConfig {
                 // The catalog is browsable anonymously (UC-006, UC-007).
                 .requestMatchers(HttpMethod.GET, "/api/products", "/api/products/{sku}").permitAll()
                 .requestMatchers(HttpMethod.HEAD, "/api/products", "/api/products/{sku}").permitAll()
+                // The storefront pages around the catalog never ask to sign in (storefront-ux §2); the cart lives in
+                // the anonymous session. /sign-in is deliberately not public: reaching it is what starts the login.
+                .requestMatchers(HttpMethod.GET, STOREFRONT_PAGES).permitAll()
+                .requestMatchers(HttpMethod.HEAD, STOREFRONT_PAGES).permitAll()
+                .requestMatchers(HttpMethod.POST, "/cart/add", "/cart/update", "/cart/remove").permitAll()
+                .requestMatchers("/checkout", "/checkout/confirmation").hasRole(CUSTOMER)
                 .requestMatchers(HttpMethod.POST, "/api/orders/{orderNumber}/deliver").hasRole(ADMIN)
                 .requestMatchers(HttpMethod.POST, "/api/orders").hasRole(CUSTOMER)
                 .requestMatchers("/api/coupons").hasRole(ADMIN)

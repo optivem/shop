@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<!--
+  Product image placeholder: the ERP has no image field, so each product gets a tile with its brand name,
+  coloured by a deterministic hash of the brand (storefront-ux §5). No external images.
+-->
+<div th:fragment="image(brand, shape)" th:class="${'product-image product-image-' + shape}"
+     th:style="${'background-color: ' + brandColours.of(brand)}" role="img"
+     th:attr="aria-label=${brand + ' product image'}">
+    <span th:text="${#strings.toUpperCase(brand)}">BRAND</span>
+</div>
+</body>
+</html>
