@@ -28,6 +28,7 @@ The orchestrating session runs the Steps below **in order**, one subagent per st
 - **Verify, don't trust:** after each subagent, the orchestrator checks `git log origin/main` and a build/test result before marking the step done.
 - **Failures:** two retries inside the step. Then record the blocker here, stop, and report. Later steps depend on earlier ones.
 - **Stop only at:** the user gates marked 🛑 below, a blocker, or a decision that is expensive to reverse (schema or API forks).
+- **Record incidental issues (user, 2026-11-10):** any issue a step finds that isn't storefront work (flaky tests, test-kit gaps, CI evidence, local-run problems, pre-existing bugs) goes into `plans/20261110-1207-system-test-reliability-followups.md` as a new numbered idea with a recommendation. Don't fix it inside the step, and don't add it here. Storefront-specific issues stay in this plan or in BUILD. Put this in every subagent brief, and have subagents report such issues back so the orchestrator records them.
 - **Legacy system tests stay lean (user, 2026-11-07):** new use-case tests go in the latest system tests only. Change legacy only as much as it needs to keep compiling and green. Put this in every subagent brief.
 - **Before each step:** `git fetch && git status -sb`; `grep -ln "Picked up by agent" plans/*.md` (another session on SPEC, BUILD or UC1 → stop and ask); check that the shop pipeline is green (`gh run list -L 10`). A red pipeline gets fixed first (priority: green pipeline).
 
@@ -37,7 +38,7 @@ Steps 1–4 are done (U2, BUILD Step 9, U3, React). The user signed off how Reac
 
 Next is **Step 5**: port to Next.js first (BUILD Step 4), then Thymeleaf, then Razor, one subagent per port, serial. Not yet checked from Step 4: each UC-006..011 scenario against the React UI line by line, and whether `src/test` interaction tests cover the new pages. Fold that check into Step 6.
 
-**Before Step 5, the pipeline must be green.** `multitier-dotnet-acceptance-stage` has failed since 2026-11-09 (runs on `2e1eec96` and `9da17ffc`). 3 of 119 API tests fail with `Product does not exist for SKU: DEFAULT-SKU-…`: `DiscountRateShouldBeNotAppliedWhenThereIsNoCoupon`, `AdminShouldSeeOrderOfChosenCustomer`, `AdminShouldSeeNoOrdersWhenNoOrderMatchesFilters`. This was investigated on 2026-11-10: it did not reproduce locally, it is intermittent in CI, and no root cause was found (see Step 5b). The failed jobs were re-run. If the re-runs pass, Step 5 goes ahead and Step 5b follows up on the flake.
+**Before Step 5, the pipeline must be green.** `multitier-dotnet-acceptance-stage` has failed since 2026-11-09 (runs on `2e1eec96` and `9da17ffc`). 3 of 119 API tests fail with `Product does not exist for SKU: DEFAULT-SKU-…`: `DiscountRateShouldBeNotAppliedWhenThereIsNoCoupon`, `AdminShouldSeeOrderOfChosenCustomer`, `AdminShouldSeeNoOrdersWhenNoOrderMatchesFilters`. This was investigated on 2026-11-10: it did not reproduce locally, it is intermittent in CI, and no root cause was found. The failed jobs were re-run. If the re-runs pass, Step 5 goes ahead. The flake and the other reliability issues are tracked in `plans/20261110-1207-system-test-reliability-followups.md`.
 
 ## Open questions
 
@@ -48,23 +49,12 @@ Next is **Step 5**: port to Next.js first (BUILD Step 4), then Thymeleaf, then R
 ## Steps
 
 - [ ] **Step 5 — BUILD Steps 4, 5, 6 (ports to Next.js, Thymeleaf, Razor).** One subagent per port, **serial**: they share docker ports when running system tests. Gate per port: that monolith's build plus its sample system tests.
-- [ ] **Step 5b — .NET acceptance flake follow-up (found 2026-11-10).** In CI only, intermittently, 1–3 of 119 .NET API acceptance tests fail with `Product does not exist for SKU: DEFAULT-SKU-…`: the ERP stub returns 404 for a SKU the test just registered successfully. First seen on `9da17ffc`, the first build that includes `f1ca8b7d`. It did not reproduce in 13 local monolith-dotnet runs. Ruled out: DSL ordering, cross-test stub deletion, static stub files, the backend's ERP lookup, and WireMock 3.10.0 under a 60-thread stress test. One subagent:
-  - (a) On failure, have the acceptance-stage workflows upload the stub server's `/__admin/requests` journal plus the stub and system container logs as artifacts.
-  - (b) Fix the .NET tax-stub leak: `UseCaseDsl.DisposeAsync` calls `_tax?.Dispose()` synchronously, so tax stubs are never removed.
-  - (c) Add the Java-style read-back check after stub registration in the .NET and TS `JsonWireMockClient`.
-  - Gate: compile, plus the .NET sample system tests. Not a blocker for Step 5 if the re-runs of 42803428175 / 42805123156 pass.
 - [ ] **Step 6 — BUILD Step 7 (verify).** One subagent: `./compile-all.sh`, `--sample` for all languages (monolith and multitier), then `./test-all.sh`.
 - [ ] **Step 7 — BUILD Step 8 (acceptance tests for UC-006–011).** UC-010/011 have only their API scenarios tagged; this step adds the untagged ones and flips them. One subagent per use case, serial (shared test kit). Each one flips its use case to `status: implemented`. Gate: compile, plus the sample system tests.
 - [ ] **Step 7b — BUILD Step 10 (close the Step 9 coverage gaps for UC-002, UC-003, UC-005, UC-012).** One subagent, after Step 7 (the UI-only scenarios UC-003.2 and UC-012.2 belong in Step 7's UI tests). Touches the order and coupon acceptance tests, so never alongside Step 3 or Step 7. Gate: compile, plus the sample system tests.
 - [ ] **Step 8 — Close out.** When SPEC and BUILD have no open items, delete both plan files (and this one). Report UC1 Track D as the remaining follow-up: it needs gh-optivem C1, C1b and C1c.
 
 Out of scope for this run: UC1 Tracks C and D (gh-optivem, then the gate re-enable). The reference sections below explain why the order is what it is.
-
-## Pre-existing issues found during Step 1 (not caused by it; outside this plan)
-
-- `system-test/dotnet` `DefaultGivensTest.OrderWithoutDeclaredProductShouldCreateDefaultProductAndTaxRateExactlyOnce` throws a NullReferenceException because it passes a null channel. It fails on the previous HEAD too.
-- The .NET monolith's `GlobalExceptionHandler` sends `application/json` instead of `application/problem+json`.
-- Step 1 didn't run the monolith-java legacy `--sample` (its latest sample and contract runs passed, and legacy compiles).
 
 ## Per-plan status snapshot
 
