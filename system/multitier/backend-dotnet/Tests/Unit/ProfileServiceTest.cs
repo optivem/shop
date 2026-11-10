@@ -97,6 +97,11 @@ public class ProfileServiceTest : IDisposable
 
     private static UpdateProfileRequest Request(string firstName, string street, string country) => new()
     {
-        FirstName = firstName, LastName = "Novak", Street = street, PostalCode = "10115", City = "Berlin", Country = country
+        FirstName = firstName,
+        LastName = "Novak",
+        Street = street,
+        PostalCode = "10115",
+        City = "Berlin",
+        Country = country
     };
 }

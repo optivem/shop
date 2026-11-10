@@ -61,7 +61,12 @@ public class OrderShippingAddressAndProfileServiceTests : IDisposable
         var request = Request("US");
         request.ShippingAddress = new ShippingAddress
         {
-            FirstName = " Ana ", LastName = "Novak", Street = "Main St 1 ", PostalCode = "10115", City = "Berlin", Country = " DE"
+            FirstName = " Ana ",
+            LastName = "Novak",
+            Street = "Main St 1 ",
+            PostalCode = "10115",
+            City = "Berlin",
+            Country = " DE"
         };
 
         var response = await _orderService.PlaceOrderAsync(request, Ana);
@@ -195,11 +200,21 @@ public class OrderShippingAddressAndProfileServiceTests : IDisposable
 
     private static ShippingAddress Address(string country) => new()
     {
-        FirstName = "Ana", LastName = "Novak", Street = "Main St 1", PostalCode = "10115", City = "Berlin", Country = country
+        FirstName = "Ana",
+        LastName = "Novak",
+        Street = "Main St 1",
+        PostalCode = "10115",
+        City = "Berlin",
+        Country = country
     };
 
     private static UpdateProfileRequest Profile(string street, string country) => new()
     {
-        FirstName = "Ana", LastName = "Novak", Street = street, PostalCode = "10115", City = "Berlin", Country = country
+        FirstName = "Ana",
+        LastName = "Novak",
+        Street = street,
+        PostalCode = "10115",
+        City = "Berlin",
+        Country = country
     };
 }

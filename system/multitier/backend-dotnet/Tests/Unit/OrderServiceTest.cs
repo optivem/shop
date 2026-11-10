@@ -444,7 +444,12 @@ public class OrderServiceTest : IDisposable
         var request = BuildRequest("BOOK-123", 2, "US");
         request.ShippingAddress = new ShippingAddress
         {
-            FirstName = " Ana ", LastName = "Novak", Street = "Main St 1 ", PostalCode = "10115", City = "Berlin", Country = " DE"
+            FirstName = " Ana ",
+            LastName = "Novak",
+            Street = "Main St 1 ",
+            PostalCode = "10115",
+            City = "Berlin",
+            Country = " DE"
         };
 
         var response = await _service.PlaceOrderAsync(request, Alice);
@@ -544,7 +549,12 @@ public class OrderServiceTest : IDisposable
 
     private static ShippingAddress Address(string country) => new()
     {
-        FirstName = "Ana", LastName = "Novak", Street = "Main St 1", PostalCode = "10115", City = "Berlin", Country = country
+        FirstName = "Ana",
+        LastName = "Novak",
+        Street = "Main St 1",
+        PostalCode = "10115",
+        City = "Berlin",
+        Country = country
     };
 
     private void GivenAnOrderCanBePlaced()
