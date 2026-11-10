@@ -401,13 +401,17 @@ jobs:
             fi
           } >> "$GITHUB_ENV"
 
+      # One instance: both external-system images keep their state in memory (WireMock's stub mappings,
+      # json-server's products). With a second instance, a stub a test registers on one instance is
+      # missing on the other, and the backend's lookup there gets a 404 ("Product does not exist" /
+      # "Country does not exist") once parallel test load makes Cloud Run scale out.
       - name: Deploy External Systems (${{ matrix.ext-service }})
         run: |
           set -euo pipefail
           gcloud run deploy "$EXT_NAME" \
             --image "$EXT_IMAGE" --region "$REGION" --project "$PROJECT" \
             --service-account "$SA" --port "$EXT_PORT" --memory 1Gi \
-            --min-instances 0 --max-instances 2 --allow-unauthenticated
+            --min-instances 0 --max-instances 1 --allow-unauthenticated
 
       - name: Read DB Credentials
         run: |
