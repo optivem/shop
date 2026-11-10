@@ -38,7 +38,11 @@ Steps 1–4 are done (U2, BUILD Step 9, U3, React). The user signed off how Reac
 
 Next is **Step 5**: port to Next.js first (BUILD Step 4), then Thymeleaf, then Razor, one subagent per port, serial. Not yet checked from Step 4: each UC-006..011 scenario against the React UI line by line, and whether `src/test` interaction tests cover the new pages. Fold that check into Step 6.
 
-**Before Step 5, the pipeline must be green.** The .NET cloud acceptance stages failed from `9da17ffc` onwards. Root cause: the external-systems Cloud Run service could scale to 2 instances, which split WireMock's in-memory stubs between them. Fixed in `c068ab47` (`--max-instances 1`). Verification runs dispatched: 42816400736 (monolith-dotnet) and 42816408496 (multitier-dotnet). When both are green, start Step 5. Details and related ideas: `plans/20261110-1207-system-test-reliability-followups.md`.
+**The pipeline is green again (2026-11-10).** Two fixes:
+- `c068ab47` capped the external-systems Cloud Run service at 1 instance. With 2, WireMock's in-memory stubs were split between instances. `monolith-dotnet-acceptance-stage` is green (42816400736).
+- The commit after it made the anonymous login-required UI checks use the React route `/order-details/:n`. `multitier-dotnet-acceptance-stage` is green (42825072988).
+
+Step 5 is in progress: the Next.js port (BUILD Step 4) is running in a subagent, then Thymeleaf, then Razor. Details and related ideas: `plans/20261110-1207-system-test-reliability-followups.md`.
 
 ## Open questions
 
