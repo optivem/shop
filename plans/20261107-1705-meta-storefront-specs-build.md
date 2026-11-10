@@ -1,7 +1,5 @@
 # 2026-11-07 17:05 UTC — Plan coordination meta-plan: storefront specs + build
 
-> 🤖 **Picked up by agent** — `8e8cd7062d0f` at `2026-11-10T07:47:59Z`
-
 
 **Plans analysed:** 2 in-scope, 1 referenced-only
 
@@ -35,7 +33,9 @@ The orchestrating session runs the Steps below **in order**, one subagent per st
 
 The prototype is signed off and the specs are reviewed (G0 closed 2026-11-07). Steps 1–3 are done (U2, BUILD Step 9, U3). The Step 3 remainder was checked on 2026-11-10: the UC-010/011 tagged tests pass the full latest acceptance suites in all three languages. Both use cases still have untagged scenarios, so they stay `planned` and flip in **Step 7** (BUILD Step 8 already lists them). Next is **Step 4** (React reference implementation), which stops at the 🛑 React gate.
 
-Before Step 4, check the pipeline. As of 2026-11-10 the meta-prerelease pipeline is red only because the `WORKFLOW_TOKEN` secret is rejected ("Invalid username or token"), so every acceptance stage's `publish-tag` fails. The user has to rotate the PAT; no code change fixes it.
+**Step 4 was started on 2026-11-10 and paused before its gate.** The partial React work (StoreLayout, Catalog, Cart/Checkout contexts, the `openHomePage()`/KeycloakUiLogin driver changes in all three languages, about 40 files) is **not on origin**. It is in a local stash on host `8e8cd7062d0f`: `stash@{0}` "WIP meta Step 4 / BUILD Step 3: React reference impl (unverified, partial; 2026-11-10)". On that machine, `git stash apply` it, check it against BUILD Step 3, finish it, and run the gate. On the other machine, start Step 4 fresh.
+
+The `WORKFLOW_TOKEN` was rotated on 2026-11-10 and `publish-tag` passes again. A fresh meta-prerelease run, 42792803006, was dispatched; check that it is green before Step 4.
 
 ## Steps
 
