@@ -1,6 +1,5 @@
 # 2026-11-10 12:07 UTC — System-test reliability follow-ups
 
-> 🤖 **Picked up by agent** — `Valentina_Desk` at `2026-11-10T21:02:26Z`
 
 ## TL;DR
 
@@ -9,9 +8,13 @@
 
 ## ▶ Next executable step (resume here)
 
-All 27 ideas are decided (see "Resolved decisions"). Start with **#1, keep evidence on failure**: add one shared on-failure step to `.github/workflows/_acceptance-stage-*.yml`, checking the composite actions in the sibling `optivem/actions` repo first. It should upload `/__admin/requests`, `/__admin/mappings` and `docker compose logs` as artifacts. Then #2 + #3, then the rest of the Do list in order. #11 is user-side, and #16 becomes a gh-optivem plan.
+Session 2026-11-10 did #1, #6, #8b, #9, #12, #16 (now `gh-optivem/plans/20261110-2109-system-test-per-suite-counts.md`), #18, #19, #22–#25, and parts of #13/#14; #10 and #8c dropped.
 
-Don't run it alongside the storefront meta-plan's (`plans/20261107-1705-meta-storefront-specs-build.md`) Steps 5–7 if an idea touches `system-test/**` and a port subagent is running system tests at the same time: they share docker ports and the test kit.
+**Waiting on the user:** #27's fix is written but **uncommitted** in `../actions/trigger-and-wait-for-workflow/trigger.sh` (+ README). Committing it auto-pushes and moves the floating `v1` tag for every consumer, and on a moved `main` it now warns and continues instead of failing (the child may test a newer sha than the parent tags). Review, then commit via `/commit`. #11 is user-side.
+
+**Blocked until the storefront `system-test/**` work is committed** (the tree had ~40 uncommitted storefront files there): #2 (await `_tax` dispose in `system-test/dotnet/Dsl.Core/UseCase/UseCaseDsl.cs:135`) is the next unit, then #3 (needs local acceptance runs — ask first), #4, #7 (b), #8a, #13 fix, #14's system-test/typescript `npm audit fix`. #28 is new and cheap (workflows only, not blocked).
+
+Don't run alongside the storefront meta-plan's (`plans/20261107-1705-meta-storefront-specs-build.md`) Steps 5–7 if an idea touches `system-test/**` and a port subagent is running system tests at the same time: they share docker ports and the test kit.
 
 ## Background: the .NET "does not exist" failures (found 2026-11-10, root cause fixed)
 
@@ -103,10 +106,11 @@ Checked 2026-11-10. The URL is fine in .NET and Java: both go through `ViewOrder
 - Java: `system-test/java/src/main/java/com/mycompany/myshop/testkit/driver/adapter/ui/MyShopUiDriver.java:134` (cancel), `:154` (deliver), anonymous branch `:179-183`.
 - **Fix (blocked until the storefront `system-test/**` work is committed):** extract a `LoginRequiredForOrder(orderNumber)` helper from `ViewOrder`'s anonymous branch (mirroring TS `loginRequiredForOrder`), call it at the very top of `CancelOrder` / `DeliverOrder` before `RunAs`, and have `ViewOrder` use it too.
 
-### 14. `npm audit` vulnerabilities in the Next.js monolith
+### 14. `npm audit` vulnerabilities in the Node projects
 
-`npm ci` in `system/monolith/typescript` reports `npm audit` vulnerabilities. They are pre-existing, found during the Next.js port on 2026-11-10.
-- **Recommended: do, as a triage.** Run `npm audit` in every Node project (the monolith, frontend-react, the multitier TS backend, system-test/typescript, external-systems). Fix the high and critical findings that have a non-breaking upgrade, and defer the rest with a note.
+Triaged 2026-11-10: `npm audit fix` (no `--force`) plus an in-range `@nestjs/common`/`@nestjs/testing` 11.2.9 bump took high/critical from 39 to 9 across the monolith, backend-typescript, frontend-react and simulators (lockfiles only). What's left:
+- **system-test/typescript (blocked on storefront work):** 1 high (brace-expansion), non-breaking. Run `npm audit fix` there once the storefront `system-test/**` changes are committed.
+- **Deferred, needs a breaking major bump:** postcss via next 16 (monolith); `@pact-foundation/pact` 17 (backend-typescript, frontend-react); vitest 5 (frontend-react, critical). backend-typescript brace-expansion <=1.1.20 was not applied by `audit fix` (pinned by its dependent).
 
 ### 15. `next start` doesn't work with `output: "standalone"` locally
 
