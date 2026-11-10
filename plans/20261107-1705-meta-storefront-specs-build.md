@@ -45,7 +45,7 @@ The `WORKFLOW_TOKEN` was rotated on 2026-11-10 and `publish-tag` passes again. A
 ## Open questions
 
 1. **Stale Docker images (found in Step 4, 2026-11-10).** Plain `gh optivem system start` runs `docker compose up -d` with no `--build` (`gh-optivem/internal/build/runner/system.go:217`), so it silently reuses old images. The 5-week-old `my-shop-real-frontend`/`my-shop-stub-frontend` caused false multitier failures until they were removed with `docker rmi -f`. `system start --restart` adds `--build` and `system build --rebuild` does `--no-cache`, but neither is the default.
-   - **Recommended:** (a) in this plan and in the subagent briefs for Steps 5–7, replace `docker rmi` and plain `start` with `gh optivem system start --restart` (check first that it rebuilds when only source changed). (b) Separately, raise a gh-optivem plan: make plain `start` build, or warn when an image is older than its source.
+   - **Recommended:** (a) in this plan and in the subagent briefs for Steps 5–7, replace `docker rmi` and plain `start` with `gh optivem system start --restart` (check first that it rebuilds when only source changed). (b) Raised 2026-11-10 as `gh-optivem/plans/20261110-1115-system-start-stale-images.md` (make plain `start` build, or warn when an image is older than its source).
    - **Alternative:** keep `docker rmi -f` as a manual step. Rejected: it is easy to forget and the failure mode is misleading.
 
 ## Steps
