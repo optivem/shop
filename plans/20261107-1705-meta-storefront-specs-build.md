@@ -37,7 +37,7 @@ Steps 1–4 are done (U2, BUILD Step 9, U3, React). The user signed off how Reac
 
 Next is **Step 5**: port to Next.js first (BUILD Step 4), then Thymeleaf, then Razor, one subagent per port, serial. Not yet checked from Step 4: each UC-006..011 scenario against the React UI line by line, and whether `src/test` interaction tests cover the new pages. Fold that check into Step 6.
 
-**Before Step 5, the pipeline must be green.** `multitier-dotnet-acceptance-stage` has failed since 2026-11-09 (runs on `2e1eec96` and `9da17ffc`). 3 of 119 API tests fail with `Product does not exist for SKU: DEFAULT-SKU-…`: `DiscountRateShouldBeNotAppliedWhenThereIsNoCoupon`, `AdminShouldSeeOrderOfChosenCustomer`, `AdminShouldSeeNoOrdersWhenNoOrderMatchesFilters`. Fix it per CLAUDE.md "Fixing Failing Workflows": reproduce locally (needs the user's OK), check all three languages, then fix. Also check that meta-prerelease run 42792803006 is green.
+**Before Step 5, the pipeline must be green.** `multitier-dotnet-acceptance-stage` has failed since 2026-11-09 (runs on `2e1eec96` and `9da17ffc`). 3 of 119 API tests fail with `Product does not exist for SKU: DEFAULT-SKU-…`: `DiscountRateShouldBeNotAppliedWhenThereIsNoCoupon`, `AdminShouldSeeOrderOfChosenCustomer`, `AdminShouldSeeNoOrdersWhenNoOrderMatchesFilters`. This was investigated on 2026-11-10: it did not reproduce locally, it is intermittent in CI, and no root cause was found (see Step 5b). The failed jobs were re-run. If the re-runs pass, Step 5 goes ahead and Step 5b follows up on the flake.
 
 ## Open questions
 
@@ -48,6 +48,11 @@ Next is **Step 5**: port to Next.js first (BUILD Step 4), then Thymeleaf, then R
 ## Steps
 
 - [ ] **Step 5 — BUILD Steps 4, 5, 6 (ports to Next.js, Thymeleaf, Razor).** One subagent per port, **serial**: they share docker ports when running system tests. Gate per port: that monolith's build plus its sample system tests.
+- [ ] **Step 5b — .NET acceptance flake follow-up (found 2026-11-10).** In CI only, intermittently, 1–3 of 119 .NET API acceptance tests fail with `Product does not exist for SKU: DEFAULT-SKU-…`: the ERP stub returns 404 for a SKU the test just registered successfully. First seen on `9da17ffc`, the first build that includes `f1ca8b7d`. It did not reproduce in 13 local monolith-dotnet runs. Ruled out: DSL ordering, cross-test stub deletion, static stub files, the backend's ERP lookup, and WireMock 3.10.0 under a 60-thread stress test. One subagent:
+  - (a) On failure, have the acceptance-stage workflows upload the stub server's `/__admin/requests` journal plus the stub and system container logs as artifacts.
+  - (b) Fix the .NET tax-stub leak: `UseCaseDsl.DisposeAsync` calls `_tax?.Dispose()` synchronously, so tax stubs are never removed.
+  - (c) Add the Java-style read-back check after stub registration in the .NET and TS `JsonWireMockClient`.
+  - Gate: compile, plus the .NET sample system tests. Not a blocker for Step 5 if the re-runs of 42803428175 / 42805123156 pass.
 - [ ] **Step 6 — BUILD Step 7 (verify).** One subagent: `./compile-all.sh`, `--sample` for all languages (monolith and multitier), then `./test-all.sh`.
 - [ ] **Step 7 — BUILD Step 8 (acceptance tests for UC-006–011).** UC-010/011 have only their API scenarios tagged; this step adds the untagged ones and flips them. One subagent per use case, serial (shared test kit). Each one flips its use case to `status: implemented`. Gate: compile, plus the sample system tests.
 - [ ] **Step 7b — BUILD Step 10 (close the Step 9 coverage gaps for UC-002, UC-003, UC-005, UC-012).** One subagent, after Step 7 (the UI-only scenarios UC-003.2 and UC-012.2 belong in Step 7's UI tests). Touches the order and coupon acceptance tests, so never alongside Step 3 or Step 7. Gate: compile, plus the sample system tests.
