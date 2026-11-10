@@ -161,10 +161,10 @@
         };
 
         var validFrom = document.getElementById('validFrom').value;
-        if (validFrom) body.validFrom = new Date(validFrom).toISOString();
+        if (validFrom) body.validFrom = new Date(validFrom + 'Z').toISOString();
 
         var validTo = document.getElementById('validTo').value;
-        if (validTo) body.validTo = new Date(validTo).toISOString();
+        if (validTo) body.validTo = new Date(validTo + 'Z').toISOString();
 
         var usageLimit = document.getElementById('usageLimit').value;
         if (usageLimit) body.usageLimit = parseInt(usageLimit);
