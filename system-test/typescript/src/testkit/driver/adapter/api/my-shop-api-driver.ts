@@ -20,6 +20,8 @@ import type { BrowseCouponsResponse } from '../../port/dtos/BrowseCouponsRespons
 import type { ViewProfileRequest } from '../../port/dtos/ViewProfileRequest.js';
 import type { ViewProfileResponse } from '../../port/dtos/ViewProfileResponse.js';
 import type { UpdateProfileRequest } from '../../port/dtos/UpdateProfileRequest.js';
+import type { BrowseCatalogRequest } from '../../port/dtos/BrowseCatalogRequest.js';
+import type { BrowseCatalogResponse } from '../../port/dtos/BrowseCatalogResponse.js';
 import type { MyShopDriver } from '../../port/my-shop-driver.js';
 import type { UserIdentity } from '../../port/user-identity.js';
 import { TestUsers, testCustomer, type TestUser } from '../shared/client/http/test-user.js';
@@ -108,7 +110,32 @@ export class MyShopApiDriver implements MyShopDriver {
     return this.runAs(TestUsers.CUSTOMER).profile().updateProfile(request);
   }
 
+  /** The catalog is public: a visitor browses it without signing in, unless a user was explicitly requested. */
+  async browseCatalog(request: BrowseCatalogRequest): Promise<Result<BrowseCatalogResponse, SystemError>> {
+    requireNotSet('headerCategory', request.headerCategory);
+    requireNotSet('search', request.search);
+    requireNotSet('category', request.category);
+    requireNotSet('brands', request.brands);
+    requireNotSet('sort', request.sort);
+    requireNotSet('followUp', request.followUp);
+
+    const client =
+      this.anonymous || this.requestedUser === undefined
+        ? this.client.as(ApiIdentity.ANONYMOUS)
+        : this.runAs(TestUsers.CUSTOMER);
+    const result = await client.products().browseProducts();
+    if (!result.success) return failure(result.error);
+    return success({ products: result.value, productCount: result.value.length });
+  }
+
   async close(): Promise<void> {
     // No resources to release: the API client uses fetch per-call.
+  }
+}
+
+/** The API serves the unfiltered catalog; filtering, search and sort happen in the UI. */
+function requireNotSet(input: string, value: unknown): void {
+  if (value !== undefined && value !== null) {
+    throw new Error(`The API channel cannot send '${input}'; run this scenario on the UI channel only`);
   }
 }

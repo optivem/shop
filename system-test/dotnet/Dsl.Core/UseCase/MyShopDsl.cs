@@ -48,6 +48,8 @@ public class MyShopDsl : IAsyncDisposable
     public ViewProfile ViewProfile() => new(_driver, _context);
 
     public UpdateProfile UpdateProfile() => new(_driver, _context);
+
+    public BrowseCatalog BrowseCatalog() => new(_driver, _context);
 }
 
 

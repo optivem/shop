@@ -106,4 +106,31 @@ public class MyShopApiDriver : IMyShopDriver
     public Task<Result<ViewProfileResponse, SystemError>> UpdateProfileAsync(UpdateProfileRequest request)
         => RunAs(TestUser.Customer).Profile().UpdateProfileAsync(request)
             .MapErrorAsync(MapError);
+
+    /// <summary>The catalog is public: a visitor browses it without signing in, unless a user was explicitly requested.</summary>
+    public Task<Result<BrowseCatalogResponse, SystemError>> BrowseCatalogAsync(BrowseCatalogRequest request)
+    {
+        RequireNotSet("headerCategory", request.HeaderCategory);
+        RequireNotSet("search", request.Search);
+        RequireNotSet("category", request.Category);
+        RequireNotSet("brands", request.Brands);
+        RequireNotSet("sort", request.Sort);
+        RequireNotSet("followUp", request.FollowUp);
+
+        var client = _anonymous || _requestedUser == null
+            ? _apiClient.As(ApiIdentity.Anonymous)
+            : RunAs(TestUser.Customer);
+        return client.Products().BrowseProductsAsync()
+            .MapErrorAsync(MapError)
+            .MapAsync(products => new BrowseCatalogResponse { Products = products, ProductCount = products.Count });
+    }
+
+    /// <summary>The API serves the unfiltered catalog; filtering, search and sort happen in the UI.</summary>
+    private static void RequireNotSet(string input, object? value)
+    {
+        if (value != null)
+        {
+            throw new NotSupportedException($"The API channel cannot send '{input}'; run this scenario on the UI channel only");
+        }
+    }
 }

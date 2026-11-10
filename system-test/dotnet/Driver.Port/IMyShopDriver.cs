@@ -16,5 +16,6 @@ public interface IMyShopDriver : IAsyncDisposable, IActingUserSelector
     Task<Result<BrowseCouponsResponse, SystemError>> BrowseCouponsAsync(BrowseCouponsRequest request);
     Task<Result<ViewProfileResponse, SystemError>> ViewProfileAsync(ViewProfileRequest request);
     Task<Result<ViewProfileResponse, SystemError>> UpdateProfileAsync(UpdateProfileRequest request);
+    Task<Result<BrowseCatalogResponse, SystemError>> BrowseCatalogAsync(BrowseCatalogRequest request);
 }
 

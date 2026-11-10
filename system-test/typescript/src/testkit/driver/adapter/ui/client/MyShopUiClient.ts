@@ -6,6 +6,7 @@ import { TestUsers, type TestUser } from '../../shared/client/http/test-user.js'
 import { KeycloakUiLogin } from '../../shared/client/playwright/keycloak-ui-login.js';
 import { PAGE_TIMEOUT_MS } from './pages/BasePage.js';
 import { HomePage } from './pages/HomePage.js';
+import { CATALOG_READY_SELECTOR, CatalogPage } from './pages/CatalogPage.js';
 import { NEW_ORDER_READY_SELECTOR, NewOrderPage } from './pages/NewOrderPage.js';
 import { OrderHistoryPage } from './pages/OrderHistoryPage.js';
 import { OrderDetailsPage } from './pages/OrderDetailsPage.js';
@@ -13,6 +14,7 @@ import { COUPON_MANAGEMENT_READY_SELECTOR, CouponManagementPage } from './pages/
 
 const HOME_READY_SELECTOR = "a[href='/order-history']";
 const SINGLE_PAGE_APP_ROOT_SELECTOR = '#root';
+const LOGIN_FORM_SELECTOR = '#kc-login';
 const NOT_AUTHORIZED_SELECTOR = "h1:has-text('Not authorized'):visible";
 const NEW_ORDER_PATH = '/new-order';
 const COUPON_MANAGEMENT_PATH = '/admin-coupons';
@@ -64,6 +66,32 @@ export class MyShopUiClient {
     } catch (e) {
       return failure({ message: `MyShop UI not available: ${String(e)}`, fieldErrors: [] });
     }
+  }
+
+  /** Opens the catalog, the home page, as the logged-in user. */
+  async openCatalog(): Promise<Result<CatalogPage, SystemError>> {
+    const result = await this.openHomePage();
+    if (!result.success) return failure(result.error);
+    return success(new CatalogPage(this.requirePage()));
+  }
+
+  /**
+   * Opens the catalog in a fresh session that never logs in.
+   * @returns the catalog, or null when the app sends the visitor to the login form instead
+   */
+  async openCatalogAnonymously(): Promise<CatalogPage | null> {
+    await this.close();
+    this.context = await this.browser.newContext({ viewport: { width: 1920, height: 1080 } });
+    this.currentPage = await this.context.newPage();
+    const page = this.currentPage;
+    await page.goto(this.baseUrl);
+    await page
+      .locator(`${CATALOG_READY_SELECTOR}, ${LOGIN_FORM_SELECTOR}`)
+      .waitFor({ state: 'visible', timeout: PAGE_TIMEOUT_MS });
+    if (this.login?.isLoginPage(page)) {
+      return null;
+    }
+    return new CatalogPage(page);
   }
 
   /** Opens an order by its URL, not through the order history. The app must already be open. */

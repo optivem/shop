@@ -1,5 +1,8 @@
 name: multitier-java-acceptance-stage-docker-compose-legacy
 
+run-name: >-
+  multitier-java-acceptance-stage-docker-compose-legacy${{ inputs.commit-sha && format(' [sha:{0}]', inputs.commit-sha) || ' [latest-image]' }}
+
 # Docker Compose acceptance gate, legacy suites. Dispatched by the prerelease pipeline (no cron).
 # Gate only: no RC tag. Legacy never runs on cloud. A project that drops legacy deletes this file
 # and the acceptance-stage-legacy job from its prerelease pipeline.

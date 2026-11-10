@@ -33,6 +33,13 @@ public class ThenSuccess<TSuccessResponse, TSuccessVerification>
 
     IThenOrderHistory IThenSuccess.OrderHistory() => OrderHistory();
 
+    public ThenSuccessCatalog<TSuccessResponse, TSuccessVerification> Catalog()
+    {
+        return new ThenSuccessCatalog<TSuccessResponse, TSuccessVerification>(_thenClause);
+    }
+
+    IThenCatalog IThenSuccess.Catalog() => Catalog();
+
     /// <summary>Verifies the profile the executed operation (view or update profile) answered with.</summary>
     public IThenProfile Profile()
     {

@@ -21,4 +21,6 @@ public interface IWhenStage
     IWhenViewProfile ViewProfile();
 
     IWhenUpdateProfile UpdateProfile();
+
+    IWhenBrowseCatalog BrowseCatalog();
 }

@@ -3,6 +3,8 @@ package com.mycompany.myshop.testkit.driver.adapter.api;
 import com.mycompany.myshop.testkit.driver.adapter.api.client.ApiIdentity;
 import com.mycompany.myshop.testkit.driver.adapter.api.client.MyShopApiClient;
 import com.mycompany.myshop.testkit.driver.port.dtos.error.SystemError;
+import com.mycompany.myshop.testkit.driver.port.dtos.BrowseCatalogRequest;
+import com.mycompany.myshop.testkit.driver.port.dtos.BrowseCatalogResponse;
 import com.mycompany.myshop.testkit.driver.port.dtos.BrowseCouponsRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.BrowseCouponsResponse;
 import com.mycompany.myshop.testkit.driver.port.dtos.BrowseOrderHistoryRequest;
@@ -135,5 +137,35 @@ public class MyShopApiDriver implements MyShopDriver {
     public Result<ViewProfileResponse, SystemError> updateProfile(UpdateProfileRequest request) {
         runAs(TestUser.CUSTOMER);
         return apiClient.profile().updateProfile(request).mapError(SystemErrorMapper::from);
+    }
+
+    /** The catalog is public: a visitor browses it without signing in, unless a user was explicitly requested. */
+    @Override
+    public Result<BrowseCatalogResponse, SystemError> browseCatalog(BrowseCatalogRequest request) {
+        requireNotSet("headerCategory", request.getHeaderCategory());
+        requireNotSet("search", request.getSearch());
+        requireNotSet("category", request.getCategory());
+        requireNotSet("brands", request.getBrands());
+        requireNotSet("sort", request.getSort());
+        requireNotSet("followUp", request.getFollowUp());
+
+        if (anonymous || requestedUser == null) {
+            apiClient.as(ApiIdentity.ANONYMOUS);
+        } else {
+            runAs(TestUser.CUSTOMER);
+        }
+        return apiClient.products().browseProducts()
+                .mapError(SystemErrorMapper::from)
+                .map(products -> BrowseCatalogResponse.builder()
+                        .products(products)
+                        .productCount(products.size())
+                        .build());
+    }
+
+    /** The API serves the unfiltered catalog; filtering, search and sort happen in the UI. */
+    private static void requireNotSet(String input, Object value) {
+        if (value != null) {
+            throw new UnsupportedOperationException("The API channel cannot send '" + input + "'; run this scenario on the UI channel only");
+        }
     }
 }

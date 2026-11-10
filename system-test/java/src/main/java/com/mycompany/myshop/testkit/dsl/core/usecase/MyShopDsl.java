@@ -2,6 +2,7 @@ package com.mycompany.myshop.testkit.dsl.core.usecase;
 
 import com.mycompany.myshop.testkit.driver.port.MyShopDriver;
 import com.mycompany.myshop.testkit.driver.port.UserIdentity;
+import com.mycompany.myshop.testkit.dsl.core.usecase.usecases.BrowseCatalog;
 import com.mycompany.myshop.testkit.dsl.core.usecase.usecases.BrowseCoupons;
 import com.mycompany.myshop.testkit.dsl.core.usecase.usecases.BrowseOrderHistory;
 import com.mycompany.myshop.testkit.dsl.core.usecase.usecases.CancelOrder;
@@ -73,5 +74,9 @@ public class MyShopDsl implements Closeable {
 
     public UpdateProfile updateProfile() {
         return new UpdateProfile(driver, context);
+    }
+
+    public BrowseCatalog browseCatalog() {
+        return new BrowseCatalog(driver, context);
     }
 }

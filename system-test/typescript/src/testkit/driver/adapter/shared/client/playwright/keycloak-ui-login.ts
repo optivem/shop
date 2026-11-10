@@ -47,7 +47,7 @@ export class KeycloakUiLogin {
     await page.waitForSelector(SUBMIT_SELECTOR, { timeout: TIMEOUT_MS });
   }
 
-  private isLoginPage(page: Page): boolean {
+  isLoginPage(page: Page): boolean {
     return page.url().startsWith(this.keycloakBaseUrl);
   }
 

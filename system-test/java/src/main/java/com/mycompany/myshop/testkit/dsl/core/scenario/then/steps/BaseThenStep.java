@@ -34,6 +34,10 @@ public abstract class BaseThenStep<R, V extends ResponseVerification<R>> {
         return new ThenOrderHistoryImpl<>(app, executionResult, successVerification);
     }
 
+    public ThenCatalogImpl<R, V> catalog() {
+        return new ThenCatalogImpl<>(app, executionResult, successVerification);
+    }
+
     public ThenProfileImpl<R, V> profile() {
         return new ThenProfileImpl<>(app, executionResult, successVerification, true);
     }

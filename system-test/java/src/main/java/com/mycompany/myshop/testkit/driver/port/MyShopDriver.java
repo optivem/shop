@@ -1,6 +1,8 @@
 package com.mycompany.myshop.testkit.driver.port;
 
 import com.mycompany.myshop.testkit.driver.port.dtos.error.SystemError;
+import com.mycompany.myshop.testkit.driver.port.dtos.BrowseCatalogRequest;
+import com.mycompany.myshop.testkit.driver.port.dtos.BrowseCatalogResponse;
 import com.mycompany.myshop.testkit.driver.port.dtos.BrowseCouponsRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.BrowseOrderHistoryRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.BrowseOrderHistoryResponse;
@@ -42,4 +44,6 @@ public interface MyShopDriver extends AutoCloseable, ActingUserSelector {
     Result<ViewProfileResponse, SystemError> viewProfile(ViewProfileRequest request);
 
     Result<ViewProfileResponse, SystemError> updateProfile(UpdateProfileRequest request);
+
+    Result<BrowseCatalogResponse, SystemError> browseCatalog(BrowseCatalogRequest request);
 }

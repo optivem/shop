@@ -1,11 +1,12 @@
 using Common;
+using Dsl.Core.External.Erp.UseCases;
 using Dsl.Port.Given.Steps;
 
 namespace Dsl.Core.Scenario.Given;
 
 public class GivenProducts : BaseGiven, IGivenProducts
 {
-    private readonly List<(string Sku, string? UnitPrice)> _products = new();
+    private readonly List<ReturnsProducts.ProductEntry> _products = new();
 
     public GivenProducts(GivenStage givenClause)
         : base(givenClause)
@@ -14,7 +15,7 @@ public class GivenProducts : BaseGiven, IGivenProducts
 
     public GivenProducts WithProduct(string sku, string? unitPrice)
     {
-        _products.Add((sku, unitPrice));
+        _products.Add(new ReturnsProducts.ProductEntry(sku, unitPrice));
         return this;
     }
 
@@ -27,12 +28,21 @@ public class GivenProducts : BaseGiven, IGivenProducts
 
     IGivenProducts IGivenProducts.WithProduct(string sku, decimal unitPrice) => WithProduct(sku, unitPrice);
 
+    public GivenProducts WithProduct(string sku, string title, string brand, string category, string unitPrice, string description)
+    {
+        _products.Add(new ReturnsProducts.ProductEntry(sku, unitPrice, title, brand, category, description));
+        return this;
+    }
+
+    IGivenProducts IGivenProducts.WithProduct(string sku, string title, string brand, string category, string unitPrice, string description)
+        => WithProduct(sku, title, brand, category, unitPrice, description);
+
     internal override async Task Execute(UseCaseDsl app)
     {
         var returnsProducts = app.Erp().ReturnsProducts();
-        foreach (var (sku, unitPrice) in _products)
+        foreach (var product in _products)
         {
-            returnsProducts.Product(sku, unitPrice);
+            returnsProducts.Product(product);
         }
 
         (await returnsProducts.Execute()).ShouldSucceed();

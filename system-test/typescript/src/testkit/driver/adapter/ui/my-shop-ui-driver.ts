@@ -26,6 +26,14 @@ import type { ViewProfileRequest } from '../../port/dtos/ViewProfileRequest.js';
 import type { ViewProfileResponse } from '../../port/dtos/ViewProfileResponse.js';
 import type { UpdateProfileRequest } from '../../port/dtos/UpdateProfileRequest.js';
 import type { MyShopDriver } from '../../port/my-shop-driver.js';
+import {
+  BRAND_SEPARATOR,
+  CLEAR_FILTERS,
+  REOPEN_PAGE_ADDRESS,
+  type BrowseCatalogRequest,
+} from '../../port/dtos/BrowseCatalogRequest.js';
+import type { BrowseCatalogResponse } from '../../port/dtos/BrowseCatalogResponse.js';
+import type { CatalogPage } from './client/pages/CatalogPage.js';
 import { TestUsers, testCustomer, type TestUser } from '../shared/client/http/test-user.js';
 import { AUTHENTICATION_REQUIRED, MyShopUiClient, PERMISSION_DENIED } from './client/MyShopUiClient.js';
 import { NewOrderPage } from './client/pages/NewOrderPage.js';
@@ -242,6 +250,43 @@ export class MyShopUiDriver implements MyShopDriver {
     return Promise.reject(notSupportedByUiYet('Updating the profile'));
   }
 
+  /** The catalog is public: a visitor browses it without signing in, unless a user was explicitly requested. */
+  async browseCatalog(request: BrowseCatalogRequest): Promise<Result<BrowseCatalogResponse, SystemError>> {
+    let catalogPage: CatalogPage;
+    if (this.anonymous || this.requestedUser === undefined) {
+      const anonymousCatalogPage = await this.client.openCatalogAnonymously();
+      if (!anonymousCatalogPage) return failure({ message: AUTHENTICATION_REQUIRED, fieldErrors: [] });
+      catalogPage = anonymousCatalogPage;
+    } else {
+      await this.runAs(TestUsers.CUSTOMER);
+      const pageResult = await this.client.openCatalog();
+      if (!pageResult.success) return failure(pageResult.error);
+      catalogPage = pageResult.value;
+    }
+    await catalogPage.waitForLoaded();
+
+    if (isSet(request.headerCategory)) await catalogPage.clickHeaderCategory(request.headerCategory);
+    if (isSet(request.search)) await catalogPage.search(request.search);
+    if (isSet(request.category)) await catalogPage.selectCategory(request.category);
+    if (isSet(request.brands)) {
+      const brands = request.brands
+        .split(BRAND_SEPARATOR)
+        .map((brand) => brand.trim())
+        .filter((brand) => brand !== '');
+      for (const brand of brands) await catalogPage.tickBrand(brand);
+    }
+    if (isSet(request.sort)) await catalogPage.sortBy(request.sort);
+    if (request.followUp === REOPEN_PAGE_ADDRESS) {
+      await catalogPage.reopenPageAddress();
+    } else if (request.followUp === CLEAR_FILTERS) {
+      await catalogPage.clickClearFilters();
+    } else if (isSet(request.followUp)) {
+      throw new Error(`Unknown catalog follow-up: ${request.followUp}`);
+    }
+
+    return success(await catalogPage.read());
+  }
+
   async close(): Promise<void> {
     await this.client.close();
   }
@@ -293,6 +338,10 @@ export class MyShopUiDriver implements MyShopDriver {
   private async runAs(operationDefault: TestUser): Promise<void> {
     await this.client.switchUser(this.requestedUser ?? operationDefault);
   }
+}
+
+function isSet(value: string | null | undefined): value is string {
+  return value !== null && value !== undefined;
 }
 
 /** The UI has no screen for this yet (BUILD Steps 3-6): API-channel scenarios only. */

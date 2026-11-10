@@ -1,7 +1,7 @@
 ---
 id: UC-006
 title: Browse Catalog
-status: planned
+status: implemented
 ---
 
 # UC-006 Browse Catalog — Acceptance criteria

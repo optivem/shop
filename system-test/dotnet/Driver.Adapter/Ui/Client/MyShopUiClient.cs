@@ -46,6 +46,8 @@ public class MyShopUiClient : IAsyncDisposable
 
     private const string SinglePageAppRootSelector = "#root";
 
+    private const string LoginFormSelector = "#kc-login";
+
     public const string AuthenticationRequired = "Authentication is required";
 
     public const string PermissionDenied = "You do not have permission to perform this action";
@@ -179,6 +181,30 @@ public class MyShopUiClient : IAsyncDisposable
     }
 
 
+
+    /// <summary>Opens the catalog, the home page, as the logged-in user.</summary>
+    public async Task<CatalogPage> OpenCatalogAsync()
+    {
+        await OpenHomePageAsync();
+        return new CatalogPage(new PlaywrightGateway(_page, _baseUrl, _login));
+    }
+
+    /// <summary>Opens the catalog in a fresh session that never logs in.</summary>
+    /// <returns>the catalog, or null when the app sends the visitor to the login form instead</returns>
+    public async Task<CatalogPage?> OpenCatalogAnonymouslyAsync()
+    {
+        await _page.CloseAsync();
+        await _context.CloseAsync();
+        (_context, _page, _login, _homePage) = await OpenSessionAsync(_browser, _baseUrl, _keycloakBaseUrl, _login?.User ?? TestUser.Customer);
+        _response = await _page.GotoAsync(_baseUrl);
+        var anonymousPageClient = new PlaywrightGateway(_page, _baseUrl);
+        await anonymousPageClient.WaitForVisibleAsync(CatalogPage.ReadySelector + ", " + LoginFormSelector);
+        if (_login != null && _login.IsLoginPage(_page))
+        {
+            return null;
+        }
+        return new CatalogPage(anonymousPageClient);
+    }
 
     /// <summary>Opens an order by its URL, not through the order history. The app must already be open.</summary>
     public async Task<OrderDetailsPage> OpenOrderDetailsPageAsync(string? orderNumber)

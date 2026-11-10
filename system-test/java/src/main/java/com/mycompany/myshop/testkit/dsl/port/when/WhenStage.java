@@ -1,5 +1,6 @@
 package com.mycompany.myshop.testkit.dsl.port.when;
 
+import com.mycompany.myshop.testkit.dsl.port.when.steps.WhenBrowseCatalog;
 import com.mycompany.myshop.testkit.dsl.port.when.steps.WhenBrowseCoupons;
 import com.mycompany.myshop.testkit.dsl.port.when.steps.WhenBrowseOrderHistory;
 import com.mycompany.myshop.testkit.dsl.port.when.steps.WhenCancelOrder;
@@ -28,4 +29,6 @@ public interface WhenStage {
     WhenViewProfile viewProfile();
 
     WhenUpdateProfile updateProfile();
+
+    WhenBrowseCatalog browseCatalog();
 }

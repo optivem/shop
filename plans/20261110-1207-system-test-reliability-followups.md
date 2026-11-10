@@ -1,6 +1,5 @@
 # 2026-11-10 12:07 UTC — System-test reliability follow-ups
 
-
 ## TL;DR
 
 **Why:** The storefront work turned up a set of system-test problems that are not part of building the storefront: an intermittent .NET CI failure with no root cause, failed CI runs that keep no evidence, leaked fake-server data, language gaps in the test kit, unreliable local .NET runs, and three older issues. None of them blocks the storefront, but together they make a red pipeline slow to diagnose and a local run hard to trust as a gate.
@@ -8,11 +7,11 @@
 
 ## ▶ Next executable step (resume here)
 
-Session 2026-11-10 did #1, #6, #8b, #9, #12, #16 (now `gh-optivem/plans/20261110-2109-system-test-per-suite-counts.md`), #18, #19, #22–#25, and parts of #13/#14; #10 and #8c dropped.
+Session 2026-11-10 did #1, #6, #8b, #9, #12, #16 (now `gh-optivem/plans/20261110-2109-system-test-per-suite-counts.md`), #18, #19, #22–#25, #28, and parts of #13/#14; #10 and #8c dropped.
 
 **Waiting on the user:** #27's fix is written but **uncommitted** in `../actions/trigger-and-wait-for-workflow/trigger.sh` (+ README). Committing it auto-pushes and moves the floating `v1` tag for every consumer, and on a moved `main` it now warns and continues instead of failing (the child may test a newer sha than the parent tags). Review, then commit via `/commit`. #11 is user-side.
 
-**Blocked until the storefront `system-test/**` work is committed** (the tree had ~40 uncommitted storefront files there): #2 (await `_tax` dispose in `system-test/dotnet/Dsl.Core/UseCase/UseCaseDsl.cs:135`) is the next unit, then #3 (needs local acceptance runs — ask first), #4, #7 (b), #8a, #13 fix, #14's system-test/typescript `npm audit fix`. #28 is new and cheap (workflows only, not blocked).
+**Blocked until the storefront `system-test/**` work is committed** (the tree had ~40 uncommitted storefront files there): #2 (await `_tax` dispose in `system-test/dotnet/Dsl.Core/UseCase/UseCaseDsl.cs:135`) is the next unit, then #3 (needs local acceptance runs — ask first), #4, #7 (b), #8a, #13 fix, #14's system-test/typescript `npm audit fix`.
 
 Don't run alongside the storefront meta-plan's (`plans/20261107-1705-meta-storefront-specs-build.md`) Steps 5–7 if an idea touches `system-test/**` and a port subagent is running system tests at the same time: they share docker ports and the test kit.
 
@@ -140,9 +139,3 @@ The .NET admin-coupons bug (fixed in storefront Step 6) was only caught because 
 ### 27. A push to `main` during `meta-prerelease-stage` fails the run
 In run 42885354673 (2026-11-10, `3f4840cc`), a plan-only commit was pushed to `main` while the run was starting. The `multitier-frontend-react-commit-stage.yml` it dispatched ran on the new head (`e8e471a1`, run 42885508265, green), and the parent failed with `Failed to locate dispatched run … (sha=3f4840cc …) within 120s`. Because of that, the pipeline, cross-language and tag jobs were skipped. Any push during the run's dispatch window, even a docs-only one, wastes a ~2.5 h run.
 - **Recommended: do.** Make the dispatch-and-wait step find the child run by a unique run name or correlation input, not by `head_sha`. Or pin the dispatch to the resolved sha. Until then, don't push to `main` while a meta run is dispatching.
-
-### 28. Show the tested commit in acceptance-stage run names
-
-Found while checking #12 (2026-11-10): the multitier Java/TS runs that "passed despite `28b1aaf9`" had actually tested `b3138b79`, an older commit passed as `inputs.commit-sha`. The run list shows `headSha` (the ref the workflow file came from), which misleads anyone reading results.
-- **Recommended: do (cheap).** Add `run-name:` to the `*-acceptance-stage*.yml` callers that includes `inputs.commit-sha` (falling back to `github.sha` when empty).
-

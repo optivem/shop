@@ -2,6 +2,7 @@ package com.mycompany.myshop.testkit.driver.adapter.shared.client.playwright;
 
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
+import com.microsoft.playwright.options.SelectOption;
 import com.microsoft.playwright.options.WaitForSelectorState;
 
 import java.util.List;
@@ -91,6 +92,33 @@ public class PageClient {
     /** Moves a single-page app to a route without reloading it. */
     public void navigateWithinApp(String route) {
         page.evaluate("route => { history.pushState({}, '', route); dispatchEvent(new PopStateEvent('popstate')); }", route);
+    }
+
+    /** Reads an attribute of every element the selector matches, without waiting for any. */
+    public List<String> readAllAttributesNoWait(String selector, String attribute) {
+        return page.locator(selector).all().stream().map(locator -> locator.getAttribute(attribute)).toList();
+    }
+
+    public void selectOptionByLabel(String selector, String label) {
+        getLocator(selector).selectOption(new SelectOption().setLabel(label));
+    }
+
+    public String readSelectedOptionLabel(String selector) {
+        return (String) getLocator(selector).evaluate("select => select.options[select.selectedIndex]?.text ?? null");
+    }
+
+    public String currentUrl() {
+        return page.url();
+    }
+
+    /** Waits until the page address differs from {@code previousUrl}: a page load or an in-app route change. */
+    public void waitForUrlChange(String previousUrl) {
+        page.waitForURL(url -> !url.equals(previousUrl), new Page.WaitForURLOptions().setTimeout(timeoutMilliseconds));
+    }
+
+    /** Opens the current page address again, as a fresh page load. */
+    public void reopenCurrentUrl() {
+        page.navigate(page.url());
     }
 
     public void removeElements(String selector) {

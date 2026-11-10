@@ -10,6 +10,7 @@ import { PublishCoupon } from './usecases/PublishCoupon.js';
 import { GoToMyShop } from './usecases/GoToMyShop.js';
 import { ViewProfile } from './usecases/ViewProfile.js';
 import { UpdateProfile } from './usecases/UpdateProfile.js';
+import { BrowseCatalog } from './usecases/BrowseCatalog.js';
 
 export class MyShopDsl {
   constructor(
@@ -55,6 +56,10 @@ export class MyShopDsl {
 
   updateProfile(): UpdateProfile {
     return new UpdateProfile(this.driver, this.context);
+  }
+
+  browseCatalog(): BrowseCatalog {
+    return new BrowseCatalog(this.driver, this.context);
   }
 
   async close(): Promise<void> {

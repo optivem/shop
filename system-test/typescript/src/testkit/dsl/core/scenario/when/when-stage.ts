@@ -10,6 +10,7 @@ import { WhenPublishCoupon } from './when-publish-coupon.js';
 import { WhenBrowseCoupons } from './when-browse-coupons.js';
 import { WhenViewProfile } from './when-view-profile.js';
 import { WhenUpdateProfile } from './when-update-profile.js';
+import { WhenBrowseCatalog } from './when-browse-catalog.js';
 
 export class WhenStage {
   constructor(
@@ -52,5 +53,9 @@ export class WhenStage {
 
   updateProfile(): WhenUpdateProfile {
     return new WhenUpdateProfile(this.app, this.ctx, this.useCaseContext);
+  }
+
+  browseCatalog(): WhenBrowseCatalog {
+    return new WhenBrowseCatalog(this.app, this.ctx, this.useCaseContext);
   }
 }

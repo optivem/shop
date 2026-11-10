@@ -12,7 +12,10 @@ import com.mycompany.myshop.testkit.driver.port.dtos.error.SystemError;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Stages the ERP's enumerable product list (GET /api/products); an empty list stages no products. */
+/**
+ * Stages the ERP's enumerable product list (GET /api/products), in the order the products are added; an empty
+ * list stages no products. Unset details fall back to the driver's defaults.
+ */
 public class ReturnsProducts extends BaseErpUseCase<Void, VoidVerification> {
     private final List<ProductEntry> products = new ArrayList<>();
 
@@ -21,7 +24,12 @@ public class ReturnsProducts extends BaseErpUseCase<Void, VoidVerification> {
     }
 
     public ReturnsProducts product(String skuParamAlias, String unitPrice) {
-        products.add(new ProductEntry(skuParamAlias, unitPrice));
+        return product(skuParamAlias, null, null, null, unitPrice, null);
+    }
+
+    public ReturnsProducts product(String skuParamAlias, String title, String brand, String category,
+                                   String unitPrice, String description) {
+        products.add(new ProductEntry(skuParamAlias, title, brand, category, unitPrice, description));
         return this;
     }
 
@@ -31,6 +39,10 @@ public class ReturnsProducts extends BaseErpUseCase<Void, VoidVerification> {
                 .map(product -> ReturnsProductRequest.builder()
                         .sku(context.getParamValue(product.skuParamAlias()))
                         .price(product.unitPrice())
+                        .title(product.title())
+                        .brand(product.brand())
+                        .category(product.category())
+                        .description(product.description())
                         .build())
                 .toList();
 
@@ -42,6 +54,7 @@ public class ReturnsProducts extends BaseErpUseCase<Void, VoidVerification> {
         return new UseCaseResult<>(result.mapError(e -> SystemError.of(e.getMessage())), context, VoidVerification::new);
     }
 
-    private record ProductEntry(String skuParamAlias, String unitPrice) {
+    private record ProductEntry(String skuParamAlias, String title, String brand, String category,
+                                String unitPrice, String description) {
     }
 }

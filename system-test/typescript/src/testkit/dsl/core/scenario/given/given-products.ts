@@ -12,8 +12,16 @@ export class GivenProducts implements IGivenProducts {
     private readonly products: ProductConfig[],
   ) {}
 
-  withProduct(sku: string, unitPrice: string | number): this {
-    this.products.push({ sku, price: typeof unitPrice === 'number' ? unitPrice.toFixed(2) : unitPrice });
+  withProduct(sku: string, unitPrice: string | number): this;
+  withProduct(sku: string, title: string, brand: string, category: string, unitPrice: string, description: string): this;
+  withProduct(sku: string, ...details: (string | number)[]): this {
+    if (details.length === 1) {
+      const unitPrice = details[0] ?? '';
+      this.products.push({ sku, price: typeof unitPrice === 'number' ? unitPrice.toFixed(2) : unitPrice });
+      return this;
+    }
+    const [title, brand, category, unitPrice, description] = details.map(String);
+    this.products.push({ sku, title, brand, category, price: unitPrice ?? '', description });
     return this;
   }
 

@@ -3,7 +3,10 @@ package com.mycompany.myshop.testkit.driver.adapter.ui;
 import com.microsoft.playwright.Browser;
 import com.mycompany.myshop.testkit.driver.adapter.shared.client.http.TestUser;
 import com.mycompany.myshop.testkit.driver.adapter.ui.client.MyShopUiClient;
+import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.CatalogPage;
 import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.CouponManagementPage;
+import com.mycompany.myshop.testkit.driver.port.dtos.BrowseCatalogRequest;
+import com.mycompany.myshop.testkit.driver.port.dtos.BrowseCatalogResponse;
 import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.HomePage;
 import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.NewOrderPage;
 import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.OrderDetailsPage;
@@ -34,6 +37,7 @@ import com.mycompany.myshop.testkit.common.Result;
 import com.mycompany.myshop.testkit.common.domain.OrderStatus;
 
 import java.net.URLEncoder;
+import java.util.Arrays;
 import java.nio.charset.StandardCharsets;
 
 import static com.mycompany.myshop.testkit.dsl.core.usecase.commons.SystemResults.failure;
@@ -303,6 +307,52 @@ public class MyShopUiDriver implements MyShopDriver {
         throw unsupportedOperation("updateProfile");
     }
 
+    /** The catalog is public: a visitor browses it without signing in, unless a user was explicitly requested. */
+    @Override
+    public Result<BrowseCatalogResponse, SystemError> browseCatalog(BrowseCatalogRequest request) {
+        CatalogPage catalogPage;
+        if (anonymous || requestedUser == null) {
+            catalogPage = client.openCatalogAnonymously();
+            resetPages();
+            if (catalogPage == null) {
+                return failure(MyShopUiClient.AUTHENTICATION_REQUIRED);
+            }
+        } else {
+            runAs(TestUser.CUSTOMER);
+            catalogPage = client.openCatalog();
+            currentPage = Page.NONE;
+        }
+        catalogPage.waitForLoaded();
+
+        if (request.getHeaderCategory() != null) {
+            catalogPage.clickHeaderCategory(request.getHeaderCategory());
+        }
+        if (request.getSearch() != null) {
+            catalogPage.search(request.getSearch());
+        }
+        if (request.getCategory() != null) {
+            catalogPage.selectCategory(request.getCategory());
+        }
+        if (request.getBrands() != null) {
+            Arrays.stream(request.getBrands().split(BrowseCatalogRequest.BRAND_SEPARATOR))
+                    .map(String::trim)
+                    .filter(brand -> !brand.isEmpty())
+                    .forEach(catalogPage::tickBrand);
+        }
+        if (request.getSort() != null) {
+            catalogPage.sortBy(request.getSort());
+        }
+        if (BrowseCatalogRequest.REOPEN_PAGE_ADDRESS.equals(request.getFollowUp())) {
+            catalogPage.reopenPageAddress();
+        } else if (BrowseCatalogRequest.CLEAR_FILTERS.equals(request.getFollowUp())) {
+            catalogPage.clickClearFilters();
+        } else if (request.getFollowUp() != null) {
+            throw new IllegalArgumentException("Unknown catalog follow-up: " + request.getFollowUp());
+        }
+
+        return success(catalogPage.read());
+    }
+
     // --- unsupported inputs ---
 
     private static UnsupportedOperationException unsupportedOperation(String operation) {
@@ -325,13 +375,18 @@ public class MyShopUiDriver implements MyShopDriver {
     private void runAs(TestUser operationDefault) {
         var user = requestedUser != null ? requestedUser : operationDefault;
         if (client.switchUser(user)) {
-            currentPage = Page.NONE;
-            homePage = null;
-            newOrderPage = null;
-            orderHistoryPage = null;
-            orderDetailsPage = null;
-            couponManagementPage = null;
+            resetPages();
         }
+    }
+
+    /** The browser session was replaced: no page is open any more. */
+    private void resetPages() {
+        currentPage = Page.NONE;
+        homePage = null;
+        newOrderPage = null;
+        orderHistoryPage = null;
+        orderDetailsPage = null;
+        couponManagementPage = null;
     }
 
     private <T> Result<T, SystemError> loginRequired(String path) {

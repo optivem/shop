@@ -2,6 +2,7 @@ import { HealthController } from './controllers/HealthController.js';
 import { OrderController } from './controllers/OrderController.js';
 import { CouponController } from './controllers/CouponController.js';
 import { ProfileController } from './controllers/ProfileController.js';
+import { ProductController } from './controllers/ProductController.js';
 import { ApiIdentity, type ApiIdentityValue } from './api-identity.js';
 import { KeycloakTokenProvider } from '../../shared/client/http/keycloak-token-provider.js';
 import { TestUsers, type TestUser } from '../../shared/client/http/test-user.js';
@@ -12,6 +13,7 @@ export class MyShopApiClient {
   private readonly orderController: OrderController;
   private readonly couponController: CouponController;
   private readonly profileController: ProfileController;
+  private readonly productController: ProductController;
   private readonly tokenProvider: KeycloakTokenProvider | undefined;
   private identity: ApiIdentityValue = ApiIdentity.CUSTOMER;
   private customer: TestUser = TestUsers.CUSTOMER;
@@ -28,6 +30,7 @@ export class MyShopApiClient {
     this.orderController = new OrderController(baseUrl, tokenSource);
     this.couponController = new CouponController(baseUrl, tokenSource);
     this.profileController = new ProfileController(baseUrl, tokenSource);
+    this.productController = new ProductController(baseUrl, tokenSource);
   }
 
   /** Selects who the following calls are made as. */
@@ -57,6 +60,10 @@ export class MyShopApiClient {
 
   profile(): ProfileController {
     return this.profileController;
+  }
+
+  products(): ProductController {
+    return this.productController;
   }
 
   private async tokenFor(): Promise<string | undefined> {

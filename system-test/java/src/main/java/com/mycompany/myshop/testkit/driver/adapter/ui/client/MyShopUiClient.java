@@ -1,6 +1,7 @@
 package com.mycompany.myshop.testkit.driver.adapter.ui.client;
 
 import com.microsoft.playwright.*;
+import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.CatalogPage;
 import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.CouponManagementPage;
 import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.HomePage;
 import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.NewOrderPage;
@@ -33,6 +34,7 @@ public class MyShopUiClient implements AutoCloseable {
 
     private static final String HOME_READY_SELECTOR = "a[href='/order-history']";
     private static final String SINGLE_PAGE_APP_ROOT_SELECTOR = "#root";
+    private static final String LOGIN_FORM_SELECTOR = "#kc-login";
 
     private final String baseUrl;
     private final Browser browser;
@@ -96,6 +98,29 @@ public class MyShopUiClient implements AutoCloseable {
             login.ensureLoggedIn(page, HOME_READY_SELECTOR);
         }
         return homePage;
+    }
+
+    /** Opens the catalog, the home page, as the logged-in user. */
+    public CatalogPage openCatalog() {
+        openHomePage();
+        return new CatalogPage(pageClient);
+    }
+
+    /**
+     * Opens the catalog in a fresh session that never logs in.
+     *
+     * @return the catalog, or null when the app sends the visitor to the login form instead
+     */
+    public CatalogPage openCatalogAnonymously() {
+        close();
+        open(login == null ? TestUser.CUSTOMER : login.getUser());
+        response = page.navigate(baseUrl);
+        var anonymousPageClient = new PageClient(page);
+        anonymousPageClient.waitForVisible(CatalogPage.READY_SELECTOR + ", " + LOGIN_FORM_SELECTOR);
+        if (login != null && login.isLoginPage(page)) {
+            return null;
+        }
+        return new CatalogPage(anonymousPageClient);
     }
 
     /** Opens an order by its URL, not through the order history. The app must already be open. */

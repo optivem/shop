@@ -16,7 +16,13 @@ public class GivenProductsImpl extends BaseGivenStep implements GivenProducts {
 
     @Override
     public GivenProductsImpl withProduct(String sku, String unitPrice) {
-        products.add(new ProductEntry(sku, unitPrice));
+        products.add(new ProductEntry(sku, null, null, null, unitPrice, null));
+        return this;
+    }
+
+    @Override
+    public GivenProductsImpl withProduct(String sku, String title, String brand, String category, String unitPrice, String description) {
+        products.add(new ProductEntry(sku, title, brand, category, unitPrice, description));
         return this;
     }
 
@@ -24,11 +30,12 @@ public class GivenProductsImpl extends BaseGivenStep implements GivenProducts {
     public void execute(UseCaseDsl app) {
         var returnsProducts = app.erp().returnsProducts();
         for (var product : products) {
-            returnsProducts.product(product.sku(), product.unitPrice());
+            returnsProducts.product(product.sku(), product.title(), product.brand(), product.category(),
+                    product.unitPrice(), product.description());
         }
         returnsProducts.execute().shouldSucceed();
     }
 
-    private record ProductEntry(String sku, String unitPrice) {
+    private record ProductEntry(String sku, String title, String brand, String category, String unitPrice, String description) {
     }
 }

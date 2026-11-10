@@ -1,5 +1,8 @@
 name: monolith-dotnet-acceptance-stage-docker-compose
 
+run-name: >-
+  monolith-dotnet-acceptance-stage-docker-compose${{ inputs.commit-sha && format(' [sha:{0}]', inputs.commit-sha) || ' [latest-image]' }}
+
 # Docker Compose acceptance gate, latest suites. Runs on every prerelease pipeline run against
 # the commit-stage images on the runner. Gate only: it creates no RC tag (the cloud
 # monolith-dotnet-acceptance-stage.yml does).

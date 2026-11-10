@@ -339,13 +339,84 @@ public class MyShopUiDriver : IMyShopDriver
         var user = _requestedUser ?? operationDefault;
         if (await _client.SwitchUserAsync(user))
         {
-            _currentPage = Page.None;
-            _homePage = null;
-            _newOrderPage = null;
-            _orderHistoryPage = null;
-            _orderDetailsPage = null;
-            _couponManagementPage = null;
+            ResetPages();
         }
+    }
+
+    /// <summary>The browser session was replaced: no page is open any more.</summary>
+    private void ResetPages()
+    {
+        _currentPage = Page.None;
+        _homePage = null;
+        _newOrderPage = null;
+        _orderHistoryPage = null;
+        _orderDetailsPage = null;
+        _couponManagementPage = null;
+    }
+
+    /// <summary>The catalog is public: a visitor browses it without signing in, unless a user was explicitly requested.</summary>
+    public async Task<Result<BrowseCatalogResponse, SystemError>> BrowseCatalogAsync(BrowseCatalogRequest request)
+    {
+        CatalogPage catalogPage;
+        if (_anonymous || _requestedUser == null)
+        {
+            var anonymousCatalogPage = await _client.OpenCatalogAnonymouslyAsync();
+            ResetPages();
+            if (anonymousCatalogPage == null)
+            {
+                return Failure<BrowseCatalogResponse>(MyShopUiClient.AuthenticationRequired);
+            }
+            catalogPage = anonymousCatalogPage;
+        }
+        else
+        {
+            await RunAsAsync(TestUser.Customer);
+            catalogPage = await _client.OpenCatalogAsync();
+            SetCurrentPage(Page.None);
+        }
+        await catalogPage.WaitForLoadedAsync();
+
+        if (request.HeaderCategory != null)
+        {
+            await catalogPage.ClickHeaderCategoryAsync(request.HeaderCategory);
+        }
+        if (request.Search != null)
+        {
+            await catalogPage.SearchAsync(request.Search);
+        }
+        if (request.Category != null)
+        {
+            await catalogPage.SelectCategoryAsync(request.Category);
+        }
+        if (request.Brands != null)
+        {
+            var brands = request.Brands.Split(BrowseCatalogRequest.BrandSeparator)
+                .Select(brand => brand.Trim())
+                .Where(brand => brand.Length > 0);
+            foreach (var brand in brands)
+            {
+                await catalogPage.TickBrandAsync(brand);
+            }
+        }
+        if (request.Sort != null)
+        {
+            await catalogPage.SortByAsync(request.Sort);
+        }
+        switch (request.FollowUp)
+        {
+            case null:
+                break;
+            case BrowseCatalogRequest.ReopenPageAddress:
+                await catalogPage.ReopenPageAddressAsync();
+                break;
+            case BrowseCatalogRequest.ClearFilters:
+                await catalogPage.ClickClearFiltersAsync();
+                break;
+            default:
+                throw new ArgumentException($"Unknown catalog follow-up: {request.FollowUp}", nameof(request));
+        }
+
+        return Success(await catalogPage.ReadAsync());
     }
 
     private async Task<Result<T, SystemError>> LoginRequiredAsync<T>(string path)

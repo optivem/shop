@@ -1,5 +1,8 @@
 name: monolith-dotnet-acceptance-stage
 
+run-name: >-
+  monolith-dotnet-acceptance-stage${{ inputs.commit-sha && format(' [sha:{0}]', inputs.commit-sha) || ' [latest-image]' }}
+
 # Cloud acceptance stage: the real acceptance stage, in a production-like environment (Cloud Run).
 # It owns the release candidate (monolith-dotnet-v<x.y.z>-rc.N) that QA consumes. Dispatch it
 # manually on a commit that passed the Docker Compose gates

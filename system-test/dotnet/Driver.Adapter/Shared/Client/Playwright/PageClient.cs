@@ -116,6 +116,43 @@ public class PageClient
         return await locator.GetAttributeAsync(attributeName);
     }
 
+    /// <summary>Reads an attribute of every element the selector matches, without waiting for any.</summary>
+    public async Task<List<string?>> ReadAllAttributesNoWaitAsync(string selector, string attributeName)
+    {
+        var values = new List<string?>();
+        foreach (var locator in await _page.Locator(selector).AllAsync())
+        {
+            values.Add(await locator.GetAttributeAsync(attributeName));
+        }
+        return values;
+    }
+
+    public async Task SelectOptionByLabelAsync(string selector, string label)
+    {
+        var locator = await GetLocatorAsync(selector);
+        await locator.SelectOptionAsync(new SelectOptionValue { Label = label });
+    }
+
+    public async Task<string?> ReadSelectedOptionLabelAsync(string selector)
+    {
+        var locator = await GetLocatorAsync(selector);
+        return await locator.EvaluateAsync<string?>("select => select.options[select.selectedIndex]?.text ?? null");
+    }
+
+    public string CurrentUrl() => _page.Url;
+
+    /// <summary>Waits until the page address differs from <paramref name="previousUrl"/>: a page load or an in-app route change.</summary>
+    public async Task WaitForUrlChangeAsync(string previousUrl)
+    {
+        await _page.WaitForURLAsync(url => url != previousUrl, new PageWaitForURLOptions { Timeout = _timeoutMilliseconds });
+    }
+
+    /// <summary>Opens the current page address again, as a fresh page load.</summary>
+    public async Task ReopenCurrentUrlAsync()
+    {
+        await _page.GotoAsync(_page.Url);
+    }
+
     public async Task<bool> IsHiddenAsync(string selector)
     {
         var locator = _page.Locator(selector);

@@ -1,5 +1,6 @@
 package com.mycompany.myshop.testkit.dsl.port.then.steps.base;
 
+import com.mycompany.myshop.testkit.dsl.port.then.steps.ThenCatalog;
 import com.mycompany.myshop.testkit.dsl.port.then.steps.ThenClock;
 import com.mycompany.myshop.testkit.dsl.port.then.steps.ThenCountry;
 import com.mycompany.myshop.testkit.dsl.port.then.steps.ThenCoupon;
@@ -23,6 +24,9 @@ public interface ThenStep<T> {
     ThenProfile profile();
 
     ThenCoupon coupon(String couponCode);
+
+    /** The catalog the executed browse showed. */
+    ThenCatalog catalog();
 
     ThenClock clock();
 

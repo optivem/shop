@@ -7,6 +7,7 @@ import type { WhenPublishCoupon } from './steps/when-publish-coupon.js';
 import type { WhenBrowseCoupons } from './steps/when-browse-coupons.js';
 import type { WhenViewProfile } from './steps/when-view-profile.js';
 import type { WhenUpdateProfile } from './steps/when-update-profile.js';
+import type { WhenBrowseCatalog } from './steps/when-browse-catalog.js';
 
 export interface WhenStage {
   placeOrder(): WhenPlaceOrder;
@@ -18,4 +19,5 @@ export interface WhenStage {
   browseCoupons(): WhenBrowseCoupons;
   viewProfile(): WhenViewProfile;
   updateProfile(): WhenUpdateProfile;
+  browseCatalog(): WhenBrowseCatalog;
 }

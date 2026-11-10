@@ -114,5 +114,13 @@ namespace Dsl.Core.Scenario.When
         }
 
         IWhenUpdateProfile IWhenStage.UpdateProfile() => UpdateProfile();
+
+        /// <summary>The catalog lists only the products the scenario staged, so no default product or tax rate is created.</summary>
+        public WhenBrowseCatalog BrowseCatalog()
+        {
+            return new WhenBrowseCatalog(_app, _scenario, () => EnsureGivenForProfile());
+        }
+
+        IWhenBrowseCatalog IWhenStage.BrowseCatalog() => BrowseCatalog();
     }
 }

@@ -4,6 +4,7 @@ import com.mycompany.myshop.testkit.dsl.core.ScenarioDslImpl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.DefaultGivens;
 import com.mycompany.myshop.testkit.dsl.core.scenario.given.CustomerResolver;
 import com.mycompany.myshop.testkit.dsl.core.usecase.UseCaseDsl;
+import com.mycompany.myshop.testkit.dsl.core.scenario.when.steps.WhenBrowseCatalogImpl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.when.steps.WhenBrowseCouponsImpl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.when.steps.WhenBrowseOrderHistoryImpl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.when.steps.WhenCancelOrderImpl;
@@ -89,6 +90,12 @@ public class WhenImpl implements WhenStage {
     public WhenUpdateProfileImpl updateProfile() {
         ensureDefaultsForProfile();
         return new WhenUpdateProfileImpl(app, scenario);
+    }
+
+    /** The catalog lists only the products the scenario staged, so no default product or tax rate is created. */
+    public WhenBrowseCatalogImpl browseCatalog() {
+        defaults.ensure(false);
+        return new WhenBrowseCatalogImpl(app, scenario);
     }
 
 }
