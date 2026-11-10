@@ -1,5 +1,7 @@
 # 2026-11-07 17:05 UTC — Plan coordination meta-plan: storefront specs + build
 
+> 🤖 **Picked up by agent** — `ValentinaLaptop` at `2026-11-10T10:16:44Z`
+
 
 **Plans analysed:** 2 in-scope, 1 referenced-only
 
@@ -33,7 +35,10 @@ The orchestrating session runs the Steps below **in order**, one subagent per st
 
 The prototype is signed off and the specs are reviewed (G0 closed 2026-11-07). Steps 1–3 are done (U2, BUILD Step 9, U3). The Step 3 remainder was checked on 2026-11-10: the UC-010/011 tagged tests pass the full latest acceptance suites in all three languages. Both use cases still have untagged scenarios, so they stay `planned` and flip in **Step 7** (BUILD Step 8 already lists them). Next is **Step 4** (React reference implementation), which stops at the 🛑 React gate.
 
-**Step 4 is partly done: WIP commit `28b1aaf9` is on main.** It compiles (frontend-react tsc + lint + 111 unit tests; system-test java/dotnet/ts compile), but the gate has not run. Resume by checking it against BUILD Step 3 and finishing anything missing. Then run the multitier sample system tests in all three languages, plus one monolith sample to check the `openHomePage()`/KeycloakUiLogin change. Watch the CI commit stages for `28b1aaf9`. Then stop at the 🛑 React gate.
+**Step 4's work is done and its local gate passed (2026-11-10): commit `28b1aaf9`.** frontend-react tsc, lint and 111 unit tests pass; multitier `--sample` (11 suites) passes in Java, .NET and TypeScript; monolith-java `--sample` passes. Not checked: each UC-006..011 scenario against the UI line by line, and whether `src/test` interaction tests cover the new pages. The only remaining part of Step 4 is the 🛑 **user sign-off on how React looks**. Next after sign-off: **Step 5**.
+
+To view it (stale-image trap: remove the old frontend images first):
+`docker rmi -f my-shop-real-frontend my-shop-stub-frontend`, then `GH_OPTIVEM_CONFIG=gh-optivem-multitier-java.yaml gh optivem system start`, open http://localhost:3311 (customer1 / customer1-test-password; admin1 / admin1-test-password), then `gh optivem system stop`.
 
 The `WORKFLOW_TOKEN` was rotated on 2026-11-10 and `publish-tag` passes again. A fresh meta-prerelease run, 42792803006, was dispatched; check that it is green before Step 4.
 
