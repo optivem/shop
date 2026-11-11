@@ -76,4 +76,10 @@ public class ErpStubDriver : BaseErpDriver<ErpStubClient>
         return _client.ConfigureUnavailableAsync()
             .MapErrorAsync(error => MapError(error));
     }
+
+    public override Task<Result<VoidValue, ErpErrorResponse>> ReturnsAvailableAsync()
+    {
+        return _client.RemoveUnavailableAsync()
+            .MapErrorAsync(error => MapError(error));
+    }
 }

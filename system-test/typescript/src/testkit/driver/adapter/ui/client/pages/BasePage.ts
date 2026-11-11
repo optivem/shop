@@ -5,6 +5,10 @@ import type { SystemError } from '../../../../port/dtos/errors/SystemError.js';
 
 export const PAGE_TIMEOUT_MS = 30_000;
 
+const NOTIFICATION_SUCCESS_SELECTOR = "[role='alert'].notification.success";
+const NOTIFICATION_ERROR_MESSAGE_SELECTOR = "[role='alert'].notification.error .error-message";
+const CART_ITEM_COUNT_SELECTOR = "[aria-label='Cart Item Count']";
+
 export abstract class BasePage {
   constructor(protected readonly page: Page) {}
 
@@ -34,5 +38,21 @@ export abstract class BasePage {
     });
 
     return failure({ message: errorMessage, fieldErrors });
+  }
+
+  /** The header's cart badge; 0 when it is not shown. */
+  async readCartItemCount(): Promise<number> {
+    const badge = this.page.locator(CART_ITEM_COUNT_SELECTOR);
+    if ((await badge.count()) === 0) return 0;
+    return Number.parseInt(((await badge.textContent({ timeout: PAGE_TIMEOUT_MS })) ?? '').trim(), 10);
+  }
+
+  /** The notification showing now, without waiting for one: the success text or the error's message; else null. */
+  protected async readShownNotification(): Promise<string | null> {
+    for (const selector of [NOTIFICATION_SUCCESS_SELECTOR, NOTIFICATION_ERROR_MESSAGE_SELECTOR]) {
+      const texts = await this.page.locator(selector).allTextContents();
+      if (texts.length > 0) return (texts[0] ?? '').trim();
+    }
+    return null;
   }
 }

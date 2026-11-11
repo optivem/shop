@@ -75,4 +75,10 @@ public class ErpStubDriver extends BaseErpDriver<ErpStubClient> {
         return client.configureUnavailable()
                 .mapError(ext -> new ErpErrorResponse(ext.getMessage()));
     }
+
+    @Override
+    public Result<Void, ErpErrorResponse> returnsAvailable() {
+        return client.removeUnavailable()
+                .mapError(ext -> new ErpErrorResponse(ext.getMessage()));
+    }
 }

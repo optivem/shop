@@ -157,7 +157,16 @@ public class GivenImpl implements GivenStage {
 
     public WhenImpl when() {
         setup();
-        return new WhenImpl(app, scenario, defaults, customerResolver());
+        return new WhenImpl(app, scenario, defaults, customerResolver(), this::changeProductPrice);
+    }
+
+    private void changeProductPrice(String skuAlias, String unitPrice) {
+        if (productLists.isEmpty()) {
+            StagedProducts.NONE.changePrice(skuAlias, unitPrice);
+        }
+        for (var productList : productLists) {
+            productList.executeWithPrice(app, skuAlias, unitPrice);
+        }
     }
 
     /** Resolves aliases named in the when stage (e.g. a customer filter) against this scenario's customers. */

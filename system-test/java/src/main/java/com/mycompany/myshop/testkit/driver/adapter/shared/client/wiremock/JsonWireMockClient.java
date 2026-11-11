@@ -196,6 +196,20 @@ public class JsonWireMockClient {
         return Result.success();
     }
 
+    /** Removes the stubs this client registered with {@link #stubGetMatching} for {@code pathRegex}. */
+    public Result<Void, String> removeStubsMatching(String pathRegex) {
+        return runOnVirtualThread(() -> {
+            var matching = wireMock.allStubMappings().getMappings().stream()
+                .filter(m -> stubIds.contains(m.getUuid()) && pathRegex.equals(m.getRequest().getUrlPathPattern()))
+                .toList();
+            for (var mapping : matching) {
+                wireMock.removeStubMapping(mapping.getUuid());
+                stubIds.remove(mapping.getUuid());
+            }
+            return Result.success();
+        });
+    }
+
     public void removeStubs() {
         for (var id : stubIds) {
             wireMock.removeStubMapping(id);

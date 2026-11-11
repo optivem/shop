@@ -19,7 +19,6 @@ const QUANTITY_SELECTOR = "input[aria-label='Product Quantity']";
 const INCREASE_SELECTOR = "button[aria-label='Increase Quantity']";
 const DECREASE_SELECTOR = "button[aria-label='Decrease Quantity']";
 const ADD_TO_CART_SELECTOR = "button[aria-label='Add to Cart']";
-const CART_ITEM_COUNT_SELECTOR = "[aria-label='Cart Item Count']";
 const PRODUCT_PATH_PREFIX = '/products/';
 
 /** A product's page `/products/{sku}` (UC-007): its details, the quantity stepper and "Add to cart". */
@@ -90,11 +89,6 @@ export class ProductPage extends BasePage {
     if (await this.isShown(NOT_FOUND_HEADING_SELECTOR)) return this.text(this.page.locator(NOT_FOUND_HEADING_SELECTOR));
     if (await this.isShown(UNAVAILABLE_SELECTOR)) return this.text(this.page.locator(UNAVAILABLE_SELECTOR));
     return null;
-  }
-
-  private async readCartItemCount(): Promise<number> {
-    if (!(await this.isShown(CART_ITEM_COUNT_SELECTOR))) return 0;
-    return Number.parseInt(await this.text(this.page.locator(CART_ITEM_COUNT_SELECTOR)), 10);
   }
 
   private readPageSku(): string | null {

@@ -42,6 +42,10 @@ public abstract class BaseThenStep<R, V extends ResponseVerification<R>> {
         return new ThenProductPageImpl<>(app, executionResult, successVerification);
     }
 
+    public ThenCartImpl<R, V> cart() {
+        return new ThenCartImpl<>(app, executionResult, successVerification);
+    }
+
     public ThenProfileImpl<R, V> profile() {
         return new ThenProfileImpl<>(app, executionResult, successVerification, true);
     }

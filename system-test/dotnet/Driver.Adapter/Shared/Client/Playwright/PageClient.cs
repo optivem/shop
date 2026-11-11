@@ -110,6 +110,28 @@ public class PageClient
         }
     }
 
+    public async Task PressAsync(string selector, string key)
+    {
+        var locator = await GetLocatorAsync(selector);
+        await locator.PressAsync(key);
+    }
+
+    /// <summary>Whether the element belongs to a form, so acting on it posts the form and loads a new document.</summary>
+    public async Task<bool> BelongsToFormAsync(string selector)
+    {
+        var locator = await GetLocatorAsync(selector);
+        return await locator.EvaluateAsync<bool>("element => element.form != null");
+    }
+
+    /// <summary>Runs an action that loads a new document (such as a form post), and waits until the new document is ready.</summary>
+    public async Task RunAndWaitForNewDocumentAsync(Func<Task> action)
+    {
+        await _page.EvaluateAsync("() => { window.__previousDocument = true; }");
+        await action();
+        await _page.WaitForFunctionAsync("() => window.__previousDocument === undefined && document.readyState !== 'loading'", null,
+            new PageWaitForFunctionOptions { Timeout = _timeoutMilliseconds });
+    }
+
     /// <summary>Moves a single-page app to a route without reloading it.</summary>
     public async Task NavigateWithinAppAsync(string route)
     {

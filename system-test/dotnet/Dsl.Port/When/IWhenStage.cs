@@ -25,4 +25,6 @@ public interface IWhenStage
     IWhenBrowseCatalog BrowseCatalog();
 
     IWhenViewProduct ViewProduct();
+
+    IWhenManageCart ManageCart();
 }

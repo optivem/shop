@@ -24,7 +24,6 @@ public class ProductPage : BasePage
     private const string IncreaseSelector = "button[aria-label='Increase Quantity']";
     private const string DecreaseSelector = "button[aria-label='Decrease Quantity']";
     private const string AddToCartSelector = "button[aria-label='Add to Cart']";
-    private const string CartItemCountSelector = "[aria-label='Cart Item Count']";
     private const string ProductPathPrefix = "/products/";
 
     private string? _notificationMessage;
@@ -104,15 +103,6 @@ public class ProductPage : BasePage
             return await ReadTextAsync(UnavailableSelector);
         }
         return null;
-    }
-
-    private async Task<int> ReadCartItemCountAsync()
-    {
-        if (await PageClient.IsHiddenAsync(CartItemCountSelector))
-        {
-            return 0;
-        }
-        return int.Parse(await ReadTextAsync(CartItemCountSelector));
     }
 
     private string? ReadPageSku()

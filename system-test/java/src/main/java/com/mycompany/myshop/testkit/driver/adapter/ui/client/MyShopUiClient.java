@@ -143,6 +143,39 @@ public class MyShopUiClient implements AutoCloseable {
         return new CatalogPage(visitorPageClient);
     }
 
+    /**
+     * Leaves the site in the same browser: the page is closed and a new, blank one takes its place, keeping the
+     * browser's cookies and storage. Open a page to come back.
+     */
+    public void revisit() {
+        Closer.close(page);
+        page = context.newPage();
+        pageClient = new PageClient(page, login);
+        homePage = new HomePage(pageClient);
+        if (visitorPageClient != null) {
+            visitorPageClient = new PageClient(page);
+        }
+    }
+
+    /** Signs in as {@code user} with the header's "Sign In" link, from the page that is open. */
+    public void signIn(TestUser user) {
+        var userLogin = KeycloakUiLogin.forBaseUrl(keycloakBaseUrl, user);
+        if (userLogin == null) {
+            throw new IllegalStateException("Signing in can only be exercised against a system with a login");
+        }
+        userLogin.ensureLoggedIn(page, HOME_READY_SELECTOR);
+    }
+
+    /** Whether the page is the login form. */
+    public boolean isOnLoginPage() {
+        return login != null && login.isLoginPage(page);
+    }
+
+    /** The page that is open, read for what every page shows, such as the header's cart badge. */
+    public HomePage currentPageInSession() {
+        return new HomePage(visitorPageClient != null ? visitorPageClient : pageClient);
+    }
+
     /** Opens the cart in the current session. The app must already be open. */
     public CartPage openCartPage() {
         if (visitorPageClient != null) {

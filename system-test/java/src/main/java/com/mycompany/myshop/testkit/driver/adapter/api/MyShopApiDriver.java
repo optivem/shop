@@ -26,6 +26,8 @@ import com.mycompany.myshop.testkit.driver.port.dtos.ViewProfileRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.ViewProfileResponse;
 import com.mycompany.myshop.testkit.driver.port.dtos.ViewProductRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.ViewProductResponse;
+import com.mycompany.myshop.testkit.driver.port.dtos.ManageCartRequest;
+import com.mycompany.myshop.testkit.driver.port.dtos.ManageCartResponse;
 import com.mycompany.myshop.testkit.driver.port.MyShopDriver;
 import com.mycompany.myshop.testkit.driver.adapter.shared.client.http.TestUser;
 import com.mycompany.myshop.testkit.driver.port.UserIdentity;
@@ -188,6 +190,12 @@ public class MyShopApiDriver implements MyShopDriver {
                         .description(product.getDescription())
                         .price(product.getPrice())
                         .build());
+    }
+
+    /** The cart lives in the browser (session, cookie or local storage): there is no cart API. */
+    @Override
+    public Result<ManageCartResponse, SystemError> manageCart(ManageCartRequest request) {
+        throw new UnsupportedOperationException("The API channel has no cart; run this scenario on the UI channel only");
     }
 
     /** The API serves the unfiltered catalog; filtering, search and sort happen in the UI. */

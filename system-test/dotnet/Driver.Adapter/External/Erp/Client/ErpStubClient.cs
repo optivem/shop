@@ -73,6 +73,11 @@ public class ErpStubClient : BaseErpClient
 
             .MapErrorAsync(ExtErpErrorResponse.From);
 
+    /// <summary>Removes the outage stub, so the product and promotion stubs answer again.</summary>
+    public Task<Result<VoidValue, ExtErpErrorResponse>> RemoveUnavailableAsync()
+        => _wireMockClient.RemoveStubsMatchingAsync(ErpApiPattern)
+            .MapErrorAsync(ExtErpErrorResponse.From);
+
     public Task RemoveStubsAsync() => _wireMockClient.RemoveStubsAsync();
 
 }

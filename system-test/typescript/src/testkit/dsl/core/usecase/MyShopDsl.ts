@@ -12,6 +12,7 @@ import { ViewProfile } from './usecases/ViewProfile.js';
 import { UpdateProfile } from './usecases/UpdateProfile.js';
 import { BrowseCatalog } from './usecases/BrowseCatalog.js';
 import { ViewProduct } from './usecases/ViewProduct.js';
+import { ManageCart } from './usecases/ManageCart.js';
 
 export class MyShopDsl {
   constructor(
@@ -65,6 +66,10 @@ export class MyShopDsl {
 
   viewProduct(): ViewProduct {
     return new ViewProduct(this.driver, this.context);
+  }
+
+  manageCart(): ManageCart {
+    return new ManageCart(this.driver, this.context);
   }
 
   async close(): Promise<void> {

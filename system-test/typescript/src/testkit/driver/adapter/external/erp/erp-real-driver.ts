@@ -37,6 +37,11 @@ export class ErpRealDriver extends BaseErpDriver<ErpRealClient> {
     throw new Error('ErpRealDriver cannot make the ERP unavailable; run this scenario against the ERP stub');
   }
 
+  /** The real ERP is never taken down by returnsUnavailable(), so it cannot be brought back either. */
+  returnsAvailable(): Promise<Result<void, ErpErrorResponse>> {
+    throw new Error('ErpRealDriver cannot end an ERP outage; run this scenario against the ERP stub');
+  }
+
   close(): Promise<void> {
     return Promise.resolve();
   }

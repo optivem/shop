@@ -12,6 +12,7 @@ import { WhenViewProfile } from './when-view-profile.js';
 import { WhenUpdateProfile } from './when-update-profile.js';
 import { WhenBrowseCatalog } from './when-browse-catalog.js';
 import { WhenViewProduct } from './when-view-product.js';
+import { WhenManageCart } from './when-manage-cart.js';
 
 export class WhenStage {
   constructor(
@@ -62,5 +63,9 @@ export class WhenStage {
 
   viewProduct(): WhenViewProduct {
     return new WhenViewProduct(this.app, this.ctx, this.useCaseContext);
+  }
+
+  manageCart(): WhenManageCart {
+    return new WhenManageCart(this.app, this.ctx, this.useCaseContext);
   }
 }

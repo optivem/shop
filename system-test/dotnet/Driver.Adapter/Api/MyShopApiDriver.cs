@@ -150,6 +150,10 @@ public class MyShopApiDriver : IMyShopDriver
             });
     }
 
+    /// <summary>The cart lives in the browser (session, cookie or local storage): there is no cart API.</summary>
+    public Task<Result<ManageCartResponse, SystemError>> ManageCartAsync(ManageCartRequest request)
+        => throw new NotSupportedException("The API channel has no cart; run this scenario on the UI channel only");
+
     /// <summary>The API serves the unfiltered catalog; filtering, search and sort happen in the UI.</summary>
     private static void RequireNotSet(string input, object? value)
     {

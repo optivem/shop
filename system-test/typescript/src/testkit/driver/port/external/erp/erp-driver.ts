@@ -17,5 +17,7 @@ export interface ErpDriver {
   returnsPromotion(request: ReturnsPromotionRequest): Promise<Result<void, ErpErrorResponse>>;
   /** Makes the ERP unavailable: every ERP API call fails until the driver is closed. */
   returnsUnavailable(): Promise<Result<void, ErpErrorResponse>>;
+  /** Ends an outage started by returnsUnavailable(): the ERP answers with what is staged again. */
+  returnsAvailable(): Promise<Result<void, ErpErrorResponse>>;
   close(): Promise<void>;
 }

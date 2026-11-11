@@ -37,6 +37,22 @@ import type { CatalogPage } from './client/pages/CatalogPage.js';
 import type { ProductPage } from './client/pages/ProductPage.js';
 import { BACK_TO_CATALOG, DECREASE, INCREASE, type ViewProductRequest } from '../../port/dtos/ViewProductRequest.js';
 import type { ViewProductResponse } from '../../port/dtos/ViewProductResponse.js';
+import {
+  ADD_FROM_CATALOG,
+  ADD_FROM_PRODUCT_PAGE,
+  BROWSE_CATALOG,
+  CHANGE_QUANTITY,
+  DECREASE_QUANTITY,
+  INCREASE_QUANTITY,
+  REMOVE_LINE,
+  REVISIT,
+  SIGN_IN,
+  VIEW_CART,
+  type ManageCartRequest,
+  type ManageCartRequestLineDto,
+} from '../../port/dtos/ManageCartRequest.js';
+import type { ManageCartResponse } from '../../port/dtos/ManageCartResponse.js';
+import type { CartPage } from './client/pages/CartPage.js';
 import { TestUsers, testCustomer, type TestUser } from '../shared/client/http/test-user.js';
 import { AUTHENTICATION_REQUIRED, MyShopUiClient, PERMISSION_DENIED } from './client/MyShopUiClient.js';
 import { NewOrderPage } from './client/pages/NewOrderPage.js';
@@ -352,8 +368,110 @@ export class MyShopUiDriver implements MyShopDriver {
     return success(response);
   }
 
+  /**
+   * The cart is public: a visitor keeps one without signing in, unless a user was explicitly requested. A new
+   * session first gets the cart lines, each from its product page; then the action runs, and the cart is read.
+   */
+  async manageCart(request: ManageCartRequest): Promise<Result<ManageCartResponse, SystemError>> {
+    const loginRequired = failure<ManageCartResponse, SystemError>({ message: AUTHENTICATION_REQUIRED, fieldErrors: [] });
+    if (request.continueSession !== true) {
+      const filled = await this.startCartSession(request.cartLines ?? []);
+      if (!filled.success) return failure(filled.error);
+    }
+    const action = request.action;
+    if (!isSet(action)) return success({});
+
+    let message: string | null = null;
+    let cartItemCount: number | null = null;
+    let cartPage: CartPage | null = null;
+    switch (action) {
+      case VIEW_CART:
+        // The cart is read below.
+        break;
+      case BROWSE_CATALOG:
+      case ADD_FROM_CATALOG: {
+        const catalogResult = await this.client.openCatalogInSession();
+        if (!catalogResult.success) return failure(catalogResult.error);
+        if (!catalogResult.value) return loginRequired;
+        const catalogPage = catalogResult.value;
+        await catalogPage.waitForLoaded();
+        if (action === ADD_FROM_CATALOG) message = await catalogPage.clickAddToCart(requireSku(request));
+        cartItemCount = await catalogPage.readCartItemCount();
+        break;
+      }
+      case ADD_FROM_PRODUCT_PAGE: {
+        const pageResult = await this.client.openProductPage(requireSku(request));
+        if (!pageResult.success) return failure(pageResult.error);
+        if (!pageResult.value) return loginRequired;
+        const productPage = pageResult.value;
+        await productPage.waitForLoaded();
+        await productPage.inputQuantity(request.quantity ?? '');
+        await productPage.clickAddToCart();
+        const shown = await productPage.read();
+        message = shown.message ?? null;
+        cartItemCount = shown.cartItemCount ?? null;
+        break;
+      }
+      case CHANGE_QUANTITY:
+      case INCREASE_QUANTITY:
+      case DECREASE_QUANTITY:
+      case REMOVE_LINE: {
+        const sku = requireSku(request);
+        cartPage = await this.client.openCartPage();
+        await cartPage.waitForLoaded();
+        if (action === CHANGE_QUANTITY) {
+          await cartPage.inputQuantity(sku, request.quantity ?? '');
+        } else if (action === INCREASE_QUANTITY) {
+          await cartPage.clickIncreaseQuantity(sku);
+        } else if (action === DECREASE_QUANTITY) {
+          await cartPage.clickDecreaseQuantity(sku);
+        } else {
+          await cartPage.clickRemove(sku);
+        }
+        message = await cartPage.readNotification();
+        break;
+      }
+      case REVISIT:
+      case SIGN_IN: {
+        if (action === REVISIT) await this.client.revisit();
+        const catalogResult = await this.client.openCatalogInSession();
+        if (!catalogResult.success) return failure(catalogResult.error);
+        if (!catalogResult.value) return loginRequired;
+        await catalogResult.value.waitForLoaded();
+        if (action === SIGN_IN) await this.client.signIn(TestUsers.CUSTOMER);
+        cartItemCount = await this.client.currentPageInSession().readCartItemCount();
+        break;
+      }
+      default:
+        throw new Error(`Unknown cart action: ${action}`);
+    }
+
+    cartPage ??= await this.client.openCartPage();
+    const response = await cartPage.read(message, cartItemCount);
+    response.askedToSignIn = this.client.isOnLoginPage();
+    return success(response);
+  }
+
   async close(): Promise<void> {
     await this.client.close();
+  }
+
+  /** A fresh session (the visitor's, or the requested user's) whose cart gets these lines, in order. */
+  private async startCartSession(cartLines: ManageCartRequestLineDto[]): Promise<Result<void, SystemError>> {
+    if (this.anonymous || this.requestedUser === undefined) {
+      await this.client.startVisitorSession();
+    } else {
+      await this.runAs(TestUsers.CUSTOMER);
+    }
+    for (const line of cartLines) {
+      const pageResult = await this.client.openProductPage(line.sku);
+      if (!pageResult.success) return failure(pageResult.error);
+      if (!pageResult.value) return failure({ message: AUTHENTICATION_REQUIRED, fieldErrors: [] });
+      await pageResult.value.waitForLoaded();
+      await pageResult.value.inputQuantity(line.quantity);
+      await pageResult.value.clickAddToCart();
+    }
+    return success(undefined);
   }
 
   private async loginRequired<T>(path: string): Promise<Result<T, SystemError>> {
@@ -407,6 +525,11 @@ export class MyShopUiDriver implements MyShopDriver {
 
 function isSet(value: string | null | undefined): value is string {
   return value !== null && value !== undefined;
+}
+
+function requireSku(request: ManageCartRequest): string {
+  if (!isSet(request.sku)) throw new Error(`The cart action '${request.action}' needs a SKU`);
+  return request.sku;
 }
 
 /** The UI has no screen for this yet (BUILD Steps 3-6): API-channel scenarios only. */

@@ -16,6 +16,7 @@ public abstract class BasePage {
     private static final String NOTIFICATION_ERROR_MESSAGE_SELECTOR = "[role='alert'].notification.error .error-message";
     private static final String NOTIFICATION_ERROR_FIELD_SELECTOR = "[role='alert'].notification.error .field-error";
     private static final String NOTIFICATION_ID_ATTRIBUTE = "data-notification-id";
+    private static final String CART_ITEM_COUNT_SELECTOR = "[aria-label='Cart Item Count']";
 
     private static final String UNRECOGNIZED_NOTIFICATION_ERROR_MESSAGE = "Notification type is not recognized";
 
@@ -120,6 +121,24 @@ public abstract class BasePage {
                 parts[0].trim(),
                 parts[1].trim()
         );
+    }
+
+    /** The notification showing now, without waiting for one: the success text or the error's message; else null. */
+    protected String readShownNotification() {
+        var success = pageClient.readAllTextContentsNoWait(NOTIFICATION_SUCCESS_SELECTOR);
+        if (!success.isEmpty()) {
+            return success.get(0).trim();
+        }
+        var error = pageClient.readAllTextContentsNoWait(NOTIFICATION_ERROR_MESSAGE_SELECTOR);
+        return error.isEmpty() ? null : error.get(0).trim();
+    }
+
+    /** The header's cart badge; 0 when it is not shown. */
+    public Integer readCartItemCount() {
+        if (pageClient.isHidden(CART_ITEM_COUNT_SELECTOR)) {
+            return 0;
+        }
+        return Integer.parseInt(pageClient.readTextContent(CART_ITEM_COUNT_SELECTOR).trim());
     }
 
     private static String withNotificationId(String selector, String notificationId) {

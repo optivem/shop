@@ -25,6 +25,8 @@ import type { BrowseCatalogRequest } from './dtos/BrowseCatalogRequest.js';
 import type { BrowseCatalogResponse } from './dtos/BrowseCatalogResponse.js';
 import type { ViewProductRequest } from './dtos/ViewProductRequest.js';
 import type { ViewProductResponse } from './dtos/ViewProductResponse.js';
+import type { ManageCartRequest } from './dtos/ManageCartRequest.js';
+import type { ManageCartResponse } from './dtos/ManageCartResponse.js';
 
 export interface MyShopDriver extends AsyncCloseable, ActingUserSelector {
   goToMyShop(request: GoToMyShopRequest): Promise<Result<GoToMyShopResponse, SystemError>>;
@@ -40,4 +42,5 @@ export interface MyShopDriver extends AsyncCloseable, ActingUserSelector {
   updateProfile(request: UpdateProfileRequest): Promise<Result<ViewProfileResponse, SystemError>>;
   browseCatalog(request: BrowseCatalogRequest): Promise<Result<BrowseCatalogResponse, SystemError>>;
   viewProduct(request: ViewProductRequest): Promise<Result<ViewProductResponse, SystemError>>;
+  manageCart(request: ManageCartRequest): Promise<Result<ManageCartResponse, SystemError>>;
 }

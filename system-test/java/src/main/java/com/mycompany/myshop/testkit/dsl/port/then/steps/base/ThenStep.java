@@ -1,5 +1,6 @@
 package com.mycompany.myshop.testkit.dsl.port.then.steps.base;
 
+import com.mycompany.myshop.testkit.dsl.port.then.steps.ThenCart;
 import com.mycompany.myshop.testkit.dsl.port.then.steps.ThenCatalog;
 import com.mycompany.myshop.testkit.dsl.port.then.steps.ThenClock;
 import com.mycompany.myshop.testkit.dsl.port.then.steps.ThenCountry;
@@ -31,6 +32,9 @@ public interface ThenStep<T> {
 
     /** The product page the executed view showed. */
     ThenProductPage productPage();
+
+    /** The cart as the visitor's action left it. */
+    ThenCart cart();
 
     ThenClock clock();
 

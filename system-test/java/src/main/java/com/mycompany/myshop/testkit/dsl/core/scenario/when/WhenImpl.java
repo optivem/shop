@@ -3,9 +3,11 @@ package com.mycompany.myshop.testkit.dsl.core.scenario.when;
 import com.mycompany.myshop.testkit.dsl.core.ScenarioDslImpl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.DefaultGivens;
 import com.mycompany.myshop.testkit.dsl.core.scenario.given.CustomerResolver;
+import com.mycompany.myshop.testkit.dsl.core.scenario.given.StagedProducts;
 import com.mycompany.myshop.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.when.steps.WhenBrowseCatalogImpl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.when.steps.WhenViewProductImpl;
+import com.mycompany.myshop.testkit.dsl.core.scenario.when.steps.WhenManageCartImpl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.when.steps.WhenBrowseCouponsImpl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.when.steps.WhenBrowseOrderHistoryImpl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.when.steps.WhenCancelOrderImpl;
@@ -23,12 +25,19 @@ public class WhenImpl implements WhenStage {
     private final ScenarioDslImpl scenario;
     private final DefaultGivens defaults;
     private final CustomerResolver customers;
+    private final StagedProducts stagedProducts;
 
-    public WhenImpl(UseCaseDsl app, ScenarioDslImpl scenario, DefaultGivens defaults, CustomerResolver customers) {
+    public WhenImpl(UseCaseDsl app, ScenarioDslImpl scenario, DefaultGivens defaults, CustomerResolver customers,
+                    StagedProducts stagedProducts) {
         this.app = app;
         this.scenario = scenario;
         this.defaults = defaults;
         this.customers = customers;
+        this.stagedProducts = stagedProducts;
+    }
+
+    public WhenImpl(UseCaseDsl app, ScenarioDslImpl scenario, DefaultGivens defaults, CustomerResolver customers) {
+        this(app, scenario, defaults, customers, StagedProducts.NONE);
     }
 
     public WhenImpl(UseCaseDsl app, ScenarioDslImpl scenario, DefaultGivens defaults) {
@@ -103,6 +112,12 @@ public class WhenImpl implements WhenStage {
     public WhenViewProductImpl viewProduct() {
         defaults.ensure(false);
         return new WhenViewProductImpl(app, scenario);
+    }
+
+    /** The cart shows only the products the scenario staged, so no default product or tax rate is created. */
+    public WhenManageCartImpl manageCart() {
+        defaults.ensure(false);
+        return new WhenManageCartImpl(app, scenario, stagedProducts);
     }
 
 }

@@ -47,6 +47,13 @@ public class ThenSuccess<TSuccessResponse, TSuccessVerification>
 
     IThenProductPage IThenSuccess.ProductPage() => ProductPage();
 
+    public ThenSuccessCart<TSuccessResponse, TSuccessVerification> Cart()
+    {
+        return new ThenSuccessCart<TSuccessResponse, TSuccessVerification>(_thenClause);
+    }
+
+    IThenCart IThenSuccess.Cart() => Cart();
+
     /// <summary>Verifies the profile the executed operation (view or update profile) answered with.</summary>
     public IThenProfile Profile()
     {

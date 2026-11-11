@@ -28,10 +28,22 @@ public class GivenProductsImpl extends BaseGivenStep implements GivenProducts {
 
     @Override
     public void execute(UseCaseDsl app) {
+        stage(app, null, null);
+    }
+
+    /** Stages the list again with this product at a new price; a list without the product is left as it is. */
+    public void executeWithPrice(UseCaseDsl app, String skuAlias, String unitPrice) {
+        if (products.stream().anyMatch(product -> product.sku().equals(skuAlias))) {
+            stage(app, skuAlias, unitPrice);
+        }
+    }
+
+    private void stage(UseCaseDsl app, String changedSkuAlias, String changedUnitPrice) {
         var returnsProducts = app.erp().returnsProducts();
         for (var product : products) {
+            var unitPrice = product.sku().equals(changedSkuAlias) ? changedUnitPrice : product.unitPrice();
             returnsProducts.product(product.sku(), product.title(), product.brand(), product.category(),
-                    product.unitPrice(), product.description());
+                    unitPrice, product.description());
         }
         returnsProducts.execute().shouldSucceed();
     }

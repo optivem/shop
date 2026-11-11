@@ -262,6 +262,37 @@ public class MyShopUiClient : IAsyncDisposable
         return new CatalogPage(_visitorPageClient);
     }
 
+    /// <summary>
+    /// Leaves the site in the same browser: the page is closed and a new, blank one takes its place, keeping the
+    /// browser's cookies and storage. Open a page to come back.
+    /// </summary>
+    public async Task RevisitAsync()
+    {
+        await _page.CloseAsync();
+        _page = await _context.NewPageAsync();
+        _homePage = new HomePage(new PlaywrightGateway(_page, _baseUrl, _login));
+        _response = null;
+        if (_visitorPageClient != null)
+        {
+            _visitorPageClient = new PlaywrightGateway(_page, _baseUrl);
+        }
+    }
+
+    /// <summary>Signs in as <paramref name="user"/> with the header's "Sign In" link, from the page that is open.</summary>
+    public async Task SignInAsync(TestUser user)
+    {
+        var userLogin = KeycloakUiLogin.ForBaseUrl(_keycloakBaseUrl, user)
+            ?? throw new InvalidOperationException("Signing in can only be exercised against a system with a login");
+        await userLogin.EnsureLoggedInAsync(_page, HomeReadySelector);
+    }
+
+    /// <summary>Whether the page is the login form.</summary>
+    public bool IsOnLoginPage() => _login != null && _login.IsLoginPage(_page);
+
+    /// <summary>The page that is open, read for what every page shows, such as the header's cart badge.</summary>
+    public HomePage CurrentPageInSession()
+        => new(_visitorPageClient ?? new PlaywrightGateway(_page, _baseUrl, _login));
+
     /// <summary>Opens the cart in the current session. The app must already be open.</summary>
     public async Task<CartPage> OpenCartPageAsync()
     {

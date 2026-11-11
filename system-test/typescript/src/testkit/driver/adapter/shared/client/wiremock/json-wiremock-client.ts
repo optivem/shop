@@ -3,6 +3,8 @@ const OUTAGE_PRIORITY = 1;
 export class JsonWireMockClient {
   private readonly adminUrl: string;
   private stubIds: string[] = [];
+  /** The ids of the stubs registered with stubGetMatching, by their path pattern. */
+  private matchingStubIds = new Map<string, string[]>();
 
   constructor(baseUrl: string) {
     const url = new URL(baseUrl);
@@ -36,6 +38,23 @@ export class JsonWireMockClient {
       request: { method: 'GET', urlPathPattern },
       response: { status: statusCode },
     });
+    const id = this.stubIds[this.stubIds.length - 1];
+    if (id !== undefined) {
+      this.matchingStubIds.set(urlPathPattern, [...(this.matchingStubIds.get(urlPathPattern) ?? []), id]);
+    }
+  }
+
+  /** Removes the stubs this client registered with stubGetMatching for `urlPathPattern`. */
+  async removeStubsMatching(urlPathPattern: string): Promise<void> {
+    const ids = this.matchingStubIds.get(urlPathPattern) ?? [];
+    for (const id of ids) {
+      const response = await fetch(`${this.adminUrl}/${id}`, { method: 'DELETE' });
+      if (!response.ok) {
+        throw new Error(`Failed to remove stub GET ${urlPathPattern}: ${response.status} ${response.statusText} ${await response.text()}`);
+      }
+    }
+    this.stubIds = this.stubIds.filter((id) => !ids.includes(id));
+    this.matchingStubIds.delete(urlPathPattern);
   }
 
   async removeStubs(): Promise<void> {
@@ -43,6 +62,7 @@ export class JsonWireMockClient {
       await fetch(`${this.adminUrl}/${id}`, { method: 'DELETE' });
     }
     this.stubIds = [];
+    this.matchingStubIds.clear();
   }
 
   private async createStub<T>(method: string, urlPath: string, responseBody: T, statusCode: number): Promise<void> {

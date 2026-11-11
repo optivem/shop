@@ -3,6 +3,7 @@ package com.mycompany.myshop.testkit.driver.adapter.ui;
 import com.microsoft.playwright.Browser;
 import com.mycompany.myshop.testkit.driver.adapter.shared.client.http.TestUser;
 import com.mycompany.myshop.testkit.driver.adapter.ui.client.MyShopUiClient;
+import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.CartPage;
 import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.CatalogPage;
 import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.CouponManagementPage;
 import com.mycompany.myshop.testkit.driver.port.dtos.BrowseCatalogRequest;
@@ -22,6 +23,8 @@ import com.mycompany.myshop.testkit.driver.port.dtos.DeliverOrderRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.DeliverOrderResponse;
 import com.mycompany.myshop.testkit.driver.port.dtos.GoToMyShopRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.GoToMyShopResponse;
+import com.mycompany.myshop.testkit.driver.port.dtos.ManageCartRequest;
+import com.mycompany.myshop.testkit.driver.port.dtos.ManageCartResponse;
 import com.mycompany.myshop.testkit.driver.port.dtos.PlaceOrderRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.PlaceOrderResponse;
 import com.mycompany.myshop.testkit.driver.port.dtos.PublishCouponRequest;
@@ -41,6 +44,7 @@ import com.mycompany.myshop.testkit.common.domain.OrderStatus;
 
 import java.net.URLEncoder;
 import java.util.Arrays;
+import java.util.List;
 import java.nio.charset.StandardCharsets;
 
 import static com.mycompany.myshop.testkit.dsl.core.usecase.commons.SystemResults.failure;
@@ -430,6 +434,110 @@ public class MyShopUiDriver implements MyShopDriver {
         }
 
         return success(response);
+    }
+
+    /**
+     * The cart is public: a visitor keeps one without signing in, unless a user was explicitly requested. A new
+     * session first gets the cart lines, each from its product page; then the action runs, and the cart is read.
+     */
+    @Override
+    public Result<ManageCartResponse, SystemError> manageCart(ManageCartRequest request) {
+        if (!Boolean.TRUE.equals(request.getContinueSession())) {
+            var filled = startCartSession(request.getCartLines());
+            if (filled.isFailure()) {
+                return failure(filled.getError());
+            }
+        }
+        var action = request.getAction();
+        if (action == null) {
+            return success(ManageCartResponse.builder().build());
+        }
+
+        String message = null;
+        Integer cartItemCount = null;
+        CartPage cartPage = null;
+        switch (action) {
+            case ManageCartRequest.VIEW_CART -> {
+                // The cart is read below.
+            }
+            case ManageCartRequest.BROWSE_CATALOG, ManageCartRequest.ADD_FROM_CATALOG -> {
+                var catalogPage = client.openCatalogInSession();
+                if (catalogPage == null) {
+                    return failure(MyShopUiClient.AUTHENTICATION_REQUIRED);
+                }
+                catalogPage.waitForLoaded();
+                if (ManageCartRequest.ADD_FROM_CATALOG.equals(action)) {
+                    message = catalogPage.clickAddToCart(request.getSku());
+                }
+                cartItemCount = catalogPage.readCartItemCount();
+            }
+            case ManageCartRequest.ADD_FROM_PRODUCT_PAGE -> {
+                var productPage = client.openProductPage(request.getSku());
+                if (productPage == null) {
+                    return failure(MyShopUiClient.AUTHENTICATION_REQUIRED);
+                }
+                productPage.waitForLoaded();
+                productPage.inputQuantity(request.getQuantity());
+                productPage.clickAddToCart();
+                var shown = productPage.read();
+                message = shown.getMessage();
+                cartItemCount = shown.getCartItemCount();
+            }
+            case ManageCartRequest.CHANGE_QUANTITY, ManageCartRequest.INCREASE_QUANTITY,
+                 ManageCartRequest.DECREASE_QUANTITY, ManageCartRequest.REMOVE_LINE -> {
+                cartPage = client.openCartPage();
+                cartPage.waitForLoaded();
+                switch (action) {
+                    case ManageCartRequest.CHANGE_QUANTITY -> cartPage.inputQuantity(request.getSku(), request.getQuantity());
+                    case ManageCartRequest.INCREASE_QUANTITY -> cartPage.clickIncreaseQuantity(request.getSku());
+                    case ManageCartRequest.DECREASE_QUANTITY -> cartPage.clickDecreaseQuantity(request.getSku());
+                    default -> cartPage.clickRemove(request.getSku());
+                }
+                message = cartPage.readNotification();
+            }
+            case ManageCartRequest.REVISIT, ManageCartRequest.SIGN_IN -> {
+                if (ManageCartRequest.REVISIT.equals(action)) {
+                    client.revisit();
+                }
+                var catalogPage = client.openCatalogInSession();
+                if (catalogPage == null) {
+                    return failure(MyShopUiClient.AUTHENTICATION_REQUIRED);
+                }
+                catalogPage.waitForLoaded();
+                if (ManageCartRequest.SIGN_IN.equals(action)) {
+                    client.signIn(TestUser.CUSTOMER);
+                }
+                cartItemCount = client.currentPageInSession().readCartItemCount();
+            }
+            default -> throw new IllegalArgumentException("Unknown cart action: " + action);
+        }
+
+        if (cartPage == null) {
+            cartPage = client.openCartPage();
+        }
+        var response = cartPage.read(message, cartItemCount);
+        response.setAskedToSignIn(client.isOnLoginPage());
+        return success(response);
+    }
+
+    /** A fresh session (the visitor's, or the requested user's) whose cart gets these lines, in order. */
+    private Result<Void, SystemError> startCartSession(List<ManageCartRequest.CartLineDto> cartLines) {
+        if (anonymous || requestedUser == null) {
+            client.startVisitorSession();
+        } else {
+            runAs(TestUser.CUSTOMER);
+        }
+        resetPages();
+        for (var line : cartLines == null ? List.<ManageCartRequest.CartLineDto>of() : cartLines) {
+            var productPage = client.openProductPage(line.getSku());
+            if (productPage == null) {
+                return failure(MyShopUiClient.AUTHENTICATION_REQUIRED);
+            }
+            productPage.waitForLoaded();
+            productPage.inputQuantity(line.getQuantity());
+            productPage.clickAddToCart();
+        }
+        return success();
     }
 
     // --- unsupported inputs ---

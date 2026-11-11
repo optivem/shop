@@ -13,6 +13,8 @@ import com.mycompany.myshop.testkit.driver.port.dtos.DeliverOrderRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.DeliverOrderResponse;
 import com.mycompany.myshop.testkit.driver.port.dtos.GoToMyShopRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.GoToMyShopResponse;
+import com.mycompany.myshop.testkit.driver.port.dtos.ManageCartRequest;
+import com.mycompany.myshop.testkit.driver.port.dtos.ManageCartResponse;
 import com.mycompany.myshop.testkit.driver.port.dtos.PlaceOrderRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.PlaceOrderResponse;
 import com.mycompany.myshop.testkit.driver.port.dtos.PublishCouponRequest;
@@ -50,4 +52,6 @@ public interface MyShopDriver extends AutoCloseable, ActingUserSelector {
     Result<BrowseCatalogResponse, SystemError> browseCatalog(BrowseCatalogRequest request);
 
     Result<ViewProductResponse, SystemError> viewProduct(ViewProductRequest request);
+
+    Result<ManageCartResponse, SystemError> manageCart(ManageCartRequest request);
 }

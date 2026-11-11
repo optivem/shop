@@ -63,5 +63,6 @@ export abstract class BaseErpDriver<TClient extends BaseErpClient> implements Er
   abstract returnsProducts(request: ReturnsProductsRequest): Promise<Result<void, ErpErrorResponse>>;
   abstract returnsPromotion(request: ReturnsPromotionRequest): Promise<Result<void, ErpErrorResponse>>;
   abstract returnsUnavailable(): Promise<Result<void, ErpErrorResponse>>;
+  abstract returnsAvailable(): Promise<Result<void, ErpErrorResponse>>;
   abstract close(): Promise<void>;
 }

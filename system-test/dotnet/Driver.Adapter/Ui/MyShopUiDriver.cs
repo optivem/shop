@@ -508,6 +508,146 @@ public class MyShopUiDriver : IMyShopDriver
         return Success(response);
     }
 
+    /// <summary>
+    /// The cart is public: a visitor keeps one without signing in, unless a user was explicitly requested. A new
+    /// session first gets the cart lines, each from its product page; then the action runs, and the cart is read.
+    /// </summary>
+    public async Task<Result<ManageCartResponse, SystemError>> ManageCartAsync(ManageCartRequest request)
+    {
+        if (request.ContinueSession != true)
+        {
+            var filled = await StartCartSessionAsync(request.CartLines);
+            if (filled.IsFailure)
+            {
+                return Failure<ManageCartResponse>(filled.Error);
+            }
+        }
+        var action = request.Action;
+        if (action == null)
+        {
+            return Success(new ManageCartResponse());
+        }
+
+        string? message = null;
+        int? cartItemCount = null;
+        CartPage? cartPage = null;
+        switch (action)
+        {
+            case ManageCartRequest.ViewCart:
+                // The cart is read below.
+                break;
+            case ManageCartRequest.BrowseCatalog:
+            case ManageCartRequest.AddFromCatalog:
+            {
+                var catalogPage = await _client.OpenCatalogInSessionAsync();
+                if (catalogPage == null)
+                {
+                    return Failure<ManageCartResponse>(MyShopUiClient.AuthenticationRequired);
+                }
+                await catalogPage.WaitForLoadedAsync();
+                if (action == ManageCartRequest.AddFromCatalog)
+                {
+                    message = await catalogPage.ClickAddToCartAsync(request.Sku!);
+                }
+                cartItemCount = await catalogPage.ReadCartItemCountAsync();
+                break;
+            }
+            case ManageCartRequest.AddFromProductPage:
+            {
+                var productPage = await _client.OpenProductPageAsync(request.Sku!);
+                if (productPage == null)
+                {
+                    return Failure<ManageCartResponse>(MyShopUiClient.AuthenticationRequired);
+                }
+                await productPage.WaitForLoadedAsync();
+                await productPage.InputQuantityAsync(request.Quantity);
+                await productPage.ClickAddToCartAsync();
+                var shown = await productPage.ReadAsync();
+                message = shown.Message;
+                cartItemCount = shown.CartItemCount;
+                break;
+            }
+            case ManageCartRequest.ChangeQuantity:
+            case ManageCartRequest.IncreaseQuantity:
+            case ManageCartRequest.DecreaseQuantity:
+            case ManageCartRequest.RemoveLine:
+            {
+                cartPage = await _client.OpenCartPageAsync();
+                await cartPage.WaitForLoadedAsync();
+                switch (action)
+                {
+                    case ManageCartRequest.ChangeQuantity:
+                        await cartPage.InputQuantityAsync(request.Sku!, request.Quantity);
+                        break;
+                    case ManageCartRequest.IncreaseQuantity:
+                        await cartPage.ClickIncreaseQuantityAsync(request.Sku!);
+                        break;
+                    case ManageCartRequest.DecreaseQuantity:
+                        await cartPage.ClickDecreaseQuantityAsync(request.Sku!);
+                        break;
+                    default:
+                        await cartPage.ClickRemoveAsync(request.Sku!);
+                        break;
+                }
+                message = await cartPage.ReadNotificationAsync();
+                break;
+            }
+            case ManageCartRequest.Revisit:
+            case ManageCartRequest.SignIn:
+            {
+                if (action == ManageCartRequest.Revisit)
+                {
+                    await _client.RevisitAsync();
+                }
+                var catalogPage = await _client.OpenCatalogInSessionAsync();
+                if (catalogPage == null)
+                {
+                    return Failure<ManageCartResponse>(MyShopUiClient.AuthenticationRequired);
+                }
+                await catalogPage.WaitForLoadedAsync();
+                if (action == ManageCartRequest.SignIn)
+                {
+                    await _client.SignInAsync(TestUser.Customer);
+                }
+                cartItemCount = await _client.CurrentPageInSession().ReadCartItemCountAsync();
+                break;
+            }
+            default:
+                throw new ArgumentException($"Unknown cart action: {action}", nameof(request));
+        }
+
+        cartPage ??= await _client.OpenCartPageAsync();
+        var response = await cartPage.ReadAsync(message, cartItemCount);
+        response.AskedToSignIn = _client.IsOnLoginPage();
+        return Success(response);
+    }
+
+    /// <summary>A fresh session (the visitor's, or the requested user's) whose cart gets these lines, in order.</summary>
+    private async Task<Result<VoidValue, SystemError>> StartCartSessionAsync(List<ManageCartRequest.CartLineDto>? cartLines)
+    {
+        if (_anonymous || _requestedUser == null)
+        {
+            await _client.StartVisitorSessionAsync();
+        }
+        else
+        {
+            await RunAsAsync(TestUser.Customer);
+        }
+        ResetPages();
+        foreach (var line in cartLines ?? [])
+        {
+            var productPage = await _client.OpenProductPageAsync(line.Sku!);
+            if (productPage == null)
+            {
+                return Failure(MyShopUiClient.AuthenticationRequired);
+            }
+            await productPage.WaitForLoadedAsync();
+            await productPage.InputQuantityAsync(line.Quantity);
+            await productPage.ClickAddToCartAsync();
+        }
+        return Success();
+    }
+
     private async Task<Result<T, SystemError>> LoginRequiredAsync<T>(string path)
     {
         await _client.AssertLoginRequiredForAsync(path);

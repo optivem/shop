@@ -44,6 +44,12 @@ public class ErpStubClient extends BaseErpClient {
                 .mapError(ExtErpErrorResponse::new);
     }
 
+    /** Removes the outage stub, so the product and promotion stubs answer again. */
+    public Result<Void, ExtErpErrorResponse> removeUnavailable() {
+        return wireMockClient.removeStubsMatching(ERP_API_PATTERN)
+                .mapError(ExtErpErrorResponse::new);
+    }
+
     public void removeStubs() {
         wireMockClient.removeStubs();
     }

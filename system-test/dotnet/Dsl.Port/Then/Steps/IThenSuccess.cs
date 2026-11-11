@@ -17,5 +17,8 @@ public interface IThenSuccess
     /// <summary>The product page the executed view showed.</summary>
     IThenProductPage ProductPage();
 
+    /// <summary>The cart as the visitor's action left it.</summary>
+    IThenCart Cart();
+
     TaskAwaiter GetAwaiter();
 }

@@ -84,6 +84,17 @@ export class CatalogPage extends BasePage {
     return new ProductPage(this.page);
   }
 
+  /** Adds a product with its card's "Add to cart" (quantity 1) and returns the confirmation or the error. */
+  async clickAddToCart(sku: string): Promise<string> {
+    await this.page
+      .locator(`${PRODUCT_LIST_SELECTOR} button[aria-label='Add ${sku} to Cart']`)
+      .click({ timeout: PAGE_TIMEOUT_MS });
+    const result = await this.getResult();
+    const message = result.success ? result.value : result.error.message;
+    await this.waitForLoaded();
+    return message.trim();
+  }
+
   async clickClearFilters(): Promise<void> {
     await this.changeView(() => this.page.locator(CLEAR_FILTERS_SELECTOR).click({ timeout: PAGE_TIMEOUT_MS }));
   }

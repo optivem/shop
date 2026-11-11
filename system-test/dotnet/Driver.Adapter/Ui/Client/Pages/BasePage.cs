@@ -28,6 +28,8 @@ public abstract class BasePage
 
     private const string NotificationIdAttribute = "data-notification-id";
 
+    private const string CartItemCountSelector = "[aria-label='Cart Item Count']";
+
     private const string UnrecognizedNotificationErrorMessage = "Notification type is not recognized";
 
 
@@ -255,6 +257,28 @@ public abstract class BasePage
     }
 
 
+
+    /// <summary>The notification showing now, without waiting for one: the success text or the error's message; else null.</summary>
+    protected async Task<string?> ReadShownNotificationAsync()
+    {
+        var success = await PageClient.ReadAllTextContentsNoWaitAsync(NotificationSuccessSelector);
+        if (success.Count > 0)
+        {
+            return success[0].Trim();
+        }
+        var error = await PageClient.ReadAllTextContentsNoWaitAsync(NotificationErrorMessageSelector);
+        return error.Count == 0 ? null : error[0].Trim();
+    }
+
+    /// <summary>The header's cart badge; 0 when it is not shown.</summary>
+    public async Task<int> ReadCartItemCountAsync()
+    {
+        if (await PageClient.IsHiddenAsync(CartItemCountSelector))
+        {
+            return 0;
+        }
+        return int.Parse((await PageClient.ReadTextContentAsync(CartItemCountSelector)).Trim());
+    }
 
     private static string WithNotificationId(string selector, string notificationId)
 

@@ -88,6 +88,16 @@ public class CatalogPage : BasePage
         return new ProductPage(PageClient);
     }
 
+    /// <summary>Adds a product with its card's "Add to cart" (quantity 1) and returns the confirmation or the error.</summary>
+    public async Task<string?> ClickAddToCartAsync(string sku)
+    {
+        await PageClient.ClickAsync($"{ProductListSelector} button[aria-label='Add {sku} to Cart']");
+        var result = await GetResultAsync();
+        var message = result.IsSuccess ? result.Value : result.Error.Message;
+        await WaitForLoadedAsync();
+        return message?.Trim();
+    }
+
     public async Task ReopenPageAddressAsync()
     {
         await PageClient.ReopenCurrentUrlAsync();

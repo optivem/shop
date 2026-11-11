@@ -11,6 +11,7 @@ import com.mycompany.myshop.testkit.dsl.port.when.steps.WhenViewOrder;
 import com.mycompany.myshop.testkit.dsl.port.when.steps.WhenUpdateProfile;
 import com.mycompany.myshop.testkit.dsl.port.when.steps.WhenViewProfile;
 import com.mycompany.myshop.testkit.dsl.port.when.steps.WhenViewProduct;
+import com.mycompany.myshop.testkit.dsl.port.when.steps.WhenManageCart;
 
 public interface WhenStage {
     WhenPlaceOrder placeOrder();
@@ -34,4 +35,6 @@ public interface WhenStage {
     WhenBrowseCatalog browseCatalog();
 
     WhenViewProduct viewProduct();
+
+    WhenManageCart manageCart();
 }

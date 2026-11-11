@@ -26,7 +26,6 @@ public class ProductPage extends BasePage {
     private static final String INCREASE_SELECTOR = "button[aria-label='Increase Quantity']";
     private static final String DECREASE_SELECTOR = "button[aria-label='Decrease Quantity']";
     private static final String ADD_TO_CART_SELECTOR = "button[aria-label='Add to Cart']";
-    private static final String CART_ITEM_COUNT_SELECTOR = "[aria-label='Cart Item Count']";
     private static final String PRODUCT_PATH_PREFIX = "/products/";
 
     private String notificationMessage;
@@ -103,13 +102,6 @@ public class ProductPage extends BasePage {
             return readText(UNAVAILABLE_SELECTOR);
         }
         return null;
-    }
-
-    private Integer readCartItemCount() {
-        if (pageClient.isHidden(CART_ITEM_COUNT_SELECTOR)) {
-            return 0;
-        }
-        return Integer.parseInt(readText(CART_ITEM_COUNT_SELECTOR));
     }
 
     private String readPageSku() {

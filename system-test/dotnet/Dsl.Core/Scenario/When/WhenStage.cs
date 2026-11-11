@@ -1,3 +1,4 @@
+using Dsl.Core.Scenario.Given;
 using Dsl.Core.Scenario.When.Steps;
 using Dsl.Port.When;
 using Dsl.Port.When.Steps;
@@ -14,9 +15,10 @@ namespace Dsl.Core.Scenario.When
         private readonly DefaultGivens _defaults;
         private readonly Func<Task>? _givenSetup;
         private readonly Func<string, UserIdentity>? _resolveCustomer;
+        private readonly StagedProducts _stagedProducts;
 
         public WhenStage(Channel? channel, UseCaseDsl app, ScenarioDsl scenario, DefaultGivens defaults, Func<Task>? givenSetup = null,
-            Func<string, UserIdentity>? resolveCustomer = null)
+            Func<string, UserIdentity>? resolveCustomer = null, StagedProducts? stagedProducts = null)
             : base(channel)
         {
             _app = app;
@@ -24,6 +26,7 @@ namespace Dsl.Core.Scenario.When
             _defaults = defaults;
             _givenSetup = givenSetup;
             _resolveCustomer = resolveCustomer;
+            _stagedProducts = stagedProducts ?? StagedProducts.None;
         }
 
         public WhenStage(Channel? channel, UseCaseDsl app, ScenarioDsl scenario)
@@ -130,5 +133,13 @@ namespace Dsl.Core.Scenario.When
         }
 
         IWhenViewProduct IWhenStage.ViewProduct() => ViewProduct();
+
+        /// <summary>The cart shows only the products the scenario staged, so no default product or tax rate is created.</summary>
+        public WhenManageCart ManageCart()
+        {
+            return new WhenManageCart(_app, _scenario, () => EnsureGivenForProfile(), _stagedProducts);
+        }
+
+        IWhenManageCart IWhenStage.ManageCart() => ManageCart();
     }
 }

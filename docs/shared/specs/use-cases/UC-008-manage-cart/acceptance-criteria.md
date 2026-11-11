@@ -1,7 +1,7 @@
 ---
 id: UC-008
 title: Manage Cart
-status: planned
+status: implemented
 ---
 
 # UC-008 Manage Cart — Acceptance criteria

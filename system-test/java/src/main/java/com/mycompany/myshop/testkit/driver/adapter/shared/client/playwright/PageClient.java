@@ -126,6 +126,23 @@ public class PageClient {
         page.navigate(page.url());
     }
 
+    public void press(String selector, String key) {
+        getLocator(selector).press(key);
+    }
+
+    /** Whether the element belongs to a form, so acting on it posts the form and loads a new document. */
+    public boolean belongsToForm(String selector) {
+        return Boolean.TRUE.equals(getLocator(selector).evaluate("element => element.form != null"));
+    }
+
+    /** Runs an action that loads a new document (such as a form post), and waits until the new document is ready. */
+    public void runAndWaitForNewDocument(Runnable action) {
+        page.evaluate("() => { window.__previousDocument = true; }");
+        action.run();
+        page.waitForFunction("() => window.__previousDocument === undefined && document.readyState !== 'loading'", null,
+                new Page.WaitForFunctionOptions().setTimeout(timeoutMilliseconds));
+    }
+
     public void removeElements(String selector) {
         page.evaluate("selector => document.querySelectorAll(selector).forEach(el => el.remove())", selector);
     }

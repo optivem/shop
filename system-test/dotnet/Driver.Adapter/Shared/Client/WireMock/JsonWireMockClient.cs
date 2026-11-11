@@ -14,6 +14,7 @@ public class JsonWireMockClient : IDisposable
     private readonly string _wireMockBaseUrl;
     private readonly JsonSerializerOptions _jsonOptions;
     private readonly List<string> _stubIds = new();
+    private readonly Dictionary<string, List<string>> _matchingStubIds = new();
     private bool _disposed;
 
     public JsonWireMockClient(string baseUrl)
@@ -123,11 +124,52 @@ public class JsonWireMockClient : IDisposable
                 return Result<VoidValue, string>.Failure($"Failed to register stub for GET {pathPattern}: {responseContent}");
             }
 
-            return await TrackAndVerifyAsync($"GET {pathPattern}", responseContent);
+            var trackedBefore = _stubIds.Count;
+            var tracked = await TrackAndVerifyAsync($"GET {pathPattern}", responseContent);
+            if (_stubIds.Count > trackedBefore)
+            {
+                if (!_matchingStubIds.TryGetValue(pathPattern, out var ids))
+                {
+                    ids = new List<string>();
+                    _matchingStubIds[pathPattern] = ids;
+                }
+                ids.Add(_stubIds[^1]);
+            }
+            return tracked;
         }
         catch (Exception ex)
         {
             return Result<VoidValue, string>.Failure($"Failed to configure GET stub for {pathPattern}: {ex.Message}");
+        }
+    }
+
+    /// <summary>Removes the stubs this client registered with <see cref="StubGetMatchingAsync"/> for <paramref name="pathPattern"/>.</summary>
+    public async Task<Result<VoidValue, string>> RemoveStubsMatchingAsync(string pathPattern)
+    {
+        if (!_matchingStubIds.TryGetValue(pathPattern, out var ids))
+        {
+            return Result<VoidValue, string>.Success(VoidValue.Empty);
+        }
+
+        try
+        {
+            foreach (var id in ids.ToList())
+            {
+                var apiResponse = await _httpClient.DeleteAsync($"{_wireMockBaseUrl}/__admin/mappings/{id}");
+                if (!apiResponse.IsSuccessStatusCode)
+                {
+                    var errorContent = await apiResponse.Content.ReadAsStringAsync();
+                    return Result<VoidValue, string>.Failure($"Failed to remove stub {id} for GET {pathPattern}: {errorContent}");
+                }
+                ids.Remove(id);
+                _stubIds.Remove(id);
+            }
+            _matchingStubIds.Remove(pathPattern);
+            return Result<VoidValue, string>.Success(VoidValue.Empty);
+        }
+        catch (Exception ex)
+        {
+            return Result<VoidValue, string>.Failure($"Failed to remove GET stubs for {pathPattern}: {ex.Message}");
         }
     }
 
@@ -138,6 +180,7 @@ public class JsonWireMockClient : IDisposable
             await _httpClient.DeleteAsync($"{_wireMockBaseUrl}/__admin/mappings/{id}");
         }
         _stubIds.Clear();
+        _matchingStubIds.Clear();
     }
 
     /// <summary>

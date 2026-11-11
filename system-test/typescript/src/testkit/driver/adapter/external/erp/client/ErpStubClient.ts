@@ -6,6 +6,8 @@ import { BaseErpClient } from './BaseErpClient.js';
 import type { ExtProductDetailsResponse } from './dtos/ExtProductDetailsResponse.js';
 import type { ExtGetPromotionResponse } from './dtos/ExtGetPromotionResponse.js';
 
+const ERP_API_PATTERN = '/erp/api/.*';
+
 export class ErpStubClient extends BaseErpClient {
   private readonly wireMock: JsonWireMockClient;
 
@@ -35,7 +37,13 @@ export class ErpStubClient extends BaseErpClient {
 
   /** Every ERP API call answers 503, outranking any product or promotion stubs. */
   async configureUnavailable(): Promise<Result<void, ErpErrorResponse>> {
-    await this.wireMock.stubGetMatching('/erp/api/.*', 503);
+    await this.wireMock.stubGetMatching(ERP_API_PATTERN, 503);
+    return success(undefined);
+  }
+
+  /** Removes the outage stub, so the product and promotion stubs answer again. */
+  async removeUnavailable(): Promise<Result<void, ErpErrorResponse>> {
+    await this.wireMock.removeStubsMatching(ERP_API_PATTERN);
     return success(undefined);
   }
 

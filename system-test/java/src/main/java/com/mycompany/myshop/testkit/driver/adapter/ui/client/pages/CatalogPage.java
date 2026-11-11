@@ -82,6 +82,15 @@ public class CatalogPage extends BasePage {
         return new ProductPage(pageClient);
     }
 
+    /** Adds a product with its card's "Add to cart" (quantity 1) and returns the confirmation or the error. */
+    public String clickAddToCart(String sku) {
+        pageClient.click(PRODUCT_LIST_SELECTOR + " button[aria-label='Add " + sku + " to Cart']");
+        var result = getResult();
+        var message = result.isSuccess() ? result.getValue() : result.getError().getMessage();
+        waitForLoaded();
+        return message == null ? null : message.trim();
+    }
+
     public void reopenPageAddress() {
         pageClient.reopenCurrentUrl();
         waitForLoaded();

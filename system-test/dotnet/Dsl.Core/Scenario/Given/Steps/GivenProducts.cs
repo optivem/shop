@@ -37,12 +37,25 @@ public class GivenProducts : BaseGiven, IGivenProducts
     IGivenProducts IGivenProducts.WithProduct(string sku, string title, string brand, string category, string unitPrice, string description)
         => WithProduct(sku, title, brand, category, unitPrice, description);
 
-    internal override async Task Execute(UseCaseDsl app)
+    internal override Task Execute(UseCaseDsl app) => StageAsync(app, null, null);
+
+    /// <summary>Stages the list again with this product at a new price; a list without the product is left as it is.</summary>
+    internal async Task ExecuteWithPriceAsync(UseCaseDsl app, string skuAlias, string unitPrice)
+    {
+        if (_products.Any(product => product.SkuParamAlias == skuAlias))
+        {
+            await StageAsync(app, skuAlias, unitPrice);
+        }
+    }
+
+    private async Task StageAsync(UseCaseDsl app, string? changedSkuAlias, string? changedUnitPrice)
     {
         var returnsProducts = app.Erp().ReturnsProducts();
         foreach (var product in _products)
         {
-            returnsProducts.Product(product);
+            returnsProducts.Product(product.SkuParamAlias == changedSkuAlias
+                ? product with { UnitPrice = changedUnitPrice }
+                : product);
         }
 
         (await returnsProducts.Execute()).ShouldSucceed();

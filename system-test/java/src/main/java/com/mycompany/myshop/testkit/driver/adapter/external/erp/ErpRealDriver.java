@@ -55,4 +55,11 @@ public class ErpRealDriver extends BaseErpDriver<ErpRealClient> {
         throw new UnsupportedOperationException(
                 "ErpRealDriver cannot make the ERP unavailable; run this scenario against the ERP stub");
     }
+
+    /** The real ERP is never taken down by {@link #returnsUnavailable()}, so it cannot be brought back either. */
+    @Override
+    public Result<Void, ErpErrorResponse> returnsAvailable() {
+        throw new UnsupportedOperationException(
+                "ErpRealDriver cannot end an ERP outage; run this scenario against the ERP stub");
+    }
 }

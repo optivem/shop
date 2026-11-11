@@ -33,6 +33,10 @@ export class ErpStubDriver extends BaseErpDriver<ErpStubClient> {
     return this.client.configureUnavailable();
   }
 
+  async returnsAvailable(): Promise<Result<void, ErpErrorResponse>> {
+    return this.client.removeUnavailable();
+  }
+
   async close(): Promise<void> {
     await this.client.close();
   }

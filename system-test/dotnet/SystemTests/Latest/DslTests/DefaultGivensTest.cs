@@ -80,6 +80,8 @@ public class DefaultGivensTest
 
         public Task<Result<VoidValue, ErpErrorResponse>> ReturnsUnavailableAsync() => Ok();
 
+        public Task<Result<VoidValue, ErpErrorResponse>> ReturnsAvailableAsync() => Ok();
+
         private static Task<Result<VoidValue, ErpErrorResponse>> Ok() =>
             Task.FromResult(Result<VoidValue, ErpErrorResponse>.Success(VoidValue.Empty));
 
@@ -148,6 +150,9 @@ public class DefaultGivensTest
             throw new NotSupportedException();
 
         public Task<Result<ViewProductResponse, SystemError>> ViewProductAsync(ViewProductRequest request) =>
+            throw new NotSupportedException();
+
+        public Task<Result<ManageCartResponse, SystemError>> ManageCartAsync(ManageCartRequest request) =>
             throw new NotSupportedException();
 
         public ValueTask DisposeAsync() => ValueTask.CompletedTask;

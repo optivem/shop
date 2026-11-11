@@ -144,6 +144,37 @@ export class MyShopUiClient {
     return success(this.login?.isLoginPage(page) ? null : new CatalogPage(page));
   }
 
+  /**
+   * Leaves the site in the same browser: the page is closed and a new, blank one takes its place, keeping the
+   * browser's cookies and storage. Open a page to come back.
+   */
+  async revisit(): Promise<void> {
+    if (!this.context) {
+      throw new Error('MyShopUiClient: a page must be open before the visitor can leave and come back');
+    }
+    await this.currentPage?.close();
+    this.currentPage = await this.context.newPage();
+  }
+
+  /** Signs in as `user` with the header's "Sign In" link, from the page that is open. */
+  async signIn(user: TestUser): Promise<void> {
+    const userLogin = KeycloakUiLogin.forBaseUrl(this.keycloakBaseUrl, user);
+    if (!userLogin) {
+      throw new Error('Signing in can only be exercised against a system with a login');
+    }
+    await userLogin.ensureLoggedIn(this.requirePage(), HOME_READY_SELECTOR);
+  }
+
+  /** Whether the page is the login form. */
+  isOnLoginPage(): boolean {
+    return this.login?.isLoginPage(this.requirePage()) ?? false;
+  }
+
+  /** The page that is open, read for what every page shows, such as the header's cart badge. */
+  currentPageInSession(): HomePage {
+    return new HomePage(this.requirePage());
+  }
+
   /** Opens the cart in the current session. The app must already be open. */
   async openCartPage(): Promise<CartPage> {
     if (this.visitorSession) {

@@ -24,6 +24,8 @@ import type { BrowseCatalogRequest } from '../../port/dtos/BrowseCatalogRequest.
 import type { BrowseCatalogResponse } from '../../port/dtos/BrowseCatalogResponse.js';
 import type { ViewProductRequest } from '../../port/dtos/ViewProductRequest.js';
 import type { ViewProductResponse } from '../../port/dtos/ViewProductResponse.js';
+import type { ManageCartRequest } from '../../port/dtos/ManageCartRequest.js';
+import type { ManageCartResponse } from '../../port/dtos/ManageCartResponse.js';
 import type { MyShopDriver } from '../../port/my-shop-driver.js';
 import type { UserIdentity } from '../../port/user-identity.js';
 import { TestUsers, testCustomer, type TestUser } from '../shared/client/http/test-user.js';
@@ -153,6 +155,11 @@ export class MyShopApiDriver implements MyShopDriver {
       description: product.description,
       price: product.price,
     });
+  }
+
+  /** The cart lives in the browser (session, cookie or local storage): there is no cart API. */
+  manageCart(_request: ManageCartRequest): Promise<Result<ManageCartResponse, SystemError>> {
+    return Promise.reject(new Error('The API channel has no cart; run this scenario on the UI channel only'));
   }
 
   async close(): Promise<void> {
