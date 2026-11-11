@@ -1,7 +1,5 @@
 # 2026-11-07 17:05 UTC — Plan coordination meta-plan: storefront specs + build
 
-> 🤖 **Picked up by agent** — `Valentina_Desk` at `2026-11-11T18:14:15Z`
-
 
 
 **Plans analysed:** 2 in-scope, 1 referenced-only
@@ -40,7 +38,12 @@ Steps 1–6 are done. **Step 6 closed 2026-11-11 (user):** local monolith `test-
 
 UC-008 done in `86208a13` (29 UI tests per language, all UI-only since there's no cart API; 29/29 on all three monoliths; `--sample` 11/11 ×3; flipped to `implemented`). Added `returnsAvailable` to the ERP driver port (stub removes the outage). React `src/test` cart gaps: UC-008.5 (price change shown), .6 (stepper limits), .8 (kept after sign-in), .9 (empty from start), .10 (shown again after outage), .11 (0, -1, 1.5, abc).
 
-**Blocked on main (another session's commits, not storefront work; owner notified 2026-11-11):**
+**Resume here (paused 2026-11-11 evening): UC-009 was in flight.** A background agent was writing UC-009 (check out) tests, building on UC-007/UC-008, and running them on the monolith stacks. First check `git log origin/main` for a `system-test: UC-009 …` commit:
+- **If it landed:** check it flipped UC-009 to `implemented`, then carry on with UC-010.
+- **If not:** the UC-009 files are uncommitted in the working tree (`git status`, `*CheckOut*` / `*check-out*` under `system-test/`). Have one subagent finish them: compile, run the new tests plus `--sample` on all three monoliths, commit with `--paths`, and flip UC-009. Don't start from scratch.
+- **Either way:** do the React run that's still owed: UC-007, UC-008 and UC-009 tests on `gh-optivem-multitier-typescript.yaml`. Also re-run UC-007 (`ViewProduct*`) and UC-008 on the Java and .NET monoliths to confirm `7177bbcc` fixed the breaker leak, and send the result to the interview-showcase session.
+
+**Previously blocked; fixed in `7177bbcc` by the interview-showcase session (not yet re-verified):**
 - `f0e725c9` (observability): the React frontend won't boot (`nginx: [emerg] unknown "otel_browser_exporter_otlp_endpoint" variable`), so no multitier stack starts. UC-007 + UC-008 (and onward) have **never run on React**: run them on a multitier stack once that's fixed, before Step 7 closes.
 - `8ee90751` (resilience): the ERP circuit breaker stays open after an ERP-outage test, so the next isolated UI test fails (Java: 2 UC-007 tests; .NET: 3). TS is unaffected. The UC-007 regression run was Java 19/21, .NET 25/28, TS 21/21. Re-check once the breaker is reset between tests.
 
