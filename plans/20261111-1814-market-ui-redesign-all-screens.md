@@ -1,7 +1,5 @@
 # 2026-11-11 18:14:38 UTC — Market UI redesign for all storefront screens
 
-> 🤖 **Picked up by agent** — `Valentina_Desk` at `2026-11-11T18:30:58Z`
-
 ## TL;DR
 
 **Why:** The storefront looks like a default Bootstrap app. After exploring nine home-page directions (`docs/design/home-redesign/`), the "Market" direction was chosen: dense, practical and modern, for a technical audience.
@@ -33,7 +31,7 @@
 
 ## ▶ Next executable step (resume here)
 
-frontend-react is fully restyled (Steps 1, 4, 5, 6, 8 done; tokens in `system/multitier/frontend-react/src/styles/market.css`, page CSS in `pages-{shop,orders,account}.css`, hook map in `docs/design/home-redesign/test-hooks-inventory.md`). Gate still open: one `--sample` system-test run per language against the multitier stack (`gh-optivem-multitier-{typescript,java,dotnet}.yaml`). Once green, next is Step 7 (monolith UIs), starting with the .NET Bootstrap 5.1 → 5.3 bump, then Java (Thymeleaf), then TypeScript (Next.js); reuse `market.css` tokens.
+frontend-react is fully restyled (Steps 1, 4, 5, 6, 8 done; tokens in `system/multitier/frontend-react/src/styles/market.css`, page CSS in `pages-{shop,orders,account}.css`, hook map in `docs/design/home-redesign/test-hooks-inventory.md`). Verified 2026-11-11: `--sample` system tests green on the multitier stack for TypeScript, Java and .NET (11/11 suites each, incl. UI acceptance + E2E). Next is Step 7 (monolith UIs), starting with the .NET Bootstrap 5.1 → 5.3 bump, then Java (Thymeleaf), then TypeScript (Next.js); reuse `market.css` tokens.
 
 ## Steps
 
