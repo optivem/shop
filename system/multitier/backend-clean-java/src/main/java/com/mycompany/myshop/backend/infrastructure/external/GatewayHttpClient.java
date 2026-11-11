@@ -1,5 +1,12 @@
 package com.mycompany.myshop.backend.infrastructure.external;
 
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.core.IntervalFunction;
+import io.github.resilience4j.core.functions.CheckedSupplier;
+import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.RetryConfig;
 import io.micrometer.core.instrument.Metrics;
 import io.micrometer.java11.instrument.binder.jdk.MicrometerHttpClient;
 import io.micrometer.observation.ObservationRegistry;
@@ -13,91 +20,128 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 
-// The one place that knows how to call a system we do not control: the timeouts, the connection pool,
-// and how many times a request is worth repeating. It was four copies of the same twelve lines before,
-// which is how the two timeouts came to be written six times and the client rebuilt on every call.
+// The one place that knows how to call a system we do not control: a tight connect/read timeout, a
+// retry with exponential backoff and jitter, and a circuit breaker (Resilience4j), one instance per
+// external system.
 //
-// It deliberately does not interpret the response. Status meaning is the caller's, and it differs:
-// a 404 from the ERP's product endpoint is "no such product", a 404 from its promotion endpoint is a
-// broken deployment. The shared part is transport, not semantics -- which is also why this returns
-// the response and rethrows IOException rather than wrapping anything: each adapter keeps building
-// its own GatewayException with its own message, naming the SKU or the country it was asking about.
+// GET only, and that is what makes the retry safe: repeating a read cannot duplicate a side effect.
+// If a POST ever needs to go through here, it must not be retried.
+//
+// Only transient failures are retried and counted by the breaker: a timeout, a refused or dropped
+// connection, a 5xx. A 4xx -- the ERP's 404 "no such product" included -- is an answer about our
+// request; repeating it cannot change it, and it says nothing about the other system's health.
+//
+// It deliberately does not interpret the response. Status meaning is the caller's: a 5xx that is
+// still failing after the last attempt is returned as a response, and an open breaker surfaces as an
+// IOException, so each gateway keeps building its own exception, naming the SKU or the country it
+// was asking about, from the same two paths it already handles. No fallback value is ever invented
+// here: a guessed price is a money bug, so the caller is told the system did not answer.
 public final class GatewayHttpClient {
 
     private static final Logger log = LoggerFactory.getLogger(GatewayHttpClient.class);
 
-    private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(10);
-    private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(10);
+    private final String name;
+    private final Duration readTimeout;
+    private final Retry retry;
+    private final CircuitBreaker circuitBreaker;
 
-    // Three attempts, not more: a retry is for the failure that is over before you finish reading
-    // about it -- a dropped connection, a node being replaced mid-request. Anything still failing on
-    // the third attempt is an outage, and hammering it is how a caller turns someone else's outage
-    // into their own.
-    private static final int MAX_ATTEMPTS = 3;
-    private static final long FIRST_BACKOFF_MILLIS = 100;
+    // One per external system rather than per call: an HttpClient owns a connection pool and an
+    // executor, and the breaker only means something if every call to that system goes through it.
+    private final HttpClient httpClient;
 
-    // Shared, and static because it is stateless and thread-safe: an HttpClient owns a connection pool
-    // and an executor, so building one per call threw away every pooled connection and stood up a
-    // thread pool in order to make a single request.
-    private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder()
-            .connectTimeout(CONNECT_TIMEOUT)
-            .build();
+    public GatewayHttpClient(String name, ResilienceSettings settings) {
+        this.name = name;
+        this.readTimeout = settings.readTimeout();
+        this.httpClient = HttpClient.newBuilder()
+                .connectTimeout(settings.connectTimeout())
+                .build();
 
-    private GatewayHttpClient() {
+        var retrySettings = settings.retry();
+        this.retry = Retry.of(name, RetryConfig.custom()
+                .maxAttempts(retrySettings.maxAttempts())
+                .intervalFunction(IntervalFunction.ofExponentialRandomBackoff(
+                        retrySettings.initialBackoff(),
+                        retrySettings.backoffMultiplier(),
+                        retrySettings.jitter()))
+                .retryOnException(GatewayHttpClient::isTransient)
+                .build());
+        this.retry.getEventPublisher().onRetry(event -> log.warn(
+                "Retrying {} call, attempt {} of {} failed with {}", name,
+                event.getNumberOfRetryAttempts(), retrySettings.maxAttempts(), describe(event.getLastThrowable())));
+
+        var breakerSettings = settings.circuitBreaker();
+        this.circuitBreaker = CircuitBreaker.of(name, CircuitBreakerConfig.custom()
+                .slidingWindowType(CircuitBreakerConfig.SlidingWindowType.COUNT_BASED)
+                .slidingWindowSize(breakerSettings.slidingWindowSize())
+                .minimumNumberOfCalls(breakerSettings.minimumNumberOfCalls())
+                .failureRateThreshold(breakerSettings.failureRateThreshold())
+                .waitDurationInOpenState(breakerSettings.waitInOpenState())
+                .permittedNumberOfCallsInHalfOpenState(breakerSettings.permittedCallsInHalfOpenState())
+                .recordException(GatewayHttpClient::isTransient)
+                .build());
+        this.circuitBreaker.getEventPublisher().onStateTransition(event -> log.warn(
+                "Circuit breaker for {} moved {}", name, event.getStateTransition()));
     }
 
-    // The registry gives every attempt its own client span and a W3C traceparent header, so one trace
-    // runs from the inbound request through each call to the external system. Wrapping is per call
-    // and cheap: the instrumented client delegates to the shared pooled one.
-    public static HttpResponse<String> get(String url, ObservationRegistry observationRegistry)
+    // The registry gives every attempt its own client span and a W3C traceparent header. Wrapping is
+    // per call and cheap: the instrumented client delegates to the pooled one.
+    public HttpResponse<String> get(String url, ObservationRegistry observationRegistry)
             throws IOException, InterruptedException {
-        var client = MicrometerHttpClient.instrumentationBuilder(HTTP_CLIENT, Metrics.globalRegistry)
+        var client = MicrometerHttpClient.instrumentationBuilder(httpClient, Metrics.globalRegistry)
                 .observationRegistry(observationRegistry)
                 .build();
         var request = HttpRequest.newBuilder()
                 .uri(URI.create(url))
-                .timeout(REQUEST_TIMEOUT)
+                .timeout(readTimeout)
                 .GET()
                 .build();
 
-        // Every call this class makes is a GET, so retrying cannot duplicate a side effect. If a POST
-        // ever needs to go through here, this loop is not automatically safe for it.
-        for (var attempt = 1; attempt < MAX_ATTEMPTS; attempt++) {
-            try {
-                var response = client.send(request, HttpResponse.BodyHandlers.ofString());
-                if (!isWorthRetrying(response.statusCode())) {
-                    return response;
-                }
-                logRetry(url, attempt, String.valueOf(response.statusCode()));
-            } catch (IOException e) {
-                // Not swallowed: if the last attempt fails too, its own exception is what propagates,
-                // carrying the same class and message this one would have.
-                logRetry(url, attempt, e.getClass().getSimpleName());
+        CheckedSupplier<HttpResponse<String>> attempt = () -> {
+            var response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() >= 500) {
+                throw new ServerErrorResponse(response);
             }
-            Thread.sleep(backoffMillis(attempt));
+            return response;
+        };
+
+        // Retry outside the breaker: every attempt is one call the breaker counts, and once it opens
+        // the retry stops at once instead of waiting out its backoff against a known outage.
+        var guarded = Retry.decorateCheckedSupplier(retry,
+                CircuitBreaker.decorateCheckedSupplier(circuitBreaker, attempt));
+
+        try {
+            return guarded.get();
+        } catch (ServerErrorResponse e) {
+            return e.response;
+        } catch (CallNotPermittedException e) {
+            throw new IOException("Circuit breaker for " + name + " is open; not calling " + url, e);
+        } catch (IOException | InterruptedException | RuntimeException | Error e) {
+            throw e;
+        } catch (Throwable e) {
+            throw new IOException(e);
         }
-
-        // The final attempt is the answer, whatever it is. A 500 here is returned rather than retried
-        // so the caller can build the message that names it, and an IOException here propagates into
-        // the caller's own catch block.
-        return client.send(request, HttpResponse.BodyHandlers.ofString());
     }
 
-    // 5xx is the upstream saying it failed, 429 is it saying "not so fast" -- both can differ on the
-    // next attempt. A 4xx is an answer about our request, and repeating an identical request cannot
-    // change it.
-    private static boolean isWorthRetrying(int statusCode) {
-        return statusCode >= 500 || statusCode == 429;
+    private static boolean isTransient(Throwable e) {
+        return e instanceof IOException || e instanceof ServerErrorResponse;
     }
 
-    private static long backoffMillis(int attempt) {
-        return FIRST_BACKOFF_MILLIS * attempt;
+    private static String describe(Throwable e) {
+        if (e instanceof ServerErrorResponse serverError) {
+            return "status " + serverError.response.statusCode();
+        }
+        return e == null ? "unknown" : e.getClass().getSimpleName();
     }
 
-    private static void logRetry(String url, int attempt, String reason) {
-        if (log.isWarnEnabled()) {
-            log.warn("Retrying {} after attempt {} of {} failed with {}",
-                    url.replaceAll("[\r\n]", "_"), attempt, MAX_ATTEMPTS, reason);
+    // Carries a 5xx through Resilience4j as a failure, so it is retried and counted, and lets the
+    // last one out again as the plain response it was.
+    private static final class ServerErrorResponse extends Exception {
+
+        private final transient HttpResponse<String> response;
+
+        private ServerErrorResponse(HttpResponse<String> response) {
+            super("status " + response.statusCode(), null, false, false);
+            this.response = response;
         }
     }
 }

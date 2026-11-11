@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.EntityFrameworkCore;
 using MyCompany.MyShop.Monolith.Api.Exception;
 using MyCompany.MyShop.Monolith.Api.Observability;
+using MyCompany.MyShop.Monolith.Api.Resilience;
 using MyCompany.MyShop.Monolith.Api.Security;
 using MyCompany.MyShop.Monolith.Core.Services;
 using MyCompany.MyShop.Monolith.Core.Services.External;
@@ -55,9 +56,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddShopAuthentication();
 
 // Register services
-builder.Services.AddScoped<ErpGateway>();
-builder.Services.AddScoped<ClockGateway>();
-builder.Services.AddScoped<TaxGateway>();
+// Typed HttpClients for the external systems, each behind timeout + retry + circuit breaker.
+builder.Services.AddShopExternalSystemClients(builder.Configuration);
 builder.Services.AddScoped<CouponService>();
 builder.Services.AddScoped<OrderService>();
 builder.Services.AddScoped<ProfileService>();

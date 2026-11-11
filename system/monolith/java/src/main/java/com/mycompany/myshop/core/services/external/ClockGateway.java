@@ -3,18 +3,12 @@ package com.mycompany.myshop.core.services.external;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.mycompany.myshop.core.dtos.external.ClockGetTimeResponse;
-import io.micrometer.core.instrument.Metrics;
-import io.micrometer.java11.instrument.binder.jdk.MicrometerHttpClient;
 import io.micrometer.observation.ObservationRegistry;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.time.Duration;
 import java.time.Instant;
 
 @Service
@@ -33,6 +27,17 @@ public class ClockGateway {
     @Autowired
     private ObservationRegistry observationRegistry;
 
+    @Autowired
+    private ResilienceSettings resilience;
+
+    // Built once per gateway, so the ERP, Clock and Tax each get their own circuit breaker.
+    private GatewayHttpClient http;
+
+    @PostConstruct
+    void initHttpClient() {
+        http = new GatewayHttpClient("clock", resilience);
+    }
+
     public Instant getCurrentTime() {
         if ("real".equals(externalSystemMode)) {
             return Instant.now();
@@ -45,20 +50,8 @@ public class ClockGateway {
 
     private Instant getStubTime() {
         try {
-            var httpClient = MicrometerHttpClient.instrumentationBuilder(HttpClient.newBuilder()
-                    .connectTimeout(Duration.ofSeconds(10))
-                    .build(), Metrics.globalRegistry)
-                    .observationRegistry(observationRegistry)
-                    .build();
-
             var url = clockUrl + "/api/time";
-            var request = HttpRequest.newBuilder()
-                    .uri(URI.create(url))
-                    .timeout(Duration.ofSeconds(10))
-                    .GET()
-                    .build();
-
-            var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            var response = http.get(url, observationRegistry);
 
             if (response.statusCode() != 200) {
                 throw new IllegalStateException("Clock API returned status " + response.statusCode()

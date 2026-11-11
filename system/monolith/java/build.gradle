@@ -57,6 +57,11 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
+	// Resilience on the outbound ERP/Clock/Tax calls (timeout, retry, circuit breaker); see GatewayHttpClient.
+	// Core modules rather than the Spring Boot starter: the policy is applied in code, so it also holds
+	// for a gateway built outside a Spring context. Not managed by the Spring Boot BOM.
+	implementation 'io.github.resilience4j:resilience4j-retry:2.2.0'
+	implementation 'io.github.resilience4j:resilience4j-circuitbreaker:2.2.0'
 	// Observability: Micrometer Tracing bridged to OpenTelemetry (inbound + outbound HTTP spans, W3C
 	// traceparent, trace_id/span_id in logs) and OTLP export for traces + metrics. Versions come from
 	// the Spring Boot BOM. Export is off unless OTEL_EXPORTER_OTLP_ENDPOINT is set.

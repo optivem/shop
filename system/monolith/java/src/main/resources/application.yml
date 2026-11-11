@@ -89,3 +89,22 @@ clock:
   url: ${CLOCK_API_URL:http://localhost:9001/clock}
 tax:
   url: ${TAX_API_URL:http://localhost:9001/tax}
+
+# Outbound calls to the ERP, Clock and Tax (GatewayHttpClient, Resilience4j). One circuit breaker per
+# external system; these settings are shared. Only GETs go out, so retrying is safe; only timeouts,
+# connection failures and 5xx are retried or counted as failures -- a 4xx (e.g. the ERP's 404 for an
+# unknown SKU) is neither. An ERP failure surfaces as 503 with Retry-After = wait-in-open-state.
+resilience:
+  connect-timeout: 1s
+  read-timeout: 2s
+  retry:
+    max-attempts: 3
+    initial-backoff: 200ms
+    backoff-multiplier: 2
+    jitter: 0.5
+  circuit-breaker:
+    sliding-window-size: 10
+    minimum-number-of-calls: 5
+    failure-rate-threshold: 50
+    wait-in-open-state: 10s
+    permitted-calls-in-half-open-state: 2

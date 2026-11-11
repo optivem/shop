@@ -5,18 +5,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mycompany.myshop.backend.core.dtos.external.ErpGetPromotionResponse;
 import com.mycompany.myshop.backend.core.dtos.external.ErpProductDetailsResponse;
 import com.mycompany.myshop.backend.core.exceptions.ErpUnavailableException;
-import io.micrometer.core.instrument.Metrics;
-import io.micrometer.java11.instrument.binder.jdk.MicrometerHttpClient;
 import io.micrometer.observation.ObservationRegistry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 
@@ -29,35 +22,30 @@ public class ErpGateway {
 
     private final String erpUrl;
     private final ObservationRegistry observationRegistry;
+    private final GatewayHttpClient http;
 
     public ErpGateway(String erpUrl) {
-        this(erpUrl, ObservationRegistry.NOOP);
+        this(erpUrl, ResilienceSettings.DEFAULTS);
+    }
+
+    public ErpGateway(String erpUrl, ResilienceSettings resilience) {
+        this(erpUrl, ObservationRegistry.NOOP, resilience);
     }
 
     // The registry gives each outbound call a client span and a W3C traceparent header.
     @Autowired
-    public ErpGateway(@Value("${erp.url}") String erpUrl, ObservationRegistry observationRegistry) {
+    public ErpGateway(@Value("${erp.url}") String erpUrl, ObservationRegistry observationRegistry,
+            ResilienceSettings resilience) {
         this.erpUrl = erpUrl;
         this.observationRegistry = observationRegistry;
+        this.http = new GatewayHttpClient("erp", resilience);
     }
 
     public ErpGetPromotionResponse getPromotionDetails() {
         var url = erpUrl + "/api/promotion";
 
         try {
-            var httpClient = MicrometerHttpClient.instrumentationBuilder(HttpClient.newBuilder()
-                    .connectTimeout(Duration.ofSeconds(10))
-                    .build(), Metrics.globalRegistry)
-                    .observationRegistry(observationRegistry)
-                    .build();
-
-            var request = HttpRequest.newBuilder()
-                    .uri(URI.create(url))
-                    .timeout(Duration.ofSeconds(10))
-                    .GET()
-                    .build();
-
-            var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            var response = http.get(url, observationRegistry);
 
             if (response.statusCode() != 200) {
                 throw new ErpUnavailableException("ERP API returned status " + response.statusCode()
@@ -81,19 +69,7 @@ public class ErpGateway {
         var url = erpUrl + "/api/products/" + sku;
 
         try {
-            var httpClient = MicrometerHttpClient.instrumentationBuilder(HttpClient.newBuilder()
-                    .connectTimeout(java.time.Duration.ofSeconds(10))
-                    .build(), Metrics.globalRegistry)
-                    .observationRegistry(observationRegistry)
-                    .build();
-
-            var request = HttpRequest.newBuilder()
-                    .uri(URI.create(url))
-                    .timeout(java.time.Duration.ofSeconds(10))
-                    .GET()
-                    .build();
-
-            var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            var response = http.get(url, observationRegistry);
 
             if (response.statusCode() == 404) {
                 return Optional.empty();
@@ -124,19 +100,7 @@ public class ErpGateway {
         var url = erpUrl + "/api/products";
 
         try {
-            var httpClient = MicrometerHttpClient.instrumentationBuilder(HttpClient.newBuilder()
-                    .connectTimeout(java.time.Duration.ofSeconds(10))
-                    .build(), Metrics.globalRegistry)
-                    .observationRegistry(observationRegistry)
-                    .build();
-
-            var request = HttpRequest.newBuilder()
-                    .uri(URI.create(url))
-                    .timeout(java.time.Duration.ofSeconds(10))
-                    .GET()
-                    .build();
-
-            var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            var response = http.get(url, observationRegistry);
 
             if (response.statusCode() != 200) {
                 throw new ErpUnavailableException("ERP API returned status " + response.statusCode() +

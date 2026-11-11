@@ -80,7 +80,8 @@ The shape worth noticing:
 - **The ports own their failures too.** `GatewayException` and its three per-system subtypes sit in
   `domain/gateways` beside the ports, not beside the adapters that throw them — a port declares both
   what it answers with and how it says it could not answer. That is what lets `presentation` map the
-  whole family to one **502**, without depending on `infrastructure` to name the type.
+  family onto HTTP — an ERP failure to **503** with `Retry-After` (the backend-java contract), tax and
+  clock failures to **502** — without depending on `infrastructure` to name the type.
 - **The domain has behaviour.** `Order` owns its own state machine (`place()`, `deliver()`,
   `cancel()`), `Coupon` owns validity and redemption, and the pricing chain is typed arithmetic in
   `OrderPricing` — instead of all of it sitting inline in `OrderService.placeOrder`. `Order`'s

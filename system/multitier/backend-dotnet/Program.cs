@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using MyCompany.MyShop.Backend.Api.Exception;
 using MyCompany.MyShop.Backend.Api.Observability;
+using MyCompany.MyShop.Backend.Api.Resilience;
 using MyCompany.MyShop.Backend.Api.Security;
 using MyCompany.MyShop.Backend.Core.Services;
 using MyCompany.MyShop.Backend.Core.Services.External;
@@ -64,9 +65,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
 
 // Register services
-builder.Services.AddScoped<ErpGateway>();
-builder.Services.AddScoped<ClockGateway>();
-builder.Services.AddScoped<TaxGateway>();
+// Typed HttpClients for the external systems, each behind timeout + retry + circuit breaker.
+builder.Services.AddShopExternalSystemClients(builder.Configuration);
 builder.Services.AddScoped<CouponService>();
 builder.Services.AddScoped<OrderService>();
 builder.Services.AddScoped<ProfileService>();

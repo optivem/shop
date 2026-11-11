@@ -27,7 +27,8 @@ describe('ErpGateway [integration]', () => {
   beforeEach(async () => {
     await fetch(`${wireMockUrl}/__admin/mappings`, { method: 'DELETE' });
     const configService = {
-      get: jest.fn().mockReturnValue(wireMockUrl),
+      get: (key: string, defaultValue?: string) =>
+        key === 'ERP_API_URL' ? wireMockUrl : defaultValue,
     } as unknown as ConfigService;
     erpGateway = new ErpGateway(configService);
   });

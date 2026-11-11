@@ -20,10 +20,13 @@ public class GlobalExceptionHandler : IExceptionHandler
     private const string GeneralErrorDetail = "An unexpected error occurred. Please try again later.";
 
     private readonly ILogger<GlobalExceptionHandler> _logger;
+    // Tells clients when to retry: the ERP circuit breaker's break duration, after which it lets calls through again.
+    private readonly string _erpRetryAfterSeconds;
 
-    public GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger)
+    public GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger, IConfiguration configuration)
     {
         _logger = logger;
+        _erpRetryAfterSeconds = configuration.GetValue("Resilience:Erp:BreakDurationSeconds", 10).ToString(System.Globalization.CultureInfo.InvariantCulture);
     }
 
     public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, System.Exception exception, CancellationToken cancellationToken)
@@ -130,6 +133,7 @@ public class GlobalExceptionHandler : IExceptionHandler
         _logger.LogError(ex, "ERP unavailable");
 
         httpContext.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+        httpContext.Response.Headers.RetryAfter = _erpRetryAfterSeconds;
 
         var response = new
         {

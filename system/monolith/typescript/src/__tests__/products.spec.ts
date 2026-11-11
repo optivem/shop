@@ -1,5 +1,6 @@
 import Decimal from 'decimal.js';
 import { jsonResponseWithDecimals } from '../lib/decimal-format';
+import { resetExternalCallPolicies } from '../lib/resilience';
 import { ErpUnavailableError } from '../lib/external';
 import { browseProducts, productNotFoundDetail, viewProduct } from '../lib/products';
 
@@ -27,6 +28,7 @@ const expectedProduct = {
 
 afterEach(() => {
   jest.restoreAllMocks();
+  resetExternalCallPolicies();
 });
 
 describe('browseProducts', () => {

@@ -1,6 +1,6 @@
 # 2026-11-11 18:31:52 UTC — Interview showcase: close the skill gaps in shop
 
-> 🤖 **Picked up by agent** — `Valentina_Desk` at `2026-11-11T18:49:18Z`
+> 🤖 **Picked up by agent** — `Valentina_Desk` at `2026-11-11T19:45:06Z`
 
 ## TL;DR
 
@@ -41,7 +41,7 @@ CI/CD meta-stages (commit → acceptance → RC → release), ATDD with DSL/driv
 
 ## ▶ Next executable step (resume here)
 
-Step 3, resilience. Wrap the outbound ERP, Clock and Tax gateways with a timeout, retry and circuit breaker in every backend: Resilience4j for Java monolith, multitier and clean-java; Polly / `Microsoft.Extensions.Http.Resilience` for .NET; a small TS equivalent such as `cockatiel` for both TS backends. Then add an acceptance test, in Java, .NET and TS, that drives a slow or down ERP stub and asserts graceful behaviour. Graceful = fail fast with `503` + `Retry-After` + problem+json message, no fallback (see Resolved decisions). Also check that the system-test driver/DSL files it touches (ErpStubDriver etc.) no longer carry uncommitted in-flight work. Gate: `./compile-all.sh` is green and `gh optivem system-test run --sample` passes per language. Then add a Resilience row to the `docs/tour.md` skills map (Step 8).
+Step 3, resilience — **backend part done** (all 7 backends: timeout 2s, retry 3× GET-only w/ backoff+jitter, breaker per system opening at 50% after ≥5 calls for 10s; ERP failure → 503 + `Retry-After: 10` + problem+json; Clock/Tax keep their old 500/502 — cross-language decision deferred). `./compile-all.sh` green; **`--sample` system tests NOT yet run** (docker was taken by another session) — run them per language first. Watch for breaker state leaking between system tests (UC-001.14 can open the ERP breaker for 10s; Java test profile shortens it to 100ms, .NET/TS don't — shorten `Resilience:Erp:BreakDurationSeconds` / `EXTERNAL_BREAKER_HALF_OPEN_AFTER_MS` in test compose if flaky). Remaining: add an acceptance test, in Java, .NET and TS, that drives a slow or down ERP stub and asserts graceful behaviour. Graceful = fail fast with `503` + `Retry-After` + problem+json message, no fallback (see Resolved decisions). Also check that the system-test driver/DSL files it touches (ErpStubDriver etc.) no longer carry uncommitted in-flight work. Gate: `./compile-all.sh` is green and `gh optivem system-test run --sample` passes per language. Then add a Resilience row to the `docs/tour.md` skills map (Step 8).
 
 ## Steps
 

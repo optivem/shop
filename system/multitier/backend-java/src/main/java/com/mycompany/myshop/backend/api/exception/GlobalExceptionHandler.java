@@ -7,6 +7,7 @@ import com.mycompany.myshop.backend.core.validation.TypeValidationMessageExtract
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import java.net.URI;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -57,6 +59,10 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @Value("${error.types.service-unavailable}")
     private String serviceUnavailableTypeUri;
+
+    // How long the ERP circuit breaker stays open; the 503 tells the client to retry after it.
+    @Value("${resilience.circuit-breaker.wait-in-open-state:10s}")
+    private Duration retryAfter;
 
     @ExceptionHandler(ValidationException.class)
     public ResponseEntity<ProblemDetail> handleValidationException(ValidationException ex) {
@@ -117,7 +123,14 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         problemDetail.setTitle("Service Unavailable");
         problemDetail.setProperty(PROP_TIMESTAMP, Instant.now());
 
-        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(problemDetail);
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .header(HttpHeaders.RETRY_AFTER, retryAfterSeconds())
+                .body(problemDetail);
+    }
+
+    // Whole seconds, rounded up and never 0: Retry-After has no finer unit.
+    private String retryAfterSeconds() {
+        return String.valueOf(Math.max(1, (retryAfter.toMillis() + 999) / 1000));
     }
 
     @ExceptionHandler(ObjectOptimisticLockingFailureException.class)

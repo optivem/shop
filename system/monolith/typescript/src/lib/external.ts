@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { envOrDefault } from './env';
+import { HttpStatusError, callIdempotent } from './resilience';
 
 const ERP_API_URL = () => envOrDefault('ERP_API_URL', 'http://localhost:9001/erp');
 const CLOCK_API_URL = () => envOrDefault('CLOCK_API_URL', 'http://localhost:9001/clock');
@@ -53,52 +54,55 @@ export async function getCurrentTime(): Promise<Date> {
 }
 
 async function getStubTime(): Promise<Date> {
-  const response = await fetchExternal(`${CLOCK_API_URL()}/api/time`);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch current time: ${response.status}`);
-  }
-  const data = await parseResponse(response, timeSchema, 'current time');
+  const data = await callIdempotent('clock', async (signal) => {
+    const response = await fetchExternal(`${CLOCK_API_URL()}/api/time`, signal);
+    if (!response.ok) {
+      throw new HttpStatusError(`Failed to fetch current time: ${response.status}`, response.status);
+    }
+    return parseResponse(response, timeSchema, 'current time');
+  });
   return new Date(data.time);
 }
 
 export async function getPromotionDetails(): Promise<ErpPromotionDetails> {
-  return fromErp(async () => {
-    const response = await fetchExternal(`${ERP_API_URL()}/api/promotion`);
+  return fromErp(async (signal) => {
+    const response = await fetchExternal(`${ERP_API_URL()}/api/promotion`, signal);
     if (!response.ok) {
-      throw new Error(`Failed to fetch promotion details: ${response.status}`);
+      throw new HttpStatusError(`Failed to fetch promotion details: ${response.status}`, response.status);
     }
     return parseResponse(response, promotionDetailsSchema, 'promotion details');
   });
 }
 
 export async function getProductDetails(sku: string): Promise<ErpProductDetails | null> {
-  return fromErp(async () => {
-    const response = await fetchExternal(`${ERP_API_URL()}/api/products/${encodeURIComponent(sku)}`);
+  return fromErp(async (signal) => {
+    const response = await fetchExternal(`${ERP_API_URL()}/api/products/${encodeURIComponent(sku)}`, signal);
     if (response.status === 404) {
       return null;
     }
     if (!response.ok) {
-      throw new Error(`Failed to fetch product details: ${response.status}`);
+      throw new HttpStatusError(`Failed to fetch product details: ${response.status}`, response.status);
     }
     return parseResponse(response, productDetailsSchema, 'product details');
   });
 }
 
 export async function getProducts(): Promise<ErpProductDetails[]> {
-  return fromErp(async () => {
-    const response = await fetchExternal(`${ERP_API_URL()}/api/products`);
+  return fromErp(async (signal) => {
+    const response = await fetchExternal(`${ERP_API_URL()}/api/products`, signal);
     if (!response.ok) {
-      throw new Error(`Failed to fetch products: ${response.status}`);
+      throw new HttpStatusError(`Failed to fetch products: ${response.status}`, response.status);
     }
     return parseResponse(response, productListSchema, 'product list');
   });
 }
 
-// Any failure to get an answer from the ERP (network error, timeout, error status, malformed body)
-// surfaces as ErpUnavailableError, keeping the original error as its cause.
-async function fromErp<T>(call: () => Promise<T>): Promise<T> {
+// Every ERP call runs through the ERP's timeout/retry/breaker policy. Any failure to get an answer
+// (network error, timeout, error status, malformed body, open breaker) surfaces as
+// ErpUnavailableError, keeping the original error as its cause.
+async function fromErp<T>(call: (signal: AbortSignal) => Promise<T>): Promise<T> {
   try {
-    return await call();
+    return await callIdempotent('erp', call);
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error);
     throw new ErpUnavailableError(`ERP unavailable: ${reason}`, { cause: error });
@@ -106,18 +110,23 @@ async function fromErp<T>(call: () => Promise<T>): Promise<T> {
 }
 
 export async function getTaxDetails(country: string): Promise<TaxDetails | null> {
-  const response = await fetchExternal(`${TAX_API_URL()}/api/countries/${encodeURIComponent(country)}`);
-  if (response.status === 404) {
-    return null;
-  }
-  if (!response.ok) {
-    throw new Error(`Failed to fetch tax details for country ${country}: ${response.status}`);
-  }
-  return parseResponse(response, taxDetailsSchema, `tax details (country ${country})`);
+  return callIdempotent('tax', async (signal) => {
+    const response = await fetchExternal(`${TAX_API_URL()}/api/countries/${encodeURIComponent(country)}`, signal);
+    if (response.status === 404) {
+      return null;
+    }
+    if (!response.ok) {
+      throw new HttpStatusError(
+        `Failed to fetch tax details for country ${country}: ${response.status}`,
+        response.status
+      );
+    }
+    return parseResponse(response, taxDetailsSchema, `tax details (country ${country})`);
+  });
 }
 
-function fetchExternal(url: string): Promise<Response> {
-  return fetch(url, { cache: 'no-store', signal: AbortSignal.timeout(10000) });
+function fetchExternal(url: string, signal: AbortSignal): Promise<Response> {
+  return fetch(url, { cache: 'no-store', signal });
 }
 
 // A malformed response fails here, naming what was fetched, instead of as a TypeError further down.

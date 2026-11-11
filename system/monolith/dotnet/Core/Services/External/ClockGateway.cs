@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Polly;
 using MyCompany.MyShop.Monolith.Core.Dtos.External;
 
 namespace MyCompany.MyShop.Monolith.Core.Services.External;
@@ -53,7 +54,7 @@ public class ClockGateway
             var clockResponse = JsonSerializer.Deserialize<ClockGetTimeResponse>(content, JsonOptions);
             return DateTime.SpecifyKind(clockResponse!.Time, DateTimeKind.Utc);
         }
-        catch (HttpRequestException e)
+        catch (System.Exception e) when (e is HttpRequestException or TaskCanceledException or ExecutionRejectedException)
         {
             throw new InvalidOperationException($"Failed to fetch current time from URL: {_clockUrl}. Error: {e.GetType().Name}: {e.Message}", e);
         }

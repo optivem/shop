@@ -24,8 +24,9 @@ export class MalformedResponseError extends Error {
 export async function fetchJson<T extends object>(
   url: string,
   responseType: ClassConstructor<T>,
+  signal: AbortSignal,
 ): Promise<T> {
-  const response = await fetch(url, { signal: AbortSignal.timeout(10000) });
+  const response = await fetch(url, { signal });
   if (!response.ok) {
     throw new HttpStatusError(url, response.status, await response.text());
   }
@@ -49,8 +50,9 @@ export async function fetchJson<T extends object>(
 export async function fetchJsonArray<T extends object>(
   url: string,
   elementType: ClassConstructor<T>,
+  signal: AbortSignal,
 ): Promise<T[]> {
-  const response = await fetch(url, { signal: AbortSignal.timeout(10000) });
+  const response = await fetch(url, { signal });
   if (!response.ok) {
     throw new HttpStatusError(url, response.status, await response.text());
   }

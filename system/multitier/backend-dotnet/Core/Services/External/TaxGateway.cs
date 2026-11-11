@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using Polly;
 using MyCompany.MyShop.Backend.Core.Dtos.External;
 
 namespace MyCompany.MyShop.Backend.Core.Services.External;
@@ -41,7 +42,7 @@ public class TaxGateway
             var content = await response.Content.ReadAsStringAsync();
             return JsonSerializer.Deserialize<TaxDetailsResponse>(content, JsonOptions);
         }
-        catch (HttpRequestException e)
+        catch (System.Exception e) when (e is HttpRequestException or TaskCanceledException or ExecutionRejectedException)
         {
             throw new InvalidOperationException($"Failed to fetch tax details for country: {country} from URL: {url}. Error: {e.GetType().Name}: {e.Message}", e);
         }

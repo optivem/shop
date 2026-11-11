@@ -34,3 +34,11 @@ error:
     conflict: ${error.types.base-url}/conflict
     internal-server-error: ${error.types.base-url}/internal-server-error
     service-unavailable: ${error.types.base-url}/service-unavailable
+
+# Short waits keep failure-path tests fast, and stop a breaker opened by one test from rejecting the
+# next test's calls for the production 10s.
+resilience:
+  retry:
+    initial-backoff: 10ms
+  circuit-breaker:
+    wait-in-open-state: 100ms

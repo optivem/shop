@@ -33,6 +33,8 @@ const GENERAL_ERROR_DETAIL =
 // The ERP failure details (URL, status, body) are logged server-side only.
 const ERP_UNAVAILABLE_DETAIL =
   "Product information can't be retrieved right now";
+// Matches the ERP circuit breaker's default half-open delay (EXTERNAL_BREAKER_HALF_OPEN_AFTER_MS).
+const ERP_RETRY_AFTER_SECONDS = '10';
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
@@ -133,7 +135,11 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       detail: ERP_UNAVAILABLE_DETAIL,
       timestamp: new Date().toISOString(),
     };
-    response.status(503).type('application/problem+json').json(body);
+    response
+      .status(503)
+      .set('Retry-After', ERP_RETRY_AFTER_SECONDS)
+      .type('application/problem+json')
+      .json(body);
   }
 
   private handleConflictException(

@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using Polly;
 using MyCompany.MyShop.Backend.Core.Exceptions;
 using MyCompany.MyShop.Backend.Core.Dtos.External;
 
@@ -42,7 +43,7 @@ public class ErpGateway
             var content = await response.Content.ReadAsStringAsync();
             return JsonSerializer.Deserialize<ErpProductDetailsResponse>(content, JsonOptions);
         }
-        catch (System.Exception e) when (e is HttpRequestException or TaskCanceledException or JsonException)
+        catch (System.Exception e) when (e is HttpRequestException or TaskCanceledException or ExecutionRejectedException or JsonException)
         {
             throw new ErpUnavailableException($"Failed to fetch product details for SKU: {sku} from URL: {url}. Error: {e.GetType().Name}: {e.Message}", e);
         }
@@ -65,7 +66,7 @@ public class ErpGateway
             var content = await response.Content.ReadAsStringAsync();
             return JsonSerializer.Deserialize<List<ErpProductDetailsResponse>>(content, JsonOptions) ?? new List<ErpProductDetailsResponse>();
         }
-        catch (System.Exception e) when (e is HttpRequestException or TaskCanceledException or JsonException)
+        catch (System.Exception e) when (e is HttpRequestException or TaskCanceledException or ExecutionRejectedException or JsonException)
         {
             throw new ErpUnavailableException($"Failed to fetch product list from URL: {url}. Error: {e.GetType().Name}: {e.Message}", e);
         }
@@ -88,7 +89,7 @@ public class ErpGateway
             var content = await response.Content.ReadAsStringAsync();
             return JsonSerializer.Deserialize<ErpGetPromotionResponse>(content, JsonOptions)!;
         }
-        catch (System.Exception e) when (e is HttpRequestException or TaskCanceledException or JsonException)
+        catch (System.Exception e) when (e is HttpRequestException or TaskCanceledException or ExecutionRejectedException or JsonException)
         {
             throw new ErpUnavailableException($"Failed to fetch promotion details from URL: {url}. Error: {e.GetType().Name}: {e.Message}", e);
         }

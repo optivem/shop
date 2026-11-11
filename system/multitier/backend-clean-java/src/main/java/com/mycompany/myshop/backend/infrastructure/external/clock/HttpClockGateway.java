@@ -5,6 +5,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.mycompany.myshop.backend.domain.gateways.ClockGateway;
 import com.mycompany.myshop.backend.domain.gateways.ClockGatewayException;
 import com.mycompany.myshop.backend.infrastructure.external.GatewayHttpClient;
+import com.mycompany.myshop.backend.infrastructure.external.ResilienceSettings;
 import io.micrometer.observation.ObservationRegistry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,19 +23,26 @@ public class HttpClockGateway implements ClockGateway {
     private final String externalSystemMode;
     private final String clockUrl;
     private final ObservationRegistry observationRegistry;
+    private final GatewayHttpClient http;
 
     public HttpClockGateway(String externalSystemMode, String clockUrl) {
-        this(externalSystemMode, clockUrl, ObservationRegistry.NOOP);
+        this(externalSystemMode, clockUrl, ResilienceSettings.DEFAULTS);
+    }
+
+    public HttpClockGateway(String externalSystemMode, String clockUrl, ResilienceSettings resilience) {
+        this(externalSystemMode, clockUrl, ObservationRegistry.NOOP, resilience);
     }
 
     @Autowired
     public HttpClockGateway(
             @Value("${external.system-mode}") String externalSystemMode,
             @Value("${clock.url}") String clockUrl,
-            ObservationRegistry observationRegistry) {
+            ObservationRegistry observationRegistry,
+            ResilienceSettings resilience) {
         this.externalSystemMode = externalSystemMode;
         this.clockUrl = clockUrl;
         this.observationRegistry = observationRegistry;
+        this.http = new GatewayHttpClient("clock", resilience);
     }
 
     @Override
@@ -53,7 +61,7 @@ public class HttpClockGateway implements ClockGateway {
     private Instant getStubTime() {
         try {
             var url = clockUrl + "/api/time";
-            var response = GatewayHttpClient.get(url, observationRegistry);
+            var response = http.get(url, observationRegistry);
 
             if (response.statusCode() != 200) {
                 throw new ClockGatewayException("Clock API returned status " + response.statusCode() +

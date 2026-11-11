@@ -9,15 +9,25 @@ import {
   isNotFound,
 } from './fetch-json';
 import { ErpUnavailableException } from '../../exceptions/erp-unavailable.exception';
+import {
+  type IdempotentCallPolicy,
+  idempotentCallPolicy,
+  resilienceOptionsFrom,
+} from './resilience';
 
 @Injectable()
 export class ErpGateway {
   private readonly erpUrl: string;
+  // One breaker for the whole ERP: every ERP call feeds and honours it.
+  private readonly policy: IdempotentCallPolicy;
 
   constructor(private readonly configService: ConfigService) {
     this.erpUrl = this.configService.get<string>(
       'ERP_API_URL',
       'http://localhost:9001/erp',
+    );
+    this.policy = idempotentCallPolicy(
+      resilienceOptionsFrom(this.configService),
     );
   }
 
@@ -26,7 +36,9 @@ export class ErpGateway {
   ): Promise<ErpProductDetailsResponse | null> {
     const url = `${this.erpUrl}/api/products/${encodeURIComponent(sku)}`;
     try {
-      return await fetchJson(url, ErpProductDetailsResponse);
+      return await this.policy((signal) =>
+        fetchJson(url, ErpProductDetailsResponse, signal),
+      );
     } catch (e) {
       if (isNotFound(e)) {
         return null;
@@ -41,7 +53,9 @@ export class ErpGateway {
   async getProducts(): Promise<ErpProductDetailsResponse[]> {
     const url = `${this.erpUrl}/api/products`;
     try {
-      return await fetchJsonArray(url, ErpProductDetailsResponse);
+      return await this.policy((signal) =>
+        fetchJsonArray(url, ErpProductDetailsResponse, signal),
+      );
     } catch (e) {
       throw new ErpUnavailableException(
         `Failed to fetch products. ${errorMessage(e)}`,
@@ -53,7 +67,9 @@ export class ErpGateway {
   async getPromotionDetails(): Promise<ErpGetPromotionResponse> {
     const url = `${this.erpUrl}/api/promotion`;
     try {
-      return await fetchJson(url, ErpGetPromotionResponse);
+      return await this.policy((signal) =>
+        fetchJson(url, ErpGetPromotionResponse, signal),
+      );
     } catch (e) {
       throw new ErpUnavailableException(
         `Failed to fetch promotion details. ${errorMessage(e)}`,

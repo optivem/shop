@@ -116,6 +116,8 @@ export function forbiddenResponse() {
 // The ERP failure details (URL, status, body) are logged server-side only; the client is told
 // product information is temporarily unavailable.
 const ERP_UNAVAILABLE_DETAIL = "Product information can't be retrieved right now";
+// Matches the ERP circuit breaker's default half-open delay (EXTERNAL_BREAKER_HALF_OPEN_AFTER_MS).
+const ERP_RETRY_AFTER_SECONDS = '10';
 
 export function erpUnavailableResponse(error: unknown) {
   logger.error('ERP unavailable', error);
@@ -127,7 +129,7 @@ export function erpUnavailableResponse(error: unknown) {
       detail: ERP_UNAVAILABLE_DETAIL,
       timestamp: new Date().toISOString(),
     },
-    { status: 503 }
+    { status: 503, headers: { 'Retry-After': ERP_RETRY_AFTER_SECONDS } }
   );
 }
 

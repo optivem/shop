@@ -9,6 +9,7 @@ import com.mycompany.myshop.backend.domain.values.Sku;
 import com.mycompany.myshop.backend.domain.gateways.ErpGateway;
 import com.mycompany.myshop.backend.domain.gateways.ErpGatewayException;
 import com.mycompany.myshop.backend.infrastructure.external.GatewayHttpClient;
+import com.mycompany.myshop.backend.infrastructure.external.ResilienceSettings;
 import io.micrometer.observation.ObservationRegistry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,15 +25,22 @@ public class HttpErpGateway implements ErpGateway {
 
     private final String erpUrl;
     private final ObservationRegistry observationRegistry;
+    private final GatewayHttpClient http;
 
     public HttpErpGateway(String erpUrl) {
-        this(erpUrl, ObservationRegistry.NOOP);
+        this(erpUrl, ResilienceSettings.DEFAULTS);
+    }
+
+    public HttpErpGateway(String erpUrl, ResilienceSettings resilience) {
+        this(erpUrl, ObservationRegistry.NOOP, resilience);
     }
 
     @Autowired
-    public HttpErpGateway(@Value("${erp.url}") String erpUrl, ObservationRegistry observationRegistry) {
+    public HttpErpGateway(@Value("${erp.url}") String erpUrl, ObservationRegistry observationRegistry,
+            ResilienceSettings resilience) {
         this.erpUrl = erpUrl;
         this.observationRegistry = observationRegistry;
+        this.http = new GatewayHttpClient("erp", resilience);
     }
 
     @Override
@@ -56,7 +64,7 @@ public class HttpErpGateway implements ErpGateway {
         var url = erpUrl + "/api/promotion";
 
         try {
-            var response = GatewayHttpClient.get(url, observationRegistry);
+            var response = http.get(url, observationRegistry);
 
             if (response.statusCode() != 200) {
                 throw new ErpGatewayException("ERP API returned status " + response.statusCode()
@@ -77,7 +85,7 @@ public class HttpErpGateway implements ErpGateway {
         var url = erpUrl + "/api/products/" + sku;
 
         try {
-            var response = GatewayHttpClient.get(url, observationRegistry);
+            var response = http.get(url, observationRegistry);
 
             if (response.statusCode() == 404) {
                 return Optional.empty();

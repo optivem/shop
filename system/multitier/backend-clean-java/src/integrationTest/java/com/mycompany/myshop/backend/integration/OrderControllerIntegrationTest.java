@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.mycompany.myshop.backend.domain.gateways.ErpGatewayException;
+import com.mycompany.myshop.backend.domain.gateways.TaxGatewayException;
 import com.mycompany.myshop.backend.presentation.UseCaseResponder;
 import com.mycompany.myshop.backend.presentation.controllers.OrderController;
 import com.mycompany.myshop.backend.common.Result;
@@ -85,14 +86,29 @@ class OrderControllerIntegrationTest {
     }
 
     // The other half of the gateway contract. ErpGatewayIntegrationTest pins that the adapter throws
-    // this when the ERP fails it; this pins what the caller is then told: 502, not the catch-all 500,
-    // and a body that repeats none of the exception's message -- which in production names the
-    // upstream URL and whatever it sent back.
+    // this when the ERP fails it (including once its circuit breaker is open); this pins what the
+    // caller is then told: 503 with Retry-After, not the catch-all 500, and a body that repeats none of
+    // the exception's message -- which in production names the upstream URL and whatever it sent back.
     @Test
-    void placeOrderReturnsBadGatewayWhenAnExternalSystemDoesNotAnswer() throws Exception {
+    void placeOrderReturnsServiceUnavailableWhenTheErpDoesNotAnswer() throws Exception {
         when(placeOrder.execute(any()))
             .thenThrow(new ErpGatewayException("ERP API returned status 503 for SKU: BOOK-123. "
                     + "URL: http://erp.internal:9001/api/products/BOOK-123"));
+
+        mockMvc.perform(post("/api/orders")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"sku\":\"BOOK-123\",\"quantity\":2,\"country\":\"US\"}"))
+            .andExpect(status().isServiceUnavailable())
+            .andExpect(header().exists("Retry-After"))
+            .andExpect(jsonPath("$.detail").value("Product information can't be retrieved right now"));
+    }
+
+    // Tax and clock failures stay 502: the request was fine, an upstream we do not control was not.
+    @Test
+    void placeOrderReturnsBadGatewayWhenTheTaxServiceDoesNotAnswer() throws Exception {
+        when(placeOrder.execute(any()))
+            .thenThrow(new TaxGatewayException("Tax API returned status 503 for country: US. "
+                    + "URL: http://tax.internal:9001/api/countries/US"));
 
         mockMvc.perform(post("/api/orders")
                 .contentType(MediaType.APPLICATION_JSON)

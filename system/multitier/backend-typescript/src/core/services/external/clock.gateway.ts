@@ -2,6 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ClockGetTimeResponse } from '../../dtos/external/clock-get-time-response.dto';
 import { errorMessage, fetchJson } from './fetch-json';
+import {
+  type IdempotentCallPolicy,
+  idempotentCallPolicy,
+  resilienceOptionsFrom,
+} from './resilience';
 
 type ExternalSystemMode = 'real' | 'stub';
 
@@ -12,6 +17,7 @@ const isExternalSystemMode = (value: string): value is ExternalSystemMode =>
 export class ClockGateway {
   private readonly externalSystemMode: ExternalSystemMode;
   private readonly clockUrl: string;
+  private readonly policy: IdempotentCallPolicy;
 
   constructor(private readonly configService: ConfigService) {
     const externalSystemMode = this.configService.get<string>(
@@ -26,6 +32,9 @@ export class ClockGateway {
       'CLOCK_API_URL',
       'http://localhost:9001/clock',
     );
+    this.policy = idempotentCallPolicy(
+      resilienceOptionsFrom(this.configService),
+    );
   }
 
   async getCurrentTime(): Promise<Date> {
@@ -38,7 +47,9 @@ export class ClockGateway {
   private async getStubTime(): Promise<Date> {
     const url = `${this.clockUrl}/api/time`;
     try {
-      const clockResponse = await fetchJson(url, ClockGetTimeResponse);
+      const clockResponse = await this.policy((signal) =>
+        fetchJson(url, ClockGetTimeResponse, signal),
+      );
       return new Date(clockResponse.time);
     } catch (e) {
       throw new Error(`Failed to fetch current time. ${errorMessage(e)}`, {

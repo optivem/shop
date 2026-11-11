@@ -7,6 +7,7 @@ import com.mycompany.myshop.backend.domain.values.Rate;
 import com.mycompany.myshop.backend.domain.gateways.TaxGatewayException;
 import com.mycompany.myshop.backend.domain.gateways.TaxGateway;
 import com.mycompany.myshop.backend.infrastructure.external.GatewayHttpClient;
+import com.mycompany.myshop.backend.infrastructure.external.ResilienceSettings;
 import io.micrometer.observation.ObservationRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,15 +26,22 @@ public class HttpTaxGateway implements TaxGateway {
 
     private final String taxUrl;
     private final ObservationRegistry observationRegistry;
+    private final GatewayHttpClient http;
 
     public HttpTaxGateway(String taxUrl) {
-        this(taxUrl, ObservationRegistry.NOOP);
+        this(taxUrl, ResilienceSettings.DEFAULTS);
+    }
+
+    public HttpTaxGateway(String taxUrl, ResilienceSettings resilience) {
+        this(taxUrl, ObservationRegistry.NOOP, resilience);
     }
 
     @Autowired
-    public HttpTaxGateway(@Value("${tax.url}") String taxUrl, ObservationRegistry observationRegistry) {
+    public HttpTaxGateway(@Value("${tax.url}") String taxUrl, ObservationRegistry observationRegistry,
+            ResilienceSettings resilience) {
         this.taxUrl = taxUrl;
         this.observationRegistry = observationRegistry;
+        this.http = new GatewayHttpClient("tax", resilience);
     }
 
     @Override
@@ -51,7 +59,7 @@ public class HttpTaxGateway implements TaxGateway {
         }
 
         try {
-            var response = GatewayHttpClient.get(url, observationRegistry);
+            var response = http.get(url, observationRegistry);
 
             log.info("getTaxDetails - status code was: {}", response.statusCode());
 
