@@ -632,7 +632,7 @@ jobs:
 
       - name: Cache NuGet Packages
         if: env.TEST_LANGUAGE == 'dotnet'
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ~/.nuget/packages
           key: nuget-${{ runner.os }}-${{ hashFiles('system-test/dotnet/**/*.csproj') }}
@@ -648,7 +648,7 @@ jobs:
 
       - name: Cache Playwright Browsers
         id: cache-playwright
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ (env.TEST_LANGUAGE == 'java' && hashFiles('system-test/java/build.gradle')) || (env.TEST_LANGUAGE == 'dotnet' && hashFiles('system-test/dotnet/**/*.csproj')) || hashFiles('system-test/typescript/package-lock.json') }}
