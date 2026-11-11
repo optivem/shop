@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.4
-FROM node:22-alpine AS deps
+FROM node:25-alpine AS deps
 WORKDIR /app
 COPY package*.json ./
 # npm retries transient registry failures (ECONNRESET, 5xx) on its own; raise
@@ -10,7 +10,7 @@ ENV npm_config_fetch_retries=5 \
     npm_config_fetch_retry_maxtimeout=120000
 RUN --mount=type=cache,target=/root/.npm npm ci
 
-FROM node:22-alpine
+FROM node:25-alpine
 WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=deps /app/node_modules ./node_modules
