@@ -21,7 +21,9 @@
 
 ## ▶ Next executable step (resume here)
 
-**Goal: confirm `meta-prerelease-stage` is green.** #30 (`actions` `f87d6d5`) and #31 (shop .NET `PageClient`) are fixed and committed. Next: check the `meta-prerelease-stage` re-run dispatched after those commits (the user approved the cloud cost on 2026-11-11). If it's green, mark U3 done. If it's red, triage the new failures into REL as new ideas.
+**Goal: confirm `meta-prerelease-stage` is green.** #30 (`actions` `f87d6d5`) and #31 (shop `2c235677`) are fixed. The re-run is **run 43052472314** on `2c235677` (dispatched 2026-11-11; the user approved the cloud cost, so no need to ask again).
+1. Check it: `gh run view 43052472314 --json status,conclusion,jobs`. If it's still running, wait in the background (poll at least every 3 min). If it's green, mark U3 done in Wave status. If it's red, triage each failing job into REL as a new numbered idea (don't fix in this meta-plan).
+2. U2: ask the user for the result of the production login check. Production realm `shop-prod` has no test users by design (`docker/keycloak/prod-realm.jq`), so the user creates a `CUSTOMER` user in https://shop-auth.optivem.com/admin (admin password: `gcloud secrets versions access latest --secret=shop-keycloak-admin-password`; local gcloud now works). It passes when signing in on https://shop.optivem.com goes via `shop-auth.optivem.com` and comes back signed in.
 
 Also still open, all user-side: the browser login check on https://shop.optivem.com (U2), pushing gh-optivem `628fa21d` once your gh-optivem plan edits are committed, and confirming v1.6.108 as X1's C2 release. U1 (SMETA) stays in its own session.
 
