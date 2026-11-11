@@ -11,7 +11,7 @@ Session 2026-11-10 did #1, #2, #3 (full latest acceptance runs per language on m
 
 **Waiting on the user:** #11 is user-side. (#27 committed in `actions` as `1139063`, 2026-11-10.)
 
-**Next executable unit:** #29, re-run `monolith-java-acceptance-stage.yml` and `monolith-dotnet-acceptance-stage.yml` on current `main` (cloud, costs a little; ask the user first) and triage per its recommendation.
+**Next executable unit:** #30: the `trigger-and-wait-for-workflow` 404 retry in `optivem/actions` (small, no local stack needed). Then #31: the .NET browse-catalog timeout against the TS frontend (local repro, needs the user's yes). Then re-run `meta-prerelease-stage` (cloud, ask). #29 is done: the .NET driver fix `d437c106` and the cloud run 43004938779 are green.
 
 **Deferred:** #5, #15, #17, #20, #21, #26 (see their ideas below).
 
@@ -56,7 +56,7 @@ Decided by the user on 2026-11-10: #1–#3 one at a time, then "I automatically 
 
 ## Ideas to decide
 
-Each idea has a recommendation, and every one is decided (see "Resolved decisions").
+Each idea has a recommendation. Everything up to #29 is decided (see "Resolved decisions"); #30 and #31 (2026-11-11) are next, with their recommendations.
 
 ### 5. Reset the stub server at the start of a suite run
 
@@ -95,15 +95,15 @@ The .NET admin-coupons bug (fixed in storefront Step 6) was only caught because 
 - **Recommended: investigate if it recurs.** Make the tag-push step print git's stderr and retry once on a non-fast-forward or a network error.
 
 
-### 29. Cloud-only monolith UI failures in `meta-prerelease-stage` 42888911339
+### 30. `trigger-and-wait-for-workflow` fails on a 404 when it reads a run it has just dispatched
 
-Found 2026-11-10 (run on `e8e471a1`, before #13's driver change). Only `verify / cloud-acceptance-stage` failed, and only on UI tests; the docker-compose stages for the same languages were green:
-- monolith-java (run 42901251872): `MyShopSmokeTest.shouldBeAbleToGoToMyShop [Channel: UI]`, Playwright `Timeout 30000ms exceeded`.
-- monolith-dotnet (run 42902460098): `DeliverOrderPositiveTest.AdminShouldBeAbleToDeliverAnotherCustomersOrder(UI)`, `Order status not updated to DELIVERED`.
-- **Recommended: re-run the two cloud acceptance stages on current `main` first.** If they pass, treat this as cloud UI latency and consider a longer UI wait for the cloud stage only. If either repeats, use #1's uploaded evidence (compose/Cloud Run logs) to diagnose. Lesson from the "does not exist" background: cloud-only means look at the cloud infra first.
-- **Re-run 2026-11-11 (after the Keycloak prod cutover):**
-  - monolith-java 42995189124: **green**, so its smoke timeout was cloud UI latency. Nothing to do.
-  - monolith-dotnet 42995196732: **red again**, `DeliverOrderPositiveTest.ShouldHaveDeliveredStatusWhenDelivered(UI)` failed with `Order status not updated to DELIVERED` (31 s).
-- **Diagnosis (.NET only, a test-driver race, not infra):** `system-test/dotnet/Driver.Adapter/Ui/MyShopUiDriver.cs:190-193` (deliver) and `:143-146` (cancel) read the status once, straight after the success notification, with `OrderDetailsPage.GetStatusAsync` (`ReadTextContentAsync`, which doesn't wait for the expected text). On slower cloud UI the status element hasn't re-rendered yet. Java and TS drivers have no post-action status check, which is why they don't fail. The test's own later status assertion already covers the behaviour.
-- **Recommended fix:** remove the two post-action status checks from the .NET driver, for parity with Java and TS. **Why:** they duplicate the test's assertion and are the only race. Alternative: wait for the expected status text (Playwright `ToHaveTextAsync`) instead of a one-shot read. Verify with the .NET `--sample` run, then re-run `monolith-dotnet-acceptance-stage.yml` in the cloud (needs cost approval).
-- **Fix applied 2026-11-11 (user approved):** I removed both checks. `dotnet build` passes. Locally on monolith-dotnet, `--sample` passed 13/13 and the deliver/cancel UI acceptance tests passed 9/9. **Left:** a green cloud re-run of `monolith-dotnet-acceptance-stage.yml`, then `meta-prerelease-stage`. Then delete #29.
+Found 2026-11-11 in `meta-prerelease-stage` 43009532540: `pipeline (multitier-java)` and `pipeline (monolith-dotnet)` failed with `Could not read dispatched run <id> of <workflow>: gh: Not Found (HTTP 404)`. The monolith-dotnet failure came from its child legacy acceptance step (run 43019313596). The child runs themselves were fine: the multitier-java pipeline run 43017020444 finished **green**.
+- **Cause:** `actions/trigger-and-wait-for-workflow/trigger.sh:138-141`. Straight after dispatching, the "did `$REF` move" diagnostic does `GET /runs/{id}` for the id the dispatch API returned. GitHub hasn't made the new run visible yet, so the read gets a 404. `retry_run` doesn't retry 404s, so the action fails hard. This looks like it came in with #27's change (`1139063`), which switched to the run id the dispatch API returns.
+- **Recommended fix:** in `optivem/actions`, poll that read on a 404 only, every 3 s for up to 60 s. If the run still isn't visible after that, fail loudly with the run id and workflow. **Why:** a 404 straight after a dispatch with a known run id is GitHub's API lag, not a missing run, and the timeout keeps the rule that probes never swallow errors. Verify with `bash -n` and `shellcheck` on `trigger.sh`, commit in `actions`, then re-run `meta-prerelease-stage` (cloud, ask about cost).
+
+### 31. Cross-lang: .NET browse-catalog UI test times out against the monolith-typescript frontend
+
+Found 2026-11-11 in `meta-prerelease-stage` 43009532540, job `cross-lang / dotnet tests vs monolith typescript`. `BrowseCatalogPositiveIsolatedTest.ShouldShowOnlyTheProductsInTheChosenCategory(UI)` failed both times with `Timeout 30000ms exceeded`, waiting for navigation until "Load". The stack is `CatalogPage.SelectCategoryAsync` → `ChangeViewAsync` → `PageClient.WaitForUrlChangeAsync`, which means the URL never changed after the category label was clicked.
+- The markup matches: `fieldset[aria-label='Category Filter']` exists in `system/monolith/typescript/src/app/CatalogView.tsx:81`. The .NET `ChangeViewAsync` (`system-test/dotnet/Driver.Adapter/Ui/Client/Pages/CatalogPage.cs:125-131`) does the same as the TS `changeView` (`system-test/typescript/src/testkit/driver/adapter/ui/client/pages/CatalogPage.ts:108-113`). The TS driver passes against this frontend, so the failure only happens with the .NET driver on Next.js. The frontend changes category with client-side `router.push` (`CatalogView.tsx:141`).
+- **Hypothesis (not verified):** a hydration race. The .NET driver clicks the radio before React has hydrated, so the browser checks the radio natively and `onChange` → `router.push` never fires. Another possibility: the .NET driver opens the catalog page differently, so it doesn't wait for the same ready state the TS driver does.
+- **Recommended:** reproduce locally by running the .NET latest acceptance tests against the monolith-typescript stack, the same combination as the cross-lang job (see how `meta-prerelease-stage` / `_cross-lang*` wires it, needs the user's yes for the local stack). Then fix in the .NET catalog page object, e.g. wait for the page to be hydrated/ready before the first filter click, or assert the option is checked and retry the click. Check the Java driver against the TS frontend for the same race. This is storefront test-kit code (`1607bbec`).
