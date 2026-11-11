@@ -1,7 +1,5 @@
 # 2026-11-11 07:33 UTC — Plan coordination meta-plan: storefront, reliability, Keycloak cutover, spec gate
 
-> 🤖 **Picked up by agent** — `Valentina_Desk` at `2026-11-11T17:24:04Z`
-
 ## TL;DR
 
 **Why:** Six active plans overlap: storefront specs/build, the Keycloak cutover, reliability follow-ups and the spec gate. Production login is broken, and some units share cloud resources or plan files, so running them by hand in any order risks confusing results and collisions.
@@ -17,16 +15,19 @@
 |---|---|
 | U2 KC cutover | **done** 2026-11-11: `multitier-typescript-v1.0.238` in PROD; user signed in on https://shop.optivem.com as `customer1` (shop-prod) via `shop-auth.optivem.com` and returned signed in. KC QA runs 42415102639/42415234619 green. KC plan deleted |
 | X1 Track C | effectively done (2026-11-11): C1/C1b/C1c shipped in gh-optivem `7399d6f2`, which is in release `v1.6.108`. `spec validate` in shop gives 12 use cases valid, 35 criteria gated, UC-001 = 16 criteria. Plan moved to `gh-optivem/plans/20261107-1300-...` (shop `248d5e4a`; gh-optivem `628fa21d` is **unpushed**, because the pull is blocked by the user's uncommitted gh-optivem plan edits). C2 needs only the user to confirm v1.6.108 counts as the release |
-| U3 REL #29 → #30/#31 | #29 done 2026-11-11. **#30 done** (`actions` `f87d6d5`: poll the post-dispatch run read on 404 only). **#31 done** (.NET `PageClient.WaitForUrlChangeAsync` polls `location.href`; the root cause was a race in the .NET `WaitForURLAsync`, not hydration). **Left:** the `meta-prerelease-stage` re-run (user approved the cost). New REL ideas #32/#33 still need deciding |
+| U3 REL #29 → #30/#31 | **done** 2026-11-11: `meta-prerelease-stage` run 43052472314 on `2c235677`: all 6 cloud pipelines, all local/commit stages except one, drift and cross-lang green. The only red, `run / local (monolith-dotnet)`, was a runner-side docker pull flake (unit tests passed) → REL #34. REL ideas #32–#35 await the user's decision |
 | U1 SMETA | user chose a separate session: `/execute-plan plans/20261107-1705-meta-storefront-specs-build.md` |
 | U4 UC1 Track D | unblocked (v1.6.108 already reads the layout); per Conflict #3, run it after U1's close-out and recount the criteria then (UC-001 now has 16, not 14) |
 
 ## ▶ Next executable step (resume here)
 
-**Goal: confirm `meta-prerelease-stage` is green.** #30 (`actions` `f87d6d5`) and #31 (shop `2c235677`) are fixed. The re-run is **run 43052472314** on `2c235677` (dispatched 2026-11-11; the user approved the cloud cost, so no need to ask again).
-1. Check it: `gh run view 43052472314 --json status,conclusion,jobs`. If it's still running, wait in the background (poll at least every 3 min). If it's green, mark U3 done in Wave status. If it's red, triage each failing job into REL as a new numbered idea (don't fix in this meta-plan). Already triaged: `run / local (monolith-dotnet)` red from a runner-side docker pull flake → REL #34.
+**No agent work left in this meta-plan this session; what remains is user-side or another session.**
+1. **U1 SMETA (next real work):** `/clear` then `/execute-plan plans/20261107-1705-meta-storefront-specs-build.md`.
+2. **X1 C2 (user):** confirm gh-optivem `v1.6.108` counts as Track C's release (recommended: yes, since `spec validate` already reads the new layout); push gh-optivem `628fa21d` once your gh-optivem plan edits are committed.
+3. **U4 UC1 Track D:** after U1's close-out, run `/execute-plan plans/20261106-1533-use-cases-match-substack-articles.md` and recount the criteria of every `implemented` use case (Conflict #3).
+4. **REL #32–#35:** the user decides (each has a recommendation in REL).
 
-Also still open, all user-side: pushing gh-optivem `628fa21d` once your gh-optivem plan edits are committed, and confirming v1.6.108 as X1's C2 release. U1 (SMETA) stays in its own session.
+Once U1 and U4 are done and their plans are deleted, delete this meta-plan.
 
 ## Target state
 
