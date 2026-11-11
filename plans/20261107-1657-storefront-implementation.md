@@ -28,7 +28,9 @@ Step 5 (Thymeleaf port) is done: commit `960fc2cd` (2026-11-10). The cart lives 
 
 Step 6 (Razor port) is done: commit `e1e923b4` (2026-11-10). All three monolith ports are done, with no driver changes.
 
-Next, per the meta-plan: **Step 7 (verify)** is partly done. The .NET coupon timezone fix (`e00edf16`) is in and `compile-all` passes. The six `--sample` runs and `./test-all.sh -a monolith` / `-a multitier` remain (they were stopped on low memory).
+Step 7 (verify) is done (2026-11-11): `compile-all`, all six `--sample` configs and `./test-all.sh -a monolith` green locally; multitier covered by CI `meta-prerelease-stage` 43052472314 (fully green).
+
+Next, per the meta-plan: **Step 8** (UI + API acceptance tests for UC-006…011), one use case at a time, then Step 10.
 
 ## Background
 
@@ -45,8 +47,6 @@ Next, per the meta-plan: **Step 7 (verify)** is partly done. The .NET coupon tim
 
 ## Steps
 
-- [ ] **Step 7: Verify.** `./compile-all.sh`, then `system-test run --sample` for java, dotnet and typescript (monolith and multitier). Then `./test-all.sh` before closing.
-  - Scenarios: none new; every tagged `@UC-NNN.M` test stays green.
 - [ ] **Step 8: Acceptance tests for the UI journeys.** Turn the remaining `@UC-006` to `@UC-011` scenarios into acceptance tests with UI and API channels in all three languages, after the UI exists so they don't collide with the UC-001 spec-gate work.
   - Scenarios: `@UC-006.1`–`.10`, `@UC-007.1`–`.7`, `@UC-008.1`–`.11`, `@UC-009.1`–`.13`; the UI-only UC-010 and UC-011 scenarios listed under Step 3; `@UC-011.2` ("-" customer; needs an order with no recorded owner); `@UC-003.2`, `@UC-012.2`. Then flip UC-006 to UC-011 to `implemented`.
   - Caveat from the Next.js port: its product 404 page (`@UC-007.5`) renders the "Product not found" body only in the browser (Next.js 15 behaviour). The server HTML doesn't include it, so assert it through Playwright, not a raw HTTP fetch.

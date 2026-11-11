@@ -15,7 +15,7 @@
 |---|---|
 | U2 KC cutover | **done** 2026-11-11: `multitier-typescript-v1.0.238` in PROD; user signed in on https://shop.optivem.com as `customer1` (shop-prod) via `shop-auth.optivem.com` and returned signed in. KC QA runs 42415102639/42415234619 green. KC plan deleted |
 | X1 Track C | effectively done (2026-11-11): C1/C1b/C1c shipped in gh-optivem `7399d6f2`, which is in release `v1.6.108`. `spec validate` in shop gives 12 use cases valid, 35 criteria gated, UC-001 = 16 criteria. Plan moved to `gh-optivem/plans/20261107-1300-...` (shop `248d5e4a`; gh-optivem `628fa21d` is **unpushed**, because the pull is blocked by the user's uncommitted gh-optivem plan edits). C2 needs only the user to confirm v1.6.108 counts as the release |
-| U3 REL #29 → #30/#31 | **done** 2026-11-11: `meta-prerelease-stage` run 43052472314 on `2c235677`: all 6 cloud pipelines, all local/commit stages except one, drift and cross-lang green. The only red, `run / local (monolith-dotnet)`, was a runner-side docker pull flake (unit tests passed) → REL #34. REL ideas #32–#35 await the user's decision |
+| U3 REL #29 → #30/#31 | **done** 2026-11-11: `meta-prerelease-stage` run 43052472314 on `2c235677` **green** (attempt 2; attempt 1's only red was the `run / local (monolith-dotnet)` runner docker pull flake, REL #34, which passed on re-run). `tag-meta-rc` created `meta-v1.0.225-rc.1543`. REL ideas #32–#35 await the user's decision |
 | U1 SMETA | user chose a separate session: `/execute-plan plans/20261107-1705-meta-storefront-specs-build.md` |
 | U4 UC1 Track D | unblocked (v1.6.108 already reads the layout); per Conflict #3, run it after U1's close-out and recount the criteria then (UC-001 now has 16, not 14) |
 

@@ -102,7 +102,7 @@ Found 2026-11-11 while fixing #30. `actions/trigger-and-wait-for-workflow/trigge
 
 ### 34. Local pipeline failed pulling images: containerd "lease does not exist"
 
-Found 2026-11-11 in `meta-prerelease-stage` run 43052472314 (`2c235677`). Child run 43052626758 (`prerelease-pipeline-monolith-dotnet`, `verify / local`) passed its unit tests (7/7, 129/129), then failed during `docker compose pull` with `failed to commit snapshot extract-… sha256:25ca64b9…: NotFound: lease does not exist: not found`. This is a containerd/BuildKit snapshot race on the GitHub-hosted runner, not a test or code failure.
+Found 2026-11-11 in `meta-prerelease-stage` run 43052472314 (`2c235677`). Child run 43052626758 (`prerelease-pipeline-monolith-dotnet`, `verify / local`) passed its unit tests (7/7, 129/129), then failed during `docker compose pull` with `failed to commit snapshot extract-… sha256:25ca64b9…: NotFound: lease does not exist: not found`. This is a containerd/BuildKit snapshot race on the GitHub-hosted runner, not a test or code failure. Re-running the failed job (attempt 2) passed, and the run went green with `meta-v1.0.225-rc.1543`, which confirms it was transient.
 - **Recommended: retry the pull once on this specific error and investigate only if it recurs.** **Why:** it is a known transient runner-side race; a single retry on that exact message keeps real pull failures (auth, missing tag) loud.
 
 ### 35. Shared Keycloak admin is the "temporary" bootstrap admin

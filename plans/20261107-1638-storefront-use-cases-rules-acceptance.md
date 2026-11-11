@@ -32,22 +32,11 @@ What we get out of this:
 
 ## ▶ Next executable step (resume here)
 
-**Gate: user review of the written specs** (UC-002 to UC-012, all under `docs/shared/specs/use-cases/`, all `status: planned`). They were written autonomously on 2026-11-07 after the user asked to proceed without the UC-006 review; any correction to UC-006's conventions (tag numbering = BR-N then extensions with `@narrative-Xa`, shared `Background:`) applies to all of them.
-
-Then **Step 8 + Step 9 run in one session together with Step 2 of `plans/20261107-1657-storefront-implementation.md`** (unit U3 of `plans/20261107-1705-meta-storefront-specs-build.md`): amend UC-001, build the domain change, then cross-reference. Push only once `./compile-all.sh` and the sample system tests are green. Check first that `plans/20261106-1533-…` has no in-flight shop work (it owns UC-001's tags).
+Steps 8 and 9 landed in unit U3 of `plans/20261107-1705-meta-storefront-specs-build.md` (UC-001 takes a shipping address, 4b = address/country; `storefront-ux.md` links the specs). Only the standing rule (Step 10) and the user's optional review of UC-002…012 remain; the SMETA orchestrator deletes this plan at its close-out (Step 8).
 
 ## Steps
 
 - [x] Step 0: Requested gh-optivem support for the folder layout as C1b in `plans/20261106-1533-use-cases-match-substack-articles.md` Track C.
-- [ ] Step 8: Amend UC-001. Country comes from the shipping address. Replace "4b country is missing" with an address-country extension, and update BR-3 and the affected `@UC-001.*` scenarios. Coordinate with `plans/20261106-1533-use-cases-match-substack-articles.md` first, since that plan's agent owns UC-001. To stay consistent with UC-009/UC-010 (as written):
-  - Main step 1 takes a shipping address (first name, last name, street, postal code, city, country) instead of a country.
-  - 4b becomes: incomplete address, or country not US/DE/GB, is rejected; `@UC-001.10` moves from the country checks to the address checks (the tests tagged `@UC-001.10` in all three languages change in BUILD Step 2).
-  - BR-3: tax = subtotal × rate of the shipping address's country. The `@UC-001.4` examples (today UK 0.09, US 0.20) change to the tax stubs US 0.00, DE 0.19, GB 0.20, and GB instead of UK.
-  - The order stores and shows the shipping address (UC-009 scenarios check it).
-  - Keep UC-001's rejection messages for unknown coupon, coupon usage limit and unknown SKU (UC-009 quotes them), or update UC-009 too.
-  - Quick order keeps its Country field, prefilled from the profile (storefront-ux.md §8).
-  - Decide whether UC-001's tags move to UC-006's convention (`@UC-001.N` = BR-N); if so, renumber the tests' tags in the same commit.
-- [ ] Step 9: Link the specs from storefront-ux.md. Also fix §4.4: it says a partial checkout failure keeps the customer on checkout with an error; the decided behaviour (UC-009 8a/8b) is that the other lines are placed and the confirmation shows a per-line result, and only if every line fails does the customer stay on checkout. Cross-reference `plans/20261107-1657-storefront-implementation.md`: each of its steps lists the `@UC-NNN.M` scenarios it must make pass.
 - [ ] Step 10: Commit and push only these docs files after each step, never the other agent's work.
 
 ## Use-case list (approved 2026-11-07; index in `docs/shared/specs/use-cases/README.md`)

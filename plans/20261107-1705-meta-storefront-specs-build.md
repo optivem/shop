@@ -1,5 +1,7 @@
 # 2026-11-07 17:05 UTC — Plan coordination meta-plan: storefront specs + build
 
+> 🤖 **Picked up by agent** — `Valentina_Desk` at `2026-11-11T18:14:15Z`
+
 
 
 **Plans analysed:** 2 in-scope, 1 referenced-only
@@ -32,19 +34,9 @@ The orchestrating session runs the Steps below **in order**, one subagent per st
 
 ## ▶ Next executable step (resume here)
 
-Steps 1–5 are done. UC-010/011 stay `planned` and flip in **Step 7**.
+Steps 1–6 are done. **Step 6 closed 2026-11-11 (user):** local monolith `test-all` green on 2026-11-10; multitier evidence is CI `meta-prerelease-stage` run 43052472314 on `2c235677`, fully green including `local (multitier-java/dotnet/typescript)`, `pipeline (multitier-*)` and every multitier cross-lang job.
 
-**Step 6 (verify) needs only `./test-all.sh -a multitier`.** Done on 2026-11-10 at HEAD `319a7122`:
-- `compile-all` passed.
-- All six `--sample` configs (monolith and multitier × java, dotnet, typescript) passed 11/11.
-- `./test-all.sh -a monolith` passed with 0 failures for all three languages, latest and legacy.
-- `system start --restart` was confirmed to rebuild images.
-
-**Orphan blocker cleared (2026-11-10 19:05 UTC):** PID 64508 is gone. The multitier-typescript stack is still up.
-
-**CI (2026-11-10):** `meta-prerelease-stage` has been red since 2026-11-09 17:03. The latest red run (42802680555, at `c32dae84`) failed only multitier: `anonymousShouldNotBeAbleToViewOrder [UI]` timed out on `#kc-login`. That run predates the fix `a3622182`. Locally, the multitier-typescript UI suites pass at HEAD (58 + 15). Run 42885354673 was dispatched on `3f4840cc` to confirm. If it's green, it's strong evidence for Step 6's multitier part.
-
-**Then:** run `./test-all.sh -a multitier -l <lang>` for dotnet, java and typescript, one at a time. Before each, `system start --restart` and stop. After each, `system stop`. Ideally run them from a terminal outside Claude Code (memory reaper, followup ideas 22–25). Once it's green, Step 6 is done, so delete it and BUILD Step 7, then do Step 7.
+**Next: Step 7** (BUILD Step 8). UC-006 is already `implemented`; check whether its UI scenarios are covered, then do UC-007, UC-008, UC-009, UC-010, UC-011 — one serial subagent each (shared test kit), latest tests only, UI + API channels in Java, .NET and TypeScript. Each flips its use case to `status: implemented` when its tests pass in all three languages. Gate per use case: compile (`./compile-all.sh` or per-project) plus `--sample` system tests per affected language, starting stacks with `gh optivem system start --restart`. Read BUILD Step 8's caveats (Next.js 404 body is browser-only; monolith address errors are plain messages; monolith cart persists only within a session).
 
 Also fold into Step 7: check each UC-006..011 scenario against the React UI line by line, and check whether the `src/test` interaction tests cover the new pages.
 
@@ -54,7 +46,6 @@ None open. **Resolved 2026-11-10 (user):** stale Docker images. Steps 6–7 star
 
 ## Steps
 
-- [ ] **Step 6 — BUILD Step 7 (verify).** One subagent: `./compile-all.sh`, `--sample` for all languages (monolith and multitier), then `./test-all.sh`.
 - [ ] **Step 7 — BUILD Step 8 (acceptance tests for UC-006–011).** UC-010/011 have only their API scenarios tagged; this step adds the untagged ones and flips them. One subagent per use case, serial (shared test kit). Each one flips its use case to `status: implemented`. Gate: compile, plus the sample system tests.
 - [ ] **Step 7b — BUILD Step 10 (close the Step 9 coverage gaps for UC-002, UC-003, UC-005, UC-012).** One subagent, after Step 7 (the UI-only scenarios UC-003.2 and UC-012.2 belong in Step 7's UI tests). Touches the order and coupon acceptance tests, so never alongside Step 3 or Step 7. Gate: compile, plus the sample system tests.
 - [ ] **Step 8 — Close out.** When SPEC and BUILD have no open items, delete both plan files (and this one). Report UC1 Track D as the remaining follow-up: it needs gh-optivem C1, C1b and C1c.
