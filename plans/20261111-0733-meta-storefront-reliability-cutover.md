@@ -15,17 +15,13 @@
 |---|---|
 | U2 KC cutover | in progress (2026-11-11): QA sign-off of `multitier-typescript-v1.0.238-rc.3406` green (run 42993887714; it supersedes rc.3402); prod-stage green (run 42994266504), so `multitier-typescript-v1.0.238` is in PROD. **Left: the user's browser login check** on https://shop.optivem.com |
 | X1 Track C | effectively done (2026-11-11): C1/C1b/C1c shipped in gh-optivem `7399d6f2`, which is in release `v1.6.108`. `spec validate` in shop gives 12 use cases valid, 35 criteria gated, UC-001 = 16 criteria. Plan moved to `gh-optivem/plans/20261107-1300-...` (shop `248d5e4a`; gh-optivem `628fa21d` is **unpushed**, because the pull is blocked by the user's uncommitted gh-optivem plan edits). C2 needs only the user to confirm v1.6.108 counts as the release |
-| U3 REL #29 → #30/#31 | **#29 done 2026-11-11**: java was cloud latency; the .NET driver race was fixed in `d437c106`, and the cloud run 43004938779 is green. `meta-prerelease-stage` 43009532540 is still red, for two new reasons now recorded in REL: **#30**, the `trigger-and-wait-for-workflow` 404 on read-after-dispatch (2 pipeline jobs; the child runs were fine), and **#31**, the .NET browse-catalog UI timeout against the monolith-typescript frontend (cross-lang job) |
+| U3 REL #29 → #30/#31 | #29 done 2026-11-11. **#30 done** (`actions` `f87d6d5`: poll the post-dispatch run read on 404 only). **#31 done** (.NET `PageClient.WaitForUrlChangeAsync` polls `location.href`; the root cause was a race in the .NET `WaitForURLAsync`, not hydration). **Left:** the `meta-prerelease-stage` re-run (user approved the cost). New REL ideas #32/#33 still need deciding |
 | U1 SMETA | user chose a separate session: `/execute-plan plans/20261107-1705-meta-storefront-specs-build.md` |
 | U4 UC1 Track D | unblocked (v1.6.108 already reads the layout); per Conflict #3, run it after U1's close-out and recount the criteria then (UC-001 now has 16, not 14) |
 
 ## ▶ Next executable step (resume here)
 
-**Goal of the next session: get `meta-prerelease-stage` green.** Do these in order (details and recommendations are in `plans/20261110-1207-system-test-reliability-followups.md` #30 and #31):
-
-1. **REL #30** (no local stack, no cost): in `optivem/actions`, `trigger-and-wait-for-workflow/trigger.sh:138-141`, poll the post-dispatch `GET /runs/{id}` on a 404 only (every 3 s, up to 60 s), then fail loudly. Check with `bash -n` and `shellcheck`, then commit with `--repo actions`. Delete #30 from REL.
-2. **REL #31** (needs the user's yes for a local stack): reproduce `BrowseCatalogPositiveIsolatedTest.ShouldShowOnlyTheProductsInTheChosenCategory(UI)` with the .NET tests against the monolith-typescript stack, the same combination as the cross-lang job. Fix the .NET `CatalogPage` (the hypothesis is a hydration race before the first filter click), check the Java driver against the TS frontend for the same race, then commit and delete #31.
-3. **Re-run `meta-prerelease-stage`** (cloud, ask about cost). Run a subagent per item; the main session dispatches and watches CI.
+**Goal: confirm `meta-prerelease-stage` is green.** #30 (`actions` `f87d6d5`) and #31 (shop .NET `PageClient`) are fixed and committed. Next: check the `meta-prerelease-stage` re-run dispatched after those commits (the user approved the cloud cost on 2026-11-11). If it's green, mark U3 done. If it's red, triage the new failures into REL as new ideas.
 
 Also still open, all user-side: the browser login check on https://shop.optivem.com (U2), pushing gh-optivem `628fa21d` once your gh-optivem plan edits are committed, and confirming v1.6.108 as X1's C2 release. U1 (SMETA) stays in its own session.
 

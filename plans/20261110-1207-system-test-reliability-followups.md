@@ -11,7 +11,7 @@ Session 2026-11-10 did #1, #2, #3 (full latest acceptance runs per language on m
 
 **Waiting on the user:** #11 is user-side. (#27 committed in `actions` as `1139063`, 2026-11-10.)
 
-**Next executable unit:** #30: the `trigger-and-wait-for-workflow` 404 retry in `optivem/actions` (small, no local stack needed). Then #31: the .NET browse-catalog timeout against the TS frontend (local repro, needs the user's yes). Then re-run `meta-prerelease-stage` (cloud, ask). #29 is done: the .NET driver fix `d437c106` and the cloud run 43004938779 are green.
+**Next executable unit:** re-run `meta-prerelease-stage` (cloud, ask) to confirm #30 and #31; then decide #32 and #33. #31 is done (`PageClient.WaitForUrlChangeAsync` in .NET now polls `location.href`, because the .NET client's `WaitForURLAsync` misses a Next.js `router.push` that lands between its URL check and its event subscription; not hydration. Local .NET vs monolith-typescript: 12/12 and suite 57/57, previously ~9/22 failed). #30 is done (`actions` `f87d6d5`: post-dispatch run read polls on 404 only, 3 s up to 60 s). #29 is done: the .NET driver fix `d437c106` and the cloud run 43004938779 are green.
 
 **Deferred:** #5, #15, #17, #20, #21, #26 (see their ideas below).
 
@@ -56,7 +56,7 @@ Decided by the user on 2026-11-10: #1–#3 one at a time, then "I automatically 
 
 ## Ideas to decide
 
-Each idea has a recommendation. Everything up to #29 is decided (see "Resolved decisions"); #30 and #31 (2026-11-11) are next, with their recommendations.
+Each idea has a recommendation. Everything up to #29 is decided (see "Resolved decisions"); #30 and #31 are done; #32 and #33 (2026-11-11) are new ideas to decide.
 
 ### 5. Reset the stub server at the start of a suite run
 
@@ -95,15 +95,12 @@ The .NET admin-coupons bug (fixed in storefront Step 6) was only caught because 
 - **Recommended: investigate if it recurs.** Make the tag-push step print git's stderr and retry once on a non-fast-forward or a network error.
 
 
-### 30. `trigger-and-wait-for-workflow` fails on a 404 when it reads a run it has just dispatched
+### 32. `trigger-and-wait-for-workflow/wait.sh` treats every poll failure as transient
 
-Found 2026-11-11 in `meta-prerelease-stage` 43009532540: `pipeline (multitier-java)` and `pipeline (monolith-dotnet)` failed with `Could not read dispatched run <id> of <workflow>: gh: Not Found (HTTP 404)`. The monolith-dotnet failure came from its child legacy acceptance step (run 43019313596). The child runs themselves were fine: the multitier-java pipeline run 43017020444 finished **green**.
-- **Cause:** `actions/trigger-and-wait-for-workflow/trigger.sh:138-141`. Straight after dispatching, the "did `$REF` move" diagnostic does `GET /runs/{id}` for the id the dispatch API returned. GitHub hasn't made the new run visible yet, so the read gets a 404. `retry_run` doesn't retry 404s, so the action fails hard. This looks like it came in with #27's change (`1139063`), which switched to the run id the dispatch API returns.
-- **Recommended fix:** in `optivem/actions`, poll that read on a 404 only, every 3 s for up to 60 s. If the run still isn't visible after that, fail loudly with the run id and workflow. **Why:** a 404 straight after a dispatch with a known run id is GitHub's API lag, not a missing run, and the timeout keeps the rule that probes never swallow errors. Verify with `bash -n` and `shellcheck` on `trigger.sh`, commit in `actions`, then re-run `meta-prerelease-stage` (cloud, ask about cost).
+Found 2026-11-11 while fixing #30. `actions/trigger-and-wait-for-workflow/wait.sh:30-34` warns and retries on any `gh run view` failure until `TIMEOUT_SECONDS`, including 401, 403 and 404. A bad token or a wrong repo therefore shows up only as a long timeout instead of a specific error.
+- **Recommended:** keep retrying on 5xx and network errors (and on 404 for a short visibility window, as in #30), but fail at once with `::error::` on 401 and 403. **Why:** that is the "never swallow errors" rule, and it turns a misconfiguration from a timeout into an actionable message.
 
-### 31. Cross-lang: .NET browse-catalog UI test times out against the monolith-typescript frontend
+### 33. `trigger-and-wait-for-workflow/trigger.sh` hides a failed rate-limit probe
 
-Found 2026-11-11 in `meta-prerelease-stage` 43009532540, job `cross-lang / dotnet tests vs monolith typescript`. `BrowseCatalogPositiveIsolatedTest.ShouldShowOnlyTheProductsInTheChosenCategory(UI)` failed both times with `Timeout 30000ms exceeded`, waiting for navigation until "Load". The stack is `CatalogPage.SelectCategoryAsync` → `ChangeViewAsync` → `PageClient.WaitForUrlChangeAsync`, which means the URL never changed after the category label was clicked.
-- The markup matches: `fieldset[aria-label='Category Filter']` exists in `system/monolith/typescript/src/app/CatalogView.tsx:81`. The .NET `ChangeViewAsync` (`system-test/dotnet/Driver.Adapter/Ui/Client/Pages/CatalogPage.cs:125-131`) does the same as the TS `changeView` (`system-test/typescript/src/testkit/driver/adapter/ui/client/pages/CatalogPage.ts:108-113`). The TS driver passes against this frontend, so the failure only happens with the .NET driver on Next.js. The frontend changes category with client-side `router.push` (`CatalogView.tsx:141`).
-- **Hypothesis (not verified):** a hydration race. The .NET driver clicks the radio before React has hydrated, so the browser checks the radio natively and `onChange` → `router.push` never fires. Another possibility: the .NET driver opens the catalog page differently, so it doesn't wait for the same ready state the TS driver does.
-- **Recommended:** reproduce locally by running the .NET latest acceptance tests against the monolith-typescript stack, the same combination as the cross-lang job (see how `meta-prerelease-stage` / `_cross-lang*` wires it, needs the user's yes for the local stack). Then fix in the .NET catalog page object, e.g. wait for the page to be hydrated/ready before the first filter click, or assert the option is checked and retry the click. Check the Java driver against the TS frontend for the same race. This is storefront test-kit code (`1607bbec`).
+Found 2026-11-11 while fixing #30. `actions/trigger-and-wait-for-workflow/trigger.sh:8,10` runs the rate-limit probe with `2>/dev/null || echo "999"`, so a failed probe silently looks like plenty of quota left.
+- **Recommended:** keep stderr visible and print a `::warning::` when the probe fails, but don't fail the job. **Why:** the probe is only advisory, yet hiding its error breaks the never-swallow-stderr rule and hides auth problems.

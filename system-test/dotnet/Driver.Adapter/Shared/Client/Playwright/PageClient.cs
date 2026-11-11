@@ -142,9 +142,15 @@ public class PageClient
     public string CurrentUrl() => _page.Url;
 
     /// <summary>Waits until the page address differs from <paramref name="previousUrl"/>: a page load or an in-app route change.</summary>
+    /// <remarks>
+    /// Polls <c>location.href</c> in the page rather than calling <c>WaitForURLAsync</c>. The .NET client checks its cached
+    /// URL and then subscribes to navigation events; a client-side route change (Next.js <c>router.push</c>) that lands
+    /// between the two is missed, and the wait hangs although the address has already changed.
+    /// </remarks>
     public async Task WaitForUrlChangeAsync(string previousUrl)
     {
-        await _page.WaitForURLAsync(url => url != previousUrl, new PageWaitForURLOptions { Timeout = _timeoutMilliseconds });
+        await _page.WaitForFunctionAsync("previousUrl => location.href !== previousUrl", previousUrl,
+            new PageWaitForFunctionOptions { Timeout = _timeoutMilliseconds });
     }
 
     /// <summary>Opens the current page address again, as a fresh page load.</summary>
