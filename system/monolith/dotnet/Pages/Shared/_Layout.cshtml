@@ -13,9 +13,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@(string.IsNullOrEmpty(title) ? "MyShop" : title + " · MyShop")</title>
+    @* Bootstrap 5.3 re-themed by the Market tokens (market.css) with Figtree self-hosted from Fontsource: the same look as frontend-react. *@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/lib/fontsource-figtree/wght.css" />
+    <link rel="stylesheet" href="~/css/market.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/storefront.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/pages.css" asp-append-version="true" />
     <script>
         // Same-origin state-changing fetch() calls carry the CSRF token the server sets in the XSRF-TOKEN cookie.
         (function () {
@@ -34,60 +37,78 @@
             };
         })();
     </script>
-    <style>
-        .notification { padding: 12px; margin-top: 10px; margin-bottom: 16px; border-radius: 4px; font-weight: 600; }
-        .notification.success { background: #d1e7dd; color: #0f5132; border: 1px solid #badbcc; }
-        .notification.error { background: #f8d7da; color: #842029; border: 1px solid #f5c2c7; }
-        .notification .error-message { margin-bottom: 8px; }
-        .notification .field-error { margin-left: 12px; margin-top: 4px; font-weight: 400; }
-        .status-PLACED { color: #198754; }
-        .status-DELIVERED { color: #0d6efd; }
-        body { min-height: 100vh; background-color: #f8f9fa; }
-    </style>
 </head>
 <body>
 <div class="store d-flex flex-column min-vh-100">
-    @* The header on every page (storefront-ux §3): logo, search, cart, sign-in state, categories and account links. *@
+    @* The header on every page (storefront-ux §3): utility strip, logo, search (with a category scope), cart, sign-in
+       state, and the category / account nav row. No element is rendered twice, so each driver selector matches once. *@
     <header class="store-header">
+        <div class="store-utility">
+            <div class="container d-flex align-items-center gap-2 py-2">
+                @Icons.Svg("truck", 14)
+                <span>Free shipping over $1,000</span>
+            </div>
+        </div>
         <div class="store-header-top">
-            <div class="container d-flex flex-wrap align-items-center gap-3 py-2">
-                <a class="store-logo" href="/"><span class="store-logo-mark" aria-hidden="true">■</span> MyShop</a>
-                <form class="store-search d-flex flex-grow-1" method="get" action="/" role="search">
-                    <input type="search" name="q" class="form-control" placeholder="Search products…"
+            <div class="container d-flex flex-wrap align-items-center py-3 store-header-row">
+                <a class="store-logo" href="/">MyShop<span class="store-logo-mark" aria-hidden="true">.</span></a>
+                <form class="store-search" method="get" action="/" role="search">
+                    @if (categories.Count > 0)
+                    {
+                        <select name="category" class="store-search-scope" aria-label="Search category">
+                            <option value="">All</option>
+                            @foreach (var category in categories)
+                            {
+                                <option value="@category">@category</option>
+                            }
+                        </select>
+                    }
+                    <input type="search" name="q" class="store-search-input" placeholder="Search products…"
                            aria-label="Search Products" value="@(ViewData[StoreChrome.SearchQueryKey] as string)">
-                    <button type="submit" class="btn btn-light ms-2" aria-label="Search">Search</button>
+                    <button type="submit" class="store-search-button" aria-label="Search">Search</button>
                 </form>
-                <div class="d-flex align-items-center gap-3 ms-auto">
-                    <a class="store-header-link" href="/cart" aria-label="Cart">
-                        <span aria-hidden="true">🛒</span> Cart
-                        <span aria-live="polite">@if (cartCount > 0)
-                            {<span class="badge rounded-pill bg-warning text-dark ms-1" aria-label="Cart Item Count">@cartCount</span>}</span>
-                    </a>
+                <div class="store-header-actions d-flex align-items-center gap-3">
                     @if (storeUser != null)
                     {
-                        <form method="post" action="/logout" class="d-flex align-items-center">
-                            <a class="store-header-link me-3" href="/account" data-testid="username" title="My account">@storeUser.Username</a>
-                            <button type="submit" class="btn btn-outline-light btn-sm">Logout</button>
+                        <form method="post" action="/logout" class="d-flex align-items-center gap-3">
+                            <span class="store-header-link store-user">
+                                <span class="store-header-hint">Hello</span>
+                                <a href="/account" data-testid="username" title="My account">@storeUser.Username</a>
+                            </span>
+                            <button type="submit" class="btn btn-outline-secondary btn-sm store-logout">Logout</button>
                             @Html.AntiForgeryToken()
                         </form>
                     }
                     else
                     {
-                        <a class="store-header-link" href="@Chrome.SignInHref" aria-label="Sign In">Sign in</a>
+                        <a class="store-header-link store-sign-in" href="@Chrome.SignInHref" aria-label="Sign In">
+                            <span class="store-header-hint">Hello</span>
+                            <span>Sign in</span>
+                        </a>
                     }
+                    <a class="store-header-link store-cart" href="/cart" aria-label="Cart">
+                        <span class="store-cart-icon">
+                            @Icons.Svg("shopping-cart", 26, strokeWidth: 1.8)
+                            <span aria-live="polite">@if (cartCount > 0)
+                                {<span class="badge rounded-pill store-cart-badge" aria-label="Cart Item Count">@cartCount</span>}</span>
+                        </span>
+                        <span class="store-cart-label">Cart</span>
+                    </a>
                 </div>
             </div>
         </div>
         <nav class="store-header-nav" aria-label="Store navigation">
-            <div class="container d-flex flex-wrap align-items-center gap-3 py-1">
-                <a class="store-nav-link" href="/">All products</a>
-                @foreach (var category in categories)
-                {
-                    <a class="store-nav-link" href="@StoreChrome.CategoryHref(category)">@category</a>
-                }
+            <div class="container store-nav-row">
+                <div class="store-nav-group">
+                    <a class="store-nav-link" href="/">All products</a>
+                    @foreach (var category in categories)
+                    {
+                        <a class="store-nav-link" href="@StoreChrome.CategoryHref(category)">@category</a>
+                    }
+                </div>
                 @if (storeUser != null)
                 {
-                    <div class="d-flex flex-wrap gap-3 ms-auto">
+                    <div class="store-nav-group store-nav-account">
                         @if (storeUser.CanPlaceOrder)
                         {
                             <a class="store-nav-link" href="/new-order">Quick order</a>
@@ -103,7 +124,7 @@
         </nav>
     </header>
 
-    <main role="main" class="container mt-4 pb-3 flex-grow-1">
+    <main role="main" class="container store-main flex-grow-1">
         @* The storefront's notification banner, with the same markup as the order pages' own notifications. *@
         @if (notice != null)
         {
@@ -126,12 +147,13 @@
         @RenderBody()
     </main>
 
-    @* Static footer: Shop, Help, and the demo-store note (storefront-ux §3). *@
+    @* Static footer: Shop, Help, the demo-store note and the photo credits (storefront-ux §3). The photos in
+       wwwroot/images/promo/ are listed in docs/design/home-redesign/images/SOURCES.md: credit every one that ships. *@
     <footer class="store-footer mt-5">
         <div class="container py-4">
             <div class="row g-4">
-                <div class="col-md-4">
-                    <h2 class="h6">Shop</h2>
+                <div class="col-6 col-md-4">
+                    <h2 class="store-footer-heading">Shop</h2>
                     <ul class="list-unstyled mb-0">
                         <li><a href="/">All products</a></li>
                         @foreach (var category in categories)
@@ -140,8 +162,8 @@
                         }
                     </ul>
                 </div>
-                <div class="col-md-4">
-                    <h2 class="h6">Help</h2>
+                <div class="col-6 col-md-4">
+                    <h2 class="store-footer-heading">Help</h2>
                     <ul class="list-unstyled mb-0">
                         <li><a href="#shipping">Shipping</a></li>
                         <li><a href="#returns">Returns</a></li>
@@ -149,8 +171,19 @@
                     </ul>
                 </div>
                 <div class="col-md-4 text-md-end">
+                    <p class="store-footer-brand mb-1">MyShop<span class="store-logo-mark" aria-hidden="true">.</span></p>
                     <p class="mb-0">© MyShop · demo store for the Optivem ATDD course</p>
                 </div>
+            </div>
+        </div>
+        <div class="store-footer-bottom">
+            <div class="container py-3">
+                <p class="mb-0">
+                    Photos on Unsplash by
+                    <a href="https://unsplash.com/photos/btVTuAIhvk8" target="_blank" rel="noopener noreferrer">Dhony Koswara</a>,
+                    <a href="https://unsplash.com/photos/VXpeQ3GetDU" target="_blank" rel="noopener noreferrer">Huy Phan</a>,
+                    <a href="https://unsplash.com/photos/U1I0IoQx3Yo" target="_blank" rel="noopener noreferrer">Jay Zhang</a>
+                </p>
             </div>
         </div>
     </footer>

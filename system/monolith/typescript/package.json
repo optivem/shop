@@ -18,6 +18,16 @@
     "node": ">=22"
   },
   "dependencies": {
+    "@opentelemetry/api": "^1.10.0",
+    "@opentelemetry/exporter-logs-otlp-proto": "^0.301.1",
+    "@opentelemetry/exporter-metrics-otlp-proto": "^0.301.1",
+    "@opentelemetry/exporter-trace-otlp-proto": "^0.301.1",
+    "@opentelemetry/instrumentation-http": "^0.301.1",
+    "@opentelemetry/instrumentation-pg": "^0.78.0",
+    "@opentelemetry/instrumentation-undici": "^0.35.0",
+    "@opentelemetry/sdk-logs": "^3.1.1",
+    "@opentelemetry/sdk-metrics": "^3.1.1",
+    "@opentelemetry/sdk-node": "^0.301.1",
     "decimal.js": "^10.6.0",
     "jose": "^6.2.12",
     "next": "^15.5.14",

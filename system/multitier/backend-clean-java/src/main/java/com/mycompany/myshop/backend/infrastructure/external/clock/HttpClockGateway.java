@@ -5,6 +5,8 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.mycompany.myshop.backend.domain.gateways.ClockGateway;
 import com.mycompany.myshop.backend.domain.gateways.ClockGatewayException;
 import com.mycompany.myshop.backend.infrastructure.external.GatewayHttpClient;
+import io.micrometer.observation.ObservationRegistry;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -19,12 +21,20 @@ public class HttpClockGateway implements ClockGateway {
 
     private final String externalSystemMode;
     private final String clockUrl;
+    private final ObservationRegistry observationRegistry;
 
+    public HttpClockGateway(String externalSystemMode, String clockUrl) {
+        this(externalSystemMode, clockUrl, ObservationRegistry.NOOP);
+    }
+
+    @Autowired
     public HttpClockGateway(
             @Value("${external.system-mode}") String externalSystemMode,
-            @Value("${clock.url}") String clockUrl) {
+            @Value("${clock.url}") String clockUrl,
+            ObservationRegistry observationRegistry) {
         this.externalSystemMode = externalSystemMode;
         this.clockUrl = clockUrl;
+        this.observationRegistry = observationRegistry;
     }
 
     @Override
@@ -43,7 +53,7 @@ public class HttpClockGateway implements ClockGateway {
     private Instant getStubTime() {
         try {
             var url = clockUrl + "/api/time";
-            var response = GatewayHttpClient.get(url);
+            var response = GatewayHttpClient.get(url, observationRegistry);
 
             if (response.statusCode() != 200) {
                 throw new ClockGatewayException("Clock API returned status " + response.statusCode() +

@@ -88,12 +88,12 @@ A change moves through commit stage (compile, lint, unit, component, Sonar, imag
 | Docker Compose | [docker/](../docker/), e.g. [docker/java/monolith/](../docker/java/monolith/) | Local and pipeline stacks, each in stub and real ERP modes |
 | Production deploy | [shop.optivem.com](https://shop.optivem.com), [monolith-java-prod-stage.yml](../.github/workflows/monolith-java-prod-stage.yml) | Released via the meta-release stage |
 | Supply-chain security | [dependabot.yml](../.github/dependabot.yml), [codeql.yml](../.github/workflows/codeql.yml), [supply-chain.yml](../.github/workflows/supply-chain.yml) | Grouped Dependabot updates; CodeQL for Java, C#, TS and Actions; Trivy scan + CycloneDX SBOM per image (report-only, free on public GitHub) |
+| Observability | [`otel-lgtm` Compose service](../docker/java/monolith/docker-compose.local.real.yml) (same block in all 24 files, enforced by [compose-drift.yml](../.github/workflows/compose-drift.yml)), backends: [Java](../system/monolith/java/), [.NET](../system/monolith/dotnet/), [TypeScript](../system/monolith/typescript/), [how-to](observability.md) | OpenTelemetry traces frontend → backend → ERP, JSON logs carrying `trace_id`, one `grafana/otel-lgtm` container behind the opt-in `observability` profile (off by default, $0) |
 
 ## Coming next
 
 Planned additions, not yet in the repo. Each moves into the skills map when it lands.
 
-- **Observability** (planned): OpenTelemetry tracing frontend → backend → ERP, structured logs with trace IDs, opt-in `grafana/otel-lgtm` Compose profile.
 - **Resilience** (planned): timeouts, retries and circuit breakers on ERP/Clock calls, proven by an acceptance test against a slow or failing stub.
 - **Performance** (planned): k6 load test for browse + place order, opt-in workflow reporting p95/p99.
 - **Parity** (planned): OpenAPI for the .NET and TypeScript backends; Stryker mutation testing for .NET and TypeScript.

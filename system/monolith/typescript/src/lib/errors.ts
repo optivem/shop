@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { logger } from './logger';
 
 const BASE_URL = 'https://api.my-company.example/errors';
 
@@ -117,7 +118,7 @@ export function forbiddenResponse() {
 const ERP_UNAVAILABLE_DETAIL = "Product information can't be retrieved right now";
 
 export function erpUnavailableResponse(error: unknown) {
-  console.error('ERP unavailable', error);
+  logger.error('ERP unavailable', error);
   return problemResponse(
     {
       type: `${BASE_URL}/service-unavailable`,
@@ -135,7 +136,7 @@ export function erpUnavailableResponse(error: unknown) {
 const GENERAL_ERROR_DETAIL = 'An unexpected error occurred. Please try again later.';
 
 export function internalErrorResponse(error: unknown) {
-  console.error('Unexpected error occurred', error);
+  logger.error('Unexpected error occurred', error);
   return problemResponse(
     {
       type: `${BASE_URL}/internal-server-error`,

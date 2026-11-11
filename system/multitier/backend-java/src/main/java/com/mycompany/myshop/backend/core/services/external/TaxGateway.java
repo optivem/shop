@@ -3,8 +3,12 @@ package com.mycompany.myshop.backend.core.services.external;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mycompany.myshop.backend.core.dtos.external.TaxDetailsResponse;
 import com.mycompany.myshop.backend.core.exceptions.TaxGatewayException;
+import io.micrometer.core.instrument.Metrics;
+import io.micrometer.java11.instrument.binder.jdk.MicrometerHttpClient;
+import io.micrometer.observation.ObservationRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -22,9 +26,17 @@ public class TaxGateway {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private final String taxUrl;
+    private final ObservationRegistry observationRegistry;
 
-    public TaxGateway(@Value("${tax.url}") String taxUrl) {
+    public TaxGateway(String taxUrl) {
+        this(taxUrl, ObservationRegistry.NOOP);
+    }
+
+    // The registry gives each outbound call a client span and a W3C traceparent header.
+    @Autowired
+    public TaxGateway(@Value("${tax.url}") String taxUrl, ObservationRegistry observationRegistry) {
         this.taxUrl = taxUrl;
+        this.observationRegistry = observationRegistry;
     }
 
     public Optional<TaxDetailsResponse> getTaxDetails(String country) {
@@ -34,8 +46,10 @@ public class TaxGateway {
         }
 
         try {
-            var httpClient = HttpClient.newBuilder()
+            var httpClient = MicrometerHttpClient.instrumentationBuilder(HttpClient.newBuilder()
                     .connectTimeout(java.time.Duration.ofSeconds(10))
+                    .build(), Metrics.globalRegistry)
+                    .observationRegistry(observationRegistry)
                     .build();
 
             var request = HttpRequest.newBuilder()

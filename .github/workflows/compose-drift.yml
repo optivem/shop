@@ -1,10 +1,12 @@
 name: compose-drift
 
-# Asserts the `db-migrate` Flyway sidecar service is byte-identical across
-# all 24 docker-compose files. The block is duplicated (per decision #6 of
+# Asserts the `db-migrate` Flyway sidecar service and the opt-in `otel-lgtm`
+# observability service are each byte-identical across all 24 docker-compose
+# files. The block is duplicated (per decision #6 of
 # `plans/20260513-1530-shop-canonical-db-schema-via-migrations.md` in the
 # gh-optivem repo) so the scaffolder stays a simple `cp`; this check is the
-# enforcement that the duplicates do not drift.
+# enforcement that the duplicates do not drift. The `otel-lgtm` block follows
+# the same rule (see docs/observability.md).
 
 on:
   pull_request:
@@ -61,3 +63,52 @@ jobs:
             exit 1
           fi
           echo "All ${#COMPOSE_FILES[@]} compose files share an identical db-migrate block."
+
+  otel-lgtm-block:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Assert otel-lgtm service is identical across compose files
+        run: |
+          set -euo pipefail
+          mapfile -t COMPOSE_FILES < <(find docker -type f -name 'docker-compose.*.yml' | sort)
+          echo "Comparing ${#COMPOSE_FILES[@]} compose files."
+          if [ "${#COMPOSE_FILES[@]}" -ne 24 ]; then
+            echo "::error::Expected 24 compose files, found ${#COMPOSE_FILES[@]}."
+            exit 1
+          fi
+          # A file missing the block would yield `null` for every such file and
+          # could still collapse to one hash, so assert presence first.
+          MISSING=0
+          for f in "${COMPOSE_FILES[@]}"; do
+            if [ "$(yq '.services | has("otel-lgtm")' "$f")" != "true" ]; then
+              echo "::error file=$f::otel-lgtm service is missing from $f."
+              MISSING=1
+            fi
+          done
+          if [ "$MISSING" -ne 0 ]; then
+            exit 1
+          fi
+          # Normalise each file's otel-lgtm block to canonical YAML, hash it,
+          # then assert there's exactly one unique hash across all files.
+          UNIQUE_HASHES=$(
+            for f in "${COMPOSE_FILES[@]}"; do
+              yq -o=yaml '.services.otel-lgtm' "$f" | sha256sum | awk '{print $1}'
+            done | sort -u
+          )
+          UNIQUE_COUNT=$(echo "$UNIQUE_HASHES" | wc -l)
+          if [ "$UNIQUE_COUNT" -ne 1 ]; then
+            echo "::error::otel-lgtm service block differs across compose files (found $UNIQUE_COUNT distinct variants)."
+            echo "Per-file hashes:"
+            for f in "${COMPOSE_FILES[@]}"; do
+              h=$(yq -o=yaml '.services.otel-lgtm' "$f" | sha256sum | awk '{print $1}')
+              echo "  $h  $f"
+            done
+            echo
+            echo "To inspect a divergence, run:"
+            echo "  diff <(yq -o=yaml .services.otel-lgtm <FILE_A>) <(yq -o=yaml .services.otel-lgtm <FILE_B>)"
+            exit 1
+          fi
+          echo "All ${#COMPOSE_FILES[@]} compose files share an identical otel-lgtm block."

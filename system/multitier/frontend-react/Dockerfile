@@ -31,12 +31,16 @@ COPY --from=build /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/templates/default.conf.template
 
 # Limit envsubst to these variables so nginx variables ($host, $remote_addr, ...) are left intact
-ENV NGINX_ENVSUBST_FILTER=BACKEND_API_URL|KEYCLOAK_URL|KEYCLOAK_REALM|KEYCLOAK_CLIENT_ID
+ENV NGINX_ENVSUBST_FILTER=BACKEND_API_URL|KEYCLOAK_URL|KEYCLOAK_REALM|KEYCLOAK_CLIENT_ID|OTEL_BROWSER_EXPORTER_OTLP_ENDPOINT
 
 # Empty Keycloak defaults keep the template valid when auth is not configured (the SPA then runs without login)
 ENV KEYCLOAK_URL="" \
     KEYCLOAK_REALM="" \
     KEYCLOAK_CLIENT_ID=""
+
+# Browser tracing is off unless this is set to an OTLP/HTTP base URL reachable from the browser
+# (e.g. http://localhost:4318); the SPA then exports spans to <url>/v1/traces.
+ENV OTEL_BROWSER_EXPORTER_OTLP_ENDPOINT=""
 
 # Expose port 3000 (unprivileged user can bind ports >1024)
 EXPOSE 3000

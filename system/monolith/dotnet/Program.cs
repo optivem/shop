@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.EntityFrameworkCore;
 using MyCompany.MyShop.Monolith.Api.Exception;
+using MyCompany.MyShop.Monolith.Api.Observability;
 using MyCompany.MyShop.Monolith.Api.Security;
 using MyCompany.MyShop.Monolith.Core.Services;
 using MyCompany.MyShop.Monolith.Core.Services.External;
@@ -10,6 +11,9 @@ using MyCompany.MyShop.Monolith.Data;
 using MyCompany.MyShop.Monolith.Pages.Storefront;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Structured JSON logs with trace IDs (always on); OpenTelemetry export only when OTEL_EXPORTER_OTLP_ENDPOINT is set.
+builder.AddShopObservability();
 
 // Add services to the container.
 builder.Services.AddRazorPages();

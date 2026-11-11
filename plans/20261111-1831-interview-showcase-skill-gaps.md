@@ -1,6 +1,6 @@
 # 2026-11-11 18:31:52 UTC — Interview showcase: close the skill gaps in shop
 
-> 🤖 **Picked up by agent** — `Valentina_Desk` at `2026-11-11T18:42:58Z`
+> 🤖 **Picked up by agent** — `Valentina_Desk` at `2026-11-11T18:49:18Z`
 
 ## TL;DR
 
@@ -41,18 +41,17 @@ CI/CD meta-stages (commit → acceptance → RC → release), ATDD with DSL/driv
 
 ## ▶ Next executable step (resume here)
 
-The interview-ready milestone (Steps 1 + 4) is done. Next is Step 2, observability: add OpenTelemetry instrumentation to every backend (Java monolith + multitier + clean-java, .NET, TS) and the React frontend, emit structured JSON logs carrying trace IDs, and add an opt-in `observability` Docker Compose profile with one `grafana/otel-lgtm` container, kept identical across the compose files that `compose-drift.yml` checks. Gate: `./compile-all.sh` is green and `gh optivem system-test run --sample` passes for each language (**ask the user before running system tests locally**). Then add an Observability row to the `docs/tour.md` skills map (Step 8).
+Step 3, resilience. Wrap the outbound ERP, Clock and Tax gateways with a timeout, retry and circuit breaker in every backend: Resilience4j for Java monolith, multitier and clean-java; Polly / `Microsoft.Extensions.Http.Resilience` for .NET; a small TS equivalent such as `cockatiel` for both TS backends. Then add an acceptance test, in Java, .NET and TS, that drives a slow or down ERP stub and asserts graceful behaviour. Graceful = fail fast with `503` + `Retry-After` + problem+json message, no fallback (see Resolved decisions). Also check that the system-test driver/DSL files it touches (ErpStubDriver etc.) no longer carry uncommitted in-flight work. Gate: `./compile-all.sh` is green and `gh optivem system-test run --sample` passes per language. Then add a Resilience row to the `docs/tour.md` skills map (Step 8).
 
 ## Steps
 
-Execution order: 2 → 3 → 5 → 6 → 7 (the interview-ready milestone, Steps 1 + 4, is done). Step 8 runs alongside each step.
+Execution order: 3 → 5 → 6 → 7 (the interview-ready milestone, Steps 1 + 4, and Step 2 observability are done). Step 8 runs alongside each step.
 
-- [ ] Step 2: Observability. Add OTel instrumentation to all backends + frontend, emit structured JSON logs with trace IDs, and put a `observability` Docker Compose profile (single `grafana/otel-lgtm` container) behind opt-in. Off by default; no cloud cost.
 - [ ] Step 3: Resilience. Wrap the ERP/Clock clients with timeout + retry + circuit breaker in each language, and add an acceptance test that drives a slow/failing ERP stub and asserts graceful behaviour.
 - [ ] Step 4b: Attach CycloneDX SBOMs to GitHub releases. The SBOMs are currently only workflow artifacts from `supply-chain.yml`; extending the gated `_prod-stage.yml` release job was judged unsafe. Recommendation: a separate workflow on `release: published` that runs `anchore/sbom-action` against the released GHCR image tags and uploads the SBOMs as release assets. Low priority, because GHCR images already carry SBOM attestations (`sbom: true`).
 - [ ] Step 5: Performance. Add a k6 script for browse + place order against the local stack, plus an opt-in `workflow_dispatch` workflow that reports p95/p99.
 - [ ] Step 6: Parity sweep. OpenAPI for the .NET and TS backends, and Stryker mutation testing for .NET and TS (nightly, matching the Java PITest job).
-- [ ] Step 7: Spin off a separate plan for #6 (Postgres-backed outbox, no broker). Decide on #7–#8 (feature flags, frontend testing): either spin off separate plans or drop them.
+- [ ] Step 7: Spin off a separate plan for #6 (Postgres-backed outbox, no broker) and a separate plan for #8 (frontend testing: component tests, axe a11y, Lighthouse CI). Drop #7 (feature flags) from the inventory.
 - [ ] Step 8: Update `docs/tour.md` skills map with each addition as it lands.
 
 ## Constraints
@@ -67,4 +66,6 @@ Execution order: 2 → 3 → 5 → 6 → 7 (the interview-ready milestone, Steps
 - **Messaging (#6):** pursue it in a **separate plan** using a Postgres-backed transactional outbox with an in-process relay, so there's no broker and no extra infra by default. That shows the pattern (atomic write + at-least-once delivery) within the $0 constraint. Step 7 spins off that plan rather than deciding whether to do it.
 - **Renovate vs Dependabot:** **Dependabot**, with grouped updates (`groups:` per ecosystem in `.github/dependabot.yml`). It's built into GitHub, so it works zero-install for cloning students. Renovate needs the Mend app installed on each repo, and a cloned `renovate.json` does nothing without it. Grouping keeps PR noise low.
 - **Observability backend:** a single **`grafana/otel-lgtm`** container in the opt-in `observability` Compose profile. One OTLP endpoint feeds traces (Tempo), metrics and logs (Loki), all correlated in Grafana with one command. Jaeger alone would cover only traces.
+- **Feature flags (#7) / frontend testing (#8):** drop #7 (little interview value over what already exists); spin off #8 into its own plan, since it fits the full-stack/tech-lead framing. Decided 2026-11-11.
+- **Resilience behaviour (Step 3):** follow industry practice. Put a tight timeout on every outbound call. Retry only idempotent calls (the ERP product GET), 2–3 attempts with exponential backoff and jitter. A circuit breaker fails fast while the ERP is down. Place-order then returns `503 Service Unavailable` with `Retry-After` and a readable problem+json message. **No fallback** to cached or default prices, because charging a guessed price is a money-correctness bug (fallbacks belong on read paths only). Client retries are safe because place-order is already idempotent. Acceptance tests cover a slow ERP stub (fails within the timeout with the 503 message) and a down ERP stub (the breaker opens and later calls fail immediately). Decided 2026-11-11.
 - **Timeline:** the first interview is soon, so **Steps 1 + 4 ship first** as an "interview-ready" milestone. Both are cheap, need no system-test churn, and make the repo presentable quickly. After that the order is 2 → 3 → 5 → 6 → 7, with Step 8 running alongside each.

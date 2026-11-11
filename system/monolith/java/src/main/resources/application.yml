@@ -39,6 +39,23 @@ management:
   endpoint:
     health:
       show-details: always
+  # Tracing is always on in-process (it stamps trace_id/span_id onto every log line); export over OTLP
+  # only happens when OTEL_EXPORTER_OTLP_ENDPOINT is set -- see OtlpExportEnvironmentPostProcessor.
+  tracing:
+    sampling:
+      probability: 1.0
+  opentelemetry:
+    resource-attributes:
+      "[service.name]": ${OTEL_SERVICE_NAME:myshop-monolith-java}
+
+logging:
+  structured:
+    format:
+      console: logstash
+    json:
+      rename:
+        "[traceId]": trace_id
+        "[spanId]": span_id
 
 auth:
   # Browser-facing issuer (what appears in tokens' iss and in the login redirect); the server-to-server

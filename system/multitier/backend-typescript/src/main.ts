@@ -1,11 +1,14 @@
+// Must stay the first import: it patches http/express/pg/undici before they load (no-op unless OTel is on).
+import './tracing';
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { configureApp } from './configure-app';
 import { envOrDefault } from './config/app.config';
+import { JsonLogger } from './json-logger';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { logger: new JsonLogger() });
 
   const allowedOrigins = envOrDefault(
     'ALLOWED_ORIGINS',
@@ -15,7 +18,8 @@ async function bootstrap() {
   app.enableCors({
     origin: allowedOrigins,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: '*',
+    // Left unset so the cors middleware reflects the preflight's requested headers (Authorization,
+    // Content-Type, traceparent, tracestate, ...). A literal '*' is not a wildcard for credentialed requests.
     credentials: true,
     maxAge: 3600,
   });

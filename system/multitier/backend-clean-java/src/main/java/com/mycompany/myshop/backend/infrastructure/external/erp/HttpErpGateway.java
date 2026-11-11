@@ -9,6 +9,8 @@ import com.mycompany.myshop.backend.domain.values.Sku;
 import com.mycompany.myshop.backend.domain.gateways.ErpGateway;
 import com.mycompany.myshop.backend.domain.gateways.ErpGatewayException;
 import com.mycompany.myshop.backend.infrastructure.external.GatewayHttpClient;
+import io.micrometer.observation.ObservationRegistry;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -21,9 +23,16 @@ public class HttpErpGateway implements ErpGateway {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private final String erpUrl;
+    private final ObservationRegistry observationRegistry;
 
-    public HttpErpGateway(@Value("${erp.url}") String erpUrl) {
+    public HttpErpGateway(String erpUrl) {
+        this(erpUrl, ObservationRegistry.NOOP);
+    }
+
+    @Autowired
+    public HttpErpGateway(@Value("${erp.url}") String erpUrl, ObservationRegistry observationRegistry) {
         this.erpUrl = erpUrl;
+        this.observationRegistry = observationRegistry;
     }
 
     @Override
@@ -47,7 +56,7 @@ public class HttpErpGateway implements ErpGateway {
         var url = erpUrl + "/api/promotion";
 
         try {
-            var response = GatewayHttpClient.get(url);
+            var response = GatewayHttpClient.get(url, observationRegistry);
 
             if (response.statusCode() != 200) {
                 throw new ErpGatewayException("ERP API returned status " + response.statusCode()
@@ -68,7 +77,7 @@ public class HttpErpGateway implements ErpGateway {
         var url = erpUrl + "/api/products/" + sku;
 
         try {
-            var response = GatewayHttpClient.get(url);
+            var response = GatewayHttpClient.get(url, observationRegistry);
 
             if (response.statusCode() == 404) {
                 return Optional.empty();

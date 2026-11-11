@@ -1,5 +1,8 @@
 package com.mycompany.myshop.backend.infrastructure.external;
 
+import io.micrometer.core.instrument.Metrics;
+import io.micrometer.java11.instrument.binder.jdk.MicrometerHttpClient;
+import io.micrometer.observation.ObservationRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,7 +46,14 @@ public final class GatewayHttpClient {
     private GatewayHttpClient() {
     }
 
-    public static HttpResponse<String> get(String url) throws IOException, InterruptedException {
+    // The registry gives every attempt its own client span and a W3C traceparent header, so one trace
+    // runs from the inbound request through each call to the external system. Wrapping is per call
+    // and cheap: the instrumented client delegates to the shared pooled one.
+    public static HttpResponse<String> get(String url, ObservationRegistry observationRegistry)
+            throws IOException, InterruptedException {
+        var client = MicrometerHttpClient.instrumentationBuilder(HTTP_CLIENT, Metrics.globalRegistry)
+                .observationRegistry(observationRegistry)
+                .build();
         var request = HttpRequest.newBuilder()
                 .uri(URI.create(url))
                 .timeout(REQUEST_TIMEOUT)
@@ -54,7 +64,7 @@ public final class GatewayHttpClient {
         // ever needs to go through here, this loop is not automatically safe for it.
         for (var attempt = 1; attempt < MAX_ATTEMPTS; attempt++) {
             try {
-                var response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+                var response = client.send(request, HttpResponse.BodyHandlers.ofString());
                 if (!isWorthRetrying(response.statusCode())) {
                     return response;
                 }
@@ -70,7 +80,7 @@ public final class GatewayHttpClient {
         // The final attempt is the answer, whatever it is. A 500 here is returned rather than retried
         // so the caller can build the message that names it, and an IOException here propagates into
         // the caller's own catch block.
-        return HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+        return client.send(request, HttpResponse.BodyHandlers.ofString());
     }
 
     // 5xx is the upstream saying it failed, 429 is it saying "not so fast" -- both can differ on the

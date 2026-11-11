@@ -7,6 +7,7 @@ services:
     ports:
       - "3112:3000"
     environment:
+      - OTEL_BROWSER_EXPORTER_OTLP_ENDPOINT
       - BACKEND_API_URL=http://backend:8081
       - KEYCLOAK_URL=http://localhost:8192
       - KEYCLOAK_REALM=shop
@@ -35,6 +36,9 @@ services:
       - AUTH_ISSUER_URI=http://localhost:8192/realms/shop
       - AUTH_JWK_SET_URI=http://keycloak:8080/realms/shop/protocol/openid-connect/certs
       - AUTH_AUDIENCE=shop-backend
+      - OTEL_SERVICE_NAME=shop-java-multitier-backend
+      - OTEL_EXPORTER_OTLP_ENDPOINT
+      - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
     depends_on:
       db-migrate:
         condition: service_completed_successfully
@@ -104,6 +108,20 @@ services:
     volumes:
       - ../../../external-systems/stubs:/home/wiremock
     command: --verbose --global-response-templating
+    networks:
+      - app-network
+
+  # Opt-in observability backend (OpenTelemetry -> Grafana LGTM: Tempo traces,
+  # Loki logs, Prometheus metrics). Off unless `--profile observability` is
+  # passed, so the default stack is unchanged. See docs/observability.md.
+  # Kept byte-identical across all 24 compose files (checked by compose-drift.yml).
+  otel-lgtm:
+    image: grafana/otel-lgtm:0.11.7
+    profiles: [observability]
+    ports:
+      - "3900:3000"
+      - "4317:4317"
+      - "4318:4318"
     networks:
       - app-network
 

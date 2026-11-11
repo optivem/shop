@@ -5,6 +5,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mycompany.myshop.backend.core.dtos.external.ErpGetPromotionResponse;
 import com.mycompany.myshop.backend.core.dtos.external.ErpProductDetailsResponse;
 import com.mycompany.myshop.backend.core.exceptions.ErpUnavailableException;
+import io.micrometer.core.instrument.Metrics;
+import io.micrometer.java11.instrument.binder.jdk.MicrometerHttpClient;
+import io.micrometer.observation.ObservationRegistry;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -24,17 +28,27 @@ public class ErpGateway {
     };
 
     private final String erpUrl;
+    private final ObservationRegistry observationRegistry;
 
-    public ErpGateway(@Value("${erp.url}") String erpUrl) {
+    public ErpGateway(String erpUrl) {
+        this(erpUrl, ObservationRegistry.NOOP);
+    }
+
+    // The registry gives each outbound call a client span and a W3C traceparent header.
+    @Autowired
+    public ErpGateway(@Value("${erp.url}") String erpUrl, ObservationRegistry observationRegistry) {
         this.erpUrl = erpUrl;
+        this.observationRegistry = observationRegistry;
     }
 
     public ErpGetPromotionResponse getPromotionDetails() {
         var url = erpUrl + "/api/promotion";
 
         try {
-            var httpClient = HttpClient.newBuilder()
+            var httpClient = MicrometerHttpClient.instrumentationBuilder(HttpClient.newBuilder()
                     .connectTimeout(Duration.ofSeconds(10))
+                    .build(), Metrics.globalRegistry)
+                    .observationRegistry(observationRegistry)
                     .build();
 
             var request = HttpRequest.newBuilder()
@@ -67,8 +81,10 @@ public class ErpGateway {
         var url = erpUrl + "/api/products/" + sku;
 
         try {
-            var httpClient = HttpClient.newBuilder()
+            var httpClient = MicrometerHttpClient.instrumentationBuilder(HttpClient.newBuilder()
                     .connectTimeout(java.time.Duration.ofSeconds(10))
+                    .build(), Metrics.globalRegistry)
+                    .observationRegistry(observationRegistry)
                     .build();
 
             var request = HttpRequest.newBuilder()
@@ -108,8 +124,10 @@ public class ErpGateway {
         var url = erpUrl + "/api/products";
 
         try {
-            var httpClient = HttpClient.newBuilder()
+            var httpClient = MicrometerHttpClient.instrumentationBuilder(HttpClient.newBuilder()
                     .connectTimeout(java.time.Duration.ofSeconds(10))
+                    .build(), Metrics.globalRegistry)
+                    .observationRegistry(observationRegistry)
                     .build();
 
             var request = HttpRequest.newBuilder()

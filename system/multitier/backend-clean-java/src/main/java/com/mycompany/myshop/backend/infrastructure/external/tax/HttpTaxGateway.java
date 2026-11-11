@@ -7,8 +7,10 @@ import com.mycompany.myshop.backend.domain.values.Rate;
 import com.mycompany.myshop.backend.domain.gateways.TaxGatewayException;
 import com.mycompany.myshop.backend.domain.gateways.TaxGateway;
 import com.mycompany.myshop.backend.infrastructure.external.GatewayHttpClient;
+import io.micrometer.observation.ObservationRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -22,9 +24,16 @@ public class HttpTaxGateway implements TaxGateway {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private final String taxUrl;
+    private final ObservationRegistry observationRegistry;
 
-    public HttpTaxGateway(@Value("${tax.url}") String taxUrl) {
+    public HttpTaxGateway(String taxUrl) {
+        this(taxUrl, ObservationRegistry.NOOP);
+    }
+
+    @Autowired
+    public HttpTaxGateway(@Value("${tax.url}") String taxUrl, ObservationRegistry observationRegistry) {
         this.taxUrl = taxUrl;
+        this.observationRegistry = observationRegistry;
     }
 
     @Override
@@ -42,7 +51,7 @@ public class HttpTaxGateway implements TaxGateway {
         }
 
         try {
-            var response = GatewayHttpClient.get(url);
+            var response = GatewayHttpClient.get(url, observationRegistry);
 
             log.info("getTaxDetails - status code was: {}", response.statusCode());
 

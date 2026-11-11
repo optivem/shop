@@ -1,11 +1,15 @@
 using Microsoft.EntityFrameworkCore;
 using MyCompany.MyShop.Backend.Api.Exception;
+using MyCompany.MyShop.Backend.Api.Observability;
 using MyCompany.MyShop.Backend.Api.Security;
 using MyCompany.MyShop.Backend.Core.Services;
 using MyCompany.MyShop.Backend.Core.Services.External;
 using MyCompany.MyShop.Backend.Data;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Structured JSON logs with trace IDs (always on); OpenTelemetry export only when OTEL_EXPORTER_OTLP_ENDPOINT is set.
+builder.AddShopObservability();
 
 // Add services to the container.
 builder.Services.AddControllers(options =>

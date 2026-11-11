@@ -3,6 +3,10 @@ package com.mycompany.myshop.backend.core.services.external;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.mycompany.myshop.backend.core.dtos.external.ClockGetTimeResponse;
+import io.micrometer.core.instrument.Metrics;
+import io.micrometer.java11.instrument.binder.jdk.MicrometerHttpClient;
+import io.micrometer.observation.ObservationRegistry;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -20,12 +24,21 @@ public class ClockGateway {
 
     private final String externalSystemMode;
     private final String clockUrl;
+    private final ObservationRegistry observationRegistry;
 
+    public ClockGateway(String externalSystemMode, String clockUrl) {
+        this(externalSystemMode, clockUrl, ObservationRegistry.NOOP);
+    }
+
+    // The registry gives each outbound call a client span and a W3C traceparent header.
+    @Autowired
     public ClockGateway(
             @Value("${external.system-mode}") String externalSystemMode,
-            @Value("${clock.url}") String clockUrl) {
+            @Value("${clock.url}") String clockUrl,
+            ObservationRegistry observationRegistry) {
         this.externalSystemMode = externalSystemMode;
         this.clockUrl = clockUrl;
+        this.observationRegistry = observationRegistry;
     }
 
     public Instant getCurrentTime() {
@@ -40,8 +53,10 @@ public class ClockGateway {
 
     private Instant getStubTime() {
         try {
-            var httpClient = HttpClient.newBuilder()
+            var httpClient = MicrometerHttpClient.instrumentationBuilder(HttpClient.newBuilder()
                     .connectTimeout(java.time.Duration.ofSeconds(10))
+                    .build(), Metrics.globalRegistry)
+                    .observationRegistry(observationRegistry)
                     .build();
 
             var url = clockUrl + "/api/time";

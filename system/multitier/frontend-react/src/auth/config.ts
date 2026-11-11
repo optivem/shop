@@ -10,6 +10,8 @@ interface RuntimeConfig {
   keycloakUrl?: string;
   keycloakRealm?: string;
   keycloakClientId?: string;
+  /** OTLP/HTTP base URL the browser exports traces to (src/telemetry); empty or absent leaves tracing off. */
+  otelExporterOtlpEndpoint?: string;
 }
 
 declare global {
