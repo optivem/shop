@@ -99,3 +99,13 @@ Found 2026-11-11 while fixing #30. `actions/trigger-and-wait-for-workflow/wait.s
 
 Found 2026-11-11 while fixing #30. `actions/trigger-and-wait-for-workflow/trigger.sh:8,10` runs the rate-limit probe with `2>/dev/null || echo "999"`, so a failed probe silently looks like plenty of quota left.
 - **Recommended:** keep stderr visible and print a `::warning::` when the probe fails, but don't fail the job. **Why:** the probe is only advisory, yet hiding its error breaks the never-swallow-stderr rule and hides auth problems.
+
+### 34. Local pipeline failed pulling images: containerd "lease does not exist"
+
+Found 2026-11-11 in `meta-prerelease-stage` run 43052472314 (`2c235677`). Child run 43052626758 (`prerelease-pipeline-monolith-dotnet`, `verify / local`) passed its unit tests (7/7, 129/129), then failed during `docker compose pull` with `failed to commit snapshot extract-… sha256:25ca64b9…: NotFound: lease does not exist: not found`. This is a containerd/BuildKit snapshot race on the GitHub-hosted runner, not a test or code failure.
+- **Recommended: retry the pull once on this specific error and investigate only if it recurs.** **Why:** it is a known transient runner-side race; a single retry on that exact message keeps real pull failures (auth, missing tag) loud.
+
+### 35. Shared Keycloak admin is the "temporary" bootstrap admin
+
+Found 2026-11-11 during the KC production login check. The admin console at https://shop-auth.optivem.com/admin shows "You are logged in as a temporary admin user. To harden security, create a permanent admin account and delete the temporary one." The `admin` user comes from the bootstrap env vars (`shop-keycloak-admin-password` secret). Login itself is unaffected.
+- **Recommended: leave as is unless the shared Keycloak gets a non-demo use.** **Why:** a permanent admin would live only in the Keycloak DB and be lost or drift on redeploy, while the bootstrap admin is reproducible from Secret Manager; for a demo store, the banner is cosmetic.
