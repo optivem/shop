@@ -28,7 +28,7 @@ export function StoreLayout({ children, title, breadcrumbs }: Readonly<StoreLayo
   return (
     <div className="store d-flex flex-column min-vh-100">
       <StoreHeader />
-      <main className="container mt-4 flex-grow-1">
+      <main className="container store-main flex-grow-1">
         {breadcrumbs && <Breadcrumb items={breadcrumbs} />}
         <Notification successMessage={successMessage} error={error} notificationId={notificationId} />
         {children}

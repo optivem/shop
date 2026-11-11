@@ -48,6 +48,7 @@ export function SubmitButton({
       disabled={isSubmitting}
       {...rest}
     >
+      {isSubmitting && <span className="spinner-border spinner-border-sm me-2" aria-hidden="true" />}
       {isSubmitting ? loadingText : text}
     </button>
   );

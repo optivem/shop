@@ -1,3 +1,4 @@
+import { CircleAlert, CircleCheck } from 'lucide-react';
 import type { ApiError } from '../types/error.types';
 
 interface NotificationProps {
@@ -7,7 +8,9 @@ interface NotificationProps {
 }
 
 /**
- * Notification component for displaying success or error messages
+ * Notification component for displaying success or error messages.
+ * The UI drivers read the success text as the element's whole textContent, so the only extra child is a
+ * text-free, aria-hidden SVG icon.
  * @param successMessage - Success message string to display
  * @param error - ApiError object with message and optional field-level errors
  */
@@ -16,10 +19,13 @@ export function Notification({ successMessage, error, notificationId }: Readonly
   if (error) {
     return (
       <div className="notification error" role="alert" data-notification-id={notificationId}>
-        <div className="error-message">{error.message}</div>
-        {error.fieldErrors?.map((fieldError) => (
-          <div key={fieldError} className="field-error">{fieldError}</div>
-        ))}
+        <CircleAlert className="notification-icon" size={20} aria-hidden="true" />
+        <div className="notification-body">
+          <div className="error-message">{error.message}</div>
+          {error.fieldErrors?.map((fieldError) => (
+            <div key={fieldError} className="field-error">{fieldError}</div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -28,6 +34,7 @@ export function Notification({ successMessage, error, notificationId }: Readonly
   if (successMessage) {
     return (
       <div className="notification success" role="alert" data-notification-id={notificationId}>
+        <CircleCheck className="notification-icon" size={20} aria-hidden="true" />
         {successMessage}
       </div>
     );

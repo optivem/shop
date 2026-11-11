@@ -47,7 +47,7 @@ export function TableDataState({
   if (isEmpty) {
     return (
       <tr>
-        <td colSpan={colSpan} className="text-center py-5 text-muted">
+        <td colSpan={colSpan} className="text-center py-5 text-body-secondary fw-semibold">
           {emptyMessage}
         </td>
       </tr>

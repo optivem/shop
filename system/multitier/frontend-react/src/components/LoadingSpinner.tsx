@@ -18,7 +18,7 @@ export function LoadingSpinner({ message = 'Loading...', size = 'md' }: Readonly
           <span className="visually-hidden">Loading...</span>
         </div>
       </output>
-      {message && <p className="mt-3">{message}</p>}
+      {message && <p className="mt-3 mb-0 text-body-secondary fw-semibold">{message}</p>}
     </div>
   );
 }

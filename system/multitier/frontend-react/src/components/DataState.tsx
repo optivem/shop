@@ -35,8 +35,8 @@ export function DataState({
 
   if (isEmpty) {
     return (
-      <div className="text-center py-5 text-muted">
-        <p>{emptyMessage}</p>
+      <div className="market-empty text-center py-5 px-3">
+        <p className="mb-0">{emptyMessage}</p>
       </div>
     );
   }

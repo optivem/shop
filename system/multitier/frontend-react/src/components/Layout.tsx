@@ -15,7 +15,7 @@ interface LayoutProps {
 export function Layout({ children, title, breadcrumbs }: Readonly<LayoutProps>) {
   return (
     <StoreLayout title={title} breadcrumbs={breadcrumbs}>
-      <div className="row">
+      <div className="row g-4">
         <aside className="col-lg-3">
           <AccountNav />
         </aside>

@@ -1,4 +1,5 @@
 import { useState, type KeyboardEvent } from 'react';
+import { Minus, Plus } from 'lucide-react';
 import { clampQuantity, parseQuantity } from '../utils/quantity';
 
 interface QuantityStepperProps {
@@ -49,14 +50,14 @@ export function QuantityStepper({
   };
 
   return (
-    <div className="input-group input-group-sm quantity-stepper">
+    <div className="input-group quantity-stepper">
       <button
         type="button"
         className="btn btn-outline-secondary"
         aria-label={decreaseLabel}
         onClick={() => step(-1)}
       >
-        −
+        <Minus size={16} aria-hidden="true" />
       </button>
       <input
         type="text"
@@ -74,7 +75,7 @@ export function QuantityStepper({
         aria-label={increaseLabel}
         onClick={() => step(1)}
       >
-        +
+        <Plus size={16} aria-hidden="true" />
       </button>
     </div>
   );

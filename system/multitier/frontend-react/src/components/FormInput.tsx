@@ -26,7 +26,7 @@ export function FormInput({
 
   return (
     <div className="mb-3">
-      <label htmlFor={inputId} className="form-label">{label}:</label>
+      <label htmlFor={inputId} className="form-label market-label">{label}:</label>
       <input
         type="text"
         className="form-control"

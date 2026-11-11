@@ -15,7 +15,7 @@ export function AccountNav() {
 
   return (
     <nav className="account-nav mb-4" aria-label={isAdmin ? 'Admin' : 'My account'}>
-      <h2 className="h6 text-uppercase text-muted">{isAdmin ? 'Admin' : 'My account'}</h2>
+      <h2 className="account-nav-heading">{isAdmin ? 'Admin' : 'My account'}</h2>
       <div className="list-group">
         {isAdmin ? (
           <>
