@@ -27,11 +27,11 @@ Snapshot taken 2026-11-11 from the working tree. Selectors marked **(uncommitted
 | UI | Bootstrap | Where loaded | Own CSS |
 |---|---|---|---|
 | frontend-react | **5.3.2** CSS + bundle JS from jsDelivr CDN | `system/multitier/frontend-react/index.html` | `public/css/common.css` (184 lines), linked from `index.html`. No CSS imported from `src/`. |
-| Java monolith (Thymeleaf) | **5.3.3** CSS + bundle JS from jsDelivr CDN | `system/monolith/java/src/main/resources/templates/layout.html` (lines 7, 158) | `src/main/resources/static/css/storefront.css` (136 lines), linked from `layout.html` |
-| .NET monolith (Razor) | **5.1.0** vendored (not 5.3) | `system/monolith/dotnet/wwwroot/lib/bootstrap/dist/` via `Pages/Shared/_Layout.cshtml` (lines 16, 160) | `wwwroot/css/site.css` (14 lines) + `wwwroot/css/storefront.css` (136 lines), both linked from `_Layout.cshtml` |
-| TypeScript monolith (Next.js) | **5.3.3** CSS + bundle JS from jsDelivr CDN (not an npm dependency) | `system/monolith/typescript/src/app/layout.tsx` (lines 49, 58) | `src/app/globals.css` (184 lines), imported in `layout.tsx` |
+| Java monolith (Thymeleaf) | **5.3.3** CSS + bundle JS from jsDelivr CDN | `system/monolith/java/src/main/resources/templates/layout.html` (lines 7, 158) | `static/css/{market,storefront,pages}.css` (Market theme), linked from `layout.html` |
+| .NET monolith (Razor) | **5.3.3** vendored (bumped from 5.1.0 in Step 7) | `system/monolith/dotnet/wwwroot/lib/bootstrap/dist/` via `Pages/Shared/_Layout.cshtml` (lines 16, 160) | `wwwroot/css/{market,storefront,pages}.css` (Market theme), linked from `_Layout.cshtml` |
+| TypeScript monolith (Next.js) | **5.3.3** CSS + bundle JS from jsDelivr CDN (not an npm dependency) | `system/monolith/typescript/src/app/layout.tsx` (lines 49, 58) | `public/css/{market,storefront,pages-shop,pages-orders,pages-account}.css` (Market theme), `<link>`ed from `layout.tsx` |
 
-Note for Step 4/7: the .NET monolith is on Bootstrap **5.1.0**, which predates the 5.3 CSS-variable theming (`--bs-*` colour modes, `--bs-border-radius`, etc.) that the Market theme relies on. It needs a Bootstrap bump (or a CDN 5.3.x link like Java/TS) before the shared theme CSS will behave the same.
+All three monoliths are on Bootstrap 5.3.3, which the Market theme's `--bs-*` variables require (the .NET monolith was bumped from 5.1.0 in Step 7).
 
 ## 3. Shared chrome (every page)
 

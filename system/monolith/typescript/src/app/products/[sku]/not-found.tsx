@@ -5,7 +5,7 @@ import { StoreLayout } from "@/components/StoreLayout";
 export default function ProductNotFound() {
   return (
     <StoreLayout title="Product not found">
-      <div className="text-center py-5">
+      <div className="market-empty text-center py-5 px-3">
         <h1 className="h3">Product not found</h1>
         <p className="text-muted">We couldn&apos;t find a product with that SKU.</p>
         <Link href="/" className="btn btn-primary" aria-label="Back to Catalog">

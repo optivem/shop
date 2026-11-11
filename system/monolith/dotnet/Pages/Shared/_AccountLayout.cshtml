@@ -8,13 +8,13 @@
         "list-group-item list-group-item-action" + (string.Equals(currentPath, path, StringComparison.OrdinalIgnoreCase) ? " active" : "");
 }
 @* The signed-in area (Quick order, My orders, order details, admin pages, My account) adds the side navigation. *@
-<div class="row">
+<div class="row g-4">
     <aside class="col-lg-3">
         @if (storeUser != null)
         {
             var heading = storeUser.Admin ? "Admin" : "My account";
             <nav class="account-nav mb-4" aria-label="@heading">
-                <h2 class="h6 text-uppercase text-muted">@heading</h2>
+                <h2 class="account-nav-heading">@heading</h2>
                 @if (storeUser.Admin)
                 {
                     <div class="list-group">

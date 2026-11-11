@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout :: layout(~{::title}, ~{::section}, true)}">
+      th:replace="~{layout :: layout(~{::title}, ~{::#page-content}, true)}">
 <head>
     <title>Quick order · MyShop</title>
 </head>
 <body>
-<section>
+<div id="page-content">
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="/">Home</a></li>
@@ -13,49 +13,61 @@
         </ol>
     </nav>
 
-    <h2>New Order</h2>
-
     <div id="notifications"></div>
 
-    <div class="row">
-        <div class="col-lg-6 mx-auto">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">Place Your Order</h4>
-                </div>
-                <div class="card-body">
-                    <form id="placeOrderForm">
-                        <div class="mb-3">
-                            <label for="sku" class="form-label">SKU:</label>
+    <div class="row g-4 align-items-start">
+        <div class="col-xl-8">
+            <section class="market-panel quick-order-panel">
+                <p class="order-eyebrow order-eyebrow-accent mb-1">Quick order</p>
+                <h1 class="h2 mb-1">Place Your Order</h1>
+                <p class="text-body-secondary mb-4">Know the SKU? Order it directly without browsing.</p>
+                <form id="placeOrderForm" class="quick-order-form">
+                    <div class="row gx-3">
+                        <div class="col-12 mb-3">
+                            <label for="sku" class="form-label market-label">SKU</label>
                             <input type="text" class="form-control" id="sku"
                                    placeholder="Enter product SKU" aria-label="SKU">
                         </div>
-                        <div class="mb-3">
-                            <label for="quantity" class="form-label">Quantity:</label>
+                        <div class="col-sm-6 mb-3">
+                            <label for="quantity" class="form-label market-label">Quantity</label>
                             <input type="text" class="form-control" id="quantity"
                                    inputmode="numeric" placeholder="Enter quantity"
                                    aria-label="Quantity">
                         </div>
-                        <div class="mb-3">
-                            <label for="country" class="form-label">Country:</label>
+                        <div class="col-sm-6 mb-3">
+                            <label for="country" class="form-label market-label">Country</label>
                             <input type="text" class="form-control" id="country"
-                                   placeholder="Enter country code" aria-label="Country"
+                                   placeholder="Enter country code (e.g. US)" aria-label="Country"
                                    th:value="${defaultCountry}">
                         </div>
-                        <div class="mb-3">
-                            <label for="couponCode" class="form-label">Coupon Code (optional):</label>
+                        <div class="col-12 mb-3">
+                            <label for="couponCode" class="form-label market-label">Coupon Code (optional)</label>
                             <input type="text" class="form-control" id="couponCode"
                                    placeholder="Enter coupon code" aria-label="Coupon Code">
                         </div>
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary btn-lg" id="submitBtn" aria-label="Place Order">
-                                Place Order
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
+                    </div>
+                    <div class="d-grid mt-2">
+                        <button type="submit" class="btn btn-primary btn-lg" id="submitBtn" aria-label="Place Order">
+                            Place Order
+                        </button>
+                    </div>
+                </form>
+            </section>
         </div>
+        <aside class="col-xl-4 d-flex flex-column gap-3" aria-label="Quick order help">
+            <div class="market-panel p-4">
+                <h2 class="h6 fw-bold mb-2">Tips</h2>
+                <ul class="quick-order-tips mb-0">
+                    <li>The SKU is shown on every product page.</li>
+                    <li>Country is a two-letter code, such as US, DE or GB.</li>
+                    <li>Tax is calculated from the country.</li>
+                </ul>
+            </div>
+            <div class="quick-order-promo">
+                <p class="fw-bold mb-1">Ordering several items?</p>
+                <a href="/" class="quick-order-promo-link">Browse the catalog and use the cart <svg th:replace="~{fragments/icons :: icon('arrow-right', 16, null, 2)}"></svg></a>
+            </div>
+        </aside>
     </div>
 
     <script>
@@ -123,6 +135,6 @@
             }
         });
     </script>
-</section>
+</div>
 </body>
 </html>

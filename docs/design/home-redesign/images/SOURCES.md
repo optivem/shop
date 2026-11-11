@@ -21,4 +21,10 @@ Copied unchanged to `system/multitier/frontend-react/public/images/promo/` for t
 | monitor.jpg | Promo tile "Shop monitors" (links to Monitors) | Huy Phan |
 | keyboard.jpg | Promo tile "Build your desk setup" (links to Accessories) | Jay Zhang |
 
+The same three files are also copied unchanged to `system/monolith/dotnet/wwwroot/images/promo/` (same tiles in `Pages/Index.cshtml`, same credits in the footer of `Pages/Shared/_Layout.cshtml`).
+
+They also ship in the Java monolith, copied unchanged to `system/monolith/java/src/main/resources/static/css/images/promo/` (same tiles in `templates/catalog.html`, same credits in the footer of `templates/layout.html`).
+
+They also ship in the TypeScript monolith, copied unchanged to `system/monolith/typescript/public/images/promo/` (same tiles in the catalog view, same credits in the store footer).
+
 Not shipped: headphones.jpg (the catalog has no Audio category), cable.jpg. Product cards and the product page show the catalog placeholder (`ProductImage`), never stock photos.

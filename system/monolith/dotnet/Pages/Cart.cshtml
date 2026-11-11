@@ -13,17 +13,18 @@
     </ol>
 </nav>
 
-<h1 class="h3 mb-4">
+<h1 class="h2 mb-4">
     Shopping cart
     @if (lines.Count > 0)
     {
-        <span aria-label="Cart Line Count">(@lines.Count @(lines.Count == 1 ? "item" : "items"))</span>
+        <span class="cart-line-count" aria-label="Cart Line Count">(@lines.Count @(lines.Count == 1 ? "item" : "items"))</span>
     }
 </h1>
 
 @if (lines.Count == 0)
 {
-    <div class="text-center py-5">
+    <div class="market-empty text-center py-5 px-3">
+        @Icons.Svg("shopping-cart", 40, "mb-3 text-body-secondary")
         <p class="lead">Your cart is empty.</p>
         <a href="/" class="btn btn-primary">Start shopping</a>
     </div>
@@ -34,17 +35,15 @@ else if (Model.Unavailable)
 }
 else
 {
-    <div class="row g-4">
+    <div class="row g-4 align-items-start">
         <div class="col-lg-8">
-            <div class="table-responsive">
-                <table class="table align-middle cart-table" aria-label="Cart Lines">
+            <div class="market-panel px-3 px-md-4 py-2">
+                <table class="table align-middle mb-0 cart-table" aria-label="Cart Lines">
                     <thead>
                     <tr>
                         <th scope="col">Product</th>
-                        <th scope="col" class="text-end">Unit price</th>
                         <th scope="col">Quantity</th>
                         <th scope="col" class="text-end">Line total</th>
-                        <th scope="col"><span class="visually-hidden">Remove</span></th>
                     </tr>
                     </thead>
                     <tbody>
@@ -52,34 +51,46 @@ else
                     {
                         var line = lines[index];
                         <tr aria-label="@("Cart Line " + line.Sku)">
-                            <td>
+                            <td class="cart-cell-product">
                                 <div class="d-flex align-items-center gap-3">
                                     <div class="cart-thumb">
-                                        <partial name="_ProductImage" model="@(new ProductImage(line.Product?.Brand ?? line.Sku, "card"))" />
+                                        <partial name="_ProductImage" model="@(new ProductImage(line.Product?.Brand ?? line.Sku, "square"))" />
                                     </div>
                                     <div>
                                         @if (line.Product != null)
                                         {
-                                            <a href="@StoreChrome.ProductHref(line.Sku)" aria-label="@("Title " + line.Sku)">@line.Product.Title</a>
+                                            <a href="@StoreChrome.ProductHref(line.Sku)" class="cart-line-title" aria-label="@("Title " + line.Sku)">@line.Product.Title</a>
+                                            <div class="cart-line-meta">
+                                                SKU @line.Sku ·
+                                                <span class="price" aria-label="@("Unit Price " + line.Sku)">@Money.Format(line.Product.Price)</span>
+                                                each
+                                            </div>
                                         }
                                         else
                                         {
-                                            <span aria-label="@("Title " + line.Sku)">@line.Sku</span>
-                                            <div class="small text-danger">No longer available</div>
+                                            <span class="cart-line-title" aria-label="@("Title " + line.Sku)">@line.Sku</span>
+                                            <div class="cart-line-meta">
+                                                <span class="text-danger">No longer available</span> ·
+                                                <span aria-label="@("Unit Price " + line.Sku)">-</span>
+                                            </div>
                                         }
+                                        <button type="submit" class="btn btn-link cart-remove" form="@("remove-" + index)"
+                                                aria-label="@("Remove " + line.Sku)">@Icons.Svg("trash", 14, "me-1")Remove</button>
                                     </div>
                                 </div>
+                                <form id="@("remove-" + index)" method="post" action="/cart/remove" asp-antiforgery="true" class="d-none">
+                                    <input type="hidden" name="sku" value="@line.Sku">
+                                </form>
                             </td>
-                            <td class="text-end price" aria-label="@("Unit Price " + line.Sku)">@(line.Product != null ? Money.Format(line.Product.Price) : "-")</td>
-                            <td>
+                            <td class="cart-cell-quantity">
                                 @* [-][ n ][+]: the buttons move by 1 within 1..99; a typed quantity is committed on change or Enter. *@
-                                <div class="input-group input-group-sm quantity-stepper">
+                                <div class="input-group quantity-stepper">
                                     <button type="submit" class="btn btn-outline-secondary" form="@("decrease-" + index)"
-                                            aria-label="@("Decrease Quantity for " + line.Sku)">−</button>
+                                            aria-label="@("Decrease Quantity for " + line.Sku)">@Icons.Svg("minus")</button>
                                     <input type="text" inputmode="numeric" name="quantity" class="form-control text-center cart-quantity"
                                            form="@("quantity-" + index)" aria-label="@("Quantity for " + line.Sku)" value="@line.Quantity">
                                     <button type="submit" class="btn btn-outline-secondary" form="@("increase-" + index)"
-                                            aria-label="@("Increase Quantity for " + line.Sku)">+</button>
+                                            aria-label="@("Increase Quantity for " + line.Sku)">@Icons.Svg("plus")</button>
                                 </div>
                                 <form id="@("quantity-" + index)" method="post" action="/cart/update" asp-antiforgery="true" class="d-none">
                                     <input type="hidden" name="sku" value="@line.Sku">
@@ -93,32 +104,23 @@ else
                                     <input type="hidden" name="quantity" value="@line.Increased">
                                 </form>
                             </td>
-                            <td class="text-end price" aria-label="@("Line Total " + line.Sku)">@Money.Format(line.LineTotal)</td>
-                            <td class="text-end">
-                                <form method="post" action="/cart/remove" asp-antiforgery="true">
-                                    <input type="hidden" name="sku" value="@line.Sku">
-                                    <button type="submit" class="btn btn-sm btn-outline-danger"
-                                            aria-label="@("Remove " + line.Sku)">✕</button>
-                                </form>
-                            </td>
+                            <td class="cart-cell-total text-end price" aria-label="@("Line Total " + line.Sku)">@Money.Format(line.LineTotal)</td>
                         </tr>
                     }
                     </tbody>
                 </table>
             </div>
-            <a href="/">← Continue shopping</a>
         </div>
         <div class="col-lg-4">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <h2 class="h5">Order summary</h2>
-                    <div class="d-flex justify-content-between">
-                        <span>Subtotal</span>
-                        <span class="price fw-bold" aria-label="Cart Subtotal">@Money.Format(Model.Subtotal)</span>
-                    </div>
-                    <p class="text-muted small mt-2">Tax and discounts are calculated at checkout.</p>
-                    <a href="/checkout" class="btn btn-primary w-100" aria-label="Proceed to Checkout">Proceed to checkout</a>
+            <div class="market-panel p-4 d-flex flex-column gap-3">
+                <h2 class="h5 mb-0">Order summary</h2>
+                <div class="d-flex justify-content-between cart-summary-row">
+                    <span>Subtotal</span>
+                    <span class="price fw-bold" aria-label="Cart Subtotal">@Money.Format(Model.Subtotal)</span>
                 </div>
+                <p class="text-body-secondary small mb-0">Tax and discounts are calculated at checkout.</p>
+                <a href="/checkout" class="btn btn-primary btn-lg w-100" aria-label="Proceed to Checkout">Proceed to checkout</a>
+                <a href="/" class="cart-continue">Continue shopping</a>
             </div>
         </div>
     </div>

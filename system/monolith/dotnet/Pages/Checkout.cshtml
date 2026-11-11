@@ -7,6 +7,8 @@
     var saved = Model.SavedAddress;
     var address = Model.Address;
     var taxRates = ShippingAddresses.EstimatedTaxRates.Keys.ToDictionary(country => country, ShippingAddresses.EstimatedTaxRate);
+    var savedChosen = Model.Choice == CheckoutModel.Saved;
+    var otherChosen = Model.Choice == CheckoutModel.Other;
 }
 @* `/checkout` (storefront-ux §4.4, UC-009): shipping address, optional coupon and the order review. *@
 <nav aria-label="breadcrumb">
@@ -17,105 +19,115 @@
     </ol>
 </nav>
 
-<h1 class="h3 mb-4">Checkout</h1>
-<form class="row g-4" method="post" action="/checkout" asp-antiforgery="true" novalidate id="checkoutForm">
-    <div class="col-lg-7">
-        <section class="card shadow-sm mb-4" aria-label="Shipping Address">
-            <div class="card-body">
-                <h2 class="h5">1. Shipping address</h2>
-                @if (saved != null)
-                {
-                    <div class="form-check">
+<h1 class="h2 mb-4">Checkout</h1>
+<form class="row g-4 align-items-start" method="post" action="/checkout" asp-antiforgery="true" novalidate id="checkoutForm">
+    <div class="col-lg-7 d-flex flex-column gap-4">
+        <section class="market-panel checkout-section" aria-label="Shipping Address">
+            <h2 class="checkout-step-title"><span class="checkout-step-number" aria-hidden="true">1</span>Shipping address</h2>
+            @if (saved != null)
+            {
+                <div class="checkout-choices">
+                    <div class="form-check checkout-choice@(savedChosen ? " is-selected" : null)">
                         <input class="form-check-input" type="radio" name="addressChoice" id="address-saved" value="saved"
-                               aria-label="Use Saved Address" checked="@(Model.Choice == CheckoutModel.Saved)"
+                               aria-label="Use Saved Address" checked="@savedChosen"
                                data-country="@saved.Country">
-                        <label class="form-check-label" for="address-saved" aria-label="Saved Address">@ShippingAddresses.Format(saved)</label>
+                        <label class="form-check-label" for="address-saved">
+                            <span class="checkout-choice-title">Use saved address</span>
+                            <span class="checkout-choice-detail" aria-label="Saved Address">@ShippingAddresses.Format(saved)</span>
+                        </label>
                     </div>
-                    <div class="form-check mb-3">
+                    <div class="form-check checkout-choice@(otherChosen ? " is-selected" : null)">
                         <input class="form-check-input" type="radio" name="addressChoice" id="address-other" value="other"
-                               aria-label="Ship to a Different Address" checked="@(Model.Choice == CheckoutModel.Other)">
-                        <label class="form-check-label" for="address-other">Ship to a different address</label>
+                               aria-label="Ship to a Different Address" checked="@otherChosen">
+                        <label class="form-check-label" for="address-other">
+                            <span class="checkout-choice-title">Ship to a different address</span>
+                            <span class="checkout-choice-detail">Enter a new address below</span>
+                        </label>
                     </div>
-                }
-                else
-                {
-                    <input type="hidden" name="addressChoice" value="other">
-                }
-
-                <div id="addressForm" class="@(Model.Choice == CheckoutModel.Saved ? "d-none" : null)">
-                    <div class="row g-3">
-                        <partial name="_CheckoutTextField" model="@(new CheckoutTextField("firstName", "First name", "Shipping First Name", address.FirstName, "col-md-6", Model.FieldError("firstName")))" />
-                        <partial name="_CheckoutTextField" model="@(new CheckoutTextField("lastName", "Last name", "Shipping Last Name", address.LastName, "col-md-6", Model.FieldError("lastName")))" />
-                        <partial name="_CheckoutTextField" model="@(new CheckoutTextField("street", "Street", "Shipping Street", address.Street, "col-12", Model.FieldError("street")))" />
-                        <partial name="_CheckoutTextField" model="@(new CheckoutTextField("postalCode", "Postal code", "Shipping Postal Code", address.PostalCode, "col-md-4", Model.FieldError("postalCode")))" />
-                        <partial name="_CheckoutTextField" model="@(new CheckoutTextField("city", "City", "Shipping City", address.City, "col-md-4", Model.FieldError("city")))" />
-                        @{ var countryError = Model.FieldError("country"); }
-                        <div class="col-md-4">
-                            <label for="shipping-country" class="form-label">Country</label>
-                            <select id="shipping-country" name="country" aria-label="Shipping Country"
-                                    class="form-select@(countryError != null ? " is-invalid" : null)"
-                                    aria-invalid="@(countryError != null ? "true" : null)">
-                                <option value="">Select a country</option>
-                                @foreach (var country in ShippingAddresses.Countries)
-                                {
-                                    <option value="@country" selected="@(address.Country == country)">@country</option>
-                                }
-                            </select>
-                            @if (countryError != null)
-                            {
-                                <div class="invalid-feedback">@countryError</div>
-                            }
-                        </div>
-                    </div>
-                    @if (Model.FirstOrder)
-                    {
-                        <div class="form-check mt-3">
-                            <input class="form-check-input" type="checkbox" id="save-as-default" name="saveAsDefault" value="true"
-                                   aria-label="Save as Default Address" checked="@Model.SaveAsDefault">
-                            <label class="form-check-label" for="save-as-default">Save as my default shipping address</label>
-                        </div>
-                    }
                 </div>
+            }
+            else
+            {
+                <input type="hidden" name="addressChoice" value="other">
+            }
+
+            <div id="addressForm" class="@(savedChosen ? "d-none" : null)">
+                <div class="row g-3">
+                    <partial name="_CheckoutTextField" model="@(new CheckoutTextField("firstName", "First name", "Shipping First Name", address.FirstName, "col-md-6", Model.FieldError("firstName")))" />
+                    <partial name="_CheckoutTextField" model="@(new CheckoutTextField("lastName", "Last name", "Shipping Last Name", address.LastName, "col-md-6", Model.FieldError("lastName")))" />
+                    <partial name="_CheckoutTextField" model="@(new CheckoutTextField("street", "Street", "Shipping Street", address.Street, "col-12", Model.FieldError("street")))" />
+                    <partial name="_CheckoutTextField" model="@(new CheckoutTextField("postalCode", "Postal code", "Shipping Postal Code", address.PostalCode, "col-md-4", Model.FieldError("postalCode")))" />
+                    <partial name="_CheckoutTextField" model="@(new CheckoutTextField("city", "City", "Shipping City", address.City, "col-md-4", Model.FieldError("city")))" />
+                    @{ var countryError = Model.FieldError("country"); }
+                    <div class="col-md-4">
+                        <label for="shipping-country" class="form-label">Country</label>
+                        <select id="shipping-country" name="country" aria-label="Shipping Country"
+                                class="form-select@(countryError != null ? " is-invalid" : null)"
+                                aria-invalid="@(countryError != null ? "true" : null)">
+                            <option value="">Select a country</option>
+                            @foreach (var country in ShippingAddresses.Countries)
+                            {
+                                <option value="@country" selected="@(address.Country == country)">@country</option>
+                            }
+                        </select>
+                        @if (countryError != null)
+                        {
+                            <div class="invalid-feedback">@countryError</div>
+                        }
+                    </div>
+                </div>
+                @if (Model.FirstOrder)
+                {
+                    <div class="form-check checkout-save-default">
+                        <input class="form-check-input" type="checkbox" id="save-as-default" name="saveAsDefault" value="true"
+                               aria-label="Save as Default Address" checked="@Model.SaveAsDefault">
+                        <label class="form-check-label" for="save-as-default">Save as my default shipping address</label>
+                    </div>
+                }
             </div>
         </section>
-        <section class="card shadow-sm mb-4">
-            <div class="card-body">
-                <h2 class="h5">2. Coupon (optional)</h2>
-                <label for="checkout-coupon" class="form-label">Code</label>
-                <input id="checkout-coupon" name="couponCode" type="text" class="form-control"
-                       aria-label="Checkout Coupon Code" value="@Model.CouponCode">
-            </div>
+        <section class="market-panel checkout-section" aria-labelledby="checkout-coupon-heading">
+            <h2 class="checkout-step-title" id="checkout-coupon-heading">
+                <span class="checkout-step-number" aria-hidden="true">2</span>Coupon <span class="checkout-step-hint">(optional)</span>
+            </h2>
+            <label for="checkout-coupon" class="form-label market-label">Code</label>
+            <input id="checkout-coupon" name="couponCode" type="text" class="form-control checkout-coupon-input"
+                   aria-label="Checkout Coupon Code" aria-describedby="checkout-coupon-hint" value="@Model.CouponCode">
+            <p id="checkout-coupon-hint" class="form-text mb-0">The code is checked for each order when you place it.</p>
         </section>
-        <button type="submit" class="btn btn-primary btn-lg" aria-label="Place Checkout Order" id="placeCheckoutOrder">
-            Place order
-        </button>
     </div>
     <div class="col-lg-5">
-        <section class="card shadow-sm" aria-label="Order Review">
-            <div class="card-body">
-                <h2 class="h5">Order review</h2>
-                <ul class="list-unstyled mb-3">
-                    @foreach (var line in Model.Lines)
-                    {
-                        <li class="d-flex justify-content-between" aria-label="@("Review Line " + line.Sku)">
-                            <span>
-                                @(line.Product?.Title ?? line.Sku)
-                                × <span aria-label="@("Review Quantity " + line.Sku)">@line.Quantity</span>
-                            </span>
-                            <span class="price" aria-label="@("Review Line Total " + line.Sku)">@Money.Format(line.LineTotal)</span>
-                        </li>
-                    }
-                </ul>
-                <div class="d-flex justify-content-between fw-bold border-top pt-2">
+        <section class="market-panel checkout-section checkout-review" aria-label="Order Review">
+            <h2 class="h5 fw-bold mb-0">Order review</h2>
+            <ul class="checkout-review-lines">
+                @foreach (var line in Model.Lines)
+                {
+                    <li class="checkout-review-line" aria-label="@("Review Line " + line.Sku)">
+                        <div class="checkout-review-thumb">
+                            <partial name="_ProductImage" model="@(new ProductImage(line.Product?.Brand ?? line.Sku, "square"))" />
+                        </div>
+                        <div class="checkout-review-name">
+                            <span class="checkout-review-title">@(line.Product?.Title ?? line.Sku)</span>
+                            <span class="checkout-review-meta">Qty <span aria-label="@("Review Quantity " + line.Sku)">@line.Quantity</span></span>
+                        </div>
+                        <span class="price checkout-review-total" aria-label="@("Review Line Total " + line.Sku)">@Money.Format(line.LineTotal)</span>
+                    </li>
+                }
+            </ul>
+            <div class="checkout-review-summary">
+                <div class="d-flex justify-content-between fw-bold">
                     <span>Subtotal</span>
                     <span class="price" aria-label="Review Subtotal">@Money.Format(Model.Subtotal)</span>
                 </div>
-                <div class="d-flex justify-content-between mt-2">
-                    <span>Est. tax (<span aria-label="Tax Country" id="taxCountry">@Model.TaxCountry</span>)</span>
+                <div class="d-flex justify-content-between">
+                    <span class="text-body-secondary">Est. tax (<span aria-label="Tax Country" id="taxCountry">@Model.TaxCountry</span>)</span>
                     <span aria-label="Estimated Tax Rate" id="taxRate">@Model.TaxRate</span>
                 </div>
-                <p class="text-muted small mt-3 mb-0">Discount and tax are worked out per order when it is placed.</p>
             </div>
+            <button type="submit" class="btn btn-primary btn-lg w-100" aria-label="Place Checkout Order" id="placeCheckoutOrder">
+                Place order
+            </button>
+            <p class="text-body-secondary small text-center mb-0">Discount and tax are worked out per order when it is placed.</p>
         </section>
     </div>
 </form>
@@ -133,6 +145,9 @@
         function refresh() {
             var useSaved = saved && saved.checked;
             addressForm.classList.toggle('d-none', !!useSaved);
+            form.querySelectorAll('.checkout-choice').forEach(function (choice) {
+                choice.classList.toggle('is-selected', choice.querySelector('input').checked);
+            });
             var code = (useSaved ? saved.getAttribute('data-country') : country.value || '').trim();
             document.getElementById('taxCountry').textContent = code || '-';
             document.getElementById('taxRate').textContent = taxRates[code] || '-';

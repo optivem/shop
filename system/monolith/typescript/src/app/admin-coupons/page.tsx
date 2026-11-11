@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { AccountLayout } from "@/components/StoreLayout";
+import { Icon } from "@/components/Icon";
+import { AccountLayout, LoadingSpinner } from "@/components/StoreLayout";
 import {
   couponsResponseSchema,
   formatFieldErrors,
@@ -127,7 +128,6 @@ export default function AdminCouponsPage() {
 
   return (
     <AccountLayout title="Coupon Management" breadcrumbs={BREADCRUMBS}>
-
       {notification && (
         <div
           role="alert"
@@ -135,38 +135,51 @@ export default function AdminCouponsPage() {
           data-notification-id={notification.id}
         >
           {notification.type === "success" ? (
-            notification.message
+            <>
+              <Icon name="circle-check" size={20} className="notification-icon" />
+              {notification.message}
+            </>
           ) : (
             <>
-              <div className="error-message">{notification.message}</div>
-              {notification.fieldErrors.map((fe) => (
-                <div key={fe} className="field-error">
-                  {fe}
-                </div>
-              ))}
+              <Icon name="circle-alert" size={20} className="notification-icon" />
+              <div className="notification-body">
+                <div className="error-message">{notification.message}</div>
+                {notification.fieldErrors.map((fe) => (
+                  <div key={fe} className="field-error">
+                    {fe}
+                  </div>
+                ))}
+              </div>
             </>
           )}
         </div>
       )}
 
-      <div className="card shadow mb-4">
-        <div className="card-header bg-primary text-white">
-          <h4 className="mb-0">Create New Coupon</h4>
+      <h1 className="admin-coupons-title">Coupons</h1>
+      <section className="market-panel coupon-panel coupon-form-panel mb-4" aria-labelledby="coupon-form-heading">
+        <div className="coupon-panel-header">
+          <div>
+            <h2 id="coupon-form-heading" className="coupon-panel-title">
+              Create New Coupon
+            </h2>
+            <p className="coupon-panel-subtitle">Customers enter the code at checkout to get the discount.</p>
+          </div>
         </div>
-        <div className="card-body">
+        <div className="coupon-panel-body">
           <form
+            className="coupon-form"
             onSubmit={(e) => {
               void handleSubmit(e);
             }}
           >
-            <div className="row mb-3">
+            <div className="row g-3 mb-3">
               <div className="col-md-6">
-                <label htmlFor="code" className="form-label">
+                <label htmlFor="code" className="form-label market-label">
                   Coupon Code:
                 </label>
                 <input
                   type="text"
-                  className="form-control"
+                  className="form-control coupon-code-input"
                   id="code"
                   aria-label="Coupon Code"
                   placeholder="e.g., SUMMER2026"
@@ -175,7 +188,7 @@ export default function AdminCouponsPage() {
                 />
               </div>
               <div className="col-md-6">
-                <label htmlFor="discountRate" className="form-label">
+                <label htmlFor="discountRate" className="form-label market-label">
                   Discount Rate (0-1):
                 </label>
                 <input
@@ -190,9 +203,9 @@ export default function AdminCouponsPage() {
                 />
               </div>
             </div>
-            <div className="row mb-3">
+            <div className="row g-3 mb-3">
               <div className="col-md-6">
-                <label htmlFor="validFrom" className="form-label">
+                <label htmlFor="validFrom" className="form-label market-label">
                   Valid From (Optional):
                 </label>
                 <input
@@ -203,12 +216,10 @@ export default function AdminCouponsPage() {
                   value={validFrom}
                   onChange={(e) => setValidFrom(e.target.value)}
                 />
-                <small className="form-text text-muted">
-                  Leave empty for immediate validity
-                </small>
+                <small className="form-text text-muted">Leave empty for immediate validity</small>
               </div>
               <div className="col-md-6">
-                <label htmlFor="validTo" className="form-label">
+                <label htmlFor="validTo" className="form-label market-label">
                   Valid To (Optional):
                 </label>
                 <input
@@ -219,14 +230,12 @@ export default function AdminCouponsPage() {
                   value={validTo}
                   onChange={(e) => setValidTo(e.target.value)}
                 />
-                <small className="form-text text-muted">
-                  Leave empty for no expiration
-                </small>
+                <small className="form-text text-muted">Leave empty for no expiration</small>
               </div>
             </div>
-            <div className="row mb-3">
+            <div className="row g-3">
               <div className="col-md-6">
-                <label htmlFor="usageLimit" className="form-label">
+                <label htmlFor="usageLimit" className="form-label market-label">
                   Usage Limit (Optional):
                 </label>
                 <input
@@ -240,83 +249,78 @@ export default function AdminCouponsPage() {
                 />
               </div>
               <div className="col-md-6 d-flex align-items-end">
-                <button
-                  type="submit"
-                  className="btn btn-primary w-100"
-                  aria-label="Create Coupon"
-                >
+                <button type="submit" className="btn btn-primary w-100 coupon-submit" aria-label="Create Coupon">
                   Create Coupon
                 </button>
               </div>
             </div>
           </form>
         </div>
-      </div>
+      </section>
 
-      <div className="card shadow">
-        <div className="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-          <h4 className="mb-0">Existing Coupons</h4>
+      <section className="market-panel coupon-panel" aria-labelledby="coupon-table-heading">
+        <div className="coupon-panel-header">
+          <div>
+            <h2 id="coupon-table-heading" className="coupon-panel-title">
+              Existing Coupons
+            </h2>
+            {!loading && (
+              <p className="coupon-panel-subtitle">
+                {coupons.length} {coupons.length === 1 ? "coupon" : "coupons"}
+              </p>
+            )}
+          </div>
           <button
-            className="btn btn-light btn-sm"
+            type="button"
+            className="btn btn-outline-secondary coupon-refresh"
             aria-label="Refresh Coupon List"
+            disabled={loading}
             onClick={() => {
               void loadCoupons();
             }}
           >
+            <Icon name="refresh-cw" />
             Refresh
           </button>
         </div>
-        <div className="card-body">
-          {loading && (
-            <div className="text-center py-3">
-              <output>
-                <div className="spinner-border text-primary">
-                  <span className="visually-hidden">Loading...</span>
-                </div>
-              </output>
-            </div>
-          )}
-          {!loading && (
-            <div className="table-responsive">
-              <table
-                className="table table-striped table-hover"
-                aria-label="Coupons Table"
-              >
-                <thead>
+        {loading && <LoadingSpinner message="Loading coupons..." />}
+        {!loading && (
+          <div className="table-responsive coupon-table-scroll">
+            <table className="table table-hover align-middle mb-0 coupon-table" aria-label="Coupons Table">
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Discount Rate</th>
+                  <th>Valid From</th>
+                  <th>Valid To</th>
+                  <th>Usage Limit</th>
+                  <th>Used Count</th>
+                </tr>
+              </thead>
+              <tbody>
+                {coupons.length === 0 ? (
                   <tr>
-                    <th>Code</th>
-                    <th>Discount Rate</th>
-                    <th>Valid From</th>
-                    <th>Valid To</th>
-                    <th>Usage Limit</th>
-                    <th>Used Count</th>
+                    <td colSpan={6} className="text-center py-5 text-body-secondary fw-semibold">
+                      No coupons found
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {coupons.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="text-center py-3 text-muted">
-                        No coupons found
-                      </td>
+                ) : (
+                  coupons.map((coupon) => (
+                    <tr key={coupon.code}>
+                      <td>{coupon.code}</td>
+                      <td>{(Number(coupon.discountRate) * 100).toFixed(2)}%</td>
+                      <td>{formatDate(coupon.validFrom)}</td>
+                      <td>{formatValidTo(coupon.validTo)}</td>
+                      <td>{formatUsageLimit(coupon.usageLimit)}</td>
+                      <td>{coupon.usedCount}</td>
                     </tr>
-                  ) : (
-                    coupons.map((coupon) => (
-                      <tr key={coupon.code}>
-                        <td>{coupon.code}</td>
-                        <td>{(Number(coupon.discountRate) * 100).toFixed(2)}%</td>
-                        <td>{formatDate(coupon.validFrom)}</td>
-                        <td>{formatValidTo(coupon.validTo)}</td>
-                        <td>{formatUsageLimit(coupon.usageLimit)}</td>
-                        <td>{coupon.usedCount}</td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      </div>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
     </AccountLayout>
   );
 }

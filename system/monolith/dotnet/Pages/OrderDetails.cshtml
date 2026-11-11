@@ -1,5 +1,6 @@
 @page "/order-details"
 @model MyCompany.MyShop.Monolith.Pages.OrderDetailsModel
+@using MyCompany.MyShop.Monolith.Pages.Storefront
 @{
     ViewData["Title"] = "Order Details";
     Layout = "_AccountLayout";
@@ -13,102 +14,93 @@
     </ol>
 </nav>
 
-<div class="card shadow">
-    <div class="card-header bg-primary text-white">
-        <h4 class="mb-0">Order Details</h4>
+<div class="order-detail">
+    <a href="/order-history" class="btn btn-link order-back">@Icons.Svg("arrow-left")Back to Order History</a>
+
+    <div id="loading" class="market-panel text-center py-5">
+        <output>
+            <div class="spinner-border text-primary">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </output>
+        <p class="mt-3 mb-0 text-body-secondary fw-semibold">Loading order details...</p>
     </div>
-    <div class="card-body">
-        <div id="loading" class="text-center py-5">
-            <output>
-                <div class="spinner-border text-primary">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
-            </output>
-            <p class="mt-3">Loading order details...</p>
-        </div>
 
-        <div id="orderDetails" style="display: none;">
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <strong>Order Number:</strong>
-                    <p id="detailOrderNumber" aria-label="Display Order Number"></p>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <strong>Order Timestamp:</strong>
-                    <p id="detailOrderTimestamp" aria-label="Display Order Timestamp"></p>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <strong>Status:</strong>
-                    <p id="detailStatus" aria-label="Display Status"></p>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <strong>SKU:</strong>
-                    <p id="detailSku" aria-label="Display SKU"></p>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <strong>Quantity:</strong>
-                    <p id="detailQuantity" aria-label="Display Quantity"></p>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <strong>Country:</strong>
-                    <p id="detailCountry" aria-label="Display Country"></p>
-                </div>
-                <div class="col-md-6 mb-3" id="detailShippingAddressBlock" style="display: none;">
-                    <strong>Shipping Address:</strong>
-                    <p id="detailShippingAddress" aria-label="Display Shipping Address"></p>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <strong>Unit Price:</strong>
-                    <p id="detailUnitPrice" aria-label="Display Unit Price"></p>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <strong>Base Price:</strong>
-                    <p id="detailBasePrice" aria-label="Display Base Price"></p>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <strong>Discount Rate:</strong>
-                    <p id="detailDiscountRate" aria-label="Display Discount Rate"></p>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <strong>Discount Amount:</strong>
-                    <p id="detailDiscountAmount" aria-label="Display Discount Amount"></p>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <strong>Subtotal Price:</strong>
-                    <p id="detailSubtotalPrice" aria-label="Display Subtotal Price"></p>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <strong>Tax Rate:</strong>
-                    <p id="detailTaxRate" aria-label="Display Tax Rate"></p>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <strong>Tax Amount:</strong>
-                    <p id="detailTaxAmount" aria-label="Display Tax Amount"></p>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <strong>Total Price:</strong>
-                    <p id="detailTotalPrice" class="fs-5 fw-bold" aria-label="Display Total Price"></p>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <strong>Applied Coupon Code:</strong>
-                    <p id="detailAppliedCouponCode" aria-label="Display Applied Coupon"></p>
-                </div>
+    <div id="notifications"></div>
+
+    <div id="orderDetails" class="order-detail" style="display: none;">
+        <section class="market-panel order-detail-header">
+            <div>
+                <p class="order-eyebrow mb-1">Order Details</p>
+                <h1 class="order-detail-number"><span id="detailOrderNumber" aria-label="Display Order Number"></span></h1>
+                <p class="text-body-secondary mb-0 d-flex flex-wrap align-items-center gap-2">
+                    <span>Ordered <span id="detailOrderTimestamp" aria-label="Display Order Timestamp"></span> UTC</span>
+                    <span id="detailStatus" class="order-status" aria-label="Display Status"></span>
+                </p>
             </div>
+            <div class="order-detail-actions">
+                <button id="cancelOrderBtn" type="button" class="btn btn-outline-danger" aria-label="Cancel Order" onclick="cancelOrder()">Cancel Order</button>
+                <button id="deliverOrderBtn" type="button" class="btn btn-primary" aria-label="Deliver Order" onclick="deliverOrder()">Deliver Order</button>
+            </div>
+        </section>
 
-            <div class="mt-4 d-flex gap-2">
-                <button id="cancelOrderBtn" class="btn btn-danger" aria-label="Cancel Order" onclick="cancelOrder()">Cancel Order</button>
-                <button id="deliverOrderBtn" class="btn btn-warning" aria-label="Deliver Order" onclick="deliverOrder()">Deliver Order</button>
-                <a href="/order-history" class="btn btn-secondary">Back to Order History</a>
+        <div class="row g-4 align-items-start">
+            <div class="col-xl-7">
+                <section class="market-panel p-4" aria-labelledby="order-item-heading">
+                    <h2 class="h5 mb-3" id="order-item-heading">Item</h2>
+                    <div class="order-item">
+                        <p class="order-item-meta mb-0">
+                            SKU <span class="font-monospace" id="detailSku" aria-label="Display SKU"></span>
+                            · Quantity <span id="detailQuantity" aria-label="Display Quantity"></span>
+                            · Unit Price <span id="detailUnitPrice" aria-label="Display Unit Price"></span>
+                        </p>
+                    </div>
+                    <dl class="order-facts">
+                        <div id="detailShippingAddressBlock" style="display: none;">
+                            <dt>Shipping Address</dt>
+                            <dd id="detailShippingAddress" aria-label="Display Shipping Address"></dd>
+                        </div>
+                        <div>
+                            <dt>Country</dt>
+                            <dd id="detailCountry" aria-label="Display Country"></dd>
+                        </div>
+                        <div>
+                            <dt>Applied Coupon</dt>
+                            <dd class="font-monospace" id="detailAppliedCouponCode" aria-label="Display Applied Coupon"></dd>
+                        </div>
+                    </dl>
+                </section>
+            </div>
+            <div class="col-xl-5">
+                <section class="market-panel p-4" aria-labelledby="order-price-heading">
+                    <h2 class="h5 mb-3" id="order-price-heading">Price breakdown</h2>
+                    <dl class="order-breakdown">
+                        <dt>Base Price</dt>
+                        <dd id="detailBasePrice" aria-label="Display Base Price"></dd>
+                        <dt>Discount Rate</dt>
+                        <dd id="detailDiscountRate" aria-label="Display Discount Rate"></dd>
+                        <dt>Discount Amount</dt>
+                        <dd id="detailDiscountAmount" aria-label="Display Discount Amount"></dd>
+                        <dt>Subtotal Price</dt>
+                        <dd class="fw-bold" id="detailSubtotalPrice" aria-label="Display Subtotal Price"></dd>
+                        <dt>Tax Rate</dt>
+                        <dd id="detailTaxRate" aria-label="Display Tax Rate"></dd>
+                        <dt>Tax Amount</dt>
+                        <dd id="detailTaxAmount" aria-label="Display Tax Amount"></dd>
+                    </dl>
+                    <div class="order-total-row">
+                        <span>Total Price</span>
+                        <span class="order-total-value" id="detailTotalPrice" aria-label="Display Total Price"></span>
+                    </div>
+                </section>
             </div>
         </div>
+    </div>
 
-        <div id="notifications"></div>
+    <div id="errorMessage" style="display: none;"></div>
 
-        <div id="errorMessage" style="display: none;"></div>
-
-        <div id="notFound" style="display: none;" class="text-center py-5 text-muted">
-            <p>Order not found</p>
-        </div>
+    <div id="notFound" style="display: none;" class="market-empty text-center py-5 px-3">
+        <p class="mb-0">Order not found</p>
     </div>
 </div>
 
@@ -151,7 +143,7 @@
             document.getElementById('detailOrderTimestamp').textContent = new Date(order.orderTimestamp).toLocaleString('en-US', { timeZone: 'UTC' });
 
             var statusEl = document.getElementById('detailStatus');
-            statusEl.className = 'status-' + order.status;
+            statusEl.className = 'order-status status-' + order.status;
             statusEl.textContent = order.status;
 
             document.getElementById('detailSku').textContent = order.sku;
@@ -179,7 +171,7 @@
                 document.getElementById('deliverOrderBtn').remove();
             }
 
-            orderDetails.style.display = 'block';
+            orderDetails.style.display = '';
         } catch (err) {
             loading.style.display = 'none';
             errorMessage.innerHTML = '<div class="alert alert-danger d-flex justify-content-between align-items-center" role="alert"><div><strong>Error:</strong> Network error: ' + err.message + '</div></div>';

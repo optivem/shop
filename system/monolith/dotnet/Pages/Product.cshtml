@@ -9,8 +9,8 @@
 @* `/products/{sku}` (storefront-ux §4.2, UC-007): one product's details, with a quantity and "Add to cart". *@
 @if (Model.IsNotFound)
 {
-    @* The 404 page of an unknown SKU (UC-007 2a). *@
-    <div class="text-center py-5">
+    @* The 404 page of an unknown SKU (UC-007 2a). The h1 and the Back link stay direct children of one parent. *@
+    <div class="market-empty text-center py-5 px-3">
         <h1 class="h3">Product not found</h1>
         <p class="text-muted">We couldn't find a product with that SKU.</p>
         <a href="/" class="btn btn-primary" aria-label="Back to Catalog">Back to the catalog</a>
@@ -30,35 +30,47 @@ else
         </ol>
     </nav>
 
-    <div class="row g-4">
-        <div class="col-md-5">
-            <partial name="_ProductImage" model="@(new ProductImage(product.Brand, "square"))" />
+    <div class="row g-4 align-items-start">
+        <div class="col-lg-7">
+            <div class="market-panel p-3">
+                <partial name="_ProductImage" model="@(new ProductImage(product.Brand, "square"))" />
+            </div>
         </div>
-        <div class="col-md-7">
-            <h1 class="h2" aria-label="Product Title">@product.Title</h1>
-            <p class="text-muted">
-                by <span aria-label="Product Brand">@product.Brand</span> ·
-                <span aria-label="Product Category">@product.Category</span> · SKU
-                <span aria-label="Product SKU">@product.Sku</span>
-            </p>
-            <p class="price fs-3 fw-bold" aria-label="Display Price">@Money.Format(product.Price)</p>
-            <form method="post" action="/cart/add" asp-antiforgery="true" class="d-flex flex-wrap align-items-center gap-3 mb-4">
+        <div class="col-lg-5 d-flex flex-column gap-3">
+            <div class="market-panel p-4">
+                <p class="product-meta mb-2">
+                    <span class="product-meta-brand" aria-label="Product Brand">@product.Brand</span>
+                    · <span aria-label="Product Category">@product.Category</span>
+                </p>
+                <h1 class="product-detail-title" aria-label="Product Title">@product.Title</h1>
+                <p class="product-meta mb-3">
+                    SKU <span class="font-monospace text-body" aria-label="Product SKU">@product.Sku</span>
+                </p>
+                <p class="price product-detail-price" aria-label="Display Price">@Money.Format(product.Price)</p>
+                <p class="product-detail-description mb-0" aria-label="Product Description">@product.Description</p>
+            </div>
+            <form method="post" action="/cart/add" asp-antiforgery="true" class="market-panel p-4 d-flex flex-column gap-3">
                 <input type="hidden" name="sku" value="@product.Sku">
                 <input type="hidden" name="returnUrl" value="@Chrome.ReturnUrl">
-                <label for="product-quantity" class="form-label mb-0">Qty</label>
-                <div class="input-group quantity-stepper">
-                    <button type="button" class="btn btn-outline-secondary" aria-label="Decrease Quantity"
-                            data-step="-1">−</button>
-                    <input id="product-quantity" name="quantity" type="text" inputmode="numeric"
-                           class="form-control text-center" aria-label="Product Quantity" value="1">
-                    <button type="button" class="btn btn-outline-secondary" aria-label="Increase Quantity"
-                            data-step="1">+</button>
+                <div class="d-flex align-items-center justify-content-between gap-3">
+                    <label for="product-quantity" class="form-label fw-bold mb-0">Quantity</label>
+                    <div class="input-group quantity-stepper">
+                        <button type="button" class="btn btn-outline-secondary" aria-label="Decrease Quantity"
+                                data-step="-1">@Icons.Svg("minus")</button>
+                        <input id="product-quantity" name="quantity" type="text" inputmode="numeric"
+                               class="form-control text-center" aria-label="Product Quantity" value="1">
+                        <button type="button" class="btn btn-outline-secondary" aria-label="Increase Quantity"
+                                data-step="1">@Icons.Svg("plus")</button>
+                    </div>
                 </div>
-                <button type="submit" class="btn btn-primary" aria-label="Add to Cart">Add to cart</button>
+                <button type="submit" class="btn btn-primary btn-lg w-100" aria-label="Add to Cart">
+                    @Icons.Svg("shopping-cart", 18, "me-2")Add to cart
+                </button>
+                <ul class="product-perks list-unstyled mb-0">
+                    <li>@Icons.Svg("check") Free shipping on orders over $1,000</li>
+                    <li>@Icons.Svg("check") 30-day returns</li>
+                </ul>
             </form>
-            <hr>
-            <p aria-label="Product Description">@product.Description</p>
-            <p class="text-muted small mb-0">✓ Ships in 1–2 business days · ✓ 30-day returns</p>
         </div>
     </div>
 }

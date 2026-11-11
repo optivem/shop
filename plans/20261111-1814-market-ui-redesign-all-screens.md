@@ -31,15 +31,12 @@
 
 ## ▶ Next executable step (resume here)
 
-frontend-react is fully restyled (Steps 1, 4, 5, 6, 8 done; tokens in `system/multitier/frontend-react/src/styles/market.css`, page CSS in `pages-{shop,orders,account}.css`, hook map in `docs/design/home-redesign/test-hooks-inventory.md`). Verified 2026-11-11: `--sample` system tests green on the multitier stack for TypeScript, Java and .NET (11/11 suites each, incl. UI acceptance + E2E). Next is Step 7 (monolith UIs), starting with the .NET Bootstrap 5.1 → 5.3 bump, then Java (Thymeleaf), then TypeScript (Next.js); reuse `market.css` tokens.
+Step 9, second half. `./compile-all.sh` passed on 2026-11-11 (all 7 configs). Step 7 is committed. Next, run `./test-all.sh` (latest + legacy, all three languages). Run it only once no other session is using the `my-shop-*` docker stacks (`docker ps`) and the in-progress UC-009 `system-test/**` edits are committed. Then hand the user the visual check at desktop and phone widths.
 
 ## Steps
 
-- [ ] Step 2 (skipped while Bootstrap stays — see Decisions): **Decouple tests from Bootstrap classes.** Move the driver selectors `.alert-danger` (CatalogPage, OrderDetailsPage), `.form-check:has(input:checked) label` (CatalogPage) and `table.table tbody tr td:nth-child(n)` (CouponManagementPage) to role/ARIA equivalents in all three languages, latest and legacy. Run `--sample` system tests per language.
-- [x] Step 3 (approved by the user 2026-11-11): **Mock the remaining screens** on the canvas in the Market style (ProductDetail, Cart, Checkout, OrderConfirmation, NewOrder, QuickOrder, OrderHistory, OrderDetails, Account, AdminCoupons, SignIn, plus empty, loading and error states). Get user approval.
-- [ ] Step 7: **Monolith UIs.** First bump the .NET monolith from its vendored Bootstrap 5.1.0 (`wwwroot/lib`) to 5.3.x, because the Market theme needs 5.3 theme variables (Java and TS load 5.3.3 from a CDN). Use the hook map in `docs/design/home-redesign/test-hooks-inventory.md`. Apply the same tokens and styling to each monolith frontend that has its own UI, keeping their test hooks, then run the `--sample` system tests for each language.
-- [ ] Step 9: **Full verification.** Run `./compile-all.sh`, then `./test-all.sh` (latest + legacy, all three languages). Do a visual check at desktop and phone widths.
-- [ ] Step 10: **Docs.** Point `docs/design/home-redesign/README.md` at the chosen direction and the token file.
+- [ ] Step 2: **Decouple tests from Bootstrap classes.** Move the driver selectors `.alert-danger` (CatalogPage, OrderDetailsPage), `.form-check:has(input:checked) label` (CatalogPage) and `table.table tbody tr td:nth-child(n)` (CouponManagementPage) to role/ARIA equivalents in all three languages, latest and legacy. Run `--sample` system tests per language. — ⏳ Deferred: only needed if Bootstrap is ever replaced (see Decisions).
+- [ ] Step 9: **Full verification.** `./compile-all.sh` done (green). Run `./test-all.sh` (latest + legacy, all three languages). The user does the visual check at desktop and phone widths.
 
 ## Follow-up ideas (left out of the styling-only plan: no backing data or behaviour)
 
@@ -52,4 +49,5 @@ frontend-react is fully restyled (Steps 1, 4, 5, 6, 8 done; tokens in `system/mu
 7. **`auth/AuthGate.tsx` redirect view** is unstyled; reuse the `.signin-redirect` classes from `pages-account.css`. Recommendation: cheap, do it in a polish pass.
 8. **`components/DetailField.tsx` no longer used by the order pages.** Recommendation: delete it if nothing else uses it.
 9. **The mockup's "Audio" promo tile was replaced by Monitors** because the catalog has no Audio category; `headphones.jpg` and `cable.jpg` don't ship. Recommendation: keep as is.
-
+10. **Java monolith fonts and promo images live under `static/css/`** (`css/lib/fontsource-figtree/`, `css/images/promo/`), because `SecurityConfig` only lets signed-out visitors load `/css/**`. Recommendation: keep as is. Moving them to `/lib/` and `/images/` (to match .NET) needs those paths added to `STOREFRONT_PAGES`.
+11. **The TS monolith's order-history and coupon tables keep their existing columns.** The Country/Coupon and Status columns the other UIs show were not added, so the driver column contract stays safe. Recommendation: align them only together with a driver check in all three languages.

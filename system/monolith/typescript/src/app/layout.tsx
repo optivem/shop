@@ -5,7 +5,6 @@ import { ADMIN, CUSTOMER } from "@/lib/auth/policy";
 import { SESSION_COOKIE, openSession } from "@/lib/auth/session";
 import { CART_COOKIE, parseCart } from "@/lib/storefront/cart-cookie";
 import { loadCatalog } from "@/lib/storefront/catalog-server";
-import "./globals.css";
 
 // Same-origin state-changing fetch() calls carry a custom header, which the server requires for
 // cookie-authenticated API requests (a cross-site request cannot set it without a CORS preflight).
@@ -21,6 +20,16 @@ const CSRF_FETCH_SCRIPT = `(function () {
     return originalFetch.call(this, input, init);
   };
 })();`;
+
+/** Figtree (self-hosted Fontsource copy), the Market tokens, the store shell, then the page styles. */
+const MARKET_STYLESHEETS = [
+  "/lib/fontsource-figtree/wght.css",
+  "/css/market.css",
+  "/css/storefront.css",
+  "/css/pages-shop.css",
+  "/css/pages-orders.css",
+  "/css/pages-account.css",
+];
 
 export const metadata: Metadata = {
   title: "MyShop",
@@ -49,6 +58,14 @@ export default async function RootLayout({
           href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
           rel="stylesheet"
         />
+        {/*
+          The Market theme (docs/design/home-redesign/) re-themes Bootstrap through its CSS variables, so it must
+          load after Bootstrap. Plain <link>s keep that order (Next's bundled CSS would be emitted before the CDN
+          link); the files live in public/ and the middleware lets these static folders through.
+        */}
+        {MARKET_STYLESHEETS.map((href) => (
+          <link key={href} href={href} rel="stylesheet" />
+        ))}
       </head>
       <body>
         <StorefrontProviders session={user} products={catalog.products} catalogUnavailable={catalog.unavailable} cart={cart}>

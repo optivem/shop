@@ -1,0 +1,592 @@
+/*
+ * Market: order screens (Checkout, OrderConfirmation, OrderHistory, OrderDetails, NewOrder/QuickOrder).
+ * Mockups: docs/design/home-redesign/designs/MCheckout, MOrderConfirmation, MOrderHistory, MOrderDetails, MQuickOrder.
+ * Builds on market.css and the .market-panel / .market-empty patterns in pages-shop.css. Test hooks (aria-labels,
+ * table/tr/td order, the "View Details" text node, p for "Order not found", .alert-danger) are left alone:
+ * see docs/design/home-redesign/test-hooks-inventory.md.
+ */
+
+/* ---- Shared bits ---- */
+
+.order-eyebrow {
+    font-size: var(--market-font-size-xs);
+    font-weight: var(--market-font-weight-bold);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--market-text-muted);
+}
+
+.order-eyebrow-accent {
+    color: var(--market-primary);
+    font-weight: var(--market-font-weight-heavy);
+    letter-spacing: 0.06em;
+}
+
+/* Status pill; .status-<STATUS> is the value class the pages already set. */
+.order-status {
+    display: inline-block;
+    border-radius: var(--market-radius-pill);
+    padding: 3px 10px;
+    font-size: 0.6875rem;
+    font-weight: var(--market-font-weight-heavy);
+    letter-spacing: 0.02em;
+    line-height: 1.4;
+    white-space: nowrap;
+    background: var(--market-surface-muted);
+    color: var(--market-ink);
+}
+
+.order-status.status-PLACED {
+    background: var(--market-info-bg);
+    color: var(--market-info);
+}
+
+.order-status.status-DELIVERED {
+    background: var(--market-success-bg);
+    color: var(--market-success);
+}
+
+.order-status.status-CANCELLED {
+    background: var(--market-danger-bg);
+    color: var(--market-danger);
+}
+
+.order-number,
+.order-number-link {
+    font-family: var(--market-font-mono);
+    font-weight: var(--market-font-weight-bold);
+}
+
+.order-number-link {
+    color: var(--market-primary);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--market-tap-target);
+}
+
+.order-number-link:hover {
+    text-decoration: underline;
+}
+
+/* ---- Checkout ---- */
+
+.checkout-section {
+    padding: var(--market-space-6);
+}
+
+.checkout-step-title {
+    display: flex;
+    align-items: center;
+    gap: var(--market-space-2);
+    font-size: var(--market-font-size-lg);
+    font-weight: var(--market-font-weight-heavy);
+    margin-bottom: var(--market-space-4);
+}
+
+.checkout-step-number {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: var(--market-radius-pill);
+    background: var(--market-ink);
+    color: var(--market-surface);
+    font-size: var(--market-font-size-sm);
+}
+
+.checkout-step-hint {
+    font-size: var(--market-font-size-base);
+    font-weight: var(--market-font-weight-normal);
+    color: var(--market-text-muted);
+}
+
+.checkout-choices {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: var(--market-space-3);
+    margin-bottom: var(--market-space-4);
+}
+
+/* Radio cards: the .form-check wrapper, input and label stay Bootstrap's; the label fills the card. */
+.form-check.checkout-choice {
+    position: relative;
+    margin: 0;
+    padding: 0;
+    border: 1px solid var(--market-border-strong);
+    border-radius: var(--market-radius-lg);
+    background: var(--market-surface);
+}
+
+.form-check.checkout-choice.is-selected {
+    border: 2px solid var(--market-primary);
+    background: var(--market-primary-subtle);
+}
+
+.checkout-choice .form-check-input {
+    position: absolute;
+    top: var(--market-space-4);
+    left: var(--market-space-4);
+    margin: 0;
+}
+
+.checkout-choice .form-check-label {
+    display: block;
+    min-height: var(--market-tap-target);
+    padding: var(--market-space-3) var(--market-space-4) var(--market-space-3) calc(var(--market-space-4) * 2 + 1em);
+    cursor: pointer;
+}
+
+.checkout-choice-title {
+    display: block;
+    font-weight: var(--market-font-weight-bold);
+}
+
+.checkout-choice-detail {
+    display: block;
+    margin-top: 2px;
+    font-size: var(--market-font-size-sm);
+    color: var(--market-text-muted);
+}
+
+.checkout-save-default {
+    display: flex;
+    align-items: center;
+    gap: var(--market-space-2);
+    min-height: var(--market-tap-target);
+    margin-top: var(--market-space-3);
+    margin-bottom: 0;
+}
+
+.checkout-save-default .form-check-input {
+    margin-top: 0;
+}
+
+.checkout-coupon-input {
+    font-family: var(--market-font-mono);
+}
+
+.checkout-review {
+    display: flex;
+    flex-direction: column;
+    gap: var(--market-space-4);
+}
+
+.checkout-review-lines {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--market-space-3);
+}
+
+.checkout-review-line {
+    display: flex;
+    align-items: center;
+    gap: var(--market-space-3);
+}
+
+.checkout-review-thumb {
+    width: 52px;
+    flex: none;
+}
+
+.checkout-review-thumb .product-image {
+    font-size: 0.5625rem;
+    border-radius: var(--market-radius-sm);
+}
+
+.checkout-review-name {
+    flex: 1;
+    min-width: 0;
+}
+
+.checkout-review-title {
+    display: block;
+    font-size: var(--market-font-size-sm);
+    font-weight: var(--market-font-weight-bold);
+    overflow-wrap: anywhere;
+}
+
+.checkout-review-meta {
+    font-size: var(--market-font-size-xs);
+    color: var(--market-text-muted);
+}
+
+.checkout-review-total {
+    font-weight: var(--market-font-weight-bold);
+    white-space: nowrap;
+}
+
+.checkout-review-summary {
+    display: flex;
+    flex-direction: column;
+    gap: var(--market-space-2);
+    padding-top: var(--market-space-4);
+    border-top: 1px solid var(--market-divider);
+    font-size: var(--market-font-size-base);
+}
+
+/* ---- Order confirmation ---- */
+
+.order-confirmation {
+    max-width: 820px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--market-space-4);
+}
+
+.order-confirmation-hero {
+    text-align: center;
+    padding: var(--market-space-8) var(--market-space-6);
+}
+
+.order-confirmation-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    margin: 0 auto var(--market-space-4);
+    border-radius: var(--market-radius-pill);
+    background: var(--market-success-bg);
+    color: var(--market-primary);
+}
+
+.confirmed-orders {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--market-space-3);
+}
+
+.confirmed-order {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--market-space-2) var(--market-space-3);
+    border: 1px solid var(--market-divider);
+    border-radius: var(--market-radius-lg);
+    padding: var(--market-space-2) var(--market-space-4);
+}
+
+.confirmed-order-meta {
+    font-size: var(--market-font-size-sm);
+    color: var(--market-text-muted);
+    padding-bottom: var(--market-space-2);
+}
+
+.alert-warning.order-rejected {
+    --bs-alert-border-radius: var(--market-radius-xl);
+    padding: var(--market-space-4) var(--market-space-5);
+    font-weight: var(--market-font-weight-normal);
+}
+
+.order-confirmation-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--market-space-3);
+    padding-top: var(--market-space-2);
+}
+
+/* ---- Order history ---- */
+
+.orders-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--market-space-3) var(--market-space-4);
+    margin-bottom: var(--market-space-4);
+}
+
+.orders-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: var(--market-space-2);
+}
+
+.orders-filter {
+    flex: 1 1 160px;
+}
+
+.orders-filter-wide {
+    flex-basis: 220px;
+}
+
+.orders-filter .form-label {
+    margin-bottom: var(--market-space-1);
+}
+
+.orders-filter .form-control,
+.orders-filter .form-select {
+    background-color: var(--market-surface);
+}
+
+.btn.orders-refresh {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--market-space-2);
+    font-weight: var(--market-font-weight-heavy);
+}
+
+@media (max-width: 575.98px) {
+    .orders-filters,
+    .orders-filter,
+    .btn.orders-refresh {
+        width: 100%;
+    }
+}
+
+.orders-table {
+    font-size: var(--market-font-size-sm);
+    white-space: nowrap;
+}
+
+.orders-table > thead th {
+    background: transparent;
+    padding: var(--market-space-3) var(--market-space-4);
+    font-size: var(--market-font-size-xs);
+    font-weight: var(--market-font-weight-bold);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--market-text-muted);
+    border-bottom-color: var(--market-divider);
+}
+
+.orders-table > tbody > tr > td {
+    padding: var(--market-space-2) var(--market-space-4);
+    border-bottom-color: var(--market-surface-muted);
+}
+
+.orders-table > tbody > tr:last-child > td {
+    border-bottom: 0;
+}
+
+.orders-table .orders-cell-orderTimestamp,
+.orders-table .orders-cell-appliedCouponCode {
+    color: var(--market-text-muted);
+}
+
+.orders-table .orders-cell-sku,
+.orders-table .orders-cell-appliedCouponCode {
+    font-family: var(--market-font-mono);
+}
+
+.orders-table .orders-cell-totalPrice {
+    text-align: right;
+}
+
+.order-total {
+    font-weight: var(--market-font-weight-heavy);
+}
+
+.order-view-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    min-height: var(--market-tap-target);
+    color: var(--market-primary);
+    font-weight: var(--market-font-weight-bold);
+    text-decoration: none;
+}
+
+.order-view-link:hover {
+    text-decoration: underline;
+}
+
+.orders-table > tbody > tr > td.orders-empty {
+    padding: var(--market-space-8) var(--market-space-4);
+    color: var(--market-text-muted);
+    font-weight: var(--market-font-weight-medium);
+    white-space: normal;
+}
+
+/* ---- Order details ---- */
+
+.order-detail {
+    display: flex;
+    flex-direction: column;
+    gap: var(--market-space-4);
+}
+
+.btn.order-back {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--market-space-1);
+    padding-left: 0;
+    padding-right: 0;
+    font-size: var(--market-font-size-sm);
+    font-weight: var(--market-font-weight-bold);
+    text-decoration: none;
+}
+
+.order-detail-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--market-space-4);
+    padding: var(--market-space-6);
+}
+
+.order-detail-number {
+    margin: 0;
+    font-family: var(--market-font-mono);
+    font-size: 1.625rem;
+    font-weight: var(--market-font-weight-heavy);
+    letter-spacing: -0.02em;
+    overflow-wrap: anywhere;
+}
+
+.order-detail-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--market-space-2);
+}
+
+.order-detail-actions .btn {
+    font-weight: var(--market-font-weight-heavy);
+}
+
+.order-item {
+    display: flex;
+    align-items: center;
+    gap: var(--market-space-4);
+    padding-bottom: var(--market-space-4);
+    border-bottom: 1px solid var(--market-divider);
+}
+
+.order-item-thumb {
+    width: 96px;
+    flex: none;
+}
+
+.order-item-thumb .product-image {
+    font-size: var(--market-font-size-xs);
+    border-radius: var(--market-radius-lg);
+}
+
+.order-item-title {
+    font-size: var(--market-font-size-md);
+    font-weight: var(--market-font-weight-heavy);
+}
+
+.order-item-meta {
+    margin-top: 2px;
+    font-size: var(--market-font-size-sm);
+    color: var(--market-text-muted);
+}
+
+.order-facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: var(--market-space-3) var(--market-space-6);
+    margin: var(--market-space-4) 0 0;
+}
+
+.order-facts dt {
+    font-size: var(--market-font-size-xs);
+    font-weight: var(--market-font-weight-bold);
+    color: var(--market-text-muted);
+}
+
+.order-facts dd {
+    margin: 2px 0 0;
+    overflow-wrap: anywhere;
+}
+
+.order-breakdown {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--market-space-2) var(--market-space-4);
+    margin: 0;
+    font-size: var(--market-font-size-base);
+}
+
+.order-breakdown dt {
+    color: var(--market-text-muted);
+}
+
+.order-breakdown dd {
+    margin: 0;
+    text-align: right;
+}
+
+.order-total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--market-space-3);
+    margin-top: var(--market-space-4);
+    padding-top: var(--market-space-4);
+    border-top: 1px solid var(--market-divider);
+    font-weight: var(--market-font-weight-heavy);
+}
+
+.order-total-value {
+    font-size: 1.625rem;
+    letter-spacing: -0.02em;
+}
+
+/* ---- Quick order / New order ---- */
+
+.quick-order-panel {
+    padding: var(--market-space-6);
+}
+
+@media (min-width: 768px) {
+    .quick-order-panel {
+        padding: 28px;
+    }
+}
+
+.quick-order-form #sku,
+.quick-order-form #coupon-code-optional- {
+    font-family: var(--market-font-mono);
+}
+
+.quick-order-tips {
+    padding-left: 18px;
+    color: var(--market-text-secondary);
+    display: flex;
+    flex-direction: column;
+    gap: var(--market-space-1);
+}
+
+.quick-order-promo {
+    background: var(--market-deal);
+    color: var(--market-on-deal);
+    border-radius: var(--market-radius-xl);
+    padding: var(--market-space-5) var(--market-space-6);
+}
+
+.quick-order-promo-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--market-space-1);
+    min-height: var(--market-tap-target);
+    color: var(--market-on-deal);
+    font-weight: var(--market-font-weight-bold);
+    text-decoration: underline;
+}
+
+.quick-order-promo-link:hover,
+.quick-order-promo-link:focus-visible {
+    color: var(--market-on-deal);
+}
+
+.quick-order-promo-link:focus-visible {
+    outline-color: var(--market-on-deal);
+}

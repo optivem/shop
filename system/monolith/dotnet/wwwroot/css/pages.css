@@ -997,7 +997,7 @@ a.cart-line-title:hover {
 }
 
 .quick-order-form #sku,
-.quick-order-form #coupon-code-optional- {
+.quick-order-form #couponCode {
     font-family: var(--market-font-mono);
 }
 

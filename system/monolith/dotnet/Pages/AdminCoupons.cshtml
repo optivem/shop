@@ -1,5 +1,6 @@
 @page "/admin-coupons"
 @model MyCompany.MyShop.Monolith.Pages.AdminCouponsModel
+@using MyCompany.MyShop.Monolith.Pages.Storefront
 @{
     ViewData["Title"] = "Coupon Management";
     Layout = "_AccountLayout";
@@ -14,47 +15,54 @@
 
 <div id="notifications"></div>
 
-<div class="card shadow mb-4">
-    <div class="card-header bg-primary text-white">
-        <h4 class="mb-0">Create New Coupon</h4>
+<h1 class="admin-coupons-title">Coupons</h1>
+
+<section class="market-panel coupon-panel mb-4" aria-labelledby="coupon-form-heading">
+    <div class="coupon-panel-header">
+        <div>
+            <h2 id="coupon-form-heading" class="coupon-panel-title">Create New Coupon</h2>
+            <p class="coupon-panel-subtitle">Customers enter the code at checkout to get the discount.</p>
+        </div>
     </div>
-    <div class="card-body">
-        <form id="createCouponForm" onsubmit="createCoupon(event)">
+    <div class="coupon-panel-body">
+        <form id="createCouponForm" class="coupon-form" onsubmit="createCoupon(event)">
             <div class="row">
                 <div class="col-md-6 mb-3">
-                    <label for="couponCode" class="form-label">Coupon Code:</label>
-                    <input type="text" class="form-control" id="couponCode" placeholder="e.g., SUMMER2026" aria-label="Coupon Code" required>
+                    <label for="couponCode" class="form-label market-label">Coupon Code:</label>
+                    <input type="text" class="form-control coupon-code-input" id="couponCode" placeholder="e.g., SUMMER2026" aria-label="Coupon Code" required>
                 </div>
                 <div class="col-md-6 mb-3">
-                    <label for="discountRate" class="form-label">Discount Rate (0-1):</label>
+                    <label for="discountRate" class="form-label market-label">Discount Rate (0-1):</label>
                     <input type="number" class="form-control" id="discountRate" placeholder="e.g., 0.2 for 20% off" step="0.01" aria-label="Discount Rate" required>
                 </div>
                 <div class="col-md-6 mb-3">
-                    <label for="validFrom" class="form-label">Valid From (Optional):</label>
+                    <label for="validFrom" class="form-label market-label">Valid From (Optional):</label>
                     <input type="datetime-local" class="form-control" id="validFrom" aria-label="Valid From">
                     <small class="form-text text-muted">Leave empty for immediate validity</small>
                 </div>
                 <div class="col-md-6 mb-3">
-                    <label for="validTo" class="form-label">Valid To (Optional):</label>
+                    <label for="validTo" class="form-label market-label">Valid To (Optional):</label>
                     <input type="datetime-local" class="form-control" id="validTo" aria-label="Valid To">
                     <small class="form-text text-muted">Leave empty for no expiration</small>
                 </div>
                 <div class="col-md-6 mb-3">
-                    <label for="usageLimit" class="form-label">Usage Limit (Optional):</label>
+                    <label for="usageLimit" class="form-label market-label">Usage Limit (Optional):</label>
                     <input type="number" class="form-control" id="usageLimit" placeholder="Leave empty for unlimited" aria-label="Usage Limit">
                 </div>
+                <div class="col-md-6 mb-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100 coupon-submit" aria-label="Create Coupon">Create Coupon</button>
+                </div>
             </div>
-            <button type="submit" class="btn btn-primary" aria-label="Create Coupon">Create Coupon</button>
         </form>
     </div>
-</div>
+</section>
 
-<div class="card shadow">
-    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-        <h4 class="mb-0">Existing Coupons</h4>
-        <button class="btn btn-light btn-sm" onclick="loadCoupons()" aria-label="Refresh Coupon List">Refresh</button>
+<section class="market-panel coupon-panel" aria-labelledby="coupon-table-heading">
+    <div class="coupon-panel-header">
+        <h2 id="coupon-table-heading" class="coupon-panel-title">Existing Coupons</h2>
+        <button type="button" class="btn btn-outline-secondary coupon-refresh" onclick="loadCoupons()" aria-label="Refresh Coupon List">@Icons.Svg("refresh-cw")Refresh</button>
     </div>
-    <div class="card-body">
+    <div>
         <div id="couponsLoading" class="text-center py-3">
             <output>
                 <div class="spinner-border text-primary">
@@ -62,8 +70,8 @@
                 </div>
             </output>
         </div>
-        <div id="couponsTable" aria-label="Coupons Table" style="display: none;">
-            <table class="table">
+        <div id="couponsTable" class="table-responsive" aria-label="Coupons Table" style="display: none;">
+            <table class="table table-hover align-middle mb-0 coupon-table">
                 <thead>
                     <tr>
                         <th>Code</th>
@@ -78,7 +86,7 @@
             </table>
         </div>
     </div>
-</div>
+</section>
 
 @section Scripts {
 <script>

@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import { Icon } from "@/components/Icon";
 import { AccountLayout, LoadingSpinner } from "@/components/StoreLayout";
 import { formatFieldErrors, parseJson, placeOrderResponseSchema, readErrorData } from "@/lib/api-types";
 import { viewProfile } from "@/lib/storefront/api-client";
@@ -46,7 +48,13 @@ export default function NewOrderPage() {
 
   return (
     <AccountLayout title="Quick order" breadcrumbs={BREADCRUMBS}>
-      {initialCountry === null ? <LoadingSpinner message="Loading..." /> : <NewOrderForm initialCountry={initialCountry} />}
+      {initialCountry === null ? (
+        <div className="market-panel">
+          <LoadingSpinner message="Loading..." />
+        </div>
+      ) : (
+        <NewOrderForm initialCountry={initialCountry} />
+      )}
     </AccountLayout>
   );
 }
@@ -112,6 +120,24 @@ function NewOrderForm({ initialCountry }: Readonly<{ initialCountry: string }>) 
     }
   }
 
+  const field = (id: string, label: string, ariaLabel: string, value: string, onChange: (value: string) => void, placeholder: string, extra?: { inputMode?: "numeric" }) => (
+    <div className="mb-3">
+      <label htmlFor={id} className="form-label market-label">
+        {label}:
+      </label>
+      <input
+        type="text"
+        className="form-control"
+        id={id}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        aria-label={ariaLabel}
+        {...extra}
+      />
+    </div>
+  );
+
   return (
     <>
       {notification && (
@@ -121,103 +147,74 @@ function NewOrderForm({ initialCountry }: Readonly<{ initialCountry: string }>) 
           data-notification-id={notification.id}
         >
           {notification.type === "success" ? (
-            notification.message
+            <>
+              <Icon name="circle-check" size={20} className="notification-icon" />
+              {notification.message}
+            </>
           ) : (
             <>
-              <div className="error-message">{notification.message}</div>
-              {notification.fieldErrors.map((fe) => (
-                <div key={fe} className="field-error">
-                  {fe}
-                </div>
-              ))}
+              <Icon name="circle-alert" size={20} className="notification-icon" />
+              <div className="notification-body">
+                <div className="error-message">{notification.message}</div>
+                {notification.fieldErrors.map((fe) => (
+                  <div key={fe} className="field-error">
+                    {fe}
+                  </div>
+                ))}
+              </div>
             </>
           )}
         </div>
       )}
 
-      <div className="row">
-        <div className="col-lg-6 mx-auto">
-          <div className="card shadow">
-            <div className="card-header bg-primary text-white">
-              <h4 className="mb-0">Place Your Order</h4>
-            </div>
-            <div className="card-body">
-              <form
-                onSubmit={(e) => {
-                  void handleSubmit(e);
-                }}
-              >
-                <div className="mb-3">
-                  <label htmlFor="sku" className="form-label">
-                    SKU:
-                  </label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    id="sku"
-                    value={sku}
-                    onChange={(e) => setSku(e.target.value)}
-                    placeholder="Enter product SKU"
-                    aria-label="SKU"
-                  />
+      <div className="row g-4 align-items-start">
+        <div className="col-xl-8">
+          <section className="market-panel quick-order-panel">
+            <p className="order-eyebrow order-eyebrow-accent mb-1">Quick order</p>
+            <h1 className="h2 mb-1">Place Your Order</h1>
+            <p className="text-body-secondary mb-4">Know the SKU? Order it directly without browsing.</p>
+            <form
+              className="quick-order-form"
+              onSubmit={(e) => {
+                void handleSubmit(e);
+              }}
+            >
+              <div className="row gx-3">
+                <div className="col-12">{field("sku", "SKU", "SKU", sku, setSku, "Enter product SKU")}</div>
+                <div className="col-sm-6">
+                  {field("quantity", "Quantity", "Quantity", quantity, setQuantity, "Enter quantity", { inputMode: "numeric" })}
                 </div>
-                <div className="mb-3">
-                  <label htmlFor="quantity" className="form-label">
-                    Quantity:
-                  </label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    id="quantity"
-                    inputMode="numeric"
-                    value={quantity}
-                    onChange={(e) => setQuantity(e.target.value)}
-                    placeholder="Enter quantity"
-                    aria-label="Quantity"
-                  />
+                <div className="col-sm-6">{field("country", "Country", "Country", country, setCountry, "Enter country code (e.g. US)")}</div>
+                <div className="col-12">
+                  {field("couponCode", "Coupon Code (optional)", "Coupon Code", couponCode, setCouponCode, "Enter coupon code")}
                 </div>
-                <div className="mb-3">
-                  <label htmlFor="country" className="form-label">
-                    Country:
-                  </label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    id="country"
-                    value={country}
-                    onChange={(e) => setCountry(e.target.value)}
-                    placeholder="Enter country code (e.g. US)"
-                    aria-label="Country"
-                  />
-                </div>
-                <div className="mb-3">
-                  <label htmlFor="couponCode" className="form-label">
-                    Coupon Code (optional):
-                  </label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    id="couponCode"
-                    value={couponCode}
-                    onChange={(e) => setCouponCode(e.target.value)}
-                    placeholder="Enter coupon code"
-                    aria-label="Coupon Code"
-                  />
-                </div>
-                <div className="d-grid">
-                  <button
-                    type="submit"
-                    className="btn btn-primary btn-lg"
-                    disabled={submitting}
-                    aria-label="Place Order"
-                  >
-                    {submitting ? "Placing Order..." : "Place Order"}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
+              </div>
+              <div className="d-grid mt-2">
+                <button type="submit" className="btn btn-primary btn-lg" disabled={submitting} aria-label="Place Order">
+                  {submitting && <span className="spinner-border spinner-border-sm me-2" aria-hidden="true" />}
+                  {submitting ? "Placing Order..." : "Place Order"}
+                </button>
+              </div>
+            </form>
+          </section>
         </div>
+        <aside className="col-xl-4 d-flex flex-column gap-3" aria-label="Quick order help">
+          <div className="market-panel p-4">
+            <h2 className="h6 fw-bold mb-2">Tips</h2>
+            <ul className="quick-order-tips mb-0">
+              <li>The SKU is shown on every product page.</li>
+              <li>Country is a two-letter code, such as US, DE or GB.</li>
+              <li>Tax is calculated from the country.</li>
+            </ul>
+          </div>
+          <div className="quick-order-promo">
+            <p className="fw-bold mb-1">Ordering several items?</p>
+            <Link href="/" className="quick-order-promo-link">
+              Browse the catalog and use the cart
+              <Icon name="arrow-right" />
+            </Link>
+          </div>
+        </aside>
       </div>
     </>
   );

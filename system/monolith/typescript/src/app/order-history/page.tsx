@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { AccountLayout } from "@/components/StoreLayout";
+import { Icon } from "@/components/Icon";
+import { AccountLayout, ErrorAlert, LoadingSpinner } from "@/components/StoreLayout";
 import { useSession } from "@/components/StorefrontProviders";
 import { ordersResponseSchema, parseJson, readErrorData, type Order } from "@/lib/api-types";
 
@@ -105,149 +106,142 @@ export default function OrderHistoryPage() {
   // The chosen customer stays offered even before the list of customers has arrived.
   const customerOptions = customer && !customers.includes(customer) ? mergeCustomers(customers, [customer]) : customers;
 
+  const columnCount = showCustomer ? 8 : 7;
+
   return (
     <AccountLayout
       title={isAdmin ? "All orders" : "My orders"}
       breadcrumbs={[{ label: "Home", path: "/" }, ...(isAdmin ? [{ label: "Admin" }, { label: "All orders" }] : [{ label: "My orders" }])]}
     >
-      <div className="card shadow">
-        <div className="card-header bg-primary text-white">
-          <h4 className="mb-0">Order History</h4>
-        </div>
-        <div className="card-body">
-          <div className="row mb-3 g-3">
-            {isAdmin && (
-              <div className="col-md-4">
-                <label htmlFor="customerFilter" className="form-label">
-                  Customer:
-                </label>
-                <select
-                  id="customerFilter"
-                  className="form-select"
-                  aria-label="Customer Filter"
-                  value={customer}
-                  onChange={(e) => handleCustomerChange(e.target.value)}
-                >
-                  <option value="">All customers</option>
-                  {customerOptions.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-            <div className={isAdmin ? "col-md-5" : "col-md-8"}>
-              <label htmlFor="orderNumberFilter" className="form-label">
-                Filter by Order Number:
-              </label>
-              <input
-                type="text"
-                className="form-control"
-                id="orderNumberFilter"
-                value={filter}
-                onChange={(e) => setFilter(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") handleRefresh();
-                }}
-                placeholder="Enter order number..."
-                aria-label="Order Number"
-              />
-            </div>
-            <div className={`${isAdmin ? "col-md-3" : "col-md-4"} d-flex align-items-end`}>
-              <button
-                className="btn btn-secondary w-100"
-                onClick={handleRefresh}
-                disabled={loading}
-                aria-label="Refresh Order List"
-              >
-                Refresh
-              </button>
-            </div>
-          </div>
-
-          {loading && (
-            <div className="text-center py-5">
-              <output>
-                <div className="spinner-border text-primary">
-                  <span className="visually-hidden">Loading...</span>
-                </div>
-              </output>
-              <p className="mt-3">Loading orders...</p>
-            </div>
-          )}
-          {!loading && error && (
-            <div
-              className="alert alert-danger d-flex justify-content-between align-items-center"
-              role="alert"
-            >
-              <div>
-                <strong>Error:</strong> {error}
-              </div>
-              <button
-                className="btn btn-sm btn-outline-danger"
-                onClick={handleRefresh}
-              >
-                Try Again
-              </button>
-            </div>
-          )}
+      <div className="orders-toolbar">
+        <div>
+          <h1 className="h2 mb-1">Order History</h1>
           {!loading && !error && (
-            <div className="table-responsive">
-              <table className="table table-striped table-hover">
-                <thead>
-                  <tr>
-                    <th>Order Number</th>
-                    {showCustomer && <th>Customer</th>}
-                    <th>Order Date</th>
-                    <th>SKU</th>
-                    <th>Quantity</th>
-                    <th>Total Price</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {orders.length === 0 ? (
-                    <tr>
-                      <td colSpan={showCustomer ? 8 : 7} className="text-center">
-                        No orders found
-                      </td>
-                    </tr>
-                  ) : (
-                    orders.map((order) => (
-                      <tr key={order.orderNumber}>
-                        <td>{order.orderNumber}</td>
-                        {showCustomer && <td>{order.customer ?? "-"}</td>}
-                        <td>
-                          {new Date(order.orderTimestamp).toLocaleString("en-US", {
-                            timeZone: "UTC",
-                          })}
-                        </td>
-                        <td>{order.sku}</td>
-                        <td>{order.quantity}</td>
-                        <td>${order.totalPrice}</td>
-                        <td>
-                          <span className={`status-${order.status}`}>
-                            {order.status}
-                          </span>
-                        </td>
-                        <td>
-                          <Link
-                            href={`/order-details?orderNumber=${encodeURIComponent(order.orderNumber)}`}
-                          >
-                            View Details
-                          </Link>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+            <p className="text-body-secondary mb-0">
+              {orders.length} {orders.length === 1 ? "order" : "orders"}
+            </p>
+          )}
+        </div>
+        <div className="orders-filters">
+          {isAdmin && (
+            <div className="orders-filter">
+              <label htmlFor="customerFilter" className="form-label market-label">
+                Customer:
+              </label>
+              <select
+                id="customerFilter"
+                className="form-select"
+                aria-label="Customer Filter"
+                value={customer}
+                onChange={(e) => handleCustomerChange(e.target.value)}
+              >
+                <option value="">All customers</option>
+                {customerOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
             </div>
           )}
+          <div className="orders-filter orders-filter-wide">
+            <label htmlFor="orderNumberFilter" className="form-label market-label">
+              Filter by Order Number:
+            </label>
+            <input
+              type="text"
+              className="form-control"
+              id="orderNumberFilter"
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleRefresh();
+              }}
+              placeholder="Enter order number..."
+              aria-label="Order Number"
+            />
+          </div>
+          <button
+            type="button"
+            className="btn btn-outline-secondary orders-refresh"
+            onClick={handleRefresh}
+            disabled={loading}
+            aria-label="Refresh Order List"
+          >
+            <Icon name="refresh-cw" />
+            Refresh
+          </button>
         </div>
       </div>
+
+      {loading && (
+        <div className="market-panel">
+          <LoadingSpinner message="Loading orders..." />
+        </div>
+      )}
+      {!loading && error && <ErrorAlert message={error} onRetry={handleRefresh} />}
+      {!loading && !error && (
+        <div className="market-panel orders-panel">
+          {/* The table keeps all its columns: on small screens the panel scrolls sideways, the page never does. */}
+          <div className="table-responsive">
+            <table className="table table-hover align-middle mb-0 orders-table">
+              <thead>
+                <tr>
+                  <th>Order Number</th>
+                  {showCustomer && <th>Customer</th>}
+                  <th>Order Date</th>
+                  <th>SKU</th>
+                  <th>Quantity</th>
+                  <th>Total Price</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {orders.length === 0 ? (
+                  <tr>
+                    <td colSpan={columnCount} className="orders-empty text-center">
+                      No orders found
+                    </td>
+                  </tr>
+                ) : (
+                  orders.map((order) => (
+                    <tr key={order.orderNumber}>
+                      <td className="orders-cell-orderNumber">
+                        <span className="order-number">{order.orderNumber}</span>
+                      </td>
+                      {showCustomer && <td>{order.customer ?? "-"}</td>}
+                      <td className="orders-cell-orderTimestamp">
+                        {new Date(order.orderTimestamp).toLocaleString("en-US", {
+                          timeZone: "UTC",
+                        })}
+                      </td>
+                      <td className="orders-cell-sku">{order.sku}</td>
+                      <td>{order.quantity}</td>
+                      <td className="orders-cell-totalPrice">
+                        <span className="order-total">${order.totalPrice}</span>
+                      </td>
+                      <td>
+                        <span className={`order-status status-${order.status}`}>{order.status}</span>
+                      </td>
+                      <td className="orders-cell-actions">
+                        {/* "View Details" must stay the link's first text node: drivers find it with contains(text(), ...). */}
+                        <Link
+                          href={`/order-details?orderNumber=${encodeURIComponent(order.orderNumber)}`}
+                          className="order-view-link"
+                        >
+                          View Details
+                          <Icon name="chevron-right" />
+                        </Link>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </AccountLayout>
   );
 }

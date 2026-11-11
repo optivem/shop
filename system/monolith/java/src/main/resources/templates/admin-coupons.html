@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout :: layout(~{::title}, ~{::section}, true)}">
+      th:replace="~{layout :: layout(~{::title}, ~{::#page-content}, true)}">
 <head>
     <title>Coupon Management · MyShop</title>
 </head>
 <body>
-<section>
+<div id="page-content">
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="/">Home</a></li>
@@ -13,85 +13,82 @@
         </ol>
     </nav>
 
-    <h2>Coupon Management</h2>
-
     <div id="notifications"></div>
 
-    <div class="card shadow mb-4">
-        <div class="card-header bg-primary text-white">
-            <h4 class="mb-0">Create New Coupon</h4>
+    <h1 class="admin-coupons-title">Coupons</h1>
+
+    <section class="market-panel coupon-panel mb-4" aria-labelledby="coupon-form-heading">
+        <div class="coupon-panel-header">
+            <div>
+                <h2 id="coupon-form-heading" class="coupon-panel-title">Create New Coupon</h2>
+                <p class="coupon-panel-subtitle">Customers enter the code at checkout to get the discount.</p>
+            </div>
         </div>
-        <div class="card-body">
-            <form id="createCouponForm">
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label for="code" class="form-label">Coupon Code:</label>
-                        <input type="text" class="form-control" id="code"
+        <div class="coupon-panel-body">
+            <form id="createCouponForm" class="coupon-form">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="code" class="form-label market-label">Coupon Code:</label>
+                        <input type="text" class="form-control coupon-code-input" id="code"
                                aria-label="Coupon Code" placeholder="e.g., SUMMER2026">
                     </div>
-                    <div class="col-md-6">
-                        <label for="discountRate" class="form-label">Discount Rate (0-1):</label>
+                    <div class="col-md-6 mb-3">
+                        <label for="discountRate" class="form-label market-label">Discount Rate (0-1):</label>
                         <input type="number" class="form-control" id="discountRate"
                                aria-label="Discount Rate" step="0.01" placeholder="e.g., 0.2 for 20% off">
                     </div>
-                </div>
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label for="validFrom" class="form-label">Valid From (Optional):</label>
+                    <div class="col-md-6 mb-3">
+                        <label for="validFrom" class="form-label market-label">Valid From (Optional):</label>
                         <input type="datetime-local" class="form-control" id="validFrom"
                                aria-label="Valid From">
                         <small class="form-text text-muted">Leave empty for immediate validity</small>
                     </div>
-                    <div class="col-md-6">
-                        <label for="validTo" class="form-label">Valid To (Optional):</label>
+                    <div class="col-md-6 mb-3">
+                        <label for="validTo" class="form-label market-label">Valid To (Optional):</label>
                         <input type="datetime-local" class="form-control" id="validTo"
                                aria-label="Valid To">
                         <small class="form-text text-muted">Leave empty for no expiration</small>
                     </div>
-                </div>
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label for="usageLimit" class="form-label">Usage Limit (Optional):</label>
+                    <div class="col-md-6 mb-3">
+                        <label for="usageLimit" class="form-label market-label">Usage Limit (Optional):</label>
                         <input type="number" class="form-control" id="usageLimit"
                                aria-label="Usage Limit" placeholder="Leave empty for unlimited">
                     </div>
-                    <div class="col-md-6 d-flex align-items-end">
-                        <button type="submit" class="btn btn-primary w-100" id="submitBtn"
+                    <div class="col-md-6 mb-3 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100 coupon-submit" id="submitBtn"
                                 aria-label="Create Coupon">Create Coupon</button>
                     </div>
                 </div>
             </form>
         </div>
-    </div>
+    </section>
 
-    <div class="card shadow">
-        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-            <h4 class="mb-0">Existing Coupons</h4>
-            <button class="btn btn-light btn-sm" id="refreshBtn"
-                    aria-label="Refresh Coupon List">Refresh</button>
+    <section class="market-panel coupon-panel" aria-labelledby="coupon-table-heading">
+        <div class="coupon-panel-header">
+            <h2 id="coupon-table-heading" class="coupon-panel-title">Existing Coupons</h2>
+            <button type="button" class="btn btn-outline-secondary coupon-refresh" id="refreshBtn"
+                    aria-label="Refresh Coupon List"><svg th:replace="~{fragments/icons :: icon('refresh-cw', 16, null, 2)}"></svg>Refresh</button>
         </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-striped table-hover" aria-label="Coupons Table">
-                    <thead>
-                        <tr>
-                            <th>Code</th>
-                            <th>Discount Rate</th>
-                            <th>Valid From</th>
-                            <th>Valid To</th>
-                            <th>Usage Limit</th>
-                            <th>Used Count</th>
-                        </tr>
-                    </thead>
-                    <tbody id="couponsTableBody">
-                        <tr id="loadingRow">
-                            <td colspan="6" class="text-center py-3">Loading coupons...</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 coupon-table" aria-label="Coupons Table">
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Discount Rate</th>
+                        <th>Valid From</th>
+                        <th>Valid To</th>
+                        <th>Usage Limit</th>
+                        <th>Used Count</th>
+                    </tr>
+                </thead>
+                <tbody id="couponsTableBody">
+                    <tr id="loadingRow">
+                        <td colspan="6" class="text-center py-3">Loading coupons...</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
-    </div>
+    </section>
 
     <script>
         var notificationCounter = 0;
@@ -219,6 +216,6 @@
             }
         });
     </script>
-</section>
+</div>
 </body>
 </html>

@@ -51,5 +51,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   runtime: 'nodejs',
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+  // Static files from public/ (Market theme CSS, the self-hosted font, promo photos) are public to everyone.
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|css/|lib/|images/).*)'],
 };

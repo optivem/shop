@@ -6,6 +6,7 @@ import { brandColour } from "@/lib/storefront/brand-colour";
 import { clampQuantity, parseQuantity } from "@/lib/storefront/quantity";
 import { SHIPPING_COUNTRIES, type AddressErrors } from "@/lib/storefront/shipping";
 import type { ShippingAddress } from "@/lib/storefront/types";
+import { Icon } from "./Icon";
 
 // Product image placeholder: the ERP has no image field, so each product gets a tile with its brand name,
 // coloured by a deterministic hash of the brand (storefront-ux §5). No external images.
@@ -63,9 +64,9 @@ export function QuantityStepper({ quantity, onChange, onInvalid, ariaLabel, decr
   };
 
   return (
-    <div className="input-group input-group-sm quantity-stepper">
+    <div className="input-group quantity-stepper">
       <button type="button" className="btn btn-outline-secondary" aria-label={decreaseLabel} onClick={() => step(-1)}>
-        −
+        <Icon name="minus" />
       </button>
       <input
         type="text"
@@ -78,7 +79,7 @@ export function QuantityStepper({ quantity, onChange, onInvalid, ariaLabel, decr
         onKeyDown={onKeyDown}
       />
       <button type="button" className="btn btn-outline-secondary" aria-label={increaseLabel} onClick={() => step(1)}>
-        +
+        <Icon name="plus" />
       </button>
     </div>
   );

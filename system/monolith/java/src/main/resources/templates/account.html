@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout :: layout(~{::title}, ~{::section}, true)}">
+      th:replace="~{layout :: layout(~{::title}, ~{::#page-content}, true)}">
 <head>
     <title>My account · MyShop</title>
 </head>
 <body>
 <!-- `/account` (My account › Profile & address, UC-010): name and default shipping address. -->
-<section>
+<div id="page-content">
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="/">Home</a></li>
@@ -17,63 +17,61 @@
 
     <div id="notifications"></div>
 
-    <div class="card shadow">
-        <div class="card-header bg-primary text-white">
-            <h4 class="mb-0">Profile &amp; address</h4>
-        </div>
-        <div class="card-body">
-            <form id="profileForm" novalidate>
-                <div class="row g-3 mb-3">
-                    <div class="col-md-6">
-                        <label for="profile-firstName" class="form-label">First name</label>
-                        <input id="profile-firstName" type="text" class="form-control" aria-label="First Name"
-                               th:value="${profile.firstName}">
-                    </div>
-                    <div class="col-md-6">
-                        <label for="profile-lastName" class="form-label">Last name</label>
-                        <input id="profile-lastName" type="text" class="form-control" aria-label="Last Name"
-                               th:value="${profile.lastName}">
-                    </div>
-                    <div class="col-12">
-                        <label for="profile-email" class="form-label">Email</label>
-                        <input id="profile-email" type="email" class="form-control" aria-label="Email"
-                               th:value="${profile.email}" readonly disabled>
-                        <div class="form-text">Your email comes from your sign-in account and can't be changed here.</div>
-                    </div>
+    <section class="market-panel account-panel" aria-labelledby="account-heading">
+        <h1 id="account-heading" class="account-title">Profile &amp; address</h1>
+        <form id="profileForm" class="account-form" novalidate>
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label for="profile-firstName" class="form-label">First name</label>
+                    <input id="profile-firstName" type="text" class="form-control" aria-label="First Name"
+                           th:value="${profile.firstName}">
                 </div>
-                <h5 class="mt-4">Shipping address</h5>
-                <div class="row g-3">
-                    <div class="col-12">
-                        <label for="profile-street" class="form-label">Street</label>
-                        <input id="profile-street" type="text" class="form-control" aria-label="Street"
-                               th:value="${profile.street}">
-                    </div>
-                    <div class="col-md-4">
-                        <label for="profile-postalCode" class="form-label">Postal code</label>
-                        <input id="profile-postalCode" type="text" class="form-control" aria-label="Postal Code"
-                               th:value="${profile.postalCode}">
-                    </div>
-                    <div class="col-md-4">
-                        <label for="profile-city" class="form-label">City</label>
-                        <input id="profile-city" type="text" class="form-control" aria-label="City"
-                               th:value="${profile.city}">
-                    </div>
-                    <div class="col-md-4">
-                        <label for="profile-country" class="form-label">Country</label>
-                        <select id="profile-country" class="form-select" aria-label="Profile Country">
-                            <option value="">Select a country</option>
-                            <option th:each="country : ${countries}" th:value="${country}" th:text="${country}"
-                                    th:selected="${profile.country == country}">US</option>
-                        </select>
-                    </div>
+                <div class="col-md-6">
+                    <label for="profile-lastName" class="form-label">Last name</label>
+                    <input id="profile-lastName" type="text" class="form-control" aria-label="Last Name"
+                           th:value="${profile.lastName}">
                 </div>
-                <p class="form-text mt-3" aria-label="Tax Country Hint">
-                    Sales tax is charged at the rate of your shipping address's country.
-                </p>
+                <div class="col-12">
+                    <label for="profile-email" class="form-label">Email</label>
+                    <input id="profile-email" type="email" class="form-control" aria-label="Email"
+                           th:value="${profile.email}" readonly disabled>
+                    <div class="form-text">Your email comes from your sign-in account and can't be changed here.</div>
+                </div>
+            </div>
+            <h2 class="account-section-title">Shipping address</h2>
+            <div class="row g-3">
+                <div class="col-12">
+                    <label for="profile-street" class="form-label">Street</label>
+                    <input id="profile-street" type="text" class="form-control" aria-label="Street"
+                           th:value="${profile.street}">
+                </div>
+                <div class="col-md-4">
+                    <label for="profile-postalCode" class="form-label">Postal code</label>
+                    <input id="profile-postalCode" type="text" class="form-control" aria-label="Postal Code"
+                           th:value="${profile.postalCode}">
+                </div>
+                <div class="col-md-4">
+                    <label for="profile-city" class="form-label">City</label>
+                    <input id="profile-city" type="text" class="form-control" aria-label="City"
+                           th:value="${profile.city}">
+                </div>
+                <div class="col-md-4">
+                    <label for="profile-country" class="form-label">Country</label>
+                    <select id="profile-country" class="form-select" aria-label="Profile Country">
+                        <option value="">Select a country</option>
+                        <option th:each="country : ${countries}" th:value="${country}" th:text="${country}"
+                                th:selected="${profile.country == country}">US</option>
+                    </select>
+                </div>
+            </div>
+            <p class="form-text mt-3" aria-label="Tax Country Hint">
+                Sales tax is charged at the rate of your shipping address's country.
+            </p>
+            <div class="account-actions">
                 <button type="submit" class="btn btn-primary" aria-label="Save Profile" id="saveProfileBtn">Save profile</button>
-            </form>
-        </div>
-    </div>
+            </div>
+        </form>
+    </section>
 
     <script>
         (function () {
@@ -137,6 +135,6 @@
             });
         })();
     </script>
-</section>
+</div>
 </body>
 </html>

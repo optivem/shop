@@ -1,0 +1,414 @@
+/*
+ * Market theme: the design tokens and a thin component layer on top of Bootstrap 5.3.
+ *
+ * Values come from the approved mockups in docs/design/home-redesign/designs/
+ * (MarketHome.dc.html and M*.dc.html). Bootstrap stays underneath and is re-themed
+ * through its CSS variables; this file is linked after Bootstrap and Fontsource
+ * in src/app/layout.tsx so it wins the cascade. Light theme only.
+ */
+
+:root {
+    /* ---- Colour ---- */
+    --market-primary: #0f766e;          /* teal: buttons, links, active states (5.5:1 on white) */
+    --market-primary-rgb: 15, 118, 110;
+    --market-primary-hover: #115e59;
+    --market-primary-active: #134e4a;
+    --market-primary-subtle: #f0fdfa;
+    --market-on-primary: #ffffff;
+
+    --market-ink: #0f172a;              /* body text, headings, dark strip */
+    --market-ink-rgb: 15, 23, 42;
+    --market-text-secondary: #334155;
+    --market-text-muted: #475569;       /* AA on both surface and page background */
+    --market-on-ink: #e2e8f0;
+
+    --market-bg: #eef1f5;               /* page background */
+    --market-bg-rgb: 238, 241, 245;
+    --market-surface: #ffffff;          /* cards, panels, header */
+    --market-surface-muted: #f1f5f9;    /* table heads, select addons, chips */
+    --market-surface-subtle: #f8fafc;
+
+    --market-border: #dce1e8;
+    --market-border-strong: #cbd5e1;
+    --market-divider: #e2e8f0;
+
+    --market-deal: #fde047;             /* yellow deal / promo badge */
+    --market-on-deal: #422006;
+
+    --market-success: #065f46;
+    --market-success-bg: #ecfdf5;
+    --market-danger: #991b1b;
+    --market-danger-bg: #fef2f2;
+    --market-danger-border: #fecaca;
+    --market-info: #075985;
+    --market-info-bg: #e0f2fe;
+
+    /* ---- Typography ---- */
+    --market-font-sans: 'Figtree Variable', Figtree, system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --market-font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --market-font-size-xs: 0.75rem;     /* 12px */
+    --market-font-size-sm: 0.8125rem;   /* 13px */
+    --market-font-size-base: 0.875rem;  /* 14px */
+    --market-font-size-md: 0.9375rem;   /* 15px */
+    --market-font-size-lg: 1.125rem;    /* 18px */
+    --market-font-size-xl: 1.5rem;      /* 24px */
+    --market-font-size-2xl: 1.875rem;   /* 30px */
+    --market-font-size-3xl: 2.5rem;     /* 40px */
+    --market-line-height: 1.45;
+    --market-line-height-tight: 1.1;
+    --market-letter-spacing-tight: -0.03em;
+    --market-font-weight-normal: 400;
+    --market-font-weight-medium: 600;
+    --market-font-weight-bold: 700;
+    --market-font-weight-heavy: 800;
+
+    /* ---- Radius ---- */
+    --market-radius-xs: 6px;            /* small badges */
+    --market-radius-sm: 8px;
+    --market-radius-md: 10px;           /* buttons, inputs, alerts */
+    --market-radius-lg: 12px;           /* search bar, larger controls */
+    --market-radius-xl: 16px;           /* cards, panels */
+    --market-radius-2xl: 18px;          /* hero tiles */
+    --market-radius-pill: 999px;
+
+    /* ---- Spacing (4px grid) ---- */
+    --market-space-1: 4px;
+    --market-space-2: 8px;
+    --market-space-3: 12px;
+    --market-space-4: 16px;
+    --market-space-5: 20px;
+    --market-space-6: 24px;
+    --market-space-8: 32px;
+    --market-space-12: 48px;
+    --market-space-16: 64px;
+    --market-container-max: 1360px;
+    --market-tap-target: 44px;
+
+    /* ---- Elevation (the mockups are flat; shadows stay subtle) ---- */
+    --market-shadow-sm: 0 1px 2px rgba(var(--market-ink-rgb), 0.06);
+    --market-shadow-md: 0 4px 12px rgba(var(--market-ink-rgb), 0.08);
+    --market-shadow-lg: 0 12px 32px rgba(var(--market-ink-rgb), 0.12);
+
+    /* ---- Focus ---- */
+    --market-focus-ring-width: 2px;
+    --market-focus-ring-offset: 2px;
+    --market-focus-ring-color: var(--market-primary);
+
+    /* ---- Bootstrap 5.3 root variables mapped to Market tokens ---- */
+    --bs-primary: var(--market-primary);
+    --bs-primary-rgb: var(--market-primary-rgb);
+    --bs-primary-text-emphasis: var(--market-primary-active);
+    --bs-primary-bg-subtle: var(--market-primary-subtle);
+    --bs-primary-border-subtle: #99f6e4;
+    --bs-success-text-emphasis: var(--market-success);
+    --bs-success-bg-subtle: var(--market-success-bg);
+    --bs-danger-text-emphasis: var(--market-danger);
+    --bs-danger-bg-subtle: var(--market-danger-bg);
+    --bs-danger-border-subtle: var(--market-danger-border);
+    --bs-info-text-emphasis: var(--market-info);
+    --bs-info-bg-subtle: var(--market-info-bg);
+
+    --bs-font-sans-serif: var(--market-font-sans);
+    --bs-font-monospace: var(--market-font-mono);
+    --bs-body-font-family: var(--market-font-sans);
+    --bs-body-font-size: var(--market-font-size-base);
+    --bs-body-line-height: var(--market-line-height);
+    --bs-body-color: var(--market-ink);
+    --bs-body-color-rgb: var(--market-ink-rgb);
+    --bs-body-bg: var(--market-bg);
+    --bs-body-bg-rgb: var(--market-bg-rgb);
+    --bs-emphasis-color: var(--market-ink);
+    --bs-secondary-color: var(--market-text-muted);
+    --bs-secondary-bg: var(--market-surface-muted);
+    --bs-tertiary-bg: var(--market-surface-subtle);
+    --bs-heading-color: var(--market-ink);
+
+    --bs-link-color: var(--market-primary);
+    --bs-link-color-rgb: var(--market-primary-rgb);
+    --bs-link-hover-color: var(--market-primary-hover);
+    --bs-link-hover-color-rgb: 17, 94, 89;
+
+    --bs-border-color: var(--market-border);
+    --bs-border-color-translucent: rgba(var(--market-ink-rgb), 0.12);
+    --bs-border-radius: var(--market-radius-md);
+    --bs-border-radius-sm: var(--market-radius-sm);
+    --bs-border-radius-lg: var(--market-radius-lg);
+    --bs-border-radius-xl: var(--market-radius-xl);
+    --bs-border-radius-xxl: var(--market-radius-2xl);
+    --bs-border-radius-pill: var(--market-radius-pill);
+
+    --bs-box-shadow-sm: var(--market-shadow-sm);
+    --bs-box-shadow: var(--market-shadow-md);
+    --bs-box-shadow-lg: var(--market-shadow-lg);
+
+    --bs-focus-ring-width: 0.25rem;
+    --bs-focus-ring-opacity: 0.3;
+    --bs-focus-ring-color: rgba(var(--market-primary-rgb), 0.3);
+    --bs-form-valid-color: var(--market-success);
+    --bs-form-invalid-color: var(--market-danger);
+}
+
+/* ---- Base ---- */
+
+body {
+    background-color: var(--market-bg);
+    color: var(--market-ink);
+    font-family: var(--market-font-sans);
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-weight: var(--market-font-weight-heavy);
+    letter-spacing: -0.02em;
+}
+
+:focus-visible {
+    outline: var(--market-focus-ring-width) solid var(--market-focus-ring-color);
+    outline-offset: var(--market-focus-ring-offset);
+}
+
+/* ---- Buttons (Bootstrap 5.3 buttons read component-level variables) ---- */
+
+.btn {
+    --bs-btn-font-weight: var(--market-font-weight-bold);
+    --bs-btn-border-radius: var(--market-radius-md);
+    --bs-btn-border-radius-sm: var(--market-radius-sm);
+    --bs-btn-border-radius-lg: var(--market-radius-lg);
+}
+
+.btn-primary {
+    --bs-btn-color: var(--market-on-primary);
+    --bs-btn-bg: var(--market-primary);
+    --bs-btn-border-color: var(--market-primary);
+    --bs-btn-hover-color: var(--market-on-primary);
+    --bs-btn-hover-bg: var(--market-primary-hover);
+    --bs-btn-hover-border-color: var(--market-primary-hover);
+    --bs-btn-focus-shadow-rgb: var(--market-primary-rgb);
+    --bs-btn-active-color: var(--market-on-primary);
+    --bs-btn-active-bg: var(--market-primary-active);
+    --bs-btn-active-border-color: var(--market-primary-active);
+    --bs-btn-disabled-color: var(--market-on-primary);
+    --bs-btn-disabled-bg: var(--market-primary);
+    --bs-btn-disabled-border-color: var(--market-primary);
+}
+
+.btn-outline-primary {
+    --bs-btn-color: var(--market-primary);
+    --bs-btn-border-color: var(--market-primary);
+    --bs-btn-hover-color: var(--market-on-primary);
+    --bs-btn-hover-bg: var(--market-primary);
+    --bs-btn-hover-border-color: var(--market-primary);
+    --bs-btn-focus-shadow-rgb: var(--market-primary-rgb);
+    --bs-btn-active-color: var(--market-on-primary);
+    --bs-btn-active-bg: var(--market-primary-active);
+    --bs-btn-active-border-color: var(--market-primary-active);
+    --bs-btn-disabled-color: var(--market-primary);
+    --bs-btn-disabled-border-color: var(--market-primary);
+}
+
+.btn-link {
+    --bs-btn-color: var(--market-primary);
+    --bs-btn-hover-color: var(--market-primary-hover);
+    --bs-btn-active-color: var(--market-primary-active);
+}
+
+.btn:focus-visible {
+    outline: var(--market-focus-ring-width) solid var(--market-focus-ring-color);
+    outline-offset: var(--market-focus-ring-offset);
+}
+
+/* ---- Cards ---- */
+
+.card {
+    --bs-card-bg: var(--market-surface);
+    --bs-card-border-color: transparent;
+    --bs-card-border-radius: var(--market-radius-xl);
+    --bs-card-inner-border-radius: calc(var(--market-radius-xl) - 1px);
+    --bs-card-cap-bg: var(--market-surface);
+    --bs-card-spacer-y: var(--market-space-5);
+    --bs-card-spacer-x: var(--market-space-5);
+}
+
+/* ---- Badges ---- */
+
+.badge {
+    --bs-badge-font-weight: var(--market-font-weight-heavy);
+    --bs-badge-border-radius: var(--market-radius-pill);
+}
+
+.badge-deal {
+    background-color: var(--market-deal);
+    color: var(--market-on-deal);
+    border-radius: var(--market-radius-xs);
+}
+
+/* ---- Forms ---- */
+
+.form-control,
+.form-select {
+    border-color: var(--market-border-strong);
+    border-radius: var(--market-radius-md);
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--market-primary);
+    box-shadow: 0 0 0 0.2rem rgba(var(--market-primary-rgb), 0.25);
+}
+
+.form-check-input:checked {
+    background-color: var(--market-primary);
+    border-color: var(--market-primary);
+}
+
+.form-check-input:focus {
+    border-color: var(--market-primary);
+    box-shadow: 0 0 0 0.2rem rgba(var(--market-primary-rgb), 0.25);
+}
+
+/* ---- Tables ---- */
+
+.table {
+    --bs-table-bg: var(--market-surface);
+    --bs-table-color: var(--market-ink);
+    --bs-table-border-color: var(--market-divider);
+    --bs-table-striped-bg: var(--market-surface-subtle);
+    --bs-table-hover-bg: var(--market-primary-subtle);
+}
+
+.table > thead {
+    --bs-table-bg: var(--market-surface-muted);
+    font-size: var(--market-font-size-sm);
+    color: var(--market-text-muted);
+}
+
+/* ---- Pagination, nav ---- */
+
+.pagination {
+    --bs-pagination-color: var(--market-primary);
+    --bs-pagination-hover-color: var(--market-primary-hover);
+    --bs-pagination-active-bg: var(--market-primary);
+    --bs-pagination-active-border-color: var(--market-primary);
+    --bs-pagination-focus-box-shadow: 0 0 0 0.2rem rgba(var(--market-primary-rgb), 0.25);
+}
+
+.nav-pills {
+    --bs-nav-pills-link-active-bg: var(--market-primary);
+}
+
+/* ---- Touch targets: default buttons and fields are at least 44px tall ---- */
+
+.btn:not(.btn-sm, .btn-lg) {
+    --bs-btn-padding-y: 0.6875rem;
+}
+
+.form-control:not(.form-control-sm, .form-control-lg),
+.form-select:not(.form-select-sm, .form-select-lg) {
+    padding-top: 0.6875rem;
+    padding-bottom: 0.6875rem;
+}
+
+.form-label.market-label {
+    font-weight: var(--market-font-weight-bold);
+    font-size: var(--market-font-size-sm);
+}
+
+.btn-outline-secondary {
+    --bs-btn-color: var(--market-ink);
+    --bs-btn-border-color: var(--market-border-strong);
+    --bs-btn-hover-color: var(--market-ink);
+    --bs-btn-hover-bg: var(--market-surface-muted);
+    --bs-btn-hover-border-color: var(--market-ink);
+    --bs-btn-active-color: var(--market-ink);
+    --bs-btn-active-bg: var(--market-divider);
+    --bs-btn-active-border-color: var(--market-ink);
+    --bs-btn-bg: var(--market-surface);
+}
+
+.btn.store-logout {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--market-space-2);
+}
+
+/* ---- Alerts (ErrorMessage keeps .alert-danger: a driver hook) ---- */
+
+.alert {
+    --bs-alert-border-radius: var(--market-radius-lg);
+    font-weight: var(--market-font-weight-medium);
+}
+
+.alert-danger {
+    --bs-alert-color: var(--market-danger);
+    --bs-alert-bg: var(--market-danger-bg);
+    --bs-alert-border-color: var(--market-danger-border);
+}
+
+.btn-outline-danger {
+    --bs-btn-color: var(--market-danger);
+    --bs-btn-border-color: var(--market-danger);
+    --bs-btn-hover-bg: var(--market-danger);
+    --bs-btn-hover-border-color: var(--market-danger);
+    --bs-btn-active-bg: var(--market-danger);
+    --bs-btn-active-border-color: var(--market-danger);
+}
+
+/* ---- Breadcrumb (markup stays Bootstrap: .breadcrumb-item is a driver hook) ---- */
+
+.breadcrumb {
+    --bs-breadcrumb-font-size: var(--market-font-size-sm);
+    --bs-breadcrumb-margin-bottom: var(--market-space-4);
+    --bs-breadcrumb-divider-color: var(--market-text-muted);
+    --bs-breadcrumb-item-active-color: var(--market-ink);
+    color: var(--market-text-muted);
+}
+
+.breadcrumb-item a {
+    font-weight: var(--market-font-weight-medium);
+    text-decoration: none;
+}
+
+.breadcrumb-item a:hover {
+    text-decoration: underline;
+}
+
+/* ---- Empty states, side navigation ---- */
+
+.market-empty {
+    background: var(--market-surface);
+    border-radius: var(--market-radius-xl);
+    color: var(--market-text-muted);
+    font-weight: var(--market-font-weight-medium);
+}
+
+.account-nav {
+    background: var(--market-surface);
+    border-radius: var(--market-radius-xl);
+    padding: var(--market-space-3);
+}
+
+.account-nav-heading {
+    font-size: var(--market-font-size-xs);
+    font-weight: var(--market-font-weight-heavy);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--market-text-muted);
+    padding: var(--market-space-2) var(--market-space-3);
+    margin: 0;
+}
+
+.account-nav .list-group {
+    --bs-list-group-border-width: 0;
+    --bs-list-group-bg: transparent;
+    --bs-list-group-color: var(--market-ink);
+    --bs-list-group-action-hover-bg: var(--market-surface-muted);
+    --bs-list-group-action-hover-color: var(--market-ink);
+    --bs-list-group-active-bg: var(--market-primary-subtle);
+    --bs-list-group-active-color: var(--market-primary-active);
+    --bs-list-group-item-padding-y: 0.6875rem;
+    gap: 2px;
+}
+
+.account-nav .list-group-item {
+    border-radius: var(--market-radius-md);
+    font-weight: var(--market-font-weight-bold);
+}

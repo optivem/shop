@@ -1,103 +1,335 @@
-/* Storefront styles (docs/design/shared/storefront-ux.md §5), shared with the React and Next.js UIs. */
+/*
+ * Storefront shell styles (header, nav, footer, notifications), built on the Market tokens in market.css.
+ * Copied from system/multitier/frontend-react/public/css/common.css; keep in sync. One difference: the
+ * notification is a plain block here, because the page scripts render .error-message / .field-error as its
+ * direct children (no icon + body wrapper as in the React Notification component).
+ */
 
-:root {
-    --shop-brand: #1f6feb;
-    --shop-brand-contrast: #ffffff;
-    --shop-accent: #f59e0b;
-    --shop-surface: #ffffff;
-    --shop-muted-surface: #f6f8fa;
-    --shop-text: #1f2328;
-    --shop-muted-text: #59636e;
-    --shop-radius: 0.5rem;
+/* ---- Notifications (driver hooks: .notification.success / .error, .error-message, .field-error) ---- */
+
+.notification {
+    display: block;
+    padding: var(--market-space-3) var(--market-space-4);
+    margin-top: var(--market-space-1);
+    margin-bottom: var(--market-space-4);
+    border: 1px solid transparent;
+    border-radius: var(--market-radius-lg);
+    font-weight: var(--market-font-weight-medium);
 }
 
+.notification-icon {
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.notification.success {
+    background: var(--market-success-bg);
+    color: var(--market-success);
+    border-color: #a7f3d0;
+}
+
+.notification.error {
+    background: var(--market-danger-bg);
+    color: var(--market-danger);
+    border-color: var(--market-danger-border);
+}
+
+.notification .error-message {
+    margin-bottom: var(--market-space-1);
+}
+
+.notification .field-error {
+    margin-top: var(--market-space-1);
+    font-weight: var(--market-font-weight-normal);
+}
+
+body {
+    min-height: 100vh;
+}
+
+/* Order status colours */
+.status-PLACED {
+    color: var(--market-success);
+}
+
+.status-DELIVERED {
+    color: var(--market-info);
+}
+
+/* ---- Storefront shell (docs/design/home-redesign/designs/MarketHome.dc.html) ---- */
+
 .store {
-    color: var(--shop-text);
-    background-color: var(--shop-muted-surface);
+    color: var(--market-ink);
+    background-color: var(--market-bg);
+}
+
+@media (min-width: 1400px) {
+    .store .container {
+        max-width: var(--market-container-max);
+    }
+}
+
+.store-main {
+    padding-top: var(--market-space-5);
 }
 
 .price {
     font-variant-numeric: tabular-nums;
 }
 
-:focus-visible {
-    outline: 3px solid var(--shop-accent);
-    outline-offset: 2px;
+/* Utility strip */
+.store-utility {
+    background-color: var(--market-ink);
+    color: var(--market-on-ink);
+    font-size: var(--market-font-size-xs);
 }
 
+/* Header row: logo · search · actions; on narrow screens the search drops to its own full-width line. */
 .store-header-top {
-    background-color: #0b4fb3;
-    color: var(--shop-brand-contrast);
+    background-color: var(--market-surface);
+    border-bottom: 1px solid var(--market-border);
 }
 
-.store-header-nav {
-    background-color: var(--shop-surface);
-    border-bottom: 1px solid #d0d7de;
-}
-
-.store-logo,
-.store-header-link {
-    color: var(--shop-brand-contrast);
-    text-decoration: none;
-    font-weight: 600;
+.store-header-row {
+    gap: var(--market-space-3) var(--market-space-6);
 }
 
 .store-logo {
-    font-size: 1.25rem;
+    color: var(--market-ink);
+    text-decoration: none;
+    font-weight: var(--market-font-weight-heavy);
+    font-size: var(--market-font-size-xl);
+    letter-spacing: -0.04em;
+    text-transform: lowercase;
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--market-tap-target);
 }
 
 .store-logo-mark {
-    color: var(--shop-accent);
+    color: var(--market-primary);
 }
 
-.store-logo:hover,
-.store-header-link:hover {
-    color: var(--shop-brand-contrast);
-    text-decoration: underline;
+.store-logo:hover {
+    color: var(--market-ink);
 }
 
 .store-search {
-    max-width: 36rem;
+    order: 3;
+    flex: 1 1 100%;
+    display: flex;
+    align-items: stretch;
+    height: 46px;
+    border: 2px solid var(--market-ink);
+    border-radius: var(--market-radius-lg);
+    overflow: hidden;
+    background: var(--market-surface);
+}
+
+.store-search:focus-within {
+    box-shadow: 0 0 0 3px rgba(var(--market-primary-rgb), 0.35);
+}
+
+.store-search-scope {
+    max-width: 9rem;
+    border: 0;
+    border-right: 1px solid var(--market-border);
+    background: var(--market-surface-muted);
+    color: var(--market-ink);
+    font-weight: var(--market-font-weight-medium);
+    padding: 0 var(--market-space-2);
+}
+
+.store-search-input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    padding: 0 var(--market-space-3);
+    color: var(--market-ink);
+    font-size: var(--market-font-size-md);
+    background: transparent;
+}
+
+.store-search-input::placeholder {
+    color: var(--market-text-muted);
+}
+
+.store-search-scope:focus-visible,
+.store-search-input:focus-visible,
+.store-search-button:focus-visible {
+    outline: var(--market-focus-ring-width) solid var(--market-primary);
+    outline-offset: -3px;
+}
+
+.store-search-button {
+    border: 0;
+    background: var(--market-ink);
+    color: var(--market-surface);
+    font-weight: var(--market-font-weight-bold);
+    padding: 0 var(--market-space-5);
+}
+
+.store-search-button:hover {
+    background: var(--market-text-secondary);
+}
+
+@media (min-width: 992px) {
+    .store-search {
+        order: 0;
+        flex: 1 1 420px;
+    }
+}
+
+.store-header-actions {
+    margin-left: auto;
+}
+
+.store-header-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--market-space-2);
+    min-height: var(--market-tap-target);
+    color: var(--market-ink);
+    text-decoration: none;
+    font-weight: var(--market-font-weight-bold);
+}
+
+.store-header-link:hover,
+.store-header-link a:hover {
+    color: var(--market-primary);
+}
+
+.store-sign-in,
+.store-user {
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 0;
+    line-height: 1.2;
+}
+
+.store-user a {
+    color: var(--market-ink);
+    text-decoration: none;
+}
+
+.store-header-hint {
+    font-size: var(--market-font-size-xs);
+    font-weight: var(--market-font-weight-normal);
+    color: var(--market-text-muted);
+}
+
+.store-cart-icon {
+    position: relative;
+    display: inline-flex;
+}
+
+.badge.store-cart-badge {
+    position: absolute;
+    top: -6px;
+    left: 14px;
+    min-width: 18px;
+    padding: 3px 5px;
+    font-size: 11px;
+    line-height: 1;
+    background-color: var(--market-primary);
+    color: var(--market-on-primary);
+}
+
+/* Category / account nav row: one row that scrolls sideways on narrow screens (never a second copy). */
+.store-header-nav {
+    background-color: var(--market-surface);
+    border-bottom: 1px solid var(--market-border);
+}
+
+.store-nav-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--market-space-6);
+    overflow-x: auto;
+    scrollbar-width: thin;
+}
+
+.store-nav-group {
+    display: flex;
+    flex-shrink: 0;
+    gap: var(--market-space-5);
+}
+
+.store-nav-account .store-nav-link {
+    color: var(--market-text-muted);
 }
 
 .store-nav-link {
-    color: var(--shop-text);
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--market-tap-target);
+    white-space: nowrap;
+    color: var(--market-ink);
+    font-weight: var(--market-font-weight-medium);
     text-decoration: none;
 }
 
-.store-nav-link:hover {
-    color: #0b4fb3;
-    text-decoration: underline;
+.store-nav-link:hover,
+.store-nav-account .store-nav-link:hover {
+    color: var(--market-primary);
 }
 
-.store-hero {
-    background: linear-gradient(120deg, #0b4fb3, #1f6feb);
-    color: var(--shop-brand-contrast);
-}
-
+/* Footer */
 .store-footer {
-    background-color: var(--shop-surface);
-    border-top: 1px solid #d0d7de;
-    color: var(--shop-muted-text);
+    background-color: var(--market-ink);
+    color: #cbd5e1;
+    font-size: var(--market-font-size-sm);
+}
+
+.store-footer-heading {
+    font-size: var(--market-font-size-base);
+    font-weight: var(--market-font-weight-heavy);
+    color: var(--market-surface);
+    margin-bottom: var(--market-space-2);
+}
+
+.store-footer-brand {
+    font-size: var(--market-font-size-lg);
+    font-weight: var(--market-font-weight-heavy);
+    letter-spacing: -0.04em;
+    text-transform: lowercase;
+    color: var(--market-surface);
+}
+
+.store-footer .store-logo-mark {
+    color: #5eead4;
 }
 
 .store-footer a {
-    color: var(--shop-muted-text);
-}
-
-.product-card {
-    border-radius: var(--shop-radius);
-    overflow: hidden;
-}
-
-.product-title-link {
-    color: var(--shop-text);
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--market-tap-target);
+    color: var(--market-on-ink);
     text-decoration: none;
 }
 
-.product-title-link:hover {
+.store-footer a:hover {
+    color: var(--market-surface);
     text-decoration: underline;
 }
+
+.store-footer a:focus-visible {
+    outline-color: #5eead4;
+}
+
+.store-footer-bottom {
+    border-top: 1px solid rgba(226, 232, 240, 0.15);
+    font-size: var(--market-font-size-xs);
+}
+
+.store-footer-bottom a {
+    display: inline;
+    text-decoration: underline;
+}
+
+/* ---- Page parts shared by several screens (page-specific styles live in src/styles/pages-shop.css) ---- */
 
 .product-image {
     display: flex;
@@ -106,7 +338,7 @@
     color: #ffffff;
     font-weight: 700;
     letter-spacing: 0.05em;
-    border-radius: var(--shop-radius);
+    border-radius: var(--market-radius-xl);
 }
 
 .product-image-card {
@@ -120,17 +352,21 @@
     font-size: 3rem;
 }
 
-.cart-thumb {
-    width: 4rem;
-    flex-shrink: 0;
-}
-
-.cart-thumb .product-image-card {
-    font-size: 0.75rem;
-    border-radius: 0.25rem;
-}
-
-.quantity-stepper {
-    width: 8.5rem;
+.input-group.quantity-stepper {
+    width: auto;
     flex-wrap: nowrap;
+}
+
+.quantity-stepper .btn {
+    width: var(--market-tap-target);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.quantity-stepper .form-control {
+    width: 3.25rem;
+    flex: 0 0 auto;
+    font-weight: var(--market-font-weight-bold);
 }

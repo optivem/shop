@@ -1,6 +1,14 @@
 # Home page redesign — explorations
 
-Styling-only redesign explorations for the storefront home page (catalog). Nothing here is wired into the frontends yet.
+Styling-only redesign explorations for the storefront home page (catalog).
+
+**Chosen direction: #8 Market** (dense, practical, modern; teal `#0F766E` primary, ink `#0F172A`, page `#EEF1F5`, yellow `#FDE047` deal badges, Figtree). It is built as Bootstrap 5.3 re-themed through its CSS variables plus one small token file:
+
+- **Tokens + Bootstrap re-theme:** [`system/multitier/frontend-react/src/styles/market.css`](../../../system/multitier/frontend-react/src/styles/market.css)
+- **Page styles:** `pages-shop.css`, `pages-orders.css`, `pages-account.css` in the same folder
+- **Test-hook map** the restyle preserves: [test-hooks-inventory.md](test-hooks-inventory.md)
+
+The other eight directions below stay here for reference only.
 
 **Live canvas (private, owner access):** https://claude.ai/artifact/6PfCB87jVYkf7vfxGhEJBk
 
@@ -24,7 +32,7 @@ The `.dc.html` files are the canvas source format: they render inside the canvas
 
 ## Acceptance-test safety
 
-Every design keeps the hooks the UI drivers in `system-test/*` select on: the `aria-label`s (`Store navigation`, `Search Products`, `Search`, `Cart`, `Cart Item Count`, `Category Filter`, `Brand Filter`, `Sort`, `Clear Filters`, `Product Count`, `Product List`, `Catalog`, `Add to Cart`), roles, visible labels, and the Bootstrap hook classes `.form-check`, `.alert-danger` and `table.table` (coupon table column order). The real redesign must keep these too, or move the drivers to role/ARIA selectors first.
+Every design keeps the hooks the UI drivers in `system-test/*` select on: the `aria-label`s (`Store navigation`, `Search Products`, `Search`, `Cart`, `Cart Item Count`, `Category Filter`, `Brand Filter`, `Sort`, `Clear Filters`, `Product Count`, `Product List`, `Catalog`, `Add to Cart`), roles, visible labels, and the Bootstrap hook classes `.form-check`, `.alert-danger` and `table.table` (coupon table column order). The shipped Market redesign keeps all of them; if Bootstrap is ever replaced, move the drivers to role/ARIA selectors first.
 
 ## Images
 

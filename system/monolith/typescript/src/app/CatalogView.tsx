@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Icon } from "@/components/Icon";
 import { StoreLayout } from "@/components/StoreLayout";
 import { ProductImage } from "@/components/StorefrontParts";
 import { useCart, useCatalog, useNotification } from "@/components/StorefrontProviders";
@@ -29,29 +30,70 @@ function rawParams(params: URLSearchParams): RawSearchParams {
   return raw;
 }
 
-/** One catalog tile: image and title link to the product page; "Add to cart" adds quantity 1. */
+/**
+ * The home hero and two promo tiles. They are the only places that show stock photos (public/images/promo/,
+ * credited in the store footer). Each tile links to a category the catalog actually carries.
+ */
+const SIDE_TILES = [
+  { label: "Shop monitors", path: "/?category=Monitors", image: "/images/promo/monitor.jpg", alt: "Monitor on a desk" },
+  { label: "Build your desk setup", path: "/?category=Accessories", image: "/images/promo/keyboard.jpg", alt: "Mechanical keyboard" },
+];
+
+// Plain <img>: the photos are fixed static files and this app does not run next/image's optimiser.
+/* eslint-disable @next/next/no-img-element */
+function PromoTiles() {
+  return (
+    <section className="promo-tiles mb-4" aria-label="Promotions">
+      <div className="promo-hero">
+        <img className="promo-photo promo-photo-hero" src="/images/promo/laptop.jpg" alt="Laptop on a white desk" />
+        <div className="promo-hero-panel">
+          <span className="badge badge-deal">New season</span>
+          <h1 className="promo-hero-title">New season laptops</h1>
+          <p className="lead">Free shipping over $1,000</p>
+          <Link href="/?category=Laptops" className="btn btn-primary">
+            Shop laptops
+          </Link>
+        </div>
+      </div>
+      <div className="promo-side">
+        {SIDE_TILES.map((tile) => (
+          <Link key={tile.path} href={tile.path} className="promo-tile">
+            <img className="promo-photo" src={tile.image} alt={tile.alt} loading="lazy" />
+            <span className="promo-tile-label">
+              {tile.label} <Icon name="arrow-right" />
+            </span>
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
+/* eslint-enable @next/next/no-img-element */
+
+/** One catalog tile: image and title link to the product page; brand, description and price come from the catalog; "Add to cart" adds quantity 1. */
 function ProductCard({ product, onAddToCart }: Readonly<{ product: Product; onAddToCart: (sku: string) => void }>) {
   const productPath = `/products/${encodeURIComponent(product.sku)}`;
   return (
     <article className="product-card card h-100" aria-label={`Product ${product.sku}`}>
-      <Link href={productPath} tabIndex={-1} aria-hidden="true">
+      <Link href={productPath} className="product-card-media" tabIndex={-1} aria-hidden="true">
         <ProductImage brand={product.brand} />
       </Link>
-      <div className="card-body d-flex flex-column">
-        <h3 className="h6 card-title mb-1">
+      <div className="product-card-body">
+        <div className="product-card-brand" aria-label="Product Brand">
+          {product.brand}
+        </div>
+        <h3 className="product-card-title">
           <Link href={productPath} className="product-title-link" aria-label="Product Title">
             {product.title}
           </Link>
         </h3>
-        <div className="text-muted small mb-2" aria-label="Product Brand">
-          {product.brand}
-        </div>
-        <div className="price fw-bold mb-3" aria-label="Display Price">
+        {product.description && <p className="product-card-spec">{product.description}</p>}
+        <div className="price product-card-price" aria-label="Display Price">
           {formatMoney(product.price)}
         </div>
         <button
           type="button"
-          className="btn btn-primary mt-auto"
+          className="btn btn-primary w-100 mt-auto"
           aria-label={`Add ${product.sku} to Cart`}
           onClick={() => onAddToCart(product.sku)}
         >
@@ -78,8 +120,8 @@ function CatalogFilters({ categories, brands, query, onChange }: Readonly<Catalo
 
   return (
     <div className="catalog-filters">
-      <fieldset className="mb-4" aria-label="Category Filter">
-        <legend className="h6">Category</legend>
+      <fieldset aria-label="Category Filter">
+        <legend className="catalog-filter-legend">Category</legend>
         {["", ...categories].map((category) => {
           const id = `category-${category || "all"}`;
           return (
@@ -100,8 +142,8 @@ function CatalogFilters({ categories, brands, query, onChange }: Readonly<Catalo
           );
         })}
       </fieldset>
-      <fieldset className="mb-4" aria-label="Brand Filter">
-        <legend className="h6">Brand</legend>
+      <fieldset aria-label="Brand Filter">
+        <legend className="catalog-filter-legend">Brand</legend>
         {brands.map((brand) => {
           const id = `brand-${brand}`;
           return (
@@ -155,7 +197,7 @@ export function Catalog() {
     }
     if (shown.length === 0) {
       return (
-        <div className="text-center py-5">
+        <div className="market-empty text-center py-5 px-3">
           <p className="lead">No products match your search.</p>
           <Link href="/" className="btn btn-outline-primary" aria-label="Clear Filters">
             Clear filters
@@ -164,11 +206,9 @@ export function Catalog() {
       );
     }
     return (
-      <div className="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4 g-4" aria-label="Product List">
+      <div className="product-grid" aria-label="Product List">
         {shown.map((product) => (
-          <div className="col" key={product.sku}>
-            <ProductCard product={product} onAddToCart={addToCart} />
-          </div>
+          <ProductCard key={product.sku} product={product} onAddToCart={addToCart} />
         ))}
       </div>
     );
@@ -176,39 +216,37 @@ export function Catalog() {
 
   return (
     <StoreLayout>
-      <section className="store-hero rounded p-4 p-md-5 mb-4">
-        <h1 className="display-6 fw-bold">New season laptops</h1>
-        <p className="lead mb-3">Free shipping over $1,000</p>
-        <Link href="/?category=Laptops" className="btn btn-warning">
-          Shop
-        </Link>
-      </section>
-      <div className="row">
-        <aside className="col-lg-3 mb-3">
+      <PromoTiles />
+      <div className="catalog-layout">
+        <aside className="catalog-sidebar">
           <button
             type="button"
-            className="btn btn-outline-secondary w-100 d-lg-none mb-3"
+            className="btn btn-outline-secondary w-100 d-lg-none"
             aria-expanded={filtersOpen}
             onClick={() => setFiltersOpen((open) => !open)}
           >
+            <Icon name="sliders-horizontal" className="me-2" />
             Filters
           </button>
-          <div className={filtersOpen ? "" : "d-none d-lg-block"}>
+          <div className={filtersOpen ? "mt-3 mt-lg-0" : "d-none d-lg-block"}>
             <CatalogFilters categories={categoriesOf(products)} brands={brandsOf(products)} query={query} onChange={setQuery} />
           </div>
         </aside>
-        <section className="col-lg-9" aria-label="Catalog">
-          <div className="d-flex justify-content-between align-items-center mb-3">
-            <span aria-label="Product Count">
-              {unavailable ? 0 : shown.length} {shown.length === 1 && !unavailable ? "product" : "products"}
-            </span>
+        <section className="catalog-results" aria-label="Catalog">
+          <div className="catalog-toolbar">
+            <p className="mb-0">
+              <strong aria-label="Product Count">
+                {unavailable ? 0 : shown.length} {shown.length === 1 && !unavailable ? "product" : "products"}
+              </strong>{" "}
+              <span className="text-body-secondary">in {query.category || "All products"}</span>
+            </p>
             <div className="d-flex align-items-center gap-2">
-              <label htmlFor="catalog-sort" className="form-label mb-0">
-                Sort:
+              <label htmlFor="catalog-sort" className="form-label mb-0 text-body-secondary">
+                Sort by
               </label>
               <select
                 id="catalog-sort"
-                className="form-select form-select-sm w-auto"
+                className="form-select w-auto"
                 aria-label="Sort"
                 value={query.sort}
                 onChange={(e) => setQuery({ ...query, sort: e.target.value as SortOrder })}

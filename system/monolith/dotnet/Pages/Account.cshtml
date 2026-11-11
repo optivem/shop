@@ -17,65 +17,63 @@
 
 <div id="notifications"></div>
 
-<div class="card shadow">
-    <div class="card-header bg-primary text-white">
-        <h4 class="mb-0">Profile &amp; address</h4>
-    </div>
-    <div class="card-body">
-        <form id="profileForm" novalidate>
-            <div class="row g-3 mb-3">
-                <div class="col-md-6">
-                    <label for="profile-firstName" class="form-label">First name</label>
-                    <input id="profile-firstName" type="text" class="form-control" aria-label="First Name"
-                           value="@profile.FirstName">
-                </div>
-                <div class="col-md-6">
-                    <label for="profile-lastName" class="form-label">Last name</label>
-                    <input id="profile-lastName" type="text" class="form-control" aria-label="Last Name"
-                           value="@profile.LastName">
-                </div>
-                <div class="col-12">
-                    <label for="profile-email" class="form-label">Email</label>
-                    <input id="profile-email" type="email" class="form-control" aria-label="Email"
-                           value="@profile.Email" readonly disabled>
-                    <div class="form-text">Your email comes from your sign-in account and can't be changed here.</div>
-                </div>
+<section class="market-panel account-panel" aria-labelledby="account-heading">
+    <h1 id="account-heading" class="account-title">Profile &amp; address</h1>
+    <form id="profileForm" class="account-form" novalidate>
+        <div class="row g-3 mb-3">
+            <div class="col-md-6">
+                <label for="profile-firstName" class="form-label">First name</label>
+                <input id="profile-firstName" type="text" class="form-control" aria-label="First Name"
+                       value="@profile.FirstName">
             </div>
-            <h5 class="mt-4">Shipping address</h5>
-            <div class="row g-3">
-                <div class="col-12">
-                    <label for="profile-street" class="form-label">Street</label>
-                    <input id="profile-street" type="text" class="form-control" aria-label="Street"
-                           value="@profile.Street">
-                </div>
-                <div class="col-md-4">
-                    <label for="profile-postalCode" class="form-label">Postal code</label>
-                    <input id="profile-postalCode" type="text" class="form-control" aria-label="Postal Code"
-                           value="@profile.PostalCode">
-                </div>
-                <div class="col-md-4">
-                    <label for="profile-city" class="form-label">City</label>
-                    <input id="profile-city" type="text" class="form-control" aria-label="City"
-                           value="@profile.City">
-                </div>
-                <div class="col-md-4">
-                    <label for="profile-country" class="form-label">Country</label>
-                    <select id="profile-country" class="form-select" aria-label="Profile Country">
-                        <option value="">Select a country</option>
-                        @foreach (var country in ShippingAddresses.Countries)
-                        {
-                            <option value="@country" selected="@(profile.Country == country)">@country</option>
-                        }
-                    </select>
-                </div>
+            <div class="col-md-6">
+                <label for="profile-lastName" class="form-label">Last name</label>
+                <input id="profile-lastName" type="text" class="form-control" aria-label="Last Name"
+                       value="@profile.LastName">
             </div>
-            <p class="form-text mt-3" aria-label="Tax Country Hint">
-                Sales tax is charged at the rate of your shipping address's country.
-            </p>
+            <div class="col-12">
+                <label for="profile-email" class="form-label">Email</label>
+                <input id="profile-email" type="email" class="form-control" aria-label="Email"
+                       value="@profile.Email" readonly disabled>
+                <div class="form-text">Your email comes from your sign-in account and can't be changed here.</div>
+            </div>
+        </div>
+        <h2 class="account-section-title">Shipping address</h2>
+        <div class="row g-3">
+            <div class="col-12">
+                <label for="profile-street" class="form-label">Street</label>
+                <input id="profile-street" type="text" class="form-control" aria-label="Street"
+                       value="@profile.Street">
+            </div>
+            <div class="col-md-4">
+                <label for="profile-postalCode" class="form-label">Postal code</label>
+                <input id="profile-postalCode" type="text" class="form-control" aria-label="Postal Code"
+                       value="@profile.PostalCode">
+            </div>
+            <div class="col-md-4">
+                <label for="profile-city" class="form-label">City</label>
+                <input id="profile-city" type="text" class="form-control" aria-label="City"
+                       value="@profile.City">
+            </div>
+            <div class="col-md-4">
+                <label for="profile-country" class="form-label">Country</label>
+                <select id="profile-country" class="form-select" aria-label="Profile Country">
+                    <option value="">Select a country</option>
+                    @foreach (var country in ShippingAddresses.Countries)
+                    {
+                        <option value="@country" selected="@(profile.Country == country)">@country</option>
+                    }
+                </select>
+            </div>
+        </div>
+        <p class="form-text mt-3" aria-label="Tax Country Hint">
+            Sales tax is charged at the rate of your shipping address's country.
+        </p>
+        <div class="account-actions">
             <button type="submit" class="btn btn-primary" aria-label="Save Profile" id="saveProfileBtn">Save profile</button>
-        </form>
-    </div>
-</div>
+        </div>
+    </form>
+</section>
 
 @section Scripts {
 <script>

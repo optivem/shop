@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
+import { Icon } from "@/components/Icon";
 import { AccountLayout, LoadingSpinner } from "@/components/StoreLayout";
 import { AddressFields } from "@/components/StorefrontParts";
 import { useNotification } from "@/components/StorefrontProviders";
@@ -52,62 +53,66 @@ export default function AccountPage() {
 
   return (
     <AccountLayout title="My account" breadcrumbs={[{ label: "Home", path: "/" }, { label: "My account" }, { label: "Profile & address" }]}>
-      <div className="card shadow">
-        <div className="card-header bg-primary text-white">
-          <h4 className="mb-0">Profile &amp; address</h4>
-        </div>
-        <div className="card-body">
-          {form ? (
-            <form noValidate onSubmit={(e) => void handleSubmit(e)}>
-              <div className="row g-3 mb-3">
-                <div className="col-md-6">
-                  <label htmlFor="profile-firstName" className="form-label">
-                    First name
-                  </label>
-                  <input
-                    id="profile-firstName"
-                    type="text"
-                    className="form-control"
-                    aria-label="First Name"
-                    value={form.firstName}
-                    onChange={(e) => setForm({ ...form, firstName: e.target.value })}
-                  />
-                </div>
-                <div className="col-md-6">
-                  <label htmlFor="profile-lastName" className="form-label">
-                    Last name
-                  </label>
-                  <input
-                    id="profile-lastName"
-                    type="text"
-                    className="form-control"
-                    aria-label="Last Name"
-                    value={form.lastName}
-                    onChange={(e) => setForm({ ...form, lastName: e.target.value })}
-                  />
-                </div>
-                <div className="col-12">
-                  <label htmlFor="profile-email" className="form-label">
-                    Email
-                  </label>
-                  <input id="profile-email" type="email" className="form-control" aria-label="Email" value={email} readOnly disabled />
-                  <div className="form-text">Your email comes from your sign-in account and can&apos;t be changed here.</div>
+      <section className="market-panel account-panel" aria-labelledby="account-heading">
+        <h1 id="account-heading" className="account-title">
+          Profile &amp; address
+        </h1>
+        {form ? (
+          <form className="account-form" noValidate onSubmit={(e) => void handleSubmit(e)}>
+            <div className="row g-3">
+              <div className="col-md-6">
+                <label htmlFor="profile-firstName" className="form-label">
+                  First name
+                </label>
+                <input
+                  id="profile-firstName"
+                  type="text"
+                  className="form-control"
+                  aria-label="First Name"
+                  value={form.firstName}
+                  onChange={(e) => setForm({ ...form, firstName: e.target.value })}
+                />
+              </div>
+              <div className="col-md-6">
+                <label htmlFor="profile-lastName" className="form-label">
+                  Last name
+                </label>
+                <input
+                  id="profile-lastName"
+                  type="text"
+                  className="form-control"
+                  aria-label="Last Name"
+                  value={form.lastName}
+                  onChange={(e) => setForm({ ...form, lastName: e.target.value })}
+                />
+              </div>
+              <div className="col-12">
+                <label htmlFor="profile-email" className="form-label">
+                  Email
+                </label>
+                <input id="profile-email" type="email" className="form-control" aria-label="Email" value={email} readOnly disabled />
+                <div className="form-text d-flex align-items-center gap-1">
+                  <Icon name="lock" size={12} className="flex-shrink-0" />
+                  Your email comes from your sign-in account and can&apos;t be changed here.
                 </div>
               </div>
-              <h5 className="mt-4">Shipping address</h5>
-              <AddressFields idPrefix="profile" address={form} errors={{}} labels={PROFILE_LABELS} onChange={setForm} withoutNames />
-              <p className="form-text mt-3" aria-label="Tax Country Hint">
-                Sales tax is charged at the rate of your shipping address&apos;s country.
-              </p>
+            </div>
+            <h2 className="account-section-title">Shipping address</h2>
+            <AddressFields idPrefix="profile" address={form} errors={{}} labels={PROFILE_LABELS} onChange={setForm} withoutNames />
+            <p className="form-text mt-3 mb-0" aria-label="Tax Country Hint">
+              Sales tax is charged at the rate of your shipping address&apos;s country.
+            </p>
+            <div className="account-actions">
               <button type="submit" className="btn btn-primary" aria-label="Save Profile" disabled={isSaving}>
+                {isSaving && <span className="spinner-border spinner-border-sm me-2" aria-hidden="true" />}
                 {isSaving ? "Saving..." : "Save profile"}
               </button>
-            </form>
-          ) : (
-            <LoadingSpinner message="Loading profile..." />
-          )}
-        </div>
-      </div>
+            </div>
+          </form>
+        ) : (
+          <LoadingSpinner message="Loading profile..." />
+        )}
+      </section>
     </AccountLayout>
   );
 }

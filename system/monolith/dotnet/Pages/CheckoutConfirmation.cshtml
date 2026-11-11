@@ -1,5 +1,6 @@
 @page "/checkout/confirmation"
 @model MyCompany.MyShop.Monolith.Pages.CheckoutConfirmationModel
+@using MyCompany.MyShop.Monolith.Pages.Storefront
 @{
     ViewData["Title"] = "Order confirmation";
     var result = Model.Result;
@@ -14,47 +15,58 @@
     </ol>
 </nav>
 
-<div class="card shadow-sm">
-    <div class="card-body">
-        @if (placed.Count > 0)
-        {
-            <h1 class="h3">Thank you for your order!</h1>
-            <p>@(placed.Count == 1 ? "Your order has been placed:" : $"Your {placed.Count} orders have been placed:")</p>
-            <ul aria-label="Confirmed Orders">
+<div class="order-confirmation">
+    @if (placed.Count > 0)
+    {
+        <section class="market-panel order-confirmation-hero">
+            <div class="order-confirmation-icon" aria-hidden="true">@Icons.Svg("circle-check", 32)</div>
+            <h1 class="h2 mb-1">Thank you for your order!</h1>
+            <p class="text-body-secondary mb-0">@(placed.Count == 1 ? "Your order has been placed:" : $"Your {placed.Count} orders have been placed:")</p>
+        </section>
+        <section class="market-panel p-4" aria-labelledby="confirmed-orders-heading">
+            <h2 class="h6 fw-bold mb-3" id="confirmed-orders-heading">Confirmed orders</h2>
+            <ul class="confirmed-orders" aria-label="Confirmed Orders">
                 @foreach (var line in placed)
                 {
-                    <li>
-                        <a href="@("/order-details?orderNumber=" + Uri.EscapeDataString(line.OrderNumber))"
-                           aria-label="@("Confirmed Order " + line.OrderNumber)">@line.OrderNumber</a>
-                        <span class="text-muted">(@line.Sku × @line.Quantity)</span>
+                    <li class="confirmed-order">
+                        <div>
+                            <a href="@("/order-details?orderNumber=" + Uri.EscapeDataString(line.OrderNumber))" class="order-number-link"
+                               aria-label="@("Confirmed Order " + line.OrderNumber)">@line.OrderNumber</a>
+                            <p class="confirmed-order-meta mb-0">@line.Sku × @line.Quantity</p>
+                        </div>
+                        <span class="order-status status-PLACED">PLACED</span>
                     </li>
                 }
             </ul>
-        }
-        else
-        {
+        </section>
+    }
+    else
+    {
+        <section class="market-empty text-center py-5 px-3">
             <h1 class="h3">No recent order</h1>
-        }
+            <p class="mb-0">Orders you place at checkout show up here right after.</p>
+        </section>
+    }
 
-        @if (rejected.Count > 0)
-        {
-            <div class="alert alert-warning" aria-label="Rejected Lines">
-                <p class="mb-2">These items were not ordered and are still in your cart:</p>
-                <ul class="mb-0">
-                    @foreach (var line in rejected)
-                    {
-                        <li aria-label="@("Rejected Line " + line.Sku)">
-                            <strong>@line.Sku</strong>:
-                            <span aria-label="@("Rejection Reason " + line.Sku)">@line.Reason</span>
-                        </li>
-                    }
-                </ul>
-            </div>
-        }
-
-        <div class="d-flex gap-3 mt-3">
-            <a href="/order-history" class="btn btn-primary">View my orders</a>
-            <a href="/" class="btn btn-outline-secondary">Continue shopping</a>
+    @if (rejected.Count > 0)
+    {
+        <div class="alert alert-warning order-rejected mb-0" aria-label="Rejected Lines">
+            <h2 class="h6 fw-bold mb-2">@(rejected.Count == 1 ? "1 item could not be ordered" : $"{rejected.Count} items could not be ordered")</h2>
+            <p class="mb-2">These items were not ordered and are still in your cart:</p>
+            <ul class="mb-0">
+                @foreach (var line in rejected)
+                {
+                    <li aria-label="@("Rejected Line " + line.Sku)">
+                        <strong>@line.Sku</strong>:
+                        <span aria-label="@("Rejection Reason " + line.Sku)">@line.Reason</span>
+                    </li>
+                }
+            </ul>
         </div>
+    }
+
+    <div class="order-confirmation-actions">
+        <a href="/order-history" class="btn btn-primary btn-lg">View my orders</a>
+        <a href="/" class="btn btn-outline-secondary btn-lg">Continue shopping</a>
     </div>
 </div>

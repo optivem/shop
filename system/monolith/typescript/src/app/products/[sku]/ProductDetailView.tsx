@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Icon } from "@/components/Icon";
 import { StoreLayout } from "@/components/StoreLayout";
 import { ProductImage } from "@/components/StorefrontParts";
 import { useCart, useNotification } from "@/components/StorefrontProviders";
@@ -48,56 +49,78 @@ export function ProductDetail({ product }: Readonly<{ product: Product | null }>
         { label: product.title },
       ]}
     >
-      <div className="row g-4">
-        <div className="col-md-5">
-          <ProductImage brand={product.brand} shape="square" />
+      <div className="row g-4 align-items-start">
+        <div className="col-lg-7">
+          <div className="market-panel p-3">
+            <ProductImage brand={product.brand} shape="square" />
+          </div>
         </div>
-        <div className="col-md-7">
-          <h1 className="h2" aria-label="Product Title">
-            {product.title}
-          </h1>
-          <p className="text-muted">
-            by <span aria-label="Product Brand">{product.brand}</span> ·{" "}
-            <span aria-label="Product Category">{product.category}</span> · SKU{" "}
-            <span aria-label="Product SKU">{product.sku}</span>
-          </p>
-          <p className="price fs-3 fw-bold" aria-label="Display Price">
-            {formatMoney(product.price)}
-          </p>
+        <div className="col-lg-5 d-flex flex-column gap-3">
+          <div className="market-panel p-4">
+            <p className="product-meta mb-2">
+              <span className="product-meta-brand" aria-label="Product Brand">
+                {product.brand}
+              </span>{" "}
+              · <span aria-label="Product Category">{product.category}</span>
+            </p>
+            <h1 className="product-detail-title" aria-label="Product Title">
+              {product.title}
+            </h1>
+            <p className="product-meta mb-3">
+              SKU{" "}
+              <span className="font-monospace text-body" aria-label="Product SKU">
+                {product.sku}
+              </span>
+            </p>
+            <p className="price product-detail-price" aria-label="Display Price">
+              {formatMoney(product.price)}
+            </p>
+            <p className="product-detail-description mb-0" aria-label="Product Description">
+              {product.description}
+            </p>
+          </div>
           <form
-            className="d-flex flex-wrap align-items-center gap-3 mb-4"
+            className="market-panel p-4 d-flex flex-column gap-3"
             onSubmit={(e) => {
               e.preventDefault();
               addToCart();
             }}
           >
-            <label htmlFor="product-quantity" className="form-label mb-0">
-              Qty
-            </label>
-            <div className="input-group quantity-stepper">
-              <button type="button" className="btn btn-outline-secondary" aria-label="Decrease Quantity" onClick={() => step(-1)}>
-                −
-              </button>
-              <input
-                id="product-quantity"
-                type="text"
-                inputMode="numeric"
-                className="form-control text-center"
-                aria-label="Product Quantity"
-                value={quantity}
-                onChange={(e) => setQuantity(e.target.value)}
-              />
-              <button type="button" className="btn btn-outline-secondary" aria-label="Increase Quantity" onClick={() => step(1)}>
-                +
-              </button>
+            <div className="d-flex align-items-center justify-content-between gap-3">
+              <label htmlFor="product-quantity" className="form-label fw-bold mb-0">
+                Quantity
+              </label>
+              <div className="input-group quantity-stepper">
+                <button type="button" className="btn btn-outline-secondary" aria-label="Decrease Quantity" onClick={() => step(-1)}>
+                  <Icon name="minus" />
+                </button>
+                <input
+                  id="product-quantity"
+                  type="text"
+                  inputMode="numeric"
+                  className="form-control text-center"
+                  aria-label="Product Quantity"
+                  value={quantity}
+                  onChange={(e) => setQuantity(e.target.value)}
+                />
+                <button type="button" className="btn btn-outline-secondary" aria-label="Increase Quantity" onClick={() => step(1)}>
+                  <Icon name="plus" />
+                </button>
+              </div>
             </div>
-            <button type="submit" className="btn btn-primary" aria-label="Add to Cart">
+            <button type="submit" className="btn btn-primary btn-lg w-100" aria-label="Add to Cart">
+              <Icon name="shopping-cart" size={18} className="me-2" />
               Add to cart
             </button>
+            <ul className="product-perks list-unstyled mb-0">
+              <li>
+                <Icon name="check" /> Free shipping on orders over $1,000
+              </li>
+              <li>
+                <Icon name="check" /> 30-day returns
+              </li>
+            </ul>
           </form>
-          <hr />
-          <p aria-label="Product Description">{product.description}</p>
-          <p className="text-muted small mb-0">✓ Ships in 1–2 business days · ✓ 30-day returns</p>
         </div>
       </div>
     </StoreLayout>

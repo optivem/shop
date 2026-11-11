@@ -14,38 +14,52 @@
         </ol>
     </nav>
 
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <th:block th:if="${result != null and !#lists.isEmpty(result.placed())}">
-                <h1 class="h3">Thank you for your order!</h1>
-                <p th:text="${#lists.size(result.placed()) == 1 ? 'Your order has been placed:' : 'Your ' + #lists.size(result.placed()) + ' orders have been placed:'}">
+    <div class="order-confirmation">
+        <th:block th:if="${result != null and !#lists.isEmpty(result.placed())}">
+            <section class="market-panel order-confirmation-hero">
+                <div class="order-confirmation-icon" aria-hidden="true"><svg th:replace="~{fragments/icons :: icon('circle-check', 32, null, 2)}"></svg></div>
+                <h1 class="h2 mb-1">Thank you for your order!</h1>
+                <p class="text-body-secondary mb-0"
+                   th:text="${#lists.size(result.placed()) == 1 ? 'Your order has been placed:' : 'Your ' + #lists.size(result.placed()) + ' orders have been placed:'}">
                     Your order has been placed:</p>
-                <ul aria-label="Confirmed Orders">
-                    <li th:each="line : ${result.placed()}">
-                        <a th:href="${'/order-details?orderNumber=' + #uris.escapeQueryParam(line.orderNumber())}"
-                           th:attr="aria-label=${'Confirmed Order ' + line.orderNumber()}"
-                           th:text="${line.orderNumber()}">ORD-1</a>
-                        <span class="text-muted" th:text="${'(' + line.sku() + ' × ' + line.quantity() + ')'}">(SKU × 1)</span>
+            </section>
+            <section class="market-panel p-4" aria-labelledby="confirmed-orders-heading">
+                <h2 class="h6 fw-bold mb-3" id="confirmed-orders-heading">Confirmed orders</h2>
+                <ul class="confirmed-orders" aria-label="Confirmed Orders">
+                    <li th:each="line : ${result.placed()}" class="confirmed-order">
+                        <div>
+                            <a th:href="${'/order-details?orderNumber=' + #uris.escapeQueryParam(line.orderNumber())}"
+                               class="order-number-link" th:attr="aria-label=${'Confirmed Order ' + line.orderNumber()}"
+                               th:text="${line.orderNumber()}">ORD-1</a>
+                            <p class="confirmed-order-meta mb-0" th:text="${line.sku() + ' × ' + line.quantity()}">SKU × 1</p>
+                        </div>
+                        <span class="order-status status-PLACED">PLACED</span>
                     </li>
                 </ul>
-            </th:block>
-            <h1 th:if="${result == null or #lists.isEmpty(result.placed())}" class="h3">No recent order</h1>
+            </section>
+        </th:block>
+        <section th:if="${result == null or #lists.isEmpty(result.placed())}" class="market-empty text-center py-5 px-3">
+            <h1 class="h3">No recent order</h1>
+            <p class="mb-0">Orders you place at checkout show up here right after.</p>
+        </section>
 
-            <div th:if="${result != null and !#lists.isEmpty(result.rejected())}" class="alert alert-warning"
-                 aria-label="Rejected Lines">
-                <p class="mb-2">These items were not ordered and are still in your cart:</p>
-                <ul class="mb-0">
-                    <li th:each="line : ${result.rejected()}" th:attr="aria-label=${'Rejected Line ' + line.sku()}">
-                        <strong th:text="${line.sku()}">SKU</strong>:
-                        <span th:attr="aria-label=${'Rejection Reason ' + line.sku()}" th:text="${line.reason()}">Reason</span>
-                    </li>
-                </ul>
-            </div>
+        <div th:if="${result != null and !#lists.isEmpty(result.rejected())}" class="alert alert-warning order-rejected mb-0"
+             aria-label="Rejected Lines">
+            <h2 class="h6 fw-bold mb-2"
+                th:text="${#lists.size(result.rejected()) == 1 ? '1 item could not be ordered' : #lists.size(result.rejected()) + ' items could not be ordered'}">
+                1 item could not be ordered</h2>
+            <p class="mb-2">These items were not ordered and are still in your cart:</p>
+            <ul class="mb-0">
+                <li th:each="line : ${result.rejected()}" th:attr="aria-label=${'Rejected Line ' + line.sku()}">
+                    <strong th:text="${line.sku()}">SKU</strong>:
+                    <span th:attr="aria-label=${'Rejection Reason ' + line.sku()}" th:text="${line.reason()}">Reason</span>
+                </li>
+            </ul>
+        </div>
 
-            <div class="d-flex gap-3 mt-3">
-                <a href="/order-history" class="btn btn-primary">View my orders</a>
-                <a href="/" class="btn btn-outline-secondary">Continue shopping</a>
-            </div>
+        <div class="order-confirmation-actions">
+            <a href="/order-history" class="btn btn-primary btn-lg">View my orders</a>
+            <a href="/" class="btn btn-outline-secondary btn-lg">Continue shopping</a>
         </div>
     </div>
 </div>

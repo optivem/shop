@@ -22,35 +22,48 @@
             </ol>
         </nav>
 
-        <div class="row g-4">
-            <div class="col-md-5">
-                <div th:replace="~{fragments/product-image :: image(${product.brand}, 'square')}"></div>
+        <div class="row g-4 align-items-start">
+            <div class="col-lg-7">
+                <div class="market-panel p-3">
+                    <div th:replace="~{fragments/product-image :: image(${product.brand}, 'square')}"></div>
+                </div>
             </div>
-            <div class="col-md-7">
-                <h1 class="h2" aria-label="Product Title" th:text="${product.title}">Title</h1>
-                <p class="text-muted">
-                    by <span aria-label="Product Brand" th:text="${product.brand}">Brand</span> ·
-                    <span aria-label="Product Category" th:text="${product.category}">Category</span> · SKU
-                    <span aria-label="Product SKU" th:text="${product.sku}">SKU</span>
-                </p>
-                <p class="price fs-3 fw-bold" aria-label="Display Price" th:text="${money.format(product.price)}">$0.00</p>
-                <form method="post" th:action="@{/cart/add}" class="d-flex flex-wrap align-items-center gap-3 mb-4">
+            <div class="col-lg-5 d-flex flex-column gap-3">
+                <div class="market-panel p-4">
+                    <p class="product-meta mb-2">
+                        <span class="product-meta-brand" aria-label="Product Brand" th:text="${product.brand}">Brand</span>
+                        · <span aria-label="Product Category" th:text="${product.category}">Category</span>
+                    </p>
+                    <h1 class="product-detail-title" aria-label="Product Title" th:text="${product.title}">Title</h1>
+                    <p class="product-meta mb-3">
+                        SKU <span class="font-monospace text-body" aria-label="Product SKU" th:text="${product.sku}">SKU</span>
+                    </p>
+                    <p class="price product-detail-price" aria-label="Display Price" th:text="${money.format(product.price)}">$0.00</p>
+                    <p class="product-detail-description mb-0" aria-label="Product Description"
+                       th:text="${product.description}">Description</p>
+                </div>
+                <form method="post" th:action="@{/cart/add}" class="market-panel p-4 d-flex flex-column gap-3">
                     <input type="hidden" name="sku" th:value="${product.sku}">
                     <input type="hidden" name="returnUrl" th:value="${returnUrl}">
-                    <label for="product-quantity" class="form-label mb-0">Qty</label>
-                    <div class="input-group quantity-stepper">
-                        <button type="button" class="btn btn-outline-secondary" aria-label="Decrease Quantity"
-                                data-step="-1">−</button>
-                        <input id="product-quantity" name="quantity" type="text" inputmode="numeric"
-                               class="form-control text-center" aria-label="Product Quantity" value="1">
-                        <button type="button" class="btn btn-outline-secondary" aria-label="Increase Quantity"
-                                data-step="1">+</button>
+                    <div class="d-flex align-items-center justify-content-between gap-3">
+                        <label for="product-quantity" class="form-label fw-bold mb-0">Quantity</label>
+                        <div class="input-group quantity-stepper">
+                            <button type="button" class="btn btn-outline-secondary" aria-label="Decrease Quantity"
+                                    data-step="-1"><svg th:replace="~{fragments/icons :: icon('minus', 16, null, 2)}"></svg></button>
+                            <input id="product-quantity" name="quantity" type="text" inputmode="numeric"
+                                   class="form-control text-center" aria-label="Product Quantity" value="1">
+                            <button type="button" class="btn btn-outline-secondary" aria-label="Increase Quantity"
+                                    data-step="1"><svg th:replace="~{fragments/icons :: icon('plus', 16, null, 2)}"></svg></button>
+                        </div>
                     </div>
-                    <button type="submit" class="btn btn-primary" aria-label="Add to Cart">Add to cart</button>
+                    <button type="submit" class="btn btn-primary btn-lg w-100" aria-label="Add to Cart">
+                        <svg th:replace="~{fragments/icons :: icon('shopping-cart', 18, 'me-2', 2)}"></svg>Add to cart
+                    </button>
+                    <ul class="product-perks list-unstyled mb-0">
+                        <li><svg th:replace="~{fragments/icons :: icon('check', 16, null, 2)}"></svg> Free shipping on orders over $1,000</li>
+                        <li><svg th:replace="~{fragments/icons :: icon('check', 16, null, 2)}"></svg> 30-day returns</li>
+                    </ul>
                 </form>
-                <hr>
-                <p aria-label="Product Description" th:text="${product.description}">Description</p>
-                <p class="text-muted small mb-0">✓ Ships in 1–2 business days · ✓ 30-day returns</p>
             </div>
         </div>
 

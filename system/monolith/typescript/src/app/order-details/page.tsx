@@ -1,9 +1,12 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, type ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { AccountLayout } from "@/components/StoreLayout";
+import { Icon } from "@/components/Icon";
+import { AccountLayout, LoadingSpinner } from "@/components/StoreLayout";
+import { ProductImage } from "@/components/StorefrontParts";
+import { useCatalog } from "@/components/StorefrontProviders";
 import { formatAddress } from "@/lib/storefront/shipping";
 import {
   formatFieldErrors,
@@ -155,7 +158,7 @@ function OrderDetailsContent() {
   }
 
   return (
-    <>
+    <div className="order-detail">
       {notification && (
         <div
           role="alert"
@@ -163,180 +166,181 @@ function OrderDetailsContent() {
           data-notification-id={notification.id}
         >
           {notification.type === "success" ? (
-            notification.message
+            <>
+              <Icon name="circle-check" size={20} className="notification-icon" />
+              {notification.message}
+            </>
           ) : (
             <>
-              <div className="error-message">{notification.message}</div>
-              {notification.fieldErrors.map((fe) => (
-                <div key={fe} className="field-error">
-                  {fe}
-                </div>
-              ))}
+              <Icon name="circle-alert" size={20} className="notification-icon" />
+              <div className="notification-body">
+                <div className="error-message">{notification.message}</div>
+                {notification.fieldErrors.map((fe) => (
+                  <div key={fe} className="field-error">
+                    {fe}
+                  </div>
+                ))}
+              </div>
             </>
           )}
         </div>
       )}
 
-      <div className="card shadow">
-        <div className="card-header bg-primary text-white">
-          <h4 className="mb-0">Order Details</h4>
+      <Link href="/order-history" className="btn btn-link order-back">
+        <Icon name="arrow-left" />
+        Back to Order History
+      </Link>
+      {loading && (
+        <div className="market-panel">
+          <LoadingSpinner message="Loading order details..." />
         </div>
-        <div className="card-body">
-          {loading && (
-            <div className="text-center py-5">
-              <output>
-                <div className="spinner-border text-primary">
-                  <span className="visually-hidden">Loading...</span>
-                </div>
-              </output>
-              <p className="mt-3">Loading order details...</p>
-            </div>
-          )}
-          {!loading && error && !notification && (
-            <div
-              className="notification error"
-              role="alert"
-              data-notification-id={0}
+      )}
+      {!loading && error && !notification && (
+        <div className="notification error" role="alert" data-notification-id={0}>
+          <Icon name="circle-alert" size={20} className="notification-icon" />
+          <div className="notification-body">
+            <div className="error-message">{error}</div>
+          </div>
+        </div>
+      )}
+      {!loading && !error && !order && (
+        <div className="market-empty text-center py-5 px-3">
+          <p className="mb-0">Order not found</p>
+        </div>
+      )}
+      {!loading && !error && order && <OrderDetailView order={order} actions={
+        order.status !== "CANCELLED" && order.status !== "DELIVERED" && (
+          <>
+            <button
+              type="button"
+              className="btn btn-outline-danger"
+              aria-label="Cancel Order"
+              onClick={() => {
+                void handleCancel();
+              }}
+              disabled={isCancelling}
             >
-              <div className="error-message">{error}</div>
-            </div>
-          )}
-          {!loading && !error && !order && (
-            <div className="text-center py-5 text-muted">
-              <p>Order not found</p>
-            </div>
-          )}
-          {!loading && !error && order && (
-            <>
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <strong>Order Number:</strong>
-                  <p aria-label="Display Order Number">{order.orderNumber}</p>
-                </div>
-                <div className="col-md-6 mb-3">
-                  <strong>Order Timestamp:</strong>
-                  <p aria-label="Display Order Timestamp">
-                    {new Date(order.orderTimestamp).toLocaleString("en-US", {
-                      timeZone: "UTC",
-                    })}
-                  </p>
-                </div>
-                <div className="col-md-6 mb-3">
-                  <strong>Status:</strong>
-                  <p
-                    className={`status-${order.status}`}
-                    aria-label="Display Status"
-                  >
-                    {order.status}
-                  </p>
-                </div>
-                <div className="col-md-6 mb-3">
-                  <strong>SKU:</strong>
-                  <p aria-label="Display SKU">{order.sku}</p>
-                </div>
-                <div className="col-md-6 mb-3">
-                  <strong>Country:</strong>
-                  <p aria-label="Display Country">{order.country}</p>
-                </div>
-                {order.shippingAddress && (
-                  <div className="col-md-6 mb-3">
-                    <strong>Shipping Address:</strong>
-                    <p aria-label="Display Shipping Address">{formatAddress(order.shippingAddress)}</p>
-                  </div>
-                )}
-                <div className="col-md-6 mb-3">
-                  <strong>Quantity:</strong>
-                  <p aria-label="Display Quantity">{order.quantity}</p>
-                </div>
-                <div className="col-md-6 mb-3">
-                  <strong>Unit Price:</strong>
-                  <p aria-label="Display Unit Price">
-                    ${order.unitPrice}
-                  </p>
-                </div>
-                <div className="col-md-6 mb-3">
-                  <strong>Base Price:</strong>
-                  <p aria-label="Display Base Price">
-                    ${order.basePrice}
-                  </p>
-                </div>
-                <div className="col-md-6 mb-3">
-                  <strong>Discount Rate:</strong>
-                  <p aria-label="Display Discount Rate">
-                    {(Number(order.discountRate) * 100).toFixed(2)}%
-                  </p>
-                </div>
-                <div className="col-md-6 mb-3">
-                  <strong>Discount Amount:</strong>
-                  <p aria-label="Display Discount Amount">
-                    ${order.discountAmount}
-                  </p>
-                </div>
-                <div className="col-md-6 mb-3">
-                  <strong>Subtotal Price:</strong>
-                  <p aria-label="Display Subtotal Price">
-                    ${order.subtotalPrice}
-                  </p>
-                </div>
-                <div className="col-md-6 mb-3">
-                  <strong>Tax Rate:</strong>
-                  <p aria-label="Display Tax Rate">
-                    {(Number(order.taxRate) * 100).toFixed(2)}%
-                  </p>
-                </div>
-                <div className="col-md-6 mb-3">
-                  <strong>Tax Amount:</strong>
-                  <p aria-label="Display Tax Amount">
-                    ${order.taxAmount}
-                  </p>
-                </div>
-                <div className="col-md-6 mb-3">
-                  <strong>Total Price:</strong>
-                  <p
-                    className="fs-5 fw-bold"
-                    aria-label="Display Total Price"
-                  >
-                    ${order.totalPrice}
-                  </p>
-                </div>
-                <div className="col-md-6 mb-3">
-                  <strong>Applied Coupon Code:</strong>
-                  <p aria-label="Display Applied Coupon">
-                    {order.appliedCouponCode ?? 'None'}
-                  </p>
-                </div>
+              {isCancelling ? "Cancelling..." : "Cancel Order"}
+            </button>
+            <button
+              type="button"
+              className="btn btn-primary"
+              aria-label="Deliver Order"
+              onClick={() => {
+                void handleDeliver();
+              }}
+              disabled={isDelivering}
+            >
+              {isDelivering ? "Delivering..." : "Deliver Order"}
+            </button>
+          </>
+        )
+      } />}
+    </div>
+  );
+}
+
+const percent = (rate: string) => `${(Number(rate) * 100).toFixed(2)}%`;
+
+/**
+ * A header with the order number, date and status, the ordered item, and the price breakdown.
+ * Every value the drivers read sits alone in its `Display <Field>` element, exactly as the API returned it.
+ */
+function OrderDetailView({ order, actions }: Readonly<{ order: OrderDetail; actions: ReactNode }>) {
+  // The order only carries the SKU; the catalog (when loaded) gives the title and brand for the item row.
+  const product = useCatalog().products.find((candidate) => candidate.sku === order.sku);
+  const timestamp = new Date(order.orderTimestamp).toLocaleString("en-US", { timeZone: "UTC" });
+
+  return (
+    <>
+      <section className="market-panel order-detail-header">
+        <div className="min-w-0">
+          <p className="order-eyebrow mb-1">Order Details</p>
+          <h1 className="order-detail-number">
+            <span aria-label="Display Order Number">{order.orderNumber}</span>
+          </h1>
+          <p className="text-body-secondary mb-0 d-flex flex-wrap align-items-center gap-2">
+            <span>
+              Ordered <span aria-label="Display Order Timestamp">{timestamp}</span> UTC
+            </span>
+            <span className={`order-status status-${order.status}`} aria-label="Display Status">
+              {order.status}
+            </span>
+          </p>
+        </div>
+        {actions && <div className="order-detail-actions">{actions}</div>}
+      </section>
+
+      <div className="row g-4 align-items-start">
+        <div className="col-xl-7">
+          <section className="market-panel p-4" aria-labelledby="order-item-heading">
+            <h2 className="h5 mb-3" id="order-item-heading">
+              Item
+            </h2>
+            <div className="order-item">
+              <div className="order-item-thumb">
+                <ProductImage brand={product?.brand ?? order.sku} shape="square" />
               </div>
-              <div className="mt-4 d-flex gap-2">
-                {order.status !== "CANCELLED" && order.status !== "DELIVERED" && (
-                  <button
-                    className="btn btn-danger"
-                    aria-label="Cancel Order"
-                    onClick={() => {
-                      void handleCancel();
-                    }}
-                    disabled={isCancelling}
-                  >
-                    {isCancelling ? "Cancelling..." : "Cancel Order"}
-                  </button>
-                )}
-                {order.status !== "CANCELLED" && order.status !== "DELIVERED" && (
-                  <button
-                    className="btn btn-warning"
-                    aria-label="Deliver Order"
-                    onClick={() => {
-                      void handleDeliver();
-                    }}
-                    disabled={isDelivering}
-                  >
-                    {isDelivering ? "Delivering..." : "Deliver Order"}
-                  </button>
-                )}
-                <Link href="/order-history" className="btn btn-secondary">
-                  Back to Order History
-                </Link>
+              <div className="min-w-0">
+                {product && <p className="order-item-title mb-0">{product.title}</p>}
+                <p className="order-item-meta mb-0">
+                  SKU{" "}
+                  <span className="font-monospace" aria-label="Display SKU">
+                    {order.sku}
+                  </span>{" "}
+                  · Quantity <span aria-label="Display Quantity">{order.quantity}</span> · Unit Price{" "}
+                  <span aria-label="Display Unit Price">${order.unitPrice}</span>
+                </p>
               </div>
-            </>
-          )}
+            </div>
+            <dl className="order-facts">
+              {order.shippingAddress && (
+                <div>
+                  <dt>Shipping Address</dt>
+                  <dd aria-label="Display Shipping Address">{formatAddress(order.shippingAddress)}</dd>
+                </div>
+              )}
+              <div>
+                <dt>Country</dt>
+                <dd aria-label="Display Country">{order.country}</dd>
+              </div>
+              <div>
+                <dt>Applied Coupon</dt>
+                <dd className="font-monospace" aria-label="Display Applied Coupon">
+                  {order.appliedCouponCode ?? "None"}
+                </dd>
+              </div>
+            </dl>
+          </section>
+        </div>
+        <div className="col-xl-5">
+          <section className="market-panel p-4" aria-labelledby="order-price-heading">
+            <h2 className="h5 mb-3" id="order-price-heading">
+              Price breakdown
+            </h2>
+            <dl className="order-breakdown">
+              <dt>Base Price</dt>
+              <dd aria-label="Display Base Price">${order.basePrice}</dd>
+              <dt>Discount Rate</dt>
+              <dd aria-label="Display Discount Rate">{percent(order.discountRate)}</dd>
+              <dt>Discount Amount</dt>
+              <dd aria-label="Display Discount Amount">${order.discountAmount}</dd>
+              <dt>Subtotal Price</dt>
+              <dd className="fw-bold" aria-label="Display Subtotal Price">
+                ${order.subtotalPrice}
+              </dd>
+              <dt>Tax Rate</dt>
+              <dd aria-label="Display Tax Rate">{percent(order.taxRate)}</dd>
+              <dt>Tax Amount</dt>
+              <dd aria-label="Display Tax Amount">${order.taxAmount}</dd>
+            </dl>
+            <div className="order-total-row">
+              <span>Total Price</span>
+              <span className="order-total-value" aria-label="Display Total Price">
+                ${order.totalPrice}
+              </span>
+            </div>
+          </section>
         </div>
       </div>
     </>
@@ -352,18 +356,7 @@ const BREADCRUMBS = [
 export default function OrderDetailsPage() {
   return (
     <AccountLayout title="Order Details" breadcrumbs={BREADCRUMBS}>
-      <Suspense
-        fallback={
-          <div className="text-center py-5">
-            <output>
-              <div className="spinner-border text-primary">
-                <span className="visually-hidden">Loading...</span>
-              </div>
-            </output>
-            <p className="mt-3">Loading...</p>
-          </div>
-        }
-      >
+      <Suspense fallback={<LoadingSpinner message="Loading..." />}>
         <OrderDetailsContent />
       </Suspense>
     </AccountLayout>
