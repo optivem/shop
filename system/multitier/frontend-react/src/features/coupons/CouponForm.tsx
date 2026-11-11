@@ -36,18 +36,21 @@ export function CouponForm({ onSubmit, isSubmitting, generateCouponCode }: Reado
   }, [onSubmit, formData, getDefaultFormData]);
 
   return (
-    <div className="card shadow mb-4">
-      <div className="card-header bg-primary text-white">
-        <h4 className="mb-0">Create New Coupon</h4>
+    <section className="market-panel coupon-panel coupon-form-panel mb-4" aria-labelledby="coupon-form-heading">
+      <div className="coupon-panel-header">
+        <div>
+          <h2 id="coupon-form-heading" className="coupon-panel-title">Create New Coupon</h2>
+          <p className="coupon-panel-subtitle">Customers enter the code at checkout to get the discount.</p>
+        </div>
       </div>
-      <div className="card-body">
-        <form onSubmit={(e) => { void handleSubmit(e); }}>
-          <div className="row mb-3">
+      <div className="coupon-panel-body">
+        <form className="coupon-form" onSubmit={(e) => { void handleSubmit(e); }}>
+          <div className="row g-3 mb-3">
             <div className="col-md-6">
-              <label htmlFor="code" className="form-label">Coupon Code:</label>
+              <label htmlFor="code" className="form-label market-label">Coupon Code:</label>
               <input
                 type="text"
-                className="form-control"
+                className="form-control coupon-code-input"
                 id="code"
                 aria-label="Coupon Code"
                 value={formData.code}
@@ -56,7 +59,7 @@ export function CouponForm({ onSubmit, isSubmitting, generateCouponCode }: Reado
               />
             </div>
             <div className="col-md-6">
-              <label htmlFor="discountRate" className="form-label">Discount Rate (0-1):</label>
+              <label htmlFor="discountRate" className="form-label market-label">Discount Rate (0-1):</label>
               <input
                 type="number"
                 className="form-control"
@@ -69,9 +72,9 @@ export function CouponForm({ onSubmit, isSubmitting, generateCouponCode }: Reado
               />
             </div>
           </div>
-          <div className="row mb-3">
+          <div className="row g-3 mb-3">
             <div className="col-md-6">
-              <label htmlFor="validFrom" className="form-label">Valid From (Optional):</label>
+              <label htmlFor="validFrom" className="form-label market-label">Valid From (Optional):</label>
               <input
                 type="datetime-local"
                 className="form-control"
@@ -83,7 +86,7 @@ export function CouponForm({ onSubmit, isSubmitting, generateCouponCode }: Reado
               <small className="form-text text-muted">Leave empty for immediate validity</small>
             </div>
             <div className="col-md-6">
-              <label htmlFor="validTo" className="form-label">Valid To (Optional):</label>
+              <label htmlFor="validTo" className="form-label market-label">Valid To (Optional):</label>
               <input
                 type="datetime-local"
                 className="form-control"
@@ -95,9 +98,9 @@ export function CouponForm({ onSubmit, isSubmitting, generateCouponCode }: Reado
               <small className="form-text text-muted">Leave empty for no expiration</small>
             </div>
           </div>
-          <div className="row mb-3">
+          <div className="row g-3">
             <div className="col-md-6">
-              <label htmlFor="usageLimit" className="form-label">Usage Limit (Optional):</label>
+              <label htmlFor="usageLimit" className="form-label market-label">Usage Limit (Optional):</label>
               <input
                 type="number"
                 className="form-control"
@@ -114,12 +117,12 @@ export function CouponForm({ onSubmit, isSubmitting, generateCouponCode }: Reado
                 text="Create Coupon"
                 loadingText="Creating..."
                 ariaLabel="Create Coupon"
-                className="btn btn-primary w-100"
+                className="btn btn-primary w-100 coupon-submit"
               />
             </div>
           </div>
         </form>
       </div>
-    </div>
+    </section>
   );
 }

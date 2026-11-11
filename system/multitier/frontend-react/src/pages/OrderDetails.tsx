@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import { Layout, DataState } from '../components';
 import { OrderDetailView } from '../features/orders';
 import { useOrderDetails } from '../hooks';
@@ -37,6 +38,9 @@ export function OrderDetails() {
     setIsDelivering(false);
   }, [orderNumber, handleResult, setSuccess, refresh]);
 
+  // A cancelled or delivered order can't be changed, so its buttons are not rendered at all (drivers count them).
+  const canChange = !!order && order.status !== OrderStatus.CANCELLED && order.status !== OrderStatus.DELIVERED;
+
   return (
     <Layout
       title="Order Details"
@@ -46,53 +50,50 @@ export function OrderDetails() {
         { label: 'Order Details' }
       ]}
     >
-      <div className="card shadow">
-        <div className="card-header bg-primary text-white">
-          <h4 className="mb-0">Order Details</h4>
-        </div>
-        <div className="card-body">
-          <DataState
-            isLoading={isLoading}
-            error={error}
-            isEmpty={!order}
-            loadingMessage="Loading order details..."
-            emptyMessage="Order not found"
-          >
-            {order && (
-              <>
-                <OrderDetailView order={order} />
-                <div className="mt-4 d-flex gap-2">
-                  {order.status !== OrderStatus.CANCELLED && order.status !== OrderStatus.DELIVERED && (
+      <div className="order-detail">
+        <button type="button" className="btn btn-link order-back" onClick={() => navigate('/order-history')}>
+          <ArrowLeft size={16} aria-hidden="true" />
+          Back to Order History
+        </button>
+        <DataState
+          isLoading={isLoading}
+          error={error}
+          isEmpty={!order}
+          loadingMessage="Loading order details..."
+          emptyMessage="Order not found"
+        >
+          {order && (
+            <OrderDetailView
+              order={order}
+              actions={
+                canChange && (
+                  <>
                     <button
-                      className="btn btn-danger"
+                      type="button"
+                      className="btn btn-outline-danger"
                       aria-label="Cancel Order"
                       onClick={() => { void handleCancel(); }}
                       disabled={isCancelling}
                     >
                       {isCancelling ? 'Cancelling...' : 'Cancel Order'}
                     </button>
-                  )}
-                  {isAdmin && order.status !== OrderStatus.CANCELLED && order.status !== OrderStatus.DELIVERED && (
-                    <button
-                      className="btn btn-warning"
-                      aria-label="Deliver Order"
-                      onClick={() => { void handleDeliver(); }}
-                      disabled={isDelivering}
-                    >
-                      {isDelivering ? 'Delivering...' : 'Deliver Order'}
-                    </button>
-                  )}
-                  <button
-                    className="btn btn-secondary"
-                    onClick={() => navigate('/order-history')}
-                  >
-                    Back to Order History
-                  </button>
-                </div>
-              </>
-            )}
-          </DataState>
-        </div>
+                    {isAdmin && (
+                      <button
+                        type="button"
+                        className="btn btn-primary"
+                        aria-label="Deliver Order"
+                        onClick={() => { void handleDeliver(); }}
+                        disabled={isDelivering}
+                      >
+                        {isDelivering ? 'Delivering...' : 'Deliver Order'}
+                      </button>
+                    )}
+                  </>
+                )
+              }
+            />
+          )}
+        </DataState>
       </div>
     </Layout>
   );

@@ -33,6 +33,7 @@ export function AdminCoupons() {
       title="Coupon Management"
       breadcrumbs={[{ label: 'Home', path: '/' }, { label: 'Coupon Management' }]}
     >
+      <h1 className="admin-coupons-title">Coupons</h1>
       <CouponForm
         onSubmit={handleCouponSubmit}
         isSubmitting={isCreating}

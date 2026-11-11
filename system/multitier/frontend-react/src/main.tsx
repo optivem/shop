@@ -4,6 +4,8 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import '@fontsource-variable/figtree';
 import './styles/market.css';
 import './styles/pages-shop.css';
+import './styles/pages-orders.css';
+import './styles/pages-account.css';
 import { App } from './App';
 import { AuthGate } from './auth/AuthGate';
 

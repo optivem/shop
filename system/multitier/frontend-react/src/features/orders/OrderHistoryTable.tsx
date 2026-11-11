@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { ChevronRight, RefreshCw } from 'lucide-react';
 import {
   useReactTable,
   getCoreRowModel,
@@ -54,7 +55,7 @@ export function OrderHistoryTable({
     () => [
       columnHelper.accessor('orderNumber', {
         header: 'Order Number',
-        cell: (info) => info.getValue(),
+        cell: (info) => <span className="order-number">{info.getValue()}</span>,
       }),
       ...(showCustomer
         ? [
@@ -83,7 +84,7 @@ export function OrderHistoryTable({
       }),
       columnHelper.accessor('totalPrice', {
         header: 'Total Price',
-        cell: (info) => `$${info.getValue()}`,
+        cell: (info) => <span className="order-total">${info.getValue()}</span>,
       }),
       columnHelper.accessor('appliedCouponCode', {
         header: 'Coupon Code',
@@ -92,17 +93,17 @@ export function OrderHistoryTable({
       columnHelper.accessor('status', {
         header: 'Status',
         cell: (info) => (
-          <span className={`status-${info.getValue()}`}>
-            {info.getValue()}
-          </span>
+          <span className={`order-status status-${info.getValue()}`}>{info.getValue()}</span>
         ),
       }),
       columnHelper.display({
         id: 'actions',
         header: 'Actions',
+        // "View Details" must stay the link's first text node: drivers find it with contains(text(), ...).
         cell: (info) => (
-          <Link to={`/order-details/${encodeURIComponent(info.row.original.orderNumber)}`}>
+          <Link to={`/order-details/${encodeURIComponent(info.row.original.orderNumber)}`} className="order-view-link">
             View Details
+            <ChevronRight size={16} aria-hidden="true" />
           </Link>
         ),
       }),
@@ -122,16 +123,23 @@ export function OrderHistoryTable({
     getSortedRowModel: getSortedRowModel(),
   });
 
+  const orderCount = orders.length;
+
   return (
-    <div className="card shadow">
-      <div className="card-header bg-primary text-white">
-        <h4 className="mb-0">Order History</h4>
-      </div>
-      <div className="card-body">
-        <div className="row mb-3 g-3">
+    <>
+      <div className="orders-toolbar">
+        <div>
+          <h1 className="h2 mb-1">Order History</h1>
+          {!isLoading && !error && (
+            <p className="text-body-secondary mb-0">
+              {orderCount} {orderCount === 1 ? 'order' : 'orders'}
+            </p>
+          )}
+        </div>
+        <div className="orders-filters">
           {customerFilter && (
-            <div className="col-md-4">
-              <label htmlFor="customerFilter" className="form-label">
+            <div className="orders-filter">
+              <label htmlFor="customerFilter" className="form-label market-label">
                 Customer:
               </label>
               <select
@@ -150,8 +158,8 @@ export function OrderHistoryTable({
               </select>
             </div>
           )}
-          <div className={customerFilter ? 'col-md-5' : 'col-md-8'}>
-            <label htmlFor="orderNumberFilter" className="form-label">
+          <div className="orders-filter orders-filter-wide">
+            <label htmlFor="orderNumberFilter" className="form-label market-label">
               Filter by Order Number:
             </label>
             <input
@@ -164,23 +172,30 @@ export function OrderHistoryTable({
               placeholder="Enter order number..."
             />
           </div>
-          <div className={`${customerFilter ? 'col-md-3' : 'col-md-4'} d-flex align-items-end`}>
-            <button
-              className="btn btn-secondary w-100"
-              onClick={onRefresh}
-              disabled={isLoading}
-              aria-label="Refresh Order List"
-            >
-              Refresh
-            </button>
-          </div>
+          <button
+            type="button"
+            className="btn btn-outline-secondary orders-refresh"
+            onClick={onRefresh}
+            disabled={isLoading}
+            aria-label="Refresh Order List"
+          >
+            <RefreshCw size={16} aria-hidden="true" />
+            Refresh
+          </button>
         </div>
+      </div>
 
-        {isLoading && <LoadingSpinner message="Loading orders..." />}
-        {!isLoading && error && <ErrorMessage message={error} onRetry={onRefresh} />}
-        {!isLoading && !error && (
+      {isLoading && (
+        <div className="market-panel">
+          <LoadingSpinner message="Loading orders..." />
+        </div>
+      )}
+      {!isLoading && error && <ErrorMessage message={error} onRetry={onRefresh} />}
+      {!isLoading && !error && (
+        <div className="market-panel orders-panel">
+          {/* The table keeps all its columns: on small screens the panel scrolls sideways, the page never does. */}
           <div className="table-responsive">
-            <table className="table table-striped table-hover">
+            <table className="table table-hover align-middle mb-0 orders-table">
               <thead>
                 {table.getHeaderGroups().map((headerGroup) => (
                   <tr key={headerGroup.id}>
@@ -193,7 +208,7 @@ export function OrderHistoryTable({
               <tbody>
                 {table.getRowModel().rows.length === 0 ? (
                   <tr>
-                    <td colSpan={columns.length} className="text-center">
+                    <td colSpan={columns.length} className="orders-empty text-center">
                       No orders found
                     </td>
                   </tr>
@@ -201,7 +216,7 @@ export function OrderHistoryTable({
                   table.getRowModel().rows.map((row) => (
                     <tr key={row.id}>
                       {row.getVisibleCells().map((cell) => (
-                        <td key={cell.id}>
+                        <td key={cell.id} className={`orders-cell-${cell.column.id}`}>
                           {flexRender(cell.column.columnDef.cell, cell.getContext())}
                         </td>
                       ))}
@@ -211,8 +226,8 @@ export function OrderHistoryTable({
               </tbody>
             </table>
           </div>
-        )}
-      </div>
-    </div>
+        </div>
+      )}
+    </>
   );
 }

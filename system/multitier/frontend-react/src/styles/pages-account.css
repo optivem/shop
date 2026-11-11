@@ -1,0 +1,247 @@
+/*
+ * Market: account screens (Account, SignIn, AdminCoupons) and the "Not authorized" view.
+ * Mockups: docs/design/home-redesign/designs/MAccount, MSignIn, MAdminCoupons.
+ * Builds on the tokens in market.css and .market-panel from pages-shop.css. Test hooks
+ * (aria-labels, label text, table.table column order, h1 "Not authorized") are left alone:
+ * see docs/design/home-redesign/test-hooks-inventory.md.
+ */
+
+/* ---- Account: Profile & address ---- */
+
+.account-panel {
+    padding: var(--market-space-5) var(--market-space-4);
+}
+
+@media (min-width: 768px) {
+    .account-panel {
+        padding: 28px;
+    }
+}
+
+.account-title {
+    margin: 0 0 18px;
+    font-size: clamp(1.375rem, 3vw, 1.625rem);
+    letter-spacing: -0.02em;
+}
+
+.account-form .form-label {
+    font-weight: var(--market-font-weight-bold);
+    font-size: var(--market-font-size-sm);
+    margin-bottom: 6px;
+}
+
+.account-form .form-control:disabled {
+    background-color: var(--market-surface-subtle);
+    color: var(--market-text-muted);
+}
+
+.account-form .form-text {
+    color: var(--market-text-muted);
+}
+
+.account-section-title {
+    margin: 28px 0 14px;
+    padding-top: 22px;
+    border-top: 1px solid var(--market-divider);
+    font-size: var(--market-font-size-lg);
+}
+
+.account-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: var(--market-space-6);
+}
+
+@media (max-width: 575.98px) {
+    .account-actions .btn {
+        width: 100%;
+    }
+}
+
+/* ---- Sign in: the short "Redirecting to sign in..." state before Keycloak ---- */
+
+.signin-redirect {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--market-space-12) var(--market-space-4);
+    background: var(--market-bg);
+}
+
+.signin-redirect-panel {
+    width: 100%;
+    max-width: 440px;
+    padding: var(--market-space-12) var(--market-space-6);
+    box-shadow: var(--market-shadow-md);
+}
+
+.signin-redirect-message {
+    font-size: var(--market-font-size-lg);
+    font-weight: var(--market-font-weight-heavy);
+    color: var(--market-ink);
+}
+
+.signin-redirect-hint {
+    margin-top: var(--market-space-2);
+    font-size: var(--market-font-size-sm);
+    color: var(--market-text-muted);
+}
+
+/* ---- Admin: Coupons ---- */
+
+.admin-coupons-title {
+    margin: 0 0 var(--market-space-4);
+    font-size: clamp(1.375rem, 3vw, 1.625rem);
+    letter-spacing: -0.02em;
+}
+
+.coupon-panel {
+    overflow: hidden;
+}
+
+.coupon-panel-header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--market-space-3);
+    padding: var(--market-space-5) var(--market-space-4) var(--market-space-4);
+}
+
+.coupon-panel-body {
+    padding: 0 var(--market-space-4) var(--market-space-5);
+}
+
+@media (min-width: 768px) {
+    .coupon-panel-header {
+        padding: var(--market-space-6) var(--market-space-6) var(--market-space-4);
+    }
+
+    .coupon-panel-body {
+        padding: 0 var(--market-space-6) var(--market-space-6);
+    }
+}
+
+.coupon-panel-title {
+    margin: 0;
+    font-size: var(--market-font-size-lg);
+}
+
+.coupon-panel-subtitle {
+    margin: 2px 0 0;
+    font-size: var(--market-font-size-sm);
+    color: var(--market-text-muted);
+}
+
+.coupon-form .form-text {
+    color: var(--market-text-muted);
+}
+
+.coupon-code-input {
+    font-family: var(--market-font-mono);
+    font-weight: var(--market-font-weight-bold);
+}
+
+.coupon-submit {
+    min-height: 48px;
+}
+
+.coupon-refresh {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--market-space-2);
+    min-height: var(--market-tap-target);
+}
+
+/* Narrow screens scroll the table sideways inside its panel; columns and cells stay as they are. */
+.coupon-table {
+    min-width: 760px;
+    font-size: var(--market-font-size-sm);
+}
+
+.coupon-table > :not(caption) > * > * {
+    padding: 14px var(--market-space-4);
+}
+
+@media (min-width: 768px) {
+    .coupon-table > :not(caption) > * > * {
+        padding-left: var(--market-space-5);
+        padding-right: var(--market-space-5);
+    }
+}
+
+.coupon-table > thead th {
+    font-size: var(--market-font-size-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+}
+
+.coupon-table > thead th .btn-link {
+    min-height: var(--market-tap-target);
+    text-transform: inherit;
+    letter-spacing: inherit;
+    font-size: inherit;
+}
+
+.coupon-table > tbody > tr:last-child > * {
+    border-bottom-width: 0;
+}
+
+.coupon-table > tbody td:first-child {
+    font-family: var(--market-font-mono);
+    font-weight: var(--market-font-weight-bold);
+}
+
+.coupon-table > tbody td:nth-child(3),
+.coupon-table > tbody td:nth-child(4) {
+    color: var(--market-text-muted);
+}
+
+/* The empty/loading/error row is a single cell: keep the default body font there. */
+.coupon-table > tbody td[colspan] {
+    font-family: inherit;
+    font-weight: inherit;
+    color: inherit;
+}
+
+.coupon-status {
+    padding: 4px 10px;
+    font-size: var(--market-font-size-xs);
+}
+
+.coupon-status-active {
+    background: var(--market-success-bg);
+    color: var(--market-success);
+}
+
+.coupon-status-scheduled {
+    background: var(--market-info-bg);
+    color: var(--market-info);
+}
+
+.coupon-status-inactive {
+    background: var(--market-surface-muted);
+    color: var(--market-text-muted);
+}
+
+/* ---- "Not authorized" (RequireAdmin, RequireCanPlaceOrder) ---- */
+
+.not-authorized {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--market-space-3);
+    padding: var(--market-space-6);
+}
+
+.not-authorized-icon {
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.not-authorized-title {
+    margin: 0 0 var(--market-space-1);
+    font-size: var(--market-font-size-xl);
+    color: inherit;
+}

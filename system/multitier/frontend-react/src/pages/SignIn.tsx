@@ -22,9 +22,16 @@ export function SignIn() {
 
   if (signedIn) return <Navigate to={returnUrl} replace />;
 
+  // Only shown for the moment before the browser leaves for the Keycloak login page.
   return (
-    <div className="container mt-4" role="status">
-      Redirecting to sign in...
+    <div className="signin-redirect">
+      <div className="market-panel signin-redirect-panel text-center">
+        <div className="spinner-border text-primary mb-3" aria-hidden="true" />
+        <div className="signin-redirect-message" role="status">
+          Redirecting to sign in...
+        </div>
+        <p className="signin-redirect-hint mb-0">You'll continue to our secure sign-in page and come straight back here.</p>
+      </div>
     </div>
   );
 }

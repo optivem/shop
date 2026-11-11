@@ -33,14 +33,25 @@
 
 ## ▶ Next executable step (resume here)
 
-Steps 1, 4, 5 done: Market tokens in `system/multitier/frontend-react/src/styles/market.css` (Bootstrap 5.3 from npm, Fontsource Figtree, lucide-react); shared shell restyled (header, nav, footer with a `PHOTO_CREDITS` array, notifications, states, form parts). Step 6 part A done (Catalog/home with promo photos, ProductDetail, Cart; Step 8 photos shipped: laptop/monitor/keyboard with footer credits). Next: Step 6 remaining screens (Checkout, OrderConfirmation, OrderHistory, OrderDetails, NewOrder/QuickOrder, Account, SignIn, AdminCoupons), using the test-hook inventory at `docs/design/home-redesign/test-hooks-inventory.md` (Step 1) so no driver selector breaks. Session scope agreed with the user: frontend-react only (Steps 1, 4, 5, 6, 8); per screen run tsc + lint + vitest; one `--sample` system-test run per language (TS, Java, .NET) at the end of the seam. Step 7 (monoliths), 9, 10 go in a later session.
+frontend-react is fully restyled (Steps 1, 4, 5, 6, 8 done; tokens in `system/multitier/frontend-react/src/styles/market.css`, page CSS in `pages-{shop,orders,account}.css`, hook map in `docs/design/home-redesign/test-hooks-inventory.md`). Gate still open: one `--sample` system-test run per language against the multitier stack (`gh-optivem-multitier-{typescript,java,dotnet}.yaml`). Once green, next is Step 7 (monolith UIs), starting with the .NET Bootstrap 5.1 → 5.3 bump, then Java (Thymeleaf), then TypeScript (Next.js); reuse `market.css` tokens.
 
 ## Steps
 
 - [ ] Step 2 (skipped while Bootstrap stays — see Decisions): **Decouple tests from Bootstrap classes.** Move the driver selectors `.alert-danger` (CatalogPage, OrderDetailsPage), `.form-check:has(input:checked) label` (CatalogPage) and `table.table tbody tr td:nth-child(n)` (CouponManagementPage) to role/ARIA equivalents in all three languages, latest and legacy. Run `--sample` system tests per language.
 - [x] Step 3 (approved by the user 2026-11-11): **Mock the remaining screens** on the canvas in the Market style (ProductDetail, Cart, Checkout, OrderConfirmation, NewOrder, QuickOrder, OrderHistory, OrderDetails, Account, AdminCoupons, SignIn, plus empty, loading and error states). Get user approval.
-- [ ] Step 6: **Restyle screens one at a time**: Catalog (with filter sidebar and dense cards) → ProductDetail → Cart → Checkout → OrderConfirmation → OrderHistory → OrderDetails → NewOrder/QuickOrder → Account → SignIn → AdminCoupons. After each: `npx tsc --noEmit`, then run the `--sample` system tests for TypeScript, Java and .NET (they all drive the same UI).
 - [ ] Step 7: **Monolith UIs.** First bump the .NET monolith from its vendored Bootstrap 5.1.0 (`wwwroot/lib`) to 5.3.x, because the Market theme needs 5.3 theme variables (Java and TS load 5.3.3 from a CDN). Use the hook map in `docs/design/home-redesign/test-hooks-inventory.md`. Apply the same tokens and styling to each monolith frontend that has its own UI, keeping their test hooks, then run the `--sample` system tests for each language.
 - [ ] Step 9: **Full verification.** Run `./compile-all.sh`, then `./test-all.sh` (latest + legacy, all three languages). Do a visual check at desktop and phone widths.
 - [ ] Step 10: **Docs.** Point `docs/design/home-redesign/README.md` at the chosen direction and the token file.
+
+## Follow-up ideas (left out of the styling-only plan: no backing data or behaviour)
+
+1. **Product data for mockup extras**: deal badges, ratings, stock status, per-product shipping lines, image gallery and specs list all need new `Product` fields. Recommendation: skip unless a course module needs them.
+2. **Price min/max filter** in the catalog sidebar. Needs API query support. Recommendation: skip for now.
+3. **Cart and checkout shipping and estimated-total rows, plus "qualifies for free shipping"**. Needs a shipping/discount preview endpoint. Recommendation: revisit with the coupon work.
+4. **Apply-coupon button with an inline error at checkout**. Needs a coupon-validate endpoint. Recommendation: revisit with the coupon work.
+5. **SignIn split layout** (photo, guest link): the app redirects straight to Keycloak. A themed Keycloak login page would be the real fix. Recommendation: low priority.
+6. **AccountNav: show the signed-in user's name and avatar** as in the mockup. Recommendation: cheap, do it in a polish pass.
+7. **`auth/AuthGate.tsx` redirect view** is unstyled; reuse the `.signin-redirect` classes from `pages-account.css`. Recommendation: cheap, do it in a polish pass.
+8. **`components/DetailField.tsx` no longer used by the order pages.** Recommendation: delete it if nothing else uses it.
+9. **The mockup's "Audio" promo tile was replaced by Monitors** because the catalog has no Audio category; `headphones.jpg` and `cable.jpg` don't ship. Recommendation: keep as is.
 

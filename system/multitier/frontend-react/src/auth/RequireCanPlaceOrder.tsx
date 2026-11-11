@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { ShieldAlert } from 'lucide-react';
 import { Layout } from '../components';
 import { useRoles } from './useRoles';
 
@@ -8,9 +9,12 @@ export function RequireCanPlaceOrder({ children }: Readonly<{ children: ReactNod
   if (canPlaceOrder) return <>{children}</>;
   return (
     <Layout>
-      <div className="alert alert-danger" role="alert">
-        <h1 className="h4">Not authorized</h1>
-        <p className="mb-0">Administrators cannot place orders.</p>
+      <div className="alert alert-danger not-authorized" role="alert">
+        <ShieldAlert className="not-authorized-icon" size={28} aria-hidden="true" />
+        <div>
+          <h1 className="not-authorized-title">Not authorized</h1>
+          <p className="mb-0">Administrators cannot place orders.</p>
+        </div>
       </div>
     </Layout>
   );

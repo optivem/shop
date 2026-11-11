@@ -26,7 +26,9 @@ export function QuickOrder() {
   if (country === null) {
     return (
       <Layout title="Quick order" breadcrumbs={[{ label: 'Home', path: '/' }, { label: 'Quick order' }]}>
-        <LoadingSpinner message="Loading..." />
+        <div className="market-panel">
+          <LoadingSpinner message="Loading..." />
+        </div>
       </Layout>
     );
   }
