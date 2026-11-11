@@ -4,6 +4,8 @@
 
 A catalog of project templates organized by two independent dimensions: **system** (the application) and **system-test** (the test harness). Each template is self-contained and copy-paste-ready.
 
+**Interviewing or reviewing this repo?** Start with the [guided tour](docs/tour.md).
+
 ## Verification
 
 [![meta-prerelease-stage](https://github.com/optivem/shop/actions/workflows/meta-prerelease-stage.yml/badge.svg?event=schedule)](https://github.com/optivem/shop/actions/workflows/meta-prerelease-stage.yml)
