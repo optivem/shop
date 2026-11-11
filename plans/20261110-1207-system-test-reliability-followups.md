@@ -109,3 +109,28 @@ Found 2026-11-11 in `meta-prerelease-stage` run 43052472314 (`2c235677`). Child 
 
 Found 2026-11-11 during the KC production login check. The admin console at https://shop-auth.optivem.com/admin shows "You are logged in as a temporary admin user. To harden security, create a permanent admin account and delete the temporary one." The `admin` user comes from the bootstrap env vars (`shop-keycloak-admin-password` secret). Login itself is unaffected.
 - **Recommended: leave as is unless the shared Keycloak gets a non-demo use.** **Why:** a permanent admin would live only in the Keycloak DB and be lost or drift on redeploy, while the bootstrap admin is reproducible from Secret Manager; for a demo store, the banner is cosmetic.
+
+### 36. Parallel sessions on one docker host clobber each other's stacks
+
+Found 2026-11-11 during SMETA Step 7 (UC-007). A design session cycled docker stacks while the UC-007 agent was running, replaced its running monolith-typescript stack, and the next runs failed with "system stub is not running". Images are also built from the shared working tree, so one session's uncommitted backend/compose edits (OpenTelemetry) ended up in the other's test runs.
+- **Recommended:** have `gh optivem system start` refuse (or warn loudly) when a stack for a different config is already running and was started by another process, and document "one session per docker host for system tests". **Why:** silent stack replacement turns into confusing "not running" failures that look like test bugs.
+
+### 37. `gh optivem commit` can't push from a shared checkout with someone else's unstaged changes
+
+Found 2026-11-11 (UC-007 commit `e964c99e`). `--paths` committed fine, but the pull step (rebase) refused to run while another session had unstaged changes, so the push never happened.
+- **Recommended:** when the tree is dirty only outside `--paths`, pull with `--autostash`, or fall back to a plain fast-forward push when there's nothing to pull. **Why:** `--paths` exists for exactly this shared-checkout case, and it's useless if it can't push.
+
+### 38. `system-test run --test` filter quirks
+
+Found 2026-11-11 (UC-007). A regex alternation passed to `--test` is treated as one test name, so the summary says "never executed" even though the tests passed. On .NET the filter matches the method name only, so a class-name filter such as `ViewProduct` matches nothing.
+- **Recommended:** document the filter semantics per language in `--help`, and make the "never executed" check use the same matching the runner used. **Why:** a false "never executed" makes a green run look red.
+
+### 39. Pre-existing lint error in the TypeScript test kit
+
+Found 2026-11-11 (UC-007). `keycloak-token-provider.ts:84` fails `@typescript-eslint/no-base-to-string`.
+- **Recommended:** fix it in the next system-test/typescript touch (stringify the value explicitly). **Why:** it's a one-line fix, and a red lint baseline hides new lint errors.
+
+### 40. TypeScript `--sample` isolated-UI suite ran 0 tests after `npx` fetched playwright@1.65.0
+
+Found 2026-11-11 (UC-007). The sample run printed "playwright@1.65.0 will be installed", ran 0 tests and exited 1, while the full isolated-UI suite on the same stack had just passed. That suggests `npx playwright` resolved outside the project's own `node_modules`, possibly during the docker contention in #36.
+- **Recommended: investigate if it recurs.** Make the runner call the project-local Playwright binary instead of `npx` resolution. **Why:** an unpinned Playwright download can silently change versions and drop tests.
