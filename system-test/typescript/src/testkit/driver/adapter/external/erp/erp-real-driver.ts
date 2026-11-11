@@ -1,6 +1,7 @@
 import type { Result } from '../../../../common/result.js';
 import { success } from '../../../../common/result.js';
 import type { ErpErrorResponse } from '../../../port/external/erp/dtos/errors/ErpErrorResponse.js';
+import type { GetProductRequest } from '../../../port/external/erp/dtos/GetProductRequest.js';
 import type { ReturnsProductRequest } from '../../../port/external/erp/dtos/ReturnsProductRequest.js';
 import type { ReturnsProductsRequest } from '../../../port/external/erp/dtos/ReturnsProductsRequest.js';
 import type { ReturnsPromotionRequest } from '../../../port/external/erp/dtos/ReturnsPromotionRequest.js';
@@ -40,6 +41,10 @@ export class ErpRealDriver extends BaseErpDriver<ErpRealClient> {
   /** The real ERP is never taken down by returnsUnavailable(), so it cannot be brought back either. */
   returnsAvailable(): Promise<Result<void, ErpErrorResponse>> {
     throw new Error('ErpRealDriver cannot end an ERP outage; run this scenario against the ERP stub');
+  }
+
+  returnsProductNotFound(_request: GetProductRequest): Promise<Result<void, ErpErrorResponse>> {
+    throw new Error('ErpRealDriver cannot withdraw a product; run this scenario against the ERP stub');
   }
 
   close(): Promise<void> {

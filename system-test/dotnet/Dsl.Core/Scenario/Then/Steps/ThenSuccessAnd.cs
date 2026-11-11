@@ -21,6 +21,13 @@ public class ThenSuccessAnd<TSuccessResponse, TSuccessVerification>
 
     IThenOrder IThenSuccessAnd.Order() => Order();
 
+    public ThenSuccessOrder<TSuccessResponse, TSuccessVerification> OrderFor(string skuAlias)
+    {
+        return CreateOrderAssertion(() => ThenSuccessCheckout<TSuccessResponse, TSuccessVerification>.OrderNumberForAsync(_thenClause, skuAlias));
+    }
+
+    IThenOrder IThenSuccessAnd.OrderFor(string skuAlias) => OrderFor(skuAlias);
+
     public ThenSuccessOrderHistory<TSuccessResponse, TSuccessVerification> OrderHistory()
     {
         return new ThenSuccessOrderHistory<TSuccessResponse, TSuccessVerification>(_thenClause);

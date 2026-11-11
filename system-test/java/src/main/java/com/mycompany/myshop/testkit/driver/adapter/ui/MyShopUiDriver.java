@@ -5,6 +5,10 @@ import com.mycompany.myshop.testkit.driver.adapter.shared.client.http.TestUser;
 import com.mycompany.myshop.testkit.driver.adapter.ui.client.MyShopUiClient;
 import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.CartPage;
 import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.CatalogPage;
+import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.CheckoutConfirmationPage;
+import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.CheckoutPage;
+import com.mycompany.myshop.testkit.driver.port.dtos.CheckOutRequest;
+import com.mycompany.myshop.testkit.driver.port.dtos.CheckOutResponse;
 import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.CouponManagementPage;
 import com.mycompany.myshop.testkit.driver.port.dtos.BrowseCatalogRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.BrowseCatalogResponse;
@@ -518,6 +522,88 @@ public class MyShopUiDriver implements MyShopDriver {
         var response = cartPage.read(message, cartItemCount);
         response.setAskedToSignIn(client.isOnLoginPage());
         return success(response);
+    }
+
+    /**
+     * Checkout is for signed-in customers: a visitor is asked to sign in, an admin is refused. A new session first
+     * gets the cart lines, each from its product page; then the checkout is opened, and, when asked, the order placed.
+     */
+    @Override
+    public Result<CheckOutResponse, SystemError> checkOut(CheckOutRequest request) {
+        if (!Boolean.TRUE.equals(request.getContinueSession())) {
+            var lines = request.getCartLines() == null ? List.<ManageCartRequest.CartLineDto>of() : request.getCartLines().stream()
+                    .map(line -> ManageCartRequest.CartLineDto.builder().sku(line.getSku()).quantity(line.getQuantity()).build())
+                    .toList();
+            var filled = startCartSession(lines);
+            if (filled.isFailure()) {
+                return failure(filled.getError());
+            }
+        }
+
+        if (CheckOutRequest.PROCEED_FROM_CART.equals(request.getEntry())) {
+            client.proceedToCheckoutFromCart();
+        } else if (request.getEntry() == null || CheckOutRequest.OPEN.equals(request.getEntry())) {
+            client.openCheckoutPage();
+        } else {
+            throw new IllegalArgumentException("Unknown checkout entry: " + request.getEntry());
+        }
+
+        if (client.isOnLoginPage()) {
+            if (!Boolean.TRUE.equals(request.getSignIn())) {
+                return failure(MyShopUiClient.AUTHENTICATION_REQUIRED);
+            }
+            client.signInOnLoginForm(TestUser.CUSTOMER);
+        }
+        if (client.isRefused()) {
+            return failure(MyShopUiClient.PERMISSION_DENIED);
+        }
+
+        var pageClient = client.sessionPageClient();
+        var checkoutPage = new CheckoutPage(pageClient);
+        var response = CheckOutResponse.builder().messageDetails(List.of()).build();
+        if (!checkoutPage.isShown()) {
+            return success(readWhereTheCheckoutSentTheCustomer(response));
+        }
+
+        response.setOpenedTaxCountry(checkoutPage.readTaxCountry());
+        response.setOpenedEstimatedTaxRate(checkoutPage.readEstimatedTaxRate());
+        if (request.getShippingAddress() != null) {
+            checkoutPage.inputShippingAddress(request.getShippingAddress());
+        }
+        if (request.getCouponCode() != null) {
+            checkoutPage.inputCouponCode(request.getCouponCode());
+        }
+        if (!Boolean.TRUE.equals(request.getPlaceOrder())) {
+            response.setShownPage(CheckOutResponse.CHECKOUT);
+            checkoutPage.readInto(response);
+            return success(response);
+        }
+
+        checkoutPage.clickPlaceOrder();
+        var confirmationPage = new CheckoutConfirmationPage(pageClient);
+        if (confirmationPage.isShown()) {
+            response.setShownPage(CheckOutResponse.CONFIRMATION);
+            confirmationPage.readInto(response);
+        } else {
+            response.setShownPage(CheckOutResponse.CHECKOUT);
+            checkoutPage.readInto(response);
+            response.setConfirmedOrders(List.of());
+        }
+        response.setCartLines(client.openCartPage().readLines());
+        return success(response);
+    }
+
+    /** The checkout was not shown: the app sent the customer to the cart, or to some other page. */
+    private CheckOutResponse readWhereTheCheckoutSentTheCustomer(CheckOutResponse response) {
+        var path = client.currentPath();
+        if (path.endsWith("/cart")) {
+            var cart = new CartPage(client.sessionPageClient()).read(null, null);
+            response.setShownPage(CheckOutResponse.CART);
+            response.setMessage(cart.getMessage());
+        } else {
+            response.setShownPage(path);
+        }
+        return response;
     }
 
     /** A fresh session (the visitor's, or the requested user's) whose cart gets these lines, in order. */

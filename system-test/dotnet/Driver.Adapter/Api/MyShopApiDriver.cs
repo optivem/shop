@@ -154,6 +154,9 @@ public class MyShopApiDriver : IMyShopDriver
     public Task<Result<ManageCartResponse, SystemError>> ManageCartAsync(ManageCartRequest request)
         => throw new NotSupportedException("The API channel has no cart; run this scenario on the UI channel only");
 
+    public Task<Result<CheckOutResponse, SystemError>> CheckOutAsync(CheckOutRequest request)
+        => throw new NotSupportedException("The API channel has no cart to check out; run this scenario on the UI channel only");
+
     /// <summary>The API serves the unfiltered catalog; filtering, search and sort happen in the UI.</summary>
     private static void RequireNotSet(string input, object? value)
     {

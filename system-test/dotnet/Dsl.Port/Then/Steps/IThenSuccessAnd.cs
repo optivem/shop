@@ -6,6 +6,9 @@ public interface IThenSuccessAnd
 
     IThenOrder Order();
 
+    /// <summary>The order the checkout placed for this product (an alias), as the system shows it now.</summary>
+    IThenOrder OrderFor(string skuAlias);
+
     IThenOrderHistory OrderHistory();
 
     IThenClock Clock();

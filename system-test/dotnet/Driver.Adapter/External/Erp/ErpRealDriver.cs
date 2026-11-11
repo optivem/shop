@@ -59,4 +59,8 @@ public class ErpRealDriver : BaseErpDriver<ErpRealClient>
     public override Task<Result<VoidValue, ErpErrorResponse>> ReturnsAvailableAsync()
         => throw new NotSupportedException(
             "ErpRealDriver cannot end an ERP outage; run this scenario against the ERP stub");
+
+    public override Task<Result<VoidValue, ErpErrorResponse>> ReturnsProductNotFoundAsync(GetProductRequest request)
+        => throw new NotSupportedException(
+            "ErpRealDriver cannot withdraw a product; run this scenario against the ERP stub");
 }

@@ -1,5 +1,6 @@
 import type { Result } from '../../../../common/result.js';
 import type { ErpErrorResponse } from '../../../port/external/erp/dtos/errors/ErpErrorResponse.js';
+import type { GetProductRequest } from '../../../port/external/erp/dtos/GetProductRequest.js';
 import type { ReturnsProductRequest } from '../../../port/external/erp/dtos/ReturnsProductRequest.js';
 import type { ReturnsProductsRequest } from '../../../port/external/erp/dtos/ReturnsProductsRequest.js';
 import type { ReturnsPromotionRequest } from '../../../port/external/erp/dtos/ReturnsPromotionRequest.js';
@@ -35,6 +36,10 @@ export class ErpStubDriver extends BaseErpDriver<ErpStubClient> {
 
   async returnsAvailable(): Promise<Result<void, ErpErrorResponse>> {
     return this.client.removeUnavailable();
+  }
+
+  async returnsProductNotFound(request: GetProductRequest): Promise<Result<void, ErpErrorResponse>> {
+    return this.client.configureGetProductNotFound(request.sku);
   }
 
   async close(): Promise<void> {

@@ -40,6 +40,17 @@ export class AppContext {
     this.identity = identity;
   }
 
+  /** Runs `action` as `identity`, then acts as before again. */
+  async actingAs<T>(identity: UserIdentity, action: () => Promise<T>): Promise<T> {
+    const previous = this.identity;
+    this.actAs(identity);
+    try {
+      return await action();
+    } finally {
+      this.actAs(previous);
+    }
+  }
+
   myShop(mode?: ChannelMode): MyShopDriver {
     const resolvedMode = mode ?? this.channelMode;
     const channel = resolvedMode === 'static' ? STATIC_CHANNEL : this.channel;

@@ -27,4 +27,7 @@ public interface ErpDriver extends AutoCloseable {
 
     /** Ends an outage started by {@link #returnsUnavailable()}: the ERP answers with what is staged again. */
     Result<Void, ErpErrorResponse> returnsAvailable();
+
+    /** The ERP no longer offers this product: asking for it answers "not found", whatever was staged before. */
+    Result<Void, ErpErrorResponse> returnsProductNotFound(GetProductRequest request);
 }

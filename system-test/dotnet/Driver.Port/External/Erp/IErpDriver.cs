@@ -23,5 +23,8 @@ public interface IErpDriver : IDisposable, IAsyncDisposable
 
     /// <summary>Ends an outage started by <see cref="ReturnsUnavailableAsync"/>: the ERP answers with what is staged again.</summary>
     Task<Result<VoidValue, ErpErrorResponse>> ReturnsAvailableAsync();
+
+    /// <summary>The ERP no longer offers this product: asking for it answers "not found", whatever was staged before.</summary>
+    Task<Result<VoidValue, ErpErrorResponse>> ReturnsProductNotFoundAsync(GetProductRequest request);
 }
 

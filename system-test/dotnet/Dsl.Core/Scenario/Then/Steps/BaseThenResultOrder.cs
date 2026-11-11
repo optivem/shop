@@ -271,6 +271,23 @@ public abstract class BaseThenResultOrder<TSuccessResponse, TSuccessVerification
 
     IThenOrder IThenOrder.HasNoShippingAddress() => HasNoShippingAddress();
 
+    public TDerived HasCountryCode(string expectedCountry)
+    {
+        _verifications.Add(v => v.CountryCode(expectedCountry));
+        return Self;
+    }
+
+    IThenOrder IThenOrder.HasCountryCode(string expectedCountry) => HasCountryCode(expectedCountry);
+
+    public TDerived HasShippingAddressWithCountryCode(string firstName, string lastName, string street, string postalCode, string city, string country)
+    {
+        _verifications.Add(v => v.ShippingAddressWithCountryCode(firstName, lastName, street, postalCode, city, country));
+        return Self;
+    }
+
+    IThenOrder IThenOrder.HasShippingAddressWithCountryCode(string firstName, string lastName, string street, string postalCode, string city, string country)
+        => HasShippingAddressWithCountryCode(firstName, lastName, street, postalCode, city, country);
+
     public TaskAwaiter GetAwaiter() => Execute().GetAwaiter();
 
     private async Task Execute()

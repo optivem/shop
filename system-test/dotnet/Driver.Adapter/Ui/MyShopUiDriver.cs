@@ -622,6 +622,109 @@ public class MyShopUiDriver : IMyShopDriver
         return Success(response);
     }
 
+    /// <summary>
+    /// Checkout is for signed-in customers: a visitor is asked to sign in, an admin is refused. A new session first
+    /// gets the cart lines, each from its product page; then the checkout is opened, and, when asked, the order placed.
+    /// </summary>
+    public async Task<Result<CheckOutResponse, SystemError>> CheckOutAsync(CheckOutRequest request)
+    {
+        if (request.ContinueSession != true)
+        {
+            var lines = (request.CartLines ?? [])
+                .Select(line => new ManageCartRequest.CartLineDto { Sku = line.Sku, Quantity = line.Quantity })
+                .ToList();
+            var filled = await StartCartSessionAsync(lines);
+            if (filled.IsFailure)
+            {
+                return Failure<CheckOutResponse>(filled.Error);
+            }
+        }
+
+        switch (request.Entry)
+        {
+            case CheckOutRequest.ProceedFromCart:
+                await _client.ProceedToCheckoutFromCartAsync();
+                break;
+            case null:
+            case CheckOutRequest.Open:
+                await _client.OpenCheckoutPageAsync();
+                break;
+            default:
+                throw new ArgumentException($"Unknown checkout entry: {request.Entry}", nameof(request));
+        }
+
+        if (_client.IsOnLoginPage())
+        {
+            if (request.SignIn != true)
+            {
+                return Failure<CheckOutResponse>(MyShopUiClient.AuthenticationRequired);
+            }
+            await _client.SignInOnLoginFormAsync(TestUser.Customer);
+        }
+        if (await _client.IsRefusedAsync())
+        {
+            return Failure<CheckOutResponse>(MyShopUiClient.PermissionDenied);
+        }
+
+        var pageClient = _client.SessionPageClient();
+        var checkoutPage = new CheckoutPage(pageClient);
+        var response = new CheckOutResponse { MessageDetails = [] };
+        if (!await checkoutPage.IsShownAsync())
+        {
+            return Success(await ReadWhereTheCheckoutSentTheCustomerAsync(response));
+        }
+
+        response.OpenedTaxCountry = await checkoutPage.ReadTaxCountryAsync();
+        response.OpenedEstimatedTaxRate = await checkoutPage.ReadEstimatedTaxRateAsync();
+        if (request.ShippingAddress != null)
+        {
+            await checkoutPage.InputShippingAddressAsync(request.ShippingAddress);
+        }
+        if (request.CouponCode != null)
+        {
+            await checkoutPage.InputCouponCodeAsync(request.CouponCode);
+        }
+        if (request.PlaceOrder != true)
+        {
+            response.ShownPage = CheckOutResponse.Checkout;
+            await checkoutPage.ReadIntoAsync(response);
+            return Success(response);
+        }
+
+        await checkoutPage.ClickPlaceOrderAsync();
+        var confirmationPage = new CheckoutConfirmationPage(pageClient);
+        if (await confirmationPage.IsShownAsync())
+        {
+            response.ShownPage = CheckOutResponse.Confirmation;
+            await confirmationPage.ReadIntoAsync(response);
+        }
+        else
+        {
+            response.ShownPage = CheckOutResponse.Checkout;
+            await checkoutPage.ReadIntoAsync(response);
+            response.ConfirmedOrders = [];
+        }
+        response.CartLines = await (await _client.OpenCartPageAsync()).ReadLinesAsync();
+        return Success(response);
+    }
+
+    /// <summary>The checkout was not shown: the app sent the customer to the cart, or to some other page.</summary>
+    private async Task<CheckOutResponse> ReadWhereTheCheckoutSentTheCustomerAsync(CheckOutResponse response)
+    {
+        var path = _client.CurrentPath();
+        if (path.EndsWith("/cart"))
+        {
+            var cart = await new CartPage(_client.SessionPageClient()).ReadAsync(null, null);
+            response.ShownPage = CheckOutResponse.Cart;
+            response.Message = cart.Message;
+        }
+        else
+        {
+            response.ShownPage = path;
+        }
+        return response;
+    }
+
     /// <summary>A fresh session (the visitor's, or the requested user's) whose cart gets these lines, in order.</summary>
     private async Task<Result<VoidValue, SystemError>> StartCartSessionAsync(List<ManageCartRequest.CartLineDto>? cartLines)
     {

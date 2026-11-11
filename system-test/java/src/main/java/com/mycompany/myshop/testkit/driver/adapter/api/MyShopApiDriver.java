@@ -28,6 +28,8 @@ import com.mycompany.myshop.testkit.driver.port.dtos.ViewProductRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.ViewProductResponse;
 import com.mycompany.myshop.testkit.driver.port.dtos.ManageCartRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.ManageCartResponse;
+import com.mycompany.myshop.testkit.driver.port.dtos.CheckOutRequest;
+import com.mycompany.myshop.testkit.driver.port.dtos.CheckOutResponse;
 import com.mycompany.myshop.testkit.driver.port.MyShopDriver;
 import com.mycompany.myshop.testkit.driver.adapter.shared.client.http.TestUser;
 import com.mycompany.myshop.testkit.driver.port.UserIdentity;
@@ -196,6 +198,11 @@ public class MyShopApiDriver implements MyShopDriver {
     @Override
     public Result<ManageCartResponse, SystemError> manageCart(ManageCartRequest request) {
         throw new UnsupportedOperationException("The API channel has no cart; run this scenario on the UI channel only");
+    }
+
+    @Override
+    public Result<CheckOutResponse, SystemError> checkOut(CheckOutRequest request) {
+        throw new UnsupportedOperationException("The API channel has no cart to check out; run this scenario on the UI channel only");
     }
 
     /** The API serves the unfiltered catalog; filtering, search and sort happen in the UI. */

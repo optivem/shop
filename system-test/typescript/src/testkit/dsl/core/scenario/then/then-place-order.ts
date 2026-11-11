@@ -11,6 +11,7 @@ import type { ScenarioContext, ShippingAddressConfig } from '../scenario-context
 import type { ShippingAddress } from '../../../../driver/port/dtos/ShippingAddress.js';
 import { arrangeGiven } from '../given/arrange-given.js';
 import { Converter } from '../../../../common/converter.js';
+import { ViewOrderVerification } from '../../usecase/usecases/ViewOrderVerification.js';
 
 export class ThenResultStage implements PromiseLike<void> {
   private _expectSuccess = true;
@@ -326,6 +327,29 @@ export class ThenOrder implements PromiseLike<void> {
   hasNoShippingAddress(): this {
     this.stage._addOrderAssertion((order) => {
       expect(order.shippingAddress ?? null, 'Order shipping address').toBeNull();
+    });
+    return this;
+  }
+
+  /** The country as a code, such as "DE", not an alias: checkout offers only real shipping countries. */
+  hasCountryCode(expectedCountry: string): this {
+    this.stage._addOrderAssertion((order) => {
+      new ViewOrderVerification(order, this.stage.useCaseContext).countryCode(expectedCountry);
+    });
+    return this;
+  }
+
+  /** The shipping address, with its country as a code, not an alias. */
+  hasShippingAddressWithCountryCode(firstName: string, lastName: string, street: string, postalCode: string, city: string, country: string): this {
+    this.stage._addOrderAssertion((order) => {
+      new ViewOrderVerification(order, this.stage.useCaseContext).shippingAddressWithCountryCode({
+        firstName,
+        lastName,
+        street,
+        postalCode,
+        city,
+        country,
+      });
     });
     return this;
   }

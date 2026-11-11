@@ -62,6 +62,10 @@ public class MyShopUiClient : IAsyncDisposable
 
     private const string CartPath = "/cart";
 
+    private const string CheckoutPath = "/checkout";
+
+    private const string ProceedToCheckoutSelector = "a[aria-label='Proceed to Checkout']";
+
 
 
     private readonly string _baseUrl;
@@ -292,6 +296,72 @@ public class MyShopUiClient : IAsyncDisposable
     /// <summary>The page that is open, read for what every page shows, such as the header's cart badge.</summary>
     public HomePage CurrentPageInSession()
         => new(_visitorPageClient ?? new PlaywrightGateway(_page, _baseUrl, _login));
+
+    /// <summary>The page client of the current session: the visitor's, if one was started, else the logged-in user's.</summary>
+    public PlaywrightGateway SessionPageClient()
+        => _visitorPageClient ?? new PlaywrightGateway(_page, _baseUrl, _login);
+
+    /// <summary>
+    /// Opens the checkout by its page address in the current session, and waits until the app shows where it sent the
+    /// user: the checkout, the cart, the login form or a refusal.
+    /// </summary>
+    public async Task OpenCheckoutPageAsync()
+    {
+        if (_visitorPageClient != null)
+        {
+            _response = await _page.GotoAsync(_baseUrl + CheckoutPath);
+        }
+        else
+        {
+            await OpenHomePageAsync();
+            await OpenDirectlyAsync(CheckoutPath, CheckoutPath);
+        }
+        await WaitForCheckoutOutcomeAsync();
+    }
+
+    /// <summary>Opens the cart in the current session and follows its "Proceed to checkout", like <see cref="OpenCheckoutPageAsync"/>.</summary>
+    public async Task ProceedToCheckoutFromCartAsync()
+    {
+        var cartPage = await OpenCartPageAsync();
+        await cartPage.WaitForLoadedAsync();
+        await SessionPageClient().ClickAsync(ProceedToCheckoutSelector);
+        await WaitForCheckoutOutcomeAsync();
+    }
+
+    /// <summary>Signs in as <paramref name="user"/> on the login form that is open, and waits for the page the app returns to.</summary>
+    public async Task SignInOnLoginFormAsync(TestUser user)
+    {
+        var userLogin = KeycloakUiLogin.ForBaseUrl(_keycloakBaseUrl, user)
+            ?? throw new InvalidOperationException("Signing in can only be exercised against a system with a login");
+        await userLogin.EnsureLoggedInAsync(_page, CheckoutPage.ReadySelector + ", " + CartPage.ReadySelector + ", " + CatalogPage.ReadySelector);
+        // A single-page UI may show its (public) landing page while it still exchanges the login code, and only then
+        // move to the page the visitor came from: wait until the code is gone from the address.
+        await _page.WaitForURLAsync(url => !System.Text.RegularExpressions.Regex.IsMatch(url, "[?&]code="));
+        if (await _page.Locator(CheckoutPage.ReadySelector).CountAsync() == 0 && _page.Url.Contains(CheckoutPath))
+        {
+            await SessionPageClient().WaitForVisibleAsync(CheckoutPage.ReadySelector);
+        }
+    }
+
+    /// <summary>Whether the app refused the page: a 403 response (server-rendered UIs) or a "Not authorized" page (React).</summary>
+    public async Task<bool> IsRefusedAsync()
+        => IsCheckoutForbidden() || await _page.Locator(NotAuthorizedSelector).CountAsync() > 0;
+
+    /// <summary>The path of the page address that is open, such as "/cart".</summary>
+    public string CurrentPath() => new Uri(_page.Url).AbsolutePath;
+
+    private bool IsCheckoutForbidden()
+        => _response?.Status == (int)HttpStatusCode.Forbidden && _page.Url.Contains(CheckoutPath);
+
+    private async Task WaitForCheckoutOutcomeAsync()
+    {
+        if (IsCheckoutForbidden())
+        {
+            return;
+        }
+        await _page.WaitForSelectorAsync(CheckoutPage.ReadySelector + ", " + CartPage.ReadySelector + ", " + LoginFormSelector
+            + ", " + NotAuthorizedSelector);
+    }
 
     /// <summary>Opens the cart in the current session. The app must already be open.</summary>
     public async Task<CartPage> OpenCartPageAsync()

@@ -49,4 +49,11 @@ public interface ThenOrder extends ThenStep<ThenOrder> {
                                  String city, String country);
 
     ThenOrder hasNoShippingAddress();
+
+    /** The country as a code, such as "DE", not an alias: checkout offers only real shipping countries. */
+    ThenOrder hasCountryCode(String expectedCountry);
+
+    /** The shipping address, with its country as a code, not an alias. */
+    ThenOrder hasShippingAddressWithCountryCode(String firstName, String lastName, String street, String postalCode,
+                                                String city, String country);
 }

@@ -1,6 +1,7 @@
 package com.mycompany.myshop.testkit.dsl.port.then.steps.base;
 
 import com.mycompany.myshop.testkit.dsl.port.then.steps.ThenCart;
+import com.mycompany.myshop.testkit.dsl.port.then.steps.ThenCheckout;
 import com.mycompany.myshop.testkit.dsl.port.then.steps.ThenCatalog;
 import com.mycompany.myshop.testkit.dsl.port.then.steps.ThenClock;
 import com.mycompany.myshop.testkit.dsl.port.then.steps.ThenCountry;
@@ -35,6 +36,12 @@ public interface ThenStep<T> {
 
     /** The cart as the visitor's action left it. */
     ThenCart cart();
+
+    /** Where the checkout left the customer. */
+    ThenCheckout checkout();
+
+    /** The order the checkout placed for this product (an alias), as the system shows it now. */
+    ThenOrder orderFor(String skuAlias);
 
     ThenClock clock();
 

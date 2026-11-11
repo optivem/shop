@@ -22,4 +22,8 @@ export interface ThenOrder extends PromiseLike<void> {
   hasCountry(expectedCountry: string): this;
   hasShippingAddress(firstName: string, lastName: string, street: string, postalCode: string, city: string, country: string): this;
   hasNoShippingAddress(): this;
+  /** The country as a code, such as "DE", not an alias: checkout offers only real shipping countries. */
+  hasCountryCode(expectedCountry: string): this;
+  /** The shipping address, with its country as a code, not an alias. */
+  hasShippingAddressWithCountryCode(firstName: string, lastName: string, street: string, postalCode: string, city: string, country: string): this;
 }

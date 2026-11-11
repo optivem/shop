@@ -161,6 +161,21 @@ public class PageClient
         await locator.SelectOptionAsync(new SelectOptionValue { Label = label });
     }
 
+    /// <summary>Selects the option with this value; a value the select does not offer is added first, as an edited form would send it.</summary>
+    public async Task SelectOptionByValueAddingIfMissingAsync(string selector, string value)
+    {
+        var locator = await GetLocatorAsync(selector);
+        await locator.EvaluateAsync("(select, value) => { if (![...select.options].some(o => o.value === value)) {"
+            + " const option = document.createElement('option'); option.value = value; option.text = value; select.add(option); } }", value);
+        await locator.SelectOptionAsync(value);
+    }
+
+    public async Task<bool> IsCheckedAsync(string selector)
+    {
+        var locator = await GetLocatorAsync(selector);
+        return await locator.IsCheckedAsync();
+    }
+
     public async Task<string?> ReadSelectedOptionLabelAsync(string selector)
     {
         var locator = await GetLocatorAsync(selector);

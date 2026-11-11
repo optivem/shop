@@ -13,6 +13,7 @@ import { UpdateProfile } from './usecases/UpdateProfile.js';
 import { BrowseCatalog } from './usecases/BrowseCatalog.js';
 import { ViewProduct } from './usecases/ViewProduct.js';
 import { ManageCart } from './usecases/ManageCart.js';
+import { CheckOut } from './usecases/CheckOut.js';
 
 export class MyShopDsl {
   constructor(
@@ -70,6 +71,10 @@ export class MyShopDsl {
 
   manageCart(): ManageCart {
     return new ManageCart(this.driver, this.context);
+  }
+
+  checkOut(): CheckOut {
+    return new CheckOut(this.driver, this.context);
   }
 
   async close(): Promise<void> {

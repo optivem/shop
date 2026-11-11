@@ -19,5 +19,7 @@ export interface ErpDriver {
   returnsUnavailable(): Promise<Result<void, ErpErrorResponse>>;
   /** Ends an outage started by returnsUnavailable(): the ERP answers with what is staged again. */
   returnsAvailable(): Promise<Result<void, ErpErrorResponse>>;
+  /** The ERP no longer offers this product: asking for it answers "not found", whatever was staged before. */
+  returnsProductNotFound(request: GetProductRequest): Promise<Result<void, ErpErrorResponse>>;
   close(): Promise<void>;
 }

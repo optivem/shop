@@ -10,6 +10,7 @@ import type { WhenUpdateProfile } from './steps/when-update-profile.js';
 import type { WhenBrowseCatalog } from './steps/when-browse-catalog.js';
 import type { WhenViewProduct } from './steps/when-view-product.js';
 import type { WhenManageCart } from './steps/when-manage-cart.js';
+import type { WhenCheckOut } from './steps/when-check-out.js';
 
 export interface WhenStage {
   placeOrder(): WhenPlaceOrder;
@@ -24,4 +25,5 @@ export interface WhenStage {
   browseCatalog(): WhenBrowseCatalog;
   viewProduct(): WhenViewProduct;
   manageCart(): WhenManageCart;
+  checkOut(): WhenCheckOut;
 }

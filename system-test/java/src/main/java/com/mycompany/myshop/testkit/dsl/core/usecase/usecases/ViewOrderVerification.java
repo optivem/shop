@@ -215,6 +215,38 @@ public class ViewOrderVerification extends ResponseVerification<ViewOrderRespons
         return this;
     }
 
+    /** The order's country as a code, such as "DE", not an alias: checkout offers only real shipping countries. */
+    public ViewOrderVerification countryCode(String expectedCountry) {
+        var actualCountry = getResponse().getCountry();
+        assertThat(actualCountry)
+                .withFailMessage("Expected country to be '%s', but was '%s'", expectedCountry, actualCountry)
+                .isEqualTo(expectedCountry);
+        return this;
+    }
+
+    /** The order's shipping address, with its country as a code, not an alias. */
+    public ViewOrderVerification shippingAddressWithCountryCode(String firstName, String lastName, String street,
+                                                                String postalCode, String city, String country) {
+        var expected = ShippingAddress.builder()
+                .firstName(firstName)
+                .lastName(lastName)
+                .street(street)
+                .postalCode(postalCode)
+                .city(city)
+                .country(country)
+                .build();
+        var actual = getResponse().getShippingAddress();
+        assertThat(actual)
+                .withFailMessage("Expected shipping address to be %s, but was %s", expected, actual)
+                .isEqualTo(expected);
+        return this;
+    }
+
+    /** The SKU the order is for, as the system returned it. */
+    public String orderedSku() {
+        return getResponse().getSku();
+    }
+
     public ViewOrderVerification noShippingAddress() {
         var actual = getResponse().getShippingAddress();
         assertThat(actual)

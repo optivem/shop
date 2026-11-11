@@ -56,6 +56,11 @@ public class ErpStubClient : BaseErpClient
 
             .MapErrorAsync(ExtErpErrorResponse.From);
 
+    /// <summary>Asking for this product answers 404; the newest stub wins over the product stubbed before.</summary>
+    public Task<Result<VoidValue, ExtErpErrorResponse>> ConfigureGetProductNotFoundAsync(string sku)
+        => _wireMockClient.StubGetAsync($"{ErpProductsEndpoint}/{sku}", HttpStatus.NotFound)
+            .MapErrorAsync(ExtErpErrorResponse.From);
+
     public Task<Result<VoidValue, ExtErpErrorResponse>> ConfigureGetProductsAsync(List<ExtProductDetailsResponse> response)
         => _wireMockClient.StubGetAsync(ErpProductsEndpoint, HttpStatus.Ok, response)
             .MapErrorAsync(ExtErpErrorResponse.From);

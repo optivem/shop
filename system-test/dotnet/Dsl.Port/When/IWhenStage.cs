@@ -27,4 +27,6 @@ public interface IWhenStage
     IWhenViewProduct ViewProduct();
 
     IWhenManageCart ManageCart();
+
+    IWhenCheckOut CheckOut();
 }

@@ -54,6 +54,13 @@ public class ThenSuccess<TSuccessResponse, TSuccessVerification>
 
     IThenCart IThenSuccess.Cart() => Cart();
 
+    public ThenSuccessCheckout<TSuccessResponse, TSuccessVerification> Checkout()
+    {
+        return new ThenSuccessCheckout<TSuccessResponse, TSuccessVerification>(_thenClause);
+    }
+
+    IThenCheckout IThenSuccess.Checkout() => Checkout();
+
     /// <summary>Verifies the profile the executed operation (view or update profile) answered with.</summary>
     public IThenProfile Profile()
     {

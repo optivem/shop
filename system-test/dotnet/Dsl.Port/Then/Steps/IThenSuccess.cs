@@ -20,5 +20,8 @@ public interface IThenSuccess
     /// <summary>The cart as the visitor's action left it.</summary>
     IThenCart Cart();
 
+    /// <summary>Where the checkout left the customer.</summary>
+    IThenCheckout Checkout();
+
     TaskAwaiter GetAwaiter();
 }

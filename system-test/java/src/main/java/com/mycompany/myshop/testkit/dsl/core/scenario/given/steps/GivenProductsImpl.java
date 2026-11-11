@@ -38,9 +38,23 @@ public class GivenProductsImpl extends BaseGivenStep implements GivenProducts {
         }
     }
 
+    /** Stages the list again without this product; a list without the product is left as it is. */
+    public void executeWithout(UseCaseDsl app, String skuAlias) {
+        if (products.stream().anyMatch(product -> product.sku().equals(skuAlias))) {
+            stage(app, null, null, skuAlias);
+        }
+    }
+
     private void stage(UseCaseDsl app, String changedSkuAlias, String changedUnitPrice) {
+        stage(app, changedSkuAlias, changedUnitPrice, null);
+    }
+
+    private void stage(UseCaseDsl app, String changedSkuAlias, String changedUnitPrice, String withdrawnSkuAlias) {
         var returnsProducts = app.erp().returnsProducts();
         for (var product : products) {
+            if (product.sku().equals(withdrawnSkuAlias)) {
+                continue;
+            }
             var unitPrice = product.sku().equals(changedSkuAlias) ? changedUnitPrice : product.unitPrice();
             returnsProducts.product(product.sku(), product.title(), product.brand(), product.category(),
                     unitPrice, product.description());

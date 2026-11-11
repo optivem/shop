@@ -171,7 +171,20 @@ namespace Dsl.Core.Scenario.Given
         public WhenStage When()
         {
             return new WhenStage(Channel, _app, _scenario, _defaults, SetupGiven, ResolveCustomer,
-                new StagedProducts(ChangeProductPriceAsync));
+                new StagedProducts(ChangeProductPriceAsync, WithdrawProductAsync));
+        }
+
+        private async Task WithdrawProductAsync(string skuAlias)
+        {
+            if (_productLists.Count == 0)
+            {
+                await StagedProducts.None.WithdrawAsync(skuAlias);
+            }
+            foreach (var productList in _productLists)
+            {
+                await productList.ExecuteWithoutAsync(_app, skuAlias);
+            }
+            (await _app.Erp().ReturnsProductNotFound().Sku(skuAlias).Execute()).ShouldSucceed();
         }
 
         private async Task ChangeProductPriceAsync(string skuAlias, string unitPrice)

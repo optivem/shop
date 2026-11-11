@@ -1,5 +1,6 @@
 package com.mycompany.myshop.testkit.driver.adapter.external.erp;
 
+import com.mycompany.myshop.testkit.driver.port.external.erp.dtos.GetProductRequest;
 import com.mycompany.myshop.testkit.driver.adapter.external.erp.client.ErpStubClient;
 import com.mycompany.myshop.testkit.driver.adapter.external.erp.client.dtos.ExtGetPromotionResponse;
 import com.mycompany.myshop.testkit.driver.adapter.external.erp.client.dtos.ExtProductDetailsResponse;
@@ -73,6 +74,12 @@ public class ErpStubDriver extends BaseErpDriver<ErpStubClient> {
     @Override
     public Result<Void, ErpErrorResponse> returnsUnavailable() {
         return client.configureUnavailable()
+                .mapError(ext -> new ErpErrorResponse(ext.getMessage()));
+    }
+
+    @Override
+    public Result<Void, ErpErrorResponse> returnsProductNotFound(GetProductRequest request) {
+        return client.configureGetProductNotFound(request.getSku())
                 .mapError(ext -> new ErpErrorResponse(ext.getMessage()));
     }
 

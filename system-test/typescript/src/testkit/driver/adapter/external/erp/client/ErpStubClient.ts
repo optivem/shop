@@ -21,6 +21,12 @@ export class ErpStubClient extends BaseErpClient {
     return success(undefined);
   }
 
+  /** Asking for this product answers 404; the newest stub wins over the product stubbed before. */
+  async configureGetProductNotFound(sku: string): Promise<Result<void, ErpErrorResponse>> {
+    await this.wireMock.stubGetStatus(`/erp/api/products/${sku}`, 404);
+    return success(undefined);
+  }
+
   async configureGetProducts(products: ExtProductDetailsResponse[]): Promise<Result<void, ErpErrorResponse>> {
     await this.wireMock.stubGet('/erp/api/products', products);
     return success(undefined);

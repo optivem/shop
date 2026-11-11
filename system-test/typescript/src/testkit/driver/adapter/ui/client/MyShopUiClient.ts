@@ -8,7 +8,9 @@ import { PAGE_TIMEOUT_MS } from './pages/BasePage.js';
 import { HomePage } from './pages/HomePage.js';
 import { CATALOG_READY_SELECTOR, CatalogPage } from './pages/CatalogPage.js';
 import { PRODUCT_READY_SELECTOR, ProductPage } from './pages/ProductPage.js';
-import { CartPage } from './pages/CartPage.js';
+import { CART_READY_SELECTOR, CartPage } from './pages/CartPage.js';
+import { CHECKOUT_READY_SELECTOR, CheckoutPage } from './pages/CheckoutPage.js';
+import { CheckoutConfirmationPage } from './pages/CheckoutConfirmationPage.js';
 import { NEW_ORDER_READY_SELECTOR, NewOrderPage } from './pages/NewOrderPage.js';
 import { OrderHistoryPage } from './pages/OrderHistoryPage.js';
 import { OrderDetailsPage } from './pages/OrderDetailsPage.js';
@@ -22,6 +24,8 @@ const NEW_ORDER_PATH = '/new-order';
 const COUPON_MANAGEMENT_PATH = '/admin-coupons';
 const PRODUCT_PATH = '/products/';
 const CART_PATH = '/cart';
+const CHECKOUT_PATH = '/checkout';
+const PROCEED_TO_CHECKOUT_SELECTOR = "a[aria-label='Proceed to Checkout']";
 const FORBIDDEN_STATUS = 403;
 
 export const AUTHENTICATION_REQUIRED = 'Authentication is required';
@@ -173,6 +177,83 @@ export class MyShopUiClient {
   /** The page that is open, read for what every page shows, such as the header's cart badge. */
   currentPageInSession(): HomePage {
     return new HomePage(this.requirePage());
+  }
+
+  /**
+   * Opens the checkout by its page address in the current session, and waits until the app shows where it sent the
+   * user: the checkout, the cart, the login form or a refusal.
+   */
+  async openCheckoutPage(): Promise<Result<void, SystemError>> {
+    if (this.visitorSession) {
+      const response = await this.requirePage().goto(`${this.baseUrl}${CHECKOUT_PATH}`);
+      this.lastResponseStatus = response?.status();
+    } else {
+      const home = await this.openHomePage();
+      if (!home.success) return failure(home.error);
+      await this.openDirectly(CHECKOUT_PATH, CHECKOUT_PATH);
+    }
+    await this.waitForCheckoutOutcome();
+    return success(undefined);
+  }
+
+  /** Opens the cart in the current session and follows its "Proceed to checkout", like openCheckoutPage(). */
+  async proceedToCheckoutFromCart(): Promise<void> {
+    const cartPage = await this.openCartPage();
+    await cartPage.waitForLoaded();
+    await this.requirePage().locator(PROCEED_TO_CHECKOUT_SELECTOR).click({ timeout: PAGE_TIMEOUT_MS });
+    await this.waitForCheckoutOutcome();
+  }
+
+  /** Signs in as `user` on the login form that is open, and waits for the page the app returns to. */
+  async signInOnLoginForm(user: TestUser): Promise<void> {
+    const userLogin = KeycloakUiLogin.forBaseUrl(this.keycloakBaseUrl, user);
+    if (!userLogin) {
+      throw new Error('Signing in can only be exercised against a system with a login');
+    }
+    const page = this.requirePage();
+    await userLogin.ensureLoggedIn(page, `${CHECKOUT_READY_SELECTOR}, ${CART_READY_SELECTOR}, ${CATALOG_READY_SELECTOR}`);
+    // A single-page UI may show its (public) landing page while it still exchanges the login code, and only then
+    // move to the page the visitor came from: wait until the code is gone from the address.
+    await page.waitForURL((url) => !url.searchParams.has('code'), { timeout: PAGE_TIMEOUT_MS });
+    if ((await page.locator(CHECKOUT_READY_SELECTOR).count()) === 0 && page.url().includes(CHECKOUT_PATH)) {
+      await page.locator(CHECKOUT_READY_SELECTOR).waitFor({ state: 'visible', timeout: PAGE_TIMEOUT_MS });
+    }
+  }
+
+  /** Whether the app refused the page: a 403 response (server-rendered UIs) or a "Not authorized" page (React). */
+  async isRefused(): Promise<boolean> {
+    return this.isCheckoutForbidden() || (await this.requirePage().locator(NOT_AUTHORIZED_SELECTOR).count()) > 0;
+  }
+
+  /** The path of the page address that is open, such as "/cart". */
+  currentPath(): string {
+    return new URL(this.requirePage().url()).pathname;
+  }
+
+  checkoutPage(): CheckoutPage {
+    return new CheckoutPage(this.requirePage());
+  }
+
+  checkoutConfirmationPage(): CheckoutConfirmationPage {
+    return new CheckoutConfirmationPage(this.requirePage());
+  }
+
+  /** The cart that is open now, without opening it. */
+  cartPageInSession(): CartPage {
+    return new CartPage(this.requirePage());
+  }
+
+  private isCheckoutForbidden(): boolean {
+    return this.lastResponseStatus === FORBIDDEN_STATUS && this.requirePage().url().includes(CHECKOUT_PATH);
+  }
+
+  /** Each of these shows only on its own page, so exactly one of them shows once the app has decided. */
+  private async waitForCheckoutOutcome(): Promise<void> {
+    if (this.isCheckoutForbidden()) return;
+    await this.requirePage()
+      .locator(`${CHECKOUT_READY_SELECTOR}, ${CART_READY_SELECTOR}, ${LOGIN_FORM_SELECTOR}, ${NOT_AUTHORIZED_SELECTOR}`)
+      .first()
+      .waitFor({ state: 'visible', timeout: PAGE_TIMEOUT_MS });
   }
 
   /** Opens the cart in the current session. The app must already be open. */

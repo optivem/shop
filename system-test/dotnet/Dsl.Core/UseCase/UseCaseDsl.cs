@@ -42,6 +42,21 @@ public class UseCaseDsl : IAsyncDisposable
         _identity = identity;
     }
 
+    /// <summary>Runs <paramref name="action"/> as <paramref name="identity"/>, then acts as before again.</summary>
+    public async Task<T> ActingAsAsync<T>(UserIdentity identity, Func<Task<T>> action)
+    {
+        var previous = _identity;
+        ActAs(identity);
+        try
+        {
+            return await action();
+        }
+        finally
+        {
+            ActAs(previous);
+        }
+    }
+
     public async Task<MyShopDsl> MyShop(ChannelMode mode, Channel channel)
     {
         var channelType = ResolveMyShopChannel(mode, channel);

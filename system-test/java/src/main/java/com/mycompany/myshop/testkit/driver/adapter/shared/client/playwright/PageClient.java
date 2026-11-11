@@ -108,6 +108,18 @@ public class PageClient {
         getLocator(selector).selectOption(new SelectOption().setLabel(label));
     }
 
+    /** Selects the option with this value; a value the select does not offer is added first, as an edited form would send it. */
+    public void selectOptionByValueAddingIfMissing(String selector, String value) {
+        var locator = getLocator(selector);
+        locator.evaluate("(select, value) => { if (![...select.options].some(o => o.value === value)) {"
+                + " const option = document.createElement('option'); option.value = value; option.text = value; select.add(option); } }", value);
+        locator.selectOption(value);
+    }
+
+    public boolean isChecked(String selector) {
+        return getLocator(selector).isChecked();
+    }
+
     public String readSelectedOptionLabel(String selector) {
         return (String) getLocator(selector).evaluate("select => select.options[select.selectedIndex]?.text ?? null");
     }

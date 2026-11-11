@@ -19,5 +19,8 @@ public interface IMyShopDriver : IAsyncDisposable, IActingUserSelector
     Task<Result<BrowseCatalogResponse, SystemError>> BrowseCatalogAsync(BrowseCatalogRequest request);
     Task<Result<ViewProductResponse, SystemError>> ViewProductAsync(ViewProductRequest request);
     Task<Result<ManageCartResponse, SystemError>> ManageCartAsync(ManageCartRequest request);
+
+    /// <summary>Checks out the cart (UC-009); the cart lives in the browser, so only the UI channel can.</summary>
+    Task<Result<CheckOutResponse, SystemError>> CheckOutAsync(CheckOutRequest request);
 }
 

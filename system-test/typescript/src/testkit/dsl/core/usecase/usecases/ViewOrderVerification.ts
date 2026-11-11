@@ -73,6 +73,18 @@ export class ViewOrderVerification extends ResponseVerification<ViewOrderRespons
     return this;
   }
 
+  /** The order's country as a code, such as "DE", not an alias: checkout offers only real shipping countries. */
+  countryCode(expectedCountry: string): this {
+    expect(this.getResponse().country, 'Order country').toBe(expectedCountry);
+    return this;
+  }
+
+  /** The order's shipping address, with its country as a code, not an alias. */
+  shippingAddressWithCountryCode(expected: ShippingAddress): this {
+    expect(this.getResponse().shippingAddress, 'Order shipping address').toEqual(expected);
+    return this;
+  }
+
   noShippingAddress(): this {
     expect(this.getResponse().shippingAddress ?? null, 'Order shipping address').toBeNull();
     return this;

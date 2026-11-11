@@ -28,6 +28,12 @@ public class ErpStubClient extends BaseErpClient {
                 .mapError(ExtErpErrorResponse::new);
     }
 
+    /** Asking for this product answers 404; the newest stub wins over the product stubbed before. */
+    public Result<Void, ExtErpErrorResponse> configureGetProductNotFound(String sku) {
+        return wireMockClient.stubGet(ERP_PRODUCTS_ENDPOINT + "/" + sku, HttpStatus.NOT_FOUND)
+                .mapError(ExtErpErrorResponse::new);
+    }
+
     public Result<Void, ExtErpErrorResponse> configureGetProducts(List<ExtProductDetailsResponse> response) {
         return wireMockClient.stubGet(ERP_PRODUCTS_ENDPOINT, HttpStatus.OK, response)
                 .mapError(ExtErpErrorResponse::new);

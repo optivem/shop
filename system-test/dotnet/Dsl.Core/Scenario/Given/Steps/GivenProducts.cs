@@ -48,11 +48,27 @@ public class GivenProducts : BaseGiven, IGivenProducts
         }
     }
 
-    private async Task StageAsync(UseCaseDsl app, string? changedSkuAlias, string? changedUnitPrice)
+    /// <summary>Stages the list again without this product; a list without the product is left as it is.</summary>
+    internal async Task ExecuteWithoutAsync(UseCaseDsl app, string skuAlias)
+    {
+        if (_products.Any(product => product.SkuParamAlias == skuAlias))
+        {
+            await StageAsync(app, null, null, skuAlias);
+        }
+    }
+
+    private Task StageAsync(UseCaseDsl app, string? changedSkuAlias, string? changedUnitPrice)
+        => StageAsync(app, changedSkuAlias, changedUnitPrice, null);
+
+    private async Task StageAsync(UseCaseDsl app, string? changedSkuAlias, string? changedUnitPrice, string? withdrawnSkuAlias)
     {
         var returnsProducts = app.Erp().ReturnsProducts();
         foreach (var product in _products)
         {
+            if (product.SkuParamAlias == withdrawnSkuAlias)
+            {
+                continue;
+            }
             returnsProducts.Product(product.SkuParamAlias == changedSkuAlias
                 ? product with { UnitPrice = changedUnitPrice }
                 : product);

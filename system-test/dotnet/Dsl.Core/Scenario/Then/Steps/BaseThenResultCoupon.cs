@@ -4,6 +4,7 @@ using Dsl.Core.Shared;
 using Dsl.Core.Scenario;
 using Driver.Adapter;
 using Dsl.Core.UseCase.UseCases;
+using Driver.Port;
 
 namespace Dsl.Core.Scenario.Then;
 
@@ -100,9 +101,13 @@ public abstract class BaseThenResultCoupon<TSuccessResponse, TSuccessVerificatio
         await RunPrelude(result);
 
         var couponCode = await _couponCodeFactory();
-        var shop = await _thenClause.App.MyShop(_thenClause.Channel!);
-        var browseResult = await shop.BrowseCoupons().Execute();
-        var verification = browseResult.ShouldSucceed();
+        // Only an admin can browse the coupons, whoever the scenario acts as (e.g. the customer who checked out).
+        var verification = await _thenClause.App.ActingAsAsync(UserIdentity.Admin, async () =>
+        {
+            var shop = await _thenClause.App.MyShop(_thenClause.Channel!);
+            var browseResult = await shop.BrowseCoupons().Execute();
+            return browseResult.ShouldSucceed();
+        });
         verification.HasCouponWithCode(couponCode);
 
         foreach (var v in _verifications)

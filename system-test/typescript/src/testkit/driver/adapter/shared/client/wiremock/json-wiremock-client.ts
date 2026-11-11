@@ -27,6 +27,14 @@ export class JsonWireMockClient {
     await this.createStub('DELETE', urlPath, responseBody, statusCode);
   }
 
+  /** Stubs a GET of `urlPath` with a bodyless `statusCode`, at the default priority (the newest such stub wins). */
+  async stubGetStatus(urlPath: string, statusCode: number): Promise<void> {
+    await this.registerMapping(`GET ${urlPath}`, {
+      request: { method: 'GET', urlPath },
+      response: { status: statusCode },
+    });
+  }
+
   /**
    * Stubs every GET whose path matches `urlPathPattern` with a bodyless `statusCode`, at priority 1 so
    * it outranks the default-priority (5) stubs this client registers. Used to take a whole external

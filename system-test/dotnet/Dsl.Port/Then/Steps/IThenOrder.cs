@@ -69,5 +69,11 @@ public interface IThenOrder
 
     IThenOrder HasNoShippingAddress();
 
+    /// <summary>The country as a code, such as "DE", not an alias: checkout offers only real shipping countries.</summary>
+    IThenOrder HasCountryCode(string expectedCountry);
+
+    /// <summary>The shipping address, with its country as a code, not an alias.</summary>
+    IThenOrder HasShippingAddressWithCountryCode(string firstName, string lastName, string street, string postalCode, string city, string country);
+
     TaskAwaiter GetAwaiter();
 }

@@ -157,7 +157,31 @@ public class GivenImpl implements GivenStage {
 
     public WhenImpl when() {
         setup();
-        return new WhenImpl(app, scenario, defaults, customerResolver(), this::changeProductPrice);
+        return new WhenImpl(app, scenario, defaults, customerResolver(), stagedProducts());
+    }
+
+    private StagedProducts stagedProducts() {
+        return new StagedProducts() {
+            @Override
+            public void changePrice(String skuAlias, String unitPrice) {
+                changeProductPrice(skuAlias, unitPrice);
+            }
+
+            @Override
+            public void withdraw(String skuAlias) {
+                withdrawProduct(skuAlias);
+            }
+        };
+    }
+
+    private void withdrawProduct(String skuAlias) {
+        if (productLists.isEmpty()) {
+            StagedProducts.NONE.withdraw(skuAlias);
+        }
+        for (var productList : productLists) {
+            productList.executeWithout(app, skuAlias);
+        }
+        app.erp().returnsProductNotFound().sku(skuAlias).execute().shouldSucceed();
     }
 
     private void changeProductPrice(String skuAlias, String unitPrice) {

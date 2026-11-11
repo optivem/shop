@@ -244,6 +244,31 @@ public class ViewOrderVerification : ResponseVerification<ViewOrderResponse>
         return this;
     }
 
+    /// <summary>The order's country as a code, such as "DE", not an alias: checkout offers only real shipping countries.</summary>
+    public ViewOrderVerification CountryCode(string expectedCountry)
+    {
+        Response.Country.ShouldBe(expectedCountry,
+            $"Expected country to be '{expectedCountry}', but was '{Response.Country}'");
+        return this;
+    }
+
+    /// <summary>The order's shipping address, with its country as a code, not an alias.</summary>
+    public ViewOrderVerification ShippingAddressWithCountryCode(string firstName, string lastName, string street, string postalCode, string city, string country)
+    {
+        var actual = Response.ShippingAddress;
+        actual.ShouldNotBeNull("Expected the order to have a shipping address, but it had none");
+        actual.FirstName.ShouldBe(firstName, $"Expected shipping first name '{firstName}', but got '{actual.FirstName}'");
+        actual.LastName.ShouldBe(lastName, $"Expected shipping last name '{lastName}', but got '{actual.LastName}'");
+        actual.Street.ShouldBe(street, $"Expected shipping street '{street}', but got '{actual.Street}'");
+        actual.PostalCode.ShouldBe(postalCode, $"Expected shipping postal code '{postalCode}', but got '{actual.PostalCode}'");
+        actual.City.ShouldBe(city, $"Expected shipping city '{city}', but got '{actual.City}'");
+        actual.Country.ShouldBe(country, $"Expected shipping country '{country}', but got '{actual.Country}'");
+        return this;
+    }
+
+    /// <summary>The SKU the order is for, as the system returned it.</summary>
+    public string? OrderedSku() => Response.Sku;
+
     public ViewOrderVerification NoShippingAddress()
     {
         Response.ShippingAddress.ShouldBeNull("Expected the order to have no shipping address, but it had one");

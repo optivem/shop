@@ -1,5 +1,6 @@
 package com.mycompany.myshop.testkit.driver.adapter.external.erp;
 
+import com.mycompany.myshop.testkit.driver.port.external.erp.dtos.GetProductRequest;
 import com.mycompany.myshop.testkit.driver.adapter.external.erp.client.ErpRealClient;
 import com.mycompany.myshop.testkit.driver.adapter.external.erp.client.dtos.ExtCreateProductRequest;
 import com.mycompany.myshop.testkit.driver.port.external.erp.dtos.ReturnsProductRequest;
@@ -54,6 +55,12 @@ public class ErpRealDriver extends BaseErpDriver<ErpRealClient> {
     public Result<Void, ErpErrorResponse> returnsUnavailable() {
         throw new UnsupportedOperationException(
                 "ErpRealDriver cannot make the ERP unavailable; run this scenario against the ERP stub");
+    }
+
+    @Override
+    public Result<Void, ErpErrorResponse> returnsProductNotFound(GetProductRequest request) {
+        throw new UnsupportedOperationException(
+                "ErpRealDriver cannot withdraw a product; run this scenario against the ERP stub");
     }
 
     /** The real ERP is never taken down by {@link #returnsUnavailable()}, so it cannot be brought back either. */

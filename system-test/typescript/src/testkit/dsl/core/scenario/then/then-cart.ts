@@ -4,6 +4,7 @@ import type { ManageCartVerification } from '../../usecase/usecases/ManageCartVe
 import type { UseCaseContext } from '../../shared/use-case-context.js';
 import type { AppContext } from '../app-context.js';
 import { arrangeGiven } from '../given/arrange-given.js';
+import { StagedProducts } from '../given/staged-products.js';
 import type { ScenarioContext } from '../scenario-context.js';
 
 const CHECKOUT_NOTE = 'Tax and discounts are calculated at checkout.';
@@ -79,7 +80,7 @@ export class ThenCartResultStage implements PromiseLike<void> {
   private async changeErp(): Promise<void> {
     const { changedPrice, erpUnavailable, viewedWhileErpUnavailable } = this.management;
     if (changedPrice !== null) {
-      await this.changeProductPrice(changedPrice.skuAlias, changedPrice.unitPrice);
+      await new StagedProducts(this.app, this.ctx, this.useCaseContext).changePrice(changedPrice.skuAlias, changedPrice.unitPrice);
     }
     if (viewedWhileErpUnavailable) {
       await this.takeErpDown();
@@ -89,25 +90,6 @@ export class ThenCartResultStage implements PromiseLike<void> {
     }
     if (erpUnavailable) {
       await this.takeErpDown();
-    }
-  }
-
-  /** Stages the product lists again, with this product at the new price; a list without the product is left as it is. */
-  private async changeProductPrice(skuAlias: string, unitPrice: string): Promise<void> {
-    if (this.ctx.productListConfigs.length === 0) {
-      throw new Error('No ERP product list was staged, so no price can change');
-    }
-    for (const productList of this.ctx.productListConfigs) {
-      if (!productList.some((product) => product.sku === skuAlias)) continue;
-      const products = productList.map((product) => ({
-        ...product,
-        sku: this.useCaseContext.getParamValue(product.sku),
-        price: product.sku === skuAlias ? unitPrice : product.price,
-      }));
-      const staged = await this.app.erpDriver.returnsProducts({ products });
-      if (!staged.success) {
-        throw new Error(`Failed to stage the ERP product list: ${staged.error.message}`);
-      }
     }
   }
 

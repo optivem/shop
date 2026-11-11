@@ -86,6 +86,17 @@ public class UseCaseDsl implements Closeable {
         this.identity = identity;
     }
 
+    /** Runs {@code action} as {@code identity}, then acts as before again. */
+    public <T> T actingAs(UserIdentity identity, Supplier<T> action) {
+        var previous = this.identity;
+        actAs(identity);
+        try {
+            return action.get();
+        } finally {
+            actAs(previous);
+        }
+    }
+
     public MyShopDsl myShop(ChannelMode mode) {
         var channel = resolveMyShopChannel(mode);
         var shop = getOrCreateMyShop(channel);

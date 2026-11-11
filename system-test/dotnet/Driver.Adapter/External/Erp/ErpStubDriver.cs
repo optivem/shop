@@ -82,4 +82,10 @@ public class ErpStubDriver : BaseErpDriver<ErpStubClient>
         return _client.RemoveUnavailableAsync()
             .MapErrorAsync(error => MapError(error));
     }
+
+    public override Task<Result<VoidValue, ErpErrorResponse>> ReturnsProductNotFoundAsync(GetProductRequest request)
+    {
+        return _client.ConfigureGetProductNotFoundAsync(request.Sku!)
+            .MapErrorAsync(error => MapError(error));
+    }
 }

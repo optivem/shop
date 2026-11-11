@@ -132,6 +132,17 @@ public class ThenOrderImpl<R, V extends ResponseVerification<R>>
         return this;
     }
 
+    public ThenOrderImpl<R, V> hasCountryCode(String expectedCountry) {
+        orderVerification.countryCode(expectedCountry);
+        return this;
+    }
+
+    public ThenOrderImpl<R, V> hasShippingAddressWithCountryCode(String firstName, String lastName, String street,
+                                                                 String postalCode, String city, String country) {
+        orderVerification.shippingAddressWithCountryCode(firstName, lastName, street, postalCode, city, country);
+        return this;
+    }
+
     public ThenOrderImpl<R, V> hasNoShippingAddress() {
         orderVerification.noShippingAddress();
         return this;

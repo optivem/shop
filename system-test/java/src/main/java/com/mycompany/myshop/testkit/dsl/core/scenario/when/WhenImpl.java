@@ -8,6 +8,7 @@ import com.mycompany.myshop.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.when.steps.WhenBrowseCatalogImpl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.when.steps.WhenViewProductImpl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.when.steps.WhenManageCartImpl;
+import com.mycompany.myshop.testkit.dsl.core.scenario.when.steps.WhenCheckOutImpl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.when.steps.WhenBrowseCouponsImpl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.when.steps.WhenBrowseOrderHistoryImpl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.when.steps.WhenCancelOrderImpl;
@@ -118,6 +119,12 @@ public class WhenImpl implements WhenStage {
     public WhenManageCartImpl manageCart() {
         defaults.ensure(false);
         return new WhenManageCartImpl(app, scenario, stagedProducts);
+    }
+
+    /** The checkout shows only the products the scenario staged, so no default product or tax rate is created. */
+    public WhenCheckOutImpl checkOut() {
+        defaults.ensure(false);
+        return new WhenCheckOutImpl(app, scenario, stagedProducts);
     }
 
 }

@@ -53,6 +53,8 @@ import {
 } from '../../port/dtos/ManageCartRequest.js';
 import type { ManageCartResponse } from '../../port/dtos/ManageCartResponse.js';
 import type { CartPage } from './client/pages/CartPage.js';
+import { OPEN, PROCEED_FROM_CART, type CheckOutRequest } from '../../port/dtos/CheckOutRequest.js';
+import { CART, CHECKOUT, CONFIRMATION, type CheckOutResponse } from '../../port/dtos/CheckOutResponse.js';
 import { TestUsers, testCustomer, type TestUser } from '../shared/client/http/test-user.js';
 import { AUTHENTICATION_REQUIRED, MyShopUiClient, PERMISSION_DENIED } from './client/MyShopUiClient.js';
 import { NewOrderPage } from './client/pages/NewOrderPage.js';
@@ -452,8 +454,82 @@ export class MyShopUiDriver implements MyShopDriver {
     return success(response);
   }
 
+  /**
+   * Checkout is for signed-in customers: a visitor is asked to sign in, an admin is refused. A new session first
+   * gets the cart lines, each from its product page; then the checkout is opened, and, when asked, the order placed.
+   */
+  async checkOut(request: CheckOutRequest): Promise<Result<CheckOutResponse, SystemError>> {
+    if (request.continueSession !== true) {
+      const filled = await this.startCartSession(request.cartLines ?? []);
+      if (!filled.success) return failure(filled.error);
+    }
+
+    if (request.entry === PROCEED_FROM_CART) {
+      await this.client.proceedToCheckoutFromCart();
+    } else if (!isSet(request.entry) || request.entry === OPEN) {
+      const opened = await this.client.openCheckoutPage();
+      if (!opened.success) return failure(opened.error);
+    } else {
+      throw new Error(`Unknown checkout entry: ${request.entry}`);
+    }
+
+    if (this.client.isOnLoginPage()) {
+      if (request.signIn !== true) return failure({ message: AUTHENTICATION_REQUIRED, fieldErrors: [] });
+      await this.client.signInOnLoginForm(TestUsers.CUSTOMER);
+    }
+    if (await this.client.isRefused()) {
+      return failure({ message: PERMISSION_DENIED, fieldErrors: [] });
+    }
+
+    const checkoutPage = this.client.checkoutPage();
+    const response: CheckOutResponse = { messageDetails: [] };
+    if (!(await checkoutPage.isShown())) {
+      return success(await this.readWhereTheCheckoutSentTheCustomer(response));
+    }
+
+    response.openedTaxCountry = await checkoutPage.readTaxCountry();
+    response.openedEstimatedTaxRate = await checkoutPage.readEstimatedTaxRate();
+    if (request.shippingAddress) {
+      await checkoutPage.inputShippingAddress(request.shippingAddress);
+    }
+    if (isSet(request.couponCode)) {
+      await checkoutPage.inputCouponCode(request.couponCode);
+    }
+    if (request.placeOrder !== true) {
+      response.shownPage = CHECKOUT;
+      await checkoutPage.readInto(response);
+      return success(response);
+    }
+
+    await checkoutPage.clickPlaceOrder();
+    const confirmationPage = this.client.checkoutConfirmationPage();
+    if (await confirmationPage.isShown()) {
+      response.shownPage = CONFIRMATION;
+      await confirmationPage.readInto(response);
+    } else {
+      response.shownPage = CHECKOUT;
+      await checkoutPage.readInto(response);
+      response.confirmedOrders = [];
+    }
+    response.cartLines = await (await this.client.openCartPage()).readLines();
+    return success(response);
+  }
+
   async close(): Promise<void> {
     await this.client.close();
+  }
+
+  /** The checkout was not shown: the app sent the customer to the cart, or to some other page. */
+  private async readWhereTheCheckoutSentTheCustomer(response: CheckOutResponse): Promise<CheckOutResponse> {
+    const path = this.client.currentPath();
+    if (path.endsWith(CART_PATH_SUFFIX)) {
+      const cart = await this.client.cartPageInSession().read(null, null);
+      response.shownPage = CART;
+      response.message = cart.message ?? null;
+    } else {
+      response.shownPage = path;
+    }
+    return response;
   }
 
   /** A fresh session (the visitor's, or the requested user's) whose cart gets these lines, in order. */
@@ -522,6 +598,8 @@ export class MyShopUiDriver implements MyShopDriver {
     await this.client.switchUser(this.requestedUser ?? operationDefault);
   }
 }
+
+const CART_PATH_SUFFIX = '/cart';
 
 function isSet(value: string | null | undefined): value is string {
   return value !== null && value !== undefined;

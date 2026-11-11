@@ -13,6 +13,7 @@ import { WhenUpdateProfile } from './when-update-profile.js';
 import { WhenBrowseCatalog } from './when-browse-catalog.js';
 import { WhenViewProduct } from './when-view-product.js';
 import { WhenManageCart } from './when-manage-cart.js';
+import { WhenCheckOut } from './when-check-out.js';
 
 export class WhenStage {
   constructor(
@@ -67,5 +68,9 @@ export class WhenStage {
 
   manageCart(): WhenManageCart {
     return new WhenManageCart(this.app, this.ctx, this.useCaseContext);
+  }
+
+  checkOut(): WhenCheckOut {
+    return new WhenCheckOut(this.app, this.ctx, this.useCaseContext);
   }
 }

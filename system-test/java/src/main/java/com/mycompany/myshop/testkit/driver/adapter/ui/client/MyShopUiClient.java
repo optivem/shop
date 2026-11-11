@@ -3,6 +3,7 @@ package com.mycompany.myshop.testkit.driver.adapter.ui.client;
 import com.microsoft.playwright.*;
 import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.CartPage;
 import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.CatalogPage;
+import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.CheckoutPage;
 import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.CouponManagementPage;
 import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.HomePage;
 import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.NewOrderPage;
@@ -30,6 +31,8 @@ public class MyShopUiClient implements AutoCloseable {
     private static final String NEW_ORDER_PATH = "/new-order";
     private static final String PRODUCT_PATH = "/products/";
     private static final String CART_PATH = "/cart";
+    private static final String CHECKOUT_PATH = "/checkout";
+    private static final String PROCEED_TO_CHECKOUT_SELECTOR = "a[aria-label='Proceed to Checkout']";
     private static final String COUPON_MANAGEMENT_PATH = "/admin-coupons";
     private static final String CONTENT_TYPE = "content-type";
     private static final String TEXT_HTML = "text/html";
@@ -174,6 +177,67 @@ public class MyShopUiClient implements AutoCloseable {
     /** The page that is open, read for what every page shows, such as the header's cart badge. */
     public HomePage currentPageInSession() {
         return new HomePage(visitorPageClient != null ? visitorPageClient : pageClient);
+    }
+
+    /** The page client of the current session: the visitor's, if one was started, else the logged-in user's. */
+    public PageClient sessionPageClient() {
+        return visitorPageClient != null ? visitorPageClient : pageClient;
+    }
+
+    /**
+     * Opens the checkout by its page address in the current session, and waits until the app shows where it sent the
+     * user: the checkout, the cart, the login form or a refusal.
+     */
+    public void openCheckoutPage() {
+        if (visitorPageClient != null) {
+            response = page.navigate(baseUrl + CHECKOUT_PATH);
+        } else {
+            openHomePage();
+            openDirectly(CHECKOUT_PATH, CHECKOUT_PATH);
+        }
+        waitForCheckoutOutcome();
+    }
+
+    /** Opens the cart in the current session and follows its "Proceed to checkout", like {@link #openCheckoutPage()}. */
+    public void proceedToCheckoutFromCart() {
+        var cartPage = openCartPage();
+        cartPage.waitForLoaded();
+        sessionPageClient().click(PROCEED_TO_CHECKOUT_SELECTOR);
+        waitForCheckoutOutcome();
+    }
+
+    /** Signs in as {@code user} on the login form that is open, and waits for the page the app returns to. */
+    public void signInOnLoginForm(TestUser user) {
+        var userLogin = KeycloakUiLogin.forBaseUrl(keycloakBaseUrl, user);
+        if (userLogin == null) {
+            throw new IllegalStateException("Signing in can only be exercised against a system with a login");
+        }
+        userLogin.ensureLoggedIn(page, CheckoutPage.READY_SELECTOR + ", " + CartPage.READY_SELECTOR + ", " + CatalogPage.READY_SELECTOR);
+        // A single-page UI may show its (public) landing page while it still exchanges the login code, and only then
+        // move to the page the visitor came from: wait until the code is gone from the address.
+        page.waitForURL(url -> !url.matches(".*[?&]code=.*"));
+        if (page.locator(CheckoutPage.READY_SELECTOR).count() == 0 && page.url().contains(CHECKOUT_PATH)) {
+            sessionPageClient().waitForVisible(CheckoutPage.READY_SELECTOR);
+        }
+    }
+
+    /** Whether the app refused the page: a 403 response (server-rendered UIs) or a "Not authorized" page (React). */
+    public boolean isRefused() {
+        return (response != null && response.status() == HttpStatus.FORBIDDEN.value() && page.url().contains(CHECKOUT_PATH))
+                || page.locator(NOT_AUTHORIZED_SELECTOR).count() > 0;
+    }
+
+    /** The path of the page address that is open, such as "/cart". */
+    public String currentPath() {
+        return java.net.URI.create(page.url()).getPath();
+    }
+
+    private void waitForCheckoutOutcome() {
+        if (response != null && response.status() == HttpStatus.FORBIDDEN.value() && page.url().contains(CHECKOUT_PATH)) {
+            return;
+        }
+        page.waitForSelector(CheckoutPage.READY_SELECTOR + ", " + CartPage.READY_SELECTOR + ", " + LOGIN_FORM_SELECTOR
+                + ", " + NOT_AUTHORIZED_SELECTOR);
     }
 
     /** Opens the cart in the current session. The app must already be open. */

@@ -141,5 +141,13 @@ namespace Dsl.Core.Scenario.When
         }
 
         IWhenManageCart IWhenStage.ManageCart() => ManageCart();
+
+        /// <summary>The checkout shows only the products the scenario staged, so no default product or tax rate is created.</summary>
+        public WhenCheckOut CheckOut()
+        {
+            return new WhenCheckOut(_app, _scenario, () => EnsureGivenForProfile(), _stagedProducts);
+        }
+
+        IWhenCheckOut IWhenStage.CheckOut() => CheckOut();
     }
 }
