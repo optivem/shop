@@ -147,6 +147,9 @@ public class DefaultGivensTest
         public Task<Result<BrowseCatalogResponse, SystemError>> BrowseCatalogAsync(BrowseCatalogRequest request) =>
             throw new NotSupportedException();
 
+        public Task<Result<ViewProductResponse, SystemError>> ViewProductAsync(ViewProductRequest request) =>
+            throw new NotSupportedException();
+
         public ValueTask DisposeAsync() => ValueTask.CompletedTask;
     }
 }

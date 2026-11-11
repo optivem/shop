@@ -74,6 +74,14 @@ public class CatalogPage extends BasePage {
         changeView(() -> pageClient.selectOptionByLabel(SORT_SELECTOR, sortLabel));
     }
 
+    /** Opens a product from its card, by the title link. */
+    public ProductPage clickProduct(String sku) {
+        var previousUrl = pageClient.currentUrl();
+        pageClient.click(PRODUCT_LIST_SELECTOR + " article[aria-label='" + PRODUCT_CARD_LABEL_PREFIX + sku + "'] a[aria-label='Product Title']");
+        pageClient.waitForUrlChange(previousUrl);
+        return new ProductPage(pageClient);
+    }
+
     public void reopenPageAddress() {
         pageClient.reopenCurrentUrl();
         waitForLoaded();

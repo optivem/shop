@@ -11,6 +11,7 @@ import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.HomePage;
 import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.NewOrderPage;
 import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.OrderDetailsPage;
 import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.OrderHistoryPage;
+import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.ProductPage;
 import com.mycompany.myshop.testkit.driver.port.dtos.BrowseCouponsRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.BrowseCouponsResponse;
 import com.mycompany.myshop.testkit.driver.port.dtos.BrowseOrderHistoryRequest;
@@ -30,6 +31,8 @@ import com.mycompany.myshop.testkit.driver.port.dtos.ViewOrderResponse;
 import com.mycompany.myshop.testkit.driver.port.dtos.UpdateProfileRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.ViewProfileRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.ViewProfileResponse;
+import com.mycompany.myshop.testkit.driver.port.dtos.ViewProductRequest;
+import com.mycompany.myshop.testkit.driver.port.dtos.ViewProductResponse;
 import com.mycompany.myshop.testkit.driver.port.MyShopDriver;
 import com.mycompany.myshop.testkit.driver.port.UserIdentity;
 import com.mycompany.myshop.testkit.driver.port.dtos.error.SystemError;
@@ -357,6 +360,76 @@ public class MyShopUiDriver implements MyShopDriver {
         }
 
         return success(catalogPage.read());
+    }
+
+    /**
+     * Product pages are public: a visitor views them without signing in, unless a user was explicitly requested.
+     * The visitor's cart line, if any, is added first, from that product's page, in the same session.
+     */
+    @Override
+    public Result<ViewProductResponse, SystemError> viewProduct(ViewProductRequest request) {
+        var visitor = anonymous || requestedUser == null;
+        if (visitor) {
+            client.startVisitorSession();
+        } else {
+            runAs(TestUser.CUSTOMER);
+        }
+        resetPages();
+
+        if (request.getCartSku() != null) {
+            var cartProductPage = client.openProductPage(request.getCartSku());
+            if (cartProductPage == null) {
+                return failure(MyShopUiClient.AUTHENTICATION_REQUIRED);
+            }
+            cartProductPage.waitForLoaded();
+            cartProductPage.inputQuantity(request.getCartQuantity());
+            cartProductPage.clickAddToCart();
+        }
+
+        ProductPage productPage;
+        if (Boolean.TRUE.equals(request.getFromCatalog())) {
+            var catalogPage = client.openCatalogInSession();
+            if (catalogPage == null) {
+                return failure(MyShopUiClient.AUTHENTICATION_REQUIRED);
+            }
+            catalogPage.waitForLoaded();
+            productPage = catalogPage.clickProduct(request.getSku());
+        } else {
+            productPage = client.openProductPage(request.getSku());
+            if (productPage == null) {
+                return failure(MyShopUiClient.AUTHENTICATION_REQUIRED);
+            }
+        }
+        productPage.waitForLoaded();
+
+        if (request.getQuantity() != null) {
+            productPage.inputQuantity(request.getQuantity());
+        }
+        if (ViewProductRequest.INCREASE.equals(request.getQuantityStep())) {
+            productPage.clickIncreaseQuantity();
+        } else if (ViewProductRequest.DECREASE.equals(request.getQuantityStep())) {
+            productPage.clickDecreaseQuantity();
+        } else if (request.getQuantityStep() != null) {
+            throw new IllegalArgumentException("Unknown quantity step: " + request.getQuantityStep());
+        }
+        var addToCart = Boolean.TRUE.equals(request.getAddToCart());
+        if (addToCart) {
+            productPage.clickAddToCart();
+        }
+
+        var response = productPage.read();
+
+        if (ViewProductRequest.BACK_TO_CATALOG.equals(request.getFollowUp())) {
+            var catalog = productPage.clickBackToCatalog().read();
+            response.setCatalogSkus(catalog.getProducts().stream().map(product -> product.getSku()).toList());
+        } else if (request.getFollowUp() != null) {
+            throw new IllegalArgumentException("Unknown product follow-up: " + request.getFollowUp());
+        }
+        if (addToCart) {
+            response.setCartLines(client.openCartPage().readLines());
+        }
+
+        return success(response);
     }
 
     // --- unsupported inputs ---

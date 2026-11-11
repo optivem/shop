@@ -14,5 +14,8 @@ public interface IThenSuccess
     /// <summary>The catalog the executed browse showed.</summary>
     IThenCatalog Catalog();
 
+    /// <summary>The product page the executed view showed.</summary>
+    IThenProductPage ProductPage();
+
     TaskAwaiter GetAwaiter();
 }

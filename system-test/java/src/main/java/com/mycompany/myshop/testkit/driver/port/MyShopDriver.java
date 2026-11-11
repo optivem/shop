@@ -22,6 +22,8 @@ import com.mycompany.myshop.testkit.driver.port.dtos.ViewOrderResponse;
 import com.mycompany.myshop.testkit.driver.port.dtos.UpdateProfileRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.ViewProfileRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.ViewProfileResponse;
+import com.mycompany.myshop.testkit.driver.port.dtos.ViewProductRequest;
+import com.mycompany.myshop.testkit.driver.port.dtos.ViewProductResponse;
 import com.mycompany.myshop.testkit.common.Result;
 
 public interface MyShopDriver extends AutoCloseable, ActingUserSelector {
@@ -46,4 +48,6 @@ public interface MyShopDriver extends AutoCloseable, ActingUserSelector {
     Result<ViewProfileResponse, SystemError> updateProfile(UpdateProfileRequest request);
 
     Result<BrowseCatalogResponse, SystemError> browseCatalog(BrowseCatalogRequest request);
+
+    Result<ViewProductResponse, SystemError> viewProduct(ViewProductRequest request);
 }

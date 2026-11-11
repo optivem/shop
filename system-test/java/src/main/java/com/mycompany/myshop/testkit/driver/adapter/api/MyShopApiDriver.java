@@ -24,6 +24,8 @@ import com.mycompany.myshop.testkit.driver.port.dtos.ViewOrderResponse;
 import com.mycompany.myshop.testkit.driver.port.dtos.UpdateProfileRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.ViewProfileRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.ViewProfileResponse;
+import com.mycompany.myshop.testkit.driver.port.dtos.ViewProductRequest;
+import com.mycompany.myshop.testkit.driver.port.dtos.ViewProductResponse;
 import com.mycompany.myshop.testkit.driver.port.MyShopDriver;
 import com.mycompany.myshop.testkit.driver.adapter.shared.client.http.TestUser;
 import com.mycompany.myshop.testkit.driver.port.UserIdentity;
@@ -159,6 +161,32 @@ public class MyShopApiDriver implements MyShopDriver {
                 .map(products -> BrowseCatalogResponse.builder()
                         .products(products)
                         .productCount(products.size())
+                        .build());
+    }
+
+    @Override
+    public Result<ViewProductResponse, SystemError> viewProduct(ViewProductRequest request) {
+        requireNotSet("fromCatalog", request.getFromCatalog());
+        requireNotSet("cartSku", request.getCartSku());
+        requireNotSet("quantity", request.getQuantity());
+        requireNotSet("quantityStep", request.getQuantityStep());
+        requireNotSet("addToCart", request.getAddToCart());
+        requireNotSet("followUp", request.getFollowUp());
+
+        if (anonymous || requestedUser == null) {
+            apiClient.as(ApiIdentity.ANONYMOUS);
+        } else {
+            runAs(TestUser.CUSTOMER);
+        }
+        return apiClient.products().viewProduct(request.getSku())
+                .mapError(SystemErrorMapper::from)
+                .map(product -> ViewProductResponse.builder()
+                        .sku(product.getSku())
+                        .title(product.getTitle())
+                        .brand(product.getBrand())
+                        .category(product.getCategory())
+                        .description(product.getDescription())
+                        .price(product.getPrice())
                         .build());
     }
 

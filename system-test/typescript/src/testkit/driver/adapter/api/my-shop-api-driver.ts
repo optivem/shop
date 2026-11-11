@@ -22,6 +22,8 @@ import type { ViewProfileResponse } from '../../port/dtos/ViewProfileResponse.js
 import type { UpdateProfileRequest } from '../../port/dtos/UpdateProfileRequest.js';
 import type { BrowseCatalogRequest } from '../../port/dtos/BrowseCatalogRequest.js';
 import type { BrowseCatalogResponse } from '../../port/dtos/BrowseCatalogResponse.js';
+import type { ViewProductRequest } from '../../port/dtos/ViewProductRequest.js';
+import type { ViewProductResponse } from '../../port/dtos/ViewProductResponse.js';
 import type { MyShopDriver } from '../../port/my-shop-driver.js';
 import type { UserIdentity } from '../../port/user-identity.js';
 import { TestUsers, testCustomer, type TestUser } from '../shared/client/http/test-user.js';
@@ -126,6 +128,31 @@ export class MyShopApiDriver implements MyShopDriver {
     const result = await client.products().browseProducts();
     if (!result.success) return failure(result.error);
     return success({ products: result.value, productCount: result.value.length });
+  }
+
+  async viewProduct(request: ViewProductRequest): Promise<Result<ViewProductResponse, SystemError>> {
+    requireNotSet('fromCatalog', request.fromCatalog);
+    requireNotSet('cartSku', request.cartSku);
+    requireNotSet('quantity', request.quantity);
+    requireNotSet('quantityStep', request.quantityStep);
+    requireNotSet('addToCart', request.addToCart);
+    requireNotSet('followUp', request.followUp);
+
+    const client =
+      this.anonymous || this.requestedUser === undefined
+        ? this.client.as(ApiIdentity.ANONYMOUS)
+        : this.runAs(TestUsers.CUSTOMER);
+    const result = await client.products().viewProduct(request.sku);
+    if (!result.success) return failure(result.error);
+    const product = result.value;
+    return success({
+      sku: product.sku,
+      title: product.title,
+      brand: product.brand,
+      category: product.category,
+      description: product.description,
+      price: product.price,
+    });
   }
 
   async close(): Promise<void> {

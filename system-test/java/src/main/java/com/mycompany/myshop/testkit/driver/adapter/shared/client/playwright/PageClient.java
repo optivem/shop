@@ -60,6 +60,11 @@ public class PageClient {
         return locator.getAttribute(attribute);
     }
 
+    public String readInputValue(String selector) {
+        var locator = getLocator(selector);
+        return locator.inputValue();
+    }
+
     public List<String> readAllTextContents(String selector) {
         var locator = page.locator(selector);
         loginIfRedirected();

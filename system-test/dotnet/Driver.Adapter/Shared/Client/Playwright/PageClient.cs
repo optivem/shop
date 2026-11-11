@@ -57,6 +57,12 @@ public class PageClient
         return await locator.TextContentAsync() ?? string.Empty;
     }
 
+    public async Task<string> ReadInputValueAsync(string selector)
+    {
+        var locator = await GetLocatorAsync(selector);
+        return await locator.InputValueAsync();
+    }
+
     public async Task<string> ReadTextContentImmediatelyAsync(string selector)
     {
         var locator = _page.Locator(selector);

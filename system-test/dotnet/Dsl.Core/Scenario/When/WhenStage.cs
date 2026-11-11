@@ -122,5 +122,13 @@ namespace Dsl.Core.Scenario.When
         }
 
         IWhenBrowseCatalog IWhenStage.BrowseCatalog() => BrowseCatalog();
+
+        /// <summary>The product page shows only the products the scenario staged, so no default product or tax rate is created.</summary>
+        public WhenViewProduct ViewProduct()
+        {
+            return new WhenViewProduct(_app, _scenario, () => EnsureGivenForProfile());
+        }
+
+        IWhenViewProduct IWhenStage.ViewProduct() => ViewProduct();
     }
 }

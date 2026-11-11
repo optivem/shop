@@ -40,6 +40,13 @@ public class ThenSuccess<TSuccessResponse, TSuccessVerification>
 
     IThenCatalog IThenSuccess.Catalog() => Catalog();
 
+    public ThenSuccessProductPage<TSuccessResponse, TSuccessVerification> ProductPage()
+    {
+        return new ThenSuccessProductPage<TSuccessResponse, TSuccessVerification>(_thenClause);
+    }
+
+    IThenProductPage IThenSuccess.ProductPage() => ProductPage();
+
     /// <summary>Verifies the profile the executed operation (view or update profile) answered with.</summary>
     public IThenProfile Profile()
     {

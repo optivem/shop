@@ -1,6 +1,7 @@
 import type { Locator } from '@playwright/test';
 import type { BrowseCatalogResponse, CatalogProductDto } from '../../../../port/dtos/BrowseCatalogResponse.js';
 import { BasePage, PAGE_TIMEOUT_MS } from './BasePage.js';
+import { ProductPage } from './ProductPage.js';
 
 const CATALOG_SELECTOR = "section[aria-label='Catalog']";
 const PRODUCT_LIST_SELECTOR = `${CATALOG_SELECTOR} [aria-label='Product List']`;
@@ -71,6 +72,16 @@ export class CatalogPage extends BasePage {
   async reopenPageAddress(): Promise<void> {
     await this.page.goto(this.page.url());
     await this.waitForLoaded();
+  }
+
+  /** Opens a product from its card, by the title link. */
+  async clickProduct(sku: string): Promise<ProductPage> {
+    const previousUrl = this.page.url();
+    await this.page
+      .locator(`${PRODUCT_LIST_SELECTOR} article[aria-label='${PRODUCT_CARD_LABEL_PREFIX}${sku}'] a[aria-label='Product Title']`)
+      .click({ timeout: PAGE_TIMEOUT_MS });
+    await this.page.waitForURL((url) => url.toString() !== previousUrl, { timeout: PAGE_TIMEOUT_MS });
+    return new ProductPage(this.page);
   }
 
   async clickClearFilters(): Promise<void> {

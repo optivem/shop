@@ -5,6 +5,8 @@ import com.mycompany.myshop.testkit.driver.adapter.api.client.dtos.errors.Proble
 import com.mycompany.myshop.testkit.driver.adapter.shared.client.http.JsonHttpClient;
 import com.mycompany.myshop.testkit.driver.port.dtos.BrowseCatalogResponse;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 
@@ -20,5 +22,10 @@ public class ProductController {
     public Result<List<BrowseCatalogResponse.ProductDto>, ProblemDetailResponse> browseProducts() {
         return httpClient.get(ENDPOINT, BrowseCatalogResponse.ProductDto[].class)
                 .map(Arrays::asList);
+    }
+
+    public Result<BrowseCatalogResponse.ProductDto, ProblemDetailResponse> viewProduct(String sku) {
+        var encodedSku = URLEncoder.encode(sku, StandardCharsets.UTF_8).replace("+", "%20");
+        return httpClient.get(ENDPOINT + "/" + encodedSku, BrowseCatalogResponse.ProductDto.class);
     }
 }

@@ -125,6 +125,31 @@ public class MyShopApiDriver : IMyShopDriver
             .MapAsync(products => new BrowseCatalogResponse { Products = products, ProductCount = products.Count });
     }
 
+    public Task<Result<ViewProductResponse, SystemError>> ViewProductAsync(ViewProductRequest request)
+    {
+        RequireNotSet("fromCatalog", request.FromCatalog);
+        RequireNotSet("cartSku", request.CartSku);
+        RequireNotSet("quantity", request.Quantity);
+        RequireNotSet("quantityStep", request.QuantityStep);
+        RequireNotSet("addToCart", request.AddToCart);
+        RequireNotSet("followUp", request.FollowUp);
+
+        var client = _anonymous || _requestedUser == null
+            ? _apiClient.As(ApiIdentity.Anonymous)
+            : RunAs(TestUser.Customer);
+        return client.Products().ViewProductAsync(request.Sku!)
+            .MapErrorAsync(MapError)
+            .MapAsync(product => new ViewProductResponse
+            {
+                Sku = product.Sku,
+                Title = product.Title,
+                Brand = product.Brand,
+                Category = product.Category,
+                Description = product.Description,
+                Price = product.Price,
+            });
+    }
+
     /// <summary>The API serves the unfiltered catalog; filtering, search and sort happen in the UI.</summary>
     private static void RequireNotSet(string input, object? value)
     {

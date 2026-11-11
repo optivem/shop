@@ -16,7 +16,13 @@ export class ErpStubDriver extends BaseErpDriver<ErpStubClient> {
   }
 
   async returnsProducts(request: ReturnsProductsRequest): Promise<Result<void, ErpErrorResponse>> {
-    return this.client.configureGetProducts(request.products.map((product) => BaseErpDriver.toExtProductDetails(product)));
+    const extProducts = request.products.map((product) => BaseErpDriver.toExtProductDetails(product));
+    // The ERP serves each listed product on its own as well (GET /api/products/{sku}), as the real ERP does.
+    for (const extProduct of extProducts) {
+      const result = await this.client.configureProduct(extProduct);
+      if (!result.success) return result;
+    }
+    return this.client.configureGetProducts(extProducts);
   }
 
   async returnsPromotion(request: ReturnsPromotionRequest): Promise<Result<void, ErpErrorResponse>> {

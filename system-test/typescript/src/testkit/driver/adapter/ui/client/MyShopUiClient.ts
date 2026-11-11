@@ -7,6 +7,8 @@ import { KeycloakUiLogin } from '../../shared/client/playwright/keycloak-ui-logi
 import { PAGE_TIMEOUT_MS } from './pages/BasePage.js';
 import { HomePage } from './pages/HomePage.js';
 import { CATALOG_READY_SELECTOR, CatalogPage } from './pages/CatalogPage.js';
+import { PRODUCT_READY_SELECTOR, ProductPage } from './pages/ProductPage.js';
+import { CartPage } from './pages/CartPage.js';
 import { NEW_ORDER_READY_SELECTOR, NewOrderPage } from './pages/NewOrderPage.js';
 import { OrderHistoryPage } from './pages/OrderHistoryPage.js';
 import { OrderDetailsPage } from './pages/OrderDetailsPage.js';
@@ -18,6 +20,8 @@ const LOGIN_FORM_SELECTOR = '#kc-login';
 const NOT_AUTHORIZED_SELECTOR = "h1:has-text('Not authorized'):visible";
 const NEW_ORDER_PATH = '/new-order';
 const COUPON_MANAGEMENT_PATH = '/admin-coupons';
+const PRODUCT_PATH = '/products/';
+const CART_PATH = '/cart';
 const FORBIDDEN_STATUS = 403;
 
 export const AUTHENTICATION_REQUIRED = 'Authentication is required';
@@ -28,6 +32,8 @@ export class MyShopUiClient {
   private currentPage: Page | null = null;
   private login: KeycloakUiLogin | undefined;
   private lastResponseStatus: number | undefined;
+  /** Set while the browser session is a visitor's, which never logs in. */
+  private visitorSession = false;
 
   /**
    * @param keycloakBaseUrl when undefined or empty, the app is assumed to have no login screen.
@@ -94,6 +100,60 @@ export class MyShopUiClient {
     return new CatalogPage(page);
   }
 
+  /** Replaces the browser session with a fresh one that never logs in: the anonymous visitor's. */
+  async startVisitorSession(): Promise<void> {
+    await this.close();
+    this.context = await this.browser.newContext({ viewport: { width: 1920, height: 1080 } });
+    this.currentPage = await this.context.newPage();
+    this.visitorSession = true;
+  }
+
+  /**
+   * Opens a product by its page address, in the visitor's session if one was started, else as the logged-in user.
+   * @returns the product page, or null when the app sends the visitor to the login form instead
+   */
+  async openProductPage(sku: string): Promise<Result<ProductPage | null, SystemError>> {
+    const path = `${PRODUCT_PATH}${encodeURIComponent(sku)}`;
+    if (this.visitorSession) {
+      const page = this.requirePage();
+      await page.goto(`${this.baseUrl}${path}`);
+      await page
+        .locator(`${PRODUCT_READY_SELECTOR}, ${LOGIN_FORM_SELECTOR}`)
+        .first()
+        .waitFor({ state: 'visible', timeout: PAGE_TIMEOUT_MS });
+      return success(this.login?.isLoginPage(page) ? null : new ProductPage(page));
+    }
+    const result = await this.openHomePage();
+    if (!result.success) return failure(result.error);
+    await this.openDirectly(path, path);
+    return success(new ProductPage(this.requirePage()));
+  }
+
+  /**
+   * Opens the catalog in the visitor's session if one was started, else as the logged-in user.
+   * @returns the catalog, or null when the app sends the visitor to the login form instead
+   */
+  async openCatalogInSession(): Promise<Result<CatalogPage | null, SystemError>> {
+    if (!this.visitorSession) return this.openCatalog();
+    const page = this.requirePage();
+    await page.goto(this.baseUrl);
+    await page
+      .locator(`${CATALOG_READY_SELECTOR}, ${LOGIN_FORM_SELECTOR}`)
+      .first()
+      .waitFor({ state: 'visible', timeout: PAGE_TIMEOUT_MS });
+    return success(this.login?.isLoginPage(page) ? null : new CatalogPage(page));
+  }
+
+  /** Opens the cart in the current session. The app must already be open. */
+  async openCartPage(): Promise<CartPage> {
+    if (this.visitorSession) {
+      await this.requirePage().goto(`${this.baseUrl}${CART_PATH}`);
+    } else {
+      await this.openDirectly(CART_PATH, CART_PATH);
+    }
+    return new CartPage(this.requirePage());
+  }
+
   /** Opens an order by its URL, not through the order history. The app must already be open. */
   async openOrderDetailsPage(orderNumber: string): Promise<OrderDetailsPage> {
     const encodedOrderNumber = encodeURIComponent(orderNumber);
@@ -150,6 +210,7 @@ export class MyShopUiClient {
   }
 
   async close(): Promise<void> {
+    this.visitorSession = false;
     if (this.currentPage) {
       await this.currentPage.close();
       this.currentPage = null;

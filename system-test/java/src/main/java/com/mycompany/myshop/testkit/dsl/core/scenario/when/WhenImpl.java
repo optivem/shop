@@ -5,6 +5,7 @@ import com.mycompany.myshop.testkit.dsl.core.scenario.DefaultGivens;
 import com.mycompany.myshop.testkit.dsl.core.scenario.given.CustomerResolver;
 import com.mycompany.myshop.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.when.steps.WhenBrowseCatalogImpl;
+import com.mycompany.myshop.testkit.dsl.core.scenario.when.steps.WhenViewProductImpl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.when.steps.WhenBrowseCouponsImpl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.when.steps.WhenBrowseOrderHistoryImpl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.when.steps.WhenCancelOrderImpl;
@@ -96,6 +97,12 @@ public class WhenImpl implements WhenStage {
     public WhenBrowseCatalogImpl browseCatalog() {
         defaults.ensure(false);
         return new WhenBrowseCatalogImpl(app, scenario);
+    }
+
+    /** The product page shows only the products the scenario staged, so no default product or tax rate is created. */
+    public WhenViewProductImpl viewProduct() {
+        defaults.ensure(false);
+        return new WhenViewProductImpl(app, scenario);
     }
 
 }

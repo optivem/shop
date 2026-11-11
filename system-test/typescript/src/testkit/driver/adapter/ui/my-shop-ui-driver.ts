@@ -34,6 +34,9 @@ import {
 } from '../../port/dtos/BrowseCatalogRequest.js';
 import type { BrowseCatalogResponse } from '../../port/dtos/BrowseCatalogResponse.js';
 import type { CatalogPage } from './client/pages/CatalogPage.js';
+import type { ProductPage } from './client/pages/ProductPage.js';
+import { BACK_TO_CATALOG, DECREASE, INCREASE, type ViewProductRequest } from '../../port/dtos/ViewProductRequest.js';
+import type { ViewProductResponse } from '../../port/dtos/ViewProductResponse.js';
 import { TestUsers, testCustomer, type TestUser } from '../shared/client/http/test-user.js';
 import { AUTHENTICATION_REQUIRED, MyShopUiClient, PERMISSION_DENIED } from './client/MyShopUiClient.js';
 import { NewOrderPage } from './client/pages/NewOrderPage.js';
@@ -285,6 +288,68 @@ export class MyShopUiDriver implements MyShopDriver {
     }
 
     return success(await catalogPage.read());
+  }
+
+  /**
+   * Product pages are public: a visitor views them without signing in, unless a user was explicitly requested.
+   * The visitor's cart line, if any, is added first, from that product's page, in the same session.
+   */
+  async viewProduct(request: ViewProductRequest): Promise<Result<ViewProductResponse, SystemError>> {
+    if (this.anonymous || this.requestedUser === undefined) {
+      await this.client.startVisitorSession();
+    } else {
+      await this.runAs(TestUsers.CUSTOMER);
+    }
+    const loginRequired = failure<ViewProductResponse, SystemError>({ message: AUTHENTICATION_REQUIRED, fieldErrors: [] });
+
+    if (isSet(request.cartSku)) {
+      const cartPageResult = await this.client.openProductPage(request.cartSku);
+      if (!cartPageResult.success) return failure(cartPageResult.error);
+      if (!cartPageResult.value) return loginRequired;
+      await cartPageResult.value.waitForLoaded();
+      await cartPageResult.value.inputQuantity(request.cartQuantity ?? '1');
+      await cartPageResult.value.clickAddToCart();
+    }
+
+    let productPage: ProductPage;
+    if (request.fromCatalog === true) {
+      const catalogResult = await this.client.openCatalogInSession();
+      if (!catalogResult.success) return failure(catalogResult.error);
+      if (!catalogResult.value) return loginRequired;
+      await catalogResult.value.waitForLoaded();
+      productPage = await catalogResult.value.clickProduct(request.sku);
+    } else {
+      const pageResult = await this.client.openProductPage(request.sku);
+      if (!pageResult.success) return failure(pageResult.error);
+      if (!pageResult.value) return loginRequired;
+      productPage = pageResult.value;
+    }
+    await productPage.waitForLoaded();
+
+    if (isSet(request.quantity)) await productPage.inputQuantity(request.quantity);
+    if (request.quantityStep === INCREASE) {
+      await productPage.clickIncreaseQuantity();
+    } else if (request.quantityStep === DECREASE) {
+      await productPage.clickDecreaseQuantity();
+    } else if (isSet(request.quantityStep)) {
+      throw new Error(`Unknown quantity step: ${request.quantityStep}`);
+    }
+    const addToCart = request.addToCart === true;
+    if (addToCart) await productPage.clickAddToCart();
+
+    const response = await productPage.read();
+
+    if (request.followUp === BACK_TO_CATALOG) {
+      const catalog = await (await productPage.clickBackToCatalog()).read();
+      response.catalogSkus = catalog.products.map((product) => product.sku);
+    } else if (isSet(request.followUp)) {
+      throw new Error(`Unknown product follow-up: ${request.followUp}`);
+    }
+    if (addToCart) {
+      response.cartLines = await (await this.client.openCartPage()).readLines();
+    }
+
+    return success(response);
   }
 
   async close(): Promise<void> {

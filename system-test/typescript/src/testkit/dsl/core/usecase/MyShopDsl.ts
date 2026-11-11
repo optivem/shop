@@ -11,6 +11,7 @@ import { GoToMyShop } from './usecases/GoToMyShop.js';
 import { ViewProfile } from './usecases/ViewProfile.js';
 import { UpdateProfile } from './usecases/UpdateProfile.js';
 import { BrowseCatalog } from './usecases/BrowseCatalog.js';
+import { ViewProduct } from './usecases/ViewProduct.js';
 
 export class MyShopDsl {
   constructor(
@@ -60,6 +61,10 @@ export class MyShopDsl {
 
   browseCatalog(): BrowseCatalog {
     return new BrowseCatalog(this.driver, this.context);
+  }
+
+  viewProduct(): ViewProduct {
+    return new ViewProduct(this.driver, this.context);
   }
 
   async close(): Promise<void> {

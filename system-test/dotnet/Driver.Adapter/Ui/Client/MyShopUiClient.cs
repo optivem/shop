@@ -58,6 +58,10 @@ public class MyShopUiClient : IAsyncDisposable
 
     private const string CouponManagementPath = "/admin-coupons";
 
+    private const string ProductPath = "/products/";
+
+    private const string CartPath = "/cart";
+
 
 
     private readonly string _baseUrl;
@@ -79,6 +83,9 @@ public class MyShopUiClient : IAsyncDisposable
 
 
     private IResponse? _response;
+
+    /// <summary>Set while the browser session is a visitor's, which never logs in.</summary>
+    private PlaywrightGateway? _visitorPageClient;
 
 
 
@@ -140,6 +147,7 @@ public class MyShopUiClient : IAsyncDisposable
         await _context.CloseAsync();
         (_context, _page, _login, _homePage) = await OpenSessionAsync(_browser, _baseUrl, _keycloakBaseUrl, user);
         _response = null;
+        _visitorPageClient = null;
         return true;
     }
 
@@ -196,6 +204,7 @@ public class MyShopUiClient : IAsyncDisposable
         await _page.CloseAsync();
         await _context.CloseAsync();
         (_context, _page, _login, _homePage) = await OpenSessionAsync(_browser, _baseUrl, _keycloakBaseUrl, _login?.User ?? TestUser.Customer);
+        _visitorPageClient = null;
         _response = await _page.GotoAsync(_baseUrl);
         var anonymousPageClient = new PlaywrightGateway(_page, _baseUrl);
         await anonymousPageClient.WaitForVisibleAsync(CatalogPage.ReadySelector + ", " + LoginFormSelector);
@@ -204,6 +213,65 @@ public class MyShopUiClient : IAsyncDisposable
             return null;
         }
         return new CatalogPage(anonymousPageClient);
+    }
+
+    /// <summary>Replaces the browser session with a fresh one that never logs in: the anonymous visitor's.</summary>
+    public async Task StartVisitorSessionAsync()
+    {
+        await _page.CloseAsync();
+        await _context.CloseAsync();
+        (_context, _page, _login, _homePage) = await OpenSessionAsync(_browser, _baseUrl, _keycloakBaseUrl, _login?.User ?? TestUser.Customer);
+        _response = null;
+        _visitorPageClient = new PlaywrightGateway(_page, _baseUrl);
+    }
+
+    /// <summary>Opens a product by its page address, in the visitor's session if one was started, else as the logged-in user.</summary>
+    /// <returns>the product page, or null when the app sends the visitor to the login form instead</returns>
+    public async Task<ProductPage?> OpenProductPageAsync(string sku)
+    {
+        var path = ProductPath + Uri.EscapeDataString(sku);
+        if (_visitorPageClient != null)
+        {
+            _response = await _page.GotoAsync(_baseUrl + path);
+            await _visitorPageClient.WaitForVisibleAsync(ProductPage.ReadySelector + ", " + LoginFormSelector);
+            if (_login != null && _login.IsLoginPage(_page))
+            {
+                return null;
+            }
+            return new ProductPage(_visitorPageClient);
+        }
+        await OpenHomePageAsync();
+        await OpenDirectlyAsync(path, path);
+        return new ProductPage(new PlaywrightGateway(_page, _baseUrl, _login));
+    }
+
+    /// <summary>Opens the catalog in the visitor's session if one was started, else as the logged-in user.</summary>
+    /// <returns>the catalog, or null when the app sends the visitor to the login form instead</returns>
+    public async Task<CatalogPage?> OpenCatalogInSessionAsync()
+    {
+        if (_visitorPageClient == null)
+        {
+            return await OpenCatalogAsync();
+        }
+        _response = await _page.GotoAsync(_baseUrl);
+        await _visitorPageClient.WaitForVisibleAsync(CatalogPage.ReadySelector + ", " + LoginFormSelector);
+        if (_login != null && _login.IsLoginPage(_page))
+        {
+            return null;
+        }
+        return new CatalogPage(_visitorPageClient);
+    }
+
+    /// <summary>Opens the cart in the current session. The app must already be open.</summary>
+    public async Task<CartPage> OpenCartPageAsync()
+    {
+        if (_visitorPageClient != null)
+        {
+            _response = await _page.GotoAsync(_baseUrl + CartPath);
+            return new CartPage(_visitorPageClient);
+        }
+        await OpenDirectlyAsync(CartPath, CartPath);
+        return new CartPage(new PlaywrightGateway(_page, _baseUrl, _login));
     }
 
     /// <summary>Opens an order by its URL, not through the order history. The app must already be open.</summary>

@@ -1,7 +1,7 @@
 ---
 id: UC-007
 title: View Product
-status: planned
+status: implemented
 ---
 
 # UC-007 View Product — Acceptance criteria

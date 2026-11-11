@@ -30,4 +30,10 @@ export class ProductController {
     if (!result.success) return result;
     return success(result.value.map((product) => ({ ...product, price: String(product.price) })));
   }
+
+  async viewProduct(sku: string): Promise<Result<CatalogProductDto, SystemError>> {
+    const result = await this.httpClient.get<ProductJson>(`${ProductController.ENDPOINT}/${encodeURIComponent(sku)}`);
+    if (!result.success) return result;
+    return success({ ...result.value, price: String(result.value.price) });
+  }
 }

@@ -30,11 +30,21 @@ public class ErpStubDriver : BaseErpDriver<ErpStubClient>
             .MapErrorAsync(error => MapError(error));
     }
 
-    public override Task<Result<VoidValue, ErpErrorResponse>> ReturnsProductsAsync(ReturnsProductsRequest request)
+    public override async Task<Result<VoidValue, ErpErrorResponse>> ReturnsProductsAsync(ReturnsProductsRequest request)
     {
         var extProducts = request.Products.Select(ToExtProductDetailsResponse).ToList();
 
-        return _client.ConfigureGetProductsAsync(extProducts)
+        // The ERP serves each listed product on its own as well (GET /api/products/{sku}), as the real ERP does.
+        foreach (var extProduct in extProducts)
+        {
+            var result = await _client.ConfigureGetProductAsync(extProduct);
+            if (result.IsFailure)
+            {
+                return result.MapError(error => MapError(error));
+            }
+        }
+
+        return await _client.ConfigureGetProductsAsync(extProducts)
             .MapErrorAsync(error => MapError(error));
     }
 

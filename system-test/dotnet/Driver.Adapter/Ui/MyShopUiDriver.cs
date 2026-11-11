@@ -415,6 +415,99 @@ public class MyShopUiDriver : IMyShopDriver
         return Success(await catalogPage.ReadAsync());
     }
 
+    /// <summary>
+    /// Product pages are public: a visitor views them without signing in, unless a user was explicitly requested.
+    /// The visitor's cart line, if any, is added first, from that product's page, in the same session.
+    /// </summary>
+    public async Task<Result<ViewProductResponse, SystemError>> ViewProductAsync(ViewProductRequest request)
+    {
+        if (_anonymous || _requestedUser == null)
+        {
+            await _client.StartVisitorSessionAsync();
+        }
+        else
+        {
+            await RunAsAsync(TestUser.Customer);
+        }
+        ResetPages();
+
+        if (request.CartSku != null)
+        {
+            var cartProductPage = await _client.OpenProductPageAsync(request.CartSku);
+            if (cartProductPage == null)
+            {
+                return Failure<ViewProductResponse>(MyShopUiClient.AuthenticationRequired);
+            }
+            await cartProductPage.WaitForLoadedAsync();
+            await cartProductPage.InputQuantityAsync(request.CartQuantity);
+            await cartProductPage.ClickAddToCartAsync();
+        }
+
+        ProductPage? productPage;
+        if (request.FromCatalog == true)
+        {
+            var catalogPage = await _client.OpenCatalogInSessionAsync();
+            if (catalogPage == null)
+            {
+                return Failure<ViewProductResponse>(MyShopUiClient.AuthenticationRequired);
+            }
+            await catalogPage.WaitForLoadedAsync();
+            productPage = await catalogPage.ClickProductAsync(request.Sku!);
+        }
+        else
+        {
+            productPage = await _client.OpenProductPageAsync(request.Sku!);
+            if (productPage == null)
+            {
+                return Failure<ViewProductResponse>(MyShopUiClient.AuthenticationRequired);
+            }
+        }
+        await productPage.WaitForLoadedAsync();
+
+        if (request.Quantity != null)
+        {
+            await productPage.InputQuantityAsync(request.Quantity);
+        }
+        switch (request.QuantityStep)
+        {
+            case null:
+                break;
+            case ViewProductRequest.Increase:
+                await productPage.ClickIncreaseQuantityAsync();
+                break;
+            case ViewProductRequest.Decrease:
+                await productPage.ClickDecreaseQuantityAsync();
+                break;
+            default:
+                throw new ArgumentException($"Unknown quantity step: {request.QuantityStep}", nameof(request));
+        }
+        var addToCart = request.AddToCart == true;
+        if (addToCart)
+        {
+            await productPage.ClickAddToCartAsync();
+        }
+
+        var response = await productPage.ReadAsync();
+
+        switch (request.FollowUp)
+        {
+            case null:
+                break;
+            case ViewProductRequest.BackToCatalog:
+                var catalog = await (await productPage.ClickBackToCatalogAsync()).ReadAsync();
+                response.CatalogSkus = catalog.Products!.Select(product => product.Sku!).ToList();
+                break;
+            default:
+                throw new ArgumentException($"Unknown product follow-up: {request.FollowUp}", nameof(request));
+        }
+        if (addToCart)
+        {
+            response.CartLines = await (await _client.OpenCartPageAsync()).ReadLinesAsync();
+        }
+
+        return Success(response);
+    }
+
     private async Task<Result<T, SystemError>> LoginRequiredAsync<T>(string path)
     {
         await _client.AssertLoginRequiredForAsync(path);

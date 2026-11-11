@@ -11,6 +11,7 @@ import { WhenBrowseCoupons } from './when-browse-coupons.js';
 import { WhenViewProfile } from './when-view-profile.js';
 import { WhenUpdateProfile } from './when-update-profile.js';
 import { WhenBrowseCatalog } from './when-browse-catalog.js';
+import { WhenViewProduct } from './when-view-product.js';
 
 export class WhenStage {
   constructor(
@@ -57,5 +58,9 @@ export class WhenStage {
 
   browseCatalog(): WhenBrowseCatalog {
     return new WhenBrowseCatalog(this.app, this.ctx, this.useCaseContext);
+  }
+
+  viewProduct(): WhenViewProduct {
+    return new WhenViewProduct(this.app, this.ctx, this.useCaseContext);
   }
 }

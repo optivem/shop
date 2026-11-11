@@ -79,6 +79,15 @@ public class CatalogPage : BasePage
         await ChangeViewAsync(() => PageClient.SelectOptionByLabelAsync(SortSelector, sortLabel));
     }
 
+    /// <summary>Opens a product from its card, by the title link.</summary>
+    public async Task<ProductPage> ClickProductAsync(string sku)
+    {
+        var previousUrl = PageClient.CurrentUrl();
+        await PageClient.ClickAsync($"{ProductListSelector} article[aria-label='{ProductCardLabelPrefix}{sku}'] a[aria-label='Product Title']");
+        await PageClient.WaitForUrlChangeAsync(previousUrl);
+        return new ProductPage(PageClient);
+    }
+
     public async Task ReopenPageAddressAsync()
     {
         await PageClient.ReopenCurrentUrlAsync();

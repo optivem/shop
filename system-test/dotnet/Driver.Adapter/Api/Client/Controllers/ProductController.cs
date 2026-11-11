@@ -21,6 +21,10 @@ public class ProductController
         => _httpClient.GetAsync<List<ProductJson>>(Endpoint)
             .MapAsync(products => products.Select(ToProductDto).ToList());
 
+    public Task<Result<BrowseCatalogResponse.ProductDto, ProblemDetailResponse>> ViewProductAsync(string sku)
+        => _httpClient.GetAsync<ProductJson>($"{Endpoint}/{Uri.EscapeDataString(sku)}")
+            .MapAsync(ToProductDto);
+
     private static BrowseCatalogResponse.ProductDto ToProductDto(ProductJson product) => new()
     {
         Sku = product.Sku,

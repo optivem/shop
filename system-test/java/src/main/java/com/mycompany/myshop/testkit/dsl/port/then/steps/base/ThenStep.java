@@ -7,6 +7,7 @@ import com.mycompany.myshop.testkit.dsl.port.then.steps.ThenCoupon;
 import com.mycompany.myshop.testkit.dsl.port.then.steps.ThenOrder;
 import com.mycompany.myshop.testkit.dsl.port.then.steps.ThenOrderHistory;
 import com.mycompany.myshop.testkit.dsl.port.then.steps.ThenProduct;
+import com.mycompany.myshop.testkit.dsl.port.then.steps.ThenProductPage;
 import com.mycompany.myshop.testkit.dsl.port.then.steps.ThenProfile;
 
 public interface ThenStep<T> {
@@ -27,6 +28,9 @@ public interface ThenStep<T> {
 
     /** The catalog the executed browse showed. */
     ThenCatalog catalog();
+
+    /** The product page the executed view showed. */
+    ThenProductPage productPage();
 
     ThenClock clock();
 

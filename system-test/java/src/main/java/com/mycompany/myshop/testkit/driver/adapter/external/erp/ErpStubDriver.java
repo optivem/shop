@@ -37,6 +37,13 @@ public class ErpStubDriver extends BaseErpDriver<ErpStubClient> {
                 .map(ErpStubDriver::toExtProductDetailsResponse)
                 .toList();
 
+        // The ERP serves each listed product on its own as well (GET /api/products/{sku}), as the real ERP does.
+        for (var extProduct : extProducts) {
+            var result = client.configureGetProduct(extProduct);
+            if (result.isFailure()) {
+                return result.mapError(ext -> new ErpErrorResponse(ext.getMessage()));
+            }
+        }
         return client.configureGetProducts(extProducts)
                 .mapError(ext -> new ErpErrorResponse(ext.getMessage()));
     }

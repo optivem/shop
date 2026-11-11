@@ -1,11 +1,13 @@
 package com.mycompany.myshop.testkit.driver.adapter.ui.client;
 
 import com.microsoft.playwright.*;
+import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.CartPage;
 import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.CatalogPage;
 import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.CouponManagementPage;
 import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.HomePage;
 import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.NewOrderPage;
 import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.OrderDetailsPage;
+import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.ProductPage;
 import com.mycompany.myshop.testkit.common.Closer;
 import com.mycompany.myshop.testkit.common.Result;
 import com.mycompany.myshop.testkit.driver.adapter.shared.client.http.TestUser;
@@ -26,6 +28,8 @@ public class MyShopUiClient implements AutoCloseable {
     public static final String PERMISSION_DENIED = "You do not have permission to perform this action";
     private static final String NOT_AUTHORIZED_SELECTOR = "h1:has-text('Not authorized'):visible";
     private static final String NEW_ORDER_PATH = "/new-order";
+    private static final String PRODUCT_PATH = "/products/";
+    private static final String CART_PATH = "/cart";
     private static final String COUPON_MANAGEMENT_PATH = "/admin-coupons";
     private static final String CONTENT_TYPE = "content-type";
     private static final String TEXT_HTML = "text/html";
@@ -44,6 +48,8 @@ public class MyShopUiClient implements AutoCloseable {
     private PageClient pageClient;
     private HomePage homePage;
     private KeycloakUiLogin login;
+    /** Set while the browser session is a visitor's, which never logs in. */
+    private PageClient visitorPageClient;
 
     private Response response;
 
@@ -89,7 +95,62 @@ public class MyShopUiClient implements AutoCloseable {
 
         this.pageClient = new PageClient(page, login);
         this.homePage = new HomePage(pageClient);
+        this.visitorPageClient = null;
         this.response = null;
+    }
+
+    /** Replaces the browser session with a fresh one that never logs in: the anonymous visitor's. */
+    public void startVisitorSession() {
+        close();
+        open(login == null ? TestUser.CUSTOMER : login.getUser());
+        visitorPageClient = new PageClient(page);
+    }
+
+    /**
+     * Opens a product by its page address, in the visitor's session if one was started, else as the logged-in user.
+     *
+     * @return the product page, or null when the app sends the visitor to the login form instead
+     */
+    public ProductPage openProductPage(String sku) {
+        var path = PRODUCT_PATH + URLEncoder.encode(sku, StandardCharsets.UTF_8).replace("+", "%20");
+        if (visitorPageClient != null) {
+            response = page.navigate(baseUrl + path);
+            visitorPageClient.waitForVisible(ProductPage.READY_SELECTOR + ", " + LOGIN_FORM_SELECTOR);
+            if (login != null && login.isLoginPage(page)) {
+                return null;
+            }
+            return new ProductPage(visitorPageClient);
+        }
+        openHomePage();
+        openDirectly(path, path);
+        return new ProductPage(pageClient);
+    }
+
+    /**
+     * Opens the catalog in the visitor's session if one was started, else as the logged-in user.
+     *
+     * @return the catalog, or null when the app sends the visitor to the login form instead
+     */
+    public CatalogPage openCatalogInSession() {
+        if (visitorPageClient == null) {
+            return openCatalog();
+        }
+        response = page.navigate(baseUrl);
+        visitorPageClient.waitForVisible(CatalogPage.READY_SELECTOR + ", " + LOGIN_FORM_SELECTOR);
+        if (login != null && login.isLoginPage(page)) {
+            return null;
+        }
+        return new CatalogPage(visitorPageClient);
+    }
+
+    /** Opens the cart in the current session. The app must already be open. */
+    public CartPage openCartPage() {
+        if (visitorPageClient != null) {
+            response = page.navigate(baseUrl + CART_PATH);
+            return new CartPage(visitorPageClient);
+        }
+        openDirectly(CART_PATH, CART_PATH);
+        return new CartPage(pageClient);
     }
 
     public HomePage openHomePage() {

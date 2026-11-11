@@ -10,6 +10,7 @@ import com.mycompany.myshop.testkit.dsl.port.when.steps.WhenPublishCoupon;
 import com.mycompany.myshop.testkit.dsl.port.when.steps.WhenViewOrder;
 import com.mycompany.myshop.testkit.dsl.port.when.steps.WhenUpdateProfile;
 import com.mycompany.myshop.testkit.dsl.port.when.steps.WhenViewProfile;
+import com.mycompany.myshop.testkit.dsl.port.when.steps.WhenViewProduct;
 
 public interface WhenStage {
     WhenPlaceOrder placeOrder();
@@ -31,4 +32,6 @@ public interface WhenStage {
     WhenUpdateProfile updateProfile();
 
     WhenBrowseCatalog browseCatalog();
+
+    WhenViewProduct viewProduct();
 }
