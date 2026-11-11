@@ -5,6 +5,11 @@ import type { TestDetails } from '@playwright/test';
 // Playwright's JUnit reporter writes into the <testcase> as
 // <property name="tag" value="UC-001.3"/>: the same shape the Java build emits
 // for @Tag("UC-001.3"), and what the `gh optivem spec` gate reads.
+// Each ID is also a native Playwright tag (@UC-001.3), so `--grep` can select
+// a use case's tests: `gh optivem system-test run --use-case UC-001` relies on it.
 export function criteria(...ids: string[]): TestDetails {
-    return { annotation: ids.map((id) => ({ type: 'tag', description: id })) };
+    return {
+        tag: ids.map((id) => `@${id}`),
+        annotation: ids.map((id) => ({ type: 'tag', description: id })),
+    };
 }
