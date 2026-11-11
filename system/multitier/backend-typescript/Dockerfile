@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.4
 
 # Stage 1: Production-only deps (runs in parallel with the build stage)
-FROM node:22-alpine AS deps-prod
+FROM node:25-alpine AS deps-prod
 WORKDIR /app
 COPY package*.json ./
 # npm retries transient registry failures (ECONNRESET, 5xx) on its own; raise
@@ -13,7 +13,7 @@ ENV npm_config_fetch_retries=5 \
 RUN --mount=type=cache,target=/root/.npm npm ci --omit=dev
 
 # Stage 2: Build the app (full deps including devDependencies)
-FROM node:22-alpine AS build
+FROM node:25-alpine AS build
 WORKDIR /app
 COPY package*.json ./
 # Raise npm's fetch-retry budget so transient registry blips don't fail the build.
@@ -25,7 +25,7 @@ COPY . .
 RUN npm run build
 
 # Stage 3: Run the app
-FROM node:22-alpine
+FROM node:25-alpine
 WORKDIR /app
 ENV NODE_ENV=production
 
