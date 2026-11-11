@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MyShop — Home (Bento)</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F5F5F4}
+a{color:#0A0A0A;text-decoration:none}a:hover{color:#C2410C}
+button,input,select{font:inherit}
+button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid #C2410C;outline-offset:2px}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #F5F5F4; color: #0A0A0A; font-family: Geist, system-ui, sans-serif; font-size: 15px; line-height: 1.5">
+
+<header>
+<div style="max-width: 1280px; margin: 0 auto; padding: 20px 24px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px">
+<a href="#" style="font-weight: 700; font-size: 20px; letter-spacing: -0.04em">myshop</a>
+<nav aria-label="Store navigation" style="display: flex; gap: 6px; background: #FFFFFF; border: 1px solid #E7E5E4; border-radius: 999px; padding: 4px; font-size: 14px; font-weight: 500">
+<a href="#" style="padding: 8px 16px; border-radius: 999px; background: #0A0A0A; color: #FFFFFF">Catalog</a>
+<a href="#" style="padding: 8px 16px; border-radius: 999px">Orders</a>
+<a href="#" style="padding: 8px 16px; border-radius: 999px">Account</a>
+</nav>
+<div style="display: flex; gap: 8px; align-items: center">
+<button type="button" style="border: 0; background: transparent; font-weight: 500; cursor: pointer; min-height: 44px; padding: 0 12px">Sign in</button>
+<a href="#" aria-label="Cart" style="display: inline-flex; align-items: center; gap: 8px; height: 44px; padding: 0 16px; border-radius: 999px; background: #FFFFFF; border: 1px solid #E7E5E4; font-weight: 600">Cart <span aria-label="Cart Item Count" style="font-family: 'Geist Mono', monospace; background: #0A0A0A; color: #FFFFFF; border-radius: 999px; padding: 0 8px; font-size: 12px">2</span></a>
+</div>
+</div>
+</header>
+
+<main style="max-width: 1280px; margin: 0 auto; padding: 24px 24px 80px">
+
+<section style="text-align: center; padding: 40px 0 48px">
+<h1 style="margin: 0 0 24px; font-size: 64px; line-height: 1; letter-spacing: -0.05em; font-weight: 600">Gear for people who build.</h1>
+<form role="search" style="max-width: 720px; margin: 0 auto; display: flex; align-items: center; gap: 12px; background: #FFFFFF; border: 1px solid #E7E5E4; border-radius: 20px; padding: 8px 8px 8px 20px; box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 12px 32px rgba(0,0,0,0.06)">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#57534E" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+<input type="search" aria-label="Search Products" placeholder="Search laptops, monitors, keyboards…" style="flex: 1; min-width: 0; border: 0; outline: none; background: transparent; padding: 12px 0; font-size: 17px; color: #0A0A0A">
+<button type="button" aria-label="Search" style="border: 0; border-radius: 14px; background: #0A0A0A; color: #FFFFFF; padding: 0 22px; font-weight: 600; cursor: pointer; min-height: 48px">Search</button>
+</form>
+<p style="margin: 16px 0 0; font-size: 13px; color: #57534E">Popular: <a href="#" style="color: #0A0A0A; text-decoration: underline">4K monitors</a> · <a href="#" style="color: #0A0A0A; text-decoration: underline">mechanical keyboards</a> · <a href="#" style="color: #0A0A0A; text-decoration: underline">USB-C hubs</a></p>
+</section>
+
+<section aria-label="Featured" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-rows: 210px; gap: 14px; margin-bottom: 64px">
+<a href="#" style="grid-column: span 2; grid-row: span 2; background: #0A0A0A; color: #FFFFFF; border-radius: 28px; padding: 36px; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden">
+<span style="font-family: 'Geist Mono', monospace; font-size: 12px; color: #A8A29E">NEW SEASON</span>
+<svg width="260" height="260" viewBox="0 0 24 24" fill="none" stroke="#44403C" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="position: absolute; right: -20px; top: 40px"><path d="M4 6h16v10H4z M2 19h20"></path></svg>
+<div style="position: relative">
+<h2 style="margin: 0 0 8px; font-size: 44px; line-height: 1; letter-spacing: -0.04em; font-weight: 600">New season laptops</h2>
+<p style="margin: 0 0 20px; color: #D6D3D1">Free shipping over $1,000</p>
+<span style="display: inline-flex; align-items: center; min-height: 44px; padding: 0 20px; border-radius: 999px; background: #FFFFFF; color: #0A0A0A; font-weight: 600">Shop laptops →</span>
+</div>
+</a>
+<a href="#" style="background: #FFFFFF; border-radius: 28px; padding: 24px; display: flex; flex-direction: column; justify-content: space-between">
+<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#0A0A0A" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 15v-3a8 8 0 0 1 16 0v3 M4 15h3v5H4z M17 15h3v5h-3z"></path></svg>
+<div><h3 style="margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.03em">Audio</h3><span style="font-size: 13px; color: #57534E">Earbuds, headphones</span></div>
+</a>
+<a href="#" style="background: #FFEDD5; border-radius: 28px; padding: 24px; display: flex; flex-direction: column; justify-content: space-between">
+<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#7C2D12" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h18v12H3z M8 20h8 M12 16v4"></path></svg>
+<div><h3 style="margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.03em; color: #431407">Displays</h3><span style="font-size: 13px; color: #7C2D12">Up to 4K, 144 Hz</span></div>
+</a>
+<article style="grid-column: span 2; background: #FFFFFF; border-radius: 28px; padding: 24px; display: flex; gap: 20px; align-items: center">
+<div style="flex: none; width: 150px; height: 150px; border-radius: 20px; background: #F5F5F4; display: flex; align-items: center; justify-content: center"><svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="#78716C" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Drift Mechanical Keyboard"><path d="M2 7h20v10H2z M6 11h.01 M10 11h.01 M14 11h.01 M18 11h.01 M7 14h10"></path></svg></div>
+<div style="flex: 1; min-width: 0">
+<span style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #C2410C">PICK OF THE WEEK</span>
+<h3 style="margin: 4px 0 2px; font-size: 22px; font-weight: 600; letter-spacing: -0.03em">Drift Mechanical Keyboard</h3>
+<p style="margin: 0 0 14px; font-size: 13px; color: #57534E">Kestrel · 75% · hot-swap</p>
+<div style="display: flex; align-items: center; gap: 14px"><span style="font-size: 20px; font-weight: 600">$129</span><button type="button" aria-label="Add to Cart" style="border: 0; border-radius: 999px; background: #0A0A0A; color: #FFFFFF; padding: 0 18px; min-height: 40px; font-weight: 600; cursor: pointer">Add to cart</button></div>
+</div>
+</article>
+</section>
+
+<section aria-label="Catalog">
+<div style="display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 16px">
+<h2 style="margin: 0; font-size: 32px; letter-spacing: -0.04em; font-weight: 600">All products <span aria-label="Product Count" style="font-family: 'Geist Mono', monospace; font-size: 14px; color: #57534E; font-weight: 400; letter-spacing: 0">8 items</span></h2>
+<div style="display: flex; gap: 8px; flex-wrap: wrap">
+<select aria-label="Brand Filter" style="border: 1px solid #E7E5E4; background: #FFFFFF; border-radius: 12px; padding: 0 12px; min-height: 40px; color: #0A0A0A"><option>All brands</option><option>Halcyon</option><option>Kestrel</option><option>Northwind</option><option>Volta</option></select>
+<select aria-label="Sort" style="border: 1px solid #E7E5E4; background: #FFFFFF; border-radius: 12px; padding: 0 12px; min-height: 40px; color: #0A0A0A"><option>Featured</option><option>Price: low to high</option><option>Price: high to low</option></select>
+</div>
+</div>
+<fieldset aria-label="Category Filter" style="border: 0; margin: 0 0 24px; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; align-items: center">
+<legend style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Category</legend>
+<sc-for list="{{categories}}" as="c" hint-placeholder-count="6">
+<div class="form-check" style="margin: 0; padding: 0">
+<label style="{{c.style}}"><input type="checkbox" checked="{{c.selected}}" style="position: absolute; opacity: 0; width: 1px; height: 1px">{{c.name}}</label>
+</div>
+</sc-for>
+<button type="button" aria-label="Clear Filters" style="border: 0; background: transparent; color: #C2410C; font-weight: 500; cursor: pointer; min-height: 40px; padding: 0 8px">Clear</button>
+</fieldset>
+<div aria-label="Product List" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px">
+<sc-for list="{{products}}" as="p" hint-placeholder-count="8">
+<article style="background: #FFFFFF; border-radius: 22px; padding: 14px; display: flex; gap: 14px; align-items: center">
+<a href="#" style="flex: none; width: 88px; height: 88px; border-radius: 16px; background: #F5F5F4; display: flex; align-items: center; justify-content: center"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#78716C" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="{{p.title}}"><path d="{{p.icon}}"></path></svg></a>
+<div style="flex: 1; min-width: 0">
+<h3 style="margin: 0; font-size: 15px; font-weight: 600; letter-spacing: -0.02em"><a href="#">{{p.title}}</a></h3>
+<p style="margin: 0 0 8px; font-size: 12px; color: #57534E">{{p.brand}}</p>
+<div style="display: flex; align-items: center; justify-content: space-between"><span style="font-weight: 600">{{p.price}}</span><button type="button" aria-label="Add to Cart" style="width: 36px; height: 36px; border: 1px solid #E7E5E4; background: #FFFFFF; border-radius: 999px; cursor: pointer; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0A0A0A" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14 M5 12h14"></path></svg></button></div>
+</div>
+</article>
+</sc-for>
+</div>
+</section>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1640}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const I = {
+      Laptops: 'M4 6h16v10H4z M2 19h20',
+      Audio: 'M4 15v-3a8 8 0 0 1 16 0v3 M4 15h3v5H4z M17 15h3v5h-3z',
+      Displays: 'M3 4h18v12H3z M8 20h8 M12 16v4',
+      Accessories: 'M2 7h20v10H2z M6 11h.01 M10 11h.01 M14 11h.01 M18 11h.01 M7 14h10',
+      Wearables: 'M7 7h10v10H7z M9 7l1-4h4l1 4 M9 17l1 4h4l1-4'
+    };
+    const rows = [
+      ['Arc 14 Laptop', 'Northwind', 'Laptops', '$1,299'],
+      ['Arc 16 Pro Laptop', 'Northwind', 'Laptops', '$1,899'],
+      ['Pulse Wireless Earbuds', 'Halcyon', 'Audio', '$149'],
+      ['Lumen 27 4K Monitor', 'Volta', 'Displays', '$449'],
+      ['Drift Mechanical Keyboard', 'Kestrel', 'Accessories', '$129'],
+      ['Orbit Smartwatch', 'Halcyon', 'Wearables', '$279'],
+      ['Studio Over-Ear Headphones', 'Halcyon', 'Audio', '$329'],
+      ['Beam USB-C Hub', 'Kestrel', 'Accessories', '$59']
+    ];
+    const products = rows.map(r => ({ title: r[0], brand: r[1], icon: I[r[2]], price: r[3] }));
+    const base = 'display: inline-flex; align-items: center; min-height: 40px; padding: 0 16px; border-radius: 999px; font-size: 14px; font-weight: 500; cursor: pointer; position: relative; ';
+    const categories = ['All', 'Laptops', 'Audio', 'Displays', 'Accessories', 'Wearables'].map((name, i) => ({
+      name, selected: i === 0,
+      style: base + (i === 0 ? 'background: #0A0A0A; color: #FFFFFF' : 'background: #FFFFFF; color: #0A0A0A; border: 1px solid #E7E5E4')
+    }));
+    return { products, categories };
+  }
+}
+</script>
+</body>
+</html>

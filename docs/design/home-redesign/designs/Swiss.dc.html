@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MyShop — Home (Swiss)</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FFFFFF}
+a{color:#000000;text-decoration:none}a:hover{text-decoration:underline}
+button,input,select{font:inherit}
+button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid #FF3B00;outline-offset:2px}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #FFFFFF; color: #000000; font-family: Archivo, system-ui, sans-serif; font-size: 15px; line-height: 1.45">
+
+<header style="border-bottom: 2px solid #000000">
+<div style="max-width: 1360px; margin: 0 auto; padding: 0 32px; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 20px; align-items: center; min-height: 64px">
+<a href="#" style="grid-column: span 3; font-weight: 900; font-stretch: 125%; font-size: 22px; letter-spacing: -0.02em">MYSHOP</a>
+<nav aria-label="Store navigation" style="grid-column: span 4; display: flex; gap: 28px; font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em">
+<a href="#" style="text-decoration: underline; text-underline-offset: 6px; text-decoration-thickness: 2px">Catalog</a>
+<a href="#">Orders</a>
+<a href="#">Account</a>
+</nav>
+<form role="search" style="grid-column: span 3; display: flex; align-items: center; border-bottom: 2px solid #000000">
+<input type="search" aria-label="Search Products" placeholder="SEARCH" style="flex: 1; min-width: 0; border: 0; outline: none; background: transparent; padding: 8px 0; font-weight: 600; font-size: 13px; letter-spacing: 0.04em; color: #000000">
+<button type="button" aria-label="Search" style="border: 0; background: transparent; cursor: pointer; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2.4" stroke-linecap="square" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg></button>
+</form>
+<div style="grid-column: span 2; justify-self: end; display: flex; gap: 16px; align-items: center; font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em">
+<button type="button" style="border: 0; background: transparent; cursor: pointer; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; font-size: 13px; min-height: 44px; padding: 0">Sign in</button>
+<a href="#" aria-label="Cart" style="display: inline-flex; align-items: center; min-height: 44px">Cart (<span aria-label="Cart Item Count">2</span>)</a>
+</div>
+</div>
+</header>
+
+<main style="max-width: 1360px; margin: 0 auto; padding: 0 32px 96px">
+
+<section style="padding: 40px 0 0">
+<h1 style="margin: 0; font-weight: 900; font-stretch: 125%; font-size: 156px; line-height: 0.86; letter-spacing: -0.045em; text-transform: uppercase">New season<br>laptops</h1>
+<div style="display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 20px; margin-top: 40px; border-top: 2px solid #000000; padding-top: 20px; align-items: start">
+<p style="grid-column: span 2; margin: 0; font-weight: 700; font-size: 13px">01 — Feature</p>
+<p style="grid-column: span 4; margin: 0; font-size: 22px; line-height: 1.25; font-weight: 500">Lighter, quieter machines for long builds. Free shipping over $1,000.</p>
+<div style="grid-column: span 6; background: #FF3B00; aspect-ratio: 16 / 9; display: flex; flex-direction: column; justify-content: space-between; padding: 24px; box-sizing: border-box">
+<svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="0.9" stroke-linecap="square" aria-hidden="true" style="align-self: flex-end"><path d="M4 6h16v10H4z M2 19h20"></path></svg>
+<a href="#" style="align-self: flex-start; display: inline-flex; align-items: center; min-height: 48px; padding: 0 22px; background: #000000; color: #FFFFFF; font-weight: 700; text-transform: uppercase; font-size: 13px; letter-spacing: 0.06em">Shop laptops →</a>
+</div>
+</div>
+</section>
+
+<section aria-label="Catalog" style="margin-top: 96px">
+<div style="display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 20px; border-top: 2px solid #000000; padding-top: 20px; margin-bottom: 32px; align-items: end">
+<p style="grid-column: span 2; margin: 0; font-weight: 700; font-size: 13px">02 — Index</p>
+<h2 style="grid-column: span 6; margin: 0; font-weight: 900; font-stretch: 125%; font-size: 56px; line-height: 0.9; letter-spacing: -0.04em; text-transform: uppercase">All products <span aria-label="Product Count" style="font-weight: 500; font-stretch: 100%; font-size: 20px; letter-spacing: 0; vertical-align: top">(08)</span></h2>
+<div style="grid-column: span 4; display: flex; gap: 16px; justify-content: flex-end; flex-wrap: wrap">
+<select aria-label="Brand Filter" style="border: 0; border-bottom: 2px solid #000000; background: transparent; padding: 6px 0; font-weight: 600; font-size: 13px; text-transform: uppercase; color: #000000; min-height: 40px"><option>All brands</option><option>Halcyon</option><option>Kestrel</option><option>Northwind</option><option>Volta</option></select>
+<select aria-label="Sort" style="border: 0; border-bottom: 2px solid #000000; background: transparent; padding: 6px 0; font-weight: 600; font-size: 13px; text-transform: uppercase; color: #000000; min-height: 40px"><option>Featured</option><option>Price ↑</option><option>Price ↓</option></select>
+</div>
+</div>
+
+<fieldset aria-label="Category Filter" style="border: 0; margin: 0 0 40px; padding: 0; display: flex; flex-wrap: wrap; gap: 0">
+<legend style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Category</legend>
+<sc-for list="{{categories}}" as="c" hint-placeholder-count="6">
+<div class="form-check" style="margin: 0; padding: 0">
+<label style="{{c.style}}"><input type="checkbox" checked="{{c.selected}}" style="position: absolute; opacity: 0; width: 1px; height: 1px">{{c.name}}</label>
+</div>
+</sc-for>
+<button type="button" aria-label="Clear Filters" style="border: 2px solid #000000; margin-left: -2px; background: #FFFFFF; padding: 0 18px; min-height: 48px; font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; cursor: pointer">Clear ×</button>
+</fieldset>
+
+<div aria-label="Product List" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 48px 20px">
+<sc-for list="{{products}}" as="p" hint-placeholder-count="8">
+<article style="display: flex; flex-direction: column; gap: 12px; border-top: 2px solid #000000; padding-top: 12px">
+<div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 12px"><span>{{p.no}}</span><span style="text-transform: uppercase">{{p.brand}}</span></div>
+<a href="#" style="aspect-ratio: 1; background: #F2F2F2; display: flex; align-items: center; justify-content: center"><svg width="96" height="96" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="0.8" stroke-linecap="square" role="img" aria-label="{{p.title}}"><path d="{{p.icon}}"></path></svg></a>
+<h3 style="margin: 0; font-weight: 800; font-stretch: 112%; font-size: 20px; line-height: 1.05; letter-spacing: -0.02em; text-transform: uppercase"><a href="#">{{p.title}}</a></h3>
+<div style="display: flex; justify-content: space-between; align-items: center">
+<span style="font-weight: 600; font-size: 18px">{{p.price}}</span>
+<button type="button" aria-label="Add to Cart" style="border: 2px solid #000000; background: #FFFFFF; padding: 0 14px; min-height: 40px; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; cursor: pointer">+ Add</button>
+</div>
+</article>
+</sc-for>
+</div>
+</section>
+</main>
+
+<footer style="background: #000000; color: #FFFFFF">
+<div style="max-width: 1360px; margin: 0 auto; padding: 48px 32px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 24px">
+<span style="font-weight: 900; font-stretch: 125%; font-size: 64px; line-height: 0.9; letter-spacing: -0.04em">MYSHOP</span>
+<span style="font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em">Free shipping over $1,000 · 30-day returns</span>
+</div>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const I = {
+      Laptops: 'M4 6h16v10H4z M2 19h20',
+      Audio: 'M4 15v-3a8 8 0 0 1 16 0v3 M4 15h3v5H4z M17 15h3v5h-3z',
+      Displays: 'M3 4h18v12H3z M8 20h8 M12 16v4',
+      Accessories: 'M2 7h20v10H2z M6 11h.01 M10 11h.01 M14 11h.01 M18 11h.01 M7 14h10',
+      Wearables: 'M7 7h10v10H7z M9 7l1-4h4l1 4 M9 17l1 4h4l1-4'
+    };
+    const rows = [
+      ['Arc 14 Laptop', 'Northwind', 'Laptops', '$1,299'],
+      ['Arc 16 Pro Laptop', 'Northwind', 'Laptops', '$1,899'],
+      ['Pulse Wireless Earbuds', 'Halcyon', 'Audio', '$149'],
+      ['Lumen 27 4K Monitor', 'Volta', 'Displays', '$449'],
+      ['Drift Mechanical Keyboard', 'Kestrel', 'Accessories', '$129'],
+      ['Orbit Smartwatch', 'Halcyon', 'Wearables', '$279'],
+      ['Studio Over-Ear Headphones', 'Halcyon', 'Audio', '$329'],
+      ['Beam USB-C Hub', 'Kestrel', 'Accessories', '$59']
+    ];
+    const products = rows.map((r, i) => ({ title: r[0], brand: r[1], icon: I[r[2]], price: r[3], no: String(i + 1).padStart(2, '0') }));
+    const base = 'display: inline-flex; align-items: center; min-height: 48px; padding: 0 18px; margin-left: -2px; border: 2px solid #000000; font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; cursor: pointer; position: relative; ';
+    const categories = ['All', 'Laptops', 'Audio', 'Displays', 'Accessories', 'Wearables'].map((name, i) => ({
+      name, selected: i === 0,
+      style: base + (i === 0 ? 'background: #000000; color: #FFFFFF' : 'background: #FFFFFF; color: #000000')
+    }));
+    return { products, categories };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MyShop — Home (Split)</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FFFFFF}
+a{color:#111114;text-decoration:none}a:hover{color:#5B3DF5}
+button,input,select{font:inherit}
+button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid #5B3DF5;outline-offset:2px}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #FFFFFF; color: #111114; font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 14px; line-height: 1.5; display: flex; flex-direction: column">
+
+<header style="height: 56px; border-bottom: 1px solid #E6E6EA; display: flex; align-items: center; gap: 20px; padding: 0 20px">
+<a href="#" style="display: inline-flex; align-items: center; gap: 8px; font-weight: 600; font-size: 15px"><span aria-hidden="true" style="width: 20px; height: 20px; border-radius: 6px; background: #5B3DF5; display: inline-block"></span>myshop</a>
+<form role="search" style="flex: 1; max-width: 560px; margin: 0 auto; display: flex; align-items: center; gap: 8px; background: #F4F4F6; border-radius: 10px; padding: 0 6px 0 12px; height: 38px">
+<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5E5E6B" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+<input type="search" aria-label="Search Products" placeholder="Search products" style="flex: 1; min-width: 0; border: 0; outline: none; background: transparent; color: #111114">
+<button type="button" aria-label="Search" style="border: 1px solid #DCDCE2; background: #FFFFFF; border-radius: 7px; padding: 0 10px; height: 28px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #5E5E6B; cursor: pointer">Ctrl K</button>
+</form>
+<button type="button" style="border: 0; background: transparent; cursor: pointer; font-weight: 500; min-height: 40px">Sign in</button>
+<a href="#" aria-label="Cart" style="display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px; border-radius: 9px; background: #111114; color: #FFFFFF; font-weight: 500">Cart <span aria-label="Cart Item Count" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #C9C2FF">{{cartCount}}</span></a>
+</header>
+
+<div style="flex: 1; display: flex; flex-wrap: wrap; min-height: 0">
+
+<aside style="flex: 1 1 220px; max-width: 240px; border-right: 1px solid #E6E6EA; background: #FAFAFB; padding: 16px 12px; display: flex; flex-direction: column; gap: 22px; box-sizing: border-box">
+<nav aria-label="Store navigation" style="display: flex; flex-direction: column; gap: 2px">
+<a href="#" style="display: flex; align-items: center; gap: 10px; padding: 0 10px; height: 34px; border-radius: 8px; background: #EEEAFE; color: #3A22C9; font-weight: 500"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#3A22C9" stroke-width="2" aria-hidden="true"><path d="M4 4h7v7H4z M13 4h7v7h-7z M4 13h7v7H4z M13 13h7v7h-7z"></path></svg>Catalog</a>
+<a href="#" style="display: flex; align-items: center; gap: 10px; padding: 0 10px; height: 34px; border-radius: 8px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5E5E6B" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 4h14v16H5z M9 9h6 M9 13h6"></path></svg>Orders</a>
+<a href="#" style="display: flex; align-items: center; gap: 10px; padding: 0 10px; height: 34px; border-radius: 8px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5E5E6B" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>Account</a>
+</nav>
+<fieldset aria-label="Category Filter" style="border: 0; margin: 0; padding: 0">
+<legend style="font-size: 11px; font-weight: 600; color: #5E5E6B; text-transform: uppercase; letter-spacing: 0.06em; padding: 0 10px; margin-bottom: 6px">Category</legend>
+<sc-for list="{{categories}}" as="c" hint-placeholder-count="5">
+<div class="form-check" style="margin: 0; padding: 0">
+<label style="display: flex; align-items: center; justify-content: space-between; height: 32px; padding: 0 10px; border-radius: 8px; cursor: pointer"><span style="display: flex; align-items: center; gap: 8px"><input type="checkbox" checked="{{c.selected}}" style="width: 15px; height: 15px; margin: 0; accent-color: #5B3DF5">{{c.name}}</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #5E5E6B">{{c.n}}</span></label>
+</div>
+</sc-for>
+</fieldset>
+<fieldset aria-label="Brand Filter" style="border: 0; margin: 0; padding: 0">
+<legend style="font-size: 11px; font-weight: 600; color: #5E5E6B; text-transform: uppercase; letter-spacing: 0.06em; padding: 0 10px; margin-bottom: 6px">Brand</legend>
+<sc-for list="{{brands}}" as="b" hint-placeholder-count="4">
+<div class="form-check" style="margin: 0; padding: 0">
+<label style="display: flex; align-items: center; gap: 8px; height: 32px; padding: 0 10px; border-radius: 8px; cursor: pointer"><input type="checkbox" style="width: 15px; height: 15px; margin: 0; accent-color: #5B3DF5">{{b}}</label>
+</div>
+</sc-for>
+</fieldset>
+<button type="button" aria-label="Clear Filters" style="align-self: flex-start; margin-left: 10px; border: 0; background: transparent; color: #5B3DF5; font-weight: 500; padding: 0; cursor: pointer; min-height: 32px">Clear filters</button>
+<div style="margin-top: auto; border: 1px solid #E6E6EA; background: #FFFFFF; border-radius: 12px; padding: 14px">
+<p style="margin: 0 0 2px; font-weight: 600">New season laptops</p>
+<p style="margin: 0 0 10px; font-size: 12px; color: #5E5E6B">Free shipping over $1,000</p>
+<a href="#" style="font-size: 13px; font-weight: 500; color: #5B3DF5">Shop laptops →</a>
+</div>
+</aside>
+
+<section aria-label="Catalog" style="flex: 999 1 480px; min-width: 0; display: flex; flex-direction: column">
+<div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 24px; border-bottom: 1px solid #E6E6EA">
+<div style="display: flex; align-items: baseline; gap: 10px">
+<h1 style="margin: 0; font-size: 20px; font-weight: 600; letter-spacing: -0.01em">All products</h1>
+<span aria-label="Product Count" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #5E5E6B">8 products</span>
+</div>
+<select aria-label="Sort" style="border: 1px solid #DCDCE2; background: #FFFFFF; border-radius: 8px; padding: 0 10px; height: 34px; color: #111114"><option>Sort: Featured</option><option>Price: low to high</option><option>Price: high to low</option></select>
+</div>
+<div style="overflow-x: auto">
+<div style="min-width: 560px">
+<div style="display: grid; grid-template-columns: 56px minmax(0, 2fr) minmax(0, 1.6fr) 96px; gap: 16px; padding: 8px 24px; font-size: 11px; font-weight: 600; color: #5E5E6B; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid #E6E6EA">
+<span></span><span>Product</span><span>Specs</span><span style="text-align: right">Price</span>
+</div>
+<div aria-label="Product List" role="list">
+<sc-for list="{{products}}" as="p" hint-placeholder-count="8">
+<div role="listitem" style="border-bottom: 1px solid #F0F0F3">
+<button type="button" onClick="{{p.pick}}" aria-pressed="{{p.selected}}" style="{{p.rowStyle}}">
+<span style="width: 56px; height: 44px; border-radius: 8px; background: #F4F4F6; display: flex; align-items: center; justify-content: center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6E6E7A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{p.icon}}"></path></svg></span>
+<span style="min-width: 0"><span style="display: block; font-weight: 500">{{p.title}}</span><span style="display: block; font-size: 12px; color: #5E5E6B">{{p.brand}}</span></span>
+<span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #3E3E48">{{p.spec}}</span>
+<span style="text-align: right; font-family: 'IBM Plex Mono', monospace; font-weight: 500">{{p.price}}</span>
+</button>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+</section>
+
+<aside aria-label="Product preview" style="flex: 1 1 340px; max-width: 400px; border-left: 1px solid #E6E6EA; padding: 24px; display: flex; flex-direction: column; gap: 18px; box-sizing: border-box">
+<div style="aspect-ratio: 4 / 3; border-radius: 14px; background: #F4F4F6; display: flex; align-items: center; justify-content: center"><svg width="110" height="110" viewBox="0 0 24 24" fill="none" stroke="#6E6E7A" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="{{sel.title}}"><path d="{{sel.icon}}"></path></svg></div>
+<div>
+<p style="margin: 0; font-size: 12px; color: #5E5E6B">{{sel.brand}} · <span style="font-family: 'IBM Plex Mono', monospace">{{sel.sku}}</span></p>
+<h2 style="margin: 2px 0 0; font-size: 24px; font-weight: 600; letter-spacing: -0.02em">{{sel.title}}</h2>
+</div>
+<dl style="margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 16px; font-size: 13px; padding: 14px 0; border-top: 1px solid #E6E6EA; border-bottom: 1px solid #E6E6EA">
+<dt style="color: #5E5E6B">Specs</dt><dd style="margin: 0; font-family: 'IBM Plex Mono', monospace; font-size: 12px">{{sel.spec}}</dd>
+<dt style="color: #5E5E6B">Shipping</dt><dd style="margin: 0">Free over $1,000</dd>
+<dt style="color: #5E5E6B">Returns</dt><dd style="margin: 0">30 days</dd>
+</dl>
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+<span style="font-family: 'IBM Plex Mono', monospace; font-size: 24px; font-weight: 500">{{sel.price}}</span>
+<button type="button" aria-label="Add to Cart" onClick="{{add}}" style="border: 0; background: #5B3DF5; color: #FFFFFF; border-radius: 10px; padding: 0 22px; min-height: 44px; font-weight: 600; cursor: pointer">Add to cart</button>
+</div>
+<a href="#" style="font-size: 13px; color: #5B3DF5; font-weight: 500">View full details →</a>
+</aside>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { sel: 0, cart: 2 }; }
+  renderVals() {
+    const I = {
+      Laptops: 'M4 6h16v10H4z M2 19h20',
+      Audio: 'M4 15v-3a8 8 0 0 1 16 0v3 M4 15h3v5H4z M17 15h3v5h-3z',
+      Displays: 'M3 4h18v12H3z M8 20h8 M12 16v4',
+      Accessories: 'M2 7h20v10H2z M6 11h.01 M10 11h.01 M14 11h.01 M18 11h.01 M7 14h10',
+      Wearables: 'M7 7h10v10H7z M9 7l1-4h4l1 4 M9 17l1 4h4l1-4'
+    };
+    const rows = [
+      ['Arc 14 Laptop', 'Northwind', 'Laptops', '$1,299.00', 'NW-ARC14', '14in · 16 GB · 512 GB'],
+      ['Arc 16 Pro Laptop', 'Northwind', 'Laptops', '$1,899.00', 'NW-ARC16P', '16in · 32 GB · 1 TB'],
+      ['Pulse Wireless Earbuds', 'Halcyon', 'Audio', '$149.00', 'HC-PULSE', 'ANC · BT 5.3'],
+      ['Lumen 27 4K Monitor', 'Volta', 'Displays', '$449.00', 'VT-LUM27', '27in · 4K · 144 Hz'],
+      ['Drift Mechanical Keyboard', 'Kestrel', 'Accessories', '$129.00', 'KS-DRIFT', '75% · hot-swap'],
+      ['Orbit Smartwatch', 'Halcyon', 'Wearables', '$279.00', 'HC-ORBIT', 'AMOLED · GPS'],
+      ['Studio Over-Ear Headphones', 'Halcyon', 'Audio', '$329.00', 'HC-STUDIO', 'ANC · 40 mm'],
+      ['Beam USB-C Hub', 'Kestrel', 'Accessories', '$59.00', 'KS-BEAM', '7-in-1 · 100 W PD']
+    ];
+    const base = 'width: 100%; display: grid; grid-template-columns: 56px minmax(0, 2fr) minmax(0, 1.6fr) 96px; gap: 16px; align-items: center; padding: 10px 24px; border: 0; text-align: left; cursor: pointer; color: #111114; ';
+    const products = rows.map((r, i) => ({
+      title: r[0], brand: r[1], icon: I[r[2]], price: r[3], sku: r[4], spec: r[5],
+      selected: this.state.sel === i,
+      rowStyle: base + (this.state.sel === i ? 'background: #F3F0FF; box-shadow: inset 3px 0 0 #5B3DF5' : 'background: #FFFFFF'),
+      pick: () => this.setState({ sel: i })
+    }));
+    const counts = { Laptops: 2, Audio: 2, Displays: 1, Accessories: 2, Wearables: 1 };
+    const categories = Object.keys(I).map(name => ({ name, n: counts[name], selected: false }));
+    return {
+      products, categories, sel: products[this.state.sel],
+      brands: ['Halcyon', 'Kestrel', 'Northwind', 'Volta'],
+      cartCount: this.state.cart,
+      add: () => this.setState({ cart: this.state.cart + 1 })
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MyShop — Home (Terminal)</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0B0D10}
+a{color:#E8EAED;text-decoration:none}a:hover{color:#B6F24A}
+button,input,select{font:inherit}
+button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid #B6F24A;outline-offset:2px}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #0B0D10; color: #E8EAED; font-family: Inter, system-ui, sans-serif; font-size: 14px; line-height: 1.5">
+
+<header style="border-bottom: 1px solid #22262E">
+<div style="max-width: 1360px; margin: 0 auto; padding: 12px 24px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 28px">
+<a href="#" style="font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 17px">myshop<span style="color: #B6F24A">_</span></a>
+<nav aria-label="Store navigation" style="display: flex; gap: 20px; font-size: 13px; font-weight: 500">
+<a href="#">Catalog</a>
+<a href="#" style="color: #9BA1AB">Orders</a>
+<a href="#" style="color: #9BA1AB">Account</a>
+</nav>
+<form role="search" style="flex: 1 1 320px; display: flex; align-items: center; gap: 10px; background: #12151A; border: 1px solid #22262E; border-radius: 10px; padding: 3px 3px 3px 12px">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9BA1AB" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+<input type="search" aria-label="Search Products" placeholder="Search by name, SKU or spec" style="flex: 1; min-width: 0; border: 0; outline: none; background: transparent; padding: 8px 0; color: #E8EAED">
+<button type="button" aria-label="Search" style="border: 0; border-radius: 8px; background: #22262E; color: #E8EAED; padding: 0 14px; font-weight: 600; cursor: pointer; min-height: 36px">Search</button>
+</form>
+<div style="display: flex; align-items: center; gap: 8px">
+<button type="button" style="border: 1px solid #2E333C; background: transparent; color: #E8EAED; border-radius: 10px; padding: 0 14px; cursor: pointer; min-height: 40px">Sign in</button>
+<a href="#" aria-label="Cart" style="display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 12px; border-radius: 10px; background: #B6F24A; color: #0B0D10; font-weight: 700">Cart <span aria-label="Cart Item Count" style="font-family: 'JetBrains Mono', monospace">2</span></a>
+</div>
+</div>
+</header>
+
+<div style="border-bottom: 1px solid #22262E; background: #0F1216">
+<div style="max-width: 1360px; margin: 0 auto; padding: 28px 24px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px">
+<div>
+<p style="margin: 0 0 6px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #B6F24A">// release notes: autumn</p>
+<h1 style="margin: 0; font-size: 36px; letter-spacing: -0.03em; font-weight: 700">New season laptops</h1>
+</div>
+<div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #9BA1AB">Free shipping over $1,000</span>
+<a href="#" style="display: inline-flex; align-items: center; min-height: 40px; padding: 0 16px; border-radius: 10px; border: 1px solid #B6F24A; color: #B6F24A; font-weight: 600">Shop laptops →</a>
+</div>
+</div>
+</div>
+
+<main style="max-width: 1360px; margin: 0 auto; padding: 24px 24px 64px; display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start">
+<aside style="flex: 1 1 220px; max-width: 240px; display: flex; flex-direction: column; gap: 24px">
+<fieldset aria-label="Category Filter" style="border: 0; margin: 0; padding: 0">
+<legend style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #9BA1AB; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px">category</legend>
+<sc-for list="{{categories}}" as="c" hint-placeholder-count="5">
+<div class="form-check" style="margin: 0; padding: 0">
+<label style="{{c.style}}"><span style="display: flex; align-items: center; gap: 10px"><input type="checkbox" checked="{{c.selected}}" style="width: 16px; height: 16px; margin: 0; accent-color: #B6F24A">{{c.name}}</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #9BA1AB">{{c.n}}</span></label>
+</div>
+</sc-for>
+</fieldset>
+<fieldset aria-label="Brand Filter" style="border: 0; margin: 0; padding: 0">
+<legend style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #9BA1AB; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px">brand</legend>
+<div style="display: flex; flex-wrap: wrap; gap: 6px">
+<sc-for list="{{brands}}" as="b" hint-placeholder-count="4">
+<div class="form-check" style="margin: 0; padding: 0">
+<label style="display: inline-flex; align-items: center; min-height: 32px; padding: 0 10px; border: 1px solid #2E333C; border-radius: 8px; font-size: 12px; cursor: pointer; position: relative"><input type="checkbox" style="position: absolute; opacity: 0; width: 1px; height: 1px">{{b}}</label>
+</div>
+</sc-for>
+</div>
+</fieldset>
+<button type="button" aria-label="Clear Filters" style="align-self: flex-start; border: 0; background: transparent; color: #9BA1AB; padding: 0; cursor: pointer; min-height: 36px; font-family: 'JetBrains Mono', monospace; font-size: 12px; text-decoration: underline">clear filters</button>
+</aside>
+
+<section aria-label="Catalog" style="flex: 999 1 640px; min-width: 0">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; padding-bottom: 14px; margin-bottom: 16px; border-bottom: 1px solid #22262E">
+<p aria-label="Product Count" style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #9BA1AB"><span style="color: #E8EAED">8</span> results</p>
+<select aria-label="Sort" style="border: 1px solid #2E333C; background: #12151A; color: #E8EAED; border-radius: 8px; padding: 0 10px; min-height: 36px; font-size: 13px"><option>Sort: Featured</option><option>Price: low to high</option><option>Price: high to low</option></select>
+</div>
+<div aria-label="Product List" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px">
+<sc-for list="{{products}}" as="p" hint-placeholder-count="8">
+<article style="background: #12151A; border: 1px solid #22262E; border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 12px">
+<a href="#" style="aspect-ratio: 16 / 10; background: #181C22; border-radius: 10px; display: flex; align-items: center; justify-content: center"><svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="{{p.title}}"><path d="{{p.icon}}"></path></svg></a>
+<div style="display: flex; justify-content: space-between; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #9BA1AB"><span>{{p.sku}}</span><span>{{p.brand}}</span></div>
+<h2 style="margin: 0; font-size: 15px; font-weight: 600"><a href="#">{{p.title}}</a></h2>
+<p style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #C3C7CE">{{p.spec}}</p>
+<div style="display: flex; align-items: center; justify-content: space-between; margin-top: auto; padding-top: 10px; border-top: 1px solid #22262E">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 600">{{p.price}}</span>
+<button type="button" aria-label="Add to Cart" style="border: 0; background: #E8EAED; color: #0B0D10; border-radius: 8px; padding: 0 12px; font-size: 12px; font-weight: 700; cursor: pointer; min-height: 36px">Add to cart</button>
+</div>
+</article>
+</sc-for>
+</div>
+</section>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1480}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const I = {
+      Laptops: 'M4 6h16v10H4z M2 19h20',
+      Audio: 'M4 15v-3a8 8 0 0 1 16 0v3 M4 15h3v5H4z M17 15h3v5h-3z',
+      Displays: 'M3 4h18v12H3z M8 20h8 M12 16v4',
+      Accessories: 'M2 7h20v10H2z M6 11h.01 M10 11h.01 M14 11h.01 M18 11h.01 M7 14h10',
+      Wearables: 'M7 7h10v10H7z M9 7l1-4h4l1 4 M9 17l1 4h4l1-4'
+    };
+    const rows = [
+      ['Arc 14 Laptop', 'Northwind', 'Laptops', '$1,299.00', 'NW-ARC14', '14.0in · 16 GB · 512 GB'],
+      ['Arc 16 Pro Laptop', 'Northwind', 'Laptops', '$1,899.00', 'NW-ARC16P', '16.0in · 32 GB · 1 TB'],
+      ['Pulse Wireless Earbuds', 'Halcyon', 'Audio', '$149.00', 'HC-PULSE', 'ANC · BT 5.3 · USB-C'],
+      ['Lumen 27 4K Monitor', 'Volta', 'Displays', '$449.00', 'VT-LUM27', '27in · 3840x2160 · 144 Hz'],
+      ['Drift Mechanical Keyboard', 'Kestrel', 'Accessories', '$129.00', 'KS-DRIFT', '75% · hot-swap · USB-C'],
+      ['Orbit Smartwatch', 'Halcyon', 'Wearables', '$279.00', 'HC-ORBIT', '1.4in AMOLED · GPS'],
+      ['Studio Over-Ear Headphones', 'Halcyon', 'Audio', '$329.00', 'HC-STUDIO', 'ANC · 40 mm drivers'],
+      ['Beam USB-C Hub', 'Kestrel', 'Accessories', '$59.00', 'KS-BEAM', '7-in-1 · 100 W PD · HDMI']
+    ];
+    const products = rows.map(r => ({ title: r[0], brand: r[1], icon: I[r[2]], price: r[3], sku: r[4], spec: r[5] }));
+    const counts = { Laptops: 2, Audio: 2, Displays: 1, Accessories: 2, Wearables: 1 };
+    const base = 'display: flex; align-items: center; justify-content: space-between; min-height: 36px; padding: 0 10px; border-radius: 8px; font-size: 13px; cursor: pointer; ';
+    const categories = Object.keys(I).map((name, i) => ({
+      name, n: counts[name], selected: i === 0,
+      style: base + (i === 0 ? 'background: #181C22; color: #E8EAED' : 'background: transparent; color: #C3C7CE')
+    }));
+    return { products, categories, brands: ['Halcyon', 'Kestrel', 'Northwind', 'Volta'] };
+  }
+}
+</script>
+</body>
+</html>
