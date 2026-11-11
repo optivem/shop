@@ -1,0 +1,93 @@
+# Dependabot version updates. Free and built into GitHub, so it works for anyone who clones
+# or scaffolds this repo with no app to install. Every ecosystem gets one grouped PR per
+# directory for minor + patch bumps; major bumps arrive as individual PRs, since they are the
+# ones that need a human to read the changelog.
+#
+# The directory lists name every project that has a manifest of that ecosystem. Keep them in
+# sync when a project is added, moved or removed under system/, system-test/ or external-systems/.
+#
+# Not covered on purpose: the docker/**/docker-compose*.yml files. Their image pins are repeated
+# across 24 files that compose-drift.yml keeps identical, and Dependabot would bump them one
+# directory at a time.
+version: 2
+
+updates:
+  - package-ecosystem: gradle
+    directories:
+      - /system/monolith/java
+      - /system/multitier/backend-java
+      - /system/multitier/backend-clean-java
+      - /system-test/java
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      gradle-minor-patch:
+        patterns: ["*"]
+        update-types: [minor, patch]
+
+  - package-ecosystem: nuget
+    directories:
+      - /system/monolith/dotnet
+      - /system/multitier/backend-dotnet
+      - /system-test/dotnet
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      nuget-minor-patch:
+        patterns: ["*"]
+        update-types: [minor, patch]
+
+  - package-ecosystem: npm
+    directories:
+      - /system/monolith/typescript
+      - /system/multitier/backend-typescript
+      - /system/multitier/frontend-react
+      - /system-test/typescript
+      - /external-systems/simulators
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      npm-minor-patch:
+        patterns: ["*"]
+        update-types: [minor, patch]
+
+  - package-ecosystem: docker
+    directories:
+      - /system/db
+      - /system/monolith/dotnet
+      - /system/monolith/java
+      - /system/monolith/typescript
+      - /system/multitier/backend-dotnet
+      - /system/multitier/backend-java
+      - /system/multitier/backend-typescript
+      - /system/multitier/frontend-react
+      - /external-systems/simulators
+      - /external-systems/stubs
+      - /docker/keycloak
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      docker-minor-patch:
+        patterns: ["*"]
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directories:
+      - /
+      - /.github/actions/*
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      github-actions-minor-patch:
+        patterns: ["*"]
+        update-types: [minor, patch]

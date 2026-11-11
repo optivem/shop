@@ -87,12 +87,12 @@ A change moves through commit stage (compile, lint, unit, component, Sonar, imag
 | Idempotency | [IdempotentOrderService.java](../system/monolith/java/src/main/java/com/mycompany/myshop/core/services/IdempotentOrderService.java), [test](../system/monolith/java/src/test/java/com/mycompany/myshop/core/services/IdempotentOrderServiceTest.java), [migration](../system/db/migrations/V20261103180000__add_idempotency_keys.sql) | Idempotency keys on order placement; .NET in [IdempotencyKey.cs](../system/monolith/dotnet/Core/Entities/IdempotencyKey.cs) |
 | Docker Compose | [docker/](../docker/), e.g. [docker/java/monolith/](../docker/java/monolith/) | Local and pipeline stacks, each in stub and real ERP modes |
 | Production deploy | [shop.optivem.com](https://shop.optivem.com), [monolith-java-prod-stage.yml](../.github/workflows/monolith-java-prod-stage.yml) | Released via the meta-release stage |
+| Supply-chain security | [dependabot.yml](../.github/dependabot.yml), [codeql.yml](../.github/workflows/codeql.yml), [supply-chain.yml](../.github/workflows/supply-chain.yml) | Grouped Dependabot updates; CodeQL for Java, C#, TS and Actions; Trivy scan + CycloneDX SBOM per image (report-only, free on public GitHub) |
 
 ## Coming next
 
 Planned additions, not yet in the repo. Each moves into the skills map when it lands.
 
-- **Supply-chain security** (planned): Dependabot with grouped updates, CodeQL, Trivy image scan, SBOM on releases.
 - **Observability** (planned): OpenTelemetry tracing frontend → backend → ERP, structured logs with trace IDs, opt-in `grafana/otel-lgtm` Compose profile.
 - **Resilience** (planned): timeouts, retries and circuit breakers on ERP/Clock calls, proven by an acceptance test against a slow or failing stub.
 - **Performance** (planned): k6 load test for browse + place order, opt-in workflow reporting p95/p99.

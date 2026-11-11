@@ -41,15 +41,15 @@ CI/CD meta-stages (commit → acceptance → RC → release), ATDD with DSL/driv
 
 ## ▶ Next executable step (resume here)
 
-Step 4: supply-chain security. Add `.github/dependabot.yml` (grouped updates per ecosystem across the real gradle/nuget/npm/docker/github-actions directories), a `codeql.yml` workflow (java-kotlin, csharp, javascript-typescript, `build-mode: none`), and a standalone `supply-chain.yml` workflow that builds each system image locally and runs a Trivy scan (SARIF, report-only) plus a CycloneDX SBOM (Syft). Attach the SBOMs to releases only if the release workflow can be extended safely. Gate: the YAML validates (actionlint if available). After that, move the supply-chain row from "Coming next" into the `docs/tour.md` skills map (Step 8). **Milestone order:** Step 4 completes the "interview-ready" milestone; then Steps 2 → 3 → 5 → 6 → 7.
+The interview-ready milestone (Steps 1 + 4) is done. Next is Step 2, observability: add OpenTelemetry instrumentation to every backend (Java monolith + multitier + clean-java, .NET, TS) and the React frontend, emit structured JSON logs carrying trace IDs, and add an opt-in `observability` Docker Compose profile with one `grafana/otel-lgtm` container, kept identical across the compose files that `compose-drift.yml` checks. Gate: `./compile-all.sh` is green and `gh optivem system-test run --sample` passes for each language (**ask the user before running system tests locally**). Then add an Observability row to the `docs/tour.md` skills map (Step 8).
 
 ## Steps
 
-Execution order: **4** (finishes the interview-ready milestone; Step 1 is done), then 2 → 3 → 5 → 6 → 7. Step 8 runs alongside each step.
+Execution order: 2 → 3 → 5 → 6 → 7 (the interview-ready milestone, Steps 1 + 4, is done). Step 8 runs alongside each step.
 
 - [ ] Step 2: Observability. Add OTel instrumentation to all backends + frontend, emit structured JSON logs with trace IDs, and put a `observability` Docker Compose profile (single `grafana/otel-lgtm` container) behind opt-in. Off by default; no cloud cost.
 - [ ] Step 3: Resilience. Wrap the ERP/Clock clients with timeout + retry + circuit breaker in each language, and add an acceptance test that drives a slow/failing ERP stub and asserts graceful behaviour.
-- [ ] Step 4: Supply-chain security. Add Dependabot (grouped updates), CodeQL, a Trivy image scan in the commit stage, and SBOM generation (Syft/CycloneDX) attached to releases.
+- [ ] Step 4b: Attach CycloneDX SBOMs to GitHub releases. The SBOMs are currently only workflow artifacts from `supply-chain.yml`; extending the gated `_prod-stage.yml` release job was judged unsafe. Recommendation: a separate workflow on `release: published` that runs `anchore/sbom-action` against the released GHCR image tags and uploads the SBOMs as release assets. Low priority, because GHCR images already carry SBOM attestations (`sbom: true`).
 - [ ] Step 5: Performance. Add a k6 script for browse + place order against the local stack, plus an opt-in `workflow_dispatch` workflow that reports p95/p99.
 - [ ] Step 6: Parity sweep. OpenAPI for the .NET and TS backends, and Stryker mutation testing for .NET and TS (nightly, matching the Java PITest job).
 - [ ] Step 7: Spin off a separate plan for #6 (Postgres-backed outbox, no broker). Decide on #7–#8 (feature flags, frontend testing): either spin off separate plans or drop them.

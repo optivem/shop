@@ -1,0 +1,111 @@
+name: supply-chain
+
+# Builds every Docker image the system deploys, locally (no push, no registry login, no secrets),
+# then for each image:
+#   - scans it with Trivy and uploads the findings to code scanning (Security tab). Report-only
+#     for now: the scan never fails the job, it only surfaces CRITICAL/HIGH issues that have a fix.
+#   - generates a CycloneDX SBOM with Syft and keeps it as a workflow artifact.
+# It is standalone on purpose, so it cannot slow down or break the commit/acceptance/release
+# pipelines. The images those pipelines push to GHCR already carry BuildKit SBOM and provenance
+# attestations (sbom: true, provenance: mode=max in the commit stages).
+#
+# The third-party scanner actions are pinned to full commit SHAs (Dependabot keeps them current),
+# because the trivy-action version tags were hijacked in March 2026 and these actions run on PRs.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '41 4 * * 1'
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  scan:
+    name: scan (${{ matrix.image }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: monolith-system-java
+            context: system/monolith/java
+          - image: monolith-system-dotnet
+            context: system/monolith/dotnet
+          - image: monolith-system-typescript
+            context: system/monolith/typescript
+          - image: multitier-backend-java
+            context: system/multitier/backend-java
+          - image: multitier-backend-dotnet
+            context: system/multitier/backend-dotnet
+          - image: multitier-backend-typescript
+            context: system/multitier/backend-typescript
+          - image: multitier-frontend-react
+            context: system/multitier/frontend-react
+          - image: shop-db-migrate
+            context: system/db
+          - image: shop-keycloak
+            context: docker/keycloak
+          - image: shop-simulators
+            context: external-systems/simulators
+          - image: shop-stubs
+            context: external-systems/stubs
+    env:
+      IMAGE_REF: local/${{ matrix.image }}:scan
+      # A PR from a fork gets a read-only token, so its SARIF upload would fail; the scan still runs.
+      CAN_UPLOAD_SARIF: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build Docker Image (local only)
+        uses: docker/build-push-action@v7
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.context }}/Dockerfile
+          push: false
+          load: true
+          tags: ${{ env.IMAGE_REF }}
+
+      - name: Scan Image with Trivy
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: image
+          image-ref: ${{ env.IMAGE_REF }}
+          format: sarif
+          output: trivy-${{ matrix.image }}.sarif
+          severity: CRITICAL,HIGH
+          limit-severities-for-sarif: true
+          ignore-unfixed: true
+          exit-code: '0'
+
+      - name: Upload Trivy Results to Code Scanning
+        if: env.CAN_UPLOAD_SARIF == 'true'
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: trivy-${{ matrix.image }}.sarif
+          category: trivy-${{ matrix.image }}
+
+      - name: Generate CycloneDX SBOM with Syft
+        uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
+        with:
+          image: ${{ env.IMAGE_REF }}
+          format: cyclonedx-json
+          output-file: sbom-${{ matrix.image }}.cdx.json
+          artifact-name: sbom-${{ matrix.image }}.cdx.json
+          upload-artifact: true
+          upload-release-assets: false
