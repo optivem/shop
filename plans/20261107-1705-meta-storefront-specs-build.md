@@ -40,7 +40,7 @@ UC-008 done in `86208a13` (29 UI tests per language, all UI-only since there's n
 
 **Resume here (paused 2026-11-11 evening): UC-009 was in flight.** A background agent was writing UC-009 (check out) tests, building on UC-007/UC-008, and running them on the monolith stacks. First check `git log origin/main` for a `system-test: UC-009 …` commit:
 - **If it landed:** check it flipped UC-009 to `implemented`, then carry on with UC-010.
-- **If not:** the UC-009 files are uncommitted in the working tree (`git status`, `*CheckOut*` / `*check-out*` under `system-test/`). Have one subagent finish them: compile, run the new tests plus `--sample` on all three monoliths, commit with `--paths`, and flip UC-009. Don't start from scratch.
+- **If not:** the user committed the agent's in-progress UC-009 work as `06bec4eb` (checkout DSL/driver/pages in all three languages) **before it was verified**. Have one subagent finish from there: compile, run the UC-009 tests plus `--sample` on all three monoliths, fix forward, commit with `--paths`, and flip UC-009. Don't start from scratch, and don't rewrite `06bec4eb`.
 - **Either way:** do the React run that's still owed: UC-007, UC-008 and UC-009 tests on `gh-optivem-multitier-typescript.yaml`. Also re-run UC-007 (`ViewProduct*`) and UC-008 on the Java and .NET monoliths to confirm `7177bbcc` fixed the breaker leak, and send the result to the interview-showcase session.
 
 **Previously blocked; fixed in `7177bbcc` by the interview-showcase session (not yet re-verified):**
