@@ -17,13 +17,13 @@
 |---|---|
 | U2 KC cutover | in progress (2026-11-11): QA sign-off of `multitier-typescript-v1.0.238-rc.3406` green (run 42993887714; it supersedes rc.3402); prod-stage green (run 42994266504), so `multitier-typescript-v1.0.238` is in PROD. **Left: the user's browser login check** on https://shop.optivem.com |
 | X1 Track C | effectively done (2026-11-11): C1/C1b/C1c shipped in gh-optivem `7399d6f2`, which is in release `v1.6.108`. `spec validate` in shop gives 12 use cases valid, 35 criteria gated, UC-001 = 16 criteria. Plan moved to `gh-optivem/plans/20261107-1300-...` (shop `248d5e4a`; gh-optivem `628fa21d` is **unpushed**, because the pull is blocked by the user's uncommitted gh-optivem plan edits). C2 needs only the user to confirm v1.6.108 counts as the release |
-| U3 REL #29 | re-runs done 2026-11-11: java green (latency); dotnet red again. **Diagnosis recorded in REL #29**: a .NET-only driver race on the post-deliver status read. Next: the user decides on the recommended fix (remove the .NET post-action status checks), then the .NET sample run and a cloud re-run |
+| U3 REL #29 | re-runs done 2026-11-11: java green (latency); dotnet red again. **Diagnosis recorded in REL #29**: a .NET-only driver race on the post-deliver status read. Fix applied and verified locally (sample 13/13, deliver/cancel UI 9/9). Next: the cloud re-run of monolith-dotnet, then meta-prerelease-stage |
 | U1 SMETA | user chose a separate session: `/execute-plan plans/20261107-1705-meta-storefront-specs-build.md` |
 | U4 UC1 Track D | unblocked (v1.6.108 already reads the layout); per Conflict #3, run it after U1's close-out and recount the criteria then (UC-001 now has 16, not 14) |
 
 ## ▶ Next executable step (resume here)
 
-REL #29 fix (if the user approves): remove the post-action status checks at `system-test/dotnet/Driver.Adapter/Ui/MyShopUiDriver.cs:143-146` and `:190-193`, run `dotnet build`, and do the .NET `--sample` run (needs the user's yes). Then re-run `monolith-dotnet-acceptance-stage.yml` in the cloud (needs cost approval), then `meta-prerelease-stage`. Also still open: the user's browser login check (U2), and pushing gh-optivem `628fa21d`.
+REL #29: the .NET driver fix is committed. Re-run `monolith-dotnet-acceptance-stage.yml` in the cloud (approved 2026-11-11). If it's green, re-run `meta-prerelease-stage`, then delete #29 from REL. Also still open: the user's browser login check (U2), and pushing gh-optivem `628fa21d`.
 
 ## Target state
 

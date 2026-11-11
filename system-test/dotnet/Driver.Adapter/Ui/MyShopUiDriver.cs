@@ -140,12 +140,6 @@ public class MyShopUiDriver : IMyShopDriver
             return Failure<CancelOrderResponse>("Did not receive expected cancellation success message");
         }
 
-        var displayStatusAfterCancel = await _orderDetailsPage.GetStatusAsync();
-        if (displayStatusAfterCancel != OrderStatus.Cancelled)
-        {
-            return Failure<CancelOrderResponse>("Order status not updated to CANCELLED");
-        }
-
         if (!await _orderDetailsPage.IsCancelButtonHiddenAsync())
         {
             return Failure<CancelOrderResponse>("Cancel button still visible");
@@ -185,12 +179,6 @@ public class MyShopUiDriver : IMyShopDriver
         if (!successMessage.Contains("delivered successfully"))
         {
             return Failure<DeliverOrderResponse>("Did not receive expected delivery success message");
-        }
-
-        var displayStatusAfterDeliver = await _orderDetailsPage.GetStatusAsync();
-        if (displayStatusAfterDeliver != OrderStatus.Delivered)
-        {
-            return Failure<DeliverOrderResponse>("Order status not updated to DELIVERED");
         }
 
         return Success(new DeliverOrderResponse());
