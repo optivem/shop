@@ -9,7 +9,7 @@
 
 Session 2026-11-10 did #1, #2, #3 (full latest acceptance runs per language on monolith stacks: .NET 363/363, Java 231 passed/0 failed/74 skipped, TS 250/250; afterwards each stub server held only its 18 static mappings, 0 dynamic, so no Java/TS leak), #4, #6, #7 (b) (token retry in all three languages; 0 token failures and 0 retries across the acceptance and sample runs), #8a, #8b, #9, #12, #13, #14 (system-test/typescript high 1 → 0; still deferred, needing a breaking major bump: postcss via next 16 (monolith), `@pact-foundation/pact` 17 (backend-typescript, frontend-react), vitest 5 (frontend-react, critical), and backend-typescript brace-expansion <=1.1.20, pinned by its dependent), #16 (now `gh-optivem/plans/20261110-2109-system-test-per-suite-counts.md`), #18, #19, #22–#25 and #28; #10 and #8c dropped.
 
-**Waiting on the user:** #11 is user-side. (#27 committed in `actions` as `1139063`, 2026-11-10.)
+**Waiting on the user:** #11 on the second machine (same fix; on Valentina_Desk it was done 2026-11-11): Git Bash's `gcloud` wrapper skips the Windows bundled Python and fell back to Python 3.13; fixed by `CLOUDSDK_PYTHON` pointing at `google-cloud-sdk/platform/bundledpython/python.exe` (user env var + `~/.bashrc`). (#27 committed in `actions` as `1139063`, 2026-11-10.)
 
 **Next executable unit:** re-run `meta-prerelease-stage` (cloud, ask) to confirm #30 and #31; then decide #32 and #33. #31 is done (`PageClient.WaitForUrlChangeAsync` in .NET now polls `location.href`, because the .NET client's `WaitForURLAsync` misses a Next.js `router.push` that lands between its URL check and its event subscription; not hydration. Local .NET vs monolith-typescript: 12/12 and suite 57/57, previously ~9/22 failed). #30 is done (`actions` `f87d6d5`: post-dispatch run read polls on 404 only, 3 s up to 60 s). #29 is done: the .NET driver fix `d437c106` and the cloud run 43004938779 are green.
 
@@ -63,11 +63,6 @@ Each idea has a recommendation. Everything up to #29 is decided (see "Resolved d
 Even with #2 fixed, a long-lived local stack accumulates any stubs a crashed or killed test run leaves behind. Option: reset dynamic mappings at suite start (`POST /__admin/mappings/reset`, which keeps the file-based static mappings), or on `gh optivem system start --restart`.
 - **Recommended: defer.** #2 and #3 remove the known leaks. Revisit if leftovers still pile up.
 - Note: a reset at suite start must never run while another suite is using the same stub server.
-
-### 11. Fix local `gcloud`
-
-Local `gcloud` fails because it doesn't support Python 3.13. It needs `CLOUDSDK_PYTHON` pointing at Python 3.8–3.12. That blocked checking the Cloud Run instance counts directly.
-- **Recommended: do, once per machine.** Set `CLOUDSDK_PYTHON` in your shell profile on both machines. Note it in `CONTRIBUTING.md` if other contributors use `gcloud`.
 
 ### 15. `next start` doesn't work with `output: "standalone"` locally
 

@@ -18,6 +18,20 @@ A catalog of project templates organized by two independent dimensions: **system
 
 Daily cleanup (23:00 UTC) of superseded deployments, prerelease git tags, GitHub releases, and Docker image tags.
 
+## Test Users
+
+Local Docker, acceptance and QA sign in through Keycloak, which is seeded from [`docker/keycloak/shop-realm.json`](docker/keycloak/shop-realm.json) with these demo test accounts (not real credentials):
+
+| Username | Password | Role |
+|---|---|---|
+| `customer1` | `customer1-test-password` | `CUSTOMER` |
+| `customer2` | `customer2-test-password` | `CUSTOMER` |
+| `admin1` | `admin1-test-password` | `ADMIN` |
+
+If you change them, change them in `shop-realm.json`. The system tests sign in with these same users.
+
+Production (https://shop.optivem.com, realm `shop-prod`) has **none** of these users: [`prod-realm.jq`](docker/keycloak/prod-realm.jq) strips them and [`prod-realm-check.jq`](docker/keycloak/prod-realm-check.jq) fails the image build if any come back. Self-registration is off, so production accounts are created by hand in the Keycloak admin console.
+
 ## Architecture
 
 ### Monolith
