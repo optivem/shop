@@ -134,3 +134,13 @@ Found 2026-11-11 (UC-007). `keycloak-token-provider.ts:84` fails `@typescript-es
 
 Found 2026-11-11 (UC-007). The sample run printed "playwright@1.65.0 will be installed", ran 0 tests and exited 1, while the full isolated-UI suite on the same stack had just passed. That suggests `npx playwright` resolved outside the project's own `node_modules`, possibly during the docker contention in #36.
 - **Recommended: investigate if it recurs.** Make the runner call the project-local Playwright binary instead of `npx` resolution. **Why:** an unpinned Playwright download can silently change versions and drop tests.
+
+### 41. .NET architecture rule A1 may flag the new cart/product request DTOs
+
+Found 2026-11-11 (UC-008). `RequestDtosDeclareOnlyStringMembers` may reject the non-string members of `ManageCartRequest`, and `ViewProductRequest` already has `bool?` fields. The architecture tests weren't run.
+- **Recommended:** run the .NET architecture tests. If A1 fires, either make the members strings (per the rule) or scope A1 to API request DTOs only. **Why:** a rule that is red but never run gives false confidence either way.
+
+### 42. `--suite X --test Y` also runs the other acceptance suites
+
+Found 2026-11-11 (UC-008), extending #38. `--suite acceptance-isolated-ui --test X` ran the other acceptance suites too, then reported "requested test(s) never executed" even though X passed. On .NET a shared method name (`ShouldKeepTheQuantityBetween1And99WhenUsingTheStepper`) also pulled in UC-007's tests.
+- **Recommended:** fold into #38's fix (make `--suite` restrict the run, and support class-qualified names on .NET). **Why:** the same false-red problem.
