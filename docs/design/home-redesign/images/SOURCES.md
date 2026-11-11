@@ -10,3 +10,15 @@ Excluded: photos showing identifiable branded products (Apple Watch Ultra, AirPo
 | headphones.jpg | https://unsplash.com/photos/oBI4NBP2Lhg | C D-X (@cdx2) |
 | keyboard.jpg | https://unsplash.com/photos/U1I0IoQx3Yo | Jay Zhang (@jay_zhang) |
 | cable.jpg | https://unsplash.com/photos/4xMAiJZPQXI | Marcus Urbenz (@marcusurbenz) |
+
+## Shipped in frontend-react
+
+Copied unchanged to `system/multitier/frontend-react/public/images/promo/` for the home hero and promo tiles, and credited in the footer (`PHOTO_CREDITS` in `src/components/StoreFooter.tsx`):
+
+| File | Used in | Credit |
+|---|---|---|
+| laptop.jpg | Home hero ("New season laptops", links to Laptops) | Dhony Koswara |
+| monitor.jpg | Promo tile "Shop monitors" (links to Monitors) | Huy Phan |
+| keyboard.jpg | Promo tile "Build your desk setup" (links to Accessories) | Jay Zhang |
+
+Not shipped: headphones.jpg (the catalog has no Audio category), cable.jpg. Product cards and the product page show the catalog placeholder (`ProductImage`), never stock photos.

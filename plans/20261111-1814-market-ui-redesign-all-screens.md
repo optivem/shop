@@ -33,7 +33,7 @@
 
 ## ▶ Next executable step (resume here)
 
-Steps 1, 4, 5 done: Market tokens in `system/multitier/frontend-react/src/styles/market.css` (Bootstrap 5.3 from npm, Fontsource Figtree, lucide-react); shared shell restyled (header, nav, footer with a `PHOTO_CREDITS` array, notifications, states, form parts). Next: Step 6, restyle the screens in order (Catalog first), using the test-hook inventory at `docs/design/home-redesign/test-hooks-inventory.md` (Step 1) so no driver selector breaks. Session scope agreed with the user: frontend-react only (Steps 1, 4, 5, 6, 8); per screen run tsc + lint + vitest; one `--sample` system-test run per language (TS, Java, .NET) at the end of the seam. Step 7 (monoliths), 9, 10 go in a later session.
+Steps 1, 4, 5 done: Market tokens in `system/multitier/frontend-react/src/styles/market.css` (Bootstrap 5.3 from npm, Fontsource Figtree, lucide-react); shared shell restyled (header, nav, footer with a `PHOTO_CREDITS` array, notifications, states, form parts). Step 6 part A done (Catalog/home with promo photos, ProductDetail, Cart; Step 8 photos shipped: laptop/monitor/keyboard with footer credits). Next: Step 6 remaining screens (Checkout, OrderConfirmation, OrderHistory, OrderDetails, NewOrder/QuickOrder, Account, SignIn, AdminCoupons), using the test-hook inventory at `docs/design/home-redesign/test-hooks-inventory.md` (Step 1) so no driver selector breaks. Session scope agreed with the user: frontend-react only (Steps 1, 4, 5, 6, 8); per screen run tsc + lint + vitest; one `--sample` system-test run per language (TS, Java, .NET) at the end of the seam. Step 7 (monoliths), 9, 10 go in a later session.
 
 ## Steps
 
@@ -41,7 +41,6 @@ Steps 1, 4, 5 done: Market tokens in `system/multitier/frontend-react/src/styles
 - [x] Step 3 (approved by the user 2026-11-11): **Mock the remaining screens** on the canvas in the Market style (ProductDetail, Cart, Checkout, OrderConfirmation, NewOrder, QuickOrder, OrderHistory, OrderDetails, Account, AdminCoupons, SignIn, plus empty, loading and error states). Get user approval.
 - [ ] Step 6: **Restyle screens one at a time**: Catalog (with filter sidebar and dense cards) → ProductDetail → Cart → Checkout → OrderConfirmation → OrderHistory → OrderDetails → NewOrder/QuickOrder → Account → SignIn → AdminCoupons. After each: `npx tsc --noEmit`, then run the `--sample` system tests for TypeScript, Java and .NET (they all drive the same UI).
 - [ ] Step 7: **Monolith UIs.** First bump the .NET monolith from its vendored Bootstrap 5.1.0 (`wwwroot/lib`) to 5.3.x, because the Market theme needs 5.3 theme variables (Java and TS load 5.3.3 from a CDN). Use the hook map in `docs/design/home-redesign/test-hooks-inventory.md`. Apply the same tokens and styling to each monolith frontend that has its own UI, keeping their test hooks, then run the `--sample` system tests for each language.
-- [ ] Step 8: **Images.** If product or hero photos ship, copy them from `docs/design/home-redesign/images/`, add footer credits, and keep `SOURCES.md` current.
 - [ ] Step 9: **Full verification.** Run `./compile-all.sh`, then `./test-all.sh` (latest + legacy, all three languages). Do a visual check at desktop and phone widths.
 - [ ] Step 10: **Docs.** Point `docs/design/home-redesign/README.md` at the chosen direction and the token file.
 

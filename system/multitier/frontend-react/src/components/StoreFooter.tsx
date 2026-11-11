@@ -3,15 +3,13 @@ import { useCatalog } from '../contexts/useCatalog';
 import { categoriesOf } from '../features/catalog/catalog-query';
 
 /**
- * Unsplash photographers credited in the footer (docs/design/home-redesign/images/SOURCES.md).
- * Add a row here whenever a new photo ships.
+ * Unsplash photographers of the photos that ship in public/images/promo/ (home hero and promo tiles).
+ * Keep in sync with docs/design/home-redesign/images/SOURCES.md: add a row whenever a new photo ships.
  */
 const PHOTO_CREDITS = [
-  { photographer: 'Dhony Koswara', url: 'https://unsplash.com/photos/btVTuAIhvk8' },
-  { photographer: 'Huy Phan', url: 'https://unsplash.com/photos/VXpeQ3GetDU' },
-  { photographer: 'C D-X', url: 'https://unsplash.com/photos/oBI4NBP2Lhg' },
-  { photographer: 'Jay Zhang', url: 'https://unsplash.com/photos/U1I0IoQx3Yo' },
-  { photographer: 'Marcus Urbenz', url: 'https://unsplash.com/photos/4xMAiJZPQXI' },
+  { photographer: 'Dhony Koswara', url: 'https://unsplash.com/photos/btVTuAIhvk8' }, // laptop.jpg
+  { photographer: 'Huy Phan', url: 'https://unsplash.com/photos/VXpeQ3GetDU' }, // monitor.jpg
+  { photographer: 'Jay Zhang', url: 'https://unsplash.com/photos/U1I0IoQx3Yo' }, // keyboard.jpg
 ];
 
 /** Static footer: Shop, Help, the demo-store note and the photo credits (storefront-ux §3). */

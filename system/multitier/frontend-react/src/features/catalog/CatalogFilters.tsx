@@ -16,8 +16,8 @@ export function CatalogFilters({ categories, brands, query, onChange }: Readonly
 
   return (
     <div className="catalog-filters">
-      <fieldset className="mb-4" aria-label="Category Filter">
-        <legend className="h6">Category</legend>
+      <fieldset aria-label="Category Filter">
+        <legend className="catalog-filter-legend">Category</legend>
         {['', ...categories].map((category) => {
           const id = `category-${category || 'all'}`;
           return (
@@ -38,8 +38,8 @@ export function CatalogFilters({ categories, brands, query, onChange }: Readonly
           );
         })}
       </fieldset>
-      <fieldset className="mb-4" aria-label="Brand Filter">
-        <legend className="h6">Brand</legend>
+      <fieldset aria-label="Brand Filter">
+        <legend className="catalog-filter-legend">Brand</legend>
         {brands.map((brand) => {
           const id = `brand-${brand}`;
           return (

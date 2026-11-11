@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { Check, Minus, Plus, ShoppingCart } from 'lucide-react';
 import { LoadingSpinner, ProductImage, StoreLayout } from '../components';
 import { useCart } from '../contexts/useCart';
 import { useNotificationContext } from '../contexts/useNotificationContext';
@@ -49,7 +50,7 @@ export function ProductDetail() {
   if (state.kind === 'not-found') {
     return (
       <StoreLayout title="Product not found">
-        <div className="text-center py-5">
+        <div className="market-empty text-center py-5 px-3">
           <h1 className="h3">Product not found</h1>
           <p className="text-muted">We couldn't find a product with SKU {sku}.</p>
           <Link to="/" className="btn btn-primary" aria-label="Back to Catalog">
@@ -99,56 +100,78 @@ export function ProductDetail() {
         { label: product.title },
       ]}
     >
-      <div className="row g-4">
-        <div className="col-md-5">
-          <ProductImage brand={product.brand} shape="square" />
+      <div className="row g-4 align-items-start">
+        <div className="col-lg-7">
+          <div className="market-panel p-3">
+            <ProductImage brand={product.brand} shape="square" />
+          </div>
         </div>
-        <div className="col-md-7">
-          <h1 className="h2" aria-label="Product Title">
-            {product.title}
-          </h1>
-          <p className="text-muted">
-            by <span aria-label="Product Brand">{product.brand}</span> ·{' '}
-            <span aria-label="Product Category">{product.category}</span> · SKU{' '}
-            <span aria-label="Product SKU">{product.sku}</span>
-          </p>
-          <p className="price fs-3 fw-bold" aria-label="Display Price">
-            {formatMoney(product.price)}
-          </p>
+        <div className="col-lg-5 d-flex flex-column gap-3">
+          <div className="market-panel p-4">
+            <p className="product-meta mb-2">
+              <span className="product-meta-brand" aria-label="Product Brand">
+                {product.brand}
+              </span>{' '}
+              · <span aria-label="Product Category">{product.category}</span>
+            </p>
+            <h1 className="product-detail-title" aria-label="Product Title">
+              {product.title}
+            </h1>
+            <p className="product-meta mb-3">
+              SKU{' '}
+              <span className="font-monospace text-body" aria-label="Product SKU">
+                {product.sku}
+              </span>
+            </p>
+            <p className="price product-detail-price" aria-label="Display Price">
+              {formatMoney(product.price)}
+            </p>
+            <p className="product-detail-description mb-0" aria-label="Product Description">
+              {product.description}
+            </p>
+          </div>
           <form
-            className="d-flex flex-wrap align-items-center gap-3 mb-4"
+            className="market-panel p-4 d-flex flex-column gap-3"
             onSubmit={(e) => {
               e.preventDefault();
               addToCart();
             }}
           >
-            <label htmlFor="product-quantity" className="form-label mb-0">
-              Qty
-            </label>
-            <div className="input-group quantity-stepper">
-              <button type="button" className="btn btn-outline-secondary" aria-label="Decrease Quantity" onClick={() => step(-1)}>
-                −
-              </button>
-              <input
-                id="product-quantity"
-                type="text"
-                inputMode="numeric"
-                className="form-control text-center"
-                aria-label="Product Quantity"
-                value={quantity}
-                onChange={(e) => setQuantity(e.target.value)}
-              />
-              <button type="button" className="btn btn-outline-secondary" aria-label="Increase Quantity" onClick={() => step(1)}>
-                +
-              </button>
+            <div className="d-flex align-items-center justify-content-between gap-3">
+              <label htmlFor="product-quantity" className="form-label fw-bold mb-0">
+                Quantity
+              </label>
+              <div className="input-group quantity-stepper">
+                <button type="button" className="btn btn-outline-secondary" aria-label="Decrease Quantity" onClick={() => step(-1)}>
+                  <Minus size={16} aria-hidden="true" />
+                </button>
+                <input
+                  id="product-quantity"
+                  type="text"
+                  inputMode="numeric"
+                  className="form-control text-center"
+                  aria-label="Product Quantity"
+                  value={quantity}
+                  onChange={(e) => setQuantity(e.target.value)}
+                />
+                <button type="button" className="btn btn-outline-secondary" aria-label="Increase Quantity" onClick={() => step(1)}>
+                  <Plus size={16} aria-hidden="true" />
+                </button>
+              </div>
             </div>
-            <button type="submit" className="btn btn-primary" aria-label="Add to Cart">
+            <button type="submit" className="btn btn-primary btn-lg w-100" aria-label="Add to Cart">
+              <ShoppingCart size={18} aria-hidden="true" className="me-2" />
               Add to cart
             </button>
+            <ul className="product-perks list-unstyled mb-0">
+              <li>
+                <Check size={16} aria-hidden="true" /> Free shipping on orders over $1,000
+              </li>
+              <li>
+                <Check size={16} aria-hidden="true" /> 30-day returns
+              </li>
+            </ul>
           </form>
-          <hr />
-          <p aria-label="Product Description">{product.description}</p>
-          <p className="text-muted small mb-0">✓ Ships in 1–2 business days · ✓ 30-day returns</p>
         </div>
       </div>
     </StoreLayout>

@@ -327,26 +327,7 @@ body {
     text-decoration: underline;
 }
 
-/* ---- Page parts (restyled screen by screen in later steps) ---- */
-
-.store-hero {
-    background: linear-gradient(120deg, var(--market-primary-active), var(--market-primary));
-    color: var(--market-on-primary);
-}
-
-.product-card {
-    border-radius: var(--market-radius-xl);
-    overflow: hidden;
-}
-
-.product-title-link {
-    color: var(--market-ink);
-    text-decoration: none;
-}
-
-.product-title-link:hover {
-    text-decoration: underline;
-}
+/* ---- Page parts shared by several screens (page-specific styles live in src/styles/pages-shop.css) ---- */
 
 .product-image {
     display: flex;
@@ -367,16 +348,6 @@ body {
 .product-image-square {
     aspect-ratio: 1 / 1;
     font-size: 3rem;
-}
-
-.cart-thumb {
-    width: 4rem;
-    flex-shrink: 0;
-}
-
-.cart-thumb .product-image-card {
-    font-size: 0.75rem;
-    border-radius: 0.25rem;
 }
 
 .input-group.quantity-stepper {

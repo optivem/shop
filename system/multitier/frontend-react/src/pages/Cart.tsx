@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { ShoppingCart, Trash2 } from 'lucide-react';
 import { LoadingSpinner, ProductImage, QuantityStepper, StoreLayout } from '../components';
 import { useCart } from '../contexts/useCart';
 import { useCatalog } from '../contexts/useCatalog';
@@ -26,7 +27,8 @@ export function Cart() {
   const renderContent = () => {
     if (itemCount === 0) {
       return (
-        <div className="text-center py-5">
+        <div className="market-empty text-center py-5 px-3">
+          <ShoppingCart size={40} aria-hidden="true" className="mb-3 text-body-secondary" />
           <p className="lead">Your cart is empty.</p>
           <Link to="/" className="btn btn-primary">
             Start shopping
@@ -43,49 +45,70 @@ export function Cart() {
     }
     if (isLoading && products.length === 0) return <LoadingSpinner message="Loading cart..." />;
     return (
-      <div className="row g-4">
+      <div className="row g-4 align-items-start">
         <div className="col-lg-8">
-          <div className="table-responsive">
-            <table className="table align-middle cart-table" aria-label="Cart Lines">
+          <div className="market-panel px-3 px-md-4 py-2">
+            <table className="table align-middle mb-0 cart-table" aria-label="Cart Lines">
               <thead>
                 <tr>
                   <th scope="col">Product</th>
-                  <th scope="col" className="text-end">
-                    Unit price
-                  </th>
                   <th scope="col">Quantity</th>
                   <th scope="col" className="text-end">
                     Line total
-                  </th>
-                  <th scope="col">
-                    <span className="visually-hidden">Remove</span>
                   </th>
                 </tr>
               </thead>
               <tbody>
                 {lines.map((line) => (
                   <tr key={line.sku} aria-label={`Cart Line ${line.sku}`}>
-                    <td>
+                    <td className="cart-cell-product">
                       <div className="d-flex align-items-center gap-3">
                         <div className="cart-thumb">
-                          <ProductImage brand={line.product?.brand ?? line.sku} />
+                          <ProductImage brand={line.product?.brand ?? line.sku} shape="square" />
                         </div>
-                        <div>
+                        <div className="min-w-0">
                           {line.product ? (
-                            <Link to={`/products/${encodeURIComponent(line.sku)}`} aria-label={`Title ${line.sku}`}>
+                            <Link
+                              to={`/products/${encodeURIComponent(line.sku)}`}
+                              className="cart-line-title"
+                              aria-label={`Title ${line.sku}`}
+                            >
                               {line.product.title}
                             </Link>
                           ) : (
-                            <span aria-label={`Title ${line.sku}`}>{line.sku}</span>
+                            <span className="cart-line-title" aria-label={`Title ${line.sku}`}>
+                              {line.sku}
+                            </span>
                           )}
-                          {!line.product && <div className="small text-danger">No longer available</div>}
+                          <div className="cart-line-meta">
+                            {line.product ? (
+                              <>
+                                SKU {line.sku} ·{' '}
+                                <span className="price" aria-label={`Unit Price ${line.sku}`}>
+                                  {formatMoney(line.product.price)}
+                                </span>{' '}
+                                each
+                              </>
+                            ) : (
+                              <>
+                                <span className="text-danger">No longer available</span> ·{' '}
+                                <span aria-label={`Unit Price ${line.sku}`}>-</span>
+                              </>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            className="btn btn-link cart-remove"
+                            aria-label={`Remove ${line.sku}`}
+                            onClick={() => cart.remove(line.sku)}
+                          >
+                            <Trash2 size={14} aria-hidden="true" className="me-1" />
+                            Remove
+                          </button>
                         </div>
                       </div>
                     </td>
-                    <td className="text-end price" aria-label={`Unit Price ${line.sku}`}>
-                      {line.product ? formatMoney(line.product.price) : '-'}
-                    </td>
-                    <td>
+                    <td className="cart-cell-quantity">
                       <QuantityStepper
                         quantity={line.quantity}
                         onChange={(quantity) => {
@@ -98,41 +121,31 @@ export function Cart() {
                         increaseLabel={`Increase Quantity for ${line.sku}`}
                       />
                     </td>
-                    <td className="text-end price" aria-label={`Line Total ${line.sku}`}>
+                    <td className="cart-cell-total text-end price" aria-label={`Line Total ${line.sku}`}>
                       {formatCents(line.lineTotalCents)}
-                    </td>
-                    <td className="text-end">
-                      <button
-                        type="button"
-                        className="btn btn-sm btn-outline-danger"
-                        aria-label={`Remove ${line.sku}`}
-                        onClick={() => cart.remove(line.sku)}
-                      >
-                        ✕
-                      </button>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-          <Link to="/">← Continue shopping</Link>
         </div>
         <div className="col-lg-4">
-          <div className="card shadow-sm">
-            <div className="card-body">
-              <h2 className="h5">Order summary</h2>
-              <div className="d-flex justify-content-between">
-                <span>Subtotal</span>
-                <span className="price fw-bold" aria-label="Cart Subtotal">
-                  {formatCents(subtotalCents)}
-                </span>
-              </div>
-              <p className="text-muted small mt-2">Tax and discounts are calculated at checkout.</p>
-              <Link to="/checkout" className="btn btn-primary w-100" aria-label="Proceed to Checkout">
-                Proceed to checkout
-              </Link>
+          <div className="market-panel p-4 d-flex flex-column gap-3">
+            <h2 className="h5 mb-0">Order summary</h2>
+            <div className="d-flex justify-content-between cart-summary-row">
+              <span>Subtotal</span>
+              <span className="price fw-bold" aria-label="Cart Subtotal">
+                {formatCents(subtotalCents)}
+              </span>
             </div>
+            <p className="text-body-secondary small mb-0">Tax and discounts are calculated at checkout.</p>
+            <Link to="/checkout" className="btn btn-primary btn-lg w-100" aria-label="Proceed to Checkout">
+              Proceed to checkout
+            </Link>
+            <Link to="/" className="cart-continue">
+              Continue shopping
+            </Link>
           </div>
         </div>
       </div>
@@ -141,9 +154,13 @@ export function Cart() {
 
   return (
     <StoreLayout title="Cart" breadcrumbs={[{ label: 'Home', path: '/' }, { label: 'Cart' }]}>
-      <h1 className="h3 mb-4">
+      <h1 className="h2 mb-4">
         Shopping cart{' '}
-        {itemCount > 0 && <span aria-label="Cart Line Count">({itemCount} {itemCount === 1 ? 'item' : 'items'})</span>}
+        {itemCount > 0 && (
+          <span className="cart-line-count" aria-label="Cart Line Count">
+            ({itemCount} {itemCount === 1 ? 'item' : 'items'})
+          </span>
+        )}
       </h1>
       {renderContent()}
     </StoreLayout>

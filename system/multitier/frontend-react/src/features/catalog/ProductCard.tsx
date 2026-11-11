@@ -8,29 +8,30 @@ interface ProductCardProps {
   onAddToCart: (sku: string) => void;
 }
 
-/** One catalog tile: image and title link to the product page; "Add to cart" adds quantity 1. */
+/** One catalog tile: image and title link to the product page; brand, description and price come from the catalog; "Add to cart" adds quantity 1. */
 export function ProductCard({ product, onAddToCart }: Readonly<ProductCardProps>) {
   const productPath = `/products/${encodeURIComponent(product.sku)}`;
   return (
     <article className="product-card card h-100" aria-label={`Product ${product.sku}`}>
-      <Link to={productPath} tabIndex={-1} aria-hidden="true">
+      <Link to={productPath} className="product-card-media" tabIndex={-1} aria-hidden="true">
         <ProductImage brand={product.brand} />
       </Link>
-      <div className="card-body d-flex flex-column">
-        <h3 className="h6 card-title mb-1">
+      <div className="product-card-body">
+        <div className="product-card-brand" aria-label="Product Brand">
+          {product.brand}
+        </div>
+        <h3 className="product-card-title">
           <Link to={productPath} className="product-title-link" aria-label="Product Title">
             {product.title}
           </Link>
         </h3>
-        <div className="text-muted small mb-2" aria-label="Product Brand">
-          {product.brand}
-        </div>
-        <div className="price fw-bold mb-3" aria-label="Display Price">
+        {product.description && <p className="product-card-spec">{product.description}</p>}
+        <div className="price product-card-price" aria-label="Display Price">
           {formatMoney(product.price)}
         </div>
         <button
           type="button"
-          className="btn btn-primary mt-auto"
+          className="btn btn-primary w-100 mt-auto"
           aria-label={`Add ${product.sku} to Cart`}
           onClick={() => onAddToCart(product.sku)}
         >

@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '@fontsource-variable/figtree';
 import './styles/market.css';
+import './styles/pages-shop.css';
 import { App } from './App';
 import { AuthGate } from './auth/AuthGate';
 
