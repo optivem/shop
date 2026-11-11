@@ -13,7 +13,7 @@ COPY . ./
 RUN dotnet publish MyCompany.MyShop.Backend.csproj -c Release -o out
 
 # Use the official ASP.NET runtime image for the app
-FROM mcr.microsoft.com/dotnet/aspnet:8.0
+FROM mcr.microsoft.com/dotnet/aspnet:11.0
 WORKDIR /app
 
 # Install curl for HEALTHCHECK probes (~7 MB)
