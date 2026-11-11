@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MyShop — Account</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#EEF1F5}
+a{color:#0F172A;text-decoration:none}a:hover{color:#0F766E}
+button,input,select{font:inherit}
+button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid #0F766E;outline-offset:2px}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #EEF1F5; color: #0F172A; font-family: Figtree, system-ui, sans-serif; font-size: 14px; line-height: 1.45">
+
+<div style="background: #0F172A; color: #E2E8F0; font-size: 12px"><div style="max-width: 1360px; margin: 0 auto; padding: 8px 20px">Free shipping over $1,000 · 30-day returns</div></div>
+<header style="background: #FFFFFF; border-bottom: 1px solid #DCE1E8">
+<div style="max-width: 1360px; margin: 0 auto; padding: 14px 20px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px">
+<a href="MarketHome.dc.html" style="font-weight: 800; font-size: 24px; letter-spacing: -0.04em">myshop<span style="color: #0F766E">.</span></a>
+<form role="search" style="flex: 1 1 420px; display: flex; height: 46px; border: 2px solid #0F172A; border-radius: 12px; overflow: hidden">
+<input type="search" aria-label="Search Products" placeholder="Search for products, brands and specs" style="flex: 1; min-width: 0; border: 0; outline: none; padding: 0 14px; font-size: 15px">
+<button type="button" aria-label="Search" style="border: 0; background: #0F172A; color: #FFFFFF; padding: 0 22px; font-weight: 700; cursor: pointer">Search</button>
+</form>
+<nav aria-label="Store navigation" style="display: flex; gap: 18px; font-weight: 600; color: #475569"><a href="MarketHome.dc.html">Catalog</a><a href="MOrderHistory.dc.html">Orders</a><a href="MAccount.dc.html" style="color: #0F766E">Account</a></nav>
+<a href="MCart.dc.html" aria-label="Cart" style="display: inline-flex; align-items: center; gap: 8px; min-height: 44px; font-weight: 700; background: #F1F5F9; border-radius: 10px; padding: 0 14px">Cart <span aria-label="Cart Item Count" style="background: #0F766E; color: #FFFFFF; border-radius: 999px; padding: 0 7px; font-size: 12px">0</span></a>
+</div>
+</header>
+
+<main style="max-width: 1100px; margin: 0 auto; padding: 28px 20px 64px; display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start">
+<nav aria-label="Account sections" style="flex: 1 1 220px; max-width: 260px; background: #FFFFFF; border-radius: 16px; padding: 12px; display: flex; flex-direction: column; gap: 2px; font-weight: 700">
+<div style="display: flex; gap: 12px; align-items: center; padding: 10px 10px 16px; border-bottom: 1px solid #E2E8F0; margin-bottom: 8px">
+<span aria-hidden="true" style="width: 44px; height: 44px; border-radius: 999px; background: #0F766E; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-weight: 800">AL</span>
+<span><span style="display: block">Ada Lovelace</span><span style="font-weight: 500; font-size: 12px; color: #64748B">customer1</span></span>
+</div>
+<a href="MAccount.dc.html" aria-current="page" style="padding: 10px 12px; border-radius: 10px; background: #F0FDFA; color: #0F766E">Profile &amp; address</a>
+<a href="MOrderHistory.dc.html" style="padding: 10px 12px; border-radius: 10px">Orders</a>
+<a href="#" style="padding: 10px 12px; border-radius: 10px; color: #475569">Sign out</a>
+</nav>
+
+<section style="flex: 999 1 520px; min-width: 0; background: #FFFFFF; border-radius: 16px; padding: 28px">
+<h1 style="margin: 0 0 18px; font-size: 26px; font-weight: 800; letter-spacing: -0.02em">Profile &amp; address</h1>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px">
+<label style="display: flex; flex-direction: column; gap: 6px; font-weight: 700; font-size: 13px">First name<input aria-label="First Name" value="Ada" style="border: 1px solid #CBD5E1; border-radius: 10px; height: 46px; padding: 0 12px; font-size: 15px"></label>
+<label style="display: flex; flex-direction: column; gap: 6px; font-weight: 700; font-size: 13px">Last name<input aria-label="Last Name" value="Lovelace" style="border: 1px solid #CBD5E1; border-radius: 10px; height: 46px; padding: 0 12px; font-size: 15px"></label>
+<label style="grid-column: 1 / -1; display: flex; flex-direction: column; gap: 6px; font-weight: 700; font-size: 13px">Email<input aria-label="Email" type="email" value="ada@example.com" style="border: 1px solid #CBD5E1; border-radius: 10px; height: 46px; padding: 0 12px; font-size: 15px"></label>
+</div>
+
+<h2 style="margin: 28px 0 14px; font-size: 18px; font-weight: 800; padding-top: 22px; border-top: 1px solid #E2E8F0">Shipping address</h2>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px">
+<label style="grid-column: 1 / -1; display: flex; flex-direction: column; gap: 6px; font-weight: 700; font-size: 13px">Street address<input value="12 Analytical Way" style="border: 1px solid #CBD5E1; border-radius: 10px; height: 46px; padding: 0 12px; font-size: 15px"></label>
+<label style="display: flex; flex-direction: column; gap: 6px; font-weight: 700; font-size: 13px">City<input value="London" style="border: 1px solid #CBD5E1; border-radius: 10px; height: 46px; padding: 0 12px; font-size: 15px"></label>
+<label style="display: flex; flex-direction: column; gap: 6px; font-weight: 700; font-size: 13px">Postal code<input value="N1 9GU" style="border: 1px solid #CBD5E1; border-radius: 10px; height: 46px; padding: 0 12px; font-size: 15px"></label>
+<label style="grid-column: 1 / -1; display: flex; flex-direction: column; gap: 6px; font-weight: 700; font-size: 13px">Country<select style="border: 1px solid #CBD5E1; border-radius: 10px; height: 46px; padding: 0 12px; font-size: 15px; background: #FFFFFF"><option>United Kingdom (GB)</option><option>United States (US)</option><option>Germany (DE)</option></select><span aria-label="Tax Country Hint" style="font-weight: 400; color: #64748B; font-size: 12px">Used to calculate tax at checkout.</span></label>
+</div>
+<div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px">
+<button type="button" style="border: 2px solid #0F172A; background: #FFFFFF; border-radius: 10px; min-height: 46px; padding: 0 20px; font-weight: 800; cursor: pointer">Cancel</button>
+<button type="button" style="border: 0; background: #0F766E; color: #FFFFFF; border-radius: 10px; min-height: 46px; padding: 0 22px; font-weight: 800; cursor: pointer">Save changes</button>
+</div>
+</section>
+</main>
+
+<footer style="background: #0F172A; color: #CBD5E1"><div style="max-width: 1360px; margin: 0 auto; padding: 24px 20px; font-size: 12px">© MyShop</div></footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1100}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

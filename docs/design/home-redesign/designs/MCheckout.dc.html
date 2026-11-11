@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MyShop — Checkout</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#EEF1F5}
+a{color:#0F172A;text-decoration:none}a:hover{color:#0F766E}
+button,input,select{font:inherit}
+button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid #0F766E;outline-offset:2px}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #EEF1F5; color: #0F172A; font-family: Figtree, system-ui, sans-serif; font-size: 14px; line-height: 1.45">
+
+<header style="background: #FFFFFF; border-bottom: 1px solid #DCE1E8">
+<div style="max-width: 1200px; margin: 0 auto; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px">
+<a href="MarketHome.dc.html" style="font-weight: 800; font-size: 24px; letter-spacing: -0.04em">myshop<span style="color: #0F766E">.</span></a>
+<ol aria-label="Checkout progress" style="list-style: none; margin: 0; padding: 0; display: flex; gap: 8px; font-size: 13px; font-weight: 700">
+<li style="color: #0F766E">Cart ✓</li><li aria-hidden="true" style="color: #94A3B8">—</li><li aria-current="step">Checkout</li><li aria-hidden="true" style="color: #94A3B8">—</li><li style="color: #64748B">Confirmation</li>
+</ol>
+<span style="font-size: 13px; color: #475569; font-weight: 600">🔒 Secure checkout</span>
+</div>
+</header>
+
+<main style="max-width: 1200px; margin: 0 auto; padding: 24px 20px 64px">
+<h1 style="margin: 0 0 18px; font-size: 30px; font-weight: 800; letter-spacing: -0.02em">Checkout</h1>
+<div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start">
+
+<div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+<section aria-label="Shipping Address" style="background: #FFFFFF; border-radius: 16px; padding: 24px">
+<h2 style="margin: 0 0 16px; font-size: 18px; font-weight: 800"><span style="display: inline-flex; width: 26px; height: 26px; border-radius: 999px; background: #0F172A; color: #FFFFFF; align-items: center; justify-content: center; font-size: 13px; margin-right: 8px">1</span>Shipping address</h2>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 16px">
+<label style="display: flex; gap: 10px; align-items: flex-start; border: 2px solid #0F766E; background: #F0FDFA; border-radius: 12px; padding: 14px; cursor: pointer"><input type="radio" name="addr" aria-label="Use Saved Address" checked="checked" style="margin-top: 3px; accent-color: #0F766E"><span><strong>Use saved address</strong><span aria-label="Saved Address" style="display: block; color: #475569; font-size: 13px; margin-top: 2px">Ada Lovelace · 12 Analytical Way, London · GB</span></span></label>
+<label style="display: flex; gap: 10px; align-items: flex-start; border: 1px solid #CBD5E1; border-radius: 12px; padding: 14px; cursor: pointer"><input type="radio" name="addr" aria-label="Ship to a Different Address" style="margin-top: 3px; accent-color: #0F766E"><span><strong>Ship to a different address</strong><span style="display: block; color: #475569; font-size: 13px; margin-top: 2px">Enter a new address below</span></span></label>
+</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+<label style="grid-column: 1 / -1; display: flex; flex-direction: column; gap: 6px; font-weight: 600; font-size: 13px">Street address<input value="12 Analytical Way" style="border: 1px solid #CBD5E1; border-radius: 10px; height: 44px; padding: 0 12px; font-size: 15px"></label>
+<label style="display: flex; flex-direction: column; gap: 6px; font-weight: 600; font-size: 13px">City<input value="London" style="border: 1px solid #CBD5E1; border-radius: 10px; height: 44px; padding: 0 12px; font-size: 15px"></label>
+<label style="display: flex; flex-direction: column; gap: 6px; font-weight: 600; font-size: 13px">Postal code<input value="N1 9GU" style="border: 1px solid #CBD5E1; border-radius: 10px; height: 44px; padding: 0 12px; font-size: 15px"></label>
+<label style="grid-column: 1 / -1; display: flex; flex-direction: column; gap: 6px; font-weight: 600; font-size: 13px">Country<select aria-label="Tax Country" style="border: 1px solid #CBD5E1; border-radius: 10px; height: 44px; padding: 0 12px; font-size: 15px; background: #FFFFFF"><option>United Kingdom (GB)</option><option>United States (US)</option><option>Germany (DE)</option></select><span aria-label="Tax Country Hint" style="font-weight: 400; color: #64748B; font-size: 12px">Tax is calculated from the shipping country.</span></label>
+</div>
+<label style="display: flex; align-items: center; gap: 10px; margin-top: 14px; cursor: pointer"><input type="checkbox" aria-label="Save as Default Address" style="width: 18px; height: 18px; margin: 0; accent-color: #0F766E">Save as my default address</label>
+</section>
+
+<section style="background: #FFFFFF; border-radius: 16px; padding: 24px">
+<h2 style="margin: 0 0 14px; font-size: 18px; font-weight: 800"><span style="display: inline-flex; width: 26px; height: 26px; border-radius: 999px; background: #0F172A; color: #FFFFFF; align-items: center; justify-content: center; font-size: 13px; margin-right: 8px">2</span>Coupon <span style="font-weight: 500; color: #64748B; font-size: 14px">(optional)</span></h2>
+<div style="display: flex; gap: 10px; flex-wrap: wrap">
+<input aria-label="Checkout Coupon Code" value="SUMMER2026" style="flex: 1 1 220px; border: 1px solid #CBD5E1; border-radius: 10px; height: 44px; padding: 0 12px; font-family: ui-monospace, monospace; text-transform: uppercase">
+<button type="button" style="border: 2px solid #0F172A; background: #FFFFFF; border-radius: 10px; padding: 0 20px; font-weight: 800; min-height: 44px; cursor: pointer">Apply</button>
+</div>
+<div class="alert alert-danger" role="alert" style="margin-top: 12px; background: #FEF2F2; color: #991B1B; border: 1px solid #FECACA; border-radius: 10px; padding: 10px 12px; font-weight: 600">Coupon code SUMMER2026 has expired</div>
+</section>
+</div>
+
+<aside aria-label="Order Review" style="flex: 1 1 340px; min-width: 0; background: #FFFFFF; border-radius: 16px; padding: 22px; display: flex; flex-direction: column; gap: 14px">
+<h2 style="margin: 0; font-size: 18px; font-weight: 800">Order review</h2>
+<ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px">
+<li style="display: flex; gap: 12px; align-items: center"><img src="/_blob/d04ef37e9822b5529880ae1e26856a38" alt="" style="width: 52px; height: 52px; border-radius: 8px; object-fit: cover; object-position: 85% 85%"><span style="flex: 1; min-width: 0"><strong style="display: block; font-size: 13px">Arc 14 Laptop</strong><span style="font-size: 12px; color: #64748B">Qty 1</span></span><strong>$1,299.00</strong></li>
+<li style="display: flex; gap: 12px; align-items: center"><img src="/_blob/7dd5e76662b5234bc8dd6572a5b11f34" alt="" style="width: 52px; height: 52px; border-radius: 8px; object-fit: cover"><span style="flex: 1; min-width: 0"><strong style="display: block; font-size: 13px">Studio Over-Ear Headphones</strong><span style="font-size: 12px; color: #64748B">Qty 2</span></span><strong>$658.00</strong></li>
+</ul>
+<dl style="margin: 0; padding-top: 14px; border-top: 1px solid #E2E8F0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; font-size: 14px">
+<dt style="color: #475569">Subtotal</dt><dd aria-label="Review Subtotal" style="margin: 0; text-align: right; font-weight: 700">$1,957.00</dd>
+<dt style="color: #475569">Shipping</dt><dd style="margin: 0; text-align: right; color: #0F766E; font-weight: 700">Free</dd>
+<dt style="color: #475569">Estimated tax</dt><dd aria-label="Estimated Tax Rate" style="margin: 0; text-align: right">20%</dd>
+</dl>
+<div style="display: flex; justify-content: space-between; align-items: baseline; padding-top: 14px; border-top: 1px solid #E2E8F0"><span style="font-weight: 800; font-size: 16px">Estimated total</span><span style="font-weight: 800; font-size: 26px; letter-spacing: -0.02em">$2,348.40</span></div>
+<a href="MOrderConfirmation.dc.html" style="display: flex; align-items: center; justify-content: center; min-height: 52px; border-radius: 12px; background: #0F766E; color: #FFFFFF; font-weight: 800; font-size: 16px">Place order</a>
+<p style="margin: 0; font-size: 12px; color: #64748B; text-align: center">By placing your order you agree to the terms of sale.</p>
+</aside>
+</div>
+</main>
+
+<footer style="background: #0F172A; color: #CBD5E1">
+<div style="max-width: 1200px; margin: 0 auto; padding: 24px 20px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; font-size: 12px">
+<span>© MyShop</span>
+<span>Photos on Unsplash by <a href="https://unsplash.com/photos/btVTuAIhvk8" style="color: #E2E8F0; text-decoration: underline">Dhony Koswara</a>, <a href="https://unsplash.com/photos/oBI4NBP2Lhg" style="color: #E2E8F0; text-decoration: underline">C D-X</a></span>
+</div>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1350}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

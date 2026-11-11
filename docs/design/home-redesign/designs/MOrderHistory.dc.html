@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MyShop — Order history</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#EEF1F5}
+a{color:#0F172A;text-decoration:none}a:hover{color:#0F766E}
+button,input,select{font:inherit}
+button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid #0F766E;outline-offset:2px}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #EEF1F5; color: #0F172A; font-family: Figtree, system-ui, sans-serif; font-size: 14px; line-height: 1.45">
+
+<div style="background: #0F172A; color: #E2E8F0; font-size: 12px"><div style="max-width: 1360px; margin: 0 auto; padding: 8px 20px">Free shipping over $1,000 · 30-day returns</div></div>
+<header style="background: #FFFFFF; border-bottom: 1px solid #DCE1E8">
+<div style="max-width: 1360px; margin: 0 auto; padding: 14px 20px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px">
+<a href="MarketHome.dc.html" style="font-weight: 800; font-size: 24px; letter-spacing: -0.04em">myshop<span style="color: #0F766E">.</span></a>
+<form role="search" style="flex: 1 1 420px; display: flex; height: 46px; border: 2px solid #0F172A; border-radius: 12px; overflow: hidden">
+<input type="search" aria-label="Search Products" placeholder="Search for products, brands and specs" style="flex: 1; min-width: 0; border: 0; outline: none; padding: 0 14px; font-size: 15px">
+<button type="button" aria-label="Search" style="border: 0; background: #0F172A; color: #FFFFFF; padding: 0 22px; font-weight: 700; cursor: pointer">Search</button>
+</form>
+<nav aria-label="Store navigation" style="display: flex; gap: 18px; font-weight: 600; color: #475569"><a href="MarketHome.dc.html">Catalog</a><a href="MOrderHistory.dc.html" style="color: #0F766E">Orders</a><a href="MAccount.dc.html">Account</a></nav>
+<a href="MCart.dc.html" aria-label="Cart" style="display: inline-flex; align-items: center; gap: 8px; min-height: 44px; font-weight: 700; background: #F1F5F9; border-radius: 10px; padding: 0 14px">Cart <span aria-label="Cart Item Count" style="background: #0F766E; color: #FFFFFF; border-radius: 999px; padding: 0 7px; font-size: 12px">0</span></a>
+</div>
+</header>
+
+<main style="max-width: 1360px; margin: 0 auto; padding: 24px 20px 64px">
+<div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; margin-bottom: 16px">
+<div>
+<h1 style="margin: 0 0 4px; font-size: 30px; font-weight: 800; letter-spacing: -0.02em">Order History</h1>
+<p style="margin: 0; color: #475569">5 orders</p>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center">
+<input aria-label="Order Number" placeholder="Enter order number..." style="border: 1px solid #CBD5E1; border-radius: 10px; height: 42px; padding: 0 12px; width: 220px; background: #FFFFFF">
+<select aria-label="Customer Filter" style="border: 1px solid #CBD5E1; border-radius: 10px; height: 42px; padding: 0 10px; background: #FFFFFF; font-weight: 600"><option>All customers</option><option>customer1</option><option>customer2</option></select>
+<button type="button" aria-label="Refresh Order List" style="border: 2px solid #0F172A; background: #FFFFFF; border-radius: 10px; height: 42px; padding: 0 16px; font-weight: 800; cursor: pointer">↻ Refresh</button>
+</div>
+</div>
+
+<div style="background: #FFFFFF; border-radius: 16px; overflow-x: auto">
+<table class="table" style="width: 100%; min-width: 1100px; border-collapse: collapse; font-size: 13px">
+<thead>
+<tr style="text-align: left; color: #64748B; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em">
+<th style="padding: 14px 16px; border-bottom: 1px solid #E2E8F0">Order Number</th>
+<th style="padding: 14px 16px; border-bottom: 1px solid #E2E8F0">Order Date</th>
+<th style="padding: 14px 16px; border-bottom: 1px solid #E2E8F0">Customer</th>
+<th style="padding: 14px 16px; border-bottom: 1px solid #E2E8F0">SKU</th>
+<th style="padding: 14px 16px; border-bottom: 1px solid #E2E8F0">Quantity</th>
+<th style="padding: 14px 16px; border-bottom: 1px solid #E2E8F0">Country</th>
+<th style="padding: 14px 16px; border-bottom: 1px solid #E2E8F0; text-align: right">Total Price</th>
+<th style="padding: 14px 16px; border-bottom: 1px solid #E2E8F0">Status</th>
+<th style="padding: 14px 16px; border-bottom: 1px solid #E2E8F0">Coupon Code</th>
+<th style="padding: 14px 16px; border-bottom: 1px solid #E2E8F0">Actions</th>
+</tr>
+</thead>
+<tbody>
+<sc-for list="{{orders}}" as="o" hint-placeholder-count="5">
+<tr>
+<td style="padding: 14px 16px; border-bottom: 1px solid #F1F5F9; font-family: ui-monospace, monospace; font-weight: 700"><a href="MOrderDetails.dc.html" style="color: #0F766E">{{o.no}}</a></td>
+<td style="padding: 14px 16px; border-bottom: 1px solid #F1F5F9; color: #475569">{{o.date}}</td>
+<td style="padding: 14px 16px; border-bottom: 1px solid #F1F5F9">{{o.customer}}</td>
+<td style="padding: 14px 16px; border-bottom: 1px solid #F1F5F9; font-family: ui-monospace, monospace">{{o.sku}}</td>
+<td style="padding: 14px 16px; border-bottom: 1px solid #F1F5F9">{{o.qty}}</td>
+<td style="padding: 14px 16px; border-bottom: 1px solid #F1F5F9">{{o.country}}</td>
+<td style="padding: 14px 16px; border-bottom: 1px solid #F1F5F9; text-align: right; font-weight: 800">{{o.total}}</td>
+<td style="padding: 14px 16px; border-bottom: 1px solid #F1F5F9"><span style="{{o.badge}}">{{o.status}}</span></td>
+<td style="padding: 14px 16px; border-bottom: 1px solid #F1F5F9; font-family: ui-monospace, monospace; color: #475569">{{o.coupon}}</td>
+<td style="padding: 14px 16px; border-bottom: 1px solid #F1F5F9"><a href="MOrderDetails.dc.html" style="color: #0F766E; font-weight: 700">View</a></td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+</main>
+
+<footer style="background: #0F172A; color: #CBD5E1"><div style="max-width: 1360px; margin: 0 auto; padding: 24px 20px; font-size: 12px">© MyShop</div></footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const B = 'display: inline-block; border-radius: 999px; padding: 3px 10px; font-size: 11px; font-weight: 800; ';
+    const S = {
+      PLACED: B + 'background: #E0F2FE; color: #075985',
+      DELIVERED: B + 'background: #ECFDF5; color: #065F46',
+      CANCELLED: B + 'background: #F1F5F9; color: #475569'
+    };
+    const rows = [
+      ['ORD-20261111-0043', '2026-11-11 18:02', 'customer1', 'HC-STUDIO', 2, 'GB', '$789.60', 'PLACED', '—'],
+      ['ORD-20261111-0042', '2026-11-11 18:02', 'customer1', 'NW-ARC14', 1, 'GB', '$1,558.80', 'PLACED', '—'],
+      ['ORD-20261109-0031', '2026-11-09 10:15', 'customer2', 'VT-LUM27', 1, 'US', '$484.92', 'DELIVERED', 'SUMMER2026'],
+      ['ORD-20261102-0017', '2026-11-02 14:40', 'customer1', 'KS-DRIFT', 1, 'DE', '$153.51', 'CANCELLED', '—'],
+      ['ORD-20261028-0009', '2026-10-28 09:05', 'customer2', 'KS-BEAM2', 3, 'US', '$61.56', 'DELIVERED', '—']
+    ];
+    const orders = rows.map(r => ({ no: r[0], date: r[1], customer: r[2], sku: r[3], qty: r[4], country: r[5], total: r[6], status: r[7], coupon: r[8], badge: S[r[7]] }));
+    return { orders };
+  }
+}
+</script>
+</body>
+</html>

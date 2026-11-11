@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MyShop — Sign in</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#EEF1F5}
+a{color:#0F172A;text-decoration:none}a:hover{color:#0F766E}
+button,input{font:inherit}
+button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid #0F766E;outline-offset:2px}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #EEF1F5; color: #0F172A; font-family: Figtree, system-ui, sans-serif; font-size: 14px; line-height: 1.45; display: flex; flex-direction: column">
+
+<header style="background: #FFFFFF; border-bottom: 1px solid #DCE1E8">
+<div style="max-width: 1360px; margin: 0 auto; padding: 16px 20px">
+<a href="MarketHome.dc.html" style="font-weight: 800; font-size: 24px; letter-spacing: -0.04em">myshop<span style="color: #0F766E">.</span></a>
+</div>
+</header>
+
+<main style="flex: 1; display: flex; flex-wrap: wrap; align-items: stretch; justify-content: center; gap: 0; max-width: 1040px; width: 100%; margin: 48px auto; padding: 0 20px; box-sizing: border-box">
+<section style="flex: 1 1 400px; min-width: 0; background: #FFFFFF; border-radius: 20px 0 0 20px; padding: 48px; display: flex; flex-direction: column; justify-content: center; gap: 18px">
+<h1 style="margin: 0; font-size: 32px; font-weight: 800; letter-spacing: -0.02em">Sign in</h1>
+<p style="margin: 0; color: #475569; font-size: 15px">Sign in to check out, track orders and save your address.</p>
+<button type="button" aria-label="Sign In" style="border: 0; border-radius: 12px; background: #0F766E; color: #FFFFFF; min-height: 52px; font-weight: 800; font-size: 16px; cursor: pointer">Sign in</button>
+<p style="margin: 0; font-size: 13px; color: #64748B">You'll continue to our secure sign-in page and come straight back here.</p>
+<div style="display: flex; align-items: center; gap: 12px; color: #94A3B8; font-size: 12px"><span style="flex: 1; height: 1px; background: #E2E8F0"></span>or<span style="flex: 1; height: 1px; background: #E2E8F0"></span></div>
+<a href="MarketHome.dc.html" style="display: flex; align-items: center; justify-content: center; min-height: 48px; border-radius: 12px; border: 2px solid #0F172A; font-weight: 800">Keep browsing as a guest</a>
+</section>
+<aside style="flex: 1 1 360px; min-width: 0; border-radius: 0 20px 20px 0; overflow: hidden; position: relative; min-height: 420px">
+<img src="/_blob/0a60fc390ab45fd3391bf9b57ad1eea4" alt="Mechanical keyboard with orange accent keys" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover">
+<div style="position: absolute; left: 20px; right: 20px; bottom: 20px; background: rgba(255,255,255,0.95); border-radius: 14px; padding: 16px 18px">
+<p style="margin: 0 0 2px; font-weight: 800">Free shipping over $1,000</p>
+<p style="margin: 0; color: #475569; font-size: 13px">30-day returns on every order.</p>
+</div>
+</aside>
+</main>
+
+<footer style="background: #0F172A; color: #CBD5E1">
+<div style="max-width: 1360px; margin: 0 auto; padding: 24px 20px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; font-size: 12px">
+<span>© MyShop</span>
+<span>Photo on Unsplash by <a href="https://unsplash.com/photos/U1I0IoQx3Yo" style="color: #E2E8F0; text-decoration: underline">Jay Zhang</a></span>
+</div>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

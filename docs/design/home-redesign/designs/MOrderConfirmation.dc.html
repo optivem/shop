@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MyShop — Order confirmation</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#EEF1F5}
+a{color:#0F172A;text-decoration:none}a:hover{color:#0F766E}
+button,input,select{font:inherit}
+button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid #0F766E;outline-offset:2px}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #EEF1F5; color: #0F172A; font-family: Figtree, system-ui, sans-serif; font-size: 14px; line-height: 1.45">
+
+<div style="background: #0F172A; color: #E2E8F0; font-size: 12px"><div style="max-width: 1360px; margin: 0 auto; padding: 8px 20px">Free shipping over $1,000 · 30-day returns</div></div>
+<header style="background: #FFFFFF; border-bottom: 1px solid #DCE1E8">
+<div style="max-width: 1360px; margin: 0 auto; padding: 14px 20px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px">
+<a href="MarketHome.dc.html" style="font-weight: 800; font-size: 24px; letter-spacing: -0.04em">myshop<span style="color: #0F766E">.</span></a>
+<form role="search" style="flex: 1 1 420px; display: flex; height: 46px; border: 2px solid #0F172A; border-radius: 12px; overflow: hidden">
+<input type="search" aria-label="Search Products" placeholder="Search for products, brands and specs" style="flex: 1; min-width: 0; border: 0; outline: none; padding: 0 14px; font-size: 15px">
+<button type="button" aria-label="Search" style="border: 0; background: #0F172A; color: #FFFFFF; padding: 0 22px; font-weight: 700; cursor: pointer">Search</button>
+</form>
+<nav aria-label="Store navigation" style="display: flex; gap: 18px; font-weight: 600; color: #475569"><a href="MarketHome.dc.html">Catalog</a><a href="MOrderHistory.dc.html">Orders</a><a href="MAccount.dc.html">Account</a></nav>
+<a href="MCart.dc.html" aria-label="Cart" style="display: inline-flex; align-items: center; gap: 8px; min-height: 44px; font-weight: 700; background: #F1F5F9; border-radius: 10px; padding: 0 14px">Cart <span aria-label="Cart Item Count" style="background: #0F766E; color: #FFFFFF; border-radius: 999px; padding: 0 7px; font-size: 12px">0</span></a>
+</div>
+</header>
+
+<main style="max-width: 820px; margin: 0 auto; padding: 40px 20px 64px; display: flex; flex-direction: column; gap: 16px">
+<section style="background: #FFFFFF; border-radius: 20px; padding: 36px; text-align: center">
+<div aria-hidden="true" style="width: 64px; height: 64px; margin: 0 auto 16px; border-radius: 999px; background: #ECFDF5; display: flex; align-items: center; justify-content: center"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#0F766E" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"></path></svg></div>
+<h1 style="margin: 0 0 6px; font-size: 32px; font-weight: 800; letter-spacing: -0.02em">Thank you for your order!</h1>
+<p style="margin: 0; color: #475569; font-size: 15px">We've sent a confirmation to ada@example.com.</p>
+</section>
+
+<section style="background: #FFFFFF; border-radius: 16px; padding: 22px">
+<h2 style="margin: 0 0 12px; font-size: 16px; font-weight: 800">Confirmed orders</h2>
+<ul aria-label="Confirmed Orders" style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px">
+<li style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; border: 1px solid #E2E8F0; border-radius: 12px; padding: 14px">
+<div><a href="MOrderDetails.dc.html" style="font-family: ui-monospace, monospace; font-weight: 700; color: #0F766E">ORD-20261111-0042</a><p style="margin: 2px 0 0; font-size: 13px; color: #475569">Arc 14 Laptop × 1</p></div>
+<span style="background: #ECFDF5; color: #065F46; font-weight: 700; font-size: 12px; border-radius: 999px; padding: 4px 10px">PLACED</span>
+</li>
+<li style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; border: 1px solid #E2E8F0; border-radius: 12px; padding: 14px">
+<div><a href="MOrderDetails.dc.html" style="font-family: ui-monospace, monospace; font-weight: 700; color: #0F766E">ORD-20261111-0043</a><p style="margin: 2px 0 0; font-size: 13px; color: #475569">Studio Over-Ear Headphones × 2</p></div>
+<span style="background: #ECFDF5; color: #065F46; font-weight: 700; font-size: 12px; border-radius: 999px; padding: 4px 10px">PLACED</span>
+</li>
+</ul>
+</section>
+
+<section aria-label="Rejected Lines" class="alert alert-danger" role="alert" style="background: #FEF2F2; color: #991B1B; border: 1px solid #FECACA; border-radius: 16px; padding: 18px 20px">
+<h2 style="margin: 0 0 6px; font-size: 15px; font-weight: 800">1 item could not be ordered</h2>
+<p style="margin: 0; font-size: 14px">Beam USB-C Cable, 2 m — insufficient stock. It's still in your cart.</p>
+</section>
+
+<div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; padding-top: 8px">
+<a href="MOrderHistory.dc.html" style="display: inline-flex; align-items: center; min-height: 48px; padding: 0 22px; border-radius: 12px; background: #0F766E; color: #FFFFFF; font-weight: 800">View my orders</a>
+<a href="MarketHome.dc.html" style="display: inline-flex; align-items: center; min-height: 48px; padding: 0 22px; border-radius: 12px; border: 2px solid #0F172A; font-weight: 800">Continue shopping</a>
+</div>
+</main>
+
+<footer style="background: #0F172A; color: #CBD5E1"><div style="max-width: 1360px; margin: 0 auto; padding: 24px 20px; font-size: 12px">© MyShop</div></footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

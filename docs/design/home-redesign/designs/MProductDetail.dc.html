@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MyShop — Product detail</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#EEF1F5}
+a{color:#0F172A;text-decoration:none}a:hover{color:#0F766E}
+button,input,select{font:inherit}
+button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid #0F766E;outline-offset:2px}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #EEF1F5; color: #0F172A; font-family: Figtree, system-ui, sans-serif; font-size: 14px; line-height: 1.45">
+
+<div style="background: #0F172A; color: #E2E8F0; font-size: 12px"><div style="max-width: 1360px; margin: 0 auto; padding: 8px 20px">Free shipping over $1,000 · 30-day returns</div></div>
+<header style="background: #FFFFFF; border-bottom: 1px solid #DCE1E8">
+<div style="max-width: 1360px; margin: 0 auto; padding: 14px 20px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px">
+<a href="MarketHome.dc.html" style="font-weight: 800; font-size: 24px; letter-spacing: -0.04em">myshop<span style="color: #0F766E">.</span></a>
+<form role="search" style="flex: 1 1 420px; display: flex; height: 46px; border: 2px solid #0F172A; border-radius: 12px; overflow: hidden">
+<input type="search" aria-label="Search Products" placeholder="Search for products, brands and specs" style="flex: 1; min-width: 0; border: 0; outline: none; padding: 0 14px; font-size: 15px">
+<button type="button" aria-label="Search" style="border: 0; background: #0F172A; color: #FFFFFF; padding: 0 22px; font-weight: 700; cursor: pointer">Search</button>
+</form>
+<nav aria-label="Store navigation" style="display: flex; gap: 18px; font-weight: 600; color: #475569"><a href="MarketHome.dc.html">Catalog</a><a href="MOrderHistory.dc.html">Orders</a><a href="MAccount.dc.html">Account</a></nav>
+<a href="MCart.dc.html" aria-label="Cart" style="display: inline-flex; align-items: center; gap: 8px; min-height: 44px; font-weight: 700; background: #F1F5F9; border-radius: 10px; padding: 0 14px">Cart <span aria-label="Cart Item Count" style="background: #0F766E; color: #FFFFFF; border-radius: 999px; padding: 0 7px; font-size: 12px">2</span></a>
+</div>
+</header>
+
+<main style="max-width: 1360px; margin: 0 auto; padding: 16px 20px 64px">
+<nav aria-label="breadcrumb" style="display: flex; gap: 8px; flex-wrap: wrap; font-size: 13px; color: #475569; margin-bottom: 14px">
+<a href="MarketHome.dc.html" aria-label="Back to Catalog" style="color: #0F766E; font-weight: 600">← Back to catalog</a><span aria-hidden="true">/</span><span>Laptops</span><span aria-hidden="true">/</span><span style="color: #0F172A">Arc 14 Laptop</span>
+</nav>
+
+<div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start">
+<section style="flex: 1 1 520px; min-width: 0; background: #FFFFFF; border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 12px">
+<div style="aspect-ratio: 4 / 3; border-radius: 12px; overflow: hidden"><img src="/_blob/d04ef37e9822b5529880ae1e26856a38" alt="Arc 14 Laptop" style="width: 100%; height: 100%; object-fit: cover; object-position: 82% 85%; display: block"></div>
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px">
+<button type="button" aria-label="View image 1" style="aspect-ratio: 1; border: 2px solid #0F766E; border-radius: 10px; padding: 0; overflow: hidden; cursor: pointer; background: #F1F5F9"><img src="/_blob/d04ef37e9822b5529880ae1e26856a38" alt="" style="width: 100%; height: 100%; object-fit: cover; object-position: 85% 85%; display: block"></button>
+<button type="button" aria-label="View image 2" style="aspect-ratio: 1; border: 1px solid #DCE1E8; border-radius: 10px; padding: 0; overflow: hidden; cursor: pointer; background: #F1F5F9"><img src="/_blob/d04ef37e9822b5529880ae1e26856a38" alt="" style="width: 100%; height: 100%; object-fit: cover; object-position: 20% 60%; display: block"></button>
+<button type="button" aria-label="View image 3" style="aspect-ratio: 1; border: 1px solid #DCE1E8; border-radius: 10px; cursor: pointer; background: #F1F5F9"></button>
+<button type="button" aria-label="View image 4" style="aspect-ratio: 1; border: 1px solid #DCE1E8; border-radius: 10px; cursor: pointer; background: #F1F5F9"></button>
+</div>
+</section>
+
+<section style="flex: 1 1 380px; min-width: 0; display: flex; flex-direction: column; gap: 14px">
+<div style="background: #FFFFFF; border-radius: 16px; padding: 24px; display: flex; flex-direction: column; gap: 10px">
+<p style="margin: 0; font-size: 13px; color: #475569"><a href="#" aria-label="Product Brand" style="color: #0F766E; font-weight: 700">Northwind</a> · <span aria-label="Product Category">Laptops</span></p>
+<h1 aria-label="Product Title" style="margin: 0; font-size: 30px; line-height: 1.15; letter-spacing: -0.02em; font-weight: 800">Arc 14 Laptop</h1>
+<p style="margin: 0; font-size: 12px; color: #64748B">SKU <span aria-label="Product SKU" style="font-family: ui-monospace, monospace; color: #0F172A">NW-ARC14</span></p>
+<p aria-label="Display Price" style="margin: 6px 0 0; font-size: 36px; font-weight: 800; letter-spacing: -0.02em"><span style="font-size: 16px; vertical-align: top">$</span>1,299<span style="font-size: 16px; vertical-align: top">00</span></p>
+<p style="margin: 0; color: #0F766E; font-weight: 700">Free shipping · In stock</p>
+<p aria-label="Product Description" style="margin: 6px 0 0; color: #334155; font-size: 15px">A 14-inch everyday laptop with an all-day battery, a bright display and a quiet, fanless design.</p>
+</div>
+
+<div style="background: #FFFFFF; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+<span style="font-weight: 700">Quantity</span>
+<div style="display: inline-flex; align-items: center; border: 1px solid #CBD5E1; border-radius: 10px">
+<button type="button" aria-label="Decrease Quantity" style="width: 44px; height: 44px; border: 0; background: transparent; font-size: 18px; cursor: pointer">−</button>
+<input aria-label="Product Quantity" value="1" style="width: 44px; text-align: center; border: 0; border-left: 1px solid #DCE1E8; border-right: 1px solid #DCE1E8; height: 44px; font-weight: 700">
+<button type="button" aria-label="Increase Quantity" style="width: 44px; height: 44px; border: 0; background: transparent; font-size: 18px; cursor: pointer">+</button>
+</div>
+</div>
+<button type="button" aria-label="Add to Cart" style="border: 0; border-radius: 12px; background: #0F766E; color: #FFFFFF; min-height: 52px; font-weight: 800; font-size: 16px; cursor: pointer">Add to cart</button>
+<ul style="list-style: none; margin: 0; padding: 12px 0 0; border-top: 1px solid #E2E8F0; display: flex; flex-direction: column; gap: 8px; color: #334155; font-size: 13px">
+<li>✓ Free shipping on orders over $1,000</li>
+<li>✓ 30-day returns</li>
+</ul>
+</div>
+
+<div style="background: #FFFFFF; border-radius: 16px; padding: 20px">
+<h2 style="margin: 0 0 10px; font-size: 16px; font-weight: 800">Specifications</h2>
+<dl style="margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 16px; font-size: 13px">
+<dt style="color: #64748B">Display</dt><dd style="margin: 0">14 in</dd>
+<dt style="color: #64748B">Memory</dt><dd style="margin: 0">16 GB</dd>
+<dt style="color: #64748B">Storage</dt><dd style="margin: 0">512 GB SSD</dd>
+</dl>
+</div>
+</section>
+</div>
+</main>
+
+<footer style="background: #0F172A; color: #CBD5E1">
+<div style="max-width: 1360px; margin: 0 auto; padding: 24px 20px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; font-size: 12px">
+<span>© MyShop</span>
+<span>Photo on Unsplash by <a href="https://unsplash.com/photos/btVTuAIhvk8" style="color: #E2E8F0; text-decoration: underline">Dhony Koswara</a></span>
+</div>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1250}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

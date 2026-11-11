@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MyShop — Admin coupons</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#EEF1F5}
+a{color:#0F172A;text-decoration:none}a:hover{color:#0F766E}
+button,input,select{font:inherit}
+button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid #0F766E;outline-offset:2px}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #EEF1F5; color: #0F172A; font-family: Figtree, system-ui, sans-serif; font-size: 14px; line-height: 1.45">
+
+<div style="background: #422006; color: #FEF9C3; font-size: 12px; font-weight: 700"><div style="max-width: 1360px; margin: 0 auto; padding: 8px 20px">Admin mode · changes affect all customers</div></div>
+<header style="background: #FFFFFF; border-bottom: 1px solid #DCE1E8">
+<div style="max-width: 1360px; margin: 0 auto; padding: 14px 20px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px">
+<div style="display: flex; align-items: center; gap: 12px">
+<a href="MarketHome.dc.html" style="font-weight: 800; font-size: 24px; letter-spacing: -0.04em">myshop<span style="color: #0F766E">.</span></a>
+<span style="background: #FDE047; color: #422006; font-weight: 800; font-size: 12px; border-radius: 6px; padding: 3px 8px">Admin</span>
+</div>
+<nav aria-label="Store navigation" style="display: flex; gap: 18px; font-weight: 600; color: #475569"><a href="MarketHome.dc.html">Catalog</a><a href="MOrderHistory.dc.html">Orders</a><a href="MAdminCoupons.dc.html" style="color: #0F766E">Coupons</a><a href="MAccount.dc.html">Account</a></nav>
+</div>
+</header>
+
+<main style="max-width: 1360px; margin: 0 auto; padding: 24px 20px 64px; display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start">
+<section style="flex: 1 1 340px; max-width: 400px; background: #FFFFFF; border-radius: 16px; padding: 24px">
+<h1 style="margin: 0 0 4px; font-size: 22px; font-weight: 800; letter-spacing: -0.02em">Create New Coupon</h1>
+<p style="margin: 0 0 18px; color: #475569; font-size: 13px">Discounts apply at checkout when the code is entered.</p>
+<form style="display: flex; flex-direction: column; gap: 14px">
+<label style="display: flex; flex-direction: column; gap: 6px; font-weight: 700; font-size: 13px">Coupon code<input aria-label="Coupon Code" placeholder="e.g., SUMMER2026" style="border: 1px solid #CBD5E1; border-radius: 10px; height: 44px; padding: 0 12px; font-family: ui-monospace, monospace; text-transform: uppercase"></label>
+<label style="display: flex; flex-direction: column; gap: 6px; font-weight: 700; font-size: 13px">Discount rate<input aria-label="Discount Rate" placeholder="e.g., 0.2 for 20% off" style="border: 1px solid #CBD5E1; border-radius: 10px; height: 44px; padding: 0 12px"></label>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+<label style="display: flex; flex-direction: column; gap: 6px; font-weight: 700; font-size: 13px">Valid from<input aria-label="Valid From" type="date" style="border: 1px solid #CBD5E1; border-radius: 10px; height: 44px; padding: 0 10px"></label>
+<label style="display: flex; flex-direction: column; gap: 6px; font-weight: 700; font-size: 13px">Valid to<input aria-label="Valid To" type="date" style="border: 1px solid #CBD5E1; border-radius: 10px; height: 44px; padding: 0 10px"></label>
+</div>
+<label style="display: flex; flex-direction: column; gap: 6px; font-weight: 700; font-size: 13px">Usage limit<input aria-label="Usage Limit" placeholder="Leave empty for unlimited" style="border: 1px solid #CBD5E1; border-radius: 10px; height: 44px; padding: 0 12px"></label>
+<button type="button" style="border: 0; border-radius: 12px; background: #0F766E; color: #FFFFFF; min-height: 48px; font-weight: 800; cursor: pointer; margin-top: 4px">Create coupon</button>
+</form>
+</section>
+
+<section style="flex: 999 1 640px; min-width: 0; background: #FFFFFF; border-radius: 16px; padding: 8px 0 0">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; padding: 16px 20px">
+<div><h2 style="margin: 0; font-size: 20px; font-weight: 800">Existing Coupons</h2><p style="margin: 2px 0 0; color: #475569; font-size: 13px">4 coupons</p></div>
+<button type="button" aria-label="Refresh Coupon List" style="border: 2px solid #0F172A; background: #FFFFFF; border-radius: 10px; height: 40px; padding: 0 14px; font-weight: 800; cursor: pointer">↻ Refresh</button>
+</div>
+<div style="overflow-x: auto">
+<table class="table" aria-label="Coupons Table" style="width: 100%; min-width: 760px; border-collapse: collapse; font-size: 13px">
+<thead>
+<tr style="text-align: left; color: #64748B; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; background: #F8FAFC">
+<th style="padding: 12px 20px">Code</th><th style="padding: 12px 20px">Discount Rate</th><th style="padding: 12px 20px">Valid From</th><th style="padding: 12px 20px">Valid To</th><th style="padding: 12px 20px">Usage Limit</th><th style="padding: 12px 20px">Used Count</th><th style="padding: 12px 20px">Status</th>
+</tr>
+</thead>
+<tbody>
+<sc-for list="{{coupons}}" as="c" hint-placeholder-count="4">
+<tr>
+<td style="padding: 14px 20px; border-top: 1px solid #F1F5F9; font-family: ui-monospace, monospace; font-weight: 700">{{c.code}}</td>
+<td style="padding: 14px 20px; border-top: 1px solid #F1F5F9">{{c.rate}}</td>
+<td style="padding: 14px 20px; border-top: 1px solid #F1F5F9; color: #475569">{{c.from}}</td>
+<td style="padding: 14px 20px; border-top: 1px solid #F1F5F9; color: #475569">{{c.to}}</td>
+<td style="padding: 14px 20px; border-top: 1px solid #F1F5F9">{{c.limit}}</td>
+<td style="padding: 14px 20px; border-top: 1px solid #F1F5F9">{{c.used}}</td>
+<td style="padding: 14px 20px; border-top: 1px solid #F1F5F9"><span style="{{c.badge}}">{{c.status}}</span></td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+</section>
+</main>
+
+<footer style="background: #0F172A; color: #CBD5E1"><div style="max-width: 1360px; margin: 0 auto; padding: 24px 20px; font-size: 12px">© MyShop</div></footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1200}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const B = 'display: inline-block; border-radius: 999px; padding: 3px 10px; font-size: 11px; font-weight: 800; ';
+    const S = { Active: B + 'background: #ECFDF5; color: #065F46', Expired: B + 'background: #F1F5F9; color: #475569', Scheduled: B + 'background: #E0F2FE; color: #075985' };
+    const coupons = [
+      ['WELCOME10', '10%', '2026-01-01', '2026-12-31', 'Unlimited', 128, 'Active'],
+      ['BLACKFRIDAY', '25%', '2026-11-27', '2026-11-30', '500', 0, 'Scheduled'],
+      ['SUMMER2026', '20%', '2026-06-01', '2026-08-31', '1000', 642, 'Expired'],
+      ['DEVDESK15', '15%', '2026-10-01', '2026-12-31', '200', 37, 'Active']
+    ].map(r => ({ code: r[0], rate: r[1], from: r[2], to: r[3], limit: r[4], used: r[5], status: r[6], badge: S[r[6]] }));
+    return { coupons };
+  }
+}
+</script>
+</body>
+</html>

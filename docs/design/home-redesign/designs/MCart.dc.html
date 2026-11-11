@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MyShop — Cart</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#EEF1F5}
+a{color:#0F172A;text-decoration:none}a:hover{color:#0F766E}
+button,input,select{font:inherit}
+button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid #0F766E;outline-offset:2px}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #EEF1F5; color: #0F172A; font-family: Figtree, system-ui, sans-serif; font-size: 14px; line-height: 1.45">
+
+<div style="background: #0F172A; color: #E2E8F0; font-size: 12px"><div style="max-width: 1360px; margin: 0 auto; padding: 8px 20px">Free shipping over $1,000 · 30-day returns</div></div>
+<header style="background: #FFFFFF; border-bottom: 1px solid #DCE1E8">
+<div style="max-width: 1360px; margin: 0 auto; padding: 14px 20px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px">
+<a href="MarketHome.dc.html" style="font-weight: 800; font-size: 24px; letter-spacing: -0.04em">myshop<span style="color: #0F766E">.</span></a>
+<form role="search" style="flex: 1 1 420px; display: flex; height: 46px; border: 2px solid #0F172A; border-radius: 12px; overflow: hidden">
+<input type="search" aria-label="Search Products" placeholder="Search for products, brands and specs" style="flex: 1; min-width: 0; border: 0; outline: none; padding: 0 14px; font-size: 15px">
+<button type="button" aria-label="Search" style="border: 0; background: #0F172A; color: #FFFFFF; padding: 0 22px; font-weight: 700; cursor: pointer">Search</button>
+</form>
+<nav aria-label="Store navigation" style="display: flex; gap: 18px; font-weight: 600; color: #475569"><a href="MarketHome.dc.html">Catalog</a><a href="MOrderHistory.dc.html">Orders</a><a href="MAccount.dc.html">Account</a></nav>
+<a href="MCart.dc.html" aria-label="Cart" style="display: inline-flex; align-items: center; gap: 8px; min-height: 44px; font-weight: 700; background: #F1F5F9; border-radius: 10px; padding: 0 14px">Cart <span aria-label="Cart Item Count" style="background: #0F766E; color: #FFFFFF; border-radius: 999px; padding: 0 7px; font-size: 12px">3</span></a>
+</div>
+</header>
+
+<main style="max-width: 1360px; margin: 0 auto; padding: 24px 20px 64px">
+<h1 style="margin: 0 0 4px; font-size: 30px; font-weight: 800; letter-spacing: -0.02em">Your cart</h1>
+<p aria-label="Cart Line Count" style="margin: 0 0 18px; color: #475569">2 items</p>
+
+<div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start">
+<section style="flex: 999 1 600px; min-width: 0; background: #FFFFFF; border-radius: 16px; padding: 8px 20px">
+<div style="display: grid; grid-template-columns: minmax(0, 1fr) 150px 110px; gap: 16px; padding: 12px 0; border-bottom: 1px solid #E2E8F0; font-size: 12px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.04em">
+<span>Product</span><span>Quantity</span><span style="text-align: right">Subtotal</span>
+</div>
+<ul aria-label="Cart Lines" style="list-style: none; margin: 0; padding: 0">
+<li style="display: grid; grid-template-columns: minmax(0, 1fr) 150px 110px; gap: 16px; align-items: center; padding: 16px 0; border-bottom: 1px solid #E2E8F0">
+<div style="display: flex; gap: 14px; align-items: center; min-width: 0">
+<img src="/_blob/d04ef37e9822b5529880ae1e26856a38" alt="Arc 14 Laptop" style="width: 88px; height: 88px; border-radius: 10px; object-fit: cover; object-position: 85% 85%; flex: none">
+<div style="min-width: 0">
+<a href="MProductDetail.dc.html" style="font-weight: 700; font-size: 15px">Northwind Arc 14 Laptop</a>
+<p style="margin: 2px 0 6px; font-size: 12px; color: #64748B">SKU NW-ARC14 · $1,299.00 each</p>
+<button type="button" style="border: 0; background: transparent; padding: 0; color: #0F766E; font-weight: 600; cursor: pointer; font-size: 13px; min-height: 28px">Remove</button>
+</div>
+</div>
+<div style="display: inline-flex; align-items: center; border: 1px solid #CBD5E1; border-radius: 10px; justify-self: start">
+<button type="button" aria-label="Decrease Quantity" style="width: 40px; height: 40px; border: 0; background: transparent; cursor: pointer">−</button>
+<span style="width: 36px; text-align: center; font-weight: 700">1</span>
+<button type="button" aria-label="Increase Quantity" style="width: 40px; height: 40px; border: 0; background: transparent; cursor: pointer">+</button>
+</div>
+<span style="text-align: right; font-weight: 800; font-size: 16px">$1,299.00</span>
+</li>
+<li style="display: grid; grid-template-columns: minmax(0, 1fr) 150px 110px; gap: 16px; align-items: center; padding: 16px 0">
+<div style="display: flex; gap: 14px; align-items: center; min-width: 0">
+<img src="/_blob/7dd5e76662b5234bc8dd6572a5b11f34" alt="Studio Over-Ear Headphones" style="width: 88px; height: 88px; border-radius: 10px; object-fit: cover; flex: none">
+<div style="min-width: 0">
+<a href="MProductDetail.dc.html" style="font-weight: 700; font-size: 15px">Halcyon Studio Over-Ear Headphones</a>
+<p style="margin: 2px 0 6px; font-size: 12px; color: #64748B">SKU HC-STUDIO · $329.00 each</p>
+<button type="button" style="border: 0; background: transparent; padding: 0; color: #0F766E; font-weight: 600; cursor: pointer; font-size: 13px; min-height: 28px">Remove</button>
+</div>
+</div>
+<div style="display: inline-flex; align-items: center; border: 1px solid #CBD5E1; border-radius: 10px; justify-self: start">
+<button type="button" aria-label="Decrease Quantity" style="width: 40px; height: 40px; border: 0; background: transparent; cursor: pointer">−</button>
+<span style="width: 36px; text-align: center; font-weight: 700">2</span>
+<button type="button" aria-label="Increase Quantity" style="width: 40px; height: 40px; border: 0; background: transparent; cursor: pointer">+</button>
+</div>
+<span style="text-align: right; font-weight: 800; font-size: 16px">$658.00</span>
+</li>
+</ul>
+</section>
+
+<aside style="flex: 1 1 320px; min-width: 0; display: flex; flex-direction: column; gap: 14px">
+<div style="background: #FFFFFF; border-radius: 16px; padding: 22px; display: flex; flex-direction: column; gap: 14px">
+<h2 style="margin: 0; font-size: 18px; font-weight: 800">Order summary</h2>
+<div style="display: flex; justify-content: space-between; font-size: 15px"><span>Subtotal</span><span aria-label="Cart Subtotal" style="font-weight: 800">$1,957.00</span></div>
+<p style="margin: 0; background: #ECFDF5; color: #065F46; border-radius: 10px; padding: 10px 12px; font-size: 13px; font-weight: 600">Your order qualifies for free shipping.</p>
+<p style="margin: 0; font-size: 12px; color: #64748B">Tax and coupons are applied at checkout.</p>
+<a href="MCheckout.dc.html" aria-label="Proceed to Checkout" style="display: flex; align-items: center; justify-content: center; min-height: 52px; border-radius: 12px; background: #0F766E; color: #FFFFFF; font-weight: 800; font-size: 16px">Proceed to checkout</a>
+<a href="MarketHome.dc.html" style="text-align: center; color: #0F766E; font-weight: 600">Continue shopping</a>
+</div>
+</aside>
+</div>
+</main>
+
+<footer style="background: #0F172A; color: #CBD5E1">
+<div style="max-width: 1360px; margin: 0 auto; padding: 24px 20px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; font-size: 12px">
+<span>© MyShop</span>
+<span>Photos on Unsplash by <a href="https://unsplash.com/photos/btVTuAIhvk8" style="color: #E2E8F0; text-decoration: underline">Dhony Koswara</a>, <a href="https://unsplash.com/photos/oBI4NBP2Lhg" style="color: #E2E8F0; text-decoration: underline">C D-X</a></span>
+</div>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1100}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

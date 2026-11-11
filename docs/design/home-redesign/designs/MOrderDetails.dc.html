@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MyShop — Order details</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#EEF1F5}
+a{color:#0F172A;text-decoration:none}a:hover{color:#0F766E}
+button,input,select{font:inherit}
+button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid #0F766E;outline-offset:2px}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #EEF1F5; color: #0F172A; font-family: Figtree, system-ui, sans-serif; font-size: 14px; line-height: 1.45">
+
+<div style="background: #0F172A; color: #E2E8F0; font-size: 12px"><div style="max-width: 1360px; margin: 0 auto; padding: 8px 20px">Free shipping over $1,000 · 30-day returns</div></div>
+<header style="background: #FFFFFF; border-bottom: 1px solid #DCE1E8">
+<div style="max-width: 1360px; margin: 0 auto; padding: 14px 20px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px">
+<a href="MarketHome.dc.html" style="font-weight: 800; font-size: 24px; letter-spacing: -0.04em">myshop<span style="color: #0F766E">.</span></a>
+<form role="search" style="flex: 1 1 420px; display: flex; height: 46px; border: 2px solid #0F172A; border-radius: 12px; overflow: hidden">
+<input type="search" aria-label="Search Products" placeholder="Search for products, brands and specs" style="flex: 1; min-width: 0; border: 0; outline: none; padding: 0 14px; font-size: 15px">
+<button type="button" aria-label="Search" style="border: 0; background: #0F172A; color: #FFFFFF; padding: 0 22px; font-weight: 700; cursor: pointer">Search</button>
+</form>
+<nav aria-label="Store navigation" style="display: flex; gap: 18px; font-weight: 600; color: #475569"><a href="MarketHome.dc.html">Catalog</a><a href="MOrderHistory.dc.html" style="color: #0F766E">Orders</a><a href="MAccount.dc.html">Account</a></nav>
+<a href="MCart.dc.html" aria-label="Cart" style="display: inline-flex; align-items: center; gap: 8px; min-height: 44px; font-weight: 700; background: #F1F5F9; border-radius: 10px; padding: 0 14px">Cart <span aria-label="Cart Item Count" style="background: #0F766E; color: #FFFFFF; border-radius: 999px; padding: 0 7px; font-size: 12px">0</span></a>
+</div>
+</header>
+
+<main style="max-width: 1100px; margin: 0 auto; padding: 24px 20px 64px; display: flex; flex-direction: column; gap: 16px">
+<a href="MOrderHistory.dc.html" style="color: #0F766E; font-weight: 700; font-size: 13px">← Back to orders</a>
+
+<section style="background: #FFFFFF; border-radius: 16px; padding: 24px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px">
+<div>
+<p style="margin: 0 0 4px; font-size: 12px; color: #64748B; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em">Order Details</p>
+<h1 style="margin: 0; font-size: 26px; font-weight: 800; font-family: ui-monospace, monospace; letter-spacing: -0.02em" aria-label="Order Number">ORD-20261111-0042</h1>
+<p style="margin: 6px 0 0; color: #475569">Placed 2026-11-11 18:02 UTC · <span style="background: #E0F2FE; color: #075985; font-weight: 800; font-size: 11px; border-radius: 999px; padding: 3px 10px">PLACED</span></p>
+</div>
+<div style="display: flex; gap: 10px; flex-wrap: wrap">
+<button type="button" aria-label="Cancel Order" style="border: 2px solid #991B1B; color: #991B1B; background: #FFFFFF; border-radius: 10px; min-height: 44px; padding: 0 18px; font-weight: 800; cursor: pointer">Cancel order</button>
+<button type="button" aria-label="Deliver Order" style="border: 0; background: #0F766E; color: #FFFFFF; border-radius: 10px; min-height: 44px; padding: 0 18px; font-weight: 800; cursor: pointer">Mark as delivered</button>
+</div>
+</section>
+
+<div class="alert alert-danger" role="alert" style="background: #FEF2F2; color: #991B1B; border: 1px solid #FECACA; border-radius: 12px; padding: 12px 16px; font-weight: 600">Error state example: Order has already been delivered and cannot be cancelled</div>
+
+<div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start">
+<section style="flex: 999 1 520px; min-width: 0; background: #FFFFFF; border-radius: 16px; padding: 24px">
+<h2 style="margin: 0 0 14px; font-size: 16px; font-weight: 800">Item</h2>
+<div style="display: flex; gap: 16px; align-items: center; padding-bottom: 16px; border-bottom: 1px solid #E2E8F0">
+<img src="/_blob/d04ef37e9822b5529880ae1e26856a38" alt="Arc 14 Laptop" style="width: 96px; height: 96px; border-radius: 12px; object-fit: cover; object-position: 85% 85%">
+<div><p style="margin: 0; font-weight: 800; font-size: 16px">Arc 14 Laptop</p><p style="margin: 2px 0 0; color: #64748B; font-size: 13px">SKU <span style="font-family: ui-monospace, monospace">NW-ARC14</span> · Quantity 1 · Unit Price $1,299.00</p></div>
+</div>
+<dl style="margin: 16px 0 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 24px">
+<div><dt style="font-size: 12px; color: #64748B; font-weight: 700">Shipping Address</dt><dd style="margin: 2px 0 0">12 Analytical Way, London N1 9GU</dd></div>
+<div><dt style="font-size: 12px; color: #64748B; font-weight: 700">Country</dt><dd style="margin: 2px 0 0">GB</dd></div>
+<div><dt style="font-size: 12px; color: #64748B; font-weight: 700">Applied Coupon</dt><dd style="margin: 2px 0 0; font-family: ui-monospace, monospace">None</dd></div>
+<div><dt style="font-size: 12px; color: #64748B; font-weight: 700">Order Timestamp</dt><dd style="margin: 2px 0 0">2026-11-11T18:02:11Z</dd></div>
+</dl>
+</section>
+
+<aside style="flex: 1 1 320px; min-width: 0; background: #FFFFFF; border-radius: 16px; padding: 24px">
+<h2 style="margin: 0 0 14px; font-size: 16px; font-weight: 800">Price breakdown</h2>
+<dl style="margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; font-size: 14px">
+<dt style="color: #475569">Base Price</dt><dd style="margin: 0; text-align: right">$1,299.00</dd>
+<dt style="color: #475569">Discount Rate</dt><dd style="margin: 0; text-align: right">0%</dd>
+<dt style="color: #475569">Discount Amount</dt><dd style="margin: 0; text-align: right">$0.00</dd>
+<dt style="color: #475569">Subtotal Price</dt><dd style="margin: 0; text-align: right; font-weight: 700">$1,299.00</dd>
+<dt style="color: #475569">Tax Rate</dt><dd style="margin: 0; text-align: right">20%</dd>
+<dt style="color: #475569">Tax Amount</dt><dd style="margin: 0; text-align: right">$259.80</dd>
+</dl>
+<div style="display: flex; justify-content: space-between; align-items: baseline; margin-top: 14px; padding-top: 14px; border-top: 1px solid #E2E8F0"><span style="font-weight: 800">Total Price</span><span style="font-size: 26px; font-weight: 800; letter-spacing: -0.02em">$1,558.80</span></div>
+</aside>
+</div>
+</main>
+
+<footer style="background: #0F172A; color: #CBD5E1">
+<div style="max-width: 1360px; margin: 0 auto; padding: 24px 20px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; font-size: 12px">
+<span>© MyShop</span>
+<span>Photo on Unsplash by <a href="https://unsplash.com/photos/btVTuAIhvk8" style="color: #E2E8F0; text-decoration: underline">Dhony Koswara</a></span>
+</div>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1200}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
