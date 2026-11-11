@@ -54,7 +54,7 @@ public static class ResilienceExtensions
                     FailureRatio = settings.FailureRatio,
                     MinimumThroughput = settings.MinimumThroughput,
                     SamplingDuration = TimeSpan.FromSeconds(settings.SamplingDurationSeconds),
-                    BreakDuration = TimeSpan.FromSeconds(settings.BreakDurationSeconds),
+                    BreakDuration = TimeSpan.FromMilliseconds(settings.BreakDurationMilliseconds),
                     ShouldHandle = args => ValueTask.FromResult(IsFailure(args.Outcome))
                 })
                 .AddTimeout(TimeSpan.FromMilliseconds(settings.AttemptTimeoutMilliseconds));
@@ -80,6 +80,6 @@ public static class ResilienceExtensions
         public double FailureRatio { get; set; } = 0.5;
         public int MinimumThroughput { get; set; } = 5;
         public int SamplingDurationSeconds { get; set; } = 30;
-        public int BreakDurationSeconds { get; set; } = 10;
+        public int BreakDurationMilliseconds { get; set; } = 10000;
     }
 }

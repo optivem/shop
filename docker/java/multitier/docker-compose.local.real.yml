@@ -9,7 +9,7 @@ services:
     ports:
       - "3111:3000"
     environment:
-      - OTEL_BROWSER_EXPORTER_OTLP_ENDPOINT
+      - OTEL_BROWSER_EXPORTER_OTLP_ENDPOINT=${OTEL_BROWSER_EXPORTER_OTLP_ENDPOINT:-}
       - BACKEND_API_URL=http://backend:8081
       - KEYCLOAK_URL=http://localhost:8191
       - KEYCLOAK_REALM=shop

@@ -9,7 +9,7 @@ services:
     ports:
       - "3212:3000"
     environment:
-      - OTEL_BROWSER_EXPORTER_OTLP_ENDPOINT
+      - OTEL_BROWSER_EXPORTER_OTLP_ENDPOINT=${OTEL_BROWSER_EXPORTER_OTLP_ENDPOINT:-}
       - BACKEND_API_URL=http://backend:8081
       - KEYCLOAK_URL=http://localhost:8292
       - KEYCLOAK_REALM=shop
@@ -36,6 +36,8 @@ services:
       - POSTGRES_DB_PASSWORD=app
       - ALLOWED_ORIGINS=http://localhost:3212,http://frontend:3000
       - ERP_API_URL=http://external-system-stubs:8080/erp
+      # Stub only: a short breaker open time so an ERP-outage test doesn't leak 503s into the next test
+      - Resilience__Erp__BreakDurationMilliseconds=500
       - CLOCK_API_URL=http://external-system-stubs:8080/clock
       - TAX_API_URL=http://external-system-stubs:8080/tax
       - EXTERNAL_SYSTEM_MODE=stub

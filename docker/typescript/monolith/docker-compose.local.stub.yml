@@ -18,6 +18,8 @@ services:
       - POSTGRES_DB_USER=app
       - POSTGRES_DB_PASSWORD=app
       - ERP_API_URL=http://external-system-stubs:8080/erp
+      # Stub only: a short breaker open time so an ERP-outage test doesn't leak 503s into the next test
+      - EXTERNAL_BREAKER_HALF_OPEN_AFTER_MS=100
       - CLOCK_API_URL=http://external-system-stubs:8080/clock
       - TAX_API_URL=http://external-system-stubs:8080/tax
       - EXTERNAL_SYSTEM_MODE=stub

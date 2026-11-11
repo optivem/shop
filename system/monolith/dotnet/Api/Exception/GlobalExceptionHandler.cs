@@ -26,7 +26,7 @@ public class GlobalExceptionHandler : IExceptionHandler
     public GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger, IConfiguration configuration)
     {
         _logger = logger;
-        _erpRetryAfterSeconds = configuration.GetValue("Resilience:Erp:BreakDurationSeconds", 10).ToString(System.Globalization.CultureInfo.InvariantCulture);
+        _erpRetryAfterSeconds = System.Math.Max(1, (int)System.Math.Ceiling(configuration.GetValue("Resilience:Erp:BreakDurationMilliseconds", 10000) / 1000.0)).ToString(System.Globalization.CultureInfo.InvariantCulture);
     }
 
     public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, System.Exception exception, CancellationToken cancellationToken)
