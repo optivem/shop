@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Creates customers in the local Keycloak's test realm, each with a unique username and a random password, and
+ * Creates customers in Keycloak's test realm, each with a unique username and a random password, and
  * deletes them again on close.
  */
 public class KeycloakIdentityProviderDriver implements IdentityProviderDriver {

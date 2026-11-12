@@ -5,7 +5,7 @@ using Driver.Port.External.Identity;
 namespace Driver.Adapter.External.Identity;
 
 /// <summary>
-/// Creates customers in the local Keycloak's test realm, each with a unique username and a random password, and
+/// Creates customers in Keycloak's test realm, each with a unique username and a random password, and
 /// deletes them again on dispose.
 /// </summary>
 public sealed class KeycloakIdentityProviderDriver : IIdentityProviderDriver

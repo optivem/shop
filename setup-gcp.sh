@@ -314,7 +314,7 @@ MISSING_GH_SECRETS=()
 repo_secrets=$(gh secret list --json name --jq '.[].name')
 # Organization secrets shared with this repo satisfy the workflows too (best-effort: user repos have none)
 org_secrets=$(gh api "repos/$REPO/actions/organization-secrets" --paginate --jq '.secrets[].name' 2> /dev/null) || org_secrets=""
-for s in GHCR_TOKEN WORKFLOW_TOKEN; do
+for s in GHCR_TOKEN WORKFLOW_TOKEN KEYCLOAK_TEST_ADMIN_CLIENT_SECRET; do
   if grep -qx "$s" <<< "$repo_secrets"; then
     echo "  ✅ GitHub secret $s exists"
   elif grep -qx "$s" <<< "$org_secrets"; then
@@ -341,7 +341,7 @@ if (( ${#MISSING_GH_SECRETS[@]} > 0 )); then
   for s in "${MISSING_GH_SECRETS[@]}"; do
     echo "    gh secret set $s"
   done
-  echo "    (GHCR_TOKEN: PAT with write:packages, which the cloud stages use to tag images and publish the shared shop-* images; WORKFLOW_TOKEN: PAT with repo + workflow)"
+  echo "    (GHCR_TOKEN: PAT with write:packages, which the cloud stages use to tag images and publish the shared shop-* images; WORKFLOW_TOKEN: PAT with repo + workflow; KEYCLOAK_TEST_ADMIN_CLIENT_SECRET: a random string, e.g. --body \"\$(openssl rand -base64 32)\", the secret of the acceptance realm's shop-system-test-admin service account, which the system tests create customers with)"
   echo ""
 fi
 echo "  Next steps:"

@@ -306,6 +306,9 @@ jobs:
           project-number: ${{ needs.shared-images.outputs.project-number }}
           region: ${{ vars.GCP_REGION }}
           keycloak-domain: ${{ vars.KEYCLOAK_DOMAIN }}
+          # The service account the system tests create customers with (realm shop only).
+          reconcile-system-test-admin: 'true'
+          system-test-admin-secret: ${{ secrets.KEYCLOAK_TEST_ADMIN_CLIENT_SECRET }}
           frontend-origins: >-
             ${{ inputs.acc-domain && format('https://{0}', inputs.acc-domain) || '' }}
             ${{ inputs.e2e-domain && format('https://{0}', inputs.e2e-domain) || '' }}
@@ -547,6 +550,12 @@ jobs:
       GH_OPTIVEM_CONFIG: gh-optivem-${{ inputs.architecture }}-${{ inputs.test-language || inputs.language }}.yaml
       # Selects the acceptance environment in every test harness; every URL in it is overridden below.
       ENVIRONMENT: acceptance
+      # Fresh customers per test: the harness signs in to the shared Keycloak as the test realm's service
+      # account (deploy-keycloak reconciles the client and sets this same secret), never as the master
+      # admin. The harness refuses any realm but shop, and shop-prod always.
+      KEYCLOAK_TEST_ADMIN_CLIENT_ID: shop-system-test-admin
+      KEYCLOAK_TEST_ADMIN_CLIENT_SECRET: ${{ secrets.KEYCLOAK_TEST_ADMIN_CLIENT_SECRET }}
+      KEYCLOAK_TEST_ADMIN_REALM: shop
       REGION: ${{ vars.GCP_REGION }}
       PROJECT_NUMBER: ${{ needs.shared-images.outputs.project-number }}
       ACC_DOMAIN: ${{ inputs.acc-domain }}

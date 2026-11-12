@@ -45,7 +45,7 @@ The script will:
 6. Configure GitHub repository variables
 7. Create the Neon project and the variant databases (a variant added later gets its databases on the next run)
 8. Store the Neon credentials and the Keycloak admin password in Secret Manager (the password is generated unless `KC_ADMIN_PASSWORD` is set)
-9. Report any missing GitHub secrets (`GHCR_TOKEN`, `WORKFLOW_TOKEN`)
+9. Report any missing GitHub secrets (`GHCR_TOKEN`, `WORKFLOW_TOKEN`, `KEYCLOAK_TEST_ADMIN_CLIENT_SECRET`: the acceptance realm's `shop-system-test-admin` service account, which the system tests create customers with)
 
 ### Manual Terraform Usage
 

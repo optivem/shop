@@ -36,6 +36,21 @@ inputs:
       through the admin API and set its secret from Secret Manager. Needs the repo checked out.
     required: false
     default: 'false'
+  reconcile-system-test-admin:
+    description: >-
+      'true' in the acceptance stage: create or update the shop realm's shop-system-test-admin client
+      (docker/keycloak/system-test-admin-client.json) through the admin API, set its secret to
+      system-test-admin-secret, and give its service account exactly realm-management's manage-users,
+      view-users and query-users. The system tests use it to create fresh customers. Never touches
+      shop-qa or shop-prod. Needs the repo checked out.
+    required: false
+    default: 'false'
+  system-test-admin-secret:
+    description: >-
+      The shop-system-test-admin client secret (secrets.KEYCLOAK_TEST_ADMIN_CLIENT_SECRET); required
+      when reconcile-system-test-admin is 'true'. The system tests read the same secret.
+    required: false
+    default: ''
   frontend-origins:
     description: >-
       Extra origins (space-separated, e.g. https://shop-acc.example.com) the frontend-realm's
@@ -177,6 +192,76 @@ runs:
           curl -fsS "${auth[@]}" -X PUT "${api}/${id}" -d "$(jq -c --arg id "$id" '.id = $id' <<< "$client")" > /dev/null
           echo "Updated shop-monolith in shop-prod."
         fi
+
+    # The acceptance stage's system tests create a fresh customer per test. On a shared Keycloak they
+    # sign in as this client's service account (client credentials in realm shop), never as the master
+    # admin, so a leaked secret can only manage users of the test realm. The realm file never reaches a
+    # realm that already exists, so the client lives here. Create-or-update: it never deletes a client,
+    # and it converges the service account's realm-management roles to exactly the three user roles.
+    - name: Reconcile system-test admin client (shop realm)
+      if: inputs.reconcile-system-test-admin == 'true'
+      shell: bash
+      env:
+        SYSTEM: ${{ inputs.system }}
+        PROJECT_NUMBER: ${{ inputs.project-number }}
+        REGION: ${{ inputs.region }}
+        CLIENT_SECRET: ${{ inputs.system-test-admin-secret }}
+      run: |
+        set -euo pipefail
+        realm=shop
+        client_id=shop-system-test-admin
+        wanted='["manage-users","query-users","view-users"]'
+        if [[ -z "$CLIENT_SECRET" ]]; then
+          echo "::error::The ${client_id} client needs a secret: set the KEYCLOAK_TEST_ADMIN_CLIENT_SECRET GitHub secret (e.g. gh secret set KEYCLOAK_TEST_ADMIN_CLIENT_SECRET --body \"\$(openssl rand -base64 32 | tr -d '\\n')\"). The system tests create customers with it."
+          exit 1
+        fi
+        echo "::add-mask::${CLIENT_SECRET}"
+        kc="https://${SYSTEM}-keycloak-${PROJECT_NUMBER}.${REGION}.run.app"
+        admin_password="$(gcloud secrets versions access latest --secret="${SYSTEM}-keycloak-admin-password")"
+        echo "::add-mask::${admin_password}"
+        token="$(curl -fsS "${kc}/realms/master/protocol/openid-connect/token" \
+          -d grant_type=password -d client_id=admin-cli -d username=admin \
+          --data-urlencode "password=${admin_password}" | jq -r .access_token)"
+        echo "::add-mask::${token}"
+        client="$(jq -c --arg secret "$CLIENT_SECRET" '.secret = $secret' "${GITHUB_WORKSPACE}/docker/keycloak/system-test-admin-client.json")"
+        [[ "$(jq -r .clientId <<< "$client")" == "$client_id" ]] || { echo "::error::system-test-admin-client.json must define ${client_id}"; exit 1; }
+        admin="${kc}/admin/realms/${realm}"
+        api="${admin}/clients"
+        auth=(-H "Authorization: Bearer ${token}" -H "Content-Type: application/json")
+        lookup() { curl -fsS "${auth[@]}" "${api}?clientId=$1" | jq -r '.[0].id // empty'; }
+        id="$(lookup "$client_id")"
+        if [[ -z "$id" ]]; then
+          # Every acceptance variant shares this realm, so another variant can create the client between
+          # the lookup and the POST (409): then fall through to updating the client it created.
+          code="$(curl -sS -o /dev/null -w '%{http_code}' "${auth[@]}" -X POST "$api" -d "$client")"
+          case "$code" in
+            201) echo "Created ${client_id} in ${realm}." ;;
+            409) ;;
+            *) echo "::error::Creating ${client_id} in ${realm} returned HTTP ${code}"; exit 1 ;;
+          esac
+          id="$(lookup "$client_id")"
+          [[ -n "$id" ]] || { echo "::error::${client_id} is still missing from realm ${realm}"; exit 1; }
+        fi
+        # PUT also resets the secret, so a rotated GitHub secret takes effect on the next run.
+        curl -fsS "${auth[@]}" -X PUT "${api}/${id}" -d "$(jq -c --arg id "$id" '.id = $id' <<< "$client")" > /dev/null
+        echo "Updated ${client_id} in ${realm}."
+        sa="$(curl -fsS "${auth[@]}" "${api}/${id}/service-account-user" | jq -r '.id // empty')"
+        [[ -n "$sa" ]] || { echo "::error::${client_id} in ${realm} has no service-account user"; exit 1; }
+        rm_id="$(lookup realm-management)"
+        [[ -n "$rm_id" ]] || { echo "::error::realm ${realm} has no realm-management client"; exit 1; }
+        roles="$(curl -fsS "${auth[@]}" "${api}/${rm_id}/roles" \
+          | jq -c --argjson wanted "$wanted" '[.[] | select(.name as $n | $wanted | index($n))]')"
+        [[ "$(jq -c '[.[].name] | sort' <<< "$roles")" == "$wanted" ]] \
+          || { echo "::error::realm-management in ${realm} lacks one of ${wanted}: found $(jq -c '[.[].name]' <<< "$roles")"; exit 1; }
+        mappings="${admin}/users/${sa}/role-mappings/clients/${rm_id}"
+        curl -fsS "${auth[@]}" -X POST "$mappings" -d "$roles" > /dev/null
+        # Least privilege: drop any other realm-management role (e.g. one added by hand).
+        extra="$(curl -fsS "${auth[@]}" "$mappings" | jq -c --argjson wanted "$wanted" '[.[] | select(.name as $n | $wanted | index($n) | not)]')"
+        if [[ "$extra" != "[]" ]]; then
+          curl -fsS "${auth[@]}" -X DELETE "$mappings" -d "$extra" > /dev/null
+          echo "Removed extra realm-management roles from ${client_id}: $(jq -c '[.[].name]' <<< "$extra")"
+        fi
+        echo "${client_id} (${realm}) holds realm-management: ${wanted}"
 
     # The custom domains of the permanent environments (docs/environments.md).
     # Add-only: never removes a URI, so other variants' run.app URLs stay as the realm file made them.

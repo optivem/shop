@@ -7,7 +7,7 @@ const CUSTOMER_ROLE = 'CUSTOMER';
 const USERNAME_PREFIX = 'new-customer-';
 
 /**
- * Creates customers in the local Keycloak's test realm, each with a unique username and a random password, and
+ * Creates customers in Keycloak's test realm, each with a unique username and a random password, and
  * deletes them again on close.
  */
 export class KeycloakIdentityProviderDriver implements IdentityProviderDriver {
