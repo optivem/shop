@@ -81,7 +81,7 @@ export class KeycloakTokenProvider {
         }),
       });
     } catch (e) {
-      const cause = e instanceof Error && e.cause ? ` (${String(e.cause)})` : '';
+      const cause = e instanceof Error && e.cause !== undefined ? ` (${describeCause(e.cause)})` : '';
       throw new TransientTokenError(`Failed to acquire token for ${user.username} from ${this.tokenUrl}: ${String(e)}${cause}`, {
         cause: e,
       });
@@ -100,6 +100,13 @@ export class KeycloakTokenProvider {
     const expiresInMs = (json.expires_in ?? DEFAULT_EXPIRES_IN_SECONDS) * 1000;
     return { value: json.access_token, expiresAt: Date.now() + expiresInMs - EXPIRY_MARGIN_MS };
   }
+}
+
+/** A fetch failure's cause (e.g. ECONNREFUSED), stringified explicitly: an object cause would print as [object Object]. */
+function describeCause(cause: unknown): string {
+  if (cause instanceof Error) return cause.message;
+  if (typeof cause === 'string') return cause;
+  return JSON.stringify(cause);
 }
 
 /** Authorization header for a test user, or no headers at all when Keycloak is not configured. */

@@ -25,6 +25,7 @@ namespace Dsl.Core.Scenario.Given
         private GivenClock? _clock;
         private GivenErp? _erp;
         private GivenPromotion _promotion;
+        private GivenNewCustomer? _newCustomer;
         private readonly CustomerAliases _customers = new();
         private Func<UserIdentity> _loggedIn = () => UserIdentity.Default;
         private bool _loggedInChosen;
@@ -128,10 +129,22 @@ namespace Dsl.Core.Scenario.Given
 
         IGivenProfile IGivenStage.Profile() => Profile();
 
+        public GivenNewCustomer NewCustomer()
+        {
+            if (_newCustomer == null)
+            {
+                _newCustomer = new GivenNewCustomer(this);
+                _customers.UseNewDefaultCustomer();
+            }
+            return _newCustomer;
+        }
+
+        IGivenNewCustomer IGivenStage.NewCustomer() => NewCustomer();
+
         public GivenStage LoggedInAsCustomer()
         {
             _customers.ReserveDefaultCustomer();
-            return LoggedInAs(CustomerAliases.DefaultCustomer);
+            return LoggedInAs(DefaultCustomer);
         }
 
         IGivenStage IGivenStage.LoggedInAsCustomer() => LoggedInAsCustomer();
@@ -165,13 +178,13 @@ namespace Dsl.Core.Scenario.Given
         /// <summary>Resolves the customer behind an alias; only valid once the scenario is being set up.</summary>
         internal UserIdentity ResolveCustomer(string alias) => _customers.Resolve(alias);
 
-        /// <summary>The default customer (customer1).</summary>
-        internal static UserIdentity DefaultCustomer() => CustomerAliases.DefaultCustomer();
+        /// <summary>The default customer: the new customer when the scenario has one (once set up), else customer1.</summary>
+        internal UserIdentity DefaultCustomer() => _newCustomer?.Identity() ?? CustomerAliases.DefaultCustomer();
 
         public WhenStage When()
         {
             return new WhenStage(Channel, _app, _scenario, _defaults, SetupGiven, ResolveCustomer,
-                new StagedProducts(ChangeProductPriceAsync, WithdrawProductAsync));
+                new StagedProducts(ChangeProductPriceAsync, WithdrawProductAsync), DefaultCustomer);
         }
 
         private async Task WithdrawProductAsync(string skuAlias)
@@ -210,6 +223,10 @@ namespace Dsl.Core.Scenario.Given
 
         private async Task SetupGiven()
         {
+            if (_newCustomer != null)
+            {
+                await _newCustomer.Execute(_app);
+            }
             ReserveDefaultCustomerIfUsed();
             await SetupClock();
             await SetupPromotion();

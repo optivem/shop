@@ -13,6 +13,7 @@ import com.mycompany.myshop.testkit.driver.port.external.erp.ErpDriver;
 import com.mycompany.myshop.testkit.driver.port.external.tax.TaxDriver;
 import com.mycompany.myshop.testkit.driver.port.MyShopDriver;
 import com.mycompany.myshop.testkit.driver.port.UserIdentity;
+import com.mycompany.myshop.testkit.driver.port.external.identity.IdentityProviderDriver;
 import com.mycompany.myshop.testkit.dsl.port.ChannelMode;
 import com.mycompany.myshop.testkit.dsl.port.ExternalSystemMode;
 import com.optivem.testing.contexts.ChannelContext;
@@ -33,12 +34,14 @@ public class UseCaseDsl implements Closeable {
     private final Supplier<ErpDriver> erpDriverSupplier;
     private final Supplier<ClockDriver> clockDriverSupplier;
     private final Supplier<TaxDriver> taxDriverSupplier;
+    private final Supplier<IdentityProviderDriver> identityProviderDriverSupplier;
 
     private final Map<String, MyShopDsl> shops = new HashMap<>();
     private UserIdentity identity = UserIdentity.DEFAULT;
     private ErpDriver erpDriver;
     private ClockDriver clockDriver;
     private TaxDriver taxDriver;
+    private IdentityProviderDriver identityProviderDriver;
 
     private ErpDsl erp;
     private ClockDsl clock;
@@ -50,12 +53,27 @@ public class UseCaseDsl implements Closeable {
                      Supplier<ErpDriver> erpDriverSupplier,
                      Supplier<ClockDriver> clockDriverSupplier,
                      Supplier<TaxDriver> taxDriverSupplier) {
+        this(externalSystemMode, channelMode, myShopDriverFactory, erpDriverSupplier, clockDriverSupplier,
+                taxDriverSupplier, () -> {
+                    throw new IllegalStateException("This DSL was built without an identity provider, so it cannot"
+                            + " create a new customer");
+                });
+    }
+
+    public UseCaseDsl(ExternalSystemMode externalSystemMode,
+                     ChannelMode channelMode,
+                     Function<String, MyShopDriver> myShopDriverFactory,
+                     Supplier<ErpDriver> erpDriverSupplier,
+                     Supplier<ClockDriver> clockDriverSupplier,
+                     Supplier<TaxDriver> taxDriverSupplier,
+                     Supplier<IdentityProviderDriver> identityProviderDriverSupplier) {
         this.context = new UseCaseContext(externalSystemMode);
         this.channelMode = channelMode;
         this.myShopDriverFactory = myShopDriverFactory;
         this.erpDriverSupplier = erpDriverSupplier;
         this.clockDriverSupplier = clockDriverSupplier;
         this.taxDriverSupplier = taxDriverSupplier;
+        this.identityProviderDriverSupplier = identityProviderDriverSupplier;
     }
 
     @Override
@@ -79,6 +97,20 @@ public class UseCaseDsl implements Closeable {
         } else {
             Closer.close(taxDriver);
         }
+
+        // Last: the shops' browser sessions may still be signed in as a created customer.
+        Closer.close(identityProviderDriver);
+    }
+
+    /**
+     * Creates a customer account of this scenario's own (customer role, no saved profile, no orders), removed again
+     * when this DSL is closed.
+     *
+     * @param email null for a unique address
+     */
+    public UserIdentity newCustomer(String firstName, String lastName, String email) {
+        identityProviderDriver = getOrCreate(identityProviderDriver, identityProviderDriverSupplier);
+        return UserIdentity.customer(identityProviderDriver.createCustomer(firstName, lastName, email));
     }
 
     /** Selects who MyShop operations are performed as, until changed again. */

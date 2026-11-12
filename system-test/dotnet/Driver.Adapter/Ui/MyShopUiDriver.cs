@@ -50,7 +50,7 @@ public class MyShopUiDriver : IMyShopDriver
         _requestedUser = identity.Kind switch
         {
             UserIdentityKind.Default or UserIdentityKind.Anonymous => null,
-            UserIdentityKind.Customer => TestUserExtensions.CustomerAt(identity.CustomerIndex),
+            UserIdentityKind.Customer => TestUser.ForCustomer(identity),
             UserIdentityKind.Admin => TestUser.Admin,
             _ => throw new ArgumentOutOfRangeException(nameof(identity), identity, null)
         };

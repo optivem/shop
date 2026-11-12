@@ -1,0 +1,20 @@
+package com.mycompany.myshop.testkit.driver.port.external.identity;
+
+import com.mycompany.myshop.testkit.driver.port.CustomerAccount;
+
+/**
+ * The identity provider's test realm, for scenarios that need a customer of their own (no saved profile, no
+ * orders). Unlike the system drivers it arranges, never asserts, so a failure is thrown rather than returned.
+ * Closing it removes every account it created.
+ */
+public interface IdentityProviderDriver extends AutoCloseable {
+    /**
+     * Creates a new customer sign-in account with this name and email, and the customer role.
+     *
+     * @param email null for a unique address derived from the generated username
+     */
+    CustomerAccount createCustomer(String firstName, String lastName, String email);
+
+    @Override
+    void close();
+}

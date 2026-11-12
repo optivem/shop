@@ -60,7 +60,7 @@ public class MyShopApiDriver implements MyShopDriver {
         anonymous = identity.kind() == UserIdentity.Kind.ANONYMOUS;
         requestedUser = switch (identity.kind()) {
             case DEFAULT, ANONYMOUS -> null;
-            case CUSTOMER -> TestUser.customer(identity.customerIndex());
+            case CUSTOMER -> TestUser.customer(identity);
             case ADMIN -> TestUser.ADMIN;
         };
     }

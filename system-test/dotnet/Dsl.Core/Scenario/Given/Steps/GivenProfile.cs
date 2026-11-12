@@ -90,7 +90,7 @@ public class GivenProfile : BaseGiven, IGivenProfile
 
     internal override async Task Execute(UseCaseDsl app)
     {
-        app.ActAs(_savedByAlias == null ? GivenStage.DefaultCustomer() : _given.ResolveCustomer(_savedByAlias));
+        app.ActAs(_savedByAlias == null ? _given.DefaultCustomer() : _given.ResolveCustomer(_savedByAlias));
         try
         {
             var shop = await app.MyShop(Channel!);

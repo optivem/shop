@@ -11,7 +11,7 @@ export interface ArrangeGivenOptions {
 }
 
 /**
- * Sets up everything the Given stage declared (clock, tax, promotion, products, ERP availability, coupons, orders, profiles), supplying the
+ * Sets up everything the Given stage declared (a new customer, clock, tax, promotion, products, ERP availability, coupons, orders, profiles), supplying the
  * defaults the given orders need, and then selects the identity the scenario action runs as.
  */
 export async function arrangeGiven(
@@ -20,6 +20,10 @@ export async function arrangeGiven(
   useCaseContext: UseCaseContext,
   options: ArrangeGivenOptions = {},
 ): Promise<void> {
+  if (ctx.newCustomerConfig && ctx.customers.needsNewCustomer()) {
+    const { firstName, lastName, email } = ctx.newCustomerConfig;
+    ctx.customers.setNewCustomer(await app.newCustomer(firstName, lastName, email));
+  }
   ctx.reserveDefaultCustomerIfUsed();
   // Profile actions never touch the ERP or tax service: without given orders, only what was declared is staged.
   const declaredOnly = options.declaredOnly === true && ctx.orderConfigs.length === 0;

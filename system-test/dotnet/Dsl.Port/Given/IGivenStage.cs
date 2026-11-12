@@ -24,7 +24,10 @@ public interface IGivenStage
 
     IGivenProfile Profile();
 
-    /// <summary>Logs in as the default customer (customer1).</summary>
+    /// <summary>The scenario's customer is a new one: a sign-in account of its own, with no saved profile and no orders.</summary>
+    IGivenNewCustomer NewCustomer();
+
+    /// <summary>Logs in as the default customer (customer1, or the new customer when the scenario has one).</summary>
     IGivenStage LoggedInAsCustomer();
 
     /// <summary>Logs in as the customer known in this scenario by the given alias.</summary>

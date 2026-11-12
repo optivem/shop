@@ -14,6 +14,7 @@ import { GivenCoupon } from './given-coupon.js';
 import { GivenCountry } from './given-country.js';
 import { GivenOrder } from './given-order.js';
 import { GivenProfile } from './given-profile.js';
+import { GivenNewCustomer } from './given-new-customer.js';
 import type { GivenStage as IGivenStage } from '../../../port/given/given-stage.js';
 import { UserIdentity } from '../../../../driver/port/user-identity.js';
 import { assertNotAwaited } from '../assert-not-awaited.js';
@@ -84,7 +85,17 @@ export class GivenStage implements IGivenStage {
     return new GivenProfile(this, config, this.ctx.customers);
   }
 
-  /** Logs in as the customer known in this scenario by the given alias, or as the default customer (customer1) when no alias is given. */
+  /** The scenario's customer is a new one: a sign-in account of its own, with no saved profile and no orders. */
+  newCustomer(): GivenNewCustomer {
+    this.ctx.newCustomerConfig ??= { firstName: DEFAULTS.FIRST_NAME, lastName: DEFAULTS.LAST_NAME };
+    this.ctx.customers.useNewDefaultCustomer();
+    return new GivenNewCustomer(this, this.ctx.newCustomerConfig);
+  }
+
+  /**
+   * Logs in as the customer known in this scenario by the given alias, or as the default customer (customer1, or
+   * the new customer when the scenario has one) when no alias is given.
+   */
   loggedInAsCustomer(alias?: string): this {
     const customers = this.ctx.customers;
     if (alias === undefined) {

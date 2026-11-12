@@ -9,6 +9,7 @@ import com.mycompany.myshop.testkit.dsl.core.scenario.given.steps.GivenClockImpl
 import com.mycompany.myshop.testkit.dsl.core.scenario.given.steps.GivenCouponImpl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.given.steps.GivenCountryImpl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.given.steps.GivenErpImpl;
+import com.mycompany.myshop.testkit.dsl.core.scenario.given.steps.GivenNewCustomerImpl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.given.steps.GivenOrderImpl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.given.steps.GivenProductImpl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.given.steps.GivenProductsImpl;
@@ -35,6 +36,7 @@ public class GivenImpl implements GivenStage {
     private final List<GivenCouponImpl> coupons;
     private final List<GivenProfileImpl> profiles;
     private final DefaultGivens defaults;
+    private GivenNewCustomerImpl newCustomer;
     private final CustomerAliases customers = new CustomerAliases();
     private Supplier<UserIdentity> loggedIn = () -> UserIdentity.DEFAULT;
     private boolean loggedInChosen;
@@ -113,9 +115,18 @@ public class GivenImpl implements GivenStage {
     }
 
     @Override
+    public GivenNewCustomerImpl newCustomer() {
+        if (newCustomer == null) {
+            newCustomer = new GivenNewCustomerImpl(this);
+            customers.useNewDefaultCustomer();
+        }
+        return newCustomer;
+    }
+
+    @Override
     public GivenImpl loggedInAsCustomer() {
         customers.reserveDefaultCustomer();
-        return loggedInAs(customers::defaultCustomer);
+        return loggedInAs(this::defaultCustomer);
     }
 
     @Override
@@ -150,9 +161,9 @@ public class GivenImpl implements GivenStage {
         return customers.resolve(alias);
     }
 
-    /** The default customer (customer1). */
+    /** The default customer: the new customer when the scenario has one (once set up), else customer1. */
     public UserIdentity defaultCustomer() {
-        return customers.defaultCustomer();
+        return newCustomer != null ? newCustomer.identity() : customers.defaultCustomer();
     }
 
     public WhenImpl when() {
@@ -215,6 +226,9 @@ public class GivenImpl implements GivenStage {
     }
 
     private void setup() {
+        if (newCustomer != null) {
+            newCustomer.execute(app);
+        }
         reserveDefaultCustomerIfUsed();
         setupClock();
         setupErp();

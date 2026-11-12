@@ -74,7 +74,7 @@ public class MyShopUiClient implements AutoCloseable {
      * @return true when the session was replaced, so callers must re-open the home page
      */
     public boolean switchUser(TestUser user) {
-        if (login == null || login.getUser() == user) {
+        if (login == null || login.getUser().equals(user)) {
             return false;
         }
         close();

@@ -15,6 +15,7 @@ import com.mycompany.myshop.testkit.driver.adapter.external.erp.ErpStubDriver;
 import com.mycompany.myshop.testkit.driver.adapter.external.tax.TaxRealDriver;
 import com.mycompany.myshop.testkit.driver.adapter.external.tax.TaxStubDriver;
 import com.mycompany.myshop.testkit.driver.adapter.api.MyShopApiDriver;
+import com.mycompany.myshop.testkit.driver.adapter.external.identity.KeycloakIdentityProviderDriver;
 import com.mycompany.myshop.testkit.driver.adapter.ui.MyShopUiDriver;
 import com.mycompany.myshop.systemtest.infrastructure.playwright.BrowserLifecycleExtension;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -59,7 +60,8 @@ public abstract class BaseConfigurableTest {
                 channel -> createMyShopDriverForChannel(configuration, channel),
                 () -> createErpDriver(configuration),
                 () -> createClockDriver(configuration),
-                () -> createTaxDriver(configuration)
+                () -> createTaxDriver(configuration),
+                () -> new KeycloakIdentityProviderDriver(requireKeycloakBaseUrl(configuration))
         );
     }
 

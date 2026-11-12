@@ -74,6 +74,13 @@ export interface ProfileConfig {
   savedByAlias?: string;
 }
 
+export interface NewCustomerConfig {
+  firstName: string;
+  lastName: string;
+  /** Undefined means a unique address. */
+  email?: string;
+}
+
 export class ScenarioContext {
   clockConfig: ClockConfig | null = null;
   productConfigs: ProductConfig[] = [];
@@ -83,6 +90,8 @@ export class ScenarioContext {
   countryConfigs: CountryConfig[] = [];
   orderConfigs: OrderConfig[] = [];
   profileConfigs: ProfileConfig[] = [];
+  /** Set when the scenario's customer is a new one, created when the scenario is set up. */
+  newCustomerConfig: NewCustomerConfig | null = null;
   hasExplicitProduct = false;
   promotionConfig: PromotionConfig = { promotionActive: DEFAULTS.PROMOTION_ACTIVE, discount: DEFAULTS.PROMOTION_DISCOUNT };
   hasExplicitPromotion = false;

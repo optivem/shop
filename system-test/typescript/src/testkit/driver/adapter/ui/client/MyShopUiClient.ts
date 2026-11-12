@@ -2,7 +2,7 @@ import type { Browser, BrowserContext, Page } from '@playwright/test';
 import type { Result } from '../../../../common/result.js';
 import { success, failure } from '../../../../common/result.js';
 import type { SystemError } from '../../../port/dtos/errors/SystemError.js';
-import { TestUsers, type TestUser } from '../../shared/client/http/test-user.js';
+import { TestUsers, sameTestUser, type TestUser } from '../../shared/client/http/test-user.js';
 import { KeycloakUiLogin } from '../../shared/client/playwright/keycloak-ui-login.js';
 import { PAGE_TIMEOUT_MS } from './pages/BasePage.js';
 import { HomePage } from './pages/HomePage.js';
@@ -55,7 +55,7 @@ export class MyShopUiClient {
    * creates a fresh isolated context and logs in as the new user). No-op without Keycloak or when already that user.
    */
   async switchUser(user: TestUser): Promise<void> {
-    if (!this.login || this.login.getUser() === user) return;
+    if (!this.login || sameTestUser(this.login.getUser(), user)) return;
     await this.close();
     this.login = KeycloakUiLogin.forBaseUrl(this.keycloakBaseUrl, user);
   }

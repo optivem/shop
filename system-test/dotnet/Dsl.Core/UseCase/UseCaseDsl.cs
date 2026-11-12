@@ -14,6 +14,8 @@ using Optivem.Testing;
 using Dsl.Core.Shared;
 using Driver.Adapter.External.Clock;
 using Driver.Adapter.External.Tax;
+using Driver.Adapter.External.Identity;
+using Driver.Port.External.Identity;
 using MyCompany.MyShop.SystemTest.Channel;
 
 namespace Dsl.Core;
@@ -29,11 +31,23 @@ public class UseCaseDsl : IAsyncDisposable
     private ErpDsl? _erp;
     private TaxDsl? _tax;
     private ClockDsl? _clock;
+    private IIdentityProviderDriver? _identityProvider;
 
     public UseCaseDsl(Configuration configuration)
     {
         _context = new UseCaseContext(configuration.ExternalSystemMode);
         _configuration = configuration;
+    }
+
+    /// <summary>
+    /// Creates a customer account of this scenario's own (customer role, no saved profile, no orders), removed again
+    /// when this DSL is disposed.
+    /// </summary>
+    /// <param name="email">null for a unique address</param>
+    public async Task<UserIdentity> NewCustomerAsync(string firstName, string lastName, string? email)
+    {
+        _identityProvider ??= new KeycloakIdentityProviderDriver(_configuration.KeycloakBaseUrl);
+        return UserIdentity.Customer(await _identityProvider.CreateCustomerAsync(firstName, lastName, email));
     }
 
     /// <summary>Selects who MyShop operations are performed as, until changed again.</summary>
@@ -152,6 +166,10 @@ public class UseCaseDsl : IAsyncDisposable
 
         if (_clock != null)
             await _clock.DisposeAsync();
+
+        // Last: the shops' browser sessions may still be signed in as a created customer.
+        if (_identityProvider != null)
+            await _identityProvider.DisposeAsync();
 
         ChannelContext.Clear();
 

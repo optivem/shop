@@ -77,8 +77,8 @@ public sealed class KeycloakTokenProvider
         {
             ["grant_type"] = "password",
             ["client_id"] = ClientId,
-            ["username"] = user.Username(),
-            ["password"] = user.Password()
+            ["username"] = user.Username,
+            ["password"] = user.Password
         });
 
         HttpResponseMessage response;
@@ -88,19 +88,19 @@ public sealed class KeycloakTokenProvider
         }
         catch (Exception e) when (e is HttpRequestException or TaskCanceledException)
         {
-            throw new TransientTokenException($"Failed to acquire token for {user.Username()} from {_tokenUri}: {e.Message}", e);
+            throw new TransientTokenException($"Failed to acquire token for {user.Username} from {_tokenUri}: {e.Message}", e);
         }
 
         var body = await response.Content.ReadAsStringAsync();
         if ((int)response.StatusCode >= 500)
         {
             throw new TransientTokenException(
-                $"Failed to acquire token for {user.Username()} from {_tokenUri}: HTTP {(int)response.StatusCode} {body}", null);
+                $"Failed to acquire token for {user.Username} from {_tokenUri}: HTTP {(int)response.StatusCode} {body}", null);
         }
         if (!response.IsSuccessStatusCode)
         {
             throw new InvalidOperationException(
-                $"Failed to acquire token for {user.Username()} from {_tokenUri}: HTTP {(int)response.StatusCode} {body}");
+                $"Failed to acquire token for {user.Username} from {_tokenUri}: HTTP {(int)response.StatusCode} {body}");
         }
 
         using var json = JsonDocument.Parse(body);

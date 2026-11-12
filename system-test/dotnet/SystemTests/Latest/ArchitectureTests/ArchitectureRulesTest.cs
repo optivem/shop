@@ -22,8 +22,14 @@ public class ArchitectureRulesTest
             typeof(Dsl.Core.UseCase.UseCases.ViewOrderVerification).Assembly)
         .Build();
 
+    // Requests of the operations only the UI driver performs (the cart, the product page, the checkout: the system
+    // has no API for them). They describe browser steps (which lines to add, whether to keep the session, whether to
+    // sign in), not a wire payload, so A1 does not apply to them (decided 2026-11-12, REL #41/#46).
+    private static readonly string[] UiDriverRequests = ["ManageCartRequest", "ViewProductRequest", "CheckOutRequest"];
+
     // A1 — request DTOs in the driver port expose only string members, or a nested driver-port DTO that
-    // itself exposes only string members (e.g. PlaceOrderRequest.ShippingAddress).
+    // itself exposes only string members (e.g. PlaceOrderRequest.ShippingAddress). Scoped to the API wire DTOs:
+    // the UI-driver requests (UiDriverRequests) are exempt.
     [Fact]
     [Trait("Category", "Architecture")]
     public void RequestDtosDeclareOnlyStringMembers()
@@ -37,7 +43,8 @@ public class ArchitectureRulesTest
 
         IArchRule rule = Classes().That()
             .ResideInNamespace("Driver.Port.Dtos").And()
-            .HaveNameEndingWith("Request")
+            .HaveNameEndingWith("Request").And()
+            .DoNotHaveNameMatching("^(" + string.Join("|", UiDriverRequests) + ")$")
             .Should().FollowCustomCondition(cls =>
             {
                 var nonString = cls.GetPropertyMembers()
@@ -49,7 +56,7 @@ public class ArchitectureRulesTest
                     : $"{cls.FullName} declares non-string members: "
                       + string.Join(", ", nonString.Select(p => $"{p.Name}:{p.Type.Name}"));
                 return new ConditionResult(cls, pass, failure);
-            }, "Request DTOs in Driver.Port.Dtos must declare only string members");
+            }, "API request DTOs in Driver.Port.Dtos must declare only string members");
 
         rule.Check(TestKit);
     }

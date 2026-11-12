@@ -30,7 +30,7 @@ import type { CheckOutRequest } from '../../port/dtos/CheckOutRequest.js';
 import type { CheckOutResponse } from '../../port/dtos/CheckOutResponse.js';
 import type { MyShopDriver } from '../../port/my-shop-driver.js';
 import type { UserIdentity } from '../../port/user-identity.js';
-import { TestUsers, testCustomer, type TestUser } from '../shared/client/http/test-user.js';
+import { TestUsers, testUserFor, type TestUser } from '../shared/client/http/test-user.js';
 import { MyShopApiClient } from './client/MyShopApiClient.js';
 import { ApiIdentity } from './client/api-identity.js';
 
@@ -51,7 +51,7 @@ export class MyShopApiDriver implements MyShopDriver {
         this.requestedUser = undefined;
         break;
       case 'CUSTOMER':
-        this.requestedUser = testCustomer(identity.customerIndex);
+        this.requestedUser = testUserFor(identity);
         break;
       case 'ADMIN':
         this.requestedUser = TestUsers.ADMIN;

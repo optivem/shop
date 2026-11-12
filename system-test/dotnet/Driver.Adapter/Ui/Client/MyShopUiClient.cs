@@ -142,7 +142,7 @@ public class MyShopUiClient : IAsyncDisposable
     /// <returns>true when the session was replaced, so callers must re-open the home page</returns>
     public async Task<bool> SwitchUserAsync(TestUser user)
     {
-        if (_login == null || _login.User == user)
+        if (_login == null || _login.User.Equals(user))
         {
             return false;
         }

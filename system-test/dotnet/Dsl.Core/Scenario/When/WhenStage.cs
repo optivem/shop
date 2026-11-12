@@ -15,10 +15,12 @@ namespace Dsl.Core.Scenario.When
         private readonly DefaultGivens _defaults;
         private readonly Func<Task>? _givenSetup;
         private readonly Func<string, UserIdentity>? _resolveCustomer;
+        private readonly Func<UserIdentity>? _defaultCustomer;
         private readonly StagedProducts _stagedProducts;
 
         public WhenStage(Channel? channel, UseCaseDsl app, ScenarioDsl scenario, DefaultGivens defaults, Func<Task>? givenSetup = null,
-            Func<string, UserIdentity>? resolveCustomer = null, StagedProducts? stagedProducts = null)
+            Func<string, UserIdentity>? resolveCustomer = null, StagedProducts? stagedProducts = null,
+            Func<UserIdentity>? defaultCustomer = null)
             : base(channel)
         {
             _app = app;
@@ -26,6 +28,7 @@ namespace Dsl.Core.Scenario.When
             _defaults = defaults;
             _givenSetup = givenSetup;
             _resolveCustomer = resolveCustomer;
+            _defaultCustomer = defaultCustomer;
             _stagedProducts = stagedProducts ?? StagedProducts.None;
         }
 
@@ -78,7 +81,7 @@ namespace Dsl.Core.Scenario.When
 
         public WhenBrowseOrderHistory BrowseOrderHistory()
         {
-            return new WhenBrowseOrderHistory(_app, _scenario, () => EnsureGiven(), _resolveCustomer);
+            return new WhenBrowseOrderHistory(_app, _scenario, () => EnsureGiven(), _resolveCustomer, _defaultCustomer);
         }
 
         IWhenBrowseOrderHistory IWhenStage.BrowseOrderHistory() => BrowseOrderHistory();

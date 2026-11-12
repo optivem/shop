@@ -23,11 +23,11 @@ public sealed class KeycloakUiLogin
     }
 
     /// <summary>Returns null when no Keycloak URL is configured (the SUT then has no login).</summary>
-    public static KeycloakUiLogin? ForBaseUrl(string? keycloakBaseUrl, TestUser user = TestUser.Customer)
+    public static KeycloakUiLogin? ForBaseUrl(string? keycloakBaseUrl, TestUser? user = null)
     {
         if (string.IsNullOrWhiteSpace(keycloakBaseUrl))
             return null;
-        return new KeycloakUiLogin(keycloakBaseUrl, user);
+        return new KeycloakUiLogin(keycloakBaseUrl, user ?? TestUser.Customer);
     }
 
     public TestUser User => _user;
@@ -75,8 +75,8 @@ public sealed class KeycloakUiLogin
     private async Task LoginAsync(IPage page)
     {
         await page.WaitForSelectorAsync(SubmitSelector, new PageWaitForSelectorOptions { Timeout = TimeoutMilliseconds });
-        await page.FillAsync(UsernameSelector, _user.Username());
-        await page.FillAsync(PasswordSelector, _user.Password());
+        await page.FillAsync(UsernameSelector, _user.Username);
+        await page.FillAsync(PasswordSelector, _user.Password);
         await page.ClickAsync(SubmitSelector);
         // Poll location instead of WaitForURLAsync, which also waits on a load-state event that can hang on the redirect back.
         await page.WaitForFunctionAsync("keycloakBase => !location.href.startsWith(keycloakBase)", _keycloakBaseUrl,

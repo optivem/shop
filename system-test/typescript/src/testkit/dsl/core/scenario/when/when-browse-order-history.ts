@@ -69,5 +69,5 @@ function usernameOf(identity: UserIdentity): string {
   if (identity.kind !== 'CUSTOMER') {
     throw new Error(`Only a customer can be used as the order history customer filter, not ${identity.kind}`);
   }
-  return UserIdentity.customerUsername(identity.customerIndex);
+  return UserIdentity.usernameOf(identity);
 }

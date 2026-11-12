@@ -1,4 +1,6 @@
-// Users of the test realm (docker/keycloak/shop-realm.json). Test credentials only.
+import type { UserIdentity } from '../../../../port/user-identity.js';
+
+// Users of the test realm (docker/keycloak/shop-realm.json), or a customer created for the scenario. Test credentials only.
 export interface TestUser {
   readonly username: string;
   readonly password: string;
@@ -19,4 +21,14 @@ export function testCustomer(index: number): TestUser {
     throw new Error(`No test customer at index ${index}`);
   }
   return customer;
+}
+
+/** The user behind a customer identity: a shared test customer, or the account created for the scenario. */
+export function testUserFor(identity: Extract<UserIdentity, { kind: 'CUSTOMER' }>): TestUser {
+  return identity.account ?? testCustomer(identity.customerIndex);
+}
+
+/** Whether two test users are the same sign-in account. */
+export function sameTestUser(a: TestUser, b: TestUser): boolean {
+  return a.username === b.username;
 }

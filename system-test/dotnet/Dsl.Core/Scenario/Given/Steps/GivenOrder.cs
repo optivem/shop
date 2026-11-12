@@ -115,7 +115,7 @@ public class GivenOrder : BaseGiven, IGivenOrder
 
     internal override async Task Execute(UseCaseDsl app)
     {
-        app.ActAs(_placedByAlias == null ? GivenStage.DefaultCustomer() : _given.ResolveCustomer(_placedByAlias));
+        app.ActAs(_placedByAlias == null ? _given.DefaultCustomer() : _given.ResolveCustomer(_placedByAlias));
         try
         {
             await PlaceAndCancel(app);

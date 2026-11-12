@@ -23,6 +23,11 @@ function pathOf(filePath: string): string {
 
 // A1 — request DTOs in the driver port expose only string members. A member may also be a nested port DTO
 // (e.g. ShippingAddress) whose own members are all strings, so request values are strings all the way down.
+// Scoped to the API wire DTOs: the requests of the operations only the UI driver performs (the cart, the product
+// page, the checkout; the system has no API for them) describe browser steps, not a wire payload, so they are
+// exempt (decided 2026-11-12, REL #41/#46).
+const UI_DRIVER_REQUESTS: ReadonlySet<string> = new Set(['ManageCartRequest', 'ViewProductRequest', 'CheckOutRequest']);
+
 function nonStringParts(typeText: string, allowed: ReadonlySet<string>): string[] {
   return typeText
     .split('|')
@@ -49,7 +54,7 @@ function findA1Violations(): string[] {
 
   for (const sf of dtoFiles) {
     for (const iface of sf.getInterfaces()) {
-      if (!iface.getName().endsWith('Request')) continue;
+      if (!iface.getName().endsWith('Request') || UI_DRIVER_REQUESTS.has(iface.getName())) continue;
       for (const prop of iface.getProperties()) {
         const typeText = prop.getTypeNode()?.getText() ?? prop.getType().getText();
         const nonString = nonStringParts(typeText, stringOnlyDtos);
@@ -63,7 +68,7 @@ function findA1Violations(): string[] {
   return violations;
 }
 
-test('A1 - request DTOs in driver/port/dtos declare only string members', () => {
+test('A1 - API request DTOs in driver/port/dtos declare only string members', () => {
   const violations = findA1Violations();
   expect(violations, `Request DTOs in driver/port/dtos must declare only string members: ${violations.join('; ')}`).toEqual([]);
 });

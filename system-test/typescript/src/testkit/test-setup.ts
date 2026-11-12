@@ -10,6 +10,7 @@ import { ClockRealDriver } from './driver/adapter/external/clock/clock-real-driv
 import { ClockStubDriver } from './driver/adapter/external/clock/clock-stub-driver.js';
 import { TaxRealDriver } from './driver/adapter/external/tax/tax-real-driver.js';
 import { TaxStubDriver } from './driver/adapter/external/tax/tax-stub-driver.js';
+import { KeycloakIdentityProviderDriver } from './driver/adapter/external/identity/keycloak-identity-provider-driver.js';
 import type { ErpDriver } from './driver/port/external/erp/erp-driver.js';
 import type { ClockDriver } from './driver/port/external/clock/clock-driver.js';
 import type { TaxDriver } from './driver/port/external/tax/tax-driver.js';
@@ -43,6 +44,7 @@ export function createScenario(options: ScenarioOptions = {}): ScenarioDsl {
     erpDriver: createErpDriver(config, mode),
     clockDriver: createClockDriver(config, mode),
     taxDriver: createTaxDriver(config, mode),
+    identityProviderDriverFactory: () => new KeycloakIdentityProviderDriver(config.keycloakUrl),
   });
 
   const useCaseContext = new UseCaseContext(mode);

@@ -55,7 +55,7 @@ import type { ManageCartResponse } from '../../port/dtos/ManageCartResponse.js';
 import type { CartPage } from './client/pages/CartPage.js';
 import { OPEN, PROCEED_FROM_CART, type CheckOutRequest } from '../../port/dtos/CheckOutRequest.js';
 import { CART, CHECKOUT, CONFIRMATION, type CheckOutResponse } from '../../port/dtos/CheckOutResponse.js';
-import { TestUsers, testCustomer, type TestUser } from '../shared/client/http/test-user.js';
+import { TestUsers, testUserFor, type TestUser } from '../shared/client/http/test-user.js';
 import { AUTHENTICATION_REQUIRED, MyShopUiClient, PERMISSION_DENIED } from './client/MyShopUiClient.js';
 import { NewOrderPage } from './client/pages/NewOrderPage.js';
 import type { CouponManagementPage } from './client/pages/CouponManagementPage.js';
@@ -78,7 +78,7 @@ export class MyShopUiDriver implements MyShopDriver {
         this.requestedUser = undefined;
         break;
       case 'CUSTOMER':
-        this.requestedUser = testCustomer(identity.customerIndex);
+        this.requestedUser = testUserFor(identity);
         break;
       case 'ADMIN':
         this.requestedUser = TestUsers.ADMIN;

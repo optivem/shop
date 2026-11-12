@@ -1,5 +1,7 @@
 package com.mycompany.myshop.systemtest.architecture;
 
+import com.tngtech.archunit.base.DescribedPredicate;
+import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.domain.JavaField;
 import com.tngtech.archunit.core.domain.JavaMethod;
@@ -14,6 +16,8 @@ import com.tngtech.archunit.lang.ConditionEvents;
 import com.tngtech.archunit.lang.SimpleConditionEvent;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+
+import java.util.Set;
 
 import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideInAPackage;
 import static com.tngtech.archunit.core.domain.JavaClass.Predicates.simpleNameEndingWith;
@@ -34,17 +38,26 @@ class ArchitectureRulesTest {
             .importPackages("com.mycompany.myshop.testkit");
 
     /**
+     * Requests of the operations only the UI driver performs (the cart, the product page, the checkout: the system
+     * has no API for them). They describe browser steps (which lines to add, whether to keep the session, whether to
+     * sign in), not a wire payload, so A1 does not apply to them (decided 2026-11-12, REL #41/#46).
+     */
+    private static final Set<String> UI_DRIVER_REQUESTS = Set.of("ManageCartRequest", "ViewProductRequest", "CheckOutRequest");
+
+    /**
      * A1 — request DTOs in the driver port expose only String fields, or a nested value DTO from the driver port
-     * (e.g. a shipping address) whose own fields are all String.
+     * (e.g. a shipping address) whose own fields are all String. Scoped to the API wire DTOs: the UI-driver requests
+     * ({@link #UI_DRIVER_REQUESTS}) are exempt.
      */
     @Test
     void requestDtosDeclareOnlyStringFields() {
         ArchRule rule = fields()
                 .that().areDeclaredInClassesThat(
-                        resideInAPackage("..driver.port.dtos..").and(simpleNameEndingWith("Request")))
+                        resideInAPackage("..driver.port.dtos..").and(simpleNameEndingWith("Request"))
+                                .and(DescribedPredicate.not(simpleNameIn(UI_DRIVER_REQUESTS))))
                 .and().areNotStatic()
                 .should(beStringOrStringOnlyPortDto())
-                .as("Request DTOs in driver.port.dtos must declare only String fields (or String-only nested port DTOs)");
+                .as("API request DTOs in driver.port.dtos must declare only String fields (or String-only nested port DTOs)");
 
         rule.check(TESTKIT);
     }
@@ -83,6 +96,11 @@ class ArchitectureRulesTest {
                 .as("Every MyShopDriver method must take a single *Request and return Result<*Response, …>");
 
         rule.check(TESTKIT);
+    }
+
+    private static DescribedPredicate<JavaClass> simpleNameIn(Set<String> simpleNames) {
+        return DescribedPredicate.describe("have a simple name in " + simpleNames,
+                javaClass -> simpleNames.contains(javaClass.getSimpleName()));
     }
 
     private static ArchCondition<JavaField> beStringOrStringOnlyPortDto() {
