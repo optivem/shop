@@ -142,27 +142,52 @@ Found 2026-11-11 (UC-009), extending #36. Concurrent clean builds in one checkou
 Found 2026-11-12 (SHOW Step 4b). `_prod-stage.yml` creates releases through `optivem/actions/create-github-release` with the default `GITHUB_TOKEN`, and GitHub does not trigger workflows from events that token causes. So the new `release-sbom.yml` (`on: release: published`) never runs on its own; it only runs by `workflow_dispatch` with a tag.
 - **Recommended:** call `release-sbom.yml` from the prod stage as a reusable workflow (`workflow_call`) after the release step, instead of switching to a PAT/app token. **Why:** no new secret to manage, and the SBOM upload stays tied to the release that produced it.
 
-### 50. Monolith order-history `loadOrders` has no stale-response guard
-
-Found 2026-11-12 (SMETA UC-011 coding). In the Thymeleaf and Razor monoliths, overlapping reloads (choosing a customer, then resetting the filters) can let an older response overwrite a newer one, so the list shows the wrong orders. The UI driver avoids double reloads, so tests don't hit it today.
-- **Recommended:** add a request counter (or `AbortController`) to `loadOrders` in both monoliths so only the latest response renders. **Why:** it's a small, real UI robustness fix, and React already guards this.
-
-### 51. Next.js order-history cells lack the `orders-cell-*` classes
-
-Found 2026-11-12 (SMETA UC-011 coding). The customer, quantity and status cells have no `orders-cell-*` classes, unlike the other three UIs, so the driver reads cells by column header instead.
-- **Recommended:** add the classes in the Next.js monolith for parity, and keep the driver's header-based reading. **Why:** a one-line markup change that keeps the four UIs consistent; the header-based read already works everywhere.
-
-### 53. TS "then" stages may publish givens their own way
-
-Found 2026-11-12 (SMETA Step 7b coding). TS `browseCoupons` silently dropped given coupons' valid-from, valid-to and usage limit until it switched to `arrangeGiven(..., { declaredOnly: true })`.
-- **Recommended:** grep the other TS then stages for their own given-publishing and switch them to `arrangeGiven`. **Why:** the same silent-drop bug may sit elsewhere.
-
-### 54. .NET `Converter.ToDateTime` parses en-US dates without a UTC kind
-
-Found 2026-11-12 (SMETA Step 7b coding). Not used by the new tests, but a future caller could get a local-time `DateTime`.
-- **Recommended:** make it return `DateTimeKind.Utc` (or `DateTimeOffset`), matching the new order-date parsing. **Why:** timezone bugs only show on non-UTC machines (see #20).
-
 ### 55. `backend-clean-java` has no authentication or authorization
 
 Found 2026-11-12 (REL #52 coding). It has no Spring Security and no role checks, so `POST /api/orders/{n}/deliver` and the spec's admin-only `POST /api/admin/orders/sweep-deliveries` are open to anyone. No system test reaches it, because it has no system stack.
 - **Recommended:** decide whether the clean variant should model auth at all. If yes, add a security adapter with the same role rules as backend-java. If not, say so in its README. **Why:** it's a teaching variant, so the omission may be deliberate, but right now it's silent.
+
+### 56. Other sessions' commits sweep up work in progress
+
+Found 2026-11-12 (REL #50–#54 session). Commit `a071aac8` ("Financial direction doc…") carried the Java/.NET stub-compose breaker threshold edits (`RESILIENCE_CIRCUITBREAKER_FAILURERATETHRESHOLD=100`, `Resilience__Erp__FailureRatio=1.0`), and `d858f52e` ("Workspace sweep") did the same.
+- **Recommended:** parallel sessions commit with `gh optivem commit --paths` only, never `--all`. **Why:** a sweep commit mislabels another session's change and hides it from review and revert.
+
+### 57. `--test` reruns overwrite the JUnit results `spec status` reads
+
+Found 2026-11-12. A `--test` rerun overwrites the JUnit results that `spec status` reads, and the "never executed" check wipes the other suites' results. Extends #38/#42 (same "never executed" logic, not the overwrite).
+- **Recommended:** fold into the #38/#42 gh-optivem plan: a filtered rerun merges into the existing results instead of replacing them. **Why:** one targeted rerun shouldn't erase the evidence of a full run.
+
+### 58. React and Next.js admin customer filters scan only 50 pages of orders
+
+Found 2026-11-12. The customer filter collects customers from the first 50 pages (2,500 orders); the local multitier DB already has 3,212, so later customers are never offered.
+- **Recommended:** add a backend customers endpoint that the filter reads (an API change; needs user approval). **Why:** paging the whole order list to build a dropdown doesn't scale and silently truncates.
+
+### 59. Stub Postgres and Keycloak data persist across `--restart`
+
+Found 2026-11-12. Local stacks keep their data across `--restart` (over 5k orders and 2k coupons locally), which feeds #58 and slows list pages.
+- **Recommended:** a documented reset (or periodic prune) for local stacks. **Why:** local runs should start from a known size, as CI does.
+
+### 60. TS SamplingBreaker threshold isn't env-configurable
+
+Found 2026-11-12. Java's breaker leaked 503s between ERP outage tests until `365de274` made its threshold configurable; the TS SamplingBreaker threshold can't be set from the environment, so it may leak the same way.
+- **Recommended:** check it in the TS test pass, and make it env-configurable like Java/.NET if it leaks. **Why:** the same cross-test leak in a third language.
+
+### 61. Java Playwright navigation hangs
+
+Found 2026-11-12. Java Playwright waits 30 s for "scheduled navigations" after Keycloak login / Sign In, or on `navigate("/")` load. The hangs grew more frequent over the session and hit different tests each run; TS Playwright on the same stacks never hung.
+- **Recommended:** investigate the Java Playwright version and the `waitUntil` settings. **Why:** it's Java-only, so it's likely the client version or its wait settings, not the stacks.
+
+### 62. One-off "Coupon code DEFAULT-COUPON-<8hex> already exists" in the idempotency replay test
+
+Found 2026-11-12. Seen once, unexplained.
+- **Recommended: watch for it;** investigate if it recurs. **Why:** one occurrence isn't enough to diagnose.
+
+### 63. The k6 smoke wasn't run
+
+Found 2026-11-12. k6 isn't installed locally, and running k6 in docker needs the Keycloak issuer/URL adjusted.
+- **Recommended:** document (or script) the docker k6 run with the right Keycloak issuer/URL. **Why:** otherwise the smoke stays unrun locally.
+
+### 64. Razor and Thymeleaf admin customer filters not checked for the `useOrders` bug
+
+Found 2026-11-12. `6b07a16b` fixed React `useOrders` dropping the customer choices when a newer filter superseded the unfiltered request; the Razor and Thymeleaf filters weren't checked for the same bug.
+- **Recommended:** check them (both already collect customers in a separate `loadCustomers`, so they're likely fine) and close this if so. **Why:** keeps the four UIs consistent.
