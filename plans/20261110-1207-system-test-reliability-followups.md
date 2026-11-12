@@ -107,11 +107,6 @@ Found 2026-11-11 while fixing #30. `actions/trigger-and-wait-for-workflow/trigge
 Found 2026-11-11 in `meta-prerelease-stage` run 43052472314 (`2c235677`). Child run 43052626758 (`prerelease-pipeline-monolith-dotnet`, `verify / local`) passed its unit tests (7/7, 129/129), then failed during `docker compose pull` with `failed to commit snapshot extract-… sha256:25ca64b9…: NotFound: lease does not exist: not found`. This is a containerd/BuildKit snapshot race on the GitHub-hosted runner, not a test or code failure. Re-running the failed job (attempt 2) passed, and the run went green with `meta-v1.0.225-rc.1543`, which confirms it was transient.
 - **Recommended: retry the pull once on this specific error and investigate only if it recurs.** **Why:** it is a known transient runner-side race; a single retry on that exact message keeps real pull failures (auth, missing tag) loud.
 
-### 35. Shared Keycloak admin is the "temporary" bootstrap admin
-
-Found 2026-11-11 during the KC production login check. The admin console at https://shop-auth.optivem.com/admin shows "You are logged in as a temporary admin user. To harden security, create a permanent admin account and delete the temporary one." The `admin` user comes from the bootstrap env vars (`shop-keycloak-admin-password` secret). Login itself is unaffected.
-- **Recommended: leave as is unless the shared Keycloak gets a non-demo use.** **Why:** a permanent admin would live only in the Keycloak DB and be lost or drift on redeploy, while the bootstrap admin is reproducible from Secret Manager; for a demo store, the banner is cosmetic.
-
 ### 36. Parallel sessions on one docker host clobber each other's stacks
 
 Found 2026-11-11 during SMETA Step 7 (UC-007). A design session cycled docker stacks while the UC-007 agent was running, replaced its running monolith-typescript stack, and the next runs failed with "system stub is not running". Images are also built from the shared working tree, so one session's uncommitted backend/compose edits (OpenTelemetry) ended up in the other's test runs.
@@ -161,8 +156,3 @@ Found 2026-11-11 (UC-009), extending #41. The TS A1 rule already fails on `Manag
 
 Found 2026-11-12 (SHOW Step 4b). `_prod-stage.yml` creates releases through `optivem/actions/create-github-release` with the default `GITHUB_TOKEN`, and GitHub does not trigger workflows from events that token causes. So the new `release-sbom.yml` (`on: release: published`) never runs on its own; it only runs by `workflow_dispatch` with a tag.
 - **Recommended:** call `release-sbom.yml` from the prod stage as a reusable workflow (`workflow_call`) after the release step, instead of switching to a PAT/app token. **Why:** no new secret to manage, and the SBOM upload stays tied to the release that produced it.
-
-### 48. .NET `DefaultGivensTest.RecordingErpDriver` must change with every `IErpDriver` method
-
-Found 2026-11-12 (SHOW Step 3). The hand-written test double in `system-test/dotnet` has to implement each new `IErpDriver` method (it gained `ReturnsSlow` this time).
-- **Recommended: leave as is unless it keeps causing churn.** Then replace it with a mocking library or a base class with default no-op members. **Why:** it's a small cost per new driver method, and it fails at compile time, so nothing slips through.
