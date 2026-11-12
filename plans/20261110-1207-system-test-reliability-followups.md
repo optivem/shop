@@ -50,7 +50,7 @@ Decided by the user on 2026-11-10: #1–#3 one at a time, then "I automatically 
 - **#25 `test-all.sh` EXIT trap:** with #23.
 - **#27 meta dispatch matches the child run without `head_sha`:** done (`actions` `1139063`).
 
-**Defer:** #5 (stub reset at suite start), #15 (`next start` standalone), #17 (split `SecurityConfigTest`), #20 (non-UTC CI timezone), #21 (HTML logger control character), #26 (RC tag push; revisit only if it recurs).
+**Defer:** #47 (release SBOM assets), #5 (stub reset at suite start), #15 (`next start` standalone), #17 (split `SecurityConfigTest`), #20 (non-UTC CI timezone), #21 (HTML logger control character), #26 (RC tag push; revisit only if it recurs).
 
 **Drop:** #8c (covered by `test-all.sh` legacy runs), #10 (`_stubIds` thread safety; theoretical).
 
@@ -152,7 +152,7 @@ Found 2026-11-11 (UC-009), extending #36. Concurrent clean builds in one checkou
 Found 2026-11-11 (UC-009), extending #41. The TS A1 rule already fails on `ManageCartRequest` and `ViewProductRequest` (boolean/array members), and `CheckOutRequest` adds more.
 - **Recommended:** decide #41 and #46 together: either UI-driver request DTOs are exempt from A1 (they aren't wire DTOs), or they're reshaped to strings. **Why:** the rule's intent is API wire DTOs; a failing architecture test that nobody runs hides real violations.
 
-### 47. Releases created with `GITHUB_TOKEN` never fire `release` events
+### 47. Releases created with `GITHUB_TOKEN` never fire `release` events — ⏳ Deferred (user, 2026-11-12): GHCR image SBOM attestations (`sbom: true`) already cover the good-practice part; release-page copies are low value. `release-sbom.yml` stays and works by `workflow_dispatch`.
 
 Found 2026-11-12 (SHOW Step 4b). `_prod-stage.yml` creates releases through `optivem/actions/create-github-release` with the default `GITHUB_TOKEN`, and GitHub does not trigger workflows from events that token causes. So the new `release-sbom.yml` (`on: release: published`) never runs on its own; it only runs by `workflow_dispatch` with a tag.
 - **Recommended:** call `release-sbom.yml` from the prod stage as a reusable workflow (`workflow_call`) after the release step, instead of switching to a PAT/app token. **Why:** no new secret to manage, and the SBOM upload stays tied to the release that produced it.
