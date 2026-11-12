@@ -93,12 +93,10 @@ describe('ErpGateway [integration]', () => {
   it('getProductDetails throws on server error', async () => {
     await stubGetStatus('/api/products/BAD-SKU', 500);
 
-    await expect(erpGateway.getProductDetails('BAD-SKU')).rejects.toThrow(
-      ErpUnavailableException,
-    );
-    await expect(erpGateway.getProductDetails('BAD-SKU')).rejects.toThrow(
-      '500',
-    );
+    // One call only: its retries open the circuit breaker, so a second call would be rejected without reaching the ERP.
+    const call = erpGateway.getProductDetails('BAD-SKU');
+    await expect(call).rejects.toThrow(ErpUnavailableException);
+    await expect(call).rejects.toThrow('500');
   });
 
   it('getPromotionDetails returns promotion', async () => {
@@ -116,9 +114,9 @@ describe('ErpGateway [integration]', () => {
   it('getPromotionDetails throws on server error', async () => {
     await stubGetStatus('/api/promotion', 503);
 
-    await expect(erpGateway.getPromotionDetails()).rejects.toThrow(
-      ErpUnavailableException,
-    );
-    await expect(erpGateway.getPromotionDetails()).rejects.toThrow('503');
+    // One call only: its retries open the circuit breaker, so a second call would be rejected without reaching the ERP.
+    const call = erpGateway.getPromotionDetails();
+    await expect(call).rejects.toThrow(ErpUnavailableException);
+    await expect(call).rejects.toThrow('503');
   });
 });
