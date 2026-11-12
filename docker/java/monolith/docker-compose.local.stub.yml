@@ -18,8 +18,11 @@ services:
       - POSTGRES_DB_USER=app
       - POSTGRES_DB_PASSWORD=app
       - ERP_API_URL=http://external-system-stubs:8080/erp
-      # Stub only: a short breaker open time so an ERP-outage test doesn't leak 503s into the next test
+      # Stub only: a short breaker open time, and a single trial call to close it again, so an ERP-outage test
+      # doesn't leak 503s into the next test (with 2 trial calls, the outage's last failed call plus one good call
+      # is a 50% failure rate, which opens the breaker again)
       - RESILIENCE_CIRCUITBREAKER_WAITINOPENSTATE=100ms
+      - RESILIENCE_CIRCUITBREAKER_PERMITTEDCALLSINHALFOPENSTATE=1
       - CLOCK_API_URL=http://external-system-stubs:8080/clock
       - TAX_API_URL=http://external-system-stubs:8080/tax
       - EXTERNAL_SYSTEM_MODE=stub

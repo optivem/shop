@@ -16,6 +16,16 @@ import com.mycompany.myshop.testkit.common.Result;
  * This allows tests to run without a real ERP system.
  */
 public class ErpStubDriver extends BaseErpDriver<ErpStubClient> {
+    /**
+     * How long to wait once an ERP outage (unavailable or slow) ends. The system's ERP circuit breaker may have
+     * opened during the outage, or reopened on its last slow call just before the test got its answer; until its
+     * open time passes (100-500 ms on the stub stacks) it still turns ERP calls away with 503, so without the wait
+     * the outage would leak into the next step or test.
+     */
+    private static final long OUTAGE_RECOVERY_MILLISECONDS = 1_000;
+
+    private boolean outage;
+
     public ErpStubDriver(String baseUrl) {
         super(new ErpStubClient(baseUrl));
     }
@@ -23,7 +33,15 @@ public class ErpStubDriver extends BaseErpDriver<ErpStubClient> {
     @Override
     public void close() throws Exception {
         client.removeStubs();
+        awaitRecoveryFromOutage();
         super.close();
+    }
+
+    private void awaitRecoveryFromOutage() throws InterruptedException {
+        if (outage) {
+            outage = false;
+            Thread.sleep(OUTAGE_RECOVERY_MILLISECONDS);
+        }
     }
 
     @Override
@@ -73,12 +91,14 @@ public class ErpStubDriver extends BaseErpDriver<ErpStubClient> {
 
     @Override
     public Result<Void, ErpErrorResponse> returnsUnavailable() {
+        outage = true;
         return client.configureUnavailable()
                 .mapError(ext -> new ErpErrorResponse(ext.getMessage()));
     }
 
     @Override
     public Result<Void, ErpErrorResponse> returnsSlow() {
+        outage = true;
         return client.configureSlow()
                 .mapError(ext -> new ErpErrorResponse(ext.getMessage()));
     }
@@ -91,7 +111,14 @@ public class ErpStubDriver extends BaseErpDriver<ErpStubClient> {
 
     @Override
     public Result<Void, ErpErrorResponse> returnsAvailable() {
-        return client.removeUnavailable()
+        var result = client.removeUnavailable()
                 .mapError(ext -> new ErpErrorResponse(ext.getMessage()));
+        try {
+            awaitRecoveryFromOutage();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Interrupted while waiting for the system to recover from the ERP outage", e);
+        }
+        return result;
     }
 }
