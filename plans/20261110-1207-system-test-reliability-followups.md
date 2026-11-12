@@ -156,3 +156,18 @@ Found 2026-11-12 (SMETA UC-011 coding). In the Thymeleaf and Razor monoliths, ov
 
 Found 2026-11-12 (SMETA UC-011 coding). The customer, quantity and status cells have no `orders-cell-*` classes, unlike the other three UIs, so the driver reads cells by column header instead.
 - **Recommended:** add the classes in the Next.js monolith for parity, and keep the driver's header-based reading. **Why:** a one-line markup change that keeps the four UIs consistent; the header-based read already works everywhere.
+
+### 52. Deliver Order is offered to customers in the three monolith UIs
+
+Found 2026-11-12 (SMETA Step 7b coding). The Thymeleaf, Razor and Next.js order details pages show Deliver Order to a customer on a PLACED order. Only React restricts it to admins. No scenario covers it.
+- **Recommended:** state in UC-012 that only admins are offered Deliver Order, add a `@UC-012` UI scenario for "customer is not offered Deliver", and hide the button for customers in the three monoliths. **Why:** delivering is an admin action in the spec, and React already behaves that way, so the monoliths are the odd ones out.
+
+### 53. TS "then" stages may publish givens their own way
+
+Found 2026-11-12 (SMETA Step 7b coding). TS `browseCoupons` silently dropped given coupons' valid-from, valid-to and usage limit until it switched to `arrangeGiven(..., { declaredOnly: true })`.
+- **Recommended:** grep the other TS then stages for their own given-publishing and switch them to `arrangeGiven`. **Why:** the same silent-drop bug may sit elsewhere.
+
+### 54. .NET `Converter.ToDateTime` parses en-US dates without a UTC kind
+
+Found 2026-11-12 (SMETA Step 7b coding). Not used by the new tests, but a future caller could get a local-time `DateTime`.
+- **Recommended:** make it return `DateTimeKind.Utc` (or `DateTimeOffset`), matching the new order-date parsing. **Why:** timezone bugs only show on non-UTC machines (see #20).

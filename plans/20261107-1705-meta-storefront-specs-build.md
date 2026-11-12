@@ -56,7 +56,16 @@ UC-009 tests done in `06bec4eb` (27 UI tests per language: 13 positive and 14 ne
 - unticking Save as Default in every UI;
 - users deleted on close.
 
-**Parity gap:** TS needs `hasNoSavedAddress` on its general `ThenProfile` (for UC-010.7).
+**Parity gap:** TS needs `hasNoSavedAddress` on its general `ThenProfile` (for UC-010.7). Fixed in `b19b17ff`.
+
+**Coded 2026-11-12 (compile-only, not yet run; nothing flipped):**
+- Cloud service account `30df8177`: realm `shop` only, secret `KEYCLOAK_TEST_ADMIN_CLIENT_SECRET` set by the user.
+- UC-010 `b19b17ff`. Gap: UC-010.7 doesn't assert the email.
+- UC-011 `b6b1f262`. Not covered: UC-011.1 "newest first" (now possible with `placedAt`), UC-011.2 and UC-011.5's order with no customer (needs DB seeding).
+- Step 7b `e300e52c`: UC-002.1–.4, .9; UC-003.2; UC-005.1, .3, .4; UC-012.2; plus the new `given().order().placedAt(...)`. Not covered: UC-005.3's total/empty page and UC-005.7 (the coupon table is never emptied).
+- Each subagent's "what the test phase must check" list is in this session's run report. The test phase walks every new test.
+
+**Next:** UC1 Track D coding (D1–D3), then the docker test phase (driven by the meta-plan), then the flips and Step 8 close-out.
 
 **Next: Step 7 continues** (BUILD Step 8): the fresh-customer unit plus `@UC-009.10` and the UC-009 flip, then UC-010 and UC-011 — one serial subagent each (shared test kit), latest tests only, UI + API channels in Java, .NET and TypeScript. Each flips its use case to `status: implemented` when its tests pass in all three languages. Gate per use case: compile (`./compile-all.sh` or per-project) plus `--sample` system tests per affected language, starting stacks with `gh optivem system start --restart`. Read BUILD Step 8's caveats (Next.js 404 body is browser-only; monolith address errors are plain messages; monolith cart persists only within a session).
 
