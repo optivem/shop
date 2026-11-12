@@ -146,3 +146,13 @@ Found 2026-11-12 (SHOW Step 4b). `_prod-stage.yml` creates releases through `opt
 
 Found 2026-11-12 (SMETA fresh-customer unit). `VerificationMethodsAreFluentOrVoid` flags `CheckOutVerification.orderNumberFor`, `orderNumbers`, `placedSkus` and `ViewOrderVerification.orderedSku` in Java and .NET; TS's A2 passes.
 - **Recommended:** move these lookup helpers out of the Verification classes (e.g. onto the response/result object), so A2 can be enforced as written. **Why:** it keeps the rule meaningful instead of growing an exemption list, and matches TS, which already passes.
+
+### 50. Monolith order-history `loadOrders` has no stale-response guard
+
+Found 2026-11-12 (SMETA UC-011 coding). In the Thymeleaf and Razor monoliths, overlapping reloads (choosing a customer, then resetting the filters) can let an older response overwrite a newer one, so the list shows the wrong orders. The UI driver avoids double reloads, so tests don't hit it today.
+- **Recommended:** add a request counter (or `AbortController`) to `loadOrders` in both monoliths so only the latest response renders. **Why:** it's a small, real UI robustness fix, and React already guards this.
+
+### 51. Next.js order-history cells lack the `orders-cell-*` classes
+
+Found 2026-11-12 (SMETA UC-011 coding). The customer, quantity and status cells have no `orders-cell-*` classes, unlike the other three UIs, so the driver reads cells by column header instead.
+- **Recommended:** add the classes in the Next.js monolith for parity, and keep the driver's header-based reading. **Why:** a one-line markup change that keeps the four UIs consistent; the header-based read already works everywhere.
