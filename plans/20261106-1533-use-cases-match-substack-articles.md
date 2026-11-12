@@ -39,7 +39,7 @@ A, B and C are independent. A and B are done (see Done). D waits for C.
 
 ### ▶ Next executable step (resume here)
 
-Track C is external: run it in a gh-optivem session (plan: `plans/move-to-gh-optivem/20261107-1300-spec-parse-gherkin-criteria.md`; parse `@UC-NNN.M` Gherkin scenarios, then publish a release). Once that release is out, Track D (D1) re-enables the gate here.
+D4: verify after the test phase. D1–D3 are done: the `spec-gate` step runs again for monolith Java, .NET and TypeScript (latest suite set), **per language**: `gh optivem spec check --mode lenient --config spec-<test-language>.yaml`. `spec-java.yaml`, `spec-dotnet.yaml` and `spec-typescript.yaml` each read only their language's JUnit XML; `spec.yaml` keeps the shared settings without results and is what `spec validate` uses. `spec validate` (2026-11-12, gh-optivem v1.6.108): 12 use cases valid, 53 criteria gated (UC-001 16, UC-004 9, UC-006 10, UC-007 7, UC-008 11), 7 planned use cases not gated.
 
 ### Track C — gh-optivem reads Gherkin criteria (other repo)
 
@@ -49,10 +49,7 @@ Track C is external: run it in a gh-optivem session (plan: `plans/move-to-gh-opt
 
 ### Track D — Re-enable the gate for all languages (shop; after A, B and C)
 
-- [ ] D1: Uncomment the `spec-gate` step in `.github/workflows/_acceptance-stage-docker-compose.yml` and delete the DISABLED comment above it.
-- [ ] D2: Add the .NET and TypeScript result globs to `results:` in `spec.yaml`. Decide whether the gate reports per language or pooled. Pooled lets one language hide another's gap, so check how gh-optivem merges results first.
-- [ ] D3: Extend the `spec-gate` step's `if:` to all languages.
-- [ ] D4 (note 2026-11-07: needs C1c; only `status: implemented` use cases count, and the UC-001 count may change when `plans/20261107-1638-…` Step 8 amends UC-001): Verify with the new gh-optivem. Run `gh optivem spec validate`, then `gh optivem spec status` after an acceptance run in each language. Check that all 14 criteria (UC-001.1 to UC-001.14) are found and coverage is at least the `spec.yaml` threshold (90%). Push, and confirm that the acceptance stage passes the `spec-gate` step for monolith Java, .NET and TypeScript.
+- [ ] D4 (after the test phase; recount if a use case flips to `implemented` first): after an acceptance run in each language, run `gh optivem spec status --config spec-<language>.yaml` for java, dotnet and typescript **separately**. In each, every criterion of the `implemented` use cases (53 today: UC-001 16, UC-004 9, UC-006 10, UC-007 7, UC-008 11) must be found and Verified, none Failing, and no use case with `status: planned` may count. Also check the result globs match real files (the gate exits 2 on "no JUnit XML files matched"). Then push and confirm that the acceptance stage passes the `spec-gate` step for monolith Java, .NET and TypeScript. **Threshold gap (gh-optivem v1.6.108):** the 90% `threshold` applies only in `--mode strict`, and strict also blocks on *every* unverified in-scope criterion, so it works as 100% in practice. The step runs `--mode lenient` (validation errors and Failing criteria only), so no coverage percent is enforced per language yet. Decide in D4: (a) **recommended:** switch the step to `--mode strict` once `spec status --mode strict` passes in all three languages, because only that makes each language prove its own coverage; or (b) keep lenient and ask gh-optivem for a mode that enforces only the threshold.
 
 ## Out of scope
 

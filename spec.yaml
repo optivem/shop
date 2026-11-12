@@ -1,9 +1,15 @@
-# Folder per use case: <specDir>/UC-NNN-<name>/acceptance-criteria.md holds the
-# front matter and Gherkin. The gh-optivem spec parser can't read this layout until
-# gh-optivem C1b ships (plans/20261106-1533-use-cases-match-substack-articles.md
-# Track C); the spec gate is disabled until then.
+# Shared spec settings: the use cases live in a folder per use case,
+# <specDir>/UC-NNN-<name>/acceptance-criteria.md (front matter + @UC-NNN.M Gherkin
+# scenarios; use cases with status: planned are validated but not gated).
+#
+# This file has no results on purpose: `gh optivem spec validate` (markdown only)
+# uses it. The gate reports per language, never pooled, so one language can't hide
+# another's gap. Each language has its own config with its own results:
+#   spec-java.yaml, spec-dotnet.yaml, spec-typescript.yaml
+# e.g. `gh optivem spec status --config spec-dotnet.yaml`. The acceptance stage runs
+# `gh optivem spec check --config spec-<test-language>.yaml`. Keep specDir, exclude
+# and threshold the same in all four files.
 specDir: docs/shared/specs/use-cases
-results: "system-test/java/build/test-results/**/*.xml"
 exclude:
   - "**/legacy/**"
 threshold: 90

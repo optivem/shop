@@ -1,0 +1,7 @@
+# Spec gate for the typescript acceptance results only (see spec.yaml for why the gate is
+# per language). JUnit XML from Playwright's junit reporter (tests.yaml PLAYWRIGHT_JUNIT_OUTPUT_NAME=<suite>.xml); tags come from criteria('UC-NNN.M') annotations.
+specDir: docs/shared/specs/use-cases
+results: "system-test/typescript/junit-results/*.xml"
+exclude:
+  - "**/legacy/**"
+threshold: 90

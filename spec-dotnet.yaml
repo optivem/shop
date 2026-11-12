@@ -1,0 +1,7 @@
+# Spec gate for the dotnet acceptance results only (see spec.yaml for why the gate is
+# per language). JUnit XML from JunitXml.TestLogger (tests.yaml --logger 'junit;LogFilePath=TestResults/junit/<suite>.xml'); tags come from [Trait("tag", "UC-NNN.M")]. The TRX files are not read.
+specDir: docs/shared/specs/use-cases
+results: "system-test/dotnet/SystemTests/TestResults/junit/*.xml"
+exclude:
+  - "**/legacy/**"
+threshold: 90
