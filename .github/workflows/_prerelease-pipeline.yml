@@ -261,8 +261,24 @@ jobs:
           project: system/multitier/frontend-react
 
       # Bring up the docker-compose stacks (real + stub) and wait for health.
+      # The image pull inside `system start` can hit a containerd snapshot race
+      # on GitHub-hosted runners ("lease does not exist"; REL #34, run
+      # 43052472314). Retry once on that exact error only; any other failure
+      # (auth, missing tag, unhealthy container) fails the step as before.
       - name: Start system
-        run: gh optivem system start
+        shell: bash
+        run: |
+          log=$(mktemp)
+          set +e
+          gh optivem system start 2>&1 | tee "$log"
+          code=${PIPESTATUS[0]}
+          set -e
+          if [ "$code" -ne 0 ] && grep -q 'lease does not exist' "$log"; then
+            echo "::warning::system start failed on the containerd 'lease does not exist' race; retrying once."
+            gh optivem system start
+          elif [ "$code" -ne 0 ]; then
+            exit "$code"
+          fi
 
       # Diagnostic: `gh optivem system start` only surfaces compose's
       # "container X exited (1)" and swallows the container's own stderr, so a
