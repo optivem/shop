@@ -4,7 +4,8 @@ import { OrderStatus } from '../../../src/testkit/common/dtos.js';
 import { criteria } from '../../commons/criteria.js';
 
 // My orders for a customer of their own, whose orders are placed at set times. The orders are placed out of date order
-// (ORD-1002, ORD-1001, ORD-1003), so a list in placing order would not pass for one in date order.
+// (ORD-1002, ORD-1001, ORD-1003), so a list in placing order would not pass for one in date order. Also the admin's
+// unfiltered list of all orders, whose orders are placed after every other order so they are on its first page.
 function givenANewCustomersThreeOrders(scenario: ScenarioDsl) {
     return scenario
         .given()
@@ -128,6 +129,39 @@ test.describe('@isolated', () => {
                 .orderHistory()
                 .showsOrders(...orders)
                 .hasTotalElements(3);
+        });
+    });
+
+    forChannels(ChannelType.UI)(() => {
+        test('shouldShowEveryOrderAgainAfterResettingTheFilters', criteria('UC-011.8'), async ({ scenario }) => {
+            // All orders, newest first, hold more than one page, so ORD-A and ORD-B are placed after every other order
+            // (a century from now, later on each run) to be on the first page once the filters are reset.
+            const placedAt = Math.floor(Date.now() / 1000) * 1000 + 36_500 * 24 * 60 * 60 * 1000;
+            const iso = (millis: number) => new Date(millis).toISOString().replace('.000Z', 'Z');
+            await scenario
+                .given()
+                .order()
+                .withOrderNumber('ORD-A')
+                .placedByCustomer('A')
+                .placedAt(iso(placedAt))
+                .and()
+                .order()
+                .withOrderNumber('ORD-B')
+                .placedByCustomer('B')
+                .placedAt(iso(placedAt + 60_000))
+                .and()
+                .loggedInAsAdmin()
+                .when()
+                .browseOrderHistory()
+                .withCustomer('B')
+                .withOrderNumber('ORD-A')
+                .withFiltersResetAfterwards()
+                .then()
+                .shouldSucceed()
+                .orderHistory()
+                .containsOrder('ORD-A')
+                .containsOrder('ORD-B')
+                .hasCustomerFilterSetToAllCustomers();
         });
     });
 });

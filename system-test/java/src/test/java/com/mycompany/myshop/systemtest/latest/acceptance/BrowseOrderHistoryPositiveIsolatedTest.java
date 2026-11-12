@@ -10,9 +10,14 @@ import com.optivem.testing.Isolated;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.TestTemplate;
 
+import java.time.Duration;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+
 /**
  * My orders for a customer of their own, whose orders are placed at set times. The orders are placed out of date order
- * (ORD-1002, ORD-1001, ORD-1003), so a list in placing order would not pass for one in date order.
+ * (ORD-1002, ORD-1001, ORD-1003), so a list in placing order would not pass for one in date order. Also the admin's
+ * unfiltered list of all orders, whose orders are placed after every other order so they are on its first page.
  */
 @Isolated("sets the shared clock to place each order at its own time; parallel runs would clash on the clock")
 class BrowseOrderHistoryPositiveIsolatedTest extends BaseAcceptanceTest {
@@ -128,5 +133,33 @@ class BrowseOrderHistoryPositiveIsolatedTest extends BaseAcceptanceTest {
                     .orderHistory()
                         .showsOrders(NONE.equals(orders) ? new String[0] : orders.split(","))
                         .hasTotalElements(3);
+    }
+
+    @Tag("UC-011.8")
+    @TestTemplate
+    @Channel(ChannelType.UI)
+    void shouldShowEveryOrderAgainAfterResettingTheFilters() {
+        // All orders, newest first, hold more than one page, so ORD-A and ORD-B are placed after every other order
+        // (a century from now, later on each run) to be on the first page once the filters are reset.
+        var placedAt = Instant.now().plus(Duration.ofDays(36_500)).truncatedTo(ChronoUnit.SECONDS);
+        scenario
+                .given().order()
+                    .withOrderNumber("ORD-A")
+                    .placedByCustomer("A")
+                    .placedAt(placedAt.toString())
+                .and().order()
+                    .withOrderNumber("ORD-B")
+                    .placedByCustomer("B")
+                    .placedAt(placedAt.plusSeconds(60).toString())
+                .and().loggedInAsAdmin()
+                .when().browseOrderHistory()
+                    .withCustomer("B")
+                    .withOrderNumber("ORD-A")
+                    .withFiltersResetAfterwards()
+                .then().shouldSucceed()
+                    .orderHistory()
+                        .containsOrder("ORD-A")
+                        .containsOrder("ORD-B")
+                        .hasCustomerFilterSetToAllCustomers();
     }
 }

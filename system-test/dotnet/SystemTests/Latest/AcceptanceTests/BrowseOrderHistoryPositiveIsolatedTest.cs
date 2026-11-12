@@ -9,7 +9,8 @@ namespace SystemTests.Latest.AcceptanceTests;
 
 /// <summary>
 /// My orders for a customer of their own, whose orders are placed at set times. The orders are placed out of date order
-/// (ORD-1002, ORD-1001, ORD-1003), so a list in placing order would not pass for one in date order.
+/// (ORD-1002, ORD-1001, ORD-1003), so a list in placing order would not pass for one in date order. Also the admin's
+/// unfiltered list of all orders, whose orders are placed after every other order so they are on its first page.
 /// </summary>
 [Collection("Isolated")]
 [Trait("Category", "isolated")]
@@ -109,4 +110,25 @@ public class BrowseOrderHistoryPositiveIsolatedTest : BaseAcceptanceTest
             .ShowsOrders(orders == None ? [] : orders.Split(','))
             .HasTotalElements(3);
     }
+
+    [Theory]
+    [Isolated(ClockReason)]
+    [ChannelData(ChannelType.UI)]
+    [Trait("tag", "UC-011.8")]
+    public async Task ShouldShowEveryOrderAgainAfterResettingTheFilters(Channel channel)
+    {
+        // All orders, newest first, hold more than one page, so ORD-A and ORD-B are placed after every other order
+        // (a century from now, later on each run) to be on the first page once the filters are reset.
+        var placedAt = DateTimeOffset.UtcNow.AddDays(36_500);
+        placedAt = placedAt.AddTicks(-(placedAt.Ticks % TimeSpan.TicksPerSecond));
+        await Scenario(channel)
+            .Given().Order().WithOrderNumber("ORD-A").PlacedByCustomer("A").PlacedAt(Iso(placedAt))
+            .And().Order().WithOrderNumber("ORD-B").PlacedByCustomer("B").PlacedAt(Iso(placedAt.AddSeconds(60)))
+            .And().LoggedInAsAdmin()
+            .When().BrowseOrderHistory().WithCustomer("B").WithOrderNumber("ORD-A").WithFiltersResetAfterwards()
+            .Then().ShouldSucceed()
+            .OrderHistory().ContainsOrder("ORD-A").ContainsOrder("ORD-B").HasCustomerFilterSetToAllCustomers();
+    }
+
+    private static string Iso(DateTimeOffset time) => time.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", System.Globalization.CultureInfo.InvariantCulture);
 }

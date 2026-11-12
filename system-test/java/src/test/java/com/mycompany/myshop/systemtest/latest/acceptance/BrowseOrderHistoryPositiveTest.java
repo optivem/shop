@@ -185,16 +185,19 @@ class BrowseOrderHistoryPositiveTest extends BaseAcceptanceTest {
     @TestTemplate
     @Channel({ChannelType.UI, ChannelType.API})
     void shouldShowOnlyTheOrdersOfTheChosenCustomer() {
+        // The chosen customer is a new one: a shared customer has more orders than fit on page 1, all at the same stub
+        // clock time, so its new order would not reliably be on the first page.
         scenario
-                .given().order()
+                .given().newCustomer()
+                .and().order()
                     .withOrderNumber("ORD-A")
-                    .placedByCustomer("A")
+                    .placedByCustomer()
                 .and().order()
                     .withOrderNumber("ORD-B")
                     .placedByCustomer("B")
                 .and().loggedInAsAdmin()
                 .when().browseOrderHistory()
-                    .withCustomer("A")
+                    .withCustomer()
                     .withNoOrderNumberFilter()
                 .then().shouldSucceed()
                     .orderHistory()
@@ -216,29 +219,6 @@ class BrowseOrderHistoryPositiveTest extends BaseAcceptanceTest {
                         .containsOrder(DEFAULT_ORDER_NUMBER)
                         .showsNoCustomers()
                         .offersNoCustomerFilter();
-    }
-
-    @Tag("UC-011.8")
-    @TestTemplate
-    @Channel(ChannelType.UI)
-    void shouldShowEveryOrderAgainAfterResettingTheFilters() {
-        scenario
-                .given().order()
-                    .withOrderNumber("ORD-A")
-                    .placedByCustomer("A")
-                .and().order()
-                    .withOrderNumber("ORD-B")
-                    .placedByCustomer("B")
-                .and().loggedInAsAdmin()
-                .when().browseOrderHistory()
-                    .withCustomer("B")
-                    .withOrderNumber("ORD-A")
-                    .withFiltersResetAfterwards()
-                .then().shouldSucceed()
-                    .orderHistory()
-                        .containsOrder("ORD-A")
-                        .containsOrder("ORD-B")
-                        .hasCustomerFilterSetToAllCustomers();
     }
 
     @Tag("UC-002.3")

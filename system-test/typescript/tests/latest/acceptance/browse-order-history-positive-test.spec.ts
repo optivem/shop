@@ -88,11 +88,15 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
     });
 
     test('shouldShowOnlyTheOrdersOfTheChosenCustomer', criteria('UC-011.3'), async ({ scenario }) => {
+        // The chosen customer is a new one: a shared customer has more orders than fit on page 1, all at the same stub
+        // clock time, so its new order would not reliably be on the first page.
         await scenario
             .given()
+            .newCustomer()
+            .and()
             .order()
             .withOrderNumber('ORD-A')
-            .placedByCustomer('A')
+            .placedByCustomer()
             .and()
             .order()
             .withOrderNumber('ORD-B')
@@ -101,7 +105,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
             .loggedInAsAdmin()
             .when()
             .browseOrderHistory()
-            .withCustomer('A')
+            .withCustomer()
             .withNoOrderNumberFilter()
             .then()
             .shouldSucceed()
@@ -227,31 +231,6 @@ forChannels(ChannelType.UI)(() => {
             .containsOrder(DEFAULTS.ORDER_NUMBER)
             .showsNoCustomers()
             .offersNoCustomerFilter();
-    });
-
-    test('shouldShowEveryOrderAgainAfterResettingTheFilters', criteria('UC-011.8'), async ({ scenario }) => {
-        await scenario
-            .given()
-            .order()
-            .withOrderNumber('ORD-A')
-            .placedByCustomer('A')
-            .and()
-            .order()
-            .withOrderNumber('ORD-B')
-            .placedByCustomer('B')
-            .and()
-            .loggedInAsAdmin()
-            .when()
-            .browseOrderHistory()
-            .withCustomer('B')
-            .withOrderNumber('ORD-A')
-            .withFiltersResetAfterwards()
-            .then()
-            .shouldSucceed()
-            .orderHistory()
-            .containsOrder('ORD-A')
-            .containsOrder('ORD-B')
-            .hasCustomerFilterSetToAllCustomers();
     });
 });
 
