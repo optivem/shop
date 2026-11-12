@@ -32,12 +32,12 @@ This is a self-driving parent meta-plan: `/execute-plan plans/20261112-0845-meta
 | Unit | State |
 |---|---|
 | U0 plan-only first pass | **done** 2026-11-12: META2 deleted, SHOW marker removed, decisions written into SMETA/REL, Track C closed in UC1 |
-| U1 SHOW | stale claim (decision #5); next: Step 3 `--sample`, docker lane slot 1 |
+| U1 SHOW | **Phase A done** 2026-11-12 (`3fb4cb7e`…`849c927c`, compile-all green); Phase B: run the resilience tests, k6 smoke, OpenAPI checks; Step 4b blocked by REL #47 |
 | U2 MUI (+ REL #43, #44) | waiting for docker lane slot 2 |
 | U3 SMETA (+ REL #39, #41/#46) | waiting for docker lane slot 3; starts with the fresh-customer unit |
 | U4 UC1 Track D | waiting for U3 close-out (Track C closed, decision #3) |
 | U5 REL #11 | user, second machine |
-| X1 external (actions, gh-optivem) | ready after U0 |
+| X1 external | **done**: actions `21972ff` (#32, #33; `v1` tag not moved yet, user to decide), shop `a3bdc9a8` (#34), gh-optivem plan `4ab210be` (#36–#45) |
 
 **Plans analysed:** 5 in-scope, 4 referenced-only
 

@@ -166,3 +166,13 @@ Found 2026-11-11 (UC-009), extending #36. Concurrent clean builds in one checkou
 
 Found 2026-11-11 (UC-009), extending #41. The TS A1 rule already fails on `ManageCartRequest` and `ViewProductRequest` (boolean/array members), and `CheckOutRequest` adds more.
 - **Recommended:** decide #41 and #46 together: either UI-driver request DTOs are exempt from A1 (they aren't wire DTOs), or they're reshaped to strings. **Why:** the rule's intent is API wire DTOs; a failing architecture test that nobody runs hides real violations.
+
+### 47. Releases created with `GITHUB_TOKEN` never fire `release` events
+
+Found 2026-11-12 (SHOW Step 4b). `_prod-stage.yml` creates releases through `optivem/actions/create-github-release` with the default `GITHUB_TOKEN`, and GitHub does not trigger workflows from events that token causes. So the new `release-sbom.yml` (`on: release: published`) never runs on its own; it only runs by `workflow_dispatch` with a tag.
+- **Recommended:** call `release-sbom.yml` from the prod stage as a reusable workflow (`workflow_call`) after the release step, instead of switching to a PAT/app token. **Why:** no new secret to manage, and the SBOM upload stays tied to the release that produced it.
+
+### 48. .NET `DefaultGivensTest.RecordingErpDriver` must change with every `IErpDriver` method
+
+Found 2026-11-12 (SHOW Step 3). The hand-written test double in `system-test/dotnet` has to implement each new `IErpDriver` method (it gained `ReturnsSlow` this time).
+- **Recommended: leave as is unless it keeps causing churn.** Then replace it with a mocking library or a base class with default no-op members. **Why:** it's a small cost per new driver method, and it fails at compile time, so nothing slips through.
