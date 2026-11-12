@@ -147,11 +147,6 @@ Found 2026-11-11 (UC-008). `RequestDtosDeclareOnlyStringMembers` may reject the 
 Found 2026-11-11 (UC-008), extending #38. `--suite acceptance-isolated-ui --test X` ran the other acceptance suites too, then reported "requested test(s) never executed" even though X passed. On .NET a shared method name (`ShouldKeepTheQuantityBetween1And99WhenUsingTheStepper`) also pulled in UC-007's tests.
 - **Recommended:** fold into #38's fix (make `--suite` restrict the run, and support class-qualified names on .NET). **Why:** the same false-red problem.
 
-### 43. Next.js monolith renders two cart badges after the Market redesign (`81566bb0`)
-
-Found 2026-11-11 (UC-009 agent). UC-008 `shouldRaiseTheQuantityOfAProductAlreadyInTheCart` fails every time on the TS monolith: two `[aria-label='Cart Item Count']` badges render (one "2", one "1"), which trips Playwright's strict mode, and the rest of that serial suite is skipped. It passes on React. The bug is in the UI, not the test. The Market-redesign session has been told.
-- **Recommended:** fix it in the Next.js layout (render one badge, or give the second one a different label), then re-run UC-008 on the TS monolith. **Why:** it's a real UI regression that makes CI red, and the test hook contract says one badge.
-
 ### 44. Monolith pages load Bootstrap from cdn.jsdelivr.net
 
 Found 2026-11-11 (UC-009). It's the likely cause of intermittent page-load and Keycloak-login timeouts in Java runs (5, then 3 different UC-009 tests timed out; all passed on re-run).

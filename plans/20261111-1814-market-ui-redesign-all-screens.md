@@ -33,6 +33,8 @@
 
 Step 9, second half. `./compile-all.sh` passed on 2026-11-11 (all 7 configs). Step 7 is committed. Next, run `./test-all.sh` (latest + legacy, all three languages). Run it only once no other session is using the `my-shop-*` docker stacks (`docker ps`) and the in-progress UC-009 `system-test/**` edits are committed. Then hand the user the visual check at desktop and phone widths.
 
+**REL #43 (2026-11-12): coded side checked, untested in docker.** At HEAD all three monolith layouts render exactly one `[aria-label='Cart Item Count']` (Next.js `StoreHeader.tsx`, Thymeleaf `layout.html`, Razor `_Layout.cshtml`). A local Next.js production build driven by Playwright through UC-008.2's flow (add on the product page, then add again from the catalog; also with CPU throttling and a delayed CDN) showed one badge every time, so no code change was needed; the two badges were most likely from a docker image built off a mid-edit shared working tree (REL #36). Confirm with UC-008 on the TS monolith in Step 9. Step 9 (`./test-all.sh` + visual check) is still pending.
+
 ## Steps
 
 - [ ] Step 2: **Decouple tests from Bootstrap classes.** Move the driver selectors `.alert-danger` (CatalogPage, OrderDetailsPage), `.form-check:has(input:checked) label` (CatalogPage) and `table.table tbody tr td:nth-child(n)` (CouponManagementPage) to role/ARIA equivalents in all three languages, latest and legacy. Run `--sample` system tests per language. — ⏳ Deferred: only needed if Bootstrap is ever replaced (see Decisions).
