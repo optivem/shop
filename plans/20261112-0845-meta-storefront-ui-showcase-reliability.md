@@ -14,7 +14,7 @@
 **Phase B, the testing pass.** Phase A coding is all on `main`, and so are REL #50, #51, #53, #54 (`d13b4a79`, `9ac5ed87`, `3c6545c0`, `c88c7ddc`).
 - **Java pass: done (2026-11-12).** Monolith Java is green. One flaky UC-007.4 result fails the spec gate: 52/53 verified, lenient. On multitier Java, 3 React UI tests hang on browser navigation (REL #61). Fixes: `365de274`, `2963db9b`, `132e7557`, `6b07a16b` (a React `useOrders` product bug), and `a071aac8` (the stub breaker thresholds, under a mislabelled commit message).
 - **.NET pass: in progress.** The first attempt was killed when the system ran low on memory. It fixed `109d80f4`, `228991cc` and `38324a28` (Java got the last one too). The local Postgres volumes were wiped on 2026-11-12, and a second attempt was started. That attempt also moves the parallel UI tests that read a coupon back from the list into the isolated classes, in all three languages. **If it never reported:** check `git log` for its commits, then rerun the .NET pass (monolith full acceptance, smoke, contract and e2e, then multitier, one stack at a time) and `spec status --config spec-dotnet.yaml`.
-- **Then:** the TS pass (UC-008 on the TS monolith for #43, REL #60 TS breaker, k6 smoke per REL #63) → `./test-all.sh` → flip the use cases that pass to `implemented` → UC1 D4 → the user's MUI visual check → delete MUI, SHOW and this file.
+- **Then:** the TS pass (REL #43 fixed, see U2; REL #60 TS breaker, k6 smoke per REL #63) → `./test-all.sh` → flip the use cases that pass to `implemented` → UC1 D4 → the user's MUI visual check → delete MUI, SHOW and this file.
 - **Memory is tight.** Use one stack at a time, and keep free RAM at 5 GB or more before starting.
 - The checklist of what to verify for each change is in **Phase B checklist** below.
 
@@ -44,7 +44,7 @@ This is a self-driving parent meta-plan: `/execute-plan plans/20261112-0845-meta
 |---|---|
 | U0 plan-only first pass | **done** 2026-11-12: META2 deleted, SHOW marker removed, decisions written into SMETA/REL, Track C closed in UC1 |
 | U1 SHOW | **Phase A done** 2026-11-12 (`3fb4cb7e`…`849c927c`, compile-all green); Phase B: run the resilience tests, k6 smoke, OpenAPI checks; Step 4b blocked by REL #47 |
-| U2 MUI (+ REL #43, #44) | coded (`70e174d7` #43 no code change, `ae34c9dc` #44); Phase B: UC-008 on TS monolith + test-all + visual check |
+| U2 MUI (+ REL #43, #44) | coded (#43 fixed 2026-11-12: the header's own Suspense boundary removed from `StoreLayout.tsx`, UC-008.2 UI 5/5 locally, cart UI tests 38/38; `70e174d7` had wrongly said "no code change"; `ae34c9dc` #44); Phase B: test-all + visual check |
 | U3 SMETA (+ REL #39, #41/#46, #49, #52) | **coded** 2026-11-12: `aed41283` `5137a909` `30df8177` `b19b17ff` `b6b1f262` `e300e52c` `5ee705f9` `071d2256`; nothing flipped; Phase B next |
 | U4 UC1 Track D | D1–D3 coded `f13a365c` (per-language spec-<lang>.yaml, lenient mode); D4 after Phase B |
 | U5 REL #11 | user, second machine |

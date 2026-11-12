@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, type ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { categoriesOf } from "@/lib/storefront/catalog-query";
@@ -143,7 +143,15 @@ export interface StoreLayoutProps {
   breadcrumbs?: BreadcrumbItem[];
 }
 
-/** The storefront chrome around every page: header, breadcrumbs, the notification banner and the footer. */
+/**
+ * The storefront chrome around every page: header, breadcrumbs, the notification banner and the footer.
+ *
+ * The header is deliberately not in a Suspense boundary of its own. Every route is dynamic (the root layout reads
+ * cookies), so its useSearchParams() never bails out to client rendering and needs no boundary; and one would let
+ * React stream the header as a separate segment (a hidden div swapped in by a later, batched reveal script). A cart
+ * change before that reveal (an "Add to cart" click on the already-shown page) client-renders the pending boundary
+ * and orphans the streamed copy, leaving a second, stale "Cart Item Count" badge in the DOM.
+ */
 export function StoreLayout({ children, title, breadcrumbs }: Readonly<StoreLayoutProps>) {
   useEffect(() => {
     document.title = title ? `${title} · MyShop` : "MyShop";
@@ -151,9 +159,7 @@ export function StoreLayout({ children, title, breadcrumbs }: Readonly<StoreLayo
 
   return (
     <div className="store d-flex flex-column min-vh-100">
-      <Suspense>
-        <StoreHeader />
-      </Suspense>
+      <StoreHeader />
       <main className="container store-main flex-grow-1">
         {breadcrumbs && <Breadcrumb items={breadcrumbs} />}
         <Notification />
