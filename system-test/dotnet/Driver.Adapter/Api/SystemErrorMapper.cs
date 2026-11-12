@@ -12,7 +12,7 @@ public static class SystemErrorMapper
         if (problemDetail.Errors != null && problemDetail.Errors.Count > 0)
         {
             var fieldErrors = problemDetail.Errors
-                .Select(e => new SystemError.FieldError(e.Field ?? string.Empty, e.Message ?? string.Empty, e.Code))
+                .Select(e => new SystemError.FieldError(e.Field ?? "unknown", e.Message ?? string.Empty, e.Code))
                 .ToList()
                 .AsReadOnly();
             return SystemError.Of(message, fieldErrors)

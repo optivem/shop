@@ -55,18 +55,7 @@ public class MyShopApiDriver : IMyShopDriver
             .MapErrorAsync(MapError)
             .MapAsync(_ => new GoToMyShopResponse());
 
-    private static SystemError MapError(ProblemDetailResponse problemDetail)
-    {
-        var message = problemDetail.Detail ?? "Request failed";
-        if (problemDetail.Errors != null && problemDetail.Errors.Count > 0)
-        {
-            var fieldErrors = problemDetail.Errors
-                .Select(e => new SystemError.FieldError(e.Field ?? "unknown", e.Message ?? string.Empty, e.Code))
-                .ToList();
-            return SystemError.Of(message, fieldErrors.AsReadOnly());
-        }
-        return SystemError.Of(message);
-    }
+    private static SystemError MapError(ProblemDetailResponse problemDetail) => SystemErrorMapper.From(problemDetail);
 
     public Task<Result<PlaceOrderResponse, SystemError>> PlaceOrderAsync(PlaceOrderRequest request)
         => RunAs(TestUser.Customer).Orders().PlaceOrderAsync(request)
