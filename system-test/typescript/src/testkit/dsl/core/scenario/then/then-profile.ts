@@ -1,6 +1,7 @@
 import { expect } from '@playwright/test';
 import type { SystemError } from '../../../../driver/port/dtos/errors/SystemError.js';
 import type { UpdateProfileRequest } from '../../../../driver/port/dtos/UpdateProfileRequest.js';
+import type { ViewProfileRequest } from '../../../../driver/port/dtos/ViewProfileRequest.js';
 import type { ViewProfileResponse } from '../../../../driver/port/dtos/ViewProfileResponse.js';
 import type { UseCaseContext } from '../../shared/use-case-context.js';
 import type { AppContext } from '../app-context.js';
@@ -12,11 +13,14 @@ type ProfileAssertion = (profile: ViewProfileResponse) => void;
 /**
  * Runs viewProfile (no request) or updateProfile (with one) as the logged-in user. Profile assertions check the
  * operation's response and, after an update, also the profile as read back; after a failure they check the profile
- * as read back, so a test can show a rejected change left the saved profile as it was.
+ * as read back, so a test can show a rejected change left the saved profile as it was. What only the operation's own
+ * response carries (the UI's message after saving, its email lock, country choices and tax note) is checked on that
+ * response only.
  */
 export class ThenProfileResultStage implements PromiseLike<void> {
   private _expectSuccess = true;
   private readonly _profileAssertions: ProfileAssertion[] = [];
+  private readonly _responseAssertions: ProfileAssertion[] = [];
   private readonly _errorAssertions: ((error: SystemError, useCaseContext: UseCaseContext) => void)[] = [];
   private _executionPromise: Promise<void> | null = null;
 
@@ -25,6 +29,7 @@ export class ThenProfileResultStage implements PromiseLike<void> {
     private readonly ctx: ScenarioContext,
     private readonly useCaseContext: UseCaseContext,
     private readonly updateRequest: UpdateProfileRequest | null,
+    private readonly viewRequest: ViewProfileRequest = {},
   ) {}
 
   shouldSucceed(): ThenProfileSuccess {
@@ -41,6 +46,10 @@ export class ThenProfileResultStage implements PromiseLike<void> {
     this._profileAssertions.push(fn);
   }
 
+  _addResponseAssertion(fn: ProfileAssertion): void {
+    this._responseAssertions.push(fn);
+  }
+
   _addErrorAssertion(fn: (error: SystemError, useCaseContext: UseCaseContext) => void): void {
     this._errorAssertions.push(fn);
   }
@@ -55,12 +64,13 @@ export class ThenProfileResultStage implements PromiseLike<void> {
     await arrangeGiven(this.app, this.ctx, this.useCaseContext, { declaredOnly: true });
 
     const shop = this.app.myShop('dynamic');
-    const result = this.updateRequest ? await shop.updateProfile(this.updateRequest) : await shop.viewProfile({});
+    const result = this.updateRequest ? await shop.updateProfile(this.updateRequest) : await shop.viewProfile(this.viewRequest);
 
     if (this._expectSuccess) {
       expect(result.success, JSON.stringify(result)).toBe(true);
       if (!result.success) return;
       this.runProfileAssertions(result.value);
+      for (const fn of this._responseAssertions) fn(result.value);
       if (this.updateRequest) await this.runProfileAssertionsOnSavedProfile();
     } else {
       expect(result.success, JSON.stringify(result)).toBe(false);
@@ -183,6 +193,50 @@ export class ThenProfile implements PromiseLike<void> {
   doesNotHaveStreet(unexpected: string): this {
     this.stage._addProfileAssertion((profile) => {
       expect(profile.street, 'Profile street').not.toBe(unexpected);
+    });
+    return this;
+  }
+
+  /** No shipping address is saved: the street, postal code, city and country are empty (null or ""). */
+  hasNoSavedAddress(): this {
+    this.stage._addProfileAssertion((profile) => {
+      const address = [profile.street, profile.postalCode, profile.city, profile.country];
+      expect(
+        address.every((value) => value === null || value === ''),
+        `Expected no saved address, but the profile has ${JSON.stringify(address)}`,
+      ).toBe(true);
+    });
+    return this;
+  }
+
+  /** The email is shown but cannot be edited: it comes from the sign-in account (UI only). */
+  hasEmailThatCannotBeChanged(): this {
+    this.stage._addResponseAssertion((profile) => {
+      expect(profile.emailChangeable, 'Profile email changeable').toBe(false);
+    });
+    return this;
+  }
+
+  /** The country select offers exactly these countries, in this order (UI only). */
+  hasCountryChoices(...expected: string[]): this {
+    this.stage._addResponseAssertion((profile) => {
+      expect(profile.countryChoices, 'Profile country choices').toEqual(expected);
+    });
+    return this;
+  }
+
+  /** The profile's note on how sales tax is charged (UI only). */
+  hasTaxNotice(expected: string): this {
+    this.stage._addResponseAssertion((profile) => {
+      expect(profile.taxNotice, 'Profile tax notice').toBe(expected);
+    });
+    return this;
+  }
+
+  /** The customer was told this after saving (UI only). */
+  hasMessage(expected: string): this {
+    this.stage._addResponseAssertion((profile) => {
+      expect(profile.message, 'Message shown after saving the profile').toBe(expected);
     });
     return this;
   }

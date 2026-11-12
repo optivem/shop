@@ -100,8 +100,11 @@ public class MyShopApiDriver : IMyShopDriver
             .MapErrorAsync(MapError);
 
     public Task<Result<ViewProfileResponse, SystemError>> ViewProfileAsync(ViewProfileRequest request)
-        => RunAs(TestUser.Customer).Profile().ViewProfileAsync()
+    {
+        RequireNotSet("whenAskedToSignIn", request.WhenAskedToSignIn);
+        return RunAs(TestUser.Customer).Profile().ViewProfileAsync()
             .MapErrorAsync(MapError);
+    }
 
     public Task<Result<ViewProfileResponse, SystemError>> UpdateProfileAsync(UpdateProfileRequest request)
         => RunAs(TestUser.Customer).Profile().UpdateProfileAsync(request)

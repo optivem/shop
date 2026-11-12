@@ -64,6 +64,8 @@ public class MyShopUiClient : IAsyncDisposable
 
     private const string CheckoutPath = "/checkout";
 
+    private const string ProfilePath = "/account";
+
     private const string ProceedToCheckoutSelector = "a[aria-label='Proceed to Checkout']";
 
 
@@ -373,6 +375,35 @@ public class MyShopUiClient : IAsyncDisposable
         }
         await OpenDirectlyAsync(CartPath, CartPath);
         return new CartPage(new PlaywrightGateway(_page, _baseUrl, _login));
+    }
+
+    /// <summary>Opens the profile by its page address, as the logged-in user, and waits until it has loaded.</summary>
+    public async Task<ProfilePage> OpenProfilePageAsync()
+    {
+        await OpenHomePageAsync();
+        await OpenDirectlyAsync(ProfilePath, ProfilePath);
+        var profilePage = new ProfilePage(new PlaywrightGateway(_page, _baseUrl, _login));
+        await profilePage.WaitForLoadedAsync();
+        return profilePage;
+    }
+
+    /// <summary>
+    /// Opens the profile by its page address in a fresh visitor session, signs in as <paramref name="user"/> when the
+    /// app asks to, and waits for the profile the app returns to.
+    /// </summary>
+    public async Task<ProfilePage> OpenProfilePageSigningInAsync(TestUser user)
+    {
+        var userLogin = KeycloakUiLogin.ForBaseUrl(_keycloakBaseUrl, user)
+            ?? throw new InvalidOperationException("Signing in can only be exercised against a system with a login");
+        await StartVisitorSessionAsync();
+        _response = await _page.GotoAsync(_baseUrl + ProfilePath);
+        await userLogin.EnsureLoggedInAsync(_page, ProfilePage.ReadySelector);
+        // A single-page UI may show its (public) landing page while it still exchanges the login code, and only then
+        // move to the page the visitor came from: wait until the code is gone from the address.
+        await _page.WaitForURLAsync(url => !System.Text.RegularExpressions.Regex.IsMatch(url, "[?&]code="));
+        var profilePage = new ProfilePage(_visitorPageClient!);
+        await profilePage.WaitForLoadedAsync();
+        return profilePage;
     }
 
     /// <summary>Opens an order by its URL, not through the order history. The app must already be open.</summary>

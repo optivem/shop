@@ -22,4 +22,16 @@ public interface ThenProfile extends ThenStep<ThenProfile> {
 
     /** No shipping address is saved: the street, postal code, city and country are empty. */
     ThenProfile hasNoSavedAddress();
+
+    /** The email is shown but cannot be edited: it comes from the sign-in account (UI only). */
+    ThenProfile hasEmailThatCannotBeChanged();
+
+    /** The country select offers exactly these countries, in this order (UI only). */
+    ThenProfile hasCountryChoices(String... expectedCountries);
+
+    /** The profile's note on how sales tax is charged (UI only). */
+    ThenProfile hasTaxNotice(String expectedNotice);
+
+    /** The customer was told this after saving (UI only). */
+    ThenProfile hasMessage(String expectedMessage);
 }

@@ -17,6 +17,7 @@ import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.NewOrderPage;
 import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.OrderDetailsPage;
 import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.OrderHistoryPage;
 import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.ProductPage;
+import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.ProfilePage;
 import com.mycompany.myshop.testkit.driver.port.dtos.BrowseCouponsRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.BrowseCouponsResponse;
 import com.mycompany.myshop.testkit.driver.port.dtos.BrowseOrderHistoryRequest;
@@ -55,6 +56,8 @@ import static com.mycompany.myshop.testkit.dsl.core.usecase.commons.SystemResult
 import static com.mycompany.myshop.testkit.dsl.core.usecase.commons.SystemResults.success;
 
 public class MyShopUiDriver implements MyShopDriver {
+    private static final String PROFILE_PATH = "/account";
+
     private final MyShopUiClient client;
 
     private TestUser requestedUser;
@@ -122,7 +125,10 @@ public class MyShopUiDriver implements MyShopDriver {
 
         newOrderPage.inputSku(sku);
         newOrderPage.inputQuantity(quantity);
-        newOrderPage.inputCountry(country);
+        // No country: the customer leaves the one Quick order prefilled from the saved profile (UC-010 BR-5).
+        if (country != null) {
+            newOrderPage.inputCountry(country);
+        }
         if (couponCode != null && !couponCode.isBlank()) {
             newOrderPage.inputCouponCode(couponCode);
         }
@@ -314,14 +320,45 @@ public class MyShopUiDriver implements MyShopDriver {
         return success(response);
     }
 
+    /** The profile is for signed-in users: a visitor is asked to sign in, and signs in as the customer when told to. */
     @Override
     public Result<ViewProfileResponse, SystemError> viewProfile(ViewProfileRequest request) {
-        throw unsupportedOperation("viewProfile");
+        ProfilePage profilePage;
+        if (anonymous) {
+            if (!ViewProfileRequest.SIGN_IN.equals(request.getWhenAskedToSignIn())) {
+                return loginRequired(PROFILE_PATH);
+            }
+            profilePage = client.openProfilePageSigningIn(TestUser.CUSTOMER);
+            resetPages();
+        } else {
+            requireNotSet("whenAskedToSignIn", request.getWhenAskedToSignIn());
+            runAs(TestUser.CUSTOMER);
+            profilePage = client.openProfilePage();
+            currentPage = Page.NONE;
+        }
+        return success(profilePage.read());
     }
 
     @Override
     public Result<ViewProfileResponse, SystemError> updateProfile(UpdateProfileRequest request) {
-        throw unsupportedOperation("updateProfile");
+        if (anonymous) {
+            return loginRequired(PROFILE_PATH);
+        }
+
+        runAs(TestUser.CUSTOMER);
+        var profilePage = client.openProfilePage();
+        currentPage = Page.NONE;
+        profilePage.input(request);
+        profilePage.clickSaveProfile();
+
+        var result = profilePage.getResult();
+        if (result.isFailure()) {
+            return failure(result.getError());
+        }
+
+        var response = profilePage.read();
+        response.setMessage(result.getValue().trim());
+        return success(response);
     }
 
     /** The catalog is public: a visitor browses it without signing in, unless a user was explicitly requested. */
@@ -630,10 +667,6 @@ public class MyShopUiDriver implements MyShopDriver {
     }
 
     // --- unsupported inputs ---
-
-    private static UnsupportedOperationException unsupportedOperation(String operation) {
-        return new UnsupportedOperationException(operation + " is not supported by the UI channel yet; run this scenario on the API channel only");
-    }
 
     /**
      * The UI has no control for this input (no idempotency key, no paging controls, no shipping address, no

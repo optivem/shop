@@ -26,4 +26,14 @@ export interface ThenProfile extends PromiseLike<void> {
   hasCity(expected: string): this;
   hasCountry(expected: string): this;
   doesNotHaveStreet(unexpected: string): this;
+  /** No shipping address is saved: the street, postal code, city and country are empty. */
+  hasNoSavedAddress(): this;
+  /** The email is shown but cannot be edited: it comes from the sign-in account (UI only). */
+  hasEmailThatCannotBeChanged(): this;
+  /** The country select offers exactly these countries, in this order (UI only). */
+  hasCountryChoices(...expected: string[]): this;
+  /** The profile's note on how sales tax is charged (UI only). */
+  hasTaxNotice(expected: string): this;
+  /** The customer was told this after saving (UI only). */
+  hasMessage(expected: string): this;
 }

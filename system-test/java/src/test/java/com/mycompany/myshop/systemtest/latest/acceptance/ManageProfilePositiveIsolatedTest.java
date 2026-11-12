@@ -12,7 +12,7 @@ import org.junit.jupiter.api.TestTemplate;
 class ManageProfilePositiveIsolatedTest extends BaseAcceptanceTest {
     @Tag("UC-010.1")
     @TestTemplate
-    @Channel(ChannelType.API)
+    @Channel({ChannelType.UI, ChannelType.API})
     void shouldShowSavedProfile() {
         scenario
                 .given().profile()
@@ -38,7 +38,20 @@ class ManageProfilePositiveIsolatedTest extends BaseAcceptanceTest {
 
     @Tag("UC-010.1")
     @TestTemplate
-    @Channel(ChannelType.API)
+    @Channel(ChannelType.UI)
+    void shouldNotLetTheCustomerChangeTheEmail() {
+        scenario
+                .given().loggedInAsCustomer()
+                .when().viewProfile()
+                .then().shouldSucceed()
+                    .profile()
+                        .hasEmail("customer1@example.com")
+                        .hasEmailThatCannotBeChanged();
+    }
+
+    @Tag("UC-010.1")
+    @TestTemplate
+    @Channel({ChannelType.UI, ChannelType.API})
     void shouldShowChangedProfileAfterSaving() {
         scenario
                 .given().profile()
@@ -63,9 +76,63 @@ class ManageProfilePositiveIsolatedTest extends BaseAcceptanceTest {
                         .hasCountry("GB");
     }
 
+    @Tag("UC-010.1")
+    @TestTemplate
+    @Channel(ChannelType.UI)
+    void shouldTellTheCustomerTheProfileWasSaved() {
+        scenario
+                .given().loggedInAsCustomer()
+                .when().updateProfile()
+                .then().shouldSucceed()
+                    .profile()
+                        .hasMessage("Your profile has been saved.");
+    }
+
+    @Tag("UC-010.3")
+    @TestTemplate
+    @Channel(ChannelType.UI)
+    void shouldOfferOnlyTheSupportedShippingCountries() {
+        scenario
+                .given().loggedInAsCustomer()
+                .when().viewProfile()
+                .then().shouldSucceed()
+                    .profile()
+                        .hasCountryChoices("US", "DE", "GB");
+    }
+
+    @Tag("UC-010.4")
+    @TestTemplate
+    @Channel(ChannelType.UI)
+    void shouldTellTheCustomerThatTaxFollowsTheShippingCountry() {
+        scenario
+                .given().loggedInAsCustomer()
+                .when().viewProfile()
+                .then().shouldSucceed()
+                    .profile()
+                        .hasTaxNotice("Sales tax is charged at the rate of your shipping address's country.");
+    }
+
+    // The saved address as checkout's default (the other @UC-010.5 scenario) is CheckOutPositiveIsolatedTest's
+    // shouldPreselectTheSavedShippingAddress.
     @Tag("UC-010.5")
     @TestTemplate
-    @Channel(ChannelType.API)
+    @Channel(ChannelType.UI)
+    void shouldPrefillTheQuickOrderCountryFromTheProfile() {
+        scenario
+                .given().profile()
+                    .withCountry("GB")
+                    .savedByCustomer()
+                .and().loggedInAsCustomer()
+                .when().placeOrder()
+                    .withPrefilledCountry()
+                .then().shouldSucceed()
+                .and().order()
+                    .hasCountryCode("GB");
+    }
+
+    @Tag("UC-010.5")
+    @TestTemplate
+    @Channel({ChannelType.UI, ChannelType.API})
     void shouldKeepEachCustomersProfilePrivate() {
         scenario
                 .given().profile()
@@ -76,5 +143,36 @@ class ManageProfilePositiveIsolatedTest extends BaseAcceptanceTest {
                 .then().shouldSucceed()
                     .profile()
                         .doesNotHaveStreet("Private Lane 7");
+    }
+
+    @Tag("UC-010.6")
+    @TestTemplate
+    @Channel(ChannelType.UI)
+    void shouldAskAnAnonymousVisitorToSignInAndReturnToTheProfile() {
+        scenario
+                .given().notLoggedIn()
+                .when().viewProfile()
+                    .withSignInWhenAsked()
+                .then().shouldSucceed()
+                    .profile()
+                        .hasEmail("customer1@example.com");
+    }
+
+    // The new customer's email is unique to the run, so the email shown is checked by shouldShowSavedProfile.
+    @Tag("UC-010.7")
+    @TestTemplate
+    @Channel({ChannelType.UI, ChannelType.API})
+    void shouldShowAnEmptyProfileWithNamesFromTheSignInAccount() {
+        scenario
+                .given().newCustomer()
+                    .withFirstName("Ana")
+                    .withLastName("Novak")
+                .and().loggedInAsCustomer()
+                .when().viewProfile()
+                .then().shouldSucceed()
+                    .profile()
+                        .hasFirstName("Ana")
+                        .hasLastName("Novak")
+                        .hasNoSavedAddress();
     }
 }

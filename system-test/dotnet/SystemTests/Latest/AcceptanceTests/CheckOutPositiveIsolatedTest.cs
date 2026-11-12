@@ -102,6 +102,7 @@ public class CheckOutPositiveIsolatedTest : BaseCheckOutTest
     [Theory]
     [ChannelData(ChannelType.UI)]
     [Trait("tag", "UC-009.3")]
+    [Trait("tag", "UC-010.5")]
     public async Task ShouldPreselectTheSavedShippingAddress(Channel channel)
     {
         await GivenTheCatalogAndSavedAddress(channel, AnaNovakBerlin)

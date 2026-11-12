@@ -14,6 +14,12 @@ public interface IWhenPlaceOrder : IWhenStep
 
     IWhenPlaceOrder WithCountry(string? country);
 
+    /// <summary>
+    /// Leaves the country as Quick order prefilled it from the saved profile (UC-010 BR-5): the UI keeps the field as
+    /// shown; the API gets no country.
+    /// </summary>
+    IWhenPlaceOrder WithPrefilledCountry();
+
     IWhenPlaceOrder WithCouponCode(string? couponCode);
 
     IWhenPlaceOrder WithCouponCode();

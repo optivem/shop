@@ -13,7 +13,7 @@ public class ManageProfileNegativeIsolatedTest : BaseAcceptanceTest
     private const string ValidationErrors = "The request contains one or more validation errors";
 
     [Theory]
-    [ChannelData(ChannelType.API)]
+    [ChannelData(ChannelType.UI, ChannelType.API)]
     [ChannelInlineData("firstName", "First name is required")]
     [ChannelInlineData("lastName", "Last name is required")]
     [ChannelInlineData("street", "Street is required")]
@@ -30,7 +30,7 @@ public class ManageProfileNegativeIsolatedTest : BaseAcceptanceTest
     }
 
     [Theory]
-    [ChannelData(ChannelType.API)]
+    [ChannelData(ChannelType.UI, ChannelType.API)]
     [Trait("tag", "UC-010.2")]
     public async Task ShouldTreatProfileFieldOfOnlySpacesAsEmpty(Channel channel)
     {
@@ -43,7 +43,7 @@ public class ManageProfileNegativeIsolatedTest : BaseAcceptanceTest
     }
 
     [Theory]
-    [ChannelData(ChannelType.API)]
+    [ChannelData(ChannelType.UI, ChannelType.API)]
     [Trait("tag", "UC-010.3")]
     public async Task ShouldRejectUnsupportedProfileCountry(Channel channel)
     {
@@ -56,7 +56,7 @@ public class ManageProfileNegativeIsolatedTest : BaseAcceptanceTest
     }
 
     [Theory]
-    [ChannelData(ChannelType.API)]
+    [ChannelData(ChannelType.UI, ChannelType.API)]
     [Trait("tag", "UC-010.8")]
     public async Task ShouldKeepSavedProfileWhenInvalidChangeIsRejected(Channel channel)
     {
@@ -75,7 +75,7 @@ public class ManageProfileNegativeIsolatedTest : BaseAcceptanceTest
     }
 
     [Theory]
-    [ChannelData(ChannelType.API)]
+    [ChannelData(ChannelType.UI, ChannelType.API)]
     public async Task AnonymousVisitorShouldNotBeAbleToViewProfile(Channel channel)
     {
         await Scenario(channel)

@@ -135,6 +135,7 @@ public class MyShopApiDriver implements MyShopDriver {
 
     @Override
     public Result<ViewProfileResponse, SystemError> viewProfile(ViewProfileRequest request) {
+        requireNotSet("whenAskedToSignIn", request.getWhenAskedToSignIn());
         runAs(TestUser.CUSTOMER);
         return apiClient.profile().viewProfile().mapError(SystemErrorMapper::from);
     }

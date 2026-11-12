@@ -49,6 +49,39 @@ public class ViewProfileVerification : ResponseVerification<ViewProfileResponse>
         return this;
     }
 
+    /// <summary>UI only: the email is shown but cannot be edited.</summary>
+    public ViewProfileVerification EmailCannotBeChanged()
+    {
+        Response.EmailChangeable.ShouldBe(false,
+            $"Expected the profile email not to be changeable, but it was (or the channel does not show it: {Response.EmailChangeable})");
+        return this;
+    }
+
+    /// <summary>UI only: the country select offers exactly these countries, in this order.</summary>
+    public ViewProfileVerification CountryChoices(params string[] expectedCountries)
+    {
+        Response.CountryChoices.ShouldNotBeNull("Expected the profile to show its country choices");
+        Response.CountryChoices.ShouldBe(expectedCountries, false,
+            $"Expected country choices [{string.Join(", ", expectedCountries)}], but were [{string.Join(", ", Response.CountryChoices)}]");
+        return this;
+    }
+
+    /// <summary>UI only: the note on how sales tax is charged.</summary>
+    public ViewProfileVerification TaxNotice(string expectedNotice)
+    {
+        Response.TaxNotice.ShouldBe(expectedNotice,
+            $"Expected tax notice '{expectedNotice}', but was '{Response.TaxNotice}'");
+        return this;
+    }
+
+    /// <summary>UI only: the notification shown after saving.</summary>
+    public ViewProfileVerification Message(string expectedMessage)
+    {
+        Response.Message.ShouldBe(expectedMessage,
+            $"Expected the message '{expectedMessage}' after saving the profile, but was '{Response.Message}'");
+        return this;
+    }
+
     public ViewProfileVerification StreetIsNot(string unexpectedStreet)
     {
         Response.Street.ShouldNotBe(unexpectedStreet,

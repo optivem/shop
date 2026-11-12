@@ -9,6 +9,7 @@ import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.HomePage;
 import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.NewOrderPage;
 import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.OrderDetailsPage;
 import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.ProductPage;
+import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.ProfilePage;
 import com.mycompany.myshop.testkit.common.Closer;
 import com.mycompany.myshop.testkit.common.Result;
 import com.mycompany.myshop.testkit.driver.adapter.shared.client.http.TestUser;
@@ -34,6 +35,7 @@ public class MyShopUiClient implements AutoCloseable {
     private static final String CHECKOUT_PATH = "/checkout";
     private static final String PROCEED_TO_CHECKOUT_SELECTOR = "a[aria-label='Proceed to Checkout']";
     private static final String COUPON_MANAGEMENT_PATH = "/admin-coupons";
+    private static final String PROFILE_PATH = "/account";
     private static final String CONTENT_TYPE = "content-type";
     private static final String TEXT_HTML = "text/html";
     private static final String HTML_OPENING_TAG = "<html";
@@ -279,6 +281,35 @@ public class MyShopUiClient implements AutoCloseable {
             return null;
         }
         return new CatalogPage(anonymousPageClient);
+    }
+
+    /** Opens the profile by its page address, as the logged-in user, and waits until it has loaded. */
+    public ProfilePage openProfilePage() {
+        openHomePage();
+        openDirectly(PROFILE_PATH, PROFILE_PATH);
+        var profilePage = new ProfilePage(pageClient);
+        profilePage.waitForLoaded();
+        return profilePage;
+    }
+
+    /**
+     * Opens the profile by its page address in a fresh visitor session, signs in as {@code user} when the app asks to,
+     * and waits for the profile the app returns to.
+     */
+    public ProfilePage openProfilePageSigningIn(TestUser user) {
+        var userLogin = KeycloakUiLogin.forBaseUrl(keycloakBaseUrl, user);
+        if (userLogin == null) {
+            throw new IllegalStateException("Signing in can only be exercised against a system with a login");
+        }
+        startVisitorSession();
+        response = page.navigate(baseUrl + PROFILE_PATH);
+        userLogin.ensureLoggedIn(page, ProfilePage.READY_SELECTOR);
+        // A single-page UI may show its (public) landing page while it still exchanges the login code, and only then
+        // move to the page the visitor came from: wait until the code is gone from the address.
+        page.waitForURL(url -> !url.matches(".*[?&]code=.*"));
+        var profilePage = new ProfilePage(visitorPageClient);
+        profilePage.waitForLoaded();
+        return profilePage;
     }
 
     /** Opens an order by its URL, not through the order history. The app must already be open. */

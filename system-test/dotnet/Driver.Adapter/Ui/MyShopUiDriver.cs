@@ -12,6 +12,8 @@ namespace Driver.Adapter.Ui;
 
 public class MyShopUiDriver : IMyShopDriver
 {
+    private const string ProfilePath = "/account";
+
     private readonly MyShopUiClient _client;
     private TestUser? _requestedUser;
     private bool _anonymous;
@@ -93,7 +95,11 @@ public class MyShopUiDriver : IMyShopDriver
 
         await _newOrderPage!.InputSkuAsync(sku);
         await _newOrderPage.InputQuantityAsync(quantity);
-        await _newOrderPage.InputCountryAsync(country);
+        // No country: the customer leaves the one Quick order prefilled from the saved profile (UC-010 BR-5).
+        if (country != null)
+        {
+            await _newOrderPage.InputCountryAsync(country);
+        }
         await _newOrderPage.InputCouponCodeAsync(couponCode);
         await _newOrderPage.ClickPlaceOrderAsync();
 
@@ -864,11 +870,52 @@ public class MyShopUiDriver : IMyShopDriver
     }
 
     // The UI has no control for this input (no idempotency key, no paging controls): API-channel scenarios only.
-    public Task<Result<ViewProfileResponse, SystemError>> ViewProfileAsync(ViewProfileRequest request)
-        => throw new NotSupportedException("Viewing the profile is not supported by the UI channel yet; run this scenario on the API channel only");
+    /// <summary>The profile is for signed-in users: a visitor is asked to sign in, and signs in as the customer when told to.</summary>
+    public async Task<Result<ViewProfileResponse, SystemError>> ViewProfileAsync(ViewProfileRequest request)
+    {
+        ProfilePage profilePage;
+        if (_anonymous)
+        {
+            if (request.WhenAskedToSignIn != ViewProfileRequest.SignIn)
+            {
+                return await LoginRequiredAsync<ViewProfileResponse>(ProfilePath);
+            }
+            profilePage = await _client.OpenProfilePageSigningInAsync(TestUser.Customer);
+            ResetPages();
+        }
+        else
+        {
+            RequireNotSet("whenAskedToSignIn", request.WhenAskedToSignIn);
+            await RunAsAsync(TestUser.Customer);
+            profilePage = await _client.OpenProfilePageAsync();
+            _currentPage = Page.None;
+        }
+        return Success(await profilePage.ReadAsync());
+    }
 
-    public Task<Result<ViewProfileResponse, SystemError>> UpdateProfileAsync(UpdateProfileRequest request)
-        => throw new NotSupportedException("Updating the profile is not supported by the UI channel yet; run this scenario on the API channel only");
+    public async Task<Result<ViewProfileResponse, SystemError>> UpdateProfileAsync(UpdateProfileRequest request)
+    {
+        if (_anonymous)
+        {
+            return await LoginRequiredAsync<ViewProfileResponse>(ProfilePath);
+        }
+
+        await RunAsAsync(TestUser.Customer);
+        var profilePage = await _client.OpenProfilePageAsync();
+        _currentPage = Page.None;
+        await profilePage.InputAsync(request);
+        await profilePage.ClickSaveProfileAsync();
+
+        var result = await profilePage.GetResultAsync();
+        if (result.IsFailure)
+        {
+            return Failure<ViewProfileResponse>(result.Error);
+        }
+
+        var response = await profilePage.ReadAsync();
+        response.Message = result.Value.Trim();
+        return Success(response);
+    }
 
     private static void RequireNotSet(string input, object? value)
     {

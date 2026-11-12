@@ -10,13 +10,25 @@ import com.mycompany.myshop.testkit.dsl.port.ChannelMode;
 import com.mycompany.myshop.testkit.dsl.port.when.steps.WhenViewProfile;
 
 public class WhenViewProfileImpl extends BaseWhenStep<ViewProfileResponse, ViewProfileVerification> implements WhenViewProfile {
+    private boolean signInWhenAsked;
+
     public WhenViewProfileImpl(UseCaseDsl app, ScenarioDslImpl scenario) {
         super(app, scenario);
     }
 
     @Override
+    public WhenViewProfileImpl withSignInWhenAsked() {
+        this.signInWhenAsked = true;
+        return this;
+    }
+
+    @Override
     protected ExecutionResult<ViewProfileResponse, ViewProfileVerification> execute(UseCaseDsl app) {
-        var result = app.myShop(ChannelMode.DYNAMIC).viewProfile().execute();
+        var viewProfile = app.myShop(ChannelMode.DYNAMIC).viewProfile();
+        if (signInWhenAsked) {
+            viewProfile.signInWhenAsked();
+        }
+        var result = viewProfile.execute();
         return new ExecutionResultBuilder<>(result).build();
     }
 }

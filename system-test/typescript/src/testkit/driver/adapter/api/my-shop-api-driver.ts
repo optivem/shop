@@ -108,7 +108,8 @@ export class MyShopApiDriver implements MyShopDriver {
     return this.runAs(TestUsers.ADMIN).coupons().browseCoupons(request.page, request.size);
   }
 
-  async viewProfile(_request: ViewProfileRequest): Promise<Result<ViewProfileResponse, SystemError>> {
+  async viewProfile(request: ViewProfileRequest): Promise<Result<ViewProfileResponse, SystemError>> {
+    requireNotSet('whenAskedToSignIn', request.whenAskedToSignIn);
     return this.runAs(TestUsers.CUSTOMER).profile().viewProfile();
   }
 

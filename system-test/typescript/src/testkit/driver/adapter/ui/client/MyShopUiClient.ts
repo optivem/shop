@@ -15,6 +15,7 @@ import { NEW_ORDER_READY_SELECTOR, NewOrderPage } from './pages/NewOrderPage.js'
 import { OrderHistoryPage } from './pages/OrderHistoryPage.js';
 import { OrderDetailsPage } from './pages/OrderDetailsPage.js';
 import { COUPON_MANAGEMENT_READY_SELECTOR, CouponManagementPage } from './pages/CouponManagementPage.js';
+import { PROFILE_READY_SELECTOR, ProfilePage } from './pages/ProfilePage.js';
 
 const HOME_READY_SELECTOR = "a[href='/order-history']";
 const SINGLE_PAGE_APP_ROOT_SELECTOR = '#root';
@@ -25,6 +26,7 @@ const COUPON_MANAGEMENT_PATH = '/admin-coupons';
 const PRODUCT_PATH = '/products/';
 const CART_PATH = '/cart';
 const CHECKOUT_PATH = '/checkout';
+const PROFILE_PATH = '/account';
 const PROCEED_TO_CHECKOUT_SELECTOR = "a[aria-label='Proceed to Checkout']";
 const FORBIDDEN_STATUS = 403;
 
@@ -264,6 +266,38 @@ export class MyShopUiClient {
       await this.openDirectly(CART_PATH, CART_PATH);
     }
     return new CartPage(this.requirePage());
+  }
+
+  /** Opens the profile by its page address, as the logged-in user, and waits until it has loaded. */
+  async openProfilePage(): Promise<Result<ProfilePage, SystemError>> {
+    const home = await this.openHomePage();
+    if (!home.success) return failure(home.error);
+    await this.openDirectly(PROFILE_PATH, PROFILE_PATH);
+    const profilePage = new ProfilePage(this.requirePage());
+    await profilePage.waitForLoaded();
+    return success(profilePage);
+  }
+
+  /**
+   * Opens the profile by its page address in a fresh visitor session, signs in as `user` when the app asks to, and
+   * waits for the profile the app returns to.
+   */
+  async openProfilePageSigningIn(user: TestUser): Promise<ProfilePage> {
+    const userLogin = KeycloakUiLogin.forBaseUrl(this.keycloakBaseUrl, user);
+    if (!userLogin) {
+      throw new Error('Signing in can only be exercised against a system with a login');
+    }
+    await this.startVisitorSession();
+    const page = this.requirePage();
+    const response = await page.goto(`${this.baseUrl}${PROFILE_PATH}`);
+    this.lastResponseStatus = response?.status();
+    await userLogin.ensureLoggedIn(page, PROFILE_READY_SELECTOR);
+    // A single-page UI may show its (public) landing page while it still exchanges the login code, and only then
+    // move to the page the visitor came from: wait until the code is gone from the address.
+    await page.waitForURL((url) => !url.searchParams.has('code'), { timeout: PAGE_TIMEOUT_MS });
+    const profilePage = new ProfilePage(page);
+    await profilePage.waitForLoaded();
+    return profilePage;
   }
 
   /** Opens an order by its URL, not through the order history. The app must already be open. */

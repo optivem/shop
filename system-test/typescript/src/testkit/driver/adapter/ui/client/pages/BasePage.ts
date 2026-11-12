@@ -9,6 +9,13 @@ const NOTIFICATION_SUCCESS_SELECTOR = "[role='alert'].notification.success";
 const NOTIFICATION_ERROR_MESSAGE_SELECTOR = "[role='alert'].notification.error .error-message";
 const CART_ITEM_COUNT_SELECTOR = "[aria-label='Cart Item Count']";
 
+/** The parts of a DOM select the option check uses (the test project has no DOM typings). */
+interface SelectControl {
+  options: ArrayLike<{ value: string }>;
+  add(option: unknown): void;
+  ownerDocument: { createElement(tagName: string): { value: string; text: string } };
+}
+
 export abstract class BasePage {
   constructor(protected readonly page: Page) {}
 
@@ -54,5 +61,23 @@ export abstract class BasePage {
       if (texts.length > 0) return (texts[0] ?? '').trim();
     }
     return null;
+  }
+
+  /** Selects the option with this value; a value the select does not offer is added first, as an edited form would send it. */
+  protected async selectOptionByValueAddingIfMissing(selector: string, value: string): Promise<void> {
+    const select = this.page.locator(selector);
+    await select.evaluate(
+      (element: SelectControl, optionValue: string): void => {
+        if (!Array.from(element.options).some((option) => option.value === optionValue)) {
+          const option = element.ownerDocument.createElement('option');
+          option.value = optionValue;
+          option.text = optionValue;
+          element.add(option);
+        }
+      },
+      value,
+      { timeout: PAGE_TIMEOUT_MS },
+    );
+    await select.selectOption(value, { timeout: PAGE_TIMEOUT_MS });
   }
 }

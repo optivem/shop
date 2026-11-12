@@ -70,6 +70,26 @@ public class ThenProfileImpl<R, V extends ResponseVerification<R>>
         return this;
     }
 
+    public ThenProfileImpl<R, V> hasEmailThatCannotBeChanged() {
+        profileVerification.emailCannotBeChanged();
+        return this;
+    }
+
+    public ThenProfileImpl<R, V> hasCountryChoices(String... expectedCountries) {
+        profileVerification.countryChoices(expectedCountries);
+        return this;
+    }
+
+    public ThenProfileImpl<R, V> hasTaxNotice(String expectedNotice) {
+        profileVerification.taxNotice(expectedNotice);
+        return this;
+    }
+
+    public ThenProfileImpl<R, V> hasMessage(String expectedMessage) {
+        profileVerification.message(expectedMessage);
+        return this;
+    }
+
     @Override
     public ThenProfileImpl<R, V> profile() {
         return new ThenProfileImpl<>(app, executionResult, successVerification, false);

@@ -22,7 +22,7 @@ import type { PublishCouponRequest } from '../../port/dtos/PublishCouponRequest.
 import type { PublishCouponResponse } from '../../port/dtos/PublishCouponResponse.js';
 import type { BrowseCouponsRequest } from '../../port/dtos/BrowseCouponsRequest.js';
 import type { BrowseCouponsResponse } from '../../port/dtos/BrowseCouponsResponse.js';
-import type { ViewProfileRequest } from '../../port/dtos/ViewProfileRequest.js';
+import { SIGN_IN as PROFILE_SIGN_IN, type ViewProfileRequest } from '../../port/dtos/ViewProfileRequest.js';
 import type { ViewProfileResponse } from '../../port/dtos/ViewProfileResponse.js';
 import type { UpdateProfileRequest } from '../../port/dtos/UpdateProfileRequest.js';
 import type { MyShopDriver } from '../../port/my-shop-driver.js';
@@ -263,12 +263,35 @@ export class MyShopUiDriver implements MyShopDriver {
     return success({ coupons: rows } as BrowseCouponsResponse);
   }
 
-  viewProfile(_request: ViewProfileRequest): Promise<Result<ViewProfileResponse, SystemError>> {
-    return Promise.reject(notSupportedByUiYet('Viewing the profile'));
+  /** The profile is for signed-in users: a visitor is asked to sign in, and signs in as the customer when told to. */
+  async viewProfile(request: ViewProfileRequest): Promise<Result<ViewProfileResponse, SystemError>> {
+    if (this.anonymous) {
+      if (request.whenAskedToSignIn !== PROFILE_SIGN_IN) return this.loginRequired(PROFILE_PATH);
+      const profilePage = await this.client.openProfilePageSigningIn(TestUsers.CUSTOMER);
+      return success(await profilePage.read());
+    }
+    requireNotSet('whenAskedToSignIn', request.whenAskedToSignIn);
+    await this.runAs(TestUsers.CUSTOMER);
+    const pageResult = await this.client.openProfilePage();
+    if (!pageResult.success) return failure(pageResult.error);
+    return success(await pageResult.value.read());
   }
 
-  updateProfile(_request: UpdateProfileRequest): Promise<Result<ViewProfileResponse, SystemError>> {
-    return Promise.reject(notSupportedByUiYet('Updating the profile'));
+  async updateProfile(request: UpdateProfileRequest): Promise<Result<ViewProfileResponse, SystemError>> {
+    if (this.anonymous) return this.loginRequired(PROFILE_PATH);
+
+    await this.runAs(TestUsers.CUSTOMER);
+    const pageResult = await this.client.openProfilePage();
+    if (!pageResult.success) return failure(pageResult.error);
+    const profilePage = pageResult.value;
+    await profilePage.input(request);
+    await profilePage.clickSaveProfile();
+
+    const notificationResult = await profilePage.getResult();
+    if (!notificationResult.success) return failure(notificationResult.error);
+    const response = await profilePage.read();
+    response.message = notificationResult.value.trim();
+    return success(response);
   }
 
   /** The catalog is public: a visitor browses it without signing in, unless a user was explicitly requested. */
@@ -603,6 +626,7 @@ export class MyShopUiDriver implements MyShopDriver {
 }
 
 const CART_PATH_SUFFIX = '/cart';
+const PROFILE_PATH = '/account';
 
 function isSet(value: string | null | undefined): value is string {
   return value !== null && value !== undefined;

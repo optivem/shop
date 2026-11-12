@@ -16,7 +16,7 @@ import static com.mycompany.myshop.systemtest.commons.constants.ErrorMessages.AU
 class ManageProfileNegativeIsolatedTest extends BaseAcceptanceTest {
     @Tag("UC-010.2")
     @TestTemplate
-    @Channel(ChannelType.API)
+    @Channel({ChannelType.UI, ChannelType.API})
     @DataSource({"firstName", "First name is required"})
     @DataSource({"lastName", "Last name is required"})
     @DataSource({"street", "Street is required"})
@@ -35,7 +35,7 @@ class ManageProfileNegativeIsolatedTest extends BaseAcceptanceTest {
 
     @Tag("UC-010.2")
     @TestTemplate
-    @Channel(ChannelType.API)
+    @Channel({ChannelType.UI, ChannelType.API})
     void shouldTreatProfileFieldOfOnlySpacesAsEmpty() {
         scenario
                 .given().loggedInAsCustomer()
@@ -48,7 +48,7 @@ class ManageProfileNegativeIsolatedTest extends BaseAcceptanceTest {
 
     @Tag("UC-010.3")
     @TestTemplate
-    @Channel(ChannelType.API)
+    @Channel({ChannelType.UI, ChannelType.API})
     void shouldRejectUnsupportedProfileCountry() {
         scenario
                 .given().loggedInAsCustomer()
@@ -61,7 +61,7 @@ class ManageProfileNegativeIsolatedTest extends BaseAcceptanceTest {
 
     @Tag("UC-010.8")
     @TestTemplate
-    @Channel(ChannelType.API)
+    @Channel({ChannelType.UI, ChannelType.API})
     void shouldKeepSavedProfileWhenInvalidChangeIsRejected() {
         scenario
                 .given().profile()
@@ -84,7 +84,7 @@ class ManageProfileNegativeIsolatedTest extends BaseAcceptanceTest {
     }
 
     @TestTemplate
-    @Channel(ChannelType.API)
+    @Channel({ChannelType.UI, ChannelType.API})
     void anonymousVisitorShouldNotBeAbleToViewProfile() {
         scenario
                 .given().notLoggedIn()

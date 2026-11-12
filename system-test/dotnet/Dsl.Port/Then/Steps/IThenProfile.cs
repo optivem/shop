@@ -24,5 +24,17 @@ public interface IThenProfile
     /// <summary>No shipping address is saved: the street, postal code, city and country are empty.</summary>
     IThenProfile HasNoSavedAddress();
 
+    /// <summary>The email is shown but cannot be edited: it comes from the sign-in account (UI only).</summary>
+    IThenProfile HasEmailThatCannotBeChanged();
+
+    /// <summary>The country select offers exactly these countries, in this order (UI only).</summary>
+    IThenProfile HasCountryChoices(params string[] expectedCountries);
+
+    /// <summary>The profile's note on how sales tax is charged (UI only).</summary>
+    IThenProfile HasTaxNotice(string expectedNotice);
+
+    /// <summary>The customer was told this after saving (UI only).</summary>
+    IThenProfile HasMessage(string expectedMessage);
+
     TaskAwaiter GetAwaiter();
 }

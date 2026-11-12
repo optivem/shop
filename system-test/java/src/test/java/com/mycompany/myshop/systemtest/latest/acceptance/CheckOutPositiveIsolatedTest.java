@@ -95,6 +95,7 @@ class CheckOutPositiveIsolatedTest extends BaseCheckOutTest {
     }
 
     @Tag("UC-009.3")
+    @Tag("UC-010.5")
     @TestTemplate
     @Channel(ChannelType.UI)
     void shouldPreselectTheSavedShippingAddress() {

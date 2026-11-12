@@ -86,7 +86,7 @@ test.describe('@isolated', () => {
                 .hasTax('GB', '20%');
         });
 
-        test('shouldPreselectTheSavedShippingAddress', criteria('UC-009.3'), async ({ scenario }) => {
+        test('shouldPreselectTheSavedShippingAddress', criteria('UC-009.3', 'UC-010.5'), async ({ scenario }) => {
             await givenTheCatalogAndSavedAddress(scenario, ANA_NOVAK_BERLIN)
                 .when()
                 .checkOut()

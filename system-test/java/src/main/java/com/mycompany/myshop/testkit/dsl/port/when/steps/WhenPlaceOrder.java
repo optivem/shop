@@ -13,6 +13,12 @@ public interface WhenPlaceOrder extends WhenStep {
 
     WhenPlaceOrder withCountry(String country);
 
+    /**
+     * Leaves the country as Quick order prefilled it from the saved profile (UC-010 BR-5): the UI keeps the field as
+     * shown; the API gets no country.
+     */
+    WhenPlaceOrder withPrefilledCountry();
+
     WhenPlaceOrder withCouponCode(String couponCode);
 
     WhenPlaceOrder withCouponCode();

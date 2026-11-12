@@ -31,13 +31,6 @@ const ERROR_DETAIL_SELECTOR = `${ERROR_SELECTOR} .field-error`;
 const reviewQuantitySelector = (sku: string) => `[aria-label='Review Quantity ${sku}']`;
 const reviewLineTotalSelector = (sku: string) => `[aria-label='Review Line Total ${sku}']`;
 
-/** The parts of a DOM select the option check uses (the test project has no DOM typings). */
-interface SelectControl {
-  options: ArrayLike<{ value: string }>;
-  add(option: unknown): void;
-  ownerDocument: { createElement(tagName: string): { value: string; text: string } };
-}
-
 /**
  * The checkout `/checkout` (UC-009): shipping address, optional coupon and the order review. The server-rendered UIs
  * post a form and render the checkout again, with an error, when nothing was placed; the single-page UIs stay in
@@ -127,24 +120,6 @@ export class CheckoutPage extends BasePage {
     } else {
       response.messageDetails = [];
     }
-  }
-
-  /** Selects the option with this value; a value the select does not offer is added first, as an edited form would send it. */
-  private async selectOptionByValueAddingIfMissing(selector: string, value: string): Promise<void> {
-    const select = this.page.locator(selector);
-    await select.evaluate(
-      (element: SelectControl, optionValue: string): void => {
-        if (!Array.from(element.options).some((option) => option.value === optionValue)) {
-          const option = element.ownerDocument.createElement('option');
-          option.value = optionValue;
-          option.text = optionValue;
-          element.add(option);
-        }
-      },
-      value,
-      { timeout: PAGE_TIMEOUT_MS },
-    );
-    await select.selectOption(value, { timeout: PAGE_TIMEOUT_MS });
   }
 
   private async fill(selector: string, value: string): Promise<void> {

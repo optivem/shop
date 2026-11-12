@@ -60,6 +60,11 @@ public class WhenPlaceOrderImpl extends BaseWhenStep<PlaceOrderResponse, PlaceOr
         return this;
     }
 
+    @Override
+    public WhenPlaceOrderImpl withPrefilledCountry() {
+        return withCountry(null);
+    }
+
     public WhenPlaceOrderImpl withCouponCode(String couponCode) {
         this.couponCode = couponCode;
         return this;

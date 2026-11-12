@@ -78,6 +78,39 @@ public class ViewProfileVerification extends ResponseVerification<ViewProfileRes
         return this;
     }
 
+    /** UI only: the email is shown but cannot be edited. */
+    public ViewProfileVerification emailCannotBeChanged() {
+        var changeable = getResponse().getEmailChangeable();
+        assertThat(changeable)
+                .withFailMessage("Expected the profile email not to be changeable, but it was (or the channel does not show it: %s)", changeable)
+                .isFalse();
+        return this;
+    }
+
+    /** UI only: the country select offers exactly these countries, in this order. */
+    public ViewProfileVerification countryChoices(String... expectedCountries) {
+        assertThat(getResponse().getCountryChoices())
+                .as("Profile country choices")
+                .containsExactly(expectedCountries);
+        return this;
+    }
+
+    /** UI only: the note on how sales tax is charged. */
+    public ViewProfileVerification taxNotice(String expectedNotice) {
+        assertThat(getResponse().getTaxNotice())
+                .as("Profile tax notice")
+                .isEqualTo(expectedNotice);
+        return this;
+    }
+
+    /** UI only: the notification shown after saving. */
+    public ViewProfileVerification message(String expectedMessage) {
+        assertThat(getResponse().getMessage())
+                .as("Message shown after saving the profile")
+                .isEqualTo(expectedMessage);
+        return this;
+    }
+
     public ViewProfileVerification streetIsNot(String unexpectedStreet) {
         var actualStreet = getResponse().getStreet();
         assertThat(actualStreet)

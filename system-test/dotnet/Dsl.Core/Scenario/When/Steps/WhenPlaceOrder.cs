@@ -75,6 +75,10 @@ public class PlaceOrder : BaseWhen<PlaceOrderResponse, PlaceOrderVerification>, 
 
     IWhenPlaceOrder IWhenPlaceOrder.WithCountry(string? country) => WithCountry(country);
 
+    public PlaceOrder WithPrefilledCountry() => WithCountry(null);
+
+    IWhenPlaceOrder IWhenPlaceOrder.WithPrefilledCountry() => WithPrefilledCountry();
+
     public PlaceOrder WithCouponCode(string? couponCode)
     {
         _couponCode = couponCode;

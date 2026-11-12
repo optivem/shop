@@ -42,6 +42,10 @@ export class WhenPlaceOrder {
     return this;
   }
 
+  withPrefilledCountry(): this {
+    return this.withCountry(null);
+  }
+
   withCouponCode(couponCode?: string | null): this {
     this.couponCode = couponCode === undefined ? DEFAULTS.COUPON_CODE : couponCode;
     return this;

@@ -76,4 +76,28 @@ public class ThenProfile : BaseThenLookup<ViewProfileVerification>, IThenProfile
         AddVerification(v => v.AddressIsEmpty());
         return this;
     }
+
+    public IThenProfile HasEmailThatCannotBeChanged()
+    {
+        AddVerification(v => v.EmailCannotBeChanged());
+        return this;
+    }
+
+    public IThenProfile HasCountryChoices(params string[] expectedCountries)
+    {
+        AddVerification(v => v.CountryChoices(expectedCountries));
+        return this;
+    }
+
+    public IThenProfile HasTaxNotice(string expectedNotice)
+    {
+        AddVerification(v => v.TaxNotice(expectedNotice));
+        return this;
+    }
+
+    public IThenProfile HasMessage(string expectedMessage)
+    {
+        AddVerification(v => v.Message(expectedMessage));
+        return this;
+    }
 }

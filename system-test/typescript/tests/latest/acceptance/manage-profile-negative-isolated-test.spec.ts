@@ -5,7 +5,7 @@ import { criteria } from '../../commons/criteria.js';
 // The two test customers are shared by every test, so profile tests must not run in parallel.
 test.describe('@isolated', () => {
     test.describe.configure({ mode: 'serial' });
-    forChannels(ChannelType.API)(() => {
+    forChannels(ChannelType.UI, ChannelType.API)(() => {
         const requiredFieldCases = [
             { field: 'firstName', message: 'First name is required' },
             { field: 'lastName', message: 'Last name is required' },
