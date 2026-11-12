@@ -103,7 +103,8 @@ public class CheckoutPage : BasePage
         var hasSaved = !await PageClient.IsHiddenAsync(UseSavedAddressSelector);
         response.SavedAddressSelected = hasSaved && await PageClient.IsCheckedAsync(UseSavedAddressSelector);
         response.SavedAddress = hasSaved ? await ReadTextAsync(SavedAddressSelector) : null;
-        var formOpen = !await PageClient.IsHiddenAsync(FirstNameSelector);
+        // The form can be in the page but hidden (a server-rendered page hides it while the saved address is chosen).
+        var formOpen = await PageClient.IsShownNowAsync(FirstNameSelector);
         response.AddressFormOpen = formOpen;
         response.ShippingFirstName = formOpen ? await PageClient.ReadInputValueAsync(FirstNameSelector) : null;
         response.ShippingLastName = formOpen ? await PageClient.ReadInputValueAsync(LastNameSelector) : null;

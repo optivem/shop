@@ -110,7 +110,8 @@ public class CheckoutPage extends BasePage {
         var hasSaved = !pageClient.isHidden(USE_SAVED_ADDRESS_SELECTOR);
         response.setSavedAddressSelected(hasSaved && pageClient.isChecked(USE_SAVED_ADDRESS_SELECTOR));
         response.setSavedAddress(hasSaved ? readText(SAVED_ADDRESS_SELECTOR) : null);
-        var formOpen = !pageClient.isHidden(FIRST_NAME_SELECTOR);
+        // The form can be in the page but hidden (Thymeleaf hides it while the saved address is chosen).
+        var formOpen = pageClient.isShownNow(FIRST_NAME_SELECTOR);
         response.setAddressFormOpen(formOpen);
         response.setShippingFirstName(formOpen ? pageClient.readInputValue(FIRST_NAME_SELECTOR) : null);
         response.setShippingLastName(formOpen ? pageClient.readInputValue(LAST_NAME_SELECTOR) : null);

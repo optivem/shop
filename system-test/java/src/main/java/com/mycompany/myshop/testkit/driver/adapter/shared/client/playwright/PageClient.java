@@ -175,6 +175,11 @@ public class PageClient {
         return locator.count() == 0;
     }
 
+    /** Whether an element matching the selector is shown now, without waiting; one in the page but hidden is not. */
+    public boolean isShownNow(String selector) {
+        return page.locator(selector).first().isVisible();
+    }
+
     private Locator getLocator(String selector, Locator.WaitForOptions waitForOptions) {
         loginIfRedirected();
         var locator = page.locator(selector);

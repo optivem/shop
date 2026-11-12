@@ -224,6 +224,12 @@ public class PageClient
         return await locator.CountAsync() == 0;
     }
 
+    /// <summary>Whether an element matching the selector is shown now, without waiting; one in the page but hidden is not.</summary>
+    public async Task<bool> IsShownNowAsync(string selector)
+    {
+        return await _page.Locator(selector).First.IsVisibleAsync();
+    }
+
     private async Task<ILocator> GetLocatorAsync(string selector, LocatorWaitForOptions waitForOptions)
     {
         await LoginIfRedirectedAsync();
