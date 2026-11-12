@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using Dsl.Port;
 using Dsl.Port.Then.Steps;
 using Dsl.Core.Shared;
 using Dsl.Core.Scenario;
@@ -17,6 +18,10 @@ public abstract class BaseThenResultOrder<TSuccessResponse, TSuccessVerification
     protected readonly ThenStage<TSuccessResponse, TSuccessVerification> _thenClause;
     protected readonly Func<Task<string>> _orderNumberFactory;
     protected readonly List<Action<ViewOrderVerification>> _verifications = [];
+
+    // The order details page shows no shipping address, so an order whose shipping address is checked is read through
+    // the API even when the scenario runs on the UI channel in dynamic mode.
+    private bool _checksShippingAddress;
 
     protected BaseThenResultOrder(
         ThenStage<TSuccessResponse, TSuccessVerification> thenClause,
@@ -296,6 +301,7 @@ public abstract class BaseThenResultOrder<TSuccessResponse, TSuccessVerification
 
     public TDerived HasShippingAddress(string firstName, string lastName, string street, string postalCode, string city, string country)
     {
+        _checksShippingAddress = true;
         _verifications.Add(v => v.ShippingAddress(firstName, lastName, street, postalCode, city, country));
         return Self;
     }
@@ -305,6 +311,7 @@ public abstract class BaseThenResultOrder<TSuccessResponse, TSuccessVerification
 
     public TDerived HasNoShippingAddress()
     {
+        _checksShippingAddress = true;
         _verifications.Add(v => v.NoShippingAddress());
         return Self;
     }
@@ -321,6 +328,7 @@ public abstract class BaseThenResultOrder<TSuccessResponse, TSuccessVerification
 
     public TDerived HasShippingAddressWithCountryCode(string firstName, string lastName, string street, string postalCode, string city, string country)
     {
+        _checksShippingAddress = true;
         _verifications.Add(v => v.ShippingAddressWithCountryCode(firstName, lastName, street, postalCode, city, country));
         return Self;
     }
@@ -344,7 +352,9 @@ public abstract class BaseThenResultOrder<TSuccessResponse, TSuccessVerification
         }
         else
         {
-            var shop = await _thenClause.App.MyShop(_thenClause.Channel!);
+            var shop = _checksShippingAddress
+                ? await _thenClause.App.MyShop(ChannelMode.Static, _thenClause.Channel!)
+                : await _thenClause.App.MyShop(_thenClause.Channel!);
             var viewOrderResult = await shop.ViewOrder().OrderNumber(orderNumber).Execute();
             verification = viewOrderResult.ShouldSucceed();
         }
