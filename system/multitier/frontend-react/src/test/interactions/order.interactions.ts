@@ -56,12 +56,23 @@ export function placeOrderInteraction({ sku, quantity, country, couponCode, orde
 }
 
 export function browseOrderHistoryInteraction(): V3Interaction {
+  return browseOrderHistoryRequest('a browse-order-history request');
+}
+
+// The admin's order history also fetches the unfiltered list page by page, to offer the customers
+// who have ordered in the customer filter; that request names its page explicitly.
+export function browseOrderHistoryPageInteraction(page: number): V3Interaction {
+  return browseOrderHistoryRequest(`a browse-order-history request for page ${page}`, { page: String(page) });
+}
+
+function browseOrderHistoryRequest(uponReceiving: string, query?: Record<string, string>): V3Interaction {
   return {
     states: [{ description: 'at least one order exists' }],
-    uponReceiving: 'a browse-order-history request',
+    uponReceiving,
     withRequest: {
       method: 'GET',
       path: '/api/orders',
+      ...(query ? { query } : {}),
     },
     willRespondWith: {
       status: 200,
