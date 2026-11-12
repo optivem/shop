@@ -178,12 +178,22 @@ namespace Dsl.Core.Scenario.Given
         /// <summary>Resolves the customer behind an alias; only valid once the scenario is being set up.</summary>
         internal UserIdentity ResolveCustomer(string alias) => _customers.Resolve(alias);
 
+        /// <summary>
+        /// Resolves an alias first named in the when or then stage (e.g. filtering on a customer who placed no order),
+        /// registering it on first use, as Java's CustomerResolver and TS's withCustomer do.
+        /// </summary>
+        private UserIdentity RegisterAndResolveCustomer(string alias)
+        {
+            _customers.Register(alias);
+            return _customers.Resolve(alias);
+        }
+
         /// <summary>The default customer: the new customer when the scenario has one (once set up), else customer1.</summary>
         internal UserIdentity DefaultCustomer() => _newCustomer?.Identity() ?? CustomerAliases.DefaultCustomer();
 
         public WhenStage When()
         {
-            return new WhenStage(Channel, _app, _scenario, _defaults, SetupGiven, ResolveCustomer,
+            return new WhenStage(Channel, _app, _scenario, _defaults, SetupGiven, RegisterAndResolveCustomer,
                 new StagedProducts(ChangeProductPriceAsync, WithdrawProductAsync), DefaultCustomer);
         }
 
