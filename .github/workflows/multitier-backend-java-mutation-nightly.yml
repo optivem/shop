@@ -117,7 +117,7 @@ jobs:
 
       - name: Upload PIT Report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: pit-report-backend-java
           path: system/multitier/backend-java/build/reports/pitest/
