@@ -153,7 +153,11 @@
         select.value = chosen;
     }
 
+    // Only the latest reload renders: an older response that lands after a newer request is dropped.
+    var latestOrdersRequest = 0;
+
     async function loadOrders() {
+        var request = ++latestOrdersRequest;
         var filter = document.getElementById('orderNumberFilter').value.trim();
         var loading = document.getElementById('loading');
         var ordersTableContainer = document.getElementById('ordersTableContainer');
@@ -172,6 +176,7 @@
 
             var response = await fetch(url);
             var data = await response.json();
+            if (request !== latestOrdersRequest) return;
 
             loading.style.display = 'none';
             refreshBtn.disabled = false;
@@ -209,6 +214,7 @@
 
             ordersTableContainer.style.display = 'block';
         } catch (err) {
+            if (request !== latestOrdersRequest) return;
             loading.style.display = 'none';
             refreshBtn.disabled = false;
             errorMessage.innerHTML = '<div class="alert alert-danger d-flex flex-wrap justify-content-between align-items-center gap-2" role="alert"><div><strong>Error:</strong> Network error: ' + err.message + '</div><button type="button" class="btn btn-outline-danger" onclick="loadOrders()">Try Again</button></div>';
