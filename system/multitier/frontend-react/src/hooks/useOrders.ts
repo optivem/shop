@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { orderService } from '../services/order-service';
 import type { BrowseOrderHistoryItemResponse, BrowseOrderHistoryResponse } from '../types/api.types';
 import type { Result } from '../types/result.types';
@@ -55,6 +55,15 @@ export function useOrders(initialFilter = '', { collectCustomers = false }: UseO
   const [reloadCount, setReloadCount] = useState(0);
   // The request whose response is currently applied; loading is derived from it.
   const [loaded, setLoaded] = useState<OrdersRequest | null>(null);
+  // Collecting the customers takes a request per page, so it can outlive the list request that started it.
+  // It only ever adds customers, so it is not cancelled by a newer filter, only by unmounting.
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     // The filter is typed keystroke by keystroke, so responses can arrive out of order:
@@ -67,7 +76,7 @@ export function useOrders(initialFilter = '', { collectCustomers = false }: UseO
         setError(null);
         if (collectCustomers && customer === '' && filter.trim() === '') {
           void collectAllCustomers(result.data, (page) => orderService.browseOrderHistory({ page })).then((found) => {
-            if (!ignore) setCustomers((known) => mergeCustomers(known, found));
+            if (mounted.current) setCustomers((known) => mergeCustomers(known, found));
           });
         }
       } else {
