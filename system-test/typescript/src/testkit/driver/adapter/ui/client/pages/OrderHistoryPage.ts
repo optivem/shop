@@ -51,7 +51,12 @@ export class OrderHistoryPage extends BasePage {
     await this.page.locator(SEARCH_BUTTON_SELECTOR).click({ timeout: PAGE_TIMEOUT_MS });
   }
 
+  /**
+   * Whether the page offers a customer filter (an admin's). Waits for the page's filter bar first: the order history
+   * link navigates client-side, so right after the click the previous page may still be showing.
+   */
   async hasCustomerFilter(): Promise<boolean> {
+    await this.page.locator(ORDER_NUMBER_INPUT_SELECTOR).waitFor({ state: 'visible', timeout: PAGE_TIMEOUT_MS });
     return (await this.page.locator(CUSTOMER_FILTER_SELECTOR).count()) > 0;
   }
 

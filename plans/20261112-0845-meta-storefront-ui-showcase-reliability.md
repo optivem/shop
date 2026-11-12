@@ -9,6 +9,8 @@
 
 ## ▶ Next executable step (resume here)
 
+**Top priority (user, 2026-11-12): get the CI pipeline green on `main` before continuing Phase B.** Red at 38324a28: .NET multitier parallel-UI coupon test (fixed `8d4fd72d`, isolated-class move); TS acceptance (admin customer-filter UI scenarios throw "UI channel cannot send 'customer'"; ERP-down/slow tests read an undefined header on multitier TS); `multitier-frontend-react-commit-stage` (Pact rejects the `page` query param added in `6b07a16b`). Re-check `gh run list --branch main` after the TS and React fixes land.
+
 **Phase B, the testing pass.** Phase A coding is all on `main`, and so are REL #50, #51, #53, #54 (`d13b4a79`, `9ac5ed87`, `3c6545c0`, `c88c7ddc`).
 - **Java pass: done (2026-11-12).** Monolith Java is green. One flaky UC-007.4 result fails the spec gate: 52/53 verified, lenient. On multitier Java, 3 React UI tests hang on browser navigation (REL #61). Fixes: `365de274`, `2963db9b`, `132e7557`, `6b07a16b` (a React `useOrders` product bug), and `a071aac8` (the stub breaker thresholds, under a mislabelled commit message).
 - **.NET pass: in progress.** The first attempt was killed when the system ran low on memory. It fixed `109d80f4`, `228991cc` and `38324a28` (Java got the last one too). The local Postgres volumes were wiped on 2026-11-12, and a second attempt was started. That attempt also moves the parallel UI tests that read a coupon back from the list into the isolated classes, in all three languages. **If it never reported:** check `git log` for its commits, then rerun the .NET pass (monolith full acceptance, smoke, contract and e2e, then multitier, one stack at a time) and `spec status --config spec-dotnet.yaml`.
