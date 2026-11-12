@@ -60,7 +60,13 @@ public class OrderHistoryPage extends BasePage {
         pageClient.click(SEARCH_BUTTON_SELECTOR);
     }
 
+    /**
+     * Whether the page offers a customer filter (an admin's). Waits for the page's filter bar first: in the Next.js and
+     * React frontends the order history link navigates client-side, so right after the click the previous page may
+     * still be showing.
+     */
     public boolean hasCustomerFilter() {
+        pageClient.waitForVisible(ORDER_NUMBER_INPUT_SELECTOR);
         return !pageClient.isHidden(CUSTOMER_FILTER_SELECTOR);
     }
 

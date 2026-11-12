@@ -53,7 +53,16 @@ public class OrderHistoryPage : BasePage
         await PageClient.ClickAsync(SearchButtonSelector);
     }
 
-    public async Task<bool> HasCustomerFilterAsync() => !await PageClient.IsHiddenAsync(CustomerFilterSelector);
+    /// <summary>
+    /// Whether the page offers a customer filter (an admin's). Waits for the page's filter bar first: in the Next.js and
+    /// React frontends the order history link navigates client-side, so right after the click the previous page may
+    /// still be showing.
+    /// </summary>
+    public async Task<bool> HasCustomerFilterAsync()
+    {
+        await PageClient.WaitForVisibleAsync(OrderNumberInputSelector);
+        return !await PageClient.IsHiddenAsync(CustomerFilterSelector);
+    }
 
     /// <summary>Chooses this customer (a username), waiting until the filter offers it; the list reloads at once.</summary>
     public Task SelectCustomerAsync(string username) => PageClient.SelectOptionByLabelAsync(CustomerFilterSelector, username);
