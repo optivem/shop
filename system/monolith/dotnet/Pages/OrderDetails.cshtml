@@ -2,6 +2,8 @@
 @model MyCompany.MyShop.Monolith.Pages.OrderDetailsModel
 @using MyCompany.MyShop.Monolith.Pages.Storefront
 @{
+    // Only an admin is offered Deliver Order (UC-012 BR-3).
+    var isAdmin = User.IsInRole("ADMIN");
     ViewData["Title"] = "Order Details";
     Layout = "_AccountLayout";
 }
@@ -40,7 +42,10 @@
             </div>
             <div class="order-detail-actions">
                 <button id="cancelOrderBtn" type="button" class="btn btn-outline-danger" aria-label="Cancel Order" onclick="cancelOrder()">Cancel Order</button>
-                <button id="deliverOrderBtn" type="button" class="btn btn-primary" aria-label="Deliver Order" onclick="deliverOrder()">Deliver Order</button>
+                @if (isAdmin)
+                {
+                    <button id="deliverOrderBtn" type="button" class="btn btn-primary" aria-label="Deliver Order" onclick="deliverOrder()">Deliver Order</button>
+                }
             </div>
         </section>
 
@@ -168,7 +173,7 @@
             var isTerminal = order.status === 'CANCELLED' || order.status === 'DELIVERED';
             if (isTerminal) {
                 document.getElementById('cancelOrderBtn').remove();
-                document.getElementById('deliverOrderBtn').remove();
+                document.getElementById('deliverOrderBtn')?.remove();
             }
 
             orderDetails.style.display = '';

@@ -9,7 +9,7 @@ title: Deliver Order
 **Secondary actors:** none
 
 ## Main Success Scenario
-1. The admin opens the details of a customer's order (from UC-011 View All Orders) and chooses Deliver Order. The option is offered only while the order is placed ([BR-2](business-rules.md)).
+1. The admin opens the details of a customer's order (from UC-011 View All Orders) and chooses Deliver Order. The option is offered only to an admin ([BR-3](business-rules.md)) and only while the order is placed ([BR-2](business-rules.md)).
 2. The system checks that the user is an admin ([BR-3](business-rules.md)).
 3. The system finds the order.
 4. The system checks that the order is placed ([BR-2](business-rules.md)).

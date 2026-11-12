@@ -76,4 +76,20 @@ forChannels(ChannelType.UI)(() => {
             .doesNotOfferDeliverOrder()
             .doesNotOfferCancelOrder();
     });
+
+    test('customerShouldNotBeOfferedDeliverOrder', criteria('UC-012.3'), async ({ scenario }) => {
+        await scenario
+            .given()
+            .order()
+            .placedByCustomer()
+            .and()
+            .loggedInAsCustomer()
+            .when()
+            .viewOrder()
+            .then()
+            .shouldSucceed()
+            .and()
+            .order()
+            .doesNotOfferDeliverOrder();
+    });
 });

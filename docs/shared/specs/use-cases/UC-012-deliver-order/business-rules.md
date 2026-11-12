@@ -4,4 +4,4 @@ Use case: [UC-012 Deliver Order](use-case-narrative.md). Acceptance criteria: [a
 
 - BR-1. Delivering an order sets its status to DELIVERED. Nothing else about the order changes.
 - BR-2. Only a PLACED order can be delivered. A cancelled or already delivered order cannot be. The order details offer Deliver Order only while the order is PLACED; once it is delivered, neither Deliver Order nor Cancel Order is offered.
-- BR-3. Only an admin can deliver an order, and an admin can deliver any customer's order.
+- BR-3. Only an admin can deliver an order, and an admin can deliver any customer's order. Only an admin is offered Deliver Order; a customer's order details never offer it, not even on their own PLACED order.

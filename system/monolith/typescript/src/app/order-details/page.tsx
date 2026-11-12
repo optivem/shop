@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Icon } from "@/components/Icon";
 import { AccountLayout, LoadingSpinner } from "@/components/StoreLayout";
 import { ProductImage } from "@/components/StorefrontParts";
-import { useCatalog } from "@/components/StorefrontProviders";
+import { useCatalog, useSession } from "@/components/StorefrontProviders";
 import { formatAddress } from "@/lib/storefront/shipping";
 import {
   formatFieldErrors,
@@ -19,6 +19,8 @@ import {
 function OrderDetailsContent() {
   const searchParams = useSearchParams();
   const orderNumber = searchParams.get("orderNumber");
+  // Only an admin is offered Deliver Order (UC-012 BR-3).
+  const isAdmin = useSession()?.isAdmin ?? false;
 
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -222,17 +224,19 @@ function OrderDetailsContent() {
             >
               {isCancelling ? "Cancelling..." : "Cancel Order"}
             </button>
-            <button
-              type="button"
-              className="btn btn-primary"
-              aria-label="Deliver Order"
-              onClick={() => {
-                void handleDeliver();
-              }}
-              disabled={isDelivering}
-            >
-              {isDelivering ? "Delivering..." : "Deliver Order"}
-            </button>
+            {isAdmin && (
+              <button
+                type="button"
+                className="btn btn-primary"
+                aria-label="Deliver Order"
+                onClick={() => {
+                  void handleDeliver();
+                }}
+                disabled={isDelivering}
+              >
+                {isDelivering ? "Delivering..." : "Deliver Order"}
+              </button>
+            )}
           </>
         )
       } />}

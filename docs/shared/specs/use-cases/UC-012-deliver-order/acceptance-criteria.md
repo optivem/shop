@@ -43,6 +43,12 @@ Scenario: Admin should be able to deliver any customer's order
   Then the order is delivered successfully
   And order ORD-2001 has status DELIVERED
 
+@UC-012.3
+Scenario: Customer should not be offered Deliver Order
+  Given the user is logged in as the customer who placed the order
+  When the user opens the details of the order
+  Then the order details do not offer Deliver Order
+
 @UC-012.4 @narrative-2a
 Scenario: Customer should not be able to deliver an order
   Given the user is logged in as the customer who placed the order

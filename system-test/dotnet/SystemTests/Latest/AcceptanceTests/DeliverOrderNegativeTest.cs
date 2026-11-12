@@ -66,4 +66,18 @@ public class DeliverOrderNegativeTest : BaseAcceptanceTest
             .DoesNotOfferDeliverOrder()
             .DoesNotOfferCancelOrder();
     }
+
+    [Theory]
+    [ChannelData(ChannelType.UI)]
+    [Trait("tag", "UC-012.3")]
+    public async Task CustomerShouldNotBeOfferedDeliverOrder(Channel channel)
+    {
+        await Scenario(channel)
+            .Given().Order().PlacedByCustomer()
+            .And().LoggedInAsCustomer()
+            .When().ViewOrder()
+            .Then().ShouldSucceed()
+            .And().Order()
+            .DoesNotOfferDeliverOrder();
+    }
 }

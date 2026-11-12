@@ -40,7 +40,8 @@
                 </div>
                 <div class="order-detail-actions">
                     <button id="cancelOrderBtn" type="button" class="btn btn-outline-danger" aria-label="Cancel Order">Cancel Order</button>
-                    <button id="deliverOrderBtn" type="button" class="btn btn-primary" aria-label="Deliver Order">Deliver Order</button>
+                    <!-- Only an admin is offered Deliver Order (UC-012 BR-3). -->
+                    <button th:if="${storeUser != null and storeUser.admin()}" id="deliverOrderBtn" type="button" class="btn btn-primary" aria-label="Deliver Order">Deliver Order</button>
                 </div>
             </section>
 
@@ -166,7 +167,7 @@
                 var isTerminal = order.status === 'CANCELLED' || order.status === 'DELIVERED';
                 if (isTerminal) {
                     document.getElementById('cancelOrderBtn').remove();
-                    document.getElementById('deliverOrderBtn').remove();
+                    document.getElementById('deliverOrderBtn')?.remove();
                 }
 
                 orderDetails.style.display = '';
@@ -179,7 +180,8 @@
 
         loadOrderDetails();
 
-        document.getElementById('deliverOrderBtn').addEventListener('click', async function() {
+        // Not rendered for a customer.
+        document.getElementById('deliverOrderBtn')?.addEventListener('click', async function() {
             var orderNumber = new URLSearchParams(window.location.search).get('orderNumber');
             var notifications = document.getElementById('notifications');
             var btn = document.getElementById('deliverOrderBtn');
