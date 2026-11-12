@@ -6,6 +6,7 @@ import { HealthController } from '../api/controller/health.controller';
 import { OrderController } from '../api/controller/order.controller';
 import { ProductController } from '../api/controller/product.controller';
 import { ProfileController } from '../api/controller/profile.controller';
+import { OpenApiController } from '../api/controller/openapi.controller';
 import { AppController } from '../app.controller';
 import { accessFor, type Access } from './route-policy';
 
@@ -27,6 +28,8 @@ const EXPECTED: Record<string, Access> = {
   'GET /api/products/:sku': 'public',
   'GET /api/account/profile': 'authenticated',
   'PUT /api/account/profile': 'authenticated',
+  // Like springdoc on the Java side, the OpenAPI document is for signed-in callers only.
+  'GET /v3/api-docs': 'authenticated',
 };
 
 type Ctor = new (...args: never[]) => object;
@@ -57,6 +60,7 @@ describe('route policy covers every controller route', () => {
     AdminController,
     ProductController,
     ProfileController,
+    OpenApiController,
   ].flatMap((c) => routesOf(c as unknown as Ctor));
 
   it('has an expected access for each discovered route and nothing stale', () => {

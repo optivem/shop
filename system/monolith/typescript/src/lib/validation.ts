@@ -55,7 +55,7 @@ const shippingAddressSchema = z.object({
   country: trimmedText('Country is required'),
 });
 
-const placeOrderSchema = z.object({
+export const placeOrderSchema = z.object({
   sku: requiredText('SKU must not be empty'),
   quantity: z.preprocess(
     numericStringAsNumber,
@@ -72,14 +72,14 @@ const placeOrderSchema = z.object({
     .nullish(),
 });
 
-const updateProfileSchema = z.object({
+export const updateProfileSchema = z.object({
   ...addressFields,
   country: trimmedText('Country is required').pipe(
     z.enum(PROFILE_COUNTRIES, { error: PROFILE_COUNTRY_UNSUPPORTED })
   ),
 });
 
-const publishCouponSchema = z.object({
+export const publishCouponSchema = z.object({
   code: requiredText('Coupon code must not be blank').transform((s) => s.trim()),
   discountRate: z.preprocess(
     numberAsString,

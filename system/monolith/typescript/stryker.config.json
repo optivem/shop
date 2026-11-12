@@ -1,0 +1,32 @@
+{
+  "packageManager": "npm",
+  "testRunner": "jest",
+  "jest": {
+    "projectType": "custom",
+    "configFile": "jest.config.ts"
+  },
+  "mutate": [
+    "src/lib/**/*.ts",
+    "!src/**/*.spec.ts",
+    "!src/**/__tests__/**"
+  ],
+  "coverageAnalysis": "perTest",
+  "reporters": [
+    "html",
+    "json",
+    "clear-text",
+    "progress"
+  ],
+  "htmlReporter": {
+    "fileName": "reports/mutation/mutation.html"
+  },
+  "jsonReporter": {
+    "fileName": "reports/mutation/mutation.json"
+  },
+  "thresholds": {
+    "high": 80,
+    "low": 60,
+    "break": null
+  },
+  "tempDirName": ".stryker-tmp"
+}

@@ -1,0 +1,68 @@
+name: monolith-typescript-mutation-nightly
+
+# Nightly mutation testing for system/monolith/typescript with StrykerJS (jest runner), the TypeScript twin of
+# the Java PITest nightly (multitier-backend-java-mutation-nightly.yml). Mutates the production
+# sources listed in system/monolith/typescript/stryker.config.json and runs the unit tests against each mutant.
+# Report-only: no threshold is applied, so the job fails only if the build or the suite breaks.
+# Stryker is installed here with --no-save at a pinned version, so the project's package.json and
+# lock file (and every student clone) carry no extra dependency.
+
+on:
+  schedule:
+    - cron: '40 2 * * *'  # Daily 02:40 UTC, next to the Java PITest nightly
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+env:
+  STRYKER_VERSION: '10.1.1'
+
+jobs:
+  mutation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: system/monolith/typescript
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22.x
+
+      - name: Install Dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm ci
+          npm install --no-save "@stryker-mutator/core@$STRYKER_VERSION" "@stryker-mutator/jest-runner@$STRYKER_VERSION"
+
+      - name: Run Mutation Testing
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx stryker run | tee "$RUNNER_TEMP/stryker.txt"
+          {
+            echo '## Mutation testing (monolith-typescript, StrykerJS)'
+            echo '```'
+            grep -E 'Final mutation score|All files' "$RUNNER_TEMP/stryker.txt" | tail -5 || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload Stryker Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stryker-report-monolith-typescript
+          path: system/monolith/typescript/reports/mutation/
+          if-no-files-found: ignore
+          retention-days: 14

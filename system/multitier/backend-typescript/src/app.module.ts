@@ -10,6 +10,7 @@ import { CouponController } from './api/controller/coupon.controller';
 import { ProductController } from './api/controller/product.controller';
 import { AdminController } from './api/controller/admin.controller';
 import { ProfileController } from './api/controller/profile.controller';
+import { OpenApiController } from './api/controller/openapi.controller';
 import { OrderService } from './core/services/order.service';
 import { ProductService } from './core/services/product.service';
 import { CouponService } from './core/services/coupon.service';
@@ -79,6 +80,7 @@ function parsePort(value: string): number {
     AdminController,
     ProductController,
     ProfileController,
+    OpenApiController,
   ],
   providers: [
     AppService,

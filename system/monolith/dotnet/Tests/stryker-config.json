@@ -1,0 +1,19 @@
+{
+  "stryker-config": {
+    "project": "MyCompany.MyShop.Monolith.csproj",
+    "test-projects": [
+      "MyCompany.MyShop.Monolith.Tests.csproj"
+    ],
+    "reporters": [
+      "html",
+      "json",
+      "progress",
+      "cleartext"
+    ],
+    "thresholds": {
+      "high": 80,
+      "low": 60,
+      "break": 0
+    }
+  }
+}

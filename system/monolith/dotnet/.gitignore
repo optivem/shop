@@ -46,3 +46,6 @@ ScaffoldingReadMe.txt
 
 # Local test results
 TestResults/
+
+# Stryker mutation testing (nightly job)
+Tests/StrykerOutput/

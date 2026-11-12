@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using MyCompany.MyShop.Backend.Api.OpenApi;
 using MyCompany.MyShop.Backend.Api.Exception;
 using MyCompany.MyShop.Backend.Api.Observability;
 using MyCompany.MyShop.Backend.Api.Resilience;
@@ -78,6 +79,8 @@ builder.Services.AddShopAuthentication();
 // Register exception handler
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
+// Code-first OpenAPI at /v3/api-docs, Swagger UI at /swagger-ui (parity with the Java backends' springdoc).
+builder.Services.AddShopOpenApi();
 
 var app = builder.Build();
 
@@ -98,6 +101,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapShopOpenApi();
 
 await app.RunAsync();
 

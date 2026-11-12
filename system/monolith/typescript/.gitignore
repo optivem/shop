@@ -24,3 +24,7 @@ npm-debug.log*
 # IDE
 .vscode/
 .idea/
+
+# Stryker mutation testing (nightly job)
+.stryker-tmp/
+reports/mutation/

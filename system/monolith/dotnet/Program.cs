@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.EntityFrameworkCore;
+using MyCompany.MyShop.Monolith.Api.OpenApi;
 using MyCompany.MyShop.Monolith.Api.Exception;
 using MyCompany.MyShop.Monolith.Api.Observability;
 using MyCompany.MyShop.Monolith.Api.Resilience;
@@ -84,6 +85,8 @@ builder.Services.AddScoped<CheckoutPlacer>();
 // Register exception handler
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
+// Code-first OpenAPI at /v3/api-docs, Swagger UI at /swagger-ui (parity with the Java backends' springdoc).
+builder.Services.AddShopOpenApi();
 
 var app = builder.Build();
 
@@ -113,6 +116,7 @@ app.UseAuthorization();
 
 app.MapRazorPages();
 app.MapControllers();
+app.MapShopOpenApi();
 
 // The header's "Sign in" link (storefront-ux §6.4). The route requires a login, so an anonymous visitor is sent to
 // Keycloak and, once signed in, comes back here and on to returnUrl (default "/"); a signed-in visitor goes straight there.

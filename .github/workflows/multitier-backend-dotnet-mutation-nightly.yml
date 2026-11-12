@@ -1,0 +1,64 @@
+name: multitier-backend-dotnet-mutation-nightly
+
+# Nightly mutation testing for system/multitier/backend-dotnet with Stryker.NET, the .NET twin of the Java PITest
+# nightly (multitier-backend-java-mutation-nightly.yml). Mutates the production project and runs its
+# test project (system/multitier/backend-dotnet/Tests, config in Tests/stryker-config.json) against each mutant.
+# Report-only: no threshold is applied, so the job fails only if the build or the suite breaks.
+# Stryker is installed here as a pinned global tool, so the project itself carries no extra dependency.
+
+on:
+  schedule:
+    - cron: '20 2 * * *'  # Daily 02:20 UTC, next to the Java PITest nightly
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+env:
+  DOTNET_STRYKER_VERSION: '5.1.0'
+
+jobs:
+  mutation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: system/multitier/backend-dotnet/Tests
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Install Stryker.NET
+        shell: bash
+        run: dotnet tool install --global dotnet-stryker --version "$DOTNET_STRYKER_VERSION"
+
+      - name: Run Mutation Testing
+        shell: bash
+        run: |
+          set -euo pipefail
+          dotnet stryker | tee "$RUNNER_TEMP/stryker.txt"
+          {
+            echo '## Mutation testing (multitier-backend-dotnet, Stryker.NET)'
+            echo '```'
+            grep -E 'The final mutation score is|mutants' "$RUNNER_TEMP/stryker.txt" | tail -5 || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload Stryker Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stryker-report-multitier-backend-dotnet
+          path: system/multitier/backend-dotnet/Tests/StrykerOutput/
+          if-no-files-found: ignore
+          retention-days: 14

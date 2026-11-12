@@ -55,6 +55,28 @@ describe('Authorization (component)', () => {
     expect(response.body).toMatchObject({ status: 401, title: 'Unauthorized' });
   });
 
+  it('the OpenAPI document needs a token', async () => {
+    expect((await call('get', '/v3/api-docs')).status).toBe(401);
+  });
+
+  it('the OpenAPI document describes the API for a signed-in caller', async () => {
+    const response = await call(
+      'get',
+      '/v3/api-docs',
+      await harness.idp.customerToken(),
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({ info: { title: 'MyShop API' } });
+    expect(Object.keys((response.body as { paths: object }).paths)).toEqual(
+      expect.arrayContaining([
+        '/api/products',
+        '/api/products/{sku}',
+        '/api/orders',
+      ]),
+    );
+  });
+
   it('orders with an invalid token returns 401', async () => {
     expect((await call('get', '/api/orders', 'garbage')).status).toBe(401);
   });
