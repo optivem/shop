@@ -21,6 +21,8 @@ const STREET_SELECTOR = "input[aria-label='Shipping Street']";
 const POSTAL_CODE_SELECTOR = "input[aria-label='Shipping Postal Code']";
 const CITY_SELECTOR = "input[aria-label='Shipping City']";
 const COUNTRY_SELECTOR = "select[aria-label='Shipping Country']";
+/** "Save as my default shipping address", offered on a first order only. */
+const SAVE_AS_DEFAULT_SELECTOR = "input[aria-label='Save as Default Address']";
 const COUPON_CODE_SELECTOR = "input[aria-label='Checkout Coupon Code']";
 const ERROR_SELECTOR = "[role='alert'].notification.error";
 const ERROR_MESSAGE_SELECTOR = `${ERROR_SELECTOR} .error-message`;
@@ -58,6 +60,11 @@ export class CheckoutPage extends BasePage {
     await this.fill(POSTAL_CODE_SELECTOR, address.postalCode);
     await this.fill(CITY_SELECTOR, address.city);
     await this.selectOptionByValueAddingIfMissing(COUNTRY_SELECTOR, address.country);
+  }
+
+  /** Ticks or unticks "Save as my default shipping address" (offered on a first order only). */
+  async setSaveAsDefault(saveAsDefault: boolean): Promise<void> {
+    await this.page.locator(SAVE_AS_DEFAULT_SELECTOR).first().setChecked(saveAsDefault, { timeout: PAGE_TIMEOUT_MS });
   }
 
   async inputCouponCode(couponCode: string): Promise<void> {
@@ -108,6 +115,12 @@ export class CheckoutPage extends BasePage {
     const hasSaved = await this.isVisible(USE_SAVED_ADDRESS_SELECTOR);
     response.savedAddressSelected = hasSaved && (await this.page.locator(USE_SAVED_ADDRESS_SELECTOR).first().isChecked());
     response.savedAddress = hasSaved ? await this.text(SAVED_ADDRESS_SELECTOR) : null;
+    const formOpen = await this.isVisible(FIRST_NAME_SELECTOR);
+    response.addressFormOpen = formOpen;
+    response.shippingFirstName = formOpen ? await this.page.locator(FIRST_NAME_SELECTOR).first().inputValue() : null;
+    response.shippingLastName = formOpen ? await this.page.locator(LAST_NAME_SELECTOR).first().inputValue() : null;
+    response.saveAsDefaultTicked =
+      (await this.isVisible(SAVE_AS_DEFAULT_SELECTOR)) && (await this.page.locator(SAVE_AS_DEFAULT_SELECTOR).first().isChecked());
     if (await this.isVisible(ERROR_SELECTOR)) {
       response.message = await this.text(ERROR_MESSAGE_SELECTOR);
       response.messageDetails = (await this.page.locator(ERROR_DETAIL_SELECTOR).allTextContents()).map((detail) => detail.trim());

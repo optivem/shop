@@ -39,6 +39,16 @@ public class ViewProfileVerification : ResponseVerification<ViewProfileResponse>
         return this;
     }
 
+    /// <summary>The street, postal code, city and country are all empty (an empty field reads as null or "").</summary>
+    public ViewProfileVerification AddressIsEmpty()
+    {
+        string?[] address = [Response.Street, Response.PostalCode, Response.City, Response.Country];
+        address.ShouldAllBe(value => string.IsNullOrEmpty(value),
+            $"Expected no saved address, but the profile has street '{Response.Street}', postal code "
+            + $"'{Response.PostalCode}', city '{Response.City}', country '{Response.Country}'");
+        return this;
+    }
+
     public ViewProfileVerification StreetIsNot(string unexpectedStreet)
     {
         Response.Street.ShouldNotBe(unexpectedStreet,

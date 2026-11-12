@@ -170,6 +170,12 @@ public class PageClient
         await locator.SelectOptionAsync(value);
     }
 
+    public async Task SetCheckedAsync(string selector, bool isChecked)
+    {
+        var locator = await GetLocatorAsync(selector);
+        await locator.SetCheckedAsync(isChecked);
+    }
+
     public async Task<bool> IsCheckedAsync(string selector)
     {
         var locator = await GetLocatorAsync(selector);

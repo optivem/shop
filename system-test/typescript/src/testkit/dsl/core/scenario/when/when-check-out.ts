@@ -45,6 +45,10 @@ export class WhenCheckOut {
     return this.step((checkOut) => checkOut.shippingAddress(firstName, lastName, street, postalCode, city, country));
   }
 
+  withSaveAsDefaultUnticked(): this {
+    return this.step((checkOut) => checkOut.doNotSaveAsDefault());
+  }
+
   withCouponCode(couponCode: string): this {
     return this.step((checkOut) => checkOut.couponCode(couponCode));
   }

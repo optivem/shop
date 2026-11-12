@@ -32,6 +32,15 @@ public interface ThenCheckout extends ThenStep<ThenCheckout> {
     /** The saved address, as the checkout shows it, is selected. */
     ThenCheckout hasSavedAddressSelected(String expectedAddress);
 
+    /** The shipping address form is open (as on a first order: there is no saved address to choose). */
+    ThenCheckout hasAddressFormOpen();
+
+    /** The address form's first and last name, as shown (e.g. prefilled from the sign-in account). */
+    ThenCheckout hasShippingName(String expectedFirstName, String expectedLastName);
+
+    /** "Save as my default shipping address" is offered and ticked. */
+    ThenCheckout hasSaveAsDefaultTicked();
+
     ThenCheckout showsMessage(String expectedMessage);
 
     /** One of the lines under the checkout's error message, such as "City is required". */

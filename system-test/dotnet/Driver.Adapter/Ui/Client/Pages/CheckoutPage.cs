@@ -33,6 +33,8 @@ public class CheckoutPage : BasePage
     private const string PostalCodeSelector = "input[aria-label='Shipping Postal Code']";
     private const string CitySelector = "input[aria-label='Shipping City']";
     private const string CountrySelector = "select[aria-label='Shipping Country']";
+    /// <summary>"Save as my default shipping address", offered on a first order only.</summary>
+    private const string SaveAsDefaultSelector = "input[aria-label='Save as Default Address']";
     private const string CouponCodeSelector = "input[aria-label='Checkout Coupon Code']";
     private const string ErrorSelector = "[role='alert'].notification.error";
     private const string ErrorMessageSelector = ErrorSelector + " .error-message";
@@ -58,6 +60,9 @@ public class CheckoutPage : BasePage
         await PageClient.FillAsync(CitySelector, address.City);
         await PageClient.SelectOptionByValueAddingIfMissingAsync(CountrySelector, address.Country ?? string.Empty);
     }
+
+    /// <summary>Ticks or unticks "Save as my default shipping address" (offered on a first order only).</summary>
+    public Task SetSaveAsDefaultAsync(bool saveAsDefault) => PageClient.SetCheckedAsync(SaveAsDefaultSelector, saveAsDefault);
 
     public Task InputCouponCodeAsync(string couponCode) => PageClient.FillAsync(CouponCodeSelector, couponCode);
 
@@ -98,6 +103,12 @@ public class CheckoutPage : BasePage
         var hasSaved = !await PageClient.IsHiddenAsync(UseSavedAddressSelector);
         response.SavedAddressSelected = hasSaved && await PageClient.IsCheckedAsync(UseSavedAddressSelector);
         response.SavedAddress = hasSaved ? await ReadTextAsync(SavedAddressSelector) : null;
+        var formOpen = !await PageClient.IsHiddenAsync(FirstNameSelector);
+        response.AddressFormOpen = formOpen;
+        response.ShippingFirstName = formOpen ? await PageClient.ReadInputValueAsync(FirstNameSelector) : null;
+        response.ShippingLastName = formOpen ? await PageClient.ReadInputValueAsync(LastNameSelector) : null;
+        response.SaveAsDefaultTicked = !await PageClient.IsHiddenAsync(SaveAsDefaultSelector)
+            && await PageClient.IsCheckedAsync(SaveAsDefaultSelector);
         if (await PageClient.IsHiddenAsync(ErrorSelector))
         {
             response.MessageDetails = [];

@@ -127,6 +127,25 @@ public class CheckOutVerification : ResponseVerification<CheckOutResponse>
         return this;
     }
 
+    public CheckOutVerification AddressFormOpen()
+    {
+        Resp().AddressFormOpen.ShouldBe(true, "Shipping address form should be open");
+        return this;
+    }
+
+    public CheckOutVerification ShippingName(string expectedFirstName, string expectedLastName)
+    {
+        Resp().ShippingFirstName.ShouldBe(expectedFirstName, "Shipping first name");
+        Resp().ShippingLastName.ShouldBe(expectedLastName, "Shipping last name");
+        return this;
+    }
+
+    public CheckOutVerification SaveAsDefaultTicked()
+    {
+        Resp().SaveAsDefaultTicked.ShouldBe(true, "\"Save as my default shipping address\" should be ticked");
+        return this;
+    }
+
     public CheckOutVerification Thanks(string expectedThanks)
     {
         Resp().Thanks.ShouldBe(expectedThanks, "Confirmation heading");

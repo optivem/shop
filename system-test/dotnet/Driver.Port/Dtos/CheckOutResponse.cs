@@ -40,6 +40,17 @@ public class CheckOutResponse
     /// <summary>The saved address as the checkout shows it; null when there is none.</summary>
     public string? SavedAddress { get; set; }
 
+    /// <summary>The shipping address form is shown (always on a first order; on choosing another address otherwise).</summary>
+    public bool? AddressFormOpen { get; set; }
+
+    /// <summary>The address form's first and last name as shown; null when the form is not shown.</summary>
+    public string? ShippingFirstName { get; set; }
+
+    public string? ShippingLastName { get; set; }
+
+    /// <summary>"Save as my default shipping address" is offered and ticked.</summary>
+    public bool? SaveAsDefaultTicked { get; set; }
+
     // The confirmation
     /// <summary>The confirmation's heading; null when it thanks for no order.</summary>
     public string? Thanks { get; set; }

@@ -122,20 +122,10 @@ Found 2026-11-11 (UC-007 commit `e964c99e`). `--paths` committed fine, but the p
 Found 2026-11-11 (UC-007). A regex alternation passed to `--test` is treated as one test name, so the summary says "never executed" even though the tests passed. On .NET the filter matches the method name only, so a class-name filter such as `ViewProduct` matches nothing.
 - **Recommended:** document the filter semantics per language in `--help`, and make the "never executed" check use the same matching the runner used. **Why:** a false "never executed" makes a green run look red.
 
-### 39. Pre-existing lint error in the TypeScript test kit
-
-Found 2026-11-11 (UC-007). `keycloak-token-provider.ts:84` fails `@typescript-eslint/no-base-to-string`.
-- **Recommended:** fix it in the next system-test/typescript touch (stringify the value explicitly). **Why:** it's a one-line fix, and a red lint baseline hides new lint errors.
-
 ### 40. TypeScript `--sample` isolated-UI suite ran 0 tests after `npx` fetched playwright@1.65.0
 
 Found 2026-11-11 (UC-007). The sample run printed "playwright@1.65.0 will be installed", ran 0 tests and exited 1, while the full isolated-UI suite on the same stack had just passed. That suggests `npx playwright` resolved outside the project's own `node_modules`, possibly during the docker contention in #36.
 - **Recommended: investigate if it recurs.** Make the runner call the project-local Playwright binary instead of `npx` resolution. **Why:** an unpinned Playwright download can silently change versions and drop tests.
-
-### 41. .NET architecture rule A1 may flag the new cart/product request DTOs
-
-Found 2026-11-11 (UC-008). `RequestDtosDeclareOnlyStringMembers` may reject the non-string members of `ManageCartRequest`, and `ViewProductRequest` already has `bool?` fields. The architecture tests weren't run.
-- **Recommended:** run the .NET architecture tests. If A1 fires, either make the members strings (per the rule) or scope A1 to API request DTOs only. **Why:** a rule that is red but never run gives false confidence either way.
 
 ### 42. `--suite X --test Y` also runs the other acceptance suites
 
@@ -146,11 +136,6 @@ Found 2026-11-11 (UC-008), extending #38. `--suite acceptance-isolated-ui --test
 
 Found 2026-11-11 (UC-009), extending #36. Concurrent clean builds in one checkout corrupted the Java build directory; fixed with a clean rebuild.
 - **Recommended:** fold into #36 (one session per checkout/docker host for system tests, or a lock file in `system-test setup`). **Why:** same root cause.
-
-### 46. TS architecture test A1 fails on the new request DTOs
-
-Found 2026-11-11 (UC-009), extending #41. The TS A1 rule already fails on `ManageCartRequest` and `ViewProductRequest` (boolean/array members), and `CheckOutRequest` adds more.
-- **Recommended:** decide #41 and #46 together: either UI-driver request DTOs are exempt from A1 (they aren't wire DTOs), or they're reshaped to strings. **Why:** the rule's intent is API wire DTOs; a failing architecture test that nobody runs hides real violations.
 
 ### 47. Releases created with `GITHUB_TOKEN` never fire `release` events — ⏳ Deferred (user, 2026-11-12): GHCR image SBOM attestations (`sbom: true`) already cover the good-practice part; release-page copies are low value. `release-sbom.yml` stays and works by `workflow_dispatch`.
 

@@ -17,6 +17,7 @@ public class CheckOut : BaseMyShopUseCase<CheckOutResponse, CheckOutVerification
     private string _entry = CheckOutRequest.Open;
     private bool? _signIn;
     private ShippingAddress? _shippingAddress;
+    private bool? _saveAsDefault;
     private string? _couponCodeAlias;
     private bool? _placeOrder;
 
@@ -66,6 +67,13 @@ public class CheckOut : BaseMyShopUseCase<CheckOutResponse, CheckOutVerification
         return this;
     }
 
+    /// <summary>Unticks "Save as my default shipping address", which a first order offers ticked.</summary>
+    public CheckOut DoNotSaveAsDefault()
+    {
+        _saveAsDefault = false;
+        return this;
+    }
+
     public CheckOut CouponCode(string couponCodeAlias)
     {
         _couponCodeAlias = couponCodeAlias;
@@ -93,6 +101,7 @@ public class CheckOut : BaseMyShopUseCase<CheckOutResponse, CheckOutVerification
             Entry = _entry,
             SignIn = _signIn,
             ShippingAddress = _shippingAddress,
+            SaveAsDefault = _saveAsDefault,
             CouponCode = _couponCodeAlias == null ? null : _context.GetParamValue(_couponCodeAlias),
             PlaceOrder = _placeOrder,
         };

@@ -492,6 +492,9 @@ export class MyShopUiDriver implements MyShopDriver {
     if (request.shippingAddress) {
       await checkoutPage.inputShippingAddress(request.shippingAddress);
     }
+    if (request.saveAsDefault === false) {
+      await checkoutPage.setSaveAsDefault(false);
+    }
     if (isSet(request.couponCode)) {
       await checkoutPage.inputCouponCode(request.couponCode);
     }

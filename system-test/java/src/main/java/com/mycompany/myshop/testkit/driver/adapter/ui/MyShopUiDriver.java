@@ -570,6 +570,9 @@ public class MyShopUiDriver implements MyShopDriver {
         if (request.getShippingAddress() != null) {
             checkoutPage.inputShippingAddress(request.getShippingAddress());
         }
+        if (Boolean.FALSE.equals(request.getSaveAsDefault())) {
+            checkoutPage.setSaveAsDefault(false);
+        }
         if (request.getCouponCode() != null) {
             checkoutPage.inputCouponCode(request.getCouponCode());
         }

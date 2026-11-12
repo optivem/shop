@@ -41,6 +41,12 @@ export interface ThenCheckout extends PromiseLike<void> {
   saysDiscountAndTaxAreWorkedOutPerOrder(): this;
   /** The saved address, as the checkout shows it, is selected. */
   hasSavedAddressSelected(expectedAddress: string): this;
+  /** The shipping address form is open (as on a first order: there is no saved address to choose). */
+  hasAddressFormOpen(): this;
+  /** The address form's first and last name, as shown (e.g. prefilled from the sign-in account). */
+  hasShippingName(expectedFirstName: string, expectedLastName: string): this;
+  /** "Save as my default shipping address" is offered and ticked. */
+  hasSaveAsDefaultTicked(): this;
   showsMessage(expectedMessage: string): this;
   /** One of the lines under the checkout's error message, such as "City is required". */
   showsMessageDetail(expectedDetail: string): this;
@@ -84,6 +90,8 @@ export interface ThenCheckedOutProfile extends PromiseLike<void> {
   hasPostalCode(expected: string): this;
   hasCity(expected: string): this;
   hasCountry(expected: string): this;
+  /** No shipping address is saved: the street, postal code, city and country are empty. */
+  hasNoSavedAddress(): this;
 }
 
 export interface ThenCheckedOutCoupon extends PromiseLike<void> {

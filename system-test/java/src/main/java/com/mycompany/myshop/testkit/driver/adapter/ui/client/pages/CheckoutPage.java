@@ -33,6 +33,8 @@ public class CheckoutPage extends BasePage {
     private static final String POSTAL_CODE_SELECTOR = "input[aria-label='Shipping Postal Code']";
     private static final String CITY_SELECTOR = "input[aria-label='Shipping City']";
     private static final String COUNTRY_SELECTOR = "select[aria-label='Shipping Country']";
+    /** "Save as my default shipping address", offered on a first order only. */
+    private static final String SAVE_AS_DEFAULT_SELECTOR = "input[aria-label='Save as Default Address']";
     private static final String COUPON_CODE_SELECTOR = "input[aria-label='Checkout Coupon Code']";
     private static final String ERROR_SELECTOR = "[role='alert'].notification.error";
     private static final String ERROR_MESSAGE_SELECTOR = ERROR_SELECTOR + " .error-message";
@@ -57,6 +59,11 @@ public class CheckoutPage extends BasePage {
         pageClient.fill(POSTAL_CODE_SELECTOR, address.getPostalCode());
         pageClient.fill(CITY_SELECTOR, address.getCity());
         pageClient.selectOptionByValueAddingIfMissing(COUNTRY_SELECTOR, address.getCountry() == null ? "" : address.getCountry());
+    }
+
+    /** Ticks or unticks "Save as my default shipping address" (offered on a first order only). */
+    public void setSaveAsDefault(boolean saveAsDefault) {
+        pageClient.setChecked(SAVE_AS_DEFAULT_SELECTOR, saveAsDefault);
     }
 
     public void inputCouponCode(String couponCode) {
@@ -103,6 +110,11 @@ public class CheckoutPage extends BasePage {
         var hasSaved = !pageClient.isHidden(USE_SAVED_ADDRESS_SELECTOR);
         response.setSavedAddressSelected(hasSaved && pageClient.isChecked(USE_SAVED_ADDRESS_SELECTOR));
         response.setSavedAddress(hasSaved ? readText(SAVED_ADDRESS_SELECTOR) : null);
+        var formOpen = !pageClient.isHidden(FIRST_NAME_SELECTOR);
+        response.setAddressFormOpen(formOpen);
+        response.setShippingFirstName(formOpen ? pageClient.readInputValue(FIRST_NAME_SELECTOR) : null);
+        response.setShippingLastName(formOpen ? pageClient.readInputValue(LAST_NAME_SELECTOR) : null);
+        response.setSaveAsDefaultTicked(!pageClient.isHidden(SAVE_AS_DEFAULT_SELECTOR) && pageClient.isChecked(SAVE_AS_DEFAULT_SELECTOR));
         if (pageClient.isHidden(ERROR_SELECTOR)) {
             response.setMessageDetails(List.of());
         } else {

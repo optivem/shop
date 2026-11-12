@@ -19,6 +19,8 @@ export interface WhenCheckOut {
   withProceededFromCartAndSignedIn(): this;
   /** Chooses to ship to this address instead of the saved one (the form is open anyway on a first order). */
   withShippingAddress(firstName: string, lastName: string, street: string, postalCode: string, city: string, country: string): this;
+  /** Unticks "Save as my default shipping address", which a first order offers ticked. */
+  withSaveAsDefaultUnticked(): this;
   withCouponCode(couponCode: string): this;
   /** Places the order; without this, the checkout is only opened (and the address entered). */
   withOrderPlaced(): this;

@@ -104,6 +104,24 @@ public class ThenCheckoutImpl<R, V extends ResponseVerification<R>>
     }
 
     @Override
+    public ThenCheckoutImpl<R, V> hasAddressFormOpen() {
+        verification.addressFormOpen();
+        return this;
+    }
+
+    @Override
+    public ThenCheckoutImpl<R, V> hasShippingName(String expectedFirstName, String expectedLastName) {
+        verification.shippingName(expectedFirstName, expectedLastName);
+        return this;
+    }
+
+    @Override
+    public ThenCheckoutImpl<R, V> hasSaveAsDefaultTicked() {
+        verification.saveAsDefaultTicked();
+        return this;
+    }
+
+    @Override
     public ThenCheckoutImpl<R, V> showsMessage(String expectedMessage) {
         verification.message(expectedMessage);
         return this;

@@ -116,6 +116,10 @@ public class PageClient {
         locator.selectOption(value);
     }
 
+    public void setChecked(String selector, boolean checked) {
+        getLocator(selector).setChecked(checked);
+    }
+
     public boolean isChecked(String selector) {
         return getLocator(selector).isChecked();
     }

@@ -65,6 +65,11 @@ public class ThenProfileImpl<R, V extends ResponseVerification<R>>
         return this;
     }
 
+    public ThenProfileImpl<R, V> hasNoSavedAddress() {
+        profileVerification.addressIsEmpty();
+        return this;
+    }
+
     @Override
     public ThenProfileImpl<R, V> profile() {
         return new ThenProfileImpl<>(app, executionResult, successVerification, false);

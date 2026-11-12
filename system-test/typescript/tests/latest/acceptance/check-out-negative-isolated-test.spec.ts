@@ -7,10 +7,9 @@ import { ANA_NOVAK_BERLIN, JANE_BROWN_LONDON, MARIE_DUPONT_PARIS, givenTheCatalo
 // Isolated: stages the shared ERP stub's product list and saves the shared test customer's profile.
 // The cart lives in the browser and only the UI checks it out; there is no checkout API.
 //
-// Not covered: @UC-009.10 (first order: the address form opens prefilled, "Save as default" is ticked and saves the
-// address). It needs a customer with no saved profile, and the two shared test customers' profiles can be saved but
-// never cleared, so no scenario can rely on one being empty. The @UC-009.11 scenarios start from a saved address and
-// choose "Ship to a different address": the same form and the same rules as on a first order.
+// The @UC-009.10 scenarios (first order) sign in as a new customer, who has no saved profile. The @UC-009.11 scenarios
+// start from a saved address and choose "Ship to a different address": the same form and the same rules as on a
+// first order.
 
 const PLEASE_CORRECT_THE_ADDRESS = 'Please correct the shipping address.';
 const NO_ORDER_WAS_PLACED = 'No order was placed.';
@@ -81,6 +80,73 @@ test.describe('@isolated', () => {
                 .checkout()
                 .showsTheCart()
                 .showsMessage('Your cart is empty.');
+        });
+
+        test('shouldOpenTheAddressFormOnAFirstOrder', criteria('UC-009.10'), async ({ scenario }) => {
+            await givenTheCatalog(scenario)
+                .and()
+                .newCustomer()
+                .withFirstName('Ana')
+                .withLastName('Novak')
+                .and()
+                .loggedInAsCustomer()
+                .when()
+                .checkOut()
+                .withCartContaining(HP_15, 1)
+                .then()
+                .shouldSucceed()
+                .checkout()
+                .hasAddressFormOpen()
+                .hasShippingName('Ana', 'Novak')
+                .hasSaveAsDefaultTicked();
+        });
+
+        test('shouldSaveTheAddressToTheProfileWhenSaveAsDefaultIsTicked', criteria('UC-009.10'), async ({ scenario }) => {
+            const address = ANA_NOVAK_BERLIN;
+            await givenTheCatalog(scenario)
+                .and()
+                .newCustomer()
+                .and()
+                .loggedInAsCustomer()
+                .when()
+                .checkOut()
+                .withCartContaining(HP_15, 1)
+                .withShippingAddress(address.firstName, address.lastName, address.street, address.postalCode, address.city, address.country)
+                .withOrderPlaced()
+                .then()
+                .shouldSucceed()
+                .checkout()
+                .confirmsOrdersFor(HP_15)
+                .and()
+                .profile()
+                .hasFirstName(address.firstName)
+                .hasLastName(address.lastName)
+                .hasStreet(address.street)
+                .hasPostalCode(address.postalCode)
+                .hasCity(address.city)
+                .hasCountry(address.country);
+        });
+
+        test('shouldNotSaveTheAddressWhenSaveAsDefaultIsUnticked', criteria('UC-009.10'), async ({ scenario }) => {
+            const address = ANA_NOVAK_BERLIN;
+            await givenTheCatalog(scenario)
+                .and()
+                .newCustomer()
+                .and()
+                .loggedInAsCustomer()
+                .when()
+                .checkOut()
+                .withCartContaining(HP_15, 1)
+                .withShippingAddress(address.firstName, address.lastName, address.street, address.postalCode, address.city, address.country)
+                .withSaveAsDefaultUnticked()
+                .withOrderPlaced()
+                .then()
+                .shouldSucceed()
+                .checkout()
+                .confirmsOrdersFor(HP_15)
+                .and()
+                .profile()
+                .hasNoSavedAddress();
         });
 
         test.each(missingFieldCases)(

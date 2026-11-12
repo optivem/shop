@@ -289,6 +289,18 @@ export class ThenCheckout extends BaseThenCheckoutStep {
     return this.add((v) => void v.savedAddressSelected(expectedAddress));
   }
 
+  hasAddressFormOpen(): this {
+    return this.add((v) => void v.addressFormOpen());
+  }
+
+  hasShippingName(expectedFirstName: string, expectedLastName: string): this {
+    return this.add((v) => void v.shippingName(expectedFirstName, expectedLastName));
+  }
+
+  hasSaveAsDefaultTicked(): this {
+    return this.add((v) => void v.saveAsDefaultTicked());
+  }
+
   showsMessage(expectedMessage: string): this {
     return this.add((v) => void v.message(expectedMessage));
   }
@@ -440,6 +452,16 @@ export class ThenCheckedOutProfile extends BaseThenCheckoutStep {
 
   hasCountry(expected: string): this {
     return this.has('country', expected);
+  }
+
+  /** An empty field reads as null or "". */
+  hasNoSavedAddress(): this {
+    this.stage._addAssertion(async () => {
+      const { street, postalCode, city, country } = await this.stage._profile();
+      expect([street, postalCode, city, country].every((value) => !value), 'No saved address, but the profile has ' +
+        `street '${street}', postal code '${postalCode}', city '${city}', country '${country}'`).toBe(true);
+    });
+    return this;
   }
 
   private has(field: keyof ViewProfileResponse, expected: string): this {

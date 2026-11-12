@@ -33,6 +33,15 @@ public interface IThenCheckout
     /// <summary>The saved address, as the checkout shows it, is selected.</summary>
     IThenCheckout HasSavedAddressSelected(string expectedAddress);
 
+    /// <summary>The shipping address form is open (as on a first order: there is no saved address to choose).</summary>
+    IThenCheckout HasAddressFormOpen();
+
+    /// <summary>The address form's first and last name, as shown (e.g. prefilled from the sign-in account).</summary>
+    IThenCheckout HasShippingName(string expectedFirstName, string expectedLastName);
+
+    /// <summary>"Save as my default shipping address" is offered and ticked.</summary>
+    IThenCheckout HasSaveAsDefaultTicked();
+
     IThenCheckout ShowsMessage(string expectedMessage);
 
     /// <summary>One of the lines under the checkout's error message, such as "City is required".</summary>

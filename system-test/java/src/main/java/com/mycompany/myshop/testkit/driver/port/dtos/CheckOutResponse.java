@@ -39,6 +39,13 @@ public class CheckOutResponse {
     private Boolean savedAddressSelected;
     /** The saved address as the checkout shows it; null when there is none. */
     private String savedAddress;
+    /** The shipping address form is shown (always on a first order; on choosing another address otherwise). */
+    private Boolean addressFormOpen;
+    /** The address form's first and last name as shown; null when the form is not shown. */
+    private String shippingFirstName;
+    private String shippingLastName;
+    /** "Save as my default shipping address" is offered and ticked. */
+    private Boolean saveAsDefaultTicked;
 
     // The confirmation
     /** The confirmation's heading; null when it thanks for no order. */

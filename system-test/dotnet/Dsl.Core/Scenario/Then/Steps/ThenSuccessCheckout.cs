@@ -107,6 +107,22 @@ public class ThenSuccessCheckout<TSuccessResponse, TSuccessVerification> : IThen
 
     IThenCheckout IThenCheckout.HasSavedAddressSelected(string expectedAddress) => HasSavedAddressSelected(expectedAddress);
 
+    public ThenSuccessCheckout<TSuccessResponse, TSuccessVerification> HasAddressFormOpen()
+        => Add(v => v.AddressFormOpen());
+
+    IThenCheckout IThenCheckout.HasAddressFormOpen() => HasAddressFormOpen();
+
+    public ThenSuccessCheckout<TSuccessResponse, TSuccessVerification> HasShippingName(string expectedFirstName, string expectedLastName)
+        => Add(v => v.ShippingName(expectedFirstName, expectedLastName));
+
+    IThenCheckout IThenCheckout.HasShippingName(string expectedFirstName, string expectedLastName)
+        => HasShippingName(expectedFirstName, expectedLastName);
+
+    public ThenSuccessCheckout<TSuccessResponse, TSuccessVerification> HasSaveAsDefaultTicked()
+        => Add(v => v.SaveAsDefaultTicked());
+
+    IThenCheckout IThenCheckout.HasSaveAsDefaultTicked() => HasSaveAsDefaultTicked();
+
     public ThenSuccessCheckout<TSuccessResponse, TSuccessVerification> ShowsMessage(string expectedMessage)
         => Add(v => v.Message(expectedMessage));
 

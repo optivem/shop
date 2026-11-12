@@ -680,6 +680,10 @@ public class MyShopUiDriver : IMyShopDriver
         {
             await checkoutPage.InputShippingAddressAsync(request.ShippingAddress);
         }
+        if (request.SaveAsDefault == false)
+        {
+            await checkoutPage.SetSaveAsDefaultAsync(false);
+        }
         if (request.CouponCode != null)
         {
             await checkoutPage.InputCouponCodeAsync(request.CouponCode);

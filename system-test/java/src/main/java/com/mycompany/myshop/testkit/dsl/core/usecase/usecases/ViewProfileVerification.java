@@ -68,6 +68,16 @@ public class ViewProfileVerification extends ResponseVerification<ViewProfileRes
         return this;
     }
 
+    /** The street, postal code, city and country are all empty (an empty field reads as null or ""). */
+    public ViewProfileVerification addressIsEmpty() {
+        var response = getResponse();
+        assertThat(new String[] {response.getStreet(), response.getPostalCode(), response.getCity(), response.getCountry()})
+                .withFailMessage("Expected no saved address, but the profile has street '%s', postal code '%s', city '%s', country '%s'",
+                        response.getStreet(), response.getPostalCode(), response.getCity(), response.getCountry())
+                .allMatch(value -> value == null || value.isEmpty());
+        return this;
+    }
+
     public ViewProfileVerification streetIsNot(String unexpectedStreet) {
         var actualStreet = getResponse().getStreet();
         assertThat(actualStreet)

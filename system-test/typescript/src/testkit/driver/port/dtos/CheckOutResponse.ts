@@ -28,6 +28,13 @@ export interface CheckOutResponse {
   savedAddressSelected?: boolean;
   /** The saved address as the checkout shows it; null when there is none. */
   savedAddress?: string | null;
+  /** The shipping address form is shown (always on a first order; on choosing another address otherwise). */
+  addressFormOpen?: boolean;
+  /** The address form's first and last name as shown; null when the form is not shown. */
+  shippingFirstName?: string | null;
+  shippingLastName?: string | null;
+  /** "Save as my default shipping address" is offered and ticked. */
+  saveAsDefaultTicked?: boolean;
 
   // The confirmation
   /** The confirmation's heading; null when it thanks for no order. */

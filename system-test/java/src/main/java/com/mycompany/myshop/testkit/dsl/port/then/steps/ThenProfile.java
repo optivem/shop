@@ -19,4 +19,7 @@ public interface ThenProfile extends ThenStep<ThenProfile> {
     ThenProfile hasCountry(String expectedCountry);
 
     ThenProfile doesNotHaveStreet(String street);
+
+    /** No shipping address is saved: the street, postal code, city and country are empty. */
+    ThenProfile hasNoSavedAddress();
 }

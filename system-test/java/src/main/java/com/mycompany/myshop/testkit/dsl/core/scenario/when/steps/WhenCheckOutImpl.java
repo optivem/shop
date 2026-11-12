@@ -65,6 +65,11 @@ public class WhenCheckOutImpl extends BaseWhenStep<CheckOutResponse, CheckOutVer
     }
 
     @Override
+    public WhenCheckOutImpl withSaveAsDefaultUnticked() {
+        return step(CheckOut::doNotSaveAsDefault);
+    }
+
+    @Override
     public WhenCheckOutImpl withCouponCode(String couponCode) {
         this.couponCode = couponCode;
         return step(checkOut -> checkOut.couponCode(couponCode));

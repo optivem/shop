@@ -115,6 +115,22 @@ public class CheckOutVerification extends ResponseVerification<CheckOutResponse>
         return this;
     }
 
+    public CheckOutVerification addressFormOpen() {
+        assertThat(response().getAddressFormOpen()).as("Shipping address form should be open").isTrue();
+        return this;
+    }
+
+    public CheckOutVerification shippingName(String expectedFirstName, String expectedLastName) {
+        assertThat(response().getShippingFirstName()).as("Shipping first name").isEqualTo(expectedFirstName);
+        assertThat(response().getShippingLastName()).as("Shipping last name").isEqualTo(expectedLastName);
+        return this;
+    }
+
+    public CheckOutVerification saveAsDefaultTicked() {
+        assertThat(response().getSaveAsDefaultTicked()).as("\"Save as my default shipping address\" should be ticked").isTrue();
+        return this;
+    }
+
     public CheckOutVerification thanks(String expectedThanks) {
         assertThat(response().getThanks()).as("Confirmation heading").isEqualTo(expectedThanks);
         return this;

@@ -91,6 +91,22 @@ export class CheckOutVerification extends ResponseVerification<CheckOutResponse>
     return this;
   }
 
+  addressFormOpen(): this {
+    expect(this.shown().addressFormOpen, 'Shipping address form should be open').toBe(true);
+    return this;
+  }
+
+  shippingName(expectedFirstName: string, expectedLastName: string): this {
+    expect(this.shown().shippingFirstName, 'Shipping first name').toBe(expectedFirstName);
+    expect(this.shown().shippingLastName, 'Shipping last name').toBe(expectedLastName);
+    return this;
+  }
+
+  saveAsDefaultTicked(): this {
+    expect(this.shown().saveAsDefaultTicked, '"Save as my default shipping address" should be ticked').toBe(true);
+    return this;
+  }
+
   thanks(expectedThanks: string): this {
     expect(this.shown().thanks, 'Confirmation heading').toBe(expectedThanks);
     return this;

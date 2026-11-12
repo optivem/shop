@@ -6,10 +6,9 @@ namespace SystemTests.Latest.AcceptanceTests;
 
 // The cart lives in the browser and only the UI checks it out; there is no checkout API.
 //
-// Not covered: @UC-009.10 (first order: the address form opens prefilled, "Save as default" is ticked and saves the
-// address). It needs a customer with no saved profile, and the two shared test customers' profiles can be saved but
-// never cleared, so no scenario can rely on one being empty. The @UC-009.11 scenarios start from a saved address and
-// choose "Ship to a different address": the same form and the same rules as on a first order.
+// The @UC-009.10 scenarios (first order) sign in as a new customer, who has no saved profile. The @UC-009.11 scenarios
+// start from a saved address and choose "Ship to a different address": the same form and the same rules as on a
+// first order.
 
 /// <summary>Isolated: stages the shared ERP stub's product list and saves the shared test customer's profile.</summary>
 [Collection("Isolated")]
@@ -76,6 +75,81 @@ public class CheckOutNegativeIsolatedTest : BaseCheckOutTest
             .Checkout()
             .ShowsTheCart()
             .ShowsMessage("Your cart is empty.");
+    }
+
+    [Theory]
+    [ChannelData(ChannelType.UI)]
+    [Trait("tag", "UC-009.10")]
+    public async Task ShouldOpenTheAddressFormOnAFirstOrder(Channel channel)
+    {
+        await GivenTheCatalog(channel)
+            .And().NewCustomer()
+            .WithFirstName("Ana")
+            .WithLastName("Novak")
+            .And().LoggedInAsCustomer()
+            .When().CheckOut()
+            .WithCartContaining(Hp15, 1)
+            .Then().ShouldSucceed()
+            .Checkout()
+            .HasAddressFormOpen()
+            .HasShippingName("Ana", "Novak")
+            .HasSaveAsDefaultTicked();
+    }
+
+    [Theory]
+    [ChannelData(ChannelType.UI)]
+    [Trait("tag", "UC-009.10")]
+    public async Task ShouldSaveTheAddressToTheProfileWhenSaveAsDefaultIsTicked(Channel channel)
+    {
+        var address = AnaNovakBerlin;
+        var then = GivenTheCatalog(channel)
+            .And().NewCustomer()
+            .And().LoggedInAsCustomer()
+            .When().CheckOut()
+            .WithCartContaining(Hp15, 1)
+            .WithShippingAddress(address.FirstName, address.LastName, address.Street,
+                address.PostalCode, address.City, address.Country)
+            .WithOrderPlaced()
+            .Then();
+
+        await then.ShouldSucceed()
+            .Checkout()
+            .ConfirmsOrdersFor(Hp15);
+
+        await then.ShouldSucceed()
+            .And().Profile()
+            .HasFirstName(address.FirstName)
+            .HasLastName(address.LastName)
+            .HasStreet(address.Street)
+            .HasPostalCode(address.PostalCode)
+            .HasCity(address.City)
+            .HasCountry(address.Country);
+    }
+
+    [Theory]
+    [ChannelData(ChannelType.UI)]
+    [Trait("tag", "UC-009.10")]
+    public async Task ShouldNotSaveTheAddressWhenSaveAsDefaultIsUnticked(Channel channel)
+    {
+        var address = AnaNovakBerlin;
+        var then = GivenTheCatalog(channel)
+            .And().NewCustomer()
+            .And().LoggedInAsCustomer()
+            .When().CheckOut()
+            .WithCartContaining(Hp15, 1)
+            .WithShippingAddress(address.FirstName, address.LastName, address.Street,
+                address.PostalCode, address.City, address.Country)
+            .WithSaveAsDefaultUnticked()
+            .WithOrderPlaced()
+            .Then();
+
+        await then.ShouldSucceed()
+            .Checkout()
+            .ConfirmsOrdersFor(Hp15);
+
+        await then.ShouldSucceed()
+            .And().Profile()
+            .HasNoSavedAddress();
     }
 
     public static IEnumerable<object[]> MissingFieldCases()

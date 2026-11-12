@@ -28,6 +28,9 @@ public interface WhenCheckOut extends WhenStep {
     WhenCheckOut withShippingAddress(String firstName, String lastName, String street, String postalCode, String city,
                                      String country);
 
+    /** Unticks "Save as my default shipping address", which a first order offers ticked. */
+    WhenCheckOut withSaveAsDefaultUnticked();
+
     WhenCheckOut withCouponCode(String couponCode);
 
     /** Places the order; without this, the checkout is only opened (and the address entered). */

@@ -20,6 +20,8 @@ export interface CheckOutRequest {
   signIn?: boolean | null;
   /** Ship to this address instead of the saved one; the country is a code as the form offers it. */
   shippingAddress?: ShippingAddress | null;
+  /** False unticks "Save as my default shipping address" (offered on a first order); unset leaves it as shown. */
+  saveAsDefault?: boolean | null;
   couponCode?: string | null;
   placeOrder?: boolean | null;
 }

@@ -70,4 +70,10 @@ public class ThenProfile : BaseThenLookup<ViewProfileVerification>, IThenProfile
         AddVerification(v => v.StreetIsNot(street));
         return this;
     }
+
+    public IThenProfile HasNoSavedAddress()
+    {
+        AddVerification(v => v.AddressIsEmpty());
+        return this;
+    }
 }

@@ -22,6 +22,7 @@ public class CheckOut extends BaseMyShopUseCase<CheckOutResponse, CheckOutVerifi
     private String entry = CheckOutRequest.OPEN;
     private Boolean signIn;
     private ShippingAddress shippingAddress;
+    private Boolean saveAsDefault;
     private String couponCodeAlias;
     private Boolean placeOrder;
 
@@ -64,6 +65,12 @@ public class CheckOut extends BaseMyShopUseCase<CheckOutResponse, CheckOutVerifi
         return this;
     }
 
+    /** Unticks "Save as my default shipping address", which a first order offers ticked. */
+    public CheckOut doNotSaveAsDefault() {
+        this.saveAsDefault = false;
+        return this;
+    }
+
     public CheckOut couponCode(String couponCodeAlias) {
         this.couponCodeAlias = couponCodeAlias;
         return this;
@@ -88,6 +95,7 @@ public class CheckOut extends BaseMyShopUseCase<CheckOutResponse, CheckOutVerifi
                 .entry(entry)
                 .signIn(signIn)
                 .shippingAddress(shippingAddress)
+                .saveAsDefault(saveAsDefault)
                 .couponCode(couponCodeAlias == null ? null : context.getParamValue(couponCodeAlias))
                 .placeOrder(placeOrder)
                 .build();

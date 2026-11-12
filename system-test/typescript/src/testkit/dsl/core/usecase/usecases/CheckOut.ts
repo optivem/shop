@@ -23,6 +23,7 @@ export class CheckOut extends BaseMyShopUseCase<CheckOutResponse, CheckOutVerifi
   private _entry = OPEN;
   private _signIn: boolean | null = null;
   private _shippingAddress: ShippingAddress | null = null;
+  private _saveAsDefault: boolean | null = null;
   private _couponCodeAlias: string | null = null;
   private _placeOrder: boolean | null = null;
 
@@ -57,6 +58,12 @@ export class CheckOut extends BaseMyShopUseCase<CheckOutResponse, CheckOutVerifi
     return this;
   }
 
+  /** Unticks "Save as my default shipping address", which a first order offers ticked. */
+  doNotSaveAsDefault(): this {
+    this._saveAsDefault = false;
+    return this;
+  }
+
   couponCode(couponCodeAlias: string): this {
     this._couponCodeAlias = couponCodeAlias;
     return this;
@@ -78,6 +85,7 @@ export class CheckOut extends BaseMyShopUseCase<CheckOutResponse, CheckOutVerifi
       entry: this._entry,
       signIn: this._signIn,
       shippingAddress: this._shippingAddress,
+      saveAsDefault: this._saveAsDefault,
       couponCode: this._couponCodeAlias === null ? null : this.context.getParamValue(this._couponCodeAlias),
       placeOrder: this._placeOrder,
     };

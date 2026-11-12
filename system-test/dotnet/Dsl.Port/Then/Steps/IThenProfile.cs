@@ -21,5 +21,8 @@ public interface IThenProfile
 
     IThenProfile DoesNotHaveStreet(string street);
 
+    /// <summary>No shipping address is saved: the street, postal code, city and country are empty.</summary>
+    IThenProfile HasNoSavedAddress();
+
     TaskAwaiter GetAwaiter();
 }

@@ -30,6 +30,8 @@ public class CheckOutRequest {
     private Boolean signIn;
     /** Ship to this address instead of the saved one; the country is a code as the form offers it. */
     private ShippingAddress shippingAddress;
+    /** False unticks "Save as my default shipping address" (offered on a first order); null leaves it as shown. */
+    private Boolean saveAsDefault;
     private String couponCode;
     private Boolean placeOrder;
 

@@ -64,6 +64,10 @@ public class WhenCheckOut : BaseWhen<CheckOutResponse, CheckOutVerification>, IW
         string city, string country)
         => WithShippingAddress(firstName, lastName, street, postalCode, city, country);
 
+    public WhenCheckOut WithSaveAsDefaultUnticked() => Step(checkOut => checkOut.DoNotSaveAsDefault());
+
+    IWhenCheckOut IWhenCheckOut.WithSaveAsDefaultUnticked() => WithSaveAsDefaultUnticked();
+
     public WhenCheckOut WithCouponCode(string couponCode)
     {
         _couponCode = couponCode;

@@ -26,6 +26,9 @@ public class CheckOutRequest
     /// <summary>Ship to this address instead of the saved one; the country is a code as the form offers it.</summary>
     public ShippingAddress? ShippingAddress { get; set; }
 
+    /// <summary>False unticks "Save as my default shipping address" (offered on a first order); null leaves it as shown.</summary>
+    public bool? SaveAsDefault { get; set; }
+
     public string? CouponCode { get; set; }
 
     public bool? PlaceOrder { get; set; }
