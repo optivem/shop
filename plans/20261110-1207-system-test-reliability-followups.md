@@ -161,3 +161,8 @@ Found 2026-11-12 (SMETA Step 7b coding). TS `browseCoupons` silently dropped giv
 
 Found 2026-11-12 (SMETA Step 7b coding). Not used by the new tests, but a future caller could get a local-time `DateTime`.
 - **Recommended:** make it return `DateTimeKind.Utc` (or `DateTimeOffset`), matching the new order-date parsing. **Why:** timezone bugs only show on non-UTC machines (see #20).
+
+### 55. `backend-clean-java` has no authentication or authorization
+
+Found 2026-11-12 (REL #52 coding). It has no Spring Security and no role checks, so `POST /api/orders/{n}/deliver` and the spec's admin-only `POST /api/admin/orders/sweep-deliveries` are open to anyone. No system test reaches it, because it has no system stack.
+- **Recommended:** decide whether the clean variant should model auth at all. If yes, add a security adapter with the same role rules as backend-java. If not, say so in its README. **Why:** it's a teaching variant, so the omission may be deliberate, but right now it's silent.

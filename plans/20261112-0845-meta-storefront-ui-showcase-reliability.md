@@ -33,9 +33,9 @@ This is a self-driving parent meta-plan: `/execute-plan plans/20261112-0845-meta
 |---|---|
 | U0 plan-only first pass | **done** 2026-11-12: META2 deleted, SHOW marker removed, decisions written into SMETA/REL, Track C closed in UC1 |
 | U1 SHOW | **Phase A done** 2026-11-12 (`3fb4cb7e`…`849c927c`, compile-all green); Phase B: run the resilience tests, k6 smoke, OpenAPI checks; Step 4b blocked by REL #47 |
-| U2 MUI (+ REL #43, #44) | waiting for docker lane slot 2 |
-| U3 SMETA (+ REL #39, #41/#46) | waiting for docker lane slot 3; starts with the fresh-customer unit |
-| U4 UC1 Track D | waiting for U3 close-out (Track C closed, decision #3) |
+| U2 MUI (+ REL #43, #44) | coded (`70e174d7` #43 no code change, `ae34c9dc` #44); Phase B: UC-008 on TS monolith + test-all + visual check |
+| U3 SMETA (+ REL #39, #41/#46, #49, #52) | **coded** 2026-11-12: `aed41283` `5137a909` `30df8177` `b19b17ff` `b6b1f262` `e300e52c` `5ee705f9` `071d2256`; nothing flipped; Phase B next |
+| U4 UC1 Track D | D1–D3 coded `f13a365c` (per-language spec-<lang>.yaml, lenient mode); D4 after Phase B |
 | U5 REL #11 | user, second machine |
 | X1 external | **done**: actions `21972ff` (#32, #33; `v1` tag not moved yet, user to decide), shop `a3bdc9a8` (#34), gh-optivem plan `4ab210be` (#36–#45) |
 
