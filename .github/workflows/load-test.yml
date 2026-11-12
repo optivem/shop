@@ -1,0 +1,129 @@
+name: load-test
+
+# Opt-in k6 load test (perf/k6/browse-and-place-order.js): builds one monolith stack from source,
+# starts it in stub mode on the runner (docker compose, no registry, no secrets, no paid service),
+# runs browse + place order under load and reports median/p95/p99/max per request in the job
+# summary. Manual only (workflow_dispatch), so it never slows down or breaks the delivery pipelines.
+#
+# k6 runs from the official grafana/k6 image, pinned to an exact version, on the host network so it
+# reaches the stack's published ports.
+
+on:
+  workflow_dispatch:
+    inputs:
+      language:
+        description: 'Monolith to load-test'
+        required: true
+        type: choice
+        options:
+          - java
+          - dotnet
+          - typescript
+        default: java
+      vus:
+        description: 'Concurrent virtual users'
+        required: false
+        type: string
+        default: '5'
+      duration:
+        description: 'How long to hold the load (k6 duration, e.g. 1m, 30s)'
+        required: false
+        type: string
+        default: '1m'
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ inputs.language }}
+  cancel-in-progress: false
+
+env:
+  K6_IMAGE: grafana/k6:1.0.0
+
+jobs:
+  load-test:
+    name: load-test (monolith-${{ inputs.language }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    env:
+      COMPOSE_FILE: docker/${{ inputs.language }}/monolith/docker-compose.local.stub.yml
+      # Host-port digit per language (docker/<language>/monolith): API 8d12, Keycloak 8d92.
+      PORT_DIGIT: ${{ inputs.language == 'java' && '1' || inputs.language == 'dotnet' && '2' || '3' }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+
+      - name: Validate Inputs
+        shell: bash
+        env:
+          VUS: ${{ inputs.vus }}
+          DURATION: ${{ inputs.duration }}
+        run: |
+          set -euo pipefail
+          [[ "$VUS" =~ ^[1-9][0-9]*$ ]] || { echo "::error::vus must be a positive whole number, got '$VUS'"; exit 1; }
+          [[ "$DURATION" =~ ^[1-9][0-9]*(s|m)$ ]] || { echo "::error::duration must look like 30s or 2m, got '$DURATION'"; exit 1; }
+
+      - name: Start Stack (stub mode)
+        shell: bash
+        run: docker compose -f "$COMPOSE_FILE" up -d --build --wait
+
+      - name: Wait for the API
+        shell: bash
+        run: |
+          set -euo pipefail
+          url="http://localhost:8${PORT_DIGIT}12/api/products/HP-15"
+          for attempt in $(seq 1 60); do
+            status=$(curl -s -o /dev/null -w '%{http_code}' "$url" || true)
+            if [ "$status" = "200" ]; then
+              echo "API is up after $attempt attempt(s)"
+              exit 0
+            fi
+            echo "Attempt $attempt: $url answered '$status'"
+            sleep 5
+          done
+          echo "::error::$url did not answer 200 within 5 minutes; see the compose logs below"
+          docker compose -f "$COMPOSE_FILE" logs --tail 200
+          exit 1
+
+      - name: Run k6
+        shell: bash
+        env:
+          VUS: ${{ inputs.vus }}
+          DURATION: ${{ inputs.duration }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/k6"
+          docker run --rm --network host --user "$(id -u):$(id -g)" \
+            -v "$GITHUB_WORKSPACE/perf/k6:/scripts:ro" \
+            -v "$RUNNER_TEMP/k6:/out" \
+            -e BASE_URL="http://localhost:8${PORT_DIGIT}12" \
+            -e KEYCLOAK_URL="http://localhost:8${PORT_DIGIT}92" \
+            -e VUS -e DURATION \
+            -e SUMMARY_DIR=/out \
+            "$K6_IMAGE" run /scripts/browse-and-place-order.js
+
+      - name: Publish Latency Summary
+        if: always()
+        shell: bash
+        run: |
+          if [ -f "$RUNNER_TEMP/k6/k6-summary.md" ]; then
+            cat "$RUNNER_TEMP/k6/k6-summary.md" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::warning::k6 wrote no summary; see the Run k6 step log"
+          fi
+
+      - name: Upload k6 Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: k6-results-monolith-${{ inputs.language }}
+          path: ${{ runner.temp }}/k6/
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Stop Stack
+        if: always()
+        shell: bash
+        run: docker compose -f "$COMPOSE_FILE" down -v

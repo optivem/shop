@@ -39,16 +39,17 @@ CI/CD meta-stages (commit → acceptance → RC → release), ATDD with DSL/driv
 
 ## ▶ Next executable step (resume here)
 
-**Testing phase pending (Phase B of meta-plan 20261112-0845):** Step 3 is code-complete but **nothing in it has been run against a stack yet** — neither `--sample` per language (backend resilience part) nor the new resilience acceptance tests. Run them first, per language: `PlaceOrderNegativeIsolatedTest` → `shouldFailFastWithServiceUnavailableWhenErpIsDown` / `…WhenErpIsSlow` (Java, .NET `ShouldFailFast…`, TS spec), API channel, stub mode. They drive the ERP stub down (503) or slow (20s WireMock fixed delay, priority-1 outage stub) and assert the 503 message, `Retry-After` in whole seconds, `application/problem+json`, and a fail-fast bound (down ≤5s, slow ≤12s). Also confirm the stub compose breaker override (Java/TS 100ms, .NET 500ms) stops breaker state leaking between isolated tests. Known limit: the breaker opening itself is not asserted black-box (the short stub open window makes it racy); cover it with backend unit tests if wanted.
+**Testing phase pending (Phase B of meta-plan 20261112-0845):** Steps 3 and 5 are code-complete but **not yet run against a stack**.
+- Step 3: run `--sample` per language (backend resilience part) and the new resilience acceptance tests — `PlaceOrderNegativeIsolatedTest` → `shouldFailFastWithServiceUnavailableWhenErpIsDown` / `…WhenErpIsSlow` (Java, .NET `ShouldFailFast…`, TS spec), API channel, stub mode. They drive the ERP stub down (503) or slow (20s WireMock fixed delay, priority-1 outage stub) and assert the 503 message, `Retry-After` in whole seconds, `application/problem+json`, and a fail-fast bound (down ≤5s, slow ≤12s). Also confirm the stub compose breaker override (Java/TS 100ms, .NET 500ms) stops breaker state leaking between isolated tests. Known limit: the breaker opening itself is not asserted black-box (the short stub open window makes it racy); cover it with backend unit tests if wanted.
+- Step 5: smoke-run `k6 run perf/k6/browse-and-place-order.js` against one stub stack (defaults = Java monolith, API 8112 / Keycloak 8192), then trigger the `load-test` workflow once (`workflow_dispatch`, language=java) and check its job summary shows the p95/p99 table.
 
-Next coding step: **Step 5** (k6 + opt-in workflow), then 6 → 4b → 7, with Step 8 (`docs/tour.md` rows) at the end.
+Next coding step: **Step 6** (OpenAPI + Stryker for .NET/TS), then 4b → 7, with Step 8 (`docs/tour.md` rows) at the end.
 
 ## Steps
 
-Execution order: 5 → 6 → 4b → 7 → 8 (the interview-ready milestone, Steps 1 + 4, Step 2 observability and Step 3 resilience are done; Step 3's tests still await the testing phase).
+Execution order: 6 → 4b → 7 → 8 (the interview-ready milestone, Steps 1 + 4, Step 2 observability, Step 3 resilience and Step 5 k6 are done; Steps 3 and 5 still await the testing phase).
 
 - [ ] Step 4b: Attach CycloneDX SBOMs to GitHub releases. The SBOMs are currently only workflow artifacts from `supply-chain.yml`; extending the gated `_prod-stage.yml` release job was judged unsafe. Recommendation: a separate workflow on `release: published` that runs `anchore/sbom-action` against the released GHCR image tags and uploads the SBOMs as release assets. Low priority, because GHCR images already carry SBOM attestations (`sbom: true`).
-- [ ] Step 5: Performance. Add a k6 script for browse + place order against the local stack, plus an opt-in `workflow_dispatch` workflow that reports p95/p99.
 - [ ] Step 6: Parity sweep. OpenAPI for the .NET and TS backends, and Stryker mutation testing for .NET and TS (nightly, matching the Java PITest job).
 - [ ] Step 7: Spin off a separate plan for #6 (Postgres-backed outbox, no broker) and a separate plan for #8 (frontend testing: component tests, axe a11y, Lighthouse CI). Drop #7 (feature flags) from the inventory.
 - [ ] Step 8: Update `docs/tour.md` skills map with each addition as it lands.
