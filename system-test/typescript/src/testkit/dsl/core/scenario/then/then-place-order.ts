@@ -18,7 +18,7 @@ export class ThenResultStage implements PromiseLike<void> {
   private readonly _orderAssertions: ((order: ViewOrderResponse) => void)[] = [];
   private readonly _couponAssertions: { code: string; fns: ((coupon: BrowseCouponItem) => void)[] }[] = [];
   private readonly _clockAssertions: ((time: GetTimeResponse) => void)[] = [];
-  private readonly _errorAssertions: ((error: SystemError, useCaseContext: UseCaseContext) => void)[] = [];
+  private readonly _errorAssertions: ((error: SystemError, useCaseContext: UseCaseContext, elapsedMs: number) => void)[] = [];
   private _executionPromise: Promise<void> | null = null;
 
   constructor(
@@ -60,7 +60,7 @@ export class ThenResultStage implements PromiseLike<void> {
     this._clockAssertions.push(fn);
   }
 
-  _addErrorAssertion(fn: (error: SystemError, useCaseContext: UseCaseContext) => void): void {
+  _addErrorAssertion(fn: (error: SystemError, useCaseContext: UseCaseContext, elapsedMs: number) => void): void {
     this._errorAssertions.push(fn);
   }
 
@@ -111,6 +111,7 @@ export class ThenResultStage implements PromiseLike<void> {
     const shippingAddress = this.resolveShippingAddress();
     const resolvedCountry = shippingAddress ? undefined : this.useCaseContext.getParamValueOrLiteral(this.country);
 
+    const startedAt = performance.now();
     const result = await this.app.myShop('dynamic').placeOrder({
       sku: resolvedSku,
       quantity: this.quantity,
@@ -121,6 +122,8 @@ export class ThenResultStage implements PromiseLike<void> {
       idempotencyKey: this.useCaseContext.getParamValue(this.idempotencyKey),
     });
 
+    const elapsedMs = performance.now() - startedAt;
+
     if (this._expectSuccess) {
       expect(result.success, JSON.stringify(result)).toBe(true);
       if (!result.success) return;
@@ -130,7 +133,7 @@ export class ThenResultStage implements PromiseLike<void> {
     } else {
       expect(result.success, JSON.stringify(result)).toBe(false);
       if (result.success) return;
-      for (const fn of this._errorAssertions) fn(result.error, this.useCaseContext);
+      for (const fn of this._errorAssertions) fn(result.error, this.useCaseContext, elapsedMs);
     }
   }
 
@@ -406,6 +409,22 @@ export class ThenFailure implements PromiseLike<void> {
   noOrderPersisted(): this {
     this.stage._addErrorAssertion((error) => {
       expect(error, 'Expected the rejected operation to yield an error response (nothing persisted)').toBeDefined();
+    });
+    return this;
+  }
+
+  serviceUnavailable(): this {
+    this.stage._addErrorAssertion((error) => {
+      expect(error.status, 'Expected HTTP status 503 (the UI channel has no HTTP status; run this on the API channel)').toBe(503);
+      expect(error.retryAfter, 'Expected a Retry-After header in whole seconds').toMatch(/^[1-9]\d*$/);
+      expect(error.contentType, 'Expected Content-Type application/problem+json').toMatch(/^application\/problem\+json/);
+    });
+    return this;
+  }
+
+  failedWithinSeconds(seconds: number): this {
+    this.stage._addErrorAssertion((_error, _useCaseContext, elapsedMs) => {
+      expect(elapsedMs, `Expected the call to fail within ${seconds}s, but it took ${Math.round(elapsedMs)}ms`).toBeLessThanOrEqual(seconds * 1000);
     });
     return this;
   }

@@ -198,6 +198,22 @@ Scenario: Should reject order when ERP is unavailable
   Then the order is rejected
   And the customer is told product information can't be retrieved right now
 
+@UC-001.14 @narrative-5a @api
+Scenario: Should fail fast with service unavailable when ERP is down
+  Given the ERP is unavailable
+  When the customer places an order
+  Then the order is rejected
+  And the customer is told product information can't be retrieved right now
+  And the response is 503 Service Unavailable with a Retry-After and a problem+json body
+
+@UC-001.14 @narrative-5a @api
+Scenario: Should fail fast with service unavailable when ERP is slow
+  Given the ERP answers only after the system's outbound timeout
+  When the customer places an order
+  Then the order is rejected
+  And the customer is told product information can't be retrieved right now
+  And the response is 503 Service Unavailable with a Retry-After and a problem+json body
+
 @UC-001.15
 Scenario: Should store the shipping address with the order
   When the customer places an order shipped to "Ana Novak, Main St 1, 10115 Berlin, DE"

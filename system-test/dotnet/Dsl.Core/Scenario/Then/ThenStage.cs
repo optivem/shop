@@ -37,6 +37,9 @@ namespace Dsl.Core.Scenario.Then
 
         internal UseCaseDsl App => _app;
 
+        /// <summary>How long the When step took; only meaningful once the execution result has been fetched.</summary>
+        internal TimeSpan Elapsed => _executionResult?.Elapsed ?? TimeSpan.Zero;
+
         internal async Task<ExecutionResult<TSuccessResponse, TSuccessVerification>> GetExecutionResult()
         {
             if (!_executionCompleted)

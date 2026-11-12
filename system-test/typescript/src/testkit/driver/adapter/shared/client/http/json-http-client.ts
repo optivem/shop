@@ -2,7 +2,7 @@ import { type Result, success, failure } from '../../../../../common/result.js';
 import type { BearerTokenSource } from './bearer-token-source.js';
 
 // Builds the client's error type from a failed response; body is undefined when it is not JSON.
-export type ErrorMapper<E> = (status: number, body: unknown) => E;
+export type ErrorMapper<E> = (status: number, body: unknown, headers: Headers) => E;
 
 export class JsonHttpClient<E> {
   constructor(
@@ -66,6 +66,6 @@ export class JsonHttpClient<E> {
 
   private async readError(response: Response): Promise<E> {
     const body: unknown = await response.json().catch(() => undefined);
-    return this.toError(response.status, body);
+    return this.toError(response.status, body, response.headers);
   }
 }

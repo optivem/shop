@@ -10,6 +10,10 @@ public interface IThenFailure
 
     IThenFailure NoOrderPersisted();
 
+    IThenFailure ServiceUnavailable();
+
+    IThenFailure FailedWithinSeconds(int seconds);
+
     IThenFailureAnd And();
 
     TaskAwaiter GetAwaiter();

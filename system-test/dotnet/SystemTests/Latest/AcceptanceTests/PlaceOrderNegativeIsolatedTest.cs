@@ -9,6 +9,12 @@ namespace SystemTests.Latest.AcceptanceTests;
 [Trait("Category", "isolated")]
 public class PlaceOrderNegativeIsolatedTest : BaseAcceptanceTest
 {
+    private const string ErpUnavailable = "Product information can't be retrieved right now";
+    // A down ERP answers at once, so only the retry backoff (well under a second) delays the 503.
+    private const int ErpDownFailFastSeconds = 5;
+    // A slow ERP costs up to 3 attempts x 2s timeout plus backoff; the stubbed ERP would take 20s.
+    private const int ErpSlowFailFastSeconds = 12;
+
     [Theory]
     [Isolated("mutates the shared wall clock to a coupon-expiry time; parallel runs would clash on the clock")]
     [ChannelData(ChannelType.UI, ChannelType.API)]
@@ -46,6 +52,40 @@ public class PlaceOrderNegativeIsolatedTest : BaseAcceptanceTest
             .Given().Erp().Unavailable()
             .When().PlaceOrder()
             .Then().ShouldFail()
-            .ErrorMessage("Product information can't be retrieved right now");
+            .ErrorMessage(ErpUnavailable);
+    }
+
+    // Resilience: the system fails fast with 503 + Retry-After instead of hanging or guessing a price.
+    // API only, because the assertions are about the HTTP response.
+    [Theory]
+    [Isolated("takes the shared ERP stub down; parallel runs would see every ERP call fail")]
+    [ChannelData(ChannelType.API)]
+    [Trait("tag", "UC-001.14")]
+    public async Task ShouldFailFastWithServiceUnavailableWhenErpIsDown(Channel channel)
+    {
+        await Scenario(channel)
+            .Given().Erp().Unavailable()
+            .When().PlaceOrder()
+            .Then().ShouldFail()
+            .ErrorMessage(ErpUnavailable)
+            .ServiceUnavailable()
+            .FailedWithinSeconds(ErpDownFailFastSeconds);
+    }
+
+    // The slow ERP answers only after 20s, far past the 2s outbound timeout: the call must give up on its
+    // own (timeout times retries) well before the ERP would have answered.
+    [Theory]
+    [Isolated("makes the shared ERP stub slow; parallel runs would see every ERP call time out")]
+    [ChannelData(ChannelType.API)]
+    [Trait("tag", "UC-001.14")]
+    public async Task ShouldFailFastWithServiceUnavailableWhenErpIsSlow(Channel channel)
+    {
+        await Scenario(channel)
+            .Given().Erp().Slow()
+            .When().PlaceOrder()
+            .Then().ShouldFail()
+            .ErrorMessage(ErpUnavailable)
+            .ServiceUnavailable()
+            .FailedWithinSeconds(ErpSlowFailFastSeconds);
     }
 }

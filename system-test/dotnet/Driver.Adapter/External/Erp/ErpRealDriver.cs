@@ -55,6 +55,11 @@ public class ErpRealDriver : BaseErpDriver<ErpRealClient>
         => throw new NotSupportedException(
             "ErpRealDriver cannot make the ERP unavailable; run this scenario against the ERP stub");
 
+    /// <summary>The real ERP cannot be slowed down on demand, so this throws for the same reason as <see cref="ReturnsUnavailableAsync"/>.</summary>
+    public override Task<Result<VoidValue, ErpErrorResponse>> ReturnsSlowAsync()
+        => throw new NotSupportedException(
+            "ErpRealDriver cannot make the ERP slow; run this scenario against the ERP stub");
+
     /// <summary>The real ERP is never taken down by <see cref="ReturnsUnavailableAsync"/>, so it cannot be brought back either.</summary>
     public override Task<Result<VoidValue, ErpErrorResponse>> ReturnsAvailableAsync()
         => throw new NotSupportedException(

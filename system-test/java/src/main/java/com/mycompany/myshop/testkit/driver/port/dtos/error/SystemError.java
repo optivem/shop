@@ -12,6 +12,10 @@ import java.util.List;
 public class SystemError {
     private final String message;
     private final List<FieldError> fields;
+    /** The HTTP status, Retry-After header and Content-Type of the failed call; null where the channel has no HTTP response (UI). */
+    private final Integer httpStatus;
+    private final String retryAfter;
+    private final String contentType;
 
     public static SystemError of(String message) {
         return SystemError.builder()

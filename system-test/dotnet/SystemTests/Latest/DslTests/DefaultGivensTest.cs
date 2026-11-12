@@ -80,6 +80,8 @@ public class DefaultGivensTest
 
         public Task<Result<VoidValue, ErpErrorResponse>> ReturnsUnavailableAsync() => Ok();
 
+        public Task<Result<VoidValue, ErpErrorResponse>> ReturnsSlowAsync() => Ok();
+
         public Task<Result<VoidValue, ErpErrorResponse>> ReturnsAvailableAsync() => Ok();
 
         public Task<Result<VoidValue, ErpErrorResponse>> ReturnsProductNotFoundAsync(GetProductRequest request) => Ok();

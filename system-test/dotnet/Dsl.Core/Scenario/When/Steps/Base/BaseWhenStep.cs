@@ -28,7 +28,10 @@ public abstract class BaseWhen<TSuccessResponse, TSuccessVerification>
         return new ThenStage<TSuccessResponse, TSuccessVerification>(Channel, _app, async () =>
         {
             await _ensureGiven();
-            return await Execute(_app);
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            var result = await Execute(_app);
+            result.Elapsed = stopwatch.Elapsed;
+            return result;
         });
     }
 

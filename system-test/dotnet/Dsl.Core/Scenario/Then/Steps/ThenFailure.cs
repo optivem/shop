@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using Dsl.Port.Then.Steps;
 using Dsl.Core.Shared;
 using Dsl.Core.UseCase.UseCases.Base;
+using Shouldly;
 
 namespace Dsl.Core.Scenario.Then;
 
@@ -45,6 +46,29 @@ public class ThenFailure<TSuccessResponse, TSuccessVerification>
     }
 
     IThenFailure IThenFailure.NoOrderPersisted() => NoOrderPersisted();
+
+    public ThenFailure<TSuccessResponse, TSuccessVerification> ServiceUnavailable()
+    {
+        _assertions.Add(v => v.ServiceUnavailable());
+        return this;
+    }
+
+    IThenFailure IThenFailure.ServiceUnavailable() => ServiceUnavailable();
+
+    /// <summary>The failure came back within <paramref name="seconds"/>: the system gave up on its own instead of hanging.</summary>
+    public ThenFailure<TSuccessResponse, TSuccessVerification> FailedWithinSeconds(int seconds)
+    {
+        // Assertions run after the execution result is fetched, so the elapsed time is known by then.
+        _assertions.Add(_ =>
+        {
+            var elapsed = _thenClause.Elapsed;
+            elapsed.ShouldBeLessThanOrEqualTo(TimeSpan.FromSeconds(seconds),
+                $"Expected the call to fail within {seconds}s, but it took {(long)elapsed.TotalMilliseconds}ms");
+        });
+        return this;
+    }
+
+    IThenFailure IThenFailure.FailedWithinSeconds(int seconds) => FailedWithinSeconds(seconds);
 
     /// <summary>
     /// Returns the failure assertion and for further chaining (e.g. .And().Order().HasStatus(...)).

@@ -15,9 +15,11 @@ public static class SystemErrorMapper
                 .Select(e => new SystemError.FieldError(e.Field ?? string.Empty, e.Message ?? string.Empty, e.Code))
                 .ToList()
                 .AsReadOnly();
-            return SystemError.Of(message, fieldErrors);
+            return SystemError.Of(message, fieldErrors)
+                .WithResponseMetadata(problemDetail.HttpStatus, problemDetail.RetryAfter, problemDetail.ContentType);
         }
 
-        return SystemError.Of(message);
+        return SystemError.Of(message)
+            .WithResponseMetadata(problemDetail.HttpStatus, problemDetail.RetryAfter, problemDetail.ContentType);
     }
 }

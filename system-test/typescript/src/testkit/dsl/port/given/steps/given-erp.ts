@@ -4,6 +4,7 @@ import type { ThenStage } from '../../then/then-stage.js';
 
 export interface GivenErp {
   unavailable(): GivenErp;
+  slow(): GivenErp;
   and(): GivenStage;
   when(): WhenStage;
   then(): ThenStage;

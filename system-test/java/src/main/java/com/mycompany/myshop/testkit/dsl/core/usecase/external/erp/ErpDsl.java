@@ -9,6 +9,7 @@ import com.mycompany.myshop.testkit.dsl.core.usecase.external.erp.usecases.Retur
 import com.mycompany.myshop.testkit.dsl.core.usecase.external.erp.usecases.ReturnsPromotion;
 import com.mycompany.myshop.testkit.dsl.core.usecase.external.erp.usecases.ReturnsAvailable;
 import com.mycompany.myshop.testkit.dsl.core.usecase.external.erp.usecases.ReturnsProductNotFound;
+import com.mycompany.myshop.testkit.dsl.core.usecase.external.erp.usecases.ReturnsSlow;
 import com.mycompany.myshop.testkit.dsl.core.usecase.external.erp.usecases.ReturnsUnavailable;
 import com.mycompany.myshop.testkit.common.Closer;
 import com.mycompany.myshop.testkit.dsl.core.shared.UseCaseContext;
@@ -53,6 +54,10 @@ public class ErpDsl implements AutoCloseable {
 
     public ReturnsUnavailable returnsUnavailable() {
         return new ReturnsUnavailable(driver, context);
+    }
+
+    public ReturnsSlow returnsSlow() {
+        return new ReturnsSlow(driver, context);
     }
 
     public ReturnsProductNotFound returnsProductNotFound() {

@@ -277,6 +277,15 @@ public class JsonHttpClient<E> implements AutoCloseable {
         }
     }
 
+    private static void captureResponseMetadata(Object error, HttpResponse<String> httpResponse) {
+        if (error instanceof ResponseMetadataAware aware) {
+            var headers = httpResponse.headers();
+            aware.captureResponseMetadata(httpResponse.statusCode(),
+                    headers.firstValue("Retry-After").orElse(null),
+                    headers.firstValue(CONTENT_TYPE).orElse(null));
+        }
+    }
+
     private boolean isSuccessStatusCode(HttpResponse<String> httpResponse) {
         var statusCode = HttpStatus.valueOf(httpResponse.statusCode());
         return statusCode.is2xxSuccessful();
@@ -288,6 +297,7 @@ public class JsonHttpClient<E> implements AutoCloseable {
                 return Result.failure(createEmptyBodyError(httpResponse.statusCode()));
             }
             var error = readResponse(httpResponse, errorType);
+            captureResponseMetadata(error, httpResponse);
             return Result.failure(error);
         }
 

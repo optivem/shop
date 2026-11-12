@@ -88,6 +88,8 @@ export class ScenarioContext {
   hasExplicitPromotion = false;
   /** When set, every ERP call fails, whatever products or promotion are staged. */
   erpUnavailable = false;
+  /** When set, every ERP call answers only after the system's outbound timeout, whatever is staged. */
+  erpSlow = false;
   readonly customers = new CustomerAliases();
   private loggedIn: () => UserIdentity = () => UserIdentity.DEFAULT;
   private loggedInChosen = false;

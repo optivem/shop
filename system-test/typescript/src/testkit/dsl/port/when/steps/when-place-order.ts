@@ -1,4 +1,4 @@
-import type { ThenResultStage } from '../../then/then-result-stage.js';
+import type { ThenPlaceOrderResultStage } from '../../then/then-place-order-result-stage.js';
 
 export interface WhenPlaceOrder {
   withOrderNumber(orderNumber: string): this;
@@ -16,5 +16,5 @@ export interface WhenPlaceOrder {
   withShippingPostalCode(postalCode: string): this;
   withShippingCity(city: string): this;
   withShippingCountry(country: string): this;
-  then(): ThenResultStage;
+  then(): ThenPlaceOrderResultStage;
 }

@@ -46,6 +46,8 @@ public class ErpDsl : IDisposable, IAsyncDisposable
 
     public ReturnsUnavailable ReturnsUnavailable() => new(_driver, _context);
 
+    public ReturnsSlow ReturnsSlow() => new(_driver, _context);
+
     public ReturnsProductNotFound ReturnsProductNotFound() => new(_driver, _context);
 
     public ReturnsAvailable ReturnsAvailable() => new(_driver, _context);

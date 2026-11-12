@@ -95,10 +95,14 @@ public class JsonWireMockClient : IDisposable
     /// <paramref name="statusCode"/>, at priority 0 so it outranks the priority-1 stubs this client
     /// registers. Used to take a whole external system down.
     /// </summary>
-    public async Task<Result<VoidValue, string>> StubGetMatchingAsync(string pathPattern, int statusCode)
+    public async Task<Result<VoidValue, string>> StubGetMatchingAsync(string pathPattern, int statusCode, int fixedDelayMilliseconds = 0)
     {
         try
         {
+            // A delay makes the whole external system slow, so the system's outbound timeout is what ends the call.
+            object response = fixedDelayMilliseconds > 0
+                ? new { status = statusCode, fixedDelayMilliseconds }
+                : new { status = statusCode };
             var mappingRequest = new
             {
                 priority = OutagePriority,
@@ -107,10 +111,7 @@ public class JsonWireMockClient : IDisposable
                     method = "GET",
                     urlPathPattern = pathPattern
                 },
-                response = new
-                {
-                    status = statusCode
-                }
+                response
             };
 
             var requestJson = JsonSerializer.Serialize(mappingRequest, _jsonOptions);

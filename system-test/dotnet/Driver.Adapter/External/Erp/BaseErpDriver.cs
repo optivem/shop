@@ -71,6 +71,8 @@ public abstract class BaseErpDriver<TClient> : IErpDriver
 
     public abstract Task<Result<VoidValue, ErpErrorResponse>> ReturnsUnavailableAsync();
 
+    public abstract Task<Result<VoidValue, ErpErrorResponse>> ReturnsSlowAsync();
+
     public abstract Task<Result<VoidValue, ErpErrorResponse>> ReturnsAvailableAsync();
 
     public abstract Task<Result<VoidValue, ErpErrorResponse>> ReturnsProductNotFoundAsync(GetProductRequest request);

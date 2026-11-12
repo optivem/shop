@@ -180,6 +180,15 @@ public class JsonHttpClient<E> : IDisposable
         return instance;
     }
 
+    private static void CaptureResponseMetadata(E error, HttpResponseMessage httpResponse)
+    {
+        if (error is IResponseMetadataAware aware)
+        {
+            var retryAfter = httpResponse.Headers.TryGetValues("Retry-After", out var values) ? values.FirstOrDefault() : null;
+            aware.CaptureResponseMetadata((int)httpResponse.StatusCode, retryAfter, httpResponse.Content.Headers.ContentType?.MediaType);
+        }
+    }
+
     private static async Task<T> ReadResponseAsync<T>(HttpResponseMessage httpResponse, JsonSerializerOptions jsonOptions)
     {
         var responseBody = await httpResponse.Content.ReadAsStringAsync();
@@ -194,6 +203,7 @@ public class JsonHttpClient<E> : IDisposable
             var error = string.IsNullOrWhiteSpace(errorBody)
                 ? CreateEmptyBodyError((int)httpResponse.StatusCode)
                 : JsonSerializer.Deserialize<E>(errorBody, _jsonOptions)!;
+            CaptureResponseMetadata(error, httpResponse);
             return Result<T, E>.Failure(error);
         }
 

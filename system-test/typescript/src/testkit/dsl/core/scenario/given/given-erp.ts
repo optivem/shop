@@ -5,7 +5,10 @@ import type { GivenStage } from './given-stage.js';
 import type { GivenErp as IGivenErp } from '../../../port/given/steps/given-erp.js';
 import { assertNotAwaited } from '../assert-not-awaited.js';
 
-/** The ERP's availability; an unavailable ERP fails every call, whatever products or promotion are staged. */
+/**
+ * The ERP's availability; an unavailable ERP fails every call, and a slow ERP answers every call only after
+ * the system's outbound timeout, whatever products or promotion are staged.
+ */
 export class GivenErp implements IGivenErp {
   constructor(
     private readonly stage: GivenStage,
@@ -14,6 +17,11 @@ export class GivenErp implements IGivenErp {
 
   unavailable(): this {
     this.ctx.erpUnavailable = true;
+    return this;
+  }
+
+  slow(): this {
+    this.ctx.erpSlow = true;
     return this;
   }
 

@@ -34,6 +34,10 @@ export class ErpStubDriver extends BaseErpDriver<ErpStubClient> {
     return this.client.configureUnavailable();
   }
 
+  async returnsSlow(): Promise<Result<void, ErpErrorResponse>> {
+    return this.client.configureSlow();
+  }
+
   async returnsAvailable(): Promise<Result<void, ErpErrorResponse>> {
     return this.client.removeUnavailable();
   }

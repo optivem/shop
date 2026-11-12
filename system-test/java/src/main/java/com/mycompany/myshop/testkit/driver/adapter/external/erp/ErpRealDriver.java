@@ -57,6 +57,13 @@ public class ErpRealDriver extends BaseErpDriver<ErpRealClient> {
                 "ErpRealDriver cannot make the ERP unavailable; run this scenario against the ERP stub");
     }
 
+    /** The real ERP cannot be slowed down on demand, so this throws for the same reason as {@link #returnsUnavailable()}. */
+    @Override
+    public Result<Void, ErpErrorResponse> returnsSlow() {
+        throw new UnsupportedOperationException(
+                "ErpRealDriver cannot make the ERP slow; run this scenario against the ERP stub");
+    }
+
     @Override
     public Result<Void, ErpErrorResponse> returnsProductNotFound(GetProductRequest request) {
         throw new UnsupportedOperationException(

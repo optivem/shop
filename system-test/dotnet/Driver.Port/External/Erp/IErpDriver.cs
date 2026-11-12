@@ -21,6 +21,9 @@ public interface IErpDriver : IDisposable, IAsyncDisposable
     /// <summary>Makes the ERP unavailable: every ERP API call fails until the driver is disposed.</summary>
     Task<Result<VoidValue, ErpErrorResponse>> ReturnsUnavailableAsync();
 
+    /// <summary>Makes the ERP slow: every ERP API call answers only after a delay well past the system's outbound timeout, until the driver is disposed.</summary>
+    Task<Result<VoidValue, ErpErrorResponse>> ReturnsSlowAsync();
+
     /// <summary>Ends an outage started by <see cref="ReturnsUnavailableAsync"/>: the ERP answers with what is staged again.</summary>
     Task<Result<VoidValue, ErpErrorResponse>> ReturnsAvailableAsync();
 

@@ -17,6 +17,22 @@ public class SystemErrorFailureVerification : ErrorVerification<SystemError>
         return this;
     }
 
+    /// <summary>
+    /// The call failed fast as 503 Service Unavailable, told the client when to retry (a whole number of
+    /// seconds in Retry-After) and explained itself as problem+json. Only the API channel sees HTTP.
+    /// </summary>
+    public SystemErrorFailureVerification ServiceUnavailable()
+    {
+        var error = Response;
+        error.HttpStatus.ShouldBe(503,
+            $"Expected HTTP status 503, but got: {error.HttpStatus} (the UI channel has no HTTP status; run this on the API channel)");
+        error.RetryAfter.ShouldNotBeNull("Expected a Retry-After header in whole seconds, but there was none");
+        error.RetryAfter.ShouldMatch(@"^[1-9]\d*$", $"Expected a Retry-After header in whole seconds, but got: '{error.RetryAfter}'");
+        error.ContentType.ShouldBe("application/problem+json",
+            $"Expected Content-Type application/problem+json, but got: '{error.ContentType}'");
+        return this;
+    }
+
     public SystemErrorFailureVerification NoOrderPersisted()
     {
         Response.ShouldNotBeNull("Expected the rejected operation to yield an error response (nothing persisted), but no error was returned");

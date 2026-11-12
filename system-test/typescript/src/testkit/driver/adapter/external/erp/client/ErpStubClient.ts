@@ -7,6 +7,9 @@ import type { ExtProductDetailsResponse } from './dtos/ExtProductDetailsResponse
 import type { ExtGetPromotionResponse } from './dtos/ExtGetPromotionResponse.js';
 
 const ERP_API_PATTERN = '/erp/api/.*';
+// Far past the system's 2s outbound read timeout, so every attempt times out; also longer than all
+// retries together take, so a system without a timeout would be caught by a fail-fast assertion.
+const SLOW_RESPONSE_DELAY_MILLISECONDS = 20_000;
 
 export class ErpStubClient extends BaseErpClient {
   private readonly wireMock: JsonWireMockClient;
@@ -47,7 +50,13 @@ export class ErpStubClient extends BaseErpClient {
     return success(undefined);
   }
 
-  /** Removes the outage stub, so the product and promotion stubs answer again. */
+  /** Every ERP API call answers only after a delay past the system's timeout, outranking any product or promotion stubs. */
+  async configureSlow(): Promise<Result<void, ErpErrorResponse>> {
+    await this.wireMock.stubGetMatching(ERP_API_PATTERN, 200, SLOW_RESPONSE_DELAY_MILLISECONDS);
+    return success(undefined);
+  }
+
+  /** Removes the outage stub (unavailable or slow), so the product and promotion stubs answer again. */
   async removeUnavailable(): Promise<Result<void, ErpErrorResponse>> {
     await this.wireMock.removeStubsMatching(ERP_API_PATTERN);
     return success(undefined);

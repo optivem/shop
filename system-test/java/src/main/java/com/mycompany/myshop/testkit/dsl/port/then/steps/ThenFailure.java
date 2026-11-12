@@ -8,5 +8,9 @@ public interface ThenFailure extends ThenStep<ThenFailure> {
     ThenFailure fieldErrorMessage(String expectedField, String expectedMessage);
 
     ThenFailure noOrderPersisted();
+
+    ThenFailure serviceUnavailable();
+
+    ThenFailure failedWithinSeconds(int seconds);
 }
 

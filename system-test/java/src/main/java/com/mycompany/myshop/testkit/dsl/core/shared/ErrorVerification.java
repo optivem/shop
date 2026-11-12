@@ -47,6 +47,26 @@ public class ErrorVerification extends ResponseVerification<SystemError> {
         return this;
     }
 
+    /**
+     * The call failed fast as 503 Service Unavailable, told the client when to retry (a whole number of
+     * seconds in Retry-After) and explained itself as problem+json. Only the API channel sees HTTP.
+     */
+    public ErrorVerification serviceUnavailable() {
+        var error = getResponse();
+        assertThat(error.getHttpStatus())
+                .withFailMessage("Expected HTTP status 503, but got: %s (the UI channel has no HTTP status; run this on the API channel)", error.getHttpStatus())
+                .isEqualTo(503);
+        assertThat(error.getRetryAfter())
+                .withFailMessage("Expected a Retry-After header in whole seconds, but got: '%s'", error.getRetryAfter())
+                .isNotNull()
+                .matches("[1-9]\\d*");
+        assertThat(error.getContentType())
+                .withFailMessage("Expected Content-Type application/problem+json, but got: '%s'", error.getContentType())
+                .isNotNull()
+                .startsWith("application/problem+json");
+        return this;
+    }
+
     public ErrorVerification noOrderPersisted() {
         var error = getResponse();
         assertThat(error)

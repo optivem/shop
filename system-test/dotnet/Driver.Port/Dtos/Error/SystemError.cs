@@ -5,6 +5,19 @@ public class SystemError
     public string Message { get; private set; }
     public IReadOnlyList<FieldError>? Fields { get; private set; }
 
+    /// <summary>The HTTP status, Retry-After header and Content-Type of the failed call; null where the channel has no HTTP response (UI).</summary>
+    public int? HttpStatus { get; private set; }
+    public string? RetryAfter { get; private set; }
+    public string? ContentType { get; private set; }
+
+    public SystemError WithResponseMetadata(int? httpStatus, string? retryAfter, string? contentType)
+    {
+        HttpStatus = httpStatus;
+        RetryAfter = retryAfter;
+        ContentType = contentType;
+        return this;
+    }
+
     private SystemError(string message, IReadOnlyList<FieldError>? fields = null)
     {
         Message = message;

@@ -21,6 +21,9 @@ public class ErpStubClient : BaseErpClient
     private const string ErpProductsEndpoint = "/erp/api/products";
     private const string ErpPromotionEndpoint = "/erp/api/promotion";
     private const string ErpApiPattern = "/erp/api/.*";
+    // Far past the system's 2s outbound read timeout, so every attempt times out; also longer than all
+    // retries together take, so a system without a timeout would be caught by a fail-fast assertion.
+    private const int SlowResponseDelayMilliseconds = 20_000;
 
 
 
@@ -78,7 +81,12 @@ public class ErpStubClient : BaseErpClient
 
             .MapErrorAsync(ExtErpErrorResponse.From);
 
-    /// <summary>Removes the outage stub, so the product and promotion stubs answer again.</summary>
+    /// <summary>Every ERP API call answers only after a delay past the system's timeout, outranking any product or promotion stubs.</summary>
+    public Task<Result<VoidValue, ExtErpErrorResponse>> ConfigureSlowAsync()
+        => _wireMockClient.StubGetMatchingAsync(ErpApiPattern, HttpStatus.Ok, SlowResponseDelayMilliseconds)
+            .MapErrorAsync(ExtErpErrorResponse.From);
+
+    /// <summary>Removes the outage stub (unavailable or slow), so the product and promotion stubs answer again.</summary>
     public Task<Result<VoidValue, ExtErpErrorResponse>> RemoveUnavailableAsync()
         => _wireMockClient.RemoveStubsMatchingAsync(ErpApiPattern)
             .MapErrorAsync(ExtErpErrorResponse.From);

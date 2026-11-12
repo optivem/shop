@@ -14,9 +14,17 @@ public class SystemErrorMapper {
             var fieldErrors = problemDetail.getErrors().stream()
                     .map(e -> new SystemError.FieldError(e.getField(), e.getMessage(), e.getCode()))
                     .toList();
-            return SystemError.builder().message(message).fields(fieldErrors).build();
+            return withResponseMetadata(SystemError.builder().message(message).fields(fieldErrors), problemDetail);
         }
 
-        return SystemError.builder().message(message).build();
+        return withResponseMetadata(SystemError.builder().message(message), problemDetail);
+    }
+
+    private static SystemError withResponseMetadata(SystemError.SystemErrorBuilder builder, ProblemDetailResponse problemDetail) {
+        return builder
+                .httpStatus(problemDetail.getHttpStatus())
+                .retryAfter(problemDetail.getRetryAfter())
+                .contentType(problemDetail.getContentType())
+                .build();
     }
 }

@@ -78,6 +78,12 @@ public class ErpStubDriver extends BaseErpDriver<ErpStubClient> {
     }
 
     @Override
+    public Result<Void, ErpErrorResponse> returnsSlow() {
+        return client.configureSlow()
+                .mapError(ext -> new ErpErrorResponse(ext.getMessage()));
+    }
+
+    @Override
     public Result<Void, ErpErrorResponse> returnsProductNotFound(GetProductRequest request) {
         return client.configureGetProductNotFound(request.getSku())
                 .mapError(ext -> new ErpErrorResponse(ext.getMessage()));

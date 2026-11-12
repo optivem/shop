@@ -22,11 +22,13 @@ export class SystemErrorMapper {
 
   // Always a complete SystemError, even when the body is not a problem detail (e.g. an HTML 502 from a proxy),
   // so an error assertion fails on the value it checks rather than with a TypeError.
-  static fromResponse(this: void, status: number, body: unknown): SystemError {
+  static fromResponse(this: void, status: number, body: unknown, headers?: Headers): SystemError {
     const problemDetail = toProblemDetail(body);
     return {
       ...SystemErrorMapper.from({ ...problemDetail, detail: problemDetail.detail ?? `Request failed (HTTP ${status})` }),
       status,
+      retryAfter: headers?.get('Retry-After') ?? undefined,
+      contentType: headers?.get('Content-Type') ?? undefined,
     };
   }
 }

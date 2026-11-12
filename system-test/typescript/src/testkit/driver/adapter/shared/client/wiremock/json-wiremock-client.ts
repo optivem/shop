@@ -38,13 +38,14 @@ export class JsonWireMockClient {
   /**
    * Stubs every GET whose path matches `urlPathPattern` with a bodyless `statusCode`, at priority 1 so
    * it outranks the default-priority (5) stubs this client registers. Used to take a whole external
-   * system down.
+   * system down, or with `fixedDelayMilliseconds` to make it slow, so the system's outbound timeout is
+   * what ends the call.
    */
-  async stubGetMatching(urlPathPattern: string, statusCode: number): Promise<void> {
+  async stubGetMatching(urlPathPattern: string, statusCode: number, fixedDelayMilliseconds = 0): Promise<void> {
     await this.registerMapping(`GET ${urlPathPattern}`, {
       priority: OUTAGE_PRIORITY,
       request: { method: 'GET', urlPathPattern },
-      response: { status: statusCode },
+      response: fixedDelayMilliseconds > 0 ? { status: statusCode, fixedDelayMilliseconds } : { status: statusCode },
     });
     const id = this.stubIds[this.stubIds.length - 1];
     if (id !== undefined) {

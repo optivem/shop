@@ -25,6 +25,12 @@ public interface ErpDriver extends AutoCloseable {
     /** Makes the ERP unavailable: every ERP API call fails until the driver is closed. */
     Result<Void, ErpErrorResponse> returnsUnavailable();
 
+    /**
+     * Makes the ERP slow: every ERP API call answers only after a delay well past the system's
+     * outbound timeout, until the driver is closed.
+     */
+    Result<Void, ErpErrorResponse> returnsSlow();
+
     /** Ends an outage started by {@link #returnsUnavailable()}: the ERP answers with what is staged again. */
     Result<Void, ErpErrorResponse> returnsAvailable();
 

@@ -104,11 +104,20 @@ public class JsonWireMockClient {
      * external system down, so it outranks any per-resource stub registered in the same scenario.
      */
     public Result<Void, String> stubGetMatching(String pathRegex, int statusCode, int priority) {
+        return stubGetMatchingWithDelay(pathRegex, statusCode, 0, priority);
+    }
+
+    /**
+     * Like {@link #stubGetMatching}, but every matching GET answers only after {@code delayMilliseconds}.
+     * Used to make a whole external system slow, so the system's outbound timeout is what ends the call.
+     */
+    public Result<Void, String> stubGetMatchingWithDelay(String pathRegex, int statusCode, int delayMilliseconds, int priority) {
         return runOnVirtualThread(() -> {
             var stubMapping = wireMock.register(WireMock.get(urlPathMatching(pathRegex))
                 .atPriority(priority)
                 .willReturn(aResponse()
-                    .withStatus(statusCode)));
+                    .withStatus(statusCode)
+                    .withFixedDelay(delayMilliseconds)));
 
             if (stubMapping != null && stubMapping.getUuid() != null) {
                 stubIds.add(stubMapping.getUuid());

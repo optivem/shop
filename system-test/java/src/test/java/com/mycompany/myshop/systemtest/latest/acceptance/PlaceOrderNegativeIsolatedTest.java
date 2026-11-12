@@ -7,8 +7,13 @@ import com.optivem.testing.Isolated;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.TestTemplate;
 
-@Isolated("mutates the shared wall clock to year-end and coupon-expiry times, and takes the shared ERP stub down; parallel runs would clash on the clock and the ERP")
+@Isolated("mutates the shared wall clock to year-end and coupon-expiry times, and takes the shared ERP stub down or makes it slow; parallel runs would clash on the clock and the ERP")
 class PlaceOrderNegativeIsolatedTest extends BaseAcceptanceTest {
+    // A down ERP answers at once, so only the retry backoff (well under a second) delays the 503.
+    private static final int ERP_DOWN_FAIL_FAST_SECONDS = 5;
+    // A slow ERP costs up to 3 attempts x 2s timeout plus backoff; the stubbed ERP would take 20s.
+    private static final int ERP_SLOW_FAIL_FAST_SECONDS = 12;
+
     @Tag("UC-001.13")
     @TestTemplate
     @Channel({ChannelType.UI, ChannelType.API})
@@ -49,5 +54,37 @@ class PlaceOrderNegativeIsolatedTest extends BaseAcceptanceTest {
                 .when().placeOrder()
                 .then().shouldFail()
                     .errorMessage("Product information can't be retrieved right now");
+    }
+
+    // Resilience: the system fails fast with 503 + Retry-After instead of hanging or guessing a price.
+    // API only, because the assertions are about the HTTP response.
+    @Tag("UC-001.14")
+    @TestTemplate
+    @Channel({ChannelType.API})
+    void shouldFailFastWithServiceUnavailableWhenErpIsDown() {
+        scenario
+                .given().erp()
+                    .unavailable()
+                .when().placeOrder()
+                .then().shouldFail()
+                    .errorMessage("Product information can't be retrieved right now")
+                    .serviceUnavailable()
+                    .failedWithinSeconds(ERP_DOWN_FAIL_FAST_SECONDS);
+    }
+
+    // The slow ERP answers only after 20s, far past the 2s outbound timeout: the call must give up on its
+    // own (timeout times retries) well before the ERP would have answered.
+    @Tag("UC-001.14")
+    @TestTemplate
+    @Channel({ChannelType.API})
+    void shouldFailFastWithServiceUnavailableWhenErpIsSlow() {
+        scenario
+                .given().erp()
+                    .slow()
+                .when().placeOrder()
+                .then().shouldFail()
+                    .errorMessage("Product information can't be retrieved right now")
+                    .serviceUnavailable()
+                    .failedWithinSeconds(ERP_SLOW_FAIL_FAST_SECONDS);
     }
 }

@@ -23,6 +23,9 @@ namespace Dsl.Core.Scenario
 
         public MyShopUseCaseResult<TSuccessResponse, TSuccessVerification> Result { get; }
 
+        /// <summary>How long the When step took to run, for asserting that a failure was fast.</summary>
+        public TimeSpan Elapsed { get; internal set; }
+
         public string? OrderNumber { get; }
 
         public string? CouponCode { get; }

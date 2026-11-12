@@ -14,6 +14,11 @@ public class ErpStubClient extends BaseErpClient {
     private static final String ERP_PROMOTION_ENDPOINT = "/erp/api/promotion";
     private static final String ERP_API_PATTERN = "/erp/api/.*";
     private static final int OUTAGE_PRIORITY = 1;
+    /**
+     * Far past the system's 2s outbound read timeout, so every attempt times out; also longer than all
+     * retries together take, so a system without a timeout would be caught by a fail-fast assertion.
+     */
+    private static final int SLOW_RESPONSE_DELAY_MILLISECONDS = 20_000;
 
     private final JsonWireMockClient wireMockClient;
 
@@ -50,7 +55,13 @@ public class ErpStubClient extends BaseErpClient {
                 .mapError(ExtErpErrorResponse::new);
     }
 
-    /** Removes the outage stub, so the product and promotion stubs answer again. */
+    /** Every ERP API call answers only after a delay past the system's timeout, outranking any product or promotion stubs. */
+    public Result<Void, ExtErpErrorResponse> configureSlow() {
+        return wireMockClient.stubGetMatchingWithDelay(ERP_API_PATTERN, HttpStatus.OK, SLOW_RESPONSE_DELAY_MILLISECONDS, OUTAGE_PRIORITY)
+                .mapError(ExtErpErrorResponse::new);
+    }
+
+    /** Removes the outage stub (unavailable or slow), so the product and promotion stubs answer again. */
     public Result<Void, ExtErpErrorResponse> removeUnavailable() {
         return wireMockClient.removeStubsMatching(ERP_API_PATTERN)
                 .mapError(ExtErpErrorResponse::new);

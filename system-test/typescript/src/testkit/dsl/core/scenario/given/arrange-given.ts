@@ -51,6 +51,13 @@ export async function arrangeGiven(
     }
   }
 
+  if (ctx.erpSlow) {
+    const slowdown = await app.erpDriver.returnsSlow();
+    if (!slowdown.success) {
+      throw new Error(`Failed to make the ERP slow: ${slowdown.error.message}`);
+    }
+  }
+
   if (ctx.erpUnavailable) {
     const outage = await app.erpDriver.returnsUnavailable();
     if (!outage.success) {
