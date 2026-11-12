@@ -210,18 +210,18 @@ export default function OrderHistoryPage() {
                       <td className="orders-cell-orderNumber">
                         <span className="order-number">{order.orderNumber}</span>
                       </td>
-                      {showCustomer && <td>{order.customer ?? "-"}</td>}
+                      {showCustomer && <td className="orders-cell-customer">{order.customer ?? "-"}</td>}
                       <td className="orders-cell-orderTimestamp">
                         {new Date(order.orderTimestamp).toLocaleString("en-US", {
                           timeZone: "UTC",
                         })}
                       </td>
                       <td className="orders-cell-sku">{order.sku}</td>
-                      <td>{order.quantity}</td>
+                      <td className="orders-cell-quantity">{order.quantity}</td>
                       <td className="orders-cell-totalPrice">
                         <span className="order-total">${order.totalPrice}</span>
                       </td>
-                      <td>
+                      <td className="orders-cell-status">
                         <span className={`order-status status-${order.status}`}>{order.status}</span>
                       </td>
                       <td className="orders-cell-actions">
