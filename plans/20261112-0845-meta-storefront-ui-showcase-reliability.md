@@ -7,6 +7,15 @@
 **Why:** Five active plans from `20261107-1705` onwards are in flight at once: the storefront orchestrator (SMETA), the Market UI redesign (MUI), the interview showcase (SHOW), the reliability follow-ups (REL) and the previous meta-plan (META2). They share no plan items, but three of them need the **one local docker host** for system tests, and two of them have already broken each other's runs that way (REL #36, #43, #45).
 **End result:** Every unit runs in a safe order. Docker-bound work runs in one serial lane, and everything else runs in parallel next to it. MUI's own regression (#43) is fixed before its full `test-all` gate. META2 is retired, and this file takes over its last items (UC1 Track D, Track C's C2 sign-off).
 
+## ▶ Next executable step (resume here)
+
+**Phase B, the testing pass.** Phase A coding is all on `main`, and so are REL #50, #51, #53, #54 (`d13b4a79`, `9ac5ed87`, `3c6545c0`, `c88c7ddc`).
+- **Java pass: done (2026-11-12).** Monolith Java is green. One flaky UC-007.4 result fails the spec gate: 52/53 verified, lenient. On multitier Java, 3 React UI tests hang on browser navigation (REL #61). Fixes: `365de274`, `2963db9b`, `132e7557`, `6b07a16b` (a React `useOrders` product bug), and `a071aac8` (the stub breaker thresholds, under a mislabelled commit message).
+- **.NET pass: in progress.** The first attempt was killed when the system ran low on memory. It fixed `109d80f4`, `228991cc` and `38324a28` (Java got the last one too). The local Postgres volumes were wiped on 2026-11-12, and a second attempt was started. That attempt also moves the parallel UI tests that read a coupon back from the list into the isolated classes, in all three languages. **If it never reported:** check `git log` for its commits, then rerun the .NET pass (monolith full acceptance, smoke, contract and e2e, then multitier, one stack at a time) and `spec status --config spec-dotnet.yaml`.
+- **Then:** the TS pass (UC-008 on the TS monolith for #43, REL #60 TS breaker, k6 smoke per REL #63) → `./test-all.sh` → flip the use cases that pass to `implemented` → UC1 D4 → the user's MUI visual check → delete MUI, SHOW and this file.
+- **Memory is tight.** Use one stack at a time, and keep free RAM at 5 GB or more before starting.
+- The checklist of what to verify for each change is in **Phase B checklist** below.
+
 ## Target state
 
 When every unit here has run:
@@ -187,3 +196,52 @@ Edges come from the plans' own wording: SMETA "Later steps depend on earlier one
 - Whether any plan's content is correct (use each plan's refine cycle).
 - REL's deferred ideas (#5, #15, #17, #20, #21, #26), MUI's deferred Step 2 and follow-up ideas, `backlog/`, `move-to-*`, and plans sorted before `20261107-1705` (except the referenced-only ones above).
 - Actually running anything (use `/execute-plan` on each unit).
+
+## Phase B checklist
+
+All commits below are on `main`, coded and compiled but never run against a stack.
+
+### SHOW (interview showcase)
+- `3fb4cb7e` Resilience: `PlaceOrderNegativeIsolatedTest` `shouldFailFastWithServiceUnavailableWhenErpIsDown` / `...WhenErpIsSlow` (UC-001.14, API only), ×3 languages. These need the backend breaker/timeout changes. Breaker open time in the stub compose files: Java/TS 100 ms, .NET 500 ms. Bounds: ≤5 s down, ≤12 s slow (the stub delay is 20 s).
+- `4eb62d6a` k6: `perf/k6/browse-and-place-order.js`. Run a short smoke against one running monolith stack (e.g. the `grafana/k6:1.0.0` image, 1 VU, 10 s).
+- `e6f8cf65` OpenAPI: `/v3/api-docs` for signed-in callers on the .NET and TS backends. NestJS `authorization.component.spec.ts` needs docker and was never run.
+
+### MUI (Market UI)
+- `70e174d7` #43: the TS monolith must render exactly one `[aria-label='Cart Item Count']`. Run UC-008 on the TS monolith, especially `shouldRaiseTheQuantityOfAProductAlreadyInTheCart`.
+- `ae34c9dc` #44: Bootstrap is self-hosted in the Java (`/css/lib/bootstrap/...`) and TS (`/lib/bootstrap/...`) monoliths. Pages must still style and work, including for signed-out visitors.
+
+### SMETA fresh customer + UC-009.10 (`aed41283`, `5137a909`, `30df8177`)
+- Keycloak 26.0 user creation (firstName, lastName, email, requiredActions empty), the password grant on `shop-system-test`, the UI login as the new user, and users deleted on close.
+- Role lookup via `role-mappings/realm/available` on localhost.
+- Prefill of first and last name (Ana Novak) on the first-order form in all four UIs.
+- Unticking "Save as Default Address" works in every UI. Unticked saves nothing, and the profile then shows empty address fields.
+- Tests: `CheckOutNegativeIsolatedTest` UC-009.10 ×3.
+
+### UC-010 (`b19b17ff`)
+- Profile page readiness and field reads in all four UIs. React and Next.js load the profile asynchronously and render the email `readonly disabled`. Thymeleaf's tax note contains newlines.
+- The profile save notification comes as `field: message` with API field names (e.g. `postalCode`). The empty-country case selects the `""` option.
+- UC-010.6: after signing in from `/account`, every UI returns to `/account` (React especially).
+- UC-010.5 Quick order: a GB order needs the tax stub's built-in GB rate, and the UI country field keeps its prefill.
+
+### UC-011 (`b6b1f262`)
+- Every admin order-history browse waits for the customer filter to load. Watch for slowdowns and timeouts.
+- Races between the reload after choosing a customer and the reload after a reset, in the monoliths (no stale-response guard: REL #50).
+- The admin customer-only filter on customer1 (many shared orders): the new order must land on page 1.
+
+### Step 7b (`e300e52c`)
+- `placedAt` must drive `orderTimestamp` on all six backends. The Next.js monolith's `now` source was not traced.
+- Order-history UI parsing in all four UIs: "Order Date" as `M/d/yyyy, h:mm:ss AM` (narrow/NBSP before AM/PM is handled) and "Total Price" as `$99.00`.
+- The lower-case partial order-number filter through the UI search.
+- Cancel/Deliver offered-or-not detection, read right after the details page loads.
+- Isolation: the `*PositiveIsolated` classes rely on nothing else publishing coupons or changing the clock at the same time.
+- TS coupon setup change (`arrangeGiven declaredOnly`): UC-005.5, UC-005.6 and the plain browse must still pass.
+- Every backend reports `page` and `size` in the order-history response (UC-002.3).
+
+### REL #49 (`5ee705f9`)
+- Checkout acceptance tests using `confirmsOrdersFor` / `orderFor(...)` on UI and API in Java and .NET (`CheckOutPositiveIsolatedTest`, `CheckOutNegativeIsolatedTest`). Results should be unchanged.
+
+### REL #52 (`071d2256`)
+- The new UC-012.3 UI test. UC-012.4 on UI (a customer finds the button missing, reported as permission denied). UC-012.1–.3 on UI as admin (the button still renders and works).
+
+### Track D (`f13a365c`)
+- After each language's acceptance run, `gh optivem spec status --config spec-<language>.yaml` must find the JUnit files at the configured globs (.NET: `system-test/dotnet/SystemTests/TestResults/junit/*.xml`). Report Verified/Failing counts per language for the 53 gated criteria.

@@ -190,4 +190,12 @@ Found 2026-11-12. k6 isn't installed locally, and running k6 in docker needs the
 ### 64. Razor and Thymeleaf admin customer filters not checked for the `useOrders` bug
 
 Found 2026-11-12. `6b07a16b` fixed React `useOrders` dropping the customer choices when a newer filter superseded the unfiltered request; the Razor and Thymeleaf filters weren't checked for the same bug.
-- **Recommended:** check them (both already collect customers in a separate `loadCustomers`, so they're likely fine) and close this if so. **Why:** keeps the four UIs consistent.
+- **Recommended:** check them (both already collect customers in a separate `loadCustomers`, so they're likely fine) and close this if so. **Why:** keeps the four UIs consistent. Update (.NET pass, 2026-11-12): Razor checked, it is unaffected, but capped by `MAX_CUSTOMER_PAGES` (the same limit as #58). Thymeleaf still to check.
+
+### 65. optivem-testing `ChannelDataAttribute` runs UI-only tests in the API suites
+Found 2026-11-12 (.NET pass). When the `CHANNEL` filter leaves no channels (a UI-only test in an API suite), the attribute falls back to all channels. So every UI-only test also runs in the API suites, in Dynamic channel mode. That doubles the browser load and caused the isolated-api "order had no shipping address" failures.
+- **Recommended:** fix it in the optivem-testing library: an empty filtered set should run zero cases. Then release it and bump shop. **Why:** a filter that widens when it matches nothing hides failures and doubles UI cost.
+
+### 66. Stub Keycloak memory grows during a run
+Found 2026-11-12 (.NET pass). The stub Keycloak grew from 0.8 GB to 2.25 GB in one monolith acceptance run, most likely from creating and deleting a user for each test (fresh customer). Two runs were killed for low memory on a 32 GB machine.
+- **Recommended:** cap the Keycloak JVM heap in the stub composes (e.g. `JAVA_OPTS_KC_HEAP`), and check whether user deletion leaves sessions or events behind. **Why:** local runs must fit alongside an IDE and a browser.
