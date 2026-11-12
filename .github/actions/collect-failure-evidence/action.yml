@@ -90,7 +90,7 @@ runs:
         ls -la "$EVIDENCE_DIR"
 
     - name: Upload Evidence
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: ${{ inputs.artifact-name }}-attempt-${{ github.run_attempt }}
         path: ${{ runner.temp }}/failure-evidence
