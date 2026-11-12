@@ -42,6 +42,22 @@ UC-009 tests done in `06bec4eb` (27 UI tests per language: 13 positive and 14 ne
 
 **Resolved (user, 2026-11-12): a fresh customer per test.** The test kit creates a fresh Keycloak CUSTOMER user per test through the Keycloak admin API (stub/local realm only, Java, .NET and TypeScript), as its own unit before UC-010. This unblocks `@UC-009.10`, UC-010, Step 7b's UC-002 isolated customer and UC-005's isolated coupon set. The same unit also takes REL #39 (TS lint in `keycloak-token-provider.ts`) and #41/#46 (exempt UI-driver request DTOs from the A1 rule in .NET and TS). This run is driven by `plans/20261112-0845-meta-storefront-ui-showcase-reliability.md`: all coding first, then testing at the end.
 
+**Fresh-customer unit coded 2026-11-12 (`aed41283`, `5137a909`; compile-only, not yet run):**
+- `given().newCustomer()` (plus `withFirstName`/`withLastName`/`withEmail`; default name Ana Novak) creates a `new-customer-<uuid>` CUSTOMER user via `KeycloakIdentityProviderDriver`. That user becomes the scenario's default customer, and the users are deleted on close.
+- REL #39 and #41/#46 are done (A1 is scoped to API wire DTOs in all three languages).
+- Three `@UC-009.10` UI tests were added in `CheckOutNegativeIsolatedTest` ×3. UC-009 is **not flipped**.
+
+**Cloud decision (user, 2026-11-12): proper and complete.** The cloud acceptance stage creates users too. It does this through a service account scoped to the test realm (manage-users on that realm only, never `shop-prod`), not through the master admin. This is its own unit before UC-010.
+
+**The test phase must check:**
+- user creation on Keycloak 26.0;
+- password grant and UI login as the new user;
+- first/last-name prefill in all four UIs;
+- unticking Save as Default in every UI;
+- users deleted on close.
+
+**Parity gap:** TS needs `hasNoSavedAddress` on its general `ThenProfile` (for UC-010.7).
+
 **Next: Step 7 continues** (BUILD Step 8): the fresh-customer unit plus `@UC-009.10` and the UC-009 flip, then UC-010 and UC-011 — one serial subagent each (shared test kit), latest tests only, UI + API channels in Java, .NET and TypeScript. Each flips its use case to `status: implemented` when its tests pass in all three languages. Gate per use case: compile (`./compile-all.sh` or per-project) plus `--sample` system tests per affected language, starting stacks with `gh optivem system start --restart`. Read BUILD Step 8's caveats (Next.js 404 body is browser-only; monolith address errors are plain messages; monolith cart persists only within a session).
 
 Also fold into Step 7: check each UC-006..011 scenario against the React UI line by line, and check whether the `src/test` interaction tests cover the new pages.
