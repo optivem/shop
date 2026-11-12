@@ -1,0 +1,105 @@
+name: release-sbom
+
+# Attaches a CycloneDX SBOM of every released image to its GitHub release. A flavour release
+# (<architecture>-<language>-v<x.y.z>, created by _prod-stage.yml) tags its GHCR images with that
+# same release tag; this workflow generates an SBOM for each of them with Syft (anchore/sbom-action)
+# and uploads it as a release asset. Kept out of the gated _prod-stage.yml release job on purpose,
+# so it can never block or break a release. Meta releases (meta-v...) carry no images and are skipped.
+#
+# Trigger note: a release created with the workflow-scoped GITHUB_TOKEN does not fire `release`
+# events for other workflows, and _prod-stage.yml's create-github-release step currently uses that
+# default token. Until it passes a PAT/app token, run this by hand (workflow_dispatch) with the tag.
+#
+# The third-party SBOM action is pinned to a full commit SHA, as in supply-chain.yml.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag, e.g. monolith-java-v1.2.3 or multitier-dotnet-v1.2.3'
+        required: true
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.release.tag_name || inputs.tag }}
+  cancel-in-progress: false
+
+env:
+  TAG: ${{ github.event.release.tag_name || inputs.tag }}
+
+jobs:
+  resolve:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: {}
+    outputs:
+      images: ${{ steps.images.outputs.images }}
+    steps:
+      - name: Resolve Released Images
+        id: images
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "$TAG" =~ ^monolith-(java|dotnet|typescript)-v[0-9] ]]; then
+            images="[\"monolith-system-${BASH_REMATCH[1]}\"]"
+          elif [[ "$TAG" =~ ^multitier-(java|dotnet|typescript)-v[0-9] ]]; then
+            images="[\"multitier-backend-${BASH_REMATCH[1]}\",\"multitier-frontend-react\"]"
+          else
+            echo "::notice::$TAG is not a flavour release (<architecture>-<language>-v<x.y.z>); it carries no images, nothing to do."
+            images='[]'
+          fi
+          echo "Images for $TAG: $images"
+          echo "images=$images" >> "$GITHUB_OUTPUT"
+
+  sbom:
+    needs: resolve
+    if: needs.resolve.outputs.images != '[]'
+    name: sbom (${{ matrix.image }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write   # upload release assets
+      packages: read    # pull the released image from GHCR
+    strategy:
+      fail-fast: false
+      matrix:
+        image: ${{ fromJSON(needs.resolve.outputs.images) }}
+    env:
+      IMAGE_REF: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/${{ matrix.image }}
+      SBOM_FILE: ${{ matrix.image }}.cdx.json
+    steps:
+      - name: Check Release Exists
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if ! gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json tagName > /dev/null; then
+            echo "::error::No GitHub release $TAG in $GITHUB_REPOSITORY; publish it first (or check the tag)."
+            exit 1
+          fi
+
+      - name: Generate SBOM (CycloneDX)
+        uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
+        with:
+          image: ${{ env.IMAGE_REF }}:${{ env.TAG }}
+          registry-username: ${{ github.actor }}
+          registry-password: ${{ secrets.GITHUB_TOKEN }}
+          format: cyclonedx-json
+          output-file: ${{ env.SBOM_FILE }}
+          # Uploaded explicitly below, so a manual (workflow_dispatch) run attaches it too.
+          upload-release-assets: false
+          upload-artifact: false
+
+      - name: Upload SBOM to the Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          gh release upload "$TAG" "$SBOM_FILE" --repo "$GITHUB_REPOSITORY" --clobber
+          echo "Attached $SBOM_FILE ($IMAGE_REF:$TAG) to release $TAG" >> "$GITHUB_STEP_SUMMARY"
