@@ -1,7 +1,5 @@
 # 2026-11-11 18:31:52 UTC — Interview showcase: close the skill gaps in shop
 
-> 🤖 **Picked up by agent** — `Valentina_Desk` at `2026-11-11T19:45:06Z`
-
 ## TL;DR
 
 **Why:** Shop is going to be the portfolio piece for interviews, framed for a full-stack/tech-lead role. It already covers pipelines, ATDD, contract tests, three languages and auth, but it's missing several things interviewers routinely probe for, especially observability, resilience, security scanning and performance.

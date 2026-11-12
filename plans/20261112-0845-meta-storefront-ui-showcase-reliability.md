@@ -1,5 +1,7 @@
 # 2026-11-12 08:45 UTC — Plan coordination meta-plan: storefront, Market UI, interview showcase, reliability
 
+> 🤖 **Picked up by agent** — `Valentina_Desk` at `2026-11-12T08:55:00Z`
+
 ## TL;DR
 
 **Why:** Five active plans from `20261107-1705` onwards are in flight at once: the storefront orchestrator (SMETA), the Market UI redesign (MUI), the interview showcase (SHOW), the reliability follow-ups (REL) and the previous meta-plan (META2). They share no plan items, but three of them need the **one local docker host** for system tests, and two of them have already broken each other's runs that way (REL #36, #43, #45).
@@ -29,7 +31,7 @@ This is a self-driving parent meta-plan: `/execute-plan plans/20261112-0845-meta
 
 | Unit | State |
 |---|---|
-| U0 plan-only first pass | decisions made 2026-11-12; plan edits not yet applied |
+| U0 plan-only first pass | **done** 2026-11-12: META2 deleted, SHOW marker removed, decisions written into SMETA/REL, Track C closed in UC1 |
 | U1 SHOW | stale claim (decision #5); next: Step 3 `--sample`, docker lane slot 1 |
 | U2 MUI (+ REL #43, #44) | waiting for docker lane slot 2 |
 | U3 SMETA (+ REL #39, #41/#46) | waiting for docker lane slot 3; starts with the fresh-customer unit |
@@ -148,20 +150,25 @@ Edges come from the plans' own wording: SMETA "Later steps depend on earlier one
 
 - **U0** (decisions made 2026-11-12, see Resolved decisions): delete META2; remove SHOW's stale pickup marker; write decision #1 into SMETA's Open question block; write decision #2 into REL's "Resolved decisions" (pull first); tick C1/C1b/C1c/C2 in UC1. User-side, whenever convenient: push gh-optivem `628fa21d`.
 
-### Wave 1 — after U0
+### Run decisions (user, 2026-11-12, at execute start)
 
-**Docker lane (serial, one machine):**
-1. **U1 SHOW Step 3:** `--sample` per language for the breaker changes, then the slow/down ERP acceptance tests ×3 (orchestrator subagent; decision #5).
-2. **U2 MUI:** REL #43 fix → re-run UC-008 on the TS monolith → (#44) → `./test-all.sh` → hand the user the desktop/phone visual check.
-3. **U3 SMETA:** `/execute-plan plans/20261107-1705-meta-storefront-specs-build.md`. Fresh-customer unit (+ REL #39, #41/#46) → `@UC-009.10` + UC-009 flip → UC-010 → UC-011 → Step 7b → Step 8 close-out.
+- Blanket yes for local system tests and per-unit commits during this run. Full run, stopping only at gates. X1: fix `actions` #32–#34 directly; gh-optivem items become one gh-optivem plan.
+- **All coding first, all testing at the end** (docker is slow). Coding units are verified by compile only (`./compile-all.sh`, or per-project `./gradlew build` / `dotnet build` / `npx tsc --noEmit`, which includes unit tests). All work happens on `main`, and **no branches are created** (user, 2026-11-12). **Each Phase A unit is committed and pushed to `main` as soon as it compiles** (user chose option 1, 2026-11-12). Phase B then tests everything and fixes forward. `main`/CI may be red in between, which the user accepted for speed. Plan-only edits and the `actions` repo push to `main` immediately.
 
-**Parallel next to the lane (no docker, disjoint files):**
-- **X1 `actions`:** one session for REL #32, #33, #34 (`trigger-and-wait-for-workflow/{wait,trigger}.sh`, compose-pull retry).
-- **X1 gh-optivem:** one session for REL #36/#45 (stack lock), #37 (commit autostash), #38/#42 (`--test`/`--suite` filters), #40 (local Playwright binary). Write it as a gh-optivem plan first.
-- **U1 SHOW Steps 4b, 6, 7, 8:** as orchestrator subagents between its docker steps (workflows, backend build config, plan files, `docs/tour.md`). Step 6 touches the .NET/TS backend build files, which no other unit edits.
+### Wave 1 / Phase A — coding (no docker), serial subagents on `main`
+
+1. **X1 `actions`:** REL #32, #33, #34 (pushed directly; script-only).
+2. **X1 gh-optivem plan:** REL #36/#45, #37, #38/#42, #40 → one plan in `gh-optivem/plans/`.
+3. **U1 SHOW:** Step 3 slow/down ERP acceptance tests ×3 (written, compiled); Step 5 k6 script + workflow; Step 6 OpenAPI .NET/TS + Stryker; Step 4b SBOM release workflow; Step 7 spin-off plans; Step 8 `docs/tour.md` rows.
+4. **U2 MUI:** REL #43 (one cart badge in the Next.js monolith) + #44 (self-host Bootstrap in the monoliths).
+5. **U3 SMETA coding:** fresh-customer test-kit capability (+ REL #39, #41/#46) → `@UC-009.10` → UC-010 → UC-011 → Step 7b tests. Status flips stay unflipped until Phase B passes.
 - **U5:** REL #11 on the second machine (user).
 
-**Docker lane, after U1 Step 3:** SHOW Step 5 (k6) can take any free lane slot. Recommended: after U2, before U3, because it is short.
+### Wave 1 / Phase B — testing at the end (one docker lane)
+
+1. Per language: `system start --restart` → `--sample` → the suites for the new tests (SHOW Step 3 resilience; UC-008 on the TS monolith for #43; UC-009.10, UC-010, UC-011, the Step 7b gaps), plus a k6 smoke run against one stack.
+2. `./test-all.sh` (latest + legacy, all three languages). This is MUI's Step 9 gate and the final gate for everything in Phase A.
+3. Fix failures (up to 2 retries per failure), then flip the use cases whose tests pass to `implemented`, fast-forward `main`, push, and hand the user MUI's desktop/phone visual check.
 
 ### Wave 2 — after U3's close-out
 

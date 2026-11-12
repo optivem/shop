@@ -54,6 +54,8 @@ Decided by the user on 2026-11-10: #1–#3 one at a time, then "I automatically 
 
 **Drop:** #8c (covered by `test-all.sh` legacy runs), #10 (`_stubIds` thread safety; theoretical).
 
+**Decided 2026-11-12 (user): #32–#46 take their written recommendations.** Routing (per `plans/20261112-0845-meta-storefront-ui-showcase-reliability.md`): #43 and #44 go with the Market UI plan; #39 and #41/#46 go with SMETA's fresh-customer unit (#41/#46: exempt UI-driver request DTOs from A1, scope it to API wire DTOs); #32, #33 and #34 are fixed in `actions`; #36/#45, #37, #38/#42 and #40 become one gh-optivem plan; #35: leave the bootstrap admin as is. Each idea is deleted here when its work lands.
+
 ## Ideas to decide
 
 Each idea has a recommendation. Everything up to #29 is decided (see "Resolved decisions"); #30 and #31 are done; #32 and #33 (2026-11-11) are new ideas to decide.
