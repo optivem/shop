@@ -5,6 +5,7 @@ import type { UseCaseContext } from '../../shared/use-case-context.js';
 import type { AppContext } from '../app-context.js';
 import type { ScenarioContext } from '../scenario-context.js';
 import { Converter } from '../../../../common/converter.js';
+import { arrangeGiven } from '../given/arrange-given.js';
 
 export class ThenPublishCouponResultStage implements PromiseLike<void> {
   private _expectSuccess = true;
@@ -52,20 +53,6 @@ export class ThenPublishCouponResultStage implements PromiseLike<void> {
     return this._executionPromise;
   }
 
-  private async _arrangeCoupons(): Promise<void> {
-    // Set up given coupons first (for duplicate tests)
-    for (const cc of this.ctx.couponConfigs) {
-      const resolvedCode = this.useCaseContext.getParamValue(cc.code);
-      await this.app.myShop().publishCoupon({
-        code: resolvedCode,
-        discountRate: String(cc.discountRate),
-        validFrom: cc.validFrom,
-        validTo: cc.validTo,
-        usageLimit: cc.usageLimit === undefined ? undefined : String(cc.usageLimit),
-      });
-    }
-  }
-
   private async _runCouponAssertions(): Promise<void> {
     for (const couponEntry of this._couponAssertions) {
       const resolvedCouponCode = this.useCaseContext.getParamValue(couponEntry.code);
@@ -81,9 +68,8 @@ export class ThenPublishCouponResultStage implements PromiseLike<void> {
   }
 
   private async _doExecute(): Promise<void> {
-    this.ctx.reserveDefaultCustomerIfUsed();
-    await this._arrangeCoupons();
-    this.app.actAs(this.ctx.loggedInIdentity());
+    // Given coupons (for the duplicate tests) and the rest of the declared givens are published the way every other then stage does.
+    await arrangeGiven(this.app, this.ctx, this.useCaseContext, { declaredOnly: true });
 
     const resolvedCode = this.useCaseContext.getParamValue(this.code);
     const result = await this.app.myShop('dynamic').publishCoupon({
