@@ -28,16 +28,30 @@ public class ThenSuccessCheckout<TSuccessResponse, TSuccessVerification> : IThen
     internal static async Task<string> OrderNumberForAsync(ThenStage<TSuccessResponse, TSuccessVerification> thenClause, string skuAlias)
     {
         var verification = await CheckoutVerificationAsync(thenClause);
-        return verification.OrderNumberFor(await PlacedSkusAsync(thenClause, verification), skuAlias);
+        string? orderNumber = null;
+        verification.ForOrderPlacedFor(await PlacedSkusAsync(thenClause, verification), skuAlias, number => orderNumber = number);
+        return orderNumber!;
     }
 
-    private static Task<List<KeyValuePair<string, string?>>> PlacedSkusAsync(
+    /// <summary>The SKU of each confirmed order, in the order shown, as the order itself shows it; each order is looked up once.</summary>
+    private static async Task<List<KeyValuePair<string, string?>>> PlacedSkusAsync(
         ThenStage<TSuccessResponse, TSuccessVerification> thenClause, CheckOutVerification verification)
-        => verification.PlacedSkusAsync(async orderNumber =>
+    {
+        var result = await thenClause.GetExecutionResult();
+        return await result.Context.PlacedSkusAsync(async () =>
         {
+            var orderNumbers = new List<string>();
+            verification.ForEachConfirmedOrder(orderNumbers.Add);
             var shop = await thenClause.App.MyShop(thenClause.Channel!);
-            return (await shop.ViewOrder().OrderNumber(orderNumber).Execute()).ShouldSucceed().OrderedSku();
+            var placed = new List<KeyValuePair<string, string?>>();
+            foreach (var orderNumber in orderNumbers)
+            {
+                var order = (await shop.ViewOrder().OrderNumber(orderNumber).Execute()).SuccessResponse();
+                placed.Add(new KeyValuePair<string, string?>(orderNumber, order.Sku));
+            }
+            return placed;
         });
+    }
 
     private static async Task<CheckOutVerification> CheckoutVerificationAsync(ThenStage<TSuccessResponse, TSuccessVerification> thenClause)
     {

@@ -26,6 +26,15 @@ public class UseCaseResult<R, V> {
         return successVerificationFactory.apply(result.getValue(), context);
     }
 
+    /**
+     * Asserts the operation succeeded and returns its response as is, for lookups the scenario layer needs (such as
+     * which product an order is for); assertions go through {@link #shouldSucceed()}.
+     */
+    public R successResponse() {
+        assertThatResult(result).isSuccess();
+        return result.getValue();
+    }
+
     public ErrorVerification shouldFail() {
         assertThatResult(result).isFailure();
         return new ErrorVerification(result.getError(), context);

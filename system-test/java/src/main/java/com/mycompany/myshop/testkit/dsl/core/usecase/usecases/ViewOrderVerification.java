@@ -265,11 +265,6 @@ public class ViewOrderVerification extends ResponseVerification<ViewOrderRespons
         return this;
     }
 
-    /** The SKU the order is for, as the system returned it. */
-    public String orderedSku() {
-        return getResponse().getSku();
-    }
-
     public ViewOrderVerification noShippingAddress() {
         var actual = getResponse().getShippingAddress();
         assertThat(actual)

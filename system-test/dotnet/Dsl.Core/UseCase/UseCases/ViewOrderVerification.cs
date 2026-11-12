@@ -286,9 +286,6 @@ public class ViewOrderVerification : ResponseVerification<ViewOrderResponse>
         return this;
     }
 
-    /// <summary>The SKU the order is for, as the system returned it.</summary>
-    public string? OrderedSku() => Response.Sku;
-
     public ViewOrderVerification NoShippingAddress()
     {
         Response.ShippingAddress.ShouldBeNull("Expected the order to have no shipping address, but it had one");

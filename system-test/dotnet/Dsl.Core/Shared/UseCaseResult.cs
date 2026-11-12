@@ -27,6 +27,16 @@ public class UseCaseResult<TSuccessResponse, TFailureResponse, TSuccessVerificat
         return _successVerificationFactory(_result.Value, _context);
     }
 
+    /// <summary>
+    /// Asserts the operation succeeded and returns its response as is, for lookups the scenario layer needs (such as
+    /// which product an order is for); assertions go through <see cref="ShouldSucceed"/>.
+    /// </summary>
+    public TSuccessResponse SuccessResponse()
+    {
+        _result.ShouldBeSuccess();
+        return _result.Value;
+    }
+
     public TFailureVerification ShouldFail()
     {
         _result.ShouldBeFailure();

@@ -142,11 +142,6 @@ Found 2026-11-11 (UC-009), extending #36. Concurrent clean builds in one checkou
 Found 2026-11-12 (SHOW Step 4b). `_prod-stage.yml` creates releases through `optivem/actions/create-github-release` with the default `GITHUB_TOKEN`, and GitHub does not trigger workflows from events that token causes. So the new `release-sbom.yml` (`on: release: published`) never runs on its own; it only runs by `workflow_dispatch` with a tag.
 - **Recommended:** call `release-sbom.yml` from the prod stage as a reusable workflow (`workflow_call`) after the release step, instead of switching to a PAT/app token. **Why:** no new secret to manage, and the SBOM upload stays tied to the release that produced it.
 
-### 49. Architecture rule A2 fails in Java and .NET on verification lookup helpers
-
-Found 2026-11-12 (SMETA fresh-customer unit). `VerificationMethodsAreFluentOrVoid` flags `CheckOutVerification.orderNumberFor`, `orderNumbers`, `placedSkus` and `ViewOrderVerification.orderedSku` in Java and .NET; TS's A2 passes.
-- **Recommended:** move these lookup helpers out of the Verification classes (e.g. onto the response/result object), so A2 can be enforced as written. **Why:** it keeps the rule meaningful instead of growing an exemption list, and matches TS, which already passes.
-
 ### 50. Monolith order-history `loadOrders` has no stale-response guard
 
 Found 2026-11-12 (SMETA UC-011 coding). In the Thymeleaf and Razor monoliths, overlapping reloads (choosing a customer, then resetting the filters) can let an older response overwrite a newer one, so the list shows the wrong orders. The UI driver avoids double reloads, so tests don't hit it today.

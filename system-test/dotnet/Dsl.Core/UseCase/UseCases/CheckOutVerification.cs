@@ -10,27 +10,15 @@ namespace Dsl.Core.UseCase.UseCases;
 /// </summary>
 public class CheckOutVerification : ResponseVerification<CheckOutResponse>
 {
-    /// <summary>The SKU of each confirmed order, by order number, once looked up.</summary>
-    private List<KeyValuePair<string, string?>>? _placedSkus;
-
     public CheckOutVerification(CheckOutResponse response, UseCaseContext context)
         : base(response, context)
     {
     }
 
-    /// <summary>The SKU of each confirmed order, in the order shown, looking each order up with <paramref name="skuOfOrder"/> once.</summary>
-    public async Task<List<KeyValuePair<string, string?>>> PlacedSkusAsync(Func<string, Task<string?>> skuOfOrder)
+    /// <summary>Passes each confirmed order number, in the order shown, to <paramref name="action"/>; the numbers must each be different.</summary>
+    public void ForEachConfirmedOrder(Action<string> action)
     {
-        if (_placedSkus == null)
-        {
-            var placed = new List<KeyValuePair<string, string?>>();
-            foreach (var orderNumber in OrderNumbers())
-            {
-                placed.Add(new KeyValuePair<string, string?>(orderNumber, await skuOfOrder(orderNumber)));
-            }
-            _placedSkus = placed;
-        }
-        return _placedSkus;
+        OrderNumbers().ForEach(action);
     }
 
     /// <summary>The confirmed orders' products, in the order shown, are exactly these.</summary>
@@ -40,14 +28,19 @@ public class CheckOutVerification : ResponseVerification<CheckOutResponse>
         return this;
     }
 
-    public string OrderNumberFor(List<KeyValuePair<string, string?>> placedSkus, string skuAlias)
+    /// <summary>
+    /// Passes the number of the order placed for this product to <paramref name="action"/>, given each confirmed order's
+    /// SKU by order number; fails if the confirmation shows no order for it.
+    /// </summary>
+    public void ForOrderPlacedFor(List<KeyValuePair<string, string?>> placedSkus, string skuAlias, Action<string> action)
     {
         var sku = Context.GetParamValue(skuAlias);
         foreach (var entry in placedSkus)
         {
             if (entry.Value == sku)
             {
-                return entry.Key;
+                action(entry.Key);
+                return;
             }
         }
         throw new ShouldAssertException($"The confirmation shows no order for {skuAlias}; it shows orders for "
@@ -153,7 +146,7 @@ public class CheckOutVerification : ResponseVerification<CheckOutResponse>
     }
 
     /// <summary>The confirmed order numbers, in the order shown; each distinct.</summary>
-    public List<string> OrderNumbers()
+    private List<string> OrderNumbers()
     {
         var orders = Resp().ConfirmedOrders;
         orders.ShouldNotBeNull("Confirmed orders should have been read");

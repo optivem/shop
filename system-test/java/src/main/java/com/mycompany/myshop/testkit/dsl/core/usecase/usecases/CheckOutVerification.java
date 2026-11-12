@@ -8,10 +8,9 @@ import com.mycompany.myshop.testkit.dsl.core.shared.UseCaseContext;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
+import java.util.function.Consumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -20,20 +19,13 @@ import static org.assertj.core.api.Assertions.assertThat;
  * expanded; everything else is a literal as shown.
  */
 public class CheckOutVerification extends ResponseVerification<CheckOutResponse> {
-    /** The SKU of each confirmed order, by order number, once looked up. */
-    private Map<String, String> placedSkus;
-
     public CheckOutVerification(CheckOutResponse response, UseCaseContext context) {
         super(response, context);
     }
 
-    /** The SKU of each confirmed order, in the order shown, looking each order up with {@code skuOfOrder} once. */
-    public Map<String, String> placedSkus(Function<String, String> skuOfOrder) {
-        if (placedSkus == null) {
-            placedSkus = new LinkedHashMap<>();
-            orderNumbers().forEach(orderNumber -> placedSkus.put(orderNumber, skuOfOrder.apply(orderNumber)));
-        }
-        return placedSkus;
+    /** Passes each confirmed order number, in the order shown, to {@code action}; the numbers must each be different. */
+    public void forEachConfirmedOrder(Consumer<String> action) {
+        orderNumbers().forEach(action);
     }
 
     /** The confirmed orders' products, in the order shown, are exactly these. */
@@ -43,14 +35,19 @@ public class CheckOutVerification extends ResponseVerification<CheckOutResponse>
         return this;
     }
 
-    public String orderNumberFor(Map<String, String> placedSkus, String skuAlias) {
+    /**
+     * Passes the number of the order placed for this product to {@code action}, given each confirmed order's SKU by
+     * order number; fails if the confirmation shows no order for it.
+     */
+    public void forOrderPlacedFor(Map<String, String> placedSkus, String skuAlias, Consumer<String> action) {
         var sku = getContext().getParamValue(skuAlias);
-        return placedSkus.entrySet().stream()
+        var orderNumber = placedSkus.entrySet().stream()
                 .filter(entry -> sku.equals(entry.getValue()))
                 .map(Map.Entry::getKey)
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("The confirmation shows no order for " + skuAlias
                         + "; it shows orders for " + placedSkus.values()));
+        action.accept(orderNumber);
     }
 
     public CheckOutVerification shownPage(String expectedPage) {
@@ -137,7 +134,7 @@ public class CheckOutVerification extends ResponseVerification<CheckOutResponse>
     }
 
     /** The confirmed order numbers, in the order shown; each distinct. */
-    public List<String> orderNumbers() {
+    private List<String> orderNumbers() {
         assertThat(response().getConfirmedOrders()).as("Confirmed orders should have been read").isNotNull();
         var numbers = response().getConfirmedOrders().stream().map(CheckOutResponse.ConfirmedOrderDto::getOrderNumber).toList();
         assertThat(numbers).as("Confirmed order numbers should each be different").doesNotHaveDuplicates();

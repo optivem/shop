@@ -7,7 +7,9 @@ import com.mycompany.myshop.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.testkit.dsl.core.usecase.usecases.CheckOutVerification;
 import com.mycompany.myshop.testkit.dsl.port.then.steps.ThenCheckout;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * The confirmation shows order numbers only; which product each order is for is looked up on the order itself, the
@@ -26,14 +28,23 @@ public class ThenCheckoutImpl<R, V extends ResponseVerification<R>>
     }
 
     /** The number of the order the checkout placed for this product. */
-    static String orderNumberFor(UseCaseDsl app, Object successVerification, String skuAlias) {
+    static String orderNumberFor(UseCaseDsl app, ExecutionResultContext executionResult, Object successVerification,
+            String skuAlias) {
         var verification = checkoutVerification(successVerification);
-        return verification.orderNumberFor(placedSkus(app, verification), skuAlias);
+        var orderNumber = new AtomicReference<String>();
+        verification.forOrderPlacedFor(placedSkus(app, executionResult, verification), skuAlias, orderNumber::set);
+        return orderNumber.get();
     }
 
-    private static Map<String, String> placedSkus(UseCaseDsl app, CheckOutVerification verification) {
-        return verification.placedSkus(orderNumber ->
-                app.myShop().viewOrder().orderNumber(orderNumber).execute().shouldSucceed().orderedSku());
+    /** The SKU of each confirmed order, in the order shown, as the order itself shows it; each order is looked up once. */
+    private static Map<String, String> placedSkus(UseCaseDsl app, ExecutionResultContext executionResult,
+            CheckOutVerification verification) {
+        return executionResult.placedSkus(() -> {
+            var placed = new LinkedHashMap<String, String>();
+            verification.forEachConfirmedOrder(orderNumber -> placed.put(orderNumber,
+                    app.myShop().viewOrder().orderNumber(orderNumber).execute().successResponse().getSku()));
+            return placed;
+        });
     }
 
     private static CheckOutVerification checkoutVerification(Object successVerification) {
@@ -148,7 +159,7 @@ public class ThenCheckoutImpl<R, V extends ResponseVerification<R>>
     @Override
     public ThenCheckoutImpl<R, V> confirmsOrdersFor(String... skuAliases) {
         verification.shownPage(CheckOutResponse.CONFIRMATION);
-        verification.placedFor(placedSkus(app, verification), skuAliases);
+        verification.placedFor(placedSkus(app, executionResult, verification), skuAliases);
         return this;
     }
 

@@ -17,4 +17,17 @@ public class ExecutionResultContext
 
     public string? OrderNumber { get; }
     public string? CouponCode { get; }
+
+    /// <summary>The SKU of each order the operation placed, by order number, once looked up.</summary>
+    private Task<List<KeyValuePair<string, string?>>>? _placedSkus;
+    private readonly object _placedSkusLock = new();
+
+    /// <summary>The SKU of each order the operation placed, by order number; looked up with <paramref name="lookUp"/> the first time only.</summary>
+    public Task<List<KeyValuePair<string, string?>>> PlacedSkusAsync(Func<Task<List<KeyValuePair<string, string?>>>> lookUp)
+    {
+        lock (_placedSkusLock)
+        {
+            return _placedSkus ??= lookUp();
+        }
+    }
 }
