@@ -172,6 +172,48 @@ export class ThenViewOrderOrder implements PromiseLike<void> {
     return this;
   }
 
+  /** The order used no coupon: the UI shows "None". */
+  hasNoAppliedCoupon(): this {
+    this.stage._addOrderAssertion((order) => {
+      expect(order.appliedCouponCode ?? null, 'Applied coupon code (none)').toBeNull();
+    });
+    return this;
+  }
+
+  /** The order details offer Cancel Order (UI only). */
+  offersCancelOrder(): this {
+    return this.cancelOffered(true);
+  }
+
+  /** The order details do not offer Cancel Order (UI only). */
+  doesNotOfferCancelOrder(): this {
+    return this.cancelOffered(false);
+  }
+
+  /** The order details offer Deliver Order (UI only). */
+  offersDeliverOrder(): this {
+    return this.deliverOffered(true);
+  }
+
+  /** The order details do not offer Deliver Order (UI only). */
+  doesNotOfferDeliverOrder(): this {
+    return this.deliverOffered(false);
+  }
+
+  private cancelOffered(expected: boolean): this {
+    this.stage._addOrderAssertion((order) => {
+      expect(order.cancelOffered, 'Cancel Order offered (UI only)').toBe(expected);
+    });
+    return this;
+  }
+
+  private deliverOffered(expected: boolean): this {
+    this.stage._addOrderAssertion((order) => {
+      expect(order.deliverOffered, 'Deliver Order offered (UI only)').toBe(expected);
+    });
+    return this;
+  }
+
   hasAppliedCoupon(expectedCouponCode: string): this {
     this.stage._addOrderAssertion((order) => {
       expect(order.appliedCouponCode).toBe(this.stage.useCaseContext.getParamValue(expectedCouponCode));

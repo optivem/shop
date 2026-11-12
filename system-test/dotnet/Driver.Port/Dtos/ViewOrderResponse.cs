@@ -20,4 +20,10 @@ public class ViewOrderResponse
     public required string Country { get; set; }
     public string? AppliedCouponCode { get; set; }
     public ShippingAddress? ShippingAddress { get; set; }
+
+    /// <summary>UI only: whether the order details offer Cancel Order; null on the API.</summary>
+    public bool? CancelOffered { get; set; }
+
+    /// <summary>UI only: whether the order details offer Deliver Order; null on the API.</summary>
+    public bool? DeliverOffered { get; set; }
 }

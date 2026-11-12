@@ -219,6 +219,8 @@ public class MyShopUiDriver : IMyShopDriver
         var totalPrice = await _orderDetailsPage.GetTotalPriceAsync();
         var status = await _orderDetailsPage.GetStatusAsync();
         var appliedCouponCode = await _orderDetailsPage.GetAppliedCouponAsync();
+        var cancelOffered = !await _orderDetailsPage.IsCancelButtonHiddenAsync();
+        var deliverOffered = !await _orderDetailsPage.IsDeliverButtonHiddenAsync();
 
         var response = new ViewOrderResponse
         {
@@ -236,7 +238,9 @@ public class MyShopUiDriver : IMyShopDriver
             TaxAmount = taxAmount,
             TotalPrice = totalPrice,
             Status = status,
-            AppliedCouponCode = appliedCouponCode
+            AppliedCouponCode = appliedCouponCode,
+            CancelOffered = cancelOffered,
+            DeliverOffered = deliverOffered,
         };
 
         return Success(response);

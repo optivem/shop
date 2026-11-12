@@ -77,6 +77,10 @@ public abstract class BaseThenStep<R, V extends ResponseVerification<R>> {
         return new ThenCouponImpl<>(app, executionResult, couponCode, successVerification);
     }
 
+    public ThenCouponListImpl<R, V> couponList() {
+        return new ThenCouponListImpl<>(app, executionResult, successVerification);
+    }
+
     public ThenCouponImpl<R, V> coupon() {
         return coupon(executionResult.getCouponCode());
     }

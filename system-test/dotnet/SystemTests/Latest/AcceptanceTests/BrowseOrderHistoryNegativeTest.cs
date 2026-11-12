@@ -59,7 +59,7 @@ public class BrowseOrderHistoryNegativeTest : BaseAcceptanceTest
     }
 
     [Theory]
-    [ChannelData(ChannelType.API)]
+    [ChannelData(ChannelType.UI, ChannelType.API)]
     [Trait("tag", "UC-002.9")]
     public async Task ShouldShowNoOrdersWhenNoOrderMatchesTheFilter(Channel channel)
     {
@@ -137,5 +137,17 @@ public class BrowseOrderHistoryNegativeTest : BaseAcceptanceTest
             .When().BrowseOrderHistory()
             .Then().ShouldFail()
             .ErrorMessage(AuthenticationRequired);
+    }
+
+    [Theory]
+    [ChannelData(ChannelType.UI)]
+    [Trait("tag", "UC-002.9")]
+    public async Task ShouldTellTheCustomerWhenNoOrderMatchesTheFilter(Channel channel)
+    {
+        await Scenario(channel)
+            .Given().LoggedInAsCustomer()
+            .When().BrowseOrderHistory().WithOrderNumber("NON-EXISTENT-ORDER-99999")
+            .Then().ShouldSucceed()
+            .OrderHistory().IsEmpty().ShowsMessage("No orders found");
     }
 }

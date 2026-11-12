@@ -197,6 +197,29 @@ public class ViewOrderVerification extends ResponseVerification<ViewOrderRespons
         return this;
     }
 
+    public ViewOrderVerification noAppliedCoupon() {
+        assertThat(getResponse().getAppliedCouponCode())
+                .as("Applied coupon code (none)")
+                .isNull();
+        return this;
+    }
+
+    /** UI only: whether the order details offer Cancel Order. */
+    public ViewOrderVerification cancelOffered(boolean expected) {
+        assertThat(getResponse().getCancelOffered())
+                .as("Cancel Order offered (UI only)")
+                .isEqualTo(expected);
+        return this;
+    }
+
+    /** UI only: whether the order details offer Deliver Order. */
+    public ViewOrderVerification deliverOffered(boolean expected) {
+        assertThat(getResponse().getDeliverOffered())
+                .as("Deliver Order offered (UI only)")
+                .isEqualTo(expected);
+        return this;
+    }
+
     /** The order's shipping address; the country is an alias, resolved like {@link #country(String)}. */
     public ViewOrderVerification shippingAddress(String firstName, String lastName, String street, String postalCode,
                                                  String city, String countryAlias) {

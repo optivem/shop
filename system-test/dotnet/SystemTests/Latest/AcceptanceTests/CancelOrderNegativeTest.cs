@@ -58,4 +58,19 @@ public class CancelOrderNegativeTest : BaseAcceptanceTest
             .Then().ShouldFail()
             .ErrorMessage($"Order {DefaultOrderNumber} does not exist.");
     }
+
+    [Theory]
+    [ChannelData(ChannelType.UI)]
+    [ChannelInlineData(OrderStatus.Cancelled)]
+    [ChannelInlineData(OrderStatus.Delivered)]
+    [Trait("tag", "UC-003.2")]
+    public async Task ShouldNotOfferToCancelAnOrderThatIsNoLongerPlaced(Channel channel, OrderStatus status)
+    {
+        await Scenario(channel)
+            .Given().Order().WithStatus(status)
+            .When().ViewOrder()
+            .Then().ShouldSucceed()
+            .And().Order()
+            .DoesNotOfferCancelOrder();
+    }
 }

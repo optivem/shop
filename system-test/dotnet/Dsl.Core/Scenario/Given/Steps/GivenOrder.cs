@@ -19,6 +19,7 @@ public class GivenOrder : BaseGiven, IGivenOrder
     private OrderStatus _status;
     private readonly GivenStage _given;
     private string? _placedByAlias;
+    private string? _placedAt;
 
     public GivenOrder(GivenStage givenClause) : base(givenClause)
     {
@@ -86,6 +87,14 @@ public class GivenOrder : BaseGiven, IGivenOrder
 
     IGivenOrder IGivenOrder.WithIdempotencyKey(string? idempotencyKey) => WithIdempotencyKey(idempotencyKey);
 
+    public GivenOrder PlacedAt(string orderTimestamp)
+    {
+        _placedAt = orderTimestamp;
+        return this;
+    }
+
+    IGivenOrder IGivenOrder.PlacedAt(string orderTimestamp) => PlacedAt(orderTimestamp);
+
     public GivenOrder PlacedByCustomer()
     {
         _placedByAlias = null;
@@ -115,6 +124,14 @@ public class GivenOrder : BaseGiven, IGivenOrder
 
     internal override async Task Execute(UseCaseDsl app)
     {
+        if (_placedAt != null)
+        {
+            (await app.Clock().ReturnsTime()
+                .Time(_placedAt)
+                .Execute())
+                .ShouldSucceed();
+        }
+
         app.ActAs(_placedByAlias == null ? _given.DefaultCustomer() : _given.ResolveCustomer(_placedByAlias));
         try
         {

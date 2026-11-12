@@ -32,3 +32,9 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
             .hasStatus(OrderStatus.CANCELLED);
     });
 });
+
+forChannels(ChannelType.UI)(() => {
+    test('shouldOfferToCancelAPlacedOrder', criteria('UC-003.2'), async ({ scenario }) => {
+        await scenario.given().order().when().viewOrder().then().shouldSucceed().and().order().offersCancelOrder();
+    });
+});

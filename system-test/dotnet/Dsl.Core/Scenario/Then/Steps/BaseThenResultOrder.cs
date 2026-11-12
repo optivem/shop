@@ -150,6 +150,46 @@ public abstract class BaseThenResultOrder<TSuccessResponse, TSuccessVerification
 
     IThenOrder IThenOrder.HasAppliedCoupon() => HasAppliedCoupon();
 
+    public TDerived HasNoAppliedCoupon()
+    {
+        _verifications.Add(v => v.NoAppliedCoupon());
+        return Self;
+    }
+
+    IThenOrder IThenOrder.HasNoAppliedCoupon() => HasNoAppliedCoupon();
+
+    public TDerived OffersCancelOrder()
+    {
+        _verifications.Add(v => v.CancelOffered(true));
+        return Self;
+    }
+
+    IThenOrder IThenOrder.OffersCancelOrder() => OffersCancelOrder();
+
+    public TDerived DoesNotOfferCancelOrder()
+    {
+        _verifications.Add(v => v.CancelOffered(false));
+        return Self;
+    }
+
+    IThenOrder IThenOrder.DoesNotOfferCancelOrder() => DoesNotOfferCancelOrder();
+
+    public TDerived OffersDeliverOrder()
+    {
+        _verifications.Add(v => v.DeliverOffered(true));
+        return Self;
+    }
+
+    IThenOrder IThenOrder.OffersDeliverOrder() => OffersDeliverOrder();
+
+    public TDerived DoesNotOfferDeliverOrder()
+    {
+        _verifications.Add(v => v.DeliverOffered(false));
+        return Self;
+    }
+
+    IThenOrder IThenOrder.DoesNotOfferDeliverOrder() => DoesNotOfferDeliverOrder();
+
     public TDerived HasOrderNumberPrefix(string expectedPrefix)
     {
         _verifications.Add(v => v.OrderNumberHasPrefix(expectedPrefix));

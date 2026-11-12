@@ -12,6 +12,13 @@ import { UserIdentity } from '../../../../driver/port/user-identity.js';
 import type { OrderStatus } from '../../../../common/domain/OrderStatus.js';
 
 const ALL_CUSTOMERS = 'All customers';
+const ORDER_NUMBER_PART_START = 4;
+const ORDER_NUMBER_PART_LENGTH = 8;
+
+/** Eight characters after the "ORD-" prefix (the start of the generated part), in lower case. */
+function partOf(orderNumber: string): string {
+  return orderNumber.substring(ORDER_NUMBER_PART_START, ORDER_NUMBER_PART_START + ORDER_NUMBER_PART_LENGTH).toLowerCase();
+}
 
 export class ThenBrowseOrderHistoryResultStage implements PromiseLike<void> {
   private _expectSuccess = true;
@@ -28,6 +35,7 @@ export class ThenBrowseOrderHistoryResultStage implements PromiseLike<void> {
     private readonly size: string | null = null,
     private readonly customer: (() => string) | null = null,
     private readonly followUp: string | null = null,
+    private readonly orderNumberPartOnly = false,
   ) {}
 
   /** The username of the customer known in this scenario by the given alias; valid once the scenario is set up. */
@@ -62,7 +70,8 @@ export class ThenBrowseOrderHistoryResultStage implements PromiseLike<void> {
   private async _doExecute(): Promise<void> {
     await arrangeGiven(this.app, this.ctx, this.useCaseContext);
 
-    const orderNumber = this.useCaseContext.getResultValue(this.orderNumber);
+    const resolvedOrderNumber = this.useCaseContext.getResultValue(this.orderNumber);
+    const orderNumber = this.orderNumberPartOnly ? partOf(resolvedOrderNumber) : resolvedOrderNumber;
     const customer = this.customer ? this.customer() : null;
     const result = await this.app.myShop('dynamic').browseOrderHistory({
       orderNumber,
@@ -145,6 +154,51 @@ export class ThenBrowseOrderHistoryOrderHistory implements PromiseLike<void> {
   hasTotalElements(expectedTotalElements: number): this {
     this.stage._addHistoryAssertion((history) => {
       expect(history.totalElements, 'Order history total elements').toBe(expectedTotalElements);
+    });
+    return this;
+  }
+
+  /** The list shows exactly these orders (aliases), in this order; none means the list is empty. */
+  showsOrders(...orderNumbers: string[]): this {
+    this.stage._addHistoryAssertion((history, useCaseContext) => {
+      const expected = orderNumbers.map((orderNumber) => useCaseContext.getResultValue(orderNumber));
+      expect(listedOrderNumbers(history), 'Orders listed, in order').toEqual(expected);
+    });
+    return this;
+  }
+
+  /** The listed order's summary: order date (ISO-8601), SKU (an alias), quantity, total price and status. */
+  showsOrderSummary(
+    orderNumber: string,
+    expectedOrderTimestamp: string,
+    skuAlias: string,
+    expectedQuantity: number,
+    expectedTotalPrice: string,
+    expectedStatus: OrderStatus,
+  ): this {
+    this.stage._addHistoryAssertion((history, useCaseContext) => {
+      const order = listedOrder(history, useCaseContext.getResultValue(orderNumber));
+      expect(Date.parse(order.orderTimestamp), `Order date of order '${order.orderNumber}'`).toBe(Date.parse(expectedOrderTimestamp));
+      expect(order.sku, `SKU of order '${order.orderNumber}'`).toBe(useCaseContext.getParamValue(skuAlias));
+      expect(order.quantity, `Quantity of order '${order.orderNumber}'`).toBe(expectedQuantity);
+      expect(Number(order.totalPrice), `Total price of order '${order.orderNumber}'`).toBe(Number(expectedTotalPrice));
+      expect(order.status, `Status of order '${order.orderNumber}'`).toBe(expectedStatus);
+    });
+    return this;
+  }
+
+  /** The page number the list shows (API only). */
+  hasPage(expectedPage: number): this {
+    this.stage._addHistoryAssertion((history) => {
+      expect(history.page, 'Order history page').toBe(expectedPage);
+    });
+    return this;
+  }
+
+  /** The page size the list uses (API only). */
+  hasPageSize(expectedPageSize: number): this {
+    this.stage._addHistoryAssertion((history) => {
+      expect(history.size, 'Order history page size').toBe(expectedPageSize);
     });
     return this;
   }

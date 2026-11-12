@@ -55,6 +55,15 @@ export class GivenOrder implements IGivenOrder {
     return this;
   }
 
+  /**
+   * The order is placed at this time (ISO-8601): the clock is set to it just before the order is placed. It mutates
+   * the shared clock, so the scenario must run isolated.
+   */
+  placedAt(orderTimestamp: string): this {
+    this.config.placedAt = orderTimestamp;
+    return this;
+  }
+
   withStatus(status: OrderStatus): this {
     this.config.status = status;
     return this;

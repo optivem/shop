@@ -33,4 +33,16 @@ class CancelOrderPositiveTest extends BaseAcceptanceTest {
                 .and().order()
                     .hasStatus(OrderStatus.CANCELLED);
     }
+
+    @Tag("UC-003.2")
+    @TestTemplate
+    @Channel(ChannelType.UI)
+    void shouldOfferToCancelAPlacedOrder() {
+        scenario
+                .given().order()
+                .when().viewOrder()
+                .then().shouldSucceed()
+                .and().order()
+                    .offersCancelOrder();
+    }
 }

@@ -12,6 +12,19 @@ public interface ThenOrderHistory extends ThenStep<ThenOrderHistory> {
 
     ThenOrderHistory hasTotalElements(int expectedTotalElements);
 
+    /** The list shows exactly these orders (aliases), in this order; none means the list is empty. */
+    ThenOrderHistory showsOrders(String... orderNumbers);
+
+    /** The listed order's summary: order date (ISO-8601), SKU (an alias), quantity, total price and status. */
+    ThenOrderHistory showsOrderSummary(String orderNumber, String expectedOrderTimestamp, String skuAlias,
+                                       int expectedQuantity, String expectedTotalPrice, OrderStatus expectedStatus);
+
+    /** The page number the list shows (API only). */
+    ThenOrderHistory hasPage(int expectedPage);
+
+    /** The page size the list uses (API only). */
+    ThenOrderHistory hasPageSize(int expectedPageSize);
+
     /** The listed order shows who placed it (a customer alias), its SKU (an alias), quantity and status. */
     ThenOrderHistory showsOrder(String orderNumber, String customerAlias, String skuAlias, int expectedQuantity,
                                 OrderStatus expectedStatus);

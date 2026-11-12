@@ -9,6 +9,7 @@ import { RESET_FILTERS } from '../../../../driver/port/dtos/BrowseOrderHistoryRe
 
 export class WhenBrowseOrderHistory {
   private orderNumber: string = DEFAULTS.ORDER_NUMBER;
+  private orderNumberPartOnly = false;
   private page: string | null = null;
   private size: string | null = null;
   private customer: (() => string) | null = null;
@@ -22,6 +23,17 @@ export class WhenBrowseOrderHistory {
 
   withOrderNumber(orderNumber: string): this {
     this.orderNumber = orderNumber;
+    this.orderNumberPartOnly = false;
+    return this;
+  }
+
+  /**
+   * Filters by part of the order number of the order known by this alias, in lower case: a few characters from its
+   * middle, so it matches that order only, whatever the case.
+   */
+  withOrderNumberPartOf(orderNumber: string): this {
+    this.orderNumber = orderNumber;
+    this.orderNumberPartOnly = true;
     return this;
   }
 
@@ -73,6 +85,7 @@ export class WhenBrowseOrderHistory {
       this.size,
       this.customer,
       this.followUp,
+      this.orderNumberPartOnly,
     );
   }
 }

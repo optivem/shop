@@ -4,8 +4,14 @@ import com.mycompany.myshop.testkit.common.domain.OrderStatus;
 import com.mycompany.myshop.testkit.driver.adapter.shared.client.playwright.PageClient;
 import com.mycompany.myshop.testkit.driver.port.dtos.BrowseOrderHistoryResponse;
 
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * The order history `/order-history`: My orders for a customer, All orders for an admin (UC-002, UC-011). An admin also
@@ -31,6 +37,13 @@ public class OrderHistoryPage extends BasePage {
     private static final String CUSTOMER_HEADER = "Customer";
     private static final String SKU_HEADER = "SKU";
     private static final String QUANTITY_HEADER = "Quantity";
+    private static final String ORDER_DATE_HEADER = "Order Date";
+    private static final String TOTAL_PRICE_HEADER = "Total Price";
+    /** Every UI shows the order date as {@code toLocaleString('en-US', {timeZone: 'UTC'})}, e.g. "1/10/2026, 9:00:00 AM". */
+    private static final DateTimeFormatter ORDER_DATE_FORMAT = DateTimeFormatter.ofPattern("M/d/yyyy, h:mm:ss a", Locale.US);
+    private static final String DOLLAR_SYMBOL = "$";
+    private static final char NARROW_NO_BREAK_SPACE = (char) 0x202F;
+    private static final char NO_BREAK_SPACE = (char) 0x00A0;
     private static final String STATUS_HEADER = "Status";
     private static final String NO_CUSTOMER = "-";
     private static final String ALL_CUSTOMERS = "All customers";
@@ -90,11 +103,15 @@ public class OrderHistoryPage extends BasePage {
             var customer = cell(headers, rowCells, CUSTOMER_HEADER);
             var quantity = cell(headers, rowCells, QUANTITY_HEADER);
             var status = cell(headers, rowCells, STATUS_HEADER);
+            var orderDate = cell(headers, rowCells, ORDER_DATE_HEADER);
+            var totalPrice = cell(headers, rowCells, TOTAL_PRICE_HEADER);
             orders.add(BrowseOrderHistoryResponse.OrderDto.builder()
                     .orderNumber(cell(headers, rowCells, ORDER_NUMBER_HEADER))
                     .customer(NO_CUSTOMER.equals(customer) ? null : customer)
                     .sku(cell(headers, rowCells, SKU_HEADER))
+                    .orderTimestamp(orderDate == null ? null : parseOrderDate(orderDate))
                     .quantity(quantity == null ? 0 : Integer.parseInt(quantity))
+                    .totalPrice(totalPrice == null ? null : new BigDecimal(totalPrice.replace(DOLLAR_SYMBOL, "").trim()))
                     .status(status == null ? null : OrderStatus.valueOf(status))
                     .detailsPath(row < links.size() ? links.get(row) : null)
                     .build());
@@ -133,6 +150,12 @@ public class OrderHistoryPage extends BasePage {
 
     private List<String> readHeaders() {
         return pageClient.readAllTextContentsNoWait(HEADER_SELECTOR).stream().map(String::trim).toList();
+    }
+
+    /** Browsers may put a narrow or a non-breaking space before AM/PM. */
+    private static Instant parseOrderDate(String text) {
+        var normalized = text.replace(NARROW_NO_BREAK_SPACE, ' ').replace(NO_BREAK_SPACE, ' ').trim();
+        return LocalDateTime.parse(normalized, ORDER_DATE_FORMAT).toInstant(ZoneOffset.UTC);
     }
 
     /** The cell under this header, or null when the list has no such column. */

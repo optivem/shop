@@ -5,6 +5,12 @@ import com.mycompany.myshop.testkit.dsl.port.when.steps.base.WhenStep;
 public interface WhenBrowseOrderHistory extends WhenStep {
     WhenBrowseOrderHistory withOrderNumber(String orderNumber);
 
+    /**
+     * Filters by part of the order number of the order known by this alias, in lower case: a few characters from its
+     * middle, so it matches that order only, whatever the case.
+     */
+    WhenBrowseOrderHistory withOrderNumberPartOf(String orderNumber);
+
     /** No order-number filter: every order the user may see (the default filters by the default order). */
     WhenBrowseOrderHistory withNoOrderNumberFilter();
 

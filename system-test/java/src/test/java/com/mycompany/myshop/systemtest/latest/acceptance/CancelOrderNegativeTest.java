@@ -60,4 +60,19 @@ class CancelOrderNegativeTest extends BaseAcceptanceTest {
                 .then().shouldFail()
                     .errorMessage("Order " + DEFAULT_ORDER_NUMBER + " does not exist.");
     }
+
+    @Tag("UC-003.2")
+    @TestTemplate
+    @Channel(ChannelType.UI)
+    @DataSource({"CANCELLED"})
+    @DataSource({"DELIVERED"})
+    void shouldNotOfferToCancelAnOrderThatIsNoLongerPlaced(String status) {
+        scenario
+                .given().order()
+                    .withStatus(status)
+                .when().viewOrder()
+                .then().shouldSucceed()
+                .and().order()
+                    .doesNotOfferCancelOrder();
+    }
 }

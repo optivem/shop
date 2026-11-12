@@ -13,6 +13,7 @@ namespace Dsl.Core.Scenario.When.Steps;
 public class WhenBrowseOrderHistory : BaseWhen<BrowseOrderHistoryResponse, BrowseOrderHistoryVerification>, IWhenBrowseOrderHistory
 {
     private string? _orderNumber;
+    private bool _orderNumberPartOnly;
     private string? _page;
     private string? _size;
     private bool _filtersOnCustomer;
@@ -34,8 +35,18 @@ public class WhenBrowseOrderHistory : BaseWhen<BrowseOrderHistoryResponse, Brows
     public WhenBrowseOrderHistory WithOrderNumber(string? orderNumber)
     {
         _orderNumber = orderNumber;
+        _orderNumberPartOnly = false;
         return this;
     }
+
+    public WhenBrowseOrderHistory WithOrderNumberPartOf(string orderNumber)
+    {
+        _orderNumber = orderNumber;
+        _orderNumberPartOnly = true;
+        return this;
+    }
+
+    IWhenBrowseOrderHistory IWhenBrowseOrderHistory.WithOrderNumberPartOf(string orderNumber) => WithOrderNumberPartOf(orderNumber);
 
     IWhenBrowseOrderHistory IWhenBrowseOrderHistory.WithOrderNumber(string? orderNumber) => WithOrderNumber(orderNumber);
 
@@ -112,6 +123,10 @@ public class WhenBrowseOrderHistory : BaseWhen<BrowseOrderHistoryResponse, Brows
             .Page(_page)
             .Size(_size)
             .Customer(CustomerUsername());
+        if (_orderNumberPartOnly)
+        {
+            browseOrderHistory.OrderNumberPartOf(_orderNumber!);
+        }
         if (_resetFiltersAfterwards)
         {
             browseOrderHistory.ResetFiltersAfterwards();

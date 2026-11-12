@@ -91,4 +91,17 @@ public class ViewOrderPositiveTest : BaseAcceptanceTest
             .And().Order()
             .HasStatus(status);
     }
+
+    [Theory]
+    [ChannelData(ChannelType.UI, ChannelType.API)]
+    [Trait("tag", "UC-002.4")]
+    public async Task ShouldShowNoAppliedCouponWhenTheOrderUsedNone(Channel channel)
+    {
+        await Scenario(channel)
+            .Given().Order()
+            .When().ViewOrder()
+            .Then().ShouldSucceed()
+            .And().Order()
+            .HasNoAppliedCoupon();
+    }
 }

@@ -20,6 +20,12 @@ public interface IGivenOrder : IGivenStep
 
     IGivenOrder WithIdempotencyKey(string? idempotencyKey);
 
+    /// <summary>
+    /// The order is placed at this time (ISO-8601): the clock is set to it just before the order is placed. It mutates
+    /// the shared clock, so the scenario must run isolated.
+    /// </summary>
+    IGivenOrder PlacedAt(string orderTimestamp);
+
     /// <summary>The order is placed by the default customer (customer1).</summary>
     IGivenOrder PlacedByCustomer();
 

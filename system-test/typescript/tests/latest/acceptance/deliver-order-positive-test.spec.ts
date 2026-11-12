@@ -35,3 +35,21 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
             .hasStatus(OrderStatus.DELIVERED);
     });
 });
+
+forChannels(ChannelType.UI)(() => {
+    test('shouldOfferToDeliverAPlacedOrder', criteria('UC-012.2'), async ({ scenario }) => {
+        await scenario
+            .given()
+            .order()
+            .placedByCustomer()
+            .and()
+            .loggedInAsAdmin()
+            .when()
+            .viewOrder()
+            .then()
+            .shouldSucceed()
+            .and()
+            .order()
+            .offersDeliverOrder();
+    });
+});

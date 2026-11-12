@@ -107,6 +107,36 @@ public class ThenOrderImpl<R, V extends ResponseVerification<R>>
         return hasAppliedCoupon(executionResult.getCouponCode());
     }
 
+    @Override
+    public ThenOrderImpl<R, V> hasNoAppliedCoupon() {
+        orderVerification.noAppliedCoupon();
+        return this;
+    }
+
+    @Override
+    public ThenOrderImpl<R, V> offersCancelOrder() {
+        orderVerification.cancelOffered(true);
+        return this;
+    }
+
+    @Override
+    public ThenOrderImpl<R, V> doesNotOfferCancelOrder() {
+        orderVerification.cancelOffered(false);
+        return this;
+    }
+
+    @Override
+    public ThenOrderImpl<R, V> offersDeliverOrder() {
+        orderVerification.deliverOffered(true);
+        return this;
+    }
+
+    @Override
+    public ThenOrderImpl<R, V> doesNotOfferDeliverOrder() {
+        orderVerification.deliverOffered(false);
+        return this;
+    }
+
     public ThenOrderImpl<R, V> hasTaxRate(String expectedTaxRate) {
         orderVerification.taxRate(expectedTaxRate);
         return this;

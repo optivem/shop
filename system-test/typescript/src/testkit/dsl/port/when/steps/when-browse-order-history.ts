@@ -2,6 +2,8 @@ import type { ThenOrderHistoryResultStage } from '../../then/then-order-history-
 
 export interface WhenBrowseOrderHistory {
   withOrderNumber(orderNumber: string): this;
+  /** Filters by part of the number of the order known by this alias, in lower case, so it matches that order only. */
+  withOrderNumberPartOf(orderNumber: string): this;
   /** No order-number filter: every order the user may see (the default filters by the default order). */
   withNoOrderNumberFilter(): this;
   /** After browsing, sets the customer filter to All customers and clears the order number (UI only). */

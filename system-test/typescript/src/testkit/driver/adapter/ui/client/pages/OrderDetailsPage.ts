@@ -35,6 +35,10 @@ export class OrderDetailsPage extends BasePage {
     await cancelButton.click({ timeout: PAGE_TIMEOUT_MS });
   }
 
+  async isCancelButtonHidden(): Promise<boolean> {
+    return (await this.page.locator('[aria-label="Cancel Order"]').count()) === 0;
+  }
+
   async isDeliverButtonHidden(): Promise<boolean> {
     return (await this.page.locator('[aria-label="Deliver Order"]').count()) === 0;
   }

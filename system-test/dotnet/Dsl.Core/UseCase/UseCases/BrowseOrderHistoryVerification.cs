@@ -1,3 +1,4 @@
+using System.Globalization;
 using Common.Domain;
 using Dsl.Core.Shared;
 using Driver.Port.Dtos;
@@ -35,6 +36,42 @@ public class BrowseOrderHistoryVerification : ResponseVerification<BrowseOrderHi
     public BrowseOrderHistoryVerification TotalElements(long expectedTotalElements)
     {
         Response.TotalElements.ShouldBe(expectedTotalElements, "Order history total elements");
+        return this;
+    }
+
+    /// <summary>The listed orders are exactly these (aliases), in this order.</summary>
+    public BrowseOrderHistoryVerification OrdersInOrder(List<string> orderNumberResultAliases)
+    {
+        var expectedOrderNumbers = orderNumberResultAliases.Select(alias => Context.GetResultValue(alias)).ToList();
+        ListedOrderNumbers().ShouldBe(expectedOrderNumbers, "Orders listed, in order");
+        return this;
+    }
+
+    /// <summary>The listed order shows this order date, SKU (an alias), quantity, total price and status.</summary>
+    public BrowseOrderHistoryVerification ShowsOrderSummary(string orderNumberResultAlias, string expectedOrderTimestamp,
+        string skuAlias, int expectedQuantity, string expectedTotalPrice, OrderStatus expectedStatus)
+    {
+        var order = ListedOrder(orderNumberResultAlias);
+        var expectedSku = Context.GetParamValue(skuAlias);
+        order.OrderTimestamp.ShouldBe(DateTimeOffset.Parse(expectedOrderTimestamp, CultureInfo.InvariantCulture).UtcDateTime,
+            $"Order date of order '{order.OrderNumber}'");
+        order.Sku.ShouldBe(expectedSku, $"SKU of order '{order.OrderNumber}'");
+        order.Quantity.ShouldBe(expectedQuantity, $"Quantity of order '{order.OrderNumber}'");
+        order.TotalPrice.ShouldBe(decimal.Parse(expectedTotalPrice, CultureInfo.InvariantCulture),
+            $"Total price of order '{order.OrderNumber}'");
+        order.Status.ShouldBe(expectedStatus, $"Status of order '{order.OrderNumber}'");
+        return this;
+    }
+
+    public BrowseOrderHistoryVerification Page(int expectedPage)
+    {
+        Response.Page.ShouldBe(expectedPage, "Order history page");
+        return this;
+    }
+
+    public BrowseOrderHistoryVerification PageSize(int expectedPageSize)
+    {
+        Response.Size.ShouldBe(expectedPageSize, "Order history page size");
         return this;
     }
 

@@ -60,3 +60,23 @@ forChannels(ChannelType.API)(() => {
             .errorMessage(`Order ${DEFAULTS.ORDER_NUMBER} does not exist.`);
     });
 });
+
+forChannels(ChannelType.UI)(() => {
+    test.each([{ status: OrderStatus.CANCELLED }, { status: OrderStatus.DELIVERED }])(
+        'shouldNotOfferToCancelAnOrderThatIsNoLongerPlaced_$status',
+        criteria('UC-003.2'),
+        async ({ scenario, status }) => {
+            await scenario
+                .given()
+                .order()
+                .withStatus(status)
+                .when()
+                .viewOrder()
+                .then()
+                .shouldSucceed()
+                .and()
+                .order()
+                .doesNotOfferCancelOrder();
+        },
+    );
+});

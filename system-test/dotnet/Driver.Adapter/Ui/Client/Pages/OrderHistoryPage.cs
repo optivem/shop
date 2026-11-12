@@ -1,3 +1,4 @@
+using System.Globalization;
 using Common.Domain;
 using Driver.Adapter.Shared.Client.Playwright;
 using Driver.Port.Dtos;
@@ -29,6 +30,11 @@ public class OrderHistoryPage : BasePage
     private const string CustomerHeader = "Customer";
     private const string SkuHeader = "SKU";
     private const string QuantityHeader = "Quantity";
+    private const string OrderDateHeader = "Order Date";
+    private const string TotalPriceHeader = "Total Price";
+    /// <summary>Every UI shows the order date as <c>toLocaleString('en-US', {timeZone: 'UTC'})</c>, e.g. "1/10/2026, 9:00:00 AM".</summary>
+    private const string OrderDateFormat = "M/d/yyyy, h:mm:ss tt";
+    private const string DollarSymbol = "$";
     private const string StatusHeader = "Status";
     private const string NoCustomer = "-";
     private const string AllCustomers = "All customers";
@@ -87,12 +93,17 @@ public class OrderHistoryPage : BasePage
             var customer = Cell(headers, rowCells, CustomerHeader);
             var quantity = Cell(headers, rowCells, QuantityHeader);
             var status = Cell(headers, rowCells, StatusHeader);
+            var orderDate = Cell(headers, rowCells, OrderDateHeader);
+            var totalPrice = Cell(headers, rowCells, TotalPriceHeader);
             orders.Add(new BrowseOrderHistoryResponse.OrderDto
             {
                 OrderNumber = Cell(headers, rowCells, OrderNumberHeader),
                 Customer = customer == NoCustomer ? null : customer,
                 Sku = Cell(headers, rowCells, SkuHeader),
+                OrderTimestamp = orderDate == null ? default : ParseOrderDate(orderDate),
                 Quantity = quantity == null ? 0 : int.Parse(quantity),
+                TotalPrice = totalPrice == null ? default
+                    : decimal.Parse(totalPrice.Replace(DollarSymbol, "").Trim(), CultureInfo.InvariantCulture),
                 Status = status == null ? default : Enum.Parse<OrderStatus>(status, ignoreCase: true),
                 DetailsPath = row < links.Count ? links[row] : null,
             });
@@ -147,6 +158,14 @@ public class OrderHistoryPage : BasePage
 
     private async Task<List<string>> ReadHeadersAsync()
         => (await PageClient.ReadAllTextContentsNoWaitAsync(HeaderSelector)).Select(header => header.Trim()).ToList();
+
+    /// <summary>Browsers may put a narrow or a non-breaking space before AM/PM.</summary>
+    private static DateTime ParseOrderDate(string text)
+    {
+        var normalized = text.Replace('\u202F', ' ').Replace('\u00A0', ' ').Trim();
+        return DateTime.ParseExact(normalized, OrderDateFormat, CultureInfo.InvariantCulture,
+            DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal);
+    }
 
     /// <summary>The cell under this header, or null when the list has no such column.</summary>
     private static string? Cell(List<string> headers, List<string> rowCells, string header)

@@ -6,6 +6,12 @@ public interface IWhenBrowseOrderHistory : IWhenStep
 {
     IWhenBrowseOrderHistory WithOrderNumber(string? orderNumber);
 
+    /// <summary>
+    /// Filters by part of the order number of the order known by this alias, in lower case: a few characters from its
+    /// middle, so it matches that order only, whatever the case.
+    /// </summary>
+    IWhenBrowseOrderHistory WithOrderNumberPartOf(string orderNumber);
+
     /// <summary>No order-number filter: every order the user may see (the default filters by the default order).</summary>
     IWhenBrowseOrderHistory WithNoOrderNumberFilter();
 

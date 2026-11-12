@@ -34,4 +34,18 @@ public class DeliverOrderPositiveTest : BaseAcceptanceTest
             .And().Order()
             .HasStatus(OrderStatus.Delivered);
     }
+
+    [Theory]
+    [ChannelData(ChannelType.UI)]
+    [Trait("tag", "UC-012.2")]
+    public async Task ShouldOfferToDeliverAPlacedOrder(Channel channel)
+    {
+        await Scenario(channel)
+            .Given().Order().PlacedByCustomer()
+            .And().LoggedInAsAdmin()
+            .When().ViewOrder()
+            .Then().ShouldSucceed()
+            .And().Order()
+            .OffersDeliverOrder();
+    }
 }

@@ -33,6 +33,13 @@ public class ThenSuccess<TSuccessResponse, TSuccessVerification>
 
     IThenOrderHistory IThenSuccess.OrderHistory() => OrderHistory();
 
+    public ThenSuccessCouponList<TSuccessResponse, TSuccessVerification> CouponList()
+    {
+        return new ThenSuccessCouponList<TSuccessResponse, TSuccessVerification>(_thenClause);
+    }
+
+    IThenCouponList IThenSuccess.CouponList() => CouponList();
+
     public ThenSuccessCatalog<TSuccessResponse, TSuccessVerification> Catalog()
     {
         return new ThenSuccessCatalog<TSuccessResponse, TSuccessVerification>(_thenClause);

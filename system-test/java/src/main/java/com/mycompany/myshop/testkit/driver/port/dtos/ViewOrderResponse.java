@@ -32,4 +32,8 @@ public class ViewOrderResponse {
     private String appliedCouponCode;
     /** Null for an order placed without one (Quick order). */
     private ShippingAddress shippingAddress;
+    /** UI only: whether the order details offer Cancel Order; null on the API. */
+    private Boolean cancelOffered;
+    /** UI only: whether the order details offer Deliver Order; null on the API. */
+    private Boolean deliverOffered;
 }

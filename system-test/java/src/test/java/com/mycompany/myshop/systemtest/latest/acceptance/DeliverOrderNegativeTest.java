@@ -55,4 +55,20 @@ class DeliverOrderNegativeTest extends BaseAcceptanceTest {
                 .and().order()
                     .hasStatus(OrderStatus.valueOf(status));
     }
+
+    @Tag("UC-012.2")
+    @TestTemplate
+    @Channel(ChannelType.UI)
+    void shouldOfferNeitherDeliverNorCancelOnceTheOrderIsDelivered() {
+        scenario
+                .given().order()
+                    .placedByCustomer()
+                    .withStatus(OrderStatus.DELIVERED)
+                .and().loggedInAsAdmin()
+                .when().viewOrder()
+                .then().shouldSucceed()
+                .and().order()
+                    .doesNotOfferDeliverOrder()
+                    .doesNotOfferCancelOrder();
+    }
 }

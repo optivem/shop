@@ -240,4 +240,33 @@ class BrowseOrderHistoryPositiveTest extends BaseAcceptanceTest {
                         .containsOrder("ORD-B")
                         .hasCustomerFilterSetToAllCustomers();
     }
+
+    @Tag("UC-002.3")
+    @TestTemplate
+    @Channel(ChannelType.API)
+    void shouldShowTheFirstPageOf50OrdersByDefault() {
+        scenario
+                .given().loggedInAsCustomer()
+                .when().browseOrderHistory()
+                    .withNoOrderNumberFilter()
+                .then().shouldSucceed()
+                    .orderHistory()
+                        .hasPage(1)
+                        .hasPageSize(50);
+    }
+
+    // Opening the linked order is ViewOrderPositiveTest's customerShouldBeAbleToViewOwnOrder.
+    @Tag("UC-002.1")
+    @TestTemplate
+    @Channel(ChannelType.UI)
+    void shouldLinkEachOfTheCustomersOrdersToItsDetails() {
+        scenario
+                .given().order()
+                    .placedByCustomer()
+                .and().loggedInAsCustomer()
+                .when().browseOrderHistory()
+                .then().shouldSucceed()
+                    .orderHistory()
+                        .linksOrderToItsDetails(DEFAULT_ORDER_NUMBER);
+    }
 }

@@ -6,6 +6,7 @@ import com.mycompany.myshop.testkit.dsl.port.then.steps.ThenCatalog;
 import com.mycompany.myshop.testkit.dsl.port.then.steps.ThenClock;
 import com.mycompany.myshop.testkit.dsl.port.then.steps.ThenCountry;
 import com.mycompany.myshop.testkit.dsl.port.then.steps.ThenCoupon;
+import com.mycompany.myshop.testkit.dsl.port.then.steps.ThenCouponList;
 import com.mycompany.myshop.testkit.dsl.port.then.steps.ThenOrder;
 import com.mycompany.myshop.testkit.dsl.port.then.steps.ThenOrderHistory;
 import com.mycompany.myshop.testkit.dsl.port.then.steps.ThenProduct;
@@ -27,6 +28,9 @@ public interface ThenStep<T> {
     ThenProfile profile();
 
     ThenCoupon coupon(String couponCode);
+
+    /** The coupon list the executed browse showed. */
+    ThenCouponList couponList();
 
     /** The catalog the executed browse showed. */
     ThenCatalog catalog();

@@ -34,4 +34,17 @@ public class CancelOrderPositiveTest : BaseAcceptanceTest
             .And().Order()
             .HasStatus(OrderStatus.Cancelled);
     }
+
+    [Theory]
+    [ChannelData(ChannelType.UI)]
+    [Trait("tag", "UC-003.2")]
+    public async Task ShouldOfferToCancelAPlacedOrder(Channel channel)
+    {
+        await Scenario(channel)
+            .Given().Order()
+            .When().ViewOrder()
+            .Then().ShouldSucceed()
+            .And().Order()
+            .OffersCancelOrder();
+    }
 }

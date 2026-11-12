@@ -230,6 +230,26 @@ public class ViewOrderVerification : ResponseVerification<ViewOrderResponse>
         return this;
     }
 
+    public ViewOrderVerification NoAppliedCoupon()
+    {
+        Response.AppliedCouponCode.ShouldBeNull("Applied coupon code (none)");
+        return this;
+    }
+
+    /// <summary>UI only: whether the order details offer Cancel Order.</summary>
+    public ViewOrderVerification CancelOffered(bool expected)
+    {
+        Response.CancelOffered.ShouldBe(expected, "Cancel Order offered (UI only)");
+        return this;
+    }
+
+    /// <summary>UI only: whether the order details offer Deliver Order.</summary>
+    public ViewOrderVerification DeliverOffered(bool expected)
+    {
+        Response.DeliverOffered.ShouldBe(expected, "Deliver Order offered (UI only)");
+        return this;
+    }
+
     public ViewOrderVerification ShippingAddress(string firstName, string lastName, string street, string postalCode, string city, string countryAlias)
     {
         var expectedCountry = Context.GetParamValueOrLiteral(countryAlias);

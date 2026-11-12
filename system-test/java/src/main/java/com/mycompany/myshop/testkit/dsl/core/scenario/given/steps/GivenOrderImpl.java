@@ -19,6 +19,7 @@ public class GivenOrderImpl extends BaseGivenStep implements GivenOrder {
     private OrderStatus status;
     private final GivenImpl given;
     private String placedByAlias;
+    private String placedAt;
 
     public GivenOrderImpl(GivenImpl given) {
         super(given);
@@ -66,6 +67,12 @@ public class GivenOrderImpl extends BaseGivenStep implements GivenOrder {
         return this;
     }
 
+    @Override
+    public GivenOrderImpl placedAt(String orderTimestamp) {
+        this.placedAt = orderTimestamp;
+        return this;
+    }
+
     public GivenOrderImpl placedByCustomer() {
         this.placedByAlias = null;
         return this;
@@ -92,6 +99,12 @@ public class GivenOrderImpl extends BaseGivenStep implements GivenOrder {
 
     @Override
     public void execute(UseCaseDsl app) {
+        if (placedAt != null) {
+            app.clock().returnsTime()
+                    .time(placedAt)
+                    .execute()
+                    .shouldSucceed();
+        }
         app.actAs(placedByAlias == null ? given.defaultCustomer() : given.resolveCustomer(placedByAlias));
         try {
             placeAndCancel(app);

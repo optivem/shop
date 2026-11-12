@@ -7,7 +7,11 @@ namespace Dsl.Core.UseCase.UseCases;
 
 public class BrowseOrderHistory : BaseMyShopUseCase<BrowseOrderHistoryResponse, BrowseOrderHistoryVerification>
 {
+    private const int OrderNumberPartStart = 4;
+    private const int OrderNumberPartLength = 8;
+
     private string? _orderNumberResultAlias;
+    private bool _orderNumberPartOnly;
     private string? _page;
     private string? _size;
     private string? _customer;
@@ -21,6 +25,14 @@ public class BrowseOrderHistory : BaseMyShopUseCase<BrowseOrderHistoryResponse, 
     public BrowseOrderHistory OrderNumber(string? orderNumberResultAlias)
     {
         _orderNumberResultAlias = orderNumberResultAlias;
+        return this;
+    }
+
+    /// <summary>Filters by part of this order's number, in lower case: characters from its middle, unique to it.</summary>
+    public BrowseOrderHistory OrderNumberPartOf(string orderNumberResultAlias)
+    {
+        _orderNumberResultAlias = orderNumberResultAlias;
+        _orderNumberPartOnly = true;
         return this;
     }
 
@@ -53,6 +65,10 @@ public class BrowseOrderHistory : BaseMyShopUseCase<BrowseOrderHistoryResponse, 
     public override async Task<MyShopUseCaseResult<BrowseOrderHistoryResponse, BrowseOrderHistoryVerification>> Execute()
     {
         var orderNumber = _context.GetResultValue(_orderNumberResultAlias);
+        if (_orderNumberPartOnly && orderNumber != null)
+        {
+            orderNumber = PartOf(orderNumber);
+        }
         var request = new BrowseOrderHistoryRequest
         {
             OrderNumber = orderNumber, Page = _page, Size = _size, Customer = _customer, FollowUp = _followUp,
@@ -64,5 +80,13 @@ public class BrowseOrderHistory : BaseMyShopUseCase<BrowseOrderHistoryResponse, 
             result,
             _context,
             (response, ctx) => new BrowseOrderHistoryVerification(response, ctx));
+    }
+
+    /// <summary>Eight characters after the "ORD-" prefix (the start of the generated part), in lower case.</summary>
+    private static string PartOf(string orderNumber)
+    {
+        var start = Math.Min(OrderNumberPartStart, orderNumber.Length);
+        var length = Math.Min(OrderNumberPartLength, orderNumber.Length - start);
+        return orderNumber.Substring(start, length).ToLowerInvariant();
     }
 }

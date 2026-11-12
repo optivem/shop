@@ -153,6 +153,8 @@ export class MyShopUiDriver implements MyShopDriver {
       country: await detailsPage.getCountry(),
       appliedCouponCode: await detailsPage.getAppliedCouponCode(),
       status: await detailsPage.getStatus(),
+      cancelOffered: !(await detailsPage.isCancelButtonHidden()),
+      deliverOffered: !(await detailsPage.isDeliverButtonHidden()),
     });
   }
 

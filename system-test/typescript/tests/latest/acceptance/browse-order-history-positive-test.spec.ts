@@ -254,3 +254,37 @@ forChannels(ChannelType.UI)(() => {
             .hasCustomerFilterSetToAllCustomers();
     });
 });
+
+forChannels(ChannelType.API)(() => {
+    test('shouldShowTheFirstPageOf50OrdersByDefault', criteria('UC-002.3'), async ({ scenario }) => {
+        await scenario
+            .given()
+            .loggedInAsCustomer()
+            .when()
+            .browseOrderHistory()
+            .withNoOrderNumberFilter()
+            .then()
+            .shouldSucceed()
+            .orderHistory()
+            .hasPage(1)
+            .hasPageSize(50);
+    });
+});
+
+forChannels(ChannelType.UI)(() => {
+    // Opening the linked order is view-order-positive-test's customerShouldBeAbleToViewOwnOrder.
+    test('shouldLinkEachOfTheCustomersOrdersToItsDetails', criteria('UC-002.1'), async ({ scenario }) => {
+        await scenario
+            .given()
+            .order()
+            .placedByCustomer()
+            .and()
+            .loggedInAsCustomer()
+            .when()
+            .browseOrderHistory()
+            .then()
+            .shouldSucceed()
+            .orderHistory()
+            .linksOrderToItsDetails(DEFAULTS.ORDER_NUMBER);
+    });
+});

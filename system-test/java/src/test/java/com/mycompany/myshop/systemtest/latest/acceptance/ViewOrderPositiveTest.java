@@ -102,4 +102,16 @@ class ViewOrderPositiveTest extends BaseAcceptanceTest {
                 .and().order()
                     .hasStatus(OrderStatus.valueOf(status));
     }
+
+    @Tag("UC-002.4")
+    @TestTemplate
+    @Channel({ChannelType.UI, ChannelType.API})
+    void shouldShowNoAppliedCouponWhenTheOrderUsedNone() {
+        scenario
+                .given().order()
+                .when().viewOrder()
+                .then().shouldSucceed()
+                .and().order()
+                    .hasNoAppliedCoupon();
+    }
 }

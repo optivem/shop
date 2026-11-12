@@ -51,6 +51,44 @@ public class ThenSuccessOrderHistory<TSuccessResponse, TSuccessVerification> : I
 
     IThenOrderHistory IThenOrderHistory.HasTotalElements(int expectedTotalElements) => HasTotalElements(expectedTotalElements);
 
+    public ThenSuccessOrderHistory<TSuccessResponse, TSuccessVerification> ShowsOrders(params string[] orderNumbers)
+    {
+        _verifications.Add((v, _) => v.OrdersInOrder(orderNumbers.ToList()));
+        return this;
+    }
+
+    IThenOrderHistory IThenOrderHistory.ShowsOrders(params string[] orderNumbers) => ShowsOrders(orderNumbers);
+
+    public ThenSuccessOrderHistory<TSuccessResponse, TSuccessVerification> ShowsOrderSummary(string orderNumber,
+        string expectedOrderTimestamp, string skuAlias, int expectedQuantity, string expectedTotalPrice,
+        OrderStatus expectedStatus)
+    {
+        _verifications.Add((v, _) => v.ShowsOrderSummary(orderNumber, expectedOrderTimestamp, skuAlias, expectedQuantity,
+            expectedTotalPrice, expectedStatus));
+        return this;
+    }
+
+    IThenOrderHistory IThenOrderHistory.ShowsOrderSummary(string orderNumber, string expectedOrderTimestamp,
+        string skuAlias, int expectedQuantity, string expectedTotalPrice, OrderStatus expectedStatus)
+        => ShowsOrderSummary(orderNumber, expectedOrderTimestamp, skuAlias, expectedQuantity, expectedTotalPrice,
+            expectedStatus);
+
+    public ThenSuccessOrderHistory<TSuccessResponse, TSuccessVerification> HasPage(int expectedPage)
+    {
+        _verifications.Add((v, _) => v.Page(expectedPage));
+        return this;
+    }
+
+    IThenOrderHistory IThenOrderHistory.HasPage(int expectedPage) => HasPage(expectedPage);
+
+    public ThenSuccessOrderHistory<TSuccessResponse, TSuccessVerification> HasPageSize(int expectedPageSize)
+    {
+        _verifications.Add((v, _) => v.PageSize(expectedPageSize));
+        return this;
+    }
+
+    IThenOrderHistory IThenOrderHistory.HasPageSize(int expectedPageSize) => HasPageSize(expectedPageSize);
+
     public ThenSuccessOrderHistory<TSuccessResponse, TSuccessVerification> ShowsOrder(string orderNumber, string customerAlias,
         string skuAlias, int expectedQuantity, OrderStatus expectedStatus)
     {

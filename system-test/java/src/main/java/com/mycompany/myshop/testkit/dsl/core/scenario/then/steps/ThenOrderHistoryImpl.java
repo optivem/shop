@@ -48,6 +48,33 @@ public class ThenOrderHistoryImpl<R, V extends ResponseVerification<R>>
     }
 
     @Override
+    public ThenOrderHistoryImpl<R, V> showsOrders(String... orderNumbers) {
+        verification.ordersInOrder(Arrays.asList(orderNumbers));
+        return this;
+    }
+
+    @Override
+    public ThenOrderHistoryImpl<R, V> showsOrderSummary(String orderNumber, String expectedOrderTimestamp,
+                                                        String skuAlias, int expectedQuantity,
+                                                        String expectedTotalPrice, OrderStatus expectedStatus) {
+        verification.showsOrderSummary(orderNumber, expectedOrderTimestamp, skuAlias, expectedQuantity,
+                expectedTotalPrice, expectedStatus);
+        return this;
+    }
+
+    @Override
+    public ThenOrderHistoryImpl<R, V> hasPage(int expectedPage) {
+        verification.page(expectedPage);
+        return this;
+    }
+
+    @Override
+    public ThenOrderHistoryImpl<R, V> hasPageSize(int expectedPageSize) {
+        verification.pageSize(expectedPageSize);
+        return this;
+    }
+
+    @Override
     public ThenOrderHistoryImpl<R, V> showsOrder(String orderNumber, String customerAlias, String skuAlias,
                                                  int expectedQuantity, OrderStatus expectedStatus) {
         verification.showsOrder(orderNumber, executionResult.customerUsername(customerAlias), skuAlias, expectedQuantity,

@@ -110,3 +110,9 @@ test.eachAlsoFirstRow([{ status: OrderStatus.DELIVERED }, { status: OrderStatus.
             .hasStatus(status);
     },
 );
+
+forChannels(ChannelType.UI, ChannelType.API)(() => {
+    test('shouldShowNoAppliedCouponWhenTheOrderUsedNone', criteria('UC-002.4'), async ({ scenario }) => {
+        await scenario.given().order().when().viewOrder().then().shouldSucceed().and().order().hasNoAppliedCoupon();
+    });
+});

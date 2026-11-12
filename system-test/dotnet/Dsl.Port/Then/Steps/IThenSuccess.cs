@@ -8,6 +8,9 @@ public interface IThenSuccess
 
     IThenOrderHistory OrderHistory();
 
+    /// <summary>The coupon list the executed browse showed.</summary>
+    IThenCouponList CouponList();
+
     /// <summary>The profile the executed operation answered with.</summary>
     IThenProfile Profile();
 

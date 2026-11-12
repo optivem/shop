@@ -40,6 +40,21 @@ public interface ThenOrder extends ThenStep<ThenOrder> {
 
     ThenOrder hasAppliedCoupon();
 
+    /** The order used no coupon: the UI shows "None". */
+    ThenOrder hasNoAppliedCoupon();
+
+    /** The order details offer Cancel Order (UI only). */
+    ThenOrder offersCancelOrder();
+
+    /** The order details do not offer Cancel Order (UI only). */
+    ThenOrder doesNotOfferCancelOrder();
+
+    /** The order details offer Deliver Order (UI only). */
+    ThenOrder offersDeliverOrder();
+
+    /** The order details do not offer Deliver Order (UI only). */
+    ThenOrder doesNotOfferDeliverOrder();
+
     ThenOrder hasTaxRate(String expectedTaxRate);
 
     ThenOrder hasTaxAmount(String expectedTaxAmount);

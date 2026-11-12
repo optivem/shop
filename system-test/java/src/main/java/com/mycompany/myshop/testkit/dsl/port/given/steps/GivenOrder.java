@@ -18,6 +18,12 @@ public interface GivenOrder extends GivenStep {
 
     GivenOrder withIdempotencyKey(String idempotencyKey);
 
+    /**
+     * The order is placed at this time (ISO-8601): the clock is set to it just before the order is placed. It mutates
+     * the shared clock, so the scenario must run isolated.
+     */
+    GivenOrder placedAt(String orderTimestamp);
+
     /** The order is placed by the default customer (customer1). */
     GivenOrder placedByCustomer();
 

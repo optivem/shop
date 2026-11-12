@@ -77,6 +77,18 @@ public class BrowseCouponsVerification : ResponseVerification<BrowseCouponsRespo
         return this;
     }
 
+    /// <summary>The listed coupons begin with these (aliases), in this order.</summary>
+    public BrowseCouponsVerification StartsWithCoupons(List<string> couponCodeAliases)
+    {
+        Response.ShouldNotBeNull();
+        Response.Coupons.ShouldNotBeNull("No coupons found in response");
+        var expectedCodes = couponCodeAliases.Select(alias => Context.GetParamValue(alias)!).ToList();
+        var listedCodes = Response.Coupons.Select(c => c.Code).Take(expectedCodes.Count).ToList();
+        listedCodes.ShouldBe(expectedCodes,
+            $"Coupons listed first, in order; listed: [{string.Join(", ", Response.Coupons.Select(c => c.Code))}]");
+        return this;
+    }
+
     private CouponDto FindCouponByCode(string couponCodeAlias)
     {
         Response.ShouldNotBeNull();

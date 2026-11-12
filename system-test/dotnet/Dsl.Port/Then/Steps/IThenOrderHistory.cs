@@ -13,6 +13,19 @@ public interface IThenOrderHistory
 
     IThenOrderHistory HasTotalElements(int expectedTotalElements);
 
+    /// <summary>The list shows exactly these orders (aliases), in this order; none means the list is empty.</summary>
+    IThenOrderHistory ShowsOrders(params string[] orderNumbers);
+
+    /// <summary>The listed order's summary: order date (ISO-8601), SKU (an alias), quantity, total price and status.</summary>
+    IThenOrderHistory ShowsOrderSummary(string orderNumber, string expectedOrderTimestamp, string skuAlias,
+        int expectedQuantity, string expectedTotalPrice, OrderStatus expectedStatus);
+
+    /// <summary>The page number the list shows (API only).</summary>
+    IThenOrderHistory HasPage(int expectedPage);
+
+    /// <summary>The page size the list uses (API only).</summary>
+    IThenOrderHistory HasPageSize(int expectedPageSize);
+
     /// <summary>The listed order shows who placed it (a customer alias), its SKU (an alias), quantity and status.</summary>
     IThenOrderHistory ShowsOrder(string orderNumber, string customerAlias, string skuAlias, int expectedQuantity, OrderStatus expectedStatus);
 

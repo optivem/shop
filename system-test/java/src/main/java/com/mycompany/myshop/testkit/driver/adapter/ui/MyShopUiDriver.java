@@ -243,6 +243,8 @@ public class MyShopUiDriver implements MyShopDriver {
                 .totalPrice(totalPrice)
                 .status(status)
                 .appliedCouponCode(appliedCoupon)
+                .cancelOffered(!orderDetailsPage.isCancelButtonHidden())
+                .deliverOffered(!orderDetailsPage.isDeliverButtonHidden())
                 .build();
 
         return success(response);

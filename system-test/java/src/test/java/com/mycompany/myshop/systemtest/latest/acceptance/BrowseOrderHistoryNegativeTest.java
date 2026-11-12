@@ -63,7 +63,7 @@ class BrowseOrderHistoryNegativeTest extends BaseAcceptanceTest {
 
     @Tag("UC-002.9")
     @TestTemplate
-    @Channel(ChannelType.API)
+    @Channel({ChannelType.UI, ChannelType.API})
     void shouldShowNoOrdersWhenNoOrderMatchesTheFilter() {
         scenario
                 .given().loggedInAsCustomer()
@@ -160,5 +160,19 @@ class BrowseOrderHistoryNegativeTest extends BaseAcceptanceTest {
                 .when().browseOrderHistory()
                 .then().shouldFail()
                     .errorMessage(AUTHENTICATION_REQUIRED);
+    }
+
+    @Tag("UC-002.9")
+    @TestTemplate
+    @Channel(ChannelType.UI)
+    void shouldTellTheCustomerWhenNoOrderMatchesTheFilter() {
+        scenario
+                .given().loggedInAsCustomer()
+                .when().browseOrderHistory()
+                    .withOrderNumber("NON-EXISTENT-ORDER-99999")
+                .then().shouldSucceed()
+                    .orderHistory()
+                        .isEmpty()
+                        .showsMessage("No orders found");
     }
 }

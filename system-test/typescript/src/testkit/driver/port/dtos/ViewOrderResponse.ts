@@ -18,4 +18,8 @@ export interface ViewOrderResponse {
   status: string;
   /** Null for an order placed without an address (Quick order); not read by the UI channel. */
   shippingAddress?: ShippingAddress | null;
+  /** UI only: whether the order details offer Cancel Order; unset on the API. */
+  cancelOffered?: boolean | null;
+  /** UI only: whether the order details offer Deliver Order; unset on the API. */
+  deliverOffered?: boolean | null;
 }

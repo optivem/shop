@@ -6,6 +6,7 @@ import com.mycompany.myshop.testkit.common.Converter;
 import com.mycompany.myshop.testkit.driver.port.dtos.BrowseCouponsResponse;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -87,6 +88,18 @@ public class BrowseCouponsVerification extends ResponseVerification<BrowseCoupon
         assertThat(coupon.getUsedCount())
                 .as("Used count for coupon '%s'", couponCode)
                 .isEqualTo(expectedUsedCount);
+        return this;
+    }
+
+    /** The listed coupons begin with these (aliases), in this order. */
+    public BrowseCouponsVerification startsWithCoupons(List<String> couponCodeAliases) {
+        assertThat(getResponse()).as("Response should not be null").isNotNull();
+        assertThat(getResponse().getCoupons()).as("Coupons list should not be null").isNotNull();
+        var expectedCodes = couponCodeAliases.stream().map(getContext()::getParamValue).toList();
+        var listedCodes = getResponse().getCoupons().stream().map(BrowseCouponsResponse.CouponDto::getCode).toList();
+        assertThat(listedCodes)
+                .as("Coupons listed first, in order")
+                .startsWith(expectedCodes.toArray(String[]::new));
         return this;
     }
 

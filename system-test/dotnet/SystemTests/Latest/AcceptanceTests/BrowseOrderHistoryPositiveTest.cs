@@ -186,4 +186,30 @@ public class BrowseOrderHistoryPositiveTest : BaseAcceptanceTest
             .Then().ShouldSucceed()
             .OrderHistory().ContainsOrder("ORD-A").ContainsOrder("ORD-B").HasCustomerFilterSetToAllCustomers();
     }
+
+    [Theory]
+    [ChannelData(ChannelType.API)]
+    [Trait("tag", "UC-002.3")]
+    public async Task ShouldShowTheFirstPageOf50OrdersByDefault(Channel channel)
+    {
+        await Scenario(channel)
+            .Given().LoggedInAsCustomer()
+            .When().BrowseOrderHistory().WithNoOrderNumberFilter()
+            .Then().ShouldSucceed()
+            .OrderHistory().HasPage(1).HasPageSize(50);
+    }
+
+    // Opening the linked order is ViewOrderPositiveTest's CustomerShouldBeAbleToViewOwnOrder.
+    [Theory]
+    [ChannelData(ChannelType.UI)]
+    [Trait("tag", "UC-002.1")]
+    public async Task ShouldLinkEachOfTheCustomersOrdersToItsDetails(Channel channel)
+    {
+        await Scenario(channel)
+            .Given().Order().PlacedByCustomer()
+            .And().LoggedInAsCustomer()
+            .When().BrowseOrderHistory()
+            .Then().ShouldSucceed()
+            .OrderHistory().LinksOrderToItsDetails(DefaultOrderNumber);
+    }
 }

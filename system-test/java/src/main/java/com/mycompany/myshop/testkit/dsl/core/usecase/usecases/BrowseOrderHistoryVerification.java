@@ -4,6 +4,7 @@ import com.mycompany.myshop.testkit.driver.port.dtos.BrowseOrderHistoryResponse;
 import com.mycompany.myshop.testkit.dsl.core.shared.ResponseVerification;
 import com.mycompany.myshop.testkit.dsl.core.shared.UseCaseContext;
 
+import com.mycompany.myshop.testkit.common.Converter;
 import com.mycompany.myshop.testkit.common.domain.OrderStatus;
 
 import java.net.URLEncoder;
@@ -44,6 +45,41 @@ public class BrowseOrderHistoryVerification extends ResponseVerification<BrowseO
         assertThat(getResponse().getTotalElements())
                 .as("Order history total elements")
                 .isEqualTo(expectedTotalElements);
+        return this;
+    }
+
+    /** The listed orders are exactly these (aliases), in this order. */
+    public BrowseOrderHistoryVerification ordersInOrder(List<String> orderNumberResultAliases) {
+        var expectedOrderNumbers = orderNumberResultAliases.stream().map(getContext()::getResultValue).toList();
+        assertThat(listedOrderNumbers())
+                .as("Orders listed, in order")
+                .containsExactlyElementsOf(expectedOrderNumbers);
+        return this;
+    }
+
+    /** The listed order shows this order date, SKU (an alias), quantity, total price and status. */
+    public BrowseOrderHistoryVerification showsOrderSummary(String orderNumberResultAlias, String expectedOrderTimestamp,
+                                                            String skuAlias, int expectedQuantity,
+                                                            String expectedTotalPrice, OrderStatus expectedStatus) {
+        var order = listedOrder(orderNumberResultAlias);
+        var expectedSku = getContext().getParamValue(skuAlias);
+        assertThat(order.getOrderTimestamp()).as("Order date of order '%s'", order.getOrderNumber())
+                .isEqualTo(Converter.toInstant(expectedOrderTimestamp));
+        assertThat(order.getSku()).as("SKU of order '%s'", order.getOrderNumber()).isEqualTo(expectedSku);
+        assertThat(order.getQuantity()).as("Quantity of order '%s'", order.getOrderNumber()).isEqualTo(expectedQuantity);
+        assertThat(order.getTotalPrice()).as("Total price of order '%s'", order.getOrderNumber())
+                .isEqualByComparingTo(Converter.toBigDecimal(expectedTotalPrice));
+        assertThat(order.getStatus()).as("Status of order '%s'", order.getOrderNumber()).isEqualTo(expectedStatus);
+        return this;
+    }
+
+    public BrowseOrderHistoryVerification page(int expectedPage) {
+        assertThat(getResponse().getPage()).as("Order history page").isEqualTo(expectedPage);
+        return this;
+    }
+
+    public BrowseOrderHistoryVerification pageSize(int expectedPageSize) {
+        assertThat(getResponse().getSize()).as("Order history page size").isEqualTo(expectedPageSize);
         return this;
     }
 

@@ -40,6 +40,21 @@ public interface IThenOrder
 
     IThenOrder HasAppliedCoupon();
 
+    /// <summary>The order used no coupon: the UI shows "None".</summary>
+    IThenOrder HasNoAppliedCoupon();
+
+    /// <summary>The order details offer Cancel Order (UI only).</summary>
+    IThenOrder OffersCancelOrder();
+
+    /// <summary>The order details do not offer Cancel Order (UI only).</summary>
+    IThenOrder DoesNotOfferCancelOrder();
+
+    /// <summary>The order details offer Deliver Order (UI only).</summary>
+    IThenOrder OffersDeliverOrder();
+
+    /// <summary>The order details do not offer Deliver Order (UI only).</summary>
+    IThenOrder DoesNotOfferDeliverOrder();
+
     IThenOrder HasDiscountAmountGreaterThanOrEqualToZero();
 
     IThenOrder HasSubtotalPriceGreaterThanZero();

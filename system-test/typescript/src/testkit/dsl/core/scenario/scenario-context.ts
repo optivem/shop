@@ -51,6 +51,8 @@ export interface OrderConfig {
   orderNumber?: string;
   /** Alias of the customer who places the order; undefined means the default customer. */
   placedByAlias?: string;
+  /** When the order is placed (ISO-8601): the clock is set to it just before; undefined leaves the clock as it is. */
+  placedAt?: string;
 }
 
 /** A shipping address as the scenario states it; its country is an alias, resolved like an order's country. */

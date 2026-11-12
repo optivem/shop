@@ -51,4 +51,19 @@ public class DeliverOrderNegativeTest : BaseAcceptanceTest
             .And().Order()
             .HasStatus(status);
     }
+
+    [Theory]
+    [ChannelData(ChannelType.UI)]
+    [Trait("tag", "UC-012.2")]
+    public async Task ShouldOfferNeitherDeliverNorCancelOnceTheOrderIsDelivered(Channel channel)
+    {
+        await Scenario(channel)
+            .Given().Order().PlacedByCustomer().WithStatus(OrderStatus.Delivered)
+            .And().LoggedInAsAdmin()
+            .When().ViewOrder()
+            .Then().ShouldSucceed()
+            .And().Order()
+            .DoesNotOfferDeliverOrder()
+            .DoesNotOfferCancelOrder();
+    }
 }

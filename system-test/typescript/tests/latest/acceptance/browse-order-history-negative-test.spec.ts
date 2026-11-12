@@ -4,6 +4,19 @@ import { ErrorMessages } from '../../commons/constants/error-messages.js';
 import { criteria } from '../../commons/criteria.js';
 
 forChannels(ChannelType.UI, ChannelType.API)(() => {
+    test('shouldShowNoOrdersWhenNoOrderMatchesTheFilter', criteria('UC-002.9'), async ({ scenario }) => {
+        await scenario
+            .given()
+            .loggedInAsCustomer()
+            .when()
+            .browseOrderHistory()
+            .withOrderNumber('NON-EXISTENT-ORDER-99999')
+            .then()
+            .shouldSucceed()
+            .orderHistory()
+            .isEmpty();
+    });
+
     test('customerShouldNotSeeAnotherCustomersOrderInHistory', criteria('UC-002.6', 'UC-011.5'), async ({ scenario }) => {
         await scenario
             .given()
@@ -110,19 +123,6 @@ forChannels(ChannelType.API)(() => {
             .errorMessage('The request contains one or more validation errors')
             .fieldErrorMessage('size', 'Page size must be between 1 and 100');
     });
-
-    test('shouldShowNoOrdersWhenNoOrderMatchesTheFilter', criteria('UC-002.9'), async ({ scenario }) => {
-        await scenario
-            .given()
-            .loggedInAsCustomer()
-            .when()
-            .browseOrderHistory()
-            .withOrderNumber('NON-EXISTENT-ORDER-99999')
-            .then()
-            .shouldSucceed()
-            .orderHistory()
-            .isEmpty();
-    });
 });
 
 forChannels(ChannelType.API)(() => {
@@ -164,6 +164,20 @@ forChannels(ChannelType.UI)(() => {
             .browseOrderHistory()
             .withCustomer('A')
             .withOrderNumber('ORD-B')
+            .then()
+            .shouldSucceed()
+            .orderHistory()
+            .isEmpty()
+            .showsMessage('No orders found');
+    });
+
+    test('shouldTellTheCustomerWhenNoOrderMatchesTheFilter', criteria('UC-002.9'), async ({ scenario }) => {
+        await scenario
+            .given()
+            .loggedInAsCustomer()
+            .when()
+            .browseOrderHistory()
+            .withOrderNumber('NON-EXISTENT-ORDER-99999')
             .then()
             .shouldSucceed()
             .orderHistory()

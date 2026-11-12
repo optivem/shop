@@ -17,6 +17,23 @@ const CUSTOMER_HEADER = 'Customer';
 const SKU_HEADER = 'SKU';
 const QUANTITY_HEADER = 'Quantity';
 const STATUS_HEADER = 'Status';
+const ORDER_DATE_HEADER = 'Order Date';
+const TOTAL_PRICE_HEADER = 'Total Price';
+/** Every UI shows the order date as toLocaleString('en-US', { timeZone: 'UTC' }), e.g. "1/10/2026, 9:00:00 AM". */
+const ORDER_DATE_PATTERN = /^(\d{1,2})\/(\d{1,2})\/(\d{4}), (\d{1,2}):(\d{2}):(\d{2})\s(AM|PM)$/;
+const HOURS_PER_HALF_DAY = 12;
+
+/** The order date as an ISO-8601 instant; browsers may put a narrow or a non-breaking space before AM/PM. */
+function parseOrderDate(text: string): string {
+  const match = ORDER_DATE_PATTERN.exec(text.replaceAll('\u202f', ' ').replaceAll('\u00a0', ' ').trim());
+  if (!match) {
+    throw new Error(`Unexpected order date format: '${text}'`);
+  }
+  const [, month, day, year, hour, minute, second, meridiem] = match.map((part) => part ?? '');
+  const hourOfHalfDay = Number(hour) % HOURS_PER_HALF_DAY;
+  const hourOfDay = meridiem === 'PM' ? hourOfHalfDay + HOURS_PER_HALF_DAY : hourOfHalfDay;
+  return new Date(Date.UTC(Number(year), Number(month) - 1, Number(day), hourOfDay, Number(minute), Number(second))).toISOString();
+}
 const NO_CUSTOMER = '-';
 const ALL_CUSTOMERS = 'All customers';
 
@@ -80,11 +97,15 @@ export class OrderHistoryPage extends BasePage {
       };
       const customer = cell(CUSTOMER_HEADER);
       const quantity = cell(QUANTITY_HEADER);
+      const orderDate = cell(ORDER_DATE_HEADER);
+      const totalPrice = cell(TOTAL_PRICE_HEADER);
       orders.push({
         orderNumber: cell(ORDER_NUMBER_HEADER) ?? '',
         customer: customer === NO_CUSTOMER ? undefined : customer,
         sku: cell(SKU_HEADER) ?? '',
+        orderTimestamp: orderDate === undefined ? '' : parseOrderDate(orderDate),
         quantity: quantity === undefined ? 0 : Number.parseInt(quantity, 10),
+        totalPrice: totalPrice === undefined ? '' : totalPrice.replace('$', '').trim(),
         status: cell(STATUS_HEADER) ?? '',
         detailsPath: await row.locator('a').first().getAttribute('href'),
       } as BrowseOrderHistoryOrderItem);

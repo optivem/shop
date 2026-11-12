@@ -18,6 +18,10 @@ export async function placeGivenOrder(
 ): Promise<void> {
   const alias = order.orderNumber ?? DEFAULTS.ORDER_NUMBER;
 
+  if (order.placedAt !== undefined) {
+    await app.clockDriver.returnsTime({ time: order.placedAt });
+  }
+
   app.actAs(ctx.placingIdentity(order));
   try {
     const placeResult = await app.myShop().placeOrder({

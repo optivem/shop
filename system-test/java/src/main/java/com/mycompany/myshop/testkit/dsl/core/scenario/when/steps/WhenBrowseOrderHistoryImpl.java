@@ -17,6 +17,7 @@ import java.util.function.Supplier;
 
 public class WhenBrowseOrderHistoryImpl extends BaseWhenStep<BrowseOrderHistoryResponse, BrowseOrderHistoryVerification> implements WhenBrowseOrderHistory {
     private String orderNumber;
+    private boolean orderNumberPartOnly;
     private String page;
     private String size;
     private Supplier<UserIdentity> customer;
@@ -31,6 +32,14 @@ public class WhenBrowseOrderHistoryImpl extends BaseWhenStep<BrowseOrderHistoryR
 
     public WhenBrowseOrderHistoryImpl withOrderNumber(String orderNumber) {
         this.orderNumber = orderNumber;
+        this.orderNumberPartOnly = false;
+        return this;
+    }
+
+    @Override
+    public WhenBrowseOrderHistoryImpl withOrderNumberPartOf(String orderNumber) {
+        this.orderNumber = orderNumber;
+        this.orderNumberPartOnly = true;
         return this;
     }
 
@@ -72,6 +81,9 @@ public class WhenBrowseOrderHistoryImpl extends BaseWhenStep<BrowseOrderHistoryR
                 .page(page)
                 .size(size)
                 .customer(customer == null ? null : customer.get().username());
+        if (orderNumberPartOnly) {
+            browseOrderHistory.orderNumberPartOf(orderNumber);
+        }
         if (resetFiltersAfterwards) {
             browseOrderHistory.resetFiltersAfterwards();
         }
