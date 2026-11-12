@@ -42,6 +42,7 @@ public static class Converter
         return From(value, v => v.ToString("O")); // ISO 8601 format
     }
 
+    /// <summary>Parses an ISO or en-US date as UTC (Kind = Utc), so the result never depends on the machine's timezone.</summary>
     public static DateTime? ToDateTime(string? text, params string[] nullValues)
     {
         if (string.IsNullOrEmpty(text))
@@ -56,7 +57,7 @@ public static class Converter
 
         // Try ISO format first
         if (DateTime.TryParse(text, System.Globalization.CultureInfo.InvariantCulture,
-            System.Globalization.DateTimeStyles.RoundtripKind, out var isoResult))
+            UtcStyles, out var isoResult))
         {
             return isoResult;
         }
@@ -72,7 +73,7 @@ public static class Converter
         foreach (var format in formats)
         {
             if (DateTime.TryParseExact(text, format, System.Globalization.CultureInfo.InvariantCulture,
-                System.Globalization.DateTimeStyles.None, out var result))
+                UtcStyles, out var result))
             {
                 return result;
             }
@@ -80,6 +81,9 @@ public static class Converter
 
         throw new FormatException($"Invalid date format: {text} - Expected ISO format or locale-specific format.");
     }
+
+    private const System.Globalization.DateTimeStyles UtcStyles =
+        System.Globalization.DateTimeStyles.AssumeUniversal | System.Globalization.DateTimeStyles.AdjustToUniversal;
 
     private static string? From<TSource>(TSource? value, Func<TSource, string> converter)
         where TSource : struct
