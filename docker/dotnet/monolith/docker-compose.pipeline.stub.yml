@@ -14,8 +14,11 @@ services:
       - POSTGRES_DB_USER=${POSTGRES_DB_USER:-app}
       - POSTGRES_DB_PASSWORD=${POSTGRES_DB_PASSWORD:-app}
       - ERP_API_URL=http://external-system-stubs:8080/erp
-      # Stub only: a short breaker open time so an ERP-outage test doesn't leak 503s into the next test
+      # Stub only: a short breaker open time, and a breaker that opens only when every recent ERP call failed, so an
+      # ERP-outage test doesn't leak 503s into the next test. At the default 0.5, the outage's failed calls left in the
+      # 30 s sampling window reopen the breaker on the next test's first good calls.
       - Resilience__Erp__BreakDurationMilliseconds=500
+      - Resilience__Erp__FailureRatio=1.0
       - CLOCK_API_URL=http://external-system-stubs:8080/clock
       - TAX_API_URL=http://external-system-stubs:8080/tax
       - EXTERNAL_SYSTEM_MODE=stub
