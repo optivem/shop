@@ -199,3 +199,9 @@ Found 2026-11-12 (.NET pass). When the `CHANNEL` filter leaves no channels (a UI
 ### 66. Stub Keycloak memory grows during a run
 Found 2026-11-12 (.NET pass). The stub Keycloak grew from 0.8 GB to 2.25 GB in one monolith acceptance run, most likely from creating and deleting a user for each test (fresh customer). Two runs were killed for low memory on a 32 GB machine.
 - **Recommended:** cap the Keycloak JVM heap in the stub composes (e.g. `JAVA_OPTS_KC_HEAP`), and check whether user deletion leaves sessions or events behind. **Why:** local runs must fit alongside an IDE and a browser.
+
+### 67. Pipeline-hiding commit-stage failures and remaining coupon-list readers
+Found 2026-11-12 (pipeline-green pass).
+- `multitier-backend-typescript-commit-stage` was red from `8ee90751` to `d01ea39f`, and the acceptance stage kept testing the last published image. The image was old but the run looked like a code failure (missing Retry-After). **Recommended:** make the acceptance stage fail loudly, or at least warn, when the backend image it pulls is older than the commit under test. **Why:** a red commit stage then shows up as its own cause, not as a misleading acceptance failure.
+- `PublishCouponPositiveTest` (ShouldBeAbleToPublishCouponWithEmptyOptionalFields, ShouldBeAbleToCorrectlySaveCoupon, ShouldAcceptDiscountRateAboveZeroAndUpToOne) still reads the coupon back through the unpaged UI list in the parallel suites, ×3 languages. They read it straight after publishing, so the risk is lower than for the tests moved in `8d4fd72d`. **Recommended:** move them to the Isolated classes if they ever flake. **Why:** it's the same failure mode as UC-004.9.
+- Note: the `8d4fd72d` message says "as Java and TS already have them". In fact that commit also carried the .NET pass agent's Java and TS moves.
