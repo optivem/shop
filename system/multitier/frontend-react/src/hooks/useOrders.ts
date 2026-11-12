@@ -55,8 +55,6 @@ export function useOrders(initialFilter = '', { collectCustomers = false }: UseO
   const [reloadCount, setReloadCount] = useState(0);
   // The request whose response is currently applied; loading is derived from it.
   const [loaded, setLoaded] = useState<OrdersRequest | null>(null);
-  // Collecting the customers takes a request per page, so it can outlive the list request that started it.
-  // It only ever adds customers, so it is not cancelled by a newer filter, only by unmounting.
   const mounted = useRef(true);
   useEffect(() => {
     mounted.current = true;
@@ -74,11 +72,6 @@ export function useOrders(initialFilter = '', { collectCustomers = false }: UseO
       if (result.success) {
         setOrders(result.data.orders);
         setError(null);
-        if (collectCustomers && customer === '' && filter.trim() === '') {
-          void collectAllCustomers(result.data, (page) => orderService.browseOrderHistory({ page })).then((found) => {
-            if (mounted.current) setCustomers((known) => mergeCustomers(known, found));
-          });
-        }
       } else {
         setError(result.error.message);
       }
@@ -87,7 +80,20 @@ export function useOrders(initialFilter = '', { collectCustomers = false }: UseO
     return () => {
       ignore = true;
     };
-  }, [filter, customer, reloadCount, collectCustomers]);
+  }, [filter, customer, reloadCount]);
+
+  // The customers for the filter come from the unfiltered list, fetched on its own: the list shown may already be
+  // filtered (the admin can type before the first page arrives). Collecting takes a request per page, and it only
+  // ever adds customers, so a newer filter or refresh does not cancel it; only unmounting does.
+  useEffect(() => {
+    if (!collectCustomers) return;
+    const fetchPage = (page: number) => orderService.browseOrderHistory({ page });
+    void fetchPage(1).then(async (first) => {
+      if (!first.success || !mounted.current) return;
+      const found = await collectAllCustomers(first.data, fetchPage);
+      if (mounted.current) setCustomers((known) => mergeCustomers(known, found));
+    });
+  }, [collectCustomers, reloadCount]);
 
   const refresh = useCallback(() => {
     setReloadCount((count) => count + 1);
