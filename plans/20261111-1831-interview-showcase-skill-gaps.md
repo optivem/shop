@@ -38,7 +38,7 @@ CI/CD meta-stages (commit → acceptance → RC → release), ATDD with DSL/driv
 
 ## ▶ Next executable step (resume here)
 
-**Testing phase pending (Phase B of meta-plan 20261112-0845):** Steps 3, 5, 6 and 4b are code-complete; compile is green (`./compile-all.sh`, all 7 configs), but nothing has been run against a stack yet.
+**Testing phase pending (Phase B of meta-plan 20261112-0845):** Every step is code-complete; compile is green (`./compile-all.sh`, all 7 configs), but nothing has been run against a stack yet.
 - Step 3: run `--sample` per language (backend resilience part) and the new resilience acceptance tests — `PlaceOrderNegativeIsolatedTest` → `shouldFailFastWithServiceUnavailableWhenErpIsDown` / `…WhenErpIsSlow` (Java, .NET `ShouldFailFast…`, TS spec), API channel, stub mode. They drive the ERP stub down (503) or slow (20s WireMock fixed delay, priority-1 outage stub) and assert the 503 message, `Retry-After` in whole seconds, `application/problem+json`, and a fail-fast bound (down ≤5s, slow ≤12s). Also confirm the stub compose breaker override (Java/TS 100ms, .NET 500ms) stops breaker state leaking between isolated tests. Known limit: the breaker opening itself is not asserted black-box (the short stub open window makes it racy); cover it with backend unit tests if wanted.
 - Step 5: smoke-run `k6 run perf/k6/browse-and-place-order.js` against one stub stack (defaults = Java monolith, API 8112 / Keycloak 8192), then trigger the `load-test` workflow once (`workflow_dispatch`, language=java) and check its job summary shows the p95/p99 table.
 - Step 6: OpenAPI is served at springdoc's `/v3/api-docs` on every backend (signed-in callers only, as on Java). Verified by unit tests for .NET (monolith + multitier, passed) and the Next.js monolith (`openapi.spec.ts`, passed); the NestJS check is a component test (`authorization.component.spec.ts`, needs docker) — run it, and open `/v3/api-docs` with a token on one running stack per language. Stryker: the TS configs passed a local `--dryRunOnly`; trigger each of the four `*-mutation-nightly.yml` workflows once by hand (the .NET ones have not been run at all) and check the summary/report artifact.
@@ -46,13 +46,14 @@ CI/CD meta-stages (commit → acceptance → RC → release), ATDD with DSL/driv
 
 Step 7 is done: the outbox and frontend-testing plans are `plans/20261112-0939-transactional-outbox-postgres.md` and `plans/20261112-0939-frontend-testing-component-a11y-lighthouse.md` (both need `/refine-plan` first); feature flags (#7) are dropped.
 
-Next coding step: **Step 8** (`docs/tour.md` skills-map rows for resilience, k6, OpenAPI/Stryker parity and SBOM release assets).
+Step 8 is done: `docs/tour.md` has skills-map rows for Resilience and Performance (k6), the OpenAPI and mutation-testing rows now cover all three languages, the supply-chain row mentions the release SBOMs, and the "Coming next" section is gone (everything in it landed).
+
+**No coding left.** Once the testing items above pass (fix forward if not), delete this plan.
 
 ## Steps
 
-Execution order: 8 (every other step is done; Steps 3, 4b, 5 and 6 still await the testing phase).
+Every step is code-complete; only the testing phase in ▶ Next remains (Steps 3, 4b, 5 and 6).
 
-- [ ] Step 8: Update `docs/tour.md` skills map with each addition as it lands.
 
 ## Constraints
 
