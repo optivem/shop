@@ -162,7 +162,7 @@ public class MyShopUiDriver : IMyShopDriver
         }
 
         await RunAsAsync(TestUser.Admin);
-        var viewResult = await ViewOrderAsync(new ViewOrderRequest { OrderNumber = request.OrderNumber });
+        var viewResult = await ReadOrderDetailsAsync(request.OrderNumber);
         if (viewResult.IsFailure)
         {
             return Failure<DeliverOrderResponse>(viewResult.Error);
@@ -198,7 +198,13 @@ public class MyShopUiDriver : IMyShopDriver
         }
 
         await RunAsAsync(TestUser.Customer);
-        var result = await EnsureOnOrderDetailsPageAsync(request.OrderNumber);
+        return await ReadOrderDetailsAsync(request.OrderNumber);
+    }
+
+    /// <summary>Opens and reads the order details page as whoever is signed in now; no user switch.</summary>
+    private async Task<Result<ViewOrderResponse, SystemError>> ReadOrderDetailsAsync(string orderNumber)
+    {
+        var result = await EnsureOnOrderDetailsPageAsync(orderNumber);
         if (result.IsFailure)
         {
             return Failure<ViewOrderResponse>(result.Error);

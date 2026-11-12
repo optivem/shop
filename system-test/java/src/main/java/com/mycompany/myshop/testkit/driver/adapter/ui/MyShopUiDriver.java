@@ -177,7 +177,7 @@ public class MyShopUiDriver implements MyShopDriver {
         }
 
         runAs(TestUser.ADMIN);
-        var viewResult = viewOrder(ViewOrderRequest.builder().orderNumber(request.getOrderNumber()).build());
+        var viewResult = readOrderDetails(request.getOrderNumber());
 
         if (viewResult.isFailure()) {
             return failure(viewResult.getError());
@@ -206,6 +206,11 @@ public class MyShopUiDriver implements MyShopDriver {
         }
 
         runAs(TestUser.CUSTOMER);
+        return readOrderDetails(orderNumber);
+    }
+
+    /** Opens and reads the order details page as whoever is signed in now; no user switch. */
+    private Result<ViewOrderResponse, SystemError> readOrderDetails(String orderNumber) {
         var result = ensureOnOrderDetailsPage(orderNumber);
         if (result.isFailure()) {
             return failure(result.getError());
