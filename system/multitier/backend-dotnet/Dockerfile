@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.4
 # Use the official .NET SDK image for build
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:11.0 AS build
 WORKDIR /app
 ENV NUGET_PACKAGES=/root/.nuget/packages
 
