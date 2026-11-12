@@ -17,6 +17,7 @@ public class WhenBrowseOrderHistory : BaseWhen<BrowseOrderHistoryResponse, Brows
     private string? _size;
     private bool _filtersOnCustomer;
     private string? _customerAlias;
+    private bool _resetFiltersAfterwards;
     private readonly Func<string, UserIdentity>? _resolveCustomer;
     private readonly Func<UserIdentity> _defaultCustomer;
 
@@ -37,6 +38,18 @@ public class WhenBrowseOrderHistory : BaseWhen<BrowseOrderHistoryResponse, Brows
     }
 
     IWhenBrowseOrderHistory IWhenBrowseOrderHistory.WithOrderNumber(string? orderNumber) => WithOrderNumber(orderNumber);
+
+    public WhenBrowseOrderHistory WithNoOrderNumberFilter() => WithOrderNumber(null);
+
+    IWhenBrowseOrderHistory IWhenBrowseOrderHistory.WithNoOrderNumberFilter() => WithNoOrderNumberFilter();
+
+    public WhenBrowseOrderHistory WithFiltersResetAfterwards()
+    {
+        _resetFiltersAfterwards = true;
+        return this;
+    }
+
+    IWhenBrowseOrderHistory IWhenBrowseOrderHistory.WithFiltersResetAfterwards() => WithFiltersResetAfterwards();
 
     public WhenBrowseOrderHistory WithPage(string? page)
     {
@@ -72,6 +85,10 @@ public class WhenBrowseOrderHistory : BaseWhen<BrowseOrderHistoryResponse, Brows
 
     IWhenBrowseOrderHistory IWhenBrowseOrderHistory.WithCustomer(string customerAlias) => WithCustomer(customerAlias);
 
+    private string ResolveCustomerUsername(string customerAlias)
+        => (_resolveCustomer ?? throw new InvalidOperationException(
+            $"Customer alias '{customerAlias}' cannot be resolved: the scenario declares no customers"))(customerAlias).Username();
+
     /// <summary>The username of the filtered customer; aliases resolve only once the scenario has been set up.</summary>
     private string? CustomerUsername()
     {
@@ -90,15 +107,20 @@ public class WhenBrowseOrderHistory : BaseWhen<BrowseOrderHistoryResponse, Brows
     protected override async Task<ExecutionResult<BrowseOrderHistoryResponse, BrowseOrderHistoryVerification>> Execute(UseCaseDsl app)
     {
         var shop = await app.MyShop(ChannelMode.Dynamic, Channel);
-        var result = await shop.BrowseOrderHistory()
+        var browseOrderHistory = shop.BrowseOrderHistory()
             .OrderNumber(_orderNumber)
             .Page(_page)
             .Size(_size)
-            .Customer(CustomerUsername())
-            .Execute();
+            .Customer(CustomerUsername());
+        if (_resetFiltersAfterwards)
+        {
+            browseOrderHistory.ResetFiltersAfterwards();
+        }
+        var result = await browseOrderHistory.Execute();
 
         return new ExecutionResultBuilder<BrowseOrderHistoryResponse, BrowseOrderHistoryVerification>(result)
             .OrderNumber(_orderNumber)
+            .CustomerUsernames(ResolveCustomerUsername)
             .Build();
     }
 }

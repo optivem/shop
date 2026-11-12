@@ -5,12 +5,14 @@ import type { ScenarioContext } from '../scenario-context.js';
 import { ThenBrowseOrderHistoryResultStage } from '../then/then-browse-order-history.js';
 import { assertNotAwaited } from '../assert-not-awaited.js';
 import { UserIdentity } from '../../../../driver/port/user-identity.js';
+import { RESET_FILTERS } from '../../../../driver/port/dtos/BrowseOrderHistoryRequest.js';
 
 export class WhenBrowseOrderHistory {
   private orderNumber: string = DEFAULTS.ORDER_NUMBER;
   private page: string | null = null;
   private size: string | null = null;
   private customer: (() => string) | null = null;
+  private followUp: string | null = null;
 
   constructor(
     private readonly app: AppContext,
@@ -20,6 +22,15 @@ export class WhenBrowseOrderHistory {
 
   withOrderNumber(orderNumber: string): this {
     this.orderNumber = orderNumber;
+    return this;
+  }
+
+  withNoOrderNumberFilter(): this {
+    return this.withOrderNumber('');
+  }
+
+  withFiltersResetAfterwards(): this {
+    this.followUp = RESET_FILTERS;
     return this;
   }
 
@@ -61,6 +72,7 @@ export class WhenBrowseOrderHistory {
       this.page,
       this.size,
       this.customer,
+      this.followUp,
     );
   }
 }

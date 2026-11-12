@@ -85,6 +85,13 @@ public class PageClient {
         locator.waitFor(getDefaultWaitForOptions());
     }
 
+    /** Waits until an element matches the selector, shown or not (such as an option of a select). */
+    public void waitForAttached(String selector) {
+        page.locator(selector).first().waitFor(new Locator.WaitForOptions()
+                .setState(com.microsoft.playwright.options.WaitForSelectorState.ATTACHED)
+                .setTimeout(timeoutMilliseconds));
+    }
+
     public boolean isVisible(String selector) {
         try {
             var locator = getLocator(selector);

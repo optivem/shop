@@ -9,11 +9,11 @@ public class ExecutionResult<R, V extends ResponseVerification<R>> {
     private final UseCaseResult<R, V> result;
     private final ExecutionResultContext context;
 
-    ExecutionResult(UseCaseResult<R, V> result, String orderNumber, String couponCode) {
+    ExecutionResult(UseCaseResult<R, V> result, ExecutionResultContext context) {
         if (result == null) {
             throw new IllegalArgumentException("Result cannot be null");
         }
         this.result = result;
-        this.context = new ExecutionResultContext(orderNumber, couponCode);
+        this.context = context;
     }
 }

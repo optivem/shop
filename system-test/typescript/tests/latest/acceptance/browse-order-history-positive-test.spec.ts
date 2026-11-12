@@ -1,9 +1,10 @@
 import { test, forChannels, ChannelType } from './base/fixtures.js';
 import { DEFAULTS } from '../../../src/testkit/dsl/core/scenario/defaults.js';
+import { OrderStatus } from '../../../src/testkit/common/dtos.js';
 import { criteria } from '../../commons/criteria.js';
 
 forChannels(ChannelType.UI, ChannelType.API)(() => {
-    test('customerShouldSeeOwnOrderInHistory', criteria('UC-002.1', 'UC-002.2'), async ({ scenario }) => {
+    test('customerShouldSeeOwnOrderInHistory', criteria('UC-002.1', 'UC-002.2', 'UC-011.5'), async ({ scenario }) => {
         await scenario
             .given()
             .order()
@@ -47,6 +48,67 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
             .orderHistory()
             .containsOrder(DEFAULTS.ORDER_NUMBER);
     });
+
+    test('adminShouldSeeOrderOfChosenCustomer', criteria('UC-011.3', 'UC-011.4'), async ({ scenario }) => {
+        await scenario
+            .given()
+            .order()
+            .withOrderNumber('ORD-A')
+            .placedByCustomer('A')
+            .and()
+            .loggedInAsAdmin()
+            .when()
+            .browseOrderHistory()
+            .withCustomer('A')
+            .withOrderNumber('ORD-A')
+            .then()
+            .shouldSucceed()
+            .orderHistory()
+            .containsOrder('ORD-A');
+    });
+
+    // Not covered: the "newest first" order of @UC-011.1 (the given orders cannot be dated) and @UC-011.2 (an order
+    // with no recorded customer cannot be placed).
+    test('shouldShowTheDetailsOfEachOrderInTheList', criteria('UC-011.1'), async ({ scenario }) => {
+        await scenario
+            .given()
+            .order()
+            .withOrderNumber('ORD-B')
+            .withQuantity(2)
+            .placedByCustomer('B')
+            .and()
+            .loggedInAsAdmin()
+            .when()
+            .browseOrderHistory()
+            .withOrderNumber('ORD-B')
+            .then()
+            .shouldSucceed()
+            .orderHistory()
+            .showsOrder('ORD-B', 'B', DEFAULTS.SKU, 2, OrderStatus.PLACED);
+    });
+
+    test('shouldShowOnlyTheOrdersOfTheChosenCustomer', criteria('UC-011.3'), async ({ scenario }) => {
+        await scenario
+            .given()
+            .order()
+            .withOrderNumber('ORD-A')
+            .placedByCustomer('A')
+            .and()
+            .order()
+            .withOrderNumber('ORD-B')
+            .placedByCustomer('B')
+            .and()
+            .loggedInAsAdmin()
+            .when()
+            .browseOrderHistory()
+            .withCustomer('A')
+            .withNoOrderNumberFilter()
+            .then()
+            .shouldSucceed()
+            .orderHistory()
+            .containsOrder('ORD-A')
+            .doesNotContainOrder('ORD-B');
+    });
 });
 
 forChannels(ChannelType.API)(() => {
@@ -86,24 +148,6 @@ forChannels(ChannelType.API)(() => {
 });
 
 forChannels(ChannelType.API)(() => {
-    test('adminShouldSeeOrderOfChosenCustomer', criteria('UC-011.3', 'UC-011.4'), async ({ scenario }) => {
-        await scenario
-            .given()
-            .order()
-            .withOrderNumber('ORD-A')
-            .placedByCustomer('A')
-            .and()
-            .loggedInAsAdmin()
-            .when()
-            .browseOrderHistory()
-            .withCustomer('A')
-            .withOrderNumber('ORD-A')
-            .then()
-            .shouldSucceed()
-            .orderHistory()
-            .containsOrder('ORD-A');
-    });
-
     test('customerFilterShouldBeIgnoredForCustomer', criteria('UC-011.5'), async ({ scenario }) => {
         await scenario
             .given()
@@ -124,5 +168,89 @@ forChannels(ChannelType.API)(() => {
             .shouldSucceed()
             .orderHistory()
             .containsOrder('ORD-A');
+    });
+});
+
+forChannels(ChannelType.UI)(() => {
+    // Opening the linked order is view-order-positive-test's adminShouldBeAbleToViewAnotherCustomersOrder.
+    test('shouldLinkEachOrderToItsDetails', criteria('UC-011.1'), async ({ scenario }) => {
+        await scenario
+            .given()
+            .order()
+            .withOrderNumber('ORD-B')
+            .placedByCustomer('B')
+            .and()
+            .loggedInAsAdmin()
+            .when()
+            .browseOrderHistory()
+            .withOrderNumber('ORD-B')
+            .then()
+            .shouldSucceed()
+            .orderHistory()
+            .linksOrderToItsDetails('ORD-B');
+    });
+
+    test('shouldOfferTheCustomersWhoHavePlacedOrders', criteria('UC-011.3'), async ({ scenario }) => {
+        await scenario
+            .given()
+            .order()
+            .withOrderNumber('ORD-A')
+            .placedByCustomer('A')
+            .and()
+            .order()
+            .withOrderNumber('ORD-B')
+            .placedByCustomer('B')
+            .and()
+            .loggedInAsAdmin()
+            .when()
+            .browseOrderHistory()
+            .withNoOrderNumberFilter()
+            .then()
+            .shouldSucceed()
+            .orderHistory()
+            .offersCustomers('A', 'B')
+            .hasCustomerFilterSetToAllCustomers();
+    });
+
+    test('shouldNotShowACustomerTheCustomerColumnOrTheCustomerFilter', criteria('UC-011.7'), async ({ scenario }) => {
+        await scenario
+            .given()
+            .order()
+            .placedByCustomer()
+            .and()
+            .loggedInAsCustomer()
+            .when()
+            .browseOrderHistory()
+            .then()
+            .shouldSucceed()
+            .orderHistory()
+            .containsOrder(DEFAULTS.ORDER_NUMBER)
+            .showsNoCustomers()
+            .offersNoCustomerFilter();
+    });
+
+    test('shouldShowEveryOrderAgainAfterResettingTheFilters', criteria('UC-011.8'), async ({ scenario }) => {
+        await scenario
+            .given()
+            .order()
+            .withOrderNumber('ORD-A')
+            .placedByCustomer('A')
+            .and()
+            .order()
+            .withOrderNumber('ORD-B')
+            .placedByCustomer('B')
+            .and()
+            .loggedInAsAdmin()
+            .when()
+            .browseOrderHistory()
+            .withCustomer('B')
+            .withOrderNumber('ORD-A')
+            .withFiltersResetAfterwards()
+            .then()
+            .shouldSucceed()
+            .orderHistory()
+            .containsOrder('ORD-A')
+            .containsOrder('ORD-B')
+            .hasCustomerFilterSetToAllCustomers();
     });
 });

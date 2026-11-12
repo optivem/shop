@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using Common.Domain;
 using Dsl.Port.Then.Steps;
 using Dsl.Core.Shared;
 using Dsl.Core.UseCase.UseCases;
@@ -9,7 +10,9 @@ public class ThenSuccessOrderHistory<TSuccessResponse, TSuccessVerification> : I
     where TSuccessVerification : ResponseVerification<TSuccessResponse>
 {
     private readonly ThenStage<TSuccessResponse, TSuccessVerification> _thenClause;
-    private readonly List<Action<BrowseOrderHistoryVerification>> _verifications = [];
+    private const string AllCustomers = "All customers";
+
+    private readonly List<Action<BrowseOrderHistoryVerification, Func<string, string>>> _verifications = [];
 
     internal ThenSuccessOrderHistory(ThenStage<TSuccessResponse, TSuccessVerification> thenClause)
     {
@@ -18,7 +21,7 @@ public class ThenSuccessOrderHistory<TSuccessResponse, TSuccessVerification> : I
 
     public ThenSuccessOrderHistory<TSuccessResponse, TSuccessVerification> ContainsOrder(string orderNumber)
     {
-        _verifications.Add(v => v.ContainsOrder(orderNumber));
+        _verifications.Add((v, _) => v.ContainsOrder(orderNumber));
         return this;
     }
 
@@ -26,7 +29,7 @@ public class ThenSuccessOrderHistory<TSuccessResponse, TSuccessVerification> : I
 
     public ThenSuccessOrderHistory<TSuccessResponse, TSuccessVerification> DoesNotContainOrder(string orderNumber)
     {
-        _verifications.Add(v => v.DoesNotContainOrder(orderNumber));
+        _verifications.Add((v, _) => v.DoesNotContainOrder(orderNumber));
         return this;
     }
 
@@ -34,7 +37,7 @@ public class ThenSuccessOrderHistory<TSuccessResponse, TSuccessVerification> : I
 
     public ThenSuccessOrderHistory<TSuccessResponse, TSuccessVerification> IsEmpty()
     {
-        _verifications.Add(v => v.IsEmpty());
+        _verifications.Add((v, _) => v.IsEmpty());
         return this;
     }
 
@@ -42,11 +45,71 @@ public class ThenSuccessOrderHistory<TSuccessResponse, TSuccessVerification> : I
 
     public ThenSuccessOrderHistory<TSuccessResponse, TSuccessVerification> HasTotalElements(int expectedTotalElements)
     {
-        _verifications.Add(v => v.TotalElements(expectedTotalElements));
+        _verifications.Add((v, _) => v.TotalElements(expectedTotalElements));
         return this;
     }
 
     IThenOrderHistory IThenOrderHistory.HasTotalElements(int expectedTotalElements) => HasTotalElements(expectedTotalElements);
+
+    public ThenSuccessOrderHistory<TSuccessResponse, TSuccessVerification> ShowsOrder(string orderNumber, string customerAlias,
+        string skuAlias, int expectedQuantity, OrderStatus expectedStatus)
+    {
+        _verifications.Add((v, customerUsername) =>
+            v.ShowsOrder(orderNumber, customerUsername(customerAlias), skuAlias, expectedQuantity, expectedStatus));
+        return this;
+    }
+
+    IThenOrderHistory IThenOrderHistory.ShowsOrder(string orderNumber, string customerAlias, string skuAlias,
+        int expectedQuantity, OrderStatus expectedStatus)
+        => ShowsOrder(orderNumber, customerAlias, skuAlias, expectedQuantity, expectedStatus);
+
+    public ThenSuccessOrderHistory<TSuccessResponse, TSuccessVerification> LinksOrderToItsDetails(string orderNumber)
+    {
+        _verifications.Add((v, _) => v.LinksOrderToItsDetails(orderNumber));
+        return this;
+    }
+
+    IThenOrderHistory IThenOrderHistory.LinksOrderToItsDetails(string orderNumber) => LinksOrderToItsDetails(orderNumber);
+
+    public ThenSuccessOrderHistory<TSuccessResponse, TSuccessVerification> OffersCustomers(params string[] customerAliases)
+    {
+        _verifications.Add((v, customerUsername) => v.OffersCustomers(customerAliases.Select(customerUsername).ToList()));
+        return this;
+    }
+
+    IThenOrderHistory IThenOrderHistory.OffersCustomers(params string[] customerAliases) => OffersCustomers(customerAliases);
+
+    public ThenSuccessOrderHistory<TSuccessResponse, TSuccessVerification> HasCustomerFilterSetToAllCustomers()
+    {
+        _verifications.Add((v, _) => v.CustomerFilterSetTo(AllCustomers));
+        return this;
+    }
+
+    IThenOrderHistory IThenOrderHistory.HasCustomerFilterSetToAllCustomers() => HasCustomerFilterSetToAllCustomers();
+
+    public ThenSuccessOrderHistory<TSuccessResponse, TSuccessVerification> OffersNoCustomerFilter()
+    {
+        _verifications.Add((v, _) => v.NoCustomerFilter());
+        return this;
+    }
+
+    IThenOrderHistory IThenOrderHistory.OffersNoCustomerFilter() => OffersNoCustomerFilter();
+
+    public ThenSuccessOrderHistory<TSuccessResponse, TSuccessVerification> ShowsNoCustomers()
+    {
+        _verifications.Add((v, _) => v.NoCustomerColumn());
+        return this;
+    }
+
+    IThenOrderHistory IThenOrderHistory.ShowsNoCustomers() => ShowsNoCustomers();
+
+    public ThenSuccessOrderHistory<TSuccessResponse, TSuccessVerification> ShowsMessage(string expectedMessage)
+    {
+        _verifications.Add((v, _) => v.Message(expectedMessage));
+        return this;
+    }
+
+    IThenOrderHistory IThenOrderHistory.ShowsMessage(string expectedMessage) => ShowsMessage(expectedMessage);
 
     public TaskAwaiter GetAwaiter() => Execute().GetAwaiter();
 
@@ -58,7 +121,7 @@ public class ThenSuccessOrderHistory<TSuccessResponse, TSuccessVerification> : I
 
         foreach (var v in _verifications)
         {
-            v(verification);
+            v(verification, result.CustomerUsername);
         }
     }
 }

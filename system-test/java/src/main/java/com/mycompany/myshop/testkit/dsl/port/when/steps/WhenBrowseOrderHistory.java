@@ -5,6 +5,12 @@ import com.mycompany.myshop.testkit.dsl.port.when.steps.base.WhenStep;
 public interface WhenBrowseOrderHistory extends WhenStep {
     WhenBrowseOrderHistory withOrderNumber(String orderNumber);
 
+    /** No order-number filter: every order the user may see (the default filters by the default order). */
+    WhenBrowseOrderHistory withNoOrderNumberFilter();
+
+    /** After browsing, sets the customer filter to All customers and clears the order number (UI only). */
+    WhenBrowseOrderHistory withFiltersResetAfterwards();
+
     WhenBrowseOrderHistory withPage(String page);
 
     WhenBrowseOrderHistory withSize(String size);

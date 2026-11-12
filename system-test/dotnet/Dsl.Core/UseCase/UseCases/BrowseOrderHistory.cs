@@ -11,6 +11,7 @@ public class BrowseOrderHistory : BaseMyShopUseCase<BrowseOrderHistoryResponse, 
     private string? _page;
     private string? _size;
     private string? _customer;
+    private string? _followUp;
 
     public BrowseOrderHistory(IMyShopDriver driver, UseCaseContext context)
         : base(driver, context)
@@ -42,10 +43,20 @@ public class BrowseOrderHistory : BaseMyShopUseCase<BrowseOrderHistoryResponse, 
         return this;
     }
 
+    /// <summary>After browsing, the customer filter is set to All customers and the order number cleared (UI only).</summary>
+    public BrowseOrderHistory ResetFiltersAfterwards()
+    {
+        _followUp = BrowseOrderHistoryRequest.ResetFilters;
+        return this;
+    }
+
     public override async Task<MyShopUseCaseResult<BrowseOrderHistoryResponse, BrowseOrderHistoryVerification>> Execute()
     {
         var orderNumber = _context.GetResultValue(_orderNumberResultAlias);
-        var request = new BrowseOrderHistoryRequest { OrderNumber = orderNumber, Page = _page, Size = _size, Customer = _customer };
+        var request = new BrowseOrderHistoryRequest
+        {
+            OrderNumber = orderNumber, Page = _page, Size = _size, Customer = _customer, FollowUp = _followUp,
+        };
 
         var result = await _driver.BrowseOrderHistoryAsync(request);
 

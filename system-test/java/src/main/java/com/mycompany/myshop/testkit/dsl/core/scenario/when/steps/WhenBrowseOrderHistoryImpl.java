@@ -20,6 +20,7 @@ public class WhenBrowseOrderHistoryImpl extends BaseWhenStep<BrowseOrderHistoryR
     private String page;
     private String size;
     private Supplier<UserIdentity> customer;
+    private boolean resetFiltersAfterwards;
     private final CustomerResolver customers;
 
     public WhenBrowseOrderHistoryImpl(UseCaseDsl app, ScenarioDslImpl scenario, CustomerResolver customers) {
@@ -30,6 +31,17 @@ public class WhenBrowseOrderHistoryImpl extends BaseWhenStep<BrowseOrderHistoryR
 
     public WhenBrowseOrderHistoryImpl withOrderNumber(String orderNumber) {
         this.orderNumber = orderNumber;
+        return this;
+    }
+
+    @Override
+    public WhenBrowseOrderHistoryImpl withNoOrderNumberFilter() {
+        return withOrderNumber(null);
+    }
+
+    @Override
+    public WhenBrowseOrderHistoryImpl withFiltersResetAfterwards() {
+        this.resetFiltersAfterwards = true;
         return this;
     }
 
@@ -55,15 +67,19 @@ public class WhenBrowseOrderHistoryImpl extends BaseWhenStep<BrowseOrderHistoryR
 
     @Override
     protected ExecutionResult<BrowseOrderHistoryResponse, BrowseOrderHistoryVerification> execute(UseCaseDsl app) {
-        var result = app.myShop(ChannelMode.DYNAMIC).browseOrderHistory()
+        var browseOrderHistory = app.myShop(ChannelMode.DYNAMIC).browseOrderHistory()
                 .orderNumber(orderNumber)
                 .page(page)
                 .size(size)
-                .customer(customer == null ? null : customer.get().username())
-                .execute();
+                .customer(customer == null ? null : customer.get().username());
+        if (resetFiltersAfterwards) {
+            browseOrderHistory.resetFiltersAfterwards();
+        }
+        var result = browseOrderHistory.execute();
 
         return new ExecutionResultBuilder<>(result)
                 .orderNumber(orderNumber)
+                .customerUsernames(alias -> customers.customer(alias).username())
                 .build();
     }
 }

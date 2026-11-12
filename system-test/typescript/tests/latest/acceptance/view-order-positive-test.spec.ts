@@ -79,7 +79,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
             .shouldSucceed();
     });
 
-    test('adminShouldBeAbleToViewAnotherCustomersOrder', async ({ scenario }) => {
+    test('adminShouldBeAbleToViewAnotherCustomersOrder', criteria('UC-011.1'), async ({ scenario }) => {
         await scenario
             .given()
             .order()

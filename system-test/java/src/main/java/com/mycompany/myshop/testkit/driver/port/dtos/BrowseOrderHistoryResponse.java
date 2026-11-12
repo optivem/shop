@@ -21,6 +21,14 @@ public class BrowseOrderHistoryResponse {
     private int size;
     private long totalElements;
     private int totalPages;
+    /** UI only: the customer filter's choices as shown ("All customers", then usernames); null when there is no filter. */
+    private List<String> customerFilterOptions;
+    /** UI only: the customer filter's chosen option as shown, such as "All customers"; null when there is no filter. */
+    private String customerFilterSelection;
+    /** UI only: whether the list has a Customer column. */
+    private Boolean customerColumnShown;
+    /** UI only: the message the list shows instead of orders, such as "No orders found". */
+    private String message;
 
     @Data
     @Builder
@@ -36,5 +44,7 @@ public class BrowseOrderHistoryResponse {
         private OrderStatus status;
         private String appliedCouponCode;
         private String customer;
+        /** UI only: where the order's "View Details" link goes. */
+        private String detailsPath;
     }
 }

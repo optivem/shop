@@ -1,3 +1,4 @@
+using static SystemTests.Commons.Constants.ErrorMessages;
 using SystemTests.Latest.AcceptanceTests.Base;
 using Dsl.Core.UseCase;
 using Optivem.Testing;
@@ -10,6 +11,7 @@ public class BrowseOrderHistoryNegativeTest : BaseAcceptanceTest
     [Theory]
     [ChannelData(ChannelType.UI, ChannelType.API)]
     [Trait("tag", "UC-002.6")]
+    [Trait("tag", "UC-011.5")]
     public async Task CustomerShouldNotSeeAnotherCustomersOrderInHistory(Channel channel)
     {
         await Scenario(channel)
@@ -69,7 +71,7 @@ public class BrowseOrderHistoryNegativeTest : BaseAcceptanceTest
     }
 
     [Theory]
-    [ChannelData(ChannelType.API)]
+    [ChannelData(ChannelType.UI, ChannelType.API)]
     [Trait("tag", "UC-011.3")]
     public async Task AdminCustomerFilterShouldExcludeOtherCustomersOrders(Channel channel)
     {
@@ -83,7 +85,7 @@ public class BrowseOrderHistoryNegativeTest : BaseAcceptanceTest
     }
 
     [Theory]
-    [ChannelData(ChannelType.API)]
+    [ChannelData(ChannelType.UI, ChannelType.API)]
     [Trait("tag", "UC-011.8")]
     public async Task AdminShouldSeeNoOrdersWhenNoOrderMatchesFilters(Channel channel)
     {
@@ -96,6 +98,7 @@ public class BrowseOrderHistoryNegativeTest : BaseAcceptanceTest
             .OrderHistory().IsEmpty();
     }
 
+    // API only: a customer's order history has no customer filter to choose another customer with.
     [Theory]
     [ChannelData(ChannelType.API)]
     [Trait("tag", "UC-011.5")]
@@ -108,5 +111,31 @@ public class BrowseOrderHistoryNegativeTest : BaseAcceptanceTest
             .When().BrowseOrderHistory().WithCustomer("B").WithOrderNumber("ORD-B")
             .Then().ShouldSucceed()
             .OrderHistory().DoesNotContainOrder("ORD-B");
+    }
+
+    // Not covered: the @UC-011.5 order with no recorded customer (such an order cannot be placed).
+    [Theory]
+    [ChannelData(ChannelType.UI)]
+    [Trait("tag", "UC-011.8")]
+    public async Task ShouldTellTheAdminWhenNoOrderMatchesTheFilters(Channel channel)
+    {
+        await Scenario(channel)
+            .Given().Order().WithOrderNumber("ORD-B").PlacedByCustomer("B")
+            .And().LoggedInAsAdmin()
+            .When().BrowseOrderHistory().WithCustomer("A").WithOrderNumber("ORD-B")
+            .Then().ShouldSucceed()
+            .OrderHistory().IsEmpty().ShowsMessage("No orders found");
+    }
+
+    [Theory]
+    [ChannelData(ChannelType.UI, ChannelType.API)]
+    [Trait("tag", "UC-011.6")]
+    public async Task ShouldAskAnAnonymousVisitorToSignIn(Channel channel)
+    {
+        await Scenario(channel)
+            .Given().NotLoggedIn()
+            .When().BrowseOrderHistory()
+            .Then().ShouldFail()
+            .ErrorMessage(AuthenticationRequired);
     }
 }

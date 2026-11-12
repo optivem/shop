@@ -12,11 +12,8 @@ import type { DeliverOrderResponse } from '../../port/dtos/DeliverOrderResponse.
 import type { ViewOrderRequest } from '../../port/dtos/ViewOrderRequest.js';
 import type { ViewOrderResponse } from '../../port/dtos/ViewOrderResponse.js';
 import type { SystemError } from '../../port/dtos/errors/SystemError.js';
-import type { BrowseOrderHistoryRequest } from '../../port/dtos/BrowseOrderHistoryRequest.js';
-import type {
-  BrowseOrderHistoryOrderItem,
-  BrowseOrderHistoryResponse,
-} from '../../port/dtos/BrowseOrderHistoryResponse.js';
+import { RESET_FILTERS, type BrowseOrderHistoryRequest } from '../../port/dtos/BrowseOrderHistoryRequest.js';
+import type { BrowseOrderHistoryResponse } from '../../port/dtos/BrowseOrderHistoryResponse.js';
 import type { UserIdentity } from '../../port/user-identity.js';
 import type { PublishCouponRequest } from '../../port/dtos/PublishCouponRequest.js';
 import type { PublishCouponResponse } from '../../port/dtos/PublishCouponResponse.js';
@@ -200,9 +197,6 @@ export class MyShopUiDriver implements MyShopDriver {
   async browseOrderHistory(request: BrowseOrderHistoryRequest): Promise<Result<BrowseOrderHistoryResponse, SystemError>> {
     requireNotSet('page', request.page);
     requireNotSet('size', request.size);
-    if (request.customer !== undefined && request.customer !== null) {
-      throw notSupportedByUiYet('The order history customer filter');
-    }
     if (this.anonymous) return this.loginRequired('/order-history');
 
     await this.runAs(TestUsers.CUSTOMER);
@@ -211,14 +205,43 @@ export class MyShopUiDriver implements MyShopDriver {
     await homeResult.value.clickOrderHistory();
 
     const orderHistoryPage = this.client.orderHistoryPage();
-    if (request.orderNumber) {
+    if (isSet(request.customer)) {
+      if (!(await orderHistoryPage.hasCustomerFilter())) {
+        throw new Error(
+          "A customer's order history has no customer filter, so the UI channel cannot send 'customer'; run this scenario on the API channel only",
+        );
+      }
+      // The order number first: choosing the customer reloads the list with both, and a second reload could race.
+      if (request.orderNumber) await orderHistoryPage.inputOrderNumber(request.orderNumber);
+      await orderHistoryPage.selectCustomer(request.customer);
+    } else if (request.orderNumber) {
       await orderHistoryPage.inputOrderNumber(request.orderNumber);
       await orderHistoryPage.clickSearch();
     }
 
-    const orderNumbers = await orderHistoryPage.readOrderNumbers();
-    const orders = orderNumbers.map((orderNumber) => ({ orderNumber } as BrowseOrderHistoryOrderItem));
-    return success({ orders } as BrowseOrderHistoryResponse);
+    if (request.followUp === RESET_FILTERS) {
+      await orderHistoryPage.readOrderNumbers();
+      // The order number first, for the same reason: choosing All customers reloads the list.
+      await orderHistoryPage.inputOrderNumber('');
+      if (await orderHistoryPage.hasCustomerFilter()) {
+        await orderHistoryPage.selectAllCustomers();
+      } else {
+        await orderHistoryPage.clickSearch();
+      }
+    } else if (isSet(request.followUp)) {
+      throw new Error(`Unknown order history follow-up: ${request.followUp}`);
+    }
+
+    const response = {
+      orders: await orderHistoryPage.readOrders(),
+      customerColumnShown: await orderHistoryPage.hasCustomerColumn(),
+      message: await orderHistoryPage.readMessage(),
+    } as BrowseOrderHistoryResponse;
+    if (await orderHistoryPage.hasCustomerFilter()) {
+      response.customerFilterOptions = await orderHistoryPage.readCustomerFilterOptions();
+      response.customerFilterSelection = await orderHistoryPage.readCustomerFilterSelection();
+    }
+    return success(response);
   }
 
   async publishCoupon(request: PublishCouponRequest): Promise<Result<PublishCouponResponse, SystemError>> {

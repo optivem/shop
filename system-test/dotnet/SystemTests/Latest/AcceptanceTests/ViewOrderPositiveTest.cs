@@ -67,6 +67,7 @@ public class ViewOrderPositiveTest : BaseAcceptanceTest
 
     [Theory]
     [ChannelData(ChannelType.UI, ChannelType.API)]
+    [Trait("tag", "UC-011.1")]
     public async Task AdminShouldBeAbleToViewAnotherCustomersOrder(Channel channel)
     {
         await Scenario(channel)

@@ -87,8 +87,11 @@ public class MyShopApiDriver : IMyShopDriver
             .MapErrorAsync(MapError);
 
     public Task<Result<BrowseOrderHistoryResponse, SystemError>> BrowseOrderHistoryAsync(BrowseOrderHistoryRequest request)
-        => RunAs(TestUser.Customer).Orders().BrowseOrderHistoryAsync(request.OrderNumber, request.Page, request.Size, request.Customer)
+    {
+        RequireNotSet("followUp", request.FollowUp);
+        return RunAs(TestUser.Customer).Orders().BrowseOrderHistoryAsync(request.OrderNumber, request.Page, request.Size, request.Customer)
             .MapErrorAsync(MapError);
+    }
 
     public Task<Result<PublishCouponResponse, SystemError>> PublishCouponAsync(PublishCouponRequest request)
         => RunAs(TestUser.Admin).Coupons().PublishCouponAsync(request)

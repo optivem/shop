@@ -6,10 +6,12 @@ import com.optivem.testing.Channel;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.TestTemplate;
 
+import static com.mycompany.myshop.systemtest.commons.constants.ErrorMessages.AUTHENTICATION_REQUIRED;
 import static com.mycompany.myshop.testkit.dsl.core.scenario.ScenarioDefaults.DEFAULT_ORDER_NUMBER;
 
 class BrowseOrderHistoryNegativeTest extends BaseAcceptanceTest {
     @Tag("UC-002.6")
+    @Tag("UC-011.5")
     @TestTemplate
     @Channel({ChannelType.UI, ChannelType.API})
     void customerShouldNotSeeAnotherCustomersOrderInHistory() {
@@ -74,7 +76,7 @@ class BrowseOrderHistoryNegativeTest extends BaseAcceptanceTest {
 
     @Tag("UC-011.3")
     @TestTemplate
-    @Channel(ChannelType.API)
+    @Channel({ChannelType.UI, ChannelType.API})
     void adminCustomerFilterShouldExcludeOtherCustomersOrders() {
         scenario
                 .given().order()
@@ -94,7 +96,7 @@ class BrowseOrderHistoryNegativeTest extends BaseAcceptanceTest {
 
     @Tag("UC-011.8")
     @TestTemplate
-    @Channel(ChannelType.API)
+    @Channel({ChannelType.UI, ChannelType.API})
     void adminShouldSeeNoOrdersWhenNoOrderMatchesFilters() {
         scenario
                 .given().order()
@@ -109,6 +111,7 @@ class BrowseOrderHistoryNegativeTest extends BaseAcceptanceTest {
                         .isEmpty();
     }
 
+    // API only: a customer's order history has no customer filter to choose another customer with.
     @Tag("UC-011.5")
     @TestTemplate
     @Channel(ChannelType.API)
@@ -127,5 +130,35 @@ class BrowseOrderHistoryNegativeTest extends BaseAcceptanceTest {
                 .then().shouldSucceed()
                     .orderHistory()
                         .doesNotContainOrder("ORD-B");
+    }
+
+    // Not covered: the @UC-011.5 order with no recorded customer (such an order cannot be placed).
+    @Tag("UC-011.8")
+    @TestTemplate
+    @Channel(ChannelType.UI)
+    void shouldTellTheAdminWhenNoOrderMatchesTheFilters() {
+        scenario
+                .given().order()
+                    .withOrderNumber("ORD-B")
+                    .placedByCustomer("B")
+                .and().loggedInAsAdmin()
+                .when().browseOrderHistory()
+                    .withCustomer("A")
+                    .withOrderNumber("ORD-B")
+                .then().shouldSucceed()
+                    .orderHistory()
+                        .isEmpty()
+                        .showsMessage("No orders found");
+    }
+
+    @Tag("UC-011.6")
+    @TestTemplate
+    @Channel({ChannelType.UI, ChannelType.API})
+    void shouldAskAnAnonymousVisitorToSignIn() {
+        scenario
+                .given().notLoggedIn()
+                .when().browseOrderHistory()
+                .then().shouldFail()
+                    .errorMessage(AUTHENTICATION_REQUIRED);
     }
 }

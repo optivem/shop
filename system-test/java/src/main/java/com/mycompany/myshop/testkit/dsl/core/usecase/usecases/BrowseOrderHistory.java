@@ -12,6 +12,7 @@ public class BrowseOrderHistory extends BaseMyShopUseCase<BrowseOrderHistoryResp
     private String page;
     private String size;
     private String customer;
+    private String followUp;
 
     public BrowseOrderHistory(MyShopDriver driver, UseCaseContext context) {
         super(driver, context);
@@ -38,6 +39,12 @@ public class BrowseOrderHistory extends BaseMyShopUseCase<BrowseOrderHistoryResp
         return this;
     }
 
+    /** After browsing, the customer filter is set to All customers and the order number cleared (UI only). */
+    public BrowseOrderHistory resetFiltersAfterwards() {
+        this.followUp = BrowseOrderHistoryRequest.RESET_FILTERS;
+        return this;
+    }
+
     @Override
     public UseCaseResult<BrowseOrderHistoryResponse, BrowseOrderHistoryVerification> execute() {
         var orderNumber = context.getResultValue(orderNumberResultAlias);
@@ -47,6 +54,7 @@ public class BrowseOrderHistory extends BaseMyShopUseCase<BrowseOrderHistoryResp
                 .page(page)
                 .size(size)
                 .customer(customer)
+                .followUp(followUp)
                 .build();
         var result = driver.browseOrderHistory(request);
 

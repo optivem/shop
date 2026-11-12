@@ -93,6 +93,7 @@ export class MyShopApiDriver implements MyShopDriver {
   }
 
   async browseOrderHistory(request: BrowseOrderHistoryRequest): Promise<Result<BrowseOrderHistoryResponse, SystemError>> {
+    requireNotSet('followUp', request.followUp);
     return this.runAs(TestUsers.CUSTOMER)
       .orders()
       .browseOrderHistory(request.orderNumber, request.page, request.size, request.customer);

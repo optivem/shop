@@ -252,7 +252,6 @@ public class MyShopUiDriver implements MyShopDriver {
     public Result<BrowseOrderHistoryResponse, SystemError> browseOrderHistory(BrowseOrderHistoryRequest request) {
         requireNotSet("page", request.getPage());
         requireNotSet("size", request.getSize());
-        requireNotSet("customer", request.getCustomer());
         if (anonymous) {
             return loginRequired("/order-history");
         }
@@ -262,16 +261,46 @@ public class MyShopUiDriver implements MyShopDriver {
         currentPage = Page.ORDER_HISTORY;
 
         var orderNumber = request.getOrderNumber();
-        if (orderNumber != null && !orderNumber.isBlank()) {
+        var customer = request.getCustomer();
+        var hasOrderNumber = orderNumber != null && !orderNumber.isBlank();
+        if (customer != null) {
+            if (!orderHistoryPage.hasCustomerFilter()) {
+                throw new UnsupportedOperationException("A customer's order history has no customer filter, so the UI"
+                        + " channel cannot send 'customer'; run this scenario on the API channel only");
+            }
+            // The order number first: choosing the customer reloads the list with both, and a second reload could race.
+            if (hasOrderNumber) {
+                orderHistoryPage.inputOrderNumber(orderNumber);
+            }
+            orderHistoryPage.selectCustomer(customer);
+        } else if (hasOrderNumber) {
             orderHistoryPage.inputOrderNumber(orderNumber);
             orderHistoryPage.clickSearch();
         }
 
-        var orders = orderHistoryPage.readOrderNumbers().stream()
-                .map(listed -> BrowseOrderHistoryResponse.OrderDto.builder().orderNumber(listed).build())
-                .toList();
+        if (BrowseOrderHistoryRequest.RESET_FILTERS.equals(request.getFollowUp())) {
+            orderHistoryPage.readOrderNumbers();
+            // The order number first, for the same reason: choosing All customers reloads the list.
+            orderHistoryPage.inputOrderNumber("");
+            if (orderHistoryPage.hasCustomerFilter()) {
+                orderHistoryPage.selectAllCustomers();
+            } else {
+                orderHistoryPage.clickSearch();
+            }
+        } else if (request.getFollowUp() != null) {
+            throw new IllegalArgumentException("Unknown order history follow-up: " + request.getFollowUp());
+        }
 
-        return success(BrowseOrderHistoryResponse.builder().orders(orders).build());
+        var response = BrowseOrderHistoryResponse.builder()
+                .orders(orderHistoryPage.readOrders())
+                .customerColumnShown(orderHistoryPage.hasCustomerColumn())
+                .message(orderHistoryPage.readMessage())
+                .build();
+        if (orderHistoryPage.hasCustomerFilter()) {
+            response.setCustomerFilterOptions(orderHistoryPage.readCustomerFilterOptions());
+            response.setCustomerFilterSelection(orderHistoryPage.readCustomerFilterSelection());
+        }
+        return success(response);
     }
 
     @Override

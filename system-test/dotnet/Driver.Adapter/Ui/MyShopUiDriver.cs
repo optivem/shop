@@ -246,7 +246,6 @@ public class MyShopUiDriver : IMyShopDriver
     {
         RequireNotSet("page", request.Page);
         RequireNotSet("size", request.Size);
-        RequireNotSet("customer", request.Customer);
         if (_anonymous)
         {
             return await LoginRequiredAsync<BrowseOrderHistoryResponse>("/order-history");
@@ -257,18 +256,58 @@ public class MyShopUiDriver : IMyShopDriver
         _orderHistoryPage = await homePage.ClickOrderHistoryAsync();
         SetCurrentPage(Page.OrderHistory);
 
-        if (!string.IsNullOrWhiteSpace(request.OrderNumber))
+        var hasOrderNumber = !string.IsNullOrWhiteSpace(request.OrderNumber);
+        if (request.Customer != null)
+        {
+            if (!await _orderHistoryPage.HasCustomerFilterAsync())
+            {
+                throw new NotSupportedException("A customer's order history has no customer filter, so the UI channel"
+                    + " cannot send 'customer'; run this scenario on the API channel only");
+            }
+            // The order number first: choosing the customer reloads the list with both, and a second reload could race.
+            if (hasOrderNumber)
+            {
+                await _orderHistoryPage.InputOrderNumberAsync(request.OrderNumber);
+            }
+            await _orderHistoryPage.SelectCustomerAsync(request.Customer);
+        }
+        else if (hasOrderNumber)
         {
             await _orderHistoryPage.InputOrderNumberAsync(request.OrderNumber);
             await _orderHistoryPage.ClickSearchAsync();
         }
 
-        var orderNumbers = await _orderHistoryPage.ReadOrderNumbersAsync();
-        var orders = orderNumbers
-            .Select(orderNumber => new BrowseOrderHistoryResponse.OrderDto { OrderNumber = orderNumber })
-            .ToList();
+        if (request.FollowUp == BrowseOrderHistoryRequest.ResetFilters)
+        {
+            await _orderHistoryPage.ReadOrderNumbersAsync();
+            // The order number first, for the same reason: choosing All customers reloads the list.
+            await _orderHistoryPage.InputOrderNumberAsync(string.Empty);
+            if (await _orderHistoryPage.HasCustomerFilterAsync())
+            {
+                await _orderHistoryPage.SelectAllCustomersAsync();
+            }
+            else
+            {
+                await _orderHistoryPage.ClickSearchAsync();
+            }
+        }
+        else if (request.FollowUp != null)
+        {
+            throw new ArgumentException($"Unknown order history follow-up: {request.FollowUp}");
+        }
 
-        return Success(new BrowseOrderHistoryResponse { Orders = orders });
+        var response = new BrowseOrderHistoryResponse
+        {
+            Orders = await _orderHistoryPage.ReadOrdersAsync(),
+            CustomerColumnShown = await _orderHistoryPage.HasCustomerColumnAsync(),
+            Message = await _orderHistoryPage.ReadMessageAsync(),
+        };
+        if (await _orderHistoryPage.HasCustomerFilterAsync())
+        {
+            response.CustomerFilterOptions = await _orderHistoryPage.ReadCustomerFilterOptionsAsync();
+            response.CustomerFilterSelection = await _orderHistoryPage.ReadCustomerFilterSelectionAsync();
+        }
+        return Success(response);
     }
 
     public async Task<Result<PublishCouponResponse, SystemError>> PublishCouponAsync(PublishCouponRequest request)

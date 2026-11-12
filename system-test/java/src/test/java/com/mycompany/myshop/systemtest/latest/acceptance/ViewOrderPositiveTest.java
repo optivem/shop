@@ -76,6 +76,7 @@ class ViewOrderPositiveTest extends BaseAcceptanceTest {
                 .then().shouldSucceed();
     }
 
+    @Tag("UC-011.1")
     @TestTemplate
     @Channel({ChannelType.UI, ChannelType.API})
     void adminShouldBeAbleToViewAnotherCustomersOrder() {

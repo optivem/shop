@@ -16,6 +16,7 @@ namespace Dsl.Core.Scenario
         private readonly MyShopUseCaseResult<TSuccessResponse, TSuccessVerification> _result;
         private string? _orderNumber;
         private string? _couponCode;
+        private Func<string, string>? _customerUsernames;
 
         internal ExecutionResultBuilder(UseCaseResult<TSuccessResponse, SystemError, TSuccessVerification, SystemErrorFailureVerification> result)
         {
@@ -35,12 +36,20 @@ namespace Dsl.Core.Scenario
             return this;
         }
 
+        /// <summary>Resolves the scenario's customer aliases to usernames, for assertions that name customers.</summary>
+        public ExecutionResultBuilder<TSuccessResponse, TSuccessVerification> CustomerUsernames(Func<string, string> customerUsernames)
+        {
+            _customerUsernames = customerUsernames;
+            return this;
+        }
+
         public ExecutionResult<TSuccessResponse, TSuccessVerification> Build()
         {
             return new ExecutionResult<TSuccessResponse, TSuccessVerification>(
                 _result,
                 _orderNumber,
-                _couponCode);
+                _couponCode,
+                _customerUsernames);
         }
     }
 }

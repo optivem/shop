@@ -2,15 +2,18 @@ package com.mycompany.myshop.systemtest.latest.acceptance;
 
 import com.mycompany.myshop.systemtest.latest.acceptance.base.BaseAcceptanceTest;
 import com.mycompany.myshop.testkit.channel.ChannelType;
+import com.mycompany.myshop.testkit.common.domain.OrderStatus;
 import com.optivem.testing.Channel;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.TestTemplate;
 
 import static com.mycompany.myshop.testkit.dsl.core.scenario.ScenarioDefaults.DEFAULT_ORDER_NUMBER;
+import static com.mycompany.myshop.testkit.dsl.core.scenario.ScenarioDefaults.DEFAULT_SKU;
 
 class BrowseOrderHistoryPositiveTest extends BaseAcceptanceTest {
     @Tag("UC-002.1")
     @Tag("UC-002.2")
+    @Tag("UC-011.5")
     @TestTemplate
     @Channel({ChannelType.UI, ChannelType.API})
     void customerShouldSeeOwnOrderInHistory() {
@@ -87,7 +90,7 @@ class BrowseOrderHistoryPositiveTest extends BaseAcceptanceTest {
     @Tag("UC-011.3")
     @Tag("UC-011.4")
     @TestTemplate
-    @Channel(ChannelType.API)
+    @Channel({ChannelType.UI, ChannelType.API})
     void adminShouldSeeOrderOfChosenCustomer() {
         scenario
                 .given().order()
@@ -120,5 +123,121 @@ class BrowseOrderHistoryPositiveTest extends BaseAcceptanceTest {
                 .then().shouldSucceed()
                     .orderHistory()
                         .containsOrder("ORD-A");
+    }
+
+    // Not covered: the "newest first" order of @UC-011.1 (the given orders cannot be dated) and @UC-011.2 (an order
+    // with no recorded customer cannot be placed).
+    @Tag("UC-011.1")
+    @TestTemplate
+    @Channel({ChannelType.UI, ChannelType.API})
+    void shouldShowTheDetailsOfEachOrderInTheList() {
+        scenario
+                .given().order()
+                    .withOrderNumber("ORD-B")
+                    .withQuantity(2)
+                    .placedByCustomer("B")
+                .and().loggedInAsAdmin()
+                .when().browseOrderHistory()
+                    .withOrderNumber("ORD-B")
+                .then().shouldSucceed()
+                    .orderHistory()
+                        .showsOrder("ORD-B", "B", DEFAULT_SKU, 2, OrderStatus.PLACED);
+    }
+
+    // Opening the linked order is ViewOrderPositiveTest's adminShouldBeAbleToViewAnotherCustomersOrder.
+    @Tag("UC-011.1")
+    @TestTemplate
+    @Channel(ChannelType.UI)
+    void shouldLinkEachOrderToItsDetails() {
+        scenario
+                .given().order()
+                    .withOrderNumber("ORD-B")
+                    .placedByCustomer("B")
+                .and().loggedInAsAdmin()
+                .when().browseOrderHistory()
+                    .withOrderNumber("ORD-B")
+                .then().shouldSucceed()
+                    .orderHistory()
+                        .linksOrderToItsDetails("ORD-B");
+    }
+
+    @Tag("UC-011.3")
+    @TestTemplate
+    @Channel(ChannelType.UI)
+    void shouldOfferTheCustomersWhoHavePlacedOrders() {
+        scenario
+                .given().order()
+                    .withOrderNumber("ORD-A")
+                    .placedByCustomer("A")
+                .and().order()
+                    .withOrderNumber("ORD-B")
+                    .placedByCustomer("B")
+                .and().loggedInAsAdmin()
+                .when().browseOrderHistory()
+                    .withNoOrderNumberFilter()
+                .then().shouldSucceed()
+                    .orderHistory()
+                        .offersCustomers("A", "B")
+                        .hasCustomerFilterSetToAllCustomers();
+    }
+
+    @Tag("UC-011.3")
+    @TestTemplate
+    @Channel({ChannelType.UI, ChannelType.API})
+    void shouldShowOnlyTheOrdersOfTheChosenCustomer() {
+        scenario
+                .given().order()
+                    .withOrderNumber("ORD-A")
+                    .placedByCustomer("A")
+                .and().order()
+                    .withOrderNumber("ORD-B")
+                    .placedByCustomer("B")
+                .and().loggedInAsAdmin()
+                .when().browseOrderHistory()
+                    .withCustomer("A")
+                    .withNoOrderNumberFilter()
+                .then().shouldSucceed()
+                    .orderHistory()
+                        .containsOrder("ORD-A")
+                        .doesNotContainOrder("ORD-B");
+    }
+
+    @Tag("UC-011.7")
+    @TestTemplate
+    @Channel(ChannelType.UI)
+    void shouldNotShowACustomerTheCustomerColumnOrTheCustomerFilter() {
+        scenario
+                .given().order()
+                    .placedByCustomer()
+                .and().loggedInAsCustomer()
+                .when().browseOrderHistory()
+                .then().shouldSucceed()
+                    .orderHistory()
+                        .containsOrder(DEFAULT_ORDER_NUMBER)
+                        .showsNoCustomers()
+                        .offersNoCustomerFilter();
+    }
+
+    @Tag("UC-011.8")
+    @TestTemplate
+    @Channel(ChannelType.UI)
+    void shouldShowEveryOrderAgainAfterResettingTheFilters() {
+        scenario
+                .given().order()
+                    .withOrderNumber("ORD-A")
+                    .placedByCustomer("A")
+                .and().order()
+                    .withOrderNumber("ORD-B")
+                    .placedByCustomer("B")
+                .and().loggedInAsAdmin()
+                .when().browseOrderHistory()
+                    .withCustomer("B")
+                    .withOrderNumber("ORD-A")
+                    .withFiltersResetAfterwards()
+                .then().shouldSucceed()
+                    .orderHistory()
+                        .containsOrder("ORD-A")
+                        .containsOrder("ORD-B")
+                        .hasCustomerFilterSetToAllCustomers();
     }
 }

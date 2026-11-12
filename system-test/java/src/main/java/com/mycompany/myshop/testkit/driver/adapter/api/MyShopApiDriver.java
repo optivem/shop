@@ -115,6 +115,7 @@ public class MyShopApiDriver implements MyShopDriver {
 
     @Override
     public Result<BrowseOrderHistoryResponse, SystemError> browseOrderHistory(BrowseOrderHistoryRequest request) {
+        requireNotSet("followUp", request.getFollowUp());
         runAs(TestUser.CUSTOMER);
         return apiClient.orders().browseOrderHistory(request.getOrderNumber(), request.getCustomer(), request.getPage(), request.getSize()).mapError(SystemErrorMapper::from);
     }

@@ -96,6 +96,16 @@ public class PageClient
         await locator.WaitForAsync(options);
     }
 
+    /// <summary>Waits until an element matches the selector, shown or not (such as an option of a select).</summary>
+    public async Task WaitForAttachedAsync(string selector)
+    {
+        await _page.Locator(selector).First.WaitForAsync(new LocatorWaitForOptions
+        {
+            State = WaitForSelectorState.Attached,
+            Timeout = _timeoutMilliseconds,
+        });
+    }
+
     public async Task<bool> IsVisibleAsync(string selector)
     {
         try
