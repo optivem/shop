@@ -14,7 +14,7 @@
 - **Supply-chain security:** dependency updates (Dependabot, grouped), CodeQL, a Trivy container scan and an SBOM are generated in CI, all free on public GitHub.
 - **Performance:** a k6 load test against the local Docker stack, with an opt-in workflow that publishes p95 latency.
 - Parity gaps are closed so "same design in three languages" holds up when probed: OpenAPI for .NET/TS and mutation testing (Stryker) for .NET/TS.
-- **Messaging:** a separate plan exists for a Postgres-backed transactional outbox (no broker). Feature flags (#7) and frontend testing (#8) are either spun off or explicitly dropped.
+- **Messaging:** a separate plan exists for a Postgres-backed transactional outbox (no broker). Frontend testing (#8) has its own plan; feature flags (#7) were dropped from the inventory.
 
 ## Already demonstrated (no work needed — reference in the tour)
 
@@ -29,9 +29,8 @@ CI/CD meta-stages (commit → acceptance → RC → release), ATDD with DSL/driv
 | 3 | Resilience on outbound calls (timeout/retry/circuit breaker) + test | High | Low–Medium | **Do** |
 | 4 | Supply-chain security (Dependabot, CodeQL, Trivy, SBOM) | High | Low | **Do** |
 | 5 | Performance/load test (k6) | Medium–High | Low | Do next |
-| 6 | Async messaging + outbox pattern (e.g. order-placed event) | High (backend/system-design interviews) | High | **Separate plan** (Postgres-backed outbox, no broker) |
-| 7 | Feature flags / dark launch | Medium | Low–Medium | Optional |
-| 8 | Frontend testing beyond e2e (component tests, axe a11y, Lighthouse CI) | Medium (frontend roles) | Medium | Optional |
+| 6 | Async messaging + outbox pattern (e.g. order-placed event) | High (backend/system-design interviews) | High | **Spun off:** `plans/20261112-0939-transactional-outbox-postgres.md` (Postgres-backed outbox, no broker) |
+| 8 | Frontend testing beyond e2e (component tests, axe a11y, Lighthouse CI) | Medium (frontend roles) | Medium | **Spun off:** `plans/20261112-0939-frontend-testing-component-a11y-lighthouse.md` |
 | 9 | OpenAPI parity (.NET, TS) | Low–Medium | Low | Fold into parity sweep |
 | 10 | Mutation-testing parity (Stryker .NET/TS) | Low–Medium | Low | Fold into parity sweep |
 | 11 | Caching (Redis) | Low–Medium | Medium | Skip unless a real use case appears |
@@ -45,13 +44,14 @@ CI/CD meta-stages (commit → acceptance → RC → release), ATDD with DSL/driv
 - Step 6: OpenAPI is served at springdoc's `/v3/api-docs` on every backend (signed-in callers only, as on Java). Verified by unit tests for .NET (monolith + multitier, passed) and the Next.js monolith (`openapi.spec.ts`, passed); the NestJS check is a component test (`authorization.component.spec.ts`, needs docker) — run it, and open `/v3/api-docs` with a token on one running stack per language. Stryker: the TS configs passed a local `--dryRunOnly`; trigger each of the four `*-mutation-nightly.yml` workflows once by hand (the .NET ones have not been run at all) and check the summary/report artifact.
 - Step 4b: `release-sbom.yml` will **not** fire on its own yet: `_prod-stage.yml` creates releases with the default `GITHUB_TOKEN` (`optivem/actions/create-github-release` default), and GitHub suppresses `release` events from that token. Until the release step passes a PAT/app token (a `_prod-stage.yml` change, deliberately not made here), run it by hand: `workflow_dispatch` with tag = the latest flavour release (e.g. `monolith-java-v…`) and check the `.cdx.json` assets appear on the release.
 
-Next coding step: **Step 7** (spin-off plans), then Step 8 (`docs/tour.md` rows).
+Step 7 is done: the outbox and frontend-testing plans are `plans/20261112-0939-transactional-outbox-postgres.md` and `plans/20261112-0939-frontend-testing-component-a11y-lighthouse.md` (both need `/refine-plan` first); feature flags (#7) are dropped.
+
+Next coding step: **Step 8** (`docs/tour.md` skills-map rows for resilience, k6, OpenAPI/Stryker parity and SBOM release assets).
 
 ## Steps
 
-Execution order: 7 → 8 (the interview-ready milestone, Steps 1 + 4, Step 2 observability, Step 3 resilience, Step 4b SBOM release assets, Step 5 k6 and Step 6 parity are done; Steps 3, 4b, 5 and 6 still await the testing phase).
+Execution order: 8 (every other step is done; Steps 3, 4b, 5 and 6 still await the testing phase).
 
-- [ ] Step 7: Spin off a separate plan for #6 (Postgres-backed outbox, no broker) and a separate plan for #8 (frontend testing: component tests, axe a11y, Lighthouse CI). Drop #7 (feature flags) from the inventory.
 - [ ] Step 8: Update `docs/tour.md` skills map with each addition as it lands.
 
 ## Constraints
