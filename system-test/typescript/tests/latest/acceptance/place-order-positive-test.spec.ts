@@ -214,22 +214,6 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
                 .hasTotalPrice(expectedTotalPrice);
         },
     );
-
-    test('couponUsageCountHasBeenIncrementedAfterItsBeenUsed', criteria('UC-001.5', 'UC-005.4'), async ({ scenario }) => {
-        const code = 'SUMMER2025';
-        await scenario
-            .given()
-            .coupon()
-            .withCouponCode(code)
-            .when()
-            .placeOrder()
-            .withCouponCode(code)
-            .then()
-            .shouldSucceed()
-            .and()
-            .coupon(code)
-            .hasUsedCount(1);
-    });
 });
 
 forChannels(ChannelType.API)(() => {

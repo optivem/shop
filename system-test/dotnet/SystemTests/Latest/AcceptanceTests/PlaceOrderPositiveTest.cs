@@ -172,20 +172,6 @@ public class PlaceOrderPositiveTest : BaseAcceptanceTest
     }
 
     [Theory]
-    [ChannelData(ChannelType.UI, ChannelType.API)]
-    [Trait("tag", "UC-001.5")]
-    [Trait("tag", "UC-005.4")]
-    public async Task CouponUsageCountHasBeenIncrementedAfterItsBeenUsed(Channel channel)
-    {
-        await Scenario(channel)
-            .Given().Coupon().WithCouponCode("SUMMER2025")
-            .When().PlaceOrder().WithCouponCode("SUMMER2025")
-            .Then().ShouldSucceed()
-            .And().Coupon("SUMMER2025")
-            .HasUsedCount(1);
-    }
-
-    [Theory]
     [ChannelData(ChannelType.API)]
     [Trait("tag", "UC-001.16")]
     public async Task OrderTotalShouldIncludeTax(Channel channel)

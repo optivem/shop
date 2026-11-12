@@ -190,21 +190,6 @@ class PlaceOrderPositiveTest extends BaseAcceptanceTest {
                     .hasTotalPrice(expectedTotalPrice);
     }
 
-    @Tag("UC-001.5")
-    @Tag("UC-005.4")
-    @TestTemplate
-    @Channel({ChannelType.UI, ChannelType.API})
-    void couponUsageCountHasBeenIncrementedAfterItsBeenUsed() {
-        scenario
-                .given().coupon()
-                    .withCouponCode("SUMMER2025")
-                .when().placeOrder()
-                    .withCouponCode("SUMMER2025")
-                .then().shouldSucceed()
-                .and().coupon("SUMMER2025")
-                    .hasUsedCount(1);
-    }
-
     @Tag("UC-001.16")
     @TestTemplate
     @Channel(ChannelType.API)

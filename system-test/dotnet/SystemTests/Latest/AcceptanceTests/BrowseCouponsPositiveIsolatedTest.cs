@@ -16,6 +16,7 @@ namespace SystemTests.Latest.AcceptanceTests;
 public class BrowseCouponsPositiveIsolatedTest : BaseAcceptanceTest
 {
     private const string NewestReason = "checks that its coupons are the newest; a coupon published in parallel would come before them";
+    private const string CouponListReason = "the UI reads the coupon back from the coupon list, newest first with no paging; coupons published in parallel would push it off the page";
 
     private IGivenStage GivenThreeCouponsPublishedInOrder(Channel channel)
         => Scenario(channel)
@@ -51,5 +52,21 @@ public class BrowseCouponsPositiveIsolatedTest : BaseAcceptanceTest
             .When().BrowseCoupons().WithPage(page).WithSize("2")
             .Then().ShouldSucceed()
             .CouponList().StartsWithCoupons(coupons.Split(','));
+    }
+
+    [Theory]
+    [Isolated(CouponListReason)]
+    [ChannelData(ChannelType.UI, ChannelType.API)]
+    [Trait("tag", "UC-005.4")]
+    public async Task ShouldShowHowManyTimesACouponHasBeenUsed(Channel channel)
+    {
+        await Scenario(channel)
+            .Given().Coupon().WithCouponCode("LIMITED2026").WithUsageLimit(2)
+            .And().Order().WithOrderNumber("ORD-1").WithCouponCode("LIMITED2026")
+            .And().Order().WithOrderNumber("ORD-2").WithCouponCode("LIMITED2026")
+            .When().BrowseCoupons()
+            .Then().ShouldSucceed()
+            .And().Coupon("LIMITED2026")
+            .HasUsedCount(2);
     }
 }

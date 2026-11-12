@@ -4,6 +4,24 @@ import { criteria } from '../../commons/criteria.js';
 test.describe('@isolated', () => {
     test.describe.configure({ mode: 'serial' });
     forChannels(ChannelType.UI, ChannelType.API)(() => {
+        // The UI reads the coupon back from the coupon list, newest first with no paging: coupons published in
+        // parallel would push it off the page.
+        test('couponUsageCountHasBeenIncrementedAfterItsBeenUsed', criteria('UC-001.5', 'UC-005.4'), async ({ scenario }) => {
+            const code = 'SUMMER2025';
+            await scenario
+                .given()
+                .coupon()
+                .withCouponCode(code)
+                .when()
+                .placeOrder()
+                .withCouponCode(code)
+                .then()
+                .shouldSucceed()
+                .and()
+                .coupon(code)
+                .hasUsedCount(1);
+        });
+
         test('shouldRecordPlacementTimestamp', criteria('UC-001.6'), async ({ scenario }) => {
             await scenario
                 .given()

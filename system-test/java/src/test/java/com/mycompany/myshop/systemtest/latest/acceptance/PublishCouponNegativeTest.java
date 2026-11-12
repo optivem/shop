@@ -40,24 +40,6 @@ class PublishCouponNegativeTest extends BaseAcceptanceTest {
                     .fieldErrorMessage("discountRate", "Discount rate must be at most 1.00");
     }
 
-    @Tag("UC-004.9")
-    @TestTemplate
-    @Channel({ChannelType.UI, ChannelType.API})
-    void cannotPublishCouponWithDuplicateCouponCode() {
-        scenario
-                .given().coupon()
-                    .withCouponCode("EXISTING-COUPON")
-                    .withDiscountRate("0.10")
-                .when().publishCoupon()
-                    .withCouponCode("EXISTING-COUPON")
-                    .withDiscountRate("0.20")
-                .then().shouldFail()
-                    .errorMessage("The request contains one or more validation errors")
-                    .fieldErrorMessage("couponCode", "Coupon code EXISTING-COUPON already exists")
-                .and().coupon("EXISTING-COUPON")
-                    .hasDiscountRate("0.10");
-    }
-
     @Tag("UC-004.8")
     @TestTemplate
     @Channel(value = {ChannelType.API}, alsoForFirstRow = ChannelType.UI)

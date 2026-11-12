@@ -7,6 +7,23 @@ namespace SystemTests.Latest.AcceptanceTests;
 [Trait("Category", "isolated")]
 public class PlaceOrderPositiveIsolatedTest : BaseAcceptanceTest
 {
+    private const string CouponListReason = "the UI reads the coupon back from the coupon list, newest first with no paging; coupons published in parallel would push it off the page";
+
+    [Theory]
+    [Isolated(CouponListReason)]
+    [ChannelData(ChannelType.UI, ChannelType.API)]
+    [Trait("tag", "UC-001.5")]
+    [Trait("tag", "UC-005.4")]
+    public async Task CouponUsageCountHasBeenIncrementedAfterItsBeenUsed(Channel channel)
+    {
+        await Scenario(channel)
+            .Given().Coupon().WithCouponCode("SUMMER2025")
+            .When().PlaceOrder().WithCouponCode("SUMMER2025")
+            .Then().ShouldSucceed()
+            .And().Coupon("SUMMER2025")
+            .HasUsedCount(1);
+    }
+
     [Theory]
     [ChannelData(ChannelType.UI, ChannelType.API)]
     [Trait("tag", "UC-001.6")]

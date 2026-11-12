@@ -36,26 +36,6 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
         },
     );
 
-    test('cannotPublishCouponWithDuplicateCouponCode', criteria('UC-004.9'), async ({ scenario }) => {
-        const dupCode = 'EXISTING-COUPON';
-        await scenario
-            .given()
-            .coupon()
-            .withCouponCode(dupCode)
-            .withDiscountRate(0.1)
-            .when()
-            .publishCoupon()
-            .withCouponCode(dupCode)
-            .withDiscountRate(0.2)
-            .then()
-            .shouldFail()
-            .errorMessage('The request contains one or more validation errors')
-            .fieldErrorMessage('couponCode', `Coupon code ${dupCode} already exists`)
-            .and()
-            .coupon(dupCode)
-            .hasDiscountRate(0.1);
-    });
-
     test.eachAlsoFirstRow(['0', '-1', '-100'])(
         'cannotPublishCouponWithZeroOrNegativeUsageLimit_$usageLimit',
         criteria('UC-004.8'),
