@@ -10,7 +10,7 @@ const compat = new FlatCompat({
 
 export default defineConfig(
   {
-    ignores: [".next/", "out/", "build/", "dist/", "coverage/", "next-env.d.ts"],
+    ignores: [".next/", "out/", "build/", "dist/", "coverage/", "next-env.d.ts", "public/lib/"],
   },
   js.configs.recommended,
   ...compat.extends("next/core-web-vitals", "next/typescript"),

@@ -21,8 +21,12 @@ const CSRF_FETCH_SCRIPT = `(function () {
   };
 })();`;
 
-/** Figtree (self-hosted Fontsource copy), the Market tokens, the store shell, then the page styles. */
+/**
+ * Bootstrap and Figtree (self-hosted copies in public/lib/), the Market tokens, the store shell, then the page
+ * styles.
+ */
 const MARKET_STYLESHEETS = [
+  "/lib/bootstrap/css/bootstrap.min.css",
   "/lib/fontsource-figtree/wght.css",
   "/css/market.css",
   "/css/storefront.css",
@@ -54,14 +58,10 @@ export default async function RootLayout({
     <html lang="en">
       <head>
         <script dangerouslySetInnerHTML={{ __html: CSRF_FETCH_SCRIPT }} />
-        <link
-          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-          rel="stylesheet"
-        />
         {/*
           The Market theme (docs/design/home-redesign/) re-themes Bootstrap through its CSS variables, so it must
-          load after Bootstrap. Plain <link>s keep that order (Next's bundled CSS would be emitted before the CDN
-          link); the files live in public/ and the middleware lets these static folders through.
+          load after Bootstrap. Plain <link>s keep that order (Next's bundled CSS would be emitted before them);
+          the files live in public/ and the middleware lets these static folders through.
         */}
         {MARKET_STYLESHEETS.map((href) => (
           <link key={href} href={href} rel="stylesheet" />
@@ -72,7 +72,7 @@ export default async function RootLayout({
           {children}
         </StorefrontProviders>
         <script
-          src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+          src="/lib/bootstrap/js/bootstrap.bundle.min.js"
           async
         />
       </body>

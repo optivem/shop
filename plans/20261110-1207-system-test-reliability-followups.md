@@ -147,11 +147,6 @@ Found 2026-11-11 (UC-008). `RequestDtosDeclareOnlyStringMembers` may reject the 
 Found 2026-11-11 (UC-008), extending #38. `--suite acceptance-isolated-ui --test X` ran the other acceptance suites too, then reported "requested test(s) never executed" even though X passed. On .NET a shared method name (`ShouldKeepTheQuantityBetween1And99WhenUsingTheStepper`) also pulled in UC-007's tests.
 - **Recommended:** fold into #38's fix (make `--suite` restrict the run, and support class-qualified names on .NET). **Why:** the same false-red problem.
 
-### 44. Monolith pages load Bootstrap from cdn.jsdelivr.net
-
-Found 2026-11-11 (UC-009). It's the likely cause of intermittent page-load and Keycloak-login timeouts in Java runs (5, then 3 different UC-009 tests timed out; all passed on re-run).
-- **Recommended:** self-host Bootstrap like Figtree (npm/webjar/static file), so system tests don't depend on a CDN. **Why:** a third-party network fetch in every page load is a flake source and breaks offline runs.
-
 ### 45. Two sessions' `system-test setup` at once corrupt `system-test/java/build`
 
 Found 2026-11-11 (UC-009), extending #36. Concurrent clean builds in one checkout corrupted the Java build directory; fixed with a clean rebuild.

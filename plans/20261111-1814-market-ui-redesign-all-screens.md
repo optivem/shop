@@ -33,7 +33,11 @@
 
 Step 9, second half. `./compile-all.sh` passed on 2026-11-11 (all 7 configs). Step 7 is committed. Next, run `./test-all.sh` (latest + legacy, all three languages). Run it only once no other session is using the `my-shop-*` docker stacks (`docker ps`) and the in-progress UC-009 `system-test/**` edits are committed. Then hand the user the visual check at desktop and phone widths.
 
-**REL #43 (2026-11-12): coded side checked, untested in docker.** At HEAD all three monolith layouts render exactly one `[aria-label='Cart Item Count']` (Next.js `StoreHeader.tsx`, Thymeleaf `layout.html`, Razor `_Layout.cshtml`). A local Next.js production build driven by Playwright through UC-008.2's flow (add on the product page, then add again from the catalog; also with CPU throttling and a delayed CDN) showed one badge every time, so no code change was needed; the two badges were most likely from a docker image built off a mid-edit shared working tree (REL #36). Confirm with UC-008 on the TS monolith in Step 9. Step 9 (`./test-all.sh` + visual check) is still pending.
+**REL #43 (2026-11-12): coded side checked, untested in docker.** At HEAD all three monolith layouts render exactly one `[aria-label='Cart Item Count']` (Next.js `StoreHeader.tsx`, Thymeleaf `layout.html`, Razor `_Layout.cshtml`). A local Next.js production build driven by Playwright through UC-008.2's flow (add on the product page, then add again from the catalog; also with CPU throttling and a delayed CDN) showed one badge every time, so no code change was needed; the two badges were most likely from a docker image built off a mid-edit shared working tree (REL #36). Confirm with UC-008 on the TS monolith in Step 9.
+
+**REL #44 (2026-11-12): coded, compiled, untested in docker.** Bootstrap 5.3.3 is self-hosted in all three monoliths (byte-identical to the jsdelivr files): .NET already served `wwwroot/lib/bootstrap/`; Java now serves `static/css/lib/bootstrap/{css,js}/` (under `/css/**` for `SecurityConfig`, as in idea 10); the TS monolith serves `public/lib/bootstrap/{css,js}/` (no `dist/` level, because the TS `.gitignore` and `.dockerignore` drop `dist/`; `public/lib/` added to its eslint ignores). frontend-react already used the `bootstrap` npm package. No `cdn.jsdelivr.net` is left in any page template. In Step 9, check that every page still picks up Bootstrap styling and the Bootstrap JS (collapse/dropdown) in all three monoliths.
+
+Both #43 and #44 are coded but untested; Step 9 (`./test-all.sh` + visual check) is still pending.
 
 ## Steps
 
