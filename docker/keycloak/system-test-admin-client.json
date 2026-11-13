@@ -1,7 +1,7 @@
 {
   "clientId": "shop-system-test-admin",
   "name": "System tests: user admin",
-  "description": "Service account the cloud acceptance stage's system tests use to create and delete test customers. Test realm (shop) only; holds realm-management manage-users, view-users and query-users. Reconciled by .github/actions/deploy-keycloak, which also sets its secret.",
+  "description": "Service account the cloud acceptance tests use to create and delete test customers. Realm shop only; realm-management manage-users, view-users, query-users. Reconciled (with its secret) by .github/actions/deploy-keycloak.",
   "enabled": true,
   "protocol": "openid-connect",
   "publicClient": false,

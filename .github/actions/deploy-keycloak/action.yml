@@ -225,6 +225,9 @@ runs:
         echo "::add-mask::${token}"
         client="$(jq -c --arg secret "$CLIENT_SECRET" '.secret = $secret' "${GITHUB_WORKSPACE}/docker/keycloak/system-test-admin-client.json")"
         [[ "$(jq -r .clientId <<< "$client")" == "$client_id" ]] || { echo "::error::system-test-admin-client.json must define ${client_id}"; exit 1; }
+        # Keycloak stores name and description in VARCHAR(255) columns; a longer value fails the POST with a bare HTTP 500.
+        too_long="$(jq -r '[to_entries[] | select((.key == "name" or .key == "description") and (.value | length) > 255) | .key] | join(", ")' <<< "$client")"
+        [[ -z "$too_long" ]] || { echo "::error::system-test-admin-client.json: ${too_long} is longer than Keycloak's 255-character limit"; exit 1; }
         admin="${kc}/admin/realms/${realm}"
         api="${admin}/clients"
         auth=(-H "Authorization: Bearer ${token}" -H "Content-Type: application/json")
@@ -233,11 +236,12 @@ runs:
         if [[ -z "$id" ]]; then
           # Every acceptance variant shares this realm, so another variant can create the client between
           # the lookup and the POST (409): then fall through to updating the client it created.
-          code="$(curl -sS -o /dev/null -w '%{http_code}' "${auth[@]}" -X POST "$api" -d "$client")"
+          body="$(mktemp)"
+          code="$(curl -sS -o "$body" -w '%{http_code}' "${auth[@]}" -X POST "$api" -d "$client")"
           case "$code" in
             201) echo "Created ${client_id} in ${realm}." ;;
             409) ;;
-            *) echo "::error::Creating ${client_id} in ${realm} returned HTTP ${code}"; exit 1 ;;
+            *) echo "::error::Creating ${client_id} in ${realm} returned HTTP ${code}: $(head -c 2000 "$body")"; exit 1 ;;
           esac
           id="$(lookup "$client_id")"
           [[ -n "$id" ]] || { echo "::error::${client_id} is still missing from realm ${realm}"; exit 1; }
