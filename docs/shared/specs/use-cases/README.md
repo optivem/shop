@@ -8,8 +8,6 @@ This is the index of every MyShop use case. Each use case has its own folder her
 
 ## Diagram
 
-A Customer is a signed-in Visitor, so a Customer can do everything a Visitor can.
-
 ```mermaid
 graph LR
     Visitor([Visitor])
@@ -18,8 +16,6 @@ graph LR
     ERP([ERP])
     Clock([Clock])
     Tax([Tax])
-
-    Customer -.->|is a| Visitor
 
     Visitor --> BrowseCatalog(UC-006 Browse Catalog)
     Visitor --> ViewProduct(UC-007 View Product)
