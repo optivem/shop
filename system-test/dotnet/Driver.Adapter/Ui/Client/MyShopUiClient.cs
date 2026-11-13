@@ -72,8 +72,6 @@ public class MyShopUiClient : IAsyncDisposable
 
     private readonly string _baseUrl;
 
-    private readonly IPlaywright _playwright;
-
     private readonly IBrowser _browser;
 
     private readonly string? _keycloakBaseUrl;
@@ -95,13 +93,11 @@ public class MyShopUiClient : IAsyncDisposable
 
 
 
-    private MyShopUiClient(string baseUrl, IPlaywright playwright, IBrowser browser, IBrowserContext context, IPage page, HomePage homePage, KeycloakUiLogin? login, string? keycloakBaseUrl)
+    private MyShopUiClient(string baseUrl, IBrowser browser, IBrowserContext context, IPage page, HomePage homePage, KeycloakUiLogin? login, string? keycloakBaseUrl)
 
     {
 
         _baseUrl = baseUrl;
-
-        _playwright = playwright;
 
         _browser = browser;
 
@@ -123,15 +119,13 @@ public class MyShopUiClient : IAsyncDisposable
 
     {
 
-        var playwright = await Playwright.CreateAsync();
-
-        var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = IsHeadless });
+        var browser = await BrowserPool.RentAsync(IsHeadless);
 
 
 
         var (context, page, login, homePage) = await OpenSessionAsync(browser, baseUrl, keycloakBaseUrl, TestUser.Customer);
 
-        return new MyShopUiClient(baseUrl, playwright, browser, context, page, homePage, login, keycloakBaseUrl);
+        return new MyShopUiClient(baseUrl, browser, context, page, homePage, login, keycloakBaseUrl);
 
     }
 
@@ -545,13 +539,10 @@ public class MyShopUiClient : IAsyncDisposable
 
             await _context.CloseAsync();
 
+        // The browser is shared (BrowserPool): hand it to the next test instead of closing it.
         if (_browser != null)
 
-            await _browser.CloseAsync();
-
-
-
-        _playwright?.Dispose();
+            BrowserPool.Return(_browser);
 
         GC.SuppressFinalize(this);
 
