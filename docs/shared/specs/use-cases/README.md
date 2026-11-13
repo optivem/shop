@@ -17,6 +17,7 @@ graph LR
     Admin([Admin])
     ERP([ERP])
     Clock([Clock])
+    Tax([Tax])
 
     Customer -.->|is a| Visitor
 
@@ -43,6 +44,7 @@ graph LR
     ManageCart --> ERP
     PlaceOrder --> Clock
     CancelOrder --> Clock
+    PlaceOrder --> Tax
 ```
 
 GitHub renders Mermaid without clickable links, so use the table below to open each use case.

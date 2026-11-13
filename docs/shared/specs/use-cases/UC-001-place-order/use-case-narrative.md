@@ -6,7 +6,7 @@ title: Place Order
 # UC-001 Place Order
 
 **Primary actor:** Customer
-**Secondary actors:** ERP, Clock
+**Secondary actors:** ERP, Clock, Tax
 
 ## Main Success Scenario
 1. The customer submits an order for a product: its SKU, a quantity, a shipping address (first name, last name, street, postal code, city and country) and, optionally, a coupon code.
