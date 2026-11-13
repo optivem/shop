@@ -343,6 +343,13 @@ jobs:
       SYSTEM_IMAGE: ${{ fromJSON(inputs.images).system }}
       MIGRATE_IMAGE: ${{ needs.shared-images.outputs.db-migrate-image }}
       STACK: ${{ matrix.stack }}
+      # Stub stack only (mirrors docker/*/*/docker-compose.*.stub.yml): a short ERP breaker open time, and a breaker that
+      # opens only when every recent ERP call failed, so an ERP-outage test doesn't leak 503s ('Product information can't be
+      # retrieved right now') into the tests after it. Names per language: Java (Resilience4j), .NET (Polly), TypeScript.
+      STUB_BREAKER_ENV: >-
+        {"RESILIENCE_CIRCUITBREAKER_WAITINOPENSTATE":"100ms","RESILIENCE_CIRCUITBREAKER_FAILURERATETHRESHOLD":"100",
+        "Resilience__Erp__BreakDurationMilliseconds":"500","Resilience__Erp__FailureRatio":"1.0",
+        "EXTERNAL_BREAKER_HALF_OPEN_AFTER_MS":"100"}
       EXT_SERVICE: ${{ matrix.ext-service }}
       EXT_IMAGE: ${{ matrix.stack == 'real' && needs.shared-images.outputs.simulators-image || needs.shared-images.outputs.stubs-image }}
       EXT_PORT: ${{ matrix.ext-port }}
@@ -465,7 +472,9 @@ jobs:
               AUTH_TOKEN_URI:($kc + "/realms/shop/protocol/openid-connect/token"),
               AUTH_JWK_SET_URI:($kc + "/realms/shop/protocol/openid-connect/certs"),
               AUTH_AUDIENCE:"shop-backend", AUTH_CLIENT_SECRET:"shop-monolith-test-secret",
-              SERVER_FORWARDHEADERSSTRATEGY:"native", ASPNETCORE_FORWARDEDHEADERS_ENABLED:"true"}' > "$env_file"
+              SERVER_FORWARDHEADERSSTRATEGY:"native", ASPNETCORE_FORWARDEDHEADERS_ENABLED:"true"}
+             + (if $mode == "stub" then $stub_breaker else {} end)' \
+            --argjson stub_breaker "$STUB_BREAKER_ENV" > "$env_file"
           gcloud run deploy "$SYSTEM_SERVICE" \
             --image "$SYSTEM_IMAGE_REF" --region "$REGION" --project "$PROJECT" \
             --service-account "$SA" --port 8080 --memory 1Gi --cpu 1 --cpu-boost \
@@ -490,7 +499,9 @@ jobs:
               EXTERNAL_SYSTEM_MODE:$mode, ALLOWED_ORIGINS:$origin,
               AUTH_ISSUER_URI:($kc + "/realms/shop"),
               AUTH_JWK_SET_URI:($kc + "/realms/shop/protocol/openid-connect/certs"),
-              AUTH_AUDIENCE:"shop-backend"}' > "$env_file"
+              AUTH_AUDIENCE:"shop-backend"}
+             + (if $mode == "stub" then $stub_breaker else {} end)' \
+            --argjson stub_breaker "$STUB_BREAKER_ENV" > "$env_file"
           gcloud run deploy "$BACKEND_NAME" \
             --image "$BACKEND_IMAGE_REF" --region "$REGION" --project "$PROJECT" \
             --service-account "$SA" --port 8081 --memory 1Gi --cpu 1 --cpu-boost \
