@@ -146,11 +146,8 @@ public class MyShopUiDriver : IMyShopDriver
             return Failure<CancelOrderResponse>("Did not receive expected cancellation success message");
         }
 
-        if (!await _orderDetailsPage.IsCancelButtonHiddenAsync())
-        {
-            return Failure<CancelOrderResponse>("Cancel button still visible");
-        }
-
+        // No immediate cancel-button check here (Java/TS parity): it raced the re-render that removes the button
+        // once the notification shows. Whether cancel is still offered is asserted through ViewOrder's CancelOffered.
         return Success(new CancelOrderResponse());
     }
 
