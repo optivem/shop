@@ -22,6 +22,15 @@ spring:
         format_sql: true
   thymeleaf:
     cache: false
+  # Content-hashed static URLs: th:href="@{/css/market.css}" renders as /css/market-<md5>.css, so a
+  # deploy that changes a file changes its URL and returning browsers never keep a stale copy.
+  web:
+    resources:
+      chain:
+        strategy:
+          content:
+            enabled: true
+            paths: /**
 
 server:
   port: 8080

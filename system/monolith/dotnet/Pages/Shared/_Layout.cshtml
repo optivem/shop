@@ -14,8 +14,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@(string.IsNullOrEmpty(title) ? "MyShop" : title + " · MyShop")</title>
     @* Bootstrap 5.3 re-themed by the Market tokens (market.css) with Figtree self-hosted from Fontsource: the same look as frontend-react. *@
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/lib/fontsource-figtree/wght.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/lib/fontsource-figtree/wght.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/market.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/storefront.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/pages.css" asp-append-version="true" />
@@ -189,8 +189,8 @@
     </footer>
 </div>
 
-<script src="~/lib/jquery/dist/jquery.min.js"></script>
-<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="~/lib/jquery/dist/jquery.min.js" asp-append-version="true"></script>
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js" asp-append-version="true"></script>
 <script src="~/js/site.js" asp-append-version="true"></script>
 
 @await RenderSectionAsync("Scripts", required: false)

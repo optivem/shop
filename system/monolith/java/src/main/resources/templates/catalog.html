@@ -10,7 +10,7 @@
     <!-- The home hero and two promo tiles: the only stock photos (static/css/images/promo/, credited in the footer). -->
     <section class="promo-tiles mb-4" aria-label="Promotions">
         <div class="promo-hero">
-            <img class="promo-photo promo-photo-hero" src="/css/images/promo/laptop.jpg" alt="Laptop on a white desk">
+            <img class="promo-photo promo-photo-hero" th:src="@{/css/images/promo/laptop.jpg}" alt="Laptop on a white desk">
             <div class="promo-hero-panel">
                 <span class="badge badge-deal">New season</span>
                 <h1 class="promo-hero-title">New season laptops</h1>
@@ -20,11 +20,11 @@
         </div>
         <div class="promo-side">
             <a href="/?category=Monitors" class="promo-tile">
-                <img class="promo-photo" src="/css/images/promo/monitor.jpg" alt="Monitor on a desk" loading="lazy">
+                <img class="promo-photo" th:src="@{/css/images/promo/monitor.jpg}" alt="Monitor on a desk" loading="lazy">
                 <span class="promo-tile-label">Shop monitors <svg th:replace="~{fragments/icons :: icon('arrow-right', 16, null, 2)}"></svg></span>
             </a>
             <a href="/?category=Accessories" class="promo-tile">
-                <img class="promo-photo" src="/css/images/promo/keyboard.jpg" alt="Mechanical keyboard" loading="lazy">
+                <img class="promo-photo" th:src="@{/css/images/promo/keyboard.jpg}" alt="Mechanical keyboard" loading="lazy">
                 <span class="promo-tile-label">Build your desk setup <svg th:replace="~{fragments/icons :: icon('arrow-right', 16, null, 2)}"></svg></span>
             </a>
         </div>

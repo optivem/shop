@@ -6,11 +6,11 @@
     <title th:replace="${title}">MyShop</title>
     <!-- Bootstrap 5.3 (self-hosted copy) re-themed by the Market tokens (market.css) with Figtree self-hosted from Fontsource: the same look
          as frontend-react and the .NET monolith. -->
-    <link href="/css/lib/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-    <link href="/css/lib/fontsource-figtree/wght.css" rel="stylesheet">
-    <link href="/css/market.css" rel="stylesheet">
-    <link href="/css/storefront.css" rel="stylesheet">
-    <link href="/css/pages.css" rel="stylesheet">
+    <link th:href="@{/css/lib/bootstrap/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/css/lib/fontsource-figtree/wght.css}" rel="stylesheet">
+    <link th:href="@{/css/market.css}" rel="stylesheet">
+    <link th:href="@{/css/storefront.css}" rel="stylesheet">
+    <link th:href="@{/css/pages.css}" rel="stylesheet">
     <script>
         // Same-origin state-changing fetch() calls carry the CSRF token the server sets in the XSRF-TOKEN cookie.
         (function () {
@@ -184,6 +184,6 @@
     </footer>
 </div>
 
-<script src="/css/lib/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script th:src="@{/css/lib/bootstrap/js/bootstrap.bundle.min.js}"></script>
 </body>
 </html>
