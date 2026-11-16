@@ -189,7 +189,16 @@ runs:
           esac
         fi
         if [[ -n "$id" ]]; then
-          curl -fsS "${auth[@]}" -X PUT "${api}/${id}" -d "$(jq -c --arg id "$id" '.id = $id' <<< "$client")" > /dev/null
+          # The parallel variants also PUT this client at the same moment, and Keycloak answers a
+          # concurrent update with 409 (meta-release 43514773710). The PUT is idempotent: retry it.
+          body="$(mktemp)"
+          for attempt in 1 2 3 4 5; do
+            code="$(curl -sS -o "$body" -w '%{http_code}' "${auth[@]}" -X PUT "${api}/${id}" -d "$(jq -c --arg id "$id" '.id = $id' <<< "$client")")"
+            [[ "$code" == 409 && "$attempt" -lt 5 ]] || break
+            echo "PUT shop-monolith returned 409 (concurrent update); retrying (${attempt}/5)."
+            sleep $((attempt * 2 + RANDOM % 3))
+          done
+          [[ "$code" == 2* ]] || { echo "::error::Updating shop-monolith in shop-prod returned HTTP ${code}: $(head -c 2000 "$body")"; exit 1; }
           echo "Updated shop-monolith in shop-prod."
         fi
 
@@ -247,7 +256,16 @@ runs:
           [[ -n "$id" ]] || { echo "::error::${client_id} is still missing from realm ${realm}"; exit 1; }
         fi
         # PUT also resets the secret, so a rotated GitHub secret takes effect on the next run.
-        curl -fsS "${auth[@]}" -X PUT "${api}/${id}" -d "$(jq -c --arg id "$id" '.id = $id' <<< "$client")" > /dev/null
+        # The parallel acceptance variants PUT this client at the same moment; Keycloak answers a
+        # concurrent update with 409. The PUT is idempotent: retry it.
+        body="$(mktemp)"
+        for attempt in 1 2 3 4 5; do
+          code="$(curl -sS -o "$body" -w '%{http_code}' "${auth[@]}" -X PUT "${api}/${id}" -d "$(jq -c --arg id "$id" '.id = $id' <<< "$client")")"
+          [[ "$code" == 409 && "$attempt" -lt 5 ]] || break
+          echo "PUT ${client_id} returned 409 (concurrent update); retrying (${attempt}/5)."
+          sleep $((attempt * 2 + RANDOM % 3))
+        done
+        [[ "$code" == 2* ]] || { echo "::error::Updating ${client_id} in ${realm} returned HTTP ${code}: $(head -c 2000 "$body")"; exit 1; }
         echo "Updated ${client_id} in ${realm}."
         sa="$(curl -fsS "${auth[@]}" "${api}/${id}/service-account-user" | jq -r '.id // empty')"
         [[ -n "$sa" ]] || { echo "::error::${client_id} in ${realm} has no service-account user"; exit 1; }
