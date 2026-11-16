@@ -1,6 +1,6 @@
 /*
  * Storefront shell styles (header, nav, footer, notifications), built on the Market tokens in market.css.
- * Copied from system/multitier/frontend-react/public/css/common.css; keep in sync. One difference: the
+ * Copied from system/multitier/frontend-react/src/styles/common.css; keep in sync. One difference: the
  * notification is a plain block here, because the page scripts render .error-message / .field-error as its
  * direct children (no icon + body wrapper as in the React Notification component).
  */

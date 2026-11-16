@@ -1,5 +1,5 @@
 /* Storefront shell styles (header, nav, footer, notifications), built on the Market tokens in market.css. */
-/* Copied from frontend-react (public/css/common.css); linked after Bootstrap here, selectors stay compounded as there. */
+/* Copied from frontend-react (src/styles/common.css); linked after Bootstrap here, selectors stay compounded as there. */
 
 /* ---- Notifications (driver hooks: .notification.success / .error, .error-message, .field-error) ---- */
 

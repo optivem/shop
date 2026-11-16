@@ -1,5 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+// Imported, not linked from public/: the bundle gives it a content-hashed name, so a deploy never
+// leaves a returning browser on a cached old copy. First, as when it was linked ahead of the bundle.
+import './styles/common.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '@fontsource-variable/figtree';
 import './styles/market.css';
