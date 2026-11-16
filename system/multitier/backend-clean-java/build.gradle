@@ -96,8 +96,8 @@ dependencies {
 	// Resilience on the outbound ERP/Clock/Tax calls (timeout, retry, circuit breaker); see GatewayHttpClient.
 	// Core modules rather than the Spring Boot starter: the policy is applied in code, so it also holds
 	// for a gateway built outside a Spring context. Not managed by the Spring Boot BOM.
-	implementation 'io.github.resilience4j:resilience4j-retry:2.2.0'
-	implementation 'io.github.resilience4j:resilience4j-circuitbreaker:2.2.0'
+	implementation 'io.github.resilience4j:resilience4j-retry:2.4.0'
+	implementation 'io.github.resilience4j:resilience4j-circuitbreaker:2.4.0'
 	// Observability: Micrometer Tracing bridged to OpenTelemetry (inbound + outbound HTTP spans, W3C
 	// traceparent, trace_id/span_id in logs) and OTLP export for traces + metrics. Versions come from
 	// the Spring Boot BOM. Export is off unless OTEL_EXPORTER_OTLP_ENDPOINT is set.
@@ -108,7 +108,7 @@ dependencies {
 	// Bridges Logback to the OTel SDK so logs reach the collector too; attached only when export is on
 	// (OtlpLogExportConfig). Not managed by the Spring Boot BOM, so the instrumentation BOM pins it at
 	// the release built against Boot's OpenTelemetry SDK (1.49.0).
-	implementation platform('io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:2.15.0-alpha')
+	implementation platform('io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:2.33.1-alpha')
 	implementation 'io.opentelemetry.instrumentation:opentelemetry-logback-appender-1.0'
 
 	runtimeOnly 'org.postgresql:postgresql'
@@ -119,7 +119,7 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	// Makes the dependency rule executable rather than aspirational: ArchitectureTest fails the
 	// build when a framework import reaches the domain, or a package points the wrong way.
-	testImplementation 'com.tngtech.archunit:archunit-junit5:1.3.0'
+	testImplementation 'com.tngtech.archunit:archunit-junit5:1.5.1'
 	testImplementation 'org.springframework.boot:spring-boot-testcontainers'
 	testImplementation 'org.testcontainers:junit-jupiter'
 	testImplementation 'org.testcontainers:postgresql'
@@ -129,11 +129,11 @@ dependencies {
 
 	// Shared stub helpers (support/) need WireMock; declared once here and inherited by the
 	// component, contract, and integration layers via the testSupportImplementation extendsFrom chain.
-	testSupportImplementation 'org.wiremock:wiremock-standalone:3.9.2'
+	testSupportImplementation 'org.wiremock:wiremock-standalone:3.13.2'
 
 	// Pact contract layer only (inherits the testSupport + test deps above). No broker and no
 	// account: @PactFolder reads the consumer's pact out of the repo-owned shop/contracts/ folder.
-	componentTestImplementation 'au.com.dius.pact.provider:junit5spring:4.6.14'
+	componentTestImplementation 'au.com.dius.pact.provider:junit5spring:4.7.7'
 }
 
 tasks.named('test') {
