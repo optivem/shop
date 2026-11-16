@@ -10,6 +10,10 @@ git config core.hooksPath .githooks
 
 The hook at `.githooks/pre-commit` rejects commits matching the accidental-rehearsal-leak shape (generic "Sync changes" message + touching `system/**` or `system-test/**` + Claude co-author trailer). It exists because of incident `d325a797` (reverted in `7ce32f0e`).
 
+## Rehearsal branches: keep permanently — NEVER delete
+
+`rehearsal/*` branches (e.g. `rehearsal/69-reject-order-with-line-quantity-of-100`, `rehearsal/76-bug-order-cancellation-blackout-on-dec`) are kept **permanently** because they are used for student demos. Never delete them — not on the remote, not locally — and never propose them for cleanup, even when they look stale (months old, unmerged, far behind `main`). This applies to branch cleanups, stale-branch audits, and any helper script that prunes branches.
+
 ## Documentation: No GitHub Pages
 
 Never enable GitHub Pages on this repo or on repos scaffolded from it. Docs live as plain markdown under `docs/`; link to them from the README using relative paths (e.g. `[Architecture](docs/architecture.md)`). GitHub renders markdown and Mermaid natively on github.com, which is sufficient for the dev audience and avoids the Pages workflow, `id-token: write` permissions, and deploy-time failures.
