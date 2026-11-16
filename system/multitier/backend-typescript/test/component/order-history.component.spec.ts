@@ -25,7 +25,9 @@ describe('Order History (component)', () => {
     harness.returnsPromotion(false, 1.0);
     harness.returnsTaxRate('US', 0.1);
 
-    const placed = await (await harness.customerApi(customer))
+    const placed = await (
+      await harness.customerApi(customer)
+    )
       .post('/api/orders')
       .send({ sku: 'BOOK-123', quantity: 2, country: 'US' });
     expect(placed.status).toBe(201);
