@@ -38,21 +38,21 @@ CI/CD meta-stages (commit → acceptance → RC → release), ATDD with DSL/driv
 
 ## ▶ Next executable step (resume here)
 
-**Testing phase pending (Phase B of meta-plan 20261112-0845):** Every step is code-complete; compile is green (`./compile-all.sh`, all 7 configs), but nothing has been run against a stack yet.
-- Step 3: run `--sample` per language (backend resilience part) and the new resilience acceptance tests — `PlaceOrderNegativeIsolatedTest` → `shouldFailFastWithServiceUnavailableWhenErpIsDown` / `…WhenErpIsSlow` (Java, .NET `ShouldFailFast…`, TS spec), API channel, stub mode. They drive the ERP stub down (503) or slow (20s WireMock fixed delay, priority-1 outage stub) and assert the 503 message, `Retry-After` in whole seconds, `application/problem+json`, and a fail-fast bound (down ≤5s, slow ≤12s). Also confirm the stub compose breaker override (Java/TS 100ms, .NET 500ms) stops breaker state leaking between isolated tests. Known limit: the breaker opening itself is not asserted black-box (the short stub open window makes it racy); cover it with backend unit tests if wanted.
-- Step 5: smoke-run `k6 run perf/k6/browse-and-place-order.js` against one stub stack (defaults = Java monolith, API 8112 / Keycloak 8192), then trigger the `load-test` workflow once (`workflow_dispatch`, language=java) and check its job summary shows the p95/p99 table.
-- Step 6: OpenAPI is served at springdoc's `/v3/api-docs` on every backend (signed-in callers only, as on Java). Verified by unit tests for .NET (monolith + multitier, passed) and the Next.js monolith (`openapi.spec.ts`, passed); the NestJS check is a component test (`authorization.component.spec.ts`, needs docker) — run it, and open `/v3/api-docs` with a token on one running stack per language. Stryker: the TS configs passed a local `--dryRunOnly`; trigger each of the four `*-mutation-nightly.yml` workflows once by hand (the .NET ones have not been run at all) and check the summary/report artifact.
-- Step 4b: `release-sbom.yml` will **not** fire on its own yet: `_prod-stage.yml` creates releases with the default `GITHUB_TOKEN` (`optivem/actions/create-github-release` default), and GitHub suppresses `release` events from that token. Until the release step passes a PAT/app token (a `_prod-stage.yml` change, deliberately not made here), run it by hand: `workflow_dispatch` with tag = the latest flavour release (e.g. `monolith-java-v…`) and check the `.cdx.json` assets appear on the release.
+**Testing phase done (2026-11-17, unit U1 of meta-plan `20261116-2003`).** Nothing is left to verify. The orchestrator deletes this plan after the user's MUI visual check.
+- Step 3: the resilience tests (`PlaceOrderNegativeIsolatedTest` fail fast when the ERP is down or slow, UC-001.14) passed on all six stacks in the local Phase B run (monolith and multitier × Java, .NET, TS). No breaker state leaked into the following isolated tests, the TS SamplingBreaker included (REL #60: no leak seen).
+- Step 5: the local docker k6 smoke against the Java monolith stub stack sent 17 requests, 0% failed. The first `load-test` dispatch (run 44047318333) failed with 33% errors: the stub stack had no `/erp/api/promotion` mapping, so every place order got a 503. Fixed in `c1000142` (static `erp-promotion.json`). Rerun 44049789149 is green: 440 requests, 0% failed, p95 browse 33.6 ms, view 24.0 ms, place order 81.3 ms.
+- Step 6: a signed-in `GET /v3/api-docs` answers 200 on the Java monolith, the .NET monolith and backend, the Next.js monolith and the NestJS backend (anonymous callers get a redirect or 401). The Java backends answered 500 (springdoc 2.6.0 against Spring 6.2); fixed in `c1000142` (springdoc 2.8.9). NestJS `authorization.component.spec.ts` passes in the commit stage (run 43952886881). Stryker: the four `*-mutation-nightly.yml` workflows run green every night and upload their report artifacts (e.g. 43842873631, 43846054957, 43843171039, 43846123170).
+- Step 4b: `release-sbom.yml` by `workflow_dispatch` (run 44047311148, tag `monolith-java-v1.0.238`) attached `monolith-system-java.cdx.json` to the release. It still doesn't fire on its own (REL #47, deferred).
 
 Step 7 is done: the outbox and frontend-testing plans are `plans/20261112-0939-transactional-outbox-postgres.md` and `plans/20261112-0939-frontend-testing-component-a11y-lighthouse.md` (both need `/refine-plan` first); feature flags (#7) are dropped.
 
 Step 8 is done: `docs/tour.md` has skills-map rows for Resilience and Performance (k6), the OpenAPI and mutation-testing rows now cover all three languages, the supply-chain row mentions the release SBOMs, and the "Coming next" section is gone (everything in it landed).
 
-**No coding left.** Once the testing items above pass (fix forward if not), delete this plan.
+**No coding or testing left.**
 
 ## Steps
 
-Every step is code-complete; only the testing phase in ▶ Next remains (Steps 3, 4b, 5 and 6).
+Every step is code-complete and verified (see ▶ Next).
 
 
 ## Constraints

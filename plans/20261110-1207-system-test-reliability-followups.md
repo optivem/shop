@@ -11,7 +11,7 @@ Session 2026-11-10 did #1, #2, #3 (full latest acceptance runs per language on m
 
 **Waiting on the user:** #11 on the second machine (same fix; on Valentina_Desk it was done 2026-11-11): Git Bash's `gcloud` wrapper skips the Windows bundled Python and fell back to Python 3.13; fixed by `CLOUDSDK_PYTHON` pointing at `google-cloud-sdk/platform/bundledpython/python.exe` (user env var + `~/.bashrc`). (#27 committed in `actions` as `1139063`, 2026-11-10.)
 
-**Next executable unit:** the shop-side ideas decided at the all-shop-plans meta-plan's G0 (2026-11-16), run as its unit U8: #55 (README note), #58 (admin `GET /api/admin/customers`), #59 (docs how-to), #60, #61, #64, #66, #67, #68 per their recommendations. #63 done in U1 (`c1000142`: docker k6 run documented in the script header, local smoke 0% failed). #57 and #65 go to other repos (X1). #32–#34 and #36–#45 are done or moved (deleted 2026-11-17).
+**Next executable unit:** the shop-side ideas decided at the all-shop-plans meta-plan's G0 (2026-11-16), run as its unit U8: #55 (README note), #58 (admin `GET /api/admin/customers`), #59 (docs how-to), #61, #64, #66, #67, #68 per their recommendations. #60 and #63 done in U1 (#60: no TS breaker leak in the full TS pass; #63: docker k6 run documented in `c1000142`, local smoke 0% failed). New from U1: #69, #70 (storefront leftovers from the deleted SPEC/BUILD), #71 (gh-optivem, X1). #57 and #65 go to other repos (X1). #32–#34 and #36–#45 are done or moved (deleted 2026-11-17).
 
 **Deferred:** #5, #15, #17, #20, #21, #26 (see their ideas below).
 
@@ -124,11 +124,6 @@ Found 2026-11-12. The customer filter collects customers from the first 50 pages
 Found 2026-11-12. Local stacks keep their data across `--restart` (over 5k orders and 2k coupons locally), which feeds #58 and slows list pages.
 - **Recommended:** a documented reset (or periodic prune) for local stacks. **Why:** local runs should start from a known size, as CI does.
 
-### 60. TS SamplingBreaker threshold isn't env-configurable
-
-Found 2026-11-12. Java's breaker leaked 503s between ERP outage tests until `365de274` made its threshold configurable; the TS SamplingBreaker threshold can't be set from the environment, so it may leak the same way.
-- **Recommended:** check it in the TS test pass, and make it env-configurable like Java/.NET if it leaks. **Why:** the same cross-test leak in a third language.
-
 ### 61. Java Playwright navigation hangs
 
 Found 2026-11-12. Java Playwright waits 30 s for "scheduled navigations" after Keycloak login / Sign In, or on `navigate("/")` load. The hangs grew more frequent over the session and hit different tests each run; TS Playwright on the same stacks never hung.
@@ -171,3 +166,17 @@ Java and TS suites against the same stacks were green in the same runs. `81be91d
 
 Found 2026-11-17 (U1 .NET pass). `system-test/dotnet/SystemTests/TestResults/junit/placeorder.xml` was a leftover from a 2026-11-07 run (78 failures, not produced by any `tests.yaml` suite). `system-test setup` doesn't clear the folder, so `spec status --config spec-dotnet.yaml` read it with the new results and reported UC-001.1–.13 and .16 as Failing although every current suite passed. Deleting it gave 110/112 verified (2 criterion-level `planned`). CI runners start clean, so only local gates are affected; the "flaky UC-007.4" of the 2026-11-12 Java pass may be the same.
 - **Recommended:** have each language's `tests.yaml` setup (or a first `Clean` step) empty its JUnit results folder (`TestResults/junit`, `junit-results`, Gradle `test-results`) before a run. **Why:** a local spec gate must only read the run it gates.
+
+### 70. Storefront leftovers carried over from SPEC/BUILD (deleted at SMETA close-out, 2026-11-17)
+
+Moved here so nothing is lost when the storefront plans were deleted.
+- Two criteria have no test and are tagged `planned` inside implemented use cases: `@UC-005.7` (no coupons: the shared coupon table is never empty) and `@UC-011.2` ("-" as the customer of an order with no recorded customer: needs DB seeding). Not covered either: UC-011.1 "newest first" (possible now with `given().order().placedAt(...)`), UC-005.3's total/empty page, and UC-010.7 doesn't assert the email.
+- Cross-language behaviour differences found while writing the specs (the specs state only the common behaviour): cancelling a delivered order is refused only by `backend-clean-java`; a coupon with valid-to before valid-from gives an unmapped `IllegalArgumentException` (likely 500) on the Java monolith and backend-java and is not checked in .NET/TS; the Java monolith's order-details page shows Deliver to customers (the server then refuses), React only to admins; React's coupon list has a Status column computed from browser time instead of the Clock; `backend-clean-java`'s BrowseOrderHistory has no owner/admin scoping and no customer field (UC-011 BR-5).
+- React `src/test` gaps listed by SMETA (UC-007 catalog/product, UC-008.5/.6/.8/.9/.10/.11, UC-009.2/.3/.5/.7/.8/.11/.12) belong to FT (`plans/20261112-0939-frontend-testing-component-a11y-lighthouse.md`).
+- Strict mode (UC1 D4, U2): with all twelve use cases implemented, `spec status --mode strict` fails in every language only on these two `Planned` criteria (UC-005.7, UC-011.2; Java also UC-009.2, see #71). Lenient passes everywhere (110/112 .NET and TS, 109/112 Java).
+- **Recommended:** triage the behaviour differences one by one (each is a small spec-or-code decision), and add the missing tests when the test kit can isolate coupons/orders (UC-005.7, UC-011.2). **Why:** they are real gaps, but none blocks the `implemented` status of a use case whose other criteria all pass.
+
+### 71. `spec status` reports a passing parameterised UI-only Java test as Planned
+
+Found 2026-11-17 (U1 Java pass). With every use case counted, Java shows `UC-009.2` as **Planned** although all its tests passed: the three UI runs of `shouldApplyTheTaxRateOfTheShippingAddressesCountry` are named with their arguments (`... [Channel: UI, address: ..., country: US, taxRate: 0.00]`) and become three separate test entries, while the API-suite skip (`shouldApplyTheTaxRateOfTheShippingAddressesCountry() [Skipped: API channel was not specified]`) normalises to the bare name, which then has only a skipped result and turns the criterion Planned. .NET and TS report it Verified. Lenient mode doesn't block on it; strict mode (U2) may count it as unverified.
+- **Recommended:** fix in gh-optivem (X1): group JUnit results under the bare method name before the argument list, and don't let a skipped-only entry downgrade a criterion whose other entries passed. **Why:** a green test must not read as unbuilt, especially once the gate is strict.

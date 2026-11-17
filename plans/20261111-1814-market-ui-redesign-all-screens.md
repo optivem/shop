@@ -31,18 +31,18 @@
 
 ## ▶ Next executable step (resume here)
 
-Step 9, second half. `./compile-all.sh` passed on 2026-11-11 (all 7 configs). Step 7 is committed. Next, run `./test-all.sh` (latest + legacy, all three languages). Run it only once no other session is using the `my-shop-*` docker stacks (`docker ps`) and the in-progress UC-009 `system-test/**` edits are committed. Then hand the user the visual check at desktop and phone widths.
+Step 9, last part: **the user's visual check** (🛑, user only). The automated half is done.
 
-**REL #43 (2026-11-12): coded side checked, untested in docker.** At HEAD all three monolith layouts render exactly one `[aria-label='Cart Item Count']` (Next.js `StoreHeader.tsx`, Thymeleaf `layout.html`, Razor `_Layout.cshtml`). A local Next.js production build driven by Playwright through UC-008.2's flow (add on the product page, then add again from the catalog; also with CPU throttling and a delayed CDN) showed one badge every time, so no code change was needed; the two badges were most likely from a docker image built off a mid-edit shared working tree (REL #36). Confirm with UC-008 on the TS monolith in Step 9.
+**`test-all` done (2026-11-17, unit U1 of meta-plan `20261116-2003`):** latest + legacy, monolith and multitier, all three languages, 12/12 phases green on `main` at `c1000142` (local, `--restart` stacks, one at a time). Three latest phases needed one rerun of their parallel suites (.NET monolith and multitier: a 30 s connection stall in the first batch, REL #68; Java multitier: 12 React navigation timeouts, REL #61); the reruns were green. UC-008 passed on the TS monolith (one cart badge, REL #43 confirmed fixed).
 
-**REL #44 (2026-11-12): coded, compiled, untested in docker.** Bootstrap 5.3.3 is self-hosted in all three monoliths (byte-identical to the jsdelivr files): .NET already served `wwwroot/lib/bootstrap/`; Java now serves `static/css/lib/bootstrap/{css,js}/` (under `/css/**` for `SecurityConfig`, as in idea 10); the TS monolith serves `public/lib/bootstrap/{css,js}/` (no `dist/` level, because the TS `.gitignore` and `.dockerignore` drop `dist/`; `public/lib/` added to its eslint ignores). frontend-react already used the `bootstrap` npm package. No `cdn.jsdelivr.net` is left in any page template. In Step 9, check that every page still picks up Bootstrap styling and the Bootstrap JS (collapse/dropdown) in all three monoliths.
+**The visual check:** start one monolith and the multitier React stack, one at a time (`$env:GH_OPTIVEM_CONFIG = "gh-optivem-monolith-java.yaml"; gh optivem system start --restart`, then `gh optivem system stop` before the next), open the stub-stack URLs (Java monolith http://localhost:3112, .NET http://localhost:3212, TS http://localhost:3312; multitier React on the same 3x12 port of its multitier config), sign in as `customer1` / `customer1-test-password` (admin: `admin1` / `admin1-test-password`), and walk every storefront screen at desktop width and at phone width (browser dev tools, ~390 px): catalog, product, cart, checkout, order confirmation, order history, order details, profile, and as admin the coupon list, publish coupon and the all-orders filter. Check Bootstrap styling and its JS (navbar collapse on phone width, dropdowns) in all three monoliths (REL #44), also signed out.
 
-Both #43 and #44 are coded but untested; Step 9 (`./test-all.sh` + visual check) is still pending.
+After the user's check, the orchestrator deletes this plan (Step 2 and the follow-up ideas stay unscheduled per the meta-plan).
 
 ## Steps
 
 - [ ] Step 2: **Decouple tests from Bootstrap classes.** Move the driver selectors `.alert-danger` (CatalogPage, OrderDetailsPage), `.form-check:has(input:checked) label` (CatalogPage) and `table.table tbody tr td:nth-child(n)` (CouponManagementPage) to role/ARIA equivalents in all three languages, latest and legacy. Run `--sample` system tests per language. — ⏳ Deferred: only needed if Bootstrap is ever replaced (see Decisions).
-- [ ] Step 9: **Full verification.** `./compile-all.sh` done (green). Run `./test-all.sh` (latest + legacy, all three languages). The user does the visual check at desktop and phone widths.
+- [ ] Step 9: **Full verification.** `./compile-all.sh` done (green). `./test-all.sh` done (green, 2026-11-17). The user does the visual check at desktop and phone widths.
 
 ## Follow-up ideas (left out of the styling-only plan: no backing data or behaviour)
 
