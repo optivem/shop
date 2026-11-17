@@ -33,7 +33,8 @@ inputs:
   reconcile-prod-realm:
     description: >-
       'true' in the production stage: create or update the shop-prod realm's shop-monolith client
-      through the admin API and set its secret from Secret Manager. Needs the repo checked out.
+      through the admin API and set its secret from Secret Manager, and turn on the realm's brute-force
+      detection. Needs the repo checked out.
     required: false
     default: 'false'
   reconcile-system-test-admin:
@@ -201,6 +202,19 @@ runs:
           [[ "$code" == 2* ]] || { echo "::error::Updating shop-monolith in shop-prod returned HTTP ${code}: $(head -c 2000 "$body")"; exit 1; }
           echo "Updated shop-monolith in shop-prod."
         fi
+        # Brute-force detection (B-PRG 4.2): the import never updates an existing realm, so set it here too.
+        # A partial realm PUT changes only the fields it carries. Parallel variants run this too: retry on 409.
+        brute_force="$(jq -c '{bruteForceProtected, permanentLockout, failureFactor, waitIncrementSeconds,
+            maxFailureWaitSeconds, maxDeltaTimeSeconds, quickLoginCheckMilliSeconds, minimumQuickLoginWaitSeconds}'           "${dir}/shop-realm.json")"
+        realm_body="$(mktemp)"
+        for attempt in 1 2 3 4 5; do
+          code="$(curl -sS -o "$realm_body" -w '%{http_code}' "${auth[@]}" -X PUT "${kc}/admin/realms/shop-prod" -d "$brute_force")"
+          [[ "$code" == 409 && "$attempt" -lt 5 ]] || break
+          echo "PUT shop-prod realm returned 409 (concurrent update); retrying (${attempt}/5)."
+          sleep $((attempt * 2 + RANDOM % 3))
+        done
+        [[ "$code" == 2* ]] || { echo "::error::Setting brute-force detection on shop-prod returned HTTP ${code}: $(head -c 2000 "$realm_body")"; exit 1; }
+        echo "Brute-force detection on in shop-prod."
 
     # The acceptance stage's system tests create a fresh customer per test. On a shared Keycloak they
     # sign in as this client's service account (client credentials in realm shop), never as the master
