@@ -26,14 +26,14 @@ The orchestrating session runs the **Wave tracker** top to bottom. Run the same 
 
 ## ▶ Next executable step (resume here)
 
-**Wave 0, U0:** the plan-only housekeeping pass, then gate 🛑 G0 (one batch of user answers). Nothing has run yet.
+**Wave 0, U0:** the plan-only housekeeping pass. 🛑 G0 is **answered** (see "G0 answers" below), so U0 runs straight through: remove META3's stale marker, delete META1, META3, B-TAX (move item 7 to the X1 substack follow-up first) and B-ACT, and delete REL #32–#34 and #36–#45. One plan-only commit. Then Wave 1. Still to confirm at the start of the session: scope (recommended Wave 0 + Wave 1).
 
 ## Wave tracker
 
 | Wave | Unit | Lane | State |
 |---|---|---|---|
 | 0 | U0 plan-only housekeeping | — | todo |
-| 0 | 🛑 G0 user answers | — | todo |
+| 0 | 🛑 G0 user answers | — | done 2026-11-16 |
 | 1 | U1 Phase B finish (META3) | D | todo |
 | 1 | U2 UC1 Track D4 | D (after U1) | todo |
 | 1 | U3 plan refinement pass (FT, OUTBOX, B-ORD, B-PRG prune, B-QAS prune, B-PIN retarget) | P | todo |
@@ -189,7 +189,20 @@ Edges from the plans' own wording: META3 "TS pass → test-all → flip → UC1 
 
 **Unscheduled (parked on purpose, no unit):** B-TKA Steps 3–4, B-LEG option C, B-KC's deferred item, B-MRF #7 and #9 (watch), REL deferred ideas (#5 #15 #17 #20 #21 #26 #47), REL #62 (watch), MUI Step 2 and its 11 follow-up ideas, the three `backlog/parked/*` plans (P-LVL, P-BRK, P-OAS). A parked plan gets a unit only if the user un-parks it.
 
-## Needs-decision (asked once at 🛑 G0)
+## G0 answers (user, 2026-11-16)
+
+1. Retirements: **yes**, delete META1, META3, B-TAX (item 7 → X1 substack follow-up first) and B-ACT.
+2. Blanket approval for this meta-plan's run (Lane D local tests, `gh optivem commit --paths` per unit, pushes to `main`; QA/prod dispatches for verification only): **yes**.
+3. UC1 D4: **strict**, once `spec status --mode strict` passes in all three languages.
+4. FT: **accept all three** (Lighthouse report-only; axe in a few dedicated scenarios; monolith pages axe only).
+5. OUTBOX: **accept all three** (in-process relay; polling; component tests only). User asked "why do we need it" at the end of the G0 session: re-confirm OUTBOX is still wanted before U11 starts.
+6. B-ORD: **keep the local order as-is.** Only CI gets Contract-before-Acceptance (all contract passes before Acceptance). Step 6 (course table) skipped.
+7. B-PRG: **accept all four** (shop only; legacy twins frozen; edge rate limiting + minimal in-app login limit; GCP is prod).
+8. REL #55–#68: **as proposed.** #55 README note (clean variant deliberately has no auth); #56 close (already the rule); #57 → gh-optivem (X1); #58 **yes**: admin-only `GET /api/admin/customers` in all six backends, returning an unpaged, A→Z-sorted JSON array of the usernames that have placed an order (`SELECT DISTINCT customer FROM orders`; 401 anonymous, 403 non-admin); the React/Next.js/Razor/Thymeleaf filters read it and `MAX_CUSTOMER_PAGES` goes away; drivers/DSL + an acceptance test; #59 docs how-to only; #60, #61, #63, #64, #66, #67, #68 per their written recommendations; #62 watch; #65 → optivem-testing (X1).
+9. B-MRF #8: **yes**, `/order-details/{orderNumber}` everywhere (U12).
+10. Dependabot: **yes**, merge the green non-major PRs before Wave 2; each major upgrade becomes its own later unit.
+
+## Needs-decision (asked once at 🛑 G0, answered above)
 
 Each question has a recommendation. Answering "accept all recommendations" unblocks every wave.
 
