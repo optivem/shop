@@ -18,6 +18,24 @@
 - A deployable prod target (Cloud Run / Cloud SQL / Secret Manager) exists, with a rollback and expand/contract migration policy, runbooks, backups, SLOs/alerts, and load/DAST checks.
 - Each chunk's behaviour is the same across Java, .NET and TypeScript, or the differences are documented.
 
+## Finding-by-language table (item 0.1, audited 2026-11-17)
+
+Backends: MJ = `system/monolith/java`, BJ = `multitier/backend-java`, CJ = `multitier/backend-clean-java`, MD = `monolith/dotnet`, BD = `multitier/backend-dotnet`, MT = `monolith/typescript`, BT = `multitier/backend-typescript`. "gap" = the later item must touch it; "ok" = already in place.
+
+| Finding (item) | MJ | BJ | CJ | MD | BD | MT | BT |
+|---|---|---|---|---|---|---|---|
+| Trace id in ProblemDetail body (3.2) | gap (`timestamp`/`errors` only) | gap | gap | gap (hand-written `WriteAsJsonAsync`, no `traceId`) | gap | gap (`lib/errors.ts`) | gap (`global-exception.filter.ts`) |
+| Actuator / health (3.4) | `/health` public stub; actuator `health,info` behind auth, `show-details: always`; no liveness/readiness split | same | same | `/health` stub only (no health checks, no probes split) | same | `app/health` stub | `/health` stub |
+| Dev settings with no prod profile (3.5) | gap (`show-sql`, `format_sql`, `thymeleaf.cache: false`) | gap (`show-sql`, `format_sql`) | gap (`show-sql`, `format_sql`) | ok (ASP.NET env model; `appsettings.Development.json` only in Development) | ok | ok (`NODE_ENV=production` in the image) | ok (TypeORM `logging` off when `NODE_ENV=production`) |
+| Secret / config defaults (4.1) | gap (`AUTH_CLIENT_SECRET` test default, DB password `app`, issuer `localhost`) | gap (DB password `app`, issuer `localhost`; resource server, no client secret) | gap (same as BJ) | gap (DB password `app`; client secret has no default but is not checked) | gap (DB password `app`) | gap (client + session secret test defaults, DB password `app`) | gap (DB password default) |
+| Security headers (4.3) | partial (Spring Security defaults: nosniff, `X-Frame-Options: DENY`, HSTS on https; no CSP / Referrer-Policy) | partial (same) | partial (same) | gap (none) | gap (none) | gap (none; Next.js sends `X-Powered-By`) | gap (none) |
+| CORS policy (4.3) | ok (same-origin, no CORS = cross-origin denied) | ok (explicit `allowed.origins` list) | ok (`CorsConfig`) | ok (same-origin) | ok (`ALLOWED_ORIGINS` / `Cors:AllowedOrigins`) | ok (same-origin; CSRF guard in `middleware.ts`) | ok (`enableCors` origin list) |
+| Swagger / OpenAPI exposure (4.4) | authenticated (any user), not admin-only | same | same | `RequireAuthorization()` (any user) | same | authenticated (not in the public auth policy) | authenticated (global guard) |
+| Rate limiting (4.2) | none | none | none | none | none | none | none |
+| Login surface for 4.2 | OIDC redirect only; credentials are entered at Keycloak | none (bearer only) | none (bearer only) | OIDC redirect only (`/sign-in`) | none (bearer only) | OIDC redirect (`/login`, `/login/callback`) | none (bearer only) |
+
+**Consequence for 4.2:** no backend accepts a password, so there is no in-app "login attempt" to count: the multitier backends only validate bearer tokens and the monoliths only redirect to Keycloak. See 4.2 for the open question this raises.
+
 ## ▶ Next executable step (resume here)
 
 Reviewed 2026-11-17 (meta-plan U3): items SHOW and the cloud deploy already delivered are deleted below. This runs as meta-plan unit U9 (Lane B), chunk order 0 → 1 → 3 → 4 → 2 → 5 → 6; 5.4 and 6.3 touch `_prod-stage.yml` and wait until B-QAS (U5) is pushed. **Next: Step 0.1**: for each finding listed in 0.1, grep the six backends (`system/monolith/{java,dotnet,typescript}`, `system/multitier/backend-{java,dotnet,typescript}`; `backend-clean-java` where it has the code) and write the finding-by-language table at the top of this plan. Plan edit only, no code. Then 1.7.
@@ -25,9 +43,6 @@ Reviewed 2026-11-17 (meta-plan U3): items SHOW and the cloud deploy already deli
 ## Steps
 
 Each chunk is independently executable, and the chunks can be done in any order. Within a chunk, do Java first (including the multitier backends), then .NET, then TS. After each chunk run the pre-commit verification from CLAUDE.md (`./compile-all.sh`, then `--sample` system tests per affected language).
-
-### Chunk 0 — Parity audit (cheap, do first)
-- [ ] 0.1 Check whether each remaining finding applies in `system/monolith/{java,dotnet,typescript}` and `system/multitier/backend-{java,dotnet,typescript}`: actuator/health exposure (Java still has `show-details: always`), dev settings with no prod profile, secret defaults, missing security headers / CORS policy, Swagger exposure, no rate limit, trace id missing from ProblemDetail. Chunk 1 (transactions, coupon race, versioning, idempotency, pagination) and gateway resilience already landed in all six backends, so they are out of the audit. Record a finding-by-language table at the top of this plan, so the later chunks only touch what is actually broken.
 
 ### Chunk 1 — Data correctness (ATDD scenarios)
 Steps 1.1–1.6 are done (2026-11-03); the child plan `20261009-1545-production-readiness-chunk1-data-correctness.md` is deleted. The decisions (idempotency per user with a 24 h TTL, 422 on a reused key with a different body, optional 1-based `page`/`size` with default 50 and cap 100, `LIKE '%x%'` search accepted as is) live in the code and its tests.
