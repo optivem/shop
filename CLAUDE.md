@@ -56,6 +56,14 @@ Note that `test-all.sh` deliberately does **not** cover `system/multitier/backen
 
 **Pipeline failures come first.** A failed optivem/shop workflow run is the highest-priority work: it pre-empts whatever else is in flight (meta-plan units, plan work, feature work). During long runs, check `gh run list` for failures between units, and triage any failure before starting the next unit. Fix it autonomously (diagnose, fix, commit via the commit skill, push, re-dispatch) without asking per step; still stop for destructive or third-party-visible actions. A transient failure (network reset, runner hiccup) gets one rerun of the failed jobs; a real defect goes through the sequence below.
 
+**Always check the verification workflows explicitly.** `meta-prerelease-stage.yml` and `meta-release-stage.yml` run on a schedule or by dispatch, so their failures quickly fall out of a plain `gh run list -L N`. Every pipeline check (between units, at session start, before reporting "no failures") must include the latest run of each by name:
+
+```bash
+for w in meta-prerelease-stage.yml meta-release-stage.yml; do gh run list -w "$w" -L 1 --json databaseId,conclusion,headSha,createdAt; done
+```
+
+A latest run that is `failure` counts as a red pipeline even if it is days old. Drill into its inner runs (`gh run view <id> --log-failed`, then the `run <id>) completed with conclusion` lines) down to the failing job. Never dispatch into a workflow's concurrency group while a meta run is using it: that cancels the meta run's inner run and shows up as a false failure.
+
 When fixing a failing CI workflow, always follow this sequence:
 
 1. **Reproduce locally first**: Before making any code changes, run `gh optivem system-test run` locally with the appropriate flags to reproduce the failure. Report whether the failure was reproduced or not.
