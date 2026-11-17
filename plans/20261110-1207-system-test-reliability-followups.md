@@ -11,7 +11,7 @@ Session 2026-11-10 did #1, #2, #3 (full latest acceptance runs per language on m
 
 **Waiting on the user:** #11 on the second machine (same fix; on Valentina_Desk it was done 2026-11-11): Git Bash's `gcloud` wrapper skips the Windows bundled Python and fell back to Python 3.13; fixed by `CLOUDSDK_PYTHON` pointing at `google-cloud-sdk/platform/bundledpython/python.exe` (user env var + `~/.bashrc`). (#27 committed in `actions` as `1139063`, 2026-11-10.)
 
-**Next executable unit:** the shop-side ideas decided at the all-shop-plans meta-plan's G0 (2026-11-16), run as its unit U8: #55 (README note), #58 (admin `GET /api/admin/customers`), #59 (docs how-to), #61, #64, #66, #67, #68 per their recommendations. #60 and #63 done in U1 (#60: no TS breaker leak in the full TS pass; #63: docker k6 run documented in `c1000142`, local smoke 0% failed). New from U1: #69, #70 (storefront leftovers from the deleted SPEC/BUILD), #71 (gh-optivem, X1; shop side done in `db087f76`). New from U2: #72 (strict `spec-gate`, waiting on the user's waiver approval). #57 and #65 go to other repos (X1). #32–#34 and #36–#45 are done or moved (deleted 2026-11-17).
+**Next executable unit (U8, state 2026-11-17 evening):** done and pushed: #55 (`a0e05e0c`, clean-java README), #59 (`a0e05e0c`, CONTRIBUTING reset how-to), #67 part 1 (`dc1a505e`, acceptance stages warn on a red commit stage); #56 closed. **#58 is coded in all six backends + four UIs + three system-test languages but uncommitted**: Java/React/spec and TS are in the working tree; .NET backends are in the tree, while the .NET system-test changes are parked in the U8 session scratchpad (`u8-dotnet-systemtest.patch` + `u8-dotnet-systemtest-new/`, plus `u8-dotnet-reapply.md` for the `MyShopUiDriver` stub and the Razor `OrderHistory.cshtml` change), held until the orchestrator's monolith-dotnet UI fix is pushed. Left for #58: reapply .NET, compile, `--sample` ×3, BrowseCustomers* acceptance tests on one monolith + one multitier stack per language, Testcontainers gates for TS (component/pact/integration), then commit; #64 closes with #58 (Razor/Thymeleaf now read the endpoint). #66 (Keycloak `JAVA_OPTS_KC_HEAP=-Xms256m -Xmx1g` in all 24 composes) is in the tree uncommitted, waiting for its `--sample` check. Still to do: #61 (watch for the hang during the #58 Java runs; candidate fix `WaitUntilState.DOMCONTENTLOADED` is a guess), #68 (wait for the orchestrator's .NET fix, which may cover it). #60 and #63 done in U1. #57, #65, #71, #73, #77, #79 go to other repos (X1). #69, #70, #72, #74–#76, #78, #80–#82 not started.
 
 **Deferred:** #5, #15, #17, #20, #21, #26 (see their ideas below).
 
@@ -99,16 +99,6 @@ The .NET admin-coupons bug (fixed in storefront Step 6) was only caught because 
 Found 2026-11-12 (SHOW Step 4b). `_prod-stage.yml` creates releases through `optivem/actions/create-github-release` with the default `GITHUB_TOKEN`, and GitHub does not trigger workflows from events that token causes. So the new `release-sbom.yml` (`on: release: published`) never runs on its own; it only runs by `workflow_dispatch` with a tag.
 - **Recommended:** call `release-sbom.yml` from the prod stage as a reusable workflow (`workflow_call`) after the release step, instead of switching to a PAT/app token. **Why:** no new secret to manage, and the SBOM upload stays tied to the release that produced it.
 
-### 55. `backend-clean-java` has no authentication or authorization
-
-Found 2026-11-12 (REL #52 coding). It has no Spring Security and no role checks, so `POST /api/orders/{n}/deliver` and the spec's admin-only `POST /api/admin/orders/sweep-deliveries` are open to anyone. No system test reaches it, because it has no system stack.
-- **Recommended:** decide whether the clean variant should model auth at all. If yes, add a security adapter with the same role rules as backend-java. If not, say so in its README. **Why:** it's a teaching variant, so the omission may be deliberate, but right now it's silent.
-
-### 56. Other sessions' commits sweep up work in progress
-
-Found 2026-11-12 (REL #50–#54 session). Commit `a071aac8` ("Financial direction doc…") carried the Java/.NET stub-compose breaker threshold edits (`RESILIENCE_CIRCUITBREAKER_FAILURERATETHRESHOLD=100`, `Resilience__Erp__FailureRatio=1.0`), and `d858f52e` ("Workspace sweep") did the same.
-- **Recommended:** parallel sessions commit with `gh optivem commit --paths` only, never `--all`. **Why:** a sweep commit mislabels another session's change and hides it from review and revert.
-
 ### 57. `--test` reruns overwrite the JUnit results `spec status` reads
 
 Found 2026-11-12. A `--test` rerun overwrites the JUnit results that `spec status` reads, and the "never executed" check wipes the other suites' results. Extends #38/#42 (same "never executed" logic, not the overwrite).
@@ -118,11 +108,6 @@ Found 2026-11-12. A `--test` rerun overwrites the JUnit results that `spec statu
 
 Found 2026-11-12. The customer filter collects customers from the first 50 pages (2,500 orders); the local multitier DB already has 3,212, so later customers are never offered.
 - **Recommended:** add a backend customers endpoint that the filter reads (an API change; needs user approval). **Why:** paging the whole order list to build a dropdown doesn't scale and silently truncates.
-
-### 59. Stub Postgres and Keycloak data persist across `--restart`
-
-Found 2026-11-12. Local stacks keep their data across `--restart` (over 5k orders and 2k coupons locally), which feeds #58 and slows list pages.
-- **Recommended:** a documented reset (or periodic prune) for local stacks. **Why:** local runs should start from a known size, as CI does.
 
 ### 61. Java Playwright navigation hangs
 
@@ -149,8 +134,7 @@ Found 2026-11-12 (.NET pass). The stub Keycloak grew from 0.8 GB to 2.25 GB in o
 - **Recommended:** cap the Keycloak JVM heap in the stub composes (e.g. `JAVA_OPTS_KC_HEAP`), and check whether user deletion leaves sessions or events behind. **Why:** local runs must fit alongside an IDE and a browser.
 
 ### 67. Pipeline-hiding commit-stage failures and remaining coupon-list readers
-Found 2026-11-12 (pipeline-green pass).
-- `multitier-backend-typescript-commit-stage` was red from `8ee90751` to `d01ea39f`, and the acceptance stage kept testing the last published image. The image was old but the run looked like a code failure (missing Retry-After). **Recommended:** make the acceptance stage fail loudly, or at least warn, when the backend image it pulls is older than the commit under test. **Why:** a red commit stage then shows up as its own cause, not as a misleading acceptance failure.
+Found 2026-11-12 (pipeline-green pass). First bullet done in `dc1a505e` (warning on a red commit stage).
 - `PublishCouponPositiveTest` (ShouldBeAbleToPublishCouponWithEmptyOptionalFields, ShouldBeAbleToCorrectlySaveCoupon, ShouldAcceptDiscountRateAboveZeroAndUpToOne) still reads the coupon back through the unpaged UI list in the parallel suites, ×3 languages. They read it straight after publishing, so the risk is lower than for the tests moved in `8d4fd72d`. **Recommended:** move them to the Isolated classes if they ever flake. **Why:** it's the same failure mode as UC-004.9.
 - Note: the `8d4fd72d` message says "as Java and TS already have them". In fact that commit also carried the .NET pass agent's Java and TS moves.
 
@@ -234,3 +218,8 @@ Found 2026-11-17. In meta-prerelease 43910138981 (attempt 2), every cloud failur
 
 Found 2026-11-17 (U10, FT Step 4). The first run of the new UI-channel axe check on monolith-typescript failed all four pages on `label-content-name-mismatch` (serious, WCAG 2.5.3 label in name): the header's `.store-sign-in` and `.store-cart`, the catalog's `aria-label="Product Title"` links and `aria-label="Add <sku> to Cart"` buttons, the cart's `aria-label="Title <sku>"` links and the checkout's primary button all have an accessible name that does not contain their visible text. The same test-hook aria-label pattern is in every storefront, and the system-test drivers select by those labels. FT Step 4 turned the rule off in the three drivers' axe check (`DISABLED_AXE_RULES` in `MyShopUiClient.ts`, Java and .NET `PageClient`), with the reason in a comment, so the check guards everything else.
 - **Recommended:** a small cross-language unit: move the drivers' selectors for these elements to `data-testid` (or to selectors that use the visible text), drop or fix the test-hook aria-labels in the four UIs (Razor, Thymeleaf, Next.js monolith, React), then delete `DISABLED_AXE_RULES`. **Why:** voice-control users say the visible label to activate a control, so this is a real a11y bug, and once the drivers no longer depend on the labels it is a markup-only fix.
+
+### 83. Keycloak 26 brute-force detection locks out concurrent successful logins
+
+Found 2026-11-17 (monolith-dotnet acceptance 44151961920 red after `8a80fe92`). With `bruteForceProtected` on in `shop-realm.json`, the .NET parallel UI suite failed 9 tests in CI and 28-41 locally, each a 90 s timeout in `KeycloakUiLogin.LoginAsync` after submit. Keycloak events showed only `LOGIN_ERROR user_temporarily_disabled` for `customer1`/`admin1`, and the brute-force status showed `numFailures: 0`. So the lockouts came from many concurrent successful sign-ins of one account, not from failed ones (it happened again with `quickLoginCheckMilliSeconds: 0`). The fix moved the settings to `prod-realm.jq`, so they apply to production only. TS stayed green with it on (lower UI parallelism).
+- **Recommended:** find out why Keycloak 26.0 locks out with no failures (check its issue tracker, or try a newer 26.x locally with the realm setting on and the .NET UI suite), and turn it back on in the test realms only once a version stops doing this. **Why:** production users can also sign in twice at once (two tabs, a double click), and the same lockout would hit them for 60 s or more.
