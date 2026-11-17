@@ -11,7 +11,7 @@ Session 2026-11-10 did #1, #2, #3 (full latest acceptance runs per language on m
 
 **Waiting on the user:** #11 on the second machine (same fix; on Valentina_Desk it was done 2026-11-11): Git Bash's `gcloud` wrapper skips the Windows bundled Python and fell back to Python 3.13; fixed by `CLOUDSDK_PYTHON` pointing at `google-cloud-sdk/platform/bundledpython/python.exe` (user env var + `~/.bashrc`). (#27 committed in `actions` as `1139063`, 2026-11-10.)
 
-**Next executable unit:** re-run `meta-prerelease-stage` (cloud, ask) to confirm #30 and #31; then decide #32 and #33. #31 is done (`PageClient.WaitForUrlChangeAsync` in .NET now polls `location.href`, because the .NET client's `WaitForURLAsync` misses a Next.js `router.push` that lands between its URL check and its event subscription; not hydration. Local .NET vs monolith-typescript: 12/12 and suite 57/57, previously ~9/22 failed). #30 is done (`actions` `f87d6d5`: post-dispatch run read polls on 404 only, 3 s up to 60 s). #29 is done: the .NET driver fix `d437c106` and the cloud run 43004938779 are green.
+**Next executable unit:** the shop-side ideas decided at the all-shop-plans meta-plan's G0 (2026-11-16), run as its unit U8: #55 (README note), #58 (admin `GET /api/admin/customers`), #59 (docs how-to), #60, #61, #64, #66, #67, #68 per their recommendations; #63 runs inside U1. #57 and #65 go to other repos (X1). #32–#34 and #36–#45 are done or moved (deleted 2026-11-17).
 
 **Deferred:** #5, #15, #17, #20, #21, #26 (see their ideas below).
 
@@ -56,9 +56,11 @@ Decided by the user on 2026-11-10: #1–#3 one at a time, then "I automatically 
 
 **Decided 2026-11-12 (user): #32–#46, #49, #50, #51, #52, #53, #54 take their written recommendations** (#47 deferred, #48 and #35 leave as is). Routing (per `plans/20261112-0845-meta-storefront-ui-showcase-reliability.md`): #43 and #44 go with the Market UI plan; #39 and #41/#46 go with SMETA's fresh-customer unit (#41/#46: exempt UI-driver request DTOs from A1, scope it to API wire DTOs); #32, #33 and #34 are fixed in `actions`; #36/#45, #37, #38/#42 and #40 become one gh-optivem plan; #35: leave the bootstrap admin as is. Each idea is deleted here when its work lands.
 
+**Decided 2026-11-16 (user, all-shop-plans meta-plan G0): #55–#68 take their written recommendations**, with #55 = a README note (the clean variant deliberately has no auth), #56 closed (already the rule), #58 yes (admin-only `GET /api/admin/customers` in all six backends: unpaged, A→Z-sorted JSON array of usernames that have placed an order; 401 anonymous, 403 non-admin; the four UI filters read it and `MAX_CUSTOMER_PAGES` goes away; drivers/DSL + an acceptance test), #59 a docs how-to only, #62 watch, #57 → gh-optivem and #65 → optivem-testing.
+
 ## Ideas to decide
 
-Each idea has a recommendation. Everything up to #29 is decided (see "Resolved decisions"); #30 and #31 are done; #32 and #33 (2026-11-11) are new ideas to decide.
+Each idea has a recommendation. Everything up to #29 is decided (see "Resolved decisions"); #30–#54 are decided 2026-11-12 and #55–#68 on 2026-11-16 (see above).
 
 ### 5. Reset the stub server at the start of a suite run
 
@@ -91,51 +93,6 @@ The .NET admin-coupons bug (fixed in storefront Step 6) was only caught because 
 `meta-prerelease-stage` run 42660796447 (2026-11-09 17:03, `ac04be12`) failed all six pipelines in `verify / cloud-acceptance-stage` with `Failed to push tag monolith-java-v1.0.237-rc.3363 (remote: , local: ac04be12…)`. The tests weren't the cause. The next runs on 2026-11-10 pushed tags for monolith without a problem, so it looks transient (a race between parallel tag pushes, or a GitHub hiccup), but the empty `remote:` field hides the real error.
 - **Recommended: investigate if it recurs.** Make the tag-push step print git's stderr and retry once on a non-fast-forward or a network error.
 
-
-### 32. `trigger-and-wait-for-workflow/wait.sh` treats every poll failure as transient
-
-Found 2026-11-11 while fixing #30. `actions/trigger-and-wait-for-workflow/wait.sh:30-34` warns and retries on any `gh run view` failure until `TIMEOUT_SECONDS`, including 401, 403 and 404. A bad token or a wrong repo therefore shows up only as a long timeout instead of a specific error.
-- **Recommended:** keep retrying on 5xx and network errors (and on 404 for a short visibility window, as in #30), but fail at once with `::error::` on 401 and 403. **Why:** that is the "never swallow errors" rule, and it turns a misconfiguration from a timeout into an actionable message.
-
-### 33. `trigger-and-wait-for-workflow/trigger.sh` hides a failed rate-limit probe
-
-Found 2026-11-11 while fixing #30. `actions/trigger-and-wait-for-workflow/trigger.sh:8,10` runs the rate-limit probe with `2>/dev/null || echo "999"`, so a failed probe silently looks like plenty of quota left.
-- **Recommended:** keep stderr visible and print a `::warning::` when the probe fails, but don't fail the job. **Why:** the probe is only advisory, yet hiding its error breaks the never-swallow-stderr rule and hides auth problems.
-
-### 34. Local pipeline failed pulling images: containerd "lease does not exist"
-
-Found 2026-11-11 in `meta-prerelease-stage` run 43052472314 (`2c235677`). Child run 43052626758 (`prerelease-pipeline-monolith-dotnet`, `verify / local`) passed its unit tests (7/7, 129/129), then failed during `docker compose pull` with `failed to commit snapshot extract-… sha256:25ca64b9…: NotFound: lease does not exist: not found`. This is a containerd/BuildKit snapshot race on the GitHub-hosted runner, not a test or code failure. Re-running the failed job (attempt 2) passed, and the run went green with `meta-v1.0.225-rc.1543`, which confirms it was transient.
-- **Recommended: retry the pull once on this specific error and investigate only if it recurs.** **Why:** it is a known transient runner-side race; a single retry on that exact message keeps real pull failures (auth, missing tag) loud.
-
-### 36. Parallel sessions on one docker host clobber each other's stacks
-
-Found 2026-11-11 during SMETA Step 7 (UC-007). A design session cycled docker stacks while the UC-007 agent was running, replaced its running monolith-typescript stack, and the next runs failed with "system stub is not running". Images are also built from the shared working tree, so one session's uncommitted backend/compose edits (OpenTelemetry) ended up in the other's test runs.
-- **Recommended:** have `gh optivem system start` refuse (or warn loudly) when a stack for a different config is already running and was started by another process, and document "one session per docker host for system tests". **Why:** silent stack replacement turns into confusing "not running" failures that look like test bugs.
-
-### 37. `gh optivem commit` can't push from a shared checkout with someone else's unstaged changes
-
-Found 2026-11-11 (UC-007 commit `e964c99e`). `--paths` committed fine, but the pull step (rebase) refused to run while another session had unstaged changes, so the push never happened.
-- **Recommended:** when the tree is dirty only outside `--paths`, pull with `--autostash`, or fall back to a plain fast-forward push when there's nothing to pull. **Why:** `--paths` exists for exactly this shared-checkout case, and it's useless if it can't push.
-
-### 38. `system-test run --test` filter quirks
-
-Found 2026-11-11 (UC-007). A regex alternation passed to `--test` is treated as one test name, so the summary says "never executed" even though the tests passed. On .NET the filter matches the method name only, so a class-name filter such as `ViewProduct` matches nothing.
-- **Recommended:** document the filter semantics per language in `--help`, and make the "never executed" check use the same matching the runner used. **Why:** a false "never executed" makes a green run look red.
-
-### 40. TypeScript `--sample` isolated-UI suite ran 0 tests after `npx` fetched playwright@1.65.0
-
-Found 2026-11-11 (UC-007). The sample run printed "playwright@1.65.0 will be installed", ran 0 tests and exited 1, while the full isolated-UI suite on the same stack had just passed. That suggests `npx playwright` resolved outside the project's own `node_modules`, possibly during the docker contention in #36.
-- **Recommended: investigate if it recurs.** Make the runner call the project-local Playwright binary instead of `npx` resolution. **Why:** an unpinned Playwright download can silently change versions and drop tests.
-
-### 42. `--suite X --test Y` also runs the other acceptance suites
-
-Found 2026-11-11 (UC-008), extending #38. `--suite acceptance-isolated-ui --test X` ran the other acceptance suites too, then reported "requested test(s) never executed" even though X passed. On .NET a shared method name (`ShouldKeepTheQuantityBetween1And99WhenUsingTheStepper`) also pulled in UC-007's tests.
-- **Recommended:** fold into #38's fix (make `--suite` restrict the run, and support class-qualified names on .NET). **Why:** the same false-red problem.
-
-### 45. Two sessions' `system-test setup` at once corrupt `system-test/java/build`
-
-Found 2026-11-11 (UC-009), extending #36. Concurrent clean builds in one checkout corrupted the Java build directory; fixed with a clean rebuild.
-- **Recommended:** fold into #36 (one session per checkout/docker host for system tests, or a lock file in `system-test setup`). **Why:** same root cause.
 
 ### 47. Releases created with `GITHUB_TOKEN` never fire `release` events — ⏳ Deferred (user, 2026-11-12): GHCR image SBOM attestations (`sbom: true`) already cover the good-practice part; release-page copies are low value. `release-sbom.yml` stays and works by `workflow_dispatch`.
 

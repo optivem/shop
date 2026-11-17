@@ -1,5 +1,7 @@
 # 2026-11-16 20:03 UTC — Plan coordination meta-plan: all shop plans
 
+> 🤖 **Picked up by agent** — `Valentina_Desk` at `2026-11-17T08:26:54Z`
+
 ## TL;DR
 
 **Why:** Shop has 21 open plans: three earlier meta-plans, the in-flight storefront/showcase/reliability work and the backlog. They share the one local docker host, the system-test drivers, the acceptance/QA/prod workflows and `frontend-react`, and several backlog plans were overtaken by later work. Running them one by one by hand repeats the docker clashes and double orchestration that REL #36/#45/#56 recorded.
@@ -26,13 +28,13 @@ The orchestrating session runs the **Wave tracker** top to bottom. Run the same 
 
 ## ▶ Next executable step (resume here)
 
-**Wave 0, U0:** the plan-only housekeeping pass. 🛑 G0 is **answered** (see "G0 answers" below), so U0 runs straight through: remove META3's stale marker, delete META1, META3, B-TAX (move item 7 to the X1 substack follow-up first) and B-ACT, and delete REL #32–#34 and #36–#45. One plan-only commit. Then Wave 1. Still to confirm at the start of the session: scope (recommended Wave 0 + Wave 1).
+**Wave 1 (session 2026-11-17, scope = Wave 1):** Lane D runs **U1** (META3 Phase B, checklist at `git show 06ac783d:plans/20261112-0845-meta-storefront-ui-showcase-reliability.md`: .NET pass → TS pass → SHOW Phase B → `./test-all.sh` → flips → SMETA Step 8 → 🛑 MUI visual check), then **U2** (UC1 D4, strict). Lane P runs **U3** (refine/review pass) in parallel. U0 is done.
 
 ## Wave tracker
 
 | Wave | Unit | Lane | State |
 |---|---|---|---|
-| 0 | U0 plan-only housekeeping | — | todo |
+| 0 | U0 plan-only housekeeping | — | done 2026-11-17 |
 | 0 | 🛑 G0 user answers | — | done 2026-11-16 |
 | 1 | U1 Phase B finish (META3) | D | todo |
 | 1 | U2 UC1 Track D4 | D (after U1) | todo |
@@ -184,7 +186,7 @@ Edges from the plans' own wording: META3 "TS pass → test-all → flip → UC1 
 | U10 | FT Steps 1–6 | D | `npm test` in `frontend-react`; axe check ×3 | `frontend-react/src/**`, UI drivers, new LHCI workflow, `docs/tour.md` |
 | U11 | OUTBOX Steps 1–7 | B, then D | compile-all + component tests; `--sample` | migrations, place-order ×6, relay, `docs/tour.md` |
 | U12 | B-MRF #8 path-param routes (only if G0 says yes) | D | cross-lang UI runs green in every direction | monolith routes ×3, `SecurityConfigTest`, UI drivers ×3 |
-| X1 | Cross-repo, last: INL (once a gh-optivem release accepts `inner-loop`), GHO Items 3–4 (needs `gh auth refresh -s project`, a read-only gh-optivem clone with `.env`, and the 5c ticket decision), B-QAS Steps 6–7, B-ORD Steps 3–6, REL #65 (optivem-testing), B-TAX item 7 (substack) | X | per repo | other repos; shop only for INL's config line and GHO's rehearsal pushes |
+| X1 | Cross-repo, last: INL (once a gh-optivem release accepts `inner-loop`), GHO Items 3–4 (needs `gh auth refresh -s project`, a read-only gh-optivem clone with `.env`, and the 5c ticket decision), B-QAS Steps 6–7, B-ORD Steps 3–6, REL #65 (optivem-testing), B-TAX item 7 (substack: update the characterization-tests draft if the component test snippet changes; `placeOrder("BOOK-123", 2, "US", "SAVE20")` still passes the country per order, while UC-001 BR-3 now takes tax from the shipping address) | X | per repo | other repos; shop only for INL's config line and GHO's rehearsal pushes |
 | M | User only: B-SL (SonarLint), REL #11 (second machine), MUI visual check (in U1) | — | — | — |
 
 **Unscheduled (parked on purpose, no unit):** B-TKA Steps 3–4, B-LEG option C, B-KC's deferred item, B-MRF #7 and #9 (watch), REL deferred ideas (#5 #15 #17 #20 #21 #26 #47), REL #62 (watch), MUI Step 2 and its 11 follow-up ideas, the three `backlog/parked/*` plans (P-LVL, P-BRK, P-OAS). A parked plan gets a unit only if the user un-parks it.
@@ -244,7 +246,7 @@ Each question has a recommendation. Answering "accept all recommendations" unblo
 ## Pre-execute checks (before any wave)
 
 - `git fetch && git status -sb`. Origin is the source of truth (two machines).
-- `grep -rln "Picked up by agent\|PICKUP\|claimed by" plans/ | grep -v parked`. Known: META1 (a prose false positive) and META3 (a stale marker from this machine, 2026-11-12, removed in U0). Any other hit: stop and ask.
+- `grep -rln "Picked up by agent\|PICKUP\|claimed by" plans/ | grep -v parked`. Known: this file (prose mention, plus its own marker while running). Any other hit: stop and ask.
 - GitHub status before any push or dispatch: `curl -s https://www.githubstatus.com/api/v2/summary.json | jq -r '.status.description'`.
 - `docker ps --filter name=my-shop` before each Lane D step.
 - `git config core.hooksPath .githooks` is set.
