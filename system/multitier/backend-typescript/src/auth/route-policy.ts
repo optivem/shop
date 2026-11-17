@@ -17,7 +17,7 @@ interface RoutePolicy {
 // First match wins. Anything not listed falls through to DEFAULT_ACCESS (secure by default).
 const POLICIES: readonly RoutePolicy[] = [
   { method: 'OPTIONS', path: /^\/.*$/, access: 'public' },
-  { method: 'GET', path: /^\/health$/, access: 'public' },
+  { method: 'GET', path: /^\/(health|livez|readyz)$/, access: 'public' },
   // The product catalog is public: anonymous visitors may browse and view products.
   { method: 'GET', path: /^\/api\/products$/, access: 'public' },
   { method: 'GET', path: /^\/api\/products\/[^/]+$/, access: 'public' },

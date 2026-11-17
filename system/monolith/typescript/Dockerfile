@@ -29,5 +29,5 @@ EXPOSE 8080
 ENV PORT=8080
 ENV HOSTNAME="0.0.0.0"
 HEALTHCHECK --interval=10s --timeout=3s --start-period=15s --retries=5 \
-  CMD wget -qO- http://localhost:8080/health || exit 1
+  CMD wget -qO- http://localhost:8080/livez || exit 1
 CMD ["node", "server.js"]

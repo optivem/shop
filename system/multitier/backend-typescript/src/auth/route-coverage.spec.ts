@@ -16,6 +16,8 @@ import { accessFor, type Access } from './route-policy';
 const EXPECTED: Record<string, Access> = {
   'GET /': 'authenticated',
   'GET /health': 'public',
+  'GET /livez': 'public',
+  'GET /readyz': 'public',
   'GET /api/orders': 'authenticated',
   'POST /api/orders': 'customer',
   'GET /api/orders/:orderNumber': 'authenticated',

@@ -47,7 +47,19 @@ management:
         include: health,info
   endpoint:
     health:
-      show-details: always
+      # Component details only for an admin; anonymous and other callers see the status alone.
+      show-details: when-authorized
+      roles: ADMIN
+      # Liveness (process up, no dependencies) and readiness (database reachable) are split and also served
+      # on the main port as /livez and /readyz, which are public; the Docker HEALTHCHECK probes /livez.
+      probes:
+        enabled: true
+        add-additional-paths: true
+      group:
+        liveness:
+          include: livenessState
+        readiness:
+          include: readinessState,db
   # Tracing is always on in-process (it stamps trace_id/span_id onto every log line); export over OTLP
   # only happens when OTEL_EXPORTER_OTLP_ENDPOINT is set -- see OtlpExportEnvironmentPostProcessor.
   tracing:

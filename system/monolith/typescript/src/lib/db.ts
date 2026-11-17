@@ -24,6 +24,16 @@ const pool = new Pool({
   password: envOrDefault('POSTGRES_DB_PASSWORD', 'app'),
 });
 
+/** True when a trivial query succeeds; the readiness probe's only check. */
+export async function isDatabaseReachable(): Promise<boolean> {
+  try {
+    await pool.query('SELECT 1');
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 // Either the pool or a client checked out for a transaction.
 export type Queryable = Pool | PoolClient;
 

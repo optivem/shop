@@ -25,6 +25,14 @@ public class SecurityTests : IClassFixture<ShopWebApplicationFactory>
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
+    [Fact]
+    public async Task Liveness_IsPublic_AndShowsOnlyTheStatus()
+    {
+        var response = await Client().GetAsync("/livez");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("{\"status\":\"UP\"}", await response.Content.ReadAsStringAsync());
+    }
+
     [Theory]
     [InlineData("/api/orders")]
     [InlineData("/api/coupons")]

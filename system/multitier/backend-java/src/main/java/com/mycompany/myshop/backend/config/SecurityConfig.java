@@ -52,8 +52,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 // Spring MVC answers HEAD with the GET handler, so every GET rule has to cover HEAD as well.
-                .requestMatchers(HttpMethod.GET, "/health").permitAll()
-                .requestMatchers(HttpMethod.HEAD, "/health").permitAll()
+                .requestMatchers(HttpMethod.GET, "/health", "/livez", "/readyz").permitAll()
+                .requestMatchers(HttpMethod.HEAD, "/health", "/livez", "/readyz").permitAll()
                 // The catalog is browsable anonymously (UC-006, UC-007).
                 .requestMatchers(HttpMethod.GET, "/api/products", "/api/products/{sku}").permitAll()
                 .requestMatchers(HttpMethod.HEAD, "/api/products", "/api/products/{sku}").permitAll()

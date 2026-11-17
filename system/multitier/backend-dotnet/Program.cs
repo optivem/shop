@@ -82,6 +82,8 @@ builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 // Code-first OpenAPI at /v3/api-docs, Swagger UI at /swagger-ui (parity with the Java backends' springdoc).
 builder.Services.AddShopOpenApi();
+// Public /livez and /readyz probes (the Docker HEALTHCHECK uses /livez).
+builder.Services.AddShopHealthProbes();
 
 var app = builder.Build();
 
@@ -103,6 +105,7 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapShopOpenApi();
+app.MapShopHealthProbes();
 
 await app.RunAsync();
 

@@ -4,6 +4,8 @@ describe('route policy', () => {
   it.each([
     ['GET', '/health', 'public'],
     ['HEAD', '/health', 'public'],
+    ['GET', '/livez', 'public'],
+    ['GET', '/readyz', 'public'],
     ['OPTIONS', '/api/orders', 'public'],
     ['GET', '/api/orders', 'authenticated'],
     ['POST', '/api/orders', 'customer'],

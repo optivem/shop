@@ -7,7 +7,7 @@ export interface Principal {
   roles: readonly string[];
 }
 
-const PUBLIC_PATHS = new Set(['/health', '/login', '/login/callback', '/logout', '/sign-in']);
+const PUBLIC_PATHS = new Set(['/health', '/livez', '/readyz', '/login', '/login/callback', '/logout', '/sign-in']);
 
 // The product catalog is public: anonymous visitors may browse and view products (read-only), and the
 // storefront pages around it (catalog, product pages, cart) never ask to sign in (storefront-ux §2).

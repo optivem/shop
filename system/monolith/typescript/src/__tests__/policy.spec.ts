@@ -6,6 +6,8 @@ const admin = { roles: ['ADMIN'] };
 describe('decide', () => {
   it.each([
     ['GET', '/health'],
+    ['GET', '/livez'],
+    ['GET', '/readyz'],
     ['GET', '/login'],
     ['GET', '/login/callback'],
     ['POST', '/logout'],
