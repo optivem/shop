@@ -34,6 +34,14 @@ public abstract class BaseCheckOutTest extends BaseManageCartTest {
             return firstName + " " + lastName + ", " + street + ", " + postalCode + " " + city + ", " + country;
         }
 
+        // A parameterised test's display name embeds its arguments. The record's own "Address[...]" would nest
+        // brackets in "[Channel: UI, address: ...]", which the spec gate can't strip, so the runs would not group
+        // under the test's name.
+        @Override
+        public String toString() {
+            return formatted();
+        }
+
         /** This address with one field (as the specs name it, e.g. "postal code") left empty. */
         public Address withEmpty(String field) {
             return switch (field) {
