@@ -1,0 +1,8 @@
+# Production profile (SPRING_PROFILES_ACTIVE=prod), set by the cloud deploy for the production stage only
+# (_deploy-stage.yml). Local and pipeline stacks run without it, so they keep their dev-friendly settings.
+spring:
+  jpa:
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false

@@ -305,7 +305,8 @@ jobs:
       # rejects the redirect URI: the two forwarded-header settings cover Java and .NET (TypeScript reads
       # x-forwarded-proto itself). One instance, because Java and .NET keep sessions and login state in memory.
       # Acceptance and QA realms carry the committed test secret. In production the shop-monolith secret
-      # comes from Secret Manager (deploy-keycloak sets the same value in the shop-prod realm).
+      # comes from Secret Manager (deploy-keycloak sets the same value in the shop-prod realm). Production
+      # also runs the Java images' prod profile (application-prod.yml); the .NET and TypeScript images ignore it.
       - name: Deploy System
         if: inputs.architecture == 'monolith'
         run: |
@@ -324,7 +325,7 @@ jobs:
               AUTH_JWK_SET_URI:($issuer + "/protocol/openid-connect/certs"),
               AUTH_AUDIENCE:"shop-backend",
               SERVER_FORWARDHEADERSSTRATEGY:"native", ASPNETCORE_FORWARDEDHEADERS_ENABLED:"true"}
-             + (if $stage == "production" then {} else {AUTH_CLIENT_SECRET:"shop-monolith-test-secret"} end)' > "$env_file"
+             + (if $stage == "production" then {SPRING_PROFILES_ACTIVE:"prod"} else {AUTH_CLIENT_SECRET:"shop-monolith-test-secret"} end)' > "$env_file"
           secret_args=()
           if [[ "$STAGE" == production ]]; then
             secret_args=(--set-secrets "AUTH_CLIENT_SECRET=${SYSTEM}-monolith-client-secret:latest")
@@ -346,14 +347,15 @@ jobs:
             --arg host "$DB_HOST" --arg port "$DB_PORT" --arg name "$DB_NAME" \
             --arg user "$DB_USER" --arg pass "$DB_PASSWORD" \
             --arg ext "$SIM_URL" --arg origin "${FRONTEND_URL}${DOMAIN:+,https://${DOMAIN}}" \
-            --arg issuer "${KEYCLOAK_URL}/realms/${REALM}" \
+            --arg issuer "${KEYCLOAK_URL}/realms/${REALM}" --arg stage "$STAGE" \
             '{POSTGRES_DB_HOST:$host, POSTGRES_DB_PORT:$port, POSTGRES_DB_NAME:$name,
               POSTGRES_DB_USER:$user, POSTGRES_DB_PASSWORD:$pass, PGSSLMODE:"require",
               ERP_API_URL:($ext + "/erp"), CLOCK_API_URL:($ext + "/clock"), TAX_API_URL:($ext + "/tax"),
               EXTERNAL_SYSTEM_MODE:"real", ALLOWED_ORIGINS:$origin,
               AUTH_ISSUER_URI:$issuer,
               AUTH_JWK_SET_URI:($issuer + "/protocol/openid-connect/certs"),
-              AUTH_AUDIENCE:"shop-backend"}' > "$env_file"
+              AUTH_AUDIENCE:"shop-backend"}
+             + (if $stage == "production" then {SPRING_PROFILES_ACTIVE:"prod"} else {} end)' > "$env_file"
           gcloud run deploy "$BACKEND_NAME" \
             --image "${IMAGE_BASE}/${BACKEND_IMAGE}:${RC_VERSION}" --region "$REGION" --project "$PROJECT" \
             --service-account "$SA" --port 8081 --memory 1Gi --cpu 1 --cpu-boost \
