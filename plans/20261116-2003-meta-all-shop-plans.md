@@ -48,6 +48,7 @@ The orchestrating session runs the **Wave tracker** top to bottom. Run the same 
 | 3 | U10 FT frontend testing | D (after U8) | todo |
 | 3 | U11 OUTBOX (confirmed 2026-11-17: Java-only worked example, a noted shortcut) | B (after U9), verified in D | todo |
 | 4 | U12 B-MRF #8 path-param routes | D (after U10) | todo (G0: yes) |
+| 4b | U13+ Dependabot major upgrades, one unit each (Spring Boot 4.1, Gradle 9.9, ESLint 10, `@types/node` 26, .NET 11, Node 25) | D | todo (user, 2026-11-17: after Wave 4, before X1) |
 | 5 | X1 cross-repo (last) | X | todo |
 | — | M manual (user) | — | open |
 
@@ -186,7 +187,7 @@ Edges from the plans' own wording: META3 "TS pass → test-all → flip → UC1 
 | U10 | FT Steps 1–6 | D | `npm test` in `frontend-react`; axe check ×3 | `frontend-react/src/**`, UI drivers, new LHCI workflow, `docs/tour.md` |
 | U11 | OUTBOX Steps 1–7 | B, then D | compile-all + component tests; `--sample` | migrations, place-order ×6, relay, `docs/tour.md` |
 | U12 | B-MRF #8 path-param routes (only if G0 says yes) | D | cross-lang UI runs green in every direction | monolith routes ×3, `SecurityConfigTest`, UI drivers ×3 |
-| X1 | Cross-repo, last: INL (once a gh-optivem release accepts `inner-loop`), GHO Items 3–4 (needs `gh auth refresh -s project`, a read-only gh-optivem clone with `.env`, and the 5c ticket decision), B-QAS Steps 6–7, B-ORD Steps 3–6, REL #65 (optivem-testing), B-TAX item 7 (substack: update the characterization-tests draft if the component test snippet changes; `placeOrder("BOOK-123", 2, "US", "SAVE20")` still passes the country per order, while UC-001 BR-3 now takes tax from the shipping address) | X | per repo | other repos; shop only for INL's config line and GHO's rehearsal pushes |
+| X1 | Cross-repo, last: INL (once a gh-optivem release accepts `inner-loop`), GHO Items 3–4 (needs `gh auth refresh -s project`, a read-only gh-optivem clone with `.env`, and filing the 5c ticket, decided: as drafted), B-QAS Steps 6–7, B-ORD Steps 3–6, REL #65 (optivem-testing), B-TAX item 7 (substack: update the characterization-tests draft if the component test snippet changes; `placeOrder("BOOK-123", 2, "US", "SAVE20")` still passes the country per order, while UC-001 BR-3 now takes tax from the shipping address) | X | per repo | other repos; shop only for INL's config line and GHO's rehearsal pushes |
 | M | User only: B-SL (SonarLint), REL #11 (second machine), MUI visual check (in U1) | — | — | — |
 
 **Unscheduled (parked on purpose, no unit):** B-TKA Steps 3–4, B-LEG option C, B-KC's deferred item, B-MRF #7 and #9 (watch), REL deferred ideas (#5 #15 #17 #20 #21 #26 #47), REL #62 (watch), MUI Step 2 and its 11 follow-up ideas, the three `backlog/parked/*` plans (P-LVL, P-BRK, P-OAS). A parked plan gets a unit only if the user un-parks it.
@@ -202,7 +203,9 @@ Edges from the plans' own wording: META3 "TS pass → test-all → flip → UC1 
 7. B-PRG: **accept all four** (shop only; legacy twins frozen; edge rate limiting + minimal in-app login limit; GCP is prod).
 8. REL #55–#68: **as proposed.** #55 README note (clean variant deliberately has no auth); #56 close (already the rule); #57 → gh-optivem (X1); #58 **yes**: admin-only `GET /api/admin/customers` in all six backends, returning an unpaged, A→Z-sorted JSON array of the usernames that have placed an order (`SELECT DISTINCT customer FROM orders`; 401 anonymous, 403 non-admin); the React/Next.js/Razor/Thymeleaf filters read it and `MAX_CUSTOMER_PAGES` goes away; drivers/DSL + an acceptance test; #59 docs how-to only; #60, #61, #63, #64, #66, #67, #68 per their written recommendations; #62 watch; #65 → optivem-testing (X1).
 9. B-MRF #8: **yes**, `/order-details/{orderNumber}` everywhere (U12).
-10. Dependabot: **yes**, merge the green non-major PRs before Wave 2; each major upgrade becomes its own later unit.
+10. Dependabot: **yes**, merge the green non-major PRs before Wave 2; each major upgrade becomes its own later unit, scheduled after Wave 4 and before X1 (user, 2026-11-17).
+
+**Further answers (user, 2026-11-17):** session 2026-11-17 stops after Wave 1 (Wave 2 starts in a fresh session). OUTBOX is Java-only. B-PRG 4.2 is an in-code login limit only. B-PRG 5.2 is done: secret scanning and push protection enabled on `optivem/shop` 2026-11-17. X1: file the 5c ticket as drafted ("show the customer's name from the CRM directory, JSONPlaceholder `/users`, on the order details") when X1 starts.
 
 ## Needs-decision (asked once at 🛑 G0, answered above)
 
