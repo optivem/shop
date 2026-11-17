@@ -11,7 +11,7 @@ Session 2026-11-10 did #1, #2, #3 (full latest acceptance runs per language on m
 
 **Waiting on the user:** #11 on the second machine (same fix; on Valentina_Desk it was done 2026-11-11): Git Bash's `gcloud` wrapper skips the Windows bundled Python and fell back to Python 3.13; fixed by `CLOUDSDK_PYTHON` pointing at `google-cloud-sdk/platform/bundledpython/python.exe` (user env var + `~/.bashrc`). (#27 committed in `actions` as `1139063`, 2026-11-10.)
 
-**Next executable unit:** the shop-side ideas decided at the all-shop-plans meta-plan's G0 (2026-11-16), run as its unit U8: #55 (README note), #58 (admin `GET /api/admin/customers`), #59 (docs how-to), #60, #61, #64, #66, #67, #68 per their recommendations; #63 runs inside U1. #57 and #65 go to other repos (X1). #32–#34 and #36–#45 are done or moved (deleted 2026-11-17).
+**Next executable unit:** the shop-side ideas decided at the all-shop-plans meta-plan's G0 (2026-11-16), run as its unit U8: #55 (README note), #58 (admin `GET /api/admin/customers`), #59 (docs how-to), #60, #61, #64, #66, #67, #68 per their recommendations. #63 done in U1 (`c1000142`: docker k6 run documented in the script header, local smoke 0% failed). #57 and #65 go to other repos (X1). #32–#34 and #36–#45 are done or moved (deleted 2026-11-17).
 
 **Deferred:** #5, #15, #17, #20, #21, #26 (see their ideas below).
 
@@ -139,11 +139,6 @@ Found 2026-11-12. Java Playwright waits 30 s for "scheduled navigations" after K
 Found 2026-11-12. Seen once, unexplained.
 - **Recommended: watch for it;** investigate if it recurs. **Why:** one occurrence isn't enough to diagnose.
 
-### 63. The k6 smoke wasn't run
-
-Found 2026-11-12. k6 isn't installed locally, and running k6 in docker needs the Keycloak issuer/URL adjusted.
-- **Recommended:** document (or script) the docker k6 run with the right Keycloak issuer/URL. **Why:** otherwise the smoke stays unrun locally.
-
 ### 64. Razor and Thymeleaf admin customer filters not checked for the `useOrders` bug
 
 Found 2026-11-12. `6b07a16b` fixed React `useOrders` dropping the customer choices when a newer filter superseded the unfiltered request; the Razor and Thymeleaf filters weren't checked for the same bug.
@@ -169,3 +164,10 @@ Found 2026-11-13 (pipeline-green pass), twice, and in .NET UI suites only:
 - meta-prerelease-stage 43406999176, cross-lang dotnet tests vs monolith java: 7 UI tests failed within 1.5 s (xUnit 01:53), each after about 90 s, with 30 s timeouts navigating to `/` and waiting for `load`.
 Java and TS suites against the same stacks were green in the same runs. `81be91db` (xunit `maxParallelThreads` "0.5x") did not stop it. Every .NET UI test launches its own Playwright driver and Chromium (`MyShopUiClient.CreateAsync`), while Java and TS share a browser. The failures stay clustered, so something shared stalls (the runner CPU, the Playwright driver, or Keycloak, see #66), not the test logic.
 - **Recommended:** reproduce locally with `docker stats` and runner CPU sampling during `acceptance-parallel-ui`. If it is CPU or process churn, move .NET to one shared Playwright and browser per test assembly (new context per test, like Java and TS). **Why:** that removes a Node driver process and a Chromium launch per test, the one structural difference from the languages that stay green.
+- Update (U1 .NET pass, 2026-11-17, local, after `fd8ed67d` BrowserPool): the same clustered stall, now in the **API** suites too. On a fresh `--restart` stack both .NET parallel suites lost their whole first batch at xUnit 00:00:31 (monolith: 34 of 134 API, 11 of 147 UI; multitier: 1 + 1), API calls with `HttpRequestException ... forcibly closed by the remote host` after 30 s, UI calls with 30 s Playwright timeouts; multitier also logged one backend `ConnectTimeout` to the WireMock clock. Everything after that first batch passed, the isolated suites (sequential) were green, and a rerun of both parallel suites on the same stacks was green (134/134, 147/147 on both architectures). Java and TS parallel suites to compare in the same pass. So it is not (only) the browser count: something at the start of a parallel .NET run (16 cores, `0.5x` = 8 threads) stalls every in-flight connection for 30 s.
+- **Recommended (updated):** sample thread-pool and socket state in the .NET test process during the first 30 s of `acceptance-parallel-api` (`dotnet-counters` for `threadpool-queue-length`, `netstat` for SYN_SENT/ESTABLISHED to 8x12), and try a one-off warm-up (a single smoke request per external port in an assembly fixture) before the parallel batch starts. **Why:** a reset of the whole first batch is a test-harness start-up effect, and a warm-up is a cheap, local fix if that is what it is.
+
+### 69. Stale JUnit files in the results folders poison `spec status`
+
+Found 2026-11-17 (U1 .NET pass). `system-test/dotnet/SystemTests/TestResults/junit/placeorder.xml` was a leftover from a 2026-11-07 run (78 failures, not produced by any `tests.yaml` suite). `system-test setup` doesn't clear the folder, so `spec status --config spec-dotnet.yaml` read it with the new results and reported UC-001.1–.13 and .16 as Failing although every current suite passed. Deleting it gave 110/112 verified (2 criterion-level `planned`). CI runners start clean, so only local gates are affected; the "flaky UC-007.4" of the 2026-11-12 Java pass may be the same.
+- **Recommended:** have each language's `tests.yaml` setup (or a first `Clean` step) empty its JUnit results folder (`TestResults/junit`, `junit-results`, Gradle `test-results`) before a run. **Why:** a local spec gate must only read the run it gates.
