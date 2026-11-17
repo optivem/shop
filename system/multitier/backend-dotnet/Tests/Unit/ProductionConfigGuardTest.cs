@@ -12,6 +12,14 @@ public class ProductionConfigGuardTest
             .Build();
 
     [Fact]
+    public void OnlyAppProfileProdIsTheProdProfile()
+    {
+        Assert.True(ProductionConfigGuard.IsProdProfile(Config(("APP_PROFILE", "prod"))));
+        Assert.False(ProductionConfigGuard.IsProdProfile(Config(("APP_PROFILE", "dev"))));
+        Assert.False(ProductionConfigGuard.IsProdProfile(Config()));
+    }
+
+    [Fact]
     public void AcceptsRealValues()
     {
         var config = Config(("POSTGRES_DB_PASSWORD", "s3cret"), ("AUTH_ISSUER_URI", "https://auth.example.com/realms/shop"));

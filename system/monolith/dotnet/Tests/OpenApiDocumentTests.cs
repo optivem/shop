@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.Configuration;
 using Xunit;
 
 namespace MyCompany.MyShop.Monolith.Tests;
@@ -12,6 +13,20 @@ public class OpenApiDocumentTests : IClassFixture<ShopWebApplicationFactory>
     private readonly ShopWebApplicationFactory _factory;
 
     public OpenApiDocumentTests(ShopWebApplicationFactory factory) => _factory = factory;
+
+    /// <summary>MapShopOpenApi maps nothing under the prod profile (B-PRG 4.4).</summary>
+    [Fact]
+    public void OnlyAppProfileProdTurnsTheDocsOff()
+    {
+        static IConfiguration Config(string? profile) =>
+            new ConfigurationBuilder()
+                .AddInMemoryCollection(new Dictionary<string, string?> { ["APP_PROFILE"] = profile })
+                .Build();
+
+        Assert.True(Api.ProductionConfigGuard.IsProdProfile(Config("prod")));
+        Assert.False(Api.ProductionConfigGuard.IsProdProfile(Config("dev")));
+        Assert.False(Api.ProductionConfigGuard.IsProdProfile(Config(null)));
+    }
 
     [Fact]
     public async Task OpenApiDocumentNeedsAnAuthenticatedCaller()

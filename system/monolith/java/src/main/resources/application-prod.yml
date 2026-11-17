@@ -8,3 +8,11 @@ spring:
         format_sql: false
   thymeleaf:
     cache: true
+
+# No OpenAPI document or Swagger UI in production (B-PRG 4.4). Local and pipeline stacks keep them (signed-in callers
+# only on the backends with auth, B-KC decision 1), since that is where the docs are read.
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false

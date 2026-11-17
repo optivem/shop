@@ -17,6 +17,11 @@ function isLocalhost(uri: string): boolean {
   }
 }
 
+/** True under APP_PROFILE=prod, which only the production deploy sets. */
+export function isProdProfile(env: Env = process.env): boolean {
+  return env[PROFILE_VARIABLE] === PROD_PROFILE;
+}
+
 /** Every missing or test-default setting that must not reach production. */
 export function productionConfigProblems(env: Env): string[] {
   const problems: string[] = [];
@@ -37,7 +42,7 @@ export function productionConfigProblems(env: Env): string[] {
  * test defaults keep working. Parity with the Java backends' prod-profile guard.
  */
 export function ensureSafeForProduction(env: Env = process.env): void {
-  if (env[PROFILE_VARIABLE] !== PROD_PROFILE) {
+  if (!isProdProfile(env)) {
     return;
   }
   const problems = productionConfigProblems(env);

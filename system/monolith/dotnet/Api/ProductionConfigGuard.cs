@@ -12,9 +12,11 @@ public static class ProductionConfigGuard
     public const string TestDbPassword = "app";
     public const string TestClientSecret = "shop-monolith-test-secret";
 
+    public static bool IsProdProfile(IConfiguration configuration) => configuration[ProfileVariable] == ProdProfile;
+
     public static void EnsureSafeForProduction(IConfiguration configuration)
     {
-        if (configuration[ProfileVariable] != ProdProfile)
+        if (!IsProdProfile(configuration))
         {
             return;
         }

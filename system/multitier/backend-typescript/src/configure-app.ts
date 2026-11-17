@@ -4,6 +4,7 @@ import { RequestValidationPipe } from './api/exception/request-validation.pipe';
 import { DecimalFormatInterceptor } from './api/interceptor/decimal-format.interceptor';
 import { setUpOpenApi } from './api/openapi/openapi-document';
 import { useSecurityHeaders } from './api/security/security-headers';
+import { isProdProfile } from './config/production-config.guard';
 
 // Request/response pipeline shared by main.ts and the component harness, so tests run the same app.
 export function configureApp(app: INestApplication): void {
@@ -11,5 +12,8 @@ export function configureApp(app: INestApplication): void {
   app.useGlobalPipes(new RequestValidationPipe());
   app.useGlobalFilters(new GlobalExceptionFilter());
   app.useGlobalInterceptors(new DecimalFormatInterceptor());
-  setUpOpenApi(app);
+  // No OpenAPI document or Swagger UI in production (B-PRG 4.4); local and pipeline stacks keep them.
+  if (!isProdProfile()) {
+    setUpOpenApi(app);
+  }
 }

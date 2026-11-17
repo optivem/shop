@@ -1,6 +1,12 @@
-import { ensureSafeForProduction, productionConfigProblems } from '@/lib/production-config-guard';
+import { ensureSafeForProduction, isProdProfile, productionConfigProblems } from '@/lib/production-config-guard';
 
 describe('production config guard', () => {
+  it('treats only APP_PROFILE=prod as the prod profile', () => {
+    expect(isProdProfile({ APP_PROFILE: 'prod' })).toBe(true);
+    expect(isProdProfile({ APP_PROFILE: 'dev' })).toBe(false);
+    expect(isProdProfile({})).toBe(false);
+  });
+
   it('accepts real values', () => {
     expect(
       productionConfigProblems({

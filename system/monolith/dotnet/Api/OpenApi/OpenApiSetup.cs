@@ -1,4 +1,5 @@
 using Microsoft.OpenApi.Models;
+using MyCompany.MyShop.Monolith.Api;
 
 namespace MyCompany.MyShop.Monolith.Api.OpenApi;
 
@@ -32,6 +33,12 @@ public static class OpenApiSetup
 
     public static WebApplication MapShopOpenApi(this WebApplication app)
     {
+        // No OpenAPI document or Swagger UI in production (B-PRG 4.4). Local and pipeline stacks keep them, signed-in
+        // callers only (B-KC decision 1), since that is where the docs are read.
+        if (ProductionConfigGuard.IsProdProfile(app.Configuration))
+        {
+            return app;
+        }
         app.MapSwagger(DocumentRoute).RequireAuthorization();
         app.UseSwaggerUI(options =>
         {
