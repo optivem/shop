@@ -1,0 +1,123 @@
+name: dast
+
+# Opt-in DAST (B-PRG 6.7): an OWASP ZAP baseline scan of one monolith stack, built from source and
+# started in stub mode on the runner (docker compose, no registry, no secrets, no paid service), like
+# load-test.yml. The baseline scan spiders the public storefront for a minute and runs ZAP's passive
+# rules only (no attacks), then puts the alert counts in the job summary and uploads the reports.
+# Manual only (workflow_dispatch) and report-only: findings never fail the run; only a ZAP error does.
+#
+# ZAP runs from the official image, pinned to an exact version, on the host network so it reaches the
+# stack's published ports.
+
+on:
+  workflow_dispatch:
+    inputs:
+      language:
+        description: 'Monolith to scan'
+        required: true
+        type: choice
+        options:
+          - java
+          - dotnet
+          - typescript
+        default: java
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ inputs.language }}
+  cancel-in-progress: false
+
+env:
+  ZAP_IMAGE: ghcr.io/zaproxy/zaproxy:2.16.1
+
+jobs:
+  zap-baseline:
+    name: zap-baseline (monolith-${{ inputs.language }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    env:
+      COMPOSE_FILE: docker/${{ inputs.language }}/monolith/docker-compose.local.stub.yml
+      # Host-port digit per language (docker/<language>/monolith): API 8d12.
+      PORT_DIGIT: ${{ inputs.language == 'java' && '1' || inputs.language == 'dotnet' && '2' || '3' }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+
+      - name: Start Stack (stub mode)
+        shell: bash
+        run: docker compose -f "$COMPOSE_FILE" up -d --build --wait
+
+      - name: Wait for the Storefront
+        shell: bash
+        run: |
+          set -euo pipefail
+          url="http://localhost:8${PORT_DIGIT}12/"
+          for attempt in $(seq 1 60); do
+            status=$(curl -s -o /dev/null -w '%{http_code}' "$url" || true)
+            if [ "$status" = "200" ]; then
+              echo "Storefront is up after $attempt attempt(s)"
+              exit 0
+            fi
+            echo "Attempt $attempt: $url answered '$status'"
+            sleep 5
+          done
+          echo "::error::$url did not answer 200 within 5 minutes; see the compose logs below"
+          docker compose -f "$COMPOSE_FILE" logs --tail 200
+          exit 1
+
+      - name: Run ZAP Baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/zap"
+          chmod 777 "$RUNNER_TEMP/zap"
+          # Exit codes: 0 clean, 1 a FAIL-level alert, 2 a WARN-level alert, 3 ZAP itself failed.
+          # Report-only: 0-2 pass; 3 fails the run, because then there is no report to trust.
+          set +e
+          docker run --rm --network host -v "$RUNNER_TEMP/zap:/zap/wrk:rw" "$ZAP_IMAGE" \
+            zap-baseline.py -t "http://localhost:8${PORT_DIGIT}12/" -m 1 \
+            -r zap-report.html -J zap-report.json -w zap-report.md
+          code=$?
+          set -e
+          echo "ZAP baseline exit code: $code"
+          if [ "$code" -ge 3 ]; then
+            echo "::error::ZAP baseline failed to run (exit $code); see the log above"
+            exit 1
+          fi
+
+      - name: Publish Alert Summary
+        if: always()
+        shell: bash
+        run: |
+          report="$RUNNER_TEMP/zap/zap-report.json"
+          if [ -f "$report" ]; then
+            {
+              echo "## ZAP baseline: monolith-${{ inputs.language }}"
+              echo
+              echo "| Risk | Alerts |"
+              echo "|---|---|"
+              jq -r '[.site[].alerts[]] | group_by(.riskdesc | split(" ")[0])
+                | map("| \(.[0].riskdesc | split(" ")[0]) | \(length) |") | .[]' "$report"
+              echo
+              echo "Details: the zap-report-monolith-${{ inputs.language }} artifact (HTML, JSON, Markdown)."
+            } >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::warning::ZAP wrote no report; see the Run ZAP Baseline step log"
+          fi
+
+      - name: Upload ZAP Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-report-monolith-${{ inputs.language }}
+          path: ${{ runner.temp }}/zap/
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Stop Stack
+        if: always()
+        shell: bash
+        run: docker compose -f "$COMPOSE_FILE" down -v

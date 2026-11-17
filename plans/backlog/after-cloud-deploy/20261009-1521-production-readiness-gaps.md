@@ -72,7 +72,7 @@ Steps 1.1–1.6 are done (2026-11-03); the child plan `20261009-1545-production-
 - [ ] 6.4 Runbooks under `docs/operations/` (new; `docker/docs/operations/` no longer exists and docs live under `docs/`): deploy, rollback, DB restore, dependency outage.
 - [ ] 6.5 Postgres (Neon) backups with a restore drill. **$0 only** (user, 2026-11-17): use Neon's built-in restore within the free tier plus a documented drill; no paid backup service.
 - [ ] 6.6 SLOs plus alert rules built on the OTel metrics from SHOW. **$0 only** (user, 2026-11-17): SLOs and alert rules target the opt-in local `otel-lgtm` stack; no paid alerting service.
-- [ ] 6.7 DAST (ZAP baseline) as an optional, opt-in workflow, like `load-test.yml` (what is left of 6.7).
+6.7 is done (U9 run 2, 2026-11-17): `.github/workflows/dast.yml`, an opt-in `workflow_dispatch` ZAP baseline scan (passive rules only, 1-minute spider) of one monolith stub stack built on the runner, like `load-test.yml`; report-only (alert counts in the job summary, HTML/JSON/Markdown reports as an artifact), fails only when ZAP itself errors. Not dispatched yet (Lane D or the user). **Left:** a `docs/tour.md` row next to the k6 one (the file was being edited by the docker lane, so not touched here).
 
 ## Resolved decisions
 
