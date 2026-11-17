@@ -11,6 +11,8 @@ export interface ThenCartSuccess extends PromiseLike<void> {
 /** The cart the visitor's action left. SKUs are aliases; titles, prices and messages are literals as shown. */
 export interface ThenCart extends PromiseLike<void> {
   and(): this;
+  /** The page has no serious or critical axe violations (UI channel only). */
+  isAccessible(): this;
   showsMessage(expectedMessage: string): this;
   hasCartBadge(expectedCount: number): this;
   hasNoCartBadge(): this;

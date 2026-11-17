@@ -162,6 +162,9 @@ public class DefaultGivensTest
         public Task<Result<CheckOutResponse, SystemError>> CheckOutAsync(CheckOutRequest request) =>
             throw new NotSupportedException();
 
+        public Task<Result<CheckAccessibilityResponse, SystemError>> CheckAccessibilityAsync(CheckAccessibilityRequest request) =>
+            throw new NotSupportedException();
+
         public ValueTask DisposeAsync() => ValueTask.CompletedTask;
     }
 }

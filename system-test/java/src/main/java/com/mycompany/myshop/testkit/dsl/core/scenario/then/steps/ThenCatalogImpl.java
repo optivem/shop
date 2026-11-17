@@ -92,6 +92,12 @@ public class ThenCatalogImpl<R, V extends ResponseVerification<R>>
     }
 
     @Override
+    public ThenCatalogImpl<R, V> isAccessible() {
+        expectPageIsAccessible();
+        return this;
+    }
+
+    @Override
     public ThenCatalogImpl<R, V> and() {
         return this;
     }

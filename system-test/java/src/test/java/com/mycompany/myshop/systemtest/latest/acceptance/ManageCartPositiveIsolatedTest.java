@@ -16,6 +16,20 @@ import java.util.stream.Stream;
 class ManageCartPositiveIsolatedTest extends BaseManageCartTest {
     private static final String ADDED_TO_CART = "Added to cart";
 
+    // Accessibility (FT Step 4): axe finds no serious or critical violation on the cart.
+    @TestTemplate
+    @Channel(ChannelType.UI)
+    void theCartShouldBeAccessible() {
+        givenTheCatalog()
+                .when().manageCart()
+                    .withCartContaining(HP_15, 2)
+                    .withCartContaining(DELL_XPS, 1)
+                .then().shouldSucceed()
+                    .cart()
+                        .hasLines(HP_15, DELL_XPS)
+                        .isAccessible();
+    }
+
     @Tag("UC-008.1")
     @TestTemplate
     @Channel(ChannelType.UI)

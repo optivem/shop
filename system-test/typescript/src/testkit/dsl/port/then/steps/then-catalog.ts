@@ -17,6 +17,8 @@ export interface ThenCatalogFailure extends PromiseLike<void> {
 /** The catalog the executed browse showed. SKUs are aliases; titles, brands, prices and labels are literals as shown. */
 export interface ThenCatalog extends PromiseLike<void> {
   and(): this;
+  /** The page has no serious or critical axe violations (UI channel only). */
+  isAccessible(): this;
   /** Exactly these products, in this order. */
   showsProducts(...skuAliases: string[]): this;
   showsNoProducts(): this;

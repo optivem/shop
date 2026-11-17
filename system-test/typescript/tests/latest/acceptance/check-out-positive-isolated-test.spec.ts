@@ -19,6 +19,19 @@ test.describe('@isolated', () => {
     test.describe.configure({ mode: 'serial' });
 
     forChannels(ChannelType.UI)(() => {
+        // Accessibility (FT Step 4): axe finds no serious or critical violation on the checkout.
+        test('theCheckoutShouldBeAccessible', async ({ scenario }) => {
+            await givenTheCatalogAndSavedAddress(scenario, ANA_NOVAK_BERLIN)
+                .when()
+                .checkOut()
+                .withCartContaining(HP_15, 1)
+                .then()
+                .shouldSucceed()
+                .checkout()
+                .isShown()
+                .isAccessible();
+        });
+
         test('shouldPlaceOneOrderPerCartLine', criteria('UC-009.1'), async ({ scenario }) => {
             const address = ANA_NOVAK_BERLIN;
             await givenTheCatalogAndSavedAddress(scenario, address)

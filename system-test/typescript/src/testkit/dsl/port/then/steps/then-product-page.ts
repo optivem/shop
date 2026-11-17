@@ -17,6 +17,8 @@ export interface ThenProductPageFailure extends PromiseLike<void> {
 /** The product page the executed view showed. SKUs are aliases; titles, prices and messages are literals as shown. */
 export interface ThenProductPage extends PromiseLike<void> {
   and(): this;
+  /** The page has no serious or critical axe violations (UI channel only). */
+  isAccessible(): this;
   hasTitle(expectedTitle: string): this;
   hasBrand(expectedBrand: string): this;
   hasCategory(expectedCategory: string): this;

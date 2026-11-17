@@ -5,6 +5,7 @@ import com.mycompany.myshop.testkit.driver.port.UserIdentity;
 import com.mycompany.myshop.testkit.dsl.core.usecase.usecases.BrowseCatalog;
 import com.mycompany.myshop.testkit.dsl.core.usecase.usecases.ManageCart;
 import com.mycompany.myshop.testkit.dsl.core.usecase.usecases.CheckOut;
+import com.mycompany.myshop.testkit.dsl.core.usecase.usecases.CheckAccessibility;
 import com.mycompany.myshop.testkit.dsl.core.usecase.usecases.ViewProduct;
 import com.mycompany.myshop.testkit.dsl.core.usecase.usecases.BrowseCoupons;
 import com.mycompany.myshop.testkit.dsl.core.usecase.usecases.BrowseOrderHistory;
@@ -93,5 +94,9 @@ public class MyShopDsl implements Closeable {
 
     public CheckOut checkOut() {
         return new CheckOut(driver, context);
+    }
+
+    public CheckAccessibility checkAccessibility() {
+        return new CheckAccessibility(driver, context);
     }
 }

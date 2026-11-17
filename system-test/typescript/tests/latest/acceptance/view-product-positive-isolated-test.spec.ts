@@ -34,6 +34,19 @@ test.describe('@isolated', () => {
     });
 
     forChannels(ChannelType.UI)(() => {
+        // Accessibility (FT Step 4): axe finds no serious or critical violation on the product page.
+        test('theProductPageShouldBeAccessible', async ({ scenario }) => {
+            await givenTheCatalog(scenario)
+                .when()
+                .viewProduct()
+                .withSku(DELL_XPS)
+                .then()
+                .shouldSucceed()
+                .productPage()
+                .hasTitle('Dell XPS 13')
+                .isAccessible();
+        });
+
         test('shouldShowTheDetailsOfTheProduct', criteria('UC-007.1'), async ({ scenario }) => {
             await givenTheCatalog(scenario)
                 .when()

@@ -5,6 +5,9 @@ namespace Dsl.Port.Then.Steps;
 /// <summary>The product page the executed view showed. SKUs are aliases; titles, prices and messages are literals as shown.</summary>
 public interface IThenProductPage
 {
+    /// <summary>The page has no serious or critical axe violations (UI channel only).</summary>
+    IThenProductPage IsAccessible();
+
     IThenProductPage HasTitle(string expectedTitle);
 
     IThenProductPage HasBrand(string expectedBrand);

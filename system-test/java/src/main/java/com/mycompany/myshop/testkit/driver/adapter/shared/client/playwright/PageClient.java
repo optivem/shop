@@ -1,5 +1,7 @@
 package com.mycompany.myshop.testkit.driver.adapter.shared.client.playwright;
 
+import com.deque.html.axecore.playwright.AxeBuilder;
+import com.deque.html.axecore.results.CheckedNode;
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.SelectOption;
@@ -11,6 +13,12 @@ public class PageClient {
     // Increased default timeout for parallel test execution
     private static final int DEFAULT_TIMEOUT_SECONDS = 30;
     private static final int DEFAULT_TIMEOUT_MILLISECONDS = DEFAULT_TIMEOUT_SECONDS * 1000;
+    /**
+     * Rules the UI-channel check leaves off. {@code label-content-name-mismatch} (WCAG 2.5.3, label in name): every
+     * storefront names its links and buttons with test-hook aria-labels ("Product Title", "Add <sku> to Cart") that
+     * differ from the visible text, and the drivers select by them; renaming them is a cross-app change tracked in REL.
+     */
+    private static final List<String> DISABLED_AXE_RULES = List.of("label-content-name-mismatch");
     private final Page page;
     private final int timeoutMilliseconds;
     private final KeycloakUiLogin login;
@@ -31,6 +39,22 @@ public class PageClient {
         this.page = page;
         this.timeoutMilliseconds = timeoutMilliseconds;
         this.login = login;
+    }
+
+    /**
+     * Runs axe on the page and returns its serious and critical violations, one readable line each (rule, impact,
+     * help, offending elements), like the frontend's screen-test helper (frontend-react/src/test/axe.ts).
+     */
+    public List<String> readAccessibilityViolations() {
+        return new AxeBuilder(page).disableRules(DISABLED_AXE_RULES).analyze().getViolations().stream()
+                .filter(violation -> "serious".equals(violation.getImpact()) || "critical".equals(violation.getImpact()))
+                .map(violation -> violation.getId() + " (" + violation.getImpact() + "): " + violation.getHelp() + " at "
+                        + String.join(", ", violation.getNodes().stream().map(PageClient::targetOf).toList()))
+                .toList();
+    }
+
+    private static String targetOf(CheckedNode node) {
+        return String.valueOf(node.getTarget());
     }
 
     private void loginIfRedirected() {

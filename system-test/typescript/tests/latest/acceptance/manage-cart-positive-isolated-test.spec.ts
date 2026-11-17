@@ -25,6 +25,20 @@ test.describe('@isolated', () => {
     test.describe.configure({ mode: 'serial' });
 
     forChannels(ChannelType.UI)(() => {
+        // Accessibility (FT Step 4): axe finds no serious or critical violation on the cart.
+        test('theCartShouldBeAccessible', async ({ scenario }) => {
+            await givenTheCatalog(scenario)
+                .when()
+                .manageCart()
+                .withCartContaining(HP_15, 2)
+                .withCartContaining(DELL_XPS, 1)
+                .then()
+                .shouldSucceed()
+                .cart()
+                .hasLines(HP_15, DELL_XPS)
+                .isAccessible();
+        });
+
         test('shouldShowTheCartsTotalQuantityInTheHeader', criteria('UC-008.1'), async ({ scenario }) => {
             await givenTheCatalog(scenario)
                 .when()

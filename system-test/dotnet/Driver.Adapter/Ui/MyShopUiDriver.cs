@@ -694,6 +694,10 @@ public class MyShopUiDriver : IMyShopDriver
         return Success(response);
     }
 
+    /// <summary>Checks the page the last step left open, in the same browser session.</summary>
+    public async Task<Result<CheckAccessibilityResponse, SystemError>> CheckAccessibilityAsync(CheckAccessibilityRequest request)
+        => Success(new CheckAccessibilityResponse { Violations = await _client.AccessibilityViolationsAsync() });
+
     /// <summary>
     /// Checkout is for signed-in customers: a visitor is asked to sign in, an admin is refused. A new session first
     /// gets the cart lines, each from its product page; then the checkout is opened, and, when asked, the order placed.

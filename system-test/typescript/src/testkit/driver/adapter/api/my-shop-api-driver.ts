@@ -28,6 +28,8 @@ import type { ManageCartRequest } from '../../port/dtos/ManageCartRequest.js';
 import type { ManageCartResponse } from '../../port/dtos/ManageCartResponse.js';
 import type { CheckOutRequest } from '../../port/dtos/CheckOutRequest.js';
 import type { CheckOutResponse } from '../../port/dtos/CheckOutResponse.js';
+import type { CheckAccessibilityRequest } from '../../port/dtos/CheckAccessibilityRequest.js';
+import type { CheckAccessibilityResponse } from '../../port/dtos/CheckAccessibilityResponse.js';
 import type { MyShopDriver } from '../../port/my-shop-driver.js';
 import type { UserIdentity } from '../../port/user-identity.js';
 import { TestUsers, testUserFor, type TestUser } from '../shared/client/http/test-user.js';
@@ -170,6 +172,11 @@ export class MyShopApiDriver implements MyShopDriver {
   /** The cart lives in the browser, so there is no checkout API either. */
   checkOut(_request: CheckOutRequest): Promise<Result<CheckOutResponse, SystemError>> {
     return Promise.reject(new Error('The API channel has no cart to check out; run this scenario on the UI channel only'));
+  }
+
+  /** The API serves data, not pages: accessibility is a UI-channel check. */
+  checkAccessibility(_request: CheckAccessibilityRequest): Promise<Result<CheckAccessibilityResponse, SystemError>> {
+    return Promise.reject(new Error('The API channel has no pages to check for accessibility; run this scenario on the UI channel only'));
   }
 
   async close(): Promise<void> {

@@ -55,6 +55,12 @@ public class ThenCheckoutImpl<R, V extends ResponseVerification<R>>
     }
 
     @Override
+    public ThenCheckoutImpl<R, V> isAccessible() {
+        expectPageIsAccessible();
+        return this;
+    }
+
+    @Override
     public ThenCheckoutImpl<R, V> isShown() {
         verification.shownPage(CheckOutResponse.CHECKOUT);
         return this;

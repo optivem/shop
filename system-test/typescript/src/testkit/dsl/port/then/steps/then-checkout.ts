@@ -26,6 +26,8 @@ export interface ThenCheckoutFailure extends PromiseLike<void> {
  */
 export interface ThenCheckout extends PromiseLike<void> {
   and(): ThenCheckoutSuccess;
+  /** The page has no serious or critical axe violations (UI channel only). */
+  isAccessible(): this;
   /** The customer is still on (or was shown) the checkout. */
   isShown(): this;
   showsTheCart(): this;

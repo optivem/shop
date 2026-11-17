@@ -30,6 +30,8 @@ import com.mycompany.myshop.testkit.driver.port.dtos.ManageCartRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.ManageCartResponse;
 import com.mycompany.myshop.testkit.driver.port.dtos.CheckOutRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.CheckOutResponse;
+import com.mycompany.myshop.testkit.driver.port.dtos.CheckAccessibilityRequest;
+import com.mycompany.myshop.testkit.driver.port.dtos.CheckAccessibilityResponse;
 import com.mycompany.myshop.testkit.driver.port.MyShopDriver;
 import com.mycompany.myshop.testkit.driver.adapter.shared.client.http.TestUser;
 import com.mycompany.myshop.testkit.driver.port.UserIdentity;
@@ -206,6 +208,12 @@ public class MyShopApiDriver implements MyShopDriver {
     @Override
     public Result<CheckOutResponse, SystemError> checkOut(CheckOutRequest request) {
         throw new UnsupportedOperationException("The API channel has no cart to check out; run this scenario on the UI channel only");
+    }
+
+    /** The API serves data, not pages: accessibility is a UI-channel check. */
+    @Override
+    public Result<CheckAccessibilityResponse, SystemError> checkAccessibility(CheckAccessibilityRequest request) {
+        throw new UnsupportedOperationException("The API channel has no pages to check for accessibility; run this scenario on the UI channel only");
     }
 
     /** The API serves the unfiltered catalog; filtering, search and sort happen in the UI. */

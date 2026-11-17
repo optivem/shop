@@ -5,6 +5,9 @@ namespace Dsl.Port.Then.Steps;
 /// <summary>The catalog the executed browse showed. SKUs are aliases; titles, brands, prices and labels are literals as shown.</summary>
 public interface IThenCatalog
 {
+    /// <summary>The page has no serious or critical axe violations (UI channel only).</summary>
+    IThenCatalog IsAccessible();
+
     /// <summary>Exactly these products, in this order.</summary>
     IThenCatalog ShowsProducts(params string[] skuAliases);
 

@@ -120,6 +120,15 @@ public class ThenSuccessProductPage<TSuccessResponse, TSuccessVerification> : IT
 
     IThenProductPage IThenProductPage.CanOpenMyOrders() => CanOpenMyOrders();
 
+    /// <summary>The page has no serious or critical axe violations (UI channel only).</summary>
+    public ThenSuccessProductPage<TSuccessResponse, TSuccessVerification> IsAccessible()
+    {
+        _verifications.Add(_ => ThenAccessibility.ExpectPageIsAccessibleAsync(_thenClause.App, _thenClause.Channel!));
+        return this;
+    }
+
+    IThenProductPage IThenProductPage.IsAccessible() => IsAccessible();
+
     public TaskAwaiter GetAwaiter() => Execute().GetAwaiter();
 
     private async Task Execute()

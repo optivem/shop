@@ -6,6 +6,7 @@ import type { AppContext } from '../app-context.js';
 import { arrangeGiven } from '../given/arrange-given.js';
 import { StagedProducts } from '../given/staged-products.js';
 import type { ScenarioContext } from '../scenario-context.js';
+import { expectPageIsAccessible } from './then-accessibility.js';
 
 const CHECKOUT_NOTE = 'Tax and discounts are calculated at checkout.';
 
@@ -46,6 +47,11 @@ export class ThenCartResultStage implements PromiseLike<void> {
 
   _addAssertion(fn: CartAssertion): void {
     this._assertions.push(fn);
+  }
+
+  /** Runs axe on the page the When step left open. */
+  async _checkAccessibility(): Promise<void> {
+    await expectPageIsAccessible(this.app);
   }
 
   private async execute(): Promise<void> {
@@ -185,6 +191,11 @@ export class ThenCart implements PromiseLike<void> {
 
   offersStartShopping(): this {
     return this.add((v) => void v.startShoppingOffered());
+  }
+
+  /** The page has no serious or critical axe violations (UI channel only). */
+  isAccessible(): this {
+    return this.add(() => this.stage._checkAccessibility());
   }
 
   didNotAskToSignIn(): this {

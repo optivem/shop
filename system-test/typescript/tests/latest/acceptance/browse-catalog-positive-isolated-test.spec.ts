@@ -80,6 +80,18 @@ test.describe('@isolated', () => {
     });
 
     forChannels(ChannelType.UI)(() => {
+        // Accessibility (FT Step 4): axe finds no serious or critical violation on the catalog.
+        test('theCatalogShouldBeAccessible', async ({ scenario }) => {
+            await givenTheCatalog(scenario)
+                .when()
+                .browseCatalog()
+                .then()
+                .shouldSucceed()
+                .catalog()
+                .showsProducts(...ALL_PRODUCTS)
+                .isAccessible();
+        });
+
         test('shouldShowTheTitleBrandAndPriceOfEachProduct', criteria('UC-006.1'), async ({ scenario }) => {
             await givenTheCatalog(scenario)
                 .when()

@@ -12,6 +12,7 @@ public class ThenSuccessCart<TSuccessResponse, TSuccessVerification> : IThenCart
 
     private readonly ThenStage<TSuccessResponse, TSuccessVerification> _thenClause;
     private readonly List<Action<ManageCartVerification>> _verifications = [];
+    private bool _checkAccessibility;
 
     internal ThenSuccessCart(ThenStage<TSuccessResponse, TSuccessVerification> thenClause)
     {
@@ -94,6 +95,15 @@ public class ThenSuccessCart<TSuccessResponse, TSuccessVerification> : IThenCart
 
     IThenCart IThenCart.DidNotAskToSignIn() => DidNotAskToSignIn();
 
+    /// <summary>The page has no serious or critical axe violations (UI channel only).</summary>
+    public ThenSuccessCart<TSuccessResponse, TSuccessVerification> IsAccessible()
+    {
+        _checkAccessibility = true;
+        return this;
+    }
+
+    IThenCart IThenCart.IsAccessible() => IsAccessible();
+
     public TaskAwaiter GetAwaiter() => Execute().GetAwaiter();
 
     private async Task Execute()
@@ -106,5 +116,8 @@ public class ThenSuccessCart<TSuccessResponse, TSuccessVerification> : IThenCart
         {
             v(verification);
         }
+
+        if (_checkAccessibility)
+            await ThenAccessibility.ExpectPageIsAccessibleAsync(_thenClause.App, _thenClause.Channel!);
     }
 }

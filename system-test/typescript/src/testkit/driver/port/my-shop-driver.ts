@@ -29,6 +29,8 @@ import type { ManageCartRequest } from './dtos/ManageCartRequest.js';
 import type { ManageCartResponse } from './dtos/ManageCartResponse.js';
 import type { CheckOutRequest } from './dtos/CheckOutRequest.js';
 import type { CheckOutResponse } from './dtos/CheckOutResponse.js';
+import type { CheckAccessibilityRequest } from './dtos/CheckAccessibilityRequest.js';
+import type { CheckAccessibilityResponse } from './dtos/CheckAccessibilityResponse.js';
 
 export interface MyShopDriver extends AsyncCloseable, ActingUserSelector {
   goToMyShop(request: GoToMyShopRequest): Promise<Result<GoToMyShopResponse, SystemError>>;
@@ -47,4 +49,6 @@ export interface MyShopDriver extends AsyncCloseable, ActingUserSelector {
   manageCart(request: ManageCartRequest): Promise<Result<ManageCartResponse, SystemError>>;
   /** Checks out the cart (UC-009); the cart lives in the browser, so only the UI channel can. */
   checkOut(request: CheckOutRequest): Promise<Result<CheckOutResponse, SystemError>>;
+  /** Runs axe on the page the last step left open (FT Step 4); only the UI channel has pages. */
+  checkAccessibility(request: CheckAccessibilityRequest): Promise<Result<CheckAccessibilityResponse, SystemError>>;
 }

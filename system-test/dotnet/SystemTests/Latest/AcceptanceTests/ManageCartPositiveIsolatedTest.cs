@@ -13,6 +13,21 @@ public class ManageCartPositiveIsolatedTest : BaseManageCartTest
 {
     private const string AddedToCart = "Added to cart";
 
+    // Accessibility (FT Step 4): axe finds no serious or critical violation on the cart.
+    [Theory]
+    [ChannelData(ChannelType.UI)]
+    public async Task TheCartShouldBeAccessible(Channel channel)
+    {
+        await GivenTheCatalog(channel)
+            .When().ManageCart()
+            .WithCartContaining(Hp15, 2)
+            .WithCartContaining(DellXps, 1)
+            .Then().ShouldSucceed()
+            .Cart()
+            .HasLines(Hp15, DellXps)
+            .IsAccessible();
+    }
+
     [Theory]
     [ChannelData(ChannelType.UI)]
     [Trait("tag", "UC-008.1")]

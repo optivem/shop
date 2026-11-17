@@ -9,6 +9,8 @@ import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.CheckoutConfi
 import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.CheckoutPage;
 import com.mycompany.myshop.testkit.driver.port.dtos.CheckOutRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.CheckOutResponse;
+import com.mycompany.myshop.testkit.driver.port.dtos.CheckAccessibilityRequest;
+import com.mycompany.myshop.testkit.driver.port.dtos.CheckAccessibilityResponse;
 import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.CouponManagementPage;
 import com.mycompany.myshop.testkit.driver.port.dtos.BrowseCatalogRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.BrowseCatalogResponse;
@@ -612,6 +614,12 @@ public class MyShopUiDriver implements MyShopDriver {
         var response = cartPage.read(message, cartItemCount);
         response.setAskedToSignIn(client.isOnLoginPage());
         return success(response);
+    }
+
+    /** Checks the page the last step left open, in the same browser session. */
+    @Override
+    public Result<CheckAccessibilityResponse, SystemError> checkAccessibility(CheckAccessibilityRequest request) {
+        return success(CheckAccessibilityResponse.builder().violations(client.accessibilityViolations()).build());
     }
 
     /**

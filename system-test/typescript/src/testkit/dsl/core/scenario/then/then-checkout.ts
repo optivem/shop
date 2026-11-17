@@ -15,6 +15,7 @@ import type { AppContext } from '../app-context.js';
 import { arrangeGiven } from '../given/arrange-given.js';
 import { StagedProducts } from '../given/staged-products.js';
 import type { ScenarioContext } from '../scenario-context.js';
+import { expectPageIsAccessible } from './then-accessibility.js';
 
 const REVIEW_NOTE = 'Discount and tax are worked out per order when it is placed.';
 const THANKS = 'Thank you for your order!';
@@ -133,6 +134,11 @@ export class ThenCheckoutResultStage implements PromiseLike<void> {
     return result.value;
   }
 
+  /** Runs axe on the page the When step left open. */
+  async _checkAccessibility(): Promise<void> {
+    await expectPageIsAccessible(this.app);
+  }
+
   private async execute(): Promise<void> {
     if (this._executionPromise) return this._executionPromise;
     this._executionPromise = this._doExecute();
@@ -247,6 +253,11 @@ export class ThenCheckout extends BaseThenCheckoutStep {
   private add(fn: CheckoutAssertion): this {
     this.stage._addAssertion(fn);
     return this;
+  }
+
+  /** The page has no serious or critical axe violations (UI channel only). */
+  isAccessible(): this {
+    return this.add(() => this.stage._checkAccessibility());
   }
 
   isShown(): this {

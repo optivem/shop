@@ -5,6 +5,7 @@ import type { UseCaseContext } from '../../shared/use-case-context.js';
 import type { AppContext } from '../app-context.js';
 import { arrangeGiven } from '../given/arrange-given.js';
 import type { ScenarioContext } from '../scenario-context.js';
+import { expectPageIsAccessible } from './then-accessibility.js';
 
 /** What the When step asked the visitor to do in the catalog. */
 export interface CatalogBrowse {
@@ -58,6 +59,11 @@ export class ThenCatalogResultStage implements PromiseLike<void> {
   async _browseOrderHistory(): Promise<void> {
     const result = await this.app.myShop('dynamic').browseOrderHistory({ orderNumber: '' });
     expect(result.success, JSON.stringify(result)).toBe(true);
+  }
+
+  /** Runs axe on the page the When step left open. */
+  async _checkAccessibility(): Promise<void> {
+    await expectPageIsAccessible(this.app);
   }
 
   private async execute(): Promise<void> {
@@ -189,6 +195,11 @@ export class ThenCatalog implements PromiseLike<void> {
 
   offersToClearFilters(): this {
     return this.add((v) => void v.clearFiltersOffered());
+  }
+
+  /** The page has no serious or critical axe violations (UI channel only). */
+  isAccessible(): this {
+    return this.add(() => this.stage._checkAccessibility());
   }
 
   canOpenMyOrders(): this {

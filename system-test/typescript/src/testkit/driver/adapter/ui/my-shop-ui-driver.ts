@@ -50,6 +50,8 @@ import {
 } from '../../port/dtos/ManageCartRequest.js';
 import type { ManageCartResponse } from '../../port/dtos/ManageCartResponse.js';
 import type { CartPage } from './client/pages/CartPage.js';
+import type { CheckAccessibilityRequest } from '../../port/dtos/CheckAccessibilityRequest.js';
+import type { CheckAccessibilityResponse } from '../../port/dtos/CheckAccessibilityResponse.js';
 import { OPEN, PROCEED_FROM_CART, type CheckOutRequest } from '../../port/dtos/CheckOutRequest.js';
 import { CART, CHECKOUT, CONFIRMATION, type CheckOutResponse } from '../../port/dtos/CheckOutResponse.js';
 import { TestUsers, testUserFor, type TestUser } from '../shared/client/http/test-user.js';
@@ -651,6 +653,11 @@ export class MyShopUiDriver implements MyShopDriver {
     const loadResult = await detailsPage.getLoadResult(orderNumber);
     if (!loadResult.success) return failure(loadResult.error);
     return success(detailsPage);
+  }
+
+  /** Checks the page the last step left open, in the same browser session. */
+  async checkAccessibility(_request: CheckAccessibilityRequest): Promise<Result<CheckAccessibilityResponse, SystemError>> {
+    return success({ violations: await this.client.accessibilityViolations() });
   }
 
   /** An explicitly requested identity wins; otherwise the operation runs as its default user. */

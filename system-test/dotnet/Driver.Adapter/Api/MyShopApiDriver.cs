@@ -155,6 +155,10 @@ public class MyShopApiDriver : IMyShopDriver
     public Task<Result<CheckOutResponse, SystemError>> CheckOutAsync(CheckOutRequest request)
         => throw new NotSupportedException("The API channel has no cart to check out; run this scenario on the UI channel only");
 
+    /// <summary>The API serves data, not pages: accessibility is a UI-channel check.</summary>
+    public Task<Result<CheckAccessibilityResponse, SystemError>> CheckAccessibilityAsync(CheckAccessibilityRequest request)
+        => throw new NotSupportedException("The API channel has no pages to check for accessibility; run this scenario on the UI channel only");
+
     /// <summary>The API serves the unfiltered catalog; filtering, search and sort happen in the UI.</summary>
     private static void RequireNotSet(string input, object? value)
     {

@@ -204,6 +204,15 @@ public class ThenSuccessCheckout<TSuccessResponse, TSuccessVerification> : IThen
 
     IThenCheckout IThenCheckout.HasCartLineQuantity(string skuAlias, int expectedQuantity) => HasCartLineQuantity(skuAlias, expectedQuantity);
 
+    /// <summary>The page has no serious or critical axe violations (UI channel only).</summary>
+    public ThenSuccessCheckout<TSuccessResponse, TSuccessVerification> IsAccessible()
+    {
+        _verifications.Add(_ => ThenAccessibility.ExpectPageIsAccessibleAsync(_thenClause.App, _thenClause.Channel!));
+        return this;
+    }
+
+    IThenCheckout IThenCheckout.IsAccessible() => IsAccessible();
+
     public TaskAwaiter GetAwaiter() => Execute().GetAwaiter();
 
     private async Task Execute()

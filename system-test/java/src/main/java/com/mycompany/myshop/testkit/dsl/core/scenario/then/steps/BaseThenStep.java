@@ -3,6 +3,7 @@ package com.mycompany.myshop.testkit.dsl.core.scenario.then.steps;
 import com.mycompany.myshop.testkit.dsl.core.shared.ResponseVerification;
 import com.mycompany.myshop.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.ExecutionResultContext;
+import com.mycompany.myshop.testkit.dsl.port.ChannelMode;
 
 public abstract class BaseThenStep<R, V extends ResponseVerification<R>> {
     protected final UseCaseDsl app;
@@ -17,6 +18,11 @@ public abstract class BaseThenStep<R, V extends ResponseVerification<R>> {
 
     public BaseThenStep<R, V> and() {
         return this;
+    }
+
+    /** Runs axe on the page the When step left open, on the same channel (FT Step 4). */
+    protected void expectPageIsAccessible() {
+        app.myShop(ChannelMode.DYNAMIC).checkAccessibility().execute().shouldSucceed().noViolations();
     }
 
     public ThenOrderImpl<R, V> order(String orderNumber) {

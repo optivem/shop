@@ -1,3 +1,4 @@
+import AxeBuilder from '@axe-core/playwright';
 import type { Browser, BrowserContext, Page } from '@playwright/test';
 import type { Result } from '../../../../common/result.js';
 import { success, failure } from '../../../../common/result.js';
@@ -29,6 +30,13 @@ const CHECKOUT_PATH = '/checkout';
 const PROFILE_PATH = '/account';
 const PROCEED_TO_CHECKOUT_SELECTOR = "a[aria-label='Proceed to Checkout']";
 const FORBIDDEN_STATUS = 403;
+
+/**
+ * Rules the UI-channel check leaves off. `label-content-name-mismatch` (WCAG 2.5.3, label in name): every storefront
+ * names its links and buttons with test-hook aria-labels ("Product Title", "Add <sku> to Cart") that differ from the
+ * visible text, and the drivers select by them; renaming them is a cross-app change tracked in REL.
+ */
+const DISABLED_AXE_RULES = ['label-content-name-mismatch'];
 
 export const AUTHENTICATION_REQUIRED = 'Authentication is required';
 export const PERMISSION_DENIED = 'You do not have permission to perform this action';
@@ -177,6 +185,20 @@ export class MyShopUiClient {
   }
 
   /** The page that is open, read for what every page shows, such as the header's cart badge. */
+  /**
+   * Runs axe on the page that is open and returns its serious and critical violations, one readable line each
+   * (rule, impact, help, offending elements), like the frontend's screen-test helper (frontend-react/src/test/axe.ts).
+   */
+  async accessibilityViolations(): Promise<string[]> {
+    const results = await new AxeBuilder({ page: this.requirePage() }).disableRules(DISABLED_AXE_RULES).analyze();
+    return results.violations
+      .filter((violation) => violation.impact === 'serious' || violation.impact === 'critical')
+      .map(
+        (violation) =>
+          `${violation.id} (${violation.impact}): ${violation.help} at ${violation.nodes.map((node) => node.target.join(' ')).join(', ')}`,
+      );
+  }
+
   currentPageInSession(): HomePage {
     return new HomePage(this.requirePage());
   }

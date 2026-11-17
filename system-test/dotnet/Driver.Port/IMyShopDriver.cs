@@ -22,5 +22,8 @@ public interface IMyShopDriver : IAsyncDisposable, IActingUserSelector
 
     /// <summary>Checks out the cart (UC-009); the cart lives in the browser, so only the UI channel can.</summary>
     Task<Result<CheckOutResponse, SystemError>> CheckOutAsync(CheckOutRequest request);
+
+    /// <summary>Runs axe on the page the last step left open (FT Step 4); only the UI channel has pages.</summary>
+    Task<Result<CheckAccessibilityResponse, SystemError>> CheckAccessibilityAsync(CheckAccessibilityRequest request);
 }
 

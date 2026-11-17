@@ -8,6 +8,9 @@ namespace Dsl.Port.Then.Steps;
 /// </summary>
 public interface IThenCheckout
 {
+    /// <summary>The page has no serious or critical axe violations (UI channel only).</summary>
+    IThenCheckout IsAccessible();
+
     /// <summary>The customer is still on (or was shown) the checkout.</summary>
     IThenCheckout IsShown();
 

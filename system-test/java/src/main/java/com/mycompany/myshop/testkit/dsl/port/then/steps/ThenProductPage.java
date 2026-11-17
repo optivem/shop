@@ -4,6 +4,9 @@ import com.mycompany.myshop.testkit.dsl.port.then.steps.base.ThenStep;
 
 /** The product page the executed view showed. SKUs are aliases; titles, prices and messages are literals as shown. */
 public interface ThenProductPage extends ThenStep<ThenProductPage> {
+    /** The page has no serious or critical axe violations (UI channel only). */
+    ThenProductPage isAccessible();
+
     ThenProductPage hasTitle(String expectedTitle);
 
     ThenProductPage hasBrand(String expectedBrand);

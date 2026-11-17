@@ -5,6 +5,9 @@ namespace Dsl.Port.Then.Steps;
 /// <summary>The cart the visitor's action left. SKUs are aliases; titles, prices and messages are literals as shown.</summary>
 public interface IThenCart
 {
+    /// <summary>The page has no serious or critical axe violations (UI channel only).</summary>
+    IThenCart IsAccessible();
+
     IThenCart ShowsMessage(string expectedMessage);
 
     IThenCart HasCartBadge(int expectedCount);

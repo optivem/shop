@@ -4,6 +4,9 @@ import com.mycompany.myshop.testkit.dsl.port.then.steps.base.ThenStep;
 
 /** The catalog the executed browse showed. SKUs are aliases; titles, brands, prices and labels are literals as shown. */
 public interface ThenCatalog extends ThenStep<ThenCatalog> {
+    /** The page has no serious or critical axe violations (UI channel only). */
+    ThenCatalog isAccessible();
+
     /** Exactly these products, in this order. */
     ThenCatalog showsProducts(String... skuAliases);
 

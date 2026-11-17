@@ -42,6 +42,8 @@ dependencies {
 
 	// Playwright (browser automation for UI tests)
 	implementation 'com.microsoft.playwright:playwright:1.65.0'
+	// axe-core accessibility checks on the UI channel (FT Step 4)
+	implementation 'com.deque.html.axe-core:playwright:4.14.0'
 
 	// WireMock (stub server for contract tests)
 	implementation 'org.wiremock:wiremock-standalone:3.13.2'

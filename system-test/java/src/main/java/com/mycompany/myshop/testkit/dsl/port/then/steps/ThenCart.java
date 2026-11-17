@@ -4,6 +4,9 @@ import com.mycompany.myshop.testkit.dsl.port.then.steps.base.ThenStep;
 
 /** The cart the visitor's action left. SKUs are aliases; titles, prices and messages are literals as shown. */
 public interface ThenCart extends ThenStep<ThenCart> {
+    /** The page has no serious or critical axe violations (UI channel only). */
+    ThenCart isAccessible();
+
     ThenCart showsMessage(String expectedMessage);
 
     ThenCart hasCartBadge(int expectedCount);

@@ -293,6 +293,9 @@ public class MyShopUiClient : IAsyncDisposable
     public HomePage CurrentPageInSession()
         => new(_visitorPageClient ?? new PlaywrightGateway(_page, _baseUrl, _login));
 
+    /// <summary>The serious and critical axe violations of the page that is open, in the current session.</summary>
+    public Task<List<string>> AccessibilityViolationsAsync() => SessionPageClient().ReadAccessibilityViolationsAsync();
+
     /// <summary>The page client of the current session: the visitor's, if one was started, else the logged-in user's.</summary>
     public PlaywrightGateway SessionPageClient()
         => _visitorPageClient ?? new PlaywrightGateway(_page, _baseUrl, _login);

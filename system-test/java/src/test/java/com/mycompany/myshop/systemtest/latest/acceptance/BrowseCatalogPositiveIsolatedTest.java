@@ -14,6 +14,18 @@ import java.util.stream.Stream;
 // Filtering, search and sort exist only in the UI; the API serves the unfiltered list.
 @Isolated("stages the shared ERP stub's product list, which every catalog page reads")
 class BrowseCatalogPositiveIsolatedTest extends BaseBrowseCatalogTest {
+    // Accessibility (FT Step 4): axe finds no serious or critical violation on the catalog.
+    @TestTemplate
+    @Channel(ChannelType.UI)
+    void theCatalogShouldBeAccessible() {
+        givenTheCatalog()
+                .when().browseCatalog()
+                .then().shouldSucceed()
+                    .catalog()
+                        .showsProducts(ALL_PRODUCTS)
+                        .isAccessible();
+    }
+
     @Tag("UC-006.1")
     @TestTemplate
     @Channel({ChannelType.UI, ChannelType.API})

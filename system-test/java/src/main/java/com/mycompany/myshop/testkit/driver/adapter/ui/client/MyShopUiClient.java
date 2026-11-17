@@ -20,6 +20,7 @@ import org.springframework.http.HttpStatus;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 import static com.mycompany.myshop.testkit.dsl.core.usecase.commons.SystemResults.failure;
 import static com.mycompany.myshop.testkit.dsl.core.usecase.commons.SystemResults.success;
@@ -179,6 +180,11 @@ public class MyShopUiClient implements AutoCloseable {
     /** The page that is open, read for what every page shows, such as the header's cart badge. */
     public HomePage currentPageInSession() {
         return new HomePage(visitorPageClient != null ? visitorPageClient : pageClient);
+    }
+
+    /** The serious and critical axe violations of the page that is open, in the current session. */
+    public List<String> accessibilityViolations() {
+        return sessionPageClient().readAccessibilityViolations();
     }
 
     /** The page client of the current session: the visitor's, if one was started, else the logged-in user's. */

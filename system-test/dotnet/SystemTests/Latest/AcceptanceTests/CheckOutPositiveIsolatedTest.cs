@@ -14,6 +14,20 @@ public class CheckOutPositiveIsolatedTest : BaseCheckOutTest
 {
     private const string Summer2025 = "SUMMER2025";
 
+    // Accessibility (FT Step 4): axe finds no serious or critical violation on the checkout.
+    [Theory]
+    [ChannelData(ChannelType.UI)]
+    public async Task TheCheckoutShouldBeAccessible(Channel channel)
+    {
+        await GivenTheCatalogAndSavedAddress(channel, AnaNovakBerlin)
+            .When().CheckOut()
+            .WithCartContaining(Hp15, 1)
+            .Then().ShouldSucceed()
+            .Checkout()
+            .IsShown()
+            .IsAccessible();
+    }
+
     [Theory]
     [ChannelData(ChannelType.UI)]
     [Trait("tag", "UC-009.1")]

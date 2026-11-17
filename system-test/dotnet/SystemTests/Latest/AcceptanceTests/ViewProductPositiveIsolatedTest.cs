@@ -13,6 +13,19 @@ public class ViewProductPositiveIsolatedTest : BaseViewProductTest
 {
     private const string AddedToCart = "Added to cart";
 
+    // Accessibility (FT Step 4): axe finds no serious or critical violation on the product page.
+    [Theory]
+    [ChannelData(ChannelType.UI)]
+    public async Task TheProductPageShouldBeAccessible(Channel channel)
+    {
+        await GivenTheCatalog(channel)
+            .When().ViewProduct().WithSku(DellXps)
+            .Then().ShouldSucceed()
+            .ProductPage()
+            .HasTitle("Dell XPS 13")
+            .IsAccessible();
+    }
+
     [Theory]
     [ChannelData(ChannelType.UI)]
     [Trait("tag", "UC-007.1")]

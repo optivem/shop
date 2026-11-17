@@ -96,6 +96,15 @@ public class ThenSuccessCatalog<TSuccessResponse, TSuccessVerification> : IThenC
 
     IThenCatalog IThenCatalog.CanOpenMyOrders() => CanOpenMyOrders();
 
+    /// <summary>The page has no serious or critical axe violations (UI channel only).</summary>
+    public ThenSuccessCatalog<TSuccessResponse, TSuccessVerification> IsAccessible()
+    {
+        _verifications.Add(_ => ThenAccessibility.ExpectPageIsAccessibleAsync(_thenClause.App, _thenClause.Channel!));
+        return this;
+    }
+
+    IThenCatalog IThenCatalog.IsAccessible() => IsAccessible();
+
     public TaskAwaiter GetAwaiter() => Execute().GetAwaiter();
 
     private async Task Execute()

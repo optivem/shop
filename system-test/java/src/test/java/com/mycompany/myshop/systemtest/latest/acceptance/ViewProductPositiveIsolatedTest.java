@@ -16,6 +16,19 @@ import java.util.stream.Stream;
 class ViewProductPositiveIsolatedTest extends BaseViewProductTest {
     private static final String ADDED_TO_CART = "Added to cart";
 
+    // Accessibility (FT Step 4): axe finds no serious or critical violation on the product page.
+    @TestTemplate
+    @Channel(ChannelType.UI)
+    void theProductPageShouldBeAccessible() {
+        givenTheCatalog()
+                .when().viewProduct()
+                    .withSku(DELL_XPS)
+                .then().shouldSucceed()
+                    .productPage()
+                        .hasTitle("Dell XPS 13")
+                        .isAccessible();
+    }
+
     @Tag("UC-007.1")
     @TestTemplate
     @Channel(ChannelType.UI)

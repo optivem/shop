@@ -124,6 +124,12 @@ public class ThenProductPageImpl<R, V extends ResponseVerification<R>>
     }
 
     @Override
+    public ThenProductPageImpl<R, V> isAccessible() {
+        expectPageIsAccessible();
+        return this;
+    }
+
+    @Override
     public ThenProductPageImpl<R, V> and() {
         return this;
     }

@@ -7,6 +7,9 @@ import com.mycompany.myshop.testkit.dsl.port.then.steps.base.ThenStep;
  * may name SKU and coupon aliases; prices, tax rates and addresses are literals as shown.
  */
 public interface ThenCheckout extends ThenStep<ThenCheckout> {
+    /** The page has no serious or critical axe violations (UI channel only). */
+    ThenCheckout isAccessible();
+
     /** The customer is still on (or was shown) the checkout. */
     ThenCheckout isShown();
 

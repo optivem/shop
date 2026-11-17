@@ -1,9 +1,21 @@
+using Deque.AxeCore.Commons;
+using Deque.AxeCore.Playwright;
 using Microsoft.Playwright;
 
 namespace Driver.Adapter.Shared.Client.Playwright;
 
 public class PageClient
 {
+    /// <summary>
+    /// Rules the UI-channel check leaves off. <c>label-content-name-mismatch</c> (WCAG 2.5.3, label in name): every
+    /// storefront names its links and buttons with test-hook aria-labels ("Product Title", "Add &lt;sku&gt; to Cart") that
+    /// differ from the visible text, and the drivers select by them; renaming them is a cross-app change tracked in REL.
+    /// </summary>
+    private static readonly AxeRunOptions AxeOptions = new()
+    {
+        Rules = new Dictionary<string, RuleOptions> { ["label-content-name-mismatch"] = new() { Enabled = false } },
+    };
+
     private readonly IPage _page;
     private readonly float _timeoutMilliseconds;
     private readonly KeycloakUiLogin? _login;
@@ -22,6 +34,20 @@ public class PageClient
     public PageClient(IPage page, string baseUrl, KeycloakUiLogin? login = null)
         : this(page, DefaultTimeoutMilliseconds, login)
     {
+    }
+
+    /// <summary>
+    /// Runs axe on the page and returns its serious and critical violations, one readable line each (rule, impact,
+    /// help, offending elements), like the frontend's screen-test helper (frontend-react/src/test/axe.ts).
+    /// </summary>
+    public async Task<List<string>> ReadAccessibilityViolationsAsync()
+    {
+        var results = await _page.RunAxe(AxeOptions);
+        return results.Violations
+            .Where(violation => violation.Impact is "serious" or "critical")
+            .Select(violation => $"{violation.Id} ({violation.Impact}): {violation.Help} at "
+                + string.Join(", ", violation.Nodes.Select(node => node.Target.ToString())))
+            .ToList();
     }
 
     // When the app redirected the browser to the Keycloak login form, sign in before touching the page.

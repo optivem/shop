@@ -11,6 +11,19 @@ namespace SystemTests.Latest.AcceptanceTests;
 [Trait("Category", "isolated")]
 public class BrowseCatalogPositiveIsolatedTest : BaseBrowseCatalogTest
 {
+    // Accessibility (FT Step 4): axe finds no serious or critical violation on the catalog.
+    [Theory]
+    [ChannelData(ChannelType.UI)]
+    public async Task TheCatalogShouldBeAccessible(Channel channel)
+    {
+        await GivenTheCatalog(channel)
+            .When().BrowseCatalog()
+            .Then().ShouldSucceed()
+            .Catalog()
+            .ShowsProducts(AllProducts)
+            .IsAccessible();
+    }
+
     [Theory]
     [ChannelData(ChannelType.UI, ChannelType.API)]
     [Trait("tag", "UC-006.1")]

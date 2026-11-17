@@ -56,6 +56,8 @@ public class MyShopDsl : IAsyncDisposable
     public ManageCart ManageCart() => new(_driver, _context);
 
     public CheckOut CheckOut() => new(_driver, _context);
+
+    public CheckAccessibility CheckAccessibility() => new(_driver, _context);
 }
 
 

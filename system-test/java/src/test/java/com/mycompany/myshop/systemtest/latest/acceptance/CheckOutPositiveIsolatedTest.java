@@ -17,6 +17,19 @@ import java.util.stream.Stream;
 class CheckOutPositiveIsolatedTest extends BaseCheckOutTest {
     private static final String SUMMER2025 = "SUMMER2025";
 
+    // Accessibility (FT Step 4): axe finds no serious or critical violation on the checkout.
+    @TestTemplate
+    @Channel(ChannelType.UI)
+    void theCheckoutShouldBeAccessible() {
+        givenTheCatalogAndSavedAddress(ANA_NOVAK_BERLIN)
+                .when().checkOut()
+                    .withCartContaining(HP_15, 1)
+                .then().shouldSucceed()
+                    .checkout()
+                        .isShown()
+                        .isAccessible();
+    }
+
     @Tag("UC-009.1")
     @TestTemplate
     @Channel(ChannelType.UI)

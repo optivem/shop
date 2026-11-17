@@ -100,6 +100,12 @@ public class ThenCartImpl<R, V extends ResponseVerification<R>>
     }
 
     @Override
+    public ThenCartImpl<R, V> isAccessible() {
+        expectPageIsAccessible();
+        return this;
+    }
+
+    @Override
     public ThenCartImpl<R, V> and() {
         return this;
     }
