@@ -9,6 +9,7 @@ public static class ProductionConfigGuard
 {
     public const string ProfileVariable = "APP_PROFILE";
     public const string ProdProfile = "prod";
+    public const string RealMode = "real";
     public const string TestDbPassword = "app";
     public const string TestClientSecret = "shop-monolith-test-secret";
 
@@ -46,6 +47,13 @@ public static class ProductionConfigGuard
         if (string.IsNullOrWhiteSpace(clientSecret) || clientSecret == TestClientSecret)
         {
             problems.Add("AUTH_CLIENT_SECRET is missing or the test-realm secret");
+        }
+
+        // B-PRG 2.3: production reads the local system clock; the external (stub) clock exists so tests control "now".
+        var externalSystemMode = configuration["EXTERNAL_SYSTEM_MODE"] ?? configuration["External:SystemMode"];
+        if (externalSystemMode != null && externalSystemMode != RealMode)
+        {
+            problems.Add("EXTERNAL_SYSTEM_MODE is not real (prod reads the local clock; the stub clock is for test and pipeline stacks)");
         }
 
         return problems;

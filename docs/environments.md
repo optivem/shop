@@ -12,6 +12,11 @@ environment that has been idle answers its first request after a cold start, and
 | QA | QA stage and QA sign-off | system + simulators | `https://shop-qa.optivem.com` (custom domain, opt-in) |
 | Production | production stage | system + simulators | `https://shop.optivem.com` (custom domain, opt-in) |
 
+**Clock.** Only the `stub` stacks (Acceptance, and the local and pipeline `stub` compose stacks) read "now" from
+the external clock stub, so tests can set the date. Every other stack runs `EXTERNAL_SYSTEM_MODE=real`, where each
+backend reads its local system clock. Production must: under the prod profile every backend refuses to start with
+`EXTERNAL_SYSTEM_MODE` set to anything but `real`.
+
 Service names, with `<system>` from the `SYSTEM_NAME` repo variable and `<flavor>` as `<architecture>-<language>`:
 
 | Environment | Monolith | Multitier |

@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 @Profile("prod")
 public class ProductionConfigGuard {
 
+    static final String REAL_MODE = "real";
     static final String TEST_DB_PASSWORD = "app";
 
 
@@ -28,6 +29,10 @@ public class ProductionConfigGuard {
         var dbPassword = property.apply("spring.datasource.password");
         if (isBlank(dbPassword) || TEST_DB_PASSWORD.equals(dbPassword)) {
             problems.add("POSTGRES_DB_PASSWORD is missing or the test default");
+        }
+        var externalSystemMode = property.apply("external.system-mode");
+        if (externalSystemMode != null && !REAL_MODE.equals(externalSystemMode)) {
+            problems.add("EXTERNAL_SYSTEM_MODE is not real (prod reads the local clock; the stub clock is for test and pipeline stacks)");
         }
         return problems;
     }

@@ -20,6 +20,15 @@ public class ProductionConfigGuardTest
     }
 
     [Fact]
+    public void RejectsTheStubClockButAcceptsRealMode()
+    {
+        Assert.Contains("EXTERNAL_SYSTEM_MODE is not real (prod reads the local clock; the stub clock is for test and pipeline stacks)",
+            ProductionConfigGuard.Problems(Config(("EXTERNAL_SYSTEM_MODE", "stub"))));
+        Assert.DoesNotContain(ProductionConfigGuard.Problems(Config(("EXTERNAL_SYSTEM_MODE", "real"))),
+            problem => problem.StartsWith("EXTERNAL_SYSTEM_MODE"));
+    }
+
+    [Fact]
     public void AcceptsRealValues()
     {
         var config = Config(("POSTGRES_DB_PASSWORD", "s3cret"), ("AUTH_ISSUER_URI", "https://auth.example.com/realms/shop"));

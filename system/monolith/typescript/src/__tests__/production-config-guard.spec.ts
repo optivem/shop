@@ -7,6 +7,17 @@ describe('production config guard', () => {
     expect(isProdProfile({})).toBe(false);
   });
 
+  it('rejects the stub clock but accepts real mode', () => {
+    expect(productionConfigProblems({ EXTERNAL_SYSTEM_MODE: 'stub' })).toContain(
+      'EXTERNAL_SYSTEM_MODE is not real (prod reads the local clock; the stub clock is for test and pipeline stacks)',
+    );
+    expect(
+      productionConfigProblems({ EXTERNAL_SYSTEM_MODE: 'real' }).some((problem) =>
+        problem.startsWith('EXTERNAL_SYSTEM_MODE'),
+      ),
+    ).toBe(false);
+  });
+
   it('accepts real values', () => {
     expect(
       productionConfigProblems({

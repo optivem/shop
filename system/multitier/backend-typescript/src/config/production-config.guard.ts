@@ -1,5 +1,6 @@
 export const PROFILE_VARIABLE = 'APP_PROFILE';
 export const PROD_PROFILE = 'prod';
+export const REAL_MODE = 'real';
 export const TEST_DB_PASSWORD = 'app';
 
 type Env = Record<string, string | undefined>;
@@ -32,6 +33,13 @@ export function productionConfigProblems(env: Env): string[] {
   const issuer = env.AUTH_ISSUER_URI;
   if (isBlank(issuer) || isLocalhost(issuer)) {
     problems.push('AUTH_ISSUER_URI is missing or points at localhost');
+  }
+  // B-PRG 2.3: production reads the local system clock; the external (stub) clock exists so tests control "now".
+  const externalSystemMode = env.EXTERNAL_SYSTEM_MODE;
+  if (externalSystemMode !== undefined && externalSystemMode !== REAL_MODE) {
+    problems.push(
+      'EXTERNAL_SYSTEM_MODE is not real (prod reads the local clock; the stub clock is for test and pipeline stacks)',
+    );
   }
   return problems;
 }
