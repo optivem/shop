@@ -190,6 +190,37 @@ jobs:
           base-image-urls: ${{ needs.preflight.outputs.image-urls }}
           tag: ${{ inputs.commit-sha && format('sha-{0}', inputs.commit-sha) || 'latest' }}
 
+      # With no commit-sha this stage tests each image's `latest` tag, which a red commit stage
+      # leaves at an older commit; the failure then looks like a code bug in this run (REL #67).
+      - name: Warn When a Tested Image's Commit Stage Is Red
+        if: inputs.commit-sha == ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          IMAGES: ${{ inputs.images }}
+        run: |
+          set -euo pipefail
+          for image in $(jq -r '.[]' <<<"$IMAGES"); do
+            # monolith-system-<language> is built by monolith-<language>-commit-stage; the rest by <image>-commit-stage.
+            if [[ "$image" == monolith-system-* ]]; then
+              workflow="monolith-${image#monolith-system-}-commit-stage.yml"
+            else
+              workflow="${image}-commit-stage.yml"
+            fi
+            # Cancelled/skipped runs (concurrency, path filters) say nothing about the image; take the latest real one.
+            run=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow "$workflow" --branch main --status completed \
+              --limit 20 --json conclusion,headSha,url               --jq '[.[] | select(.conclusion != "cancelled" and .conclusion != "skipped")][0] // empty')
+            if [[ -z "$run" ]]; then
+              echo "::warning::No completed $workflow run on main; cannot tell how current the $image:latest image is."
+              continue
+            fi
+            conclusion=$(jq -r .conclusion <<<"$run")
+            if [[ "$conclusion" != "success" ]]; then
+              msg="$workflow last finished '$conclusion' on main ($(jq -r '.headSha[0:8]' <<<"$run"), $(jq -r .url <<<"$run")): $image:latest is from an older commit, so failures here may come from the stale image, not from the code under test."
+              echo "::warning::$msg"
+              echo "- ⚠️ $msg" >> "$GITHUB_STEP_SUMMARY"
+            fi
+          done
+
       - name: Get Last Workflow Run
         id: last-run
         uses: optivem/actions/get-last-workflow-run@v1
