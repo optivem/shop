@@ -2,7 +2,7 @@ plugins {
 	id 'java'
 	id 'checkstyle'
 	id 'jacoco'
-	id 'org.sonarqube' version '7.2.3.7755'
+	id 'org.sonarqube' version '7.5.0.8588'
 	id 'org.springframework.boot' version '3.5.6'
 	id 'io.spring.dependency-management' version '1.1.7'
 }
@@ -60,8 +60,8 @@ dependencies {
 	// Resilience on the outbound ERP/Clock/Tax calls (timeout, retry, circuit breaker); see GatewayHttpClient.
 	// Core modules rather than the Spring Boot starter: the policy is applied in code, so it also holds
 	// for a gateway built outside a Spring context. Not managed by the Spring Boot BOM.
-	implementation 'io.github.resilience4j:resilience4j-retry:2.2.0'
-	implementation 'io.github.resilience4j:resilience4j-circuitbreaker:2.2.0'
+	implementation 'io.github.resilience4j:resilience4j-retry:2.4.0'
+	implementation 'io.github.resilience4j:resilience4j-circuitbreaker:2.4.0'
 	// Observability: Micrometer Tracing bridged to OpenTelemetry (inbound + outbound HTTP spans, W3C
 	// traceparent, trace_id/span_id in logs) and OTLP export for traces + metrics. Versions come from
 	// the Spring Boot BOM. Export is off unless OTEL_EXPORTER_OTLP_ENDPOINT is set.
@@ -72,7 +72,7 @@ dependencies {
 	// Bridges Logback to the OTel SDK so logs reach the collector too; attached only when export is on
 	// (OtlpLogExportConfig). Not managed by the Spring Boot BOM, so the instrumentation BOM pins it at
 	// the release built against Boot's OpenTelemetry SDK (1.49.0).
-	implementation platform('io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:2.15.0-alpha')
+	implementation platform('io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:2.33.1-alpha')
 	implementation 'io.opentelemetry.instrumentation:opentelemetry-logback-appender-1.0'
 
 	runtimeOnly 'org.postgresql:postgresql'
