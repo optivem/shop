@@ -138,4 +138,10 @@ Scenario: Should tell the customer when no order matches
 Scenario: Should tell the customer when the order does not exist
   When the customer opens the details of order NON-EXISTENT-ORDER-99999
   Then the customer is told "Order NON-EXISTENT-ORDER-99999 does not exist."
+
+@UC-002.11 @narrative-5b
+Scenario: Should ask an anonymous visitor to sign in and return to the order details
+  Given the visitor is not signed in
+  When the visitor opens the link to the details of order ORD-1001 and signs in as customer Alice
+  Then the order details of ORD-1001 are shown
 ```

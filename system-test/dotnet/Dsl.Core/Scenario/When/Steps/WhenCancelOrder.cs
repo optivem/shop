@@ -7,6 +7,7 @@ using Driver.Port.Dtos;
 using Dsl.Core.UseCase.UseCases;
 using Optivem.Testing;
 using static Dsl.Core.Scenario.ScenarioDefaults;
+using Dsl.Port;
 
 namespace Dsl.Core.Scenario.When.Steps;
 
@@ -29,7 +30,7 @@ public class CancelOrder : BaseWhen<VoidValue, VoidVerification>, IWhenCancelOrd
 
     protected override async Task<ExecutionResult<VoidValue, VoidVerification>> Execute(UseCaseDsl app)
     {
-        var shop = await app.MyShop(Channel);
+        var shop = await app.MyShop(ChannelMode.Dynamic, Channel);
         var result = await shop.CancelOrder()
             .OrderNumber(_orderNumber)
             .Execute();

@@ -13,7 +13,7 @@ import { CHECKOUT_READY_SELECTOR, CheckoutPage } from './pages/CheckoutPage.js';
 import { CheckoutConfirmationPage } from './pages/CheckoutConfirmationPage.js';
 import { NEW_ORDER_READY_SELECTOR, NewOrderPage } from './pages/NewOrderPage.js';
 import { OrderHistoryPage } from './pages/OrderHistoryPage.js';
-import { OrderDetailsPage } from './pages/OrderDetailsPage.js';
+import { ORDER_DETAILS_READY_SELECTOR, OrderDetailsPage } from './pages/OrderDetailsPage.js';
 import { COUPON_MANAGEMENT_READY_SELECTOR, CouponManagementPage } from './pages/CouponManagementPage.js';
 import { PROFILE_READY_SELECTOR, ProfilePage } from './pages/ProfilePage.js';
 
@@ -305,6 +305,32 @@ export class MyShopUiClient {
     const encodedOrderNumber = encodeURIComponent(orderNumber);
     await this.openDirectly(`/order-details?orderNumber=${encodedOrderNumber}`, `/order-details/${encodedOrderNumber}`);
     return new OrderDetailsPage(this.requirePage());
+  }
+
+  /**
+   * Pastes an order's URL into a fresh visitor session, signs in as `user` when the app asks to, and waits for the
+   * order details the app returns to. A single-page UI that drops the deep link across the login lands on its home
+   * page instead, so the order details never load.
+   */
+  async openOrderDetailsPageSigningIn(orderNumber: string, user: TestUser): Promise<OrderDetailsPage> {
+    const userLogin = KeycloakUiLogin.forBaseUrl(this.keycloakBaseUrl, user);
+    if (!userLogin) {
+      throw new Error('Signing in can only be exercised against a system with a login');
+    }
+    const encodedOrderNumber = encodeURIComponent(orderNumber);
+    await this.startVisitorSession();
+    const page = this.requirePage();
+    let response = await page.goto(`${this.baseUrl}/order-details?orderNumber=${encodedOrderNumber}`);
+    // The React frontend matches no route for the server path: load its own route, as a pasted link would.
+    if ((await page.locator(SINGLE_PAGE_APP_ROOT_SELECTOR).count()) > 0) {
+      response = await page.goto(`${this.baseUrl}/order-details/${encodedOrderNumber}`);
+    }
+    this.lastResponseStatus = response?.status();
+    await userLogin.ensureLoggedIn(page, ORDER_DETAILS_READY_SELECTOR);
+    // A single-page UI may show its (public) landing page while it still exchanges the login code, and only then
+    // move to the page the visitor came from: wait until the code is gone from the address.
+    await page.waitForURL((url) => !url.searchParams.has('code'), { timeout: PAGE_TIMEOUT_MS });
+    return new OrderDetailsPage(page);
   }
 
   /** Opens the new order page by its URL, reporting a refusal. The app must already be open. */

@@ -319,6 +319,31 @@ public class MyShopUiClient implements AutoCloseable {
         return new OrderDetailsPage(pageClient);
     }
 
+    /**
+     * Pastes an order's URL into a fresh visitor session, signs in as {@code user} when the app asks to, and waits for
+     * the order details the app returns to. A single-page UI that drops the deep link across the login lands on its
+     * home page instead, so the order details never load.
+     */
+    public OrderDetailsPage openOrderDetailsPageSigningIn(String orderNumber, TestUser user) {
+        var userLogin = KeycloakUiLogin.forBaseUrl(keycloakBaseUrl, user);
+        if (userLogin == null) {
+            throw new IllegalStateException("Signing in can only be exercised against a system with a login");
+        }
+        var encodedOrderNumber = URLEncoder.encode(orderNumber, StandardCharsets.UTF_8).replace("+", "%20");
+        var serverPath = "/order-details?orderNumber=" + encodedOrderNumber;
+        startVisitorSession();
+        response = page.navigate(baseUrl + serverPath);
+        // The React frontend matches no route for the server path: load its own route, as a pasted link would.
+        if (page.locator(SINGLE_PAGE_APP_ROOT_SELECTOR).count() > 0) {
+            response = page.navigate(baseUrl + "/order-details/" + encodedOrderNumber);
+        }
+        userLogin.ensureLoggedIn(page, OrderDetailsPage.READY_SELECTOR);
+        // A single-page UI may show its (public) landing page while it still exchanges the login code, and only then
+        // move to the page the visitor came from: wait until the code is gone from the address.
+        page.waitForURL(url -> !url.matches(".*[?&]code=.*"));
+        return new OrderDetailsPage(visitorPageClient);
+    }
+
     /** Opens the new order page by its URL, reporting a refusal. The app must already be open. */
     public Result<NewOrderPage, SystemError> openNewOrderPage() {
         return openRestrictedPage(NEW_ORDER_PATH, NewOrderPage.READY_SELECTOR, new NewOrderPage(pageClient));

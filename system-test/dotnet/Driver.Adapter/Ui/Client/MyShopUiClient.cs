@@ -408,6 +408,30 @@ public class MyShopUiClient : IAsyncDisposable
         return new OrderDetailsPage(new PlaywrightGateway(_page, _baseUrl, _login));
     }
 
+    /// <summary>
+    /// Pastes an order's URL into a fresh visitor session, signs in as <paramref name="user"/> when the app asks to, and
+    /// waits for the order details the app returns to. A single-page UI that drops the deep link across the login lands on
+    /// its home page instead, so the order details never load.
+    /// </summary>
+    public async Task<OrderDetailsPage> OpenOrderDetailsPageSigningInAsync(string? orderNumber, TestUser user)
+    {
+        var userLogin = KeycloakUiLogin.ForBaseUrl(_keycloakBaseUrl, user)
+            ?? throw new InvalidOperationException("Signing in can only be exercised against a system with a login");
+        var encodedOrderNumber = Uri.EscapeDataString(orderNumber ?? string.Empty);
+        await StartVisitorSessionAsync();
+        _response = await _page.GotoAsync($"{_baseUrl}/order-details?orderNumber={encodedOrderNumber}");
+        // The React frontend matches no route for the server path: load its own route, as a pasted link would.
+        if (await _page.Locator(SinglePageAppRootSelector).CountAsync() > 0)
+        {
+            _response = await _page.GotoAsync($"{_baseUrl}/order-details/{encodedOrderNumber}");
+        }
+        await userLogin.EnsureLoggedInAsync(_page, OrderDetailsPage.ReadySelector);
+        // A single-page UI may show its (public) landing page while it still exchanges the login code, and only then
+        // move to the page the visitor came from: wait until the code is gone from the address.
+        await _page.WaitForURLAsync(url => !System.Text.RegularExpressions.Regex.IsMatch(url, "[?&]code="));
+        return new OrderDetailsPage(_visitorPageClient!);
+    }
+
     /// <summary>Opens the new order page by its URL, reporting a refusal. The app must already be open.</summary>
     public Task<Result<NewOrderPage, SystemError>> OpenNewOrderPageAsync()
     {

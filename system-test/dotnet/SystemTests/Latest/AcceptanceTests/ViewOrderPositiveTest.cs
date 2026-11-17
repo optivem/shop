@@ -104,4 +104,19 @@ public class ViewOrderPositiveTest : BaseAcceptanceTest
             .And().Order()
             .HasNoAppliedCoupon();
     }
+
+    [Theory]
+    [ChannelData(ChannelType.UI)]
+    [Trait("tag", "UC-002.11")]
+    public async Task ShouldAskAnAnonymousVisitorToSignInAndReturnToTheOrderDetails(Channel channel)
+    {
+        await Scenario(channel)
+            .Given().Order()
+            .And().NotLoggedIn()
+            .When().ViewOrder().WithSignInWhenAsked()
+            .Then().ShouldSucceed()
+            .And().Order()
+            .HasOrderNumberPrefix("ORD-")
+            .HasStatus(OrderStatus.Placed);
+    }
 }

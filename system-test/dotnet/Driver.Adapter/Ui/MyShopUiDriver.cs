@@ -187,13 +187,27 @@ public class MyShopUiDriver : IMyShopDriver
         return Success(new DeliverOrderResponse());
     }
 
+    /// <summary>The order details are for signed-in users: a visitor is asked to sign in, and signs in as the customer when told to.</summary>
     public async Task<Result<ViewOrderResponse, SystemError>> ViewOrderAsync(ViewOrderRequest request)
     {
         if (_anonymous)
         {
-            return await LoginRequiredForOrderAsync<ViewOrderResponse>(request.OrderNumber);
+            if (request.WhenAskedToSignIn != ViewOrderRequest.SignIn)
+            {
+                return await LoginRequiredForOrderAsync<ViewOrderResponse>(request.OrderNumber);
+            }
+            var signedInPage = await _client.OpenOrderDetailsPageSigningInAsync(request.OrderNumber, TestUser.Customer);
+            ResetPages();
+            _orderDetailsPage = signedInPage;
+            var loadResult = await _orderDetailsPage.GetLoadResultAsync(request.OrderNumber);
+            if (loadResult.IsFailure)
+            {
+                return Failure<ViewOrderResponse>(loadResult.Error);
+            }
+            return Success(await ReadShownOrderDetailsAsync());
         }
 
+        RequireNotSet("whenAskedToSignIn", request.WhenAskedToSignIn);
         await RunAsAsync(TestUser.Customer);
         return await ReadOrderDetailsAsync(request.OrderNumber);
     }
@@ -207,6 +221,12 @@ public class MyShopUiDriver : IMyShopDriver
             return Failure<ViewOrderResponse>(result.Error);
         }
 
+        return Success(await ReadShownOrderDetailsAsync());
+    }
+
+    /// <summary>Reads the order details page that has loaded.</summary>
+    private async Task<ViewOrderResponse> ReadShownOrderDetailsAsync()
+    {
         var displayOrderNumber = await _orderDetailsPage!.GetOrderNumberAsync();
         var orderTimestamp = await _orderDetailsPage.GetOrderTimestampAsync();
         var sku = await _orderDetailsPage.GetSkuAsync();
@@ -246,7 +266,7 @@ public class MyShopUiDriver : IMyShopDriver
             DeliverOffered = deliverOffered,
         };
 
-        return Success(response);
+        return response;
     }
 
     public async Task<Result<BrowseOrderHistoryResponse, SystemError>> BrowseOrderHistoryAsync(BrowseOrderHistoryRequest request)

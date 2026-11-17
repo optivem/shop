@@ -114,4 +114,19 @@ class ViewOrderPositiveTest extends BaseAcceptanceTest {
                 .and().order()
                     .hasNoAppliedCoupon();
     }
+
+    @Tag("UC-002.11")
+    @TestTemplate
+    @Channel(ChannelType.UI)
+    void shouldAskAnAnonymousVisitorToSignInAndReturnToTheOrderDetails() {
+        scenario
+                .given().order()
+                .and().notLoggedIn()
+                .when().viewOrder()
+                    .withSignInWhenAsked()
+                .then().shouldSucceed()
+                .and().order()
+                    .hasOrderNumberPrefix("ORD-")
+                    .hasStatus(OrderStatus.PLACED);
+    }
 }

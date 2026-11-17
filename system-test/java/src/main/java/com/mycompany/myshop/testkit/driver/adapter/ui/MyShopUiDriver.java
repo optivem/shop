@@ -198,13 +198,25 @@ public class MyShopUiDriver implements MyShopDriver {
         return success(DeliverOrderResponse.builder().build());
     }
 
+    /** The order details are for signed-in users: a visitor is asked to sign in, and signs in as the customer when told to. */
     @Override
     public Result<ViewOrderResponse, SystemError> viewOrder(ViewOrderRequest request) {
         var orderNumber = request.getOrderNumber();
         if (anonymous) {
-            return loginRequiredForOrder(orderNumber);
+            if (!ViewOrderRequest.SIGN_IN.equals(request.getWhenAskedToSignIn())) {
+                return loginRequiredForOrder(orderNumber);
+            }
+            var signedInPage = client.openOrderDetailsPageSigningIn(orderNumber, TestUser.CUSTOMER);
+            resetPages();
+            orderDetailsPage = signedInPage;
+            var loadResult = orderDetailsPage.getLoadResult(orderNumber);
+            if (loadResult.isFailure()) {
+                return failure(loadResult.getError());
+            }
+            return success(readShownOrderDetails());
         }
 
+        requireNotSet("whenAskedToSignIn", request.getWhenAskedToSignIn());
         runAs(TestUser.CUSTOMER);
         return readOrderDetails(orderNumber);
     }
@@ -216,6 +228,11 @@ public class MyShopUiDriver implements MyShopDriver {
             return failure(result.getError());
         }
 
+        return success(readShownOrderDetails());
+    }
+
+    /** Reads the order details page that has loaded. */
+    private ViewOrderResponse readShownOrderDetails() {
         var displayOrderNumber = orderDetailsPage.getOrderNumber();
         var orderTimestamp = orderDetailsPage.getOrderTimestamp();
         var sku = orderDetailsPage.getSku();
@@ -252,7 +269,7 @@ public class MyShopUiDriver implements MyShopDriver {
                 .deliverOffered(!orderDetailsPage.isDeliverButtonHidden())
                 .build();
 
-        return success(response);
+        return response;
     }
 
     @Override

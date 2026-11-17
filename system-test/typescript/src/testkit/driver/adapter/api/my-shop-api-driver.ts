@@ -89,6 +89,7 @@ export class MyShopApiDriver implements MyShopDriver {
   }
 
   async viewOrder(request: ViewOrderRequest): Promise<Result<ViewOrderResponse, SystemError>> {
+    requireNotSet('whenAskedToSignIn', request.whenAskedToSignIn);
     return this.runAs(TestUsers.CUSTOMER).orders().viewOrder(request.orderNumber);
   }
 

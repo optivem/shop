@@ -14,6 +14,8 @@ import static com.mycompany.myshop.testkit.dsl.core.usecase.commons.SystemResult
 
 public class OrderDetailsPage extends BasePage {
     private static final String ORDER_NUMBER_OUTPUT_SELECTOR = "[aria-label='Display Order Number']";
+    /** Shown once the order has loaded. */
+    public static final String READY_SELECTOR = ORDER_NUMBER_OUTPUT_SELECTOR;
     private static final String ORDER_TIMESTAMP_OUTPUT_SELECTOR = "[aria-label='Display Order Timestamp']";
     private static final String SKU_OUTPUT_SELECTOR = "[aria-label='Display SKU']";
     private static final String COUNTRY_OUTPUT_SELECTOR = "[aria-label='Display Country']";

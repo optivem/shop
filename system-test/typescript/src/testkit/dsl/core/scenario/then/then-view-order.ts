@@ -19,6 +19,7 @@ export class ThenViewOrderResultStage implements PromiseLike<void> {
     private readonly ctx: ScenarioContext,
     readonly useCaseContext: UseCaseContext,
     private readonly orderNumber: string,
+    private readonly whenAskedToSignIn: string | null = null,
   ) {}
 
   shouldSucceed(): ThenViewOrderSuccess {
@@ -50,7 +51,10 @@ export class ThenViewOrderResultStage implements PromiseLike<void> {
 
     const targetOrderNumber = this.ctx.orderConfigs[0]?.orderNumber ?? this.orderNumber;
 
-    const result = await this.app.myShop('dynamic').viewOrder({ orderNumber: targetOrderNumber });
+    const result = await this.app.myShop('dynamic').viewOrder({
+      orderNumber: targetOrderNumber,
+      whenAskedToSignIn: this.whenAskedToSignIn,
+    });
 
     if (this._expectSuccess) {
       expect(result.success, JSON.stringify(result)).toBe(true);

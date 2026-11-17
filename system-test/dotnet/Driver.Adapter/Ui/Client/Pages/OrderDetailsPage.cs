@@ -27,6 +27,8 @@ public class OrderDetailsPage : BasePage
     private const string CancelOrderOutputSelector = "[aria-label='Cancel Order']";
     private const string DeliverOrderOutputSelector = "[aria-label='Deliver Order']";
 
+    /// <summary>Shown once the order has loaded.</summary>
+    public const string ReadySelector = OrderNumberOutputSelector;
     private const string OrderLoadedSelector = OrderNumberOutputSelector + ":visible";
     private const string OrderNotFoundSelector = "p:has-text('Order not found'):visible";
     private const string OrderErrorSelector = ".alert-danger:visible, .notification.error:visible";

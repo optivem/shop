@@ -9,6 +9,7 @@ import com.mycompany.myshop.testkit.dsl.core.shared.UseCaseContext;
 
 public class ViewOrder extends BaseMyShopUseCase<ViewOrderResponse, ViewOrderVerification> {
     private String orderNumberResultAlias;
+    private String whenAskedToSignIn;
 
     public ViewOrder(MyShopDriver driver, UseCaseContext context) {
         super(driver, context);
@@ -19,11 +20,17 @@ public class ViewOrder extends BaseMyShopUseCase<ViewOrderResponse, ViewOrderVer
         return this;
     }
 
+    /** A visitor asked to sign in signs in as the customer (UI only). */
+    public ViewOrder signInWhenAsked() {
+        this.whenAskedToSignIn = ViewOrderRequest.SIGN_IN;
+        return this;
+    }
+
     @Override
     public UseCaseResult<ViewOrderResponse, ViewOrderVerification> execute() {
         var orderNumber = context.getResultValue(orderNumberResultAlias);
 
-        var request = ViewOrderRequest.builder().orderNumber(orderNumber).build();
+        var request = ViewOrderRequest.builder().orderNumber(orderNumber).whenAskedToSignIn(whenAskedToSignIn).build();
         var result = driver.viewOrder(request);
 
         return new UseCaseResult<>(result, context, ViewOrderVerification::new);

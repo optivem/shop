@@ -116,3 +116,22 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
         await scenario.given().order().when().viewOrder().then().shouldSucceed().and().order().hasNoAppliedCoupon();
     });
 });
+
+forChannels(ChannelType.UI)(() => {
+    test('shouldAskAnAnonymousVisitorToSignInAndReturnToTheOrderDetails', criteria('UC-002.11'), async ({ scenario }) => {
+        await scenario
+            .given()
+            .order()
+            .and()
+            .notLoggedIn()
+            .when()
+            .viewOrder()
+            .withSignInWhenAsked()
+            .then()
+            .shouldSucceed()
+            .and()
+            .order()
+            .hasOrderNumberPrefix('ORD-')
+            .hasStatus(OrderStatus.PLACED);
+    });
+});

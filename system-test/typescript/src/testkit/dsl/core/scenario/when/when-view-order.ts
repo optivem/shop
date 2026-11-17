@@ -1,3 +1,4 @@
+import { SIGN_IN } from '../../../../driver/port/dtos/ViewOrderRequest.js';
 import { DEFAULTS } from '../defaults.js';
 import type { UseCaseContext } from '../../shared/use-case-context.js';
 import type { AppContext } from '../app-context.js';
@@ -7,6 +8,7 @@ import { assertNotAwaited } from '../assert-not-awaited.js';
 
 export class WhenViewOrder {
   private orderNumber: string = DEFAULTS.ORDER_NUMBER;
+  private whenAskedToSignIn: string | null = null;
 
   constructor(
     private readonly app: AppContext,
@@ -19,10 +21,15 @@ export class WhenViewOrder {
     return this;
   }
 
+  withSignInWhenAsked(): this {
+    this.whenAskedToSignIn = SIGN_IN;
+    return this;
+  }
+
   then(): ThenViewOrderResultStage;
   then(...args: unknown[]): ThenViewOrderResultStage {
     assertNotAwaited(args);
     this.ctx.markExecuted();
-    return new ThenViewOrderResultStage(this.app, this.ctx, this.useCaseContext, this.orderNumber);
+    return new ThenViewOrderResultStage(this.app, this.ctx, this.useCaseContext, this.orderNumber, this.whenAskedToSignIn);
   }
 }

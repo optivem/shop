@@ -12,6 +12,7 @@ namespace Dsl.Core.Scenario.When.Steps;
 public class ViewOrder : BaseWhen<ViewOrderResponse, ViewOrderVerification>, IWhenViewOrder
 {
     private string? _orderNumber;
+    private bool _signInWhenAsked;
 
     public ViewOrder(UseCaseDsl app, ScenarioDsl scenario, Func<Task> ensureGiven) : base(app, scenario, ensureGiven)
     {
@@ -26,12 +27,24 @@ public class ViewOrder : BaseWhen<ViewOrderResponse, ViewOrderVerification>, IWh
 
     IWhenViewOrder IWhenViewOrder.WithOrderNumber(string? orderNumber) => WithOrderNumber(orderNumber);
 
+    public ViewOrder WithSignInWhenAsked()
+    {
+        _signInWhenAsked = true;
+        return this;
+    }
+
+    IWhenViewOrder IWhenViewOrder.WithSignInWhenAsked() => WithSignInWhenAsked();
+
     protected override async Task<ExecutionResult<ViewOrderResponse, ViewOrderVerification>> Execute(UseCaseDsl app)
     {
         var shop = await app.MyShop(ChannelMode.Dynamic, Channel);
-        var result = await shop.ViewOrder()
-            .OrderNumber(_orderNumber)
-            .Execute();
+        var viewOrder = shop.ViewOrder()
+            .OrderNumber(_orderNumber);
+        if (_signInWhenAsked)
+        {
+            viewOrder.SignInWhenAsked();
+        }
+        var result = await viewOrder.Execute();
 
         return new ExecutionResultBuilder<ViewOrderResponse, ViewOrderVerification>(result)
             .OrderNumber(_orderNumber)

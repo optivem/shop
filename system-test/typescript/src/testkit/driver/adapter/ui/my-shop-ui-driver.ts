@@ -9,7 +9,7 @@ import type { CancelOrderRequest } from '../../port/dtos/CancelOrderRequest.js';
 import type { CancelOrderResponse } from '../../port/dtos/CancelOrderResponse.js';
 import type { DeliverOrderRequest } from '../../port/dtos/DeliverOrderRequest.js';
 import type { DeliverOrderResponse } from '../../port/dtos/DeliverOrderResponse.js';
-import type { ViewOrderRequest } from '../../port/dtos/ViewOrderRequest.js';
+import { SIGN_IN as ORDER_SIGN_IN, type ViewOrderRequest } from '../../port/dtos/ViewOrderRequest.js';
 import type { ViewOrderResponse } from '../../port/dtos/ViewOrderResponse.js';
 import type { SystemError } from '../../port/dtos/errors/SystemError.js';
 import { RESET_FILTERS, type BrowseOrderHistoryRequest } from '../../port/dtos/BrowseOrderHistoryRequest.js';
@@ -126,18 +126,27 @@ export class MyShopUiDriver implements MyShopDriver {
     return failure(notificationResult.error);
   }
 
+  /** The order details are for signed-in users: a visitor is asked to sign in, and signs in as the customer when told to. */
   async viewOrder(request: ViewOrderRequest): Promise<Result<ViewOrderResponse, SystemError>> {
+    const orderNumber = request.orderNumber;
     if (this.anonymous) {
-      return this.loginRequiredForOrder(request.orderNumber);
+      if (request.whenAskedToSignIn !== ORDER_SIGN_IN) return this.loginRequiredForOrder(orderNumber);
+      const signedInPage = await this.client.openOrderDetailsPageSigningIn(orderNumber, TestUsers.CUSTOMER);
+      const loadResult = await signedInPage.getLoadResult(orderNumber);
+      if (!loadResult.success) return failure(loadResult.error);
+      return success(await this.readOrderDetails(signedInPage));
     }
 
+    requireNotSet('whenAskedToSignIn', request.whenAskedToSignIn);
     await this.runAs(TestUsers.CUSTOMER);
-    const orderNumber = request.orderNumber;
     const detailsResult = await this.openOrderDetails(orderNumber);
     if (!detailsResult.success) return failure(detailsResult.error);
-    const detailsPage = detailsResult.value;
+    return success(await this.readOrderDetails(detailsResult.value));
+  }
 
-    return success({
+  /** Reads the order details page that has loaded. */
+  private async readOrderDetails(detailsPage: OrderDetailsPage): Promise<ViewOrderResponse> {
+    return {
       orderNumber: await detailsPage.getOrderNumber(),
       orderTimestamp: await detailsPage.getOrderTimestamp(),
       sku: await detailsPage.getSku(),
@@ -155,7 +164,7 @@ export class MyShopUiDriver implements MyShopDriver {
       status: await detailsPage.getStatus(),
       cancelOffered: !(await detailsPage.isCancelButtonHidden()),
       deliverOffered: !(await detailsPage.isDeliverButtonHidden()),
-    });
+    };
   }
 
   async cancelOrder(request: CancelOrderRequest): Promise<Result<CancelOrderResponse, SystemError>> {

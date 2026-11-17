@@ -9,6 +9,7 @@ namespace Dsl.Core.UseCase.UseCases;
 public class ViewOrder : BaseMyShopUseCase<ViewOrderResponse, ViewOrderVerification>
 {
     private string? _orderNumberResultAlias;
+    private string? _whenAskedToSignIn;
 
     public ViewOrder(IMyShopDriver driver, UseCaseContext context)
         : base(driver, context)
@@ -21,10 +22,17 @@ public class ViewOrder : BaseMyShopUseCase<ViewOrderResponse, ViewOrderVerificat
         return this;
     }
 
+    /// <summary>A visitor asked to sign in signs in as the customer (UI only).</summary>
+    public ViewOrder SignInWhenAsked()
+    {
+        _whenAskedToSignIn = ViewOrderRequest.SignIn;
+        return this;
+    }
+
     public override async Task<MyShopUseCaseResult<ViewOrderResponse, ViewOrderVerification>> Execute()
     {
         var orderNumber = _context.GetResultValue(_orderNumberResultAlias);
-        var request = new ViewOrderRequest { OrderNumber = orderNumber };
+        var request = new ViewOrderRequest { OrderNumber = orderNumber, WhenAskedToSignIn = _whenAskedToSignIn };
 
         var result = await _driver.ViewOrderAsync(request);
 

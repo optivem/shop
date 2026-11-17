@@ -5,7 +5,9 @@ import { BasePage, PAGE_TIMEOUT_MS } from './BasePage.js';
 import { nonEmptyOr } from '../../../../../common/fallback.js';
 import { Converter } from '../../../../../common/converter.js';
 
-const ORDER_LOADED_SELECTOR = "[aria-label='Display Order Number']:visible";
+/** Shown once the order has loaded. */
+export const ORDER_DETAILS_READY_SELECTOR = "[aria-label='Display Order Number']";
+const ORDER_LOADED_SELECTOR = `${ORDER_DETAILS_READY_SELECTOR}:visible`;
 const ORDER_NOT_FOUND_SELECTOR = "p:has-text('Order not found'):visible";
 const ORDER_ERROR_SELECTOR = ".alert-danger:visible, .notification.error:visible";
 const ORDER_ERROR_PREFIX = 'Error:';

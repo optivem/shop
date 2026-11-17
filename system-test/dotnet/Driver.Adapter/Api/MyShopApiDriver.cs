@@ -72,8 +72,11 @@ public class MyShopApiDriver : IMyShopDriver
             .MapAsync(_ => new DeliverOrderResponse());
 
     public Task<Result<ViewOrderResponse, SystemError>> ViewOrderAsync(ViewOrderRequest request)
-        => RunAs(TestUser.Customer).Orders().ViewOrderAsync(request.OrderNumber)
+    {
+        RequireNotSet("whenAskedToSignIn", request.WhenAskedToSignIn);
+        return RunAs(TestUser.Customer).Orders().ViewOrderAsync(request.OrderNumber)
             .MapErrorAsync(MapError);
+    }
 
     public Task<Result<BrowseOrderHistoryResponse, SystemError>> BrowseOrderHistoryAsync(BrowseOrderHistoryRequest request)
     {

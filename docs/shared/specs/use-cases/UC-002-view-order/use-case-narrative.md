@@ -28,6 +28,8 @@ Steps 3 and 4 are optional and can repeat.
     - The system tells the customer no orders were found. Resume at step 3.
 - 5a. The order does not exist, or it belongs to another customer:
     - The system tells the customer the order does not exist. The use case ends.
+- 5b. The visitor opens a link to an order's details while not signed in:
+    - The system asks the visitor to sign in. After signing in, the customer comes back to that order's details. Resume at step 6.
 
 ## Acceptance criteria
 

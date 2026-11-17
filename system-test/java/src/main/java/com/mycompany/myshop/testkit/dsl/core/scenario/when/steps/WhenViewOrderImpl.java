@@ -13,6 +13,7 @@ import com.mycompany.myshop.testkit.dsl.core.usecase.usecases.ViewOrderVerificat
 
 public class WhenViewOrderImpl extends BaseWhenStep<ViewOrderResponse, ViewOrderVerification> implements WhenViewOrder {
     private String orderNumber;
+    private boolean signInWhenAsked;
 
     public WhenViewOrderImpl(UseCaseDsl app, ScenarioDslImpl scenario) {
         super(app, scenario);
@@ -25,10 +26,19 @@ public class WhenViewOrderImpl extends BaseWhenStep<ViewOrderResponse, ViewOrder
     }
 
     @Override
+    public WhenViewOrderImpl withSignInWhenAsked() {
+        this.signInWhenAsked = true;
+        return this;
+    }
+
+    @Override
     protected ExecutionResult<ViewOrderResponse, ViewOrderVerification> execute(UseCaseDsl app) {
-        var result = app.myShop(ChannelMode.DYNAMIC).viewOrder()
-                .orderNumber(orderNumber)
-                .execute();
+        var viewOrder = app.myShop(ChannelMode.DYNAMIC).viewOrder()
+                .orderNumber(orderNumber);
+        if (signInWhenAsked) {
+            viewOrder.signInWhenAsked();
+        }
+        var result = viewOrder.execute();
 
         return new ExecutionResultBuilder<>(result)
                 .orderNumber(orderNumber)

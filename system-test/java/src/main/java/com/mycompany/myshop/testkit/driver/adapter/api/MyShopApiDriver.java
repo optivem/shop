@@ -109,6 +109,7 @@ public class MyShopApiDriver implements MyShopDriver {
 
     @Override
     public Result<ViewOrderResponse, SystemError> viewOrder(ViewOrderRequest request) {
+        requireNotSet("whenAskedToSignIn", request.getWhenAskedToSignIn());
         runAs(TestUser.CUSTOMER);
         return apiClient.orders().viewOrder(request.getOrderNumber()).mapError(SystemErrorMapper::from);
     }
