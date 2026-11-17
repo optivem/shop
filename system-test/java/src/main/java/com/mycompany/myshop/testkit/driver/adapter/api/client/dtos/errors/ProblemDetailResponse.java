@@ -20,6 +20,7 @@ public class ProblemDetailResponse implements ResponseMetadataAware {
     private String detail;
     private String instance;
     private String timestamp;
+    private String traceId;
     private List<FieldError> errors;
 
     // From the HTTP response, not the body.

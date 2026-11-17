@@ -11,6 +11,7 @@ public class ProblemDetailResponse : IResponseMetadataAware
     public string? Detail { get; set; }
     public string? Instance { get; set; }
     public string? Timestamp { get; set; }
+    public string? TraceId { get; set; }
     public List<FieldError>? Errors { get; set; }
 
     // From the HTTP response, not the body.
