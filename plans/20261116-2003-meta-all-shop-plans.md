@@ -46,7 +46,7 @@ The orchestrating session runs the **Wave tracker** top to bottom. Run the same 
 | 2 | U8 REL open ideas, shop side | D (after U7) | todo |
 | 3 | U9 B-PRG remainder (4.2 decided 2026-11-17: in-code login limit only, edge policy opt-in and cost-labelled; a noted shortcut) | B | todo |
 | 3 | U10 FT frontend testing | D (after U8) | todo |
-| 3 | U11 OUTBOX (🛑 re-confirm with user first: full six backends, Java-only, or drop; see its "Why we need it") | B (after U9), verified in D | todo |
+| 3 | U11 OUTBOX (confirmed 2026-11-17: Java-only worked example, a noted shortcut) | B (after U9), verified in D | todo |
 | 4 | U12 B-MRF #8 path-param routes | D (after U10) | todo (G0: yes) |
 | 5 | X1 cross-repo (last) | X | todo |
 | — | M manual (user) | — | open |
