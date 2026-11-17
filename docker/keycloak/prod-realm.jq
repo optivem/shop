@@ -3,10 +3,22 @@
 # none of the test realm's weak settings. prod-realm-check.jq enforces this.
 # Keycloak generates a random shop-monolith secret on import; deploy-keycloak then sets the real one
 # from Secret Manager (${SYSTEM}-monolith-client-secret), so the secret never reaches the image or git.
+# Brute-force detection (B-PRG 4.2) is set here, not in shop-realm.json: on Keycloak 26 it locks a user
+# out (user_temporarily_disabled, with no failed login recorded) when the same account signs in many
+# times at once, which is what the parallel system tests do with customer1 and admin1.
 def no_localhost: map(select(contains("localhost") | not));
 
 del(.users, .passwordPolicy)
 | .sslRequired = "external"
+| . + {
+    bruteForceProtected: true,
+    permanentLockout: false,
+    failureFactor: 10,
+    waitIncrementSeconds: 60,
+    maxFailureWaitSeconds: 900,
+    maxDeltaTimeSeconds: 43200,
+    quickLoginCheckMilliSeconds: 1000,
+    minimumQuickLoginWaitSeconds: 60 }
 | .clients |= map(
     select(.clientId == "shop-frontend" or .clientId == "shop-monolith")
     | del(.secret)

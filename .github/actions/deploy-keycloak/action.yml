@@ -169,10 +169,10 @@ runs:
           -d grant_type=password -d client_id=admin-cli -d username=admin \
           --data-urlencode "password=${admin_password}" | jq -r .access_token)"
         echo "::add-mask::${token}"
-        client="$(jq -L "$dir" --arg realm shop-prod --arg stage production --arg system "$SYSTEM" --arg suffix "$suffix" \
+        prod_realm="$(jq -L "$dir" --arg realm shop-prod --arg stage production --arg system "$SYSTEM" --arg suffix "$suffix" \
             -f "${dir}/stage-realm.jq" "${dir}/shop-realm.json" \
-          | jq -f "${dir}/prod-realm.jq" \
-          | jq -c --arg secret "$secret" '.clients[] | select(.clientId == "shop-monolith") | .secret = $secret')"
+          | jq -f "${dir}/prod-realm.jq")"
+        client="$(jq -c --arg secret "$secret" '.clients[] | select(.clientId == "shop-monolith") | .secret = $secret' <<< "$prod_realm")"
         [[ -n "$client" ]] || { echo "::error::shop-monolith is missing from the production realm filters"; exit 1; }
         api="${kc}/admin/realms/shop-prod/clients"
         auth=(-H "Authorization: Bearer ${token}" -H "Content-Type: application/json")
@@ -202,10 +202,11 @@ runs:
           [[ "$code" == 2* ]] || { echo "::error::Updating shop-monolith in shop-prod returned HTTP ${code}: $(head -c 2000 "$body")"; exit 1; }
           echo "Updated shop-monolith in shop-prod."
         fi
-        # Brute-force detection (B-PRG 4.2): the import never updates an existing realm, so set it here too.
-        # A partial realm PUT changes only the fields it carries. Parallel variants run this too: retry on 409.
+        # Brute-force detection (B-PRG 4.2), production realm only (prod-realm.jq): the import never updates an
+        # existing realm, so set it here too. A partial realm PUT changes only the fields it carries.
+        # Parallel variants run this too: retry on 409.
         brute_force="$(jq -c '{bruteForceProtected, permanentLockout, failureFactor, waitIncrementSeconds,
-            maxFailureWaitSeconds, maxDeltaTimeSeconds, quickLoginCheckMilliSeconds, minimumQuickLoginWaitSeconds}'           "${dir}/shop-realm.json")"
+            maxFailureWaitSeconds, maxDeltaTimeSeconds, quickLoginCheckMilliSeconds, minimumQuickLoginWaitSeconds}' <<< "$prod_realm")"
         realm_body="$(mktemp)"
         for attempt in 1 2 3 4 5; do
           code="$(curl -sS -o "$realm_body" -w '%{http_code}' "${auth[@]}" -X PUT "${kc}/admin/realms/shop-prod" -d "$brute_force")"

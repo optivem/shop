@@ -6,14 +6,6 @@
   "loginWithEmailAllowed": true,
   "accessTokenLifespan": 300,
   "passwordPolicy": "hashIterations(1)",
-  "bruteForceProtected": true,
-  "permanentLockout": false,
-  "failureFactor": 10,
-  "waitIncrementSeconds": 60,
-  "maxFailureWaitSeconds": 900,
-  "maxDeltaTimeSeconds": 43200,
-  "quickLoginCheckMilliSeconds": 1000,
-  "minimumQuickLoginWaitSeconds": 60,
   "roles": {
     "realm": [
       { "name": "CUSTOMER", "description": "Regular shop customer" },

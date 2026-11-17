@@ -2,7 +2,7 @@
 
 ## What the default deploy protects
 
-No shop backend ever sees a password. The monoliths send the browser to Keycloak to sign in, and the multitier backends only validate bearer tokens. So the login rate limit lives in Keycloak: **brute-force detection** is on in every realm (`docker/keycloak/shop-realm.json`; `deploy-keycloak` also sets it on the existing `shop-prod` realm, because a realm import never updates a realm that already exists).
+No shop backend ever sees a password. The monoliths send the browser to Keycloak to sign in, and the multitier backends only validate bearer tokens. So the login rate limit lives in Keycloak: **brute-force detection** is on in the production realm (`docker/keycloak/prod-realm.jq`; `deploy-keycloak` also sets it on the existing `shop-prod` realm, because a realm import never updates a realm that already exists). The test realms (local, acceptance, QA) leave it off: Keycloak 26 locks an account out when it signs in many times at once, which the parallel system tests do with their shared users.
 
 | Setting | Value | Effect |
 |---|---|---|
