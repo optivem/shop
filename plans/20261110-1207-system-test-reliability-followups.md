@@ -128,6 +128,7 @@ Found 2026-11-12. Local stacks keep their data across `--restart` (over 5k order
 
 Found 2026-11-12. Java Playwright waits 30 s for "scheduled navigations" after Keycloak login / Sign In, or on `navigate("/")` load. The hangs grew more frequent over the session and hit different tests each run; TS Playwright on the same stacks never hung.
 - **Recommended:** investigate the Java Playwright version and the `waitUntil` settings. **Why:** it's Java-only, so it's likely the client version or its wait settings, not the stacks.
+- **Seen again 2026-11-17 (U7, monolith-java, after the Playwright 1.65 Dependabot bump):** on two fresh `system start --restart` runs in a row, `--sample` failed only `E2E (real) - UI` (`shouldPlaceOrder`: `navigate("http://localhost:3111/")` load timeout, 30 s) and the new UC-002.11 test failed the same way on `navigate("/order-details?orderNumber=…")`. A Node Playwright probe of the same URLs loaded in about 1.3 s, and both Java tests passed when rerun on the warm stack. .NET and TS on the same flavor were green.
 
 ### 62. One-off "Coupon code DEFAULT-COUPON-<8hex> already exists" in the idempotency replay test
 
