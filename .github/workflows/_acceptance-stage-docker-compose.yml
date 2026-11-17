@@ -425,7 +425,7 @@ jobs:
       # Per language, never pooled: spec-<test-language>.yaml reads only this run's results.
       - name: spec-gate
         if: inputs.suite-set == 'latest' && inputs.architecture == 'monolith'
-        run: gh optivem spec check --mode lenient --config "spec-${TEST_LANGUAGE}.yaml"
+        run: gh optivem spec check --mode strict --config "spec-${TEST_LANGUAGE}.yaml"
 
       # === Legacy Suites ===
       - name: mod02-smoke

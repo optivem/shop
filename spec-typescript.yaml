@@ -5,3 +5,14 @@ results: "system-test/typescript/junit-results/*.xml"
 exclude:
   - "**/legacy/**"
 threshold: 90
+# Time-boxed waivers (user-approved 2026-11-17, REL #72): the test kit can't yet seed an
+# empty coupon table (UC-005.7) or an order with no customer (UC-011.2). Revisit before expiry.
+waivers:
+  - id: UC-005.7
+    reason: "Needs an empty coupon table; coupons can't be deleted and other tests publish them on the shared stack (REL #70)."
+    approver: "Valentina Jemuović"
+    until: "2027-02-17"
+  - id: UC-011.2
+    reason: "Needs a seeded order with no customer; no system-test DB seeding exists in any language (REL #70)."
+    approver: "Valentina Jemuović"
+    until: "2027-02-17"
