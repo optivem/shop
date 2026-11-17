@@ -183,3 +183,8 @@ Found 2026-11-17 (U1 Java pass). With every use case counted, Java shows `UC-009
 - **Shop side done (`db087f76`):** `Address.toString()` returns `formatted()` (no brackets). The UI runs now normalise to the bare name and UC-009.2 is Verified in Java (local isolated UI + API run).
 - **Still recommended:** fix in gh-optivem (X1) as well: strip the whole trailing bracket group even when an argument nests brackets, and drop a test entry that has only not-applicable results. **Why:** any other record argument would hit the same trap, and a green test must not read as unbuilt.
 
+
+### 73. `gh optivem commit` cannot push from a shared dirty checkout
+
+Found 2026-11-17 (U10, meta-plan Wave 3). With several agents in one checkout, every `gh optivem commit --paths …` committed but stopped before pushing: its pull step runs `git pull --rebase`, which refuses while any other file is unstaged ("cannot pull with rebase: You have unstaged changes"). U10's three commits (`8cf687c3`, `5a294ef7`, `a2520492`) and an earlier B-PRG commit stayed local-only, so CI never saw them and the new `lighthouse.yml` could not be dispatched. (Numbered 73 because #72 is referenced in this file's header but its section was not in the local copy yet.)
+- **Recommended:** fix in gh-optivem (X1): pull with a merge (`git pull --no-rebase --autostash`, matching the user's "plain git pull, never rebase" rule) so other sessions' dirty files don't block the push. Until then, the orchestrator pushes once per wave when the tree is clean. **Why:** a commit that silently stays local hides work from CI and from the "verify `git log origin/main`" check.
