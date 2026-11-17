@@ -22,7 +22,7 @@ public class OrderService
 
     public const string IdempotencyKeyField = "Idempotency-Key";
     private const int MaxIdempotencyKeyLength = 255;
-    private static readonly TimeSpan IdempotencyKeyTtl = TimeSpan.FromHours(24);
+    public static readonly TimeSpan IdempotencyKeyTtl = TimeSpan.FromHours(24);
     private const string MsgIdempotencyKeyTooLong = "Idempotency-Key must be at most 255 characters";
     private const string MsgIdempotencyKeyReused = "Idempotency-Key has already been used with a different request";
 

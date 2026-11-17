@@ -43,6 +43,13 @@ class IdempotencyKeyStoreTest {
     }
 
     @Test
+    void purgeDeletesEveryRowOlderThanTheTtl() {
+        when(repository.deleteAllExpired(NOW.minus(Duration.ofHours(24)))).thenReturn(3);
+
+        assertThat(store.purgeExpired()).isEqualTo(3);
+    }
+
+    @Test
     void blankHeaderIsNoKey() {
         assertThat(IdempotencyKeyStore.normalizeKey(null)).isEmpty();
         assertThat(IdempotencyKeyStore.normalizeKey("  ")).isEmpty();

@@ -19,4 +19,8 @@ public interface IdempotencyKeyRepository extends JpaRepository<IdempotencyKey, 
     // fails on the unique constraint instead of replacing the winner's row.
     @Query("DELETE FROM IdempotencyKey k WHERE k.owner = :owner AND k.key = :key AND k.createdAt <= :cutoff")
     int deleteExpired(@Param("owner") String owner, @Param("key") String key, @Param("cutoff") Instant cutoff);
+
+    @Modifying
+    @Query("DELETE FROM IdempotencyKey k WHERE k.createdAt <= :cutoff")
+    int deleteAllExpired(@Param("cutoff") Instant cutoff);
 }

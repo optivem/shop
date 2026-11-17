@@ -23,6 +23,7 @@ import { Coupon } from './core/entities/coupon.entity';
 import { IdempotencyKey } from './core/entities/idempotency-key.entity';
 import { CustomerProfile } from './core/entities/customer-profile.entity';
 import { IdempotencyKeyStore } from './core/services/idempotency-key.store';
+import { IdempotencyKeyPurge } from './core/services/idempotency-key.purge';
 import { AuthGuard } from './auth/auth.guard';
 import { loadAuthConfig } from './auth/auth.config';
 import { JwtVerifier } from './auth/jwt-verifier';
@@ -89,6 +90,7 @@ function parsePort(value: string): number {
     ProductService,
     ProfileService,
     IdempotencyKeyStore,
+    IdempotencyKeyPurge,
     ErpGateway,
     ClockGateway,
     TaxGateway,

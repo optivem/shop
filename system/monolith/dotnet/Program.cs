@@ -61,6 +61,7 @@ builder.Services.AddShopAuthentication();
 builder.Services.AddShopExternalSystemClients(builder.Configuration);
 builder.Services.AddScoped<CouponService>();
 builder.Services.AddScoped<OrderService>();
+builder.Services.AddHostedService<IdempotencyKeyPurgeService>();
 builder.Services.AddScoped<ProfileService>();
 builder.Services.AddScoped<ProductService>();
 

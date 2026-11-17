@@ -6,4 +6,10 @@ export async function register(): Promise<void> {
   if (process.env.NEXT_RUNTIME === 'nodejs' && endpoint !== undefined && endpoint.trim() !== '') {
     await import('./instrumentation-node');
   }
+  if (process.env.NEXT_RUNTIME === 'nodejs') {
+    // Hourly purge of expired idempotency keys (node runtime only, since it needs the pg pool), after the
+    // OpenTelemetry SDK so its pg instrumentation is in place first.
+    const { startIdempotencyKeyPurge } = await import('./lib/idempotency-purge');
+    startIdempotencyKeyPurge();
+  }
 }

@@ -142,4 +142,17 @@ export class IdempotencyKeyStore {
       createdAt: now,
     });
   }
+
+  /**
+   * Deletes every row older than the TTL; returns how many. Expired rows are already ignored and
+   * replaced on their next use, so this only keeps the table from growing without bound.
+   */
+  async purgeExpired(now: Date): Promise<number> {
+    const result = await this.repository.delete({
+      createdAt: LessThanOrEqual(
+        new Date(now.getTime() - IdempotencyKeyStore.TTL_MS),
+      ),
+    });
+    return result.affected ?? 0;
+  }
 }

@@ -134,6 +134,15 @@ public class IdempotencyKeyStore {
         repository.saveAndFlush(new IdempotencyKey(claim.owner(), claim.key(), claim.requestHash(), status, writeBody(body), now));
     }
 
+    /**
+     * Deletes every row older than the TTL. Expired rows are already ignored and replaced on their
+     * next use; this only keeps the table from growing without bound. Returns the number deleted.
+     */
+    @Transactional
+    public int purgeExpired() {
+        return repository.deleteAllExpired(clock.instant().minus(TTL));
+    }
+
     private boolean isExpired(IdempotencyKey row) {
         return !row.getCreatedAt().isAfter(clock.instant().minus(TTL));
     }

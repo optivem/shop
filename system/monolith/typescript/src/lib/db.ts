@@ -287,6 +287,12 @@ export async function deleteExpiredIdempotencyKey(owner: string, key: string, cu
   );
 }
 
+/** Deletes every idempotency key created at or before the cutoff; returns how many. */
+export async function purgeExpiredIdempotencyKeys(cutoff: Date, db: Queryable = pool): Promise<number> {
+  const result = await db.query('DELETE FROM idempotency_keys WHERE created_at <= $1', [cutoff]);
+  return result.rowCount ?? 0;
+}
+
 export async function insertIdempotencyKey(row: {
   owner: string;
   key: string;

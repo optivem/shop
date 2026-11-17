@@ -65,3 +65,23 @@ describe('IdempotencyKeyStore', () => {
     expect(IdempotencyKeyStore.isKeyConflict(new Error('boom'))).toBe(false);
   });
 });
+
+describe('IdempotencyKeyStore.purgeExpired', () => {
+  it('deletes every row older than 24 hours and reports how many', async () => {
+    const deleted: unknown[] = [];
+    const repository = {
+      delete: (criteria: unknown) => {
+        deleted.push(criteria);
+        return Promise.resolve({ affected: 3, raw: [] });
+      },
+    };
+    const store = new IdempotencyKeyStore(repository as never);
+
+    const count = await store.purgeExpired(new Date('2026-01-02T00:00:00Z'));
+
+    expect(count).toBe(3);
+    expect(deleted).toHaveLength(1);
+    const createdAt = (deleted[0] as { createdAt: { value: Date } }).createdAt;
+    expect(createdAt.value).toEqual(new Date('2026-01-01T00:00:00Z'));
+  });
+});
