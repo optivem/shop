@@ -42,8 +42,7 @@ function routesOf(controller: Ctor): string[] {
     .flatMap((name) => {
       const handler = proto[name] as object;
       const method = Reflect.getMetadata(METHOD_METADATA, handler) as
-        | RequestMethod
-        | undefined;
+        RequestMethod | undefined;
       if (method === undefined) return [];
       const sub = Reflect.getMetadata(PATH_METADATA, handler) as string;
       const path = `/${[base, sub].filter((p) => p && p !== '/').join('/')}`;

@@ -41,7 +41,9 @@ describe('Place Order (component)', () => {
   }
 
   const placeAndFetch = async (body: OrderRequest): Promise<OrderDetails> => {
-    const placed = await (await harness.customerApi())
+    const placed = await (
+      await harness.customerApi()
+    )
       .post('/api/orders')
       .send(body);
     expect(placed.status).toBe(201);
