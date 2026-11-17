@@ -12,6 +12,7 @@ import com.mycompany.myshop.backend.core.entities.Order;
 import com.mycompany.myshop.backend.core.entities.OrderStatus;
 import com.mycompany.myshop.backend.core.exceptions.NotExistValidationException;
 import com.mycompany.myshop.backend.core.exceptions.ValidationException;
+import com.mycompany.myshop.backend.core.outbox.OutboxStore;
 import com.mycompany.myshop.backend.core.repositories.OrderRepository;
 import com.mycompany.myshop.backend.core.services.external.ClockGateway;
 import com.mycompany.myshop.backend.core.services.external.ErpGateway;
@@ -52,6 +53,8 @@ class OrderServiceTest {
     private CouponService couponService;
     @Mock
     private IdempotencyKeyStore idempotencyKeyStore;
+    @Mock
+    private OutboxStore outboxStore;
 
     @InjectMocks
     private OrderService orderService;

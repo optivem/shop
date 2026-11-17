@@ -14,12 +14,10 @@ The user asked "why do we need it" at G0 (2026-11-16), so here is the honest cas
 
 ## ▶ Next executable step (resume here)
 
-Steps 1–2 are done (event + consumer decided, migration `system/db/migrations/V20261117150000__add_outbox_and_order_placed_audit.sql` added). Start **Step 3**: the Java implementation in `system/multitier/backend-java`.
+Steps 1–4 are done: migration `V20261117150000__add_outbox_and_order_placed_audit.sql`, and in `system/multitier/backend-java` the `core/outbox` package (`OutboxStore`, `OutboxRelay`, `OutboxRelayScheduler`, `OrderPlacedAuditHandler`), the write in `OrderService.placeOrder`, `config/OutboxConfig` (`outbox.pending` gauge) and the `outbox.relay` observation, with unit tests and `component/outbox/TransactionalOutboxComponentTest`. Start **Step 5**: the docs.
 
 ## Steps
 
-- [ ] Step 3: Java, `system/multitier/backend-java` only: write the outbox row in the place-order transaction; add a scheduled relay (`SELECT … FOR UPDATE SKIP LOCKED`, batch, mark sent, bounded retries with backoff); unit + component tests for the atomic write (order rolled back ⇒ no event) and the relay (crash before mark-sent ⇒ redelivered, handled once).
-- [ ] Step 4: Observability hook: a span per relayed event and an `outbox_pending` gauge, so the existing opt-in `otel-lgtm` profile shows the backlog.
 - [ ] Step 5: `docs/tour.md` skills-map row (Messaging / transactional outbox) and a short how-to.
 
 ## Resolved decisions

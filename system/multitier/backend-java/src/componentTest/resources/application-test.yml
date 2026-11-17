@@ -42,3 +42,9 @@ resilience:
     initial-backoff: 10ms
   circuit-breaker:
     wait-in-open-state: 100ms
+
+# The transactional-outbox tests drive OutboxRelay.relayBatch() themselves; the scheduled relay would
+# race them for the same rows.
+outbox:
+  relay:
+    enabled: false

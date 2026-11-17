@@ -12,6 +12,8 @@ import com.mycompany.myshop.backend.core.entities.Order;
 import com.mycompany.myshop.backend.core.entities.OrderStatus;
 import com.mycompany.myshop.backend.core.exceptions.NotExistValidationException;
 import com.mycompany.myshop.backend.core.exceptions.ValidationException;
+import com.mycompany.myshop.backend.core.outbox.OrderPlaced;
+import com.mycompany.myshop.backend.core.outbox.OutboxStore;
 import com.mycompany.myshop.backend.core.repositories.OrderRepository;
 import com.mycompany.myshop.backend.core.services.external.ClockGateway;
 import com.mycompany.myshop.backend.core.services.external.ErpGateway;
@@ -47,15 +49,17 @@ public class OrderService {
     private final ClockGateway clockGateway;
     private final CouponService couponService;
     private final IdempotencyKeyStore idempotencyKeyStore;
+    private final OutboxStore outboxStore;
 
     public OrderService(OrderRepository orderRepository, ErpGateway erpGateway, TaxGateway taxGateway, ClockGateway clockGateway,
-                        CouponService couponService, IdempotencyKeyStore idempotencyKeyStore) {
+                        CouponService couponService, IdempotencyKeyStore idempotencyKeyStore, OutboxStore outboxStore) {
         this.orderRepository = orderRepository;
         this.erpGateway = erpGateway;
         this.taxGateway = taxGateway;
         this.clockGateway = clockGateway;
         this.couponService = couponService;
         this.idempotencyKeyStore = idempotencyKeyStore;
+        this.outboxStore = outboxStore;
     }
 
     @Transactional
@@ -66,7 +70,7 @@ public class OrderService {
     /**
      * Places the order and, when the request carried an {@code Idempotency-Key}, records the response
      * under that key in the same transaction: either both the order and the key row commit, or
-     * neither does.
+     * neither does. The {@link OrderPlaced} outbox event is written in that transaction too.
      */
     @Transactional
     public PlaceOrderResponse placeOrder(PlaceOrderRequest request, CurrentUser user, IdempotencyKeyStore.Claim claim) {
@@ -133,6 +137,11 @@ public class OrderService {
         }
 
         orderRepository.save(order);
+
+        // Transactional outbox: the event row commits or rolls back with the order, so a relay can
+        // publish it later without a dual write (see core/outbox).
+        outboxStore.append(OrderPlaced.AGGREGATE_TYPE, orderNumber, OrderPlaced.EVENT_TYPE,
+                new OrderPlaced(orderNumber, sku, quantity, order.getTotalPrice(), orderTimestamp));
 
         return response;
     }
