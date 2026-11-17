@@ -1,3 +1,4 @@
+import { trace } from '@opentelemetry/api';
 import { NextResponse } from 'next/server';
 import { logger } from './logger';
 
@@ -7,8 +8,17 @@ const BASE_URL = 'https://api.my-company.example/errors';
 // backends. NextResponse.json only defaults Content-Type to application/json when none is set.
 const PROBLEM_JSON_CONTENT_TYPE = 'application/problem+json';
 
+/**
+ * Every problem body carries the active span's trace id as `traceId`, so an error a user reports can be found in the
+ * logs (logged there as trace_id). Absent outside a span or with tracing off, exactly like the log field.
+ */
+export function withTraceId(body: Record<string, unknown>): Record<string, unknown> {
+  const spanContext = trace.getActiveSpan()?.spanContext();
+  return spanContext ? { ...body, traceId: spanContext.traceId } : body;
+}
+
 function problemResponse(body: Record<string, unknown>, init: { status: number; headers?: Record<string, string> }) {
-  return NextResponse.json(body, {
+  return NextResponse.json(withTraceId(body), {
     ...init,
     headers: { ...init.headers, 'Content-Type': PROBLEM_JSON_CONTENT_TYPE },
   });

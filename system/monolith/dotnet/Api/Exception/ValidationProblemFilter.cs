@@ -43,6 +43,7 @@ public class ValidationProblemFilter : IActionFilter
                 status = 422,
                 detail = "The request contains one or more validation errors",
                 timestamp = DateTime.UtcNow,
+                traceId = ProblemTraceId.Of(context.HttpContext),
                 errors
             };
 

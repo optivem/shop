@@ -38,6 +38,7 @@ const problemDetail: Schema = {
     detail: { type: 'string' },
     instance: { type: 'string' },
     timestamp: { type: 'string' },
+    traceId: { type: 'string' },
     errors: {
       type: 'array',
       items: {

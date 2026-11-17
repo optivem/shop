@@ -1,4 +1,5 @@
 using System.Text.Json;
+using MyCompany.MyShop.Backend.Api.Exception;
 
 namespace MyCompany.MyShop.Backend.Api.Security;
 
@@ -29,6 +30,7 @@ public static class ProblemDetailSecurityHandlers
             status,
             detail,
             timestamp = DateTime.UtcNow,
+            traceId = ProblemTraceId.Of(context),
         };
         return context.Response.WriteAsJsonAsync(
             problem, options: (JsonSerializerOptions?)null, contentType: ProblemJsonContentType);

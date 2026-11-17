@@ -9,6 +9,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import type { Response } from 'express';
+import { trace } from '@opentelemetry/api';
 import { ValidationException } from '../../core/exceptions/validation.exception';
 import { NotExistValidationException } from '../../core/exceptions/not-exist-validation.exception';
 import { ConcurrentModificationException } from '../../core/exceptions/concurrent-modification.exception';
@@ -35,6 +36,15 @@ const ERP_UNAVAILABLE_DETAIL =
   "Product information can't be retrieved right now";
 // Matches the ERP circuit breaker's default half-open delay (EXTERNAL_BREAKER_HALF_OPEN_AFTER_MS).
 const ERP_RETRY_AFTER_SECONDS = '10';
+
+/**
+ * The active span's trace id as `traceId`, so an error a user reports can be found in the logs (logged
+ * there as trace_id). Absent outside a span or with tracing off, exactly like the log field.
+ */
+export function traceIdField(): { traceId?: string } {
+  const spanContext = trace.getActiveSpan()?.spanContext();
+  return spanContext ? { traceId: spanContext.traceId } : {};
+}
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
@@ -78,6 +88,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         status: 422,
         detail: ex.message,
         timestamp: new Date().toISOString(),
+        ...traceIdField(),
       };
       response.status(422).type('application/problem+json').json(body);
     } else {
@@ -87,6 +98,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         status: 422,
         detail: 'The request contains one or more validation errors',
         timestamp: new Date().toISOString(),
+        ...traceIdField(),
         errors: [{ field: ex.fieldName, message: ex.message }],
       };
       response.status(422).type('application/problem+json').json(body);
@@ -103,6 +115,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       status: 422,
       detail: ex.message,
       timestamp: new Date().toISOString(),
+      ...traceIdField(),
       errors: ex.fieldErrors,
     };
     response.status(422).type('application/problem+json').json(body);
@@ -118,6 +131,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       status: 404,
       detail: ex.message,
       timestamp: new Date().toISOString(),
+      ...traceIdField(),
     };
     response.status(404).type('application/problem+json').json(body);
   }
@@ -134,6 +148,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       status: 503,
       detail: ERP_UNAVAILABLE_DETAIL,
       timestamp: new Date().toISOString(),
+      ...traceIdField(),
     };
     response
       .status(503)
@@ -152,6 +167,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       status: 409,
       detail: 'The resource was modified concurrently, please retry',
       timestamp: new Date().toISOString(),
+      ...traceIdField(),
     };
     response.status(409).type('application/problem+json').json(body);
   }
@@ -163,6 +179,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       status: 401,
       detail: 'Authentication is required',
       timestamp: new Date().toISOString(),
+      ...traceIdField(),
     };
     response
       .status(401)
@@ -178,6 +195,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       status: 403,
       detail: 'You do not have permission to perform this action',
       timestamp: new Date().toISOString(),
+      ...traceIdField(),
     };
     response.status(403).type('application/problem+json').json(body);
   }
@@ -190,6 +208,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       status: 400,
       detail: 'Invalid request format',
       timestamp: new Date().toISOString(),
+      ...traceIdField(),
     };
     response.status(400).type('application/problem+json').json(body);
   }
@@ -202,6 +221,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       status,
       detail: ex.message,
       timestamp: new Date().toISOString(),
+      ...traceIdField(),
     };
     response.status(status).type('application/problem+json').json(body);
   }
@@ -216,6 +236,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       status: 500,
       detail: GENERAL_ERROR_DETAIL,
       timestamp: new Date().toISOString(),
+      ...traceIdField(),
     };
     response.status(500).type('application/problem+json').json(body);
   }

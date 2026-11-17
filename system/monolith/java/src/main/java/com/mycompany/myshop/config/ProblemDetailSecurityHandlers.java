@@ -23,10 +23,13 @@ public class ProblemDetailSecurityHandlers implements AuthenticationEntryPoint, 
 
     private final ObjectMapper objectMapper;
     private final String baseUrl;
+    private final TraceIdProblemDetailAdvice traceIds;
 
-    public ProblemDetailSecurityHandlers(ObjectMapper objectMapper, @Value("${error.types.base-url}") String baseUrl) {
+    public ProblemDetailSecurityHandlers(ObjectMapper objectMapper, @Value("${error.types.base-url}") String baseUrl,
+            TraceIdProblemDetailAdvice traceIds) {
         this.objectMapper = objectMapper;
         this.baseUrl = baseUrl;
+        this.traceIds = traceIds;
     }
 
     @Override
@@ -49,6 +52,7 @@ public class ProblemDetailSecurityHandlers implements AuthenticationEntryPoint, 
         problem.setType(URI.create(baseUrl + typePath));
         problem.setTitle(title);
         problem.setProperty("timestamp", Instant.now());
+        traceIds.stamp(problem);
         response.setStatus(status.value());
         response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
         objectMapper.writeValue(response.getOutputStream(), problem);

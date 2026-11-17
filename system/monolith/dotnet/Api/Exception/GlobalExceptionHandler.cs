@@ -70,6 +70,7 @@ public class GlobalExceptionHandler : IExceptionHandler
                 status = 422,
                 detail = "The request contains one or more validation errors",
                 timestamp = DateTime.UtcNow,
+                traceId = ProblemTraceId.Of(httpContext),
                 errors = new[]
                 {
                     new { field = ex.FieldName, message = ex.Message }
@@ -84,7 +85,8 @@ public class GlobalExceptionHandler : IExceptionHandler
                 title = "Validation Error",
                 status = 422,
                 detail = ex.Message,
-                timestamp = DateTime.UtcNow
+                timestamp = DateTime.UtcNow,
+                traceId = ProblemTraceId.Of(httpContext)
             };
         }
 
@@ -102,7 +104,8 @@ public class GlobalExceptionHandler : IExceptionHandler
             title = "Resource Not Found",
             status = 404,
             detail = ex.Message,
-            timestamp = DateTime.UtcNow
+            timestamp = DateTime.UtcNow,
+            traceId = ProblemTraceId.Of(httpContext)
         };
 
         await httpContext.Response.WriteAsJsonAsync(
@@ -119,7 +122,8 @@ public class GlobalExceptionHandler : IExceptionHandler
             title = "Conflict",
             status = 409,
             detail = "The resource was modified concurrently, please retry",
-            timestamp = DateTime.UtcNow
+            timestamp = DateTime.UtcNow,
+            traceId = ProblemTraceId.Of(httpContext)
         };
 
         await httpContext.Response.WriteAsJsonAsync(
@@ -141,7 +145,8 @@ public class GlobalExceptionHandler : IExceptionHandler
             title = "Service Unavailable",
             status = 503,
             detail = ErpUnavailableDetail,
-            timestamp = DateTime.UtcNow
+            timestamp = DateTime.UtcNow,
+            traceId = ProblemTraceId.Of(httpContext)
         };
 
         await httpContext.Response.WriteAsJsonAsync(
@@ -160,7 +165,8 @@ public class GlobalExceptionHandler : IExceptionHandler
             title = "Internal Server Error",
             status = 500,
             detail = GeneralErrorDetail,
-            timestamp = DateTime.UtcNow
+            timestamp = DateTime.UtcNow,
+            traceId = ProblemTraceId.Of(httpContext)
         };
 
         await httpContext.Response.WriteAsJsonAsync(
