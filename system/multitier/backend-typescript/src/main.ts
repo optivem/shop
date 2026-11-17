@@ -5,9 +5,12 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { configureApp } from './configure-app';
 import { envOrDefault } from './config/app.config';
+import { ensureSafeForProduction } from './config/production-config.guard';
 import { JsonLogger } from './json-logger';
 
 async function bootstrap() {
+  // With APP_PROFILE=prod (production deploy only), refuse to start on test-default secrets.
+  ensureSafeForProduction();
   const app = await NestFactory.create(AppModule, { logger: new JsonLogger() });
 
   const allowedOrigins = envOrDefault(

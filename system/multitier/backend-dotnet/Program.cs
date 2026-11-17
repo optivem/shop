@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using MyCompany.MyShop.Backend.Api;
 using MyCompany.MyShop.Backend.Api.OpenApi;
 using MyCompany.MyShop.Backend.Api.Exception;
 using MyCompany.MyShop.Backend.Api.Observability;
@@ -9,6 +10,9 @@ using MyCompany.MyShop.Backend.Core.Services.External;
 using MyCompany.MyShop.Backend.Data;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// With APP_PROFILE=prod (production deploy only), refuse to start on missing or test-default secrets.
+ProductionConfigGuard.EnsureSafeForProduction(builder.Configuration);
 
 // Structured JSON logs with trace IDs (always on); OpenTelemetry export only when OTEL_EXPORTER_OTLP_ENDPOINT is set.
 builder.AddShopObservability();

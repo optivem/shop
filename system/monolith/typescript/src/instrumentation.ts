@@ -2,6 +2,11 @@
 // OpenTelemetry is opt-in: the SDK loads only when OTEL_EXPORTER_OTLP_ENDPOINT is set and non-empty, so by default
 // nothing is imported or started and the app behaves exactly as before.
 export async function register(): Promise<void> {
+  if (process.env.NEXT_RUNTIME === 'nodejs') {
+    // With APP_PROFILE=prod (production deploy only), refuse to start on test-default secrets.
+    const { ensureSafeForProduction } = await import('./lib/production-config-guard');
+    ensureSafeForProduction();
+  }
   const endpoint = process.env.OTEL_EXPORTER_OTLP_ENDPOINT;
   if (process.env.NEXT_RUNTIME === 'nodejs' && endpoint !== undefined && endpoint.trim() !== '') {
     await import('./instrumentation-node');

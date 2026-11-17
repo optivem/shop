@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.EntityFrameworkCore;
+using MyCompany.MyShop.Monolith.Api;
 using MyCompany.MyShop.Monolith.Api.OpenApi;
 using MyCompany.MyShop.Monolith.Api.Exception;
 using MyCompany.MyShop.Monolith.Api.Observability;
@@ -13,6 +14,9 @@ using MyCompany.MyShop.Monolith.Data;
 using MyCompany.MyShop.Monolith.Pages.Storefront;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// With APP_PROFILE=prod (production deploy only), refuse to start on missing or test-default secrets.
+ProductionConfigGuard.EnsureSafeForProduction(builder.Configuration);
 
 // Structured JSON logs with trace IDs (always on); OpenTelemetry export only when OTEL_EXPORTER_OTLP_ENDPOINT is set.
 builder.AddShopObservability();

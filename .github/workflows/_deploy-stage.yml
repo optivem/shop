@@ -306,7 +306,8 @@ jobs:
       # x-forwarded-proto itself). One instance, because Java and .NET keep sessions and login state in memory.
       # Acceptance and QA realms carry the committed test secret. In production the shop-monolith secret
       # comes from Secret Manager (deploy-keycloak sets the same value in the shop-prod realm). Production
-      # also runs the Java images' prod profile (application-prod.yml); the .NET and TypeScript images ignore it.
+      # also runs the prod profile: SPRING_PROFILES_ACTIVE for Java (application-prod.yml), APP_PROFILE for .NET
+      # and TypeScript; under it every backend refuses to start on a missing or test-default secret.
       - name: Deploy System
         if: inputs.architecture == 'monolith'
         run: |
@@ -325,7 +326,7 @@ jobs:
               AUTH_JWK_SET_URI:($issuer + "/protocol/openid-connect/certs"),
               AUTH_AUDIENCE:"shop-backend",
               SERVER_FORWARDHEADERSSTRATEGY:"native", ASPNETCORE_FORWARDEDHEADERS_ENABLED:"true"}
-             + (if $stage == "production" then {SPRING_PROFILES_ACTIVE:"prod"} else {AUTH_CLIENT_SECRET:"shop-monolith-test-secret"} end)' > "$env_file"
+             + (if $stage == "production" then {SPRING_PROFILES_ACTIVE:"prod", APP_PROFILE:"prod"} else {AUTH_CLIENT_SECRET:"shop-monolith-test-secret"} end)' > "$env_file"
           secret_args=()
           if [[ "$STAGE" == production ]]; then
             secret_args=(--set-secrets "AUTH_CLIENT_SECRET=${SYSTEM}-monolith-client-secret:latest")
@@ -355,7 +356,7 @@ jobs:
               AUTH_ISSUER_URI:$issuer,
               AUTH_JWK_SET_URI:($issuer + "/protocol/openid-connect/certs"),
               AUTH_AUDIENCE:"shop-backend"}
-             + (if $stage == "production" then {SPRING_PROFILES_ACTIVE:"prod"} else {} end)' > "$env_file"
+             + (if $stage == "production" then {SPRING_PROFILES_ACTIVE:"prod", APP_PROFILE:"prod"} else {} end)' > "$env_file"
           gcloud run deploy "$BACKEND_NAME" \
             --image "${IMAGE_BASE}/${BACKEND_IMAGE}:${RC_VERSION}" --region "$REGION" --project "$PROJECT" \
             --service-account "$SA" --port 8081 --memory 1Gi --cpu 1 --cpu-boost \
