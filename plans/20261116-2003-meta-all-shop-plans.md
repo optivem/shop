@@ -207,6 +207,16 @@ Edges from the plans' own wording: META3 "TS pass → test-all → flip → UC1 
 
 **Further answers (user, 2026-11-17):** session 2026-11-17 stops after Wave 1 (Wave 2 starts in a fresh session). OUTBOX is Java-only. B-PRG 4.2 is an in-code login limit only. B-PRG 5.2 is done: secret scanning and push protection enabled on `optivem/shop` 2026-11-17. X1: file the 5c ticket as drafted ("show the customer's name from the CRM directory, JSONPlaceholder `/users`, on the order details") when X1 starts.
 
+## Standing answers for every later session (user, 2026-11-17)
+
+Later sessions run these without asking:
+- **Pacing:** one wave per session, each ending green and pushed, with a `/clear` + `/execute-plan` hand-off.
+- **U1 visual check:** if the user is away when U1 reaches the MUI visual check, carry on with U2. Delete MUI and SHOW only after the user has looked.
+- **Dependabot majors:** if one still fails after two fix-forward retries, leave its PR open, record what broke as a REL idea with a recommendation, and move to the next unit.
+- **X1 cross-repo:** plans only. Every item for courses, substack, optivem-testing or gh-optivem becomes a plan file in that repo (committed there with `gh optivem commit --repo <name> --paths`); no code or content outside shop is edited from this meta-plan.
+- **Decided inside child plans:** B-PRG 2.3 local clock in prod; B-PRG 6.5/6.6 $0 only; OUTBOX in `backend-java` only; B-MRF #8 clean break, no redirects.
+- **Still a user gate:** the MUI visual check itself, the user-only items in M (B-SL, REL #11), and `gh auth refresh -h github.com -s project` before GHO's rehearsals.
+
 ## Needs-decision (asked once at 🛑 G0, answered above)
 
 Each question has a recommendation. Answering "accept all recommendations" unblocks every wave.

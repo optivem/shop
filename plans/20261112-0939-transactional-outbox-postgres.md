@@ -5,7 +5,7 @@ Spun off from `20261111-1831-interview-showcase-skill-gaps.md` (gap #6, Step 7).
 ## TL;DR
 
 **Why:** Async messaging and the outbox pattern are a standard backend / system-design interview topic, and shop has neither. A broker (Kafka, RabbitMQ) would add infrastructure that every cloning student pays for, so the pattern has to be shown without one.
-**End result:** Placing an order writes an `OrderPlaced` event to an `outbox` table in the same Postgres transaction as the order. An in-process relay polls the table, delivers each event at least once to an in-process handler, and marks it sent. Duplicate deliveries are harmless because the handler is idempotent. This lands in Java, .NET and TypeScript, in the monolith and the multitier backends, with tests that prove the atomic write and the at-least-once delivery.
+**End result:** Placing an order writes an `OrderPlaced` event to an `outbox` table in the same Postgres transaction as the order. An in-process relay polls the table, delivers each event at least once to an in-process handler, and marks it sent. Duplicate deliveries are harmless because the handler is idempotent. This lands in Java only (`system/multitier/backend-java`) as a worked example, with tests that prove the atomic write and the at-least-once delivery.
 **Unchanged:** no broker, no new container, no paid service: the default clone and pipeline stay $0 and zero-infra. Place-order behaviour, its API and the existing system tests stay the same. The relay can be switched off by configuration.
 
 ## Why we need it (confirmed by the user 2026-11-17: build it, Java-only)
@@ -20,7 +20,7 @@ Open questions are resolved (G0, 2026-11-16) and the plan is confirmed **Java-on
 
 - [ ] Step 1: Decide the event and its consumer. Recommendation: `OrderPlaced { orderNumber, sku, quantity, totalPrice, placedAt }`, consumed by an in-process handler that records an order-placed audit/notification row (observable in tests, no external system).
 - [ ] Step 2: Flyway migration in `system/db/migrations/` (forward-only, expand-contract): an `outbox` table (`id`, `aggregate_type`, `aggregate_id`, `event_type`, `payload jsonb`, `created_at`, `sent_at`, `attempts`), plus an index on unsent rows, and the consumer's own table with a unique key on the event id (idempotent handling).
-- [ ] Step 3: Java (monolith + multitier backend + clean variant where it fits): write the outbox row in the place-order transaction; add a scheduled relay (`SELECT … FOR UPDATE SKIP LOCKED`, batch, mark sent, bounded retries with backoff); unit + component tests for the atomic write (order rolled back ⇒ no event) and the relay (crash before mark-sent ⇒ redelivered, handled once).
+- [ ] Step 3: Java, `system/multitier/backend-java` only: write the outbox row in the place-order transaction; add a scheduled relay (`SELECT … FOR UPDATE SKIP LOCKED`, batch, mark sent, bounded retries with backoff); unit + component tests for the atomic write (order rolled back ⇒ no event) and the relay (crash before mark-sent ⇒ redelivered, handled once).
 - [ ] Step 4: Observability hook: a span per relayed event and an `outbox_pending` gauge, so the existing opt-in `otel-lgtm` profile shows the backlog.
 - [ ] Step 5: `docs/tour.md` skills-map row (Messaging / transactional outbox) and a short how-to.
 
@@ -28,7 +28,7 @@ Open questions are resolved (G0, 2026-11-16) and the plan is confirmed **Java-on
 
 All decided (user, 2026-11-16, meta-plan G0 answer 5; scope confirmed 2026-11-17):
 
-- **Scope: Java-only worked example** (user, 2026-11-17). Step 3 lands in the Java multitier backend (plus the Java monolith if it fits cleanly); .NET and TypeScript get no outbox code. **Shortcut, noted:** this deliberately breaks the "every change in all three languages" rule below. The shared migration still creates the tables, so the other five backends carry unused `outbox`/audit tables. Revisit if students ask for the .NET/TS versions.
+- **Scope: Java-only worked example** (user, 2026-11-17). Step 3 lands in `system/multitier/backend-java` only (user, 2026-11-17: not the monolith, not the clean variant); .NET and TypeScript get no outbox code. **Shortcut, noted:** this deliberately breaks the "every change in all three languages" rule below. The shared migration still creates the tables, so the other five backends carry unused `outbox`/audit tables. Revisit if students ask for the .NET/TS versions.
 
 - **Where the relay runs in multitier:** inside each backend process: zero infra, and it matches the monolith. No separate worker container.
 - **Polling vs `LISTEN/NOTIFY`:** polling first (simplest); `LISTEN/NOTIFY` is a possible later optimisation. On Cloud Run with min instances 0 the relay only runs while the instance has CPU (see the caveat above).

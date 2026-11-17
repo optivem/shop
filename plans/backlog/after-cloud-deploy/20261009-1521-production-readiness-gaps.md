@@ -36,7 +36,7 @@ Steps 1.1–1.6 are done (2026-11-03); the child plan `20261009-1545-production-
 
 ### Chunk 2 — Resilience
 2.1 (shared pooled client, configurable timeouts) and 2.2 (GET-only retry + circuit breaker) were delivered by SHOW: `GatewayHttpClient` + `ResilienceSettings` (Resilience4j) in the three Java backends, `Api/Resilience/ResilienceExtensions.cs` in both .NET backends, `resilience.ts` in both TS backends, with `ErpGatewayResilience*` tests.
-- [ ] 2.3 Decide on clock: keep it as a test seam only, or use a local `Clock` bean in prod with the external clock reserved for non-prod. Record the decision.
+- [ ] 2.3 Clock (decided, user 2026-11-17): prod uses a local system `Clock`; the external clock stays only for test and pipeline stacks, where tests control "now". Implement per backend and record it in the docs.
 
 ### Chunk 3 — Observability and config profiles
 3.1 (metrics), the trace-propagation and log parts of 3.2, and 3.3 (structured JSON logs) were delivered by SHOW: OTel/Micrometer pushed over OTLP (`OtlpExportEnvironmentPostProcessor`, `micrometer-registry-otlp`; metrics are not exposed over HTTP, Java actuator exposes only `health,info`), JSON logs with `trace_id`/`span_id` always on (`logging.structured.format.console: logstash`, `TraceJsonConsoleFormatter`, `logger.ts` / `json-logger.ts`), viewable through the opt-in `otel-lgtm` compose profile.
@@ -60,8 +60,8 @@ Steps 1.1–1.6 are done (2026-11-03); the child plan `20261009-1545-production-
 6.1 was delivered by the cloud deploy (`terraform/main.tf`: project, WIF, service accounts, Secret Manager; `terraform/neon.sh` for Neon; Cloud Run services and `--min-instances`/`--max-instances` set by `_deploy-stage.yml`). 6.2 is in `CONTRIBUTING.md` (rollback-safety table and expand-contract worked examples). The k6 half of 6.7 is `load-test.yml` (SHOW).
 - [ ] 6.3 Rollback procedure for the prod stage, and a documented rollback test. Touches `_prod-stage.yml`: after B-QAS (Conflict 4).
 - [ ] 6.4 Runbooks under `docs/operations/` (new; `docker/docs/operations/` no longer exists and docs live under `docs/`): deploy, rollback, DB restore, dependency outage.
-- [ ] 6.5 Postgres (Neon) backups with a restore drill.
-- [ ] 6.6 SLOs plus alert rules built on the OTel metrics from SHOW.
+- [ ] 6.5 Postgres (Neon) backups with a restore drill. **$0 only** (user, 2026-11-17): use Neon's built-in restore within the free tier plus a documented drill; no paid backup service.
+- [ ] 6.6 SLOs plus alert rules built on the OTel metrics from SHOW. **$0 only** (user, 2026-11-17): SLOs and alert rules target the opt-in local `otel-lgtm` stack; no paid alerting service.
 - [ ] 6.7 DAST (ZAP baseline) as an optional, opt-in workflow, like `load-test.yml` (what is left of 6.7).
 
 ## Resolved decisions
