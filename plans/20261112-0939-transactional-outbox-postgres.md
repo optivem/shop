@@ -14,12 +14,10 @@ The user asked "why do we need it" at G0 (2026-11-16), so here is the honest cas
 
 ## ▶ Next executable step (resume here)
 
-Open questions are resolved (G0, 2026-11-16) and the plan is confirmed **Java-only** (user, 2026-11-17). This is meta-plan unit U11 (Lane B, after U9 because of the shared place-order service and `system/db/migrations`). Start **Step 1**: confirm the `OrderPlaced` payload against the current order model (the shipping address landed in `V20261109120000__add_customer_profiles_and_order_shipping_address.sql`) and the consumer table, and write the decision into Step 1.
+Steps 1–2 are done (event + consumer decided, migration `system/db/migrations/V20261117150000__add_outbox_and_order_placed_audit.sql` added). Start **Step 3**: the Java implementation in `system/multitier/backend-java`.
 
 ## Steps
 
-- [ ] Step 1: Decide the event and its consumer. Recommendation: `OrderPlaced { orderNumber, sku, quantity, totalPrice, placedAt }`, consumed by an in-process handler that records an order-placed audit/notification row (observable in tests, no external system).
-- [ ] Step 2: Flyway migration in `system/db/migrations/` (forward-only, expand-contract): an `outbox` table (`id`, `aggregate_type`, `aggregate_id`, `event_type`, `payload jsonb`, `created_at`, `sent_at`, `attempts`), plus an index on unsent rows, and the consumer's own table with a unique key on the event id (idempotent handling).
 - [ ] Step 3: Java, `system/multitier/backend-java` only: write the outbox row in the place-order transaction; add a scheduled relay (`SELECT … FOR UPDATE SKIP LOCKED`, batch, mark sent, bounded retries with backoff); unit + component tests for the atomic write (order rolled back ⇒ no event) and the relay (crash before mark-sent ⇒ redelivered, handled once).
 - [ ] Step 4: Observability hook: a span per relayed event and an `outbox_pending` gauge, so the existing opt-in `otel-lgtm` profile shows the backlog.
 - [ ] Step 5: `docs/tour.md` skills-map row (Messaging / transactional outbox) and a short how-to.
@@ -30,6 +28,7 @@ All decided (user, 2026-11-16, meta-plan G0 answer 5; scope confirmed 2026-11-17
 
 - **Scope: Java-only worked example** (user, 2026-11-17). Step 3 lands in `system/multitier/backend-java` only (user, 2026-11-17: not the monolith, not the clean variant); .NET and TypeScript get no outbox code. **Shortcut, noted:** this deliberately breaks the "every change in all three languages" rule below. The shared migration still creates the tables, so the other five backends carry unused `outbox`/audit tables. Revisit if students ask for the .NET/TS versions.
 
+- **Event and consumer (Step 1, 2026-11-17):** `OrderPlaced { orderNumber, sku, quantity, totalPrice, placedAt }` (aggregate type `Order`, aggregate id = order number; `totalPrice` is the stored, rounded total, serialized as a two-decimal string by the app mapper; `placedAt` is the order timestamp). The shipping address and owner are left out: the consumer does not need them, and the event should not copy personal data. Consumer: an in-process handler that inserts one `order_placed_audit` row per event, keyed on the event id (`ON CONFLICT DO NOTHING`), with no foreign key to `orders`. The `outbox` table adds `next_attempt_at` and `last_error` to the listed columns, for the backoff and for diagnosis.
 - **Where the relay runs in multitier:** inside each backend process: zero infra, and it matches the monolith. No separate worker container.
 - **Polling vs `LISTEN/NOTIFY`:** polling first (simplest); `LISTEN/NOTIFY` is a possible later optimisation. On Cloud Run with min instances 0 the relay only runs while the instance has CPU (see the caveat above).
 - **System-test coverage:** component tests only, no new UC-001 acceptance criterion, since the event has no user-visible effect yet. Existing system tests stay unchanged.
