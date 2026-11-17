@@ -90,6 +90,29 @@ Do **not** substitute `./gradlew test`, `mvn test`, `dotnet test`, or `npm
 test` — these wrappers manage Docker containers and per-suite environment
 variables that the raw toolchain does not.
 
+### Resetting local stack data
+
+Local stacks keep their Postgres data between runs, also across
+`gh optivem system start --restart`: it lives in the named docker volumes
+`my-shop-stub_postgres-data` and `my-shop-real_postgres-data`, and every
+language and architecture shares the same two (the compose project names are
+`my-shop-stub` / `my-shop-real` everywhere). Over many runs they fill up with
+test orders and coupons (5k+ orders seen), which slows the admin list pages and
+makes a local run differ from CI, where every runner starts empty.
+
+To start from an empty database:
+
+```bash
+gh optivem system stop                     # compose down; Keycloak's dev DB lives in its container, so this resets users too
+docker ps --filter name=my-shop            # must print no containers
+docker volume rm my-shop-stub_postgres-data my-shop-real_postgres-data
+gh optivem system start --restart          # db-migrate re-creates the schema
+```
+
+`docker volume rm` refuses while a container still uses the volume; stop every
+stack first (each `GH_OPTIVEM_CONFIG` you started). Nothing else needs a
+reset: the WireMock stubs and simulators keep their state in memory only.
+
 ## Line endings
 
 The root [`.gitattributes`](.gitattributes) is the single source of truth: LF everywhere, CRLF for `*.bat` and `*.cmd`, and binary types declared explicitly. Don't add nested `.gitattributes` files. When you add a new binary type, declare it in the root file. The `check-line-endings` workflow fails otherwise.

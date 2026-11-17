@@ -36,6 +36,19 @@ The whole commit-stage gate, which is what CI runs and what to run before commit
 - `./gradlew benchmark` is a measurement harness, not a verdict: minutes to run, Docker required,
   never part of `build`. See [`docs/theme2-measurements.md`](docs/theme2-measurements.md).
 
+## No authentication, by design
+
+This variant deliberately models **no authentication or authorization**: there is no Spring
+Security, no Keycloak, and no role checks. Endpoints that are admin-only or owner-only in
+[`../backend-java`](../backend-java) (for example `POST /api/orders/{n}/deliver` and
+`POST /api/admin/orders/sweep-deliveries`) are open to any caller here. The variant exists to teach
+the clean-architecture refactor of the order/coupon logic, and security would add a cross-cutting
+adapter that says nothing about that refactor. It has no system-test stack, so no system test
+reaches it. For the same reason it has no admin-only `GET /api/admin/customers` endpoint, which
+exists only to serve the admin UIs' customer filter.
+
+Do not deploy it anywhere reachable: it is a teaching variant, not a production backend.
+
 ## Status
 
 The refactor is complete. `src/main` is organised by the dependency rule rather than by technical
