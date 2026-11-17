@@ -36,8 +36,8 @@ The orchestrating session runs the **Wave tracker** top to bottom. Run the same 
 |---|---|---|---|
 | 0 | U0 plan-only housekeeping | — | done 2026-11-17 |
 | 0 | 🛑 G0 user answers | — | done 2026-11-16 |
-| 1 | U1 Phase B finish (META3) | D | todo |
-| 1 | U2 UC1 Track D4 | D (after U1) | todo |
+| 1 | U1 Phase B finish (META3) | D | done 2026-11-17 up to `897bbe33` (test-all 12/12, all 12 UCs implemented, SPEC/BUILD/SMETA deleted); 🛑 MUI visual check (user) pending, then delete MUI + SHOW |
+| 1 | U2 UC1 Track D4 | D (after U1) | running (strict blocked by UC-005.7, UC-011.2 untested and Java UC-009.2 misread, REL #70/#71) |
 | 1 | U3 plan refinement pass (FT, OUTBOX, B-ORD, B-PRG prune, B-QAS prune, B-PIN retarget) | P | done 2026-11-17 (`0e6bba99`) |
 | 2 | U4 B-PIN pinned-SHA gate (now verification only: one pinned-SHA dispatch) | W | todo |
 | 2 | U5 B-QAS remainder (verification only: smoke ran green before record/release) | W (after U4) | todo |
@@ -205,7 +205,7 @@ Edges from the plans' own wording: META3 "TS pass → test-all → flip → UC1 
 9. B-MRF #8: **yes**, `/order-details/{orderNumber}` everywhere (U12).
 10. Dependabot: **yes**, merge the green non-major PRs before Wave 2; each major upgrade becomes its own later unit, scheduled after Wave 4 and before X1 (user, 2026-11-17).
 
-**Further answers (user, 2026-11-17):** session 2026-11-17 stops after Wave 1 (Wave 2 starts in a fresh session). OUTBOX is Java-only. B-PRG 4.2 is an in-code login limit only. B-PRG 5.2 is done: secret scanning and push protection enabled on `optivem/shop` 2026-11-17. X1: file the 5c ticket as drafted ("show the customer's name from the CRM directory, JSONPlaceholder `/users`, on the order details") when X1 starts.
+**Further answers (user, 2026-11-17):** session 2026-11-17 continues past Wave 1 autonomously for the rest of the day (user, later the same day). OUTBOX is Java-only. B-PRG 4.2 is an in-code login limit only. B-PRG 5.2 is done: secret scanning and push protection enabled on `optivem/shop` 2026-11-17. X1: file the 5c ticket as drafted ("show the customer's name from the CRM directory, JSONPlaceholder `/users`, on the order details") when X1 starts.
 
 ## Standing answers for every later session (user, 2026-11-17)
 
