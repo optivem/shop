@@ -157,6 +157,16 @@ class SecurityConfigTest {
     }
 
     @Test
+    void responsesCarryTheSecurityHeaders() throws Exception {
+        mockMvc.perform(get("/health"))
+            .andExpect(header().string("Content-Security-Policy", SecurityConfig.CONTENT_SECURITY_POLICY))
+            .andExpect(header().string("Referrer-Policy", "strict-origin-when-cross-origin"))
+            .andExpect(header().string("Strict-Transport-Security", "max-age=31536000"))
+            .andExpect(header().string("X-Content-Type-Options", "nosniff"))
+            .andExpect(header().string("X-Frame-Options", "DENY"));
+    }
+
+    @Test
     void healthIsPublic() throws Exception {
         mockMvc.perform(get("/health")).andExpect(status().isOk());
     }

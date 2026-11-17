@@ -3,9 +3,11 @@ import { GlobalExceptionFilter } from './api/exception/global-exception.filter';
 import { RequestValidationPipe } from './api/exception/request-validation.pipe';
 import { DecimalFormatInterceptor } from './api/interceptor/decimal-format.interceptor';
 import { setUpOpenApi } from './api/openapi/openapi-document';
+import { useSecurityHeaders } from './api/security/security-headers';
 
 // Request/response pipeline shared by main.ts and the component harness, so tests run the same app.
 export function configureApp(app: INestApplication): void {
+  useSecurityHeaders(app);
   app.useGlobalPipes(new RequestValidationPipe());
   app.useGlobalFilters(new GlobalExceptionFilter());
   app.useGlobalInterceptors(new DecimalFormatInterceptor());

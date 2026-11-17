@@ -26,6 +26,32 @@ public class SecurityTests : IClassFixture<ShopWebApplicationFactory>
     }
 
     [Fact]
+    public async Task Responses_CarryTheSecurityHeaders()
+    {
+        var response = await Client().GetAsync("/health");
+        AssertSecurityHeaders(response);
+    }
+
+    [Fact]
+    public async Task ErrorResponses_CarryTheSecurityHeaders()
+    {
+        var response = await Client().GetAsync("/api/orders");
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        AssertSecurityHeaders(response);
+    }
+
+    private static void AssertSecurityHeaders(HttpResponseMessage response)
+    {
+        Assert.Equal(Api.Security.SecurityHeaders.ContentSecurityPolicy,
+            response.Headers.GetValues("Content-Security-Policy").Single());
+        Assert.Equal("strict-origin-when-cross-origin", response.Headers.GetValues("Referrer-Policy").Single());
+        Assert.Equal("max-age=31536000", response.Headers.GetValues("Strict-Transport-Security").Single());
+        Assert.Equal("nosniff", response.Headers.GetValues("X-Content-Type-Options").Single());
+        Assert.Equal("DENY", response.Headers.GetValues("X-Frame-Options").Single());
+        Assert.False(response.Headers.Contains("Server"));
+    }
+
+    [Fact]
     public async Task Liveness_IsPublic_AndShowsOnlyTheStatus()
     {
         var response = await Client().GetAsync("/livez");

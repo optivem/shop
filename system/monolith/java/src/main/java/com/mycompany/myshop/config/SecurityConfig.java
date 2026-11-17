@@ -46,6 +46,7 @@ import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfFilter;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import org.springframework.security.web.util.matcher.AnyRequestMatcher;
 import org.springframework.security.web.util.matcher.OrRequestMatcher;
@@ -65,6 +66,14 @@ public class SecurityConfig {
     private static final String REGISTRATION_ID = "keycloak";
     private static final String BEARER_PREFIX = "Bearer ";
     private static final String[] STOREFRONT_PAGES = {"/", "/products/{sku}", "/cart", "/css/**"};
+    /**
+     * Same-origin only. The pages carry inline scripts and style attributes, hence 'unsafe-inline'; everything they
+     * load (Bootstrap, the self-hosted font, images) is served from this app. form-action is left out on purpose:
+     * browsers apply it to the redirect to Keycloak that follows the logout form.
+     */
+    static final String CONTENT_SECURITY_POLICY = "default-src 'self'; script-src 'self' 'unsafe-inline'; "
+        + "style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; "
+        + "object-src 'none'; base-uri 'self'; frame-ancestors 'none'";
 
     @Value("${auth.issuer-uri}")
     private String issuerUri;
@@ -106,6 +115,14 @@ public class SecurityConfig {
                 .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
                 .ignoringRequestMatchers(bearerRequests))
             .addFilterAfter(new CsrfCookieFilter(), CsrfFilter.class)
+            // On top of Spring Security's defaults (nosniff, X-Frame-Options: DENY, no-cache): CSP, referrer policy,
+            // and HSTS on every response, since TLS ends at the Cloud Run front and the app itself only sees http.
+            .headers(headers -> headers
+                .contentSecurityPolicy(csp -> csp.policyDirectives(CONTENT_SECURITY_POLICY))
+                .referrerPolicy(referrer -> referrer.policy(ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
+                .httpStrictTransportSecurity(hsts -> hsts
+                    .requestMatcher(AnyRequestMatcher.INSTANCE)
+                    .includeSubDomains(false)))
             .authorizeHttpRequests(auth -> auth
                 // Spring MVC answers HEAD with the GET handler, so every GET rule has to cover HEAD as well.
                 .requestMatchers(HttpMethod.GET, "/health", "/livez", "/readyz").permitAll()

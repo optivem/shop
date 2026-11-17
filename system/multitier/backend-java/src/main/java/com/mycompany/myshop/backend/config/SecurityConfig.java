@@ -25,6 +25,8 @@ import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy;
+import org.springframework.security.web.util.matcher.AnyRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
@@ -42,6 +44,14 @@ public class SecurityConfig {
     @Value("${auth.audience}")
     private String audience;
 
+    /**
+     * The API answers JSON; the only HTML it serves is Swagger UI, which needs inline script/style and data: images.
+     * Everything is same-origin.
+     */
+    static final String CONTENT_SECURITY_POLICY = "default-src 'self'; script-src 'self' 'unsafe-inline'; "
+        + "style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; "
+        + "object-src 'none'; base-uri 'self'; frame-ancestors 'none'";
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, ProblemDetailSecurityHandlers handlers)
             throws Exception {
@@ -49,6 +59,14 @@ public class SecurityConfig {
             .cors(Customizer.withDefaults())
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            // On top of Spring Security's defaults (nosniff, X-Frame-Options: DENY, no-cache): CSP, referrer policy,
+            // and HSTS on every response, since TLS ends at the Cloud Run front and the app itself only sees http.
+            .headers(headers -> headers
+                .contentSecurityPolicy(csp -> csp.policyDirectives(CONTENT_SECURITY_POLICY))
+                .referrerPolicy(referrer -> referrer.policy(ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
+                .httpStrictTransportSecurity(hsts -> hsts
+                    .requestMatcher(AnyRequestMatcher.INSTANCE)
+                    .includeSubDomains(false)))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 // Spring MVC answers HEAD with the GET handler, so every GET rule has to cover HEAD as well.

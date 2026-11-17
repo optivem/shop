@@ -14,6 +14,8 @@ using MyCompany.MyShop.Monolith.Data;
 using MyCompany.MyShop.Monolith.Pages.Storefront;
 
 var builder = WebApplication.CreateBuilder(args);
+// No "Server: Kestrel" header: it only tells a scanner what to aim at.
+builder.WebHost.ConfigureKestrel(options => options.AddServerHeader = false);
 
 // With APP_PROFILE=prod (production deploy only), refuse to start on missing or test-default secrets.
 ProductionConfigGuard.EnsureSafeForProduction(builder.Configuration);
@@ -98,6 +100,8 @@ builder.Services.AddShopHealthProbes();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
+app.UseShopSecurityHeaders();
+
 app.Use(async (context, next) =>
 {
     context.Request.EnableBuffering();

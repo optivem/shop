@@ -209,3 +209,8 @@ Found 2026-11-17 (U9, B-PRG 4.1). `system/monolith/typescript/src/lib/auth/setti
 
 Found 2026-11-17 (U9). Commits made with `gh optivem commit --yes --paths … "<message>"` end with the caller's `Co-Authored-By: Claude Opus 5.5` and `Claude-Session` lines, then a blank line and an extra `Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>` the tool adds itself (e.g. `707e37a6`).
 - **Recommended:** fix in gh-optivem (X1): skip the tool's own trailer when the message already has a `Co-Authored-By:` line. **Why:** the extra line names the wrong model and splits the trailer block.
+
+### 78. `frontend-react` (nginx) sends no security headers
+
+Found 2026-11-17 (U9 run 2, B-PRG 4.3). 4.3 put CSP, Referrer-Policy, HSTS, `nosniff` and `X-Frame-Options` on all seven backends, but the multitier UI is served by `system/multitier/frontend-react/nginx.conf`, which sends none of them. Its CSP is harder than the backends': the SPA talks to Keycloak (`KEYCLOAK_URL`, possibly a check-sso iframe) and optionally to a browser OTLP endpoint, so `connect-src`/`frame-src` need those runtime origins, and nginx's `add_header` is not inherited by a `location` that has its own `add_header` (all four here do).
+- **Recommended:** add the non-CSP headers (`nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy`, HSTS) with `always` to every `location`, and a `Content-Security-Policy-Report-Only` built from `${KEYCLOAK_URL}` and `${OTEL_BROWSER_EXPORTER_OTLP_ENDPOINT}` (add them to `NGINX_ENVSUBST_FILTER`); enforce it after a Lane D UI run shows no violations in the console. **Why:** the SPA is the user-facing surface of the multitier stack, and report-only first is the safe way to get its origins right.
