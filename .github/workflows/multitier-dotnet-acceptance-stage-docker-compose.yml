@@ -20,7 +20,9 @@ on:
 permissions: {}
 
 concurrency:
-  group: multitier-dotnet-acceptance-stage-docker-compose
+  # Scheduled runs share one group. Each dispatched run (a prerelease pipeline's gate) gets its own:
+  # in a shared group the next hourly run cancels a pending dispatched run, which fails the pipeline.
+  group: multitier-dotnet-acceptance-stage-docker-compose-${{ github.event_name == 'schedule' && 'schedule' || github.run_id }}
 
 jobs:
   acceptance-stage:
