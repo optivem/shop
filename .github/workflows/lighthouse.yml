@@ -101,7 +101,7 @@ jobs:
 
       - name: Upload Lighthouse Reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: lighthouse-reports
           path: ${{ runner.temp }}/lhci/
