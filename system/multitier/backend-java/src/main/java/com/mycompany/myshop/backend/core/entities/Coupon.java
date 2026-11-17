@@ -6,8 +6,10 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.math.BigDecimal;
@@ -15,7 +17,9 @@ import java.time.Instant;
 
 @Entity
 @Table(name = "coupons")
-@Data
+@Getter
+@Setter
+@ToString
 @NoArgsConstructor
 public class Coupon {
 
@@ -74,5 +78,26 @@ public class Coupon {
         this.validTo = validTo;
         this.usageLimit = usageLimit;
         this.usedCount = usedCount;
+    }
+
+    /**
+     * Identity is the database id, so an entity stays equal to itself before and after it is persisted
+     * and across Hibernate proxies; two unsaved entities are never equal. The hash code is constant per
+     * class so it does not change when the id is assigned on save.
+     */
+    @Override
+    public boolean equals(Object other) {
+        if (this == other) {
+            return true;
+        }
+        if (!(other instanceof Coupon that)) {
+            return false;
+        }
+        return id != null && id.equals(that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Coupon.class.hashCode();
     }
 }

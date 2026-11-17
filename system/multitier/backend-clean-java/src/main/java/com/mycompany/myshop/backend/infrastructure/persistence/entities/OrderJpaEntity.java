@@ -9,8 +9,10 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.math.BigDecimal;
@@ -18,7 +20,9 @@ import java.time.Instant;
 
 @Entity
 @Table(name = "orders")
-@Data
+@Getter
+@Setter
+@ToString
 @NoArgsConstructor
 public class OrderJpaEntity {
 
@@ -79,4 +83,21 @@ public class OrderJpaEntity {
 
     @Column(name = "applied_coupon_code", nullable = true)
     private String appliedCouponCode;
+
+    // Identity is the database id; the hash code is constant per class so it survives the id being assigned on save.
+    @Override
+    public boolean equals(Object other) {
+        if (this == other) {
+            return true;
+        }
+        if (!(other instanceof OrderJpaEntity that)) {
+            return false;
+        }
+        return id != null && id.equals(that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return OrderJpaEntity.class.hashCode();
+    }
 }

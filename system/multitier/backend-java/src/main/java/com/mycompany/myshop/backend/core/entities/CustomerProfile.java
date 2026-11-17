@@ -6,15 +6,19 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 import java.time.Instant;
 
 /** A customer's name and default shipping address, one row per token subject. The email is not stored. */
 @Entity
 @Table(name = "customer_profiles")
-@Data
+@Getter
+@Setter
+@ToString
 @NoArgsConstructor
 public class CustomerProfile {
     @Id
@@ -48,5 +52,26 @@ public class CustomerProfile {
 
     public CustomerProfile(String owner) {
         this.owner = owner;
+    }
+
+    /**
+     * Identity is the database id, so an entity stays equal to itself before and after it is persisted
+     * and across Hibernate proxies; two unsaved entities are never equal. The hash code is constant per
+     * class so it does not change when the id is assigned on save.
+     */
+    @Override
+    public boolean equals(Object other) {
+        if (this == other) {
+            return true;
+        }
+        if (!(other instanceof CustomerProfile that)) {
+            return false;
+        }
+        return id != null && id.equals(that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return CustomerProfile.class.hashCode();
     }
 }
