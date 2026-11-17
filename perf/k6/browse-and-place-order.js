@@ -6,6 +6,14 @@
 //   docker compose -f docker/java/monolith/docker-compose.local.stub.yml up -d --build --wait
 //   k6 run perf/k6/browse-and-place-order.js
 //
+// Without a local k6, run it from the pinned image (as load-test.yml does). On Linux use --network host.
+// On Docker Desktop (Windows/macOS) map localhost to the host gateway instead, so the token issuer stays
+// http://localhost:<port> and the backend accepts it (host.docker.internal would change the issuer):
+//
+//   echo '{"hosts":{"localhost":"'$(docker run --rm alpine getent hosts host.docker.internal | cut -d' ' -f1)'"}}' > k6-hosts.json
+//   docker run --rm -v "$PWD/perf/k6:/scripts:ro" -v "$PWD/k6-hosts.json:/k6-hosts.json:ro" -e VUS=1 -e DURATION=10s \
+//     -e SUMMARY_DIR=/tmp grafana/k6:1.0.0 run --config /k6-hosts.json /scripts/browse-and-place-order.js
+//
 // Defaults target the Java monolith stub stack (API 8112, Keycloak 8192). For the others set
 // BASE_URL / KEYCLOAK_URL: .NET 8212 / 8292, TypeScript 8312 / 8392 (see docker/<language>/monolith).
 //

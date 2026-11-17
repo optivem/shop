@@ -1,0 +1,16 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/erp/api/promotion"
+  },
+  "response": {
+    "status": 200,
+    "jsonBody": {
+      "promotionActive": false,
+      "discount": 1.0
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}
