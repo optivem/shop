@@ -38,7 +38,7 @@ Backends: MJ = `system/monolith/java`, BJ = `multitier/backend-java`, CJ = `mult
 
 ## ▶ Next executable step (resume here)
 
-Meta-plan unit U9 (Lane B), chunk order 0 → 1 → 3 → 4 → 2 → 5 → 6; 5.4 and 6.3 touch `_prod-stage.yml` and wait until B-QAS (U5) is pushed. U9 run 1 (2026-11-17) did 0.1 (table above), 1.7, 1.8, 3.2, 3.4, 3.5 and 4.1. **Lane D still owes** a `--sample` run per language for 3.4 (Docker `HEALTHCHECK` now probes `/livez`) and a look at the `/readyz` response on a running stack. Before the next production dispatch, confirm the prod `shop-monolith` client secret in Secret Manager is not `shop-monolith-test-secret` (4.1 would refuse to start). **Next: 4.3** (security headers per the table: CSP + Referrer-Policy on Java, the full set on .NET and TS, drop Next.js `X-Powered-By`), then 4.4, then 2.3. 4.2 waits on Open question 1.
+Meta-plan unit U9 (Lane B), chunk order 0 → 1 → 3 → 4 → 2 → 5 → 6; 5.4 and 6.3 touch `_prod-stage.yml` and wait until B-QAS (U5) is pushed. U9 run 1 (2026-11-17) did 0.1 (table above), 1.7, 1.8, 3.2, 3.4, 3.5 and 4.1. **Lane D still owes** a `--sample` run per language for 3.4 (Docker `HEALTHCHECK` now probes `/livez`) and a look at the `/readyz` response on a running stack. Before the next production dispatch, confirm the prod `shop-monolith` client secret in Secret Manager is not `shop-monolith-test-secret` (4.1 would refuse to start). **Next: 4.3** (security headers per the table: CSP + Referrer-Policy on Java, the full set on .NET and TS, drop Next.js `X-Powered-By`), then 4.4, then 2.3. 4.2 is decided (Keycloak brute-force detection).
 
 ## Steps
 
@@ -56,7 +56,7 @@ Steps 1.1–1.6 are done (2026-11-03); the child plan `20261009-1545-production-
 
 ### Chunk 4 — Security hardening
 4.1 is done (U9, 2026-11-17): under the prod profile (Java `SPRING_PROFILES_ACTIVE=prod`, .NET/TS `APP_PROFILE=prod`, both set by the production deploy only) every backend refuses to start on a missing/test-default DB password, a missing/localhost issuer, or (monoliths) the test-realm client secret. The TS monolith's `AUTH_SESSION_SECRET` is not checked yet: production never sets it (REL #76).
-- [ ] 4.2 ⚠ **Blocked on Open question 1** (U9, 2026-11-17). Rate limiting: a minimal in-app login-attempt limit in all six backends, plus a `docs/operations/` how-to for an opt-in edge policy (Cloud Armor rule or a free fronting proxy) with its monthly cost labelled, not wired into the default deploy (decided, see Resolved decisions). **Shortcut, noted:** this is not real edge rate limiting. Cloud Run limits nothing by default and the in-app limit is per instance, so a determined attacker spread across instances isn't stopped; we accept that to keep the default $0 for students who clone shop.
+- [ ] 4.2 Rate limiting (re-decided, user 2026-11-17): no backend has an in-app login (passwords are checked by Keycloak), so turn on **Keycloak brute-force detection** (temporary lockout after repeated failed logins) in the realm imports, plus a `docs/operations/` how-to for an opt-in edge policy (Cloud Armor rule or a free fronting proxy) with its monthly cost labelled, not wired into the default deploy. **Shortcut, noted:** still not real edge rate limiting; non-login endpoints stay unlimited, to keep the default $0.
 - [ ] 4.3 Security headers (CSP, HSTS, `X-Content-Type-Options`, frame options, referrer policy) and an explicit CORS policy.
 - [ ] 4.4 Swagger/OpenAPI exposure policy: disabled or admin-only in prod. Keep B-KC decision 1 (actuator/swagger on backend-java stay authenticated, never public).
 
@@ -82,13 +82,10 @@ Decided (user, 2026-11-16, meta-plan G0 answer 7, plus the meta-plan's U9 chunk 
 - **Order of chunks:** 0, 1, 3, 4, 2, 5, 6 (Chunk 0 fixes the scope; 1 is the real correctness risk; 3 and 4 are small and visible).
 - **Legacy twins:** stay frozen; fixes land in the latest variants only, unless a parity plan says otherwise.
 - **Idempotency scope (1.4):** settled when 1.4 shipped (per user, 24 h TTL); see the Chunk 1 note.
-- **Rate limiting (4.2):** in-code login limit only; the edge policy is a documented, cost-labelled opt-in (user, 2026-11-17). A deliberate shortcut, see 4.2.
+- **Rate limiting (4.2):** Keycloak brute-force detection plus a documented, cost-labelled opt-in edge policy (user, 2026-11-17, re-decided after the 0.1 audit found no in-app login). A deliberate shortcut, see 4.2.
 - **Prod target (6.1):** GCP (Cloud Run + Neon + Secret Manager) is the real prod target; compose stays the local and pipeline runtime.
 - **Overlap with B-KC** (`backlog/p2-product-correctness/20261007-1114-keycloak-auth-followups.md`): checked by the meta-plan; B-KC holds only a deferred .NET route-table/JWKS item and no chunk 4 work. Its decision 1 (actuator/swagger stay authenticated) is carried into 4.4.
 
 ## Open questions
 
-1. **4.2: there is no in-app login to limit.** The 0.1 audit found that no backend accepts a password: users type credentials at Keycloak, the monoliths only redirect to it (`/sign-in`, `/login`, `/login/callback`, the Spring/ASP.NET OIDC callbacks) and the multitier backends only validate bearer tokens. An in-app "login-attempt limit" in six backends would count redirects, not guesses. Options:
-   - (a) **Recommended:** enable Keycloak's built-in brute-force detection in the `shop` realm import (`bruteForceProtected: true`, a `failureFactor`, wait increments) for the local, pipeline and cloud realms, plus the cost-labelled `docs/operations/` edge-policy how-to as decided. $0, one config change, and it limits the place passwords are actually checked. A test-stack caveat: a few failed logins in one test could lock a shared test user, so set a generous `failureFactor` there.
-   - (b) A per-IP limit in the six backends on the OIDC entry/callback routes (monoliths) and on requests rejected with 401 (all). Stops callback floods and token-guessing noise, but not password guessing.
-   - (c) Both.
+None. 4.2 was re-decided 2026-11-17 (Keycloak brute-force detection).
