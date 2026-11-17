@@ -732,6 +732,13 @@ jobs:
         run: gh optivem system-test run --suite smoke-stub
       - name: smoke-real
         run: gh optivem system-test run --suite smoke-real
+      # === Run Contract Tests ===
+      - name: contract-stub
+        run: gh optivem system-test run --suite contract-stub
+      - name: contract-stub-isolated
+        run: gh optivem system-test run --suite contract-stub-isolated
+      - name: contract-real
+        run: gh optivem system-test run --suite contract-real
       # === Run Acceptance Tests ===
       - name: acceptance-parallel-api
         run: gh optivem system-test run --suite acceptance-parallel-api
@@ -741,13 +748,6 @@ jobs:
         run: gh optivem system-test run --suite acceptance-isolated-api
       - name: acceptance-isolated-ui
         run: gh optivem system-test run --suite acceptance-isolated-ui
-      # === Run Contract Tests ===
-      - name: contract-stub
-        run: gh optivem system-test run --suite contract-stub
-      - name: contract-stub-isolated
-        run: gh optivem system-test run --suite contract-stub-isolated
-      - name: contract-real
-        run: gh optivem system-test run --suite contract-real
       # === Run E2E Tests ===
       - name: e2e-api
         run: gh optivem system-test run --suite e2e-api
