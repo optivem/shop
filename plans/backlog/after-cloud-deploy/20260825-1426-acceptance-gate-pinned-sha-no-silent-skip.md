@@ -11,55 +11,40 @@ What we get out of this — the goals and deliverables:
 
 - `meta-prerelease-stage` no longer fails intermittently with "No rc tag matching '<prefix>-v<version>-rc.*' found on <sha>" caused by the cron/dispatch race.
 - A pinned-SHA acceptance-stage dispatch has exactly two honest terminations: it runs and tags that SHA, or it fails. It can no longer skip into a false green.
-- A pinned-SHA dispatch is idempotent: if an RC tag already exists on that SHA, it skips *for the right reason*, and the caller resolves the existing tag and passes.
-- The 6 `-legacy` acceptance stages no longer silently skip verification of a pinned SHA (they publish no tag, so today the skip is invisible to the caller).
-- The existing loud guard at `_prerelease-pipeline.yml:410-419` stays untouched — it was correct; the defect was upstream.
+- A pinned dispatch of a SHA that already has an RC tag re-tests it and adds a higher RC tag. That is harmless: the caller resolves the highest RC on the SHA (see below).
+- The legacy acceptance stages no longer silently skip verification of a pinned SHA.
+- The loud `Fail If No RC Tag On SHA` guard stays as it is; it was correct, the defect was upstream.
+
+## Current state (reviewed 2026-11-17, meta-plan U3)
+
+The single-pipeline move rewrote the files this plan targeted. The 12 per-variant `*-acceptance-stage.yml` / `*-acceptance-stage-legacy.yml` files it named are gone. Today there are 18 thin callers (`<arch>-<lang>-acceptance-stage.yml`, `-acceptance-stage-docker-compose.yml`, `-acceptance-stage-docker-compose-legacy.yml`) of two reusable workflows, each with one `check` job:
+
+- `.github/workflows/_acceptance-stage.yml` (cloud; owns the RC tag): `Evaluate Run Gate` at ~line 216.
+- `.github/workflows/_acceptance-stage-docker-compose.yml` (docker compose gate, `suite-set` latest or legacy; creates no RC tag): `Evaluate Run Gate` at ~line 202.
+
+What is already done there:
+
+- **The core fix (old Steps 1–4, item 2, third condition) is in both files.** The freshness skip reads `{"when": ${{ inputs.commit-sha == '' && steps.artifacts-changed.outputs.newer != 'true' && steps.test-changes.outputs.changed != 'true' }}, ...}` (`_acceptance-stage.yml:223`, `_acceptance-stage-docker-compose.yml:209`; added in `b893a9cc` with the reusable workflows). A pinned dispatch can no longer take the cron-style "nothing new" skip. Because the legacy callers use the same `_acceptance-stage-docker-compose.yml` `check` job (with `suite-set: legacy`), they carry the same guard (old Step 3).
+- **The loud guard moved.** `Fail If No RC Tag On SHA` is no longer at `_prerelease-pipeline.yml:410-419`. It is now the `verify-rc-tag` job in `_acceptance-stage.yml` (~lines 816–848), and `_prerelease-pipeline.yml`'s `cloud-acceptance-stage` job resolves the RC with `Resolve RC Tag On SHA` (~line 394) after dispatching `<prefix>-acceptance-stage.yml` with `commit-sha`.
+- **The race source today:** the hourly `cron: '0 * * * *'` is active only on the six `*-acceptance-stage-docker-compose.yml` callers (the cloud callers have it commented out). `_prerelease-pipeline.yml`'s `acceptance-stage` job dispatches those with `commit-sha`, so the guard above is what protects it.
+
+## Resolved decisions
+
+- **`rc-on-sha` idempotence skip (old Step 1, item 1 + new second skip condition): dropped** (U3 review, 2026-11-17; cheap to reverse). `verify-rc-tag`'s comment in `_acceptance-stage.yml` records the current design: "A re-run re-tests the SHA and adds a higher rc tag; we resolve the highest, so that is harmless." That is honest (it never skips into a false green), so adding a skip would only save CI minutes on a rare re-dispatch. `_acceptance-stage-docker-compose.yml` publishes no RC tag, so the condition has nothing to resolve there.
+- **Pinned dispatch and the `Release in progress` skip (condition #1): left unchanged.** `check-version` in `_prerelease-pipeline.yml` (~line 64) already fails the pipeline loudly before the acceptance stage is reached. Revisit only if a real run shows the acceptance stage skipping for that reason under a pinned dispatch.
+- **Skipping `Get Last Workflow Run` / `check-timestamp-newer` under a pinned dispatch: not done.** Cosmetic; the values are cheap and the same `check` job serves the cron path.
 
 ## ▶ Next executable step (resume here)
 
-Edit `.github/workflows/monolith-typescript-acceptance-stage.yml` (the variant that actually failed) as the reference implementation:
-
-1. In the `check` job, insert a new step immediately **before** `- name: Evaluate Run Gate` (currently at line 129):
-   ```yaml
-   - name: Resolve Existing RC Tag On SHA
-     id: rc-on-sha
-     uses: optivem/actions/resolve-latest-tag-from-sha@v1
-     with:
-       commit-sha: ${{ env.COMMIT_SHA }}
-       pattern: monolith-typescript-v${{ steps.read-base-version.outputs.base-version }}-rc.*
-   ```
-   Requires `contents: read` on the `check` job — already present.
-2. Rewrite the `skip-conditions` array so it reads:
-   ```yaml
-   skip-conditions: |
-     [
-       {"when": ${{ steps.check-tag.outputs.exists == 'true' }}, "reason": "Release in progress — version already tagged, awaiting post-release VERSION bump."},
-       {"when": ${{ inputs.commit-sha != '' && steps.rc-on-sha.outputs.tag != '' }}, "reason": "RC tag already published for this commit — nothing to re-verify."},
-       {"when": ${{ !inputs.commit-sha && steps.artifacts-changed.outputs.newer != 'true' && steps.test-changes.outputs.changed != 'true' }}, "reason": "No new artifacts since last run AND no test/workflow changes since last RC tag." }
-     ]
-   ```
-   The only change to the third condition is the `!inputs.commit-sha &&` prefix. Leave the first condition alone.
-
-Gate: stop after this one file, confirm the YAML parses and the diff is exactly the two edits above, then replicate to the other 11 files (Steps 2–3). This unblocks the whole plan — the remaining files are mechanical copies of the same shape.
+Meta-plan unit U4 (Lane W, after U2 is pushed: Conflict 2). No workflow edit is left; only the live check. **Step 1:** dispatch `prerelease-pipeline-monolith-typescript.yml` with a pinned `commit-sha` (main HEAD) a few minutes before the top of the hour, so the hourly `monolith-typescript-acceptance-stage-docker-compose.yml` cron run overlaps it. Confirm that the docker-compose acceptance run for that SHA does not skip at `Evaluate Run Gate`, that the cloud `monolith-typescript-acceptance-stage.yml` run's `verify-rc-tag` finds an RC tag on the SHA, and that the pipeline is green. If it passes, delete this plan.
 
 ## Steps
 
-- [ ] Step 1: Apply the reference fix to `.github/workflows/monolith-typescript-acceptance-stage.yml` (new `rc-on-sha` step + rewritten `skip-conditions`), per the Next executable step above.
-- [ ] Step 2: Replicate to the other 5 `*-acceptance-stage.yml` files — `monolith-dotnet`, `monolith-java`, `multitier-dotnet`, `multitier-java`, `multitier-typescript`. Substitute the per-variant tag prefix in the `pattern:` (`<arch>-<lang>`, e.g. `multitier-java-v...-rc.*`). Note the gate block sits at ~line 136 in the monolith files and ~line 138 in the multitier files; each file contains the skip-condition string exactly once, and each already has a `read-base-version` step id in the `check` job.
-- [ ] Step 3: Apply **only** the `!inputs.commit-sha &&` guard (Step 1's item 2, third condition) to the 6 `*-acceptance-stage-legacy.yml` files. Do **not** add the `rc-on-sha` step there — those workflows publish no RC tag (no `compose-prerelease-version` / `publish-tag` job), so the idempotence condition has nothing to resolve.
-- [ ] Step 4: Verify statically — run `actionlint` (or the repo's workflow lint) over all 12 changed files; then grep-confirm that all 12 contain `!inputs.commit-sha &&` on the freshness condition, that exactly 6 contain the `rc-on-sha` step, and that none of the 6 legacy files gained one.
-- [ ] Step 5: Verify live — dispatch `prerelease-pipeline-monolith-typescript.yml` (or the full `meta-prerelease-stage`) with a pinned `commit-sha`, and confirm the acceptance stage actually runs for that SHA and publishes an RC tag on it, i.e. `Fail If No RC Tag On SHA` does not trigger. Deliberately overlapping the hourly cron makes this a real regression test for the race.
-- [ ] Step 6: Commit the 12 workflow files via `/commit`.
+- [ ] Step 1: Verify live, as in the Next executable step above. If the docker-compose or cloud stage still skips or `Fail If No RC Tag On SHA` fires, capture the run ids and reopen the gate analysis with the current `check` job (the notes below describe the original failure).
 
-## Notes — root cause evidence (for the executor)
+## Notes — root cause evidence (2026-08-25, pre-single-pipeline; file names are historical)
 
 - Failing run: <https://github.com/optivem/shop/actions/runs/32848640220> → downstream `prerelease-pipeline-monolith-typescript` run 32849970949 → job `verify / acceptance-stage`, step `Fail If No RC Tag On SHA`.
 - From the `check` job of the dispatched acceptance-stage run 32850857809: `COMMIT_SHA=ebb7bd16` resolved correctly (image `sha-ebb7bd16…` pulled fine), but `since = 2026-08-25T12:52:23Z` — the start time of the **hourly cron** run 32850026370 — so `artifacts-changed.newer=false` (image pushed ~12:45). `test-changes` baselined on `monolith-typescript-v1.0.201-rc.2802` and found nothing. Gate skipped.
 - Meanwhile that 12:52 cron run tested main HEAD `fd4920f3` and tagged `rc.2802` **there**, not on the pinned `ebb7bd16`.
 - Not reproducible locally: it is a timing race between the hourly cron and the dispatched run — a CI-config defect, not a code defect.
-- The `Release in progress` skip condition stays as-is: that case is already caught loudly upstream by the `check-version` job at `_prerelease-pipeline.yml:80-91`.
-
-## Open questions
-
-- Should a pinned-SHA dispatch *also* bypass the `Release in progress` skip (condition #1)? Left unchanged here on the reasoning that `check-version` already fails the pipeline loudly before acceptance-stage is reached. Revisit only if a real run shows the acceptance stage skipping for that reason under a pinned dispatch.
-- Should the `check` job's `Get Last Workflow Run` / `check-timestamp-newer` steps be skipped entirely under a pinned dispatch (they compute values no longer consumed)? Cosmetic and token-cheap to leave in — proposed as a follow-up cleanup, not part of this fix.
