@@ -54,6 +54,8 @@ Note that `test-all.sh` deliberately does **not** cover `system/multitier/backen
 
 ## Fixing Failing Workflows
 
+**Pipeline failures come first.** A failed optivem/shop workflow run is the highest-priority work: it pre-empts whatever else is in flight (meta-plan units, plan work, feature work). During long runs, check `gh run list` for failures between units, and triage any failure before starting the next unit. Fix it autonomously (diagnose, fix, commit via the commit skill, push, re-dispatch) without asking per step; still stop for destructive or third-party-visible actions. A transient failure (network reset, runner hiccup) gets one rerun of the failed jobs; a real defect goes through the sequence below.
+
 When fixing a failing CI workflow, always follow this sequence:
 
 1. **Reproduce locally first**: Before making any code changes, run `gh optivem system-test run` locally with the appropriate flags to reproduce the failure. Report whether the failure was reproduced or not.
