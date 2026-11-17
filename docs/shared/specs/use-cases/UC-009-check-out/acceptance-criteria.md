@@ -1,7 +1,7 @@
 ---
 id: UC-009
 title: Check Out
-status: planned
+status: implemented
 ---
 
 # UC-009 Check Out — Acceptance criteria

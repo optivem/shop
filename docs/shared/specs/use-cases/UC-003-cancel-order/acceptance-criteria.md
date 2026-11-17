@@ -1,7 +1,7 @@
 ---
 id: UC-003
 title: Cancel Order
-status: planned
+status: implemented
 ---
 
 # UC-003 Cancel Order — Acceptance criteria

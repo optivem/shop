@@ -1,7 +1,7 @@
 ---
 id: UC-010
 title: Manage Profile
-status: planned
+status: implemented
 ---
 
 # UC-010 Manage Profile — Acceptance criteria

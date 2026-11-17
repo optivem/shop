@@ -1,7 +1,7 @@
 ---
 id: UC-002
 title: View Order
-status: planned
+status: implemented
 ---
 
 # UC-002 View Order — Acceptance criteria

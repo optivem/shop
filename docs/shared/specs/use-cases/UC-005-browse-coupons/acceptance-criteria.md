@@ -1,7 +1,7 @@
 ---
 id: UC-005
 title: Browse Coupons
-status: planned
+status: implemented
 ---
 
 # UC-005 Browse Coupons — Acceptance criteria

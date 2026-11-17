@@ -1,7 +1,7 @@
 ---
 id: UC-012
 title: Deliver Order
-status: planned
+status: implemented
 ---
 
 # UC-012 Deliver Order — Acceptance criteria

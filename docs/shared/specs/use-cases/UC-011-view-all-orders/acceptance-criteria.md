@@ -1,7 +1,7 @@
 ---
 id: UC-011
 title: View All Orders
-status: planned
+status: implemented
 ---
 
 # UC-011 View All Orders — Acceptance criteria

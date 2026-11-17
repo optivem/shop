@@ -50,16 +50,16 @@ GitHub renders Mermaid without clickable links, so use the table below to open e
 | ID | Name | Primary actor | Status (spec gate) |
 |---|---|---|---|
 | UC-001 | [Place Order](UC-001-place-order/use-case-narrative.md) | Customer | implemented |
-| UC-002 | [View Order](UC-002-view-order/use-case-narrative.md) | Customer | planned |
-| UC-003 | [Cancel Order](UC-003-cancel-order/use-case-narrative.md) | Customer | planned |
+| UC-002 | [View Order](UC-002-view-order/use-case-narrative.md) | Customer | implemented |
+| UC-003 | [Cancel Order](UC-003-cancel-order/use-case-narrative.md) | Customer | implemented |
 | UC-004 | [Publish Coupon](UC-004-publish-coupon/use-case-narrative.md) | Admin | implemented |
-| UC-005 | [Browse Coupons](UC-005-browse-coupons/use-case-narrative.md) | Admin | planned |
+| UC-005 | [Browse Coupons](UC-005-browse-coupons/use-case-narrative.md) | Admin | implemented |
 | UC-006 | [Browse Catalog](UC-006-browse-catalog/use-case-narrative.md) | Visitor | implemented |
 | UC-007 | [View Product](UC-007-view-product/use-case-narrative.md) | Visitor | implemented |
 | UC-008 | [Manage Cart](UC-008-manage-cart/use-case-narrative.md) | Visitor | implemented |
-| UC-009 | [Check Out](UC-009-check-out/use-case-narrative.md) | Customer | planned |
-| UC-010 | [Manage Profile](UC-010-manage-profile/use-case-narrative.md) | Customer | planned |
-| UC-011 | [View All Orders](UC-011-view-all-orders/use-case-narrative.md) | Admin | planned |
-| UC-012 | [Deliver Order](UC-012-deliver-order/use-case-narrative.md) | Admin | planned |
+| UC-009 | [Check Out](UC-009-check-out/use-case-narrative.md) | Customer | implemented |
+| UC-010 | [Manage Profile](UC-010-manage-profile/use-case-narrative.md) | Customer | implemented |
+| UC-011 | [View All Orders](UC-011-view-all-orders/use-case-narrative.md) | Admin | implemented |
+| UC-012 | [Deliver Order](UC-012-deliver-order/use-case-narrative.md) | Admin | implemented |
 
 Secondary actors: ERP supplies product data (Place Order, Browse Catalog, View Product, and current prices in Manage Cart). Clock supplies the current time where time matters (Place Order, including coupon validity; Cancel Order). Check Out reaches both through Place Order.
