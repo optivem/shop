@@ -29,7 +29,7 @@ CI/CD meta-stages (commit → acceptance → RC → release), ATDD with DSL/driv
 | 3 | Resilience on outbound calls (timeout/retry/circuit breaker) + test | High | Low–Medium | **Do** |
 | 4 | Supply-chain security (Dependabot, CodeQL, Trivy, SBOM) | High | Low | **Do** |
 | 5 | Performance/load test (k6) | Medium–High | Low | Do next |
-| 6 | Async messaging + outbox pattern (e.g. order-placed event) | High (backend/system-design interviews) | High | **Spun off:** `plans/20261112-0939-transactional-outbox-postgres.md` (Postgres-backed outbox, no broker) |
+| 6 | Async messaging + outbox pattern (e.g. order-placed event) | High (backend/system-design interviews) | High | **Done (2026-11-17):** Java-only worked example in `system/multitier/backend-java`, see [docs/transactional-outbox.md](../docs/transactional-outbox.md) (Postgres-backed outbox, no broker; plan deleted) |
 | 8 | Frontend testing beyond e2e (component tests, axe a11y, Lighthouse CI) | Medium (frontend roles) | Medium | **Spun off:** `plans/20261112-0939-frontend-testing-component-a11y-lighthouse.md` |
 | 9 | OpenAPI parity (.NET, TS) | Low–Medium | Low | Fold into parity sweep |
 | 10 | Mutation-testing parity (Stryker .NET/TS) | Low–Medium | Low | Fold into parity sweep |

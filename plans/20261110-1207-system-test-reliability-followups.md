@@ -189,3 +189,13 @@ Found 2026-11-17 (U1 Java pass). With every use case counted, Java shows `UC-009
 
 Found 2026-11-17 (U10, meta-plan Wave 3). With several agents in one checkout, every `gh optivem commit --paths …` committed but stopped before pushing: its pull step runs `git pull --rebase`, which refuses while any other file is unstaged ("cannot pull with rebase: You have unstaged changes"). U10's three commits (`8cf687c3`, `5a294ef7`, `a2520492`) and an earlier B-PRG commit stayed local-only, so CI never saw them and the new `lighthouse.yml` could not be dispatched. (Numbered 73 because #72 is referenced in this file's header but its section was not in the local copy yet.)
 - **Recommended:** fix in gh-optivem (X1): pull with a merge (`git pull --no-rebase --autostash`, matching the user's "plain git pull, never rebase" rule) so other sessions' dirty files don't block the push. Until then, the orchestrator pushes once per wave when the tree is clean. **Why:** a commit that silently stays local hides work from CI and from the "verify `git log origin/main`" check.
+
+### 74. Sent outbox rows are never purged (backend-java multitier)
+
+Found 2026-11-17 (U11 OUTBOX). The transactional-outbox worked example (`system/multitier/backend-java/.../core/outbox/`, migration `V20261117150000__add_outbox_and_order_placed_audit.sql`) keeps every sent `outbox` row and every `order_placed_audit` row forever. On a long-lived stack (prod, a student's running local stack) both tables grow by one row per order. The how-to (`docs/transactional-outbox.md`, Caveats) says so.
+- **Recommended:** leave it until a real consumer lands, then add a purge of `outbox` rows with `sent_at` older than 7 days to the relay's poll (one `DELETE ... WHERE sent_at < now() - interval '7 days'` per N polls), mirroring the B-PRG idempotency-key purge. **Why:** the table is tiny at demo volumes, and the purge belongs next to the idempotency purge so the two follow one pattern.
+
+### 75. Two `@EnableScheduling` in backend-java once B-PRG's purge lands
+
+Found 2026-11-17 (U11 OUTBOX). U11 put `@EnableScheduling` on the new `config/OutboxConfig.java` so the outbox relay did not depend on uncommitted work. U9 (B-PRG idempotency purge) is adding `@EnableScheduling` to `BackendApplication.java` in the same checkout. Two copies are harmless (Spring imports the scheduling config once), just redundant.
+- **Recommended:** after both are on `main`, remove `@EnableScheduling` from `OutboxConfig` and keep the one on `BackendApplication`. **Why:** one switch is easier to reason about.
