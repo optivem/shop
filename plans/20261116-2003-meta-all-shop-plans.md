@@ -37,10 +37,10 @@ The orchestrating session runs the **Wave tracker** top to bottom. Run the same 
 | 0 | U0 plan-only housekeeping | — | done 2026-11-17 |
 | 0 | 🛑 G0 user answers | — | done 2026-11-16 |
 | 1 | U1 Phase B finish (META3) | D | done 2026-11-17 up to `897bbe33` (test-all 12/12, all 12 UCs implemented, SPEC/BUILD/SMETA deleted); 🛑 MUI visual check (user) pending, then delete MUI + SHOW |
-| 1 | U2 UC1 Track D4 | D (after U1) | running (strict blocked by UC-005.7, UC-011.2 untested and Java UC-009.2 misread, REL #70/#71) |
+| 1 | U2 UC1 Track D4 | D (after U1) | done 2026-11-17: UC1 deleted (`513c47ed`), Java UC-009.2 fixed (`db087f76`), spec-gate strict with user-approved waivers for UC-005.7 / UC-011.2 until 2027-02-17 |
 | 1 | U3 plan refinement pass (FT, OUTBOX, B-ORD, B-PRG prune, B-QAS prune, B-PIN retarget) | P | done 2026-11-17 (`0e6bba99`) |
-| 2 | U4 B-PIN pinned-SHA gate (now verification only: one pinned-SHA dispatch) | W | todo |
-| 2 | U5 B-QAS remainder (verification only: smoke ran green before record/release) | W (after U4) | todo |
+| 2 | U4 B-PIN pinned-SHA gate (now verification only: one pinned-SHA dispatch) | W | done 2026-11-17: run 44087239748 green, gate didn't skip, RC tag on `db087f76`; plan deleted (`9e7cd5ef`) |
+| 2 | U5 B-QAS remainder (verification only: smoke ran green before record/release) | W (after U4) | done 2026-11-17 (`e0e3c925`); Steps 2–3 are X1 |
 | 2 | U6 B-ORD shop steps | W (after U5) | todo |
 | 2 | U7 B-MRF #3 + #4 | D (after U2) | todo |
 | 2 | U8 REL open ideas, shop side | D (after U7) | todo |
