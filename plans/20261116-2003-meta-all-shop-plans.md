@@ -28,7 +28,7 @@ The orchestrating session runs the **Wave tracker** top to bottom. Run the same 
 
 ## ▶ Next executable step (resume here)
 
-**Wave 1 (session 2026-11-17, scope = Wave 1):** Lane D runs **U1** (META3 Phase B, checklist at `git show 06ac783d:plans/20261112-0845-meta-storefront-ui-showcase-reliability.md`: .NET pass → TS pass → SHOW Phase B → `./test-all.sh` → flips → SMETA Step 8 → 🛑 MUI visual check), then **U2** (UC1 D4, strict). Lane P runs **U3** (refine/review pass) in parallel. U0 is done.
+**Wave 1 (session 2026-11-17, scope = Wave 1):** Lane D runs **U1** (META3 Phase B, checklist at `git show 06ac783d:plans/20261112-0845-meta-storefront-ui-showcase-reliability.md`: .NET pass → TS pass → SHOW Phase B → `./test-all.sh` → flips → SMETA Step 8 → 🛑 MUI visual check), then **U2** (UC1 D4, strict). U0 and U3 are done.
 
 ## Wave tracker
 
@@ -38,16 +38,16 @@ The orchestrating session runs the **Wave tracker** top to bottom. Run the same 
 | 0 | 🛑 G0 user answers | — | done 2026-11-16 |
 | 1 | U1 Phase B finish (META3) | D | todo |
 | 1 | U2 UC1 Track D4 | D (after U1) | todo |
-| 1 | U3 plan refinement pass (FT, OUTBOX, B-ORD, B-PRG prune, B-QAS prune, B-PIN retarget) | P | todo |
-| 2 | U4 B-PIN pinned-SHA gate | W | todo |
-| 2 | U5 B-QAS remainder (shop) | W (after U4) | todo |
+| 1 | U3 plan refinement pass (FT, OUTBOX, B-ORD, B-PRG prune, B-QAS prune, B-PIN retarget) | P | done 2026-11-17 (`0e6bba99`) |
+| 2 | U4 B-PIN pinned-SHA gate (now verification only: one pinned-SHA dispatch) | W | todo |
+| 2 | U5 B-QAS remainder (verification only: smoke ran green before record/release) | W (after U4) | todo |
 | 2 | U6 B-ORD shop steps | W (after U5) | todo |
 | 2 | U7 B-MRF #3 + #4 | D (after U2) | todo |
 | 2 | U8 REL open ideas, shop side | D (after U7) | todo |
-| 3 | U9 B-PRG remainder | B | todo |
+| 3 | U9 B-PRG remainder (chunk 4.2 needs a user answer: edge rate-limit is cost-bearing; recommended in-code login limit only, edge policy opt-in and cost-labelled) | B | todo |
 | 3 | U10 FT frontend testing | D (after U8) | todo |
-| 3 | U11 OUTBOX | B (after U9), verified in D | todo |
-| 4 | U12 B-MRF #8 path-param routes | D (after U10) | todo (needs G0 answer) |
+| 3 | U11 OUTBOX (🛑 re-confirm with user first: full six backends, Java-only, or drop; see its "Why we need it") | B (after U9), verified in D | todo |
+| 4 | U12 B-MRF #8 path-param routes | D (after U10) | todo (G0: yes) |
 | 5 | X1 cross-repo (last) | X | todo |
 | — | M manual (user) | — | open |
 
