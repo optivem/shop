@@ -199,3 +199,13 @@ Found 2026-11-17 (U11 OUTBOX). The transactional-outbox worked example (`system/
 
 Found 2026-11-17 (U11 OUTBOX). U11 put `@EnableScheduling` on the new `config/OutboxConfig.java` so the outbox relay did not depend on uncommitted work. U9 (B-PRG idempotency purge) is adding `@EnableScheduling` to `BackendApplication.java` in the same checkout. Two copies are harmless (Spring imports the scheduling config once), just redundant.
 - **Recommended:** after both are on `main`, remove `@EnableScheduling` from `OutboxConfig` and keep the one on `BackendApplication`. **Why:** one switch is easier to reason about.
+
+### 76. TS monolith in production seals sessions with the committed test session secret
+
+Found 2026-11-17 (U9, B-PRG 4.1). `system/monolith/typescript/src/lib/auth/settings.ts` defaults `AUTH_SESSION_SECRET` to `shop-monolith-test-session-secret-change-me`, and `_deploy-stage.yml` never sets it, so a production monolith-typescript deploy encrypts its session and login cookies with a key anyone can read in the repo. The 4.1 prod guard deliberately does not check it yet: adding the check today would stop the next production deploy of that image.
+- **Recommended:** add a `${SYSTEM}-monolith-session-secret` Secret Manager secret (terraform, random value), map it with `--set-secrets AUTH_SESSION_SECRET=…` for the production stage in `_deploy-stage.yml`, then add `AUTH_SESSION_SECRET` to `productionConfigProblems` in `lib/production-config-guard.ts`. **Why:** a forged session cookie is a full account takeover, and the guard is the cheap way to keep it from coming back.
+
+### 77. `gh optivem commit` appends a second, different Co-Authored-By trailer
+
+Found 2026-11-17 (U9). Commits made with `gh optivem commit --yes --paths … "<message>"` end with the caller's `Co-Authored-By: Claude Opus 5.5` and `Claude-Session` lines, then a blank line and an extra `Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>` the tool adds itself (e.g. `707e37a6`).
+- **Recommended:** fix in gh-optivem (X1): skip the tool's own trailer when the message already has a `Co-Authored-By:` line. **Why:** the extra line names the wrong model and splits the trailer block.
