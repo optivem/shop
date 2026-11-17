@@ -63,7 +63,7 @@ Steps 1.1–1.6 are done (2026-11-03); the child plan `20261009-1545-production-
 ### Chunk 5 — Supply chain and repo hygiene
 5.1 (grouped Dependabot for gradle, nuget, npm, docker, github-actions: `.github/dependabot.yml`), CodeQL (`codeql.yml`), 5.3 (Trivy, CRITICAL/HIGH with a fix, report-only by design, in the standalone `supply-chain.yml`) and the SBOM part of 5.4 (Syft CycloneDX in `supply-chain.yml` and `release-sbom.yml`, BuildKit `sbom: true` + `provenance: mode=max` in the commit stages) were delivered by SHOW.
 - [ ] 5.4 Image signing with cosign (keyless, GitHub OIDC) in the prod stage (what is left of 5.4). Touches `_prod-stage.yml`: after B-QAS (Conflict 4).
-- [ ] 5.5 Add `SECURITY.md` and `CODEOWNERS`. Note in it that secret scanning and push protection are on (enabled 2026-11-17, user-approved; this was item 5.2).
+5.5 is done (U9 run 2, 2026-11-17): `SECURITY.md` (private reporting via the Security tab, what is in place, the committed test credentials explained) and `.github/CODEOWNERS` (`*` to the maintainer). **Open for the user:** GitHub private vulnerability reporting is still **off** on the repo, so the Security-tab link `SECURITY.md` points to does not exist yet; turn it on (repo Settings, or `gh api -X PUT repos/optivem/shop/private-vulnerability-reporting`).
 - [ ] 5.6 Pin base images by digest and tighten the floating `^` ranges in TS, supported by a lockfile and renovation PRs.
 
 ### Chunk 6 — Deploy and operations
