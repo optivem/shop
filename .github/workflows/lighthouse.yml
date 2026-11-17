@@ -1,0 +1,114 @@
+name: lighthouse
+
+# Opt-in Lighthouse CI for the React storefront (system/multitier/frontend-react). Builds the
+# multitier Java stack from source, starts it in stub mode on the runner (docker compose, no
+# registry, no secrets, no hosted LHCI server, no paid service), runs @lhci/cli against the public
+# pages listed in lighthouserc.json and reports the performance, accessibility and best-practices
+# scores in the job summary, with the HTML reports as an artifact.
+#
+# REPORT-ONLY: every budget in lighthouserc.json is a `warn` assertion, so a missed budget shows up
+# as a warning and never turns the run red. The run fails only when it cannot measure at all (the
+# stack does not start, or Lighthouse cannot load a page). Switch budgets to `error` once the
+# scores are stable. Manual (workflow_dispatch) plus nightly; never part of a delivery pipeline.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 3 * * *'  # Daily 03:00 UTC, after the mutation nightlies
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+env:
+  LHCI_VERSION: 0.16.0
+  COMPOSE_FILE: docker/java/multitier/docker-compose.local.stub.yml
+  LHCI_CONFIG: system/multitier/frontend-react/lighthouserc.json
+  # The frontend's published port in docker/java/multitier (lighthouserc.json uses the same port).
+  FRONTEND_URL: http://localhost:3112
+
+jobs:
+  lighthouse:
+    name: lighthouse (multitier frontend-react)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+
+      - name: Start Stack (stub mode)
+        shell: bash
+        run: docker compose -f "$COMPOSE_FILE" up -d --build --wait
+
+      - name: Wait for the Storefront
+        shell: bash
+        run: |
+          set -euo pipefail
+          url="$FRONTEND_URL/api/products/HP-15"
+          for attempt in $(seq 1 60); do
+            status=$(curl -s -o /dev/null -w '%{http_code}' "$url" || true)
+            if [ "$status" = "200" ]; then
+              echo "Storefront and API are up after $attempt attempt(s)"
+              exit 0
+            fi
+            echo "Attempt $attempt: $url answered '$status'"
+            sleep 5
+          done
+          echo "::error::$url did not answer 200 within 5 minutes; see the compose logs below"
+          docker compose -f "$COMPOSE_FILE" logs --tail 200
+          exit 1
+
+      - name: Run Lighthouse CI
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx --yes "@lhci/cli@$LHCI_VERSION" autorun \
+            --config="$LHCI_CONFIG" \
+            --upload.outputDir="$RUNNER_TEMP/lhci"
+
+      - name: Publish Score Summary
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          manifest="$RUNNER_TEMP/lhci/manifest.json"
+          if [ ! -f "$manifest" ]; then
+            echo "::warning::Lighthouse CI wrote no manifest; see the Run Lighthouse CI step log"
+            exit 0
+          fi
+          {
+            echo "## Lighthouse (report-only, median run per page)"
+            echo
+            echo "| Page | Performance | Accessibility | Best practices | SEO |"
+            echo "|---|---|---|---|---|"
+            jq -r '.[] | select(.isRepresentativeRun)
+              | [ .url,
+                  (.summary.performance, .summary.accessibility, .summary["best-practices"], .summary.seo
+                   | if . == null then "n/a" else (. * 100 | round | tostring) end) ]
+              | "| " + join(" | ") + " |"' "$manifest"
+            echo
+            echo "Budgets live in \`$LHCI_CONFIG\` as \`warn\` assertions; misses appear as warnings in the Run Lighthouse CI step."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload Lighthouse Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-reports
+          path: ${{ runner.temp }}/lhci/
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Stop Stack
+        if: always()
+        shell: bash
+        run: docker compose -f "$COMPOSE_FILE" down -v
