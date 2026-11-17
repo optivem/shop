@@ -11,7 +11,7 @@ The shared UX spec for all four MyShop UIs:
 
 All four implement the same routes, page anatomy and selector contract. Where server-side and client-side rendering have to differ (the cart store, how a redirect happens), this doc says so.
 
-Implementation plan: [`plans/20261107-1657-storefront-implementation.md`](../../../plans/20261107-1657-storefront-implementation.md).
+Implemented in all four UIs (November 2026); the use cases are UC-006 to UC-011 under [`docs/shared/specs/use-cases/`](../../shared/specs/use-cases/README.md).
 
 Behaviour, business rules and acceptance criteria live in the use cases ([index](../../shared/specs/use-cases/README.md)); where this doc and a use case disagree, the use case wins. Per page:
 
@@ -318,7 +318,7 @@ The change lives in `MyShopUiClient` (Java), its .NET and TS equivalents, and `K
 
 ## 8. Customer profile and tax country
 
-Decided 2026-11-07. This needs a domain change; see Step 2 of the [implementation plan](../../../plans/20261107-1657-storefront-implementation.md).
+Decided 2026-11-07 and built as a domain change: UC-001 takes the tax country from the shipping address (BR-3).
 
 - **Profile fields:** first name, last name, email (read-only, from Keycloak), and a shipping address of street, postal code, city and country.
 - **Where it's edited:** `/account` ("My account › Profile & address"). The selectors are `First Name`, `Last Name`, `Street`, `Postal Code`, `City`, `Profile Country` and `Save Profile`.
