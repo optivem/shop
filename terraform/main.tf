@@ -136,11 +136,12 @@ resource "google_service_account" "runtime" {
   depends_on = [google_project_service.required_apis]
 }
 
-# Shared DB credentials (database names come from convention), the Keycloak admin password and the
-# production monolith's OIDC client secret (shop-prod realm; deploy-keycloak sets it in Keycloak).
+# Shared DB credentials (database names come from convention), the Keycloak admin password, the
+# production monolith's OIDC client secret (shop-prod realm; deploy-keycloak sets it in Keycloak) and the
+# production TypeScript monolith's session secret (seals its session and login cookies).
 # Secret versions are added out of band (gcloud secrets versions add) so values stay out of state
 resource "google_secret_manager_secret" "runtime" {
-  for_each  = toset([for s in ["db", "keycloak-admin-password", "monolith-client-secret"] : "${local.system_name}-${s}"])
+  for_each  = toset([for s in ["db", "keycloak-admin-password", "monolith-client-secret", "monolith-session-secret"] : "${local.system_name}-${s}"])
   project   = google_project.this.project_id
   secret_id = each.value
 

@@ -24,6 +24,7 @@ describe('production config guard', () => {
         POSTGRES_DB_PASSWORD: 's3cret',
         AUTH_ISSUER_URI: 'https://auth.example.com/realms/shop',
         AUTH_CLIENT_SECRET: 'real-secret',
+        AUTH_SESSION_SECRET: 'real-session-secret',
       })
     ).toEqual([]);
   });
@@ -34,13 +35,15 @@ describe('production config guard', () => {
         POSTGRES_DB_PASSWORD: 'app',
         AUTH_ISSUER_URI: 'http://localhost:8391/realms/shop',
         AUTH_CLIENT_SECRET: 'shop-monolith-test-secret',
+        AUTH_SESSION_SECRET: 'shop-monolith-test-session-secret-change-me',
       })
     ).toEqual([
       'POSTGRES_DB_PASSWORD is missing or the test default',
       'AUTH_ISSUER_URI is missing or points at localhost',
       'AUTH_CLIENT_SECRET is missing or the test-realm secret',
+      'AUTH_SESSION_SECRET is missing or the test default',
     ]);
-    expect(productionConfigProblems({})).toHaveLength(3);
+    expect(productionConfigProblems({})).toHaveLength(4);
   });
 
   it('only checks under the prod profile', () => {

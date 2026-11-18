@@ -4,7 +4,7 @@ This directory contains the Terraform configuration and helper scripts that set 
 
 - **GCP Project** with automatic naming
 - **Workload Identity Federation** for GitHub Actions authentication
-- **Secret Manager** for the database credentials and the Keycloak admin password
+- **Secret Manager** for the database credentials, the Keycloak admin password and the production monolith's client and session secrets
 - **IAM bindings** for GitHub Actions deployment
 - **Neon Postgres** project with one database per variant (created by `neonctl`, not Terraform)
 - **Billing kill-switch**: a budget, a Pub/Sub topic and a Cloud Function that unlinks billing at about $5 (see [Cost](#cost))
@@ -76,7 +76,7 @@ Every name derives from the GitHub repo, or from the `SYSTEM_NAME` environment v
 | System name | `shop` |
 | GCP project | `shop-<random 6 hex>` |
 | Neon project | `shop` |
-| Secrets | `shop-db`, `shop-keycloak-admin-password` |
+| Secrets | `shop-db`, `shop-keycloak-admin-password`, `shop-monolith-client-secret`, `shop-monolith-session-secret` |
 | Databases | `shop_<arch>_<language>_<real\|stub\|qa\|production>` for every variant (`multitier`/`monolith` × `java`/`dotnet`/`typescript`, e.g. `shop_multitier_java_real`), `shop_keycloak` |
 
 Hyphens are valid in GCP names but not in unquoted Postgres identifiers, so database names replace them with underscores. The system name is limited to 14 characters because it prefixes Cloud Run service names, which are limited to 49 (e.g. `<system>-multitier-typescript-real-frontend`). The longest names, `<system>-multitier-typescript-production-{frontend,backend}`, leave only 8 (12 for multitier-dotnet): Terraform warns at plan time and the deploy fails early with the name if it's longer. The names can't simply be shortened, because the imported Keycloak realms hold redirect URIs built from them.
@@ -132,7 +132,7 @@ It asks you to type the GCP project ID before deleting anything, and is safe to 
 Google Cloud Project
 ├── Workload Identity Pool (GitHub OIDC)
 │   └── Service Account (github-deployer)
-├── Secret Manager (<system>-db, <system>-keycloak-admin-password)
+├── Secret Manager (<system>-db, <system>-keycloak-admin-password, <system>-monolith-client-secret, <system>-monolith-session-secret)
 ├── Service Account (runtime, Cloud Run runtime identity)
 ├── Billing kill-switch (budget → Pub/Sub topic → Cloud Function, own service accounts)
 └── IAM Roles
@@ -154,7 +154,7 @@ Google Cloud bills **per resource, by usage**. Each service has its own meter (t
 | **Cloud Run** requests (vCPU-s, GiB-s, requests) | Only while a cloud stage runs tests or someone uses QA/production. Every cloud stage is manual (`workflow_dispatch`); the cloud acceptance cron is commented out, and QA/prod have none. | Request-based billing: an instance is billed only while it handles a request, and every service scales to zero (`--min-instances 0`). The free tier is 180,000 vCPU-s, 360,000 GiB-s and 2M requests a month. A cloud acceptance run keeps roughly 5–7 services (Keycloak, two stacks of system or backend+frontend, simulators, stubs) busy for the length of its suites, about 5,000–10,000 vCPU-s at 1 vCPU, so a few dozen runs a month fit. QA and production runs are only a deploy plus smoke tests. |
 | **Network egress** | Responses leaving Google: pages and API responses to the test runners and browsers, and Cloud Run's queries to Neon (AWS us-east-2), which also leave Google. | The free allowance is about 1 GiB a month from North America. Database traffic is a few MB per run; UI suites loading the frontend bundle are the larger part. Past the allowance, egress costs about $0.12/GiB, i.e. cents. |
 | **Image storage** | — | None: Cloud Run deploys the public GHCR images directly (`ghcr.io/<owner>/<repo>/...`, including the shared `shop-*` images), and Cloud Run imports an image once per deploy, not per instance. GitHub doesn't bill public package storage or pulls. The only Artifact Registry storage left is the kill-switch function's build image (a few MB, 0.5 GB free). |
-| **Secret Manager** | Every deploy reads `<system>-db`. | 2 secret versions (6 free) and a few accesses per run (10,000 free). |
+| **Secret Manager** | Every deploy reads `<system>-db`. | 4 secret versions (6 free) and a few accesses per run (10,000 free). |
 | **Cloud Logging** | Cloud Run request and container logs. | 50 GiB per project free. |
 | **Kill-switch** (budget, Pub/Sub, Cloud Function) | A few budget notifications a day. | Budgets are free; Pub/Sub carries a few KB (10 GiB free); the function runs a few times a day (2M invocations free), and its source zip sits in a small Cloud Storage bucket (5 GB free). |
 | **IAM, Workload Identity Federation, service accounts, enabled APIs, the project itself** | — | Free. |

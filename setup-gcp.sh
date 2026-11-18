@@ -318,6 +318,16 @@ else
   echo "  ✅ Stored $SYSTEM-monolith-client-secret"
 fi
 
+# Production TypeScript monolith session secret: random, never typed or committed. It seals the session and
+# login cookies; the production monolith-typescript reads it via --set-secrets AUTH_SESSION_SECRET.
+if secret_has_version "$SYSTEM-monolith-session-secret"; then
+  echo "  ✅ Monolith production session secret already stored"
+else
+  openssl rand -base64 32 | tr -d '
+' | gcloud secrets versions add "$SYSTEM-monolith-session-secret" --data-file=- --project="$PROJECT_ID" --quiet > /dev/null
+  echo "  ✅ Stored $SYSTEM-monolith-session-secret"
+fi
+
 # Custom domains of the permanent environments and Keycloak (opt-in; docs/environments.md)
 if [[ -n "${ACC_DOMAIN:-}${E2E_DOMAIN:-}${QA_DOMAIN:-}${PROD_DOMAIN:-}${KEYCLOAK_DOMAIN:-}" ]]; then
   echo ""

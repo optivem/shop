@@ -3,6 +3,7 @@ export const PROD_PROFILE = 'prod';
 export const REAL_MODE = 'real';
 export const TEST_DB_PASSWORD = 'app';
 export const TEST_CLIENT_SECRET = 'shop-monolith-test-secret';
+export const TEST_SESSION_SECRET = 'shop-monolith-test-session-secret-change-me';
 
 type Env = Record<string, string | undefined>;
 
@@ -27,7 +28,12 @@ export function isProdProfile(env: Env = process.env): boolean {
 /** Every missing or test-default setting that must not reach production. */
 export function productionConfigProblems(env: Env): string[] {
   const problems: string[] = [];
-  const { POSTGRES_DB_PASSWORD: dbPassword, AUTH_ISSUER_URI: issuer, AUTH_CLIENT_SECRET: clientSecret } = env;
+  const {
+    POSTGRES_DB_PASSWORD: dbPassword,
+    AUTH_ISSUER_URI: issuer,
+    AUTH_CLIENT_SECRET: clientSecret,
+    AUTH_SESSION_SECRET: sessionSecret,
+  } = env;
   if (isBlank(dbPassword) || dbPassword === TEST_DB_PASSWORD) {
     problems.push('POSTGRES_DB_PASSWORD is missing or the test default');
   }
@@ -36,6 +42,10 @@ export function productionConfigProblems(env: Env): string[] {
   }
   if (isBlank(clientSecret) || clientSecret === TEST_CLIENT_SECRET) {
     problems.push('AUTH_CLIENT_SECRET is missing or the test-realm secret');
+  }
+  // REL #76: the session secret seals the session and login cookies; the committed default would let anyone forge one.
+  if (isBlank(sessionSecret) || sessionSecret === TEST_SESSION_SECRET) {
+    problems.push('AUTH_SESSION_SECRET is missing or the test default');
   }
   // B-PRG 2.3: production reads the local system clock; the external (stub) clock exists so tests control "now".
   const externalSystemMode = env.EXTERNAL_SYSTEM_MODE;

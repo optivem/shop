@@ -305,7 +305,8 @@ jobs:
       # rejects the redirect URI: the two forwarded-header settings cover Java and .NET (TypeScript reads
       # x-forwarded-proto itself). One instance, because Java and .NET keep sessions and login state in memory.
       # Acceptance and QA realms carry the committed test secret. In production the shop-monolith secret
-      # comes from Secret Manager (deploy-keycloak sets the same value in the shop-prod realm). Production
+      # comes from Secret Manager (deploy-keycloak sets the same value in the shop-prod realm), and so does
+      # the TypeScript monolith's session secret (AUTH_SESSION_SECRET, seals its session cookies). Production
       # also runs the prod profile: SPRING_PROFILES_ACTIVE for Java (application-prod.yml), APP_PROFILE for .NET
       # and TypeScript; under it every backend refuses to start on a missing or test-default secret.
       - name: Deploy System
@@ -330,6 +331,9 @@ jobs:
           secret_args=()
           if [[ "$STAGE" == production ]]; then
             secret_args=(--set-secrets "AUTH_CLIENT_SECRET=${SYSTEM}-monolith-client-secret:latest")
+            if [[ "$PREFIX" == monolith-typescript ]]; then
+              secret_args=(--set-secrets "AUTH_CLIENT_SECRET=${SYSTEM}-monolith-client-secret:latest,AUTH_SESSION_SECRET=${SYSTEM}-monolith-session-secret:latest")
+            fi
           fi
           gcloud run deploy "$SYSTEM_SERVICE" \
             --image "${IMAGE_BASE}/${SYSTEM_IMAGE}:${RC_VERSION}" --region "$REGION" --project "$PROJECT" \
