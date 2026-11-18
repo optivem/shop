@@ -5,7 +5,8 @@ set -euo pipefail
 # Prerequisite: gcloud, gh and neonctl authenticated, and a GCP billing account
 # Optional: SYSTEM_NAME=<4-14 chars> overrides the name derived from the repo (prefixes the GCP project, services, secrets, databases).
 #   Keep it to 8 chars or fewer to deploy multitier-typescript to production (12 for multitier-dotnet): Cloud Run caps service names at 49.
-# Optional: BILLING_KILL_SWITCH_AMOUNT=<whole number, default 1> sets the monthly cost at which billing is unlinked (terraform/billing-kill-switch.tf)
+# Optional: BILLING_KILL_SWITCH_AMOUNT=<whole number, default 1> sets the monthly cost at which billing is unlinked (terraform/billing-kill-switch.tf);
+#   after the kill-switch has fired, re-run with a higher amount: the script raises the limit and links billing again before Terraform runs
 # Optional: KC_ADMIN_PASSWORD=<password> sets the Keycloak admin password on first setup (default: generated)
 # Optional: ACC_DOMAIN / E2E_DOMAIN / QA_DOMAIN / PROD_DOMAIN=<domain> map the permanent environments, and
 #   KEYCLOAK_DOMAIN=<domain> the shared Keycloak, to custom domains (setup-custom-domains.sh, docs/environments.md); needs the domain verified for your gcloud account
@@ -34,6 +35,8 @@ install_hint() {
 source "$(dirname "$0")/terraform/neon.sh"
 # shellcheck source=terraform/state-backend.sh
 source "$(dirname "$0")/terraform/state-backend.sh"
+# shellcheck source=terraform/kill-switch.sh
+source "$(dirname "$0")/terraform/kill-switch.sh"
 
 # Check prerequisites
 echo "Checking prerequisites..."
@@ -144,6 +147,11 @@ if [[ -z "$BILLING_ACCOUNT" ]]; then
 fi
 
 echo "  ✅ Billing account: $BILLING_ACCOUNT"
+echo ""
+
+# Before Terraform: with billing unlinked, its plan can't even read the project's resources
+echo "Checking the billing kill-switch..."
+restore_billing_if_killed "$BILLING_ACCOUNT" "$STATE_PROJECT" "${BILLING_KILL_SWITCH_AMOUNT:-1}" "$AUTO_APPROVE"
 echo ""
 
 # Initialize Terraform
