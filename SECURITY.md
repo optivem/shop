@@ -12,6 +12,15 @@ You can expect a first reply within a week. Fixes land on `main`; there are no m
 
 - **Secret scanning and push protection** are on for this repository (since 2026-11-17): a push that contains a recognised secret is blocked.
 - **Dependabot** version updates (`.github/dependabot.yml`), **CodeQL** (`.github/workflows/codeql.yml`), and **Trivy** image scanning plus SBOMs (`.github/workflows/supply-chain.yml`, `release-sbom.yml`).
+- **Pinned inputs:** every Dockerfile base image is pinned by digest and every npm dependency to an exact version with a lockfile; Dependabot renovates both.
+- **Signed releases:** the production stage signs every released image with cosign, keyless (GitHub OIDC, Sigstore). Verify one with:
+
+  ```bash
+  cosign verify ghcr.io/optivem/shop/monolith-system-java:monolith-java-v1.0.0 \
+    --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+    --certificate-identity-regexp '^https://github\.com/optivem/shop/\.github/workflows/_prod-stage\.yml@'
+  ```
+
 - Production start-up guards: under the prod profile every backend refuses to start with a test-default secret, a localhost issuer, or the stub clock.
 - Security headers (CSP, HSTS, `nosniff`, `X-Frame-Options`, Referrer-Policy) on every backend, and Keycloak brute-force detection on every realm. See [edge rate limiting](docs/operations/edge-rate-limiting.md) for what is deliberately not covered.
 

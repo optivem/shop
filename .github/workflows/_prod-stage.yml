@@ -3,7 +3,9 @@ name: _prod-stage
 # Production stage, shared by every variant: deploys the latest QA-approved release candidate
 # (or an explicit one) to production on Cloud Run, runs the smoke tests against it, and on a
 # green deploy publishes the release: the <architecture>-<language>-v<x.y.z> git tag, image tag
-# and GitHub release, plus the component image and git tags.
+# and GitHub release, plus the component image and git tags, and signs the released images with
+# cosign. A red deploy rolls the traffic back to the revisions that served before it (snapshot,
+# rollback; docs/operations/rollback.md).
 #
 # Callers (<architecture>-<language>-prod-stage.yml) own the dispatch trigger, the workflow name
 # and concurrency (github.workflow resolves to the caller, so a group here would deadlock). They
@@ -173,9 +175,66 @@ jobs:
           tag: ${{ inputs.version || steps.resolve-latest.outputs.tag }}
           base-image-urls: ${{ steps.images.outputs.urls }}
 
+  # === Record What Production Serves Now (for the rollback below) ===
+  # Every Cloud Run service this stack deploys, with the revisions that take traffic before the
+  # deploy. A service that does not exist yet (first production deploy) is left out; a gcloud
+  # failure fails the job instead of passing an empty list (nothing to roll back is not the same as
+  # could not tell). Keycloak is shared by all variants and the DB migrations are expand-contract
+  # (CONTRIBUTING.md), so neither is rolled back. See docs/operations/rollback.md.
+  snapshot:
+    needs: check
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.architecture }}-${{ inputs.language }}-production
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      revisions: ${{ steps.revisions.outputs.revisions }}
+    steps:
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+
+      - name: Setup Cloud SDK
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Record Serving Revisions
+        id: revisions
+        env:
+          SYSTEM: ${{ vars.SYSTEM_NAME }}
+          REGION: ${{ vars.GCP_REGION }}
+          PROJECT: ${{ vars.GCP_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          p="${SYSTEM}-${PREFIX}-production"
+          if [[ "$ARCHITECTURE" == monolith ]]; then
+            services=("${p}" "${p}-sim")
+          else
+            services=("${p}-backend" "${p}-frontend" "${p}-sim")
+          fi
+          result='[]'
+          for name in "${services[@]}"; do
+            found=$(gcloud run services list --region "$REGION" --project "$PROJECT" \
+              --filter="metadata.name=${name}" --format=json)
+            if [[ "$(jq length <<< "$found")" -eq 0 ]]; then
+              echo "No production service ${name} yet: nothing to roll back to."
+              continue
+            fi
+            traffic=$(jq -r '[.[0].status.traffic[] | select((.percent // 0) > 0) | "\(.revisionName)=\(.percent)"] | join(",")' <<< "$found")
+            if [[ -z "$traffic" ]]; then
+              echo "::error::Service ${name} exists but no revision takes traffic; cannot record a rollback target."
+              exit 1
+            fi
+            echo "${name}: ${traffic}"
+            result=$(jq -c --arg s "$name" --arg t "$traffic" '. + [{service: $s, traffic: $t}]' <<< "$result")
+          done
+          echo "revisions=${result}" >> "$GITHUB_OUTPUT"
+
   # === Deploy to Cloud Run + Run Smoke Tests ===
   deploy:
-    needs: check
+    needs: [check, snapshot]
     permissions:
       contents: read
       id-token: write
@@ -191,10 +250,48 @@ jobs:
       version: ${{ needs.check.outputs.version }}
       domain: ${{ inputs.domain }}
 
+  # === Roll Back a Failed Deploy ===
+  # A red deploy (a service that does not come up, or failing smoke tests) puts the traffic back on
+  # the revisions the snapshot job recorded, so production keeps serving the last release. Nothing
+  # is released (the release job needs a green deploy) and the run stays red. The new revisions are
+  # kept, without traffic, for diagnosis. Manual rollback and the drill: docs/operations/rollback.md.
+  rollback:
+    needs: [snapshot, deploy]
+    if: always() && needs.snapshot.result == 'success' && (needs.deploy.result == 'failure' || needs.deploy.result == 'cancelled') && needs.snapshot.outputs.revisions != '[]'
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.architecture }}-${{ inputs.language }}-production
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+
+      - name: Setup Cloud SDK
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Restore Traffic to the Previous Revisions
+        env:
+          REVISIONS: ${{ needs.snapshot.outputs.revisions }}
+          REGION: ${{ vars.GCP_REGION }}
+          PROJECT: ${{ vars.GCP_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          echo "### Rolled back to the previous revisions" >> "$GITHUB_STEP_SUMMARY"
+          while IFS=$'\t' read -r service traffic; do
+            echo "Rolling ${service} back to ${traffic}"
+            gcloud run services update-traffic "$service" --to-revisions "$traffic" \
+              --region "$REGION" --project "$PROJECT"
+            echo "- \`${service}\` → \`${traffic}\`" >> "$GITHUB_STEP_SUMMARY"
+          done < <(jq -r '.[] | [.service, .traffic] | @tsv' <<< "$REVISIONS")
+
   # === Docker Compose deploy (inactive) ===
-  # To deploy production with Docker Compose instead of Cloud Run, delete the `deploy` job above
-  # and uncomment this block. Beware: this is only a zero-cost stand-in for production. The
-  # stack runs on the GitHub runner and is thrown away when the job ends, so nothing persists
+  # To deploy production with Docker Compose instead of Cloud Run, delete the `snapshot`, `deploy`
+  # and `rollback` jobs above and uncomment this block. Beware: this is only a zero-cost stand-in
+  # for production. The stack runs on the GitHub runner and is thrown away when the job ends, so nothing persists
   # and nobody can use it; only the release tags below are real. It needs DOCKERHUB_USERNAME
   # (var) and DOCKERHUB_TOKEN (secret) instead of the GCP settings. Ports use the language digit
   # (java=1, dotnet=2, typescript=3), as in _acceptance-stage-docker-compose.yml.
@@ -270,6 +367,8 @@ jobs:
     permissions:
       contents: write
       packages: write
+      # cosign keyless signing (Sign Released Images)
+      id-token: write
     outputs:
       version: ${{ steps.promote.outputs.version }}
       image-urls: ${{ needs.check.outputs.image-urls }}
@@ -293,6 +392,26 @@ jobs:
           tag: ${{ steps.promote.outputs.version }}
           registry-username: ${{ github.repository_owner }}
           token: ${{ secrets.GHCR_TOKEN }}
+
+      # Keyless cosign signature (GitHub OIDC, Sigstore's public Fulcio/Rekor, $0) on each released
+      # image digest, pushed next to the image in GHCR. The release tag and the RC tag share the
+      # digest, so one signature covers both. Verify with the command in SECURITY.md.
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Sign Released Images
+        env:
+          IMAGE_URLS: ${{ steps.tag-images.outputs.tagged-image-urls }}
+        run: |
+          set -euo pipefail
+          echo "### Signed images (cosign, keyless)" >> "$GITHUB_STEP_SUMMARY"
+          while read -r url; do
+            digest=$(docker buildx imagetools inspect "$url" --format '{{json .Manifest.Digest}}' | jq -r .)
+            [[ "$digest" == sha256:* ]] || { echo "::error::Could not resolve the digest of ${url} (got '${digest}')."; exit 1; }
+            ref="${url%:*}@${digest}"
+            cosign sign --yes "$ref"
+            echo "- \`${ref}\`" >> "$GITHUB_STEP_SUMMARY"
+          done < <(jq -r '.[]' <<< "$IMAGE_URLS")
 
       - name: Publish Release Tag
         uses: optivem/actions/publish-tag@v1
