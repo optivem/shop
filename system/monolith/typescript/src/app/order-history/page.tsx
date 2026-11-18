@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { Icon } from "@/components/Icon";
 import { AccountLayout, ErrorAlert, LoadingSpinner } from "@/components/StoreLayout";
@@ -36,7 +36,12 @@ export default function OrderHistoryPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Only the latest reload renders: an older response that lands after a newer request is dropped.
+  const latestOrdersRequest = useRef(0);
+
   const loadOrders = useCallback(async (orderNumberFilter?: string, customerFilter?: string) => {
+    const request = ++latestOrdersRequest.current;
+    const isLatest = () => request === latestOrdersRequest.current;
     setLoading(true);
     setError(null);
 
@@ -45,20 +50,23 @@ export default function OrderHistoryPage() {
 
       if (!response.ok) {
         const data = await readErrorData(response);
+        if (!isLatest()) return;
         setError(data.detail ?? "Failed to load orders");
         setOrders([]);
         return;
       }
 
       const data = await parseJson(response, ordersResponseSchema);
+      if (!isLatest()) return;
       setOrders(data.orders);
     } catch (err) {
+      if (!isLatest()) return;
       setError(
         `Network error: ${err instanceof Error ? err.message : String(err)}`
       );
       setOrders([]);
     } finally {
-      setLoading(false);
+      if (isLatest()) setLoading(false);
     }
   }, []);
 
