@@ -64,6 +64,8 @@ services:
       - KC_HOSTNAME_BACKCHANNEL_DYNAMIC=true
       - KC_HTTP_ENABLED=true
       - KC_HEALTH_ENABLED=true
+      # Cap the heap (REL #66): the default is a share of host RAM, and test runs create and delete a user per test.
+      - JAVA_OPTS_KC_HEAP=-Xms256m -Xmx1g
     ports:
       - "8292:8080"
     volumes:
