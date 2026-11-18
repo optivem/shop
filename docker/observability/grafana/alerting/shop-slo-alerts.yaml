@@ -1,0 +1,123 @@
+# SLO alert rules for the opt-in otel-lgtm stack (docs/operations/slos.md). Mounted read-only into
+# /otel-lgtm/grafana/conf/provisioning/alerting by the otel-lgtm service in every docker/ compose file.
+#
+# The rules read Tempo's span metrics (traces_spanmetrics_*), which come from the server spans every
+# backend already exports, so one rule covers Java, .NET and TypeScript alike. The backends' own HTTP
+# metrics differ per language (Java milliseconds without buckets, .NET seconds, the Next.js monolith
+# none), so they are not used. Health probes are left out.
+#
+# SLOs: 99.5% of requests succeed (server span not in error, i.e. no 5xx); 95% of requests finish
+# within 512 ms (the span-metrics bucket bound closest to 500 ms). Error budgets: 0.5% and 5%.
+apiVersion: 1
+groups:
+  - orgId: 1
+    name: shop-slo
+    folder: SLOs
+    interval: 1m
+    rules:
+      # Fast burn: the budget burns at 14.4x (2% of a 30-day budget in 1 h) over both the last hour
+      # and the last 5 minutes. Page-worthy.
+      - uid: shop-availability-fast-burn
+        title: Availability SLO fast burn (error ratio > 7.2%)
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange: { from: 3600, to: 0 }
+            datasourceUid: prometheus
+            model:
+              instant: true
+              expr: >-
+                (
+                  sum by (service) (rate(traces_spanmetrics_calls_total{span_kind="SPAN_KIND_SERVER", status_code="STATUS_CODE_ERROR", span_name!~".*(livez|readyz|health).*"}[1h]))
+                  / sum by (service) (rate(traces_spanmetrics_calls_total{span_kind="SPAN_KIND_SERVER", span_name!~".*(livez|readyz|health).*"}[1h]))
+                )
+                and
+                (
+                  sum by (service) (rate(traces_spanmetrics_calls_total{span_kind="SPAN_KIND_SERVER", status_code="STATUS_CODE_ERROR", span_name!~".*(livez|readyz|health).*"}[5m]))
+                  / sum by (service) (rate(traces_spanmetrics_calls_total{span_kind="SPAN_KIND_SERVER", span_name!~".*(livez|readyz|health).*"}[5m]))
+                ) > 0.072
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: { type: gt, params: [0.072] }
+        noDataState: OK
+        execErrState: Error
+        for: 2m
+        labels: { severity: page, slo: availability }
+        annotations:
+          summary: '{{ $labels.service }} is failing more than 7.2% of requests (1 h and 5 m)'
+          runbook_url: docs/operations/dependency-outage.md
+
+      # Slow burn: 6x (5% of the budget in 6 h) over 6 hours and 30 minutes. Ticket-worthy.
+      - uid: shop-availability-slow-burn
+        title: Availability SLO slow burn (error ratio > 3%)
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange: { from: 21600, to: 0 }
+            datasourceUid: prometheus
+            model:
+              instant: true
+              expr: >-
+                (
+                  sum by (service) (rate(traces_spanmetrics_calls_total{span_kind="SPAN_KIND_SERVER", status_code="STATUS_CODE_ERROR", span_name!~".*(livez|readyz|health).*"}[6h]))
+                  / sum by (service) (rate(traces_spanmetrics_calls_total{span_kind="SPAN_KIND_SERVER", span_name!~".*(livez|readyz|health).*"}[6h]))
+                )
+                and
+                (
+                  sum by (service) (rate(traces_spanmetrics_calls_total{span_kind="SPAN_KIND_SERVER", status_code="STATUS_CODE_ERROR", span_name!~".*(livez|readyz|health).*"}[30m]))
+                  / sum by (service) (rate(traces_spanmetrics_calls_total{span_kind="SPAN_KIND_SERVER", span_name!~".*(livez|readyz|health).*"}[30m]))
+                ) > 0.03
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: { type: gt, params: [0.03] }
+        noDataState: OK
+        execErrState: Error
+        for: 15m
+        labels: { severity: ticket, slo: availability }
+        annotations:
+          summary: '{{ $labels.service }} is failing more than 3% of requests (6 h and 30 m)'
+          runbook_url: docs/operations/dependency-outage.md
+
+      # Latency: more than 10% of requests slower than 512 ms (twice the 5% budget) over the last
+      # hour and the last 5 minutes.
+      - uid: shop-latency-burn
+        title: Latency SLO burn (more than 10% of requests over 512 ms)
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange: { from: 3600, to: 0 }
+            datasourceUid: prometheus
+            model:
+              instant: true
+              expr: >-
+                (
+                  1 - sum by (service) (rate(traces_spanmetrics_latency_bucket{span_kind="SPAN_KIND_SERVER", le="0.512", span_name!~".*(livez|readyz|health).*"}[1h]))
+                    / sum by (service) (rate(traces_spanmetrics_latency_count{span_kind="SPAN_KIND_SERVER", span_name!~".*(livez|readyz|health).*"}[1h]))
+                )
+                and
+                (
+                  1 - sum by (service) (rate(traces_spanmetrics_latency_bucket{span_kind="SPAN_KIND_SERVER", le="0.512", span_name!~".*(livez|readyz|health).*"}[5m]))
+                    / sum by (service) (rate(traces_spanmetrics_latency_count{span_kind="SPAN_KIND_SERVER", span_name!~".*(livez|readyz|health).*"}[5m]))
+                ) > 0.10
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: { type: gt, params: [0.10] }
+        noDataState: OK
+        execErrState: Error
+        for: 5m
+        labels: { severity: ticket, slo: latency }
+        annotations:
+          summary: '{{ $labels.service }}: more than 10% of requests over 512 ms (1 h and 5 m)'
+          runbook_url: docs/operations/dependency-outage.md

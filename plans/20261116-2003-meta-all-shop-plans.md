@@ -1,5 +1,7 @@
 # 2026-11-16 20:03 UTC — Plan coordination meta-plan: all shop plans
 
+> 🤖 **Picked up by agent** — `Valentina_Desk` at `2026-11-18T15:03:22Z`
+
 ## TL;DR
 
 **Why:** Shop has 21 open plans: three earlier meta-plans, the in-flight storefront/showcase/reliability work and the backlog. They share the one local docker host, the system-test drivers, the acceptance/QA/prod workflows and `frontend-react`, and several backlog plans were overtaken by later work. Running them one by one by hand repeats the docker clashes and double orchestration that REL #36/#45/#56 recorded.
@@ -43,7 +45,7 @@ The orchestrating session runs the **Wave tracker** top to bottom. Run the same 
 | 2 | U7 B-MRF #3 + #4 | D (after U2) | done 2026-11-17 (`c094da41`, `49a5cf12`): new UC-002.11 deep-link UI test ×3 languages, .NET cancel UI now drives the UI |
 | 2 | U8 REL open ideas, shop side | D (after U7) | 2026-11-18: #55 #56 #58 #59 #64 #66 #67(1) #69 #75 #76 #80 #84 done; #78 headers + report-only CSP; #68 done (`0cd89824`, `f8a57fb9`); #82 done (`a57c88f7`, all six stacks green); #61 → watch; left: #78 enforcement only (needs a cloud multitier UI run) |
 | 3 | U9 B-PRG remainder (4.2 decided 2026-11-17: in-code login limit only, edge policy opt-in and cost-labelled; a noted shortcut) | B | runs 1–2 done 2026-11-17 (0.1, 1.7, 1.8, 3.2, 3.4, 3.5, 4.1, 4.3, 4.4, 2.3, 4.2, 5.5, 6.7); Lane D `--sample` green on all 6 stacks; left: 5.6, 6.4–6.6, 5.4/6.3 (prod-stage), one `dast.yml` dispatch; user: turn on private vulnerability reporting; before prod: secret check (4.1) |
-| 3 | U10 FT frontend testing | D (after U8) | Steps 1–6 done 2026-11-17 (axe in `npm test` + in the UI drivers ×3, `f13a9adb`; `lighthouse.yml`); left: one `lighthouse.yml` dispatch, SignIn axe test, REL #70 recheck |
+| 3 | U10 FT frontend testing | D (after U8) | done 2026-11-18: Lighthouse run 44331924479 green (3 pages; warn budgets `25bfb043`), SignIn axe test `8d5ace02`, REL #70 rechecked per criterion (`d7841c8c`, UC-008.11 test `e73bde72`); FT deleted (`32fe298b`) |
 | 3 | U11 OUTBOX (confirmed 2026-11-17: Java-only worked example, a noted shortcut) | B (after U9), verified in D | done 2026-11-17, plan deleted; Lane D verified: relay delivers, `sent_at` set, audit rows written |
 | 4 | U12 B-MRF #8 path-param routes | D (after U10) | todo (G0: yes) |
 | 4b | U13+ Dependabot major upgrades, one unit each (Spring Boot 4.1, Gradle 9.9, ESLint 10, `@types/node` 26, .NET 11, Node 25) | D | todo (user, 2026-11-17: after Wave 4, before X1) |

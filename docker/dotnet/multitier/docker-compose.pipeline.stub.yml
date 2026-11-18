@@ -129,6 +129,9 @@ services:
       - "3900:3000"
       - "4317:4317"
       - "4318:4318"
+    # SLO alert rules (docs/operations/slos.md), provisioned into Grafana at start-up.
+    volumes:
+      - ../../observability/grafana/alerting:/otel-lgtm/grafana/conf/provisioning/alerting:ro
     networks:
       - app-network
 
