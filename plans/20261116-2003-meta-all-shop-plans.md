@@ -36,7 +36,7 @@ The orchestrating session runs the **Wave tracker** top to bottom. Run the same 
 |---|---|---|---|
 | 0 | U0 plan-only housekeeping | — | done 2026-11-17 |
 | 0 | 🛑 G0 user answers | — | done 2026-11-16 |
-| 1 | U1 Phase B finish (META3) | D | done 2026-11-17 up to `897bbe33` (test-all 12/12, all 12 UCs implemented, SPEC/BUILD/SMETA deleted); 🛑 MUI visual check (user) pending, then delete MUI + SHOW |
+| 1 | U1 Phase B finish (META3) | D | done 2026-11-17 up to `897bbe33` (test-all 12/12, all 12 UCs implemented, SPEC/BUILD/SMETA deleted); MUI visual check approved by the user 2026-11-18; MUI + SHOW deleted, MUI Step 2 + 11 follow-up ideas moved to `backlog/parked/20261118-1400-market-ui-follow-ups` |
 | 1 | U2 UC1 Track D4 | D (after U1) | done 2026-11-17: UC1 deleted (`513c47ed`), Java UC-009.2 fixed (`db087f76`), spec-gate strict with user-approved waivers for UC-005.7 / UC-011.2 until 2027-02-17 |
 | 1 | U3 plan refinement pass (FT, OUTBOX, B-ORD, B-PRG prune, B-QAS prune, B-PIN retarget) | P | done 2026-11-17 (`0e6bba99`) |
 | 2 | U4 B-PIN pinned-SHA gate (now verification only: one pinned-SHA dispatch) | W | done 2026-11-17: run 44087239748 green, gate didn't skip, RC tag on `db087f76`; plan deleted (`9e7cd5ef`) |
@@ -54,7 +54,7 @@ The orchestrating session runs the **Wave tracker** top to bottom. Run the same 
 
 ### M-GCP follow-ups — done 2026-11-18 (`6a40c010`, `78d5c4b5`); user actions
 
-- **User:** run `./setup-gcp.sh` once before the next production deploy of monolith-typescript. It creates `<system>-monolith-session-secret` (REL #76, `a94d06e1`); until then that deploy fails on `--set-secrets`.
+- Done 2026-11-18: `./setup-gcp.sh` created and stored `shop-monolith-session-secret` (REL #76; plan 2 to add, 0 to change, 0 to destroy).
 - **User:** meta-release now waits for approval in the `production-release` environment (REL #80, `ed389f13`); approve or reject it on the run page.
 
 ## Per-plan status snapshot
@@ -69,8 +69,8 @@ Snapshot 2026-11-16 (`main` at `054e06dd`; pipeline green; UC status: 001, 004, 
 | SPEC | `20261107-1638-storefront-use-cases-rules-acceptance` | only standing rule left | deleted at SMETA close-out | — |
 | BUILD | `20261107-1657-storefront-implementation` | Steps 8, 10 coded | verify + flip | `system-test/**` latest tests |
 | UC1 | `20261106-1533-use-cases-match-substack-articles` | D1–D3 coded | D4 (+ lenient→strict decision) | `_acceptance-stage-docker-compose.yml` spec-gate step, `spec-*.yaml` |
-| MUI | `20261111-1814-market-ui-redesign-all-screens` | Step 9 half done | `test-all.sh` + user visual check; Step 2 deferred; 11 follow-up ideas | none (verification only) |
-| SHOW | `20261111-1831-interview-showcase-skill-gaps` | code-complete | Phase B: Steps 3, 5, 6, 4b checks | none planned (fix forward) |
+| MUI | `20261111-1814-market-ui-redesign-all-screens` | **deleted 2026-11-18** (visual check approved) | leftovers parked as P-MUI | — |
+| SHOW | `20261111-1831-interview-showcase-skill-gaps` | **deleted 2026-11-18** | — | — |
 | REL | `20261110-1207-system-test-reliability-followups` | #1–#54 decided; X1 work done but entries #32–#34, #36–#45 still listed | #11 (user); undecided #55–#68; deferred #5 #15 #17 #20 #21 #26 #47 | varies per idea |
 | FT | `20261112-0939-frontend-testing-component-a11y-lighthouse` | needs refine (3 open questions) | Steps 1–6 | `frontend-react/src/**` tests, `system-test/*` UI driver axe check, new LHCI workflow, `docs/tour.md` |
 | OUTBOX | `20261112-0939-transactional-outbox-postgres` | needs refine (3 open questions) | Steps 1–7 | `system/db/migrations`, place-order service ×6 backends, relay, `docs/tour.md` |
@@ -90,6 +90,7 @@ Snapshot 2026-11-16 (`main` at `054e06dd`; pipeline green; UC status: 001, 004, 
 
 | P-LVL | `backlog/parked/20260618-0701-place-order-test-levelling-worked-example` | parked; a paid article's code blocks wait on it | unscheduled | — |
 | P-BRK | `backlog/parked/20260625-0913-pact-broker-default-contract-distribution` | parked; blocked on hosting a persistent broker (also against the $0 default, `[[feedback_templates_propagate_cost_to_students]]`) | unscheduled | — |
+| P-MUI | `backlog/parked/20261118-1400-market-ui-follow-ups` | parked; MUI Step 2 (deferred) + 11 follow-up ideas | unscheduled | — |
 | P-OAS | `backlog/parked/20260818-1130-openapi-response-schemas-clean-java` | parked; cosmetic, nothing consumes the spec | unscheduled | — |
 
 Not plans: `move-to-*/README.md`.
@@ -193,9 +194,9 @@ Edges from the plans' own wording: META3 "TS pass → test-all → flip → UC1 
 | U11 | OUTBOX Steps 1–7 | B, then D | compile-all + component tests; `--sample` | migrations, place-order ×6, relay, `docs/tour.md` |
 | U12 | B-MRF #8 path-param routes (only if G0 says yes) | D | cross-lang UI runs green in every direction | monolith routes ×3, `SecurityConfigTest`, UI drivers ×3 |
 | X1 | Cross-repo, last: INL (once a gh-optivem release accepts `inner-loop`), GHO Items 3–4 (needs `gh auth refresh -s project`, a read-only gh-optivem clone with `.env`, and filing the 5c ticket, decided: as drafted), B-QAS Steps 6–7, B-ORD Steps 3–6, REL #65 (optivem-testing), B-TAX item 7 (substack: update the characterization-tests draft if the component test snippet changes; `placeOrder("BOOK-123", 2, "US", "SAVE20")` still passes the country per order, while UC-001 BR-3 now takes tax from the shipping address) | X | per repo | other repos; shop only for INL's config line and GHO's rehearsal pushes |
-| M | User only: B-SL (SonarLint), REL #11 (second machine), MUI visual check (in U1), `./setup-gcp.sh` before the next monolith-typescript prod deploy (see M-GCP follow-ups), approving meta-release runs | — | — | — |
+| M | User only: B-SL (SonarLint), REL #11 (second machine), approving meta-release runs (`production-release` environment) | — | — | — |
 
-**Unscheduled (parked on purpose, no unit):** B-TKA Steps 3–4, B-LEG option C, B-KC's deferred item, B-MRF #7 and #9 (watch), REL deferred ideas (#5 #15 #17 #20 #21 #26 #47), REL #62 (watch), MUI Step 2 and its 11 follow-up ideas, the three `backlog/parked/*` plans (P-LVL, P-BRK, P-OAS). A parked plan gets a unit only if the user un-parks it.
+**Unscheduled (parked on purpose, no unit):** B-TKA Steps 3–4, B-LEG option C, B-KC's deferred item, B-MRF #7 and #9 (watch), REL deferred ideas (#5 #15 #17 #20 #21 #26 #47), REL #62 (watch), the four `backlog/parked/*` plans (P-LVL, P-BRK, P-OAS, P-MUI: MUI Step 2 and its 11 follow-up ideas). A parked plan gets a unit only if the user un-parks it.
 
 ## G0 answers (user, 2026-11-16)
 
