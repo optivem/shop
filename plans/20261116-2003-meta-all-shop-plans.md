@@ -1,7 +1,5 @@
 # 2026-11-16 20:03 UTC — Plan coordination meta-plan: all shop plans
 
-> 🤖 **Picked up by agent** — `Valentina_Desk` at `2026-11-18T12:06:17Z`
-
 ## TL;DR
 
 **Why:** Shop has 21 open plans: three earlier meta-plans, the in-flight storefront/showcase/reliability work and the backlog. They share the one local docker host, the system-test drivers, the acceptance/QA/prod workflows and `frontend-react`, and several backlog plans were overtaken by later work. Running them one by one by hand repeats the docker clashes and double orchestration that REL #36/#45/#56 recorded.
