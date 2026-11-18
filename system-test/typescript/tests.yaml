@@ -41,6 +41,10 @@
 # strings that could parse as a YAML scalar (`yes`, `no`, country codes).
 
 setupCommands:
+  # The spec gate (spec-typescript.yaml) reads every junit-results/*.xml, so a
+  # leftover file from an earlier run would be read as this run's (REL #69).
+  - name: Clear JUnit Results
+    command: node -e "require('node:fs').rmSync('junit-results',{recursive:true,force:true})"
   - name: Install Dependencies
     command: npm ci --fetch-retries=5 --fetch-retry-mintimeout=20000 --fetch-retry-maxtimeout=120000
   - name: Install Playwright Browsers

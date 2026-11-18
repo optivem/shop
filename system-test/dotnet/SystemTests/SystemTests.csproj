@@ -46,4 +46,10 @@
     </None>
   </ItemGroup>
 
+  <!-- tests.yaml setup runs this before a run: the spec gate (spec-dotnet.yaml) reads every
+       TestResults/junit/*.xml, so a leftover file from an earlier run would be read as this run's (REL #69). -->
+  <Target Name="ClearJUnitResults">
+    <RemoveDir Directories="$(MSBuildProjectDirectory)/TestResults/junit" />
+  </Target>
+
 </Project>

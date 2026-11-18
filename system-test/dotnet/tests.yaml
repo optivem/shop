@@ -48,6 +48,8 @@
 setupCommands:
   - name: Clean
     command: dotnet clean
+  - name: Clear JUnit Results
+    command: dotnet msbuild SystemTests/SystemTests.csproj -t:ClearJUnitResults -nologo
   - name: Build
     command: dotnet build
 testFilter: '&DisplayName~<test>'
