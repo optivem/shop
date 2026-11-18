@@ -38,6 +38,10 @@ concurrency:
 jobs:
   check:
     runs-on: ubuntu-latest
+    # Required reviewer gate: a green meta-prerelease pushes the RC tag that triggers this workflow,
+    # so without it every green prerelease would go to production on its own. The release waits here
+    # until a reviewer of the `production-release` environment approves it (or rejects it to hold the RC).
+    environment: production-release
     permissions:
       contents: read
     outputs:
