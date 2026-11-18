@@ -1,6 +1,6 @@
 # 2026-11-16 20:03 UTC — Plan coordination meta-plan: all shop plans
 
-> 🤖 **Picked up by agent** — `Valentina_Desk` at `2026-11-17T08:26:54Z`
+> 🤖 **Picked up by agent** — `Valentina_Desk` at `2026-11-18T12:06:17Z`
 
 ## TL;DR
 
@@ -28,7 +28,7 @@ The orchestrating session runs the **Wave tracker** top to bottom. Run the same 
 
 ## ▶ Next executable step (resume here)
 
-**Wave 1 (session 2026-11-17, scope = Wave 1):** Lane D runs **U1** (META3 Phase B, checklist at `git show 06ac783d:plans/20261112-0845-meta-storefront-ui-showcase-reliability.md`: .NET pass → TS pass → SHOW Phase B → `./test-all.sh` → flips → SMETA Step 8 → 🛑 MUI visual check), then **U2** (UC1 D4, strict). U0 and U3 are done.
+**Wave 2 close-out, remainder:** Lane D finishes **U8** from REL's ▶ block: #68 UI half (warm-up fixture before the parallel .NET UI batch), #82 (drivers off the aria-label hooks, fix the four UIs, delete `DISABLED_AXE_RULES`), #78 enforcement after a cloud multitier UI run. Then confirm **U6** in CI (an acceptance-stage run on or after `5dabd1d2` runs contract before acceptance) and start Wave 3's remainder.
 
 ## Wave tracker
 
@@ -43,14 +43,19 @@ The orchestrating session runs the **Wave tracker** top to bottom. Run the same 
 | 2 | U5 B-QAS remainder (verification only: smoke ran green before record/release) | W (after U4) | done 2026-11-17 (`e0e3c925`); Steps 2–3 are X1 |
 | 2 | U6 B-ORD shop steps | W (after U5) | pushed `5dabd1d2` (contract before acceptance in CI, latest only); CI confirmation pending |
 | 2 | U7 B-MRF #3 + #4 | D (after U2) | done 2026-11-17 (`c094da41`, `49a5cf12`): new UC-002.11 deep-link UI test ×3 languages, .NET cancel UI now drives the UI |
-| 2 | U8 REL open ideas, shop side | D (after U7) | todo |
+| 2 | U8 REL open ideas, shop side | D (after U7) | 2026-11-18: #55 #56 #58 #59 #64 #66 #67(1) #69 #75 #76 #80 #84 done; #78 headers + report-only CSP; #68 API half (`0cd89824`); #61 → watch; left: #68 UI half, #82, #78 enforcement |
 | 3 | U9 B-PRG remainder (4.2 decided 2026-11-17: in-code login limit only, edge policy opt-in and cost-labelled; a noted shortcut) | B | runs 1–2 done 2026-11-17 (0.1, 1.7, 1.8, 3.2, 3.4, 3.5, 4.1, 4.3, 4.4, 2.3, 4.2, 5.5, 6.7); Lane D `--sample` green on all 6 stacks; left: 5.6, 6.4–6.6, 5.4/6.3 (prod-stage), one `dast.yml` dispatch; user: turn on private vulnerability reporting; before prod: secret check (4.1) |
 | 3 | U10 FT frontend testing | D (after U8) | Steps 1–6 done 2026-11-17 (axe in `npm test` + in the UI drivers ×3, `f13a9adb`; `lighthouse.yml`); left: one `lighthouse.yml` dispatch, SignIn axe test, REL #70 recheck |
 | 3 | U11 OUTBOX (confirmed 2026-11-17: Java-only worked example, a noted shortcut) | B (after U9), verified in D | done 2026-11-17, plan deleted; Lane D verified: relay delivers, `sent_at` set, audit rows written |
 | 4 | U12 B-MRF #8 path-param routes | D (after U10) | todo (G0: yes) |
 | 4b | U13+ Dependabot major upgrades, one unit each (Spring Boot 4.1, Gradle 9.9, ESLint 10, `@types/node` 26, .NET 11, Node 25) | D | todo (user, 2026-11-17: after Wave 4, before X1) |
 | 5 | X1 cross-repo (last) | X | todo |
-| — | M manual (user) | — | open |
+| — | M manual (user) | — | open; **M-GCP** done 2026-11-18, user actions below |
+
+### M-GCP follow-ups — done 2026-11-18 (`6a40c010`, `78d5c4b5`); user actions
+
+- **User:** run `./setup-gcp.sh` once before the next production deploy of monolith-typescript. It creates `<system>-monolith-session-secret` (REL #76, `a94d06e1`); until then that deploy fails on `--set-secrets`.
+- **User:** meta-release now waits for approval in the `production-release` environment (REL #80, `ed389f13`); approve or reject it on the run page.
 
 ## Per-plan status snapshot
 
@@ -188,7 +193,7 @@ Edges from the plans' own wording: META3 "TS pass → test-all → flip → UC1 
 | U11 | OUTBOX Steps 1–7 | B, then D | compile-all + component tests; `--sample` | migrations, place-order ×6, relay, `docs/tour.md` |
 | U12 | B-MRF #8 path-param routes (only if G0 says yes) | D | cross-lang UI runs green in every direction | monolith routes ×3, `SecurityConfigTest`, UI drivers ×3 |
 | X1 | Cross-repo, last: INL (once a gh-optivem release accepts `inner-loop`), GHO Items 3–4 (needs `gh auth refresh -s project`, a read-only gh-optivem clone with `.env`, and filing the 5c ticket, decided: as drafted), B-QAS Steps 6–7, B-ORD Steps 3–6, REL #65 (optivem-testing), B-TAX item 7 (substack: update the characterization-tests draft if the component test snippet changes; `placeOrder("BOOK-123", 2, "US", "SAVE20")` still passes the country per order, while UC-001 BR-3 now takes tax from the shipping address) | X | per repo | other repos; shop only for INL's config line and GHO's rehearsal pushes |
-| M | User only: B-SL (SonarLint), REL #11 (second machine), MUI visual check (in U1) | — | — | — |
+| M | User only: B-SL (SonarLint), REL #11 (second machine), MUI visual check (in U1), `./setup-gcp.sh` before the next monolith-typescript prod deploy (see M-GCP follow-ups), approving meta-release runs | — | — | — |
 
 **Unscheduled (parked on purpose, no unit):** B-TKA Steps 3–4, B-LEG option C, B-KC's deferred item, B-MRF #7 and #9 (watch), REL deferred ideas (#5 #15 #17 #20 #21 #26 #47), REL #62 (watch), MUI Step 2 and its 11 follow-up ideas, the three `backlog/parked/*` plans (P-LVL, P-BRK, P-OAS). A parked plan gets a unit only if the user un-parks it.
 
@@ -204,6 +209,8 @@ Edges from the plans' own wording: META3 "TS pass → test-all → flip → UC1 
 8. REL #55–#68: **as proposed.** #55 README note (clean variant deliberately has no auth); #56 close (already the rule); #57 → gh-optivem (X1); #58 **yes**: admin-only `GET /api/admin/customers` in all six backends, returning an unpaged, A→Z-sorted JSON array of the usernames that have placed an order (`SELECT DISTINCT customer FROM orders`; 401 anonymous, 403 non-admin); the React/Next.js/Razor/Thymeleaf filters read it and `MAX_CUSTOMER_PAGES` goes away; drivers/DSL + an acceptance test; #59 docs how-to only; #60, #61, #63, #64, #66, #67, #68 per their written recommendations; #62 watch; #65 → optivem-testing (X1).
 9. B-MRF #8: **yes**, `/order-details/{orderNumber}` everywhere (U12).
 10. Dependabot: **yes**, merge the green non-major PRs before Wave 2; each major upgrade becomes its own later unit, scheduled after Wave 4 and before X1 (user, 2026-11-17).
+
+**Answers (user, 2026-11-18):** REL #69, #75, #76, #78, #82, #84 join U8 with their written recommendations (#74, #81, #83 stay on watch). REL #80: add a `production-release` environment with the user as required reviewer to meta-release-stage's first job. M-GCP: both follow-ups as recommended (README matches the one $10 USD alert budget; default `billing_kill_switch_amount` 5).
 
 **Further answers (user, 2026-11-17):** session 2026-11-17 continues past Wave 1 autonomously for the rest of the day (user, later the same day). OUTBOX is Java-only. B-PRG 4.2 is an in-code login limit only. B-PRG 5.2 is done: secret scanning and push protection enabled on `optivem/shop` 2026-11-17. X1: file the 5c ticket as drafted ("show the customer's name from the CRM directory, JSONPlaceholder `/users`, on the order details") when X1 starts.
 

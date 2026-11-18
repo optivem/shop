@@ -11,7 +11,7 @@ Session 2026-11-10 did #1, #2, #3 (full latest acceptance runs per language on m
 
 **Waiting on the user:** #11 on the second machine (same fix; on Valentina_Desk it was done 2026-11-11): Git Bash's `gcloud` wrapper skips the Windows bundled Python and fell back to Python 3.13; fixed by `CLOUDSDK_PYTHON` pointing at `google-cloud-sdk/platform/bundledpython/python.exe` (user env var + `~/.bashrc`). (#27 committed in `actions` as `1139063`, 2026-11-10.)
 
-**Next executable unit (U8, state 2026-11-18):** U8 committed in this checkout (local; the shared dirty tree blocked `gh optivem commit`'s push, #73): #58 + #64 (`a8f8e9d6`), #66 (`85c89c25`), #84 token-client messages (`fcf43b1f`; docs half `051fde24` by Lane B), #69 (`2981f8ef`), #78 headers + report-only CSP (`6d20d8c0`, enforcement left in #78), #68 API half (`0cd89824`, xUnit `conservative`); #58/#64/#66/#69/#84 deleted here. #61 not reproduced (now watch). Still to do: #68 UI half (warm-up fixture), #82 (not started: cross-language selector move + four UIs, then UI suites on all six stacks), #78 enforcement after a cloud multitier UI run. New: #85, #86. #75, #76, #80 landed in Lane B commits (`8605c878`, `a94d06e1`, `ed389f13`) and are left here for the orchestrator to verify and delete. #57, #65, #71, #73, #77, #79 go to other repos (X1). #70, #72, #74 not started.
+**Next executable unit (U8, state 2026-11-18):** U8 committed in this checkout (local; the shared dirty tree blocked `gh optivem commit`'s push, #73): #58 + #64 (`a8f8e9d6`), #66 (`85c89c25`), #84 token-client messages (`fcf43b1f`; docs half `051fde24` by Lane B), #69 (`2981f8ef`), #78 headers + report-only CSP (`6d20d8c0`, enforcement left in #78), #68 API half (`0cd89824`, xUnit `conservative`); #58/#64/#66/#69/#84 deleted here. #61 not reproduced (now watch). Still to do: #68 UI half (warm-up fixture), #82 (not started: cross-language selector move + four UIs, then UI suites on all six stacks), #78 enforcement after a cloud multitier UI run. New: #85, #86. #75, #76, #80 done in Lane B (`8605c878`, `a94d06e1`, `ed389f13`) and deleted. #57, #65, #71, #73, #77, #79 go to other repos (X1). #70, #72, #74 not started.
 
 **Deferred:** #5, #15, #17, #20, #21, #26 (see their ideas below).
 
@@ -163,16 +163,6 @@ Found 2026-11-17 (U10, meta-plan Wave 3). With several agents in one checkout, e
 Found 2026-11-17 (U11 OUTBOX). The transactional-outbox worked example (`system/multitier/backend-java/.../core/outbox/`, migration `V20261117150000__add_outbox_and_order_placed_audit.sql`) keeps every sent `outbox` row and every `order_placed_audit` row forever. On a long-lived stack (prod, a student's running local stack) both tables grow by one row per order. The how-to (`docs/transactional-outbox.md`, Caveats) says so.
 - **Recommended:** leave it until a real consumer lands, then add a purge of `outbox` rows with `sent_at` older than 7 days to the relay's poll (one `DELETE ... WHERE sent_at < now() - interval '7 days'` per N polls), mirroring the B-PRG idempotency-key purge. **Why:** the table is tiny at demo volumes, and the purge belongs next to the idempotency purge so the two follow one pattern.
 
-### 75. Two `@EnableScheduling` in backend-java once B-PRG's purge lands
-
-Found 2026-11-17 (U11 OUTBOX). U11 put `@EnableScheduling` on the new `config/OutboxConfig.java` so the outbox relay did not depend on uncommitted work. U9 (B-PRG idempotency purge) is adding `@EnableScheduling` to `BackendApplication.java` in the same checkout. Two copies are harmless (Spring imports the scheduling config once), just redundant.
-- **Recommended:** after both are on `main`, remove `@EnableScheduling` from `OutboxConfig` and keep the one on `BackendApplication`. **Why:** one switch is easier to reason about.
-
-### 76. TS monolith in production seals sessions with the committed test session secret
-
-Found 2026-11-17 (U9, B-PRG 4.1). `system/monolith/typescript/src/lib/auth/settings.ts` defaults `AUTH_SESSION_SECRET` to `shop-monolith-test-session-secret-change-me`, and `_deploy-stage.yml` never sets it, so a production monolith-typescript deploy encrypts its session and login cookies with a key anyone can read in the repo. The 4.1 prod guard deliberately does not check it yet: adding the check today would stop the next production deploy of that image.
-- **Recommended:** add a `${SYSTEM}-monolith-session-secret` Secret Manager secret (terraform, random value), map it with `--set-secrets AUTH_SESSION_SECRET=…` for the production stage in `_deploy-stage.yml`, then add `AUTH_SESSION_SECRET` to `productionConfigProblems` in `lib/production-config-guard.ts`. **Why:** a forged session cookie is a full account takeover, and the guard is the cheap way to keep it from coming back.
-
 ### 77. `gh optivem commit` appends a second, different Co-Authored-By trailer
 
 Found 2026-11-17 (U9). Commits made with `gh optivem commit --yes --paths … "<message>"` end with the caller's `Co-Authored-By: Claude Opus 5.5` and `Claude-Session` lines, then a blank line and an extra `Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>` the tool adds itself (e.g. `707e37a6`).
@@ -187,11 +177,6 @@ Found 2026-11-17 (U9 run 2, B-PRG 4.3). Done in U8 (`6d20d8c0`): `system/multiti
 
 Found 2026-11-17 (meta-release red since 11-13). `optivem/actions/cleanup-prereleases/cleanup-prereleases.sh` keys `final_releases` and `prerelease_tags_map` by bare version (`1.0.226`), not by prefix + version. Cleanup 43548561064 (2026-11-14) logged "Version 1.0.226 (released as multitier-typescript-v1.0.226)" and deleted `meta-v1.0.226-rc.1550`, the RC that meta-release 43514773710 was promoting, so its re-run (attempt 2, 11-16) could not fetch the tag. The same pass deleted unreleased `monolith-dotnet-`, `monolith-java-`, `monolith-typescript-` and `multitier-dotnet-v1.0.238-rc.*` tags because `multitier-typescript-v1.0.238` exists. The meta version (1.0.226) collides with flavor versions, so every nightly cleanup can delete a live meta RC or flavor RC before it is promoted.
 - **Recommended:** fix in optivem/actions: key both maps by `<prefix>|<version>` (`get_tag_prefix` already exists) so a release only clears its own pipeline's RCs; add a test with two prefixes that share a version. **Why:** the script deletes tags a release still needs, and the release fails much later with a "couldn't find remote ref" that hides the cause.
-
-### 80. A green meta-prerelease releases to production on its own
-
-Found 2026-11-17. `tag-meta-rc` pushes `meta-v*-rc.*` with `VERIFY_TOKEN` (a PAT), and `meta-release-stage.yml` triggers on that tag push, so every green meta-prerelease run starts a production release (all past meta-release runs are `push` events). A release can't be held while the prerelease is checked (e.g. the B-PRG 4.1 hold on the prod client secret): the only ways to stop it are not to run meta-prerelease or to disable the workflow.
-- **Recommended:** add a GitHub environment with required reviewers (e.g. `production-release`) to meta-release-stage's first job, or drop the tag-push trigger and release by dispatch only. **Why:** it keeps the RC automatic and makes the step into production a deliberate one.
 
 ### 81. Cloud acceptance: one-minute us-central1 blip failed four flavors at once (2026-11-16 23:16 UTC)
 
