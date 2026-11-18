@@ -15,6 +15,14 @@ set -euo pipefail
 AUTO_APPROVE=false
 [[ "${1:-}" == "--yes" ]] && AUTO_APPROVE=true
 
+# Mirror everything (stdout and stderr, prompts included) to a log file, so a run can be followed
+# or reviewed later (newest: ls -t .tmp/logs/setup-gcp-*.log | head -1); .tmp/ is gitignored.
+LOG_DIR="$(cd "$(dirname "$0")" && pwd)/.tmp/logs"
+mkdir -p "$LOG_DIR"
+LOG_FILE="$LOG_DIR/setup-gcp-$(date -u +%Y%m%dT%H%M%SZ).log"
+exec > >(tee -a "$LOG_FILE") 2>&1
+echo "Log: $LOG_FILE"
+
 echo "========================================="
 echo " GCP Infrastructure Setup (Terraform)"
 echo "========================================="
