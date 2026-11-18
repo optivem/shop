@@ -18,6 +18,7 @@ import { Checkout } from '../../pages/Checkout';
 import { OrderDetails } from '../../pages/OrderDetails';
 import { OrderHistory } from '../../pages/OrderHistory';
 import { ProductDetail } from '../../pages/ProductDetail';
+import { SignIn } from '../../pages/SignIn';
 import { orderService } from '../../services/order-service';
 import { productService } from '../../services/product-service';
 import { profileService } from '../../services/profile-service';
@@ -151,6 +152,13 @@ describe('accessibility (axe, serious and critical)', () => {
     });
     const { container } = renderScreen(<OrderDetails />, { path: '/order-details/:orderNumber', entry: '/order-details/ORD-1001' });
     await screen.findByLabelText('Display Order Number');
+    expect(await seriousA11yViolations(container)).toEqual([]);
+  });
+
+  it('sign-in redirect', async () => {
+    const auth = createMockAuth({ isAuthenticated: false, user: null, signinRedirect: vi.fn().mockResolvedValue(undefined) });
+    const { container } = renderScreen(<SignIn />, { path: '/sign-in', entry: '/sign-in?returnUrl=%2Fcheckout', auth });
+    await screen.findByRole('status');
     expect(await seriousA11yViolations(container)).toEqual([]);
   });
 
