@@ -64,6 +64,8 @@ for w in meta-prerelease-stage.yml meta-release-stage.yml; do gh run list -w "$w
 
 A latest run that is `failure` counts as a red pipeline even if it is days old. Drill into its inner runs (`gh run view <id> --log-failed`, then the `run <id>) completed with conclusion` lines) down to the failing job. Never dispatch into a workflow's concurrency group while a meta run is using it: that cancels the meta run's inner run and shows up as a false failure.
 
+Before treating a red inner run as "the fix didn't work", check which commit it really tested: read its `commit-sha:` or `HEAD is now at` log line (or the `[sha:...]` in its run name). The `headSha` that `gh run list` shows is the dispatch ref, not the tested SHA, so an inner run dispatched after a fix landed can still be testing the commit the meta run started on.
+
 When fixing a failing CI workflow, always follow this sequence:
 
 1. **Reproduce locally first**: Before making any code changes, run `gh optivem system-test run` locally with the appropriate flags to reproduce the failure. Report whether the failure was reproduced or not.
