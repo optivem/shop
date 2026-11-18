@@ -28,7 +28,7 @@ variable "billing_account_id" {
 variable "billing_kill_switch_amount" {
   description = "Monthly cost (in the billing account's currency) at which the kill-switch unlinks the project from billing"
   type        = number
-  default     = 1
+  default     = 5
 
   validation {
     condition     = var.billing_kill_switch_amount >= 1 && floor(var.billing_kill_switch_amount) == var.billing_kill_switch_amount

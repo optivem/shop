@@ -1,6 +1,6 @@
 # Billing kill-switch: a budget on this project publishes to Pub/Sub, and a Cloud Function unlinks
 # the project from its billing account once the month's cost passes var.billing_kill_switch_amount
-# (in the billing account's currency, about €1 by default). That stops everything billable here.
+# (in the billing account's currency, 5 by default, i.e. $5 for a USD account). That stops everything billable here.
 # Budget data lags usage by hours, so the worst case is a few cents over. Re-running setup-gcp.sh
 # links billing again; raise the amount first, or the next notification that month disables it again.
 # The account-level $10 Monthly Budget Alert on the billing account stays as it is (README: Cost).

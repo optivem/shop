@@ -7,7 +7,7 @@ This directory contains the Terraform configuration and helper scripts that set 
 - **Secret Manager** for the database credentials and the Keycloak admin password
 - **IAM bindings** for GitHub Actions deployment
 - **Neon Postgres** project with one database per variant (created by `neonctl`, not Terraform)
-- **Billing kill-switch**: a budget, a Pub/Sub topic and a Cloud Function that unlinks billing at about €1 (see [Cost](#cost))
+- **Billing kill-switch**: a budget, a Pub/Sub topic and a Cloud Function that unlinks billing at about $5 (see [Cost](#cost))
 
 ## Quick Start
 
@@ -89,7 +89,7 @@ Hyphens are valid in GCP names but not in unquoted Postgres identifiers, so data
 | `github_repo` | GitHub repo in `owner/repo` format | Yes | `myorg/shop` |
 | `billing_account_id` | GCP billing account ID | Yes | `01ABCD-EFGHIJ-KLMNOP` |
 | `system_name` | Overrides the name derived from the repo (4-14 chars) | No | `shop` |
-| `billing_kill_switch_amount` | Monthly cost (billing account currency) at which billing is unlinked; `BILLING_KILL_SWITCH_AMOUNT` for `./setup-gcp.sh` | No | `1` |
+| `billing_kill_switch_amount` | Monthly cost (billing account currency) at which billing is unlinked; `BILLING_KILL_SWITCH_AMOUNT` for `./setup-gcp.sh` | No | `5` |
 
 Find your billing account ID:
 ```bash
@@ -145,7 +145,7 @@ Google Cloud Project
 
 Google Cloud bills **per resource, by usage**. Each service has its own meter (time, storage, requests, data transferred), and the charges add up on the billing account linked to the project. There is no flat fee. Many services have a monthly free tier, counted per billing account.
 
-**In normal use the project costs $0**, and a **kill-switch** caps the worst case at about €1 a month plus a few cents. Strictly guaranteed $0 isn't possible on GCP: budget data lags usage by hours, so spending can run on a little before the kill-switch fires. The Docker Compose acceptance gates run on GitHub's runners and never touch GCP; they are the always-free path.
+**In normal use the project costs $0**, and a **kill-switch** caps the worst case at about $5 a month plus a few cents. Strictly guaranteed $0 isn't possible on GCP: budget data lags usage by hours, so spending can run on a little before the kill-switch fires. The Docker Compose acceptance gates run on GitHub's runners and never touch GCP; they are the always-free path.
 
 ### What drives the cost
 
@@ -163,10 +163,10 @@ Not on the GCP bill: **Neon Postgres** bills through the Neon account (free plan
 
 ### Kill-switch
 
-`billing-kill-switch.tf` creates a budget on this project at `billing_kill_switch_amount` (default 1, in the billing account's currency, so about €1 for a EUR account). Every budget update goes to a Pub/Sub topic, and the `billing-kill-switch` Cloud Function **unlinks the project from its billing account** as soon as the month's cost passes the budget. That stops everything billable in the project: Cloud Run services stop serving, and the cloud stages fail until billing is back.
+`billing-kill-switch.tf` creates a budget on this project at `billing_kill_switch_amount` (default 5, in the billing account's currency, so $5 for a USD account). Every budget update goes to a Pub/Sub topic, and the `billing-kill-switch` Cloud Function **unlinks the project from its billing account** as soon as the month's cost passes the budget. That stops everything billable in the project: Cloud Run services stop serving, and the cloud stages fail until billing is back.
 
 - **To tell it fired**: `gcloud billing projects describe <project-id>` shows `billingEnabled: False`, gcloud and Terraform calls fail with `BILLING_DISABLED`, and the function's log says `Billing disabled for projects/<project-id>: cost X is over the budget Y`.
-- **To restore billing**, re-run with a higher limit: `BILLING_KILL_SWITCH_AMOUNT=5 ./setup-gcp.sh`. Before Terraform runs, the script (`kill-switch.sh`) raises the budget, links the billing account again and waits until billing is active. Terraform can't do this itself: with billing off, its plan fails reading Secret Manager and Cloud Storage. The limit must go up first because the budget still counts this month's cost, and the next notice (minutes away) would unlink billing again. Keeping the old limit asks for confirmation; it's fine once a new month has started.
+- **To restore billing**, re-run with a higher limit: `BILLING_KILL_SWITCH_AMOUNT=10 ./setup-gcp.sh`. Before Terraform runs, the script (`kill-switch.sh`) raises the budget, links the billing account again and waits until billing is active. Terraform can't do this itself: with billing off, its plan fails reading Secret Manager and Cloud Storage. The limit must go up first because the budget still counts this month's cost, and the next notice (minutes away) would unlink billing again. Keeping the old limit asks for confirmation; it's fine once a new month has started.
 - Google may delete resources of a project that stays without billing for a long time; `./setup-gcp.sh` recreates the GCP side.
 - Keep the **budget alert** on the billing account (Billing > Budgets & alerts): one `$10 Monthly Budget Alert` budget, in USD like the billing account. It covers every project on the account and only alerts; the kill-switch budget above is separate and scoped to this project.
 

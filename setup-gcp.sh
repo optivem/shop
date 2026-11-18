@@ -5,7 +5,7 @@ set -euo pipefail
 # Prerequisite: gcloud, gh and neonctl authenticated, and a GCP billing account
 # Optional: SYSTEM_NAME=<4-14 chars> overrides the name derived from the repo (prefixes the GCP project, services, secrets, databases).
 #   Keep it to 8 chars or fewer to deploy multitier-typescript to production (12 for multitier-dotnet): Cloud Run caps service names at 49.
-# Optional: BILLING_KILL_SWITCH_AMOUNT=<whole number, default 1> sets the monthly cost at which billing is unlinked (terraform/billing-kill-switch.tf);
+# Optional: BILLING_KILL_SWITCH_AMOUNT=<whole number, default 5> sets the monthly cost at which billing is unlinked (terraform/billing-kill-switch.tf);
 #   after the kill-switch has fired, re-run with a higher amount: the script raises the limit and links billing again before Terraform runs
 # Optional: KC_ADMIN_PASSWORD=<password> sets the Keycloak admin password on first setup (default: generated)
 # Optional: ACC_DOMAIN / E2E_DOMAIN / QA_DOMAIN / PROD_DOMAIN=<domain> map the permanent environments, and
@@ -159,7 +159,7 @@ echo ""
 
 # Before Terraform: with billing unlinked, its plan can't even read the project's resources
 echo "Checking the billing kill-switch..."
-restore_billing_if_killed "$BILLING_ACCOUNT" "$STATE_PROJECT" "${BILLING_KILL_SWITCH_AMOUNT:-1}" "$AUTO_APPROVE"
+restore_billing_if_killed "$BILLING_ACCOUNT" "$STATE_PROJECT" "${BILLING_KILL_SWITCH_AMOUNT:-5}" "$AUTO_APPROVE"
 echo ""
 
 # Initialize Terraform
@@ -174,7 +174,7 @@ init_state_backend "$STATE_BUCKET" "$REPO"
 echo ""
 echo "Planning infrastructure..."
 terraform plan -var="github_repo=$REPO" -var="billing_account_id=$BILLING_ACCOUNT" -var="system_name=${SYSTEM_NAME:-}" \
-  -var="billing_kill_switch_amount=${BILLING_KILL_SWITCH_AMOUNT:-1}" -out=tfplan
+  -var="billing_kill_switch_amount=${BILLING_KILL_SWITCH_AMOUNT:-5}" -out=tfplan
 
 # Apply: additions go ahead; updates/deletes need confirmation (or --yes)
 plan_json=$(terraform show -json tfplan)
@@ -350,7 +350,7 @@ echo ""
 echo "  GCP Project:  $PROJECT_ID"
 echo "  Region:       $REGION"
 echo "  Cost:         ~\$0/month in normal use (free tier); see terraform/README.md#cost"
-echo "  Kill-switch:  billing is unlinked once this month's cost passes ${BILLING_KILL_SWITCH_AMOUNT:-1} (billing account currency)"
+echo "  Kill-switch:  billing is unlinked once this month's cost passes ${BILLING_KILL_SWITCH_AMOUNT:-5} (billing account currency)"
 echo ""
 if (( ${#MISSING_GH_SECRETS[@]} > 0 )); then
   echo "  ⚠️  MANUAL STEP before triggering the workflow — set the missing GitHub secrets:"

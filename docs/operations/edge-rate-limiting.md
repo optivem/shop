@@ -20,7 +20,7 @@ Successful logins are never counted, so the system tests, which sign in as `cust
 
 Cloud Armor attaches to an external Application Load Balancer, not to Cloud Run directly. So this means putting a global load balancer with a serverless NEG in front of each service you want to protect.
 
-**Monthly cost (approximate, check current GCP pricing):** about $18 for the load balancer's forwarding rule, plus about $5 for the Cloud Armor policy and $1 per rule, plus per-request and data-processing charges that are cents at shop's traffic. **That is far above the project's billing kill-switch (about €1, see [terraform/README.md](../../terraform/README.md#cost)):** raise `BILLING_KILL_SWITCH_AMOUNT` before turning this on, or the kill-switch unlinks billing and every Cloud Run service stops.
+**Monthly cost (approximate, check current GCP pricing):** about $18 for the load balancer's forwarding rule, plus about $5 for the Cloud Armor policy and $1 per rule, plus per-request and data-processing charges that are cents at shop's traffic. **That is far above the project's billing kill-switch (about $5, see [terraform/README.md](../../terraform/README.md#cost)):** raise `BILLING_KILL_SWITCH_AMOUNT` before turning this on, or the kill-switch unlinks billing and every Cloud Run service stops.
 
 Sketch, once the load balancer and its backend service (`shop-edge-backend`) exist:
 
