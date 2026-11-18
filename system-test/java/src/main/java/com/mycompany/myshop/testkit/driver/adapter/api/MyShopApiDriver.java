@@ -7,6 +7,8 @@ import com.mycompany.myshop.testkit.driver.port.dtos.BrowseCatalogRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.BrowseCatalogResponse;
 import com.mycompany.myshop.testkit.driver.port.dtos.BrowseCouponsRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.BrowseCouponsResponse;
+import com.mycompany.myshop.testkit.driver.port.dtos.BrowseCustomersRequest;
+import com.mycompany.myshop.testkit.driver.port.dtos.BrowseCustomersResponse;
 import com.mycompany.myshop.testkit.driver.port.dtos.BrowseOrderHistoryRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.BrowseOrderHistoryResponse;
 import com.mycompany.myshop.testkit.driver.port.dtos.CancelOrderRequest;
@@ -121,6 +123,12 @@ public class MyShopApiDriver implements MyShopDriver {
         requireNotSet("followUp", request.getFollowUp());
         runAs(TestUser.CUSTOMER);
         return apiClient.orders().browseOrderHistory(request.getOrderNumber(), request.getCustomer(), request.getPage(), request.getSize()).mapError(SystemErrorMapper::from);
+    }
+
+    @Override
+    public Result<BrowseCustomersResponse, SystemError> browseCustomers(BrowseCustomersRequest request) {
+        runAs(TestUser.ADMIN);
+        return apiClient.admin().browseCustomers().mapError(SystemErrorMapper::from);
     }
 
     @Override

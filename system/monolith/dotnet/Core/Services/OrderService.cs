@@ -303,6 +303,18 @@ public class OrderService
         await _dbContext.SaveChangesAsync();
     }
 
+    /// <summary>The usernames that have placed an order, distinct, A to Z: the choices of the admin customer filter.</summary>
+    /// <remarks>Unpaged by design: one row per customer, not per order.</remarks>
+    public async Task<List<string>> BrowseCustomersAsync()
+    {
+        return await _dbContext.Orders
+            .Where(o => o.OwnerName != null)
+            .Select(o => o.OwnerName!)
+            .Distinct()
+            .OrderBy(ownerName => ownerName)
+            .ToListAsync();
+    }
+
     public async Task CancelOrderAsync(string orderNumber, CurrentUser user)
     {
         var now = (await _clockGateway.GetCurrentTimeAsync()).ToUniversalTime();

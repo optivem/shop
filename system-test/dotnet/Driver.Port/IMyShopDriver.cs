@@ -12,6 +12,8 @@ public interface IMyShopDriver : IAsyncDisposable, IActingUserSelector
     Task<Result<DeliverOrderResponse, SystemError>> DeliverOrderAsync(DeliverOrderRequest request);
     Task<Result<ViewOrderResponse, SystemError>> ViewOrderAsync(ViewOrderRequest request);
     Task<Result<BrowseOrderHistoryResponse, SystemError>> BrowseOrderHistoryAsync(BrowseOrderHistoryRequest request);
+    /// <summary>The customers who have placed orders (admin only); the UI offers them only inside the order history.</summary>
+    Task<Result<BrowseCustomersResponse, SystemError>> BrowseCustomersAsync(BrowseCustomersRequest request);
     Task<Result<PublishCouponResponse, SystemError>> PublishCouponAsync(PublishCouponRequest request);
     Task<Result<BrowseCouponsResponse, SystemError>> BrowseCouponsAsync(BrowseCouponsRequest request);
     Task<Result<ViewProfileResponse, SystemError>> ViewProfileAsync(ViewProfileRequest request);

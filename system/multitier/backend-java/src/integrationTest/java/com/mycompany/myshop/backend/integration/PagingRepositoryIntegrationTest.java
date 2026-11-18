@@ -22,7 +22,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
 // The paged list queries against real Postgres: LIMIT/OFFSET, the COUNT twins, and a sort that stays
-// stable when timestamps tie.
+// stable when timestamps tie. Also the unpaged customer list the admin filter offers.
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @ActiveProfiles("test")
@@ -84,6 +84,16 @@ class PagingRepositoryIntegrationTest {
     }
 
     @Test
+    void customersAreListedOnceEachFromAToZ() {
+        orderRepository.save(order("ORD-001", "carol-sub", "carol"));
+        orderRepository.save(order("ORD-002", "alice-sub", "alice"));
+        orderRepository.save(order("ORD-003", "carol-sub", "carol"));
+        orderRepository.save(order("ORD-004", "legacy-sub", null));
+
+        assertThat(orderRepository.findDistinctOwnerNames()).containsExactly("alice", "carol");
+    }
+
+    @Test
     void couponsArePagedNewestFirst() {
         for (int i = 1; i <= 3; i++) {
             couponRepository.save(new Coupon("CODE" + i, new BigDecimal("0.1000"), null, null, 10, 0));
@@ -94,9 +104,13 @@ class PagingRepositoryIntegrationTest {
     }
 
     private static Order order(String orderNumber, String owner) {
+        return order(orderNumber, owner, "user");
+    }
+
+    private static Order order(String orderNumber, String owner, String ownerName) {
         return new Order(orderNumber, SAME_TIME, "US", "BOOK-123", 1,
                 new BigDecimal("10.00"), new BigDecimal("10.00"), new BigDecimal("0.0000"), new BigDecimal("0.00"),
                 new BigDecimal("10.00"), new BigDecimal("0.1000"), new BigDecimal("1.00"), new BigDecimal("11.00"),
-                OrderStatus.PLACED, null, owner, "user");
+                OrderStatus.PLACED, null, owner, ownerName);
     }
 }

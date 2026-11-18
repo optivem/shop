@@ -82,6 +82,30 @@ class AuthorizationComponentTest extends BaseComponentTest {
     }
 
     @Test
+    void customersWithoutTokenReturnsUnauthorized() {
+        var response = call(HttpMethod.GET, "/api/admin/customers", null);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(response.getBody()).contains("\"status\":401");
+    }
+
+    @Test
+    void customerCannotBrowseCustomers() {
+        var response = call(HttpMethod.GET, "/api/admin/customers", TestAuthConfiguration.CUSTOMER_TOKEN);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(response.getBody()).contains("\"status\":403");
+    }
+
+    @Test
+    void adminCanBrowseCustomers() {
+        var response = call(HttpMethod.GET, "/api/admin/customers", TestAuthConfiguration.ADMIN_TOKEN);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).startsWith("[");
+    }
+
+    @Test
     void adminPassesAuthorizationOnAdminEndpoint() {
         // The order does not exist, so the request is authorized and then rejected by the service.
         var response = call(HttpMethod.POST, "/api/orders/ORD-MISSING/deliver", TestAuthConfiguration.ADMIN_TOKEN);

@@ -55,6 +55,7 @@ describe('decide', () => {
     ['GET', '/api/coupons'],
     ['POST', '/api/coupons'],
     ['GET', '/api/admin/recall/ABC'],
+    ['GET', '/api/admin/customers'],
     ['GET', '/admin-coupons'],
   ])('%s %s is ADMIN only', (method, path) => {
     expect(decide(method, path, null)).toBe('unauthenticated');

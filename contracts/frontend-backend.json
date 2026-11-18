@@ -184,7 +184,7 @@
       }
     },
     {
-      "description": "a browse-order-history request for page 1",
+      "description": "a browse-customers request",
       "providerStates": [
         {
           "name": "at least one order exists"
@@ -192,34 +192,18 @@
       ],
       "request": {
         "method": "GET",
-        "path": "/api/orders",
-        "query": {
-          "page": [
-            "1"
-          ]
-        }
+        "path": "/api/admin/customers"
       },
       "response": {
-        "body": {
-          "orders": [
-            {
-              "appliedCouponCode": null,
-              "country": "US",
-              "orderNumber": "ORD-1",
-              "orderTimestamp": "2026-03-10T12:00:00Z",
-              "quantity": 2,
-              "sku": "BOOK-123",
-              "status": "PLACED",
-              "totalPrice": "22.00"
-            }
-          ]
-        },
+        "body": [
+          "customer1"
+        ],
         "headers": {
           "Content-Type": "application/json"
         },
         "matchingRules": {
           "body": {
-            "$.orders": {
+            "$": {
               "combine": "AND",
               "matchers": [
                 {
@@ -228,60 +212,11 @@
                 }
               ]
             },
-            "$.orders[*].country": {
+            "$[*]": {
               "combine": "AND",
               "matchers": [
                 {
                   "match": "type"
-                }
-              ]
-            },
-            "$.orders[*].orderNumber": {
-              "combine": "AND",
-              "matchers": [
-                {
-                  "match": "type"
-                }
-              ]
-            },
-            "$.orders[*].orderTimestamp": {
-              "combine": "AND",
-              "matchers": [
-                {
-                  "match": "type"
-                }
-              ]
-            },
-            "$.orders[*].quantity": {
-              "combine": "AND",
-              "matchers": [
-                {
-                  "match": "integer"
-                }
-              ]
-            },
-            "$.orders[*].sku": {
-              "combine": "AND",
-              "matchers": [
-                {
-                  "match": "type"
-                }
-              ]
-            },
-            "$.orders[*].status": {
-              "combine": "AND",
-              "matchers": [
-                {
-                  "match": "type"
-                }
-              ]
-            },
-            "$.orders[*].totalPrice": {
-              "combine": "AND",
-              "matchers": [
-                {
-                  "match": "regex",
-                  "regex": "^-?\\d+\\.\\d{2}$"
                 }
               ]
             }

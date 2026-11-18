@@ -157,6 +157,16 @@ public class OrderShippingAddressAndProfileServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task BrowseCustomers_ListsTheUsernamesThatHavePlacedOrdersOnceEachFromAToZ()
+    {
+        await _orderService.PlaceOrderAsync(Request("US"), Bob);
+        await _orderService.PlaceOrderAsync(Request("US"), Ana);
+        await _orderService.PlaceOrderAsync(Request("US"), Bob);
+
+        Assert.Equal(["ana", "bob"], await _orderService.BrowseCustomersAsync());
+    }
+
+    [Fact]
     public async Task ViewProfile_WithoutSavedProfileTakesNamesAndEmailFromTheAccount()
     {
         var profile = await _profileService.ViewProfileAsync(Ana);

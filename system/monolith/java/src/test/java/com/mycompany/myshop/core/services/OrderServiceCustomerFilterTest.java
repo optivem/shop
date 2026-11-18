@@ -91,6 +91,13 @@ class OrderServiceCustomerFilterTest {
         verify(orderRepository, never()).countByOwnerName(any());
     }
 
+    @Test
+    void browseCustomersListsTheUsernamesThatHavePlacedOrders() {
+        when(orderRepository.findDistinctOwnerNames()).thenReturn(List.of("customer1", "customer2"));
+
+        assertThat(orderService.browseCustomers()).containsExactly("customer1", "customer2");
+    }
+
     private static Order placedOrder(String orderNumber) {
         return new Order(
                 orderNumber, Instant.parse("2025-06-15T10:00:00Z"), "US", "BOOK-123", 1,

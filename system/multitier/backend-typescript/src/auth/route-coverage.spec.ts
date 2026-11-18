@@ -26,6 +26,7 @@ const EXPECTED: Record<string, Access> = {
   'GET /api/coupons': 'admin',
   'POST /api/coupons': 'admin',
   'POST /api/admin/recall/:sku': 'admin',
+  'GET /api/admin/customers': 'admin',
   'GET /api/products': 'public',
   'GET /api/products/:sku': 'public',
   'GET /api/account/profile': 'authenticated',

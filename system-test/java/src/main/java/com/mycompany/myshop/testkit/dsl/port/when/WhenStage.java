@@ -8,6 +8,7 @@ import com.mycompany.myshop.testkit.dsl.port.when.steps.WhenDeliverOrder;
 import com.mycompany.myshop.testkit.dsl.port.when.steps.WhenPlaceOrder;
 import com.mycompany.myshop.testkit.dsl.port.when.steps.WhenPublishCoupon;
 import com.mycompany.myshop.testkit.dsl.port.when.steps.WhenViewOrder;
+import com.mycompany.myshop.testkit.dsl.port.when.steps.WhenBrowseCustomers;
 import com.mycompany.myshop.testkit.dsl.port.when.steps.WhenUpdateProfile;
 import com.mycompany.myshop.testkit.dsl.port.when.steps.WhenViewProfile;
 import com.mycompany.myshop.testkit.dsl.port.when.steps.WhenViewProduct;
@@ -28,6 +29,8 @@ public interface WhenStage {
     WhenBrowseCoupons browseCoupons();
 
     WhenBrowseOrderHistory browseOrderHistory();
+
+    WhenBrowseCustomers browseCustomers();
 
     WhenViewProfile viewProfile();
 

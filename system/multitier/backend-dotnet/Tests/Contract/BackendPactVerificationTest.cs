@@ -353,6 +353,8 @@ public class BackendPactVerificationTest : IAsyncLifetime
         TotalPrice = 22.00m,
         Status = status,
         AppliedCouponCode = null,
+        Owner = "customer-sub",
+        OwnerName = "customer1",
     };
 
     private static int FindFreePort()

@@ -45,6 +45,8 @@ public class MyShopDsl : IAsyncDisposable
 
     public BrowseCoupons BrowseCoupons() => new(_driver, _context);
 
+    public BrowseCustomers BrowseCustomers() => new(_driver, _context);
+
     public ViewProfile ViewProfile() => new(_driver, _context);
 
     public UpdateProfile UpdateProfile() => new(_driver, _context);

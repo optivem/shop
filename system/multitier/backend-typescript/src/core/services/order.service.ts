@@ -317,6 +317,17 @@ export class OrderService {
   }
 
   /**
+   * The usernames that have placed an order, distinct, A to Z: the choices of the admin customer filter.
+   * Unpaged by design -- one row per customer, not per order.
+   */
+  async browseCustomers(): Promise<string[]> {
+    const rows: { owner_name: string }[] = await this.orderRepository.query(
+      'SELECT DISTINCT owner_name FROM orders WHERE owner_name IS NOT NULL ORDER BY owner_name',
+    );
+    return rows.map((row) => row.owner_name);
+  }
+
+  /**
    * A customer always sees only their own orders; an admin sees every order, or with `customer` only
    * the orders placed under that username (exact match). The customer filter is ignored for customers.
    */

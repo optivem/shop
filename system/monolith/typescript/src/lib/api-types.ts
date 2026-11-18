@@ -84,6 +84,9 @@ export const productSchema = z.object({
 
 export const productsResponseSchema = z.array(productSchema);
 
+// The usernames that have placed an order, A to Z: a bare JSON array.
+export const customersResponseSchema = z.array(z.string());
+
 export const profileResponseSchema = z.object({
   firstName: z.string().nullish(),
   lastName: z.string().nullish(),

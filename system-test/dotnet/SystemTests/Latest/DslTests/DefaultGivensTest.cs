@@ -138,6 +138,9 @@ public class DefaultGivensTest
         public Task<Result<BrowseOrderHistoryResponse, SystemError>> BrowseOrderHistoryAsync(BrowseOrderHistoryRequest request) =>
             throw new NotSupportedException();
 
+        public Task<Result<BrowseCustomersResponse, SystemError>> BrowseCustomersAsync(BrowseCustomersRequest request) =>
+            throw new NotSupportedException();
+
         public Task<Result<PublishCouponResponse, SystemError>> PublishCouponAsync(PublishCouponRequest request) =>
             Task.FromResult(Result<PublishCouponResponse, SystemError>.Success(new PublishCouponResponse()));
 

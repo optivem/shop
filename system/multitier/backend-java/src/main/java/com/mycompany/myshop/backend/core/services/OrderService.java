@@ -241,6 +241,12 @@ public class OrderService {
         return response;
     }
 
+    /** The usernames that have placed an order, distinct, A to Z: the choices of the admin customer filter. */
+    @Transactional(readOnly = true)
+    public List<String> browseCustomers() {
+        return orderRepository.findDistinctOwnerNames();
+    }
+
     /**
      * One page of order history. A customer sees only their own orders; an admin sees everyone's,
      * optionally narrowed to one customer (by username, exact match). {@code customerFilter} is

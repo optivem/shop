@@ -111,12 +111,15 @@ describe('Backend Pact Provider Verification', () => {
           );
         },
 
+        // The order carries a customer, so the browse-customers interaction lists at least one.
         'at least one order exists': async () => {
           await harness.resetState();
           await harness.orderRepo.save(
             harness.orderRepo.create({
               ...sampleOrder(),
               orderNumber: 'ORD-HIST-1',
+              owner: 'customer-sub',
+              ownerName: 'customer1',
             }),
           );
         },

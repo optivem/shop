@@ -10,7 +10,7 @@ import { useOrders } from '../hooks';
 export function OrderHistory() {
   const { isAdmin } = useRoles();
   const { orders, filter, setFilter, customer, setCustomer, customers, isLoading, error, refresh } = useOrders('', {
-    collectCustomers: isAdmin,
+    loadCustomers: isAdmin,
   });
 
   return (

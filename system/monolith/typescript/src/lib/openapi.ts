@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import {
   couponsResponseSchema,
+  customersResponseSchema,
   orderDetailSchema,
   ordersResponseSchema,
   placeOrderResponseSchema,
@@ -143,6 +144,12 @@ export const API_OPERATIONS: Record<string, Partial<Record<'get' | 'post' | 'put
       summary: 'View a coupon',
       parameters: [pathParam('code')],
       responses: { '200': { description: 'The coupon' }, '404': problem('No such coupon') },
+    },
+  },
+  '/api/admin/customers': {
+    get: {
+      summary: 'Browse the customers who have placed orders, A to Z (admins only)',
+      responses: { '200': { description: 'The customers', ...json(responseSchema(customersResponseSchema)) } },
     },
   },
   '/api/account/profile': {

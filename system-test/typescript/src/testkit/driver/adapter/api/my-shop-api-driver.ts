@@ -17,6 +17,8 @@ import type { PublishCouponRequest } from '../../port/dtos/PublishCouponRequest.
 import type { PublishCouponResponse } from '../../port/dtos/PublishCouponResponse.js';
 import type { BrowseCouponsRequest } from '../../port/dtos/BrowseCouponsRequest.js';
 import type { BrowseCouponsResponse } from '../../port/dtos/BrowseCouponsResponse.js';
+import type { BrowseCustomersRequest } from '../../port/dtos/BrowseCustomersRequest.js';
+import type { BrowseCustomersResponse } from '../../port/dtos/BrowseCustomersResponse.js';
 import type { ViewProfileRequest } from '../../port/dtos/ViewProfileRequest.js';
 import type { ViewProfileResponse } from '../../port/dtos/ViewProfileResponse.js';
 import type { UpdateProfileRequest } from '../../port/dtos/UpdateProfileRequest.js';
@@ -100,6 +102,10 @@ export class MyShopApiDriver implements MyShopDriver {
     return this.runAs(TestUsers.CUSTOMER)
       .orders()
       .browseOrderHistory(request.orderNumber, request.page, request.size, request.customer);
+  }
+
+  async browseCustomers(_request: BrowseCustomersRequest): Promise<Result<BrowseCustomersResponse, SystemError>> {
+    return this.runAs(TestUsers.ADMIN).admin().browseCustomers();
   }
 
   async publishCoupon(request: PublishCouponRequest): Promise<Result<PublishCouponResponse, SystemError>> {

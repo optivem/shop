@@ -12,7 +12,7 @@ import {
   placeOrderUnknownSkuInteraction,
   placeOrderUntaxedCountryInteraction,
   browseOrderHistoryInteraction,
-  browseOrderHistoryPageInteraction,
+  browseCustomersInteraction,
   viewOrderDetailsInteraction,
   viewMissingOrderInteraction,
   cancelOrderInteraction,
@@ -63,8 +63,8 @@ export class BackendStubDsl {
     this.driver.stub(browseOrderHistoryInteraction());
   }
 
-  returnsOrderHistoryPage(page: number): void {
-    this.driver.stub(browseOrderHistoryPageInteraction(page));
+  returnsCustomers(): void {
+    this.driver.stub(browseCustomersInteraction());
   }
 
   returnsOrderDetails(orderNumber: string, status: OrderStatus = OrderStatus.PLACED): void {

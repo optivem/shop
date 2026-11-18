@@ -5,34 +5,22 @@ import Link from "next/link";
 import { Icon } from "@/components/Icon";
 import { AccountLayout, ErrorAlert, LoadingSpinner } from "@/components/StoreLayout";
 import { useSession } from "@/components/StorefrontProviders";
-import { ordersResponseSchema, parseJson, readErrorData, type Order } from "@/lib/api-types";
+import { customersResponseSchema, ordersResponseSchema, parseJson, readErrorData, type Order } from "@/lib/api-types";
 
-// The admin list is paged; the customer filter offers the customers found on its pages, up to this many.
-const MAX_CUSTOMER_PAGES = 50;
-
-function ordersUrl(params: { orderNumber?: string; customer?: string; page?: number }): string {
+function ordersUrl(params: { orderNumber?: string; customer?: string }): string {
   const query = new URLSearchParams();
   if (params.orderNumber) query.set("orderNumber", params.orderNumber);
   if (params.customer) query.set("customer", params.customer);
-  if (params.page !== undefined) query.set("page", String(params.page));
   const search = query.toString();
   return search ? `/api/orders?${search}` : "/api/orders";
 }
 
-const mergeCustomers = (known: string[], more: string[]) => [...new Set([...known, ...more])].sort((a, b) => a.localeCompare(b));
+const withCustomer = (known: string[], chosen: string) => [...known, chosen].sort((a, b) => a.localeCompare(b));
 
-/** The customers who have placed orders, from every page of the unfiltered admin list. */
-async function collectAllCustomers(): Promise<string[]> {
-  const customers: string[] = [];
-  let totalPages = 1;
-  for (let page = 1; page <= Math.min(totalPages, MAX_CUSTOMER_PAGES); page++) {
-    const response = await fetch(ordersUrl({ page }));
-    if (!response.ok) break;
-    const data = await parseJson(response, ordersResponseSchema);
-    customers.push(...data.orders.map((order) => order.customer).filter((customer): customer is string => !!customer));
-    totalPages = data.totalPages ?? 1;
-  }
-  return customers;
+/** The customers who have placed orders, A to Z, from the admin customer list (UC-011). */
+async function fetchCustomers(): Promise<string[] | null> {
+  const response = await fetch("/api/admin/customers");
+  return response.ok ? parseJson(response, customersResponseSchema) : null;
 }
 
 /**
@@ -81,12 +69,14 @@ export default function OrderHistoryPage() {
     void loadOrders();
   }, [loadOrders]);
 
+  // The customers for the filter come from their own admin endpoint, fetched once and on their own, so a newer
+  // filter never drops them.
   useEffect(() => {
     if (!isAdmin) return;
     let ignore = false;
-    void collectAllCustomers()
+    void fetchCustomers()
       .then((found) => {
-        if (!ignore) setCustomers((known) => mergeCustomers(known, found));
+        if (!ignore && found) setCustomers(found);
       })
       .catch(() => undefined);
     return () => {
@@ -104,7 +94,7 @@ export default function OrderHistoryPage() {
   }
 
   // The chosen customer stays offered even before the list of customers has arrived.
-  const customerOptions = customer && !customers.includes(customer) ? mergeCustomers(customers, [customer]) : customers;
+  const customerOptions = customer && !customers.includes(customer) ? withCustomer(customers, customer) : customers;
 
   const columnCount = showCustomer ? 8 : 7;
 

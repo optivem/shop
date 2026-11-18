@@ -22,6 +22,8 @@ import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.ProductPage;
 import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.ProfilePage;
 import com.mycompany.myshop.testkit.driver.port.dtos.BrowseCouponsRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.BrowseCouponsResponse;
+import com.mycompany.myshop.testkit.driver.port.dtos.BrowseCustomersRequest;
+import com.mycompany.myshop.testkit.driver.port.dtos.BrowseCustomersResponse;
 import com.mycompany.myshop.testkit.driver.port.dtos.BrowseOrderHistoryRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.BrowseOrderHistoryResponse;
 import com.mycompany.myshop.testkit.driver.port.dtos.CancelOrderRequest;
@@ -272,6 +274,13 @@ public class MyShopUiDriver implements MyShopDriver {
                 .build();
 
         return response;
+    }
+
+    /** The UI has no customer list of its own; it offers the customers only as the order history's customer filter. */
+    @Override
+    public Result<BrowseCustomersResponse, SystemError> browseCustomers(BrowseCustomersRequest request) {
+        throw new UnsupportedOperationException("The UI offers the customers only as the order history's customer filter;"
+                + " run this scenario on the API channel only");
     }
 
     @Override

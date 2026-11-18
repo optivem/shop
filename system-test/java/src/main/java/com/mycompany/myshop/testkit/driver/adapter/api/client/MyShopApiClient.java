@@ -1,5 +1,6 @@
 package com.mycompany.myshop.testkit.driver.adapter.api.client;
 
+import com.mycompany.myshop.testkit.driver.adapter.api.client.controllers.AdminController;
 import com.mycompany.myshop.testkit.driver.adapter.api.client.controllers.CouponController;
 import com.mycompany.myshop.testkit.driver.adapter.api.client.controllers.HealthController;
 import com.mycompany.myshop.testkit.driver.adapter.api.client.controllers.OrderController;
@@ -18,6 +19,7 @@ public class MyShopApiClient implements AutoCloseable {
     private final CouponController couponController;
     private final ProfileController profileController;
     private final ProductController productController;
+    private final AdminController adminController;
     private final KeycloakTokenProvider tokenProvider;
     private volatile ApiIdentity identity = ApiIdentity.CUSTOMER;
     private volatile TestUser customer = TestUser.CUSTOMER;
@@ -36,6 +38,7 @@ public class MyShopApiClient implements AutoCloseable {
         this.couponController = new CouponController(httpClient);
         this.profileController = new ProfileController(httpClient);
         this.productController = new ProductController(httpClient);
+        this.adminController = new AdminController(httpClient);
         if (keycloakBaseUrl != null && !keycloakBaseUrl.isBlank()) {
             this.tokenProvider = KeycloakTokenProvider.forBaseUrl(keycloakBaseUrl);
             this.httpClient.setBearerTokenSource(this::tokenFor);
@@ -74,6 +77,10 @@ public class MyShopApiClient implements AutoCloseable {
 
     public ProductController products() {
         return productController;
+    }
+
+    public AdminController admin() {
+        return adminController;
     }
 
     @Override

@@ -131,6 +131,29 @@ describe('Authorization (component)', () => {
     ).toBe(403);
   });
 
+  it('customers without a token returns 401', async () => {
+    const response = await call('get', '/api/admin/customers');
+
+    expect(response.status).toBe(401);
+    expect(response.body).toMatchObject({ status: 401 });
+  });
+
+  it('customer cannot browse customers', async () => {
+    const token = await harness.idp.customerToken();
+    const response = await call('get', '/api/admin/customers', token);
+
+    expect(response.status).toBe(403);
+    expect(response.body).toMatchObject({ status: 403 });
+  });
+
+  it('admin can browse customers', async () => {
+    const token = await harness.idp.adminToken();
+    const response = await call('get', '/api/admin/customers', token);
+
+    expect(response.status).toBe(200);
+    expect(Array.isArray(response.body)).toBe(true);
+  });
+
   it('admin passes authorization on an admin endpoint', async () => {
     // The order does not exist, so the request is authorized and then rejected by the service.
     const response = await call(

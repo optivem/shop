@@ -5,6 +5,7 @@ import { OrderStatus } from './api.types';
 import type {
   BrowseCouponsItemResponse,
   BrowseCouponsResponse,
+  BrowseCustomersResponse,
   BrowseOrderHistoryItemResponse,
   BrowseOrderHistoryResponse,
   PlaceOrderResponse,
@@ -72,6 +73,8 @@ export const isViewOrderDetailsResponse = hasShape<ViewOrderDetailsResponse>({
   status: isOrderStatus,
   shippingAddress: (value) => value == null || isShippingAddress(value),
 });
+
+export const isBrowseCustomersResponse: Guard<BrowseCustomersResponse> = isArrayOf(isString);
 
 export const isBrowseOrderHistoryResponse = hasShape<BrowseOrderHistoryResponse>({
   orders: isArrayOf(

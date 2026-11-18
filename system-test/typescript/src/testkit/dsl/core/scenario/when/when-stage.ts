@@ -5,6 +5,7 @@ import { WhenPlaceOrder } from './when-place-order.js';
 import { WhenCancelOrder } from './when-cancel-order.js';
 import { WhenDeliverOrder } from './when-deliver-order.js';
 import { WhenBrowseOrderHistory } from './when-browse-order-history.js';
+import { WhenBrowseCustomers } from './when-browse-customers.js';
 import { WhenViewOrder } from './when-view-order.js';
 import { WhenPublishCoupon } from './when-publish-coupon.js';
 import { WhenBrowseCoupons } from './when-browse-coupons.js';
@@ -36,6 +37,10 @@ export class WhenStage {
 
   browseOrderHistory(): WhenBrowseOrderHistory {
     return new WhenBrowseOrderHistory(this.app, this.ctx, this.useCaseContext);
+  }
+
+  browseCustomers(): WhenBrowseCustomers {
+    return new WhenBrowseCustomers(this.app, this.ctx, this.useCaseContext);
   }
 
   viewOrder(): WhenViewOrder {

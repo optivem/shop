@@ -12,6 +12,7 @@ public class MyShopApiClient : IDisposable
     private readonly CouponController _couponController;
     private readonly ProfileController _profileController;
     private readonly ProductController _productController;
+    private readonly AdminController _adminController;
     private readonly KeycloakTokenProvider? _tokenProvider;
     private volatile ApiIdentity _identity = ApiIdentity.Customer;
     private volatile TestUser _customer = TestUser.Customer;
@@ -26,6 +27,7 @@ public class MyShopApiClient : IDisposable
         _couponController = new CouponController(_httpClient);
         _profileController = new ProfileController(_httpClient);
         _productController = new ProductController(_httpClient);
+        _adminController = new AdminController(_httpClient);
         if (!string.IsNullOrWhiteSpace(keycloakBaseUrl))
         {
             _tokenProvider = KeycloakTokenProvider.ForBaseUrl(keycloakBaseUrl);
@@ -80,4 +82,6 @@ public class MyShopApiClient : IDisposable
     public ProfileController Profile() => _profileController;
 
     public ProductController Products() => _productController;
+
+    public AdminController Admin() => _adminController;
 }

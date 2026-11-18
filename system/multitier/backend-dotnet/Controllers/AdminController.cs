@@ -23,4 +23,11 @@ public class AdminController : ControllerBase
         var response = await _orderService.RecallSkuAsync(sku);
         return Ok(response);
     }
+
+    /// <summary>The usernames that have placed an order, distinct, A to Z (UC-011 customer filter).</summary>
+    [HttpGet("customers")]
+    public async Task<ActionResult<List<string>>> BrowseCustomers()
+    {
+        return Ok(await _orderService.BrowseCustomersAsync());
+    }
 }

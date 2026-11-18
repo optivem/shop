@@ -55,4 +55,9 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     @Query("SELECT COUNT(o) FROM Order o WHERE o.ownerName = :ownerName AND LOWER(o.orderNumber) LIKE LOWER(CONCAT('%', :orderNumber, '%'))")
     long countByOwnerNameAndOrderNumberContaining(@Param("ownerName") String ownerName, @Param("orderNumber") String orderNumber);
+
+    // The customers the admin filter offers: every username that has placed an order, A to Z.
+    // Unpaged by design -- one row per customer, not per order.
+    @Query("SELECT DISTINCT o.ownerName FROM Order o WHERE o.ownerName IS NOT NULL ORDER BY o.ownerName")
+    List<String> findDistinctOwnerNames();
 }

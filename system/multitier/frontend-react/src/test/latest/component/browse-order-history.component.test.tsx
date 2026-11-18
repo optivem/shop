@@ -7,8 +7,8 @@ const { backend, frontend } = componentHarness();
 describe('BrowseOrderHistory', () => {
   it('shows order history when orders are returned', async () => {
     backend.returnsOrderHistory();
-    // The admin page also reads the unfiltered list from page 1 to offer the customers who have ordered.
-    backend.returnsOrderHistoryPage(1);
+    // The admin page also reads the customers who have ordered, to offer them in the customer filter.
+    backend.returnsCustomers();
 
     // Assert the row renders its total and status too, not just the order number — the history table
     // shows Total Price and Status columns. Semantic expectation (total as the wire's decimal string): the

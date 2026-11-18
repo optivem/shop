@@ -40,6 +40,13 @@ public class ThenSuccess<TSuccessResponse, TSuccessVerification>
 
     IThenCouponList IThenSuccess.CouponList() => CouponList();
 
+    public ThenSuccessCustomerList<TSuccessResponse, TSuccessVerification> CustomerList()
+    {
+        return new ThenSuccessCustomerList<TSuccessResponse, TSuccessVerification>(_thenClause);
+    }
+
+    IThenCustomerList IThenSuccess.CustomerList() => CustomerList();
+
     public ThenSuccessCatalog<TSuccessResponse, TSuccessVerification> Catalog()
     {
         return new ThenSuccessCatalog<TSuccessResponse, TSuccessVerification>(_thenClause);

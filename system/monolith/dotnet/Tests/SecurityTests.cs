@@ -62,6 +62,7 @@ public class SecurityTests : IClassFixture<ShopWebApplicationFactory>
     [Theory]
     [InlineData("/api/orders")]
     [InlineData("/api/coupons")]
+    [InlineData("/api/admin/customers")]
     public async Task Api_WithoutToken_Returns401(string path)
     {
         var response = await Client().GetAsync(path);
@@ -112,6 +113,22 @@ public class SecurityTests : IClassFixture<ShopWebApplicationFactory>
     {
         var response = await Client(_factory.CreateToken("ADMIN")).GetAsync("/api/coupons");
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Customers_WithCustomerToken_Returns403()
+    {
+        var response = await Client(_factory.CreateToken("CUSTOMER")).GetAsync("/api/admin/customers");
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+    }
+
+    [Fact]
+    public async Task Customers_WithAdminToken_Returns200()
+    {
+        var response = await Client(_factory.CreateToken("ADMIN")).GetAsync("/api/admin/customers");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.StartsWith("[", await response.Content.ReadAsStringAsync());
     }
 
     [Fact]

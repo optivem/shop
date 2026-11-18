@@ -70,6 +70,9 @@ export interface BrowseOrderHistoryResponse {
   totalPages?: number; // paging metadata; absent from older backends
 }
 
+// GET /api/admin/customers (admin only): the usernames that have placed an order, distinct, A to Z.
+export type BrowseCustomersResponse = string[];
+
 export interface BrowseOrderHistoryQuery {
   orderNumber?: string;
   customer?: string;

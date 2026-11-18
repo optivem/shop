@@ -16,6 +16,7 @@ describe('route policy', () => {
     ['HEAD', '/api/coupons', 'admin'],
     ['POST', '/api/coupons', 'admin'],
     ['POST', '/api/admin/recall/BOOK-123', 'admin'],
+    ['GET', '/api/admin/customers', 'admin'],
     ['GET', '/api/admin/anything', 'admin'],
     ['DELETE', '/api/admin', 'admin'],
     ['GET', '/api/products', 'public'],

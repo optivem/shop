@@ -169,6 +169,18 @@ class OrderRepositoryIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void customersAreListedOnceEachFromAToZ() {
+        orderRepository.save(ownedBy("ORD-001", "carol"));
+        orderRepository.save(ownedBy("ORD-002", "alice"));
+        orderRepository.save(ownedBy("ORD-003", "carol"));
+        var legacyOrder = order("ORD-004", "legacy-sub");
+        legacyOrder.setOwnerName(null);
+        orderRepository.save(legacyOrder);
+
+        assertThat(orderRepository.findDistinctOwnerNames()).containsExactly("alice", "carol");
+    }
+
+    @Test
     void profileIsStoredAndFoundByOwner() {
         var profile = new CustomerProfile("customer-sub");
         profile.setFirstName("Ana");

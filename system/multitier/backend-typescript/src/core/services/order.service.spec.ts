@@ -49,7 +49,10 @@ const DEC_31_CANCEL_BLACKOUT = new Date('2025-12-31T22:15:00Z');
 describe('OrderService', () => {
   let service: OrderService;
   let orderRepository: jest.Mocked<
-    Pick<Repository<Order>, 'save' | 'update' | 'findOne' | 'find' | 'count'>
+    Pick<
+      Repository<Order>,
+      'save' | 'update' | 'findOne' | 'find' | 'count' | 'query'
+    >
   > & {
     manager: Pick<EntityManager, 'transaction' | 'withRepository'>;
   };
@@ -70,6 +73,7 @@ describe('OrderService', () => {
       findOne: jest.fn(),
       find: jest.fn(),
       count: jest.fn().mockResolvedValue(1),
+      query: jest.fn(),
       // Runs the transaction inline against the same mocked repository.
       manager: {
         transaction: jest.fn(
@@ -422,6 +426,20 @@ describe('OrderService', () => {
       expect(orderRepository.count).toHaveBeenLastCalledWith({
         where: { owner: CUSTOMER.subject },
       });
+    });
+  });
+
+  describe('browseCustomers', () => {
+    it('lists the usernames that have placed orders', async () => {
+      orderRepository.query.mockResolvedValue([
+        { owner_name: 'customer1' },
+        { owner_name: 'customer2' },
+      ]);
+
+      await expect(service.browseCustomers()).resolves.toEqual([
+        'customer1',
+        'customer2',
+      ]);
     });
   });
 

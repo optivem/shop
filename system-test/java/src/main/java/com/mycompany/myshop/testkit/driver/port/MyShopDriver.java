@@ -4,6 +4,8 @@ import com.mycompany.myshop.testkit.driver.port.dtos.error.SystemError;
 import com.mycompany.myshop.testkit.driver.port.dtos.BrowseCatalogRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.BrowseCatalogResponse;
 import com.mycompany.myshop.testkit.driver.port.dtos.BrowseCouponsRequest;
+import com.mycompany.myshop.testkit.driver.port.dtos.BrowseCustomersRequest;
+import com.mycompany.myshop.testkit.driver.port.dtos.BrowseCustomersResponse;
 import com.mycompany.myshop.testkit.driver.port.dtos.BrowseOrderHistoryRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.BrowseOrderHistoryResponse;
 import com.mycompany.myshop.testkit.driver.port.dtos.BrowseCouponsResponse;
@@ -44,6 +46,9 @@ public interface MyShopDriver extends AutoCloseable, ActingUserSelector {
     Result<ViewOrderResponse, SystemError> viewOrder(ViewOrderRequest request);
 
     Result<BrowseOrderHistoryResponse, SystemError> browseOrderHistory(BrowseOrderHistoryRequest request);
+
+    /** The customers who have placed orders (admin only); the UI offers them only inside the order history. */
+    Result<BrowseCustomersResponse, SystemError> browseCustomers(BrowseCustomersRequest request);
 
     Result<PublishCouponResponse, SystemError> publishCoupon(PublishCouponRequest request);
 

@@ -5,6 +5,7 @@ import userEvent from '@testing-library/user-event';
 import { Account } from '../../pages/Account';
 import { OrderHistory } from '../../pages/OrderHistory';
 import { QuickOrder } from '../../pages/QuickOrder';
+import { adminService } from '../../services/admin-service';
 import { orderService } from '../../services/order-service';
 import { profileService } from '../../services/profile-service';
 import type { BrowseOrderHistoryItemResponse, ProfileResponse } from '../../types/api.types';
@@ -92,9 +93,9 @@ describe('quick order', () => {
 
 describe('all orders (admin)', () => {
   it('offers the customers who have ordered, and filters by one', async () => {
+    const customers = vi.spyOn(adminService, 'browseCustomers').mockResolvedValue({ success: true, data: ['alice', 'bob', 'carol'] });
     const browse = vi.spyOn(orderService, 'browseOrderHistory').mockImplementation((query) => {
-      const { customer, page } = typeof query === 'object' ? query : {};
-      if (page === 2) return Promise.resolve({ success: true, data: { orders: [order('ORD-1001', 'alice')], totalPages: 2 } });
+      const { customer } = typeof query === 'object' ? query : {};
       if (customer === 'alice') return Promise.resolve({ success: true, data: { orders: [order('ORD-1003', 'alice')] } });
       return Promise.resolve({
         success: true,
@@ -112,6 +113,35 @@ describe('all orders (admin)', () => {
     await userEvent.selectOptions(filter, 'alice');
     expect(await screen.findByText('ORD-1003')).toBeInTheDocument();
     expect(browse).toHaveBeenCalledWith({ orderNumber: '', customer: 'alice' });
+    // Picking a customer filters the list; the customers are fetched once, not again per filter.
+    expect(customers).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps offering the customers when the admin filters before they arrive', async () => {
+    let deliverCustomers: (customers: string[]) => void = () => undefined;
+    vi.spyOn(adminService, 'browseCustomers').mockReturnValue(
+      new Promise((resolve) => {
+        deliverCustomers = (data) => resolve({ success: true, data });
+      }),
+    );
+    vi.spyOn(orderService, 'browseOrderHistory').mockResolvedValue({ success: true, data: { orders: [order('ORD-1', 'alice')] } });
+    renderWithProviders(<OrderHistory />, { auth: createMockAuth({}, ['ADMIN']) });
+    await userEvent.type(await screen.findByPlaceholderText('Enter order number...'), '1');
+
+    deliverCustomers(['alice', 'bob']);
+
+    const filter = screen.getByLabelText<HTMLSelectElement>('Customer Filter');
+    await waitFor(() => {
+      expect(Array.from(filter.options).map((o) => o.textContent)).toEqual(['All customers', 'alice', 'bob']);
+    });
+  });
+
+  it('does not ask a customer for the list of customers', async () => {
+    const customers = vi.spyOn(adminService, 'browseCustomers');
+    vi.spyOn(orderService, 'browseOrderHistory').mockResolvedValue({ success: true, data: { orders: [order('ORD-1', 'alice')] } });
+    renderWithProviders(<OrderHistory />, { auth: createMockAuth({}, ['CUSTOMER']) });
+    expect(await screen.findByText('ORD-1')).toBeInTheDocument();
+    expect(customers).not.toHaveBeenCalled();
   });
 
   it('offers a customer neither the filter nor the customer column', async () => {

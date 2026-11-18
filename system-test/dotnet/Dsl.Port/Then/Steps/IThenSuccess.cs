@@ -11,6 +11,9 @@ public interface IThenSuccess
     /// <summary>The coupon list the executed browse showed.</summary>
     IThenCouponList CouponList();
 
+    /// <summary>The customer list the executed browse returned.</summary>
+    IThenCustomerList CustomerList();
+
     /// <summary>The profile the executed operation answered with.</summary>
     IThenProfile Profile();
 

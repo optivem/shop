@@ -91,6 +91,7 @@ class SecurityConfigTest {
         route("GET", "/api/account/profile", Access.AUTHENTICATED),
         route("PUT", "/api/account/profile", Access.AUTHENTICATED),
         route("POST", "/api/coupons", Access.ADMIN_ONLY),
+        route("GET", "/api/admin/customers", Access.ADMIN_ONLY),
         route("GET", "/", Access.PUBLIC),
         route("GET", "/products/{sku}", Access.PUBLIC),
         route("GET", "/cart", Access.PUBLIC),

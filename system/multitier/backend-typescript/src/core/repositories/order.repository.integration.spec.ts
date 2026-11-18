@@ -100,6 +100,30 @@ describe('OrderRepository [integration]', () => {
     expect(found!.status).toBe(OrderStatus.PLACED);
   });
 
+  it('lists the customers once each from A to Z', async () => {
+    const order = (orderNumber: string, ownerName: string | null) =>
+      orderRepo.create({
+        orderNumber,
+        orderTimestamp: new Date('2026-01-01T00:00:00Z'),
+        country: 'US',
+        sku: 'BOOK-123',
+        quantity: 1,
+        unitPrice: new Decimal('10.00'),
+        totalPrice: new Decimal('11.00'),
+        status: OrderStatus.PLACED,
+        ownerName,
+      });
+    await orderRepo.save(order('ORD-101', 'carol'));
+    await orderRepo.save(order('ORD-102', 'alice'));
+    await orderRepo.save(order('ORD-103', 'carol'));
+    await orderRepo.save(order('ORD-104', null));
+
+    await expect(orderService.browseCustomers()).resolves.toEqual([
+      'alice',
+      'carol',
+    ]);
+  });
+
   it('bumps the version on a status change and rejects a stale update', async () => {
     const order = await orderRepo.save(
       orderRepo.create({

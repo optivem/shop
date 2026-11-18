@@ -11,6 +11,7 @@ import com.mycompany.myshop.testkit.dsl.core.scenario.when.steps.WhenManageCartI
 import com.mycompany.myshop.testkit.dsl.core.scenario.when.steps.WhenCheckOutImpl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.when.steps.WhenBrowseCouponsImpl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.when.steps.WhenBrowseOrderHistoryImpl;
+import com.mycompany.myshop.testkit.dsl.core.scenario.when.steps.WhenBrowseCustomersImpl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.when.steps.WhenCancelOrderImpl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.when.steps.WhenDeliverOrderImpl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.when.steps.WhenPlaceOrderImpl;
@@ -81,6 +82,11 @@ public class WhenImpl implements WhenStage {
     public WhenBrowseOrderHistoryImpl browseOrderHistory() {
         ensureDefaults();
         return new WhenBrowseOrderHistoryImpl(app, scenario, customers);
+    }
+
+    public WhenBrowseCustomersImpl browseCustomers() {
+        ensureDefaults();
+        return new WhenBrowseCustomersImpl(app, scenario, customers);
     }
 
     public WhenPublishCouponImpl publishCoupon() {

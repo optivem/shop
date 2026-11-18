@@ -18,6 +18,8 @@ import type { PublishCouponRequest } from './dtos/PublishCouponRequest.js';
 import type { PublishCouponResponse } from './dtos/PublishCouponResponse.js';
 import type { BrowseCouponsRequest } from './dtos/BrowseCouponsRequest.js';
 import type { BrowseCouponsResponse } from './dtos/BrowseCouponsResponse.js';
+import type { BrowseCustomersRequest } from './dtos/BrowseCustomersRequest.js';
+import type { BrowseCustomersResponse } from './dtos/BrowseCustomersResponse.js';
 import type { ViewProfileRequest } from './dtos/ViewProfileRequest.js';
 import type { ViewProfileResponse } from './dtos/ViewProfileResponse.js';
 import type { UpdateProfileRequest } from './dtos/UpdateProfileRequest.js';
@@ -39,6 +41,8 @@ export interface MyShopDriver extends AsyncCloseable, ActingUserSelector {
   deliverOrder(request: DeliverOrderRequest): Promise<Result<DeliverOrderResponse, SystemError>>;
   viewOrder(request: ViewOrderRequest): Promise<Result<ViewOrderResponse, SystemError>>;
   browseOrderHistory(request: BrowseOrderHistoryRequest): Promise<Result<BrowseOrderHistoryResponse, SystemError>>;
+  /** The customers who have placed orders (admin only); the UI offers them only inside the order history. */
+  browseCustomers(request: BrowseCustomersRequest): Promise<Result<BrowseCustomersResponse, SystemError>>;
   publishCoupon(request: PublishCouponRequest): Promise<Result<PublishCouponResponse, SystemError>>;
   browseCoupons(request: BrowseCouponsRequest): Promise<Result<BrowseCouponsResponse, SystemError>>;
   viewProfile(request: ViewProfileRequest): Promise<Result<ViewProfileResponse, SystemError>>;

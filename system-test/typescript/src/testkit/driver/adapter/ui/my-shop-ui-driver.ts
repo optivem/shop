@@ -19,6 +19,8 @@ import type { PublishCouponRequest } from '../../port/dtos/PublishCouponRequest.
 import type { PublishCouponResponse } from '../../port/dtos/PublishCouponResponse.js';
 import type { BrowseCouponsRequest } from '../../port/dtos/BrowseCouponsRequest.js';
 import type { BrowseCouponsResponse } from '../../port/dtos/BrowseCouponsResponse.js';
+import type { BrowseCustomersRequest } from '../../port/dtos/BrowseCustomersRequest.js';
+import type { BrowseCustomersResponse } from '../../port/dtos/BrowseCustomersResponse.js';
 import { SIGN_IN as PROFILE_SIGN_IN, type ViewProfileRequest } from '../../port/dtos/ViewProfileRequest.js';
 import type { ViewProfileResponse } from '../../port/dtos/ViewProfileResponse.js';
 import type { UpdateProfileRequest } from '../../port/dtos/UpdateProfileRequest.js';
@@ -255,6 +257,13 @@ export class MyShopUiDriver implements MyShopDriver {
       response.customerFilterSelection = await orderHistoryPage.readCustomerFilterSelection();
     }
     return success(response);
+  }
+
+  /** The UI has no customer list of its own; it offers the customers only as the order history's customer filter. */
+  browseCustomers(_request: BrowseCustomersRequest): Promise<Result<BrowseCustomersResponse, SystemError>> {
+    return Promise.reject(new Error(
+      "The UI offers the customers only as the order history's customer filter; run this scenario on the API channel only",
+    ));
   }
 
   async publishCoupon(request: PublishCouponRequest): Promise<Result<PublishCouponResponse, SystemError>> {

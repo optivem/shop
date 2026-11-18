@@ -85,6 +85,10 @@ public class MyShopApiDriver : IMyShopDriver
             .MapErrorAsync(MapError);
     }
 
+    public Task<Result<BrowseCustomersResponse, SystemError>> BrowseCustomersAsync(BrowseCustomersRequest request)
+        => RunAs(TestUser.Admin).Admin().BrowseCustomersAsync()
+            .MapErrorAsync(MapError);
+
     public Task<Result<PublishCouponResponse, SystemError>> PublishCouponAsync(PublishCouponRequest request)
         => RunAs(TestUser.Admin).Coupons().PublishCouponAsync(request)
             .MapErrorAsync(MapError)

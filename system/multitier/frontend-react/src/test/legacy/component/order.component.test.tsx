@@ -149,30 +149,15 @@ describe('OrderHistory', () => {
       },
     });
 
-    // The admin page also reads the unfiltered list from page 1 to offer the customers who have ordered.
+    // The admin page also reads the customers who have ordered, to offer them in the customer filter.
     provider.addInteraction({
       states: [{ description: 'at least one order exists' }],
-      uponReceiving: 'a browse-order-history request for page 1',
-      withRequest: {
-        method: 'GET',
-        path: '/api/orders',
-        query: { page: '1' },
-      },
+      uponReceiving: 'a browse-customers request',
+      withRequest: { method: 'GET', path: '/api/admin/customers' },
       willRespondWith: {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
-        body: {
-          orders: eachLike({
-            orderNumber: like('ORD-1'),
-            orderTimestamp: like('2026-03-10T12:00:00Z'),
-            country: like('US'),
-            sku: like('BOOK-123'),
-            quantity: integer(2),
-            totalPrice: regex(String.raw`^-?\d+\.\d{2}$`, '22.00'),
-            appliedCouponCode: null,
-            status: like('PLACED'),
-          }),
-        },
+        body: eachLike(like('customer1')),
       },
     });
 

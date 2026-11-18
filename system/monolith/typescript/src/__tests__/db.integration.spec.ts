@@ -150,6 +150,35 @@ describe('db adapter [integration]', () => {
     expect(await db.findAccessibleOrder('ORD-OWN-B', admin)).not.toBeNull();
   });
 
+  it('lists the customers once each from A to Z', async () => {
+    const order = (orderNumber: string, ownerName: string) => ({
+      orderNumber,
+      orderTimestamp: new Date('2026-01-02T00:00:00Z'),
+      country: 'US',
+      sku: 'BOOK-123',
+      quantity: 1,
+      unitPrice: new Decimal('10.0'),
+      basePrice: new Decimal('10.0'),
+      discountRate: new Decimal('0'),
+      discountAmount: new Decimal('0'),
+      subtotalPrice: new Decimal('10.0'),
+      taxRate: new Decimal('0.1'),
+      taxAmount: new Decimal('1.0'),
+      totalPrice: new Decimal('11.0'),
+      appliedCouponCode: null,
+      status: 'PLACED' as const,
+      owner: 'sub-x',
+      ownerName,
+    });
+    await db.insertOrder(order('ORD-CUST-1', 'zz-carol'));
+    await db.insertOrder(order('ORD-CUST-2', 'zz-alice'));
+    await db.insertOrder(order('ORD-CUST-3', 'zz-carol'));
+
+    // The database is shared with the other cases, so only these customers' relative order is asserted.
+    const listed = (await db.findDistinctOwnerNames()).filter((name) => name.startsWith('zz-'));
+    expect(listed).toEqual(['zz-alice', 'zz-carol']);
+  });
+
   it('rejects a status update made from a stale read', async () => {
     const order = await db.findByOrderNumber('ORD-100');
     if (!order) throw new Error('seed order missing');

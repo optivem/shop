@@ -269,6 +269,11 @@ public class MyShopUiDriver : IMyShopDriver
         return response;
     }
 
+    /// <summary>The UI has no customer list of its own; it offers the customers only as the order history's customer filter.</summary>
+    public Task<Result<BrowseCustomersResponse, SystemError>> BrowseCustomersAsync(BrowseCustomersRequest request)
+        => throw new NotSupportedException("The UI offers the customers only as the order history's customer filter;"
+            + " run this scenario on the API channel only");
+
     public async Task<Result<BrowseOrderHistoryResponse, SystemError>> BrowseOrderHistoryAsync(BrowseOrderHistoryRequest request)
     {
         RequireNotSet("page", request.Page);

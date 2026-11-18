@@ -1,4 +1,4 @@
-import { Controller, HttpCode, Param, Post } from '@nestjs/common';
+import { Controller, Get, HttpCode, Param, Post } from '@nestjs/common';
 import { OrderService } from '../../core/services/order.service';
 
 @Controller('api/admin')
@@ -9,5 +9,10 @@ export class AdminController {
   @HttpCode(200)
   async recallSku(@Param('sku') sku: string) {
     return this.orderService.recallSku(sku);
+  }
+
+  @Get('customers')
+  async browseCustomers(): Promise<string[]> {
+    return this.orderService.browseCustomers();
   }
 }

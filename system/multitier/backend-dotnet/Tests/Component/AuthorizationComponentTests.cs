@@ -186,6 +186,33 @@ public class AuthorizationComponentTests : IClassFixture<WebApplicationFactory<P
     }
 
     [Fact]
+    public async Task CustomersWithoutTokenReturnsUnauthorized()
+    {
+        var response = await Call(HttpMethod.Get, "/api/admin/customers");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Contains("\"status\":401", await response.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task CustomerCannotBrowseCustomers()
+    {
+        var response = await Call(HttpMethod.Get, "/api/admin/customers", TestAuth.CustomerToken);
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Contains("\"status\":403", await response.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task AdminCanBrowseCustomers()
+    {
+        var response = await Call(HttpMethod.Get, "/api/admin/customers", TestAuth.AdminToken);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.StartsWith("[", await response.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
     public async Task AdminPassesAuthorizationOnAdminEndpoint()
     {
         // The order does not exist, so the request is authorized and then rejected by the service.

@@ -86,6 +86,13 @@ namespace Dsl.Core.Scenario.When
 
         IWhenBrowseOrderHistory IWhenStage.BrowseOrderHistory() => BrowseOrderHistory();
 
+        public WhenBrowseCustomers BrowseCustomers()
+        {
+            return new WhenBrowseCustomers(_app, _scenario, () => EnsureGiven(), _resolveCustomer);
+        }
+
+        IWhenBrowseCustomers IWhenStage.BrowseCustomers() => BrowseCustomers();
+
         public ViewOrder ViewOrder()
         {
             return new ViewOrder(_app, _scenario, () => EnsureGiven());

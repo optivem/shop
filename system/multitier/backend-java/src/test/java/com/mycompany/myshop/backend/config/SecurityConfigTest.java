@@ -93,7 +93,8 @@ class SecurityConfigTest {
         route("POST", "/api/coupons", Access.ADMIN_ONLY),
         route("GET", "/api/account/profile", Access.AUTHENTICATED),
         route("PUT", "/api/account/profile", Access.AUTHENTICATED),
-        route("POST", "/api/admin/recall/{sku}", Access.ADMIN_ONLY));
+        route("POST", "/api/admin/recall/{sku}", Access.ADMIN_ONLY),
+        route("GET", "/api/admin/customers", Access.ADMIN_ONLY));
 
     private static HttpServer jwksServer;
 

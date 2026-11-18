@@ -212,6 +212,19 @@ public class OrderServiceTest : IDisposable
     }
 
     [Fact]
+    public async Task BrowseCustomers_ListsTheUsernamesThatHavePlacedOrdersOnceEachFromAToZ()
+    {
+        await SeedOrder("ORD-001", OrderStatus.PLACED, "sub-carol", "carol");
+        await SeedOrder("ORD-002", OrderStatus.PLACED, "sub-alice", "alice");
+        await SeedOrder("ORD-003", OrderStatus.PLACED, "sub-carol", "carol");
+        await SeedOrder("ORD-LEGACY", OrderStatus.PLACED);
+
+        var customers = await _service.BrowseCustomersAsync();
+
+        Assert.Equal(["alice", "carol"], customers);
+    }
+
+    [Fact]
     public async Task GetOrder_ReturnsOwnOrder()
     {
         await SeedOrder("ORD-A", OrderStatus.PLACED, "sub-alice", "alice");

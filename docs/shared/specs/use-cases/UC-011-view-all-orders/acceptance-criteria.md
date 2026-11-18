@@ -61,6 +61,12 @@ Scenario: Should show only the orders of the chosen customer
   When the admin filters all orders by customer alice
   Then the order list shows orders ORD-1003, ORD-1001
 
+@UC-011.3
+Scenario: Should list each customer who has placed orders once, from A to Z
+  Given the user is logged in as an admin
+  When the admin asks for the customers who have placed orders
+  Then the customers listed are alice, bob, carol, in that order
+
 @UC-011.4
 Scenario: Should show only the chosen customer's orders that match the order number
   Given the user is logged in as an admin
@@ -88,10 +94,23 @@ Scenario: Should not show an order with no recorded customer to any customer
   When the customer views their orders
   Then the order list does not show orders ORD-0999
 
+@UC-011.5
+Scenario: Should not let a customer see who the other customers are
+  Given the user is logged in as customer "alice"
+  When the customer asks for the customers who have placed orders
+  Then the request is rejected
+  And the user is told "You do not have permission to perform this action"
+
 @UC-011.6 @narrative-2a
 Scenario: Should ask an anonymous visitor to sign in
   Given the visitor is not signed in
   When the visitor opens all orders
+  Then the visitor is asked to sign in
+
+@UC-011.6 @narrative-2a
+Scenario: Should ask an anonymous visitor to sign in before listing the customers
+  Given the visitor is not signed in
+  When the visitor asks for the customers who have placed orders
   Then the visitor is asked to sign in
 
 @UC-011.7 @narrative-2b

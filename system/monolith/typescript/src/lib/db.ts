@@ -200,6 +200,15 @@ export async function countOrders(filter: OrderFilter = {}): Promise<number> {
   return Number(result.rows[0]?.count ?? 0);
 }
 
+// The customers the admin filter offers: every username that has placed an order, A to Z.
+// Unpaged by design -- one row per customer, not per order.
+export async function findDistinctOwnerNames(): Promise<string[]> {
+  const result = await pool.query<{ owner_name: string }>(
+    'SELECT DISTINCT owner_name FROM orders WHERE owner_name IS NOT NULL ORDER BY owner_name'
+  );
+  return result.rows.map((row) => row.owner_name);
+}
+
 // Another customer's order is reported as missing, so its existence is not revealed. Orders without an
 // owner are visible to admins only.
 export async function findAccessibleOrder(

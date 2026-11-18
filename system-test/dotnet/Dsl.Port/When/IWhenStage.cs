@@ -14,6 +14,8 @@ public interface IWhenStage
 
     IWhenBrowseOrderHistory BrowseOrderHistory();
 
+    IWhenBrowseCustomers BrowseCustomers();
+
     IWhenPublishCoupon PublishCoupon();
 
     IWhenBrowseCoupons BrowseCoupons();
