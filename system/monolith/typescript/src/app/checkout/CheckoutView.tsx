@@ -250,7 +250,7 @@ export function Checkout() {
                 <span aria-label="Estimated Tax Rate">{taxRate === undefined ? "-" : formatTaxRate(taxRate)}</span>
               </div>
             </div>
-            <button type="submit" className="btn btn-primary btn-lg w-100" aria-label="Place Checkout Order" disabled={isSubmitting}>
+            <button type="submit" className="btn btn-primary btn-lg w-100" data-testid="place-order" disabled={isSubmitting}>
               {isSubmitting && <span className="spinner-border spinner-border-sm me-2" aria-hidden="true" />}
               {isSubmitting ? "Placing order..." : "Place order"}
             </button>

@@ -257,7 +257,7 @@ export function Checkout() {
               isSubmitting={isSubmitting}
               text="Place order"
               loadingText="Placing order..."
-              ariaLabel="Place Checkout Order"
+              data-testid="place-order"
               className="btn btn-primary btn-lg w-100"
             />
             <p className="text-body-secondary small text-center mb-0">

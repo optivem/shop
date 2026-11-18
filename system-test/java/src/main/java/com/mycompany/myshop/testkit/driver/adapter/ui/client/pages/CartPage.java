@@ -19,7 +19,7 @@ public class CartPage extends BasePage {
     private static final String CART_LINE_SELECTOR = CART_LINES_SELECTOR + " tr[aria-label^='Cart Line ']";
     private static final String CART_LINE_LABEL_PREFIX = "Cart Line ";
     private static final String QUANTITY_SELECTOR_TEMPLATE = "input[aria-label='Quantity for %s']";
-    private static final String TITLE_SELECTOR_TEMPLATE = "[aria-label='Title %s']";
+    private static final String TITLE_SELECTOR_TEMPLATE = "[data-testid='cart-line-title-%s']";
     private static final String UNIT_PRICE_SELECTOR_TEMPLATE = "[aria-label='Unit Price %s']";
     private static final String LINE_TOTAL_SELECTOR_TEMPLATE = "[aria-label='Line Total %s']";
     private static final String INCREASE_SELECTOR_TEMPLATE = "button[aria-label='Increase Quantity for %s']";

@@ -21,7 +21,7 @@ export function ProductCard({ product, onAddToCart }: Readonly<ProductCardProps>
           {product.brand}
         </div>
         <h3 className="product-card-title">
-          <Link to={productPath} className="product-title-link" aria-label="Product Title">
+          <Link to={productPath} className="product-title-link" data-testid="product-title">
             {product.title}
           </Link>
         </h3>
@@ -32,7 +32,7 @@ export function ProductCard({ product, onAddToCart }: Readonly<ProductCardProps>
         <button
           type="button"
           className="btn btn-primary w-100 mt-auto"
-          aria-label={`Add ${product.sku} to Cart`}
+          data-testid={`add-to-cart-${product.sku}`}
           onClick={() => onAddToCart(product.sku)}
         >
           Add to cart

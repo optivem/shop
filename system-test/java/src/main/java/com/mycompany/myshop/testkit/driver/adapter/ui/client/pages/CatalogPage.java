@@ -77,14 +77,14 @@ public class CatalogPage extends BasePage {
     /** Opens a product from its card, by the title link. */
     public ProductPage clickProduct(String sku) {
         var previousUrl = pageClient.currentUrl();
-        pageClient.click(PRODUCT_LIST_SELECTOR + " article[aria-label='" + PRODUCT_CARD_LABEL_PREFIX + sku + "'] a[aria-label='Product Title']");
+        pageClient.click(PRODUCT_LIST_SELECTOR + " article[aria-label='" + PRODUCT_CARD_LABEL_PREFIX + sku + "'] a[data-testid='product-title']");
         pageClient.waitForUrlChange(previousUrl);
         return new ProductPage(pageClient);
     }
 
     /** Adds a product with its card's "Add to cart" (quantity 1) and returns the confirmation or the error. */
     public String clickAddToCart(String sku) {
-        pageClient.click(PRODUCT_LIST_SELECTOR + " button[aria-label='Add " + sku + " to Cart']");
+        pageClient.click(PRODUCT_LIST_SELECTOR + " button[data-testid='add-to-cart-" + sku + "']");
         var result = getResult();
         var message = result.isSuccess() ? result.getValue() : result.getError().getMessage();
         waitForLoaded();
@@ -105,7 +105,7 @@ public class CatalogPage extends BasePage {
         var skus = pageClient.readAllAttributesNoWait(PRODUCT_CARD_SELECTOR, "aria-label").stream()
                 .map(label -> label.substring(PRODUCT_CARD_LABEL_PREFIX.length()))
                 .toList();
-        var titles = trimmed(pageClient.readAllTextContentsNoWait(PRODUCT_CARD_SELECTOR + " [aria-label='Product Title']"));
+        var titles = trimmed(pageClient.readAllTextContentsNoWait(PRODUCT_CARD_SELECTOR + " [data-testid='product-title']"));
         var brands = trimmed(pageClient.readAllTextContentsNoWait(PRODUCT_CARD_SELECTOR + " [aria-label='Product Brand']"));
         var prices = trimmed(pageClient.readAllTextContentsNoWait(PRODUCT_CARD_SELECTOR + " [aria-label='Display Price']"));
 

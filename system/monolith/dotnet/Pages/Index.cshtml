@@ -111,7 +111,7 @@
                             <div class="product-card-brand" aria-label="Product Brand">@product.Brand</div>
                             <h3 class="product-card-title">
                                 <a href="@StoreChrome.ProductHref(product.Sku)" class="product-title-link"
-                                   aria-label="Product Title">@product.Title</a>
+                                   data-testid="product-title">@product.Title</a>
                             </h3>
                             @if (!string.IsNullOrEmpty(product.Description))
                             {
@@ -123,7 +123,7 @@
                                 <input type="hidden" name="quantity" value="1">
                                 <input type="hidden" name="returnUrl" value="@Chrome.ReturnUrl">
                                 <button type="submit" class="btn btn-primary w-100"
-                                        aria-label="@("Add " + product.Sku + " to Cart")">Add to cart</button>
+                                        data-testid="@("add-to-cart-" + product.Sku)">Add to cart</button>
                             </form>
                         </div>
                     </article>

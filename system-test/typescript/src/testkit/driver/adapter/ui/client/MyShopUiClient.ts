@@ -31,13 +31,6 @@ const PROFILE_PATH = '/account';
 const PROCEED_TO_CHECKOUT_SELECTOR = "a[aria-label='Proceed to Checkout']";
 const FORBIDDEN_STATUS = 403;
 
-/**
- * Rules the UI-channel check leaves off. `label-content-name-mismatch` (WCAG 2.5.3, label in name): every storefront
- * names its links and buttons with test-hook aria-labels ("Product Title", "Add <sku> to Cart") that differ from the
- * visible text, and the drivers select by them; renaming them is a cross-app change tracked in REL.
- */
-const DISABLED_AXE_RULES = ['label-content-name-mismatch'];
-
 export const AUTHENTICATION_REQUIRED = 'Authentication is required';
 export const PERMISSION_DENIED = 'You do not have permission to perform this action';
 
@@ -190,7 +183,7 @@ export class MyShopUiClient {
    * (rule, impact, help, offending elements), like the frontend's screen-test helper (frontend-react/src/test/axe.ts).
    */
   async accessibilityViolations(): Promise<string[]> {
-    const results = await new AxeBuilder({ page: this.requirePage() }).disableRules(DISABLED_AXE_RULES).analyze();
+    const results = await new AxeBuilder({ page: this.requirePage() }).analyze();
     return results.violations
       .filter((violation) => violation.impact === 'serious' || violation.impact === 'critical')
       .map(

@@ -19,7 +19,7 @@ export interface SubmitButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonE
   /**
    * Accessible label for the button action
    */
-  ariaLabel: string;
+  ariaLabel?: string;
 
   /**
    * Additional CSS classes to apply to the button

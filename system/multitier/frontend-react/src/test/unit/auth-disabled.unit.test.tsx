@@ -45,7 +45,7 @@ describe('auth disabled (no Keycloak configured)', () => {
     );
     expect(screen.queryByTestId('username')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Logout' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'Sign In' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /sign in/i })).not.toBeInTheDocument();
   });
 
   it('shows admin-only UI', () => {

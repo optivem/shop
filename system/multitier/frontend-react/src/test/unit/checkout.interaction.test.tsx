@@ -138,7 +138,7 @@ describe('checkout page', () => {
     const save = vi.spyOn(profileService, 'updateProfile');
     renderCheckout(savedProfile);
     await userEvent.type(await screen.findByLabelText('Checkout Coupon Code'), 'SUMMER2025');
-    await userEvent.click(screen.getByRole('button', { name: 'Place Checkout Order' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Place order' }));
 
     expect(await screen.findByText('Thank you for your order!')).toBeInTheDocument();
     expect(place.mock.calls).toEqual([
@@ -163,7 +163,7 @@ describe('checkout page', () => {
       });
     renderCheckout(savedProfile);
     await userEvent.type(await screen.findByLabelText('Checkout Coupon Code'), 'LIMITED2024');
-    await userEvent.click(screen.getByRole('button', { name: 'Place Checkout Order' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Place order' }));
 
     expect(await screen.findByRole('link', { name: 'Confirmed Order ORD-1' })).toBeInTheDocument();
     expect(screen.getByLabelText('Rejection Reason DELL-XPS')).toHaveTextContent('Coupon code LIMITED2024 has exceeded its usage limit');
@@ -178,12 +178,12 @@ describe('checkout page', () => {
     });
     renderCheckout(savedProfile);
     await userEvent.type(await screen.findByLabelText('Checkout Coupon Code'), 'INVALIDCOUPON');
-    await userEvent.click(screen.getByRole('button', { name: 'Place Checkout Order' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Place order' }));
 
     const alert = await screen.findByRole('alert');
     expect(within(alert).getByText('HP-15: Coupon code INVALIDCOUPON does not exist')).toHaveClass('field-error');
     expect(within(alert).getByText('DELL-XPS: Coupon code INVALIDCOUPON does not exist')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Place Checkout Order' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Place order' })).toBeInTheDocument();
     expect(storedCart()).toEqual([{ sku: 'HP-15', quantity: 1 }, { sku: 'DELL-XPS', quantity: 1 }]);
   });
 
@@ -197,7 +197,7 @@ describe('checkout page', () => {
     expect(screen.getByLabelText('Save as Default Address')).toBeChecked();
 
     await fillAddress(ANA);
-    await userEvent.click(screen.getByRole('button', { name: 'Place Checkout Order' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Place order' }));
     expect(await screen.findByText('Thank you for your order!')).toBeInTheDocument();
     expect(place).toHaveBeenCalledWith('HP-15', 1, ANA, undefined);
     expect(save).toHaveBeenCalledWith(ANA);
@@ -210,7 +210,7 @@ describe('checkout page', () => {
     renderCheckout(emptyProfile);
     await fillAddress(ANA);
     await userEvent.click(screen.getByLabelText('Save as Default Address'));
-    await userEvent.click(screen.getByRole('button', { name: 'Place Checkout Order' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Place order' }));
     expect(await screen.findByText('Thank you for your order!')).toBeInTheDocument();
     expect(save).not.toHaveBeenCalled();
   });
@@ -220,7 +220,7 @@ describe('checkout page', () => {
     const place = vi.spyOn(orderService, 'placeOrderTo');
     renderCheckout(emptyProfile);
     await fillAddress({ ...ANA, street: '' });
-    await userEvent.click(screen.getByRole('button', { name: 'Place Checkout Order' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Place order' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Street is required');
     expect(place).not.toHaveBeenCalled();
     expect(storedCart()).toEqual([{ sku: 'HP-15', quantity: 1 }]);

@@ -50,7 +50,7 @@
                                 <div>
                                     <th:block th:if="${line.product() != null}">
                                         <a th:href="${'/products/' + #uris.escapePathSegment(line.sku())}" class="cart-line-title"
-                                           th:attr="aria-label=${'Title ' + line.sku()}" th:text="${line.product().title}">Title</a>
+                                           th:attr="data-testid=${'cart-line-title-' + line.sku()}" th:text="${line.product().title}">Title</a>
                                         <div class="cart-line-meta">
                                             <th:block th:text="${'SKU ' + line.sku() + ' ·'}">SKU ·</th:block>
                                             <span class="price" th:attr="aria-label=${'Unit Price ' + line.sku()}"
@@ -59,7 +59,7 @@
                                         </div>
                                     </th:block>
                                     <th:block th:if="${line.product() == null}">
-                                        <span class="cart-line-title" th:attr="aria-label=${'Title ' + line.sku()}"
+                                        <span class="cart-line-title" th:attr="data-testid=${'cart-line-title-' + line.sku()}"
                                               th:text="${line.sku()}">SKU</span>
                                         <div class="cart-line-meta">
                                             <span class="text-danger">No longer available</span> ·

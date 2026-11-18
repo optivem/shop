@@ -81,12 +81,12 @@
                     }
                     else
                     {
-                        <a class="store-header-link store-sign-in" href="@Chrome.SignInHref" aria-label="Sign In">
+                        <a class="store-header-link store-sign-in" href="@Chrome.SignInHref" data-testid="sign-in">
                             <span class="store-header-hint">Hello</span>
                             <span>Sign in</span>
                         </a>
                     }
-                    <a class="store-header-link store-cart" href="/cart" aria-label="Cart">
+                    <a class="store-header-link store-cart" href="/cart">
                         <span class="store-cart-icon">
                             @Icons.Svg("shopping-cart", 26, strokeWidth: 1.8)
                             <span aria-live="polite">@if (cartCount > 0)

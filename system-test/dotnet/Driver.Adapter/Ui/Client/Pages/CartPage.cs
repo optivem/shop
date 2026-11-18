@@ -20,7 +20,7 @@ public class CartPage : BasePage
     private const string CartLineSelector = CartLinesSelector + " tr[aria-label^='Cart Line ']";
     private const string CartLineLabelPrefix = "Cart Line ";
     private const string QuantitySelectorTemplate = "input[aria-label='Quantity for {0}']";
-    private const string TitleSelectorTemplate = "[aria-label='Title {0}']";
+    private const string TitleSelectorTemplate = "[data-testid='cart-line-title-{0}']";
     private const string UnitPriceSelectorTemplate = "[aria-label='Unit Price {0}']";
     private const string LineTotalSelectorTemplate = "[aria-label='Line Total {0}']";
     private const string IncreaseSelectorTemplate = "button[aria-label='Increase Quantity for {0}']";

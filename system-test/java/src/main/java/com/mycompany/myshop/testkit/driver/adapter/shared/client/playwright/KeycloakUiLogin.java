@@ -8,7 +8,7 @@ public class KeycloakUiLogin {
     private static final String PASSWORD_SELECTOR = "#password";
     private static final String SUBMIT_SELECTOR = "#kc-login";
     /** The storefront's header link for anonymous visitors; apps that force login on every page never show it. */
-    private static final String SIGN_IN_SELECTOR = "[aria-label='Sign In']";
+    private static final String SIGN_IN_SELECTOR = "[data-testid='sign-in']";
     private static final int TIMEOUT_MILLISECONDS = 30_000;
 
     private final String keycloakBaseUrl;

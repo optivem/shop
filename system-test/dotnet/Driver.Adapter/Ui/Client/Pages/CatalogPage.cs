@@ -83,7 +83,7 @@ public class CatalogPage : BasePage
     public async Task<ProductPage> ClickProductAsync(string sku)
     {
         var previousUrl = PageClient.CurrentUrl();
-        await PageClient.ClickAsync($"{ProductListSelector} article[aria-label='{ProductCardLabelPrefix}{sku}'] a[aria-label='Product Title']");
+        await PageClient.ClickAsync($"{ProductListSelector} article[aria-label='{ProductCardLabelPrefix}{sku}'] a[data-testid='product-title']");
         await PageClient.WaitForUrlChangeAsync(previousUrl);
         return new ProductPage(PageClient);
     }
@@ -91,7 +91,7 @@ public class CatalogPage : BasePage
     /// <summary>Adds a product with its card's "Add to cart" (quantity 1) and returns the confirmation or the error.</summary>
     public async Task<string?> ClickAddToCartAsync(string sku)
     {
-        await PageClient.ClickAsync($"{ProductListSelector} button[aria-label='Add {sku} to Cart']");
+        await PageClient.ClickAsync($"{ProductListSelector} button[data-testid='add-to-cart-{sku}']");
         var result = await GetResultAsync();
         var message = result.IsSuccess ? result.Value : result.Error.Message;
         await WaitForLoadedAsync();
@@ -112,7 +112,7 @@ public class CatalogPage : BasePage
         var skus = (await PageClient.ReadAllAttributesNoWaitAsync(ProductCardSelector, "aria-label"))
             .Select(label => label![ProductCardLabelPrefix.Length..])
             .ToList();
-        var titles = Trimmed(await PageClient.ReadAllTextContentsNoWaitAsync(ProductCardSelector + " [aria-label='Product Title']"));
+        var titles = Trimmed(await PageClient.ReadAllTextContentsNoWaitAsync(ProductCardSelector + " [data-testid='product-title']"));
         var brands = Trimmed(await PageClient.ReadAllTextContentsNoWaitAsync(ProductCardSelector + " [aria-label='Product Brand']"));
         var prices = Trimmed(await PageClient.ReadAllTextContentsNoWaitAsync(ProductCardSelector + " [aria-label='Display Price']"));
 

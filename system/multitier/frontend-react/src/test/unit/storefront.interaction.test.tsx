@@ -62,13 +62,13 @@ describe('header', () => {
 
   it('offers an anonymous visitor "Sign In" back to the current page, and hides the signed-in links', () => {
     renderStore(<Catalog />, { entry: '/?category=Laptops' });
-    expect(screen.getByRole('link', { name: 'Sign In' })).toHaveAttribute('href', '/sign-in?returnUrl=%2F%3Fcategory%3DLaptops');
+    expect(screen.getByRole('link', { name: /sign in/i })).toHaveAttribute('href', '/sign-in?returnUrl=%2F%3Fcategory%3DLaptops');
     expect(document.querySelector("a[href='/order-history']")).toBeNull();
   });
 
   it('shows neither "Sign In" nor the signed-in links while the session is being checked', () => {
     renderStore(<Catalog />, { sessionChecked: false });
-    expect(screen.queryByRole('link', { name: 'Sign In' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /sign in/i })).not.toBeInTheDocument();
     expect(document.querySelector("a[href='/order-history']")).toBeNull();
   });
 
@@ -77,7 +77,7 @@ describe('header', () => {
     expect(document.querySelector("a[href='/new-order']")).not.toBeNull();
     expect(document.querySelector("a[href='/order-history']")).not.toBeNull();
     expect(document.querySelector("a[href='/admin-coupons']")).toBeNull();
-    expect(screen.queryByRole('link', { name: 'Sign In' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /sign in/i })).not.toBeInTheDocument();
   });
 
   it('links each catalog category and hides the badge for an empty cart', () => {
@@ -103,10 +103,10 @@ describe('catalog page (UC-006)', () => {
     renderStore(<Catalog />);
     expect(screen.getByLabelText('Product Count')).toHaveTextContent('6 products');
     const dell = within(card('DELL-XPS'));
-    expect(dell.getByLabelText('Product Title')).toHaveTextContent('Dell XPS 13');
+    expect(dell.getByTestId('product-title')).toHaveTextContent('Dell XPS 13');
     expect(dell.getByLabelText('Product Brand')).toHaveTextContent('Dell');
     expect(dell.getByLabelText('Display Price')).toHaveTextContent('$1,299.99');
-    expect(dell.getByLabelText('Product Title')).toHaveAttribute('href', '/products/DELL-XPS');
+    expect(dell.getByTestId('product-title')).toHaveAttribute('href', '/products/DELL-XPS');
   });
 
   it('keeps the filters and sort in the page address', async () => {
@@ -139,8 +139,8 @@ describe('catalog page (UC-006)', () => {
 
   it('adds quantity 1 to the cart and updates the badge', async () => {
     renderStore(<Catalog />);
-    await userEvent.click(screen.getByRole('button', { name: 'Add LOGI-MX3S to Cart' }));
-    await userEvent.click(screen.getByRole('button', { name: 'Add LOGI-MX3S to Cart' }));
+    await userEvent.click(screen.getByTestId('add-to-cart-LOGI-MX3S'));
+    await userEvent.click(screen.getByTestId('add-to-cart-LOGI-MX3S'));
     expect(screen.getByRole('alert')).toHaveTextContent('Added to cart');
     expect(screen.getByLabelText('Cart Item Count')).toHaveTextContent('2');
     expect(JSON.parse(localStorage.getItem(CART_STORAGE_KEY) ?? '[]')).toEqual([{ sku: 'LOGI-MX3S', quantity: 2 }]);

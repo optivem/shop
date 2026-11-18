@@ -101,7 +101,7 @@ class StorefrontPagesTest {
                 .andExpect(content().string(containsString("aria-label=\"Product DELL-XPS\"")))
                 .andExpect(content().string(containsString("$1,299.99")))
                 .andExpect(content().string(containsString("href=\"/sign-in?returnUrl=")))
-                .andExpect(content().string(containsString("aria-label=\"Sign In\"")))
+                .andExpect(content().string(containsString("data-testid=\"sign-in\"")))
                 .andExpect(content().string(not(containsString("href=\"/order-history\""))));
         mockMvc.perform(head("/")).andExpect(status().isOk());
     }
@@ -111,7 +111,7 @@ class StorefrontPagesTest {
         var html = mockMvc.perform(get("/").with(customer())).andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        assertThat(html).doesNotContain("aria-label=\"Sign In\"").contains("data-testid=\"username\"");
+        assertThat(html).doesNotContain("data-testid=\"sign-in\"").contains("data-testid=\"username\"");
         assertThat(count(html, "href=\"/order-history\"")).isEqualTo(1);
         assertThat(count(html, "href=\"/new-order\"")).isEqualTo(1);
         assertThat(html).doesNotContain("href=\"/admin-coupons\"");

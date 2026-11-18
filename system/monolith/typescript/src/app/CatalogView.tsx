@@ -83,7 +83,7 @@ function ProductCard({ product, onAddToCart }: Readonly<{ product: Product; onAd
           {product.brand}
         </div>
         <h3 className="product-card-title">
-          <Link href={productPath} className="product-title-link" aria-label="Product Title">
+          <Link href={productPath} className="product-title-link" data-testid="product-title">
             {product.title}
           </Link>
         </h3>
@@ -94,7 +94,7 @@ function ProductCard({ product, onAddToCart }: Readonly<{ product: Product; onAd
         <button
           type="button"
           className="btn btn-primary w-100 mt-auto"
-          aria-label={`Add ${product.sku} to Cart`}
+          data-testid={`add-to-cart-${product.sku}`}
           onClick={() => onAddToCart(product.sku)}
         >
           Add to cart

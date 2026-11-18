@@ -59,7 +59,7 @@ else
                                     <div>
                                         @if (line.Product != null)
                                         {
-                                            <a href="@StoreChrome.ProductHref(line.Sku)" class="cart-line-title" aria-label="@("Title " + line.Sku)">@line.Product.Title</a>
+                                            <a href="@StoreChrome.ProductHref(line.Sku)" class="cart-line-title" data-testid="@("cart-line-title-" + line.Sku)">@line.Product.Title</a>
                                             <div class="cart-line-meta">
                                                 SKU @line.Sku ·
                                                 <span class="price" aria-label="@("Unit Price " + line.Sku)">@Money.Format(line.Product.Price)</span>
@@ -68,7 +68,7 @@ else
                                         }
                                         else
                                         {
-                                            <span class="cart-line-title" aria-label="@("Title " + line.Sku)">@line.Sku</span>
+                                            <span class="cart-line-title" data-testid="@("cart-line-title-" + line.Sku)">@line.Sku</span>
                                             <div class="cart-line-meta">
                                                 <span class="text-danger">No longer available</span> ·
                                                 <span aria-label="@("Unit Price " + line.Sku)">-</span>

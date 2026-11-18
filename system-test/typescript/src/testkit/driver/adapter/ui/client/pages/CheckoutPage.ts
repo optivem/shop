@@ -3,7 +3,7 @@ import type { ShippingAddress } from '../../../../port/dtos/ShippingAddress.js';
 import { BasePage, PAGE_TIMEOUT_MS } from './BasePage.js';
 import { CHECKOUT_CONFIRMATION_READY_SELECTOR } from './CheckoutConfirmationPage.js';
 
-const PLACE_ORDER_SELECTOR = "button[aria-label='Place Checkout Order']";
+const PLACE_ORDER_SELECTOR = "button[data-testid='place-order']";
 /** The checkout has loaded (the single-page UIs load the profile first). */
 export const CHECKOUT_READY_SELECTOR = PLACE_ORDER_SELECTOR;
 const REVIEW_LINE_SELECTOR = "[aria-label='Order Review'] li[aria-label^='Review Line ']";

@@ -78,7 +78,7 @@ export class CatalogPage extends BasePage {
   async clickProduct(sku: string): Promise<ProductPage> {
     const previousUrl = this.page.url();
     await this.page
-      .locator(`${PRODUCT_LIST_SELECTOR} article[aria-label='${PRODUCT_CARD_LABEL_PREFIX}${sku}'] a[aria-label='Product Title']`)
+      .locator(`${PRODUCT_LIST_SELECTOR} article[aria-label='${PRODUCT_CARD_LABEL_PREFIX}${sku}'] a[data-testid='product-title']`)
       .click({ timeout: PAGE_TIMEOUT_MS });
     await this.page.waitForURL((url) => url.toString() !== previousUrl, { timeout: PAGE_TIMEOUT_MS });
     return new ProductPage(this.page);
@@ -87,7 +87,7 @@ export class CatalogPage extends BasePage {
   /** Adds a product with its card's "Add to cart" (quantity 1) and returns the confirmation or the error. */
   async clickAddToCart(sku: string): Promise<string> {
     await this.page
-      .locator(`${PRODUCT_LIST_SELECTOR} button[aria-label='Add ${sku} to Cart']`)
+      .locator(`${PRODUCT_LIST_SELECTOR} button[data-testid='add-to-cart-${sku}']`)
       .click({ timeout: PAGE_TIMEOUT_MS });
     const result = await this.getResult();
     const message = result.success ? result.value : result.error.message;
@@ -107,7 +107,7 @@ export class CatalogPage extends BasePage {
       const label = (await card.getAttribute('aria-label')) ?? '';
       products.push({
         sku: label.substring(PRODUCT_CARD_LABEL_PREFIX.length),
-        title: await this.text(card.locator("[aria-label='Product Title']")),
+        title: await this.text(card.locator("[data-testid='product-title']")),
         brand: await this.text(card.locator("[aria-label='Product Brand']")),
         price: await this.text(card.locator("[aria-label='Display Price']")),
       });

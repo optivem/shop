@@ -10,7 +10,7 @@ public sealed class KeycloakUiLogin
     private const string PasswordSelector = "#password";
     private const string SubmitSelector = "#kc-login";
     /// <summary>The storefront's header link for anonymous visitors; apps that force login on every page never show it.</summary>
-    private const string SignInSelector = "[aria-label='Sign In']";
+    private const string SignInSelector = "[data-testid='sign-in']";
     private const int TimeoutMilliseconds = 90_000;
 
     private readonly string _keycloakBaseUrl;

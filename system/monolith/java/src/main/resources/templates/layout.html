@@ -66,11 +66,11 @@
                     </form>
                     <a th:if="${storeUser == null}" class="store-header-link store-sign-in"
                        th:href="${'/sign-in?returnUrl=' + #uris.escapeQueryParam(returnUrl)}" href="/sign-in"
-                       aria-label="Sign In">
+                       data-testid="sign-in">
                         <span class="store-header-hint">Hello</span>
                         <span>Sign in</span>
                     </a>
-                    <a class="store-header-link store-cart" href="/cart" aria-label="Cart">
+                    <a class="store-header-link store-cart" href="/cart">
                         <span class="store-cart-icon">
                             <svg th:replace="~{fragments/icons :: icon('shopping-cart', 26, null, 1.8)}"></svg>
                             <span aria-live="polite"><span th:if="${cartCount != null and cartCount > 0}"

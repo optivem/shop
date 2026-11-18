@@ -74,8 +74,8 @@ Auth rules:
 
 - **Logo / "MyShop"** links to `/`.
 - **Search** is a `form` with `method=get action=/`, `aria-label="Search Products"` on the input and `aria-label="Search"` on the button.
-- **Cart** is a link to `/cart`, `aria-label="Cart"`. The badge `aria-label="Cart Item Count"` shows the total quantity and is hidden when that is 0.
-- **Anonymous visitors:** a "Sign in" link, `a[href^='/sign-in']`, `aria-label="Sign In"`.
+- **Cart** is a link to `/cart`, named by its visible "Cart" text. The badge `aria-label="Cart Item Count"` shows the total quantity and is hidden when that is 0.
+- **Anonymous visitors:** a "Sign in" link, `a[href^='/sign-in']`, `data-testid="sign-in"`.
 - **Signed in:** the existing `UserMenu` (username plus Sign out).
 - **Second row, left:** category links derived from the catalog.
 - **Second row, right**, shown only when signed in, as plain visible links (not hidden in a dropdown):
@@ -119,7 +119,8 @@ The existing notification component and markup stay as they are: `[role='alert']
   - The image placeholder (§5) and the title both link to `/products/{sku}`.
   - Brand in muted text.
   - Price with `aria-label="Display Price"`.
-  - Button with `aria-label="Add {SKU} to Cart"`. It adds quantity 1 and shows the "Added to cart" toast.
+  - The title link has `data-testid="product-title"`.
+  - "Add to cart" button with `data-testid="add-to-cart-{SKU}"`. It adds quantity 1 and shows the "Added to cart" toast.
 - **Filters:** `category` (radio), `brand` (checkboxes), `q` (search over title, brand and description, case-insensitive) and `sort` ∈ `featured` (ERP order), `price-asc`, `price-desc`, `name`. Filtering happens **in the shop UI or BFF over the full list**, because the catalog is small and the ERP has no query API.
 - **Empty result:** "No products match your search." plus a "Clear filters" link to `/`.
 - **ERP unavailable:** an `alert-danger` "Products are temporarily unavailable." The header still renders, so "My orders" keeps working.
@@ -185,7 +186,7 @@ Checkout
   - "Ship to a different address" opens a form: `Shipping First Name`, `Shipping Last Name`, `Shipping Street`, `Shipping Postal Code`, `Shipping City`, and `Shipping Country` (a select of US, DE and GB).
   - The **sales tax country is the shipping address's country** (§8), and the review shows the estimated tax for it.
 - Coupon: `aria-label="Checkout Coupon Code"`. This label is deliberately **different** from the Quick order label (`Coupon Code`), so the two pages never collide in a selector.
-- Button: `aria-label="Place Checkout Order"`.
+- "Place order" button with `data-testid="place-order"`.
 - On submit, place one order per cart line (§6.5).
   - **All succeed:** clear the cart and go to confirmation.
   - **Some fail** ([UC-009](../../shared/specs/use-cases/UC-009-check-out/use-case-narrative.md) 8a): the other lines are still placed. Remove the placed lines from the cart, keep the rejected ones, and go to confirmation, which shows a result per line: the order number for each placed line, and the SKU and the backend's message for each rejected line.
@@ -311,7 +312,7 @@ The system-test UI drivers use these selectors in Java, .NET and TypeScript (`sy
 Today `openHomePage()` navigates to `/` and waits for **either** the Keycloak form **or** `a[href='/order-history']`, because the whole app currently forces login. With an anonymous storefront neither appears for a fresh session: no redirect happens, and the "My orders" link only shows after login. So `openHomePage()` in all three languages changes as follows:
 
 1. Navigate to `/`.
-2. If a login is configured and `[aria-label='Sign In']` is visible, click it.
+2. If a login is configured and `[data-testid='sign-in']` is visible, click it.
 3. `ensureLoggedIn(HOME_READY_SELECTOR)` as before.
 
 The change lives in `MyShopUiClient` (Java), its .NET and TS equivalents, and `KeycloakUiLogin`. It ships **in the same commit** as the first UI that drops the global login.
@@ -331,9 +332,11 @@ Visual design (clickable prototype of every page): <https://claude.ai/artifact/G
 
 ## 9. New selectors (for future system tests)
 
-- **Catalog:** `[aria-label='Search Products']`, `[aria-label='Search']`, `article.product-card[aria-label='Product {SKU}']`, `[aria-label='Display Price']`, `[aria-label='Add {SKU} to Cart']`.
+A link's or button's `aria-label` must contain its visible text (WCAG 2.5.3, axe `label-content-name-mismatch`), so a test hook on one whose label would differ is a `data-testid`, not an `aria-label`.
+
+- **Catalog:** `[aria-label='Search Products']`, `[aria-label='Search']`, `article.product-card[aria-label='Product {SKU}']`, `[aria-label='Display Price']`, `[data-testid='product-title']`, `[data-testid='add-to-cart-{SKU}']`.
 - **Product detail:** `[aria-label='Product Quantity']`, `[aria-label='Add to Cart']`.
-- **Header:** `[aria-label='Cart']`, `[aria-label='Cart Item Count']`, `[aria-label='Sign In']`.
-- **Cart:** `[aria-label='Cart Line {SKU}']`, `[aria-label='Quantity for {SKU}']`, `[aria-label='Remove {SKU}']`, `[aria-label='Line Total {SKU}']`, `[aria-label='Cart Subtotal']`, `[aria-label='Proceed to Checkout']`.
-- **Checkout:** `[aria-label='Checkout Country']`, `[aria-label='Checkout Coupon Code']`, `[aria-label='Place Checkout Order']`.
+- **Header:** `[aria-label='Cart Item Count']`, `[data-testid='sign-in']`.
+- **Cart:** `[aria-label='Cart Line {SKU}']`, `[data-testid='cart-line-title-{SKU}']`, `[aria-label='Quantity for {SKU}']`, `[aria-label='Remove {SKU}']`, `[aria-label='Line Total {SKU}']`, `[aria-label='Cart Subtotal']`, `[aria-label='Proceed to Checkout']`.
+- **Checkout:** `[aria-label='Checkout Country']`, `[aria-label='Checkout Coupon Code']`, `[data-testid='place-order']`.
 - **Confirmation:** `[aria-label='Confirmed Order {orderNumber}']`.

@@ -102,7 +102,7 @@
                         <div class="product-card-brand" aria-label="Product Brand" th:text="${product.brand}">Brand</div>
                         <h3 class="product-card-title">
                             <a th:href="${'/products/' + #uris.escapePathSegment(product.sku)}" class="product-title-link"
-                               aria-label="Product Title" th:text="${product.title}">Title</a>
+                               data-testid="product-title" th:text="${product.title}">Title</a>
                         </h3>
                         <p th:if="${!#strings.isEmpty(product.description)}" class="product-card-spec"
                            th:text="${product.description}">Description</p>
@@ -112,7 +112,7 @@
                             <input type="hidden" name="quantity" value="1">
                             <input type="hidden" name="returnUrl" th:value="${returnUrl}">
                             <button type="submit" class="btn btn-primary w-100"
-                                    th:attr="aria-label=${'Add ' + product.sku + ' to Cart'}">Add to cart</button>
+                                    th:attr="data-testid=${'add-to-cart-' + product.sku}">Add to cart</button>
                         </form>
                     </div>
                 </article>

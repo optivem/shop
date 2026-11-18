@@ -6,16 +6,6 @@ namespace Driver.Adapter.Shared.Client.Playwright;
 
 public class PageClient
 {
-    /// <summary>
-    /// Rules the UI-channel check leaves off. <c>label-content-name-mismatch</c> (WCAG 2.5.3, label in name): every
-    /// storefront names its links and buttons with test-hook aria-labels ("Product Title", "Add &lt;sku&gt; to Cart") that
-    /// differ from the visible text, and the drivers select by them; renaming them is a cross-app change tracked in REL.
-    /// </summary>
-    private static readonly AxeRunOptions AxeOptions = new()
-    {
-        Rules = new Dictionary<string, RuleOptions> { ["label-content-name-mismatch"] = new() { Enabled = false } },
-    };
-
     private readonly IPage _page;
     private readonly float _timeoutMilliseconds;
     private readonly KeycloakUiLogin? _login;
@@ -42,7 +32,7 @@ public class PageClient
     /// </summary>
     public async Task<List<string>> ReadAccessibilityViolationsAsync()
     {
-        var results = await _page.RunAxe(AxeOptions);
+        var results = await _page.RunAxe();
         return results.Violations
             .Where(violation => violation.Impact is "serious" or "critical")
             .Select(violation => $"{violation.Id} ({violation.Impact}): {violation.Help} at "

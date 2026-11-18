@@ -72,7 +72,7 @@ public partial class StorefrontPagesTests : IClassFixture<ShopWebApplicationFact
         Assert.Contains("aria-label=\"Product DELL-XPS\"", html);
         Assert.Contains("$1,299.99", html);
         Assert.Contains("href=\"/sign-in?returnUrl=%2F\"", html);
-        Assert.Contains("aria-label=\"Sign In\"", html);
+        Assert.Contains("data-testid=\"sign-in\"", html);
         Assert.Contains("href=\"/?category=Accessories\"", html);
         Assert.DoesNotContain("href=\"/order-history\"", html);
         Assert.Equal(HttpStatusCode.OK, (await client.SendAsync(new HttpRequestMessage(HttpMethod.Head, "/"))).StatusCode);
@@ -99,7 +99,7 @@ public partial class StorefrontPagesTests : IClassFixture<ShopWebApplicationFact
         Assert.Contains(">My orders<", html);
         Assert.Contains("data-testid=\"username\"", html);
         Assert.DoesNotContain("href=\"/admin-coupons\"", html);
-        Assert.DoesNotContain("aria-label=\"Sign In\"", html);
+        Assert.DoesNotContain("data-testid=\"sign-in\"", html);
     }
 
     [Fact]

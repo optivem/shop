@@ -17,7 +17,7 @@ const START_SHOPPING_SELECTOR = "a:text-is('Start shopping')";
 const COMMIT_KEY = 'Tab';
 
 const quantitySelector = (sku: string) => `input[aria-label='Quantity for ${sku}']`;
-const titleSelector = (sku: string) => `[aria-label='Title ${sku}']`;
+const titleSelector = (sku: string) => `[data-testid='cart-line-title-${sku}']`;
 const unitPriceSelector = (sku: string) => `[aria-label='Unit Price ${sku}']`;
 const lineTotalSelector = (sku: string) => `[aria-label='Line Total ${sku}']`;
 const increaseSelector = (sku: string) => `button[aria-label='Increase Quantity for ${sku}']`;

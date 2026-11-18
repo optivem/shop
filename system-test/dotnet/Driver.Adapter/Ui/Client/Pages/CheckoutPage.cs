@@ -11,7 +11,7 @@ namespace Driver.Adapter.Ui.Client.Pages;
 /// </summary>
 public class CheckoutPage : BasePage
 {
-    private const string PlaceOrderSelector = "button[aria-label='Place Checkout Order']";
+    private const string PlaceOrderSelector = "button[data-testid='place-order']";
 
     /// <summary>The checkout has loaded (the single-page UIs load the profile first).</summary>
     public const string ReadySelector = PlaceOrderSelector;

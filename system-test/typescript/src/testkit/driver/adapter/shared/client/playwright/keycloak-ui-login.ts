@@ -5,7 +5,7 @@ const USERNAME_SELECTOR = '#username';
 const PASSWORD_SELECTOR = '#password';
 const SUBMIT_SELECTOR = '#kc-login';
 /** The storefront's header link for anonymous visitors; apps that force login on every page never show it. */
-const SIGN_IN_SELECTOR = "[aria-label='Sign In']";
+const SIGN_IN_SELECTOR = "[data-testid='sign-in']";
 const TIMEOUT_MS = 30_000;
 
 /** Logs the browser in on the Keycloak login form when the app redirects there. */

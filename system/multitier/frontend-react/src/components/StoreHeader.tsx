@@ -95,14 +95,14 @@ export function StoreHeader() {
               <Link
                 className="store-header-link store-sign-in"
                 to={`/sign-in?returnUrl=${encodeURIComponent(returnUrl)}`}
-                aria-label="Sign In"
+                data-testid="sign-in"
               >
                 <span className="store-header-hint">Hello</span>
                 <span>Sign in</span>
               </Link>
             )}
             <UserMenu />
-            <Link className="store-header-link store-cart" to="/cart" aria-label="Cart">
+            <Link className="store-header-link store-cart" to="/cart">
               <span className="store-cart-icon">
                 <ShoppingCart size={26} strokeWidth={1.8} aria-hidden="true" />
                 <span aria-live="polite">

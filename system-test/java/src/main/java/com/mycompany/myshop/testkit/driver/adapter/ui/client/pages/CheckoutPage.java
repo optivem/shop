@@ -13,7 +13,7 @@ import java.util.List;
  * line is "SKU: reason", so they are read as they are shown rather than parsed as {@code field: message}.
  */
 public class CheckoutPage extends BasePage {
-    private static final String PLACE_ORDER_SELECTOR = "button[aria-label='Place Checkout Order']";
+    private static final String PLACE_ORDER_SELECTOR = "button[data-testid='place-order']";
     /** The checkout has loaded (the single-page UIs load the profile first). */
     public static final String READY_SELECTOR = PLACE_ORDER_SELECTOR;
     private static final String REVIEW_LINE_SELECTOR = "[aria-label='Order Review'] li[aria-label^='Review Line ']";

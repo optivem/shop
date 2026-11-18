@@ -72,12 +72,12 @@ export default function CartPage() {
                             <Link
                               href={`/products/${encodeURIComponent(line.sku)}`}
                               className="cart-line-title"
-                              aria-label={`Title ${line.sku}`}
+                              data-testid={`cart-line-title-${line.sku}`}
                             >
                               {line.product.title}
                             </Link>
                           ) : (
-                            <span className="cart-line-title" aria-label={`Title ${line.sku}`}>
+                            <span className="cart-line-title" data-testid={`cart-line-title-${line.sku}`}>
                               {line.sku}
                             </span>
                           )}
