@@ -57,6 +57,15 @@ resource "google_project_iam_member" "billing_kill_switch_project_billing_manage
   member  = "serviceAccount:${google_service_account.billing_kill_switch.email}"
 }
 
+# Project Billing Manager only grants create/deleteBillingAssignment. The function first reads the
+# project's billing info, which needs resourcemanager.projects.get; without this role every call failed
+# with PERMISSION_DENIED and the switch never fired (2026-11-17).
+resource "google_project_iam_member" "billing_kill_switch_project_browser" {
+  project = google_project.this.project_id
+  role    = "roles/browser"
+  member  = "serviceAccount:${google_service_account.billing_kill_switch.email}"
+}
+
 # Eventarc delivers the Pub/Sub messages as this identity, so it must be able to invoke the function.
 resource "google_project_iam_member" "billing_kill_switch_invoker" {
   project = google_project.this.project_id
