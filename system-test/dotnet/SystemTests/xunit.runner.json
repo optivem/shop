@@ -3,6 +3,7 @@
   "parallelizeAssembly": false,
   "parallelizeTestCollections": true,
   "maxParallelThreads": "0.5x",
+  "parallelAlgorithm": "conservative",
   "methodDisplay": "method",
   "methodDisplayOptions": "all"
 }
