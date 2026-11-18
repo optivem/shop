@@ -29,3 +29,7 @@ Opt-in and $0: one [`grafana/otel-lgtm`](https://github.com/grafana/docker-otel-
 3. Open Grafana at <http://localhost:3900>. In **Explore → Tempo**, search by service name `shop-java-monolith` and open the trace of the place-order `POST` (route names differ slightly per language). The trace shows the inbound request with the outbound ERP / Clock / Tax HTTP calls as child spans (the TypeScript backends also trace Postgres queries).
 4. Correlated logs: from a span, use **Logs for this span**, or in **Explore → Loki** run `{service_name="shop-java-monolith"} | trace_id="<trace id>"`. Every log line written while handling the request carries the same `trace_id`.
 5. Stop it with the same `-f <file> --profile observability down`.
+
+## SLOs and alerts
+
+The availability and latency SLOs and their Grafana alert rules run on this same stack: see [SLOs and alerts](operations/slos.md).
