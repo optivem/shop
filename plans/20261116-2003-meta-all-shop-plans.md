@@ -1,7 +1,5 @@
 # 2026-11-16 20:03 UTC — Plan coordination meta-plan: all shop plans
 
-> 🤖 **Picked up by agent** — `Valentina_Desk` at `2026-11-18T15:03:22Z`
-
 ## TL;DR
 
 **Why:** Shop has 21 open plans: three earlier meta-plans, the in-flight storefront/showcase/reliability work and the backlog. They share the one local docker host, the system-test drivers, the acceptance/QA/prod workflows and `frontend-react`, and several backlog plans were overtaken by later work. Running them one by one by hand repeats the docker clashes and double orchestration that REL #36/#45/#56 recorded.
@@ -28,7 +26,7 @@ The orchestrating session runs the **Wave tracker** top to bottom. Run the same 
 
 ## ▶ Next executable step (resume here)
 
-**Wave 3 close-out, then Wave 4:** U10 is done. U9's code is done. Its last item is one release verification. Dispatch `meta-prerelease-stage.yml` (manual, runs the cloud chain and tags a meta RC). Approve the `production-release` deployment of the meta-release it triggers (pre-approved, user 2026-11-18). Confirm: meta-release is green, `_prod-stage.yml` snapshot + cosign signatures, `deploy-keycloak` PUT brute-force on `shop-prod`, and REL #78's CSP shows no violations in the cloud multitier UI run (then enforce it). After that, delete B-PRG (`plans/backlog/after-cloud-deploy/20261009-1521-production-readiness-gaps.md`). Then Wave 4: **U12** B-MRF #8 path-param routes (Lane D).
+**Wave 3 close-out, then Wave 4:** U10 is done. U9's code is done. Its last item is one release verification. **In flight (2026-11-18 ~21:30 UTC):** meta-prerelease run **44402085567** on `8abcd9c2`, dispatched after two cloud acceptance fixes: REL #88 Next.js order-history race (`0ffc2c5a`) and REL #81 WireMock admin retry (`2d5cb10c`). It is the retry of 44352569945, which failed. First check its result (`gh run view 44402085567`). If it is red, triage the inner runs (CLAUDE.md "Fixing Failing Workflows") and re-dispatch `meta-prerelease-stage.yml`. Approve the `production-release` deployment of the meta-release it triggers (pre-approved, user 2026-11-18). Confirm: meta-release is green, `_prod-stage.yml` snapshot + cosign signatures, `deploy-keycloak` PUT brute-force on `shop-prod`, and REL #78's CSP shows no violations in the cloud multitier UI run (then enforce it). After that, delete B-PRG (`plans/backlog/after-cloud-deploy/20261009-1521-production-readiness-gaps.md`). Then Wave 4: **U12** B-MRF #8 path-param routes (Lane D).
 
 ## Wave tracker
 
