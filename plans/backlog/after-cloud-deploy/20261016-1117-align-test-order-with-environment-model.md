@@ -26,13 +26,12 @@ Decided (user, 2026-11-16, meta-plan G0 answer 6): only CI changes; Local keeps 
 
 ## ▶ Next executable step (resume here)
 
-Meta-plan unit U6 (Lane W, after U4/B-PIN is pushed: same files, Conflict 2). **Step 2:** in `.github/workflows/_acceptance-stage-docker-compose.yml` (the `suite-set == 'latest'` steps, currently lines ~389–423) and `.github/workflows/_acceptance-stage.yml` (lines ~731–755), move the `# === Run Contract Tests ===` block (`contract-stub`, `contract-stub-isolated`, `contract-real`) above the `# === Run Acceptance Tests ===` block. Touch nothing else. Then dispatch one docker-compose acceptance caller (e.g. `monolith-java-acceptance-stage-docker-compose.yml`) and one cloud caller and confirm green.
+Shop side done (Step 2, `5dabd1d2`; confirmed 2026-11-18: docker-compose run 44296859054 and cloud run 44212978049 run every contract pass before acceptance, both green). Only cross-repo steps remain (Steps 3–5, meta-plan X1): each becomes a plan file in its own repo (gh-optivem, courses).
 
 ## Steps
 
 Step 1 (shop part) is done by this review (2026-11-17): in shop, only the two reusable workflows hard-code the CI order (`grep -rln "contract-stub\|acceptance-parallel"` outside `plans/` hits `_acceptance-stage.yml`, `_acceptance-stage-docker-compose.yml`, and the `system-test/*/tests*.yaml` + READMEs, which stay unchanged). Each CI step runs one `--suite`, so file order in `tests.yaml` doesn't matter to CI.
 
-- [ ] Step 2: shop: reorder the latest suite steps in `_acceptance-stage-docker-compose.yml` and `_acceptance-stage.yml` as above, then check with a CI run of one docker-compose caller and one cloud caller. Leave the legacy suite-set steps and every `tests*.yaml` alone.
 - [ ] Step 3 (gh-optivem, cross-repo / X1): update anything that lists the CI suite order (MAPPING.md, README, scaffolding tests, `steps/verify.go`); find them with `grep -rn "contract-stub\|acceptance-parallel"`. Create a test student repo for each architecture and language to confirm the copied workflows keep the new order. Don't change any local-order listing.
 - [ ] Step 4 (courses, cross-repo / X1): Pipeline course: update `01-pipeline-accelerator/course/03-acceptance-stage/03-system-tests-run.md`:
   - swap the Acceptance and Contract steps in the numbered sequence and add the one-sentence reason (the stubs are validated before the tests that rely on them)
