@@ -168,7 +168,7 @@ Not on the GCP bill: **Neon Postgres** bills through the Neon account (free plan
 - **To tell it fired**: `gcloud billing projects describe <project-id>` shows `billingEnabled: False`, gcloud and Terraform calls fail with `BILLING_DISABLED`, and the function's log says `Billing disabled for projects/<project-id>: cost X is over the budget Y`.
 - **To restore billing**, re-run with a higher limit: `BILLING_KILL_SWITCH_AMOUNT=5 ./setup-gcp.sh`. Before Terraform runs, the script (`kill-switch.sh`) raises the budget, links the billing account again and waits until billing is active. Terraform can't do this itself: with billing off, its plan fails reading Secret Manager and Cloud Storage. The limit must go up first because the budget still counts this month's cost, and the next notice (minutes away) would unlink billing again. Keeping the old limit asks for confirmation; it's fine once a new month has started.
 - Google may delete resources of a project that stays without billing for a long time; `./setup-gcp.sh` recreates the GCP side.
-- Keep the two **budget alerts** on the billing account (Billing > Budgets & alerts), at €5 and €20 per month, alerting at 50/90/100%. They cover every project on the account and only alert.
+- Keep the **budget alert** on the billing account (Billing > Budgets & alerts): one `$10 Monthly Budget Alert` budget, in USD like the billing account. It covers every project on the account and only alerts; the kill-switch budget above is separate and scoped to this project.
 
 ### Scale and limits
 

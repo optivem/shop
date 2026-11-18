@@ -3,7 +3,7 @@
 # (in the billing account's currency, about €1 by default). That stops everything billable here.
 # Budget data lags usage by hours, so the worst case is a few cents over. Re-running setup-gcp.sh
 # links billing again; raise the amount first, or the next notification that month disables it again.
-# The €5/€20 budget alerts on the billing account stay as they are (README: Cost).
+# The account-level $10 Monthly Budget Alert on the billing account stays as it is (README: Cost).
 #
 # Free tier: a few notifications a day trigger the function (Cloud Run functions: 2M invocations
 # free), the topic carries a few KB (Pub/Sub: 10 GiB free), and the source zip and the function's
