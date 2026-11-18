@@ -15,6 +15,8 @@ namespace Driver.Adapter.Ui.Client;
 internal static class BrowserPool
 {
     private static readonly SemaphoreSlim PlaywrightLock = new(1, 1);
+    /// <summary>Chromium starts one at a time: a burst of parallel launches on a fresh run starves the first pages (REL #68).</summary>
+    private static readonly SemaphoreSlim LaunchLock = new(1, 1);
     private static readonly ConcurrentBag<IBrowser> Idle = new();
     private static readonly ConcurrentBag<IBrowser> All = new();
     private static IPlaywright? _playwright;
@@ -35,9 +37,17 @@ internal static class BrowserPool
         }
 
         var playwright = await GetPlaywrightAsync();
-        var launched = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = headless });
-        All.Add(launched);
-        return launched;
+        await LaunchLock.WaitAsync();
+        try
+        {
+            var launched = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = headless });
+            All.Add(launched);
+            return launched;
+        }
+        finally
+        {
+            LaunchLock.Release();
+        }
     }
 
     /// <summary>Returns a browser for the next test. A disconnected browser is dropped.</summary>

@@ -119,6 +119,8 @@ public class MyShopUiClient : IAsyncDisposable
 
     {
 
+        await WarmUpOnceAsync(baseUrl, keycloakBaseUrl);
+
         var browser = await BrowserPool.RentAsync(IsHeadless);
 
 
@@ -130,6 +132,52 @@ public class MyShopUiClient : IAsyncDisposable
     }
 
 
+
+    private static readonly object WarmUpLock = new();
+    private static Task? _warmUp;
+
+    /// <summary>
+    /// Once per test process, before the first UI test opens its session: one home-page load and one Keycloak sign-in
+    /// through the shared <see cref="BrowserPool"/>. Every test that starts meanwhile waits for it. On a fresh stack the
+    /// first parallel batch of page loads and sign-ins otherwise stalls all at once on the cold app and Keycloak
+    /// (REL #68, UI half). A failed warm-up is reported and the tests go on, so each one fails on its own cause.
+    /// </summary>
+    private static Task WarmUpOnceAsync(string baseUrl, string? keycloakBaseUrl)
+    {
+        lock (WarmUpLock)
+        {
+            return _warmUp ??= WarmUpAsync(baseUrl, keycloakBaseUrl);
+        }
+    }
+
+    private static async Task WarmUpAsync(string baseUrl, string? keycloakBaseUrl)
+    {
+        var browser = await BrowserPool.RentAsync(IsHeadless);
+        try
+        {
+            var (context, page, login, _) = await OpenSessionAsync(browser, baseUrl, keycloakBaseUrl, TestUser.Customer);
+            try
+            {
+                await page.GotoAsync(baseUrl);
+                if (login != null)
+                {
+                    await login.EnsureLoggedInAsync(page, HomeReadySelector);
+                }
+            }
+            finally
+            {
+                await context.CloseAsync();
+            }
+        }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine($"UI warm-up against {baseUrl} failed, the tests go on without it: {e.Message}");
+        }
+        finally
+        {
+            BrowserPool.Return(browser);
+        }
+    }
 
     /// <summary>
     /// Makes <paramref name="user"/> the logged-in user. Switching discards the browser session (a fresh isolated
