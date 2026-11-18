@@ -1,13 +1,16 @@
 package com.mycompany.myshop.testkit.driver.adapter.shared.client.wiremock;
 
 import com.github.tomakehurst.wiremock.client.MappingBuilder;
+import com.github.tomakehurst.wiremock.client.VerificationException;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.matching.UrlPathPattern;
+import com.github.tomakehurst.wiremock.stubbing.StubMapping;
 import com.mycompany.myshop.testkit.common.Result;
 import wiremock.com.fasterxml.jackson.databind.ObjectMapper;
 import wiremock.com.fasterxml.jackson.databind.SerializationFeature;
 import wiremock.com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
+import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +19,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
+import java.util.function.IntFunction;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
@@ -26,13 +31,21 @@ public class JsonWireMockClient {
     private static final String CONTENT_TYPE = "Content-Type";
     private static final String APPLICATION_JSON = "application/json";
     private static final ExecutorService VIRTUAL_THREAD_EXECUTOR = Executors.newVirtualThreadPerTaskExecutor();
+    // Admin calls to a Cloud Run stub service occasionally fail in Google's front end before they
+    // reach the container (a 502, or a request that reads out). Retry those a bounded number of times.
+    private static final int MAX_ADMIN_ATTEMPTS = 4;
+    private static final long INITIAL_BACKOFF_MILLIS = 1000;
+    private static final Pattern RETRYABLE_STATUS = Pattern.compile("but was (502|503|504)\\b");
     private final ObjectMapper objectMapper;
 
     private final WireMock wireMock;
+    private final String adminUrl;
     private final List<UUID> stubIds = new ArrayList<>();
 
     public JsonWireMockClient(String baseUrl) {
-        this.wireMock = createWireMock(URI.create(baseUrl));
+        var uri = URI.create(baseUrl);
+        this.wireMock = createWireMock(uri);
+        this.adminUrl = uri.getScheme() + "://" + uri.getAuthority() + "/__admin/mappings";
         this.objectMapper = createObjectMapper();
     }
 
@@ -113,17 +126,13 @@ public class JsonWireMockClient {
      */
     public Result<Void, String> stubGetMatchingWithDelay(String pathRegex, int statusCode, int delayMilliseconds, int priority) {
         return runOnVirtualThread(() -> {
-            var stubMapping = wireMock.register(WireMock.get(urlPathMatching(pathRegex))
+            register("GET " + pathRegex, WireMock.get(urlPathMatching(pathRegex))
                 .atPriority(priority)
                 .willReturn(aResponse()
                     .withStatus(statusCode)
                     .withFixedDelay(delayMilliseconds)));
 
-            if (stubMapping != null && stubMapping.getUuid() != null) {
-                stubIds.add(stubMapping.getUuid());
-            }
-
-            var registered = wireMock.allStubMappings().getMappings().stream()
+            var registered = allStubMappings().stream()
                 .anyMatch(m -> "GET".equals(m.getRequest().getMethod().getName())
                     && pathRegex.equals(m.getRequest().getUrlPathPattern()));
 
@@ -157,18 +166,13 @@ public class JsonWireMockClient {
     ) {
         var responseBody = serialize(response);
 
-        var stubMapping = wireMock.register(methodBuilder.apply(urlPathEqualTo(path))
+        register(methodName + " " + path, methodBuilder.apply(urlPathEqualTo(path))
             .willReturn(aResponse()
                 .withStatus(statusCode)
                 .withHeader(CONTENT_TYPE, APPLICATION_JSON)
                 .withBody(responseBody)));
 
-        if (stubMapping != null && stubMapping.getUuid() != null) {
-            stubIds.add(stubMapping.getUuid());
-        }
-
-        var mappings = wireMock.allStubMappings();
-        var registered = mappings.getMappings().stream()
+        var registered = allStubMappings().stream()
             .anyMatch(m -> methodName.equals(m.getRequest().getMethod().getName())
                 && path.equals(m.getRequest().getUrlPath()));
 
@@ -185,16 +189,11 @@ public class JsonWireMockClient {
         Function<UrlPathPattern, MappingBuilder> methodBuilder,
         String methodName
     ) {
-        var stubMapping = wireMock.register(methodBuilder.apply(urlPathEqualTo(path))
+        register(methodName + " " + path, methodBuilder.apply(urlPathEqualTo(path))
             .willReturn(aResponse()
                 .withStatus(statusCode)));
 
-        if (stubMapping != null && stubMapping.getUuid() != null) {
-            stubIds.add(stubMapping.getUuid());
-        }
-
-        var mappings = wireMock.allStubMappings();
-        var registered = mappings.getMappings().stream()
+        var registered = allStubMappings().stream()
             .anyMatch(m -> methodName.equals(m.getRequest().getMethod().getName())
                 && path.equals(m.getRequest().getUrlPath()));
 
@@ -205,10 +204,80 @@ public class JsonWireMockClient {
         return Result.success();
     }
 
+    /**
+     * Registers the mapping under a client-chosen id, retrying transient admin failures. Before each
+     * retry it checks whether the failed attempt reached the server after all, so a mapping is never
+     * added twice.
+     */
+    private void register(String description, MappingBuilder mapping) {
+        var id = UUID.randomUUID();
+        mapping.withId(id);
+        withRetry("register stub " + description + " (id " + id + ")", attempt -> {
+            if (attempt == 1 || !isRegistered(id)) {
+                wireMock.register(mapping);
+            }
+            return null;
+        });
+        stubIds.add(id);
+    }
+
+    private boolean isRegistered(UUID id) {
+        return wireMock.allStubMappings().getMappings().stream().anyMatch(m -> id.equals(m.getId()));
+    }
+
+    private List<StubMapping> allStubMappings() {
+        return withRetry("list stubs", attempt -> wireMock.allStubMappings().getMappings());
+    }
+
+    private <R> R withRetry(String description, IntFunction<R> call) {
+        Throwable last = null;
+        for (var attempt = 1; attempt <= MAX_ADMIN_ATTEMPTS; attempt++) {
+            if (attempt > 1) {
+                sleep(INITIAL_BACKOFF_MILLIS << (attempt - 2));
+            }
+            try {
+                return call.apply(attempt);
+            } catch (Exception | VerificationException e) {
+                if (!isTransient(e)) {
+                    throw e;
+                }
+                last = e;
+                System.err.printf("WireMock admin call failed (attempt %d/%d): %s at %s: %s%n",
+                    attempt, MAX_ADMIN_ATTEMPTS, description, adminUrl, e);
+            }
+        }
+        throw new IllegalStateException("WireMock admin call failed after " + MAX_ADMIN_ATTEMPTS + " attempts: "
+            + description + " at " + adminUrl + ": " + last, last);
+    }
+
+    // A 502/503/504 from the front end, or a transport failure (connect/read timeout, reset connection).
+    // The WireMock client rethrows its IOExceptions unchecked, so the cause chain is walked.
+    private static boolean isTransient(Throwable e) {
+        for (var t = e; t != null; t = t.getCause()) {
+            if (t instanceof VerificationException && t.getMessage() != null
+                && RETRYABLE_STATUS.matcher(t.getMessage()).find()) {
+                return true;
+            }
+            if (t instanceof IOException) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static void sleep(long millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Interrupted while retrying a WireMock admin call", e);
+        }
+    }
+
     /** Removes the stubs this client registered with {@link #stubGetMatching} for {@code pathRegex}. */
     public Result<Void, String> removeStubsMatching(String pathRegex) {
         return runOnVirtualThread(() -> {
-            var matching = wireMock.allStubMappings().getMappings().stream()
+            var matching = allStubMappings().stream()
                 .filter(m -> stubIds.contains(m.getUuid()) && pathRegex.equals(m.getRequest().getUrlPathPattern()))
                 .toList();
             for (var mapping : matching) {
