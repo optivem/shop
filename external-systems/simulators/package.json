@@ -8,6 +8,6 @@
     "dev": "nodemon mock-server.js"
   },
   "devDependencies": {
-    "json-server": "^0.17.4"
+    "json-server": "0.17.4"
   }
 }

@@ -153,10 +153,12 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
+      # The base images are pinned by digest in the Dockerfile (Dependabot renovates them),
+      # so pull exactly those refs instead of repeating them here.
       - name: Pre-pull base images
         uses: optivem/actions/retry@v1
         with:
-          command: docker pull node:22-alpine
+          command: bash -c 'set -e; for ref in $(grep "^FROM " system/monolith/typescript/Dockerfile | cut -d " " -f 2 | sort -u); do docker pull "$ref"; done'
 
       - name: Read Base Component Version
         id: read-version

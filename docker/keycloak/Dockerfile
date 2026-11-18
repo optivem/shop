@@ -11,7 +11,7 @@
 # one public image (ghcr.io/<owner>/<repo>/shop-keycloak) serves every project and scaffold.
 # Runtime env: SYSTEM, RUN_APP_SUFFIX (<project-number>.<region>.run.app); see deploy-keycloak.
 # Build context: docker/keycloak. Local compose keeps using the stock image with shop-realm.json.
-FROM alpine:3.20 AS realm
+FROM alpine:3.20@sha256:d9e853e87e55526f6b2917df91a2115c36dd7c696a35be12163d44e6e2a4b6bc AS realm
 RUN apk add --no-cache jq
 COPY shop-realm.json redirects.jq acceptance-realm.jq stage-realm.jq prod-realm.jq prod-realm-check.jq /
 # Single quotes: the placeholders go into the realm files literally.
@@ -23,12 +23,12 @@ RUN jq -L / --arg realm shop-prod --arg stage production --arg system '${SYSTEM}
       -f /stage-realm.jq /shop-realm.json | jq -f /prod-realm.jq > /realm-prod.json \
     && jq -e -f /prod-realm-check.jq /realm-prod.json
 
-FROM quay.io/keycloak/keycloak:26.0 AS builder
+FROM quay.io/keycloak/keycloak:26.0@sha256:09a381c715ab0b111835b70f2905955274843a219c6f27efb348e4d9f4086858 AS builder
 ENV KC_DB=postgres \
     KC_HEALTH_ENABLED=true
 RUN /opt/keycloak/bin/kc.sh build
 
-FROM quay.io/keycloak/keycloak:26.0
+FROM quay.io/keycloak/keycloak:26.0@sha256:09a381c715ab0b111835b70f2905955274843a219c6f27efb348e4d9f4086858
 COPY --from=builder /opt/keycloak/ /opt/keycloak/
 COPY --from=realm /realm.json /opt/keycloak/data/import/shop-realm.json
 COPY --from=realm /realm-qa.json /opt/keycloak/data/import/shop-qa-realm.json

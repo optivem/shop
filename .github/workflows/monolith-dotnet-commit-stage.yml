@@ -170,15 +170,12 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
-      - name: Pre-pull base image mcr.microsoft.com/dotnet/sdk:8.0
+      # The base images are pinned by digest in the Dockerfile (Dependabot renovates them),
+      # so pull exactly those refs instead of repeating them here.
+      - name: Pre-pull base images
         uses: optivem/actions/retry@v1
         with:
-          command: docker pull mcr.microsoft.com/dotnet/sdk:8.0
-
-      - name: Pre-pull base image mcr.microsoft.com/dotnet/aspnet:8.0
-        uses: optivem/actions/retry@v1
-        with:
-          command: docker pull mcr.microsoft.com/dotnet/aspnet:8.0
+          command: bash -c 'set -e; for ref in $(grep "^FROM " system/monolith/dotnet/Dockerfile | cut -d " " -f 2 | sort -u); do docker pull "$ref"; done'
 
       - name: Read Base Component Version
         id: read-version

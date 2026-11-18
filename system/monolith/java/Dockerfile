@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.4
-FROM eclipse-temurin:21-jdk-alpine AS build
+FROM eclipse-temurin:21-jdk-alpine@sha256:82801f9dcdcbad5a05082aba8c86d1da5b72ccb498e71318b1f91b5a477887b3 AS build
 WORKDIR /app
 COPY gradlew .
 COPY gradle gradle
@@ -18,7 +18,7 @@ RUN --mount=type=cache,target=/root/.gradle \
     done && \
     ./gradlew bootJar --no-daemon
 
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:21-jre-alpine@sha256:ac05c3c42b7c2f1a52c9bd52f01041fa1958231b15ebeae7420429cbc5baf474
 WORKDIR /app
 RUN addgroup -S app && adduser -S app -G app
 COPY --from=build --chown=app:app /app/build/libs/*.jar app.jar

@@ -6,6 +6,11 @@
 # The directory lists name every project that has a manifest of that ecosystem. Keep them in
 # sync when a project is added, moved or removed under system/, system-test/ or external-systems/.
 #
+# Pinning: every Dockerfile FROM is `tag@sha256:digest`, so builds are reproducible and Dependabot
+# still renovates them (it bumps the digest when the tag moves, and tag plus digest on a new
+# version). The npm projects pin exact versions (`save-exact=true` in each `.npmrc`) with a
+# committed lockfile, so every bump arrives as a PR here instead of floating on `npm install`.
+#
 # Not covered on purpose: the docker/**/docker-compose*.yml files. Their image pins are repeated
 # across 24 files that compose-drift.yml keeps identical, and Dependabot would bump them one
 # directory at a time.
