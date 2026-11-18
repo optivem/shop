@@ -28,7 +28,7 @@ The orchestrating session runs the **Wave tracker** top to bottom. Run the same 
 
 ## ▶ Next executable step (resume here)
 
-**Wave 3 remainder (next session):** Wave 2 is done except REL #78 enforcement (CSP report-only → enforced after a cloud multitier UI run shows no violations; fold it into the next cloud acceptance check). Lane B runs **U9** (B-PRG: 5.6, 6.4–6.6, 5.4/6.3 prod-stage, one `dast.yml` dispatch, the 4.1 secret check before prod). Lane D runs **U10** (FT: one `lighthouse.yml` dispatch, SignIn axe test, REL #70 recheck). Child plans: `plans/backlog/after-cloud-deploy/20261009-1521-production-readiness-gaps.md`, `plans/20261112-0939-frontend-testing-component-a11y-lighthouse.md`. Then Wave 4 (U12).
+**Wave 3 close-out, then Wave 4:** U10 is done. U9's code is done. Its last item is one release verification. Dispatch `meta-prerelease-stage.yml` (manual, runs the cloud chain and tags a meta RC). Approve the `production-release` deployment of the meta-release it triggers (pre-approved, user 2026-11-18). Confirm: meta-release is green, `_prod-stage.yml` snapshot + cosign signatures, `deploy-keycloak` PUT brute-force on `shop-prod`, and REL #78's CSP shows no violations in the cloud multitier UI run (then enforce it). After that, delete B-PRG (`plans/backlog/after-cloud-deploy/20261009-1521-production-readiness-gaps.md`). Then Wave 4: **U12** B-MRF #8 path-param routes (Lane D).
 
 ## Wave tracker
 
@@ -44,7 +44,7 @@ The orchestrating session runs the **Wave tracker** top to bottom. Run the same 
 | 2 | U6 B-ORD shop steps | W (after U5) | done 2026-11-18: `5dabd1d2` confirmed in CI (docker-compose 44296859054, cloud 44212978049: contract before acceptance, green); Steps 3–5 are X1 |
 | 2 | U7 B-MRF #3 + #4 | D (after U2) | done 2026-11-17 (`c094da41`, `49a5cf12`): new UC-002.11 deep-link UI test ×3 languages, .NET cancel UI now drives the UI |
 | 2 | U8 REL open ideas, shop side | D (after U7) | 2026-11-18: #55 #56 #58 #59 #64 #66 #67(1) #69 #75 #76 #80 #84 done; #78 headers + report-only CSP; #68 done (`0cd89824`, `f8a57fb9`); #82 done (`a57c88f7`, all six stacks green); #61 → watch; left: #78 enforcement only (needs a cloud multitier UI run) |
-| 3 | U9 B-PRG remainder (4.2 decided 2026-11-17: in-code login limit only, edge policy opt-in and cost-labelled; a noted shortcut) | B | runs 1–2 done 2026-11-17 (0.1, 1.7, 1.8, 3.2, 3.4, 3.5, 4.1, 4.3, 4.4, 2.3, 4.2, 5.5, 6.7); Lane D `--sample` green on all 6 stacks; left: 5.6, 6.4–6.6, 5.4/6.3 (prod-stage), one `dast.yml` dispatch; user: turn on private vulnerability reporting; before prod: secret check (4.1) |
+| 3 | U9 B-PRG remainder (4.2 decided 2026-11-17: in-code login limit only, edge policy opt-in and cost-labelled; a noted shortcut) | B | code done 2026-11-18 (run 3: 5.6 `149cc519`/`8a94b4c1`, 5.4+6.3 `a540d1d6`, 6.4–6.6 `3751adfd`/`f6451ba9`, DAST run 44333808708 green, 4.1 prod secret is not the test secret); `--sample` green ×6; left: confirm snapshot/rollback, cosign signatures and the `shop-prod` brute-force PUT on the next meta-release, then delete B-PRG |
 | 3 | U10 FT frontend testing | D (after U8) | done 2026-11-18: Lighthouse run 44331924479 green (3 pages; warn budgets `25bfb043`), SignIn axe test `8d5ace02`, REL #70 rechecked per criterion (`d7841c8c`, UC-008.11 test `e73bde72`); FT deleted (`32fe298b`) |
 | 3 | U11 OUTBOX (confirmed 2026-11-17: Java-only worked example, a noted shortcut) | B (after U9), verified in D | done 2026-11-17, plan deleted; Lane D verified: relay delivers, `sent_at` set, audit rows written |
 | 4 | U12 B-MRF #8 path-param routes | D (after U10) | todo (G0: yes) |
@@ -224,6 +224,7 @@ Later sessions run these without asking:
 - **X1 cross-repo:** plans only. Every item for courses, substack, optivem-testing or gh-optivem becomes a plan file in that repo (committed there with `gh optivem commit --repo <name> --paths`); no code or content outside shop is edited from this meta-plan.
 - **Decided inside child plans:** B-PRG 2.3 local clock in prod; B-PRG 6.5/6.6 $0 only; OUTBOX in `backend-java` only; B-MRF #8 clean break, no redirects.
 - **Meta-release approval (user, 2026-11-18):** the orchestrator approves a waiting `production-release` deployment on the user's behalf (`gh api -X POST repos/optivem/shop/actions/runs/<id>/pending_deployments` with `state=approved`) only when the triggering meta-prerelease is green, the latest commit stages on `main` are green, and no plan item holds production (e.g. a missing prod secret). Otherwise it rejects or leaves the run waiting and reports why.
+- **Workflow executions (user, 2026-11-18):** the orchestrator may dispatch and approve any workflow run for this meta-plan without asking, including meta-prerelease → meta-release → production (`production-release` approvals). It still checks first that the commit stages on `main` are green and reports what it ran.
 - **Still a user gate:** the MUI visual check itself, the user-only items in M (B-SL, REL #11), and `gh auth refresh -h github.com -s project` before GHO's rehearsals.
 
 ## Needs-decision (asked once at 🛑 G0, answered above)
