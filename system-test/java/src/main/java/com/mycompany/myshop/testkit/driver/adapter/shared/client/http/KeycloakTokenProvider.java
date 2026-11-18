@@ -95,7 +95,8 @@ public class KeycloakTokenProvider {
             }
             if (response.statusCode() != 200) {
                 throw new IllegalStateException("Failed to acquire token for " + user.getUsername() + " from "
-                        + tokenUri + ": HTTP " + response.statusCode() + " " + response.body());
+                        + tokenUri + ": HTTP " + response.statusCode() + " " + response.body()
+                        + lockoutHint(response.statusCode(), response.body()));
             }
             var json = objectMapper.readTree(response.body());
             var expiresIn = json.path("expires_in").asLong(60);
@@ -108,6 +109,17 @@ public class KeycloakTokenProvider {
             Thread.currentThread().interrupt();
             throw new IllegalStateException("Interrupted while acquiring token from " + tokenUri, e);
         }
+    }
+
+    /**
+     * Keycloak's brute-force detection reports a locked-out user as a plain 401 {@code invalid_grant}
+     * ("Invalid user credentials"), so the bare response reads like a wrong password.
+     */
+    private static String lockoutHint(int statusCode, String body) {
+        return statusCode == 401 && body.contains("invalid_grant")
+                ? " (the user may be temporarily locked out by Keycloak brute-force detection;"
+                        + " check the realm's bruteForceProtected setting and its LOGIN_ERROR user_temporarily_disabled events)"
+                : "";
     }
 
     private static void sleep(Duration delay) {

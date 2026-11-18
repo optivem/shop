@@ -100,7 +100,8 @@ public sealed class KeycloakTokenProvider
         if (!response.IsSuccessStatusCode)
         {
             throw new InvalidOperationException(
-                $"Failed to acquire token for {user.Username} from {_tokenUri}: HTTP {(int)response.StatusCode} {body}");
+                $"Failed to acquire token for {user.Username} from {_tokenUri}: HTTP {(int)response.StatusCode} {body}"
+                + LockoutHint((int)response.StatusCode, body));
         }
 
         using var json = JsonDocument.Parse(body);
@@ -109,6 +110,16 @@ public sealed class KeycloakTokenProvider
         var expiresAt = DateTimeOffset.UtcNow.AddSeconds(expiresIn) - ExpiryMargin;
         return new CachedToken(root.GetProperty("access_token").GetString()!, expiresAt);
     }
+
+    /// <summary>
+    /// Keycloak's brute-force detection reports a locked-out user as a plain 401 <c>invalid_grant</c>
+    /// ("Invalid user credentials"), so the bare response reads like a wrong password.
+    /// </summary>
+    private static string LockoutHint(int statusCode, string body) =>
+        statusCode == 401 && body.Contains("invalid_grant", StringComparison.Ordinal)
+            ? " (the user may be temporarily locked out by Keycloak brute-force detection;"
+              + " check the realm's bruteForceProtected setting and its LOGIN_ERROR user_temporarily_disabled events)"
+            : "";
 
     /// <summary>A failure worth retrying; after the last attempt it surfaces as is.</summary>
     private sealed class TransientTokenException(string message, Exception? inner)

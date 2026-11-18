@@ -92,14 +92,25 @@ export class KeycloakTokenProvider {
       );
     }
     if (!response.ok) {
+      const body = await response.text();
       throw new Error(
-        `Failed to acquire token for ${user.username} from ${this.tokenUrl}: HTTP ${response.status} ${await response.text()}`,
+        `Failed to acquire token for ${user.username} from ${this.tokenUrl}: HTTP ${response.status} ${body}${lockoutHint(response.status, body)}`,
       );
     }
     const json = (await response.json()) as { access_token: string; expires_in?: number };
     const expiresInMs = (json.expires_in ?? DEFAULT_EXPIRES_IN_SECONDS) * 1000;
     return { value: json.access_token, expiresAt: Date.now() + expiresInMs - EXPIRY_MARGIN_MS };
   }
+}
+
+/**
+ * Keycloak's brute-force detection reports a locked-out user as a plain 401 `invalid_grant`
+ * ("Invalid user credentials"), so the bare response reads like a wrong password.
+ */
+function lockoutHint(status: number, body: string): string {
+  return status === 401 && body.includes('invalid_grant')
+    ? " (the user may be temporarily locked out by Keycloak brute-force detection; check the realm's bruteForceProtected setting and its LOGIN_ERROR user_temporarily_disabled events)"
+    : '';
 }
 
 /** A fetch failure's cause (e.g. ECONNREFUSED), stringified explicitly: an object cause would print as [object Object]. */
