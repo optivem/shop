@@ -245,12 +245,12 @@ describe('cart page (UC-008)', () => {
     expect(quantity).toHaveValue('4');
   });
 
-  it('keeps the previous quantity when the new one is not valid', async () => {
+  it.each(['0', '-1', '1.5', 'abc', '100'])('keeps the previous quantity when the new one is %s', async (value) => {
     storeCart([{ sku: 'HP-15', quantity: 2 }]);
     renderStore(<Cart />, { path: '/cart', entry: '/cart' });
     const quantity = screen.getByLabelText('Quantity for HP-15');
     await userEvent.clear(quantity);
-    await userEvent.type(quantity, '100{Enter}');
+    await userEvent.type(quantity, `${value}{Enter}`);
     expect(screen.getByRole('alert')).toHaveTextContent('Quantity must be a whole number from 1 to 99.');
     expect(quantity).toHaveValue('2');
   });
