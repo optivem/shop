@@ -32,10 +32,10 @@ public class JsonWireMockClient {
     private static final String APPLICATION_JSON = "application/json";
     private static final ExecutorService VIRTUAL_THREAD_EXECUTOR = Executors.newVirtualThreadPerTaskExecutor();
     // Admin calls to a Cloud Run stub service occasionally fail in Google's front end before they
-    // reach the container (a 502, or a request that reads out). Retry those a bounded number of times.
+    // reach the container (a 500 or 502 the container never logged, or a request that reads out). Retry those a bounded number of times.
     private static final int MAX_ADMIN_ATTEMPTS = 4;
     private static final long INITIAL_BACKOFF_MILLIS = 1000;
-    private static final Pattern RETRYABLE_STATUS = Pattern.compile("but was (502|503|504)\\b");
+    private static final Pattern RETRYABLE_STATUS = Pattern.compile("but was (500|502|503|504)\\b");
     private final ObjectMapper objectMapper;
 
     private final WireMock wireMock;
@@ -250,7 +250,7 @@ public class JsonWireMockClient {
             + description + " at " + adminUrl + ": " + last, last);
     }
 
-    // A 502/503/504 from the front end, or a transport failure (connect/read timeout, reset connection).
+    // A 500/502/503/504 from the front end, or a transport failure (connect/read timeout, reset connection).
     // The WireMock client rethrows its IOExceptions unchecked, so the cause chain is walked.
     private static boolean isTransient(Throwable e) {
         for (var t = e; t != null; t = t.getCause()) {

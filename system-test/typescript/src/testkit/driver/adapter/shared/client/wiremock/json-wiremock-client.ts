@@ -3,11 +3,11 @@ import { randomUUID } from 'node:crypto';
 const OUTAGE_PRIORITY = 1;
 
 // Admin calls to a Cloud Run stub service occasionally fail in Google's front end before they reach
-// the container (a 502, or a request that reads out). Retry those a bounded number of times.
+// the container (a 500 or 502 the container never logged, or a request that reads out). Retry those a bounded number of times.
 const MAX_ADMIN_ATTEMPTS = 4;
 const INITIAL_BACKOFF_MS = 1000;
 const ADMIN_REQUEST_TIMEOUT_MS = 30_000;
-const TRANSIENT_STATUSES = new Set([502, 503, 504]);
+const TRANSIENT_STATUSES = new Set([500, 502, 503, 504]);
 
 export class JsonWireMockClient {
   private readonly adminUrl: string;
@@ -139,7 +139,7 @@ export class JsonWireMockClient {
   }
 
   /**
-   * Sends an admin request, retrying with exponential backoff on a 502/503/504 or a transport failure
+   * Sends an admin request, retrying with exponential backoff on a 500/502/503/504 or a transport failure
    * (connect/read timeout, reset connection). Returns the last response; throws once the retries run out
    * on a transport failure.
    */

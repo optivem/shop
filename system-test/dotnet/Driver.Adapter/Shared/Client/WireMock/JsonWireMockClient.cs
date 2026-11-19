@@ -12,7 +12,7 @@ public class JsonWireMockClient : IDisposable
     private const int OutagePriority = 0;
 
     // Admin calls to a Cloud Run stub service occasionally fail in Google's front end before they
-    // reach the container (a 502, or a request that reads out). Retry those a bounded number of times.
+    // reach the container (a 500 or 502 the container never logged, or a request that reads out). Retry those a bounded number of times.
     private const int MaxAdminAttempts = 4;
     private static readonly TimeSpan InitialBackoff = TimeSpan.FromSeconds(1);
     private static readonly TimeSpan AdminRequestTimeout = TimeSpan.FromSeconds(30);
@@ -230,7 +230,7 @@ public class JsonWireMockClient : IDisposable
     }
 
     /// <summary>
-    /// Sends an admin request, retrying with exponential backoff on a 502/503/504 or a transport failure
+    /// Sends an admin request, retrying with exponential backoff on a 500/502/503/504 or a transport failure
     /// (connect/read timeout, reset connection). Returns the last response; throws once the retries run out
     /// on a transport failure.
     /// </summary>
@@ -268,7 +268,7 @@ public class JsonWireMockClient : IDisposable
     }
 
     private static bool IsTransient(HttpStatusCode statusCode)
-        => statusCode is HttpStatusCode.BadGateway or HttpStatusCode.ServiceUnavailable or HttpStatusCode.GatewayTimeout;
+        => statusCode is HttpStatusCode.InternalServerError or HttpStatusCode.BadGateway or HttpStatusCode.ServiceUnavailable or HttpStatusCode.GatewayTimeout;
 
     // HttpClient reports its own timeout as a TaskCanceledException (no caller token is passed here).
     private static bool IsTransient(Exception ex)

@@ -57,6 +57,17 @@ public class ErpGatewayResilienceTests
     }
 
     [Fact]
+    public async Task RetriesAConnectTimeoutThenSucceeds()
+    {
+        var erp = new ScriptedErpHandler(HttpStatusCode.OK) { ConnectTimeouts = 1 };
+
+        var result = await Gateway(erp).GetProductDetailsAsync("BOOK-123");
+
+        Assert.NotNull(result);
+        Assert.Equal(2, erp.Calls);
+    }
+
+    [Fact]
     public async Task DoesNotRetryProductNotFound()
     {
         var erp = new ScriptedErpHandler(HttpStatusCode.NotFound);
@@ -121,11 +132,20 @@ public class ErpGatewayResilienceTests
 
         public TimeSpan Delay { get; init; } = TimeSpan.Zero;
 
+        /// <summary>The first N calls fail the way SocketsHttpHandler reports an exceeded ConnectTimeout.</summary>
+        public int ConnectTimeouts { get; init; }
+
         public int Calls => _calls;
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             var call = Interlocked.Increment(ref _calls);
+            if (call <= ConnectTimeouts)
+            {
+                throw new TaskCanceledException("The operation was canceled.",
+                    new TimeoutException("A connection could not be established within the configured ConnectTimeout."));
+            }
+
             if (Delay > TimeSpan.Zero)
             {
                 await Task.Delay(Delay, cancellationToken);

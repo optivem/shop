@@ -67,8 +67,11 @@ public static class ResilienceExtensions
         request?.Method == HttpMethod.Get || request?.Method == HttpMethod.Head;
 
     // Timeouts, connection errors and 5xx count as failures; 4xx (e.g. 404 product-not-found) are answers.
+    // SocketsHttpHandler reports ConnectTimeout as a TaskCanceledException wrapping a TimeoutException (not an
+    // HttpRequestException), so it is matched explicitly; a caller's own cancellation has no TimeoutException inside.
     private static bool IsFailure(Outcome<HttpResponseMessage> outcome) =>
         outcome.Exception is HttpRequestException or Polly.Timeout.TimeoutRejectedException
+            or TaskCanceledException { InnerException: TimeoutException }
         || (outcome.Result is { } response && (int)response.StatusCode >= (int)HttpStatusCode.InternalServerError);
 
     private sealed class ResilienceSettings
