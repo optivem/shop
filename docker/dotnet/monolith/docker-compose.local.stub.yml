@@ -23,6 +23,10 @@ services:
       # 30 s sampling window reopen the breaker on the next test's first good calls.
       - Resilience__Erp__BreakDurationMilliseconds=500
       - Resilience__Erp__FailureRatio=1.0
+      - Resilience__Clock__BreakDurationMilliseconds=500
+      - Resilience__Clock__FailureRatio=1.0
+      - Resilience__Tax__BreakDurationMilliseconds=500
+      - Resilience__Tax__FailureRatio=1.0
       - CLOCK_API_URL=http://external-system-stubs:8080/clock
       - TAX_API_URL=http://external-system-stubs:8080/tax
       - EXTERNAL_SYSTEM_MODE=stub

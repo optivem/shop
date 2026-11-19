@@ -374,12 +374,14 @@ jobs:
       SYSTEM_IMAGE: ${{ fromJSON(inputs.images).system }}
       MIGRATE_IMAGE: ${{ needs.shared-images.outputs.db-migrate-image }}
       STACK: ${{ matrix.stack }}
-      # Stub stack only (mirrors docker/*/*/docker-compose.*.stub.yml): a short ERP breaker open time, and a breaker that
-      # opens only when every recent ERP call failed, so an ERP-outage test doesn't leak 503s ('Product information can't be
-      # retrieved right now') into the tests after it. Names per language: Java (Resilience4j), .NET (Polly), TypeScript.
+      # Stub stack only (mirrors docker/*/*/docker-compose.*.stub.yml): a short breaker open time, and a breaker that
+      # opens only when every recent call failed, for every external system (ERP, Clock, Tax), so an outage test or one
+      # slow burst at the single stubs instance doesn't leak errors into the tests after it. Names per language: Java (Resilience4j), .NET (Polly), TypeScript.
       STUB_BREAKER_ENV: >-
         {"RESILIENCE_CIRCUITBREAKER_WAITINOPENSTATE":"100ms","RESILIENCE_CIRCUITBREAKER_FAILURERATETHRESHOLD":"100",
         "Resilience__Erp__BreakDurationMilliseconds":"500","Resilience__Erp__FailureRatio":"1.0",
+        "Resilience__Clock__BreakDurationMilliseconds":"500","Resilience__Clock__FailureRatio":"1.0",
+        "Resilience__Tax__BreakDurationMilliseconds":"500","Resilience__Tax__FailureRatio":"1.0",
         "EXTERNAL_BREAKER_HALF_OPEN_AFTER_MS":"100"}
       EXT_SERVICE: ${{ matrix.ext-service }}
       EXT_IMAGE: ${{ matrix.stack == 'real' && needs.shared-images.outputs.simulators-image || needs.shared-images.outputs.stubs-image }}
