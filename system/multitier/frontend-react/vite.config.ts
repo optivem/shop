@@ -17,6 +17,10 @@ export default defineConfig({
     // Consumer test files share one pact contract file (frontend-react-backend.json);
     // run files sequentially so concurrent writers don't race on the merge.
     fileParallelism: false,
+    // Node 25+ ships a built-in global `localStorage` (Web Storage) that shadows
+    // jsdom's and is unusable without --localstorage-file; turn it off so the
+    // tests get jsdom's storage.
+    poolOptions: { forks: { execArgv: ['--no-experimental-webstorage'] } },
     // OPT-IN LAYER: the in-process component + Pact contract suites are kept OFF
     // the default `npm test` so the default build is unchanged for students who
     // never opted in. They run via `npm run test:component` / `test:pact`
