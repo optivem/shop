@@ -13,7 +13,7 @@
     <!-- axe-core accessibility checks on the UI channel (FT Step 4) -->
     <PackageReference Include="Deque.AxeCore.Playwright" Version="4.14.0" />
     <PackageReference Include="WireMock.Net" Version="1.7.0" />
-    <PackageReference Include="System.Text.Json" Version="9.0.1" />
+    <PackageReference Include="System.Text.Json" Version="11.0.0" />
     <PackageReference Include="Shouldly" Version="4.2.1" />
   </ItemGroup>
 
