@@ -228,3 +228,8 @@ Found 2026-11-20 (U9 release check, meta-release 44784247292). Every prod-stage 
 
 Found 2026-11-20 (U9 release check, REL #78). The cloud multitier prod and QA smoke runs (prod 44784657146 and its siblings; QA 44776538213, 44782828071, 44774715904) load only the home page, the system-test UI drivers never capture the browser console, and the nginx policy has no `report-uri`/`report-to`. So "no CSP violations in the logs" can't confirm #78.
 - **Recommended:** have the Playwright UI drivers (all three languages) collect `console` messages of type error whose text contains `Content Security Policy`, and fail the test on any of them (or at least log them). **Why:** an enforced CSP that blocks a script fails silently in the browser. A console check turns it into a red test, locally and in cloud runs.
+
+### 95. Monolith TypeScript can't move to ESLint 10 yet (Dependabot #141, #109)
+
+Found 2026-11-20 (U15). `eslint-config-next@15.5.14` caps eslint at ^9, and `eslint-config-next@16.4.6` doesn't help: it pulls eslint-plugin-react 7.37.5, eslint-plugin-import 2.32.0 and eslint-plugin-jsx-a11y 6.10.2, whose latest releases still cap at ^9. `@eslint/js@10` needs eslint ^10, so #109 is blocked the same way. The other three TS projects moved to ESLint 10 in `97266b2f`.
+- **Recommended:** keep the monolith on ESLint 9 and leave #141/#109 open. Re-check when those three plugins publish ESLint 10 peer support (`npm view eslint-plugin-react peerDependencies`). **Why:** the alternatives are forcing peers (`--legacy-peer-deps`, which the meta-plan rules out) or replacing eslint-config-next with a hand-built config, which would lose the React, import and a11y rules.
