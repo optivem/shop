@@ -554,6 +554,11 @@ jobs:
     if: ${{ always() && !failure() && !cancelled() && needs.check.outputs.should_run == 'true' && contains(fromJSON('["acceptance","qa"]'), inputs.level) }}
     strategy:
       fail-fast: ${{ inputs.fail-fast }}
+      # Each entry holds a runner for the whole pipeline, and each pipeline holds two more
+      # (latest + legacy acceptance waiters). Six at once kept ~18 runners idle-waiting, so the
+      # real acceptance/sonar jobs queued over an hour and the 7200s waits gave up on green
+      # runs (REL #91). Three at a time leaves the pool free for the work itself.
+      max-parallel: 3
       matrix:
         variant: [monolith-java, monolith-dotnet, monolith-typescript, multitier-java, multitier-dotnet, multitier-typescript]
     runs-on: ubuntu-latest
