@@ -50,7 +50,7 @@ The orchestrating session runs the **Wave tracker** top to bottom. Run the same 
 | 3 | U11 OUTBOX (confirmed 2026-11-17: Java-only worked example, a noted shortcut) | B (after U9), verified in D | done 2026-11-17, plan deleted; Lane D verified: relay delivers, `sent_at` set, audit rows written |
 | 4 | U12 B-MRF #8 path-param routes | D (after U10) | done 2026-11-20 (`82eff412`): all 14 cross-lang jobs of meta-prerelease 44750478153 green (local cross-lang timeouts were REL #92, host RAM) |
 | 4b | U13 GitHub Actions majors (#118–#123: upload-artifact 7, setup-go 7, cache 6, setup-dotnet 6, setup-node 7) | W | done 2026-11-20 (`7750351c`): 43 `uses:` bumps, actionlint clean, 15/15 push runs green, PRs closed by Dependabot |
-| 4b | U14 Node 26 (images #92 #99 #103 #104; `@types/node` 26 #108 #110 #112 #117) | D | todo |
+| 4b | U14 Node 26 (images #92 #99 #103 #104; `@types/node` 26 #108 #110 #112 #117) | D | done 2026-11-20 (`63fc762e`, vitest webstorage fix `9b6a063c`): compile-all ×7, `--sample` monolith-ts + multitier-ts 6/6, CI green, PRs closed; `engines` floors left at `>=22` |
 | 4b | U15 ESLint 10 (+ `@eslint/js` 10: #107 #109 #114 #115 #140–#143) | D (after U14) | todo |
 | 4b | U16 .NET 11 (sdk/aspnet images #97 #98 #101 #102, TFMs, System.Text.Json 11 #133 #134, MS.Extensions #127, nuget minor group #144) | D (after U15) | todo |
 | 4b | U17 .NET test deps majors (WireMock.Net 2 #132 #135 #146 #147, coverlet 10 #145) | D (after U16) | todo |
