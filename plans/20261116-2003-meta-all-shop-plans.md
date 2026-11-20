@@ -1,5 +1,7 @@
 # 2026-11-16 20:03 UTC — Plan coordination meta-plan: all shop plans
 
+> 🤖 **Picked up by agent** — `Valentina_Desk` at `2026-11-20T11:04:49Z`
+
 ## TL;DR
 
 **Why:** Shop has 21 open plans: three earlier meta-plans, the in-flight storefront/showcase/reliability work and the backlog. They share the one local docker host, the system-test drivers, the acceptance/QA/prod workflows and `frontend-react`, and several backlog plans were overtaken by later work. Running them one by one by hand repeats the docker clashes and double orchestration that REL #36/#45/#56 recorded.
@@ -26,7 +28,7 @@ The orchestrating session runs the **Wave tracker** top to bottom. Run the same 
 
 ## ▶ Next executable step (resume here)
 
-**Wave 3 close-out, then Wave 4:** U10 is done. U9's code is done. Its last item is one release verification. **In flight (2026-11-19 ~10:25 UTC):** meta-prerelease run **44510183439** on `b399cf71`. The previous retry 44402085567 failed only in the two .NET cloud acceptance stages: the stub-mode Clock breaker stayed open for 10 s after a 2 s queue at the single stubs instance. Fixed in `436acd63` (REL #89: .NET Clock/Tax stub breaker overrides), and both .NET cloud acceptance stages were re-run green on it (44502578752, 44502584994). First check its result (`gh run view 44510183439`). If it is red, triage the inner runs (CLAUDE.md "Fixing Failing Workflows") and re-dispatch `meta-prerelease-stage.yml`. Approve the `production-release` deployment of the meta-release it triggers (pre-approved, user 2026-11-18). Confirm: meta-release is green, `_prod-stage.yml` snapshot + cosign signatures, `deploy-keycloak` PUT brute-force on `shop-prod`, and REL #78's CSP shows no violations in the cloud multitier UI run (then enforce it). After that, delete B-PRG (`plans/backlog/after-cloud-deploy/20261009-1521-production-readiness-gaps.md`). Then Wave 4: **U12** B-MRF #8 path-param routes (Lane D).
+**Wave 3 close-out, then Wave 4:** U10 is done. U9's code is done. Its last item is one release verification. **In flight (2026-11-20 11:03 UTC):** scheduled meta-prerelease run **44724359792** on `f1bb9b34` (includes REL #89 and REL #90 fixes; runs 44510183439 and 44513488543 failed in 5 pipeline jobs and led to REL #90). Don't dispatch into its concurrency group while it runs. First check its result (`gh run view 44724359792`). If it is red, triage the inner runs (CLAUDE.md "Fixing Failing Workflows") and re-dispatch `meta-prerelease-stage.yml`. Approve the `production-release` deployment of the meta-release it triggers (pre-approved, user 2026-11-18). Confirm: meta-release is green, `_prod-stage.yml` snapshot + cosign signatures, `deploy-keycloak` PUT brute-force on `shop-prod`, and REL #78's CSP shows no violations in the cloud multitier UI run (then enforce it). After that, delete B-PRG (`plans/backlog/after-cloud-deploy/20261009-1521-production-readiness-gaps.md`). Wave 4 **U12** code is pushed (`82eff412`); once the meta run is finished, dispatch `cross-lang-system-verification.yml` on `main` and tick U12 when green. Then Wave 4b: Dependabot major upgrades, one unit each.
 
 ## Wave tracker
 
@@ -45,7 +47,7 @@ The orchestrating session runs the **Wave tracker** top to bottom. Run the same 
 | 3 | U9 B-PRG remainder (4.2 decided 2026-11-17: in-code login limit only, edge policy opt-in and cost-labelled; a noted shortcut) | B | code done 2026-11-18 (run 3: 5.6 `149cc519`/`8a94b4c1`, 5.4+6.3 `a540d1d6`, 6.4–6.6 `3751adfd`/`f6451ba9`, DAST run 44333808708 green, 4.1 prod secret is not the test secret); `--sample` green ×6; left: confirm snapshot/rollback, cosign signatures and the `shop-prod` brute-force PUT on the next meta-release, then delete B-PRG |
 | 3 | U10 FT frontend testing | D (after U8) | done 2026-11-18: Lighthouse run 44331924479 green (3 pages; warn budgets `25bfb043`), SignIn axe test `8d5ace02`, REL #70 rechecked per criterion (`d7841c8c`, UC-008.11 test `e73bde72`); FT deleted (`32fe298b`) |
 | 3 | U11 OUTBOX (confirmed 2026-11-17: Java-only worked example, a noted shortcut) | B (after U9), verified in D | done 2026-11-17, plan deleted; Lane D verified: relay delivers, `sent_at` set, audit rows written |
-| 4 | U12 B-MRF #8 path-param routes | D (after U10) | todo (G0: yes) |
+| 4 | U12 B-MRF #8 path-param routes | D (after U10) | code done 2026-11-20 (`82eff412`, plans `131067e6`): compile-all green, `--sample` green on monolith ×3 + multitier-java; local cross-lang UI had 30 s page-load timeouts on unchanged paths under low RAM (REL #92). Left: dispatch `cross-lang-system-verification.yml` on `131067e6` after meta-prerelease 44724359792 finishes; tick when green |
 | 4b | U13+ Dependabot major upgrades, one unit each (Spring Boot 4.1, Gradle 9.9, ESLint 10, `@types/node` 26, .NET 11, Node 25) | D | todo (user, 2026-11-17: after Wave 4, before X1) |
 | 5 | X1 cross-repo (last) | X | todo |
 | — | M manual (user) | — | open; **M-GCP** done 2026-11-18, user actions below |
