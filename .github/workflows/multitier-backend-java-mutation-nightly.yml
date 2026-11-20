@@ -81,7 +81,7 @@ jobs:
 
       - name: Setup Go
         if: ${{ env.GH_OPTIVEM_REF != '' }}
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
           go-version-file: ${{ runner.temp }}/gh-optivem/go.mod
           cache: false
@@ -117,7 +117,7 @@ jobs:
 
       - name: Upload PIT Report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: pit-report-backend-java
           path: system/multitier/backend-java/build/reports/pitest/

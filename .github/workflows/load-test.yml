@@ -116,7 +116,7 @@ jobs:
 
       - name: Upload k6 Results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: k6-results-monolith-${{ inputs.language }}
           path: ${{ runner.temp }}/k6/
