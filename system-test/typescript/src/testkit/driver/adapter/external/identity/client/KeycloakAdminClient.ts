@@ -203,7 +203,7 @@ function requireUrl(keycloakBaseUrl: string | undefined): string {
       "A new customer needs Keycloak: set KEYCLOAK_URL (or KEYCLOAK_URL_<MODE>) to the stack's Keycloak, e.g. http://localhost:8392.",
     );
   }
-  let host = '';
+  let host: string;
   try {
     host = new URL(keycloakBaseUrl).hostname;
   } catch (e) {

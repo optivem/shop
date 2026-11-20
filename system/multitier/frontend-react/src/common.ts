@@ -88,7 +88,7 @@ export async function extractApiError(response: Response): Promise<ApiError> {
   const body = await safeParseJson(response);
   const errorData = isProblemDetail(body) ? body : null;
 
-  let message = '';
+  let message: string;
   let fieldErrors: string[] | undefined = undefined;
 
   if (errorData?.detail) {
