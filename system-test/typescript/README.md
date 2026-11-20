@@ -4,7 +4,7 @@
 
 - gh CLI with the optivem extension: `gh extension install optivem/gh-optivem`
 - Docker Desktop (running)
-- Node.js 22+
+- Node.js 26+
 
 ## Running Tests
 

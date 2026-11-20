@@ -4,7 +4,7 @@ This is a sample monolithic application written in TypeScript using Next.js with
 
 ## Instructions
 
-Ensure you have Node.js 22 installed
+Ensure you have Node.js 26 installed
 
 ```shell
 node --version

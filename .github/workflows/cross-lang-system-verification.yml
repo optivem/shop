@@ -136,7 +136,7 @@ jobs:
         if: matrix.test-lang == 'typescript'
         uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 26
 
       - name: Install gh-optivem CLI extension
         uses: optivem/actions/install-gh-optivem@v1

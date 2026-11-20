@@ -10,7 +10,7 @@ Open up the 'backend' folder
 cd backend
 ```
 
-Ensure you have Node.js 22 installed
+Ensure you have Node.js 26 installed
 
 ```shell
 node --version
