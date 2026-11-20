@@ -1,5 +1,6 @@
 # 2026-11-16 20:03 UTC — Plan coordination meta-plan: all shop plans
 
+
 ## TL;DR
 
 **Why:** Shop has 21 open plans: three earlier meta-plans, the in-flight storefront/showcase/reliability work and the backlog. They share the one local docker host, the system-test drivers, the acceptance/QA/prod workflows and `frontend-react`, and several backlog plans were overtaken by later work. Running them one by one by hand repeats the docker clashes and double orchestration that REL #36/#45/#56 recorded.
@@ -26,7 +27,7 @@ The orchestrating session runs the **Wave tracker** top to bottom. Run the same 
 
 ## ▶ Next executable step (resume here)
 
-**Wave 4b, U16 .NET 11** (Lane D). Waves 0–4 are done, and in Wave 4b U13, U14 and U15 are done (session of 2026-11-20, which ended green and pushed). U16: apply Dependabot #97 #98 #101 #102 (dotnet/sdk and aspnet 8.0 → 11.0 images for `system/monolith/dotnet` and `system/multitier/backend-dotnet`) by hand on `main`, plus the matching `TargetFramework` net8.0 → net11.0 in every `.csproj` (system, system-test/dotnet, external-systems), `global.json` and the `setup-dotnet` `dotnet-version` inputs. Then fold in System.Text.Json 11 (#133 #134), Microsoft.Extensions.Configuration (#127) and the nuget-minor-patch group (#144, its check is red, so find out why). Gate: `dotnet build` (it runs the unit tests) in every .NET project, `./compile-all.sh`, then `--sample` for monolith-dotnet and multitier-dotnet (one stack at a time, ≥5 GB free RAM, `dotnet build-server shutdown` afterwards, REL #92), push with `gh optivem commit --paths`, and check CI on the SHA. Then U17 → U20 in tracker order. Memory note: Claude Code killed `./compile-all.sh` once for low RAM on 2026-11-20. Close IDEs first, or compile the touched projects one at a time.
+**Wave 4b, U16 .NET 11, Lane D gate only** (on host `Valentina_Desk`). The code is done but **uncommitted** in that machine's working tree (44 files + REL #96 in the REL plan), session 2026-11-20. Details: .NET 11 SDK 11.0.100 installed via winget; images and `net11.0` everywhere (no `global.json` exists); #144 applied (Testcontainers 4.17 `UntilPortIsAvailable` → `UntilInternalTcpPortIsAvailable(8080)`); #127 applied; #133/#134 handled by removing the `System.Text.Json` reference (it ships in the framework on net11); ASP.NET Core / EF Core / Npgsql EF moved to 11.0.0 (TestHost 8 fails on the 11 runtime), plus `RemoveAll<IDbContextOptionsConfiguration<AppDbContext>>()` in 10 test factories (EF Core 9+ provider swap). `dotnet build` is green in every project and `./compile-all.sh` passed 7/7. **Left:** `--sample` monolith-dotnet (Claude Code killed it for low RAM during `system-test setup`, with vmmemWSL ~9.2 GB and VS Code ~2.5 GB), then multitier-dotnet. Close VS Code/IDEs first and aim for ≥8 GB free. If green: `gh optivem commit --repo shop --paths <44 code files>` with message `build(deps): .NET 11 (images, net11.0, ASP.NET/EF Core 11, MS.Extensions.Configuration 11, nuget minor group); supersedes #97 #98 #101 #102 #127 #133 #134 #144`, then commit the REL plan separately, check CI on the SHA, and close the PRs if Dependabot doesn't. Then U17 → U20 in tracker order.
 
 ## Wave tracker
 
@@ -50,7 +51,7 @@ The orchestrating session runs the **Wave tracker** top to bottom. Run the same 
 | 4b | U13 GitHub Actions majors (#118–#123: upload-artifact 7, setup-go 7, cache 6, setup-dotnet 6, setup-node 7) | W | done 2026-11-20 (`7750351c`): 43 `uses:` bumps, actionlint clean, 15/15 push runs green, PRs closed by Dependabot |
 | 4b | U14 Node 26 (images #92 #99 #103 #104; `@types/node` 26 #108 #110 #112 #117) | D | done 2026-11-20 (`63fc762e`, vitest webstorage fix `9b6a063c`): compile-all ×7, `--sample` monolith-ts + multitier-ts 6/6, CI green, PRs closed; `engines` floors left at `>=22` |
 | 4b | U15 ESLint 10 | D (after U14) | done 2026-11-20 (`97266b2f`) for system-test, backend-typescript and frontend-react (lint/typecheck/tests green; 2 `no-useless-assignment` fixes); monolith stays on ESLint 9, blocked by eslint-config-next's plugins (REL #95, PRs #141/#109 left open) |
-| 4b | U16 .NET 11 (sdk/aspnet images #97 #98 #101 #102, TFMs, System.Text.Json 11 #133 #134, MS.Extensions #127, nuget minor group #144) | D (after U15) | todo |
+| 4b | U16 .NET 11 (sdk/aspnet images #97 #98 #101 #102, TFMs, System.Text.Json 11 #133 #134, MS.Extensions #127, nuget minor group #144) | D (after U15) | in progress 2026-11-20: code + builds green, uncommitted on `Valentina_Desk`; `--sample` blocked on host RAM |
 | 4b | U17 .NET test deps majors (WireMock.Net 2 #132 #135 #146 #147, coverlet 10 #145) | D (after U16) | todo |
 | 4b | U18 Gradle 9.9 (#136–#139) | D (after U17) | todo |
 | 4b | U19 Spring Boot 4.1 (#87 #90 #94 #96) | D (after U18) | todo |
