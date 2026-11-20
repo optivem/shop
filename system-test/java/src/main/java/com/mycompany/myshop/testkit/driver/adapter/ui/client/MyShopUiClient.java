@@ -128,7 +128,7 @@ public class MyShopUiClient implements AutoCloseable {
             return new ProductPage(visitorPageClient);
         }
         openHomePage();
-        openDirectly(path, path);
+        openDirectly(path);
         return new ProductPage(pageClient);
     }
 
@@ -201,7 +201,7 @@ public class MyShopUiClient implements AutoCloseable {
             response = page.navigate(baseUrl + CHECKOUT_PATH);
         } else {
             openHomePage();
-            openDirectly(CHECKOUT_PATH, CHECKOUT_PATH);
+            openDirectly(CHECKOUT_PATH);
         }
         waitForCheckoutOutcome();
     }
@@ -254,7 +254,7 @@ public class MyShopUiClient implements AutoCloseable {
             response = page.navigate(baseUrl + CART_PATH);
             return new CartPage(visitorPageClient);
         }
-        openDirectly(CART_PATH, CART_PATH);
+        openDirectly(CART_PATH);
         return new CartPage(pageClient);
     }
 
@@ -292,7 +292,7 @@ public class MyShopUiClient implements AutoCloseable {
     /** Opens the profile by its page address, as the logged-in user, and waits until it has loaded. */
     public ProfilePage openProfilePage() {
         openHomePage();
-        openDirectly(PROFILE_PATH, PROFILE_PATH);
+        openDirectly(PROFILE_PATH);
         var profilePage = new ProfilePage(pageClient);
         profilePage.waitForLoaded();
         return profilePage;
@@ -321,7 +321,7 @@ public class MyShopUiClient implements AutoCloseable {
     /** Opens an order by its URL, not through the order history. The app must already be open. */
     public OrderDetailsPage openOrderDetailsPage(String orderNumber) {
         var encodedOrderNumber = URLEncoder.encode(orderNumber, StandardCharsets.UTF_8).replace("+", "%20");
-        openDirectly("/order-details?orderNumber=" + encodedOrderNumber, "/order-details/" + encodedOrderNumber);
+        openDirectly("/order-details/" + encodedOrderNumber);
         return new OrderDetailsPage(pageClient);
     }
 
@@ -336,13 +336,8 @@ public class MyShopUiClient implements AutoCloseable {
             throw new IllegalStateException("Signing in can only be exercised against a system with a login");
         }
         var encodedOrderNumber = URLEncoder.encode(orderNumber, StandardCharsets.UTF_8).replace("+", "%20");
-        var serverPath = "/order-details?orderNumber=" + encodedOrderNumber;
         startVisitorSession();
-        response = page.navigate(baseUrl + serverPath);
-        // The React frontend matches no route for the server path: load its own route, as a pasted link would.
-        if (page.locator(SINGLE_PAGE_APP_ROOT_SELECTOR).count() > 0) {
-            response = page.navigate(baseUrl + "/order-details/" + encodedOrderNumber);
-        }
+        response = page.navigate(baseUrl + "/order-details/" + encodedOrderNumber);
         userLogin.ensureLoggedIn(page, OrderDetailsPage.READY_SELECTOR);
         // A single-page UI may show its (public) landing page while it still exchanges the login code, and only then
         // move to the page the visitor came from: wait until the code is gone from the address.
@@ -362,30 +357,19 @@ public class MyShopUiClient implements AutoCloseable {
 
     /** Opens {@code path} in a throwaway session that never logs in, and requires the app to send it to the login form. */
     public void assertLoginRequiredFor(String path) {
-        assertLoginRequiredFor(path, path);
-    }
-
-    /**
-     * Like {@link #assertLoginRequiredFor(String)}, for a page whose React route differs from its server-rendered path:
-     * the React frontend matches no route for the server path, so it would never ask to log in.
-     */
-    public void assertLoginRequiredFor(String serverPath, String singlePageAppRoute) {
         if (login == null) {
             throw new IllegalStateException("Anonymous access can only be exercised against a system with a login");
         }
         try (var anonymousContext = browser.newContext()) {
             var anonymousPage = anonymousContext.newPage();
-            anonymousPage.navigate(baseUrl + serverPath);
-            if (!singlePageAppRoute.equals(serverPath) && anonymousPage.locator(SINGLE_PAGE_APP_ROOT_SELECTOR).count() > 0) {
-                anonymousPage.navigate(baseUrl + singlePageAppRoute);
-            }
+            anonymousPage.navigate(baseUrl + path);
             login.waitForLoginForm(anonymousPage);
         }
     }
 
     /** The server-rendered UIs refuse with a 403 response; the React frontend renders a "Not authorized" page. */
     private <T> Result<T, SystemError> openRestrictedPage(String path, String readySelector, T openedPage) {
-        openDirectly(path, path);
+        openDirectly(path);
 
         if (response != null && response.status() == HttpStatus.FORBIDDEN.value()) {
             return failure(PERMISSION_DENIED);
@@ -399,11 +383,11 @@ public class MyShopUiClient implements AutoCloseable {
      * Server-rendered UIs are simply navigated to. The React frontend keeps its session in memory and returns to
      * the home page after the login redirect, so a reload would lose the URL: it is moved to the route in place.
      */
-    private void openDirectly(String serverPath, String singlePageAppRoute) {
+    private void openDirectly(String path) {
         if (page.locator(SINGLE_PAGE_APP_ROOT_SELECTOR).count() > 0) {
-            pageClient.navigateWithinApp(singlePageAppRoute);
+            pageClient.navigateWithinApp(path);
         } else {
-            response = page.navigate(baseUrl + serverPath);
+            response = page.navigate(baseUrl + path);
         }
     }
 

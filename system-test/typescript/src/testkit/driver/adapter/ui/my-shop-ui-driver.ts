@@ -628,7 +628,7 @@ export class MyShopUiDriver implements MyShopDriver {
 
   private async loginRequiredForOrder<T>(orderNumber: string): Promise<Result<T, SystemError>> {
     const encodedOrderNumber = encodeURIComponent(orderNumber);
-    await this.client.assertLoginRequiredFor(`/order-details?orderNumber=${encodedOrderNumber}`, `/order-details/${encodedOrderNumber}`);
+    await this.client.assertLoginRequiredFor(`/order-details/${encodedOrderNumber}`);
     return failure({ message: AUTHENTICATION_REQUIRED, fieldErrors: [] });
   }
 

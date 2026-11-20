@@ -28,7 +28,7 @@
                 <ul class="confirmed-orders" aria-label="Confirmed Orders">
                     <li th:each="line : ${result.placed()}" class="confirmed-order">
                         <div>
-                            <a th:href="${'/order-details?orderNumber=' + #uris.escapeQueryParam(line.orderNumber())}"
+                            <a th:href="${'/order-details/' + #uris.escapePathSegment(line.orderNumber())}"
                                class="order-number-link" th:attr="aria-label=${'Confirmed Order ' + line.orderNumber()}"
                                th:text="${line.orderNumber()}">ORD-1</a>
                             <p class="confirmed-order-meta mb-0" th:text="${line.sku() + ' × ' + line.quantity()}">SKU × 1</p>

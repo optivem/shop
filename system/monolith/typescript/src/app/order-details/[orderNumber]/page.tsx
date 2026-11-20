@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, Suspense, type ReactNode } from "react";
-import { useSearchParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { Icon } from "@/components/Icon";
 import { AccountLayout, LoadingSpinner } from "@/components/StoreLayout";
@@ -17,8 +17,7 @@ import {
 } from "@/lib/api-types";
 
 function OrderDetailsContent() {
-  const searchParams = useSearchParams();
-  const orderNumber = searchParams.get("orderNumber");
+  const { orderNumber } = useParams<{ orderNumber: string }>();
   // Only an admin is offered Deliver Order (UC-012 BR-3).
   const isAdmin = useSession()?.isAdmin ?? false;
 

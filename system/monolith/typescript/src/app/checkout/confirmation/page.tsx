@@ -8,7 +8,7 @@ import { useCatalog } from "@/components/StorefrontProviders";
 import { loadConfirmation } from "@/lib/storefront/confirmation-store";
 import type { CheckoutResult } from "@/lib/storefront/place-checkout-orders";
 
-const orderDetailsPath = (orderNumber: string) => `/order-details?orderNumber=${encodeURIComponent(orderNumber)}`;
+const orderDetailsPath = (orderNumber: string) => `/order-details/${encodeURIComponent(orderNumber)}`;
 
 /** `/checkout/confirmation`: the orders just placed (and, after a partial failure, the rejected lines). */
 export default function OrderConfirmationPage() {

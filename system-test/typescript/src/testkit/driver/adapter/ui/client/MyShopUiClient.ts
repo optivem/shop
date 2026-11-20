@@ -132,7 +132,7 @@ export class MyShopUiClient {
     }
     const result = await this.openHomePage();
     if (!result.success) return failure(result.error);
-    await this.openDirectly(path, path);
+    await this.openDirectly(path);
     return success(new ProductPage(this.requirePage()));
   }
 
@@ -207,7 +207,7 @@ export class MyShopUiClient {
     } else {
       const home = await this.openHomePage();
       if (!home.success) return failure(home.error);
-      await this.openDirectly(CHECKOUT_PATH, CHECKOUT_PATH);
+      await this.openDirectly(CHECKOUT_PATH);
     }
     await this.waitForCheckoutOutcome();
     return success(undefined);
@@ -278,7 +278,7 @@ export class MyShopUiClient {
     if (this.visitorSession) {
       await this.requirePage().goto(`${this.baseUrl}${CART_PATH}`);
     } else {
-      await this.openDirectly(CART_PATH, CART_PATH);
+      await this.openDirectly(CART_PATH);
     }
     return new CartPage(this.requirePage());
   }
@@ -287,7 +287,7 @@ export class MyShopUiClient {
   async openProfilePage(): Promise<Result<ProfilePage, SystemError>> {
     const home = await this.openHomePage();
     if (!home.success) return failure(home.error);
-    await this.openDirectly(PROFILE_PATH, PROFILE_PATH);
+    await this.openDirectly(PROFILE_PATH);
     const profilePage = new ProfilePage(this.requirePage());
     await profilePage.waitForLoaded();
     return success(profilePage);
@@ -318,7 +318,7 @@ export class MyShopUiClient {
   /** Opens an order by its URL, not through the order history. The app must already be open. */
   async openOrderDetailsPage(orderNumber: string): Promise<OrderDetailsPage> {
     const encodedOrderNumber = encodeURIComponent(orderNumber);
-    await this.openDirectly(`/order-details?orderNumber=${encodedOrderNumber}`, `/order-details/${encodedOrderNumber}`);
+    await this.openDirectly(`/order-details/${encodedOrderNumber}`);
     return new OrderDetailsPage(this.requirePage());
   }
 
@@ -335,11 +335,7 @@ export class MyShopUiClient {
     const encodedOrderNumber = encodeURIComponent(orderNumber);
     await this.startVisitorSession();
     const page = this.requirePage();
-    let response = await page.goto(`${this.baseUrl}/order-details?orderNumber=${encodedOrderNumber}`);
-    // The React frontend matches no route for the server path: load its own route, as a pasted link would.
-    if ((await page.locator(SINGLE_PAGE_APP_ROOT_SELECTOR).count()) > 0) {
-      response = await page.goto(`${this.baseUrl}/order-details/${encodedOrderNumber}`);
-    }
+    const response = await page.goto(`${this.baseUrl}/order-details/${encodedOrderNumber}`);
     this.lastResponseStatus = response?.status();
     await userLogin.ensureLoggedIn(page, ORDER_DETAILS_READY_SELECTOR);
     // A single-page UI may show its (public) landing page while it still exchanges the login code, and only then
@@ -363,21 +359,16 @@ export class MyShopUiClient {
   }
 
   /**
-   * Opens `serverPath` in a throwaway session that never logs in, and requires the app to send it to the login form.
-   * The React frontend matches no route for a server path that differs from its own route (`singlePageAppRoute`),
-   * so it would never ask to log in: it is moved to that route instead.
+   * Opens `path` in a throwaway session that never logs in, and requires the app to send it to the login form.
    */
-  async assertLoginRequiredFor(serverPath: string, singlePageAppRoute: string = serverPath): Promise<void> {
+  async assertLoginRequiredFor(path: string): Promise<void> {
     if (!this.login) {
       throw new Error('Anonymous access can only be exercised against a system with a login');
     }
     const anonymousContext = await this.browser.newContext();
     try {
       const anonymousPage = await anonymousContext.newPage();
-      await anonymousPage.goto(`${this.baseUrl}${serverPath}`);
-      if (singlePageAppRoute !== serverPath && (await anonymousPage.locator(SINGLE_PAGE_APP_ROOT_SELECTOR).count()) > 0) {
-        await anonymousPage.goto(`${this.baseUrl}${singlePageAppRoute}`);
-      }
+      await anonymousPage.goto(`${this.baseUrl}${path}`);
       await this.login.waitForLoginForm(anonymousPage);
     } finally {
       await anonymousContext.close();
@@ -414,7 +405,7 @@ export class MyShopUiClient {
     readySelector: string,
     openedPage: T,
   ): Promise<Result<T, SystemError>> {
-    await this.openDirectly(path, path);
+    await this.openDirectly(path);
 
     if (this.lastResponseStatus === FORBIDDEN_STATUS) {
       return failure({ message: PERMISSION_DENIED, fieldErrors: [] });
@@ -435,13 +426,13 @@ export class MyShopUiClient {
    * Server-rendered UIs are simply navigated to. The React frontend keeps its session in memory and returns to
    * the home page after the login redirect, so a reload would lose the URL: it is moved to the route in place.
    */
-  private async openDirectly(serverPath: string, singlePageAppRoute: string): Promise<void> {
+  private async openDirectly(path: string): Promise<void> {
     const page = this.requirePage();
     if ((await page.locator(SINGLE_PAGE_APP_ROOT_SELECTOR).count()) > 0) {
-      const route = JSON.stringify(singlePageAppRoute);
+      const route = JSON.stringify(path);
       await page.evaluate(`history.pushState({}, '', ${route}); dispatchEvent(new PopStateEvent('popstate'));`);
     } else {
-      const response = await page.goto(`${this.baseUrl}${serverPath}`);
+      const response = await page.goto(`${this.baseUrl}${path}`);
       this.lastResponseStatus = response?.status();
     }
   }

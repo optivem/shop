@@ -46,7 +46,7 @@ All three monoliths are on Bootstrap 5.3.3, which the Market theme's `--bs-*` va
 | `button[aria-label='Search']` | CatalogPage (all 3) | `StoreHeader.tsx:55` | Java `layout.html:49`, .NET `_Layout.cshtml:58`, TS `StoreHeader.tsx:68` |
 | `nav[aria-label='Store navigation'] a:text-is('<Category>')` | CatalogPage `clickHeaderCategory` (all 3) | `StoreHeader.tsx:83-90` category links | Java `layout.html:70`, .NET `_Layout.cshtml:81`, TS `StoreHeader.tsx:94` |
 | `[aria-label='Cart Item Count']` (integer text only) | ProductPage (uncommitted WIP) | `StoreHeader.tsx:64` badge, rendered only when count > 0 | Java `layout.html:56`, .NET `_Layout.cshtml:64`, TS `StoreHeader.tsx:77` |
-| `[role='alert'][data-notification-id]` + `.notification.success` / `.notification.error` + children `.error-message`, `.field-error` | BasePage (all 3), legacy mod03 | `components/Notification.tsx` (rendered by `StoreLayout.tsx`) | Java `layout.html:87` + inline JS `innerHTML` strings in `new-order.html`, `order-details.html`, `admin-coupons.html`, `account.html`; .NET `_Layout.cshtml:110` + same inline JS in `NewOrder/OrderDetails/AdminCoupons/Account.cshtml`; TS `components/StoreLayout.tsx:39,51` + `new-order/page.tsx`, `order-details/page.tsx`, `admin-coupons/page.tsx` |
+| `[role='alert'][data-notification-id]` + `.notification.success` / `.notification.error` + children `.error-message`, `.field-error` | BasePage (all 3), legacy mod03 | `components/Notification.tsx` (rendered by `StoreLayout.tsx`) | Java `layout.html:87` + inline JS `innerHTML` strings in `new-order.html`, `order-details.html`, `admin-coupons.html`, `account.html`; .NET `_Layout.cshtml:110` + same inline JS in `NewOrder/OrderDetails/AdminCoupons/Account.cshtml`; TS `components/StoreLayout.tsx:39,51` + `new-order/page.tsx`, `order-details/[orderNumber]/page.tsx`, `admin-coupons/page.tsx` |
 | `h1:has-text('Not authorized'):visible` | MyShopUiClient `openRestrictedPage` (all 3) | `auth/RequireAdmin.tsx:12`, `auth/RequireCanPlaceOrder.tsx:12` (`<h1 className="h4">`) | not used (monoliths answer 403) |
 | `#kc-login`, `#username`, `#password` | KeycloakUiLogin, MyShopUiClient | Keycloak login theme (not storefront) | same |
 
@@ -141,9 +141,9 @@ Page object: OrderHistoryPage (all 3) + legacy mod03. frontend-react: `pages/Ord
 
 Column order (React): Order Number, [Customer — admin only], Order Date, SKU, Quantity, Country, Total Price, Coupon Code, Status, Actions. Only "first column = Order Number" is load-bearing.
 
-### Order details `/order-details/{orderNumber}` (React) / `/order-details?orderNumber=` (monoliths)
+### Order details `/order-details/{orderNumber}`
 
-Page object: OrderDetailsPage (all 3) + legacy mod03. frontend-react: `pages/OrderDetails.tsx`, `features/orders/OrderDetailView.tsx`, `components/DetailField.tsx`, `components/DataState.tsx`, `components/ErrorMessage.tsx`. Monoliths: Java `templates/order-details.html`, .NET `Pages/OrderDetails.cshtml`, TS `src/app/order-details/page.tsx`.
+Page object: OrderDetailsPage (all 3) + legacy mod03. frontend-react: `pages/OrderDetails.tsx`, `features/orders/OrderDetailView.tsx`, `components/DetailField.tsx`, `components/DataState.tsx`, `components/ErrorMessage.tsx`. Monoliths: Java `templates/order-details.html`, .NET `Pages/OrderDetails.cshtml`, TS `src/app/order-details/[orderNumber]/page.tsx`.
 
 | Selector | Text contract | frontend-react element |
 |---|---|---|

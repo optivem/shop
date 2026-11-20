@@ -222,7 +222,7 @@ class StorefrontPagesTest {
         mockMvc.perform(get("/checkout/confirmation").session(session).with(customer()))
                 .andExpect(content().string(containsString("Thank you for your order!")))
                 .andExpect(content().string(containsString("aria-label=\"Confirmed Order ORD-1\"")))
-                .andExpect(content().string(containsString("href=\"/order-details?orderNumber=ORD-1\"")));
+                .andExpect(content().string(containsString("href=\"/order-details/ORD-1\"")));
     }
 
     @Test

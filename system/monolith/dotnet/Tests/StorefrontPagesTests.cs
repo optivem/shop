@@ -425,6 +425,6 @@ public partial class StorefrontPagesTests : IClassFixture<ShopWebApplicationFact
     [GeneratedRegex("name=\"__RequestVerificationToken\" type=\"hidden\" value=\"([^\"]+)\"")]
     private static partial Regex AntiforgeryToken();
 
-    [GeneratedRegex("href=\"/order-details\\?orderNumber=([^\"]+)\"")]
+    [GeneratedRegex("href=\"/order-details/([^\"]+)\"")]
     private static partial Regex OrderLink();
 }

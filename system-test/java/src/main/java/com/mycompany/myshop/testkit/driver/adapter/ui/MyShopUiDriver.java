@@ -775,7 +775,7 @@ public class MyShopUiDriver implements MyShopDriver {
 
     private <T> Result<T, SystemError> loginRequiredForOrder(String orderNumber) {
         var encodedOrderNumber = URLEncoder.encode(orderNumber, StandardCharsets.UTF_8).replace("+", "%20");
-        client.assertLoginRequiredFor("/order-details?orderNumber=" + encodedOrderNumber, "/order-details/" + encodedOrderNumber);
+        client.assertLoginRequiredFor("/order-details/" + encodedOrderNumber);
         return failure(MyShopUiClient.AUTHENTICATION_REQUIRED);
     }
 

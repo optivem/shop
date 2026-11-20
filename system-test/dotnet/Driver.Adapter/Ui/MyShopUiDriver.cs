@@ -845,7 +845,7 @@ public class MyShopUiDriver : IMyShopDriver
     private async Task<Result<T, SystemError>> LoginRequiredForOrderAsync<T>(string? orderNumber)
     {
         var encodedOrderNumber = Uri.EscapeDataString(orderNumber ?? string.Empty);
-        await _client.AssertLoginRequiredForAsync($"/order-details?orderNumber={encodedOrderNumber}", $"/order-details/{encodedOrderNumber}");
+        await _client.AssertLoginRequiredForAsync($"/order-details/{encodedOrderNumber}");
         return Failure<T>(MyShopUiClient.AuthenticationRequired);
     }
 

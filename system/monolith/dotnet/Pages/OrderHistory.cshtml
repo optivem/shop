@@ -197,7 +197,7 @@
                     '<td class="orders-cell-quantity">' + order.quantity + '</td>' +
                     '<td class="orders-cell-totalPrice"><span class="order-total">$' + order.totalPrice + '</span></td>' +
                     '<td class="orders-cell-status"><span class="order-status status-' + order.status + '">' + order.status + '</span></td>' +
-                    '<td class="orders-cell-actions"><a class="order-view-link" href="/order-details?orderNumber=' + encodeURIComponent(order.orderNumber) + '">View Details' + chevronIcon + '</a></td>';
+                    '<td class="orders-cell-actions"><a class="order-view-link" href="/order-details/' + encodeURIComponent(order.orderNumber) + '">View Details' + chevronIcon + '</a></td>';
                 tbody.appendChild(row);
             });
 

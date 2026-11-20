@@ -24,7 +24,7 @@ describe('decide', () => {
   it.each([
     ['GET', '/order-history'],
     ['GET', '/account'],
-    ['GET', '/order-details'],
+    ['GET', '/order-details/ORD-1'],
     ['GET', '/api/orders'],
     ['GET', '/api/orders/ORD-1'],
     ['POST', '/api/orders/ORD-1/cancel'],

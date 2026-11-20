@@ -48,7 +48,7 @@ Behaviour, business rules and acceptance criteria live in the use cases ([index]
 | `/checkout/confirmation` | Order confirmation | **customer** | Shows the order numbers just created |
 | `/new-order` | Quick order (by SKU) | **customer** | Today's New Order form, unchanged. **Test contract.** |
 | `/order-history` | My orders | **logged in** | Unchanged contract, restyled |
-| `/order-details/{orderNumber}` (SPA), `/order-details?orderNumber=` (server-rendered) | Order details | **logged in** | Unchanged contract, restyled |
+| `/order-details/{orderNumber}` | Order details | **logged in** | Unchanged contract, restyled |
 | `/admin-coupons` | Admin › Coupons | **admin** | Unchanged contract, restyled |
 | `/sign-in` | Starts login | anonymous | Redirects to Keycloak and returns to `returnUrl` (default `/`) |
 
@@ -278,7 +278,7 @@ The system-test UI drivers use these selectors in Java, .NET and TypeScript (`sy
 - `#root` (SPA detection).
 - Keycloak: `#username`, `#password`, `#kc-login`.
 - `h1:has-text('Not authorized')` (SPA refusal). The server-rendered UIs return a 403 status.
-- Anonymous requests to `/new-order`, `/order-details?…`, `/order-history` and `/admin-coupons` land on the Keycloak form.
+- Anonymous requests to `/new-order`, `/order-details/{orderNumber}`, `/order-history` and `/admin-coupons` land on the Keycloak form.
 
 **Notifications**
 

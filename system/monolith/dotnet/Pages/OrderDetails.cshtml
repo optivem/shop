@@ -1,4 +1,4 @@
-@page "/order-details"
+@page "/order-details/{orderNumber}"
 @model MyCompany.MyShop.Monolith.Pages.OrderDetailsModel
 @using MyCompany.MyShop.Monolith.Pages.Storefront
 @{
@@ -16,7 +16,7 @@
     </ol>
 </nav>
 
-<div class="order-detail">
+<div class="order-detail" data-order-number="@Model.OrderNumber">
     <a href="/order-history" class="btn btn-link order-back">@Icons.Svg("arrow-left")Back to Order History</a>
 
     <div id="loading" class="market-panel text-center py-5">
@@ -112,8 +112,7 @@
 @section Scripts {
 <script>
     async function loadOrderDetails() {
-        var params = new URLSearchParams(window.location.search);
-        var orderNumber = params.get('orderNumber');
+        var orderNumber = document.querySelector('[data-order-number]').dataset.orderNumber;
         var loading = document.getElementById('loading');
         var orderDetails = document.getElementById('orderDetails');
         var notFound = document.getElementById('notFound');
@@ -185,8 +184,7 @@
     }
 
     async function cancelOrder() {
-        var params = new URLSearchParams(window.location.search);
-        var orderNumber = params.get('orderNumber');
+        var orderNumber = document.querySelector('[data-order-number]').dataset.orderNumber;
         if (!orderNumber) return;
 
         var notifications = document.getElementById('notifications');
@@ -227,8 +225,7 @@
     }
 
     async function deliverOrder() {
-        var params = new URLSearchParams(window.location.search);
-        var orderNumber = params.get('orderNumber');
+        var orderNumber = document.querySelector('[data-order-number]').dataset.orderNumber;
         if (!orderNumber) return;
 
         var notifications = document.getElementById('notifications');

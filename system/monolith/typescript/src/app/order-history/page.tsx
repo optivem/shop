@@ -225,7 +225,7 @@ export default function OrderHistoryPage() {
                       <td className="orders-cell-actions">
                         {/* "View Details" must stay the link's first text node: drivers find it with contains(text(), ...). */}
                         <Link
-                          href={`/order-details?orderNumber=${encodeURIComponent(order.orderNumber)}`}
+                          href={`/order-details/${encodeURIComponent(order.orderNumber)}`}
                           className="order-view-link"
                         >
                           View Details

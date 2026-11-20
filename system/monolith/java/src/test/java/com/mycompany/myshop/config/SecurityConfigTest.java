@@ -106,7 +106,7 @@ class SecurityConfigTest {
         route("GET", "/new-order", Access.CUSTOMER_ONLY),
         route("POST", "/new-order", Access.CUSTOMER_ONLY),
         route("GET", "/order-history", Access.AUTHENTICATED),
-        route("GET", "/order-details", Access.AUTHENTICATED),
+        route("GET", "/order-details/{orderNumber}", Access.AUTHENTICATED),
         route("GET", "/admin-coupons", Access.ADMIN_ONLY));
 
     private static HttpServer jwksServer;

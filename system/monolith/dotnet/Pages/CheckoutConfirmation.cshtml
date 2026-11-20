@@ -30,7 +30,7 @@
                 {
                     <li class="confirmed-order">
                         <div>
-                            <a href="@("/order-details?orderNumber=" + Uri.EscapeDataString(line.OrderNumber))" class="order-number-link"
+                            <a href="@("/order-details/" + Uri.EscapeDataString(line.OrderNumber))" class="order-number-link"
                                aria-label="@("Confirmed Order " + line.OrderNumber)">@line.OrderNumber</a>
                             <p class="confirmed-order-meta mb-0">@line.Sku × @line.Quantity</p>
                         </div>

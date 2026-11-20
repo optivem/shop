@@ -289,7 +289,7 @@ public class MyShopUiClient : IAsyncDisposable
             return new ProductPage(_visitorPageClient);
         }
         await OpenHomePageAsync();
-        await OpenDirectlyAsync(path, path);
+        await OpenDirectlyAsync(path);
         return new ProductPage(new PlaywrightGateway(_page, _baseUrl, _login));
     }
 
@@ -361,7 +361,7 @@ public class MyShopUiClient : IAsyncDisposable
         else
         {
             await OpenHomePageAsync();
-            await OpenDirectlyAsync(CheckoutPath, CheckoutPath);
+            await OpenDirectlyAsync(CheckoutPath);
         }
         await WaitForCheckoutOutcomeAsync();
     }
@@ -418,7 +418,7 @@ public class MyShopUiClient : IAsyncDisposable
             _response = await _page.GotoAsync(_baseUrl + CartPath);
             return new CartPage(_visitorPageClient);
         }
-        await OpenDirectlyAsync(CartPath, CartPath);
+        await OpenDirectlyAsync(CartPath);
         return new CartPage(new PlaywrightGateway(_page, _baseUrl, _login));
     }
 
@@ -426,7 +426,7 @@ public class MyShopUiClient : IAsyncDisposable
     public async Task<ProfilePage> OpenProfilePageAsync()
     {
         await OpenHomePageAsync();
-        await OpenDirectlyAsync(ProfilePath, ProfilePath);
+        await OpenDirectlyAsync(ProfilePath);
         var profilePage = new ProfilePage(new PlaywrightGateway(_page, _baseUrl, _login));
         await profilePage.WaitForLoadedAsync();
         return profilePage;
@@ -455,7 +455,7 @@ public class MyShopUiClient : IAsyncDisposable
     public async Task<OrderDetailsPage> OpenOrderDetailsPageAsync(string? orderNumber)
     {
         var encodedOrderNumber = Uri.EscapeDataString(orderNumber ?? string.Empty);
-        await OpenDirectlyAsync($"/order-details?orderNumber={encodedOrderNumber}", $"/order-details/{encodedOrderNumber}");
+        await OpenDirectlyAsync($"/order-details/{encodedOrderNumber}");
         return new OrderDetailsPage(new PlaywrightGateway(_page, _baseUrl, _login));
     }
 
@@ -470,12 +470,7 @@ public class MyShopUiClient : IAsyncDisposable
             ?? throw new InvalidOperationException("Signing in can only be exercised against a system with a login");
         var encodedOrderNumber = Uri.EscapeDataString(orderNumber ?? string.Empty);
         await StartVisitorSessionAsync();
-        _response = await _page.GotoAsync($"{_baseUrl}/order-details?orderNumber={encodedOrderNumber}");
-        // The React frontend matches no route for the server path: load its own route, as a pasted link would.
-        if (await _page.Locator(SinglePageAppRootSelector).CountAsync() > 0)
-        {
-            _response = await _page.GotoAsync($"{_baseUrl}/order-details/{encodedOrderNumber}");
-        }
+        _response = await _page.GotoAsync($"{_baseUrl}/order-details/{encodedOrderNumber}");
         await userLogin.EnsureLoggedInAsync(_page, OrderDetailsPage.ReadySelector);
         // A single-page UI may show its (public) landing page while it still exchanges the login code, and only then
         // move to the page the visitor came from: wait until the code is gone from the address.
@@ -498,13 +493,7 @@ public class MyShopUiClient : IAsyncDisposable
     }
 
     /// <summary>Opens <paramref name="path"/> in a throwaway session that never logs in, and requires the app to send it to the login form.</summary>
-    public Task AssertLoginRequiredForAsync(string path) => AssertLoginRequiredForAsync(path, path);
-
-    /// <summary>
-    /// Like <see cref="AssertLoginRequiredForAsync(string)"/>, for a page whose React route differs from its
-    /// server-rendered path: the React frontend matches no route for the server path, so it would never ask to log in.
-    /// </summary>
-    public async Task AssertLoginRequiredForAsync(string serverPath, string singlePageAppRoute)
+    public async Task AssertLoginRequiredForAsync(string path)
     {
         if (_login == null)
         {
@@ -513,18 +502,14 @@ public class MyShopUiClient : IAsyncDisposable
 
         await using var anonymousContext = await _browser.NewContextAsync();
         var anonymousPage = await anonymousContext.NewPageAsync();
-        await anonymousPage.GotoAsync(_baseUrl + serverPath);
-        if (singlePageAppRoute != serverPath && await anonymousPage.Locator(SinglePageAppRootSelector).CountAsync() > 0)
-        {
-            await anonymousPage.GotoAsync(_baseUrl + singlePageAppRoute);
-        }
+        await anonymousPage.GotoAsync(_baseUrl + path);
         await _login.WaitForLoginFormAsync(anonymousPage);
     }
 
     /// <summary>The server-rendered UIs refuse with a 403 response; the React frontend renders a "Not authorized" page.</summary>
     private async Task<Result<T, SystemError>> OpenRestrictedPageAsync<T>(string path, string readySelector, T openedPage)
     {
-        await OpenDirectlyAsync(path, path);
+        await OpenDirectlyAsync(path);
 
         if (_response?.Status == (int)HttpStatusCode.Forbidden)
         {
@@ -542,15 +527,15 @@ public class MyShopUiClient : IAsyncDisposable
     /// Server-rendered UIs are simply navigated to. The React frontend keeps its session in memory and returns to
     /// the home page after the login redirect, so a reload would lose the URL: it is moved to the route in place.
     /// </summary>
-    private async Task OpenDirectlyAsync(string serverPath, string singlePageAppRoute)
+    private async Task OpenDirectlyAsync(string path)
     {
         if (await _page.Locator(SinglePageAppRootSelector).CountAsync() > 0)
         {
-            await new PlaywrightGateway(_page, _baseUrl, _login).NavigateWithinAppAsync(singlePageAppRoute);
+            await new PlaywrightGateway(_page, _baseUrl, _login).NavigateWithinAppAsync(path);
         }
         else
         {
-            _response = await _page.GotoAsync(_baseUrl + serverPath);
+            _response = await _page.GotoAsync(_baseUrl + path);
         }
     }
 
