@@ -161,7 +161,7 @@ Found 2026-11-17 (U11 OUTBOX). The transactional-outbox worked example (`system/
 Found 2026-11-17 (U9). Commits made with `gh optivem commit --yes --paths … "<message>"` end with the caller's `Co-Authored-By: Claude Opus 5.5` and `Claude-Session` lines, then a blank line and an extra `Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>` the tool adds itself (e.g. `707e37a6`).
 - **Recommended:** fix in gh-optivem (X1): skip the tool's own trailer when the message already has a `Co-Authored-By:` line. **Why:** the extra line names the wrong model and splits the trailer block.
 
-### 78. `frontend-react` (nginx) CSP is report-only — ✅ Done
+### 78. `frontend-react` (nginx) CSP is report-only — ✅ Done (`f02a79a1`)
 
 Enforced 2026-11-20 (U9b): the three `add_header` lines now send `Content-Security-Policy` (same value). A local Playwright probe on multitier-typescript with `OTEL_BROWSER_EXPORTER_OTLP_ENDPOINT=http://localhost:4318` set (anonymous catalog, product, cart; admin Keycloak sign-in; order history, an order-details page, coupons, account) logged 0 CSP violations under report-only and again under the enforced policy, with every page working, and `--sample` passed 11/11 on multitier-typescript, multitier-java and multitier-dotnet. Still not checked: the cloud stage's Keycloak origin.
 
