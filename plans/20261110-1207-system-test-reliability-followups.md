@@ -237,4 +237,15 @@ Found 2026-11-20 (U15). `eslint-config-next@15.5.14` caps eslint at ^9, and `esl
 ### 97. CLAUDE.md says `dotnet build` runs the unit tests; it doesn't
 
 Found 2026-11-23 (U17). Repo `CLAUDE.md` → Pre-Commit Verification says "`./gradlew build` and `dotnet build` run the unit tests". True for Gradle, false for .NET: no project hooks a test target into build, so `dotnet build` only compiles. A .NET change can pass that gate with a red test, which is exactly what the note warns against. (U17 ran `dotnet test` explicitly: 139/139 in `backend-dotnet/Tests`.)
-- **Recommended:** change the .NET bullet to `dotnet build && dotnet test` (test project dirs: `system/monolith/dotnet/Tests`, `system/multitier/backend-dotnet/Tests`) and fix the "Note that…" sentence to name Gradle only. Also check whether `compile-all.sh`'s .NET step runs `dotnet test`. **Why:** a doc-only fix, it closes a real gap in the commit gate, and it's cheaper than adding an MSBuild hook that would make every build slower.
+- **Recommended:** change the .NET bullet to `dotnet build && dotnet test` (test project dirs: `system/monolith/dotnet/Tests`, `system/multitier/backend-dotnet/Tests`) and fix the "Note that…" sentence to name Gradle only. Also check whether `compile-all.sh`'s .NET step runs `dotnet test`. Same section, Java side (found U18): in `system-test/java`, `./gradlew build` runs the whole system suite (497/509 fail without a booted stack: `KEYCLOAK_URL_STUB` not set), so name that project's gate explicitly as `./gradlew testClasses` + `--sample`. **Why:** a doc-only fix, it closes a real gap in the commit gate, and it's cheaper than adding an MSBuild hook that would make every build slower.
+
+### 98. Gradle 10 deprecations in the four Java builds
+
+Found 2026-11-23 (U18, Gradle 9.9.1). `--warning-mode all` prints 21 deprecations: `afterSuite` / `afterTest` / `beforeTest(Closure)` on test tasks (e.g. `backend-clean-java/build.gradle:147–151`), `Configuration.setVisible(boolean)` ×4, and Groovy space-assignment in `settings.gradle:7` (at least `backend-clean-java` and `system-test/java`).
+- **Recommended:** one cleanup pass across `system/monolith/java`, `system/multitier/backend-java`, `backend-clean-java` and `system-test/java` (`addTestListener`, drop `setVisible`, `url = ...`), gated by `./gradlew build --warning-mode fail` in each. **Why:** Gradle 10 turns these into errors, and a Dependabot major is a bad moment to find out.
+
+### 99. `compile-all.sh` + lingering Gradle daemons trip the host memory reaper
+
+Found 2026-11-23 (U18). With no docker stack up and VS Code open (~4 GB), `./compile-all.sh` was killed by Claude Code's memory-pressure reaper; daemons left by earlier configs (Gradle, dotnet build servers) stay resident across the sweep. Same family as #66 / #92.
+- **Recommended:** run the Java configs in `compile-all.sh` with `--no-daemon` (or `./gradlew --stop` after each) and `dotnet build-server shutdown` at the end. **Why:** the sweep is a one-shot gate, so daemon warm-up buys nothing and costs ~1–2 GB per project.
+
