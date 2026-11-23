@@ -310,7 +310,7 @@ jobs:
   deploy-keycloak:
     needs: shared-images
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     environment: ${{ inputs.architecture }}-${{ inputs.language }}-acceptance
     permissions:
       contents: read

@@ -124,6 +124,8 @@ runs:
         fi
         rm -f "$env_file"
 
+    # Since 26.8 a cold start (--min-instances 0) bootstraps for ~18 min on Cloud Run (REL #107), and
+    # /health/started passes before the realms are served, so this wait must outlast the bootstrap.
     - name: Wait for Keycloak (cold start + realm import)
       uses: optivem/actions/wait-for-endpoints@v1
       with:
@@ -133,9 +135,9 @@ runs:
             {"name": "Keycloak shop-qa", "url": "https://${{ inputs.system }}-keycloak-${{ inputs.project-number }}.${{ inputs.region }}.run.app/realms/shop-qa/.well-known/openid-configuration"},
             {"name": "Keycloak shop-prod", "url": "https://${{ inputs.system }}-keycloak-${{ inputs.project-number }}.${{ inputs.region }}.run.app/realms/shop-prod/.well-known/openid-configuration"}
           ]
-        max-attempts: '60'
+        max-attempts: '180'
         wait-seconds: '10'
-        timeout-seconds: '900'
+        timeout-seconds: '1800'
 
     # The mapping (setup-custom-domains.sh) routes to the service, so this proves TLS and the route
     # before any backend is pointed at the domain.
