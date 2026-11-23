@@ -139,33 +139,33 @@ public class PlaceOrderPositiveTest : BaseAcceptanceTest
 
     [Theory]
     [ChannelData(ChannelType.API, AlsoForFirstRow = new[] { ChannelType.UI })]
-    [ChannelInlineData("UK", 0.09)]
-    [ChannelInlineData("US", 0.20)]
+    [ChannelInlineData("UK", "0.09")]
+    [ChannelInlineData("US", "0.20")]
     [Trait("tag", "UC-001.16")]
-    public async Task CorrectTaxRateShouldBeUsedBasedOnCountry(Channel channel, string country, double taxRate)
+    public async Task CorrectTaxRateShouldBeUsedBasedOnCountry(Channel channel, string country, string taxRate)
     {
         await Scenario(channel)
-            .Given().Country().WithCode(country).WithTaxRate((decimal)taxRate)
+            .Given().Country().WithCode(country).WithTaxRate(taxRate)
             .When().PlaceOrder().WithCountry(country)
             .Then().ShouldSucceed()
             .And().Order()
-            .HasTaxRate((decimal)taxRate);
+            .HasTaxRate(taxRate);
     }
 
     [Theory]
     [ChannelData(ChannelType.API, AlsoForFirstRow = new[] { ChannelType.UI })]
-    [ChannelInlineData("UK", 0.09, "50.00", "4.50", "54.50")]
-    [ChannelInlineData("US", 0.20, "100.00", "20.00", "120.00")]
+    [ChannelInlineData("UK", "0.09", "50.00", "4.50", "54.50")]
+    [ChannelInlineData("US", "0.20", "100.00", "20.00", "120.00")]
     [Trait("tag", "UC-001.16")]
-    public async Task TotalPriceShouldBeSubtotalPricePlusTaxAmount(Channel channel, string country, double taxRate, string subtotalPrice, string expectedTaxAmount, string expectedTotalPrice)
+    public async Task TotalPriceShouldBeSubtotalPricePlusTaxAmount(Channel channel, string country, string taxRate, string subtotalPrice, string expectedTaxAmount, string expectedTotalPrice)
     {
         await Scenario(channel)
-            .Given().Country().WithCode(country).WithTaxRate((decimal)taxRate)
+            .Given().Country().WithCode(country).WithTaxRate(taxRate)
             .And().Product().WithUnitPrice(subtotalPrice)
             .When().PlaceOrder().WithCountry(country).WithQuantity(1)
             .Then().ShouldSucceed()
             .And().Order()
-            .HasTaxRate((decimal)taxRate)
+            .HasTaxRate(taxRate)
             .HasSubtotalPrice(subtotalPrice)
             .HasTaxAmount(expectedTaxAmount)
             .HasTotalPrice(expectedTotalPrice);

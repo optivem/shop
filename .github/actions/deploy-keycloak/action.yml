@@ -102,9 +102,15 @@ runs:
             KC_BOOTSTRAP_ADMIN_USERNAME:"admin", SYSTEM:$system, RUN_APP_SUFFIX:$suffix}' > "$env_file"
         # One instance: Keycloak keeps in-flight logins in local memory and Cloud Run instances can't
         # cluster, so a second instance makes login form posts fail with expired_code (UI tests hang).
+        # Startup probe on /health/started (management port 9000), not the default TCP probe on 8080:
+        # since 26.8, health enabled means async bootstrap, so 8080 opens before bootstrap. A TCP probe
+        # then passes at once and Cloud Run throttles the CPU to request time only, so the bootstrap
+        # crawled for ~33 min and the service sat at 503 (REL #107). Until the probe passes, the
+        # instance keeps full startup CPU (plus --cpu-boost). 60 x 10s = Cloud Run's 600s maximum.
         args=(--image "$IMAGE" --region "$REGION" --project "$PROJECT"
           --service-account "runtime@${PROJECT}.iam.gserviceaccount.com"
           --port 8080 --memory 1Gi --cpu 1 --cpu-boost
+          --startup-probe "httpGet.path=/health/started,httpGet.port=9000,periodSeconds=10,failureThreshold=60,timeoutSeconds=5"
           --min-instances 0 --max-instances 1 --allow-unauthenticated
           --set-secrets "KC_BOOTSTRAP_ADMIN_PASSWORD=${SYSTEM}-keycloak-admin-password:latest")
         fingerprint="$(printf '%s\n' "${args[@]}" | cat - "$env_file" | sha256sum | cut -c1-32)"
