@@ -15,6 +15,9 @@ import com.mycompany.myshop.backend.usecases.queries.coupon.BrowseCouponsRequest
 import com.mycompany.myshop.backend.usecases.queries.coupon.BrowseCouponsResponse;
 import com.mycompany.myshop.backend.usecases.commands.coupon.PublishCoupon;
 import com.mycompany.myshop.backend.usecases.commands.coupon.PublishCouponRequest;
+import com.mycompany.myshop.backend.usecases.queries.order.BrowseCustomers;
+import com.mycompany.myshop.backend.usecases.queries.order.BrowseCustomersRequest;
+import com.mycompany.myshop.backend.usecases.queries.order.BrowseCustomersResponse;
 import com.mycompany.myshop.backend.usecases.queries.order.BrowseOrderHistory;
 import com.mycompany.myshop.backend.usecases.queries.order.BrowseOrderHistoryRequest;
 import com.mycompany.myshop.backend.usecases.queries.order.BrowseOrderHistoryResponse;
@@ -78,6 +81,11 @@ public class UseCaseConfig {
     @Bean
     UseCase<BrowseOrderHistoryRequest, BrowseOrderHistoryResponse> browseOrderHistory(OrderReader orderReader) {
         return observed("BrowseOrderHistory", new BrowseOrderHistory(orderReader));
+    }
+
+    @Bean
+    UseCase<BrowseCustomersRequest, BrowseCustomersResponse> browseCustomers(OrderReader orderReader) {
+        return observed("BrowseCustomers", new BrowseCustomers(orderReader));
     }
 
     @Bean

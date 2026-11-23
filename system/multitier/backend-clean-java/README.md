@@ -44,8 +44,9 @@ Security, no Keycloak, and no role checks. Endpoints that are admin-only or owne
 `POST /api/admin/orders/sweep-deliveries`) are open to any caller here. The variant exists to teach
 the clean-architecture refactor of the order/coupon logic, and security would add a cross-cutting
 adapter that says nothing about that refactor. It has no system-test stack, so no system test
-reaches it. For the same reason it has no admin-only `GET /api/admin/customers` endpoint, which
-exists only to serve the admin UIs' customer filter.
+reaches it. `GET /api/admin/customers` is served (the frontend's pact requires it) but is open too,
+and since this variant records no customer on the orders it places, it lists only the customers
+that a backend with authentication wrote to the shared `orders.owner_name` column.
 
 Do not deploy it anywhere reachable: it is a teaching variant, not a production backend.
 

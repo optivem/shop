@@ -26,6 +26,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 @Provider("backend")
 @PactFolder("../../../contracts")
@@ -36,6 +37,9 @@ class BackendPactVerificationTest extends BaseComponentTest {
 
     @Autowired
     private CouponRepository coupons;
+
+    @Autowired
+    private JdbcTemplate jdbc;
 
     @BeforeEach
     void setTarget(PactVerificationContext context) {
@@ -92,6 +96,9 @@ class BackendPactVerificationTest extends BaseComponentTest {
     @State("at least one order exists")
     void atLeastOneOrderExists() {
         orders.add(sampleOrder("ORD-HIST-1"));
+        // The browse-customers interaction needs the order to have a customer. The domain Order has
+        // none (this variant has no authentication), so the shared schema's column is set directly.
+        jdbc.update("UPDATE orders SET owner_name = 'customer1' WHERE order_number = 'ORD-HIST-1'");
     }
 
     @State("order ORD-1 is placed")

@@ -71,6 +71,15 @@ public class JpaOrderReader implements OrderReader {
             WHERE o.orderNumber = :orderNumber
             """;
 
+    // Native because owner_name is not mapped on OrderJpaEntity: this variant never writes it (it has
+    // no authentication to know the customer by), but the schema is shared with the backends that do.
+    private static final String CUSTOMERS_SELECT = """
+            SELECT DISTINCT o.owner_name
+            FROM orders o
+            WHERE o.owner_name IS NOT NULL
+            ORDER BY o.owner_name
+            """;
+
     private static final String ORDER_NUMBER = "orderNumber";
     private static final String LIMIT = "limit";
     private static final String OFFSET = "offset";
@@ -113,6 +122,12 @@ public class JpaOrderReader implements OrderReader {
                 .getResultList().stream()
                 .findFirst()
                 .map(JpaOrderReader::toDetail);
+    }
+
+    @Override
+    public List<String> listCustomers() {
+        List<?> rows = entityManager.createNativeQuery(CUSTOMERS_SELECT).getResultList();
+        return rows.stream().map(String.class::cast).toList();
     }
 
     // createNativeQuery's JPA signature is raw whatever result class it is handed, so the cast is

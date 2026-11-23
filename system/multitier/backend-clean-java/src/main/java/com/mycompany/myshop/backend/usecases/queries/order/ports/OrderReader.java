@@ -3,6 +3,7 @@ import com.mycompany.myshop.backend.usecases.queries.order.BrowseOrderHistoryIte
 
 import com.mycompany.myshop.backend.usecases.queries.common.Page;
 import com.mycompany.myshop.backend.usecases.queries.common.PageSpec;
+import java.util.List;
 import java.util.Optional;
 
 // The read side of orders.
@@ -29,4 +30,8 @@ public interface OrderReader {
     Page<BrowseOrderHistoryItemResponse> listOrders(String orderNumberFilter, PageSpec page);
 
     Optional<ViewOrderDetailsResponse> findOrderDetail(String orderNumber);
+
+    // Every customer that has placed an order, once each, A to Z. Orders with no customer are left
+    // out rather than listed as a blank.
+    List<String> listCustomers();
 }

@@ -33,7 +33,8 @@ import org.springframework.test.context.ActiveProfiles;
 // walking pages 1..totalPages must visit every row exactly once, and the total the client counts its
 // buttons with must be the total of rows the filter actually matches. An off-by-one in the offset
 // skips or repeats a row at a page boundary, and a count that disagrees with the filter draws
-// buttons for pages that come back empty -- nothing else in the suite would notice either.
+// buttons for pages that come back empty -- nothing else in the suite would notice either. Also the
+// unpaged customer list the admin filter offers, which is the one list here with no page at all.
 //
 // @DataJpaTest for the reason OrderRepositoryIntegrationTest gives: the subject is one adapter, and
 // it is transactional, so each test's rows roll back. The query classes are plain @Component beans,
@@ -131,6 +132,24 @@ class OffsetPagingIntegrationTest {
         assertThat(page.totalElements()).isEqualTo(1);
     }
 
+    // The DISTINCT and the ORDER BY are both in the SQL, and an order with no customer must not turn
+    // up as a blank choice. The table is shared with the rest of the suite, so only this test's
+    // customers are asserted on.
+    @Test
+    void listsEachCustomerOnceFromAToZ() {
+        persistOrder(SCOPE + "-C1", BASE, SCOPE + "-carol");
+        persistOrder(SCOPE + "-C2", BASE, SCOPE + "-alice");
+        persistOrder(SCOPE + "-C3", BASE, SCOPE + "-carol");
+        persistOrder(SCOPE + "-C4", BASE, null);
+        entityManager.flush();
+
+        var customers = orderReader.listCustomers();
+
+        assertThat(customers).doesNotContainNull().isSorted();
+        assertThat(customers.stream().filter(name -> name.startsWith(SCOPE)))
+            .containsExactly(SCOPE + "-alice", SCOPE + "-carol");
+    }
+
     @Test
     void walksEveryCouponExactlyOnceNewestPublishedFirst() {
         persistCoupon(SCOPE + "-CPN-1");
@@ -186,6 +205,17 @@ class OffsetPagingIntegrationTest {
         order.setTotalPrice(new BigDecimal("22.00"));
         order.setStatus(OrderStatus.PLACED);
         entityManager.persist(order);
+    }
+
+    // owner_name is not mapped on OrderJpaEntity -- this variant never writes it -- so the column is
+    // set the way a backend with authentication would leave it.
+    private void persistOrder(String orderNumber, Instant orderTimestamp, String ownerName) {
+        persistOrder(orderNumber, orderTimestamp);
+        entityManager.flush();
+        entityManager.createNativeQuery("UPDATE orders SET owner_name = :ownerName WHERE order_number = :orderNumber")
+            .setParameter("ownerName", ownerName)
+            .setParameter("orderNumber", orderNumber)
+            .executeUpdate();
     }
 
     private void persistCoupon(String code) {
