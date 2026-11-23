@@ -1,3 +1,5 @@
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
@@ -23,6 +25,7 @@ public class OpenApiDocumentComponentTests : IClassFixture<WebApplicationFactory
             var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<AppDbContext>));
             if (descriptor != null)
                 services.Remove(descriptor);
+            services.RemoveAll<IDbContextOptionsConfiguration<AppDbContext>>();
             services.AddDbContext<AppDbContext>(options => options.UseInMemoryDatabase("OpenApiTestDb"));
         });
     });

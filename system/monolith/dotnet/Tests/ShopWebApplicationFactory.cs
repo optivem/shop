@@ -1,3 +1,5 @@
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -37,6 +39,7 @@ public sealed class ShopWebApplicationFactory : WebApplicationFactory<Program>
                 d => d.ServiceType == typeof(DbContextOptions<AppDbContext>));
             if (descriptor != null)
                 services.Remove(descriptor);
+            services.RemoveAll<IDbContextOptionsConfiguration<AppDbContext>>();
             // Placing an order opens a transaction, which the in-memory database doesn't support and only warns about.
             services.AddDbContext<AppDbContext>(options => options.UseInMemoryDatabase("TestDb")
                 .ConfigureWarnings(w => w.Ignore(InMemoryEventId.TransactionIgnoredWarning)));

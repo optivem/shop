@@ -1,3 +1,5 @@
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using System.Net;
 using System.Net.Http.Headers;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -29,6 +31,7 @@ public class AuthorizationComponentTests : IClassFixture<WebApplicationFactory<P
                     d => d.ServiceType == typeof(DbContextOptions<AppDbContext>));
                 if (descriptor != null)
                     services.Remove(descriptor);
+                services.RemoveAll<IDbContextOptionsConfiguration<AppDbContext>>();
 
                 services.AddDbContext<AppDbContext>(options =>
                     options.UseInMemoryDatabase("AuthorizationTestDb"));

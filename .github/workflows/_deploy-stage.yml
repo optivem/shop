@@ -481,7 +481,7 @@ jobs:
         if: env.TEST_LANGUAGE == 'dotnet'
         uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: 11.0.x
 
       - name: Cache NuGet Packages
         if: env.TEST_LANGUAGE == 'dotnet'

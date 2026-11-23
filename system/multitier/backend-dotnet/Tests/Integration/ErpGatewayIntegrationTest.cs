@@ -20,7 +20,7 @@ public sealed class ErpWireMockFixture : IAsyncLifetime
         _container = new ContainerBuilder()
             .WithImage("wiremock/wiremock:3.9.0")
             .WithPortBinding(8080, assignRandomHostPort: true)
-            .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(8080))
+            .WithWaitStrategy(Wait.ForUnixContainer().UntilInternalTcpPortIsAvailable(8080))
             .Build();
 
         await _container.StartAsync();

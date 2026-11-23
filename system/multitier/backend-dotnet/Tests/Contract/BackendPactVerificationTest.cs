@@ -1,3 +1,5 @@
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
@@ -408,6 +410,7 @@ public class BackendPactVerificationTest : IAsyncLifetime
                     d => d.ServiceType == typeof(DbContextOptions<AppDbContext>));
                 if (descriptor != null)
                     services.Remove(descriptor);
+                services.RemoveAll<IDbContextOptionsConfiguration<AppDbContext>>();
 
                 services.AddDbContext<AppDbContext>(options =>
                     options.UseNpgsql(_dbConnectionString));

@@ -8,7 +8,7 @@ Check that you have Powershell 7
 $PSVersionTable.PSVersion
 ```
 
-Ensure you have .NET 8:
+Ensure you have .NET 11:
 
 ```shell
 dotnet --version

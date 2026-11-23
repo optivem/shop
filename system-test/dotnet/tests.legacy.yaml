@@ -38,7 +38,7 @@ suites:
     testReportPath: SystemTests/TestResults/testResults.html
     sampleTest: ShouldBeAbleToGoToMyShop
     testInstallCommands:
-      - pwsh bin/Debug/net8.0/playwright.ps1 install
+      - pwsh bin/Debug/net11.0/playwright.ps1 install
   - id: mod03-e2e
     name: mod03 - E2E
     command: dotnet test --filter 'FullyQualifiedName~.Legacy.Mod03.E2eTests' --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
@@ -46,7 +46,7 @@ suites:
     testReportPath: SystemTests/TestResults/testResults.html
     sampleTest: ShouldPlaceOrder
     testInstallCommands:
-      - pwsh bin/Debug/net8.0/playwright.ps1 install
+      - pwsh bin/Debug/net11.0/playwright.ps1 install
   - id: mod04-smoke
     name: mod04 - Smoke (real)
     command: dotnet test --filter 'FullyQualifiedName~.Legacy.Mod04.SmokeTests' -e EXTERNAL_SYSTEM_MODE=real --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
@@ -54,7 +54,7 @@ suites:
     testReportPath: SystemTests/TestResults/testResults.html
     sampleTest: ShouldBeAbleToGoToMyShop
     testInstallCommands:
-      - pwsh bin/Debug/net8.0/playwright.ps1 install
+      - pwsh bin/Debug/net11.0/playwright.ps1 install
   - id: mod04-e2e
     name: mod04 - E2E
     command: dotnet test --filter 'FullyQualifiedName~.Legacy.Mod04.E2eTests' --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
@@ -62,7 +62,7 @@ suites:
     testReportPath: SystemTests/TestResults/testResults.html
     sampleTest: ShouldPlaceOrder
     testInstallCommands:
-      - pwsh bin/Debug/net8.0/playwright.ps1 install
+      - pwsh bin/Debug/net11.0/playwright.ps1 install
   - id: mod05-smoke
     name: mod05 - Smoke (real)
     command: dotnet test --filter 'FullyQualifiedName~.Legacy.Mod05.SmokeTests' -e EXTERNAL_SYSTEM_MODE=real --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
@@ -70,7 +70,7 @@ suites:
     testReportPath: SystemTests/TestResults/testResults.html
     sampleTest: ShouldBeAbleToGoToMyShop
     testInstallCommands:
-      - pwsh bin/Debug/net8.0/playwright.ps1 install
+      - pwsh bin/Debug/net11.0/playwright.ps1 install
   - id: mod05-e2e
     name: mod05 - E2E
     command: dotnet test --filter 'FullyQualifiedName~.Legacy.Mod05.E2eTests' --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
@@ -78,7 +78,7 @@ suites:
     testReportPath: SystemTests/TestResults/testResults.html
     sampleTest: ShouldPlaceOrder
     testInstallCommands:
-      - pwsh bin/Debug/net8.0/playwright.ps1 install
+      - pwsh bin/Debug/net11.0/playwright.ps1 install
   - id: mod06-smoke
     name: mod06 - Smoke (real)
     command: dotnet test --filter 'FullyQualifiedName~.Legacy.Mod06.SmokeTests' -e EXTERNAL_SYSTEM_MODE=real --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
@@ -86,7 +86,7 @@ suites:
     testReportPath: SystemTests/TestResults/testResults.html
     sampleTest: ShouldBeAbleToGoToMyShop
     testInstallCommands:
-      - pwsh bin/Debug/net8.0/playwright.ps1 install
+      - pwsh bin/Debug/net11.0/playwright.ps1 install
   - id: mod06-e2e-api
     name: mod06 - E2E - API
     command: dotnet test --filter 'FullyQualifiedName~.Legacy.Mod06.E2eTests' -e CHANNEL=API --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
@@ -100,7 +100,7 @@ suites:
     testReportPath: SystemTests/TestResults/testResults.html
     sampleTest: ShouldPlaceOrder
     testInstallCommands:
-      - pwsh bin/Debug/net8.0/playwright.ps1 install
+      - pwsh bin/Debug/net11.0/playwright.ps1 install
   - id: mod07-smoke
     name: mod07 - Smoke (real)
     command: dotnet test --filter 'FullyQualifiedName~.Legacy.Mod07.SmokeTests' -e EXTERNAL_SYSTEM_MODE=real --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
@@ -108,7 +108,7 @@ suites:
     testReportPath: SystemTests/TestResults/testResults.html
     sampleTest: ShouldBeAbleToGoToMyShop
     testInstallCommands:
-      - pwsh bin/Debug/net8.0/playwright.ps1 install
+      - pwsh bin/Debug/net11.0/playwright.ps1 install
   - id: mod07-e2e-api
     name: mod07 - E2E - API
     command: dotnet test --filter 'FullyQualifiedName~.Legacy.Mod07.E2eTests' -e CHANNEL=API --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
@@ -122,7 +122,7 @@ suites:
     testReportPath: SystemTests/TestResults/testResults.html
     sampleTest: ShouldPlaceOrder
     testInstallCommands:
-      - pwsh bin/Debug/net8.0/playwright.ps1 install
+      - pwsh bin/Debug/net11.0/playwright.ps1 install
   - id: mod08-smoke
     name: mod08 - Smoke (real)
     command: dotnet test --filter 'FullyQualifiedName~.Legacy.Mod08.SmokeTests' -e EXTERNAL_SYSTEM_MODE=real --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
@@ -130,7 +130,7 @@ suites:
     testReportPath: SystemTests/TestResults/testResults.html
     sampleTest: ShouldBeAbleToGoToMyShop
     testInstallCommands:
-      - pwsh bin/Debug/net8.0/playwright.ps1 install
+      - pwsh bin/Debug/net11.0/playwright.ps1 install
   - id: mod08-e2e-api
     name: mod08 - E2E - API
     command: dotnet test --filter 'FullyQualifiedName~.Legacy.Mod08.E2eTests' -e CHANNEL=API --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
@@ -144,7 +144,7 @@ suites:
     testReportPath: SystemTests/TestResults/testResults.html
     sampleTest: ShouldPlaceOrder
     testInstallCommands:
-      - pwsh bin/Debug/net8.0/playwright.ps1 install
+      - pwsh bin/Debug/net11.0/playwright.ps1 install
   - id: mod09-smoke-stub
     name: mod09 - Smoke (stub)
     command: dotnet test --filter 'FullyQualifiedName~.Legacy.Mod09.SmokeTests' -e EXTERNAL_SYSTEM_MODE=stub --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
@@ -152,7 +152,7 @@ suites:
     testReportPath: SystemTests/TestResults/testResults.html
     sampleTest: ShouldBeAbleToGoToMyShop
     testInstallCommands:
-      - pwsh bin/Debug/net8.0/playwright.ps1 install
+      - pwsh bin/Debug/net11.0/playwright.ps1 install
   - id: mod09-smoke-real
     name: mod09 - Smoke (real)
     command: dotnet test --filter 'FullyQualifiedName~.Legacy.Mod09.SmokeTests' -e EXTERNAL_SYSTEM_MODE=real --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
@@ -160,7 +160,7 @@ suites:
     testReportPath: SystemTests/TestResults/testResults.html
     sampleTest: ShouldBeAbleToGoToMyShop
     testInstallCommands:
-      - pwsh bin/Debug/net8.0/playwright.ps1 install
+      - pwsh bin/Debug/net11.0/playwright.ps1 install
   - id: mod10-acceptance-api
     name: mod10 - Acceptance (stub) - API
     command: dotnet test --filter 'FullyQualifiedName~.Legacy.Mod10.AcceptanceTests&Category!=isolated' -e CHANNEL=API --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
@@ -174,7 +174,7 @@ suites:
     testReportPath: SystemTests/TestResults/testResults.html
     sampleTest: OrderNumberShouldStartWithORD
     testInstallCommands:
-      - pwsh bin/Debug/net8.0/playwright.ps1 install
+      - pwsh bin/Debug/net11.0/playwright.ps1 install
   - id: mod10-acceptance-isolated-api
     name: mod10 - Acceptance Isolated (stub) - API
     command: dotnet test --filter 'FullyQualifiedName~.Legacy.Mod10.AcceptanceTests&Category=isolated' -e CHANNEL=API --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
@@ -188,7 +188,7 @@ suites:
     testReportPath: SystemTests/TestResults/testResults.html
     sampleTest: ShouldRecordPlacementTimestamp
     testInstallCommands:
-      - pwsh bin/Debug/net8.0/playwright.ps1 install
+      - pwsh bin/Debug/net11.0/playwright.ps1 install
   - id: mod11-contract-stub
     name: mod11 - Contract (stub)
     command: dotnet test --filter 'FullyQualifiedName~.Legacy.Mod11.ExternalSystemContractTests&FullyQualifiedName~Stub&Category!=isolated' --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
@@ -220,4 +220,4 @@ suites:
     testReportPath: SystemTests/TestResults/testResults.html
     sampleTest: ShouldPlaceOrder
     testInstallCommands:
-      - pwsh bin/Debug/net8.0/playwright.ps1 install
+      - pwsh bin/Debug/net11.0/playwright.ps1 install

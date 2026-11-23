@@ -1,6 +1,6 @@
 # Dev Container
 
-Reproducible development environment with `gcloud`, `gh`, `terraform`, `neonctl`, Docker, Node 26, Java 21, .NET 8, PowerShell, and Claude Code pre-installed, plus what the Java, .NET, and TypeScript system tests need (`gh optivem`, Chromium OS libraries). Works identically on Windows, macOS, and Linux.
+Reproducible development environment with `gcloud`, `gh`, `terraform`, `neonctl`, Docker, Node 26, Java 21, .NET 11, PowerShell, and Claude Code pre-installed, plus what the Java, .NET, and TypeScript system tests need (`gh optivem`, Chromium OS libraries). Works identically on Windows, macOS, and Linux.
 
 ## Prerequisites
 
@@ -73,7 +73,7 @@ Versions are pinned in [devcontainer.json](devcontainer.json), except `neonctl`,
 | neonctl   | 8.13.2  |
 | node      | 22      |
 | java      | 21      |
-| dotnet    | 8.0     |
+| dotnet    | 11.0    |
 | claude    | latest  |
 
 ## Claude Code

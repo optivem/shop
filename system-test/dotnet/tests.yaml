@@ -67,7 +67,7 @@ suites:
     testCountPath: TestResults/testResults.trx
     sampleTest: ShouldBeAbleToGoToMyShop
     testInstallCommands:
-      - pwsh bin/Debug/net8.0/playwright.ps1 install
+      - pwsh bin/Debug/net11.0/playwright.ps1 install
   - id: smoke-real
     name: latest - Smoke (real)
     command: dotnet test --filter 'FullyQualifiedName~.Latest.SmokeTests' -e EXTERNAL_SYSTEM_MODE=real --logger 'trx;LogFileName=testResults.trx' --logger 'junit;LogFilePath=TestResults/junit/smoke-real.xml' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
@@ -76,7 +76,7 @@ suites:
     testCountPath: TestResults/testResults.trx
     sampleTest: ShouldBeAbleToGoToMyShop
     testInstallCommands:
-      - pwsh bin/Debug/net8.0/playwright.ps1 install
+      - pwsh bin/Debug/net11.0/playwright.ps1 install
   - id: acceptance-parallel-api
     name: latest - Acceptance Parallel (stub) - API
     command: dotnet test --filter 'FullyQualifiedName~.Latest.AcceptanceTests&Category!=isolated' -e CHANNEL=API --logger 'trx;LogFileName=parallel-api.trx' --logger 'junit;LogFilePath=TestResults/junit/acceptance-parallel-api.xml' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
@@ -92,7 +92,7 @@ suites:
     testCountPath: TestResults/parallel-ui.trx
     sampleTest: ShouldBeAbleToPlaceOrderForValidInput
     testInstallCommands:
-      - pwsh bin/Debug/net8.0/playwright.ps1 install
+      - pwsh bin/Debug/net11.0/playwright.ps1 install
   - id: acceptance-isolated-api
     name: latest - Acceptance Isolated (stub) - API
     command: dotnet test --filter 'FullyQualifiedName~.Latest.AcceptanceTests&Category=isolated' -e CHANNEL=API --logger 'trx;LogFileName=isolated-api.trx' --logger 'junit;LogFilePath=TestResults/junit/acceptance-isolated-api.xml' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
@@ -108,7 +108,7 @@ suites:
     testCountPath: TestResults/isolated-ui.trx
     sampleTest: ShouldRecordPlacementTimestamp
     testInstallCommands:
-      - pwsh bin/Debug/net8.0/playwright.ps1 install
+      - pwsh bin/Debug/net11.0/playwright.ps1 install
   - id: contract-stub
     name: latest - Contract (stub)
     command: dotnet test --filter 'FullyQualifiedName~.Latest.ExternalSystemContractTests&FullyQualifiedName~Stub&Category!=isolated' --logger 'trx;LogFileName=testResults.trx' --logger 'junit;LogFilePath=TestResults/junit/contract-stub.xml' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
@@ -138,7 +138,7 @@ suites:
     testCountPath: TestResults/testResults.trx
     sampleTest: ShouldPlaceOrder
     testInstallCommands:
-      - pwsh bin/Debug/net8.0/playwright.ps1 install
+      - pwsh bin/Debug/net11.0/playwright.ps1 install
   - id: e2e-ui
     name: latest - E2E (real) - UI
     command: dotnet test --filter 'FullyQualifiedName~.Latest.E2eTests' -e CHANNEL=UI -e CHANNEL_MODE=static --logger 'trx;LogFileName=testResults.trx' --logger 'junit;LogFilePath=TestResults/junit/e2e-ui.xml' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
@@ -147,4 +147,4 @@ suites:
     testCountPath: TestResults/testResults.trx
     sampleTest: ShouldPlaceOrder
     testInstallCommands:
-      - pwsh bin/Debug/net8.0/playwright.ps1 install
+      - pwsh bin/Debug/net11.0/playwright.ps1 install
