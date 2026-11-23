@@ -20,7 +20,9 @@ public sealed class ErpWireMockFixture : IAsyncLifetime
         _container = new ContainerBuilder()
             .WithImage("wiremock/wiremock:3.9.0")
             .WithPortBinding(8080, assignRandomHostPort: true)
-            .WithWaitStrategy(Wait.ForUnixContainer().UntilInternalTcpPortIsAvailable(8080))
+            // HTTP, not TCP: Jetty accepts on 8080 before it serves, so a TCP wait let the first
+            // requests hit "connection reset by peer". Same wait as the TypeScript integration test.
+            .WithWaitStrategy(Wait.ForUnixContainer().UntilHttpRequestIsSucceeded(r => r.ForPort(8080).ForPath("/__admin/mappings")))
             .Build();
 
         await _container.StartAsync();
