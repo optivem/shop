@@ -1,6 +1,5 @@
 # 2026-11-16 20:03 UTC — Plan coordination meta-plan: all shop plans
 
-> 🤖 **Picked up by agent** — `Valentina_Desk` at `2026-11-23T09:16:10Z`
 
 
 ## TL;DR
@@ -29,7 +28,7 @@ The orchestrating session runs the **Wave tracker** top to bottom. Run the same 
 
 ## ▶ Next executable step (resume here)
 
-**Watch first:** meta-prerelease **45136998785** failed in the multitier-dotnet QA `deploy-keycloak` (Keycloak 26.8 migration, REL #107; prod realms recovered 12:08 UTC 2026-11-23). Its cross-lang jobs had all passed, so the Java breaker fix (`d5f4016d`) is confirmed. Verification is now scheduled meta-prerelease **45169935797** (tests `e52df37b`, which includes U20). A rerun attempt 2 of 45136998785 is also queued behind it (the orchestrator's cancel was denied); let it run or cancel it by hand. If 45169935797 goes red, triage it before X1.
+**Check first: meta-prerelease 45180795041** (dispatched 2026-11-23 ~13:00 UTC on `b5502a47` = all of Wave 4b, incl. the Keycloak 26.8 image). It is the first full run over U16–U21 and the first QA deploy since the Keycloak DB migration finished (REL #107). Ignore the earlier red runs: 45136998785 (Keycloak migration timeout, then its attempt 2 failed because a rerun pairs today's `net11.0` workflow paths with old `d5f4016d` code) and 45169935797 (Maven Central 429 on the multitier-backend-java commit stage; pipelines skipped). If 45180795041 is green, delete this paragraph and start U22. If it's red, triage it pipeline-first. Before any QA/prod Keycloak redeploy, check the realms answer 200 (`curl …/realms/shop-prod/.well-known/openid-configuration`).
 
 **Wave 4c, new Dependabot PRs** (opened 2026-11-23 after Wave 4b). Same recipe as Wave 4b: read each PR's diff, apply it to the current main, gate, commit with `--paths`, check CI on the pushed head, then close superseded PRs.
 - **U22** npm-minor-patch group #148, Lane D. Gate: `npm ci` + lint/typecheck/tests in each touched dir, then `--sample` monolith-typescript + multitier-typescript.
