@@ -9,7 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Playwright" Version="1.65.0" />
-    <PackageReference Include="WireMock.Net" Version="1.25.0" />
+    <PackageReference Include="WireMock.Net" Version="2.31.0" />
     <PackageReference Include="Shouldly" Version="4.3.0" />
   </ItemGroup>
 
