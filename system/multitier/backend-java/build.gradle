@@ -4,7 +4,7 @@ plugins {
 	id 'jacoco'
 	id 'info.solidsoft.pitest' version '1.19.0'
 	id 'org.sonarqube' version '7.5.0.8588'
-	id 'org.springframework.boot' version '4.1.2'
+	id 'org.springframework.boot' version '4.2.0'
 	id 'io.spring.dependency-management' version '1.1.7'
 }
 
@@ -74,7 +74,7 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-jackson2'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-security-oauth2-resource-server'
-	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.2.0'
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.2.1'
 	// Resilience on the outbound ERP/Clock/Tax calls (timeout, retry, circuit breaker); see GatewayHttpClient.
 	// Core modules rather than the Spring Boot starter: the policy is applied in code, so it also holds
 	// for a gateway built outside a Spring context. Not managed by the Spring Boot BOM.
