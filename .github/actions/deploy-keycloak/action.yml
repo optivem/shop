@@ -236,6 +236,7 @@ runs:
         PROJECT_NUMBER: ${{ inputs.project-number }}
         REGION: ${{ inputs.region }}
         CLIENT_SECRET: ${{ inputs.system-test-admin-secret }}
+        KEYCLOAK_DOMAIN: ${{ inputs.keycloak-domain }}
       run: |
         set -euo pipefail
         realm=shop
@@ -305,6 +306,29 @@ runs:
           echo "Removed extra realm-management roles from ${client_id}: $(jq -c '[.[].name]' <<< "$extra")"
         fi
         echo "${client_id} (${realm}) holds realm-management: ${wanted}"
+        # Probe: sign in as the service account and call the admin API the way the system tests do, through
+        # both hostnames (run.app and the custom domain), so a 401 shows up here with its cause, not as a
+        # bare 401 in the tests (REL #107). Prints the token's non-secret claims, never the token.
+        hosts=("$kc")
+        [[ -n "$KEYCLOAK_DOMAIN" ]] && hosts+=("https://${KEYCLOAK_DOMAIN}")
+        claims() { cut -d. -f2 <<< "$1" | tr '_-' '/+' | awk '{ while (length($0) % 4) $0 = $0 "="; print }' | base64 -d \
+          | jq -c '{iss, aud, azp, typ, scope, sub_present: (.sub != null), sid_present: (.sid != null), exp_in: (.exp - now | floor)}'; }
+        probe_ok=true
+        for token_host in "${hosts[@]}"; do
+          sa_token="$(curl -fsS "${token_host}/realms/${realm}/protocol/openid-connect/token" \
+            -d grant_type=client_credentials -d client_id="$client_id" --data-urlencode "client_secret=${CLIENT_SECRET}" | jq -r .access_token)"
+          echo "::add-mask::${sa_token}"
+          echo "Service-account token from ${token_host}: $(claims "$sa_token")"
+          for admin_host in "${hosts[@]}"; do
+            headers="$(mktemp)"; body="$(mktemp)"
+            code="$(curl -sS -D "$headers" -o "$body" -w '%{http_code}' -H "Authorization: Bearer ${sa_token}" \
+              "${admin_host}/admin/realms/${realm}/users?max=1&briefRepresentation=true")"
+            echo "  GET ${admin_host}/admin/realms/${realm}/users -> HTTP ${code} $(grep -i '^www-authenticate:' "$headers" | tr -d '\r') $(head -c 300 "$body")"
+            # The system tests sign in and call the admin API through KEYCLOAK_URL, the custom domain when set.
+            if [[ "$code" != 200 && "$token_host" == "${hosts[-1]}" && "$admin_host" == "${hosts[-1]}" ]]; then probe_ok=false; fi
+          done
+        done
+        [[ "$probe_ok" == true ]] || { echo "::error::The ${client_id} service account cannot call the admin API of realm ${realm} through ${hosts[-1]} (the URL the system tests use); see the probe lines above (REL #107)."; exit 1; }
 
     # The custom domains of the permanent environments (docs/environments.md).
     # Add-only: never removes a URI, so other variants' run.app URLs stay as the realm file made them.
