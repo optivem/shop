@@ -23,6 +23,11 @@ services:
       # count-based window (or the last one in a half-open trial) reopen the breaker on the next test's first good calls.
       - RESILIENCE_CIRCUITBREAKER_WAITINOPENSTATE=100ms
       - RESILIENCE_CIRCUITBREAKER_FAILURERATETHRESHOLD=100
+      # Many half-open trial calls: the outage request's last retry can take a trial permit as the breaker half-opens,
+      # and Resilience4j stays half-open until every permit is used. With the default 2, the next page's two concurrent ERP
+      # calls (catalog + product) found one permit left and the second got a 503. With the 100% threshold, a single good
+      # trial among the 20 still closes the breaker.
+      - RESILIENCE_CIRCUITBREAKER_PERMITTEDCALLSINHALFOPENSTATE=20
       - CLOCK_API_URL=http://external-system-stubs:8080/clock
       - TAX_API_URL=http://external-system-stubs:8080/tax
       - EXTERNAL_SYSTEM_MODE=stub
