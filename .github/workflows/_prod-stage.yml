@@ -109,7 +109,7 @@ jobs:
 
       - name: Checkout Repository
         if: inputs.version == ''
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -317,7 +317,7 @@ jobs:
   #         DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
   #
   #     - name: Checkout Repository
-  #       uses: actions/checkout@v6
+  #       uses: actions/checkout@v7
   #       with:
   #         ref: ${{ needs.check.outputs.version }}
   #
@@ -374,7 +374,7 @@ jobs:
       image-urls: ${{ needs.check.outputs.image-urls }}
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ needs.check.outputs.version }}
 

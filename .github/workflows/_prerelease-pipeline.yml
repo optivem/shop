@@ -69,7 +69,7 @@ jobs:
       base-version: ${{ steps.read-base-version.outputs.base-version }}
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           ref: ${{ env.COMMIT_SHA }}
@@ -110,7 +110,7 @@ jobs:
       KEYCLOAK_URL_STUB: ${{ (inputs.language == 'java' && 'http://localhost:8192') || (inputs.language == 'dotnet' && 'http://localhost:8292') || 'http://localhost:8392' }}
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ env.COMMIT_SHA }}
 

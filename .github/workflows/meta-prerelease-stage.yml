@@ -58,7 +58,7 @@ jobs:
           echo "name=$name" >> "$GITHUB_OUTPUT"
 
       - name: Checkout Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -195,7 +195,7 @@ jobs:
           echo "Tagging meta-rc against SHA: $sha (original github.sha=$ORIGINAL_SHA)"
       # fetch-depth: 0 so build-flavor-rc-manifest can see every flavor RC tag
       # when probing for the latest qa-approved RC at each flavor.VERSION.
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           token: ${{ secrets.VERIFY_TOKEN }}
           ref: ${{ steps.sha.outputs.value }}

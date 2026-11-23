@@ -53,7 +53,7 @@ jobs:
       PORT_DIGIT: ${{ inputs.language == 'java' && '1' || inputs.language == 'dotnet' && '2' || '3' }}
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Validate Inputs
         shell: bash
