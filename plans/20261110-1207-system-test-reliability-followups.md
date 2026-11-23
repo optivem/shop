@@ -249,3 +249,28 @@ Found 2026-11-23 (U18, Gradle 9.9.1). `--warning-mode all` prints 21 deprecation
 Found 2026-11-23 (U18). With no docker stack up and VS Code open (~4 GB), `./compile-all.sh` was killed by Claude Code's memory-pressure reaper; daemons left by earlier configs (Gradle, dotnet build servers) stay resident across the sweep. Same family as #66 / #92.
 - **Recommended:** run the Java configs in `compile-all.sh` with `--no-daemon` (or `./gradlew --stop` after each) and `dotnet build-server shutdown` at the end. **Why:** the sweep is a one-shot gate, so daemon warm-up buys nothing and costs ~1–2 GB per project.
 
+### 100. Java backends sit on the deprecated Jackson 2 bridge after Spring Boot 4.1
+
+Found 2026-11-23 (U19, `e467f3f6`). To keep `MoneyJsonModule`, the gateways, the ProblemDetail handlers and `IdempotencyKeyStore` / `OutboxStore` unchanged, U19 added `spring-boot-jackson2` and moved config to `spring.jackson2.*` + `spring.http.converters.preferred-json-mapper: jackson2` in monolith, backend-java and backend-clean-java. Both are deprecated since Boot 4.0.
+- **Recommended:** a dedicated unit that migrates the three Java backends to Jackson 3 (`tools.jackson`), updates clean-java's `ArchitectureTest` package ban (`com.fasterxml.jackson..`), drops the bridge, and re-syncs the hq/temp article snippets that quote this code (`[[project_hq_temp_docs_mirror_shop]]`). **Why:** the bridge will be removed in a later Boot major; doing it as its own unit keeps the money wire format (cross-language) under one focused gate instead of riding a dependency bump.
+
+### 101. Stale OpenTelemetry version comment in the Java build files
+
+Found 2026-11-23 (U19). The build files say the instrumentation BOM 2.33.1-alpha is pinned to "Boot's OTel SDK 1.49.0", but it imports opentelemetry-bom 1.67.0 while Boot 4.1 manages 1.62.0.
+- **Recommended:** `./gradlew dependencyInsight --dependency opentelemetry-sdk` in each backend, then fix the comment (and the pin if the two BOMs disagree at runtime). **Why:** a wrong comment will mislead the next upgrade.
+
+### 102. Deprecated API use left in Java backends after Boot 4.1
+
+Found 2026-11-23 (U19). Deprecation warnings remain in the three `GlobalExceptionHandler`s, monolith `AbstractIntegrationTest` and backend-java `OrderControllerIntegrationTest`.
+- **Recommended:** one `-Xlint:deprecation` build per backend and a cleanup commit; combine with #98 (Gradle 10 deprecations) if convenient. **Why:** cheap now, forced later.
+
+### 103. `default-timezone: UTC` in the Java `application.yml` jackson block is not a Boot property
+
+Found 2026-11-23 (U19); predates the upgrade. Boot ignores it silently.
+- **Recommended:** delete it (UTC is already enforced elsewhere; confirm with the clock tests). **Why:** dead config suggests a guarantee that isn't there.
+
+### 104. clean-java `GET /api/admin/customers` returns `[]` for its own orders; README counts stale
+
+Found 2026-11-23 while fixing the clean-java commit stage (red since 2026-11-18: REL #58 added the endpoint to "all six backends" and the frontend pact, but not to `backend-clean-java`, so pact `browse-customers` got a 404). Fix `b8ce6935`: open endpoint (clean-java has no auth by design), reading `SELECT DISTINCT owner_name FROM orders` natively. Clean-java's domain `Order` has no customer and its PlaceOrder never writes `owner_name`, so against its own data the list is always empty. The README line from #55 saying the variant has no such endpoint was rewritten. README test counts are also stale (106/51/43 unit/integration/contract vs 116/58/45; "62 component" now 64).
+- **Recommended:** accept the empty-list behaviour (no auth means no customer, consistent with the variant's design) and add one README sentence saying so; refresh the counts in the same commit. Also add clean-java to whatever checklist produced "all six backends", so the seventh backend isn't missed again. **Why:** the pact contract is satisfied, and modelling a customer in clean-java's domain would undo its deliberate no-auth simplification.
+
