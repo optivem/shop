@@ -274,3 +274,13 @@ Found 2026-11-23 (U19); predates the upgrade. Boot ignores it silently.
 Found 2026-11-23 while fixing the clean-java commit stage (red since 2026-11-18: REL #58 added the endpoint to "all six backends" and the frontend pact, but not to `backend-clean-java`, so pact `browse-customers` got a 404). Fix `b8ce6935`: open endpoint (clean-java has no auth by design), reading `SELECT DISTINCT owner_name FROM orders` natively. Clean-java's domain `Order` has no customer and its PlaceOrder never writes `owner_name`, so against its own data the list is always empty. The README line from #55 saying the variant has no such endpoint was rewritten. README test counts are also stale (106/51/43 unit/integration/contract vs 116/58/45; "62 component" now 64).
 - **Recommended:** accept the empty-list behaviour (no auth means no customer, consistent with the variant's design) and add one README sentence saying so; refresh the counts in the same commit. Also add clean-java to whatever checklist produced "all six backends", so the seventh backend isn't missed again. **Why:** the pact contract is satisfied, and modelling a customer in clean-java's domain would undo its deliberate no-auth simplification.
 
+### 105. Compose image tags drift from the Dockerfile pins (Dependabot only bumps the Dockerfiles)
+
+Found 2026-11-23 (U20, `0c417732`). `dependabot.yml` excludes `docker/**/docker-compose*.yml` on purpose, and `compose-drift.yml` only checks that the 24 compose files agree with **each other**. Nothing checks them against the digest-pinned `FROM` lines in `system/db/Dockerfile`, `docker/keycloak/Dockerfile` and `external-systems/stubs/Dockerfile`. #91 and #95 would have left all 24 compose files on flyway 10.21 / keycloak 26.0 / wiremock 3.10 (U20 bumped them by hand), and local `--sample` would have tested the old images.
+- **Recommended:** extend `compose-drift.yml` with one assertion: the flyway, keycloak and wiremock tags in the compose files equal the tag part of the matching Dockerfile `FROM`. **Why:** it keeps the existing "no Dependabot on compose" decision and turns silent drift into a red check on the Dependabot PR itself.
+
+### 106. `gh optivem commit --paths` silently treats a comma-separated list as one path
+
+Found 2026-11-23 (U20). `--paths "a,b"` fails with a `git add` pathspec error (exit 128); only space-separated works, and the help text doesn't say so. → gh-optivem.
+- **Recommended:** goes to X1 as a gh-optivem plan item (accept commas or document the separator). **Why:** shop doesn't edit gh-optivem (read-only, 2026-11-06).
+
