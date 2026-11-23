@@ -50,7 +50,7 @@ services:
       - app-network
 
   keycloak:
-    image: quay.io/keycloak/keycloak:26.0
+    image: quay.io/keycloak/keycloak:26.8
     command: start-dev --import-realm
     environment:
       - KC_BOOTSTRAP_ADMIN_USERNAME=admin
@@ -75,7 +75,7 @@ services:
       - app-network
 
   db-migrate:
-    image: flyway/flyway:10.21.0-alpine
+    image: flyway/flyway:13.12.2-alpine
     command: -url=jdbc:postgresql://postgres:5432/app -user=app -password=app -locations=filesystem:/migrations migrate
     environment:
       FLYWAY_CLEAN_DISABLED: "true"
