@@ -31,7 +31,12 @@ The orchestrating session runs the **Wave tracker** top to bottom. Run the same 
 
 **Watch first:** meta-prerelease **45136998785** failed in the multitier-dotnet QA `deploy-keycloak` (Keycloak 26.8 migration, REL #107; prod realms recovered 12:08 UTC 2026-11-23). Its cross-lang jobs had all passed, so the Java breaker fix (`d5f4016d`) is confirmed. Verification is now scheduled meta-prerelease **45169935797** (tests `e52df37b`, which includes U20). A rerun attempt 2 of 45136998785 is also queued behind it (the orchestrator's cancel was denied); let it run or cancel it by hand. If 45169935797 goes red, triage it before X1.
 
-**Wave 5, X1 cross-repo (last)**: Wave 4b is complete. Per the standing answer, X1 is **plans only**: each item for courses, substack, optivem-testing or gh-optivem becomes a plan file in that repo, committed there with `gh optivem commit --repo <name> --paths`. No code or content outside shop gets edited from here. Items (see the X1 row in Execution units): INL (only once `gh release list -R optivem/gh-optivem -L 3` shows a release with `inner-loop`), GHO Items 3–4 (needs `gh auth refresh -h github.com -s project` from the user first, a user gate), B-QAS Steps 6–7, B-ORD Steps 3–6, REL #57 and #106 (gh-optivem), REL #65 (optivem-testing), B-TAX item 7 (substack). Before starting: Dependabot PRs on `main` that are still open (`gh pr list --author app/dependabot`) get triaged like Wave 4b (non-majors merged when green, majors as new units).
+**Wave 4c, new Dependabot PRs** (opened 2026-11-23 after Wave 4b). Same recipe as Wave 4b: read each PR's diff, apply it to the current main, gate, commit with `--paths`, check CI on the pushed head, then close superseded PRs.
+- **U22** npm-minor-patch group #148, Lane D. Gate: `npm ci` + lint/typecheck/tests in each touched dir, then `--sample` monolith-typescript + multitier-typescript.
+- **U23** Actions majors #155 (checkout 7) and #156 (setup-java 6), Lane W, can run in parallel with U22. Gate: actionlint, then the push-triggered workflow runs green.
+- **U24** TypeScript 7 (#149 #151 #152 #154), Lane D after U22. This is a major, so expect config and type breaks; fix forward ≤2 retries, otherwise leave the PRs open and record a REL idea. Gate: `npx tsc --noEmit` + tests per dir, `--sample` TS ×2. Monolith may be capped by Next.js the way ESLint 10 was (REL #95).
+- **U25** cockatiel 4 (#150 #153), Lane D. Gate: unit/component tests in both TS backends, then `--sample` TS ×2. It's the resilience library (breaker/retry), so compare its behaviour with the Java breaker settings (`d5f4016d`).
+Then **X1** (cross-repo, plans only per the standing answer): INL (gated on a gh-optivem release with `inner-loop`), GHO Items 3–4 (user gate: `gh auth refresh -h github.com -s project`), B-QAS Steps 6–7, B-ORD Steps 3–6, REL #57/#106 (gh-optivem), REL #65 (optivem-testing), B-TAX item 7 (substack).
 
 ## Wave tracker
 
@@ -60,7 +65,11 @@ The orchestrating session runs the **Wave tracker** top to bottom. Run the same 
 | 4b | U18 Gradle 9.9 (#136–#139) | D (after U17) | done 2026-11-23 (`dcc0d973`): wrapper 8.14.3 → 9.9.1 in all 4 Java builds (networkTimeout kept at 60000), `./gradlew build` ×3 + system-test `testClasses` green, `--sample` monolith-java + multitier-java green; compile-all killed by the memory reaper (REL #99); Gradle 10 deprecations → REL #98; CI green |
 | 4b | U19 Spring Boot 4.1 (#87 #90 #94 #96) | D (after U18) | done 2026-11-23 (`e467f3f6`): Boot 3.5.6 → 4.1.2 (Spring 7, Testcontainers 2, JUnit 6, Hibernate 7; springdoc 3.2.0; Jackson 2 kept via the `spring-boot-jackson2` bridge → REL #100); build ×3 + `--sample` java ×2 green; REL #101–#103; CI green |
 | 4b | U20 Flyway 13 (#95) + docker-minor-patch group (#91) | D (after U19) | done 2026-11-23 (`0c417732`): flyway 10.21 → 13.12.2, keycloak 26.0 → 26.8, wiremock 3.10 → 3.13.2-3, alpine 3.20 → 3.24 in 3 Dockerfiles + all 24 compose files; `--sample` all six stacks 11/11; #95 #91 closed; REL #105 #106. **Incident:** the Keycloak 26.8 DB migration took cloud Keycloak (incl. prod) down ~11:28–12:08 UTC, REL #107 |
-| 4b | U21 rebased Dependabot non-majors (Boot 4.2.0 #87 #90 #94 #96, Gradle 9.9.2 #136–#139) | D (after U20) | done 2026-11-23 (`a9926bd3`): Boot 4.1.2 → 4.2.0, springdoc 3.2.1, Gradle 9.9.2; builds, component, integration and contract tests green; `--sample` monolith-java + multitier-java 11/11; CI and PR close pending |
+| 4b | U21 rebased Dependabot non-majors (Boot 4.2.0 #87 #90 #94 #96, Gradle 9.9.2 #136–#139) | D (after U20) | done 2026-11-23 (`a9926bd3`): Boot 4.1.2 → 4.2.0, springdoc 3.2.1, Gradle 9.9.2; builds, component, integration and contract tests green; `--sample` monolith-java + multitier-java 11/11; CI green (head `6e56dc4b`); PRs closed |
+| 4c | U22 npm-minor-patch group (#148, 10 updates across 4 dirs) | D | todo |
+| 4c | U23 GitHub Actions majors: setup-java 6 (#156), checkout 7 (#155) | W | todo |
+| 4c | U24 TypeScript 7 (#149 system-test, #151 monolith, #152 backend-typescript, #154 frontend-react) | D (after U22) | todo |
+| 4c | U25 cockatiel 4 (#150 monolith, #153 backend-typescript) | D (after U24) | todo |
 | 5 | X1 cross-repo (last) | X | todo |
 | — | M manual (user) | — | open; **M-GCP** done 2026-11-18, user actions below |
 
