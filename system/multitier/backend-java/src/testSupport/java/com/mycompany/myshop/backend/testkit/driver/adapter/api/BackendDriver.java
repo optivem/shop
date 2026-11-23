@@ -6,7 +6,7 @@ import com.mycompany.myshop.backend.core.dtos.BrowseOrderHistoryResponse;
 import com.mycompany.myshop.backend.core.dtos.PlaceOrderRequest;
 import com.mycompany.myshop.backend.core.dtos.PublishCouponRequest;
 import java.util.Map;
-import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.resttestclient.TestRestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;

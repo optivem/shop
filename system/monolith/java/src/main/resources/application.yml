@@ -1,7 +1,11 @@
 spring:
   application:
     name: myShop
-  jackson:
+  # Boot 4 defaults HTTP JSON to Jackson 3; stay on the Jackson 2 mapper (spring-boot-jackson2) for now.
+  http:
+    converters:
+      preferred-json-mapper: jackson2
+  jackson2:
     deserialization:
       ACCEPT_FLOAT_AS_INT: false
       ADJUST_DATES_TO_CONTEXT_TIME_ZONE: false

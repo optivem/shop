@@ -13,7 +13,7 @@ import org.springframework.http.HttpStatus;
 
 /**
  * {@code POST /api/orders} — accepted with {@code 201 CREATED} carrying the order number, rejected
- * with {@code 422 UNPROCESSABLE_ENTITY} carrying a {@code ProblemDetail}. Placing returns only the
+ * with {@code 422 UNPROCESSABLE_CONTENT} carrying a {@code ProblemDetail}. Placing returns only the
  * order number; to inspect the persisted totals, read the order back with {@link ViewOrder}.
  */
 public class PlaceOrder extends BaseMyShopUseCase<PlaceOrderResponse, PlaceOrderVerification> {
@@ -81,7 +81,7 @@ public class PlaceOrder extends BaseMyShopUseCase<PlaceOrderResponse, PlaceOrder
         var result = new UseCaseResult<PlaceOrderResponse, PlaceOrderVerification>(
             response.getStatusCode(),
             HttpStatus.CREATED,
-            Set.of(HttpStatus.UNPROCESSABLE_ENTITY),
+            Set.of(HttpStatus.UNPROCESSABLE_CONTENT),
             () -> ResponseParser.parseSuccess(response, PlaceOrderResponse.class, objectMapper),
             () -> ResponseParser.parseRejection(response, objectMapper),
             PlaceOrderVerification::new);

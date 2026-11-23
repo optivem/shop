@@ -71,7 +71,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<ProblemDetail> handleValidationException(ValidationException ex) {
         if (ex.getFieldName() != null) {
             ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
-                    HttpStatus.UNPROCESSABLE_ENTITY,
+                    HttpStatus.UNPROCESSABLE_CONTENT,
                     VALIDATION_DETAIL
             );
             problemDetail.setType(URI.create(validationErrorTypeUri));
@@ -85,17 +85,17 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             errors.add(errorDetail);
             problemDetail.setProperty(PROP_ERRORS, errors);
 
-            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(problemDetail);
+            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT).body(problemDetail);
         } else {
             ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
-                    HttpStatus.UNPROCESSABLE_ENTITY,
+                    HttpStatus.UNPROCESSABLE_CONTENT,
                     ex.getMessage()
             );
             problemDetail.setType(URI.create(validationErrorTypeUri));
             problemDetail.setTitle(VALIDATION_TITLE);
             problemDetail.setProperty(PROP_TIMESTAMP, Instant.now());
 
-            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(problemDetail);
+            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT).body(problemDetail);
         }
     }
 
@@ -155,7 +155,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                                                                    org.springframework.http.HttpStatusCode status,
                                                                    org.springframework.web.context.request.WebRequest request) {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
-                HttpStatus.UNPROCESSABLE_ENTITY,
+                HttpStatus.UNPROCESSABLE_CONTENT,
                 VALIDATION_DETAIL
         );
         problemDetail.setType(URI.create(validationErrorTypeUri));
@@ -173,7 +173,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         });
         problemDetail.setProperty(PROP_ERRORS, errors);
 
-        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body((Object) problemDetail);
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT).body((Object) problemDetail);
     }
 
     @Override
@@ -185,13 +185,13 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
         ProblemDetail problemDetail = tryParseFieldError(ex.getMessage());
         if (problemDetail != null) {
-            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body((Object) problemDetail);
+            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT).body((Object) problemDetail);
         }
 
         if (ex.getCause() != null) {
             problemDetail = tryParseFieldError(ex.getCause().getMessage());
             if (problemDetail != null) {
-                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body((Object) problemDetail);
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT).body((Object) problemDetail);
             }
         }
 
@@ -227,7 +227,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                     String fieldMessage = entry.getValue();
 
                     ProblemDetail pd = ProblemDetail.forStatusAndDetail(
-                            HttpStatus.UNPROCESSABLE_ENTITY,
+                            HttpStatus.UNPROCESSABLE_CONTENT,
                             VALIDATION_DETAIL
                     );
                     pd.setType(URI.create(validationErrorTypeUri));

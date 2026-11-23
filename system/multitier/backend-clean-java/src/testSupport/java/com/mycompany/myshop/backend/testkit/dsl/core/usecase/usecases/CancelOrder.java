@@ -32,7 +32,7 @@ public class CancelOrder extends BaseMyShopUseCase<Void, VoidVerification> {
         return new UseCaseResult<>(
             response.getStatusCode(),
             HttpStatus.NO_CONTENT,
-            Set.of(HttpStatus.UNPROCESSABLE_ENTITY, HttpStatus.NOT_FOUND),
+            Set.of(HttpStatus.UNPROCESSABLE_CONTENT, HttpStatus.NOT_FOUND),
             () -> null,
             () -> ResponseParser.parseRejection(response, objectMapper),
             VoidVerification::new);

@@ -66,7 +66,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                                                                    org.springframework.http.HttpStatusCode status,
                                                                    org.springframework.web.context.request.WebRequest request) {
         var problemDetail = ProblemDetail.forStatusAndDetail(
-                HttpStatus.UNPROCESSABLE_ENTITY,
+                HttpStatus.UNPROCESSABLE_CONTENT,
                 VALIDATION_DETAIL
         );
         problemDetail.setType(URI.create(validationErrorTypeUri));
@@ -84,7 +84,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         });
         problemDetail.setProperty(PROP_ERRORS, errors);
 
-        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body((Object) problemDetail);
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT).body((Object) problemDetail);
     }
 
     @Override
@@ -96,7 +96,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
         var problemDetail = tryBuildTypeMismatchError(ex);
         if (problemDetail != null) {
-            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body((Object) problemDetail);
+            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT).body((Object) problemDetail);
         }
 
         problemDetail = ProblemDetail.forStatusAndDetail(
@@ -135,7 +135,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         }
 
         var problemDetail = ProblemDetail.forStatusAndDetail(
-                HttpStatus.UNPROCESSABLE_ENTITY,
+                HttpStatus.UNPROCESSABLE_CONTENT,
                 VALIDATION_DETAIL
         );
         problemDetail.setType(URI.create(validationErrorTypeUri));

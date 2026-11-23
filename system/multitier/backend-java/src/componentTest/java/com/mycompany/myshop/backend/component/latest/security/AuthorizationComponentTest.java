@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.mycompany.myshop.backend.BaseComponentTest;
 import com.mycompany.myshop.backend.backendtest.configuration.TestAuthConfiguration;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.resttestclient.TestRestTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;

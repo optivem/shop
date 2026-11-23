@@ -62,18 +62,18 @@ public class UseCaseResponder {
     private ResponseEntity<Object> invalid(UseCaseError.Invalid error) {
         if (error.field() == null) {
             var problemDetail = ProblemDetail.forStatusAndDetail(
-                    HttpStatus.UNPROCESSABLE_ENTITY,
+                    HttpStatus.UNPROCESSABLE_CONTENT,
                     error.message()
             );
             problemDetail.setType(URI.create(validationErrorTypeUri));
             problemDetail.setTitle(VALIDATION_TITLE);
             problemDetail.setProperty(PROP_TIMESTAMP, Instant.now());
 
-            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(problemDetail);
+            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT).body(problemDetail);
         }
 
         var problemDetail = ProblemDetail.forStatusAndDetail(
-                HttpStatus.UNPROCESSABLE_ENTITY,
+                HttpStatus.UNPROCESSABLE_CONTENT,
                 VALIDATION_DETAIL
         );
         problemDetail.setType(URI.create(validationErrorTypeUri));
@@ -87,6 +87,6 @@ public class UseCaseResponder {
         errors.add(errorDetail);
         problemDetail.setProperty(PROP_ERRORS, errors);
 
-        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(problemDetail);
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT).body(problemDetail);
     }
 }

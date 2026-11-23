@@ -6,7 +6,7 @@ import com.mycompany.myshop.backend.usecases.queries.order.BrowseOrderHistoryRes
 import com.mycompany.myshop.backend.usecases.commands.order.PlaceOrderRequest;
 import com.mycompany.myshop.backend.usecases.commands.coupon.PublishCouponRequest;
 import java.util.Map;
-import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.resttestclient.TestRestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;

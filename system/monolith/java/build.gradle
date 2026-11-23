@@ -3,7 +3,7 @@ plugins {
 	id 'checkstyle'
 	id 'jacoco'
 	id 'org.sonarqube' version '7.5.0.8588'
-	id 'org.springframework.boot' version '3.5.6'
+	id 'org.springframework.boot' version '4.1.2'
 	id 'io.spring.dependency-management' version '1.1.7'
 }
 
@@ -11,10 +11,6 @@ checkstyle {
 	toolVersion = '10.21.4'
 	configFile = file("${rootDir}/config/checkstyle/checkstyle.xml")
 }
-
-// Override Spring Boot's managed Testcontainers version: 1.21.3 fails to talk to Docker Engine
-// 29.x (docker-java returns HTTP 400 on the daemon handshake); 1.21.4 fixes it.
-ext['testcontainers.version'] = '1.21.4'
 
 group = 'com.mycompany.myshop'
 version = '0.0.1-SNAPSHOT'
@@ -48,15 +44,18 @@ repositories {
 }
 
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
 	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	// Boot 4 defaults to Jackson 3; this keeps the Jackson 2 ObjectMapper (MoneyJsonModule, gateways,
+	// ProblemDetail handlers) on the HTTP converters until the code moves to Jackson 3.
+	implementation 'org.springframework.boot:spring-boot-jackson2'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
-	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
-	implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
-	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9'
+	implementation 'org.springframework.boot:spring-boot-starter-security-oauth2-client'
+	implementation 'org.springframework.boot:spring-boot-starter-security-oauth2-resource-server'
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.2.0'
 	// Resilience on the outbound ERP/Clock/Tax calls (timeout, retry, circuit breaker); see GatewayHttpClient.
 	// Core modules rather than the Spring Boot starter: the policy is applied in code, so it also holds
 	// for a gateway built outside a Spring context. Not managed by the Spring Boot BOM.
@@ -81,11 +80,12 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok'
 
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
 	testImplementation 'org.springframework.security:spring-security-test'
 	testImplementation 'org.springframework.boot:spring-boot-testcontainers'
-	testImplementation 'org.testcontainers:junit-jupiter'
-	testImplementation 'org.testcontainers:postgresql'
-	testImplementation 'org.flywaydb:flyway-core'
+	testImplementation 'org.testcontainers:testcontainers-junit-jupiter'
+	testImplementation 'org.testcontainers:testcontainers-postgresql'
+	testImplementation 'org.springframework.boot:spring-boot-starter-flyway'
 	testImplementation 'org.flywaydb:flyway-database-postgresql'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
