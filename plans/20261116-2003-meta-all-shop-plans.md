@@ -28,8 +28,7 @@ The orchestrating session runs the **Wave tracker** top to bottom. Run the same 
 
 ## ▶ Next executable step (resume here)
 
-**REL #107 fixed; confirm meta-prerelease is green, then start U22.** On 2026-11-24 the cloud admin API 401 (REL #107b) was traced to Keycloak 26.8's admin API audience check. Fix `f5426806` attaches the `kc-admin-api` scope, and monolith-java cloud acceptance 45299055227 is green. The cold-bootstrap timeout (REL #107a) is covered by an 1800 s wait (`b2684883`, the user's $0 choice). The debug logging is removed (`61e54686`). Details are in REL #107; the new idea is REL #109.
-- **Next:** check meta-prerelease **45305793365** (dispatched on `61e54686`). If it's red, triage the failure first. If it's green, start U22.
+**REL #107 resolved:** meta-prerelease 45305793365 is green on `61e54686` (2026-11-24 05:09 UTC). The fix is in `f5426806` (`kc-admin-api` scope) and `b2684883` (1800 s wait); details in REL #107. **In flight since 05:10 UTC:** U22 (Lane D) and U23 (Lane W), each in its own subagent. **On resume:** check `git log origin/main` and the state of PRs #148, #155 and #156 to see whether U22 and U23 landed. Tick them in the tracker, then run U24 (Lane D, after U22).
 
 **Wave 4c, new Dependabot PRs** (opened 2026-11-23 after Wave 4b). Same recipe as Wave 4b: read each PR's diff, apply it to the current main, gate, commit with `--paths`, check CI on the pushed head, then close superseded PRs.
 - **U22** npm-minor-patch group #148, Lane D. Gate: `npm ci` + lint/typecheck/tests in each touched dir, then `--sample` monolith-typescript + multitier-typescript.
