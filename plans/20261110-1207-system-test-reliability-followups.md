@@ -311,3 +311,14 @@ Seen 2026-11-24 in U23: the commit succeeded, but the push step's pull-with-reba
 
 Found 2026-11-24 in U24. typescript@7.0.2 (the Go-native compiler) has no JS compiler API: its main entry exports only `version` and `versionMajorMinor`, and the rest sits under `typescript/unstable/*`. typescript-eslint 8.74.0 (and canary 8.74.1-alpha.0) declares the peer range `typescript >=4.8.4 <6.1.0`, and ts-jest 29.4.15 declares `<7`. Peer ranges re-checked by the orchestrator. All four TS dirs use typescript-eslint; monolith and backend-typescript also use ts-jest, and backend also uses ts-node; monolith's Next.js 15 type-checks through the TS API. Every dir stays on 5.9.3, unchanged.
 - **Recommended:** stay on 5.9.3. In `.github/dependabot.yml`, add an `ignore` for `typescript` with `update-types: ["version-update:semver-major"]` to the npm entries (including system-test/typescript), so the PRs stop reappearing. Then close #149 #151 #152 #154 with a pointer here. Revisit once typescript-eslint ships a peer range that includes 7. Optional: move to 6.0.x in the meantime, which `<6.1.0` allows. **Why:** the blocker is upstream, and no fix on our side gets past a peer range plus a missing compiler API.
+
+### 112. TS circuit breaker differs from the Java one (Resilience4j, `d5f4016d`)
+
+Found 2026-11-24 in U25 (cockatiel 3.2.1 → 4.0.0, `7771c6c3`). The bump changed no behaviour, but comparing the two backends showed gaps that were already there. Both TS backends:
+- **Half-open trial calls:** TS allows 1; Java allows 2 (20 on the stub stacks).
+- **Stub-stack failure threshold:** TS uses 50%; Java uses 100%.
+- **Breaker window:** TS samples over time (10 s); Java counts the last 10 calls.
+- **Backoff jitter:** TS uses decorrelated jitter; Java uses ×2 with 0.5 jitter.
+- **Timeout:** TS has one 2000 ms timeout per attempt; Java has a 1 s connect and a 2 s read timeout.
+
+**Recommended:** mirror the `d5f4016d` stub overrides in TS. cockatiel 4's new `halfOpenSampling: { calls }` can now express the trial-call count, and the stub threshold can be set to 100%. Then run `--sample` on both TS stacks. Leave the window type, jitter style and timeout split as documented library differences. **Why:** `d5f4016d` fixed flaky stub-stack breaker trips in Java; TS stub stacks with a 50% threshold and 1 trial call can still trip the same way.

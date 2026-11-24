@@ -28,7 +28,10 @@ The orchestrating session runs the **Wave tracker** top to bottom. Run the same 
 
 ## ▶ Next executable step (resume here)
 
-**U22 and U23 are done (2026-11-24). U24 is blocked upstream (REL #111). In flight: U25, cockatiel 4 (#150 #153, Lane D), in its own subagent.** On resume: check `git log origin/main` and the state of PRs #150 and #153, then go on to X1. Lane D memory tip: run `gh optivem system-test setup` *before* `system start` (the browser download plus a running stack trips Claude Code's memory reaper). Push tip (REL #110): commit only when no other lane has unstaged changes.
+**Wave 4c is done (2026-11-24) except U24, which is blocked upstream (REL #111, PRs left open). Next: X1, the cross-repo unit (plans only, per the standing answer).** Run it from each target repo's own session (line ~287): for each item below, write a plan file in that repo and commit it there with `gh optivem commit --repo <name> --paths`.
+- **Gates checked 2026-11-24:** INL is still gated (the latest gh-optivem release is `v1.6.108`, from 2026-11-10, before `inner-loop`). GHO Items 3–4 need you to run `! gh auth refresh -h github.com -s project` first.
+- **Ready now, no gate:** B-QAS Steps 6–7 (gh-optivem, courses), B-ORD Steps 3–6 (gh-optivem, courses), REL #57/#106/#110 (gh-optivem), REL #65 (optivem-testing), B-TAX item 7 (substack).
+- **Shop-side follow-ups for your review** (not scheduled): REL #109 (Keycloak full-scope-allowed), #111 (TypeScript 7 Dependabot ignore), #112 (TS breaker vs Java).
 
 **Wave 4c, new Dependabot PRs** (opened 2026-11-23 after Wave 4b). Same recipe as Wave 4b: read each PR's diff, apply it to the current main, gate, commit with `--paths`, check CI on the pushed head, then close superseded PRs.
 - **U22** npm-minor-patch group #148, Lane D. Gate: `npm ci` + lint/typecheck/tests in each touched dir, then `--sample` monolith-typescript + multitier-typescript.
@@ -68,7 +71,7 @@ Then **X1** (cross-repo, plans only per the standing answer): INL (gated on a gh
 | 4c | U22 npm-minor-patch group (#148, 10 updates across 4 dirs) | D | done 2026-11-24 (`21e92df3`): 4 dirs, npm ci + lint + tsc + tests green; `--sample` monolith-ts + multitier-ts 11/11 each (with `system-test setup` run before `system start`, to avoid the memory reaper); CI 15/15 green; #148 closed |
 | 4c | U23 GitHub Actions majors: setup-java 6 (#156), checkout 7 (#155) | W | done 2026-11-24 (`86eb8951`): 71 checkout + 13 setup-java bumps in 52 files, actionlint clean, no input changes needed; 17/17 push runs green; Dependabot closed both PRs |
 | 4c | U24 TypeScript 7 (#149 system-test, #151 monolith, #152 backend-typescript, #154 frontend-react) | D (after U22) | blocked 2026-11-24: TS 7.0.2 has no JS compiler API, typescript-eslint peer `<6.1.0`, ts-jest `<7`; all dirs stay on 5.9.3, PRs left open → REL #111 (recommended: Dependabot ignore for TS majors) |
-| 4c | U25 cockatiel 4 (#150 monolith, #153 backend-typescript) | D (after U24) | todo |
+| 4c | U25 cockatiel 4 (#150 monolith, #153 backend-typescript) | D (after U24) | done 2026-11-24 (`7771c6c3`): 3.2.1 → 4.0.0, now ESM-only, so the Jest configs transform cockatiel; no src changes and no behaviour change; unit, component, pact and integration green; `--sample` TS ×2 11/11; CI 7/7 green; PRs closed. Existing breaker gaps vs Java → REL #112 |
 | 5 | X1 cross-repo (last) | X | todo |
 | — | M manual (user) | — | open; **M-GCP** done 2026-11-18, user actions below |
 
