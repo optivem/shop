@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh api -X POST repos/optivem/shop/actions/runs/*/pending_deployments *)"
+    ]
+  }
+}
