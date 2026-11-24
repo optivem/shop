@@ -294,6 +294,14 @@ runs:
         done
         [[ "$code" == 2* ]] || { echo "::error::Updating ${client_id} in ${realm} returned HTTP ${code}: $(head -c 2000 "$body")"; exit 1; }
         echo "Updated ${client_id} in ${realm}."
+        # Since 26.8 the admin API only accepts tokens issued for it (RFC 9700): the token must carry the
+        # built-in kc-admin-api client scope, which adds the admin API to aud. Without it every admin call
+        # is a 401 "Expected audience not available in the token" (REL #107). Default scope, so the
+        # client-credentials grant gets it without asking for it. PUT is idempotent.
+        scope_id="$(curl -fsS "${auth[@]}" "${admin}/client-scopes" | jq -r '.[] | select(.name == "kc-admin-api") | .id')"
+        [[ -n "$scope_id" ]] || { echo "::error::Realm ${realm} has no kc-admin-api client scope (added by Keycloak 26.8); is Keycloak older than 26.8?"; exit 1; }
+        curl -fsS "${auth[@]}" -X PUT "${api}/${id}/default-client-scopes/${scope_id}" > /dev/null
+        echo "${client_id} has the kc-admin-api default client scope."
         sa="$(curl -fsS "${auth[@]}" "${api}/${id}/service-account-user" | jq -r '.id // empty')"
         [[ -n "$sa" ]] || { echo "::error::${client_id} in ${realm} has no service-account user"; exit 1; }
         rm_id="$(lookup realm-management)"
