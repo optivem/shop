@@ -28,17 +28,11 @@ The orchestrating session runs the **Wave tracker** top to bottom. Run the same 
 
 ## ▶ Next executable step (resume here)
 
-**Wave 4c is done (2026-11-24) except U24, which is blocked upstream (REL #111, PRs left open). Next: X1, the cross-repo unit (plans only, per the standing answer).** Run it from each target repo's own session (line ~287): for each item below, write a plan file in that repo and commit it there with `gh optivem commit --repo <name> --paths`.
-- **Gates checked 2026-11-24:** INL is still gated (the latest gh-optivem release is `v1.6.108`, from 2026-11-10, before `inner-loop`). GHO Items 3–4 need you to run `! gh auth refresh -h github.com -s project` first.
-- **Ready now, no gate:** B-QAS Steps 6–7 (gh-optivem, courses), B-ORD Steps 3–6 (gh-optivem, courses), REL #57/#106/#110 (gh-optivem), REL #65 (optivem-testing), B-TAX item 7 (substack).
-- **Shop-side follow-ups for your review** (not scheduled): REL #109 (Keycloak full-scope-allowed), #111 (TypeScript 7 Dependabot ignore), #112 (TS breaker vs Java).
-
-**Wave 4c, new Dependabot PRs** (opened 2026-11-23 after Wave 4b). Same recipe as Wave 4b: read each PR's diff, apply it to the current main, gate, commit with `--paths`, check CI on the pushed head, then close superseded PRs.
-- **U22** npm-minor-patch group #148, Lane D. Gate: `npm ci` + lint/typecheck/tests in each touched dir, then `--sample` monolith-typescript + multitier-typescript.
-- **U23** Actions majors #155 (checkout 7) and #156 (setup-java 6), Lane W, can run in parallel with U22. Gate: actionlint, then the push-triggered workflow runs green.
-- **U24** TypeScript 7 (#149 #151 #152 #154), Lane D after U22. This is a major, so expect config and type breaks; fix forward ≤2 retries, otherwise leave the PRs open and record a REL idea. Gate: `npx tsc --noEmit` + tests per dir, `--sample` TS ×2. Monolith may be capped by Next.js the way ESLint 10 was (REL #95).
-- **U25** cockatiel 4 (#150 #153), Lane D. Gate: unit/component tests in both TS backends, then `--sample` TS ×2. It's the resilience library (breaker/retry), so compare its behaviour with the Java breaker settings (`d5f4016d`).
-Then **X1** (cross-repo, plans only per the standing answer): INL (gated on a gh-optivem release with `inner-loop`), GHO Items 3–4 (user gate: `gh auth refresh -h github.com -s project`), B-QAS Steps 6–7, B-ORD Steps 3–6, REL #57/#106 (gh-optivem), REL #65 (optivem-testing), B-TAX item 7 (substack).
+**X1's ungated part is done (2026-11-24).** Only two gated items remain. Neither can run until its gate clears:
+- **INL** (`plans/20261103-1335-readd-inner-loop-pilot-config.md`): gated on a gh-optivem release that accepts `inner-loop`. Check with `gh release list -R optivem/gh-optivem -L 3`. The latest release on 2026-11-24 was `v1.6.108`, from 2026-11-10, which is before the `inner-loop` change. Once a release has it, run INL Steps 1–2 (the config line in `gh-optivem-multitier-java.yaml`).
+- **GHO Items 3–4** (`plans/20261103-1049-gh-optivem-driven-shop-changes.md`): user gate. You run `! gh auth refresh -h github.com -s project` first, then the rehearsals (pre-approved pushes; check GitHub status first) and filing the 5c ticket as drafted.
+- **Shop-side follow-ups for your review** (not scheduled): REL #109 (Keycloak full-scope-allowed), #111 (TypeScript 7 Dependabot ignore), #112 (TS breaker vs Java), #113 (bump `Optivem.Testing` after the optivem-testing release).
+- **Not tracked here yet:** `plans/20261120-1500-per-test-admin.md` and `plans/20261120-1730-visitor-sign-up.md` were added after this meta-plan was written. Ask the user whether to schedule them.
 
 ## Wave tracker
 
@@ -72,7 +66,7 @@ Then **X1** (cross-repo, plans only per the standing answer): INL (gated on a gh
 | 4c | U23 GitHub Actions majors: setup-java 6 (#156), checkout 7 (#155) | W | done 2026-11-24 (`86eb8951`): 71 checkout + 13 setup-java bumps in 52 files, actionlint clean, no input changes needed; 17/17 push runs green; Dependabot closed both PRs |
 | 4c | U24 TypeScript 7 (#149 system-test, #151 monolith, #152 backend-typescript, #154 frontend-react) | D (after U22) | blocked 2026-11-24: TS 7.0.2 has no JS compiler API, typescript-eslint peer `<6.1.0`, ts-jest `<7`; all dirs stay on 5.9.3, PRs left open → REL #111 (recommended: Dependabot ignore for TS majors) |
 | 4c | U25 cockatiel 4 (#150 monolith, #153 backend-typescript) | D (after U24) | done 2026-11-24 (`7771c6c3`): 3.2.1 → 4.0.0, now ESM-only, so the Jest configs transform cockatiel; no src changes and no behaviour change; unit, component, pact and integration green; `--sample` TS ×2 11/11; CI 7/7 green; PRs closed. Existing breaker gaps vs Java → REL #112 |
-| 5 | X1 cross-repo (last) | X | todo |
+| 5 | X1 cross-repo (last) | X | 2026-11-24, ungated part done (plans only): gh-optivem `8ffceb07` (B-QAS 6 + B-ORD 3 → new scaffold plan; REL #57/#106/#110 → shared-host plan) plus REL #71/#73/#77 (`9b6a6df1`); courses `34ec640` (B-QAS 7, B-ORD 4–5); optivem-testing `23f5b67` (REL #65, shop half → REL #113); substack: B-TAX item 7 needs no change. B-QAS and B-ORD deleted. **Left:** INL (release gate), GHO Items 3–4 (user gate) |
 | — | M manual (user) | — | open; **M-GCP** done 2026-11-18, user actions below |
 
 ### M-GCP follow-ups — done 2026-11-18 (`6a40c010`, `78d5c4b5`); user actions

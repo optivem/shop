@@ -99,11 +99,6 @@ The .NET admin-coupons bug (fixed in storefront Step 6) was only caught because 
 Found 2026-11-12 (SHOW Step 4b). `_prod-stage.yml` creates releases through `optivem/actions/create-github-release` with the default `GITHUB_TOKEN`, and GitHub does not trigger workflows from events that token causes. So the new `release-sbom.yml` (`on: release: published`) never runs on its own; it only runs by `workflow_dispatch` with a tag.
 - **Recommended:** call `release-sbom.yml` from the prod stage as a reusable workflow (`workflow_call`) after the release step, instead of switching to a PAT/app token. **Why:** no new secret to manage, and the SBOM upload stays tied to the release that produced it.
 
-### 57. `--test` reruns overwrite the JUnit results `spec status` reads
-
-Found 2026-11-12. A `--test` rerun overwrites the JUnit results that `spec status` reads, and the "never executed" check wipes the other suites' results. Extends #38/#42 (same "never executed" logic, not the overwrite).
-- **Recommended:** fold into the #38/#42 gh-optivem plan: a filtered rerun merges into the existing results instead of replacing them. **Why:** one targeted rerun shouldn't erase the evidence of a full run.
-
 ### 61. Java Playwright navigation hangs
 
 Found 2026-11-12. Java Playwright waits 30 s for "scheduled navigations" after Keycloak login / Sign In, or on `navigate("/")` load. The hangs grew more frequent over the session and hit different tests each run; TS Playwright on the same stacks never hung.
@@ -115,10 +110,6 @@ Found 2026-11-12. Java Playwright waits 30 s for "scheduled navigations" after K
 
 Found 2026-11-12. Seen once, unexplained.
 - **Recommended: watch for it;** investigate if it recurs. **Why:** one occurrence isn't enough to diagnose.
-
-### 65. optivem-testing `ChannelDataAttribute` runs UI-only tests in the API suites
-Found 2026-11-12 (.NET pass). When the `CHANNEL` filter leaves no channels (a UI-only test in an API suite), the attribute falls back to all channels. So every UI-only test also runs in the API suites, in Dynamic channel mode. That doubles the browser load and caused the isolated-api "order had no shipping address" failures.
-- **Recommended:** fix it in the optivem-testing library: an empty filtered set should run zero cases. Then release it and bump shop. **Why:** a filter that widens when it matches nothing hides failures and doubles UI cost.
 
 ### 67. Pipeline-hiding commit-stage failures and remaining coupon-list readers
 Found 2026-11-12 (pipeline-green pass). First bullet done in `dc1a505e` (warning on a red commit stage).
@@ -138,28 +129,10 @@ Moved here so nothing is lost when the storefront plans were deleted.
 - Strict mode (UC1 D4, U2): with all twelve use cases implemented, `spec check --mode strict` fails in every language only on these two `Planned` criteria (UC-005.7, UC-011.2). Java's extra UC-009.2 is fixed (#71, `db087f76`), so every language is at 110/112. Lenient passes everywhere. The strict switch itself is now #72.
 - **Recommended:** triage the behaviour differences one by one (each is a small spec-or-code decision), and add the missing tests when the test kit can isolate coupons/orders (UC-005.7, UC-011.2). **Why:** they are real gaps, but none blocks the `implemented` status of a use case whose other criteria all pass.
 
-### 71. `spec status` reports a passing parameterised UI-only Java test as Planned
-
-Found 2026-11-17 (U1 Java pass). With every use case counted, Java shows `UC-009.2` as **Planned** although all its tests passed: the three UI runs of `shouldApplyTheTaxRateOfTheShippingAddressesCountry` are named with their arguments (`... [Channel: UI, address: ..., country: US, taxRate: 0.00]`) and become three separate test entries, while the API-suite skip (`shouldApplyTheTaxRateOfTheShippingAddressesCountry() [Skipped: API channel was not specified]`) normalises to the bare name, which then has only a skipped result and turns the criterion Planned. .NET and TS report it Verified. Lenient mode doesn't block on it; strict mode (U2) may count it as unverified.
-- **Root cause (U2, 2026-11-17):** the `address` argument is the record `BaseCheckOutTest.Address`, whose default `toString()` is `Address[firstName=..., ...]`. Its brackets nest inside `[Channel: UI, address: ...]`, and gh-optivem's suffix regex (`\s*\[[^\]]*\]\s*$`, `internal/spec/junit.go`) can't strip a nested bracket, so the UI runs kept their argument lists. The API skip (`... [Skipped: ...]`) is dropped as not-applicable but still creates the bare-name entry with no results, which reads as skipped.
-- **Shop side done (`db087f76`):** `Address.toString()` returns `formatted()` (no brackets). The UI runs now normalise to the bare name and UC-009.2 is Verified in Java (local isolated UI + API run).
-- **Still recommended:** fix in gh-optivem (X1) as well: strip the whole trailing bracket group even when an argument nests brackets, and drop a test entry that has only not-applicable results. **Why:** any other record argument would hit the same trap, and a green test must not read as unbuilt.
-
-
-### 73. `gh optivem commit` cannot push from a shared dirty checkout
-
-Found 2026-11-17 (U10, meta-plan Wave 3). With several agents in one checkout, every `gh optivem commit --paths …` committed but stopped before pushing: its pull step runs `git pull --rebase`, which refuses while any other file is unstaged ("cannot pull with rebase: You have unstaged changes"). U10's three commits (`8cf687c3`, `5a294ef7`, `a2520492`) and an earlier B-PRG commit stayed local-only, so CI never saw them and the new `lighthouse.yml` could not be dispatched. (Numbered 73 because #72 is referenced in this file's header but its section was not in the local copy yet.)
-- **Recommended:** fix in gh-optivem (X1): pull with a merge (`git pull --no-rebase --autostash`, matching the user's "plain git pull, never rebase" rule) so other sessions' dirty files don't block the push. Until then, the orchestrator pushes once per wave when the tree is clean. **Why:** a commit that silently stays local hides work from CI and from the "verify `git log origin/main`" check.
-
 ### 74. Sent outbox rows are never purged (backend-java multitier)
 
 Found 2026-11-17 (U11 OUTBOX). The transactional-outbox worked example (`system/multitier/backend-java/.../core/outbox/`, migration `V20261117150000__add_outbox_and_order_placed_audit.sql`) keeps every sent `outbox` row and every `order_placed_audit` row forever. On a long-lived stack (prod, a student's running local stack) both tables grow by one row per order. The how-to (`docs/transactional-outbox.md`, Caveats) says so.
 - **Recommended:** leave it until a real consumer lands, then add a purge of `outbox` rows with `sent_at` older than 7 days to the relay's poll (one `DELETE ... WHERE sent_at < now() - interval '7 days'` per N polls), mirroring the B-PRG idempotency-key purge. **Why:** the table is tiny at demo volumes, and the purge belongs next to the idempotency purge so the two follow one pattern.
-
-### 77. `gh optivem commit` appends a second, different Co-Authored-By trailer
-
-Found 2026-11-17 (U9). Commits made with `gh optivem commit --yes --paths … "<message>"` end with the caller's `Co-Authored-By: Claude Opus 5.5` and `Claude-Session` lines, then a blank line and an extra `Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>` the tool adds itself (e.g. `707e37a6`).
-- **Recommended:** fix in gh-optivem (X1): skip the tool's own trailer when the message already has a `Co-Authored-By:` line. **Why:** the extra line names the wrong model and splits the trailer block.
 
 ### 78. `frontend-react` (nginx) CSP is report-only — ✅ Done (`f02a79a1`)
 
@@ -279,11 +252,6 @@ Found 2026-11-23 while fixing the clean-java commit stage (red since 2026-11-18:
 Found 2026-11-23 (U20, `0c417732`). `dependabot.yml` excludes `docker/**/docker-compose*.yml` on purpose, and `compose-drift.yml` only checks that the 24 compose files agree with **each other**. Nothing checks them against the digest-pinned `FROM` lines in `system/db/Dockerfile`, `docker/keycloak/Dockerfile` and `external-systems/stubs/Dockerfile`. #91 and #95 would have left all 24 compose files on flyway 10.21 / keycloak 26.0 / wiremock 3.10 (U20 bumped them by hand), and local `--sample` would have tested the old images.
 - **Recommended:** extend `compose-drift.yml` with one assertion: the flyway, keycloak and wiremock tags in the compose files equal the tag part of the matching Dockerfile `FROM`. **Why:** it keeps the existing "no Dependabot on compose" decision and turns silent drift into a red check on the Dependabot PR itself.
 
-### 106. `gh optivem commit --paths` silently treats a comma-separated list as one path
-
-Found 2026-11-23 (U20). `--paths "a,b"` fails with a `git add` pathspec error (exit 128); only space-separated works, and the help text doesn't say so. → gh-optivem.
-- **Recommended:** goes to X1 as a gh-optivem plan item (accept commas or document the separator). **Why:** shop doesn't edit gh-optivem (read-only, 2026-11-06).
-
 ### 107. Keycloak minor bump took the shared cloud Keycloak (incl. `shop-prod`) down for ~40 min
 
 Incident 2026-11-23, caused by U20 (`0c417732`, keycloak 26.0 → 26.8 in `docker/keycloak/Dockerfile`). The multitier-dotnet QA stage (run 45165378553, tested `e52df37b`) built and deployed revision `shop-keycloak-00014-dbn`; on first boot Keycloak 26.8.2 ran its Liquibase + model migration (26.0 → 26.1+) against the shared DB and returned 503 ("Request received during bootstrapping") for all realms. The deploy's `wait-for-endpoints` (900 s) timed out at 11:43 (exit 124) and failed meta-prerelease 45136998785. After that nothing hit the service, so Cloud Run (1 vCPU, request-based CPU) starved the migration; it only progressed once the orchestrator polled the realms every 5 s, and all three realms returned 200 at 12:08 UTC. Outage window ~11:28–12:08 UTC for shop, shop-qa **and shop-prod**. Not rolled back: Keycloak doesn't support DB downgrade once the migration has started. Local `--sample` couldn't catch it: local stacks use a fresh DB and the plain upstream image, not `docker/keycloak/Dockerfile`.
@@ -302,11 +270,6 @@ Found 2026-11-23 in meta-prerelease 45209901068 (inner run 45210100125, multitie
 Seen 2026-11-24 in the cloud Keycloak logs: `Client 'shop-system-test-admin' in the realm 'shop' has 'Full scope allowed' switch enabled. This client switch is deprecated`. The client JSON doesn't set `fullScopeAllowed`, so it takes the default (true). Other realm clients probably warn the same way.
 - **Recommended:** set `"fullScopeAllowed": false` in `docker/keycloak/system-test-admin-client.json` and add realm-management's three user roles to its scope mappings. Then audit the realm's other clients the same way before Keycloak removes the switch. **Why:** it's a warning today but becomes a break on removal, and least privilege is already this client's stated intent.
 
-### 110. `gh optivem commit --paths` can't push while another agent has unstaged changes in the same clone
-
-Seen 2026-11-24 in U23: the commit succeeded, but the push step's pull-with-rebase refused to run because U22 had unstaged `package.json` edits in the same clone. The subagent then pushed with a plain `git push origin main` (a fast-forward of one commit), which breaks the "push only via the commit skill" rule. Parallel lanes in one clone hit this every time.
-- **Recommended:** in gh-optivem, have the push step use `git pull --autostash` (or stash and pop the unrelated dirty paths) when `--paths` is given, and keep failing loudly on a real conflict. Until that ships, the meta-plan's subagent briefs should say: on this failure, wait and re-run `gh optivem commit` once the other lane has committed; never push by hand. **Why:** the meta-plan runs lanes in parallel by design, and every hand push is an exception to the commit rule.
-
 ### 111. TypeScript 7 is blocked by the tooling (Dependabot #149 #151 #152 #154 left open)
 
 Found 2026-11-24 in U24. typescript@7.0.2 (the Go-native compiler) has no JS compiler API: its main entry exports only `version` and `versionMajorMinor`, and the rest sits under `typescript/unstable/*`. typescript-eslint 8.74.0 (and canary 8.74.1-alpha.0) declares the peer range `typescript >=4.8.4 <6.1.0`, and ts-jest 29.4.15 declares `<7`. Peer ranges re-checked by the orchestrator. All four TS dirs use typescript-eslint; monolith and backend-typescript also use ts-jest, and backend also uses ts-node; monolith's Next.js 15 type-checks through the TS API. Every dir stays on 5.9.3, unchanged.
@@ -322,3 +285,8 @@ Found 2026-11-24 in U25 (cockatiel 3.2.1 → 4.0.0, `7771c6c3`). The bump change
 - **Timeout:** TS has one 2000 ms timeout per attempt; Java has a 1 s connect and a 2 s read timeout.
 
 **Recommended:** mirror the `d5f4016d` stub overrides in TS. cockatiel 4's new `halfOpenSampling: { calls }` can now express the trial-call count, and the stub threshold can be set to 100%. Then run `--sample` on both TS stacks. Leave the window type, jitter style and timeout split as documented library differences. **Why:** `d5f4016d` fixed flaky stub-stack breaker trips in Java; TS stub stacks with a 50% threshold and 1 trial call can still trip the same way.
+
+### 113. Bump `Optivem.Testing` once the .NET `ChannelData` empty-filter fix is released
+
+Found 2026-11-24 (X1). REL #65 moved to optivem-testing as `plans/20261124-1013-dotnet-channeldata-empty-filter.md` (`23f5b67`): .NET `ChannelDataAttribute.GetData` widens an empty `CHANNEL` filter to all channels, so UI-only tests run in the API suites. Its Step 5 is shop-side.
+- **Recommended:** once optivem-testing releases 1.1.10, bump the `Optivem.Testing` package 1.1.9 → 1.1.10 in `system-test/dotnet`, run `--sample` monolith-dotnet + multitier-dotnet, and confirm the API suite no longer runs `BrowseCatalogNegativeIsolatedTest`. **Why:** the fix only reaches shop through the package version.
