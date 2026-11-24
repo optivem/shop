@@ -32,7 +32,7 @@
     "decimal.js": "10.6.0",
     "jose": "6.2.18",
     "next": "15.5.29",
-    "openid-client": "6.9.0",
+    "openid-client": "6.9.1",
     "pg": "8.23.1",
     "react": "19.3.1",
     "react-dom": "19.3.1",
