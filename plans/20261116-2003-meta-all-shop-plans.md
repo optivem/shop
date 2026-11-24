@@ -1,7 +1,6 @@
 # 2026-11-16 20:03 UTC — Plan coordination meta-plan: all shop plans
 
 
-
 ## TL;DR
 
 **Why:** Shop has 21 open plans: three earlier meta-plans, the in-flight storefront/showcase/reliability work and the backlog. They share the one local docker host, the system-test drivers, the acceptance/QA/prod workflows and `frontend-react`, and several backlog plans were overtaken by later work. Running them one by one by hand repeats the docker clashes and double orchestration that REL #36/#45/#56 recorded.
@@ -28,7 +27,7 @@ The orchestrating session runs the **Wave tracker** top to bottom. Run the same 
 
 ## ▶ Next executable step (resume here)
 
-**Next: Wave 6, U26 per-test admin** (`plans/20261120-1500-per-test-admin.md`, Lane D; approved by the user 2026-11-24). Work its Items 1–5 in order: driver `createAdmin` ×3 languages → DSL `newAdmin` / `loggedInAsAdmin()` creates a fresh admin → migrate every `UserIdentity.ADMIN` use ×3 → remove the pre-seeded test admin from the test realm imports → gate. Gate: compile-all, admin-touching acceptance tests run in parallel, then `--sample` all six stacks (Lane D rules; `system-test setup` before `system start`), CI green on the pushed head. Commit per item with `gh optivem commit --repo shop --paths "<space-separated files>"` (one value; repeating `--paths` keeps only the last). After U26: **U27 visitor sign-up** (`plans/20261120-1730-visitor-sign-up.md`), decisions recorded in its Items 2–3.
+**Next: unblock Wave 6, U26 per-test admin** (`plans/20261120-1500-per-test-admin.md`, Lane D). The code for Items 1–5 is in `stash@{0}` on `Valentina_Desk` ("U26 per-test admin WIP"), and as a patch in that session's scratchpad. The stash exists only on that machine, so resume U26 there, or re-implement it from the child plan elsewhere. Apply it with `git stash apply`. The open problem is the .NET `acceptance-parallel-ui` regression: Playwright times out after 30 s loading `http://localhost:3212/`. First step, from the child plan: take a Playwright trace of one failing .NET UI scenario. It will show whether the cause is the fresh admin's login or calls queueing behind the 4-call Keycloak limit. If it is the limit, fall back to one admin per test process for the implicit admin-only operations and keep a fresh admin per scenario for `loggedInAsAdmin()`. Gate: compile-all, then the .NET UI suite back at 0 failures, then `--sample` on all six stacks (TS and multitier not yet run), then CI green. After U26: **U27 visitor sign-up** (`plans/20261120-1730-visitor-sign-up.md`).
 
 **Gated (cannot run yet):**
 - **INL** (`plans/20261103-1335-readd-inner-loop-pilot-config.md`): needs a gh-optivem release that accepts `inner-loop`. Check with `gh release list -R optivem/gh-optivem -L 3`; the latest on 2026-11-24 was `v1.6.108` (2026-11-10, before the change). Then INL Steps 1–2.
@@ -68,8 +67,8 @@ The orchestrating session runs the **Wave tracker** top to bottom. Run the same 
 | 4c | U24 TypeScript 7 (#149 system-test, #151 monolith, #152 backend-typescript, #154 frontend-react) | D (after U22) | blocked 2026-11-24: TS 7.0.2 has no JS compiler API, typescript-eslint peer `<6.1.0`, ts-jest `<7`; all dirs stay on 5.9.3, PRs left open → REL #111 (recommended: Dependabot ignore for TS majors) |
 | 4c | U25 cockatiel 4 (#150 monolith, #153 backend-typescript) | D (after U24) | done 2026-11-24 (`7771c6c3`): 3.2.1 → 4.0.0, now ESM-only, so the Jest configs transform cockatiel; no src changes and no behaviour change; unit, component, pact and integration green; `--sample` TS ×2 11/11; CI 7/7 green; PRs closed. Existing breaker gaps vs Java → REL #112 |
 | 5 | X1 cross-repo (last) | X | 2026-11-24, ungated part done (plans only): gh-optivem `8ffceb07` (B-QAS 6 + B-ORD 3 → new scaffold plan; REL #57/#106/#110 → shared-host plan) plus REL #71/#73/#77 (`9b6a6df1`); courses `34ec640` (B-QAS 7, B-ORD 4–5); optivem-testing `23f5b67` (REL #65, shop half → REL #113); substack: B-TAX item 7 needs no change. B-QAS and B-ORD deleted. **Left:** INL (release gate), GHO Items 3–4 (user gate) |
-| 6 | U26 per-test admin (`20261120-1500-per-test-admin`) | D | todo (approved 2026-11-24) |
-| 6 | U27 visitor sign-up UC-013 (`20261120-1730-visitor-sign-up`) | D (after U26) | todo (approved 2026-11-24; decisions: prod registration off, country = required Keycloak registration attribute) |
+| 6 | U26 per-test admin (`20261120-1500-per-test-admin`) | D | **blocked 2026-11-24** after 2 retries: Items 1–5 coded ×3 languages (stash on `Valentina_Desk` + patch, not committed). Java: acceptance 388/0, `--sample` 11/11. .NET `acceptance-parallel-ui` regresses (151/0 on main → 116/53, 157/16): Playwright 30 s timeouts loading the app. Blocker + next step in the child plan (`a72bfe95`); REL #114 added |
+| 6 | U27 visitor sign-up UC-013 (`20261120-1730-visitor-sign-up`) | D (after U26) | waiting on U26 (approved 2026-11-24; decisions: prod registration off, country = required Keycloak registration attribute) |
 | — | M manual (user) | — | open; **M-GCP** done 2026-11-18, user actions below |
 
 ### M-GCP follow-ups — done 2026-11-18 (`6a40c010`, `78d5c4b5`); user actions
