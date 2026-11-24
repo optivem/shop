@@ -31,7 +31,7 @@ The orchestrating session runs the **Wave tracker** top to bottom. Run the same 
 
 **Gated (cannot run yet):**
 - **INL** (`plans/20261103-1335-readd-inner-loop-pilot-config.md`): needs a gh-optivem release that accepts `inner-loop`. Check with `gh release list -R optivem/gh-optivem -L 3`; the latest on 2026-11-24 was `v1.6.108` (2026-11-10, before the change). Then INL Steps 1–2.
-- **GHO Items 3–4** (`plans/20261103-1049-gh-optivem-driven-shop-changes.md`): the user runs `! gh auth refresh -h github.com -s project` first; then the rehearsals and the 5c ticket as drafted.
+- **GHO Items 3–4** (`plans/20261103-1049-gh-optivem-driven-shop-changes.md`): user gate cleared 2026-11-24 (`gh auth refresh -s project` done; token now has `project`; `../gh-optivem/.env` present). Runnable after U26/U27 in Lane D (rehearsals need docker): file the 5c ticket as drafted, then rehearse #65 and the new ticket.
 - **Shop-side follow-ups for your review** (not scheduled): REL #109, #111, #112, #113.
 
 ## Wave tracker
