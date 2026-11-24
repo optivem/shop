@@ -53,7 +53,7 @@
     "jest": "30.5.2",
     "testcontainers": "12.2.2",
     "ts-jest": "29.4.15",
-    "typescript": "5.9.3",
+    "typescript": "7.0.2",
     "typescript-eslint": "8.73.0"
   }
 }
