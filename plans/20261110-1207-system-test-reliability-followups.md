@@ -301,3 +301,8 @@ Found 2026-11-23 in meta-prerelease 45209901068 (inner run 45210100125, multitie
 
 Seen 2026-11-24 in the cloud Keycloak logs: `Client 'shop-system-test-admin' in the realm 'shop' has 'Full scope allowed' switch enabled. This client switch is deprecated`. The client JSON doesn't set `fullScopeAllowed`, so it takes the default (true). Other realm clients probably warn the same way.
 - **Recommended:** set `"fullScopeAllowed": false` in `docker/keycloak/system-test-admin-client.json` and add realm-management's three user roles to its scope mappings. Then audit the realm's other clients the same way before Keycloak removes the switch. **Why:** it's a warning today but becomes a break on removal, and least privilege is already this client's stated intent.
+
+### 110. `gh optivem commit --paths` can't push while another agent has unstaged changes in the same clone
+
+Seen 2026-11-24 in U23: the commit succeeded, but the push step's pull-with-rebase refused to run because U22 had unstaged `package.json` edits in the same clone. The subagent then pushed with a plain `git push origin main` (a fast-forward of one commit), which breaks the "push only via the commit skill" rule. Parallel lanes in one clone hit this every time.
+- **Recommended:** in gh-optivem, have the push step use `git pull --autostash` (or stash and pop the unrelated dirty paths) when `--paths` is given, and keep failing loudly on a real conflict. Until that ships, the meta-plan's subagent briefs should say: on this failure, wait and re-run `gh optivem commit` once the other lane has committed; never push by hand. **Why:** the meta-plan runs lanes in parallel by design, and every hand push is an exception to the commit rule.

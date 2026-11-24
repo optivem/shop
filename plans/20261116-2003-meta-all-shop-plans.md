@@ -66,7 +66,7 @@ Then **X1** (cross-repo, plans only per the standing answer): INL (gated on a gh
 | 4b | U20 Flyway 13 (#95) + docker-minor-patch group (#91) | D (after U19) | done 2026-11-23 (`0c417732`): flyway 10.21 → 13.12.2, keycloak 26.0 → 26.8, wiremock 3.10 → 3.13.2-3, alpine 3.20 → 3.24 in 3 Dockerfiles + all 24 compose files; `--sample` all six stacks 11/11; #95 #91 closed; REL #105 #106. **Incident:** the Keycloak 26.8 DB migration took cloud Keycloak (incl. prod) down ~11:28–12:08 UTC, REL #107 |
 | 4b | U21 rebased Dependabot non-majors (Boot 4.2.0 #87 #90 #94 #96, Gradle 9.9.2 #136–#139) | D (after U20) | done 2026-11-23 (`a9926bd3`): Boot 4.1.2 → 4.2.0, springdoc 3.2.1, Gradle 9.9.2; builds, component, integration and contract tests green; `--sample` monolith-java + multitier-java 11/11; CI green (head `6e56dc4b`); PRs closed |
 | 4c | U22 npm-minor-patch group (#148, 10 updates across 4 dirs) | D | todo |
-| 4c | U23 GitHub Actions majors: setup-java 6 (#156), checkout 7 (#155) | W | todo |
+| 4c | U23 GitHub Actions majors: setup-java 6 (#156), checkout 7 (#155) | W | done 2026-11-24 (`86eb8951`): 71 checkout + 13 setup-java bumps in 52 files, actionlint clean, no input changes needed; 17/17 push runs green; Dependabot closed both PRs |
 | 4c | U24 TypeScript 7 (#149 system-test, #151 monolith, #152 backend-typescript, #154 frontend-react) | D (after U22) | todo |
 | 4c | U25 cockatiel 4 (#150 monolith, #153 backend-typescript) | D (after U24) | todo |
 | 5 | X1 cross-repo (last) | X | todo |
