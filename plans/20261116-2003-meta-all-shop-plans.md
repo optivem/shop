@@ -28,7 +28,7 @@ The orchestrating session runs the **Wave tracker** top to bottom. Run the same 
 
 ## ▶ Next executable step (resume here)
 
-**U22 and U23 are done (2026-11-24). In flight: U24, TypeScript 7 (#149 #151 #152 #154, Lane D), in its own subagent.** On resume: check `git log origin/main` and the four PRs' state. Once U24 is done, run U25 (cockatiel 4, Lane D), then X1. Lane D memory tip: run `gh optivem system-test setup` *before* `system start` (the browser download plus a running stack trips Claude Code's memory reaper). Push tip (REL #110): commit only when no other lane has unstaged changes.
+**U22 and U23 are done (2026-11-24). U24 is blocked upstream (REL #111). In flight: U25, cockatiel 4 (#150 #153, Lane D), in its own subagent.** On resume: check `git log origin/main` and the state of PRs #150 and #153, then go on to X1. Lane D memory tip: run `gh optivem system-test setup` *before* `system start` (the browser download plus a running stack trips Claude Code's memory reaper). Push tip (REL #110): commit only when no other lane has unstaged changes.
 
 **Wave 4c, new Dependabot PRs** (opened 2026-11-23 after Wave 4b). Same recipe as Wave 4b: read each PR's diff, apply it to the current main, gate, commit with `--paths`, check CI on the pushed head, then close superseded PRs.
 - **U22** npm-minor-patch group #148, Lane D. Gate: `npm ci` + lint/typecheck/tests in each touched dir, then `--sample` monolith-typescript + multitier-typescript.
@@ -67,7 +67,7 @@ Then **X1** (cross-repo, plans only per the standing answer): INL (gated on a gh
 | 4b | U21 rebased Dependabot non-majors (Boot 4.2.0 #87 #90 #94 #96, Gradle 9.9.2 #136–#139) | D (after U20) | done 2026-11-23 (`a9926bd3`): Boot 4.1.2 → 4.2.0, springdoc 3.2.1, Gradle 9.9.2; builds, component, integration and contract tests green; `--sample` monolith-java + multitier-java 11/11; CI green (head `6e56dc4b`); PRs closed |
 | 4c | U22 npm-minor-patch group (#148, 10 updates across 4 dirs) | D | done 2026-11-24 (`21e92df3`): 4 dirs, npm ci + lint + tsc + tests green; `--sample` monolith-ts + multitier-ts 11/11 each (with `system-test setup` run before `system start`, to avoid the memory reaper); CI 15/15 green; #148 closed |
 | 4c | U23 GitHub Actions majors: setup-java 6 (#156), checkout 7 (#155) | W | done 2026-11-24 (`86eb8951`): 71 checkout + 13 setup-java bumps in 52 files, actionlint clean, no input changes needed; 17/17 push runs green; Dependabot closed both PRs |
-| 4c | U24 TypeScript 7 (#149 system-test, #151 monolith, #152 backend-typescript, #154 frontend-react) | D (after U22) | todo |
+| 4c | U24 TypeScript 7 (#149 system-test, #151 monolith, #152 backend-typescript, #154 frontend-react) | D (after U22) | blocked 2026-11-24: TS 7.0.2 has no JS compiler API, typescript-eslint peer `<6.1.0`, ts-jest `<7`; all dirs stay on 5.9.3, PRs left open → REL #111 (recommended: Dependabot ignore for TS majors) |
 | 4c | U25 cockatiel 4 (#150 monolith, #153 backend-typescript) | D (after U24) | todo |
 | 5 | X1 cross-repo (last) | X | todo |
 | — | M manual (user) | — | open; **M-GCP** done 2026-11-18, user actions below |
