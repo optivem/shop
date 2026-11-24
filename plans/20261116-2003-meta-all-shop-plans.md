@@ -28,7 +28,7 @@ The orchestrating session runs the **Wave tracker** top to bottom. Run the same 
 
 ## ▶ Next executable step (resume here)
 
-**REL #107 resolved:** meta-prerelease 45305793365 is green on `61e54686` (2026-11-24 05:09 UTC). The fix is in `f5426806` (`kc-admin-api` scope) and `b2684883` (1800 s wait); details in REL #107. **In flight since 05:10 UTC:** U22 (Lane D) and U23 (Lane W), each in its own subagent. **On resume:** check `git log origin/main` and the state of PRs #148, #155 and #156 to see whether U22 and U23 landed. Tick them in the tracker, then run U24 (Lane D, after U22).
+**U22 and U23 are done (2026-11-24). In flight: U24, TypeScript 7 (#149 #151 #152 #154, Lane D), in its own subagent.** On resume: check `git log origin/main` and the four PRs' state. Once U24 is done, run U25 (cockatiel 4, Lane D), then X1. Lane D memory tip: run `gh optivem system-test setup` *before* `system start` (the browser download plus a running stack trips Claude Code's memory reaper). Push tip (REL #110): commit only when no other lane has unstaged changes.
 
 **Wave 4c, new Dependabot PRs** (opened 2026-11-23 after Wave 4b). Same recipe as Wave 4b: read each PR's diff, apply it to the current main, gate, commit with `--paths`, check CI on the pushed head, then close superseded PRs.
 - **U22** npm-minor-patch group #148, Lane D. Gate: `npm ci` + lint/typecheck/tests in each touched dir, then `--sample` monolith-typescript + multitier-typescript.
@@ -65,7 +65,7 @@ Then **X1** (cross-repo, plans only per the standing answer): INL (gated on a gh
 | 4b | U19 Spring Boot 4.1 (#87 #90 #94 #96) | D (after U18) | done 2026-11-23 (`e467f3f6`): Boot 3.5.6 → 4.1.2 (Spring 7, Testcontainers 2, JUnit 6, Hibernate 7; springdoc 3.2.0; Jackson 2 kept via the `spring-boot-jackson2` bridge → REL #100); build ×3 + `--sample` java ×2 green; REL #101–#103; CI green |
 | 4b | U20 Flyway 13 (#95) + docker-minor-patch group (#91) | D (after U19) | done 2026-11-23 (`0c417732`): flyway 10.21 → 13.12.2, keycloak 26.0 → 26.8, wiremock 3.10 → 3.13.2-3, alpine 3.20 → 3.24 in 3 Dockerfiles + all 24 compose files; `--sample` all six stacks 11/11; #95 #91 closed; REL #105 #106. **Incident:** the Keycloak 26.8 DB migration took cloud Keycloak (incl. prod) down ~11:28–12:08 UTC, REL #107 |
 | 4b | U21 rebased Dependabot non-majors (Boot 4.2.0 #87 #90 #94 #96, Gradle 9.9.2 #136–#139) | D (after U20) | done 2026-11-23 (`a9926bd3`): Boot 4.1.2 → 4.2.0, springdoc 3.2.1, Gradle 9.9.2; builds, component, integration and contract tests green; `--sample` monolith-java + multitier-java 11/11; CI green (head `6e56dc4b`); PRs closed |
-| 4c | U22 npm-minor-patch group (#148, 10 updates across 4 dirs) | D | todo |
+| 4c | U22 npm-minor-patch group (#148, 10 updates across 4 dirs) | D | done 2026-11-24 (`21e92df3`): 4 dirs, npm ci + lint + tsc + tests green; `--sample` monolith-ts + multitier-ts 11/11 each (with `system-test setup` run before `system start`, to avoid the memory reaper); CI 15/15 green; #148 closed |
 | 4c | U23 GitHub Actions majors: setup-java 6 (#156), checkout 7 (#155) | W | done 2026-11-24 (`86eb8951`): 71 checkout + 13 setup-java bumps in 52 files, actionlint clean, no input changes needed; 17/17 push runs green; Dependabot closed both PRs |
 | 4c | U24 TypeScript 7 (#149 system-test, #151 monolith, #152 backend-typescript, #154 frontend-react) | D (after U22) | todo |
 | 4c | U25 cockatiel 4 (#150 monolith, #153 backend-typescript) | D (after U24) | todo |
