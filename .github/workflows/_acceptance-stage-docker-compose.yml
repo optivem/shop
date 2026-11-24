@@ -141,7 +141,7 @@ jobs:
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Checkout Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           ref: ${{ env.COMMIT_SHA }}
@@ -261,7 +261,7 @@ jobs:
     steps:
       # === Checkout Code ===
       - name: Checkout Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           ref: ${{ env.COMMIT_SHA }}
@@ -331,7 +331,7 @@ jobs:
       # === Setup Test Harness ===
       - name: Setup Java
         if: env.TEST_LANGUAGE == 'java'
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           java-version: 21
           distribution: temurin
@@ -564,14 +564,14 @@ jobs:
       contents: read
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           ref: ${{ env.COMMIT_SHA }}
 
       - name: Setup Java
         if: env.TEST_LANGUAGE == 'java'
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           java-version: 21
           distribution: temurin

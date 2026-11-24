@@ -104,7 +104,7 @@ jobs:
           echo "Pipeline timeout (seconds): ${{ inputs.pipeline-timeout-seconds }}"
           echo "Stage timeout (seconds): ${{ inputs.stage-timeout-seconds }}"
           echo "Triggered by: ${{ github.event_name }} ${{ github.event.schedule }}"
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Read VERSION
@@ -333,7 +333,7 @@ jobs:
 
       - name: Re-Checkout After Bump
         if: ${{ steps.verify-pre-bump.outputs.needs_bump == 'true' }}
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           ref: main
