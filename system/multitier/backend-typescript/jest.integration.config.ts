@@ -10,8 +10,20 @@ const config: Config = {
   rootDir: 'src',
   testRegex: '.*\\.integration\\.spec\\.ts$',
   transform: {
+    // cockatiel 4 ships ESM only; transpile it to CommonJS for Jest (`.` matches either path separator).
+    'node_modules.cockatiel.+\\.js$': [
+      'ts-jest',
+      {
+        tsconfig: {
+          allowJs: true,
+          module: 'commonjs',
+          moduleResolution: 'node10',
+        },
+      },
+    ],
     '^.+\\.(t|j)s$': 'ts-jest',
   },
+  transformIgnorePatterns: ['/node_modules/(?!cockatiel/)'],
   testEnvironment: 'node',
 };
 

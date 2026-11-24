@@ -4,6 +4,17 @@
   "testEnvironment": "node",
   "testRegex": "pact/.*\\.pact\\.spec\\.ts$",
   "transform": {
+    "node_modules.cockatiel.+\\.js$": [
+      "ts-jest",
+      {
+        "tsconfig": {
+          "allowJs": true,
+          "module": "commonjs",
+          "moduleResolution": "node10"
+        }
+      }
+    ],
     "^.+\\.(t|j)s$": "ts-jest"
-  }
+  },
+  "transformIgnorePatterns": ["/node_modules/(?!cockatiel/)"]
 }

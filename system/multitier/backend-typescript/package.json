@@ -48,7 +48,7 @@
     "@opentelemetry/sdk-node": "0.301.2",
     "class-transformer": "0.5.1",
     "class-validator": "0.15.1",
-    "cockatiel": "3.2.1",
+    "cockatiel": "4.0.0",
     "decimal.js": "10.6.0",
     "jose": "5.10.0",
     "pg": "8.23.1",
@@ -95,8 +95,21 @@
       "\\.integration\\.spec\\.ts$"
     ],
     "transform": {
+      "node_modules.cockatiel.+\\.js$": [
+        "ts-jest",
+        {
+          "tsconfig": {
+            "allowJs": true,
+            "module": "commonjs",
+            "moduleResolution": "node10"
+          }
+        }
+      ],
       "^.+\\.(t|j)s$": "ts-jest"
     },
+    "transformIgnorePatterns": [
+      "/node_modules/(?!cockatiel/)"
+    ],
     "collectCoverageFrom": [
       "**/*.(t|j)s"
     ],
