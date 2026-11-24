@@ -28,11 +28,12 @@ The orchestrating session runs the **Wave tracker** top to bottom. Run the same 
 
 ## ▶ Next executable step (resume here)
 
-**X1's ungated part is done (2026-11-24).** Only two gated items remain. Neither can run until its gate clears:
-- **INL** (`plans/20261103-1335-readd-inner-loop-pilot-config.md`): gated on a gh-optivem release that accepts `inner-loop`. Check with `gh release list -R optivem/gh-optivem -L 3`. The latest release on 2026-11-24 was `v1.6.108`, from 2026-11-10, which is before the `inner-loop` change. Once a release has it, run INL Steps 1–2 (the config line in `gh-optivem-multitier-java.yaml`).
-- **GHO Items 3–4** (`plans/20261103-1049-gh-optivem-driven-shop-changes.md`): user gate. You run `! gh auth refresh -h github.com -s project` first, then the rehearsals (pre-approved pushes; check GitHub status first) and filing the 5c ticket as drafted.
-- **Shop-side follow-ups for your review** (not scheduled): REL #109 (Keycloak full-scope-allowed), #111 (TypeScript 7 Dependabot ignore), #112 (TS breaker vs Java), #113 (bump `Optivem.Testing` after the optivem-testing release).
-- **Not tracked here yet:** `plans/20261120-1500-per-test-admin.md` and `plans/20261120-1730-visitor-sign-up.md` were added after this meta-plan was written. Ask the user whether to schedule them.
+**Next: Wave 6, U26 per-test admin** (`plans/20261120-1500-per-test-admin.md`, Lane D; approved by the user 2026-11-24). Work its Items 1–5 in order: driver `createAdmin` ×3 languages → DSL `newAdmin` / `loggedInAsAdmin()` creates a fresh admin → migrate every `UserIdentity.ADMIN` use ×3 → remove the pre-seeded test admin from the test realm imports → gate. Gate: compile-all, admin-touching acceptance tests run in parallel, then `--sample` all six stacks (Lane D rules; `system-test setup` before `system start`), CI green on the pushed head. Commit per item with `gh optivem commit --repo shop --paths "<space-separated files>"` (one value; repeating `--paths` keeps only the last). After U26: **U27 visitor sign-up** (`plans/20261120-1730-visitor-sign-up.md`), decisions recorded in its Items 2–3.
+
+**Gated (cannot run yet):**
+- **INL** (`plans/20261103-1335-readd-inner-loop-pilot-config.md`): needs a gh-optivem release that accepts `inner-loop`. Check with `gh release list -R optivem/gh-optivem -L 3`; the latest on 2026-11-24 was `v1.6.108` (2026-11-10, before the change). Then INL Steps 1–2.
+- **GHO Items 3–4** (`plans/20261103-1049-gh-optivem-driven-shop-changes.md`): the user runs `! gh auth refresh -h github.com -s project` first; then the rehearsals and the 5c ticket as drafted.
+- **Shop-side follow-ups for your review** (not scheduled): REL #109, #111, #112, #113.
 
 ## Wave tracker
 
@@ -67,6 +68,8 @@ The orchestrating session runs the **Wave tracker** top to bottom. Run the same 
 | 4c | U24 TypeScript 7 (#149 system-test, #151 monolith, #152 backend-typescript, #154 frontend-react) | D (after U22) | blocked 2026-11-24: TS 7.0.2 has no JS compiler API, typescript-eslint peer `<6.1.0`, ts-jest `<7`; all dirs stay on 5.9.3, PRs left open → REL #111 (recommended: Dependabot ignore for TS majors) |
 | 4c | U25 cockatiel 4 (#150 monolith, #153 backend-typescript) | D (after U24) | done 2026-11-24 (`7771c6c3`): 3.2.1 → 4.0.0, now ESM-only, so the Jest configs transform cockatiel; no src changes and no behaviour change; unit, component, pact and integration green; `--sample` TS ×2 11/11; CI 7/7 green; PRs closed. Existing breaker gaps vs Java → REL #112 |
 | 5 | X1 cross-repo (last) | X | 2026-11-24, ungated part done (plans only): gh-optivem `8ffceb07` (B-QAS 6 + B-ORD 3 → new scaffold plan; REL #57/#106/#110 → shared-host plan) plus REL #71/#73/#77 (`9b6a6df1`); courses `34ec640` (B-QAS 7, B-ORD 4–5); optivem-testing `23f5b67` (REL #65, shop half → REL #113); substack: B-TAX item 7 needs no change. B-QAS and B-ORD deleted. **Left:** INL (release gate), GHO Items 3–4 (user gate) |
+| 6 | U26 per-test admin (`20261120-1500-per-test-admin`) | D | todo (approved 2026-11-24) |
+| 6 | U27 visitor sign-up UC-013 (`20261120-1730-visitor-sign-up`) | D (after U26) | todo (approved 2026-11-24; decisions: prod registration off, country = required Keycloak registration attribute) |
 | — | M manual (user) | — | open; **M-GCP** done 2026-11-18, user actions below |
 
 ### M-GCP follow-ups — done 2026-11-18 (`6a40c010`, `78d5c4b5`); user actions
