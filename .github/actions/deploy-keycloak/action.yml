@@ -99,10 +99,7 @@ runs:
           --arg dbuser "$db_user" --arg dbpass "$db_password" \
           --arg system "$SYSTEM" --arg suffix "${PROJECT_NUMBER}.${REGION}.run.app" \
           '{KC_HOSTNAME:$host, KC_DB_URL:$dburl, KC_DB_USERNAME:$dbuser, KC_DB_PASSWORD:$dbpass,
-            KC_BOOTSTRAP_ADMIN_USERNAME:"admin", SYSTEM:$system, RUN_APP_SUFFIX:$suffix,
-            KC_LOG_LEVEL:"info,org.keycloak.services.managers:debug,org.keycloak.services.resources.admin:debug"}' > "$env_file"
-        # TODO(REL #107b): KC_LOG_LEVEL debug categories are temporary, to log why the admin API answers the
-        # system-test service account with 401. Remove once that is fixed.
+            KC_BOOTSTRAP_ADMIN_USERNAME:"admin", SYSTEM:$system, RUN_APP_SUFFIX:$suffix}' > "$env_file"
         # One instance: Keycloak keeps in-flight logins in local memory and Cloud Run instances can't
         # cluster, so a second instance makes login form posts fail with expired_code (UI tests hang).
         # Startup probe on /health/started (management port 9000), not the default TCP probe on 8080:
