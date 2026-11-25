@@ -1,6 +1,6 @@
 # 2026-11-16 20:03 UTC — Plan coordination meta-plan: all shop plans
 
-> ⚠️ **GitHub Actions outage (2026-11-25 ~16:00 UTC): wait for it to end before any CI dispatch.** Check with `curl -s https://www.githubstatus.com/api/v2/summary.json | jq -r '.components[] | select(.name=="Actions") | .status'` and dispatch nothing (meta-prerelease, meta-release, rehearsal CI) until it reports `operational`. **In the meantime, keep implementing:** GHO Items 3–4 (Lane D, local work), and U27's local `./test-all.sh`. Then re-dispatch meta-prerelease as the U27 CI gate. Delete this note once Actions is operational and that run is green.
+> ⚠️ **GitHub Actions outage (2026-11-25 ~16:00 UTC): CI verification waits, implementation does not (user, 2026-11-25).** Keep implementing, committing and pushing (while `Git Operations` is operational). Ignore outage-caused CI failures such as `startup_failure` and record the SHAs to verify later. Dispatch nothing (meta-prerelease, meta-release) until Actions reports `operational`. Check with `curl -s https://www.githubstatus.com/api/v2/summary.json | jq -r '.components[] | select(.name=="Actions") | .status'`. Then re-dispatch meta-prerelease as the U27 CI gate; it also covers anything pushed during the outage. Delete this note once that run is green.
 
 
 
