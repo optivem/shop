@@ -34,17 +34,25 @@ import type { CheckAccessibilityRequest } from '../../port/dtos/CheckAccessibili
 import type { CheckAccessibilityResponse } from '../../port/dtos/CheckAccessibilityResponse.js';
 import type { MyShopDriver } from '../../port/my-shop-driver.js';
 import type { UserIdentity } from '../../port/user-identity.js';
-import { TestUsers, testUserFor, type TestUser } from '../shared/client/http/test-user.js';
+import { TestUsers, testUserOf, type TestUser } from '../shared/client/http/test-user.js';
 import { MyShopApiClient } from './client/MyShopApiClient.js';
 import { ApiIdentity } from './client/api-identity.js';
 
 export class MyShopApiDriver implements MyShopDriver {
   private readonly client: MyShopApiClient;
+  private readonly signsIn: boolean;
   private requestedUser: TestUser | undefined;
   private anonymous = false;
+  private scenarioAdmin: () => Promise<UserIdentity> = () =>
+    Promise.reject(
+      new Error(
+        "No admin for this admin-only operation: act as an admin, or give the driver the scenario's admin (useScenarioAdmin)",
+      ),
+    );
 
   constructor(baseUrl: string, keycloakBaseUrl?: string) {
     this.client = new MyShopApiClient(baseUrl, keycloakBaseUrl);
+    this.signsIn = !!keycloakBaseUrl;
   }
 
   actAs(identity: UserIdentity): void {
@@ -55,19 +63,36 @@ export class MyShopApiDriver implements MyShopDriver {
         this.requestedUser = undefined;
         break;
       case 'CUSTOMER':
-        this.requestedUser = testUserFor(identity);
-        break;
       case 'ADMIN':
-        this.requestedUser = TestUsers.ADMIN;
+        this.requestedUser = testUserOf(identity);
         break;
     }
+  }
+
+  useScenarioAdmin(admin: () => Promise<UserIdentity>): void {
+    this.scenarioAdmin = admin;
   }
 
   /** An explicitly requested identity wins; otherwise the operation runs as its default user. */
   private runAs(operationDefault: TestUser): MyShopApiClient {
     const user = this.requestedUser ?? operationDefault;
     if (this.anonymous) return this.client.as(ApiIdentity.ANONYMOUS);
-    return user === TestUsers.ADMIN ? this.client.as(ApiIdentity.ADMIN) : this.client.asCustomer(user);
+    return this.client.asUser(user);
+  }
+
+  /**
+   * Runs an admin-only operation: as the requested identity, else as the scenario's admin. Without sign-in (no
+   * Keycloak) no token is sent anyway, so no admin is created.
+   */
+  private async runAsAdmin(): Promise<MyShopApiClient> {
+    const needsAdmin = this.requestedUser === undefined && !this.anonymous && this.signsIn;
+    return this.runAs(needsAdmin ? await this.scenarioAdminUser() : TestUsers.CUSTOMER);
+  }
+
+  private async scenarioAdminUser(): Promise<TestUser> {
+    const admin = await this.scenarioAdmin();
+    if (admin.kind !== 'ADMIN') throw new Error(`The scenario's admin is a ${admin.kind} identity`);
+    return testUserOf(admin);
   }
 
   async goToMyShop(_request: GoToMyShopRequest): Promise<Result<GoToMyShopResponse, SystemError>> {
@@ -87,7 +112,7 @@ export class MyShopApiDriver implements MyShopDriver {
   }
 
   async deliverOrder(request: DeliverOrderRequest): Promise<Result<DeliverOrderResponse, SystemError>> {
-    const result = await this.runAs(TestUsers.ADMIN).orders().deliverOrder(request.orderNumber);
+    const result = await (await this.runAsAdmin()).orders().deliverOrder(request.orderNumber);
     if (result.success) return success({});
     return failure(result.error);
   }
@@ -105,17 +130,17 @@ export class MyShopApiDriver implements MyShopDriver {
   }
 
   async browseCustomers(_request: BrowseCustomersRequest): Promise<Result<BrowseCustomersResponse, SystemError>> {
-    return this.runAs(TestUsers.ADMIN).admin().browseCustomers();
+    return (await this.runAsAdmin()).admin().browseCustomers();
   }
 
   async publishCoupon(request: PublishCouponRequest): Promise<Result<PublishCouponResponse, SystemError>> {
-    const result = await this.runAs(TestUsers.ADMIN).coupons().publishCoupon(request);
+    const result = await (await this.runAsAdmin()).coupons().publishCoupon(request);
     if (result.success) return success({});
     return failure(result.error);
   }
 
   async browseCoupons(request: BrowseCouponsRequest): Promise<Result<BrowseCouponsResponse, SystemError>> {
-    return this.runAs(TestUsers.ADMIN).coupons().browseCoupons(request.page, request.size);
+    return (await this.runAsAdmin()).coupons().browseCoupons(request.page, request.size);
   }
 
   async viewProfile(request: ViewProfileRequest): Promise<Result<ViewProfileResponse, SystemError>> {

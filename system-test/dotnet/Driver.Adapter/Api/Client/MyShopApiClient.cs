@@ -14,8 +14,8 @@ public class MyShopApiClient : IDisposable
     private readonly ProductController _productController;
     private readonly AdminController _adminController;
     private readonly KeycloakTokenProvider? _tokenProvider;
-    private volatile ApiIdentity _identity = ApiIdentity.Customer;
-    private volatile TestUser _customer = TestUser.Customer;
+    /// <summary>Who calls are made as; null for no credentials.</summary>
+    private volatile TestUser? _user = TestUser.Customer;
     private bool _disposed;
 
     /// <param name="keycloakBaseUrl">When null or blank, no token is acquired and no Authorization header is sent.</param>
@@ -37,26 +37,26 @@ public class MyShopApiClient : IDisposable
 
     public MyShopApiClient As(ApiIdentity identity)
     {
-        _identity = identity;
+        _user = identity switch
+        {
+            ApiIdentity.Anonymous => null,
+            ApiIdentity.Customer => TestUser.Customer,
+            _ => throw new ArgumentOutOfRangeException(nameof(identity), identity, null)
+        };
         return this;
     }
 
-    /// <summary>Calls are made as the given customer, until changed again.</summary>
-    public MyShopApiClient AsCustomer(TestUser customer)
+    /// <summary>Calls are made as the given user (a customer or an admin), until changed again.</summary>
+    public MyShopApiClient AsUser(TestUser user)
     {
-        _identity = ApiIdentity.Customer;
-        _customer = customer;
+        _user = user;
         return this;
     }
 
     private async Task<string?> TokenForAsync()
     {
-        return _identity switch
-        {
-            ApiIdentity.Anonymous => null,
-            ApiIdentity.Admin => await _tokenProvider!.GetTokenAsync(TestUser.Admin),
-            _ => await _tokenProvider!.GetTokenAsync(_customer)
-        };
+        var user = _user;
+        return user == null ? null : await _tokenProvider!.GetTokenAsync(user);
     }
 
     public void Dispose()

@@ -27,7 +27,7 @@ namespace Dsl.Core.Scenario.Given
         private GivenPromotion _promotion;
         private GivenNewCustomer? _newCustomer;
         private readonly CustomerAliases _customers = new();
-        private Func<UserIdentity> _loggedIn = () => UserIdentity.Default;
+        private Func<Task<UserIdentity>> _loggedIn = () => Task.FromResult(UserIdentity.Default);
         private bool _loggedInChosen;
 
         public GivenStage(Channel? channel, UseCaseDsl app, ScenarioDsl scenario)
@@ -157,7 +157,7 @@ namespace Dsl.Core.Scenario.Given
 
         IGivenStage IGivenStage.LoggedInAsCustomer(string alias) => LoggedInAsCustomer(alias);
 
-        public GivenStage LoggedInAsAdmin() => LoggedInAs(() => UserIdentity.Admin);
+        public GivenStage LoggedInAsAdmin() => LoggedInAs(_app.AdminAsync);
 
         IGivenStage IGivenStage.LoggedInAsAdmin() => LoggedInAsAdmin();
 
@@ -165,7 +165,9 @@ namespace Dsl.Core.Scenario.Given
 
         IGivenStage IGivenStage.NotLoggedIn() => NotLoggedIn();
 
-        private GivenStage LoggedInAs(Func<UserIdentity> identity)
+        private GivenStage LoggedInAs(Func<UserIdentity> identity) => LoggedInAs(() => Task.FromResult(identity()));
+
+        private GivenStage LoggedInAs(Func<Task<UserIdentity>> identity)
         {
             _loggedIn = identity;
             _loggedInChosen = true;
@@ -243,7 +245,7 @@ namespace Dsl.Core.Scenario.Given
             await SetupErp();
             await SetupTax();
             await SetupMyShop();
-            _app.ActAs(_loggedIn());
+            _app.ActAs(await _loggedIn());
         }
 
         /// <summary>Operations with no explicit customer run as the default customer, so customer1 must stay theirs.</summary>

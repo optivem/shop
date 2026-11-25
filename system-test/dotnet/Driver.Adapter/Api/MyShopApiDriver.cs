@@ -11,12 +11,17 @@ namespace Driver.Adapter.Api;
 public class MyShopApiDriver : IMyShopDriver
 {
     private readonly MyShopApiClient _apiClient;
+    private readonly bool _signsIn;
     private TestUser? _requestedUser;
     private bool _anonymous;
+    private Func<Task<UserIdentity>> _scenarioAdmin = () => throw new InvalidOperationException(
+        "No admin for this admin-only operation: act as an admin, or give the driver the scenario's admin"
+        + " (UseScenarioAdmin)");
 
     public MyShopApiDriver(string baseUrl, string? keycloakBaseUrl = null)
     {
         _apiClient = new MyShopApiClient(baseUrl, keycloakBaseUrl);
+        _signsIn = !string.IsNullOrWhiteSpace(keycloakBaseUrl);
     }
 
     public ValueTask DisposeAsync()
@@ -32,11 +37,12 @@ public class MyShopApiDriver : IMyShopDriver
         _requestedUser = identity.Kind switch
         {
             UserIdentityKind.Default or UserIdentityKind.Anonymous => null,
-            UserIdentityKind.Customer => TestUser.ForCustomer(identity),
-            UserIdentityKind.Admin => TestUser.Admin,
+            UserIdentityKind.Customer or UserIdentityKind.Admin => TestUser.For(identity),
             _ => throw new ArgumentOutOfRangeException(nameof(identity), identity, null)
         };
     }
+
+    public void UseScenarioAdmin(Func<Task<UserIdentity>> admin) => _scenarioAdmin = admin;
 
     /// <summary>An explicitly requested identity wins; otherwise the operation runs as its default user.</summary>
     private MyShopApiClient RunAs(TestUser operationDefault)
@@ -47,7 +53,17 @@ public class MyShopApiDriver : IMyShopDriver
             return _apiClient.As(ApiIdentity.Anonymous);
         }
 
-        return user == TestUser.Admin ? _apiClient.As(ApiIdentity.Admin) : _apiClient.AsCustomer(user);
+        return _apiClient.AsUser(user);
+    }
+
+    /// <summary>
+    /// Runs an admin-only operation: as the requested identity, else as the scenario's admin. Without sign-in (no
+    /// Keycloak) no token is sent anyway, so no admin is created.
+    /// </summary>
+    private async Task<MyShopApiClient> RunAsAdminAsync()
+    {
+        var needsAdmin = _requestedUser == null && !_anonymous && _signsIn;
+        return RunAs(needsAdmin ? TestUser.For(await _scenarioAdmin()) : TestUser.Customer);
     }
 
     public Task<Result<GoToMyShopResponse, SystemError>> GoToMyShopAsync(GoToMyShopRequest request)
@@ -66,8 +82,8 @@ public class MyShopApiDriver : IMyShopDriver
             .MapErrorAsync(MapError)
             .MapAsync(_ => new CancelOrderResponse());
 
-    public Task<Result<DeliverOrderResponse, SystemError>> DeliverOrderAsync(DeliverOrderRequest request)
-        => RunAs(TestUser.Admin).Orders().DeliverOrderAsync(request.OrderNumber)
+    public async Task<Result<DeliverOrderResponse, SystemError>> DeliverOrderAsync(DeliverOrderRequest request)
+        => await (await RunAsAdminAsync()).Orders().DeliverOrderAsync(request.OrderNumber)
             .MapErrorAsync(MapError)
             .MapAsync(_ => new DeliverOrderResponse());
 
@@ -85,17 +101,17 @@ public class MyShopApiDriver : IMyShopDriver
             .MapErrorAsync(MapError);
     }
 
-    public Task<Result<BrowseCustomersResponse, SystemError>> BrowseCustomersAsync(BrowseCustomersRequest request)
-        => RunAs(TestUser.Admin).Admin().BrowseCustomersAsync()
+    public async Task<Result<BrowseCustomersResponse, SystemError>> BrowseCustomersAsync(BrowseCustomersRequest request)
+        => await (await RunAsAdminAsync()).Admin().BrowseCustomersAsync()
             .MapErrorAsync(MapError);
 
-    public Task<Result<PublishCouponResponse, SystemError>> PublishCouponAsync(PublishCouponRequest request)
-        => RunAs(TestUser.Admin).Coupons().PublishCouponAsync(request)
+    public async Task<Result<PublishCouponResponse, SystemError>> PublishCouponAsync(PublishCouponRequest request)
+        => await (await RunAsAdminAsync()).Coupons().PublishCouponAsync(request)
             .MapErrorAsync(MapError)
             .MapAsync(_ => new PublishCouponResponse());
 
-    public Task<Result<BrowseCouponsResponse, SystemError>> BrowseCouponsAsync(BrowseCouponsRequest request)
-        => RunAs(TestUser.Admin).Coupons().BrowseCouponsAsync(request.Page, request.Size)
+    public async Task<Result<BrowseCouponsResponse, SystemError>> BrowseCouponsAsync(BrowseCouponsRequest request)
+        => await (await RunAsAdminAsync()).Coupons().BrowseCouponsAsync(request.Page, request.Size)
             .MapErrorAsync(MapError);
 
     public Task<Result<ViewProfileResponse, SystemError>> ViewProfileAsync(ViewProfileRequest request)

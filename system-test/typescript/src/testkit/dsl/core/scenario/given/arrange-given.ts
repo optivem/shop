@@ -87,5 +87,5 @@ export async function arrangeGiven(
     await saveGivenProfile(app, ctx, profileConfig);
   }
 
-  app.actAs(ctx.loggedInIdentity());
+  app.actAs(await ctx.loggedInIdentity());
 }

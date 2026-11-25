@@ -102,7 +102,7 @@ public abstract class BaseThenResultCoupon<TSuccessResponse, TSuccessVerificatio
 
         var couponCode = await _couponCodeFactory();
         // Only an admin can browse the coupons, whoever the scenario acts as (e.g. the customer who checked out).
-        var verification = await _thenClause.App.ActingAsAsync(UserIdentity.Admin, async () =>
+        var verification = await _thenClause.App.ActingAsAsync(await _thenClause.App.AdminAsync(), async () =>
         {
             var shop = await _thenClause.App.MyShop(_thenClause.Channel!);
             var browseResult = await shop.BrowseCoupons().Execute();

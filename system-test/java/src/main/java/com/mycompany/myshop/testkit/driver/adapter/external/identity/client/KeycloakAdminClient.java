@@ -15,6 +15,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.time.Instant;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Semaphore;
 
 /**
  * Keycloak's admin REST API, for the test realm only. How it signs in depends on where Keycloak is:
@@ -36,11 +39,26 @@ public class KeycloakAdminClient {
 
     private final String baseUrl;
     private final TokenGrant tokenGrant;
-    private final HttpClient httpClient = HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).build();
+    private static final int TOKEN_REFRESH_MARGIN_SECONDS = 15;
+    /**
+     * At most this many admin calls at once per process. Every parallel scenario creates its own users, and a burst of
+     * concurrent admin calls makes the local Keycloak reset connections; queueing here lets each call through.
+     */
+    private static final int MAX_CONCURRENT_CALLS = 4;
+    private static final Semaphore CALL_LIMIT = new Semaphore(MAX_CONCURRENT_CALLS, true);
+    private static final Map<String, CachedToken> TOKEN_CACHE = new ConcurrentHashMap<>();
+    /** One connection pool for every client of this process: each scenario makes its own client. */
+    private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).build();
+
+    private final HttpClient httpClient = HTTP_CLIENT;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     /** How to get an admin token: the token endpoint, its form, and what to say when Keycloak refuses it. */
     private record TokenGrant(String tokenUrl, String form, String refusedMessage) {
+    }
+
+    /** An admin token and when to fetch a new one. */
+    private record CachedToken(String token, Instant refreshAt) {
     }
 
     public KeycloakAdminClient(String keycloakBaseUrl) {
@@ -118,8 +136,28 @@ public class KeycloakAdminClient {
                 .header("Authorization", "Bearer " + adminToken());
     }
 
-    /** A fresh admin token (they live for a minute, so one per call keeps it simple). */
+    /**
+     * An admin token, shared by every client of this process that signs in the same way and fetched again shortly
+     * before it expires, so that the parallel scenarios do not put a sign-in on every admin call.
+     */
     private String adminToken() {
+        var key = tokenGrant.tokenUrl() + "?" + tokenGrant.form();
+        var cached = TOKEN_CACHE.get(key);
+        if (cached != null && cached.refreshAt().isAfter(Instant.now())) {
+            return cached.token();
+        }
+        synchronized (TOKEN_CACHE) {
+            cached = TOKEN_CACHE.get(key);
+            if (cached != null && cached.refreshAt().isAfter(Instant.now())) {
+                return cached.token();
+            }
+            var fetched = fetchAdminToken();
+            TOKEN_CACHE.put(key, fetched);
+            return fetched.token();
+        }
+    }
+
+    private CachedToken fetchAdminToken() {
         var response = send(HttpRequest.newBuilder()
                 .uri(URI.create(tokenGrant.tokenUrl()))
                 .header("Content-Type", "application/x-www-form-urlencoded")
@@ -128,16 +166,24 @@ public class KeycloakAdminClient {
             throw new IllegalStateException(tokenGrant.refusedMessage());
         }
         expectStatus(response, 200, "get an admin token");
-        var token = parse(response.body()).path("access_token").asText();
+        var json = parse(response.body());
+        var token = json.path("access_token").asText();
         if (token.isEmpty()) {
             throw new IllegalStateException("Keycloak at " + baseUrl + " sent an admin token response without"
                     + " access_token");
         }
-        return token;
+        var expiresIn = json.path("expires_in").asInt(60);
+        return new CachedToken(token, Instant.now().plusSeconds(Math.max(0, expiresIn - TOKEN_REFRESH_MARGIN_SECONDS)));
     }
 
     private HttpResponse<String> send(HttpRequest.Builder request) {
         var built = request.build();
+        try {
+            CALL_LIMIT.acquire();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Interrupted while waiting to call Keycloak admin " + built.uri(), e);
+        }
         try {
             return httpClient.send(built, HttpResponse.BodyHandlers.ofString());
         } catch (IOException e) {
@@ -145,6 +191,8 @@ public class KeycloakAdminClient {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new IllegalStateException("Interrupted during Keycloak admin call " + built.uri(), e);
+        } finally {
+            CALL_LIMIT.release();
         }
     }
 

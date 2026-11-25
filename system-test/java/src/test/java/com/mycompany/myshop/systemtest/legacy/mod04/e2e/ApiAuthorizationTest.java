@@ -2,7 +2,11 @@ package com.mycompany.myshop.systemtest.legacy.mod04.e2e;
 
 import com.mycompany.myshop.systemtest.legacy.mod04.e2e.base.BaseE2eTest;
 import com.mycompany.myshop.testkit.driver.adapter.api.client.ApiIdentity;
+import com.mycompany.myshop.testkit.driver.adapter.external.identity.KeycloakIdentityProviderDriver;
+import com.mycompany.myshop.testkit.driver.adapter.shared.client.http.TestUser;
+import com.mycompany.myshop.testkit.driver.port.UserIdentity;
 import com.mycompany.myshop.testkit.driver.port.dtos.PublishCouponRequest;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -13,6 +17,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 class ApiAuthorizationTest extends BaseE2eTest {
+    private KeycloakIdentityProviderDriver identityProvider;
+
     @Override
     protected void setMyShopClient() {
         setUpMyShopApiClient();
@@ -23,6 +29,13 @@ class ApiAuthorizationTest extends BaseE2eTest {
         var keycloakBaseUrl = configuration.getKeycloakBaseUrl();
         assumeTrue(keycloakBaseUrl != null && !keycloakBaseUrl.isBlank(),
                 "Authorization tests require KEYCLOAK_URL to be set");
+    }
+
+    @AfterEach
+    void deleteCreatedUsers() {
+        if (identityProvider != null) {
+            identityProvider.close();
+        }
     }
 
     @Test
@@ -50,7 +63,10 @@ class ApiAuthorizationTest extends BaseE2eTest {
 
     @Test
     void shouldAllowAdminToPublishCoupon() {
-        var result = myShopApiClient.as(ApiIdentity.ADMIN).coupons().publishCoupon(newCouponRequest());
+        identityProvider = new KeycloakIdentityProviderDriver(configuration.getKeycloakBaseUrl());
+        var admin = UserIdentity.admin(identityProvider.createAdmin("Test", "Admin", null));
+
+        var result = myShopApiClient.asUser(TestUser.of(admin)).coupons().publishCoupon(newCouponRequest());
 
         assertThatResult(result).isSuccess();
     }

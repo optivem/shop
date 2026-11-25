@@ -1,4 +1,7 @@
 using Driver.Adapter.Api.Client;
+using Driver.Adapter.External.Identity;
+using Driver.Adapter.Shared.Client.Http;
+using Driver.Port;
 using Driver.Port.Dtos;
 using Shouldly;
 using SystemTests.Legacy.Mod04.E2eTests.Base;
@@ -46,7 +49,10 @@ public class ApiAuthorizationTest : BaseE2eTest
     [SkippableFact]
     public async Task ShouldAllowAdminToPublishCoupon()
     {
-        var result = await _shopApiClient!.As(ApiIdentity.Admin).Coupons().PublishCouponAsync(NewCouponRequest());
+        await using var identityProvider = new KeycloakIdentityProviderDriver(_configuration.KeycloakBaseUrl);
+        var admin = UserIdentity.Admin(await identityProvider.CreateAdminAsync("Test", "Admin", null));
+
+        var result = await _shopApiClient!.AsUser(TestUser.For(admin)).Coupons().PublishCouponAsync(NewCouponRequest());
 
         result.ShouldBeSuccess();
     }

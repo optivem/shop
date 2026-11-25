@@ -2,10 +2,10 @@ package com.mycompany.myshop.testkit.driver.port;
 
 /**
  * Who an operation is performed as. A shared test customer carries its zero-based position (0 = customer1,
- * 1 = customer2, ...); a customer created for the scenario carries its account instead. Two identities are the
- * same user exactly when they are equal.
+ * 1 = customer2, ...); a customer or an admin created for the scenario carries its account instead. Two identities
+ * are the same user exactly when they are equal.
  */
-public record UserIdentity(Kind kind, int customerIndex, CustomerAccount account) {
+public record UserIdentity(Kind kind, int customerIndex, UserAccount account) {
     /** The number of shared test customers in the identity provider (customer1, customer2). */
     public static final int CUSTOMER_COUNT = 2;
 
@@ -16,11 +16,10 @@ public record UserIdentity(Kind kind, int customerIndex, CustomerAccount account
         ADMIN
     }
 
-    /** Customer for customer operations, admin for admin-only operations. */
+    /** Customer for customer operations, the scenario's admin for admin-only operations. */
     public static final UserIdentity DEFAULT = new UserIdentity(Kind.DEFAULT, -1);
     /** No credentials at all. */
     public static final UserIdentity ANONYMOUS = new UserIdentity(Kind.ANONYMOUS, -1);
-    public static final UserIdentity ADMIN = new UserIdentity(Kind.ADMIN, -1);
 
     public UserIdentity(Kind kind, int customerIndex) {
         this(kind, customerIndex, null);
@@ -48,10 +47,18 @@ public record UserIdentity(Kind kind, int customerIndex, CustomerAccount account
     }
 
     /** A customer whose account was created for this scenario. */
-    public static UserIdentity customer(CustomerAccount account) {
+    public static UserIdentity customer(UserAccount account) {
         if (account == null) {
             throw new IllegalArgumentException("A created customer needs its account");
         }
         return new UserIdentity(Kind.CUSTOMER, -1, account);
+    }
+
+    /** An admin whose account was created for this scenario. */
+    public static UserIdentity admin(UserAccount account) {
+        if (account == null) {
+            throw new IllegalArgumentException("A created admin needs its account");
+        }
+        return new UserIdentity(Kind.ADMIN, -1, account);
     }
 }

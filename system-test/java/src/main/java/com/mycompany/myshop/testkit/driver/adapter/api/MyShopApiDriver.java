@@ -40,11 +40,19 @@ import com.mycompany.myshop.testkit.driver.port.UserIdentity;
 import com.mycompany.myshop.testkit.common.Closer;
 import com.mycompany.myshop.testkit.common.Result;
 
+import java.util.function.Supplier;
+
 public class MyShopApiDriver implements MyShopDriver {
     private final MyShopApiClient apiClient;
 
+    private final boolean signsIn;
+
     private TestUser requestedUser;
     private boolean anonymous;
+    private Supplier<UserIdentity> scenarioAdmin = () -> {
+        throw new IllegalStateException("No admin for this admin-only operation: act as an admin, or give the driver"
+                + " the scenario's admin (useScenarioAdmin)");
+    };
 
     public MyShopApiDriver(String baseUrl) {
         this(baseUrl, null);
@@ -52,6 +60,7 @@ public class MyShopApiDriver implements MyShopDriver {
 
     public MyShopApiDriver(String baseUrl, String keycloakBaseUrl) {
         this.apiClient = new MyShopApiClient(baseUrl, keycloakBaseUrl);
+        this.signsIn = keycloakBaseUrl != null && !keycloakBaseUrl.isBlank();
     }
 
     @Override
@@ -64,9 +73,13 @@ public class MyShopApiDriver implements MyShopDriver {
         anonymous = identity.kind() == UserIdentity.Kind.ANONYMOUS;
         requestedUser = switch (identity.kind()) {
             case DEFAULT, ANONYMOUS -> null;
-            case CUSTOMER -> TestUser.customer(identity);
-            case ADMIN -> TestUser.ADMIN;
+            case CUSTOMER, ADMIN -> TestUser.of(identity);
         };
+    }
+
+    @Override
+    public void useScenarioAdmin(Supplier<UserIdentity> admin) {
+        this.scenarioAdmin = admin;
     }
 
     /** An explicitly requested identity wins; otherwise the operation runs as its default user. */
@@ -74,11 +87,18 @@ public class MyShopApiDriver implements MyShopDriver {
         var user = requestedUser != null ? requestedUser : operationDefault;
         if (anonymous) {
             apiClient.as(ApiIdentity.ANONYMOUS);
-        } else if (user == TestUser.ADMIN) {
-            apiClient.as(ApiIdentity.ADMIN);
         } else {
-            apiClient.asCustomer(user);
+            apiClient.asUser(user);
         }
+    }
+
+    /**
+     * Runs an admin-only operation: as the requested identity, else as the scenario's admin. Without sign-in (no
+     * Keycloak) no token is sent anyway, so no admin is created.
+     */
+    private void runAsAdmin() {
+        var needsAdmin = requestedUser == null && !anonymous && signsIn;
+        runAs(needsAdmin ? TestUser.of(scenarioAdmin.get()) : TestUser.CUSTOMER);
     }
 
     @Override
@@ -105,7 +125,7 @@ public class MyShopApiDriver implements MyShopDriver {
 
     @Override
     public Result<DeliverOrderResponse, SystemError> deliverOrder(DeliverOrderRequest request) {
-        runAs(TestUser.ADMIN);
+        runAsAdmin();
         return apiClient.orders().deliverOrder(request.getOrderNumber())
                 .mapError(SystemErrorMapper::from)
                 .map(value -> DeliverOrderResponse.builder().build());
@@ -127,13 +147,13 @@ public class MyShopApiDriver implements MyShopDriver {
 
     @Override
     public Result<BrowseCustomersResponse, SystemError> browseCustomers(BrowseCustomersRequest request) {
-        runAs(TestUser.ADMIN);
+        runAsAdmin();
         return apiClient.admin().browseCustomers().mapError(SystemErrorMapper::from);
     }
 
     @Override
     public Result<PublishCouponResponse, SystemError> publishCoupon(PublishCouponRequest request) {
-        runAs(TestUser.ADMIN);
+        runAsAdmin();
         return apiClient.coupons().publishCoupon(request)
                 .mapError(SystemErrorMapper::from)
                 .map(value -> PublishCouponResponse.builder().build());
@@ -141,7 +161,7 @@ public class MyShopApiDriver implements MyShopDriver {
 
     @Override
     public Result<BrowseCouponsResponse, SystemError> browseCoupons(BrowseCouponsRequest request) {
-        runAs(TestUser.ADMIN);
+        runAsAdmin();
         return apiClient.coupons().browseCoupons(request.getPage(), request.getSize()).mapError(SystemErrorMapper::from);
     }
 

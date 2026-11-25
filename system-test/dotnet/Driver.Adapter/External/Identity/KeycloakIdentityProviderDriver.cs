@@ -5,13 +5,15 @@ using Driver.Port.External.Identity;
 namespace Driver.Adapter.External.Identity;
 
 /// <summary>
-/// Creates customers in Keycloak's test realm, each with a unique username and a random password, and
+/// Creates customers and admins in Keycloak's test realm, each with a unique username and a random password, and
 /// deletes them again on dispose.
 /// </summary>
 public sealed class KeycloakIdentityProviderDriver : IIdentityProviderDriver
 {
     private const string CustomerRole = "CUSTOMER";
-    private const string UsernamePrefix = "new-customer-";
+    private const string AdminRole = "ADMIN";
+    private const string CustomerUsernamePrefix = "new-customer-";
+    private const string AdminUsernamePrefix = "new-admin-";
 
     private readonly KeycloakAdminClient _client;
     private readonly List<string> _createdUserIds = [];
@@ -21,15 +23,22 @@ public sealed class KeycloakIdentityProviderDriver : IIdentityProviderDriver
         _client = new KeycloakAdminClient(keycloakBaseUrl);
     }
 
-    public async Task<CustomerAccount> CreateCustomerAsync(string firstName, string lastName, string? email)
+    public Task<UserAccount> CreateCustomerAsync(string firstName, string lastName, string? email)
+        => CreateUserAsync(CustomerUsernamePrefix, CustomerRole, firstName, lastName, email);
+
+    public Task<UserAccount> CreateAdminAsync(string firstName, string lastName, string? email)
+        => CreateUserAsync(AdminUsernamePrefix, AdminRole, firstName, lastName, email);
+
+    private async Task<UserAccount> CreateUserAsync(string usernamePrefix, string role, string firstName,
+        string lastName, string? email)
     {
-        var username = UsernamePrefix + Guid.NewGuid();
+        var username = usernamePrefix + Guid.NewGuid();
         var password = Guid.NewGuid().ToString();
         var userId = await _client.CreateUserAsync(username, password, firstName, lastName,
             email ?? username + "@example.com");
         _createdUserIds.Add(userId);
-        await _client.AssignRealmRoleAsync(userId, CustomerRole);
-        return new CustomerAccount(username, password);
+        await _client.AssignRealmRoleAsync(userId, role);
+        return new UserAccount(username, password);
     }
 
     public async ValueTask DisposeAsync()
@@ -51,7 +60,7 @@ public sealed class KeycloakIdentityProviderDriver : IIdentityProviderDriver
         if (failures.Count > 0)
         {
             throw new InvalidOperationException(
-                "Could not delete the customers created for this scenario: [" + string.Join(", ", failures) + "]");
+                "Could not delete the users created for this scenario: [" + string.Join(", ", failures) + "]");
         }
     }
 }

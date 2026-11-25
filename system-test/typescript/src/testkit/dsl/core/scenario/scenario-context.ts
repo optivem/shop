@@ -102,13 +102,13 @@ export class ScenarioContext {
   /** When set, every ERP call answers only after the system's outbound timeout, whatever is staged. */
   erpSlow = false;
   readonly customers = new CustomerAliases();
-  private loggedIn: () => UserIdentity = () => UserIdentity.DEFAULT;
+  private loggedIn: () => UserIdentity | Promise<UserIdentity> = () => UserIdentity.DEFAULT;
   private loggedInChosen = false;
 
   constructor(private readonly onExecuted?: () => void) {}
 
   /** Chooses who the scenario's action is performed as; resolved lazily so aliases are assigned in order of first use. */
-  logInAs(identity: () => UserIdentity): void {
+  logInAs(identity: () => UserIdentity | Promise<UserIdentity>): void {
     this.loggedIn = identity;
     this.loggedInChosen = true;
   }
@@ -125,7 +125,7 @@ export class ScenarioContext {
   }
 
   /** The identity the scenario's action runs as. */
-  loggedInIdentity(): UserIdentity {
+  async loggedInIdentity(): Promise<UserIdentity> {
     return this.loggedIn();
   }
 

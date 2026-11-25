@@ -9,4 +9,10 @@ public interface IActingUserSelector
 {
     /// <summary>Selects who subsequent operations are performed as.</summary>
     void ActAs(UserIdentity identity);
+
+    /// <summary>
+    /// Who admin-only operations run as while no identity is selected: the scenario's own admin. Asked only when such
+    /// an operation runs, so a scenario without one creates no admin.
+    /// </summary>
+    void UseScenarioAdmin(Func<Task<UserIdentity>> admin);
 }

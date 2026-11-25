@@ -109,7 +109,7 @@ export class GivenStage implements IGivenStage {
   }
 
   loggedInAsAdmin(): this {
-    this.ctx.logInAs(() => UserIdentity.ADMIN);
+    this.ctx.logInAs(() => this.app.scenarioAdmin());
     return this;
   }
 

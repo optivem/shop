@@ -12,7 +12,7 @@ No shop backend ever sees a password. The monoliths send the browser to Keycloak
 | `quickLoginCheckMilliSeconds` / `minimumQuickLoginWaitSeconds` | 1000 / 60 | Two failures less than a second apart lock the user out for 1 minute |
 | `permanentLockout` | false | Lockouts always expire; an admin never has to unlock a user |
 
-Successful logins are never counted, so the system tests, which sign in as `customer1` and `admin1` many times in parallel, are not affected. None of them fails a login on purpose.
+Successful logins are never counted, so the system tests, which sign in as `customer1` many times in parallel, are not affected. None of them fails a login on purpose.
 
 **What this does not cover (a deliberate shortcut):** the API endpoints themselves have no request limit. A client can call `GET /api/products` as often as it likes, and Cloud Run scales out to absorb it (up to the service's `--max-instances`). Limiting that belongs at the edge, in front of the app. The default deploy has no edge, to keep it at $0.
 

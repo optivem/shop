@@ -23,6 +23,8 @@ namespace Dsl.Core;
 public class UseCaseDsl : IAsyncDisposable
 {
     private const string StaticChannel = ChannelType.API;
+    private const string AdminFirstName = "Test";
+    private const string AdminLastName = "Admin";
 
     private readonly UseCaseContext _context;
     private readonly Configuration _configuration;
@@ -32,6 +34,7 @@ public class UseCaseDsl : IAsyncDisposable
     private TaxDsl? _tax;
     private ClockDsl? _clock;
     private IIdentityProviderDriver? _identityProvider;
+    private UserIdentity? _admin;
 
     public UseCaseDsl(Configuration configuration)
     {
@@ -48,6 +51,24 @@ public class UseCaseDsl : IAsyncDisposable
     {
         _identityProvider ??= new KeycloakIdentityProviderDriver(_configuration.KeycloakBaseUrl);
         return UserIdentity.Customer(await _identityProvider.CreateCustomerAsync(firstName, lastName, email));
+    }
+
+    /// <summary>Creates an admin account of this scenario's own (admin role), removed again when this DSL is disposed.</summary>
+    /// <param name="email">null for a unique address</param>
+    public async Task<UserIdentity> NewAdminAsync(string firstName, string lastName, string? email)
+    {
+        _identityProvider ??= new KeycloakIdentityProviderDriver(_configuration.KeycloakBaseUrl);
+        return UserIdentity.Admin(await _identityProvider.CreateAdminAsync(firstName, lastName, email));
+    }
+
+    /// <summary>
+    /// This scenario's admin, created the first time it is needed: who admin-only operations run as, unless another
+    /// identity is selected.
+    /// </summary>
+    public async Task<UserIdentity> AdminAsync()
+    {
+        _admin ??= await NewAdminAsync(AdminFirstName, AdminLastName, null);
+        return _admin.Value;
     }
 
     /// <summary>Selects who MyShop operations are performed as, until changed again.</summary>
@@ -86,7 +107,9 @@ public class UseCaseDsl : IAsyncDisposable
     {
         if (!_shops.TryGetValue(channelType, out var shop))
         {
-            shop = await MyShopDsl.CreateAsync(await CreateMyShopDriverForChannelAsync(channelType), _context);
+            var driver = await CreateMyShopDriverForChannelAsync(channelType);
+            driver.UseScenarioAdmin(AdminAsync);
+            shop = await MyShopDsl.CreateAsync(driver, _context);
             _shops[channelType] = shop;
         }
         shop.ActAs(_identity);

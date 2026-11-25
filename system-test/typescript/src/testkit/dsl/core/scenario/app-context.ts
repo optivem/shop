@@ -9,6 +9,8 @@ import { UserIdentity } from '../../../driver/port/user-identity.js';
 export type ChannelMode = 'dynamic' | 'static';
 
 const STATIC_CHANNEL = ChannelType.API;
+const ADMIN_FIRST_NAME = 'Test';
+const ADMIN_LAST_NAME = 'Admin';
 
 export class AppContext {
   private readonly shops = new Map<string, MyShopDriver>();
@@ -21,6 +23,7 @@ export class AppContext {
   readonly taxDriver: TaxDriver;
   private readonly identityProviderDriverFactory?: () => IdentityProviderDriver;
   private identityProviderDriver?: IdentityProviderDriver;
+  private admin?: Promise<UserIdentity>;
 
   constructor(opts: {
     channelMode: ChannelMode;
@@ -29,7 +32,7 @@ export class AppContext {
     erpDriver: ErpDriver;
     clockDriver: ClockDriver;
     taxDriver: TaxDriver;
-    /** Creates customers of a scenario's own; without it a scenario cannot have a new customer. */
+    /** Creates customers and admins of a scenario's own; without it a scenario cannot have a new customer or admin. */
     identityProviderDriverFactory?: () => IdentityProviderDriver;
   }) {
     this.channelMode = opts.channelMode;
@@ -46,13 +49,33 @@ export class AppContext {
    * by {@link closeAll}.
    */
   async newCustomer(firstName: string, lastName: string, email?: string): Promise<UserIdentity> {
+    return UserIdentity.createdCustomer(await this.identityProvider().createCustomer(firstName, lastName, email));
+  }
+
+  /** Creates an admin account of the scenario's own (admin role), removed again by {@link closeAll}. */
+  async newAdmin(firstName: string, lastName: string, email?: string): Promise<UserIdentity> {
+    return UserIdentity.admin(await this.identityProvider().createAdmin(firstName, lastName, email));
+  }
+
+  /**
+   * The scenario's admin, created the first time it is needed: who admin-only operations run as, unless another
+   * identity is selected.
+   */
+  scenarioAdmin(): Promise<UserIdentity> {
+    this.admin ??= this.newAdmin(ADMIN_FIRST_NAME, ADMIN_LAST_NAME);
+    return this.admin;
+  }
+
+  private identityProvider(): IdentityProviderDriver {
     if (!this.identityProviderDriver) {
       if (!this.identityProviderDriverFactory) {
-        throw new Error('This app context was built without an identity provider, so it cannot create a new customer');
+        throw new Error(
+          'This app context was built without an identity provider, so it cannot create a new customer or admin',
+        );
       }
       this.identityProviderDriver = this.identityProviderDriverFactory();
     }
-    return UserIdentity.createdCustomer(await this.identityProviderDriver.createCustomer(firstName, lastName, email));
+    return this.identityProviderDriver;
   }
 
   /** Selects who MyShop operations are performed as, until changed again. */
@@ -75,7 +98,9 @@ export class AppContext {
     const resolvedMode = mode ?? this.channelMode;
     const channel = resolvedMode === 'static' ? STATIC_CHANNEL : this.channel;
     if (!this.shops.has(channel)) {
-      this.shops.set(channel, this.myShopDriverFactory(channel));
+      const driver = this.myShopDriverFactory(channel);
+      driver.useScenarioAdmin(() => this.scenarioAdmin());
+      this.shops.set(channel, driver);
     }
     const shop = this.shops.get(channel)!;
     shop.actAs(this.identity);

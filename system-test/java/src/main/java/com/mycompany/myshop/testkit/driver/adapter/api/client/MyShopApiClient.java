@@ -21,8 +21,8 @@ public class MyShopApiClient implements AutoCloseable {
     private final ProductController productController;
     private final AdminController adminController;
     private final KeycloakTokenProvider tokenProvider;
-    private volatile ApiIdentity identity = ApiIdentity.CUSTOMER;
-    private volatile TestUser customer = TestUser.CUSTOMER;
+    /** Who calls are made as; null for no credentials. */
+    private volatile TestUser user = TestUser.CUSTOMER;
 
     public MyShopApiClient(String baseUrl) {
         this(baseUrl, null);
@@ -48,14 +48,16 @@ public class MyShopApiClient implements AutoCloseable {
     }
 
     public MyShopApiClient as(ApiIdentity identity) {
-        this.identity = identity;
+        this.user = switch (identity) {
+            case ANONYMOUS -> null;
+            case CUSTOMER -> TestUser.CUSTOMER;
+        };
         return this;
     }
 
-    /** Calls are made as the given customer, until changed again. */
-    public MyShopApiClient asCustomer(TestUser customer) {
-        this.identity = ApiIdentity.CUSTOMER;
-        this.customer = customer;
+    /** Calls are made as the given user (a customer or an admin), until changed again. */
+    public MyShopApiClient asUser(TestUser user) {
+        this.user = user;
         return this;
     }
 
@@ -89,10 +91,7 @@ public class MyShopApiClient implements AutoCloseable {
     }
 
     private String tokenFor() {
-        return switch (identity) {
-            case ANONYMOUS -> null;
-            case CUSTOMER -> tokenProvider.getToken(customer);
-            case ADMIN -> tokenProvider.getToken(TestUser.ADMIN);
-        };
+        var current = user;
+        return current == null ? null : tokenProvider.getToken(current);
     }
 }

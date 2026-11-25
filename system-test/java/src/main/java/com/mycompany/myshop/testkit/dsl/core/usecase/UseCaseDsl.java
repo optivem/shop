@@ -27,6 +27,8 @@ import java.util.function.Supplier;
 public class UseCaseDsl implements Closeable {
     private static final Logger log = LoggerFactory.getLogger(UseCaseDsl.class);
     private static final String STATIC_CHANNEL = ChannelType.API;
+    private static final String ADMIN_FIRST_NAME = "Test";
+    private static final String ADMIN_LAST_NAME = "Admin";
 
     private final UseCaseContext context;
     private final ChannelMode channelMode;
@@ -42,6 +44,7 @@ public class UseCaseDsl implements Closeable {
     private ClockDriver clockDriver;
     private TaxDriver taxDriver;
     private IdentityProviderDriver identityProviderDriver;
+    private UserIdentity admin;
 
     private ErpDsl erp;
     private ClockDsl clock;
@@ -56,7 +59,7 @@ public class UseCaseDsl implements Closeable {
         this(externalSystemMode, channelMode, myShopDriverFactory, erpDriverSupplier, clockDriverSupplier,
                 taxDriverSupplier, () -> {
                     throw new IllegalStateException("This DSL was built without an identity provider, so it cannot"
-                            + " create a new customer");
+                            + " create a new customer or admin");
                 });
     }
 
@@ -98,7 +101,7 @@ public class UseCaseDsl implements Closeable {
             Closer.close(taxDriver);
         }
 
-        // Last: the shops' browser sessions may still be signed in as a created customer.
+        // Last: the shops' browser sessions may still be signed in as a created customer or admin.
         Closer.close(identityProviderDriver);
     }
 
@@ -111,6 +114,27 @@ public class UseCaseDsl implements Closeable {
     public UserIdentity newCustomer(String firstName, String lastName, String email) {
         identityProviderDriver = getOrCreate(identityProviderDriver, identityProviderDriverSupplier);
         return UserIdentity.customer(identityProviderDriver.createCustomer(firstName, lastName, email));
+    }
+
+    /**
+     * Creates an admin account of this scenario's own (admin role), removed again when this DSL is closed.
+     *
+     * @param email null for a unique address
+     */
+    public UserIdentity newAdmin(String firstName, String lastName, String email) {
+        identityProviderDriver = getOrCreate(identityProviderDriver, identityProviderDriverSupplier);
+        return UserIdentity.admin(identityProviderDriver.createAdmin(firstName, lastName, email));
+    }
+
+    /**
+     * This scenario's admin, created the first time it is needed: who admin-only operations run as, unless another
+     * identity is selected.
+     */
+    public UserIdentity admin() {
+        if (admin == null) {
+            admin = newAdmin(ADMIN_FIRST_NAME, ADMIN_LAST_NAME, null);
+        }
+        return admin;
     }
 
     /** Selects who MyShop operations are performed as, until changed again. */
@@ -141,8 +165,11 @@ public class UseCaseDsl implements Closeable {
     }
 
     private MyShopDsl getOrCreateMyShop(String channel) {
-        return shops.computeIfAbsent(channel, ch ->
-                new MyShopDsl(myShopDriverFactory.apply(ch), context));
+        return shops.computeIfAbsent(channel, ch -> {
+            var driver = myShopDriverFactory.apply(ch);
+            driver.useScenarioAdmin(this::admin);
+            return new MyShopDsl(driver, context);
+        });
     }
 
     private String resolveMyShopChannel(ChannelMode mode) {

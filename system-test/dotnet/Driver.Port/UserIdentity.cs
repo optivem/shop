@@ -2,21 +2,19 @@ namespace Driver.Port;
 
 /// <summary>
 /// Who an operation is performed as. A shared test customer carries its zero-based position (0 = customer1,
-/// 1 = customer2, ...); a customer created for the scenario carries its account instead. Two identities are the
-/// same user exactly when they are equal.
+/// 1 = customer2, ...); a customer or an admin created for the scenario carries its account instead. Two identities
+/// are the same user exactly when they are equal.
 /// </summary>
-public readonly record struct UserIdentity(UserIdentityKind Kind, int CustomerIndex, CustomerAccount? Account = null)
+public readonly record struct UserIdentity(UserIdentityKind Kind, int CustomerIndex, UserAccount? Account = null)
 {
     /// <summary>The number of shared test customers in the identity provider (customer1, customer2).</summary>
     public const int CustomerCount = 2;
 
-    /// <summary>Customer for customer operations, admin for admin-only operations.</summary>
+    /// <summary>Customer for customer operations, the scenario's admin for admin-only operations.</summary>
     public static UserIdentity Default { get; } = new(UserIdentityKind.Default, -1);
 
     /// <summary>No credentials at all.</summary>
     public static UserIdentity Anonymous { get; } = new(UserIdentityKind.Anonymous, -1);
-
-    public static UserIdentity Admin { get; } = new(UserIdentityKind.Admin, -1);
 
     /// <summary>
     /// The sign-in username of this customer identity (customer1, customer2, ..., or the created account's), as the
@@ -46,7 +44,7 @@ public readonly record struct UserIdentity(UserIdentityKind Kind, int CustomerIn
     }
 
     /// <summary>A customer whose account was created for this scenario.</summary>
-    public static UserIdentity Customer(CustomerAccount account)
+    public static UserIdentity Customer(UserAccount account)
     {
         if (account == null)
         {
@@ -54,6 +52,17 @@ public readonly record struct UserIdentity(UserIdentityKind Kind, int CustomerIn
         }
 
         return new UserIdentity(UserIdentityKind.Customer, -1, account);
+    }
+
+    /// <summary>An admin whose account was created for this scenario.</summary>
+    public static UserIdentity Admin(UserAccount account)
+    {
+        if (account == null)
+        {
+            throw new ArgumentNullException(nameof(account), "A created admin needs its account");
+        }
+
+        return new UserIdentity(UserIdentityKind.Admin, -1, account);
     }
 }
 

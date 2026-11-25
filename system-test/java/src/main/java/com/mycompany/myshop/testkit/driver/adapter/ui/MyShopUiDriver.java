@@ -54,6 +54,7 @@ import com.mycompany.myshop.testkit.common.domain.OrderStatus;
 import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Supplier;
 import java.nio.charset.StandardCharsets;
 
 import static com.mycompany.myshop.testkit.dsl.core.usecase.commons.SystemResults.failure;
@@ -63,9 +64,14 @@ public class MyShopUiDriver implements MyShopDriver {
     private static final String PROFILE_PATH = "/account";
 
     private final MyShopUiClient client;
+    private final boolean signsIn;
 
     private TestUser requestedUser;
     private boolean anonymous;
+    private Supplier<UserIdentity> scenarioAdmin = () -> {
+        throw new IllegalStateException("No admin for this admin-only operation: act as an admin, or give the driver"
+                + " the scenario's admin (useScenarioAdmin)");
+    };
     private Page currentPage = Page.NONE;
     private HomePage homePage;
     private NewOrderPage newOrderPage;
@@ -79,6 +85,7 @@ public class MyShopUiDriver implements MyShopDriver {
 
     public MyShopUiDriver(String baseUrl, Browser browser, String keycloakBaseUrl) {
         this.client = new MyShopUiClient(baseUrl, browser, keycloakBaseUrl);
+        this.signsIn = keycloakBaseUrl != null && !keycloakBaseUrl.isBlank();
     }
 
     @Override
@@ -91,9 +98,13 @@ public class MyShopUiDriver implements MyShopDriver {
         anonymous = identity.kind() == UserIdentity.Kind.ANONYMOUS;
         requestedUser = switch (identity.kind()) {
             case DEFAULT, ANONYMOUS -> null;
-            case CUSTOMER -> TestUser.customer(identity);
-            case ADMIN -> TestUser.ADMIN;
+            case CUSTOMER, ADMIN -> TestUser.of(identity);
         };
+    }
+
+    @Override
+    public void useScenarioAdmin(Supplier<UserIdentity> admin) {
+        this.scenarioAdmin = admin;
     }
 
     @Override
@@ -180,7 +191,7 @@ public class MyShopUiDriver implements MyShopDriver {
             return loginRequiredForOrder(request.getOrderNumber());
         }
 
-        runAs(TestUser.ADMIN);
+        runAsAdmin();
         var viewResult = readOrderDetails(request.getOrderNumber());
 
         if (viewResult.isFailure()) {
@@ -344,7 +355,7 @@ public class MyShopUiDriver implements MyShopDriver {
             return loginRequired("/admin-coupons");
         }
 
-        runAs(TestUser.ADMIN);
+        runAsAdmin();
         var pageResult = ensureOnCouponManagementPage();
         if (pageResult.isFailure()) {
             return failure(pageResult.getError());
@@ -369,7 +380,7 @@ public class MyShopUiDriver implements MyShopDriver {
             return loginRequired("/admin-coupons");
         }
 
-        runAs(TestUser.ADMIN);
+        runAsAdmin();
         var pageResult = navigateToCouponManagementPage();
         if (pageResult.isFailure()) {
             return failure(pageResult.getError());
@@ -758,6 +769,15 @@ public class MyShopUiDriver implements MyShopDriver {
         }
     }
 
+    /**
+     * Runs an admin-only operation: as the requested identity, else as the scenario's admin. Without sign-in (no
+     * Keycloak) the browser never logs in, so no admin is created.
+     */
+    private void runAsAdmin() {
+        var needsAdmin = requestedUser == null && signsIn;
+        runAs(needsAdmin ? TestUser.of(scenarioAdmin.get()) : TestUser.CUSTOMER);
+    }
+
     /** The browser session was replaced: no page is open any more. */
     private void resetPages() {
         currentPage = Page.NONE;
@@ -796,7 +816,7 @@ public class MyShopUiDriver implements MyShopDriver {
         }
 
         var homePage = getHomePage();
-        if (requestedUser != TestUser.ADMIN) {
+        if (requestedUser == null || !requestedUser.isAdmin()) {
             newOrderPage = homePage.clickNewOrder();
             currentPage = Page.NEW_ORDER;
             return success();
@@ -820,7 +840,7 @@ public class MyShopUiDriver implements MyShopDriver {
     /** A user who has no link to the page opens its URL, which is what can be refused. */
     private Result<Void, SystemError> navigateToCouponManagementPage() {
         var homePage = getHomePage();
-        if (requestedUser == null || requestedUser == TestUser.ADMIN) {
+        if (requestedUser == null || requestedUser.isAdmin()) {
             couponManagementPage = homePage.clickCouponManagement();
             currentPage = Page.COUPON_MANAGEMENT;
             return success();

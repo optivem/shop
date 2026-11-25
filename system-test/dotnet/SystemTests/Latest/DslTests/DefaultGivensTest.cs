@@ -119,6 +119,8 @@ public class DefaultGivensTest
     {
         public void ActAs(UserIdentity identity) { }
 
+        public void UseScenarioAdmin(Func<Task<UserIdentity>> admin) { }
+
         public Task<Result<GoToMyShopResponse, SystemError>> GoToMyShopAsync(GoToMyShopRequest request) =>
             throw new NotSupportedException();
 

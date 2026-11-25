@@ -8,4 +8,9 @@ import type { UserIdentity } from './user-identity.js';
 export interface ActingUserSelector {
   /** Selects who subsequent operations are performed as. */
   actAs(identity: UserIdentity): void;
+  /**
+   * Who admin-only operations run as while no identity is selected: the scenario's own admin. Asked only when such an
+   * operation runs, so a scenario without one creates no admin.
+   */
+  useScenarioAdmin(admin: () => Promise<UserIdentity>): void;
 }

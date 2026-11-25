@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
@@ -28,12 +29,35 @@ public sealed class KeycloakAdminClient : IDisposable
         "localhost", "127.0.0.1", "[::1]", "::1"
     };
 
+    private const int TokenRefreshMarginSeconds = 15;
+    private static readonly ConcurrentDictionary<string, CachedToken> TokenCache = new();
+    private static readonly SemaphoreSlim TokenLock = new(1, 1);
+
+    /// <summary>
+    /// At most this many admin calls at once per process. Every parallel scenario creates its own users, and a burst
+    /// of concurrent admin calls makes the local Keycloak reset connections; queueing here lets each call through.
+    /// </summary>
+    private const int MaxConcurrentCalls = 4;
+    private static readonly SemaphoreSlim CallLimit = new(MaxConcurrentCalls, MaxConcurrentCalls);
+
     private readonly string _baseUrl;
     private readonly TokenGrant _tokenGrant;
-    private readonly HttpClient _httpClient = new();
+    /// <summary>
+    /// One connection pool for every client of this process: each scenario makes its own client.
+    /// </summary>
+    private static readonly HttpClient SharedHttpClient = new(new SocketsHttpHandler
+    {
+        PooledConnectionLifetime = TimeSpan.FromMinutes(1),
+        PooledConnectionIdleTimeout = TimeSpan.FromSeconds(10)
+    });
+
+    private readonly HttpClient _httpClient = SharedHttpClient;
 
     /// <summary>How to get an admin token: the token endpoint, its form, and what to say when Keycloak refuses it.</summary>
     private sealed record TokenGrant(string TokenUrl, Dictionary<string, string> Form, string RefusedMessage);
+
+    /// <summary>An admin token and when to fetch a new one.</summary>
+    private sealed record CachedToken(string Token, DateTime RefreshAt);
 
     public KeycloakAdminClient(string? keycloakBaseUrl)
     {
@@ -115,7 +139,10 @@ public sealed class KeycloakAdminClient : IDisposable
         }
     }
 
-    public void Dispose() => _httpClient.Dispose();
+    /// <summary>Nothing to release: the HTTP client is shared by the process.</summary>
+    public void Dispose()
+    {
+    }
 
     private async Task<HttpRequestMessage> AdminRequestAsync(HttpMethod method, string path, string? json = null)
     {
@@ -128,8 +155,36 @@ public sealed class KeycloakAdminClient : IDisposable
         return request;
     }
 
-    /// <summary>A fresh admin token (they live for a minute, so one per call keeps it simple).</summary>
+    /// <summary>
+    /// An admin token, shared by every client of this process that signs in the same way and fetched again shortly
+    /// before it expires. Each scenario creates its own users, so a fresh token per call would put a sign-in on every
+    /// admin call of every parallel test, which a local Keycloak cannot keep up with.
+    /// </summary>
     private async Task<string> AdminTokenAsync()
+    {
+        var key = _tokenGrant.TokenUrl + "?" + string.Join("&", _tokenGrant.Form.Select(f => f.Key + "=" + f.Value));
+        if (TokenCache.TryGetValue(key, out var cached) && cached.RefreshAt > DateTime.UtcNow)
+        {
+            return cached.Token;
+        }
+        await TokenLock.WaitAsync();
+        try
+        {
+            if (TokenCache.TryGetValue(key, out cached) && cached.RefreshAt > DateTime.UtcNow)
+            {
+                return cached.Token;
+            }
+            var fetched = await FetchAdminTokenAsync();
+            TokenCache[key] = fetched;
+            return fetched.Token;
+        }
+        finally
+        {
+            TokenLock.Release();
+        }
+    }
+
+    private async Task<CachedToken> FetchAdminTokenAsync()
     {
         var request = new HttpRequestMessage(HttpMethod.Post, _tokenGrant.TokenUrl)
         {
@@ -141,17 +196,22 @@ public sealed class KeycloakAdminClient : IDisposable
             throw new InvalidOperationException(_tokenGrant.RefusedMessage);
         }
         ExpectStatus(response, body, HttpStatusCode.OK, "get an admin token");
-        var token = Parse(body)["access_token"]?.GetValue<string>();
-        return string.IsNullOrEmpty(token)
-            ? throw new InvalidOperationException(
-                $"Keycloak at {_baseUrl} sent an admin token response without access_token")
-            : token;
+        var json = Parse(body);
+        var token = json["access_token"]?.GetValue<string>();
+        if (string.IsNullOrEmpty(token))
+        {
+            throw new InvalidOperationException(
+                $"Keycloak at {_baseUrl} sent an admin token response without access_token");
+        }
+        var expiresIn = json["expires_in"]?.GetValue<int>() ?? 60;
+        return new CachedToken(token, DateTime.UtcNow.AddSeconds(Math.Max(0, expiresIn - TokenRefreshMarginSeconds)));
     }
 
     private async Task<(HttpResponseMessage Response, string Body)> SendAsync(HttpRequestMessage request)
     {
         using (request)
         {
+            await CallLimit.WaitAsync();
             try
             {
                 var response = await _httpClient.SendAsync(request);
@@ -162,6 +222,10 @@ public sealed class KeycloakAdminClient : IDisposable
             {
                 throw new InvalidOperationException(
                     $"Keycloak admin call {request.Method} {request.RequestUri} failed: {e.Message}", e);
+            }
+            finally
+            {
+                CallLimit.Release();
             }
         }
     }

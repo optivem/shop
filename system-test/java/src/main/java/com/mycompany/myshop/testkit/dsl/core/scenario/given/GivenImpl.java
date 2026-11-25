@@ -137,7 +137,7 @@ public class GivenImpl implements GivenStage {
 
     @Override
     public GivenImpl loggedInAsAdmin() {
-        return loggedInAs(() -> UserIdentity.ADMIN);
+        return loggedInAs(app::admin);
     }
 
     @Override

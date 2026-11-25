@@ -22,6 +22,40 @@ interface TokenGrant {
  *   KEYCLOAK_TEST_ADMIN_CLIENT_SECRET). KEYCLOAK_TEST_ADMIN_REALM must name the test realm, and the production realm
  *   is refused whatever the config says. Both checks run before any call, and the master admin is never used.
  */
+const TOKEN_REFRESH_MARGIN_SECONDS = 15;
+/**
+ * At most this many admin calls at once per process. Every parallel scenario creates its own users, and a burst of
+ * concurrent admin calls makes the local Keycloak reset connections; queueing here lets each call through.
+ */
+const MAX_CONCURRENT_CALLS = 4;
+
+/** An admin token and when to fetch a new one. */
+interface CachedToken {
+  readonly token: string;
+  readonly refreshAt: number;
+}
+
+/** Admin tokens shared by every client of this process that signs in the same way. */
+const tokenCache = new Map<string, Promise<CachedToken>>();
+
+let activeCalls = 0;
+const waitingCalls: (() => void)[] = [];
+
+async function withCallLimit<T>(call: () => Promise<T>): Promise<T> {
+  if (activeCalls >= MAX_CONCURRENT_CALLS) {
+    await new Promise<void>((resolve) => waitingCalls.push(resolve));
+  } else {
+    activeCalls++;
+  }
+  try {
+    return await call();
+  } finally {
+    const next = waitingCalls.shift();
+    if (next) next();
+    else activeCalls--;
+  }
+}
+
 export class KeycloakAdminClient {
   private readonly baseUrl: string;
   private readonly tokenGrant: TokenGrant;
@@ -98,22 +132,47 @@ export class KeycloakAdminClient {
     const headers: Record<string, string> = { Authorization: `Bearer ${await this.adminToken()}` };
     if (body !== undefined) headers['Content-Type'] = 'application/json';
     try {
-      return await fetch(url, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
+      return await withCallLimit(() =>
+        fetch(url, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) }),
+      );
     } catch (e) {
       throw new Error(`Keycloak admin call ${method} ${url} failed: ${describeError(e)}`, { cause: e });
     }
   }
 
-  /** A fresh admin token (they live for a minute, so one per call keeps it simple). */
+  /**
+   * An admin token, shared by every client of this process that signs in the same way and fetched again shortly
+   * before it expires, so that the parallel scenarios do not put a sign-in on every admin call.
+   */
   private async adminToken(): Promise<string> {
+    const key = `${this.tokenGrant.tokenUrl}?${new URLSearchParams(this.tokenGrant.form).toString()}`;
+    const cached = tokenCache.get(key);
+    if (cached) {
+      const token = await cached.catch(() => undefined);
+      if (token && token.refreshAt > Date.now()) return token.token;
+      if (tokenCache.get(key) !== cached) return this.adminToken();
+    }
+    const fetched = this.fetchAdminToken();
+    tokenCache.set(key, fetched);
+    try {
+      return (await fetched).token;
+    } catch (e) {
+      if (tokenCache.get(key) === fetched) tokenCache.delete(key);
+      throw e;
+    }
+  }
+
+  private async fetchAdminToken(): Promise<CachedToken> {
     const url = this.tokenGrant.tokenUrl;
     let response: Response;
     try {
-      response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams(this.tokenGrant.form),
-      });
+      response = await withCallLimit(() =>
+        fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams(this.tokenGrant.form),
+        }),
+      );
     } catch (e) {
       throw new Error(`Keycloak admin sign-in at ${url} failed: ${describeError(e)}`, { cause: e });
     }
@@ -121,11 +180,15 @@ export class KeycloakAdminClient {
       throw new Error(this.tokenGrant.refusedMessage);
     }
     await this.expectStatus(response, 200, 'get an admin token');
-    const json = (await response.json()) as { access_token?: string };
+    const json = (await response.json()) as { access_token?: string; expires_in?: number };
     if (!json.access_token) {
       throw new Error(`Keycloak at ${this.baseUrl} sent an admin token response without access_token`);
     }
-    return json.access_token;
+    const expiresIn = json.expires_in ?? 60;
+    return {
+      token: json.access_token,
+      refreshAt: Date.now() + Math.max(0, expiresIn - TOKEN_REFRESH_MARGIN_SECONDS) * 1000,
+    };
   }
 
   private async expectStatus(response: Response, expected: number, action: string): Promise<void> {

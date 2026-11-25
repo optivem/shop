@@ -17,8 +17,8 @@ export class MyShopApiClient {
   private readonly productController: ProductController;
   private readonly adminController: AdminController;
   private readonly tokenProvider: KeycloakTokenProvider | undefined;
-  private identity: ApiIdentityValue = ApiIdentity.CUSTOMER;
-  private customer: TestUser = TestUsers.CUSTOMER;
+  /** Who calls are made as; undefined for no credentials. */
+  private user: TestUser | undefined = TestUsers.CUSTOMER;
 
   /**
    * @param keycloakBaseUrl when undefined or empty, no token is acquired and no Authorization header is sent.
@@ -38,14 +38,13 @@ export class MyShopApiClient {
 
   /** Selects who the following calls are made as. */
   as(identity: ApiIdentityValue): this {
-    this.identity = identity;
+    this.user = identity === ApiIdentity.ANONYMOUS ? undefined : TestUsers.CUSTOMER;
     return this;
   }
 
-  /** Calls are made as the given customer, until changed again. */
-  asCustomer(customer: TestUser): this {
-    this.identity = ApiIdentity.CUSTOMER;
-    this.customer = customer;
+  /** Calls are made as the given user (a customer or an admin), until changed again. */
+  asUser(user: TestUser): this {
+    this.user = user;
     return this;
   }
 
@@ -75,14 +74,8 @@ export class MyShopApiClient {
 
   private async tokenFor(): Promise<string | undefined> {
     const provider = this.tokenProvider;
-    if (!provider) return undefined;
-    switch (this.identity) {
-      case ApiIdentity.ANONYMOUS:
-        return undefined;
-      case ApiIdentity.CUSTOMER:
-        return provider.getToken(this.customer);
-      case ApiIdentity.ADMIN:
-        return provider.getToken(TestUsers.ADMIN);
-    }
+    const user = this.user;
+    if (!provider || !user) return undefined;
+    return provider.getToken(user);
   }
 }

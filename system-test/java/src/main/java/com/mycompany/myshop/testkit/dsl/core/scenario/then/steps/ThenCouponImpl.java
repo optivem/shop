@@ -1,6 +1,5 @@
 package com.mycompany.myshop.testkit.dsl.core.scenario.then.steps;
 
-import com.mycompany.myshop.testkit.driver.port.UserIdentity;
 import com.mycompany.myshop.testkit.dsl.core.shared.ResponseVerification;
 import com.mycompany.myshop.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.ExecutionResultContext;
@@ -16,7 +15,7 @@ public class ThenCouponImpl<R, V extends ResponseVerification<R>>
         super(app, executionResult, successVerification);
         this.couponCode = couponCode;
         // Only an admin can browse the coupons, whoever the scenario acts as (e.g. the customer who checked out).
-        this.verification = app.actingAs(UserIdentity.ADMIN, () -> app.myShop().browseCoupons()
+        this.verification = app.actingAs(app.admin(), () -> app.myShop().browseCoupons()
                 .execute()
                 .shouldSucceed());
 

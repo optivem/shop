@@ -15,8 +15,12 @@ public class MyShopUiDriver : IMyShopDriver
     private const string ProfilePath = "/account";
 
     private readonly MyShopUiClient _client;
+    private readonly bool _signsIn;
     private TestUser? _requestedUser;
     private bool _anonymous;
+    private Func<Task<UserIdentity>> _scenarioAdmin = () => throw new InvalidOperationException(
+        "No admin for this admin-only operation: act as an admin, or give the driver the scenario's admin"
+        + " (UseScenarioAdmin)");
     private Page _currentPage = Page.None;
 
     private HomePage? _homePage;
@@ -28,9 +32,10 @@ public class MyShopUiDriver : IMyShopDriver
     private const int MaxBrowseRetries = 10;
     private static readonly TimeSpan BrowseRetryDelay = TimeSpan.FromSeconds(1);
 
-    private MyShopUiDriver(MyShopUiClient client)
+    private MyShopUiDriver(MyShopUiClient client, bool signsIn)
     {
         _client = client;
+        _signsIn = signsIn;
     }
 
     public async ValueTask DisposeAsync()
@@ -43,7 +48,7 @@ public class MyShopUiDriver : IMyShopDriver
     public static async Task<MyShopUiDriver> CreateAsync(string baseUrl, string? keycloakBaseUrl = null)
     {
         var client = await MyShopUiClient.CreateAsync(baseUrl, keycloakBaseUrl);
-        return new MyShopUiDriver(client);
+        return new MyShopUiDriver(client, !string.IsNullOrWhiteSpace(keycloakBaseUrl));
     }
 
     public void ActAs(UserIdentity identity)
@@ -52,11 +57,12 @@ public class MyShopUiDriver : IMyShopDriver
         _requestedUser = identity.Kind switch
         {
             UserIdentityKind.Default or UserIdentityKind.Anonymous => null,
-            UserIdentityKind.Customer => TestUser.ForCustomer(identity),
-            UserIdentityKind.Admin => TestUser.Admin,
+            UserIdentityKind.Customer or UserIdentityKind.Admin => TestUser.For(identity),
             _ => throw new ArgumentOutOfRangeException(nameof(identity), identity, null)
         };
     }
+
+    public void UseScenarioAdmin(Func<Task<UserIdentity>> admin) => _scenarioAdmin = admin;
 
     public async Task<Result<GoToMyShopResponse, SystemError>> GoToMyShopAsync(GoToMyShopRequest request)
     {
@@ -158,7 +164,7 @@ public class MyShopUiDriver : IMyShopDriver
             return await LoginRequiredForOrderAsync<DeliverOrderResponse>(request.OrderNumber);
         }
 
-        await RunAsAsync(TestUser.Admin);
+        await RunAsAdminAsync();
         var viewResult = await ReadOrderDetailsAsync(request.OrderNumber);
         if (viewResult.IsFailure)
         {
@@ -349,7 +355,7 @@ public class MyShopUiDriver : IMyShopDriver
             return await LoginRequiredAsync<PublishCouponResponse>("/admin-coupons");
         }
 
-        await RunAsAsync(TestUser.Admin);
+        await RunAsAdminAsync();
         var pageResult = await EnsureOnCouponManagementPageAsync();
         if (pageResult.IsFailure)
         {
@@ -376,7 +382,7 @@ public class MyShopUiDriver : IMyShopDriver
             return await LoginRequiredAsync<BrowseCouponsResponse>("/admin-coupons");
         }
 
-        await RunAsAsync(TestUser.Admin);
+        await RunAsAdminAsync();
 
         // Retry with fresh page navigations to handle UI eventual consistency —
         // after publishing a coupon or placing an order, the coupon table
@@ -414,6 +420,16 @@ public class MyShopUiDriver : IMyShopDriver
         {
             ResetPages();
         }
+    }
+
+    /// <summary>
+    /// Runs an admin-only operation: as the requested identity, else as the scenario's admin. Without sign-in (no
+    /// Keycloak) the browser never logs in, so no admin is created.
+    /// </summary>
+    private async Task RunAsAdminAsync()
+    {
+        var needsAdmin = _requestedUser == null && _signsIn;
+        await RunAsAsync(needsAdmin ? TestUser.For(await _scenarioAdmin()) : TestUser.Customer);
     }
 
     /// <summary>The browser session was replaced: no page is open any more.</summary>
@@ -868,7 +884,7 @@ public class MyShopUiDriver : IMyShopDriver
         }
 
         var homePage = await GetHomePageAsync();
-        if (_requestedUser != TestUser.Admin)
+        if (_requestedUser == null || !_requestedUser.IsAdmin)
         {
             _newOrderPage = await homePage.ClickNewOrderAsync();
             SetCurrentPage(Page.NewOrder);
@@ -905,7 +921,7 @@ public class MyShopUiDriver : IMyShopDriver
     private async Task<Result<VoidValue, SystemError>> NavigateToCouponManagementPageAsync()
     {
         var homePage = await GetHomePageAsync();
-        if (_requestedUser == null || _requestedUser == TestUser.Admin)
+        if (_requestedUser == null || _requestedUser.IsAdmin)
         {
             _couponManagementPage = await homePage.ClickCouponManagementAsync();
             SetCurrentPage(Page.CouponManagement);

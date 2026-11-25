@@ -56,7 +56,7 @@ import type { CheckAccessibilityRequest } from '../../port/dtos/CheckAccessibili
 import type { CheckAccessibilityResponse } from '../../port/dtos/CheckAccessibilityResponse.js';
 import { OPEN, PROCEED_FROM_CART, type CheckOutRequest } from '../../port/dtos/CheckOutRequest.js';
 import { CART, CHECKOUT, CONFIRMATION, type CheckOutResponse } from '../../port/dtos/CheckOutResponse.js';
-import { TestUsers, testUserFor, type TestUser } from '../shared/client/http/test-user.js';
+import { TestUsers, testUserOf, type TestUser } from '../shared/client/http/test-user.js';
 import { AUTHENTICATION_REQUIRED, MyShopUiClient, PERMISSION_DENIED } from './client/MyShopUiClient.js';
 import { NewOrderPage } from './client/pages/NewOrderPage.js';
 import type { CouponManagementPage } from './client/pages/CouponManagementPage.js';
@@ -64,11 +64,19 @@ import type { OrderDetailsPage } from './client/pages/OrderDetailsPage.js';
 
 export class MyShopUiDriver implements MyShopDriver {
   private readonly client: MyShopUiClient;
+  private readonly signsIn: boolean;
   private requestedUser: TestUser | undefined;
   private anonymous = false;
+  private scenarioAdmin: () => Promise<UserIdentity> = () =>
+    Promise.reject(
+      new Error(
+        "No admin for this admin-only operation: act as an admin, or give the driver the scenario's admin (useScenarioAdmin)",
+      ),
+    );
 
   constructor(baseUrl: string, browser: Browser, keycloakBaseUrl?: string) {
     this.client = new MyShopUiClient(baseUrl, browser, keycloakBaseUrl);
+    this.signsIn = !!keycloakBaseUrl;
   }
 
   actAs(identity: UserIdentity): void {
@@ -79,12 +87,14 @@ export class MyShopUiDriver implements MyShopDriver {
         this.requestedUser = undefined;
         break;
       case 'CUSTOMER':
-        this.requestedUser = testUserFor(identity);
-        break;
       case 'ADMIN':
-        this.requestedUser = TestUsers.ADMIN;
+        this.requestedUser = testUserOf(identity);
         break;
     }
+  }
+
+  useScenarioAdmin(admin: () => Promise<UserIdentity>): void {
+    this.scenarioAdmin = admin;
   }
 
   async goToMyShop(_request: GoToMyShopRequest): Promise<Result<GoToMyShopResponse, SystemError>> {
@@ -193,7 +203,7 @@ export class MyShopUiDriver implements MyShopDriver {
       return this.loginRequiredForOrder(request.orderNumber);
     }
 
-    await this.runAs(TestUsers.ADMIN);
+    await this.runAsAdmin();
     const orderNumber = request.orderNumber;
     const detailsResult = await this.openOrderDetails(orderNumber);
     if (!detailsResult.success) return failure(detailsResult.error);
@@ -269,7 +279,7 @@ export class MyShopUiDriver implements MyShopDriver {
   async publishCoupon(request: PublishCouponRequest): Promise<Result<PublishCouponResponse, SystemError>> {
     if (this.anonymous) return this.loginRequired('/admin-coupons');
 
-    await this.runAs(TestUsers.ADMIN);
+    await this.runAsAdmin();
     const pageResult = await this.openCouponManagementPage();
     if (!pageResult.success) return failure(pageResult.error);
 
@@ -297,7 +307,7 @@ export class MyShopUiDriver implements MyShopDriver {
     requireNotSet('size', request.size);
     if (this.anonymous) return this.loginRequired('/admin-coupons');
 
-    await this.runAs(TestUsers.ADMIN);
+    await this.runAsAdmin();
     const pageResult = await this.openCouponManagementPage();
     if (!pageResult.success) return failure(pageResult.error);
 
@@ -637,7 +647,7 @@ export class MyShopUiDriver implements MyShopDriver {
     const homeResult = await this.client.openHomePage();
     if (!homeResult.success) return failure(homeResult.error);
 
-    if (this.requestedUser === TestUsers.ADMIN) return this.client.openNewOrderPage();
+    if (this.requestedUser?.admin) return this.client.openNewOrderPage();
 
     await homeResult.value.clickNewOrder();
     return success(this.client.newOrderPage());
@@ -648,7 +658,7 @@ export class MyShopUiDriver implements MyShopDriver {
     const homeResult = await this.client.openHomePage();
     if (!homeResult.success) return failure(homeResult.error);
 
-    if (this.requestedUser && this.requestedUser !== TestUsers.ADMIN) return this.client.openCouponManagementPage();
+    if (this.requestedUser && !this.requestedUser.admin) return this.client.openCouponManagementPage();
 
     await homeResult.value.clickAdminCoupons();
     return success(this.client.couponManagementPage());
@@ -672,6 +682,21 @@ export class MyShopUiDriver implements MyShopDriver {
   /** An explicitly requested identity wins; otherwise the operation runs as its default user. */
   private async runAs(operationDefault: TestUser): Promise<void> {
     await this.client.switchUser(this.requestedUser ?? operationDefault);
+  }
+
+  /**
+   * Runs an admin-only operation: as the requested identity, else as the scenario's admin. Without sign-in (no
+   * Keycloak) the browser never logs in, so no admin is created.
+   */
+  private async runAsAdmin(): Promise<void> {
+    const needsAdmin = this.requestedUser === undefined && this.signsIn;
+    await this.runAs(needsAdmin ? await this.scenarioAdminUser() : TestUsers.CUSTOMER);
+  }
+
+  private async scenarioAdminUser(): Promise<TestUser> {
+    const admin = await this.scenarioAdmin();
+    if (admin.kind !== 'ADMIN') throw new Error(`The scenario's admin is a ${admin.kind} identity`);
+    return testUserOf(admin);
   }
 }
 

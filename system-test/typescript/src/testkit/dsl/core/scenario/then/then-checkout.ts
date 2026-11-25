@@ -4,7 +4,6 @@ import { CART, CHECKOUT, CONFIRMATION } from '../../../../driver/port/dtos/Check
 import type { BrowseCouponItem } from '../../../../driver/port/dtos/BrowseCouponsResponse.js';
 import type { ViewOrderResponse } from '../../../../driver/port/dtos/ViewOrderResponse.js';
 import type { ViewProfileResponse } from '../../../../driver/port/dtos/ViewProfileResponse.js';
-import { UserIdentity } from '../../../../driver/port/user-identity.js';
 import { CheckOut } from '../../usecase/usecases/CheckOut.js';
 import type { CheckOutVerification } from '../../usecase/usecases/CheckOutVerification.js';
 import { ManageCart } from '../../usecase/usecases/ManageCart.js';
@@ -116,7 +115,7 @@ export class ThenCheckoutResultStage implements PromiseLike<void> {
   /** Only an admin can browse the coupons, whoever the scenario acts as (here the customer who checked out). */
   async _coupon(couponCode: string): Promise<BrowseCouponItem> {
     const resolvedCouponCode = this.useCaseContext.getParamValue(couponCode);
-    const result = await this.app.actingAs(UserIdentity.ADMIN, () => this.app.myShop().browseCoupons({}));
+    const result = await this.app.actingAs(await this.app.scenarioAdmin(), () => this.app.myShop().browseCoupons({}));
     expect(result.success, JSON.stringify(result)).toBe(true);
     if (!result.success) throw new Error('The coupons could not be browsed');
     const coupon = result.value.coupons.find((c) => c.code === resolvedCouponCode);
