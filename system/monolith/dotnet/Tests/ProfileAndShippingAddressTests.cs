@@ -62,6 +62,18 @@ public class ProfileAndShippingAddressTests : IClassFixture<ShopWebApplicationFa
     }
 
     [Fact]
+    public async Task ViewProfile_WithoutSavedProfileAnswersWithTheCountryChosenAtSignUp()
+    {
+        var token = _factory.CreateToken("CUSTOMER", subject: $"customer-{Guid.NewGuid()}",
+            extraClaims: new Dictionary<string, string> { ["email"] = "ana@example.com", ["country"] = "GB" });
+
+        var body = await Json(await Send(HttpMethod.Get, "/api/account/profile", token));
+
+        Assert.Equal("GB", body.GetProperty("country").GetString());
+        Assert.Equal(JsonValueKind.Null, body.GetProperty("street").ValueKind);
+    }
+
+    [Fact]
     public async Task ViewProfile_WithoutTokenIsUnauthorized()
     {
         var response = await Send(HttpMethod.Get, "/api/account/profile", null);

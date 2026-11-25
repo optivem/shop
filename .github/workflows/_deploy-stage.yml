@@ -181,6 +181,8 @@ jobs:
           region: ${{ vars.GCP_REGION }}
           keycloak-domain: ${{ vars.KEYCLOAK_DOMAIN }}
           reconcile-prod-realm: ${{ inputs.stage == 'production' }}
+          # Sign-up (UC-013) on the existing shop-qa realm; production stays off.
+          reconcile-sign-up: ${{ inputs.stage == 'qa' }}
           frontend-origins: ${{ inputs.domain && format('https://{0}', inputs.domain) || '' }}
           frontend-realm: ${{ env.REALM }}
 

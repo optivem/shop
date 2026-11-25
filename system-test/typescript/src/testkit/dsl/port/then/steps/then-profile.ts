@@ -28,6 +28,8 @@ export interface ThenProfile extends PromiseLike<void> {
   doesNotHaveStreet(unexpected: string): this;
   /** No shipping address is saved: the street, postal code, city and country are empty. */
   hasNoSavedAddress(): this;
+  /** No street address is saved: the street, postal code and city are empty (the country may be set). */
+  hasNoStreetAddress(): this;
   /** The email is shown but cannot be edited: it comes from the sign-in account (UI only). */
   hasEmailThatCannotBeChanged(): this;
   /** The country select offers exactly these countries, in this order (UI only). */

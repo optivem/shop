@@ -28,6 +28,18 @@ export class KeycloakIdentityProviderDriver implements IdentityProviderDriver {
     return this.createUser(ADMIN_USERNAME_PREFIX, ADMIN_ROLE, firstName, lastName, email);
   }
 
+  newAccountCredentials(): UserAccount {
+    return { username: `${CUSTOMER_USERNAME_PREFIX}${randomUUID()}`, password: randomUUID() };
+  }
+
+  newAccountEmail(account: UserAccount): string {
+    return `${account.username}@example.com`;
+  }
+
+  async deleteOnClose(username: string): Promise<void> {
+    this.createdUserIds.push(await this.client.findUserId(username));
+  }
+
   private async createUser(
     usernamePrefix: string,
     role: string,
@@ -40,6 +52,11 @@ export class KeycloakIdentityProviderDriver implements IdentityProviderDriver {
     const userId = await this.client.createUser(username, password, firstName, lastName, email ?? `${username}@example.com`);
     this.createdUserIds.push(userId);
     await this.client.assignRealmRole(userId, role);
+    if (role === ADMIN_ROLE) {
+      // Every new user gets the realm's default role, which makes a visitor who signs up a customer (UC-013).
+      // An admin is not a customer.
+      await this.client.removeDefaultRoles(userId);
+    }
     return { username, password };
   }
 

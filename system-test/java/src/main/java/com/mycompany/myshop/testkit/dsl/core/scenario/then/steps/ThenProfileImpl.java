@@ -70,6 +70,11 @@ public class ThenProfileImpl<R, V extends ResponseVerification<R>>
         return this;
     }
 
+    public ThenProfileImpl<R, V> hasNoStreetAddress() {
+        profileVerification.streetAddressIsEmpty();
+        return this;
+    }
+
     public ThenProfileImpl<R, V> hasEmailThatCannotBeChanged() {
         profileVerification.emailCannotBeChanged();
         return this;

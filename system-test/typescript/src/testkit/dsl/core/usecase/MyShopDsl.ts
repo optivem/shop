@@ -11,6 +11,7 @@ import { PublishCoupon } from './usecases/PublishCoupon.js';
 import { GoToMyShop } from './usecases/GoToMyShop.js';
 import { ViewProfile } from './usecases/ViewProfile.js';
 import { UpdateProfile } from './usecases/UpdateProfile.js';
+import { SignUp } from './usecases/SignUp.js';
 import { BrowseCatalog } from './usecases/BrowseCatalog.js';
 import { ViewProduct } from './usecases/ViewProduct.js';
 import { ManageCart } from './usecases/ManageCart.js';
@@ -64,6 +65,10 @@ export class MyShopDsl {
 
   updateProfile(): UpdateProfile {
     return new UpdateProfile(this.driver, this.context);
+  }
+
+  signUp(): SignUp {
+    return new SignUp(this.driver, this.context);
   }
 
   browseCatalog(): BrowseCatalog {

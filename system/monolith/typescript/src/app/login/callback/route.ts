@@ -44,6 +44,7 @@ export async function GET(request: NextRequest) {
         email: stringClaim(claims.email),
         givenName: stringClaim(claims.given_name),
         familyName: stringClaim(claims.family_name),
+        country: stringClaim(claims.country),
         idToken: tokens.id_token,
       }),
       sessionCookieOptions

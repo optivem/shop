@@ -102,6 +102,8 @@ class StorefrontPagesTest {
                 .andExpect(content().string(containsString("$1,299.99")))
                 .andExpect(content().string(containsString("href=\"/sign-in?returnUrl=")))
                 .andExpect(content().string(containsString("data-testid=\"sign-in\"")))
+                .andExpect(content().string(containsString("href=\"/sign-up?returnUrl=")))
+                .andExpect(content().string(containsString("data-testid=\"sign-up\"")))
                 .andExpect(content().string(not(containsString("href=\"/order-history\""))));
         mockMvc.perform(head("/")).andExpect(status().isOk());
     }
@@ -111,7 +113,7 @@ class StorefrontPagesTest {
         var html = mockMvc.perform(get("/").with(customer())).andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        assertThat(html).doesNotContain("data-testid=\"sign-in\"").contains("data-testid=\"username\"");
+        assertThat(html).doesNotContain("data-testid=\"sign-in\"").doesNotContain("data-testid=\"sign-up\"").contains("data-testid=\"username\"");
         assertThat(count(html, "href=\"/order-history\"")).isEqualTo(1);
         assertThat(count(html, "href=\"/new-order\"")).isEqualTo(1);
         assertThat(html).doesNotContain("href=\"/admin-coupons\"");
@@ -269,6 +271,27 @@ class StorefrontPagesTest {
     void signInReturnsToTheRequestedPage() throws Exception {
         mockMvc.perform(get("/sign-in").param("returnUrl", "/cart").with(customer())).andExpect(redirectedUrl("/cart"));
         mockMvc.perform(get("/sign-in").param("returnUrl", "//evil.example").with(customer())).andExpect(redirectedUrl("/"));
+    }
+
+    @Test
+    void signUpAsksKeycloakForItsRegistrationFormAndSignInDoesNot() throws Exception {
+        assertThat(loginRedirectFrom("/sign-up?returnUrl=%2Fcart")).contains("prompt=create");
+        assertThat(loginRedirectFrom("/sign-in?returnUrl=%2Fcart")).doesNotContain("prompt=");
+    }
+
+    /** Follows an anonymous page request to the Keycloak authorization request it starts, in one session. */
+    private String loginRedirectFrom(String path) throws Exception {
+        var session = new org.springframework.mock.web.MockHttpSession();
+        var login = mockMvc.perform(get(path).session(session)).andReturn().getResponse();
+        assertThat(login.getRedirectedUrl()).endsWith("/oauth2/authorization/keycloak");
+        return mockMvc.perform(get("/oauth2/authorization/keycloak").session(session)).andReturn().getResponse()
+            .getRedirectedUrl();
+    }
+
+    @Test
+    void signUpReturnsToTheRequestedPage() throws Exception {
+        mockMvc.perform(get("/sign-up").param("returnUrl", "/cart").with(customer())).andExpect(redirectedUrl("/cart"));
+        mockMvc.perform(get("/sign-up").param("returnUrl", "//evil.example").with(customer())).andExpect(redirectedUrl("/"));
     }
 
     private static ViewProfileResponse savedProfile() {

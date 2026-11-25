@@ -47,6 +47,7 @@ describe('JwtVerifier', () => {
       email: null,
       givenName: null,
       familyName: null,
+      country: null,
     });
   });
 
@@ -55,11 +56,13 @@ describe('JwtVerifier', () => {
       email: 'alice@example.com',
       given_name: 'Alice',
       family_name: 'Smith',
+      country: 'GB',
     });
     await expect(verifier.verify(token)).resolves.toMatchObject({
       email: 'alice@example.com',
       givenName: 'Alice',
       familyName: 'Smith',
+      country: 'GB',
     });
   });
 

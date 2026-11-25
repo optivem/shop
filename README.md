@@ -32,7 +32,9 @@ Local Docker, acceptance and QA sign in through Keycloak, which is seeded from [
 
 If you change them, change them in `shop-realm.json`. The system tests sign in as `customer1` and `customer2`, but never as `admin1`: each test that needs an admin creates its own in Keycloak and deletes it afterwards. `admin1` stays in the realm so that people can sign in as an admin by hand (local demos, QA).
 
-Production (https://shop.optivem.com, realm `shop-prod`) has **none** of these users: [`prod-realm.jq`](docker/keycloak/prod-realm.jq) strips them and [`prod-realm-check.jq`](docker/keycloak/prod-realm-check.jq) fails the image build if any come back. Self-registration is off, so production accounts are created by hand in the Keycloak admin console.
+Local Docker, acceptance and QA also let a visitor **sign up** (UC-013 Create Customer): the header's "Sign up" link opens Keycloak's registration form, which asks for a shipping country (US, DE or GB). Every new account gets the realm's default role, which holds `CUSTOMER`, so the system tests take it away from each admin they create. Keycloak's *Verify Profile* action is off, so accounts without a country (the seeded users, the ones the tests create) still sign in without a profile form. The cloud acceptance and QA realms already exist and a realm import never updates them, so `deploy-keycloak` applies sign-up to them ([`reconcile-sign-up.sh`](.github/actions/deploy-keycloak/reconcile-sign-up.sh)).
+
+Production (https://shop.optivem.com, realm `shop-prod`) has **none** of these users: [`prod-realm.jq`](docker/keycloak/prod-realm.jq) strips them and [`prod-realm-check.jq`](docker/keycloak/prod-realm-check.jq) fails the image build if any come back. Self-registration is off (decided 2026-11-24: the production Keycloak is shared, so public sign-up there is a separate decision), and new production accounts get no `CUSTOMER` role by default; production accounts are created by hand in the Keycloak admin console. `prod-realm-check.jq` fails the build if either changes.
 
 ## Architecture
 

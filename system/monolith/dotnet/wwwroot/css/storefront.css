@@ -200,6 +200,7 @@ body {
 }
 
 .store-sign-in,
+.store-sign-up,
 .store-user {
     flex-direction: column;
     align-items: flex-start;

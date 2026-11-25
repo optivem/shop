@@ -41,7 +41,9 @@ import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
+import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfFilter;
 import org.springframework.security.web.csrf.CsrfToken;
@@ -65,6 +67,7 @@ public class SecurityConfig {
     private static final String CUSTOMER = "CUSTOMER";
     private static final String REGISTRATION_ID = "keycloak";
     private static final String BEARER_PREFIX = "Bearer ";
+    private static final String SIGN_UP_PATH = "/sign-up";
     private static final String[] STOREFRONT_PAGES = {"/", "/products/{sku}", "/cart", "/css/**"};
     /**
      * Same-origin only. The pages carry inline scripts and style attributes, hence 'unsafe-inline'; everything they
@@ -131,7 +134,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/products", "/api/products/{sku}").permitAll()
                 .requestMatchers(HttpMethod.HEAD, "/api/products", "/api/products/{sku}").permitAll()
                 // The storefront pages around the catalog never ask to sign in (storefront-ux §2); the cart lives in
-                // the anonymous session. /sign-in is deliberately not public: reaching it is what starts the login.
+                // the anonymous session. /sign-in and /sign-up are deliberately not public: reaching them is what starts the
+                // login (or, for /sign-up, Keycloak's registration form).
                 .requestMatchers(HttpMethod.GET, STOREFRONT_PAGES).permitAll()
                 .requestMatchers(HttpMethod.HEAD, STOREFRONT_PAGES).permitAll()
                 .requestMatchers(HttpMethod.POST, "/cart/add", "/cart/update", "/cart/remove").permitAll()
@@ -184,12 +188,39 @@ public class SecurityConfig {
         return new InMemoryClientRegistrationRepository(registration);
     }
 
-    /** Adds PKCE (S256) to the authorization-code request; the realm client requires it. */
+    /**
+     * Adds PKCE (S256) to the authorization-code request; the realm client requires it. A login started from the
+     * header's "Sign up" link (UC-013, the saved request is /sign-up) also asks Keycloak for its registration form
+     * (OIDC prompt=create).
+     */
     private static OAuth2AuthorizationRequestResolver pkceAuthorizationRequestResolver(
             ClientRegistrationRepository repository) {
         var resolver = new DefaultOAuth2AuthorizationRequestResolver(repository, "/oauth2/authorization");
         resolver.setAuthorizationRequestCustomizer(OAuth2AuthorizationRequestCustomizers.withPkce());
-        return resolver;
+        var requestCache = new HttpSessionRequestCache();
+        return new OAuth2AuthorizationRequestResolver() {
+            @Override
+            public OAuth2AuthorizationRequest resolve(HttpServletRequest request) {
+                return withSignUpPrompt(request, resolver.resolve(request));
+            }
+
+            @Override
+            public OAuth2AuthorizationRequest resolve(HttpServletRequest request, String clientRegistrationId) {
+                return withSignUpPrompt(request, resolver.resolve(request, clientRegistrationId));
+            }
+
+            private OAuth2AuthorizationRequest withSignUpPrompt(HttpServletRequest request,
+                    OAuth2AuthorizationRequest authorizationRequest) {
+                var saved = requestCache.getRequest(request, null);
+                if (authorizationRequest == null || saved == null
+                        || !java.net.URI.create(saved.getRedirectUrl()).getPath().equals(SIGN_UP_PATH)) {
+                    return authorizationRequest;
+                }
+                return OAuth2AuthorizationRequest.from(authorizationRequest)
+                    .additionalParameters(parameters -> parameters.put("prompt", "create"))
+                    .build();
+            }
+        };
     }
 
     private OidcClientInitiatedLogoutSuccessHandler logoutSuccessHandler(ClientRegistrationRepository repository) {

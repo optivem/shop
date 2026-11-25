@@ -10,6 +10,8 @@ public class GivenNewCustomer : BaseGiven, IGivenNewCustomer
     private string _firstName = DefaultFirstName;
     private string _lastName = DefaultLastName;
     private string? _email;
+    private string _country = DefaultSignUpCountry;
+    private bool _signedUp;
     private UserIdentity? _identity;
 
     public GivenNewCustomer(GivenStage givenClause) : base(givenClause)
@@ -40,10 +42,28 @@ public class GivenNewCustomer : BaseGiven, IGivenNewCustomer
 
     IGivenNewCustomer IGivenNewCustomer.WithEmail(string email) => WithEmail(email);
 
+    public GivenNewCustomer WithCountry(string country)
+    {
+        _country = country;
+        return this;
+    }
+
+    IGivenNewCustomer IGivenNewCustomer.WithCountry(string country) => WithCountry(country);
+
+    public GivenNewCustomer SignedUpThroughTheShop()
+    {
+        _signedUp = true;
+        return this;
+    }
+
+    IGivenNewCustomer IGivenNewCustomer.SignedUpThroughTheShop() => SignedUpThroughTheShop();
+
     /// <summary>Creates the account, once.</summary>
     internal override async Task Execute(UseCaseDsl app)
     {
-        _identity ??= await app.NewCustomerAsync(_firstName, _lastName, _email);
+        _identity ??= _signedUp
+            ? await app.SignedUpCustomerAsync(_firstName, _lastName, _email, _country, Channel!)
+            : await app.NewCustomerAsync(_firstName, _lastName, _email);
     }
 
     /// <summary>The created customer; only valid once the scenario is being set up.</summary>

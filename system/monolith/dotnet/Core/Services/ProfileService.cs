@@ -27,7 +27,8 @@ public class ProfileService
             {
                 FirstName = user.FirstName,
                 LastName = user.LastName,
-                Email = user.Email
+                Email = user.Email,
+                Country = user.Country
             };
         }
 

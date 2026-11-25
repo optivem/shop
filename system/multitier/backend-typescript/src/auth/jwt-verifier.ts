@@ -9,6 +9,8 @@ export interface AuthenticatedUser {
   email: string | null;
   givenName: string | null;
   familyName: string | null;
+  /** The `country` claim, the shipping country chosen at sign-up (UC-013); null when the token has none. */
+  country: string | null;
 }
 
 /**
@@ -41,6 +43,7 @@ export class JwtVerifier {
       email: stringClaim(payload.email),
       givenName: stringClaim(payload.given_name),
       familyName: stringClaim(payload.family_name),
+      country: stringClaim(payload.country),
     };
   }
 }

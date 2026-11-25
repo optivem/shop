@@ -16,6 +16,8 @@ export interface Caller {
   email: string | null;
   firstName: string | null;
   lastName: string | null;
+  /** The shipping country chosen at sign-up (UC-013), from the `country` claim; null when absent. */
+  country: string | null;
 }
 
 /**
@@ -35,6 +37,7 @@ export async function resolveCaller(request: NextRequest): Promise<Caller | null
         email: identity.email,
         firstName: identity.givenName,
         lastName: identity.familyName,
+        country: identity.country,
       }
       : null;
   }
@@ -47,6 +50,7 @@ export async function resolveCaller(request: NextRequest): Promise<Caller | null
       email: session.email,
       firstName: session.givenName,
       lastName: session.familyName,
+      country: session.country,
     }
     : null;
 }

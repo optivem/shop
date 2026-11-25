@@ -6,10 +6,14 @@
 # Brute-force detection (B-PRG 4.2) is set here, not in shop-realm.json: on Keycloak 26 it locks a user
 # out (user_temporarily_disabled, with no failed login recorded) when the same account signs in many
 # times at once, which is what the parallel system tests do with customer1 and admin1.
+# Sign-up (UC-013) stays off in production for now (user, 2026-11-24): the production Keycloak is shared,
+# and public sign-up there is a separate decision. So new users get no CUSTOMER role by default either.
 def no_localhost: map(select(contains("localhost") | not));
 
 del(.users, .passwordPolicy)
 | .sslRequired = "external"
+| .registrationAllowed = false
+| .roles.realm |= map(if .name == "default-roles-shop" then .composites.realm |= map(select(. != "CUSTOMER")) else . end)
 | . + {
     bruteForceProtected: true,
     permanentLockout: false,

@@ -17,4 +17,13 @@ public interface GivenNewCustomer extends GivenStep {
 
     /** The sign-in account's email. */
     GivenNewCustomer withEmail(String email);
+
+    /** The shipping country chosen on the sign-up form; only with {@link #signedUpThroughTheShop()}. */
+    GivenNewCustomer withCountry(String country);
+
+    /**
+     * The visitor creates the account themselves (UC-013): the shop's "Sign up" link and the identity provider's
+     * registration form, instead of the identity provider's admin API. UI channel only.
+     */
+    GivenNewCustomer signedUpThroughTheShop();
 }

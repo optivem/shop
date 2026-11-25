@@ -48,6 +48,9 @@ public class MyShopUiClient : IAsyncDisposable
 
     private const string LoginFormSelector = "#kc-login";
 
+    /// <summary>The storefront header's link for anonymous visitors to create an account (UC-013).</summary>
+    private const string SignUpSelector = "[data-testid='sign-up']";
+
     public const string AuthenticationRequired = "Authentication is required";
 
     public const string PermissionDenied = "You do not have permission to perform this action";
@@ -332,6 +335,36 @@ public class MyShopUiClient : IAsyncDisposable
         var userLogin = KeycloakUiLogin.ForBaseUrl(_keycloakBaseUrl, user)
             ?? throw new InvalidOperationException("Signing in can only be exercised against a system with a login");
         await userLogin.EnsureLoggedInAsync(_page, HomeReadySelector);
+    }
+
+    /// <summary>
+    /// Signs up as <paramref name="user"/> (its username and password) in a fresh visitor session: the header's
+    /// "Sign up" link, then Keycloak's registration form, until the shop shows the new customer signed in. The session
+    /// is then replaced by a fresh one for <paramref name="user"/>, so the next page open signs in with the password.
+    /// </summary>
+    /// <returns>null when signed up, else what the registration form or the shop showed instead</returns>
+    public async Task<string?> SignUpAsync(TestUser user, string email, string firstName, string lastName, string country)
+    {
+        var registration = KeycloakUiLogin.ForBaseUrl(_keycloakBaseUrl, user)
+            ?? throw new InvalidOperationException("Signing up can only be exercised against a system with a login");
+        await ReopenSessionAsync(user);
+        _response = await _page.GotoAsync(_baseUrl);
+        var visitorPageClient = new PlaywrightGateway(_page, _baseUrl);
+        await visitorPageClient.WaitForVisibleAsync(SignUpSelector);
+        await _page.ClickAsync(SignUpSelector);
+        var error = await registration.RegisterAsync(_page, email, firstName, lastName, country, HomeReadySelector);
+        await ReopenSessionAsync(user);
+        return error;
+    }
+
+    /// <summary>Replaces the browser session with a fresh one for <paramref name="user"/>, which has not signed in yet.</summary>
+    private async Task ReopenSessionAsync(TestUser user)
+    {
+        await _page.CloseAsync();
+        await _context.CloseAsync();
+        (_context, _page, _login, _homePage) = await OpenSessionAsync(_browser, _baseUrl, _keycloakBaseUrl, user);
+        _response = null;
+        _visitorPageClient = null;
     }
 
     /// <summary>Whether the page is the login form.</summary>

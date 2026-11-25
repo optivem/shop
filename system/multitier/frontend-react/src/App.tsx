@@ -69,6 +69,7 @@ export function App() {
                 <Route path="/products/:sku" element={<ProductDetail />} />
                 <Route path="/cart" element={<Cart />} />
                 <Route path="/sign-in" element={<SignIn />} />
+                <Route path="/sign-up" element={<SignIn signUp />} />
                 <Route path="/checkout" element={customer(<Checkout />)} />
                 <Route path="/checkout/confirmation" element={customer(<OrderConfirmation />)} />
                 <Route path="/new-order" element={customer(<QuickOrder />)} />

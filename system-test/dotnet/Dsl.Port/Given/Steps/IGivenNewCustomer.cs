@@ -18,4 +18,13 @@ public interface IGivenNewCustomer : IGivenStep
 
     /// <summary>The sign-in account's email.</summary>
     IGivenNewCustomer WithEmail(string email);
+
+    /// <summary>The shipping country chosen on the sign-up form; only with <see cref="SignedUpThroughTheShop"/>.</summary>
+    IGivenNewCustomer WithCountry(string country);
+
+    /// <summary>
+    /// The visitor creates the account themselves (UC-013): the shop's "Sign up" link and the identity provider's
+    /// registration form, instead of the identity provider's admin API. UI channel only.
+    /// </summary>
+    IGivenNewCustomer SignedUpThroughTheShop();
 }

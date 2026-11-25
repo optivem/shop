@@ -18,6 +18,13 @@ public interface IMyShopDriver : IAsyncDisposable, IActingUserSelector
     Task<Result<BrowseCouponsResponse, SystemError>> BrowseCouponsAsync(BrowseCouponsRequest request);
     Task<Result<ViewProfileResponse, SystemError>> ViewProfileAsync(ViewProfileRequest request);
     Task<Result<ViewProfileResponse, SystemError>> UpdateProfileAsync(UpdateProfileRequest request);
+
+    /// <summary>
+    /// A visitor signs up (UC-013) through the shop's "Sign up" link and the identity provider's registration form,
+    /// creating the request's account (UI only).
+    /// </summary>
+    Task<Result<SignUpResponse, SystemError>> SignUpAsync(SignUpRequest request);
+
     Task<Result<BrowseCatalogResponse, SystemError>> BrowseCatalogAsync(BrowseCatalogRequest request);
     Task<Result<ViewProductResponse, SystemError>> ViewProductAsync(ViewProductRequest request);
     Task<Result<ManageCartResponse, SystemError>> ManageCartAsync(ManageCartRequest request);

@@ -63,6 +63,7 @@ describe('header', () => {
   it('offers an anonymous visitor "Sign In" back to the current page, and hides the signed-in links', () => {
     renderStore(<Catalog />, { entry: '/?category=Laptops' });
     expect(screen.getByRole('link', { name: /sign in/i })).toHaveAttribute('href', '/sign-in?returnUrl=%2F%3Fcategory%3DLaptops');
+    expect(screen.getByRole('link', { name: /sign up/i })).toHaveAttribute('href', '/sign-up?returnUrl=%2F%3Fcategory%3DLaptops');
     expect(document.querySelector("a[href='/order-history']")).toBeNull();
   });
 

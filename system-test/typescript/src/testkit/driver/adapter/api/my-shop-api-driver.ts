@@ -22,6 +22,8 @@ import type { BrowseCustomersResponse } from '../../port/dtos/BrowseCustomersRes
 import type { ViewProfileRequest } from '../../port/dtos/ViewProfileRequest.js';
 import type { ViewProfileResponse } from '../../port/dtos/ViewProfileResponse.js';
 import type { UpdateProfileRequest } from '../../port/dtos/UpdateProfileRequest.js';
+import type { SignUpRequest } from '../../port/dtos/SignUpRequest.js';
+import type { SignUpResponse } from '../../port/dtos/SignUpResponse.js';
 import type { BrowseCatalogRequest } from '../../port/dtos/BrowseCatalogRequest.js';
 import type { BrowseCatalogResponse } from '../../port/dtos/BrowseCatalogResponse.js';
 import type { ViewProductRequest } from '../../port/dtos/ViewProductRequest.js';
@@ -203,6 +205,11 @@ export class MyShopApiDriver implements MyShopDriver {
   /** The cart lives in the browser, so there is no checkout API either. */
   checkOut(_request: CheckOutRequest): Promise<Result<CheckOutResponse, SystemError>> {
     return Promise.reject(new Error('The API channel has no cart to check out; run this scenario on the UI channel only'));
+  }
+
+  /** Signing up is the identity provider's registration form, reached from the shop's pages: there is no sign-up API. */
+  signUp(_request: SignUpRequest): Promise<Result<SignUpResponse, SystemError>> {
+    return Promise.reject(new Error('The API channel has no sign-up form; run this scenario on the UI channel only'));
   }
 
   /** The API serves data, not pages: accessibility is a UI-channel check. */

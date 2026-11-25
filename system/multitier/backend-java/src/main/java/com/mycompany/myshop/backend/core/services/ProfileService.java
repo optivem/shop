@@ -13,7 +13,8 @@ import java.time.Clock;
 
 /**
  * The signed-in customer's profile (UC-010), keyed by the token subject. The email always comes from
- * the token; until a profile is saved, the name comes from the token and the address is empty.
+ * the token; until a profile is saved, the name and the country chosen at sign-up come from the token and the
+ * rest of the address is empty.
  */
 @Service
 public class ProfileService {
@@ -70,6 +71,7 @@ public class ProfileService {
         response.setFirstName(user.givenName());
         response.setLastName(user.familyName());
         response.setEmail(user.email());
+        response.setCountry(user.country());
         return response;
     }
 

@@ -209,6 +209,18 @@ export class ThenProfile implements PromiseLike<void> {
     return this;
   }
 
+  /** No street address is saved: the street, postal code and city are empty (null or ""); the country may be set. */
+  hasNoStreetAddress(): this {
+    this.stage._addProfileAssertion((profile) => {
+      const streetAddress = [profile.street, profile.postalCode, profile.city];
+      expect(
+        streetAddress.every((value) => value === null || value === ''),
+        `Expected no street address, but the profile has street, postal code, city ${JSON.stringify(streetAddress)}`,
+      ).toBe(true);
+    });
+    return this;
+  }
+
   /** The email is shown but cannot be edited: it comes from the sign-in account (UI only). */
   hasEmailThatCannotBeChanged(): this {
     this.stage._addResponseAssertion((profile) => {

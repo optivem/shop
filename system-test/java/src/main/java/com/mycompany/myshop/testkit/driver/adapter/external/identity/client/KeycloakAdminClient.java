@@ -122,6 +122,41 @@ public class KeycloakAdminClient {
         expectStatus(mapping, 204, "give user " + userId + " the realm role " + roleName);
     }
 
+    /**
+     * Takes the realm's default role (default-roles-shop, which holds CUSTOMER so that a visitor who signs up is a
+     * customer) away from the user, e.g. an admin.
+     */
+    public void removeDefaultRoles(String userId) {
+        var defaultRole = "default-roles-" + REALM;
+        var mapped = send(adminRequest("/users/" + encode(userId) + "/role-mappings/realm").GET());
+        expectStatus(mapped, 200, "list the realm roles of user " + userId);
+        var remove = new ArrayList<JsonNode>();
+        for (var role : parse(mapped.body())) {
+            if (defaultRole.equals(role.path("name").asText())) {
+                remove.add(role);
+            }
+        }
+        if (remove.isEmpty()) {
+            return;
+        }
+        var response = send(adminRequest("/users/" + encode(userId) + "/role-mappings/realm")
+                .header("Content-Type", "application/json")
+                .method("DELETE", HttpRequest.BodyPublishers.ofString(toJson(remove))));
+        expectStatus(response, 204, "take the realm role " + defaultRole + " away from user " + userId);
+    }
+
+    /** The id of the user with exactly this username. */
+    public String findUserId(String username) {
+        var response = send(adminRequest("/users?exact=true&briefRepresentation=true&username=" + encode(username)).GET());
+        expectStatus(response, 200, "find user " + username);
+        for (var user : parse(response.body())) {
+            if (username.equals(user.path("username").asText())) {
+                return user.path("id").asText();
+            }
+        }
+        throw new IllegalStateException("Keycloak at " + baseUrl + " has no user " + username + " in realm " + REALM);
+    }
+
     /** Deletes the user; one that is already gone counts as deleted. */
     public void deleteUser(String userId) {
         var response = send(adminRequest("/users/" + encode(userId)).DELETE());

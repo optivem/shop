@@ -1,10 +1,14 @@
 # Run with jq -e: fails the image build if the production realm regresses.
 # directAccessGrantsEnabled must be explicitly false, because Keycloak treats a missing value as true.
 # Brute-force detection (B-PRG 4.2) is the login rate limit: no backend sees a password, Keycloak does.
+# Sign-up (UC-013) is off in production for now, and new users get no CUSTOMER role by default.
 # shop-monolith is confidential, but its secret is set at deploy time (deploy-keycloak), never in the file.
 .realm == "shop-prod"
 and ((.users // []) == [])
 and (.passwordPolicy == null)
+and (.registrationAllowed == false)
+and .defaultRole.name as $default
+    | ([.roles.realm[] | select(.name == $default) | .composites.realm[]?] | index("CUSTOMER") == null)
 and (.bruteForceProtected == true and .permanentLockout == false)
 and ([.clients[].clientId] | sort) == ["shop-frontend", "shop-monolith"]
 and all(.clients[];

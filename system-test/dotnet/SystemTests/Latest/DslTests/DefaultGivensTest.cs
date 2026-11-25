@@ -155,6 +155,9 @@ public class DefaultGivensTest
         public Task<Result<ViewProfileResponse, SystemError>> UpdateProfileAsync(UpdateProfileRequest request) =>
             throw new NotSupportedException();
 
+        public Task<Result<SignUpResponse, SystemError>> SignUpAsync(SignUpRequest request) =>
+            throw new NotSupportedException();
+
         public Task<Result<BrowseCatalogResponse, SystemError>> BrowseCatalogAsync(BrowseCatalogRequest request) =>
             throw new NotSupportedException();
 

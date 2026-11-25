@@ -128,6 +128,41 @@ public sealed class KeycloakAdminClient : IDisposable
         ExpectStatus(mapping, mappingBody, HttpStatusCode.NoContent, $"give user {userId} the realm role {roleName}");
     }
 
+    /// <summary>
+    /// Takes the realm's default role (default-roles-shop, which holds CUSTOMER so that a visitor who signs up is a
+    /// customer) away from the user, e.g. an admin.
+    /// </summary>
+    public async Task RemoveDefaultRolesAsync(string userId)
+    {
+        var defaultRole = "default-roles-" + Realm;
+        var (mapped, mappedBody) = await SendAsync(await AdminRequestAsync(HttpMethod.Get,
+            "/users/" + Uri.EscapeDataString(userId) + "/role-mappings/realm"));
+        ExpectStatus(mapped, mappedBody, HttpStatusCode.OK, $"list the realm roles of user {userId}");
+        var remove = new JsonArray(Parse(mappedBody).AsArray()
+            .Where(role => role?["name"]?.GetValue<string>() == defaultRole)
+            .Select(role => role!.DeepClone())
+            .ToArray());
+        if (remove.Count == 0)
+        {
+            return;
+        }
+        var (response, body) = await SendAsync(await AdminRequestAsync(HttpMethod.Delete,
+            "/users/" + Uri.EscapeDataString(userId) + "/role-mappings/realm", remove.ToJsonString()));
+        ExpectStatus(response, body, HttpStatusCode.NoContent, $"take the realm role {defaultRole} away from user {userId}");
+    }
+
+    /// <summary>The id of the user with exactly this username.</summary>
+    public async Task<string> FindUserIdAsync(string username)
+    {
+        var (response, body) = await SendAsync(await AdminRequestAsync(HttpMethod.Get,
+            "/users?exact=true&briefRepresentation=true&username=" + Uri.EscapeDataString(username)));
+        ExpectStatus(response, body, HttpStatusCode.OK, $"find user {username}");
+        var user = Parse(body).AsArray()
+            .FirstOrDefault(candidate => candidate?["username"]?.GetValue<string>() == username);
+        return user?["id"]?.GetValue<string>()
+            ?? throw new InvalidOperationException($"Keycloak at {_baseUrl} has no user {username} in realm {Realm}");
+    }
+
     /// <summary>Deletes the user; one that is already gone counts as deleted.</summary>
     public async Task DeleteUserAsync(string userId)
     {

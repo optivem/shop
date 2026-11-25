@@ -21,8 +21,12 @@ export async function arrangeGiven(
   options: ArrangeGivenOptions = {},
 ): Promise<void> {
   if (ctx.newCustomerConfig && ctx.customers.needsNewCustomer()) {
-    const { firstName, lastName, email } = ctx.newCustomerConfig;
-    ctx.customers.setNewCustomer(await app.newCustomer(firstName, lastName, email));
+    const { firstName, lastName, email, country, signedUp } = ctx.newCustomerConfig;
+    ctx.customers.setNewCustomer(
+      signedUp
+        ? await app.signedUpCustomer(firstName, lastName, email, country, useCaseContext)
+        : await app.newCustomer(firstName, lastName, email),
+    );
   }
   ctx.reserveDefaultCustomerIfUsed();
   // Profile actions never touch the ERP or tax service: without given orders, only what was declared is staged.

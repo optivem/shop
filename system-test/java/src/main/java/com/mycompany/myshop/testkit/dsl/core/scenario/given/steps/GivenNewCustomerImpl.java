@@ -2,6 +2,7 @@ package com.mycompany.myshop.testkit.dsl.core.scenario.given.steps;
 
 import static com.mycompany.myshop.testkit.dsl.core.scenario.ScenarioDefaults.DEFAULT_FIRST_NAME;
 import static com.mycompany.myshop.testkit.dsl.core.scenario.ScenarioDefaults.DEFAULT_LAST_NAME;
+import static com.mycompany.myshop.testkit.dsl.core.scenario.ScenarioDefaults.DEFAULT_SIGN_UP_COUNTRY;
 
 import com.mycompany.myshop.testkit.driver.port.UserIdentity;
 import com.mycompany.myshop.testkit.dsl.core.scenario.given.GivenImpl;
@@ -12,6 +13,8 @@ public class GivenNewCustomerImpl extends BaseGivenStep implements GivenNewCusto
     private String firstName = DEFAULT_FIRST_NAME;
     private String lastName = DEFAULT_LAST_NAME;
     private String email;
+    private String country = DEFAULT_SIGN_UP_COUNTRY;
+    private boolean signedUp;
     private UserIdentity identity;
 
     public GivenNewCustomerImpl(GivenImpl given) {
@@ -36,11 +39,25 @@ public class GivenNewCustomerImpl extends BaseGivenStep implements GivenNewCusto
         return this;
     }
 
+    @Override
+    public GivenNewCustomerImpl withCountry(String country) {
+        this.country = country;
+        return this;
+    }
+
+    @Override
+    public GivenNewCustomerImpl signedUpThroughTheShop() {
+        this.signedUp = true;
+        return this;
+    }
+
     /** Creates the account, once. */
     @Override
     public void execute(UseCaseDsl app) {
         if (identity == null) {
-            identity = app.newCustomer(firstName, lastName, email);
+            identity = signedUp
+                    ? app.signedUpCustomer(firstName, lastName, email, country)
+                    : app.newCustomer(firstName, lastName, email);
         }
     }
 

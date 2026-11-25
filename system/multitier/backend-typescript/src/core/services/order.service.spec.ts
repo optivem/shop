@@ -24,6 +24,7 @@ const CUSTOMER: CurrentUser = {
   email: null,
   firstName: null,
   lastName: null,
+  country: null,
 };
 const OTHER_CUSTOMER: CurrentUser = {
   subject: 'sub-other',
@@ -32,6 +33,7 @@ const OTHER_CUSTOMER: CurrentUser = {
   email: null,
   firstName: null,
   lastName: null,
+  country: null,
 };
 const ADMIN: CurrentUser = {
   subject: 'sub-admin',
@@ -40,6 +42,7 @@ const ADMIN: CurrentUser = {
   email: null,
   firstName: null,
   lastName: null,
+  country: null,
 };
 
 const NORMAL_TIME = new Date('2025-06-15T10:00:00Z');

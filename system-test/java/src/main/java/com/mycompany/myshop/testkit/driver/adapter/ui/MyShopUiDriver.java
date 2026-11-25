@@ -40,7 +40,10 @@ import com.mycompany.myshop.testkit.driver.port.dtos.PublishCouponRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.PublishCouponResponse;
 import com.mycompany.myshop.testkit.driver.port.dtos.ViewOrderRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.ViewOrderResponse;
+import com.mycompany.myshop.testkit.driver.port.dtos.SignUpRequest;
+import com.mycompany.myshop.testkit.driver.port.dtos.SignUpResponse;
 import com.mycompany.myshop.testkit.driver.port.dtos.UpdateProfileRequest;
+import com.mycompany.myshop.testkit.driver.port.UserAccount;
 import com.mycompany.myshop.testkit.driver.port.dtos.ViewProfileRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.ViewProfileResponse;
 import com.mycompany.myshop.testkit.driver.port.dtos.ViewProductRequest;
@@ -745,6 +748,22 @@ public class MyShopUiDriver implements MyShopDriver {
             productPage.clickAddToCart();
         }
         return success();
+    }
+
+    /**
+     * Signs up in a fresh visitor session with the header's "Sign up" link and Keycloak's registration form. The
+     * session is then discarded, so the new customer's operations sign in with the account's password.
+     */
+    @Override
+    public Result<SignUpResponse, SystemError> signUp(SignUpRequest request) {
+        if (!signsIn) {
+            throw new IllegalStateException("Signing up can only be exercised against a system with a login");
+        }
+        var user = TestUser.customer(UserIdentity.customer(new UserAccount(request.getUsername(), request.getPassword())));
+        var error = client.signUp(user, request.getEmail(), request.getFirstName(), request.getLastName(),
+                request.getCountry());
+        resetPages();
+        return error == null ? success(SignUpResponse.builder().build()) : failure(error);
     }
 
     // --- unsupported inputs ---

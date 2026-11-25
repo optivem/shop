@@ -134,6 +134,10 @@ app.MapShopHealthProbes();
 // Keycloak and, once signed in, comes back here and on to returnUrl (default "/"); a signed-in visitor goes straight there.
 app.MapGet("/sign-in", (string? returnUrl) => Results.Redirect(ReturnUrls.Safe(returnUrl)));
 
+// The header's "Sign up" link (UC-013). Like /sign-in, but the login it starts opens Keycloak's registration form
+// (prompt=create, set in AuthenticationExtensions), so a visitor creates a customer account and comes back signed in.
+app.MapGet(AuthenticationExtensions.SignUpPath, (string? returnUrl) => Results.Redirect(ReturnUrls.Safe(returnUrl)));
+
 app.MapPost("/logout", async (HttpContext context) =>
 {
     await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);

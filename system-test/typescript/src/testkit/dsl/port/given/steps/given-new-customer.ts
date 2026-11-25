@@ -14,6 +14,13 @@ export interface GivenNewCustomer {
   withLastName(lastName: string): GivenNewCustomer;
   /** The sign-in account's email. */
   withEmail(email: string): GivenNewCustomer;
+  /** The shipping country chosen on the sign-up form; only with {@link signedUpThroughTheShop}. */
+  withCountry(country: string): GivenNewCustomer;
+  /**
+   * The visitor creates the account themselves (UC-013): the shop's "Sign up" link and the identity provider's
+   * registration form, instead of the identity provider's admin API. UI channel only.
+   */
+  signedUpThroughTheShop(): GivenNewCustomer;
   and(): GivenStage;
   when(): WhenStage;
   then(): ThenStage;

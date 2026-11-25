@@ -45,6 +45,8 @@ public class MyShopUiClient implements AutoCloseable {
     private static final String HOME_READY_SELECTOR = "a[href='/order-history']";
     private static final String SINGLE_PAGE_APP_ROOT_SELECTOR = "#root";
     private static final String LOGIN_FORM_SELECTOR = "#kc-login";
+    /** The storefront header's link for anonymous visitors to create an account (UC-013). */
+    private static final String SIGN_UP_SELECTOR = "[data-testid='sign-up']";
 
     private final String baseUrl;
     private final Browser browser;
@@ -170,6 +172,29 @@ public class MyShopUiClient implements AutoCloseable {
             throw new IllegalStateException("Signing in can only be exercised against a system with a login");
         }
         userLogin.ensureLoggedIn(page, HOME_READY_SELECTOR);
+    }
+
+    /**
+     * Signs up as {@code user} (its username and password) in a fresh visitor session: the header's "Sign up" link,
+     * then Keycloak's registration form, until the shop shows the new customer signed in. The session is then
+     * replaced by a fresh one for {@code user}, so the next page open signs in with the password.
+     *
+     * @return null when signed up, else what the registration form or the shop showed instead
+     */
+    public String signUp(TestUser user, String email, String firstName, String lastName, String country) {
+        var registration = KeycloakUiLogin.forBaseUrl(keycloakBaseUrl, user);
+        if (registration == null) {
+            throw new IllegalStateException("Signing up can only be exercised against a system with a login");
+        }
+        close();
+        open(user);
+        page.navigate(baseUrl);
+        pageClient.waitForVisible(SIGN_UP_SELECTOR);
+        page.click(SIGN_UP_SELECTOR);
+        var error = registration.register(page, email, firstName, lastName, country, HOME_READY_SELECTOR);
+        close();
+        open(user);
+        return error;
     }
 
     /** Whether the page is the login form. */

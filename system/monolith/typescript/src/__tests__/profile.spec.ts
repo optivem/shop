@@ -8,6 +8,7 @@ const caller: Caller = {
   email: 'customer1@example.com',
   firstName: 'Token',
   lastName: 'Name',
+  country: null,
 };
 
 describe('toProfileResponse', () => {
@@ -21,6 +22,10 @@ describe('toProfileResponse', () => {
       city: null,
       country: null,
     });
+  });
+
+  it('takes the country chosen at sign-up from the token when nothing is saved', () => {
+    expect(toProfileResponse(null, { ...caller, country: 'GB' })).toMatchObject({ country: 'GB', street: null });
   });
 
   it('shows the saved profile with the email from the token', () => {

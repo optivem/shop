@@ -1008,6 +1008,22 @@ public class MyShopUiDriver : IMyShopDriver
         return Success(response);
     }
 
+    /// <summary>
+    /// Signs up in a fresh visitor session with the header's "Sign up" link and Keycloak's registration form. The
+    /// session is then discarded, so the new customer's operations sign in with the account's password.
+    /// </summary>
+    public async Task<Result<SignUpResponse, SystemError>> SignUpAsync(SignUpRequest request)
+    {
+        if (!_signsIn)
+        {
+            throw new InvalidOperationException("Signing up can only be exercised against a system with a login");
+        }
+        var user = TestUser.ForCustomer(UserIdentity.Customer(new UserAccount(request.Username!, request.Password!)));
+        var error = await _client.SignUpAsync(user, request.Email!, request.FirstName!, request.LastName!, request.Country!);
+        ResetPages();
+        return error == null ? Success(new SignUpResponse()) : Failure<SignUpResponse>(error);
+    }
+
     private static void RequireNotSet(string input, object? value)
     {
         if (value != null)

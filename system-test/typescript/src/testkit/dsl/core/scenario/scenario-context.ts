@@ -81,6 +81,10 @@ export interface NewCustomerConfig {
   lastName: string;
   /** Undefined means a unique address. */
   email?: string;
+  /** The shipping country chosen on the sign-up form; only used when signedUp is set. */
+  country: string;
+  /** Set when the visitor creates the account through the shop's sign-up (UC-013) instead of the admin API. */
+  signedUp?: boolean;
 }
 
 export class ScenarioContext {

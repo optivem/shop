@@ -24,6 +24,9 @@ public interface IThenProfile
     /// <summary>No shipping address is saved: the street, postal code, city and country are empty.</summary>
     IThenProfile HasNoSavedAddress();
 
+    /// <summary>No street address is saved: the street, postal code and city are empty (the country may be set).</summary>
+    IThenProfile HasNoStreetAddress();
+
     /// <summary>The email is shown but cannot be edited: it comes from the sign-in account (UI only).</summary>
     IThenProfile HasEmailThatCannotBeChanged();
 

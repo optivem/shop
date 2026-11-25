@@ -5,7 +5,8 @@ namespace MyCompany.MyShop.Backend.Api.Security;
 
 /// <summary>
 /// Resolves the caller from the authenticated principal (the token's <c>sub</c>, <c>preferred_username</c>,
-/// <c>email</c>, <c>given_name</c> and <c>family_name</c>; inbound claim mapping is off, so the names are as issued).
+/// <c>email</c>, <c>given_name</c>, <c>family_name</c> and <c>country</c>, the shipping country chosen at sign-up;
+/// inbound claim mapping is off, so the names are as issued).
 /// </summary>
 public static class CurrentUserResolver
 {
@@ -17,5 +18,6 @@ public static class CurrentUserResolver
             principal.IsInRole(Roles.Admin),
             principal.FindFirst("email")?.Value,
             principal.FindFirst("given_name")?.Value,
-            principal.FindFirst("family_name")?.Value);
+            principal.FindFirst("family_name")?.Value,
+            principal.FindFirst("country")?.Value);
 }

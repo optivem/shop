@@ -17,6 +17,16 @@ public class SignInController {
         return "redirect:" + safeReturnUrl(returnUrl);
     }
 
+    /**
+     * `/sign-up?returnUrl=…` (UC-013): the header's "Sign up" link. Like {@code /sign-in}, but the login it starts
+     * opens Keycloak's registration form (SecurityConfig adds prompt=create), so a visitor creates a customer
+     * account and comes back to {@code returnUrl} signed in.
+     */
+    @GetMapping("/sign-up")
+    public String signUp(@RequestParam(required = false) String returnUrl) {
+        return "redirect:" + safeReturnUrl(returnUrl);
+    }
+
     /** Only same-site relative paths are accepted as destinations (no open redirect). */
     static String safeReturnUrl(String value) {
         var sameSite = value != null && value.startsWith("/") && !value.startsWith("//") && !value.startsWith("/\\");

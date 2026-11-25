@@ -77,6 +77,12 @@ public class ThenProfile : BaseThenLookup<ViewProfileVerification>, IThenProfile
         return this;
     }
 
+    public IThenProfile HasNoStreetAddress()
+    {
+        AddVerification(v => v.StreetAddressIsEmpty());
+        return this;
+    }
+
     public IThenProfile HasEmailThatCannotBeChanged()
     {
         AddVerification(v => v.EmailCannotBeChanged());

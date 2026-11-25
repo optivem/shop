@@ -26,6 +26,16 @@ export class GivenNewCustomer implements IGivenNewCustomer {
     return this;
   }
 
+  withCountry(country: string): this {
+    this.config.country = country;
+    return this;
+  }
+
+  signedUpThroughTheShop(): this {
+    this.config.signedUp = true;
+    return this;
+  }
+
   and(): GivenStage {
     return this.stage;
   }

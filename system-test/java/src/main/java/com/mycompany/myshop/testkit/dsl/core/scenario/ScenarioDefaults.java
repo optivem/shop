@@ -25,6 +25,8 @@ public final class ScenarioDefaults {
     public static final String DEFAULT_POSTAL_CODE = "10115";
     public static final String DEFAULT_CITY = "Berlin";
     public static final String DEFAULT_PROFILE_COUNTRY = "DE";
+    /** The shipping country a visitor chooses when signing up (UC-013). */
+    public static final String DEFAULT_SIGN_UP_COUNTRY = "GB";
 
     // Promotion defaults
     public static final boolean DEFAULT_PROMOTION_ACTIVE = false;

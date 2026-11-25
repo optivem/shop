@@ -4,6 +4,15 @@ import { TestUsers, type TestUser } from '../http/test-user.js';
 const USERNAME_SELECTOR = '#username';
 const PASSWORD_SELECTOR = '#password';
 const SUBMIT_SELECTOR = '#kc-login';
+const REGISTER_FORM_SELECTOR = '#kc-register-form';
+const REGISTER_SUBMIT_SELECTOR = "#kc-register-form [type='submit']";
+/** The field errors Keycloak shows on a rejected registration (e.g. a username that is taken). */
+const REGISTER_ERROR_SELECTOR = '#kc-register-form .kc-feedback-text';
+const PASSWORD_CONFIRM_SELECTOR = '#password-confirm';
+const EMAIL_SELECTOR = '#email';
+const FIRST_NAME_SELECTOR = '#firstName';
+const LAST_NAME_SELECTOR = '#lastName';
+const COUNTRY_SELECTOR = '#country';
 /** The storefront's header link for anonymous visitors; apps that force login on every page never show it. */
 const SIGN_IN_SELECTOR = "[data-testid='sign-in']";
 const TIMEOUT_MS = 30_000;
@@ -40,6 +49,35 @@ export class KeycloakUiLogin {
       await this.login(page);
       await page.waitForSelector(appReadySelector, { timeout: TIMEOUT_MS });
     }
+  }
+
+  /**
+   * Fills in and submits Keycloak's registration form (UC-013) for this login's user, then waits until the app
+   * shows `appReadySelector`.
+   * @returns undefined when the app was reached, else the errors the registration form showed
+   */
+  async register(
+    page: Page,
+    email: string,
+    firstName: string,
+    lastName: string,
+    country: string,
+    appReadySelector: string,
+  ): Promise<string | undefined> {
+    await page.waitForSelector(REGISTER_FORM_SELECTOR, { timeout: TIMEOUT_MS });
+    await page.fill(USERNAME_SELECTOR, this.user.username);
+    await page.fill(PASSWORD_SELECTOR, this.user.password);
+    await page.fill(PASSWORD_CONFIRM_SELECTOR, this.user.password);
+    await page.fill(EMAIL_SELECTOR, email);
+    await page.fill(FIRST_NAME_SELECTOR, firstName);
+    await page.fill(LAST_NAME_SELECTOR, lastName);
+    await page.selectOption(COUNTRY_SELECTOR, country);
+    await page.click(REGISTER_SUBMIT_SELECTOR);
+    await page.waitForSelector(`${appReadySelector}, ${REGISTER_ERROR_SELECTOR}`, { timeout: TIMEOUT_MS });
+    if (this.isLoginPage(page)) {
+      return (await page.locator(REGISTER_ERROR_SELECTOR).allInnerTexts()).join('; ');
+    }
+    return undefined;
   }
 
   /** Waits for the login form, without filling it in. */

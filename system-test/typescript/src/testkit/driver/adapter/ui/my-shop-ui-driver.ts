@@ -24,6 +24,8 @@ import type { BrowseCustomersResponse } from '../../port/dtos/BrowseCustomersRes
 import { SIGN_IN as PROFILE_SIGN_IN, type ViewProfileRequest } from '../../port/dtos/ViewProfileRequest.js';
 import type { ViewProfileResponse } from '../../port/dtos/ViewProfileResponse.js';
 import type { UpdateProfileRequest } from '../../port/dtos/UpdateProfileRequest.js';
+import type { SignUpRequest } from '../../port/dtos/SignUpRequest.js';
+import type { SignUpResponse } from '../../port/dtos/SignUpResponse.js';
 import type { MyShopDriver } from '../../port/my-shop-driver.js';
 import {
   BRAND_SEPARATOR,
@@ -672,6 +674,19 @@ export class MyShopUiDriver implements MyShopDriver {
     const loadResult = await detailsPage.getLoadResult(orderNumber);
     if (!loadResult.success) return failure(loadResult.error);
     return success(detailsPage);
+  }
+
+  /**
+   * Signs up in a fresh visitor session with the header's "Sign up" link and Keycloak's registration form. The
+   * session is then discarded, so the new customer's operations sign in with the account's password.
+   */
+  async signUp(request: SignUpRequest): Promise<Result<SignUpResponse, SystemError>> {
+    if (!this.signsIn) {
+      throw new Error('Signing up can only be exercised against a system with a login');
+    }
+    const user: TestUser = { username: request.username, password: request.password };
+    const error = await this.client.signUp(user, request.email, request.firstName, request.lastName, request.country);
+    return error === undefined ? success({}) : failure({ message: error, fieldErrors: [] });
   }
 
   /** Checks the page the last step left open, in the same browser session. */

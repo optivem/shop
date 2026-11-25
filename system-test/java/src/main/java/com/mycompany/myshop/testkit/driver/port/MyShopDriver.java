@@ -27,6 +27,8 @@ import com.mycompany.myshop.testkit.driver.port.dtos.PublishCouponRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.PublishCouponResponse;
 import com.mycompany.myshop.testkit.driver.port.dtos.ViewOrderRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.ViewOrderResponse;
+import com.mycompany.myshop.testkit.driver.port.dtos.SignUpRequest;
+import com.mycompany.myshop.testkit.driver.port.dtos.SignUpResponse;
 import com.mycompany.myshop.testkit.driver.port.dtos.UpdateProfileRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.ViewProfileRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.ViewProfileResponse;
@@ -57,6 +59,12 @@ public interface MyShopDriver extends AutoCloseable, ActingUserSelector {
     Result<ViewProfileResponse, SystemError> viewProfile(ViewProfileRequest request);
 
     Result<ViewProfileResponse, SystemError> updateProfile(UpdateProfileRequest request);
+
+    /**
+     * A visitor signs up (UC-013) through the shop's "Sign up" link and the identity provider's registration form,
+     * creating the request's account (UI only).
+     */
+    Result<SignUpResponse, SystemError> signUp(SignUpRequest request);
 
     Result<BrowseCatalogResponse, SystemError> browseCatalog(BrowseCatalogRequest request);
 

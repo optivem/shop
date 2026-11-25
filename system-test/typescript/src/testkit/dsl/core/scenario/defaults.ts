@@ -26,4 +26,6 @@ export const DEFAULTS = {
   CITY: 'Berlin',
   /** The profile only accepts US, DE or GB, so its country is a literal, not an alias. */
   PROFILE_COUNTRY: 'DE',
+  /** The shipping country a visitor chooses when signing up (UC-013). */
+  SIGN_UP_COUNTRY: 'GB',
 };

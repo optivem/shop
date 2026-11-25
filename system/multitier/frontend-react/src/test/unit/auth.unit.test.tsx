@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { AuthContext, type AuthContextProps } from 'react-oidc-context';
 import { RequireAuth } from '../../auth/AuthGate';
+import { SignIn } from '../../pages/SignIn';
 import { setAccessTokenSource, setUnauthorizedHandler } from '../../auth/access-token';
 import { getAuthConfig, getAuthority } from '../../auth/config';
 import { SessionCheckedContext } from '../../auth/session-check';
@@ -76,6 +77,29 @@ describe('RequireAuth', () => {
     renderWithAuth(<RequireAuth><div>secret</div></RequireAuth>, auth);
 
     expect(signinRedirect).not.toHaveBeenCalled();
+  });
+});
+
+describe('sign up', () => {
+  const start = (path: string, element: React.ReactElement) => {
+    const signinRedirect = vi.fn().mockResolvedValue(undefined);
+    const auth = createMockAuth({ isAuthenticated: false, user: null, signinRedirect });
+    render(
+      <AuthContext.Provider value={auth}>
+        <MemoryRouter initialEntries={[path]}>{element}</MemoryRouter>
+      </AuthContext.Provider>,
+    );
+    return signinRedirect;
+  };
+
+  it('opens the Keycloak registration form and comes back to the page', () => {
+    const signinRedirect = start('/sign-up?returnUrl=%2Fcart', <SignIn signUp />);
+    expect(signinRedirect).toHaveBeenCalledWith({ state: { returnUrl: '/cart' }, prompt: 'create' });
+  });
+
+  it('opens the login form for "Sign in"', () => {
+    const signinRedirect = start('/sign-in?returnUrl=%2Fcart', <SignIn />);
+    expect(signinRedirect).toHaveBeenCalledWith({ state: { returnUrl: '/cart' } });
   });
 });
 

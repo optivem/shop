@@ -27,6 +27,7 @@ const CUSTOMER: CurrentUser = {
   email: null,
   firstName: null,
   lastName: null,
+  country: null,
 };
 const ADMIN: CurrentUser = {
   subject: 'sub-admin',
@@ -35,6 +36,7 @@ const ADMIN: CurrentUser = {
   email: null,
   firstName: null,
   lastName: null,
+  country: null,
 };
 
 /**

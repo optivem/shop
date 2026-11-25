@@ -78,6 +78,16 @@ public class ViewProfileVerification extends ResponseVerification<ViewProfileRes
         return this;
     }
 
+    /** The street, postal code and city are all empty (an empty field reads as null or ""). */
+    public ViewProfileVerification streetAddressIsEmpty() {
+        var response = getResponse();
+        assertThat(new String[] {response.getStreet(), response.getPostalCode(), response.getCity()})
+                .withFailMessage("Expected no street address, but the profile has street '%s', postal code '%s', city '%s'",
+                        response.getStreet(), response.getPostalCode(), response.getCity())
+                .allMatch(value -> value == null || value.isEmpty());
+        return this;
+    }
+
     /** UI only: the email is shown but cannot be edited. */
     public ViewProfileVerification emailCannotBeChanged() {
         var changeable = getResponse().getEmailChangeable();

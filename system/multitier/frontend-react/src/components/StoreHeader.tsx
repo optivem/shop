@@ -101,6 +101,17 @@ export function StoreHeader() {
                 <span>Sign in</span>
               </Link>
             )}
+            {session.status === 'anonymous' && (
+              // UC-013: Keycloak's registration form, then back here signed in as a new customer.
+              <Link
+                className="store-header-link store-sign-up"
+                to={`/sign-up?returnUrl=${encodeURIComponent(returnUrl)}`}
+                data-testid="sign-up"
+              >
+                <span className="store-header-hint">New customer?</span>
+                <span>Sign up</span>
+              </Link>
+            )}
             <UserMenu />
             <Link className="store-header-link store-cart" to="/cart">
               <span className="store-cart-icon">

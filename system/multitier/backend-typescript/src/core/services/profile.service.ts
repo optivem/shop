@@ -14,7 +14,10 @@ export class ProfileService {
     private readonly profileRepository: Repository<CustomerProfile>,
   ) {}
 
-  /** The saved profile; without one, the name comes from the token and the address is empty. */
+  /**
+   * The saved profile; without one, the name and the country chosen at sign-up come from the token and the rest
+   * of the address is empty.
+   */
   async viewProfile(user: CurrentUser): Promise<ViewProfileResponse> {
     const profile = await this.profileRepository.findOne({
       where: { owner: user.subject },
@@ -29,7 +32,7 @@ export class ProfileService {
     response.street = null;
     response.postalCode = null;
     response.city = null;
-    response.country = null;
+    response.country = user.country;
     return response;
   }
 

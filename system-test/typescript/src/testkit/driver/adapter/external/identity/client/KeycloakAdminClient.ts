@@ -119,6 +119,36 @@ export class KeycloakAdminClient {
     await this.expectStatus(mapping, 204, `give user ${userId} the realm role ${roleName}`);
   }
 
+  /**
+   * Takes the realm's default role (default-roles-shop, which holds CUSTOMER so that a visitor who signs up is a
+   * customer) away from the user, e.g. an admin.
+   */
+  async removeDefaultRoles(userId: string): Promise<void> {
+    const defaultRole = `default-roles-${REALM}`;
+    const path = `/users/${encodeURIComponent(userId)}/role-mappings/realm`;
+    const mapped = await this.send('GET', path);
+    await this.expectStatus(mapped, 200, `list the realm roles of user ${userId}`);
+    const remove = ((await mapped.json()) as { name?: string }[]).filter((role) => role.name === defaultRole);
+    if (remove.length === 0) return;
+    const response = await this.send('DELETE', path, remove);
+    await this.expectStatus(response, 204, `take the realm role ${defaultRole} away from user ${userId}`);
+  }
+
+  /** The id of the user with exactly this username. */
+  async findUserId(username: string): Promise<string> {
+    const response = await this.send(
+      'GET',
+      `/users?exact=true&briefRepresentation=true&username=${encodeURIComponent(username)}`,
+    );
+    await this.expectStatus(response, 200, `find user ${username}`);
+    const users = (await response.json()) as { id?: string; username?: string }[];
+    const user = users.find((candidate) => candidate.username === username);
+    if (!user?.id) {
+      throw new Error(`Keycloak at ${this.baseUrl} has no user ${username} in realm ${REALM}`);
+    }
+    return user.id;
+  }
+
   /** Deletes the user; one that is already gone counts as deleted. */
   async deleteUser(userId: string): Promise<void> {
     const response = await this.send('DELETE', `/users/${encodeURIComponent(userId)}`);

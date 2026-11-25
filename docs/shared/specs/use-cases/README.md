@@ -20,6 +20,7 @@ graph LR
     Visitor --> BrowseCatalog(UC-006 Browse Catalog)
     Visitor --> ViewProduct(UC-007 View Product)
     Visitor --> ManageCart(UC-008 Manage Cart)
+    Visitor --> CreateCustomer(UC-013 Create Customer)
 
     Customer --> PlaceOrder(UC-001 Place Order)
     Customer --> ViewOrder(UC-002 View Order)
@@ -31,6 +32,7 @@ graph LR
     Admin --> BrowseCoupons(UC-005 Browse Coupons)
     Admin --> ViewAllOrders(UC-011 View All Orders)
     Admin --> DeliverOrder(UC-012 Deliver Order)
+    Admin --> CreateAdmin(UC-014 Create Admin)
 
     CheckOut -.->|includes| PlaceOrder
 
@@ -61,5 +63,7 @@ GitHub renders Mermaid without clickable links, so use the table below to open e
 | UC-010 | [Manage Profile](UC-010-manage-profile/use-case-narrative.md) | Customer | implemented |
 | UC-011 | [View All Orders](UC-011-view-all-orders/use-case-narrative.md) | Admin | implemented |
 | UC-012 | [Deliver Order](UC-012-deliver-order/use-case-narrative.md) | Admin | implemented |
+| UC-013 | [Create Customer](UC-013-create-customer/use-case-narrative.md) | Visitor | implemented |
+| UC-014 | [Create Admin](UC-014-create-admin/use-case-narrative.md) | Admin | planned |
 
-Secondary actors: ERP supplies product data (Place Order, Browse Catalog, View Product, and current prices in Manage Cart). Clock supplies the current time where time matters (Place Order, including coupon validity; Cancel Order). Check Out reaches both through Place Order.
+Secondary actors: ERP supplies product data (Place Order, Browse Catalog, View Product, and current prices in Manage Cart). Clock supplies the current time where time matters (Place Order, including coupon validity; Cancel Order). Check Out reaches both through Place Order. The sign-in accounts of Create Customer and Create Admin live in the identity provider (Keycloak).

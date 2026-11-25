@@ -29,6 +29,14 @@ public sealed class KeycloakIdentityProviderDriver : IIdentityProviderDriver
     public Task<UserAccount> CreateAdminAsync(string firstName, string lastName, string? email)
         => CreateUserAsync(AdminUsernamePrefix, AdminRole, firstName, lastName, email);
 
+    public UserAccount NewAccountCredentials()
+        => new(CustomerUsernamePrefix + Guid.NewGuid(), Guid.NewGuid().ToString());
+
+    public string NewAccountEmail(UserAccount account) => account.Username + "@example.com";
+
+    public async Task DeleteOnDisposeAsync(string username)
+        => _createdUserIds.Add(await _client.FindUserIdAsync(username));
+
     private async Task<UserAccount> CreateUserAsync(string usernamePrefix, string role, string firstName,
         string lastName, string? email)
     {
@@ -38,6 +46,12 @@ public sealed class KeycloakIdentityProviderDriver : IIdentityProviderDriver
             email ?? username + "@example.com");
         _createdUserIds.Add(userId);
         await _client.AssignRealmRoleAsync(userId, role);
+        if (role == AdminRole)
+        {
+            // Every new user gets the realm's default role, which makes a visitor who signs up a customer (UC-013).
+            // An admin is not a customer.
+            await _client.RemoveDefaultRolesAsync(userId);
+        }
         return new UserAccount(username, password);
     }
 

@@ -73,6 +73,8 @@ public partial class StorefrontPagesTests : IClassFixture<ShopWebApplicationFact
         Assert.Contains("$1,299.99", html);
         Assert.Contains("href=\"/sign-in?returnUrl=%2F\"", html);
         Assert.Contains("data-testid=\"sign-in\"", html);
+        Assert.Contains("href=\"/sign-up?returnUrl=%2F\"", html);
+        Assert.Contains("data-testid=\"sign-up\"", html);
         Assert.Contains("href=\"/?category=Accessories\"", html);
         Assert.DoesNotContain("href=\"/order-history\"", html);
         Assert.Equal(HttpStatusCode.OK, (await client.SendAsync(new HttpRequestMessage(HttpMethod.Head, "/"))).StatusCode);
@@ -100,6 +102,7 @@ public partial class StorefrontPagesTests : IClassFixture<ShopWebApplicationFact
         Assert.Contains("data-testid=\"username\"", html);
         Assert.DoesNotContain("href=\"/admin-coupons\"", html);
         Assert.DoesNotContain("data-testid=\"sign-in\"", html);
+        Assert.DoesNotContain("data-testid=\"sign-up\"", html);
     }
 
     [Fact]
@@ -388,6 +391,17 @@ public partial class StorefrontPagesTests : IClassFixture<ShopWebApplicationFact
     public async Task SignInReturnsToTheRequestedSameSitePage(string returnUrl, string expected)
     {
         var response = await Browser(role: "CUSTOMER").GetAsync("/sign-in?returnUrl=" + Uri.EscapeDataString(returnUrl));
+
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal(expected, response.Headers.Location!.ToString());
+    }
+
+    [Theory]
+    [InlineData("/cart", "/cart")]
+    [InlineData("//evil.example", "/")]
+    public async Task SignUpReturnsToTheRequestedSameSitePage(string returnUrl, string expected)
+    {
+        var response = await Browser(role: "CUSTOMER").GetAsync("/sign-up?returnUrl=" + Uri.EscapeDataString(returnUrl));
 
         Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
         Assert.Equal(expected, response.Headers.Location!.ToString());

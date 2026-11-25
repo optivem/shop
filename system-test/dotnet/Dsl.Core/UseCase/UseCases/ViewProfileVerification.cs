@@ -49,6 +49,16 @@ public class ViewProfileVerification : ResponseVerification<ViewProfileResponse>
         return this;
     }
 
+    /// <summary>The street, postal code and city are all empty (an empty field reads as null or "").</summary>
+    public ViewProfileVerification StreetAddressIsEmpty()
+    {
+        string?[] streetAddress = [Response.Street, Response.PostalCode, Response.City];
+        streetAddress.ShouldAllBe(value => string.IsNullOrEmpty(value),
+            $"Expected no street address, but the profile has street '{Response.Street}', postal code "
+            + $"'{Response.PostalCode}', city '{Response.City}'");
+        return this;
+    }
+
     /// <summary>UI only: the email is shown but cannot be edited.</summary>
     public ViewProfileVerification EmailCannotBeChanged()
     {

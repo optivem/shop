@@ -32,6 +32,9 @@ public sealed class StoreChrome
 
     public string SignInHref => "/sign-in?returnUrl=" + Uri.EscapeDataString(ReturnUrl);
 
+    /// <summary>The header's "Sign up" link (UC-013): Keycloak's registration form, then back to this page.</summary>
+    public string SignUpHref => "/sign-up?returnUrl=" + Uri.EscapeDataString(ReturnUrl);
+
     public Task<IReadOnlyList<string>> CategoriesAsync() => _catalog.CategoriesAsync();
 
     public Notice? TakeNotice() => Notice.Take(Context);

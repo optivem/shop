@@ -21,6 +21,8 @@ import { PROFILE_READY_SELECTOR, ProfilePage } from './pages/ProfilePage.js';
 const HOME_READY_SELECTOR = "a[href='/order-history']";
 const SINGLE_PAGE_APP_ROOT_SELECTOR = '#root';
 const LOGIN_FORM_SELECTOR = '#kc-login';
+/** The storefront header's link for anonymous visitors to create an account (UC-013). */
+const SIGN_UP_SELECTOR = "[data-testid='sign-up']";
 const NOT_AUTHORIZED_SELECTOR = "h1:has-text('Not authorized'):visible";
 const NEW_ORDER_PATH = '/new-order';
 const COUPON_MANAGEMENT_PATH = '/admin-coupons';
@@ -170,6 +172,28 @@ export class MyShopUiClient {
       throw new Error('Signing in can only be exercised against a system with a login');
     }
     await userLogin.ensureLoggedIn(this.requirePage(), HOME_READY_SELECTOR);
+  }
+
+  /**
+   * Signs up as `user` (its username and password) in a fresh visitor session: the header's "Sign up" link, then
+   * Keycloak's registration form, until the shop shows the new customer signed in. The session is then discarded
+   * and `user` becomes the logged-in user, so the next page open signs in with the password.
+   * @returns undefined when signed up, else what the registration form showed instead
+   */
+  async signUp(user: TestUser, email: string, firstName: string, lastName: string, country: string): Promise<string | undefined> {
+    const registration = KeycloakUiLogin.forBaseUrl(this.keycloakBaseUrl, user);
+    if (!registration) {
+      throw new Error('Signing up can only be exercised against a system with a login');
+    }
+    await this.startVisitorSession();
+    const page = this.requirePage();
+    await page.goto(this.baseUrl);
+    await page.locator(SIGN_UP_SELECTOR).waitFor({ state: 'visible', timeout: PAGE_TIMEOUT_MS });
+    await page.click(SIGN_UP_SELECTOR);
+    const error = await registration.register(page, email, firstName, lastName, country, HOME_READY_SELECTOR);
+    await this.close();
+    this.login = registration;
+    return error;
   }
 
   /** Whether the page is the login form. */

@@ -20,7 +20,7 @@ title: Manage Profile
 - 1a. The user is not signed in:
     - The system asks the visitor to sign in. After signing in, the customer comes back to the profile page. Resume at step 2.
 - 2a. The customer has no saved profile yet:
-    - The system shows an empty profile, with the first and last name prefilled from the sign-in account where known and the email shown read-only. Resume at step 3.
+    - The system shows an empty profile, with the first and last name and the shipping country chosen at sign-up (UC-013 Create Customer) prefilled from the sign-in account where known, and the email shown read-only. Resume at step 3.
 - 5a. A required field is empty, or the country is not supported:
     - The system tells the customer which fields to correct. Nothing is saved, and the previously saved profile is unchanged. Resume at step 3.
 

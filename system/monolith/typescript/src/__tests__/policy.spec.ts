@@ -17,6 +17,7 @@ describe('decide', () => {
     ['GET', '/products/HP-15'],
     ['GET', '/cart'],
     ['GET', '/sign-in'],
+    ['GET', '/sign-up'],
   ])('%s %s is public', (method, path) => {
     expect(decide(method, path, null)).toBe('allow');
   });

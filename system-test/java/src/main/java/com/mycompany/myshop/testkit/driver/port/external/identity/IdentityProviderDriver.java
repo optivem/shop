@@ -22,6 +22,18 @@ public interface IdentityProviderDriver extends AutoCloseable {
      */
     UserAccount createAdmin(String firstName, String lastName, String email);
 
+    /**
+     * A new unique username and password for a customer account that is created elsewhere (a visitor's sign-up,
+     * UC-013); call {@link #deleteOnClose(String)} once it exists.
+     */
+    UserAccount newAccountCredentials();
+
+    /** A unique email for an account from {@link #newAccountCredentials()}. */
+    String newAccountEmail(UserAccount account);
+
+    /** Removes the account with this username on close, like the ones this driver created. */
+    void deleteOnClose(String username);
+
     @Override
     void close();
 }

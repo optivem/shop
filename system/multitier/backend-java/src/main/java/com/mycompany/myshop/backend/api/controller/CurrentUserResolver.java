@@ -10,6 +10,8 @@ final class CurrentUserResolver {
     private static final String EMAIL_CLAIM = "email";
     private static final String GIVEN_NAME_CLAIM = "given_name";
     private static final String FAMILY_NAME_CLAIM = "family_name";
+    /** The shipping country chosen at sign-up (UC-013), a Keycloak user attribute mapped into the access token. */
+    private static final String COUNTRY_CLAIM = "country";
 
     private CurrentUserResolver() {
     }
@@ -19,6 +21,6 @@ final class CurrentUserResolver {
                 .anyMatch(authority -> ROLE_ADMIN.equals(authority.getAuthority()));
         var username = jwt.getClaimAsString(USERNAME_CLAIM);
         return new CurrentUser(jwt.getSubject(), username, admin, jwt.getClaimAsString(EMAIL_CLAIM),
-                jwt.getClaimAsString(GIVEN_NAME_CLAIM), jwt.getClaimAsString(FAMILY_NAME_CLAIM));
+                jwt.getClaimAsString(GIVEN_NAME_CLAIM), jwt.getClaimAsString(FAMILY_NAME_CLAIM), jwt.getClaimAsString(COUNTRY_CLAIM));
     }
 }

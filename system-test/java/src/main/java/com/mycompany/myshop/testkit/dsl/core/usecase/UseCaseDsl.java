@@ -12,6 +12,7 @@ import com.mycompany.myshop.testkit.driver.port.external.clock.ClockDriver;
 import com.mycompany.myshop.testkit.driver.port.external.erp.ErpDriver;
 import com.mycompany.myshop.testkit.driver.port.external.tax.TaxDriver;
 import com.mycompany.myshop.testkit.driver.port.MyShopDriver;
+import com.mycompany.myshop.testkit.driver.port.UserAccount;
 import com.mycompany.myshop.testkit.driver.port.UserIdentity;
 import com.mycompany.myshop.testkit.driver.port.external.identity.IdentityProviderDriver;
 import com.mycompany.myshop.testkit.dsl.port.ChannelMode;
@@ -114,6 +115,38 @@ public class UseCaseDsl implements Closeable {
     public UserIdentity newCustomer(String firstName, String lastName, String email) {
         identityProviderDriver = getOrCreate(identityProviderDriver, identityProviderDriverSupplier);
         return UserIdentity.customer(identityProviderDriver.createCustomer(firstName, lastName, email));
+    }
+
+    /**
+     * A visitor signs up through the shop (UC-013, the UI channel only): the identity provider's registration form
+     * creates the account, with this name and shipping country. It is removed again when this DSL is closed.
+     *
+     * @param email null for a unique address
+     */
+    public UserIdentity signedUpCustomer(String firstName, String lastName, String email, String country) {
+        identityProviderDriver = getOrCreate(identityProviderDriver, identityProviderDriverSupplier);
+        var account = identityProviderDriver.newAccountCredentials();
+        try {
+            myShop(ChannelMode.DYNAMIC).signUp()
+                    .account(account.username(), account.password())
+                    .email(email != null ? email : identityProviderDriver.newAccountEmail(account))
+                    .name(firstName, lastName)
+                    .country(country)
+                    .execute()
+                    .shouldSucceed();
+        } finally {
+            removeOnClose(account);
+        }
+        return UserIdentity.customer(account);
+    }
+
+    /** Also when the form was submitted but the shop never showed the customer signed in; no account, nothing to do. */
+    private void removeOnClose(UserAccount account) {
+        try {
+            identityProviderDriver.deleteOnClose(account.username());
+        } catch (IllegalStateException e) {
+            log.info("No account {} to remove after the sign-up: {}", account.username(), e.getMessage());
+        }
     }
 
     /**

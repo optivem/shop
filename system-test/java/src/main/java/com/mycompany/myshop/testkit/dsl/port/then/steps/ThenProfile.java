@@ -23,6 +23,9 @@ public interface ThenProfile extends ThenStep<ThenProfile> {
     /** No shipping address is saved: the street, postal code, city and country are empty. */
     ThenProfile hasNoSavedAddress();
 
+    /** No street address is saved: the street, postal code and city are empty (the country may be set). */
+    ThenProfile hasNoStreetAddress();
+
     /** The email is shown but cannot be edited: it comes from the sign-in account (UI only). */
     ThenProfile hasEmailThatCannotBeChanged();
 

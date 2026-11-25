@@ -87,7 +87,11 @@ export class GivenStage implements IGivenStage {
 
   /** The scenario's customer is a new one: a sign-in account of its own, with no saved profile and no orders. */
   newCustomer(): GivenNewCustomer {
-    this.ctx.newCustomerConfig ??= { firstName: DEFAULTS.FIRST_NAME, lastName: DEFAULTS.LAST_NAME };
+    this.ctx.newCustomerConfig ??= {
+      firstName: DEFAULTS.FIRST_NAME,
+      lastName: DEFAULTS.LAST_NAME,
+      country: DEFAULTS.SIGN_UP_COUNTRY,
+    };
     this.ctx.customers.useNewDefaultCustomer();
     return new GivenNewCustomer(this, this.ctx.newCustomerConfig);
   }

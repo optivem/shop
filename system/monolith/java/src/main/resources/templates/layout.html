@@ -70,6 +70,12 @@
                         <span class="store-header-hint">Hello</span>
                         <span>Sign in</span>
                     </a>
+                    <a th:if="${storeUser == null}" class="store-header-link store-sign-up"
+                       th:href="${'/sign-up?returnUrl=' + #uris.escapeQueryParam(returnUrl)}" href="/sign-up"
+                       data-testid="sign-up">
+                        <span class="store-header-hint">New customer?</span>
+                        <span>Sign up</span>
+                    </a>
                     <a class="store-header-link store-cart" href="/cart">
                         <span class="store-cart-icon">
                             <svg th:replace="~{fragments/icons :: icon('shopping-cart', 26, null, 1.8)}"></svg>

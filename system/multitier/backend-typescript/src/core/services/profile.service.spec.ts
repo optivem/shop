@@ -11,6 +11,7 @@ const CUSTOMER: CurrentUser = {
   email: 'customer1@example.com',
   firstName: 'Token',
   lastName: 'Name',
+  country: null,
 };
 
 const SAVED = {
@@ -55,6 +56,12 @@ describe('ProfileService', () => {
       city: null,
       country: null,
     });
+  });
+
+  it('takes the country chosen at sign-up from the token when nothing is saved', async () => {
+    await expect(
+      service.viewProfile({ ...CUSTOMER, country: 'GB' }),
+    ).resolves.toMatchObject({ country: 'GB', street: null });
   });
 
   it('shows the saved profile with the email from the token', async () => {

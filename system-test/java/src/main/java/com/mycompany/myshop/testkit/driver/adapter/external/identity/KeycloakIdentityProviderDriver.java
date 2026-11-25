@@ -35,6 +35,21 @@ public class KeycloakIdentityProviderDriver implements IdentityProviderDriver {
         return createUser(ADMIN_USERNAME_PREFIX, ADMIN_ROLE, firstName, lastName, email);
     }
 
+    @Override
+    public UserAccount newAccountCredentials() {
+        return new UserAccount(CUSTOMER_USERNAME_PREFIX + UUID.randomUUID(), UUID.randomUUID().toString());
+    }
+
+    @Override
+    public String newAccountEmail(UserAccount account) {
+        return account.username() + "@example.com";
+    }
+
+    @Override
+    public void deleteOnClose(String username) {
+        createdUserIds.add(client.findUserId(username));
+    }
+
     private UserAccount createUser(String usernamePrefix, String role, String firstName, String lastName, String email) {
         var username = usernamePrefix + UUID.randomUUID();
         var password = UUID.randomUUID().toString();
@@ -42,6 +57,11 @@ public class KeycloakIdentityProviderDriver implements IdentityProviderDriver {
                 email != null ? email : username + "@example.com");
         createdUserIds.add(userId);
         client.assignRealmRole(userId, role);
+        if (ADMIN_ROLE.equals(role)) {
+            // Every new user gets the realm's default role, which makes a visitor who signs up a customer (UC-013).
+            // An admin is not a customer.
+            client.removeDefaultRoles(userId);
+        }
         return new UserAccount(username, password);
     }
 

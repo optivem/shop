@@ -16,6 +16,8 @@ export interface Session {
   email: string | null;
   givenName: string | null;
   familyName: string | null;
+  /** The `country` claim, the shipping country chosen at sign-up (UC-013); null when the ID token has none. */
+  country: string | null;
   /** Kept only so logout can tell Keycloak which session to end. */
   idToken: string;
 }
@@ -83,6 +85,7 @@ export async function openSession(token: string | undefined): Promise<Session | 
     email: optionalString(p.email),
     givenName: optionalString(p.givenName),
     familyName: optionalString(p.familyName),
+    country: optionalString(p.country),
     idToken: p.idToken,
     roles: p.roles.filter((r): r is string => typeof r === 'string'),
   };

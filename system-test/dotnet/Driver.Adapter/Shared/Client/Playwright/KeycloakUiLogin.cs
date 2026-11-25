@@ -9,6 +9,15 @@ public sealed class KeycloakUiLogin
     private const string UsernameSelector = "#username";
     private const string PasswordSelector = "#password";
     private const string SubmitSelector = "#kc-login";
+    private const string RegisterFormSelector = "#kc-register-form";
+    private const string RegisterSubmitSelector = "#kc-register-form [type='submit']";
+    /// <summary>The field errors Keycloak shows on a rejected registration (e.g. a username that is taken).</summary>
+    private const string RegisterErrorSelector = "#kc-register-form .kc-feedback-text";
+    private const string PasswordConfirmSelector = "#password-confirm";
+    private const string EmailSelector = "#email";
+    private const string FirstNameSelector = "#firstName";
+    private const string LastNameSelector = "#lastName";
+    private const string CountrySelector = "#country";
     /// <summary>The storefront's header link for anonymous visitors; apps that force login on every page never show it.</summary>
     private const string SignInSelector = "[data-testid='sign-in']";
     private const int TimeoutMilliseconds = 90_000;
@@ -64,6 +73,32 @@ public sealed class KeycloakUiLogin
             await page.WaitForSelectorAsync(appReadySelector,
                 new PageWaitForSelectorOptions { Timeout = TimeoutMilliseconds });
         }
+    }
+
+    /// <summary>
+    /// Fills in and submits Keycloak's registration form (UC-013) for this login's user, then waits until the app
+    /// shows <paramref name="appReadySelector"/>.
+    /// </summary>
+    /// <returns>null when the app was reached, else the errors the registration form showed</returns>
+    public async Task<string?> RegisterAsync(IPage page, string email, string firstName, string lastName, string country,
+        string appReadySelector)
+    {
+        await page.WaitForSelectorAsync(RegisterFormSelector, new PageWaitForSelectorOptions { Timeout = TimeoutMilliseconds });
+        await page.FillAsync(UsernameSelector, _user.Username);
+        await page.FillAsync(PasswordSelector, _user.Password);
+        await page.FillAsync(PasswordConfirmSelector, _user.Password);
+        await page.FillAsync(EmailSelector, email);
+        await page.FillAsync(FirstNameSelector, firstName);
+        await page.FillAsync(LastNameSelector, lastName);
+        await page.SelectOptionAsync(CountrySelector, country);
+        await page.ClickAsync(RegisterSubmitSelector);
+        await page.WaitForSelectorAsync(appReadySelector + ", " + RegisterErrorSelector,
+            new PageWaitForSelectorOptions { Timeout = TimeoutMilliseconds });
+        if (IsLoginPage(page))
+        {
+            return string.Join("; ", await page.Locator(RegisterErrorSelector).AllInnerTextsAsync());
+        }
+        return null;
     }
 
     /// <summary>Waits for the login form, without filling it in.</summary>

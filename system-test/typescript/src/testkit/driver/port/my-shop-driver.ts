@@ -23,6 +23,8 @@ import type { BrowseCustomersResponse } from './dtos/BrowseCustomersResponse.js'
 import type { ViewProfileRequest } from './dtos/ViewProfileRequest.js';
 import type { ViewProfileResponse } from './dtos/ViewProfileResponse.js';
 import type { UpdateProfileRequest } from './dtos/UpdateProfileRequest.js';
+import type { SignUpRequest } from './dtos/SignUpRequest.js';
+import type { SignUpResponse } from './dtos/SignUpResponse.js';
 import type { BrowseCatalogRequest } from './dtos/BrowseCatalogRequest.js';
 import type { BrowseCatalogResponse } from './dtos/BrowseCatalogResponse.js';
 import type { ViewProductRequest } from './dtos/ViewProductRequest.js';
@@ -48,6 +50,11 @@ export interface MyShopDriver extends AsyncCloseable, ActingUserSelector {
   viewProfile(request: ViewProfileRequest): Promise<Result<ViewProfileResponse, SystemError>>;
   /** Saves the profile; the response is the saved profile, the same shape viewProfile returns. */
   updateProfile(request: UpdateProfileRequest): Promise<Result<ViewProfileResponse, SystemError>>;
+  /**
+   * A visitor signs up (UC-013) through the shop's "Sign up" link and the identity provider's registration form,
+   * creating the request's account (UI only).
+   */
+  signUp(request: SignUpRequest): Promise<Result<SignUpResponse, SystemError>>;
   browseCatalog(request: BrowseCatalogRequest): Promise<Result<BrowseCatalogResponse, SystemError>>;
   viewProduct(request: ViewProductRequest): Promise<Result<ViewProductResponse, SystemError>>;
   manageCart(request: ManageCartRequest): Promise<Result<ManageCartResponse, SystemError>>;

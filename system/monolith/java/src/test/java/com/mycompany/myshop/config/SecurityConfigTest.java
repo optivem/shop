@@ -103,6 +103,7 @@ class SecurityConfigTest {
         route("GET", "/checkout/confirmation", Access.CUSTOMER_ONLY),
         route("GET", "/account", Access.AUTHENTICATED),
         route("GET", "/sign-in", Access.AUTHENTICATED),
+        route("GET", "/sign-up", Access.AUTHENTICATED),
         route("GET", "/new-order", Access.CUSTOMER_ONLY),
         route("POST", "/new-order", Access.CUSTOMER_ONLY),
         route("GET", "/order-history", Access.AUTHENTICATED),

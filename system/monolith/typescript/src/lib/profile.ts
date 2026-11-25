@@ -12,7 +12,10 @@ export interface ProfileResponse {
   country: string | null;
 }
 
-/** Without a saved profile the name comes from the token and the address is empty. */
+/**
+ * Without a saved profile the name and the country chosen at sign-up come from the token, and the rest of the
+ * address is empty.
+ */
 export function toProfileResponse(profile: CustomerProfileRow | null, caller: Caller): ProfileResponse {
   if (!profile) {
     return {
@@ -22,7 +25,7 @@ export function toProfileResponse(profile: CustomerProfileRow | null, caller: Ca
       street: null,
       postalCode: null,
       city: null,
-      country: null,
+      country: caller.country,
     };
   }
   return {

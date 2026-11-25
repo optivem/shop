@@ -53,6 +53,17 @@ class ProfileServiceTest {
     }
 
     @Test
+    void profileWithoutSavedRowTakesTheCountryChosenAtSignUpFromTheToken() {
+        when(repository.findByOwner("new-sub")).thenReturn(Optional.empty());
+
+        var profile = service.getProfile(
+                new CurrentUser("new-sub", "ana", false, "ana@example.com", "Ana", "Novak", "GB"));
+
+        assertThat(profile.getCountry()).isEqualTo("GB");
+        assertThat(profile.getStreet()).isNull();
+    }
+
+    @Test
     void profileWithoutSavedRowOrTokenNamesHasNullNames() {
         when(repository.findByOwner("anon-sub")).thenReturn(Optional.empty());
 

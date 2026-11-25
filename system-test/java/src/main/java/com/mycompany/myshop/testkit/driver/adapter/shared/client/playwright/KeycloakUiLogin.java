@@ -7,6 +7,15 @@ public class KeycloakUiLogin {
     private static final String USERNAME_SELECTOR = "#username";
     private static final String PASSWORD_SELECTOR = "#password";
     private static final String SUBMIT_SELECTOR = "#kc-login";
+    private static final String REGISTER_FORM_SELECTOR = "#kc-register-form";
+    private static final String REGISTER_SUBMIT_SELECTOR = "#kc-register-form [type='submit']";
+    /** The field errors Keycloak shows on a rejected registration (e.g. a username that is taken). */
+    private static final String REGISTER_ERROR_SELECTOR = "#kc-register-form .kc-feedback-text";
+    private static final String PASSWORD_CONFIRM_SELECTOR = "#password-confirm";
+    private static final String EMAIL_SELECTOR = "#email";
+    private static final String FIRST_NAME_SELECTOR = "#firstName";
+    private static final String LAST_NAME_SELECTOR = "#lastName";
+    private static final String COUNTRY_SELECTOR = "#country";
     /** The storefront's header link for anonymous visitors; apps that force login on every page never show it. */
     private static final String SIGN_IN_SELECTOR = "[data-testid='sign-in']";
     private static final int TIMEOUT_MILLISECONDS = 30_000;
@@ -65,6 +74,31 @@ public class KeycloakUiLogin {
             page.waitForSelector(appReadySelector,
                     new Page.WaitForSelectorOptions().setTimeout(TIMEOUT_MILLISECONDS));
         }
+    }
+
+    /**
+     * Fills in and submits Keycloak's registration form (UC-013) for this login's user, then waits until the app
+     * shows {@code appReadySelector}.
+     *
+     * @return null when the app was reached, else the errors the registration form showed
+     */
+    public String register(Page page, String email, String firstName, String lastName, String country,
+                           String appReadySelector) {
+        page.waitForSelector(REGISTER_FORM_SELECTOR, new Page.WaitForSelectorOptions().setTimeout(TIMEOUT_MILLISECONDS));
+        page.fill(USERNAME_SELECTOR, user.getUsername());
+        page.fill(PASSWORD_SELECTOR, user.getPassword());
+        page.fill(PASSWORD_CONFIRM_SELECTOR, user.getPassword());
+        page.fill(EMAIL_SELECTOR, email);
+        page.fill(FIRST_NAME_SELECTOR, firstName);
+        page.fill(LAST_NAME_SELECTOR, lastName);
+        page.selectOption(COUNTRY_SELECTOR, country);
+        page.click(REGISTER_SUBMIT_SELECTOR);
+        page.waitForSelector(appReadySelector + ", " + REGISTER_ERROR_SELECTOR,
+                new Page.WaitForSelectorOptions().setTimeout(TIMEOUT_MILLISECONDS));
+        if (isLoginPage(page)) {
+            return String.join("; ", page.locator(REGISTER_ERROR_SELECTOR).allInnerTexts());
+        }
+        return null;
     }
 
     /** Waits for the login form, without filling it in. */

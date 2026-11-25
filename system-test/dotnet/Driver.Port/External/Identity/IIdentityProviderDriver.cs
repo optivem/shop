@@ -14,4 +14,16 @@ public interface IIdentityProviderDriver : IAsyncDisposable
     /// <summary>Creates a new admin sign-in account with this name and email, and the admin role.</summary>
     /// <param name="email">null for a unique address derived from the generated username</param>
     Task<UserAccount> CreateAdminAsync(string firstName, string lastName, string? email);
+
+    /// <summary>
+    /// A new unique username and password for a customer account that is created elsewhere (a visitor's sign-up,
+    /// UC-013); call <see cref="DeleteOnDisposeAsync"/> once it exists.
+    /// </summary>
+    UserAccount NewAccountCredentials();
+
+    /// <summary>A unique email for an account from <see cref="NewAccountCredentials"/>.</summary>
+    string NewAccountEmail(UserAccount account);
+
+    /// <summary>Removes the account with this username on dispose, like the ones this driver created.</summary>
+    Task DeleteOnDisposeAsync(string username);
 }

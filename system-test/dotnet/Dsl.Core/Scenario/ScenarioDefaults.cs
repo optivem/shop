@@ -45,6 +45,8 @@ public static class ScenarioDefaults
     public const string DefaultPostalCode = "10115";
     public const string DefaultCity = "Berlin";
     public const string DefaultProfileCountry = "DE";
+    /// <summary>The shipping country a visitor chooses when signing up (UC-013).</summary>
+    public const string DefaultSignUpCountry = "GB";
 
     public const string? Empty = null;
 }

@@ -23,6 +23,8 @@ import com.mycompany.myshop.testkit.driver.port.dtos.PublishCouponRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.PublishCouponResponse;
 import com.mycompany.myshop.testkit.driver.port.dtos.ViewOrderRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.ViewOrderResponse;
+import com.mycompany.myshop.testkit.driver.port.dtos.SignUpRequest;
+import com.mycompany.myshop.testkit.driver.port.dtos.SignUpResponse;
 import com.mycompany.myshop.testkit.driver.port.dtos.UpdateProfileRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.ViewProfileRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.ViewProfileResponse;
@@ -236,6 +238,12 @@ public class MyShopApiDriver implements MyShopDriver {
     @Override
     public Result<CheckOutResponse, SystemError> checkOut(CheckOutRequest request) {
         throw new UnsupportedOperationException("The API channel has no cart to check out; run this scenario on the UI channel only");
+    }
+
+    /** Signing up is the identity provider's registration form, reached from the shop's pages: there is no sign-up API. */
+    @Override
+    public Result<SignUpResponse, SystemError> signUp(SignUpRequest request) {
+        throw new UnsupportedOperationException("The API channel has no sign-up form; run this scenario on the UI channel only");
     }
 
     /** The API serves data, not pages: accessibility is a UI-channel check. */

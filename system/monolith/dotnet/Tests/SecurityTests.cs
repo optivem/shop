@@ -77,6 +77,7 @@ public class SecurityTests : IClassFixture<ShopWebApplicationFactory>
     [InlineData("/account")]
     [InlineData("/checkout")]
     [InlineData("/sign-in?returnUrl=%2Fcart")]
+    [InlineData("/sign-up?returnUrl=%2Fcart")]
     public async Task Page_WithoutSession_RedirectsToKeycloak(string path)
     {
         var response = await Client().GetAsync(path);
@@ -84,6 +85,15 @@ public class SecurityTests : IClassFixture<ShopWebApplicationFactory>
         var location = response.Headers.Location!.ToString();
         Assert.StartsWith(ShopWebApplicationFactory.Issuer + "/protocol/openid-connect/auth", location);
         Assert.Contains("code_challenge_method=S256", location);
+    }
+
+    [Theory]
+    [InlineData("/sign-up?returnUrl=%2Fcart", true)]
+    [InlineData("/sign-in?returnUrl=%2Fcart", false)]
+    public async Task SignUp_AsksKeycloakForItsRegistrationForm(string path, bool registration)
+    {
+        var location = (await Client().GetAsync(path)).Headers.Location!.ToString();
+        Assert.Equal(registration, location.Contains("prompt=create"));
     }
 
     [Fact]

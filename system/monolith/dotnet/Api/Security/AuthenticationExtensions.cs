@@ -25,6 +25,20 @@ public static class AuthenticationExtensions
     private const string XsrfHeader = "X-XSRF-TOKEN";
     private const string BearerPrefix = "Bearer ";
 
+    /// <summary>The header's "Sign up" link (UC-013); its login asks Keycloak for the registration form.</summary>
+    public const string SignUpPath = "/sign-up";
+
+    /// <summary>Whether the login returns to <see cref="SignUpPath"/>, i.e. it was started by "Sign up".</summary>
+    internal static bool IsSignUp(string? redirectUri)
+    {
+        if (string.IsNullOrEmpty(redirectUri))
+            return false;
+        var path = Uri.TryCreate(redirectUri, UriKind.Absolute, out var absolute)
+            ? absolute.AbsolutePath
+            : redirectUri.Split('?', 2)[0];
+        return string.Equals(path, SignUpPath, StringComparison.Ordinal);
+    }
+
     /// <summary>
     /// Server-side OIDC login for the UI (authorization code + PKCE, session cookie; tokens never reach
     /// browser JS) plus Bearer-JWT validation for API clients. Both resolve to the same realm-role rules.
@@ -133,6 +147,15 @@ public static class AuthenticationExtensions
                     OnTokenValidated = context =>
                     {
                         MapRealmRolesToRoleClaims(context.Principal);
+                        return Task.CompletedTask;
+                    },
+                    // A login started from the header's "Sign up" link (UC-013) asks Keycloak for its registration
+                    // form (OIDC prompt=create); the challenge returns to /sign-up, which then goes on to returnUrl.
+                    OnRedirectToIdentityProvider = context =>
+                    {
+                        if (context.Request.Path.Equals(SignUpPath, StringComparison.Ordinal)
+                            || IsSignUp(context.Properties.RedirectUri))
+                            context.ProtocolMessage.Prompt = "create";
                         return Task.CompletedTask;
                     },
                     // Without an id_token_hint (tokens are not saved) Keycloak needs client_id to accept post_logout_redirect_uri.

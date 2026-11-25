@@ -16,6 +16,8 @@ export interface TokenIdentity {
   email: string | null;
   givenName: string | null;
   familyName: string | null;
+  /** The `country` claim, the shipping country chosen at sign-up (UC-013); null when the token has none. */
+  country: string | null;
 }
 
 /** Validates signature (JWKS), issuer, audience and expiry; returns the caller's identity, or null if invalid. */
@@ -32,6 +34,7 @@ export async function verifyBearerToken(token: string): Promise<TokenIdentity | 
       email: stringClaim(payload.email),
       givenName: stringClaim(payload.given_name),
       familyName: stringClaim(payload.family_name),
+      country: stringClaim(payload.country),
     };
   } catch {
     return null;

@@ -13,6 +13,8 @@ export interface CurrentUser {
   email: string | null;
   firstName: string | null;
   lastName: string | null;
+  /** The shipping country chosen at sign-up (UC-013), from the `country` claim; null when absent. */
+  country: string | null;
 }
 
 /** Injects the caller the AuthGuard authenticated; every non-public route has one. */
@@ -27,6 +29,7 @@ export const Caller = createParamDecorator(
       email: user.email,
       firstName: user.givenName,
       lastName: user.familyName,
+      country: user.country,
     };
   },
 );

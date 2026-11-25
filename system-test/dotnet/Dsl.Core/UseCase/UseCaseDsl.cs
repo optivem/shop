@@ -53,6 +53,47 @@ public class UseCaseDsl : IAsyncDisposable
         return UserIdentity.Customer(await _identityProvider.CreateCustomerAsync(firstName, lastName, email));
     }
 
+    /// <summary>
+    /// A visitor signs up through the shop (UC-013, the UI channel only): the identity provider's registration form
+    /// creates the account, with this name and shipping country. It is removed again when this DSL is disposed.
+    /// </summary>
+    /// <param name="email">null for a unique address</param>
+    public async Task<UserIdentity> SignedUpCustomerAsync(string firstName, string lastName, string? email,
+        string country, Channel channel)
+    {
+        _identityProvider ??= new KeycloakIdentityProviderDriver(_configuration.KeycloakBaseUrl);
+        var account = _identityProvider.NewAccountCredentials();
+        try
+        {
+            var shop = await MyShop(ChannelMode.Dynamic, channel);
+            (await shop.SignUp()
+                .Account(account.Username, account.Password)
+                .Email(email ?? _identityProvider.NewAccountEmail(account))
+                .Name(firstName, lastName)
+                .Country(country)
+                .Execute())
+                .ShouldSucceed();
+        }
+        finally
+        {
+            await RemoveOnDisposeAsync(account);
+        }
+        return UserIdentity.Customer(account);
+    }
+
+    /// <summary>Also when the form was submitted but the shop never showed the customer signed in; no account, nothing to do.</summary>
+    private async Task RemoveOnDisposeAsync(UserAccount account)
+    {
+        try
+        {
+            await _identityProvider!.DeleteOnDisposeAsync(account.Username);
+        }
+        catch (InvalidOperationException e)
+        {
+            Console.WriteLine($"No account {account.Username} to remove after the sign-up: {e.Message}");
+        }
+    }
+
     /// <summary>Creates an admin account of this scenario's own (admin role), removed again when this DSL is disposed.</summary>
     /// <param name="email">null for a unique address</param>
     public async Task<UserIdentity> NewAdminAsync(string firstName, string lastName, string? email)

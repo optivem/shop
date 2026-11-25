@@ -5,6 +5,9 @@ import type { ClockDriver } from '../../../driver/port/external/clock/clock-driv
 import type { TaxDriver } from '../../../driver/port/external/tax/tax-driver.js';
 import type { IdentityProviderDriver } from '../../../driver/port/external/identity/identity-provider-driver.js';
 import { UserIdentity } from '../../../driver/port/user-identity.js';
+import type { UserAccount } from '../../../driver/port/user-account.js';
+import type { UseCaseContext } from '../shared/use-case-context.js';
+import { MyShopDsl } from '../usecase/MyShopDsl.js';
 
 export type ChannelMode = 'dynamic' | 'static';
 
@@ -50,6 +53,44 @@ export class AppContext {
    */
   async newCustomer(firstName: string, lastName: string, email?: string): Promise<UserIdentity> {
     return UserIdentity.createdCustomer(await this.identityProvider().createCustomer(firstName, lastName, email));
+  }
+
+  /**
+   * A visitor signs up through the shop (UC-013, the UI channel only): the identity provider's registration form
+   * creates the account, with this name and shipping country. It is removed again by {@link closeAll}.
+   * @param email undefined for a unique address
+   */
+  async signedUpCustomer(
+    firstName: string,
+    lastName: string,
+    email: string | undefined,
+    country: string,
+    useCaseContext: UseCaseContext,
+  ): Promise<UserIdentity> {
+    const identityProvider = this.identityProvider();
+    const account = identityProvider.newAccountCredentials();
+    try {
+      const result = await new MyShopDsl(this.myShop('dynamic'), useCaseContext)
+        .signUp()
+        .account(account.username, account.password)
+        .email(email ?? identityProvider.newAccountEmail(account))
+        .name(firstName, lastName)
+        .country(country)
+        .execute();
+      result.shouldSucceed();
+    } finally {
+      await this.removeOnClose(identityProvider, account);
+    }
+    return UserIdentity.createdCustomer(account);
+  }
+
+  /** Also when the form was submitted but the shop never showed the customer signed in; no account, nothing to do. */
+  private async removeOnClose(identityProvider: IdentityProviderDriver, account: UserAccount): Promise<void> {
+    try {
+      await identityProvider.deleteOnClose(account.username);
+    } catch (e) {
+      console.info(`No account ${account.username} to remove after the sign-up: ${e instanceof Error ? e.message : String(e)}`);
+    }
   }
 
   /** Creates an admin account of the scenario's own (admin role), removed again by {@link closeAll}. */
