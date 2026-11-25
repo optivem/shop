@@ -1,5 +1,7 @@
 # 2026-11-16 20:03 UTC — Plan coordination meta-plan: all shop plans
 
+> 🤖 **Picked up by agent** — `Valentina_Desk` at `2026-11-25T09:57:39Z`
+
 
 ## TL;DR
 
@@ -27,7 +29,7 @@ The orchestrating session runs the **Wave tracker** top to bottom. Run the same 
 
 ## ▶ Next executable step (resume here)
 
-**Next: finish the U26 gate** (`plans/20261120-1500-per-test-admin.md`, Lane D, on `Valentina_Desk`: `stash@{0}` "U26 per-test admin WIP" holds the code and exists only there). The .NET UI "regression" was host/stack degradation, not U26 (REL #115): main itself went 151/0 → 123/28 → 86/65 on a reused stack and 98/53 on a fresh stack once free RAM dropped to ~5 GB. **First (user):** restart Docker Desktop or reboot. Then confirm main gives 151/0 on .NET `acceptance-parallel-ui` on a fresh stack, `git stash apply stash@{0}`, rerun that suite (expect 0 failures), then `--sample` on all six stacks (fresh `system start --restart` before every suite), the `new-admin-*` Keycloak check, commit the 56 unit files plus the child plan, CI green, drop the stash. compile-all with the stash already passed 7/7 (2026-11-24). After U26: **U27 visitor sign-up** (`plans/20261120-1730-visitor-sign-up.md`).
+**Next: close the U26 gate** (`plans/20261120-1500-per-test-admin.md`, item 5). The code is pushed as `64c6f617`. The gate is CI (user, 2026-11-25: CI's Linux acceptance stage is the authoritative full-suite gate; local parallel UI is informational only, REL #115). Watch meta-prerelease run 45596690272 (dispatched on `64c6f617`). If it is green, drop `stash@{0}` "U26 per-test admin WIP" on `Valentina_Desk` (check `git stash list` first) and delete the child plan. If it is red, drill into the failing inner run and fix forward. Then start **U27 visitor sign-up** (`plans/20261120-1730-visitor-sign-up.md`, Lane D).
 
 **Gated (cannot run yet):**
 - **INL** (`plans/20261103-1335-readd-inner-loop-pilot-config.md`): needs a gh-optivem release that accepts `inner-loop`. Check with `gh release list -R optivem/gh-optivem -L 3`; the latest on 2026-11-24 was `v1.6.108` (2026-11-10, before the change). Then INL Steps 1–2.
@@ -67,7 +69,7 @@ The orchestrating session runs the **Wave tracker** top to bottom. Run the same 
 | 4c | U24 TypeScript 7 (#149 system-test, #151 monolith, #152 backend-typescript, #154 frontend-react) | D (after U22) | blocked 2026-11-24: TS 7.0.2 has no JS compiler API, typescript-eslint peer `<6.1.0`, ts-jest `<7`; all dirs stay on 5.9.3, PRs left open → REL #111 (recommended: Dependabot ignore for TS majors) |
 | 4c | U25 cockatiel 4 (#150 monolith, #153 backend-typescript) | D (after U24) | done 2026-11-24 (`7771c6c3`): 3.2.1 → 4.0.0, now ESM-only, so the Jest configs transform cockatiel; no src changes and no behaviour change; unit, component, pact and integration green; `--sample` TS ×2 11/11; CI 7/7 green; PRs closed. Existing breaker gaps vs Java → REL #112 |
 | 5 | X1 cross-repo (last) | X | 2026-11-24, ungated part done (plans only): gh-optivem `8ffceb07` (B-QAS 6 + B-ORD 3 → new scaffold plan; REL #57/#106/#110 → shared-host plan) plus REL #71/#73/#77 (`9b6a6df1`); courses `34ec640` (B-QAS 7, B-ORD 4–5); optivem-testing `23f5b67` (REL #65, shop half → REL #113); substack: B-TAX item 7 needs no change. B-QAS and B-ORD deleted. **Left:** INL (release gate), GHO Items 3–4 (user gate) |
-| 6 | U26 per-test admin (`20261120-1500-per-test-admin`) | D | **blocked on the host 2026-11-24:** code done ×3 languages (stash on `Valentina_Desk`), compile-all 7/7; .NET UI failures shown to be host/stack degradation (main 98/53 on a fresh stack), not U26 (`6ec74c4f`, `cde49f64`, REL #115). Needs a Docker Desktop restart, then the gate |
+| 6 | U26 per-test admin (`20261120-1500-per-test-admin`) | D | 2026-11-25: pushed `64c6f617` (56 files ×3 languages). Local: main 136/15 on .NET parallel UI after a reboot (REL #115) vs U26 151/0; `--sample` ×6 green (monolith-java needed 1 rerun for a UI navigation timeout); 0 `new-admin-*` users left. Gate is CI (user decision): meta-prerelease 45596690272 is running; then drop the stash and delete the child plan |
 | 6 | U27 visitor sign-up UC-013 (`20261120-1730-visitor-sign-up`) | D (after U26) | waiting on U26 (approved 2026-11-24; decisions: prod registration off, country = required Keycloak registration attribute) |
 | — | M manual (user) | — | open; **M-GCP** done 2026-11-18, user actions below |
 
