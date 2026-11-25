@@ -29,7 +29,7 @@ The orchestrating session runs the **Wave tracker** top to bottom. Run the same 
 
 ## ▶ Next executable step (resume here)
 
-**Next: finish U27 visitor sign-up** (`plans/20261120-1730-visitor-sign-up.md`, Lane D). A subagent started it on 2026-11-25 on `Valentina_Desk`; check `git status` for uncommitted U27 work before restarting it. Gate: compile-all, `--sample` on all six stacks and the new UC-013 tests locally, then CI acceptance green (CI decides, REL #115). After U27, GHO Items 3–4 (Lane D rehearsals).
+**Next: close the U27 gate** (`plans/20261120-1730-visitor-sign-up.md`, item 6). The code is pushed as `cdaf342f`: compile-all 7/7, `--sample` ×6 green, UC-013 tests 2/2 per language locally. Watch meta-prerelease 45633676970: acceptance and QA green, with the deploy-keycloak reconcile step logging "Sign-up is on". Then run full `./test-all.sh` and delete the child plan. Meta-release 45633063941 (`64c6f617`) is waiting for the user's `production-release` approval; the orchestrator's approval call was blocked by the permission check. After U27: GHO Items 3–4 (Lane D rehearsals).
 
 **Gated (cannot run yet):**
 - **INL** (`plans/20261103-1335-readd-inner-loop-pilot-config.md`): needs a gh-optivem release that accepts `inner-loop`. Check with `gh release list -R optivem/gh-optivem -L 3`; the latest on 2026-11-24 was `v1.6.108` (2026-11-10, before the change). Then INL Steps 1–2.
@@ -70,7 +70,7 @@ The orchestrating session runs the **Wave tracker** top to bottom. Run the same 
 | 4c | U25 cockatiel 4 (#150 monolith, #153 backend-typescript) | D (after U24) | done 2026-11-24 (`7771c6c3`): 3.2.1 → 4.0.0, now ESM-only, so the Jest configs transform cockatiel; no src changes and no behaviour change; unit, component, pact and integration green; `--sample` TS ×2 11/11; CI 7/7 green; PRs closed. Existing breaker gaps vs Java → REL #112 |
 | 5 | X1 cross-repo (last) | X | 2026-11-24, ungated part done (plans only): gh-optivem `8ffceb07` (B-QAS 6 + B-ORD 3 → new scaffold plan; REL #57/#106/#110 → shared-host plan) plus REL #71/#73/#77 (`9b6a6df1`); courses `34ec640` (B-QAS 7, B-ORD 4–5); optivem-testing `23f5b67` (REL #65, shop half → REL #113); substack: B-TAX item 7 needs no change. B-QAS and B-ORD deleted. **Left:** INL (release gate), GHO Items 3–4 (user gate) |
 | 6 | U26 per-test admin (`20261120-1500-per-test-admin`) | D | done 2026-11-25 (`64c6f617`): meta-prerelease 45596690272 green (all pipelines and cross-lang); local `--sample` ×6 green; .NET parallel UI 151/0 locally (informational); stash dropped, child plan deleted. Gate changed to CI (user, 2026-11-25; REL #115) |
-| 6 | U27 visitor sign-up UC-013 (`20261120-1730-visitor-sign-up`) | D | in progress 2026-11-25 (subagent; decisions: prod registration off, country = required Keycloak registration attribute) |
+| 6 | U27 visitor sign-up UC-013 (`20261120-1730-visitor-sign-up`) | D | 2026-11-25: pushed `cdaf342f` (134 files; registration on in local, acceptance and QA, prod off and guarded by `prod-realm-check.jq`). Local gate green; CI gate meta-prerelease 45633676970 running; REL #116, #117 |
 | — | M manual (user) | — | open; **M-GCP** done 2026-11-18, user actions below |
 
 ### M-GCP follow-ups — done 2026-11-18 (`6a40c010`, `78d5c4b5`); user actions
