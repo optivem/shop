@@ -1,6 +1,5 @@
 # 2026-11-16 20:03 UTC — Plan coordination meta-plan: all shop plans
 
-> 🤖 **Picked up by agent** — `Valentina_Desk` at `2026-11-25T09:57:39Z`
 
 
 ## TL;DR
@@ -29,7 +28,7 @@ The orchestrating session runs the **Wave tracker** top to bottom. Run the same 
 
 ## ▶ Next executable step (resume here)
 
-**Next: close the U27 gate** (`plans/20261120-1730-visitor-sign-up.md`, item 6). The code is pushed as `cdaf342f`: compile-all 7/7, `--sample` ×6 green, UC-013 tests 2/2 per language locally. Watch meta-prerelease 45633676970: acceptance and QA green, with the deploy-keycloak reconcile step logging "Sign-up is on". Then run full `./test-all.sh` and delete the child plan. Meta-release 45633063941 (`64c6f617`) is waiting for the user's `production-release` approval; the orchestrator's approval call was blocked by the permission check. After U27: GHO Items 3–4 (Lane D rehearsals).
+**Next: close the U27 gate** (`plans/20261120-1730-visitor-sign-up.md`, item 6). The code is in `cdaf342f`: compile-all 7/7, `--sample` ×6 green, UC-013 tests 2/2 per language locally. The CI gate is meta-prerelease **45649932332** (dispatched on `3015cefb`, which includes `cdaf342f` plus the 1.0.242 VERSION bumps). Check it with `gh run view 45649932332 --json status,conclusion`; check the deploy-keycloak reconcile log for "Sign-up is on" in the acceptance and QA stages. The earlier U27 run 45633676970 failed for transient reasons only: a VERSION race on the pinned SHA, and GitHub 500s on the multitier dispatches (REL #118). Its local, commit and cross-lang jobs, including UC-013, were green. If it is green, run the full `./test-all.sh` (Lane D), then delete the child plan and tick U27. If it is red, drill into the inner run (check the tested SHA) and fix forward. Production: U26 is live (all six prod stages green, 2026-11-25). Meta-release 45633063941 timed out, so it cut no meta tag and root VERSION stays 1.0.228; the next meta-release covers it. Don't rerun it. After U27: GHO Items 3–4 (Lane D rehearsals).
 
 **Gated (cannot run yet):**
 - **INL** (`plans/20261103-1335-readd-inner-loop-pilot-config.md`): needs a gh-optivem release that accepts `inner-loop`. Check with `gh release list -R optivem/gh-optivem -L 3`; the latest on 2026-11-24 was `v1.6.108` (2026-11-10, before the change). Then INL Steps 1–2.
