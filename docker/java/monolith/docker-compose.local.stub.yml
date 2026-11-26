@@ -28,6 +28,15 @@ services:
       # calls (catalog + product) found one permit left and the second got a 503. With the 100% threshold, a single good
       # trial among the 20 still closes the breaker.
       - RESILIENCE_CIRCUITBREAKER_PERMITTEDCALLSINHALFOPENSTATE=20
+      # The same stub-only breaker settings for the other two backends. gh-optivem scaffolds a backend of any
+      # language with this test language's compose file, and each backend ignores the other backends' variables.
+      - Resilience__Erp__BreakDurationMilliseconds=500
+      - Resilience__Erp__FailureRatio=1.0
+      - Resilience__Clock__BreakDurationMilliseconds=500
+      - Resilience__Clock__FailureRatio=1.0
+      - Resilience__Tax__BreakDurationMilliseconds=500
+      - Resilience__Tax__FailureRatio=1.0
+      - EXTERNAL_BREAKER_HALF_OPEN_AFTER_MS=100
       - CLOCK_API_URL=http://external-system-stubs:8080/clock
       - TAX_API_URL=http://external-system-stubs:8080/tax
       - EXTERNAL_SYSTEM_MODE=stub

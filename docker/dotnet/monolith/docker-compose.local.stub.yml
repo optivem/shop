@@ -27,6 +27,12 @@ services:
       - Resilience__Clock__FailureRatio=1.0
       - Resilience__Tax__BreakDurationMilliseconds=500
       - Resilience__Tax__FailureRatio=1.0
+      # The same stub-only breaker settings for the other two backends. gh-optivem scaffolds a backend of any
+      # language with this test language's compose file, and each backend ignores the other backends' variables.
+      - RESILIENCE_CIRCUITBREAKER_WAITINOPENSTATE=100ms
+      - RESILIENCE_CIRCUITBREAKER_FAILURERATETHRESHOLD=100
+      - RESILIENCE_CIRCUITBREAKER_PERMITTEDCALLSINHALFOPENSTATE=20
+      - EXTERNAL_BREAKER_HALF_OPEN_AFTER_MS=100
       - CLOCK_API_URL=http://external-system-stubs:8080/clock
       - TAX_API_URL=http://external-system-stubs:8080/tax
       - EXTERNAL_SYSTEM_MODE=stub

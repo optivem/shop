@@ -29,6 +29,12 @@ interface FormControl {
   form: unknown;
 }
 
+/** The parts of the page's window the new-document wait uses (the test project has no DOM typings). */
+interface DocumentWindow {
+  __previousDocument?: boolean;
+  document: { readyState: string };
+}
+
 /**
  * The cart `/cart` (UC-008): its lines, quantity changes, removal and the subtotal. The server-rendered UIs post a
  * form and load the cart again for every change; the single-page UIs change it in place.
@@ -117,11 +123,20 @@ export class CartPage extends BasePage {
 
   /** Runs an action that loads a new document (such as a form post), and waits until the new document is ready. */
   private async runAndWaitForNewDocument(action: () => Promise<void>): Promise<void> {
-    await this.page.evaluate('window.__previousDocument = true');
-    await action();
-    await this.page.waitForFunction("window.__previousDocument === undefined && document.readyState !== 'loading'", undefined, {
-      timeout: PAGE_TIMEOUT_MS,
+    // Functions, not expression strings: Playwright runs a string predicate through eval in the page, which a
+    // Content-Security-Policy without 'unsafe-eval' (the .NET monolith's) blocks once the new document loads.
+    await this.page.evaluate(() => {
+      (globalThis as unknown as DocumentWindow).__previousDocument = true;
     });
+    await action();
+    await this.page.waitForFunction(
+      () => {
+        const page = globalThis as unknown as DocumentWindow;
+        return page.__previousDocument === undefined && page.document.readyState !== 'loading';
+      },
+      undefined,
+      { timeout: PAGE_TIMEOUT_MS },
+    );
   }
 
   private async readCartLineSkus(): Promise<string[]> {
