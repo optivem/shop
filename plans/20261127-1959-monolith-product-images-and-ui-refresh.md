@@ -11,13 +11,11 @@
 
 ## ▶ Next executable step (resume here)
 
-Step 3 is ported but NOT committed: TypeScript is done and its checks pass (tsc, jest, lint). Java was in progress by a subagent, so check `git status system/monolith/java` and finish whatever is missing against the .NET reference (commit e99166af). Then run `./compile-all.sh` and commit Java and TypeScript separately, leaving out the `frontend-react` DemoWakeUp files (another session's work). Commits ba85210d / e99166af / 92f07ba5 are local and not pushed (the permission check blocked the push), so the user pushes. Then Step 4, Step 5, and Step 6 (CI, ask before deploy).
+Steps 1–4 are done and pushed. Next: a clean dispatch of `meta-prerelease-stage.yml` (`gh workflow run meta-prerelease-stage.yml --ref main`; the permission check blocked Claude from dispatching it, so the user runs it or allows it). Watch it, fix any red without local system-test runs, then **stop and ask the user before the quick-deploy to production**.
 
 ## Steps
 
-- [ ] Step 3: **Monolith UIs: showcase refresh, full parity** (user decision 2026-11-27): .NET is done (e99166af). Bring Java (has base tokens/font/CTA only) and TypeScript (photos only, old Market theme) up to the .NET level: home sections, product buy box, checkout progress, mobile 44px controls. Categories menu, wishlist heart and "More in <category>" stay out in all three. Keep e2e driver selectors stable across languages.
-- [ ] Step 4: **System tests**: extend the e2e coverage for images to the monolith configs and keep selectors in sync (verified in CI, not locally).
-- [ ] Step 5: Run `./compile-all.sh`, commit, push, and confirm the monolith acceptance stages are green in CI.
+- [ ] Step 5: Confirm the monolith acceptance stages are green in CI (all code is committed and pushed; `./compile-all.sh` passes for all 7 configs). The photo tests are UI-channel acceptance tests, not limited to multitier, so they already cover the monolith configs: no `system-test/` changes were needed.
 - [ ] Step 6 (moved from the deleted multitier plan): confirm CI is green for multitier and monolith, including the photo acceptance tests `shouldShowThePhotoOfEachProduct` / `shouldShowThePhotoOfTheProduct` in .NET and TypeScript (never run locally), via a clean dispatch of `meta-prerelease-stage.yml`. Fix any red without local system-test runs. **Stop and ask user before the quick-deploy to production** (user reviews the UI locally first).
 
 ## Decisions (carried over from the multitier plan)
