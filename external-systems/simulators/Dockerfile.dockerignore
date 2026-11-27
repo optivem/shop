@@ -1,0 +1,7 @@
+# The build context is external-systems/ (see the Dockerfile); send only what the image uses.
+*
+!simulators/package.json
+!simulators/package-lock.json
+!simulators/mock-server.js
+!erp-images
+erp-images/SOURCES.md

@@ -2,6 +2,7 @@ package com.mycompany.myshop.testkit.dsl.core.usecase.external.erp;
 
 import com.mycompany.myshop.testkit.driver.port.external.erp.ErpDriver;
 import com.mycompany.myshop.testkit.dsl.core.usecase.external.erp.usecases.GetProduct;
+import com.mycompany.myshop.testkit.dsl.core.usecase.external.erp.usecases.GetProductImage;
 import com.mycompany.myshop.testkit.dsl.core.usecase.external.erp.usecases.GetProducts;
 import com.mycompany.myshop.testkit.dsl.core.usecase.external.erp.usecases.GoToErp;
 import com.mycompany.myshop.testkit.dsl.core.usecase.external.erp.usecases.ReturnsProduct;
@@ -38,6 +39,10 @@ public class ErpDsl implements AutoCloseable {
 
     public GetProduct getProduct() {
         return new GetProduct(driver, context);
+    }
+
+    public GetProductImage getProductImage() {
+        return new GetProductImage(driver, context);
     }
 
     public ReturnsProducts returnsProducts() {

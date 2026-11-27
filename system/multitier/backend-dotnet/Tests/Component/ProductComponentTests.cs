@@ -17,7 +17,7 @@ using Xunit;
 namespace MyCompany.MyShop.Backend.Tests.Component;
 
 /// <summary>
-/// The public catalog over HTTP: both product routes answer without a token, the list is a bare JSON
+/// The public catalog over HTTP: every product route answers without a token, the list is a bare JSON
 /// array, an unknown SKU is a 404 problem detail and an unavailable ERP a 503 problem detail.
 /// </summary>
 public class ProductComponentTests : IClassFixture<WebApplicationFactory<Program>>
@@ -80,6 +80,7 @@ public class ProductComponentTests : IClassFixture<WebApplicationFactory<Program
         var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync()).RootElement;
         Assert.Equal("BOOK-123", json.GetProperty("sku").GetString());
         Assert.Equal("Clean Code", json.GetProperty("title").GetString());
+        Assert.Equal(JsonValueKind.Null, json.GetProperty("imageUrl").ValueKind);
     }
 
     [Fact]
@@ -92,6 +93,32 @@ public class ProductComponentTests : IClassFixture<WebApplicationFactory<Program
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
         Assert.Contains("Product NO-SUCH-SKU does not exist.", await response.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task ViewProductImageWithoutTokenReturnsTheErpImage()
+    {
+        _erpMock.Setup(g => g.GetProductDetailsAsync("BOOK-123"))
+            .ReturnsAsync(new ErpProductDetailsResponse { Id = "BOOK-123", Price = 12m, ImageUrl = "/erp/images/BOOK-123.jpg" });
+        _erpMock.Setup(g => g.GetProductImageAsync("/erp/images/BOOK-123.jpg"))
+            .ReturnsAsync(new ErpProductImage(new byte[] { 1, 2, 3 }, "image/jpeg"));
+
+        var response = await _factory.CreateClient().GetAsync("/api/products/BOOK-123/image");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("image/jpeg", response.Content.Headers.ContentType?.MediaType);
+        Assert.Equal(new byte[] { 1, 2, 3 }, await response.Content.ReadAsByteArrayAsync());
+    }
+
+    [Fact]
+    public async Task ViewImageOfUnknownProductReturnsNotFoundProblemDetail()
+    {
+        _erpMock.Setup(g => g.GetProductDetailsAsync("NO-SUCH-SKU")).ReturnsAsync((ErpProductDetailsResponse?)null);
+
+        var response = await _factory.CreateClient().GetAsync("/api/products/NO-SUCH-SKU/image");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
     }
 
     [Fact]

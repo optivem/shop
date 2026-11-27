@@ -67,7 +67,8 @@ public class ErpStubDriver : BaseErpDriver<ErpStubClient>
             Description = request.Description ?? DefaultDescription,
             Price = decimal.Parse(request.Price!),
             Category = request.Category ?? DefaultCategory,
-            Brand = request.Brand ?? DefaultBrand
+            Brand = request.Brand ?? DefaultBrand,
+            ImageUrl = request.ImageUrl
         };
 
     public override Task<Result<VoidValue, ErpErrorResponse>> ReturnsPromotionAsync(ReturnsPromotionRequest request)

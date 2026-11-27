@@ -13,6 +13,7 @@ public class GivenProduct : BaseGiven, IGivenProduct
     private string? _description;
     private string? _category;
     private string? _brand;
+    private string? _imageUrl;
 
     public GivenProduct(GivenStage givenClause)
         : base(givenClause)
@@ -76,6 +77,14 @@ public class GivenProduct : BaseGiven, IGivenProduct
 
     IGivenProduct IGivenProduct.WithBrand(string? brand) => WithBrand(brand);
 
+    public GivenProduct WithImageUrl(string? imageUrl)
+    {
+        _imageUrl = imageUrl;
+        return this;
+    }
+
+    IGivenProduct IGivenProduct.WithImageUrl(string? imageUrl) => WithImageUrl(imageUrl);
+
     internal override async Task Execute(UseCaseDsl app)
     {
         (await app.Erp().ReturnsProduct()
@@ -85,6 +94,7 @@ public class GivenProduct : BaseGiven, IGivenProduct
             .Description(_description)
             .Category(_category)
             .Brand(_brand)
+            .ImageUrl(_imageUrl)
             .Execute())
             .ShouldSucceed();
     }

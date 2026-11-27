@@ -1,4 +1,8 @@
-import type { CallHandler, ExecutionContext } from '@nestjs/common';
+import {
+  StreamableFile,
+  type CallHandler,
+  type ExecutionContext,
+} from '@nestjs/common';
 import Decimal from 'decimal.js';
 import { lastValueFrom, of } from 'rxjs';
 import { DecimalFormatInterceptor } from './decimal-format.interceptor';
@@ -40,6 +44,15 @@ describe('DecimalFormatInterceptor', () => {
     expect(body).toBe(
       '[{"sku":"BOOK-123","price":"12.00"},{"sku":"BOOK-456","price":"15.50"}]',
     );
+  });
+
+  it('passes a file (e.g. a product image) through untouched', async () => {
+    const file = new StreamableFile(Buffer.from([1, 2, 3]), {
+      type: 'image/jpeg',
+    });
+    const { body, headers } = await bodyOf(file);
+    expect(body).toBe(file);
+    expect(headers).toEqual({});
   });
 
   it('writes rate fields as JSON strings with four decimals', async () => {

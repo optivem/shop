@@ -11,7 +11,8 @@
       "description": "13.3-inch ultrabook with Intel Core i7 processor",
       "price": 1299.99,
       "category": "Laptops",
-      "brand": "Dell"
+      "brand": "Dell",
+      "imageUrl": "/erp/images/DELL-XPS.jpg"
     },
     "headers": {
       "Content-Type": "application/json"

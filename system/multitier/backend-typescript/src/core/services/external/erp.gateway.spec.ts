@@ -12,12 +12,15 @@ describe('ErpGateway resilience', () => {
   let server: http.Server;
   let handler: Handler;
   let requests: number;
+  let lastPath: string | undefined;
   let erpGateway: ErpGateway;
 
   beforeEach(async () => {
     requests = 0;
-    server = http.createServer((_req, res) => {
+    lastPath = undefined;
+    server = http.createServer((req, res) => {
       requests++;
+      lastPath = req.url;
       handler(res);
     });
     await new Promise<void>((resolve) => server.listen(0, resolve));
@@ -95,5 +98,32 @@ describe('ErpGateway resilience', () => {
       ErpUnavailableException,
     );
     expect(requests).toBe(requestsWhenOpened);
+  });
+
+  it('fetches a product image from the path the ERP gave, with its content type', async () => {
+    handler = (res) => {
+      res.writeHead(200, { 'Content-Type': 'image/jpeg' });
+      res.end(Buffer.from([1, 2, 3]));
+    };
+    const image = await erpGateway.getProductImage('/erp/images/HP-15.jpg');
+    expect(lastPath).toBe('/erp/images/HP-15.jpg');
+    expect(image?.contentType).toBe('image/jpeg');
+    expect([...(image?.content ?? [])]).toEqual([1, 2, 3]);
+  });
+
+  it('returns null for a missing product image without retrying', async () => {
+    handler = respond(404);
+    await expect(
+      erpGateway.getProductImage('/erp/images/UNKNOWN.jpg'),
+    ).resolves.toBeNull();
+    expect(requests).toBe(1);
+  });
+
+  it('reports the ERP as unavailable when the image keeps failing', async () => {
+    handler = respond(500);
+    await expect(
+      erpGateway.getProductImage('/erp/images/HP-15.jpg'),
+    ).rejects.toThrow(ErpUnavailableException);
+    expect(requests).toBe(3);
   });
 });

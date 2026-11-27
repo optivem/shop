@@ -29,6 +29,7 @@ const EXPECTED: Record<string, Access> = {
   'GET /api/admin/customers': 'admin',
   'GET /api/products': 'public',
   'GET /api/products/:sku': 'public',
+  'GET /api/products/:sku/image': 'public',
   'GET /api/account/profile': 'authenticated',
   'PUT /api/account/profile': 'authenticated',
   // Like springdoc on the Java side, the OpenAPI document is for signed-in callers only.

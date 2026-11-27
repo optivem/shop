@@ -14,4 +14,9 @@ public interface ThenProduct extends ThenStep<ThenProduct> {
     ThenProduct hasCategory(String category);
 
     ThenProduct hasBrand(String brand);
+
+    ThenProduct hasImageUrl(String imageUrl);
+
+    /** The product's image URL serves a non-empty image of this content type. */
+    ThenProduct hasImageOfType(String contentType);
 }

@@ -6,4 +6,5 @@ export interface ExtProductDetailsResponse {
   price: number;
   category?: string;
   brand?: string;
+  imageUrl?: string;
 }

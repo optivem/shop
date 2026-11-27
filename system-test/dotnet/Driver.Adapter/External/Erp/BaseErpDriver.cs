@@ -63,6 +63,15 @@ public abstract class BaseErpDriver<TClient> : IErpDriver
             })
             .MapErrorAsync(error => MapError(error));
 
+    public virtual Task<Result<GetProductImageResponse, ErpErrorResponse>> GetProductImageAsync(GetProductImageRequest request)
+        => _client.GetImageAsync(request.ImageUrl)
+            .MapAsync(image => new GetProductImageResponse
+            {
+                ContentType = image.ContentType,
+                SizeInBytes = image.SizeInBytes
+            })
+            .MapErrorAsync(error => MapError(error));
+
     public abstract Task<Result<VoidValue, ErpErrorResponse>> ReturnsProductAsync(ReturnsProductRequest request);
 
     public abstract Task<Result<VoidValue, ErpErrorResponse>> ReturnsProductsAsync(ReturnsProductsRequest request);
@@ -85,7 +94,8 @@ public abstract class BaseErpDriver<TClient> : IErpDriver
             Description = productDetails.Description,
             Category = productDetails.Category,
             Brand = productDetails.Brand,
-            Price = productDetails.Price
+            Price = productDetails.Price,
+            ImageUrl = productDetails.ImageUrl
         };
 
     protected static ErpErrorResponse MapError(ExtErpErrorResponse extError)

@@ -1,0 +1,16 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/erp/images/[A-Za-z0-9-]+[.]jpg"
+  },
+  "response": {
+    "status": 200,
+    "bodyFileName": "erp/images/{{request.pathSegments.[2]}}",
+    "headers": {
+      "Content-Type": "image/jpeg"
+    },
+    "transformerParameters": {
+      "disableBodyFileTemplating": true
+    }
+  }
+}

@@ -6,6 +6,7 @@ import com.mycompany.myshop.testkit.dsl.core.shared.ResponseVerification;
 import com.mycompany.myshop.testkit.dsl.core.shared.UseCaseContext;
 
 import java.math.BigDecimal;
+import java.util.function.Consumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -64,6 +65,24 @@ public class GetProductVerification extends ResponseVerification<GetProductRespo
         assertThat(actualBrand)
                 .withFailMessage("Expected brand to be '%s', but was '%s'", expectedBrand, actualBrand)
                 .isEqualTo(expectedBrand);
+        return this;
+    }
+
+    public GetProductVerification imageUrl(String expectedImageUrl) {
+        var actualImageUrl = getResponse().getImageUrl();
+        assertThat(actualImageUrl)
+                .withFailMessage("Expected image URL to be '%s', but was '%s'", expectedImageUrl, actualImageUrl)
+                .isEqualTo(expectedImageUrl);
+        return this;
+    }
+
+    /** Checks the product has an image URL and hands it on, so the caller can fetch the image it points at. */
+    public GetProductVerification forImageUrl(Consumer<String> imageUrlConsumer) {
+        var actualImageUrl = getResponse().getImageUrl();
+        assertThat(actualImageUrl)
+                .withFailMessage("Expected product '%s' to have an image URL, but it had none", getResponse().getSku())
+                .isNotBlank();
+        imageUrlConsumer.accept(actualImageUrl);
         return this;
     }
 }

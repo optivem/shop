@@ -22,7 +22,8 @@ public class ErpRealDriver : BaseErpDriver<ErpRealClient>
             Description = request.Description ?? DefaultDescription,
             Category = request.Category ?? DefaultCategory,
             Brand = request.Brand ?? DefaultBrand,
-            Price = request.Price
+            Price = request.Price,
+            ImageUrl = request.ImageUrl
         };
 
         return _client.CreateProductAsync(createProductRequest)

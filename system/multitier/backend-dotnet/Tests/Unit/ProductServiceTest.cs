@@ -65,6 +65,68 @@ public class ProductServiceTest
         Assert.Equal("Books", response.Category);
         Assert.Equal("Prentice Hall", response.Brand);
         Assert.Equal(12.00m, response.Price);
+        Assert.Equal("/api/products/BOOK-123/image", response.ImageUrl);
+    }
+
+    [Fact]
+    public async Task ViewProduct_HasNoImageUrlWhenTheErpHasNoImage()
+    {
+        var product = Product("BOOK-123", 12.00m, "Clean Code", "A handbook", "Books", "Prentice Hall");
+        product.ImageUrl = null;
+        _erpMock.Setup(g => g.GetProductDetailsAsync("BOOK-123")).ReturnsAsync(product);
+
+        var response = await _service.ViewProductAsync("BOOK-123");
+
+        Assert.Null(response.ImageUrl);
+    }
+
+    [Fact]
+    public async Task GetProductImage_ProxiesTheErpImage()
+    {
+        var image = new ErpProductImage(new byte[] { 1, 2, 3 }, "image/jpeg");
+        _erpMock.Setup(g => g.GetProductDetailsAsync("HP-15"))
+            .ReturnsAsync(Product("HP-15", 699.99m, "HP 15 Laptop", "Everyday laptop", "Laptops", "HP"));
+        _erpMock.Setup(g => g.GetProductImageAsync("/erp/images/HP-15.jpg")).ReturnsAsync(image);
+
+        var result = await _service.GetProductImageAsync("HP-15");
+
+        Assert.Same(image, result);
+    }
+
+    [Fact]
+    public async Task GetProductImage_ThrowsNotExistWhenTheErpDoesNotKnowTheSku()
+    {
+        _erpMock.Setup(g => g.GetProductDetailsAsync("NO-SUCH-SKU")).ReturnsAsync((ErpProductDetailsResponse?)null);
+
+        var ex = await Assert.ThrowsAsync<NotExistValidationException>(() => _service.GetProductImageAsync("NO-SUCH-SKU"));
+
+        Assert.Equal("Product NO-SUCH-SKU does not exist.", ex.Message);
+        _erpMock.Verify(g => g.GetProductImageAsync(It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GetProductImage_ThrowsNotExistWhenTheProductHasNoImage()
+    {
+        var product = Product("HP-15", 699.99m, "HP 15 Laptop", "Everyday laptop", "Laptops", "HP");
+        product.ImageUrl = null;
+        _erpMock.Setup(g => g.GetProductDetailsAsync("HP-15")).ReturnsAsync(product);
+
+        var ex = await Assert.ThrowsAsync<NotExistValidationException>(() => _service.GetProductImageAsync("HP-15"));
+
+        Assert.Equal("Product HP-15 has no image.", ex.Message);
+        _erpMock.Verify(g => g.GetProductImageAsync(It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GetProductImage_ThrowsNotExistWhenTheErpHasNoSuchImage()
+    {
+        _erpMock.Setup(g => g.GetProductDetailsAsync("HP-15"))
+            .ReturnsAsync(Product("HP-15", 699.99m, "HP 15 Laptop", "Everyday laptop", "Laptops", "HP"));
+        _erpMock.Setup(g => g.GetProductImageAsync("/erp/images/HP-15.jpg")).ReturnsAsync((ErpProductImage?)null);
+
+        var ex = await Assert.ThrowsAsync<NotExistValidationException>(() => _service.GetProductImageAsync("HP-15"));
+
+        Assert.Equal("Image of product HP-15 does not exist.", ex.Message);
     }
 
     [Fact]
@@ -85,6 +147,7 @@ public class ProductServiceTest
             Title = title,
             Description = description,
             Category = category,
-            Brand = brand
+            Brand = brand,
+            ImageUrl = $"/erp/images/{sku}.jpg"
         };
 }

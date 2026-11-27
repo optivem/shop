@@ -38,4 +38,17 @@ export class GetProductVerification extends ResponseVerification<GetProductRespo
     expect(this.getResponse().brand).toBe(expectedBrand);
     return this;
   }
+
+  imageUrl(expectedImageUrl: string): this {
+    expect(this.getResponse().imageUrl).toBe(expectedImageUrl);
+    return this;
+  }
+
+  /** Checks the product has an image URL and hands it on, so the caller can fetch the image it points at. */
+  async forImageUrl(imageUrlConsumer: (imageUrl: string) => Promise<void>): Promise<this> {
+    const imageUrl = this.getResponse().imageUrl;
+    expect(imageUrl, `Expected product '${this.getResponse().sku}' to have an image URL, but it had none`).toBeTruthy();
+    await imageUrlConsumer(imageUrl ?? '');
+    return this;
+  }
 }

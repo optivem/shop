@@ -3,6 +3,8 @@ package com.mycompany.myshop.testkit.driver.adapter.external.erp;
 import com.mycompany.myshop.testkit.driver.port.external.erp.ErpDriver;
 
 import com.mycompany.myshop.testkit.driver.adapter.external.erp.client.BaseErpClient;
+import com.mycompany.myshop.testkit.driver.port.external.erp.dtos.GetProductImageRequest;
+import com.mycompany.myshop.testkit.driver.port.external.erp.dtos.GetProductImageResponse;
 import com.mycompany.myshop.testkit.driver.port.external.erp.dtos.GetProductRequest;
 import com.mycompany.myshop.testkit.driver.port.external.erp.dtos.GetProductResponse;
 import com.mycompany.myshop.testkit.driver.port.external.erp.dtos.GetProductsResponse;
@@ -50,6 +52,16 @@ public abstract class BaseErpDriver<C extends BaseErpClient> implements ErpDrive
                 .mapError(ext -> new ErpErrorResponse(ext.getMessage()));
     }
 
+    @Override
+    public Result<GetProductImageResponse, ErpErrorResponse> getProductImage(GetProductImageRequest request) {
+        return client.getImage(request.getImageUrl())
+                .map(image -> GetProductImageResponse.builder()
+                        .contentType(image.getContentType())
+                        .sizeInBytes(image.getSizeInBytes())
+                        .build())
+                .mapError(ext -> new ErpErrorResponse(ext.getMessage()));
+    }
+
     private static GetProductResponse toGetProductResponse(ExtProductDetailsResponse productDetails) {
         return GetProductResponse.builder()
                 .sku(productDetails.getId())
@@ -58,6 +70,7 @@ public abstract class BaseErpDriver<C extends BaseErpClient> implements ErpDrive
                 .description(productDetails.getDescription())
                 .category(productDetails.getCategory())
                 .brand(productDetails.getBrand())
+                .imageUrl(productDetails.getImageUrl())
                 .build();
     }
 

@@ -58,9 +58,11 @@ jobs:
           - image: shop-keycloak
             context: docker/keycloak
           - image: shop-simulators
-            context: external-systems/simulators
+            context: external-systems
+            file: external-systems/simulators/Dockerfile
           - image: shop-stubs
-            context: external-systems/stubs
+            context: external-systems
+            file: external-systems/stubs/Dockerfile
     env:
       IMAGE_REF: local/${{ matrix.image }}:scan
       # A PR from a fork gets a read-only token, so its SARIF upload would fail; the scan still runs.
@@ -76,7 +78,7 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           context: ${{ matrix.context }}
-          file: ${{ matrix.context }}/Dockerfile
+          file: ${{ matrix.file || format('{0}/Dockerfile', matrix.context) }}
           push: false
           load: true
           tags: ${{ env.IMAGE_REF }}

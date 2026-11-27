@@ -31,6 +31,28 @@ export function registerErpContractTests(test: ContractTest): void {
       .hasBrand('Prentice Hall');
   });
 
+  test('shouldBeAbleToGetProductImageUrl', async ({ scenario }) => {
+    await scenario
+      .given()
+      .product()
+      .withSku('BOOK-123')
+      .withImageUrl('/erp/images/HP-15.jpg')
+      .then()
+      .product('BOOK-123')
+      .hasImageUrl('/erp/images/HP-15.jpg');
+  });
+
+  test('shouldBeAbleToGetProductImage', async ({ scenario }) => {
+    await scenario
+      .given()
+      .product()
+      .withSku('BOOK-123')
+      .withImageUrl('/erp/images/HP-15.jpg')
+      .then()
+      .product('BOOK-123')
+      .hasImageOfType('image/jpeg');
+  });
+
   test('shouldBeAbleToListProducts', async ({ scenario }) => {
     await scenario
       .given()

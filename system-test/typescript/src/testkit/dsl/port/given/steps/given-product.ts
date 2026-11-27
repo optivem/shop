@@ -9,6 +9,7 @@ export interface GivenProduct {
   withDescription(description: string): GivenProduct;
   withCategory(category: string): GivenProduct;
   withBrand(brand: string): GivenProduct;
+  withImageUrl(imageUrl: string): GivenProduct;
   and(): GivenStage;
   when(): WhenStage;
   then(): ThenStage;

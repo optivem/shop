@@ -41,6 +41,11 @@ export class GivenProduct implements IGivenProduct {
     return this;
   }
 
+  withImageUrl(imageUrl: string): this {
+    this.config.imageUrl = imageUrl;
+    return this;
+  }
+
   and(): GivenStage {
     return this.stage;
   }

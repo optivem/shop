@@ -14,6 +14,7 @@ export class ReturnsProduct extends BaseErpUseCase<void, VoidVerification> {
   private _description?: string;
   private _category?: string;
   private _brand?: string;
+  private _imageUrl?: string;
 
   constructor(driver: ErpDriver, context: UseCaseContext) {
     super(driver, context);
@@ -49,6 +50,11 @@ export class ReturnsProduct extends BaseErpUseCase<void, VoidVerification> {
     return this;
   }
 
+  imageUrl(imageUrl: string): this {
+    this._imageUrl = imageUrl;
+    return this;
+  }
+
   async execute(): Promise<UseCaseResult<void, VoidVerification>> {
     const sku = this.context.getParamValue(this._skuAlias);
     const request: ReturnsProductRequest = {
@@ -58,6 +64,7 @@ export class ReturnsProduct extends BaseErpUseCase<void, VoidVerification> {
       description: this._description,
       category: this._category,
       brand: this._brand,
+      imageUrl: this._imageUrl,
     };
     const driverResult = await this.driver.returnsProduct(request);
     const result: Result<void, SystemError> = driverResult.success

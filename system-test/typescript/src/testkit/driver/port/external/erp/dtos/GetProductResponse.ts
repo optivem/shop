@@ -4,5 +4,6 @@ export interface GetProductResponse {
   description: string;
   category: string;
   brand: string;
+  imageUrl?: string;
   price: number;
 }

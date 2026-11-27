@@ -14,6 +14,7 @@ import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ExecutionException;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -71,6 +72,28 @@ public class JsonHttpClient<E> implements AutoCloseable {
     public Result<Void, E> get(String path) {
         var httpResponse = doGet(path);
         return getResultOrFailure(httpResponse, Void.class);
+    }
+
+    /**
+     * GETs a non-JSON resource such as an image. The URL is resolved against the base URL the way a browser
+     * resolves a link, so a root-relative URL ("/erp/images/X.jpg") keeps only the base URL's scheme and host.
+     */
+    public Result<BinaryResponse, E> getBinary(String url) {
+        var httpRequest = requestBuilder(resolveUri(url))
+                .GET()
+                .build();
+        var httpResponse = sendRequest(httpRequest, HttpResponse.BodyHandlers.ofByteArray());
+
+        if (!isSuccessStatusCode(httpResponse.statusCode())) {
+            var body = new String(httpResponse.body(), StandardCharsets.UTF_8);
+            if (body.isBlank()) {
+                return Result.failure(createEmptyBodyError(httpResponse.statusCode()));
+            }
+            return Result.failure(readResponse(body, errorType));
+        }
+
+        var contentType = httpResponse.headers().firstValue(CONTENT_TYPE).orElse(null);
+        return Result.success(new BinaryResponse(contentType, httpResponse.body()));
     }
     
     // POST Methods
@@ -131,6 +154,14 @@ public class JsonHttpClient<E> implements AutoCloseable {
             return new URI(baseUrl + path);
         } catch (URISyntaxException ex) {
             throw new IllegalArgumentException("Failed to create URI for path: " + path, ex);
+        }
+    }
+
+    private URI resolveUri(String url) {
+        try {
+            return new URI(baseUrl).resolve(url);
+        } catch (URISyntaxException | IllegalArgumentException ex) {
+            throw new IllegalArgumentException("Failed to resolve URL '" + url + "' against base URL: " + baseUrl, ex);
         }
     }
 
@@ -205,10 +236,14 @@ public class JsonHttpClient<E> implements AutoCloseable {
     }
 
     private HttpResponse<String> sendRequest(HttpRequest httpRequest) {
+        return sendRequest(httpRequest, HttpResponse.BodyHandlers.ofString());
+    }
+
+    private <B> HttpResponse<B> sendRequest(HttpRequest httpRequest, HttpResponse.BodyHandler<B> bodyHandler) {
         try {
             // Execute HTTP request on virtual thread for non-blocking I/O
             return VIRTUAL_THREAD_EXECUTOR.submit(() ->
-                    httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString())
+                    httpClient.send(httpRequest, bodyHandler)
             ).get();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -228,11 +263,13 @@ public class JsonHttpClient<E> implements AutoCloseable {
     }
 
     private <T> T readResponse(HttpResponse<String> httpResponse, Class<T> responseType) {
+        return readResponse(httpResponse.body(), responseType);
+    }
+
+    private <T> T readResponse(String responseBody, Class<T> responseType) {
         try {
-            var responseBody = httpResponse.body();
             return objectMapper.readValue(responseBody, responseType);
         } catch (com.fasterxml.jackson.core.JsonParseException ex) {
-            var responseBody = httpResponse.body();
             var fallback = tryCreateErrorFromBody(responseType, responseBody, ex);
             if (fallback != null) {
                 return fallback;
@@ -287,8 +324,11 @@ public class JsonHttpClient<E> implements AutoCloseable {
     }
 
     private boolean isSuccessStatusCode(HttpResponse<String> httpResponse) {
-        var statusCode = HttpStatus.valueOf(httpResponse.statusCode());
-        return statusCode.is2xxSuccessful();
+        return isSuccessStatusCode(httpResponse.statusCode());
+    }
+
+    private static boolean isSuccessStatusCode(int statusCode) {
+        return HttpStatus.valueOf(statusCode).is2xxSuccessful();
     }
 
     private <T> Result<T, E> getResultOrFailure(HttpResponse<String> httpResponse, Class<T> responseType) {

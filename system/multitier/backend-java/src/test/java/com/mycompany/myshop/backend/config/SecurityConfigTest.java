@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.head;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -24,6 +25,7 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 import com.mycompany.myshop.backend.core.dtos.PlaceOrderResponse;
+import com.mycompany.myshop.backend.core.dtos.external.ErpProductImage;
 import com.mycompany.myshop.backend.core.services.CouponService;
 import com.mycompany.myshop.backend.core.services.IdempotencyKeyStore;
 import com.mycompany.myshop.backend.core.services.IdempotentOrderService;
@@ -89,6 +91,7 @@ class SecurityConfigTest {
         route("POST", "/api/orders/{orderNumber}/deliver", Access.ADMIN_ONLY),
         route("GET", "/api/products", Access.PUBLIC),
         route("GET", "/api/products/{sku}", Access.PUBLIC),
+        route("GET", "/api/products/{sku}/image", Access.PUBLIC),
         route("GET", "/api/coupons", Access.ADMIN_ONLY),
         route("POST", "/api/coupons", Access.ADMIN_ONLY),
         route("GET", "/api/account/profile", Access.AUTHENTICATED),
@@ -186,6 +189,17 @@ class SecurityConfigTest {
     @Test
     void anonymousCanViewProduct() throws Exception {
         mockMvc.perform(get("/api/products/HP-15")).andExpect(status().isOk());
+    }
+
+    @Test
+    void anonymousCanViewProductImage() throws Exception {
+        when(productService.getProductImage("HP-15"))
+            .thenReturn(new ErpProductImage(new byte[] {1, 2, 3}, "image/jpeg"));
+
+        mockMvc.perform(get("/api/products/HP-15/image"))
+            .andExpect(status().isOk())
+            .andExpect(header().string("Content-Type", "image/jpeg"))
+            .andExpect(content().bytes(new byte[] {1, 2, 3}));
     }
 
     @Test

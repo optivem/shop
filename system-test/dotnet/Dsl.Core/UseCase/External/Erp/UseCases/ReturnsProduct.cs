@@ -15,6 +15,7 @@ public class ReturnsProduct : BaseErpUseCase<VoidValue, VoidVerification>
     private string? _description;
     private string? _category;
     private string? _brand;
+    private string? _imageUrl;
 
     public ReturnsProduct(IErpDriver driver, UseCaseContext context)
         : base(driver, context)
@@ -62,6 +63,12 @@ public class ReturnsProduct : BaseErpUseCase<VoidValue, VoidVerification>
         return this;
     }
 
+    public ReturnsProduct ImageUrl(string? imageUrl)
+    {
+        _imageUrl = imageUrl;
+        return this;
+    }
+
     public override async Task<ErpUseCaseResult<VoidValue, VoidVerification>> Execute()
     {
         var sku = _context.GetParamValue(_skuParamAlias);
@@ -73,7 +80,8 @@ public class ReturnsProduct : BaseErpUseCase<VoidValue, VoidVerification>
             Title = _title,
             Description = _description,
             Category = _category,
-            Brand = _brand
+            Brand = _brand,
+            ImageUrl = _imageUrl
         };
 
         var result = await _driver.ReturnsProductAsync(request);

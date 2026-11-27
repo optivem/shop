@@ -17,4 +17,6 @@ public interface IGivenProduct : IGivenStep
     IGivenProduct WithCategory(string? category);
 
     IGivenProduct WithBrand(string? brand);
+
+    IGivenProduct WithImageUrl(string? imageUrl);
 }

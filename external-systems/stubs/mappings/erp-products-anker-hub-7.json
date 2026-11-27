@@ -11,7 +11,8 @@
       "description": "USB-C hub with HDMI, USB-A, SD card reader and power delivery",
       "price": 39.99,
       "category": "Accessories",
-      "brand": "Anker"
+      "brand": "Anker",
+      "imageUrl": "/erp/images/ANKER-HUB-7.jpg"
     },
     "headers": {
       "Content-Type": "application/json"

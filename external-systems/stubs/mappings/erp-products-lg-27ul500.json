@@ -11,7 +11,8 @@
       "description": "27-inch 4K UHD IPS monitor with HDR10",
       "price": 299.99,
       "category": "Monitors",
-      "brand": "LG"
+      "brand": "LG",
+      "imageUrl": "/erp/images/LG-27UL500.jpg"
     },
     "headers": {
       "Content-Type": "application/json"

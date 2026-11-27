@@ -105,8 +105,8 @@ services:
 
   external-system-simulators:
     build:
-      context: ../../../external-systems/simulators
-      dockerfile: Dockerfile
+      context: ../../../external-systems
+      dockerfile: simulators/Dockerfile
     ports:
       - "9211:9000"
     networks:

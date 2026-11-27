@@ -18,9 +18,11 @@ interface RoutePolicy {
 const POLICIES: readonly RoutePolicy[] = [
   { method: 'OPTIONS', path: /^\/.*$/, access: 'public' },
   { method: 'GET', path: /^\/(health|livez|readyz)$/, access: 'public' },
-  // The product catalog is public: anonymous visitors may browse and view products.
+  // The product catalog is public: anonymous visitors may browse and view products, and an img
+  // tag loads a product photo without a token.
   { method: 'GET', path: /^\/api\/products$/, access: 'public' },
   { method: 'GET', path: /^\/api\/products\/[^/]+$/, access: 'public' },
+  { method: 'GET', path: /^\/api\/products\/[^/]+\/image$/, access: 'public' },
   { method: 'POST', path: /^\/api\/orders\/[^/]+\/deliver$/, access: 'admin' },
   { method: 'POST', path: /^\/api\/orders$/, access: 'customer' },
   { method: 'POST', path: /^\/api\/coupons$/, access: 'admin' },

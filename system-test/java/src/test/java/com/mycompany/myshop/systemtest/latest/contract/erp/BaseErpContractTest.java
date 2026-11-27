@@ -31,6 +31,20 @@ public abstract class BaseErpContractTest extends BaseExternalSystemContractTest
     }
 
     @Test
+    void shouldBeAbleToGetProductImageUrl() {
+        assertDoesNotThrow(() -> scenario
+                .given().product().withSku("BOOK-123").withImageUrl("/erp/images/HP-15.jpg")
+                .then().product("BOOK-123").hasImageUrl("/erp/images/HP-15.jpg"));
+    }
+
+    @Test
+    void shouldBeAbleToGetProductImage() {
+        assertDoesNotThrow(() -> scenario
+                .given().product().withSku("BOOK-123").withImageUrl("/erp/images/HP-15.jpg")
+                .then().product("BOOK-123").hasImageOfType("image/jpeg"));
+    }
+
+    @Test
     void shouldBeAbleToListProducts() {
         assertDoesNotThrow(() -> scenario
                 .given().products()

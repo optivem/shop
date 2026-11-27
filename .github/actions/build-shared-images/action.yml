@@ -61,8 +61,10 @@ runs:
         }
         build shop-db-migrate "$SOURCE" system/db
         build shop-keycloak . docker/keycloak
-        build shop-simulators "$SOURCE" external-systems/simulators
-        build shop-stubs "$SOURCE" external-systems/stubs
+        # Simulators and stubs build from external-systems/ (both ship external-systems/erp-images),
+        # so both are tagged by that tree hash and rebuilt when either of them or the images change.
+        build shop-simulators "$SOURCE" external-systems -f "${SOURCE}/external-systems/simulators/Dockerfile"
+        build shop-stubs "$SOURCE" external-systems -f "${SOURCE}/external-systems/stubs/Dockerfile"
 
     # Cloud Run deploys public GHCR images directly, with no credentials. A package GHCR created
     # private (the default for a new package unless it inherits the repo's visibility) would only

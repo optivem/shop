@@ -82,6 +82,22 @@ export async function fetchJsonArray<T extends object>(
   return instances;
 }
 
+// GETs a binary body (e.g. an image) with its content type.
+export async function fetchBinary(
+  url: string,
+  signal: AbortSignal,
+): Promise<{ content: Buffer; contentType: string }> {
+  const response = await fetch(url, { signal });
+  if (!response.ok) {
+    throw new HttpStatusError(url, response.status, await response.text());
+  }
+  return {
+    content: Buffer.from(await response.arrayBuffer()),
+    contentType:
+      response.headers.get('content-type') ?? 'application/octet-stream',
+  };
+}
+
 export function isNotFound(error: unknown): boolean {
   return error instanceof HttpStatusError && error.status === 404;
 }

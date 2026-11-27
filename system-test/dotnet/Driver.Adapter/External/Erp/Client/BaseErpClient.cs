@@ -79,6 +79,15 @@ public abstract class BaseErpClient : IDisposable
     public Task<Result<List<ExtProductDetailsResponse>, ExtErpErrorResponse>> GetProductsAsync()
         => HttpClient.GetAsync<List<ExtProductDetailsResponse>>(ProductsEndpoint);
 
+    /// <summary>Fetches a product image by the URL the ERP gave on the product (root-relative, e.g. "/erp/images/HP-15.jpg").</summary>
+    public Task<Result<ExtGetImageResponse, ExtErpErrorResponse>> GetImageAsync(string? imageUrl)
+        => HttpClient.GetBinaryAsync(imageUrl!)
+            .MapAsync(response => new ExtGetImageResponse
+            {
+                ContentType = response.ContentType,
+                SizeInBytes = response.Body.Length
+            });
+
 }
 
 

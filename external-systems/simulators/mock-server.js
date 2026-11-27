@@ -1,5 +1,7 @@
 // Mock API server using json-server
 // Serves ERP and Clock APIs under namespaced paths
+const fs = require('fs');
+const path = require('path');
 const jsonServer = require('json-server');
 
 const server = jsonServer.create();
@@ -38,6 +40,23 @@ server.get('/clock/health', (req, res) => {
   });
 });
 
+// ERP product photos (external-systems/erp-images). In the container they are copied to
+// ./erp-images; when run from a checkout they are read from the sibling folder.
+const erpImagesDir = (process.env.ERP_IMAGES_DIR && path.resolve(process.env.ERP_IMAGES_DIR))
+  || [path.join(__dirname, 'erp-images'), path.join(__dirname, '..', 'erp-images')].find((dir) => fs.existsSync(dir));
+
+server.get('/erp/images/:file', (req, res) => {
+  const { file } = req.params;
+  if (!erpImagesDir || !/^[A-Za-z0-9-]+\.jpg$/.test(file)) {
+    return res.status(404).json({ error: 'Image not found' });
+  }
+  res.sendFile(path.join(erpImagesDir, file), { headers: { 'Content-Type': 'image/jpeg' } }, (err) => {
+    if (err && !res.headersSent) {
+      res.status(404).json({ error: 'Image not found' });
+    }
+  });
+});
+
 // In-memory data for ERP API
 const erpRouter = jsonServer.router({
   products: [
@@ -47,7 +66,8 @@ const erpRouter = jsonServer.router({
       description: "15.6-inch laptop with Intel Core i5 processor",
       price: 699.99,
       category: "Laptops",
-      brand: "HP"
+      brand: "HP",
+      imageUrl: "/erp/images/HP-15.jpg"
     },
     {
       id: "DELL-XPS",
@@ -55,7 +75,8 @@ const erpRouter = jsonServer.router({
       description: "13.3-inch ultrabook with Intel Core i7 processor",
       price: 1299.99,
       category: "Laptops",
-      brand: "Dell"
+      brand: "Dell",
+      imageUrl: "/erp/images/DELL-XPS.jpg"
     },
     {
       id: "LENOVO-T14",
@@ -63,7 +84,8 @@ const erpRouter = jsonServer.router({
       description: "14-inch business laptop",
       price: 999.99,
       category: "Laptops",
-      brand: "Lenovo"
+      brand: "Lenovo",
+      imageUrl: "/erp/images/LENOVO-T14.jpg"
     },
     {
       id: "ASUS-ZENBOOK-14",
@@ -71,7 +93,8 @@ const erpRouter = jsonServer.router({
       description: "14-inch OLED ultrabook with Intel Core Ultra 7 processor",
       price: 899.99,
       category: "Laptops",
-      brand: "ASUS"
+      brand: "ASUS",
+      imageUrl: "/erp/images/ASUS-ZENBOOK-14.jpg"
     },
     {
       id: "DELL-U2723QE",
@@ -79,7 +102,8 @@ const erpRouter = jsonServer.router({
       description: "27-inch 4K IPS monitor with USB-C hub",
       price: 579.99,
       category: "Monitors",
-      brand: "Dell"
+      brand: "Dell",
+      imageUrl: "/erp/images/DELL-U2723QE.jpg"
     },
     {
       id: "LG-27UL500",
@@ -87,7 +111,8 @@ const erpRouter = jsonServer.router({
       description: "27-inch 4K UHD IPS monitor with HDR10",
       price: 299.99,
       category: "Monitors",
-      brand: "LG"
+      brand: "LG",
+      imageUrl: "/erp/images/LG-27UL500.jpg"
     },
     {
       id: "SAMSUNG-S24",
@@ -95,7 +120,8 @@ const erpRouter = jsonServer.router({
       description: "24-inch Full HD monitor with slim bezels",
       price: 149.99,
       category: "Monitors",
-      brand: "Samsung"
+      brand: "Samsung",
+      imageUrl: "/erp/images/SAMSUNG-S24.jpg"
     },
     {
       id: "LOGI-MX3S",
@@ -103,7 +129,8 @@ const erpRouter = jsonServer.router({
       description: "Wireless performance mouse with quiet clicks",
       price: 99.99,
       category: "Accessories",
-      brand: "Logitech"
+      brand: "Logitech",
+      imageUrl: "/erp/images/LOGI-MX3S.jpg"
     },
     {
       id: "LOGI-MXKEYS",
@@ -111,7 +138,8 @@ const erpRouter = jsonServer.router({
       description: "Wireless illuminated keyboard for Mac and PC",
       price: 109.99,
       category: "Accessories",
-      brand: "Logitech"
+      brand: "Logitech",
+      imageUrl: "/erp/images/LOGI-MXKEYS.jpg"
     },
     {
       id: "ANKER-HUB-7",
@@ -119,7 +147,8 @@ const erpRouter = jsonServer.router({
       description: "USB-C hub with HDMI, USB-A, SD card reader and power delivery",
       price: 39.99,
       category: "Accessories",
-      brand: "Anker"
+      brand: "Anker",
+      imageUrl: "/erp/images/ANKER-HUB-7.jpg"
     }
   ]
 });

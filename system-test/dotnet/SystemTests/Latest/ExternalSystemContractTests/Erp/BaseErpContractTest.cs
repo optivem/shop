@@ -33,6 +33,24 @@ public abstract class BaseErpContractTest : BaseExternalSystemContractTest
     }
 
     [Fact]
+    public async Task ShouldBeAbleToGetProductImageUrl()
+    {
+        await Scenario()
+            .Given().Product().WithSku("BOOK-123").WithImageUrl("/erp/images/HP-15.jpg")
+            .Then().Product("BOOK-123")
+            .HasImageUrl("/erp/images/HP-15.jpg");
+    }
+
+    [Fact]
+    public async Task ShouldBeAbleToGetProductImage()
+    {
+        await Scenario()
+            .Given().Product().WithSku("BOOK-123").WithImageUrl("/erp/images/HP-15.jpg")
+            .Then().Product("BOOK-123")
+            .HasImageOfType("image/jpeg");
+    }
+
+    [Fact]
     public async Task ShouldBeAbleToListProducts()
     {
         await Scenario()

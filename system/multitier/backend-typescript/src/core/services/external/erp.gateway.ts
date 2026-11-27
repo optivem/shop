@@ -2,8 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ErpProductDetailsResponse } from '../../dtos/external/erp-product-details-response.dto';
 import { ErpGetPromotionResponse } from '../../dtos/external/erp-get-promotion-response.dto';
+import type { ErpProductImage } from '../../dtos/external/erp-product-image.dto';
 import {
   errorMessage,
+  fetchBinary,
   fetchJson,
   fetchJsonArray,
   isNotFound,
@@ -76,6 +78,23 @@ export class ErpGateway {
         {
           cause: e,
         },
+      );
+    }
+  }
+
+  // imageUrl is the ERP's own reference (a path such as /erp/images/HP-15.jpg, or an absolute URL);
+  // it is resolved against the ERP base URL, so the photo always comes from the ERP we are configured for.
+  async getProductImage(imageUrl: string): Promise<ErpProductImage | null> {
+    const url = new URL(imageUrl, this.erpUrl).toString();
+    try {
+      return await this.policy((signal) => fetchBinary(url, signal));
+    } catch (e) {
+      if (isNotFound(e)) {
+        return null;
+      }
+      throw new ErpUnavailableException(
+        `Failed to fetch product image. ${errorMessage(e)}`,
+        { cause: e },
       );
     }
   }

@@ -6,4 +6,5 @@ export interface ReturnsProductRequest {
   description?: string;
   category?: string;
   brand?: string;
+  imageUrl?: string;
 }

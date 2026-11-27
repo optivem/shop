@@ -51,6 +51,23 @@ public class ThenProductImpl extends BaseThenStep<Void, VoidVerification> implem
     }
 
     @Override
+    public ThenProductImpl hasImageUrl(String imageUrl) {
+        verification.imageUrl(imageUrl);
+        return this;
+    }
+
+    @Override
+    public ThenProductImpl hasImageOfType(String contentType) {
+        verification.forImageUrl(imageUrl -> app.erp().getProductImage()
+                .imageUrl(imageUrl)
+                .execute()
+                .shouldSucceed()
+                .contentType(contentType)
+                .notEmpty());
+        return this;
+    }
+
+    @Override
     public ThenProductImpl and() {
         return this;
     }

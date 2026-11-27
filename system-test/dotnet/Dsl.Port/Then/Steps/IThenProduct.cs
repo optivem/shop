@@ -16,6 +16,11 @@ public interface IThenProduct
 
     IThenProduct HasBrand(string brand);
 
+    IThenProduct HasImageUrl(string imageUrl);
+
+    /// <summary>The product's image URL serves a non-empty image of this content type.</summary>
+    IThenProduct HasImageOfType(string contentType);
+
     IThenClock Clock();
 
     IThenProduct Product(string skuAlias);

@@ -58,4 +58,20 @@ public class GetProductVerification : ResponseVerification<GetProductResponse>
         actualBrand.ShouldBe(expectedBrand, $"Expected brand to be '{expectedBrand}', but was '{actualBrand}'");
         return this;
     }
+
+    public GetProductVerification ImageUrl(string expectedImageUrl)
+    {
+        var actualImageUrl = Response.ImageUrl;
+        actualImageUrl.ShouldBe(expectedImageUrl, $"Expected image URL to be '{expectedImageUrl}', but was '{actualImageUrl}'");
+        return this;
+    }
+
+    /// <summary>Checks the product has an image URL and hands it on, so the caller can fetch the image it points at.</summary>
+    public async Task<GetProductVerification> ForImageUrl(Func<string, Task> imageUrlConsumer)
+    {
+        var actualImageUrl = Response.ImageUrl;
+        actualImageUrl.ShouldNotBeNullOrWhiteSpace($"Expected product '{Response.Sku}' to have an image URL, but it had none");
+        await imageUrlConsumer(actualImageUrl!);
+        return this;
+    }
 }

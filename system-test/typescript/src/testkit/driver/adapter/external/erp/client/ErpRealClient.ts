@@ -14,6 +14,7 @@ export class ErpRealClient extends BaseErpClient {
       price: request.price,
       category: request.category ?? ErpProductDefaults.CATEGORY,
       brand: request.brand ?? ErpProductDefaults.BRAND,
+      imageUrl: request.imageUrl,
     };
     const response = await fetch(`${this.baseUrl}/api/products`, {
       method: 'POST',

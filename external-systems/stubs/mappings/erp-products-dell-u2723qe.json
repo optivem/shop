@@ -11,7 +11,8 @@
       "description": "27-inch 4K IPS monitor with USB-C hub",
       "price": 579.99,
       "category": "Monitors",
-      "brand": "Dell"
+      "brand": "Dell",
+      "imageUrl": "/erp/images/DELL-U2723QE.jpg"
     },
     "headers": {
       "Content-Type": "application/json"

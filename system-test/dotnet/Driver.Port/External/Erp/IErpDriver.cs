@@ -12,6 +12,9 @@ public interface IErpDriver : IDisposable, IAsyncDisposable
 
     Task<Result<GetProductsResponse, ErpErrorResponse>> GetProductsAsync();
 
+    /// <summary>Fetches the image a product's image URL points at, from the ERP that gave the URL.</summary>
+    Task<Result<GetProductImageResponse, ErpErrorResponse>> GetProductImageAsync(GetProductImageRequest request);
+
     Task<Result<VoidValue, ErpErrorResponse>> ReturnsProductAsync(ReturnsProductRequest request);
 
     Task<Result<VoidValue, ErpErrorResponse>> ReturnsProductsAsync(ReturnsProductsRequest request);

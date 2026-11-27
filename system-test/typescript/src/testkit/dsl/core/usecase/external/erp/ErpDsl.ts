@@ -7,6 +7,7 @@ import { ReturnsUnavailable } from './usecases/ReturnsUnavailable.js';
 import { ReturnsAvailable } from './usecases/ReturnsAvailable.js';
 import { ReturnsProductNotFound } from './usecases/ReturnsProductNotFound.js';
 import { GetProduct } from './usecases/GetProduct.js';
+import { GetProductImage } from './usecases/GetProductImage.js';
 import { GetProducts } from './usecases/GetProducts.js';
 import { GoToErp } from './usecases/GoToErp.js';
 
@@ -46,6 +47,10 @@ export class ErpDsl {
 
   getProduct(): GetProduct {
     return new GetProduct(this.driver, this.context);
+  }
+
+  getProductImage(): GetProductImage {
+    return new GetProductImage(this.driver, this.context);
   }
 
   getProducts(): GetProducts {

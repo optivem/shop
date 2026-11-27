@@ -53,4 +53,20 @@ public class ThenProduct : BaseThenLookup<GetProductVerification>, IThenProduct
         AddVerification(v => v.Brand(brand));
         return this;
     }
+
+    public IThenProduct HasImageUrl(string imageUrl)
+    {
+        AddVerification(v => v.ImageUrl(imageUrl));
+        return this;
+    }
+
+    public IThenProduct HasImageOfType(string contentType)
+    {
+        AddAsyncVerification(v => v.ForImageUrl(async imageUrl =>
+            (await _app.Erp().GetProductImage().ImageUrl(imageUrl).Execute())
+                .ShouldSucceed()
+                .ContentType(contentType)
+                .NotEmpty()));
+        return this;
+    }
 }

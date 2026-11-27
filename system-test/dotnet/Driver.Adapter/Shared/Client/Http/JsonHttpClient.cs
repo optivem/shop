@@ -64,6 +64,24 @@ public class JsonHttpClient<E> : IDisposable
     public async Task<Result<VoidValue, E>> GetAsync(string path)
         => await GetResultOrFailureAsync<VoidValue>(await DoGetAsync(path));
 
+    /// <summary>
+    /// GETs a non-JSON resource such as an image. The URL is resolved against the base URL the way a browser
+    /// resolves a link, so a root-relative URL ("/erp/images/X.jpg") keeps only the base URL's scheme and host.
+    /// </summary>
+    public async Task<Result<BinaryResponse, E>> GetBinaryAsync(string url)
+    {
+        var httpRequest = new HttpRequestMessage(HttpMethod.Get, new Uri(new Uri(_baseUrl), url));
+        var httpResponse = await SendRequest(httpRequest);
+
+        if (!httpResponse.IsSuccessStatusCode)
+        {
+            return await GetResultOrFailureAsync<BinaryResponse>(httpResponse);
+        }
+
+        var body = await httpResponse.Content.ReadAsByteArrayAsync();
+        return Result<BinaryResponse, E>.Success(new BinaryResponse(httpResponse.Content.Headers.ContentType?.MediaType, body));
+    }
+
     public async Task<Result<T, E>> PostAsync<T>(string path, object request)
         => await GetResultOrFailureAsync<T>(await DoPostAsync(path, request));
 

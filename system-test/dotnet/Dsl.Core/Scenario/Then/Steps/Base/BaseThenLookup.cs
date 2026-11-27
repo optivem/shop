@@ -11,7 +11,7 @@ public abstract class BaseThenLookup<TVerification>
 {
     protected readonly UseCaseDsl _app;
     private readonly Func<Task> _prelude;
-    private readonly List<Action<TVerification>> _verifications = [];
+    private readonly List<Func<TVerification, Task>> _verifications = [];
 
     protected BaseThenLookup(UseCaseDsl app, Func<Task> prelude)
     {
@@ -22,6 +22,16 @@ public abstract class BaseThenLookup<TVerification>
     protected abstract Task<TVerification> Fetch();
 
     protected void AddVerification(Action<TVerification> verification)
+    {
+        _verifications.Add(v =>
+        {
+            verification(v);
+            return Task.CompletedTask;
+        });
+    }
+
+    /// <summary>For an assertion that itself calls an external system (e.g. fetching the image a product points at).</summary>
+    protected void AddAsyncVerification(Func<TVerification, Task> verification)
     {
         _verifications.Add(verification);
     }
@@ -42,7 +52,7 @@ public abstract class BaseThenLookup<TVerification>
         var verification = await Fetch();
         foreach (var v in _verifications)
         {
-            v(verification);
+            await v(verification);
         }
     }
 }

@@ -15,6 +15,7 @@ public class ReturnsProduct extends BaseErpUseCase<Void, VoidVerification> {
     private String description;
     private String category;
     private String brand;
+    private String imageUrl;
 
     public ReturnsProduct(ErpDriver driver, UseCaseContext context) {
         super(driver, context);
@@ -50,6 +51,11 @@ public class ReturnsProduct extends BaseErpUseCase<Void, VoidVerification> {
         return this;
     }
 
+    public ReturnsProduct imageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+        return this;
+    }
+
     @Override
     public UseCaseResult<Void, VoidVerification> execute() {
         var sku = context.getParamValue(skuParamAlias);
@@ -61,6 +67,7 @@ public class ReturnsProduct extends BaseErpUseCase<Void, VoidVerification> {
                 .description(description)
                 .category(category)
                 .brand(brand)
+                .imageUrl(imageUrl)
                 .build();
 
         var result = driver.returnsProduct(request);

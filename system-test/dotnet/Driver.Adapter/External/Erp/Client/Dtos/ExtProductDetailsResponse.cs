@@ -8,5 +8,6 @@ public class ExtProductDetailsResponse
     public decimal Price { get; set; }
     public required string Category { get; set; }
     public required string Brand { get; set; }
+    public string? ImageUrl { get; set; }
 }
 

@@ -3,6 +3,8 @@ import type { GetTimeResponse } from '../../../../driver/port/external/clock/dto
 import type { GetProductResponse } from '../../../../driver/port/external/erp/dtos/GetProductResponse.js';
 import type { GetProductsResponse } from '../../../../driver/port/external/erp/dtos/GetProductsResponse.js';
 import type { GetTaxResponse } from '../../../../driver/port/external/tax/dtos/GetTaxResponse.js';
+import { GetProductImageVerification } from '../../usecase/external/erp/usecases/GetProductImageVerification.js';
+import { GetProductVerification } from '../../usecase/external/erp/usecases/GetProductVerification.js';
 import { GetProductsVerification } from '../../usecase/external/erp/usecases/GetProductsVerification.js';
 import type { UseCaseContext } from '../../shared/use-case-context.js';
 import type { AppContext } from '../app-context.js';
@@ -12,7 +14,7 @@ import type { ThenStage as IThenStage } from '../../../port/then/then-stage.js';
 
 export class ThenContractStage implements PromiseLike<void>, IThenStage {
   private readonly _clockAssertions: ((time: GetTimeResponse) => void)[] = [];
-  private readonly _productAssertions = new Map<string, ((product: GetProductResponse) => void)[]>();
+  private readonly _productAssertions = new Map<string, ((product: GetProductResponse) => void | Promise<void>)[]>();
   private readonly _productListAssertions: ((products: GetProductsResponse) => void)[] = [];
   private readonly _countryAssertions = new Map<string, ((tax: GetTaxResponse) => void)[]>();
   private _executionPromise: Promise<void> | null = null;
@@ -43,10 +45,14 @@ export class ThenContractStage implements PromiseLike<void>, IThenStage {
     this._clockAssertions.push(fn);
   }
 
-  _addProductAssertion(sku: string, fn: (product: GetProductResponse) => void): void {
+  _addProductAssertion(sku: string, fn: (product: GetProductResponse) => void | Promise<void>): void {
     const assertions = this._productAssertions.get(sku) ?? [];
     assertions.push(fn);
     this._productAssertions.set(sku, assertions);
+  }
+
+  _getProductImage(imageUrl: string) {
+    return this.app.erpDriver.getProductImage({ imageUrl });
   }
 
   _addProductListAssertion(fn: (products: GetProductsResponse) => void): void {
@@ -102,7 +108,7 @@ export class ThenContractStage implements PromiseLike<void>, IThenStage {
       const productResult = await this.app.erpDriver.getProduct({ sku: resolvedSku });
       expect(productResult.success).toBe(true);
       if (productResult.success) {
-        for (const fn of assertions) fn(productResult.value);
+        for (const fn of assertions) await fn(productResult.value);
       }
     }
   }
@@ -210,6 +216,26 @@ export class ThenContractProduct implements PromiseLike<void> {
   hasBrand(brand: string): this {
     this.stage._addProductAssertion(this.sku, (p) => {
       expect(p.brand).toBe(brand);
+    });
+    return this;
+  }
+
+  hasImageUrl(imageUrl: string): this {
+    this.stage._addProductAssertion(this.sku, (p) => {
+      new GetProductVerification(p, this.stage.useCaseContext).imageUrl(imageUrl);
+    });
+    return this;
+  }
+
+  hasImageOfType(contentType: string): this {
+    this.stage._addProductAssertion(this.sku, async (p) => {
+      await new GetProductVerification(p, this.stage.useCaseContext).forImageUrl(async (imageUrl) => {
+        const imageResult = await this.stage._getProductImage(imageUrl);
+        expect(imageResult.success, `Expected the image at '${imageUrl}' to be served`).toBe(true);
+        if (imageResult.success) {
+          new GetProductImageVerification(imageResult.value, this.stage.useCaseContext).contentType(contentType).notEmpty();
+        }
+      });
     });
     return this;
   }

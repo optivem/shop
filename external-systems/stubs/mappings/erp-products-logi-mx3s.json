@@ -11,7 +11,8 @@
       "description": "Wireless performance mouse with quiet clicks",
       "price": 99.99,
       "category": "Accessories",
-      "brand": "Logitech"
+      "brand": "Logitech",
+      "imageUrl": "/erp/images/LOGI-MX3S.jpg"
     },
     "headers": {
       "Content-Type": "application/json"

@@ -74,6 +74,9 @@ public class DefaultGivensTest
         public Task<Result<GetProductsResponse, ErpErrorResponse>> GetProductsAsync() =>
             throw new NotSupportedException();
 
+        public Task<Result<GetProductImageResponse, ErpErrorResponse>> GetProductImageAsync(GetProductImageRequest request) =>
+            throw new NotSupportedException();
+
         public Task<Result<VoidValue, ErpErrorResponse>> ReturnsProductsAsync(ReturnsProductsRequest request) => Ok();
 
         public Task<Result<VoidValue, ErpErrorResponse>> ReturnsPromotionAsync(ReturnsPromotionRequest request) => Ok();

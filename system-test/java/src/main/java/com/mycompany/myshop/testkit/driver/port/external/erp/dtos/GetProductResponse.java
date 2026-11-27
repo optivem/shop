@@ -18,4 +18,5 @@ public class GetProductResponse {
     private String description;
     private String category;
     private String brand;
+    private String imageUrl;
 }

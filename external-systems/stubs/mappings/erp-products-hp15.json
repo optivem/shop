@@ -11,7 +11,8 @@
       "description": "15.6-inch laptop with Intel Core i5 processor",
       "price": 699.99,
       "category": "Laptops",
-      "brand": "HP"
+      "brand": "HP",
+      "imageUrl": "/erp/images/HP-15.jpg"
     },
     "headers": {
       "Content-Type": "application/json"

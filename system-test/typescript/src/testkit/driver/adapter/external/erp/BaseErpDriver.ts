@@ -1,6 +1,8 @@
 import { type Result, success, failure } from '../../../../common/result.js';
 import { nonEmptyOr } from '../../../../common/fallback.js';
 import type { ErpErrorResponse } from '../../../port/external/erp/dtos/errors/ErpErrorResponse.js';
+import type { GetProductImageRequest } from '../../../port/external/erp/dtos/GetProductImageRequest.js';
+import type { GetProductImageResponse } from '../../../port/external/erp/dtos/GetProductImageResponse.js';
 import type { GetProductRequest } from '../../../port/external/erp/dtos/GetProductRequest.js';
 import type { GetProductResponse } from '../../../port/external/erp/dtos/GetProductResponse.js';
 import type { GetProductsResponse } from '../../../port/external/erp/dtos/GetProductsResponse.js';
@@ -37,6 +39,12 @@ export abstract class BaseErpDriver<TClient extends BaseErpClient> implements Er
     return success({ products: result.value.map((product) => BaseErpDriver.toGetProductResponse(product, '')) });
   }
 
+  async getProductImage(request: GetProductImageRequest): Promise<Result<GetProductImageResponse, ErpErrorResponse>> {
+    const result = await this.client.getImage(request.imageUrl);
+    if (!result.success) return failure(result.error);
+    return success({ contentType: result.value.contentType, sizeInBytes: result.value.sizeInBytes });
+  }
+
   protected static toExtProductDetails(request: ReturnsProductRequest): ExtProductDetailsResponse {
     return {
       id: request.sku,
@@ -45,6 +53,7 @@ export abstract class BaseErpDriver<TClient extends BaseErpClient> implements Er
       price: Number.parseFloat(request.price),
       category: request.category ?? BaseErpDriver.DEFAULT_CATEGORY,
       brand: request.brand ?? BaseErpDriver.DEFAULT_BRAND,
+      imageUrl: request.imageUrl,
     };
   }
 
@@ -56,6 +65,7 @@ export abstract class BaseErpDriver<TClient extends BaseErpClient> implements Er
       category: product.category ?? '',
       brand: product.brand ?? '',
       price: Number.parseFloat(String(product.price)),
+      imageUrl: product.imageUrl,
     };
   }
 

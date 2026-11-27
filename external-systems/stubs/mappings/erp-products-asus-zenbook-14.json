@@ -11,7 +11,8 @@
       "description": "14-inch OLED ultrabook with Intel Core Ultra 7 processor",
       "price": 899.99,
       "category": "Laptops",
-      "brand": "ASUS"
+      "brand": "ASUS",
+      "imageUrl": "/erp/images/ASUS-ZENBOOK-14.jpg"
     },
     "headers": {
       "Content-Type": "application/json"

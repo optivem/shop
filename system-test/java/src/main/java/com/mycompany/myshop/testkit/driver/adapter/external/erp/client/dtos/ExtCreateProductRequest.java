@@ -12,4 +12,5 @@ public class ExtCreateProductRequest {
     private String price;
     private String category;
     private String brand;
+    private String imageUrl;
 }

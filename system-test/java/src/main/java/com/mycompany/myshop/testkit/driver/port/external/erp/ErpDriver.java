@@ -1,5 +1,7 @@
 package com.mycompany.myshop.testkit.driver.port.external.erp;
 
+import com.mycompany.myshop.testkit.driver.port.external.erp.dtos.GetProductImageRequest;
+import com.mycompany.myshop.testkit.driver.port.external.erp.dtos.GetProductImageResponse;
 import com.mycompany.myshop.testkit.driver.port.external.erp.dtos.GetProductRequest;
 import com.mycompany.myshop.testkit.driver.port.external.erp.dtos.GetProductResponse;
 import com.mycompany.myshop.testkit.driver.port.external.erp.dtos.GetProductsResponse;
@@ -15,6 +17,9 @@ public interface ErpDriver extends AutoCloseable {
     Result<GetProductResponse, ErpErrorResponse> getProduct(GetProductRequest request);
 
     Result<GetProductsResponse, ErpErrorResponse> getProducts();
+
+    /** Fetches the image a product's image URL points at, from the ERP that gave the URL. */
+    Result<GetProductImageResponse, ErpErrorResponse> getProductImage(GetProductImageRequest request);
 
     Result<Void, ErpErrorResponse> returnsProduct(ReturnsProductRequest request);
 

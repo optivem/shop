@@ -75,6 +75,7 @@ public class ErpStubDriver extends BaseErpDriver<ErpStubClient> {
                 .price(Converter.toBigDecimal(request.getPrice()))
                 .category(orDefault(request.getCategory(), DEFAULT_CATEGORY))
                 .brand(orDefault(request.getBrand(), DEFAULT_BRAND))
+                .imageUrl(request.getImageUrl())
                 .build();
     }
 

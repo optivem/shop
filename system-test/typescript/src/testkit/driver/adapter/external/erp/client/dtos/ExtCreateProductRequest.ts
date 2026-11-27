@@ -5,4 +5,5 @@ export interface ExtCreateProductRequest {
   price: string | number;
   category: string;
   brand: string;
+  imageUrl?: string;
 }

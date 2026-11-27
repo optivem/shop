@@ -14,6 +14,7 @@ public class GivenProductImpl extends BaseGivenStep implements GivenProduct {
     private String description;
     private String category;
     private String brand;
+    private String imageUrl;
 
     public GivenProductImpl(GivenImpl given) {
         super(given);
@@ -56,6 +57,12 @@ public class GivenProductImpl extends BaseGivenStep implements GivenProduct {
     }
 
     @Override
+    public GivenProductImpl withImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+        return this;
+    }
+
+    @Override
     public void execute(UseCaseDsl app) {
         app.erp().returnsProduct()
                 .sku(sku)
@@ -64,6 +71,7 @@ public class GivenProductImpl extends BaseGivenStep implements GivenProduct {
                 .description(description)
                 .category(category)
                 .brand(brand)
+                .imageUrl(imageUrl)
                 .execute()
                 .shouldSucceed();
     }

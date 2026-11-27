@@ -9,4 +9,6 @@ export interface ViewProductDetailsResponse {
   category: string | null;
   /** Serialized as a 2-decimal string (e.g. "12.00") by the DecimalFormatInterceptor. */
   price: Decimal;
+  /** The shop's own URL for the product photo (GET /api/products/{sku}/image); null when the ERP has none. */
+  imageUrl: string | null;
 }

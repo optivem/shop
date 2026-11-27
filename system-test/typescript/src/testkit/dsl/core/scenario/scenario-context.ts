@@ -20,6 +20,7 @@ export interface ProductConfig {
   description?: string;
   category?: string;
   brand?: string;
+  imageUrl?: string;
 }
 
 export interface PromotionConfig {

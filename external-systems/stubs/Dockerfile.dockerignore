@@ -1,0 +1,6 @@
+# The build context is external-systems/ (see the Dockerfile); send only what the image uses.
+*
+!stubs
+stubs/Dockerfile*
+!erp-images
+erp-images/SOURCES.md

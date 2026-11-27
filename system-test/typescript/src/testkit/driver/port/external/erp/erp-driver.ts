@@ -1,5 +1,7 @@
 import type { Result } from '../../../../common/result.js';
 import type { ErpErrorResponse } from './dtos/errors/ErpErrorResponse.js';
+import type { GetProductImageRequest } from './dtos/GetProductImageRequest.js';
+import type { GetProductImageResponse } from './dtos/GetProductImageResponse.js';
 import type { GetProductRequest } from './dtos/GetProductRequest.js';
 import type { GetProductResponse } from './dtos/GetProductResponse.js';
 import type { GetProductsResponse } from './dtos/GetProductsResponse.js';
@@ -11,6 +13,8 @@ export interface ErpDriver {
   goToErp(): Promise<Result<void, ErpErrorResponse>>;
   getProduct(request: GetProductRequest): Promise<Result<GetProductResponse, ErpErrorResponse>>;
   getProducts(): Promise<Result<GetProductsResponse, ErpErrorResponse>>;
+  /** Fetches the image a product's image URL points at, from the ERP that gave the URL. */
+  getProductImage(request: GetProductImageRequest): Promise<Result<GetProductImageResponse, ErpErrorResponse>>;
   returnsProduct(request: ReturnsProductRequest): Promise<Result<void, ErpErrorResponse>>;
   /** Stages the ERP's enumerable product list (GET /api/products). */
   returnsProducts(request: ReturnsProductsRequest): Promise<Result<void, ErpErrorResponse>>;

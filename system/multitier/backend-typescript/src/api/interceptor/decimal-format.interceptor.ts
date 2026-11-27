@@ -3,6 +3,7 @@ import {
   ExecutionContext,
   Injectable,
   NestInterceptor,
+  StreamableFile,
 } from '@nestjs/common';
 import Decimal from 'decimal.js';
 import type { Response } from 'express';
@@ -67,7 +68,12 @@ export class DecimalFormatInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     return next.handle().pipe(
       map((data: unknown) => {
-        if (data === undefined || data === null) {
+        // A file (e.g. a product image) is not JSON: Nest streams it with its own content type.
+        if (
+          data === undefined ||
+          data === null ||
+          data instanceof StreamableFile
+        ) {
           return data;
         }
 

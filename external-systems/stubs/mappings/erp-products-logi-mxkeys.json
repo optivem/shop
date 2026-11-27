@@ -11,7 +11,8 @@
       "description": "Wireless illuminated keyboard for Mac and PC",
       "price": 109.99,
       "category": "Accessories",
-      "brand": "Logitech"
+      "brand": "Logitech",
+      "imageUrl": "/erp/images/LOGI-MXKEYS.jpg"
     },
     "headers": {
       "Content-Type": "application/json"

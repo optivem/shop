@@ -1,5 +1,6 @@
 package com.mycompany.myshop.testkit.driver.adapter.external.erp.client;
 
+import com.mycompany.myshop.testkit.driver.adapter.external.erp.client.dtos.ExtGetImageResponse;
 import com.mycompany.myshop.testkit.driver.adapter.external.erp.client.dtos.ExtProductDetailsResponse;
 import com.mycompany.myshop.testkit.driver.adapter.external.erp.client.dtos.error.ExtErpErrorResponse;
 import com.mycompany.myshop.testkit.driver.adapter.shared.client.http.JsonHttpClient;
@@ -34,5 +35,14 @@ public abstract class BaseErpClient implements AutoCloseable {
     public Result<List<ExtProductDetailsResponse>, ExtErpErrorResponse> getProducts() {
         return httpClient.get(PRODUCTS_ENDPOINT, ExtProductDetailsResponse[].class)
                 .map(List::of);
+    }
+
+    /** Fetches a product image by the URL the ERP gave on the product (root-relative, e.g. "/erp/images/HP-15.jpg"). */
+    public Result<ExtGetImageResponse, ExtErpErrorResponse> getImage(String imageUrl) {
+        return httpClient.getBinary(imageUrl)
+                .map(response -> ExtGetImageResponse.builder()
+                        .contentType(response.contentType())
+                        .sizeInBytes(response.body().length)
+                        .build());
     }
 }

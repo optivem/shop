@@ -8,4 +8,6 @@ public class ErpProductDetailsResponse
     public decimal Price { get; set; }
     public string? Category { get; set; }
     public string? Brand { get; set; }
+    // Where the ERP serves the product photo, as a path on the ERP (e.g. /erp/images/HP-15.jpg); null when it has none.
+    public string? ImageUrl { get; set; }
 }

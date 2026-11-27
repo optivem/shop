@@ -11,7 +11,8 @@
       "description": "14-inch business laptop",
       "price": 999.99,
       "category": "Laptops",
-      "brand": "Lenovo"
+      "brand": "Lenovo",
+      "imageUrl": "/erp/images/LENOVO-T14.jpg"
     },
     "headers": {
       "Content-Type": "application/json"

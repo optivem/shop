@@ -14,4 +14,6 @@ public interface GivenProduct extends GivenStep {
     GivenProduct withCategory(String category);
 
     GivenProduct withBrand(String brand);
+
+    GivenProduct withImageUrl(String imageUrl);
 }
