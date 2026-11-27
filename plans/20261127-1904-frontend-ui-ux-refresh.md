@@ -1,0 +1,34 @@
+# 2026-11-27 19:04:43 UTC — Frontend UI/UX refresh of the shop
+
+## TL;DR
+
+**Why:** The shop UI was partly restyled in the earlier "Market redesign" (commit `578234dd`: catalog filters, dense cards, promo tiles with credited Unsplash photos), but product cards still have no product imagery and the refresh is not finished or consistent across all frontends.
+**End result:** `frontend-react` (the production-deployed UI) has a polished, mobile-friendly showcase path (monolith UIs deferred), and each product shows a real photo that **comes from the ERP**: the made-up ERP (simulator + stub) owns the image files and returns an `imageUrl` per product, and the shop backend proxies the image to the browser.
+
+**Approach:** straight implementation, no ATDD flow (no ATDD agents, no acceptance-test-first). The goal is UX polish for a job-application showcase; tests are still kept green and extended where the change needs them.
+
+## Outcomes
+
+- **Product images are ERP data.** The ERP owns the photos the way it owns title and price: both ERP implementations (simulator `mock-server.js` and the WireMock stub) serve the same committed image files and return `imageUrl` on each product (e.g. `"imageUrl": "/erp/images/HP-15.jpg"`).
+- **The ERP stays internal.** The browser never calls the ERP; the shop backend exposes `GET /api/products/{id}/image`, which fetches the image from the ERP and streams it back (same flow as prices: ERP → backend → UI).
+- Each product card and product detail page shows the product photo (e.g. "HP Laptop 15" shows a laptop photo). Photos are Unsplash images downloaded and committed to the repo, so nothing depends on Unsplash at runtime.
+- **Every product has a photo** — no imageless products in the simulator or stub data. A neutral placeholder exists only as a defensive fallback (image fails to load), never as an intended state.
+- ERP contract tests cover the new `imageUrl` field and the image endpoint, so the stub and the simulator can't drift apart.
+- Unsplash photographers are credited the same way the promo tiles already are (footer credit block).
+- `frontend-react` (the one quick-deploy ships to production, i.e. what a recruiter opens) has a polished showcase path: catalog → product detail → cart → checkout → order confirmation, working well on mobile. Admin and order-history screens are out of scope. Monolith UIs are deferred.
+- System tests (smoke/acceptance/e2e) stay green; UI selectors used by e2e drivers are unchanged or updated in all languages together.
+
+## ▶ Next executable step (resume here)
+
+Step 1 (ERP side). Pick one Unsplash photo per product listed in `external-systems/stubs/mappings/erp-products-list.json` and in the simulator's product data in `external-systems/simulators/mock-server.js`. Resize to ~600px wide JPEG and commit once under `external-systems/erp-images/<product-id>.jpg`, recording photographer + photo URL. Make the simulator serve them at `/erp/images/<id>.jpg` and the stub serve the same files (copy into the stub image / `__files` at Docker build, not a second committed copy), and add `imageUrl` to every product in both. Gate: `curl` the image and product list from both containers locally. Unblocks Step 2.
+
+## Steps
+
+- [ ] Step 1: **ERP owns the images** — commit the photos once under `external-systems/erp-images/`; simulator serves `/erp/images/<id>.jpg`; stub serves the same files via a mapping + `__files` (copied at build); `imageUrl` added to every product in the simulator data and the stub mappings (`erp-products-list.json`, `erp-products-hp15.json`, …).
+- [ ] Step 2: **ERP contract tests** — extend the ERP contract tests (stub + real) in all three languages to assert `imageUrl` on products and that the image URL returns `200 image/jpeg`.
+- [ ] Step 3: **Backend proxy** — in each backend (Java, .NET, TypeScript × monolith + multitier), read `imageUrl` in the ERP client/DTO, add `GET /api/products/{id}/image` that fetches from the ERP and streams it (404 when the product has no image), and expose the shop image URL on the product response the frontend uses.
+- [ ] Step 4: **Frontend images (`frontend-react`)** — render the product image on catalog cards and product detail via the shop image URL, with a placeholder fallback; extend the existing Unsplash credit block with the product photographers.
+- [ ] Step 5: **Showcase-path refresh (`frontend-react`)** — polish the screens a visitor sees in a 2-minute click-through: catalog, product detail, cart, checkout, order confirmation, plus mobile layout (16px gutter, no horizontal scroll, touch-sized controls). Use the `frontend-design:frontend-design` skill for aesthetic direction; keep e2e-driver selectors stable.
+- [ ] Step 6: **System tests** — adjust e2e coverage where Steps 4–5 change the UI (every product shows its image), keeping driver selectors in sync across languages.
+- [ ] Step 7: Compile all (`./compile-all.sh`), run sample system tests per language, commit, quick-deploy to production.
+- [ ] Step 8 (deferred, optional): port the image + refresh to the monolith Java / .NET / TypeScript UIs.
