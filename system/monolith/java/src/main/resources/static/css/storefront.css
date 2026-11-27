@@ -82,36 +82,64 @@ body {
     font-variant-numeric: tabular-nums;
 }
 
-/* Utility strip (navy) */
+/* Utility strip (navy): the store's standing promises, then the demo-store note. */
 .store-utility {
     background-color: var(--market-primary);
-    color: var(--market-on-primary);
+    color: var(--market-on-primary-muted);
     font-size: var(--market-font-size-sm);
+}
+
+.store-utility-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--market-space-1) var(--market-space-5);
+    padding-top: var(--market-space-2);
+    padding-bottom: var(--market-space-2);
+}
+
+.store-utility-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--market-on-primary);
+    font-weight: var(--market-font-weight-medium);
+}
+
+.store-utility-note {
+    margin-left: auto;
+}
+
+@media (max-width: 575.98px) {
+    .store-utility-note {
+        display: none;
+    }
 }
 
 /* Header row: logo · search · actions; on narrow screens the search drops to its own full-width line. */
 .store-header-top {
     background-color: var(--market-surface);
-    border-bottom: 1px solid var(--market-border);
+    position: relative;
+    z-index: 20;
 }
 
 .store-header-row {
-    gap: var(--market-space-3) var(--market-space-6);
+    gap: var(--market-space-3) var(--market-space-4);
 }
 
 .store-logo {
     color: var(--market-primary);
     text-decoration: none;
     font-weight: var(--market-font-weight-heavy);
-    font-size: var(--market-font-size-xl);
-    letter-spacing: -0.04em;
+    font-size: 1.625rem;
+    letter-spacing: -0.035em;
     text-transform: lowercase;
     display: inline-flex;
     align-items: center;
     min-height: var(--market-tap-target);
 }
 
-/* Orange on white is 3.6:1: fine for the large heavy logo mark, not for body copy. */
+/* Orange on white is 3.6:1: fine for the 26px heavy logo (large text), not for body copy. */
 .store-logo-mark {
     color: var(--market-accent);
 }
@@ -120,20 +148,27 @@ body {
     color: var(--market-primary-hover);
 }
 
+/* Phones: menu button, logo, cart (as in the mobile mockup). Desktop: the logo leads, then Categories and search. */
+@media (min-width: 992px) {
+    .store-logo {
+        order: -1;
+    }
+}
+
 .store-search {
     order: 3;
     flex: 1 1 100%;
     display: flex;
     align-items: stretch;
-    height: 46px;
-    border: 2px solid var(--market-ink);
-    border-radius: var(--market-radius-lg);
+    height: 48px;
+    border: 2px solid var(--market-primary);
+    border-radius: var(--market-radius-md);
     overflow: hidden;
     background: var(--market-surface);
 }
 
 .store-search:focus-within {
-    box-shadow: 0 0 0 3px rgba(var(--market-primary-rgb), 0.35);
+    box-shadow: 0 0 0 3px rgba(var(--market-primary-rgb), 0.25);
 }
 
 .store-search-scope {
@@ -169,14 +204,23 @@ body {
 
 .store-search-button {
     border: 0;
-    background: var(--market-ink);
-    color: var(--market-surface);
-    font-weight: var(--market-font-weight-bold);
-    padding: 0 var(--market-space-5);
+    background: var(--market-primary);
+    color: var(--market-on-primary);
+    width: 56px;
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .store-search-button:hover {
-    background: var(--market-text-secondary);
+    background: var(--market-primary-hover);
+}
+
+@media (max-width: 575.98px) {
+    .store-search-scope {
+        max-width: 5.5rem;
+    }
 }
 
 @media (min-width: 992px) {
@@ -239,14 +283,27 @@ body {
     padding: 3px 5px;
     font-size: 11px;
     line-height: 1;
-    background-color: var(--market-primary);
-    color: var(--market-on-primary);
+    background-color: var(--market-cta);
+    color: var(--market-on-cta);
+}
+
+@media (max-width: 575.98px) {
+    .store-header-actions {
+        gap: var(--market-space-2) !important;
+    }
+
+    .store-header-hint,
+    .store-cart-label {
+        display: none;
+    }
 }
 
 /* Category / account nav row: one row that scrolls sideways on narrow screens (never a second copy). */
 .store-header-nav {
     background-color: var(--market-surface);
-    border-bottom: 1px solid var(--market-border);
+    border-top: 1px solid var(--market-divider);
+    box-shadow: 0 1px 0 var(--market-border);
+    font-size: var(--market-font-size-sm);
 }
 
 .store-nav-row {
@@ -274,7 +331,7 @@ body {
     min-height: var(--market-tap-target);
     white-space: nowrap;
     color: var(--market-ink);
-    font-weight: var(--market-font-weight-medium);
+    font-weight: var(--market-font-weight-bold);
     text-decoration: none;
 }
 
@@ -286,7 +343,7 @@ body {
 /* Footer */
 .store-footer {
     background-color: var(--market-ink);
-    color: #cbd5e1;
+    color: var(--market-on-ink);
     font-size: var(--market-font-size-sm);
 }
 
@@ -306,7 +363,7 @@ body {
 }
 
 .store-footer .store-logo-mark {
-    color: var(--market-accent);
+    color: #fb923c;
 }
 
 .store-footer a {
@@ -323,7 +380,7 @@ body {
 }
 
 .store-footer a:focus-visible {
-    outline-color: #5eead4;
+    outline-color: #fb923c;
 }
 
 .store-footer-bottom {

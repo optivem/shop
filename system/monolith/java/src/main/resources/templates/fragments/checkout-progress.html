@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<!--
+  Where the visitor is on the way to an order: Cart, then Checkout, then Confirmation (Retail look).
+  Usage: th:replace="~{fragments/checkout-progress :: progress('Cart')}" (the current step).
+-->
+<ol th:fragment="progress(current)" class="checkout-progress" aria-label="Checkout progress"
+    th:with="steps=${T(java.util.List).of('Cart', 'Checkout', 'Confirmation')}">
+    <li th:each="step, iter : ${steps}"
+        th:with="currentIndex=${steps.indexOf(current)},
+                 state=${iter.index lt currentIndex ? 'done' : (iter.index == currentIndex ? 'current' : 'next')}"
+        th:class="${'checkout-progress-step is-' + state}"
+        th:attr="aria-current=${state == 'current' ? 'step' : null}">
+        <span class="checkout-progress-marker" aria-hidden="true">
+            <svg th:if="${state == 'done'}" th:replace="~{fragments/icons :: icon('check', 14, null, 3)}"></svg>
+            <th:block th:unless="${state == 'done'}" th:text="${iter.count}">1</th:block>
+        </span>
+        <th:block th:text="${step}">Cart</th:block>
+    </li>
+</ol>
+</body>
+</html>

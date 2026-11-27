@@ -1,6 +1,7 @@
 package com.mycompany.myshop.controllers.web;
 
 import com.mycompany.myshop.controllers.web.storefront.CatalogQuery;
+import com.mycompany.myshop.controllers.web.storefront.HomeSections;
 import com.mycompany.myshop.controllers.web.storefront.StorefrontModelInterceptor;
 import com.mycompany.myshop.core.dtos.ViewProductDetailsResponse;
 import com.mycompany.myshop.core.services.ProductService;
@@ -60,6 +61,10 @@ public class CatalogController {
         model.addAttribute("searchQuery", query.q());
         model.addAttribute("filterCategories", CatalogQuery.categoriesOf(products));
         model.addAttribute("filterBrands", CatalogQuery.brandsOf(products));
+        // The home sections only show on the plain catalog; a search or filter goes straight to results.
+        var isHome = !unavailable && !products.isEmpty() && query.q().isBlank() && query.category().isEmpty()
+                && query.brands().isEmpty();
+        model.addAttribute("home", isHome ? HomeSections.of(products) : null);
         model.addAttribute("sortOptions", CatalogQuery.SORT_OPTIONS);
         return "catalog";
     }

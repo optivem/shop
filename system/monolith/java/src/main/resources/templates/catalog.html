@@ -7,28 +7,89 @@
 <body>
 <!-- `/` (storefront-ux §4.1, UC-006): browse, search, filter and sort the catalog; add a product with quantity 1. -->
 <div id="page-content">
-    <!-- The home hero and two promo tiles: the only stock photos (static/css/images/promo/, credited in the footer). -->
-    <section class="promo-tiles mb-4" aria-label="Promotions">
-        <div class="promo-hero">
-            <img class="promo-photo promo-photo-hero" th:src="@{/css/images/promo/laptop.jpg}" alt="Laptop on a white desk">
-            <div class="promo-hero-panel">
-                <span class="badge badge-deal">New season</span>
-                <h1 class="promo-hero-title">New season laptops</h1>
-                <p class="lead">Free shipping over $1,000</p>
-                <a href="/?category=Laptops" class="btn btn-primary">Shop laptops</a>
+    <!-- The home page above the full catalog (Retail look): deal hero, service tiles, round-photo category shortcuts, and the
+         Bestsellers / New arrivals rows. Shown only on the unfiltered catalog; the rows' cards carry no e2e test hooks, so
+         the driver queries (article[aria-label^='Product '], add-to-cart-<sku>) match only the catalog list below. -->
+    <div th:if="${home != null}" class="home-sections">
+        <section class="deal-hero" aria-label="Promotion">
+            <div class="deal-hero-copy">
+                <span class="badge badge-deal">Featured</span>
+                <h1 class="deal-hero-title">A 4K workspace, sorted.</h1>
+                <p th:if="${home.featured() != null}" class="deal-hero-lead">
+                    <th:block th:text="${home.featured().title + ': ' + (#strings.isEmpty(home.featured().description) ? home.featured().category : home.featured().description) + '.'}">Monitor: description.</th:block>
+                    <strong class="deal-hero-price price" th:text="${money.format(home.featured().price)}">$0.00</strong>
+                </p>
+                <p th:if="${home.featured() == null}" class="deal-hero-lead">Sharp monitors for a cleaner desk.</p>
+                <a th:href="${home.featured() != null ? '/products/' + #uris.escapePathSegment(home.featured().sku) : '/?category=Monitors'}"
+                   class="btn deal-hero-cta" th:text="${home.featured() != null ? 'See the monitor' : 'Shop monitors'}">See the monitor</a>
             </div>
-        </div>
-        <div class="promo-side">
-            <a href="/?category=Monitors" class="promo-tile">
-                <img class="promo-photo" th:src="@{/css/images/promo/monitor.jpg}" alt="Monitor on a desk" loading="lazy">
-                <span class="promo-tile-label">Shop monitors <svg th:replace="~{fragments/icons :: icon('arrow-right', 16, null, 2)}"></svg></span>
-            </a>
-            <a href="/?category=Accessories" class="promo-tile">
-                <img class="promo-photo" th:src="@{/css/images/promo/keyboard.jpg}" alt="Mechanical keyboard" loading="lazy">
-                <span class="promo-tile-label">Build your desk setup <svg th:replace="~{fragments/icons :: icon('arrow-right', 16, null, 2)}"></svg></span>
-            </a>
-        </div>
-    </section>
+            <div class="deal-hero-media">
+                <img class="deal-hero-photo" th:src="@{/css/images/promo/monitor.jpg}" alt="A 27-inch monitor on a tidy desk">
+            </div>
+        </section>
+
+        <ul class="service-tiles" aria-label="Our services">
+            <li class="service-tile">
+                <span class="service-tile-icon" aria-hidden="true"><svg th:replace="~{fragments/icons :: icon('truck', 22, null, 2)}"></svg></span>
+                <span><strong class="service-tile-title">Free shipping</strong><span class="service-tile-detail">on orders over $1,000</span></span>
+            </li>
+            <li class="service-tile">
+                <span class="service-tile-icon" aria-hidden="true"><svg th:replace="~{fragments/icons :: icon('rotate-ccw', 22, null, 2)}"></svg></span>
+                <span><strong class="service-tile-title">30-day returns</strong><span class="service-tile-detail">send it back within a month</span></span>
+            </li>
+            <li class="service-tile">
+                <span class="service-tile-icon" aria-hidden="true"><svg th:replace="~{fragments/icons :: icon('shield-check', 22, null, 2)}"></svg></span>
+                <span><strong class="service-tile-title">Secure checkout</strong><span class="service-tile-detail">signed in with your account</span></span>
+            </li>
+        </ul>
+
+        <section th:if="${!#lists.isEmpty(home.categories())}" class="home-section" aria-labelledby="home-categories-heading">
+            <h2 class="home-section-title" id="home-categories-heading">Shop by category</h2>
+            <ul class="category-shortcuts">
+                <li th:each="shortcut : ${home.categories()}">
+                    <a th:href="${'/?category=' + #uris.escapeQueryParam(shortcut.name())}" class="category-shortcut">
+                        <img th:if="${shortcut.photoUrl() != null}" class="category-shortcut-photo" th:src="${shortcut.photoUrl()}"
+                             alt="" width="56" height="56" loading="lazy">
+                        <span th:unless="${shortcut.photoUrl() != null}" class="category-shortcut-photo" aria-hidden="true"></span>
+                        <th:block th:text="${shortcut.name()}">Category</th:block>
+                    </a>
+                </li>
+            </ul>
+        </section>
+
+        <section th:if="${!#lists.isEmpty(home.bestsellers())}" class="home-section" aria-labelledby="home-bestsellers-heading">
+            <div class="home-section-head">
+                <h2 class="home-section-title" id="home-bestsellers-heading">Bestsellers</h2>
+                <a href="#catalog" class="home-section-link">See all products <svg th:replace="~{fragments/icons :: icon('arrow-right', 16, null, 2)}"></svg></a>
+            </div>
+            <div class="product-row">
+                <th:block th:each="product : ${home.bestsellers()}">
+                    <article th:replace="~{fragments/product-card :: card(${product}, false)}"></article>
+                </th:block>
+            </div>
+        </section>
+
+        <section th:if="${!#lists.isEmpty(home.newArrivals())}" class="home-section" aria-labelledby="home-new-heading">
+            <h2 class="home-section-title" id="home-new-heading">New arrivals</h2>
+            <ul class="compact-products">
+                <li th:each="product : ${home.newArrivals()}">
+                    <a th:href="${'/products/' + #uris.escapePathSegment(product.sku)}" class="compact-product">
+                        <span class="compact-product-thumb">
+                            <div th:replace="~{fragments/product-image :: image(${product.imageUrl}, '', ${product.brand}, 'square', true)}"></div>
+                        </span>
+                        <span class="compact-product-text">
+                            <span class="compact-product-tag">New</span>
+                            <span class="compact-product-title" th:text="${product.title}">Title</span>
+                            <span class="compact-product-price price" th:text="${money.format(product.price)}">$0.00</span>
+                        </span>
+                    </a>
+                </li>
+            </ul>
+        </section>
+    </div>
+    <h2 th:if="${home != null}" class="catalog-heading" id="catalog">All products</h2>
+    <h1 th:if="${home == null}" class="catalog-heading" id="catalog"
+        th:text="${query.category() != '' ? query.category() : (#strings.isEmpty(#strings.trim(query.q())) ? 'All products' : 'Search results')}">All products</h1>
     <div class="catalog-layout">
         <aside class="catalog-sidebar">
             <button type="button" class="btn btn-outline-secondary w-100 d-lg-none" aria-expanded="false"
@@ -91,31 +152,9 @@
             </div>
 
             <div th:if="${!unavailable and !#lists.isEmpty(shown)}" class="product-grid" aria-label="Product List">
-                <!-- One catalog tile: image and title link to the product page; "Add to cart" adds quantity 1. -->
-                <article th:each="product : ${shown}" class="product-card card h-100"
-                         th:attr="aria-label=${'Product ' + product.sku}">
-                    <a th:href="${'/products/' + #uris.escapePathSegment(product.sku)}" class="product-card-media"
-                       tabindex="-1" aria-hidden="true">
-                        <div th:replace="~{fragments/product-image :: image(${product.imageUrl}, ${product.title}, ${product.brand}, 'card', true)}"></div>
-                    </a>
-                    <div class="product-card-body">
-                        <div class="product-card-brand" aria-label="Product Brand" th:text="${product.brand}">Brand</div>
-                        <h3 class="product-card-title">
-                            <a th:href="${'/products/' + #uris.escapePathSegment(product.sku)}" class="product-title-link"
-                               data-testid="product-title" th:text="${product.title}">Title</a>
-                        </h3>
-                        <p th:if="${!#strings.isEmpty(product.description)}" class="product-card-spec"
-                           th:text="${product.description}">Description</p>
-                        <div class="price product-card-price" aria-label="Display Price" th:text="${money.format(product.price)}">$0.00</div>
-                        <form method="post" th:action="@{/cart/add}" class="mt-auto">
-                            <input type="hidden" name="sku" th:value="${product.sku}">
-                            <input type="hidden" name="quantity" value="1">
-                            <input type="hidden" name="returnUrl" th:value="${returnUrl}">
-                            <button type="submit" class="btn btn-cta w-100"
-                                    th:attr="data-testid=${'add-to-cart-' + product.sku}">Add to cart</button>
-                        </form>
-                    </div>
-                </article>
+                <th:block th:each="product : ${shown}">
+                    <article th:replace="~{fragments/product-card :: card(${product}, true)}"></article>
+                </th:block>
             </div>
         </section>
     </div>

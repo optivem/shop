@@ -15,6 +15,7 @@
         </ol>
     </nav>
 
+    <ol th:replace="~{fragments/checkout-progress :: progress('Checkout')}"></ol>
     <h1 class="h2 mb-4">Checkout</h1>
     <form class="row g-4 align-items-start" method="post" th:action="@{/checkout}" novalidate id="checkoutForm">
         <div class="col-lg-7 d-flex flex-column gap-4">

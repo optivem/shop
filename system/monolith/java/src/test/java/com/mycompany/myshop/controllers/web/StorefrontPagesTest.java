@@ -153,6 +153,69 @@ class StorefrontPagesTest {
     }
 
     @Test
+    void homeSectionsShowOnTheUnfilteredCatalogWithoutDuplicatingTheCatalogHooks() throws Exception {
+        when(productService.browseProducts()).thenReturn(List.of(
+                product("DELL-U2723QE", "Dell UltraSharp 27 4K", "Dell", "Monitors", "519.99"),
+                product("HP-15", "HP Laptop 15", "HP", "Laptops", "699.99"),
+                product("DELL-XPS", "Dell XPS 13", "Dell", "Laptops", "1299.99"),
+                product("ASUS-ZENBOOK-14", "ASUS Zenbook 14", "ASUS", "Laptops", "999.99")));
+
+        var html = mockMvc.perform(get("/")).andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        assertThat(html).contains("class=\"deal-hero\"", "A 4K workspace, sorted.", "$519.99", "href=\"/products/DELL-U2723QE\"")
+                .contains("class=\"service-tiles\"", "Shop by category", "Bestsellers", "New arrivals", "id=\"catalog\"");
+        // Hand-picked SKUs the catalog does not carry are skipped; the New arrivals row has no card hooks at all.
+        assertThat(html).contains("aria-label=\"Add HP Laptop 15 to cart\"").contains("aria-label=\"Add Dell XPS 13 to cart\"")
+                .doesNotContain("Add Logitech");
+        assertThat(count(html, "aria-label=\"Product HP-15\"")).isEqualTo(1);
+        assertThat(count(html, "data-testid=\"add-to-cart-HP-15\"")).isEqualTo(1);
+        assertThat(count(html, "aria-label=\"Product List\"")).isEqualTo(1);
+        assertThat(count(html, "data-testid=\"product-title\"")).isEqualTo(4);
+        assertThat(count(html, "aria-label=\"Search\"")).isEqualTo(1);
+    }
+
+    @Test
+    void homeSectionsAreLeftOutOfAFilteredOrSearchedCatalog() throws Exception {
+        for (var address : List.of("/?category=Laptops", "/?q=laptop", "/?brand=HP")) {
+            var html = mockMvc.perform(get(address)).andExpect(status().isOk())
+                    .andReturn().getResponse().getContentAsString();
+            assertThat(html).doesNotContain("class=\"deal-hero\"").doesNotContain("home-bestsellers-heading").contains("class=\"catalog-heading\"");
+        }
+    }
+
+    @Test
+    void productPageHasTheBuyBoxServiceTilesAndAboutPanel() throws Exception {
+        when(productService.viewProduct("HP-15")).thenReturn(product("HP-15", "HP Laptop 15", "HP", "Laptops", "699.99"));
+
+        var html = mockMvc.perform(get("/products/HP-15")).andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        assertThat(html).contains("product-buy-box", "product-detail-media", "service-tiles-compact", "About this product",
+                "aria-label=\"Add to Cart\"", "aria-label=\"Product Quantity\"", "aria-label=\"Product Description\"");
+    }
+
+    @Test
+    void cartCheckoutAndConfirmationShowTheCheckoutProgress() throws Exception {
+        when(profileService.getProfile(any())).thenReturn(savedProfile());
+        Cart.of(session).add("HP-15", 1);
+
+        var cart = mockMvc.perform(get("/cart").session(session)).andReturn().getResponse().getContentAsString();
+        assertThat(cart).contains("aria-label=\"Checkout progress\"", "checkout-progress-step is-current\" aria-current=\"step\"");
+        assertThat(count(cart, "is-next")).isEqualTo(2);
+
+        var checkout = mockMvc.perform(get("/checkout").session(session).with(customer())).andReturn().getResponse().getContentAsString();
+        assertThat(checkout).contains("checkout-progress-step is-done").contains("checkout-progress-step is-current");
+        assertThat(count(checkout, "is-next")).isEqualTo(1);
+    }
+
+    @Test
+    void anEmptyCartHasNoCheckoutProgress() throws Exception {
+        mockMvc.perform(get("/cart").session(session))
+                .andExpect(content().string(not(containsString("Checkout progress"))));
+    }
+
+    @Test
     void addingToTheCartGoesBackWithANoticeAndRaisesTheBadge() throws Exception {
         var result = mockMvc.perform(post("/cart/add").session(session).with(csrf())
                         .param("sku", "HP-15").param("quantity", "2").param("returnUrl", "/products/HP-15"))

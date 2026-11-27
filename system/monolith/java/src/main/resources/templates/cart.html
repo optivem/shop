@@ -14,6 +14,9 @@
         </ol>
     </nav>
 
+    <th:block th:if="${!#lists.isEmpty(lines)}">
+        <ol th:replace="~{fragments/checkout-progress :: progress('Cart')}"></ol>
+    </th:block>
     <h1 class="h2 mb-4">
         Shopping cart
         <span th:if="${!#lists.isEmpty(lines)}" class="cart-line-count" aria-label="Cart Line Count"

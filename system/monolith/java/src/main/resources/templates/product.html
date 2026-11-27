@@ -22,32 +22,25 @@
             </ol>
         </nav>
 
-        <div class="row g-4 align-items-start">
-            <div class="col-lg-7">
-                <div class="market-panel product-detail-media p-3">
-                    <div th:replace="~{fragments/product-image :: image(${product.imageUrl}, ${product.title}, ${product.brand}, 'card', false)}"></div>
-                </div>
+        <div class="product-detail">
+            <div class="product-detail-media market-panel">
+                <div th:replace="~{fragments/product-image :: image(${product.imageUrl}, ${product.title}, ${product.brand}, 'card', false)}"></div>
             </div>
-            <div class="col-lg-5 d-flex flex-column gap-3">
-                <div class="market-panel p-4">
-                    <p class="product-meta mb-2">
-                        <span class="product-meta-brand" aria-label="Product Brand" th:text="${product.brand}">Brand</span>
-                        · <span aria-label="Product Category" th:text="${product.category}">Category</span>
+            <div class="product-detail-info">
+                <form method="post" th:action="@{/cart/add}" class="market-panel product-buy-box">
+                    <input type="hidden" name="sku" th:value="${product.sku}">
+                    <input type="hidden" name="returnUrl" th:value="${returnUrl}">
+                    <p class="product-meta mb-0">
+                        <span class="product-meta-brand" aria-label="Product Brand" th:text="${product.brand}">Brand</span><span class="product-meta-sep" aria-hidden="true">/</span><span aria-label="Product Category" th:text="${product.category}">Category</span>
                     </p>
                     <h1 class="product-detail-title" aria-label="Product Title" th:text="${product.title}">Title</h1>
-                    <p class="product-meta mb-3">
+                    <p class="product-meta mb-0">
                         SKU <span class="font-monospace text-body" aria-label="Product SKU" th:text="${product.sku}">SKU</span>
                     </p>
                     <p class="price product-detail-price" aria-label="Display Price" th:text="${money.format(product.price)}">$0.00</p>
-                    <p class="product-detail-description mb-0" aria-label="Product Description"
-                       th:text="${product.description}">Description</p>
-                </div>
-                <form method="post" th:action="@{/cart/add}" class="market-panel p-4 d-flex flex-column gap-3">
-                    <input type="hidden" name="sku" th:value="${product.sku}">
-                    <input type="hidden" name="returnUrl" th:value="${returnUrl}">
-                    <div class="d-flex align-items-center justify-content-between gap-3">
-                        <label for="product-quantity" class="form-label fw-bold mb-0">Quantity</label>
-                        <div class="input-group quantity-stepper">
+                    <div class="product-buy-row">
+                        <label for="product-quantity" class="visually-hidden">Quantity</label>
+                        <div class="input-group quantity-stepper quantity-stepper-lg">
                             <button type="button" class="btn btn-outline-secondary" aria-label="Decrease Quantity"
                                     data-step="-1"><svg th:replace="~{fragments/icons :: icon('minus', 16, null, 2)}"></svg></button>
                             <input id="product-quantity" name="quantity" type="text" inputmode="numeric"
@@ -55,15 +48,30 @@
                             <button type="button" class="btn btn-outline-secondary" aria-label="Increase Quantity"
                                     data-step="1"><svg th:replace="~{fragments/icons :: icon('plus', 16, null, 2)}"></svg></button>
                         </div>
+                        <button type="submit" class="btn btn-cta btn-lg product-add-button" aria-label="Add to Cart">
+                            <svg th:replace="~{fragments/icons :: icon('shopping-cart', 18, 'me-2', 2)}"></svg>Add to cart
+                        </button>
                     </div>
-                    <button type="submit" class="btn btn-cta btn-lg w-100" aria-label="Add to Cart">
-                        <svg th:replace="~{fragments/icons :: icon('shopping-cart', 18, 'me-2', 2)}"></svg>Add to cart
-                    </button>
-                    <ul class="product-perks list-unstyled mb-0">
-                        <li><svg th:replace="~{fragments/icons :: icon('check', 16, null, 2)}"></svg> Free shipping on orders over $1,000</li>
-                        <li><svg th:replace="~{fragments/icons :: icon('check', 16, null, 2)}"></svg> 30-day returns</li>
-                    </ul>
                 </form>
+                <ul class="service-tiles service-tiles-compact" aria-label="Our services">
+                    <li class="service-tile">
+                        <span class="service-tile-icon" aria-hidden="true"><svg th:replace="~{fragments/icons :: icon('truck', 18, null, 2)}"></svg></span>
+                        <span><strong class="service-tile-title">Free shipping</strong><span class="service-tile-detail">on orders over $1,000</span></span>
+                    </li>
+                    <li class="service-tile">
+                        <span class="service-tile-icon" aria-hidden="true"><svg th:replace="~{fragments/icons :: icon('rotate-ccw', 18, null, 2)}"></svg></span>
+                        <span><strong class="service-tile-title">30-day returns</strong><span class="service-tile-detail">send it back within a month</span></span>
+                    </li>
+                    <li class="service-tile">
+                        <span class="service-tile-icon" aria-hidden="true"><svg th:replace="~{fragments/icons :: icon('shield-check', 18, null, 2)}"></svg></span>
+                        <span><strong class="service-tile-title">Secure checkout</strong><span class="service-tile-detail">signed in with your account</span></span>
+                    </li>
+                </ul>
+                <section class="market-panel product-about" aria-labelledby="product-about-heading">
+                    <h2 class="product-about-title" id="product-about-heading">About this product</h2>
+                    <p class="product-detail-description mb-0" aria-label="Product Description"
+                       th:text="${product.description}">Description</p>
+                </section>
             </div>
         </div>
 

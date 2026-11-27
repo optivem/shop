@@ -36,9 +36,10 @@
          state, and the category / account nav row. No element is rendered twice, so each driver selector matches once. -->
     <header class="store-header">
         <div class="store-utility">
-            <div class="container d-flex align-items-center gap-2 py-2">
-                <svg th:replace="~{fragments/icons :: icon('truck', 14, null, 2)}"></svg>
-                <span>Free shipping over $1,000</span>
+            <div class="container store-utility-row">
+                <span class="store-utility-item"><svg th:replace="~{fragments/icons :: icon('truck', 14, null, 2)}"></svg> Free shipping over $1,000</span>
+                <span class="store-utility-item"><svg th:replace="~{fragments/icons :: icon('rotate-ccw', 14, null, 2)}"></svg> 30-day returns</span>
+                <span class="store-utility-note">Demo store</span>
             </div>
         </div>
         <div class="store-header-top">
@@ -50,9 +51,9 @@
                         <option value="">All</option>
                         <option th:each="category : ${categories}" th:value="${category}" th:text="${category}">Category</option>
                     </select>
-                    <input type="search" name="q" class="store-search-input" placeholder="Search products…"
+                    <input type="search" name="q" class="store-search-input" placeholder="What are you looking for?"
                            aria-label="Search Products" th:value="${searchQuery}">
-                    <button type="submit" class="store-search-button" aria-label="Search">Search</button>
+                    <button type="submit" class="store-search-button" aria-label="Search"><svg th:replace="~{fragments/icons :: icon('search', 20, null, 2.2)}"></svg></button>
                 </form>
                 <div class="store-header-actions d-flex align-items-center gap-3">
                     <form th:if="${storeUser != null}" method="post" th:action="@{/logout}"

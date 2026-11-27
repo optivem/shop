@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<!--
+  One product tile: photo and title link to the product page; "Add to cart" adds quantity 1.
+  The catalog grid's cards carry the UI drivers' hooks (aria-labels, data-testids); the home page's Bestsellers row
+  reuses the card without them (hooks = false), so each hook still names one element.
+-->
+<article th:fragment="card(product, hooks)" class="product-card"
+         th:attr="aria-label=${hooks ? 'Product ' + product.sku : product.title}">
+    <div class="product-card-media">
+        <a th:href="${'/products/' + #uris.escapePathSegment(product.sku)}" tabindex="-1" aria-hidden="true">
+            <div th:replace="~{fragments/product-image :: image(${product.imageUrl}, ${product.title}, ${product.brand}, 'card', true)}"></div>
+        </a>
+    </div>
+    <div class="product-card-body">
+        <div class="product-card-brand" th:attr="aria-label=${hooks ? 'Product Brand' : null}" th:text="${product.brand}">Brand</div>
+        <h3 class="product-card-title">
+            <a th:href="${'/products/' + #uris.escapePathSegment(product.sku)}" class="product-title-link"
+               th:attr="data-testid=${hooks ? 'product-title' : null}" th:text="${product.title}">Title</a>
+        </h3>
+        <p th:if="${!#strings.isEmpty(product.description)}" class="product-card-spec"
+           th:text="${product.description}">Description</p>
+        <div class="price product-card-price" th:attr="aria-label=${hooks ? 'Display Price' : null}"
+             th:text="${money.format(product.price)}">$0.00</div>
+        <form method="post" th:action="@{/cart/add}" class="mt-auto">
+            <input type="hidden" name="sku" th:value="${product.sku}">
+            <input type="hidden" name="quantity" value="1">
+            <input type="hidden" name="returnUrl" th:value="${returnUrl}">
+            <button type="submit" class="btn btn-cta w-100"
+                    th:attr="data-testid=${hooks ? 'add-to-cart-' + product.sku : null},
+                             aria-label=${hooks ? null : 'Add ' + product.title + ' to cart'}">Add to cart</button>
+        </form>
+    </div>
+</article>
+</body>
+</html>
