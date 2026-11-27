@@ -7,6 +7,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import '@fontsource-variable/manrope';
 import './styles/market.css';
 import './styles/pages-shop.css';
+import './styles/wake-up.css';
 import './styles/pages-orders.css';
 import './styles/pages-account.css';
 import { App } from './App';

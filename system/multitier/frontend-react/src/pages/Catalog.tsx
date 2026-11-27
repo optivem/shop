@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { SlidersHorizontal } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { LoadingSpinner, StoreLayout } from '../components';
+import { StoreLayout } from '../components';
 import { useCart } from '../contexts/useCart';
 import { useCatalog } from '../contexts/useCatalog';
 import { useNotificationContext } from '../contexts/useNotificationContext';
 import { CatalogFilters } from '../features/catalog/CatalogFilters';
+import { DemoWakeUp } from '../features/catalog/DemoWakeUp';
 import { HomeSections } from '../features/catalog/HomeSections';
 import { ProductCard } from '../features/catalog/ProductCard';
 import {
@@ -42,7 +43,7 @@ export function Catalog() {
   };
 
   const renderResults = () => {
-    if (isLoading && products.length === 0) return <LoadingSpinner message="Loading products..." />;
+    if (isLoading && products.length === 0) return <DemoWakeUp />;
     if (error) {
       return (
         <div className="alert alert-danger" role="alert">
