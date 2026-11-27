@@ -1,5 +1,7 @@
 # 2026-11-27 19:04:43 UTC — Frontend UI/UX refresh of the shop
 
+> 🤖 **Picked up by agent** — `Valentina_Desk` at `2026-11-27T19:59:24Z`
+
 ## TL;DR
 
 **Why:** The shop UI was partly restyled in the earlier "Market redesign" (commit `578234dd`: catalog filters, dense cards, promo tiles with credited Unsplash photos), but product cards still have no product imagery and the refresh is not finished or consistent across all frontends.
@@ -26,9 +28,15 @@ Step 1 (ERP side). Pick one Unsplash photo per product listed in `external-syste
 
 - [ ] Step 1: **ERP owns the images** — commit the photos once under `external-systems/erp-images/`; simulator serves `/erp/images/<id>.jpg`; stub serves the same files via a mapping + `__files` (copied at build); `imageUrl` added to every product in the simulator data and the stub mappings (`erp-products-list.json`, `erp-products-hp15.json`, …).
 - [ ] Step 2: **ERP contract tests** — extend the ERP contract tests (stub + real) in all three languages to assert `imageUrl` on products and that the image URL returns `200 image/jpeg`.
-- [ ] Step 3: **Backend proxy** — in each backend (Java, .NET, TypeScript × monolith + multitier), read `imageUrl` in the ERP client/DTO, add `GET /api/products/{id}/image` that fetches from the ERP and streams it (404 when the product has no image), and expose the shop image URL on the product response the frontend uses.
+- [ ] Step 3: **Backend proxy** — in each **multitier** backend (`backend-java`, `backend-dotnet`, `backend-typescript`; monolith backends moved to `plans/20261127-1959-monolith-product-images-and-ui-refresh.md`), read `imageUrl` in the ERP client/DTO, add `GET /api/products/{id}/image` that fetches from the ERP and streams it (404 when the product has no image), and expose the shop image URL on the product response the frontend uses.
 - [ ] Step 4: **Frontend images (`frontend-react`)** — render the product image on catalog cards and product detail via the shop image URL, with a placeholder fallback; extend the existing Unsplash credit block with the product photographers.
-- [ ] Step 5: **Showcase-path refresh (`frontend-react`)** — polish the screens a visitor sees in a 2-minute click-through: catalog, product detail, cart, checkout, order confirmation, plus mobile layout (16px gutter, no horizontal scroll, touch-sized controls). Use the `frontend-design:frontend-design` skill for aesthetic direction; keep e2e-driver selectors stable.
+- [ ] Step 5: **Showcase-path refresh (`frontend-react`)** — polish the screens a visitor sees in a 2-minute click-through: catalog, product detail, cart, checkout, order confirmation, plus mobile layout (16px gutter, no horizontal scroll, touch-sized controls). Decided (revised 2026-11-27): adopt the **Retail** direction from the mockup canvas https://claude.ai/artifact/C1GPrvhmiRd5cJWktQ5bv7 (artboards "C · Retail", "Retail · Product detail", "Retail · Cart", "Retail · Checkout", "Retail · Mobile"): navy `#0b3a6f` + orange `#ea580c` on `#f4f6f9`, Manrope; utility bar, Categories button + prominent search, deal hero, service tiles, round-photo category shortcuts, Bestsellers / New arrivals rows, wishlist heart on cards. Re-theme via the Market tokens in `src/styles/market.css` on top of Bootstrap; keep e2e-driver selectors stable. Savings badges / struck-through "was" prices and wishlist are visual-only until the ERP or backend provides the data (don't invent prices).
 - [ ] Step 6: **System tests** — adjust e2e coverage where Steps 4–5 change the UI (every product shows its image), keeping driver selectors in sync across languages.
-- [ ] Step 7: Compile all (`./compile-all.sh`), run sample system tests per language, commit, quick-deploy to production.
-- [ ] Step 8 (deferred, optional): port the image + refresh to the monolith Java / .NET / TypeScript UIs.
+- [ ] Step 7: Compile all (`./compile-all.sh`), run sample system tests per language, commit. **Stop and ask user before the quick-deploy to production** (user reviews the UI locally first).
+
+## Decisions (resolved before execution, 2026-11-27)
+
+- Backends: multitier only; the monolith backends and UIs are tracked in `plans/20261127-1959-monolith-product-images-and-ui-refresh.md`.
+- Local Docker/system-test runs and one commit per verified step are pre-approved.
+- Production deploy: stop and ask first.
+- Design: ~~polish the existing Market look~~ → revised 2026-11-27: adopt the Retail direction (see Step 5).
