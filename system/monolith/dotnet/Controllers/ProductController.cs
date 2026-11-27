@@ -4,7 +4,7 @@ using MyCompany.MyShop.Monolith.Core.Services;
 
 namespace MyCompany.MyShop.Monolith.Controllers;
 
-/// <summary>The catalog is public: both routes are reachable without signing in.</summary>
+/// <summary>The catalog is public: every route is reachable without signing in.</summary>
 [ApiController]
 [AllowAnonymous]
 [Route("api/products")]
@@ -29,5 +29,13 @@ public class ProductController : ControllerBase
     {
         var response = await _productService.ViewProductAsync(sku);
         return Ok(response);
+    }
+
+    /// <summary>The product photo, proxied from the ERP so an img tag can load it from the shop's own origin.</summary>
+    [HttpGet("{sku}/image")]
+    public async Task<IActionResult> ViewProductImage(string sku)
+    {
+        var image = await _productService.GetProductImageAsync(sku);
+        return File(image.Content, image.ContentType);
     }
 }

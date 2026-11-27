@@ -1,10 +1,21 @@
 @using MyCompany.MyShop.Monolith.Pages.Storefront
 @model ProductImage
 @*
-  Product image placeholder: the ERP has no image field, so each product gets a tile with its brand name,
-  coloured by a deterministic hash of the brand (storefront-ux §5). No external images.
+  The product photo the ERP owns, served by the shop at the product's imageUrl (ERP -> shop -> page). A neutral
+  placeholder is only a defensive fallback: the product has no imageUrl, or the photo fails to load (site.js swaps
+  a broken photo for the same placeholder). The photo is an img inside .product-image, as the UI drivers expect.
 *@
-<div class="product-image product-image-@Model.Shape" style="background-color: @BrandColour.Of(Model.Brand)" role="img"
-     aria-label="@(Model.Brand + " product image")">
-    <span>@((Model.Brand ?? string.Empty).ToUpperInvariant())</span>
-</div>
+@if (string.IsNullOrEmpty(Model.ImageUrl))
+{
+    <div class="product-image product-image-@Model.Shape product-image-placeholder"
+         @(string.IsNullOrEmpty(Model.Alt) ? Html.Raw("aria-hidden=\"true\"") : Html.Raw($"role=\"img\" aria-label=\"{Html.Encode(Model.Alt)}\""))>
+        @Icons.Svg("package", 32, null, 1.5)
+    </div>
+}
+else
+{
+    <div class="product-image product-image-@Model.Shape">
+        <img src="@Model.ImageUrl" alt="@Model.Alt" width="600" height="450" decoding="async"
+             @(Model.Lazy ? Html.Raw("loading=\"lazy\"") : null) />
+    </div>
+}

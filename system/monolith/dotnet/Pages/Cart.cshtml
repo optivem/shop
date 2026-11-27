@@ -13,6 +13,10 @@
     </ol>
 </nav>
 
+@if (lines.Count > 0)
+{
+    <partial name="_CheckoutProgress" model="@("Cart")" />
+}
 <h1 class="h2 mb-4">
     Shopping cart
     @if (lines.Count > 0)
@@ -54,7 +58,7 @@ else
                             <td class="cart-cell-product">
                                 <div class="d-flex align-items-center gap-3">
                                     <div class="cart-thumb">
-                                        <partial name="_ProductImage" model="@(new ProductImage(line.Product?.Brand ?? line.Sku, "square"))" />
+                                        <partial name="_ProductImage" model="@(new ProductImage(line.Product?.ImageUrl, "", "square", true))" />
                                     </div>
                                     <div>
                                         @if (line.Product != null)
@@ -119,7 +123,7 @@ else
                     <span class="price fw-bold" aria-label="Cart Subtotal">@Money.Format(Model.Subtotal)</span>
                 </div>
                 <p class="text-body-secondary small mb-0">Tax and discounts are calculated at checkout.</p>
-                <a href="/checkout" class="btn btn-primary btn-lg w-100" aria-label="Proceed to Checkout">Proceed to checkout</a>
+                <a href="/checkout" class="btn btn-cta btn-lg w-100" aria-label="Proceed to Checkout">Proceed to checkout</a>
                 <a href="/" class="cart-continue">Continue shopping</a>
             </div>
         </div>

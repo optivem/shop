@@ -13,4 +13,6 @@ public class ViewProductDetailsResponse
     public string? Category { get; set; }
     [JsonConverter(typeof(MoneyJsonConverter))]
     public decimal Price { get; set; }
+    // The shop's own URL for the product photo (GET /api/products/{sku}/image); null when the ERP has none.
+    public string? ImageUrl { get; set; }
 }

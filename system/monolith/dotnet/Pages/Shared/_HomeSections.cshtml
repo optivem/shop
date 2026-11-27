@@ -1,0 +1,126 @@
+@using MyCompany.MyShop.Monolith.Core.Dtos
+@using MyCompany.MyShop.Monolith.Pages.Storefront
+@model IReadOnlyList<ViewProductDetailsResponse>
+@*
+  The home page above the full catalog (Retail look): deal hero, service tiles, round-photo category shortcuts, and
+  the Bestsellers / New arrivals rows. Shown only on the unfiltered catalog. The same as frontend-react HomeSections.
+*@
+@{
+    // The hero's product: its title, description and price are read from the catalog, never written here.
+    const string featuredSku = "DELL-U2723QE";
+    // Curated merchandising picks: the ERP has no sales figures or listing dates yet, so these rows are hand-picked
+    // SKUs (any the catalog no longer carries are skipped).
+    string[] bestsellerSkus = ["DELL-XPS", "HP-15", "LG-27UL500", "LOGI-MX3S", "LOGI-MXKEYS"];
+    string[] newArrivalSkus = ["ASUS-ZENBOOK-14", "LENOVO-T14", "SAMSUNG-S24", "ANKER-HUB-7"];
+    List<ViewProductDetailsResponse> Pick(string[] skus) =>
+        skus.Select(sku => Model.FirstOrDefault(product => product.Sku == sku)).OfType<ViewProductDetailsResponse>().ToList();
+
+    var featured = Model.FirstOrDefault(product => product.Sku == featuredSku);
+    var bestsellers = Pick(bestsellerSkus);
+    var newArrivals = Pick(newArrivalSkus);
+    var categories = CatalogQuery.CategoriesOf(Model);
+}
+<div class="home-sections">
+    <section class="deal-hero" aria-label="Promotion">
+        <div class="deal-hero-copy">
+            <span class="badge badge-deal">Featured</span>
+            <h1 class="deal-hero-title">A 4K workspace, sorted.</h1>
+            @if (featured != null)
+            {
+                <p class="deal-hero-lead">
+                    @featured.Title: @(string.IsNullOrEmpty(featured.Description) ? featured.Category : featured.Description).
+                    <strong class="deal-hero-price price">@Money.Format(featured.Price)</strong>
+                </p>
+            }
+            else
+            {
+                <p class="deal-hero-lead">Sharp monitors for a cleaner desk.</p>
+            }
+            <a href="@(featured != null ? StoreChrome.ProductHref(featured.Sku) : StoreChrome.CategoryHref("Monitors"))" class="btn deal-hero-cta">@(featured != null ? "See the monitor" : "Shop monitors")</a>
+        </div>
+        <div class="deal-hero-media">
+            <img class="deal-hero-photo" src="~/images/promo/monitor.jpg" alt="A 27-inch monitor on a tidy desk">
+        </div>
+    </section>
+
+    <ul class="service-tiles" aria-label="Our services">
+        <li class="service-tile">
+            <span class="service-tile-icon" aria-hidden="true">@Icons.Svg("truck", 22)</span>
+            <span><strong class="service-tile-title">Free shipping</strong><span class="service-tile-detail">on orders over $1,000</span></span>
+        </li>
+        <li class="service-tile">
+            <span class="service-tile-icon" aria-hidden="true">@Icons.Svg("rotate-ccw", 22)</span>
+            <span><strong class="service-tile-title">30-day returns</strong><span class="service-tile-detail">send it back within a month</span></span>
+        </li>
+        <li class="service-tile">
+            <span class="service-tile-icon" aria-hidden="true">@Icons.Svg("shield-check", 22)</span>
+            <span><strong class="service-tile-title">Secure checkout</strong><span class="service-tile-detail">signed in with your account</span></span>
+        </li>
+    </ul>
+
+    @if (categories.Count > 0)
+    {
+        <section class="home-section" aria-labelledby="home-categories-heading">
+            <h2 class="home-section-title" id="home-categories-heading">Shop by category</h2>
+            <ul class="category-shortcuts">
+                @foreach (var category in categories)
+                {
+                    var photo = Model.FirstOrDefault(product => product.Category == category && !string.IsNullOrEmpty(product.ImageUrl))?.ImageUrl;
+                    <li>
+                        <a href="@StoreChrome.CategoryHref(category)" class="category-shortcut">
+                            @if (photo != null)
+                            {
+                                <img class="category-shortcut-photo" src="@photo" alt="" width="56" height="56" loading="lazy">
+                            }
+                            else
+                            {
+                                <span class="category-shortcut-photo" aria-hidden="true"></span>
+                            }
+                            @category
+                        </a>
+                    </li>
+                }
+            </ul>
+        </section>
+    }
+
+    @if (bestsellers.Count > 0)
+    {
+        <section class="home-section" aria-labelledby="home-bestsellers-heading">
+            <div class="home-section-head">
+                <h2 class="home-section-title" id="home-bestsellers-heading">Bestsellers</h2>
+                <a href="#catalog" class="home-section-link">See all products @Icons.Svg("arrow-right")</a>
+            </div>
+            <div class="product-row">
+                @foreach (var product in bestsellers)
+                {
+                    <partial name="_ProductCard" model="@(new ProductCardModel(product, false))" />
+                }
+            </div>
+        </section>
+    }
+
+    @if (newArrivals.Count > 0)
+    {
+        <section class="home-section" aria-labelledby="home-new-heading">
+            <h2 class="home-section-title" id="home-new-heading">New arrivals</h2>
+            <ul class="compact-products">
+                @foreach (var product in newArrivals)
+                {
+                    <li>
+                        <a href="@StoreChrome.ProductHref(product.Sku)" class="compact-product">
+                            <span class="compact-product-thumb">
+                                <partial name="_ProductImage" model="@(new ProductImage(product.ImageUrl, "", "square", true))" />
+                            </span>
+                            <span class="compact-product-text">
+                                <span class="compact-product-tag">New</span>
+                                <span class="compact-product-title">@product.Title</span>
+                                <span class="compact-product-price price">@Money.Format(product.Price)</span>
+                            </span>
+                        </a>
+                    </li>
+                }
+            </ul>
+        </section>
+    }
+</div>

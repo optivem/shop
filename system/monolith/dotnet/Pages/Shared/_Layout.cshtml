@@ -13,9 +13,9 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@(string.IsNullOrEmpty(title) ? "MyShop" : title + " · MyShop")</title>
-    @* Bootstrap 5.3 re-themed by the Market tokens (market.css) with Figtree self-hosted from Fontsource: the same look as frontend-react. *@
+    @* Bootstrap 5.3 re-themed by the Market tokens (market.css) with Manrope self-hosted from Fontsource: the same look as frontend-react. *@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/lib/fontsource-figtree/wght.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/lib/fontsource-manrope/wght.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/market.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/storefront.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/pages.css" asp-append-version="true" />
@@ -44,14 +44,15 @@
        state, and the category / account nav row. No element is rendered twice, so each driver selector matches once. *@
     <header class="store-header">
         <div class="store-utility">
-            <div class="container d-flex align-items-center gap-2 py-2">
-                @Icons.Svg("truck", 14)
-                <span>Free shipping over $1,000</span>
+            <div class="container store-utility-row">
+                <span class="store-utility-item">@Icons.Svg("truck", 14) Free shipping over $1,000</span>
+                <span class="store-utility-item">@Icons.Svg("rotate-ccw", 14) 30-day returns</span>
+                <span class="store-utility-note">Demo store</span>
             </div>
         </div>
         <div class="store-header-top">
             <div class="container d-flex flex-wrap align-items-center py-3 store-header-row">
-                <a class="store-logo" href="/">MyShop<span class="store-logo-mark" aria-hidden="true">.</span></a>
+                <a class="store-logo" href="/">My<span class="store-logo-mark">Shop</span></a>
                 <form class="store-search" method="get" action="/" role="search">
                     @if (categories.Count > 0)
                     {
@@ -63,9 +64,9 @@
                             }
                         </select>
                     }
-                    <input type="search" name="q" class="store-search-input" placeholder="Search products…"
+                    <input type="search" name="q" class="store-search-input" placeholder="What are you looking for?"
                            aria-label="Search Products" value="@(ViewData[StoreChrome.SearchQueryKey] as string)">
-                    <button type="submit" class="store-search-button" aria-label="Search">Search</button>
+                    <button type="submit" class="store-search-button" aria-label="Search">@Icons.Svg("search", 20, null, 2.2)</button>
                 </form>
                 <div class="store-header-actions d-flex align-items-center gap-3">
                     @if (storeUser != null)
@@ -151,8 +152,9 @@
         @RenderBody()
     </main>
 
-    @* Static footer: Shop, Help, the demo-store note and the photo credits (storefront-ux §3). The photos in
-       wwwroot/images/promo/ are listed in docs/design/home-redesign/images/SOURCES.md: credit every one that ships. *@
+    @* Static footer: Shop, Help, the demo-store note and the photo credits (storefront-ux §3). Credit the photographer of every
+       photo the shop shows: the promo photos in wwwroot/images/promo/ (docs/design/home-redesign/images/SOURCES.md) and the ERP
+       product photos (external-systems/erp-images/SOURCES.md). One entry per photographer; keep in sync with the React footer. *@
     <footer class="store-footer mt-5">
         <div class="container py-4">
             <div class="row g-4">
@@ -175,7 +177,7 @@
                     </ul>
                 </div>
                 <div class="col-md-4 text-md-end">
-                    <p class="store-footer-brand mb-1">MyShop<span class="store-logo-mark" aria-hidden="true">.</span></p>
+                    <p class="store-footer-brand mb-1">My<span class="store-logo-mark">Shop</span></p>
                     <p class="mb-0">© MyShop · demo store for the Optivem ATDD course</p>
                 </div>
             </div>
@@ -184,9 +186,15 @@
             <div class="container py-3">
                 <p class="mb-0">
                     Photos on Unsplash by
-                    <a href="https://unsplash.com/photos/btVTuAIhvk8" target="_blank" rel="noopener noreferrer">Dhony Koswara</a>,
-                    <a href="https://unsplash.com/photos/VXpeQ3GetDU" target="_blank" rel="noopener noreferrer">Huy Phan</a>,
-                    <a href="https://unsplash.com/photos/U1I0IoQx3Yo" target="_blank" rel="noopener noreferrer">Jay Zhang</a>
+                    <a href="https://unsplash.com/@@dhony24" target="_blank" rel="noopener noreferrer">Dhony Koswara</a>,
+                    <a href="https://unsplash.com/@@maybejensen" target="_blank" rel="noopener noreferrer">Lasse Jensen</a>,
+                    <a href="https://unsplash.com/@@ffz_20" target="_blank" rel="noopener noreferrer">Faraaz Zuberi</a>,
+                    <a href="https://unsplash.com/@@2hmedia" target="_blank" rel="noopener noreferrer">2H Media</a>,
+                    <a href="https://unsplash.com/@@huyphan2602" target="_blank" rel="noopener noreferrer">Huy Phan</a>,
+                    <a href="https://unsplash.com/@@rpnickson" target="_blank" rel="noopener noreferrer">Roberto Nickson</a>,
+                    <a href="https://unsplash.com/@@nkachanovskyyy" target="_blank" rel="noopener noreferrer">Nikita Kachanovsky</a>,
+                    <a href="https://unsplash.com/@@ravipalwe" target="_blank" rel="noopener noreferrer">Ravi Palwe</a>,
+                    <a href="https://unsplash.com/@@jay_zhang" target="_blank" rel="noopener noreferrer">Jay Zhang</a>
                 </p>
             </div>
         </div>

@@ -26,6 +26,12 @@ namespace MyCompany.MyShop.Monolith.Pages
 
         public bool Unavailable { get; private set; }
 
+        /// <summary>The whole catalog, for the home sections (hero, shortcuts, rows) above the results.</summary>
+        public IReadOnlyList<ViewProductDetailsResponse> AllProducts { get; private set; } = [];
+
+        /// <summary>The home sections only show on the plain catalog; a search or filter goes straight to results.</summary>
+        public bool IsHome => Query.Q.Trim().Length == 0 && Query.Category.Length == 0 && Query.Brands.Count == 0 && !Unavailable && AllProducts.Count > 0;
+
         public async Task<IActionResult> OnGetAsync(
             [FromQuery] string? q, [FromQuery] string? category, [FromQuery(Name = "brand")] string[]? brands,
             [FromQuery] string? sort)
@@ -38,6 +44,7 @@ namespace MyCompany.MyShop.Monolith.Pages
 
             var products = await _catalog.BrowseAsync();
             Unavailable = products == null;
+            AllProducts = products ?? [];
             Shown = Query.Apply(products ?? []);
             FilterCategories = CatalogQuery.CategoriesOf(products ?? []);
             FilterBrands = CatalogQuery.BrandsOf(products ?? []);

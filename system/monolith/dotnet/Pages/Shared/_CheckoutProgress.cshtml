@@ -1,0 +1,22 @@
+@using MyCompany.MyShop.Monolith.Pages.Storefront
+@model string
+@*
+  Where the visitor is on the way to an order: Cart, then Checkout, then Confirmation (Retail look).
+  The model is the current step.
+*@
+@{
+    string[] steps = ["Cart", "Checkout", "Confirmation"];
+    var currentIndex = Array.IndexOf(steps, Model);
+}
+<ol class="checkout-progress" aria-label="Checkout progress">
+    @for (var index = 0; index < steps.Length; index++)
+    {
+        var state = index < currentIndex ? "done" : index == currentIndex ? "current" : "next";
+        <li class="checkout-progress-step is-@state" aria-current="@(state == "current" ? "step" : null)">
+            <span class="checkout-progress-marker" aria-hidden="true">
+                @if (state == "done") { @Icons.Svg("check", 14, null, 3) } else { @(index + 1) }
+            </span>
+            @steps[index]
+        </li>
+    }
+</ol>

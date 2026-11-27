@@ -74,6 +74,66 @@ public class ProductApiTests : IClassFixture<ShopWebApplicationFactory>
         Assert.Contains("Product NO-SUCH-SKU does not exist.", body);
     }
 
+    private const string ErpHp15 = """
+        {"id":"HP-15","title":"HP Laptop 15","price":699.99,"category":"Laptops","brand":"HP","imageUrl":"/erp/images/HP-15.jpg"}
+        """;
+
+    [Fact]
+    public async Task ViewProduct_ExposesTheShopImageUrl()
+    {
+        var client = AnonymousClient(new StubErpHandler().Returns("/api/products/HP-15", HttpStatusCode.OK, ErpHp15));
+
+        var json = JsonDocument.Parse(await client.GetStringAsync("/api/products/HP-15")).RootElement;
+
+        Assert.Equal("/api/products/HP-15/image", json.GetProperty("imageUrl").GetString());
+    }
+
+    [Fact]
+    public async Task ViewProduct_WithoutAnErpImage_HasANullImageUrl()
+    {
+        var client = AnonymousClient(new StubErpHandler().Returns("/api/products/BOOK-123", HttpStatusCode.OK, ErpBook));
+
+        var json = JsonDocument.Parse(await client.GetStringAsync("/api/products/BOOK-123")).RootElement;
+
+        Assert.Equal(JsonValueKind.Null, json.GetProperty("imageUrl").ValueKind);
+    }
+
+    [Fact]
+    public async Task ViewProductImage_WithoutToken_ReturnsTheErpImage()
+    {
+        var client = AnonymousClient(new StubErpHandler()
+            .Returns("/api/products/HP-15", HttpStatusCode.OK, ErpHp15)
+            .ReturnsImage("/erp/images/HP-15.jpg", [1, 2, 3]));
+
+        var response = await client.GetAsync("/api/products/HP-15/image");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("image/jpeg", response.Content.Headers.ContentType?.MediaType);
+        Assert.Equal(new byte[] { 1, 2, 3 }, await response.Content.ReadAsByteArrayAsync());
+    }
+
+    [Fact]
+    public async Task ViewProductImage_UnknownSku_ReturnsNotFoundProblemDetail()
+    {
+        var client = AnonymousClient(new StubErpHandler());
+
+        var response = await client.GetAsync("/api/products/NO-SUCH-SKU/image");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Contains("Product NO-SUCH-SKU does not exist.", await response.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task ViewProductImage_ProductWithoutImage_ReturnsNotFoundProblemDetail()
+    {
+        var client = AnonymousClient(new StubErpHandler().Returns("/api/products/BOOK-123", HttpStatusCode.OK, ErpBook));
+
+        var response = await client.GetAsync("/api/products/BOOK-123/image");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Contains("Product BOOK-123 has no image.", await response.Content.ReadAsStringAsync());
+    }
+
     [Fact]
     public async Task BrowseProducts_ErpDown_ReturnsServiceUnavailableProblemDetail()
     {

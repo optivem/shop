@@ -94,4 +94,34 @@ public class ErpGateway
             throw new ErpUnavailableException($"Failed to fetch promotion details from URL: {url}. Error: {e.GetType().Name}: {e.Message}", e);
         }
     }
+
+    // imageUrl is the ERP's own reference (a path such as /erp/images/HP-15.jpg, or an absolute URL);
+    // it is resolved against the ERP base URL, so the photo always comes from the ERP we are configured for.
+    public async Task<ErpProductImage?> GetProductImageAsync(string imageUrl)
+    {
+        var url = new Uri(new Uri(_erpUrl), imageUrl).ToString();
+
+        try
+        {
+            var response = await _httpClient.GetAsync(url);
+
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                return null;
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new ErpUnavailableException($"ERP API returned status {(int)response.StatusCode} for product image. URL: {url}");
+            }
+
+            var content = await response.Content.ReadAsByteArrayAsync();
+            var contentType = response.Content.Headers.ContentType?.ToString() ?? "application/octet-stream";
+            return new ErpProductImage(content, contentType);
+        }
+        catch (System.Exception e) when (e is HttpRequestException or TaskCanceledException or ExecutionRejectedException)
+        {
+            throw new ErpUnavailableException($"Failed to fetch product image from URL: {url}. Error: {e.GetType().Name}: {e.Message}", e);
+        }
+    }
 }

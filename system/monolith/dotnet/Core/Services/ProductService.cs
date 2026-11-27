@@ -9,6 +9,8 @@ namespace MyCompany.MyShop.Monolith.Core.Services;
 public class ProductService
 {
     private const string MsgProductDoesNotExist = "Product {0} does not exist.";
+    private const string MsgProductHasNoImage = "Product {0} has no image.";
+    private const string MsgProductImageDoesNotExist = "Image of product {0} does not exist.";
 
     private readonly ErpGateway _erpGateway;
 
@@ -30,6 +32,19 @@ public class ProductService
         return ToResponse(product);
     }
 
+    // The photo is proxied rather than linked: the ERP is not reachable from the browser.
+    public async Task<ErpProductImage> GetProductImageAsync(string sku)
+    {
+        var product = await _erpGateway.GetProductDetailsAsync(sku)
+            ?? throw new NotExistValidationException(string.Format(MsgProductDoesNotExist, sku));
+        if (string.IsNullOrWhiteSpace(product.ImageUrl))
+        {
+            throw new NotExistValidationException(string.Format(MsgProductHasNoImage, sku));
+        }
+        return await _erpGateway.GetProductImageAsync(product.ImageUrl)
+            ?? throw new NotExistValidationException(string.Format(MsgProductImageDoesNotExist, sku));
+    }
+
     private static ViewProductDetailsResponse ToResponse(ErpProductDetailsResponse product)
         => new()
         {
@@ -38,6 +53,10 @@ public class ProductService
             Description = product.Description,
             Brand = product.Brand,
             Category = product.Category,
-            Price = product.Price
+            Price = product.Price,
+            ImageUrl = ImageUrlOf(product)
         };
+
+    private static string? ImageUrlOf(ErpProductDetailsResponse product)
+        => string.IsNullOrWhiteSpace(product.ImageUrl) ? null : $"/api/products/{product.Id}/image";
 }

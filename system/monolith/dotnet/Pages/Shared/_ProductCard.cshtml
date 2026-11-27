@@ -1,0 +1,34 @@
+@using MyCompany.MyShop.Monolith.Pages.Storefront
+@model ProductCardModel
+@inject StoreChrome Chrome
+@{
+    var product = Model.Product;
+}
+@* One catalog tile: photo and title link to the product page; "Add to cart" adds quantity 1. *@
+<article class="product-card" aria-label="@(Model.TestHooks ? "Product " + product.Sku : product.Title)">
+    <div class="product-card-media">
+        <a href="@StoreChrome.ProductHref(product.Sku)" tabindex="-1" aria-hidden="true">
+            <partial name="_ProductImage" model="@(new ProductImage(product.ImageUrl, product.Title ?? string.Empty, "card", true))" />
+        </a>
+    </div>
+    <div class="product-card-body">
+        <div class="product-card-brand" aria-label="@(Model.TestHooks ? "Product Brand" : null)">@product.Brand</div>
+        <h3 class="product-card-title">
+            <a href="@StoreChrome.ProductHref(product.Sku)" class="product-title-link"
+               data-testid="@(Model.TestHooks ? "product-title" : null)">@product.Title</a>
+        </h3>
+        @if (!string.IsNullOrEmpty(product.Description))
+        {
+            <p class="product-card-spec">@product.Description</p>
+        }
+        <div class="price product-card-price" aria-label="@(Model.TestHooks ? "Display Price" : null)">@Money.Format(product.Price)</div>
+        <form method="post" action="/cart/add" asp-antiforgery="true" class="mt-auto">
+            <input type="hidden" name="sku" value="@product.Sku">
+            <input type="hidden" name="quantity" value="1">
+            <input type="hidden" name="returnUrl" value="@Chrome.ReturnUrl">
+            <button type="submit" class="btn btn-cta w-100"
+                    data-testid="@(Model.TestHooks ? "add-to-cart-" + product.Sku : null)"
+                    aria-label="@(Model.TestHooks ? null : "Add " + product.Title + " to cart")">Add to cart</button>
+        </form>
+    </div>
+</article>

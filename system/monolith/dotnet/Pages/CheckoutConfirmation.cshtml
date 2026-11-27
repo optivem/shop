@@ -18,6 +18,7 @@
 <div class="order-confirmation">
     @if (placed.Count > 0)
     {
+        <partial name="_CheckoutProgress" model="@("Confirmation")" />
         <section class="market-panel order-confirmation-hero">
             <div class="order-confirmation-icon" aria-hidden="true">@Icons.Svg("circle-check", 32)</div>
             <h1 class="h2 mb-1">Thank you for your order!</h1>
@@ -29,7 +30,10 @@
                 @foreach (var line in placed)
                 {
                     <li class="confirmed-order">
-                        <div>
+                        <div class="confirmed-order-thumb">
+                            <partial name="_ProductImage" model="@(new ProductImage(Model.ImageUrlOf(line.Sku), "", "square"))" />
+                        </div>
+                        <div class="flex-grow-1">
                             <a href="@("/order-details/" + Uri.EscapeDataString(line.OrderNumber))" class="order-number-link"
                                aria-label="@("Confirmed Order " + line.OrderNumber)">@line.OrderNumber</a>
                             <p class="confirmed-order-meta mb-0">@line.Sku × @line.Quantity</p>

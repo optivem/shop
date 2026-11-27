@@ -19,6 +19,7 @@
     </ol>
 </nav>
 
+<partial name="_CheckoutProgress" model="@("Checkout")" />
 <h1 class="h2 mb-4">Checkout</h1>
 <form class="row g-4 align-items-start" method="post" action="/checkout" asp-antiforgery="true" novalidate id="checkoutForm">
     <div class="col-lg-7 d-flex flex-column gap-4">
@@ -104,7 +105,7 @@
                 {
                     <li class="checkout-review-line" aria-label="@("Review Line " + line.Sku)">
                         <div class="checkout-review-thumb">
-                            <partial name="_ProductImage" model="@(new ProductImage(line.Product?.Brand ?? line.Sku, "square"))" />
+                            <partial name="_ProductImage" model="@(new ProductImage(line.Product?.ImageUrl, "", "square"))" />
                         </div>
                         <div class="checkout-review-name">
                             <span class="checkout-review-title">@(line.Product?.Title ?? line.Sku)</span>
@@ -124,7 +125,7 @@
                     <span aria-label="Estimated Tax Rate" id="taxRate">@Model.TaxRate</span>
                 </div>
             </div>
-            <button type="submit" class="btn btn-primary btn-lg w-100" data-testid="place-order" id="placeCheckoutOrder">
+            <button type="submit" class="btn btn-cta btn-lg w-100" data-testid="place-order" id="placeCheckoutOrder">
                 Place order
             </button>
             <p class="text-body-secondary small text-center mb-0">Discount and tax are worked out per order when it is placed.</p>

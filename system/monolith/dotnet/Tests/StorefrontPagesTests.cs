@@ -159,6 +159,50 @@ public partial class StorefrontPagesTests : IClassFixture<ShopWebApplicationFact
         Assert.Contains("$699.99", html);
     }
 
+    private static StubErpHandler ExternalSystemsWithPhotos() => ExternalSystems()
+        .Returns("/api/products", HttpStatusCode.OK,
+            """[{"id":"HP-15","title":"HP Laptop 15","brand":"HP","category":"Laptops","price":699.99,"imageUrl":"/erp/images/HP-15.jpg"},{"id":"DELL-XPS","title":"Dell XPS 13","brand":"Dell","category":"Laptops","price":1299.99}]""")
+        .Returns("/api/products/HP-15", HttpStatusCode.OK,
+            """{"id":"HP-15","title":"HP Laptop 15","brand":"HP","category":"Laptops","price":699.99,"imageUrl":"/erp/images/HP-15.jpg"}""");
+
+    [Fact]
+    public async Task CatalogCardShowsThePhotoOfTheProductAndAPlaceholderWhenThereIsNone()
+    {
+        var html = await (await Browser(ExternalSystemsWithPhotos()).GetAsync("/?category=Laptops")).Content.ReadAsStringAsync();
+
+        var hp = html[html.IndexOf("aria-label=\"Product HP-15\"", StringComparison.Ordinal)..];
+        hp = hp[..hp.IndexOf("</article>", StringComparison.Ordinal)];
+        Assert.Contains("<div class=\"product-image product-image-card\"", hp);
+        Assert.Contains("<img src=\"/api/products/HP-15/image\" alt=\"HP Laptop 15\"", hp);
+        Assert.Contains("loading=\"lazy\"", hp);
+
+        var dell = html[html.IndexOf("aria-label=\"Product DELL-XPS\"", StringComparison.Ordinal)..];
+        dell = dell[..dell.IndexOf("</article>", StringComparison.Ordinal)];
+        Assert.Contains("product-image-placeholder", dell);
+        Assert.DoesNotContain("<img", dell);
+    }
+
+    [Fact]
+    public async Task ProductPageShowsThePhotoInTheProductDetailMedia()
+    {
+        var html = await (await Browser(ExternalSystemsWithPhotos()).GetAsync("/products/HP-15")).Content.ReadAsStringAsync();
+
+        var media = html[html.IndexOf("product-detail-media", StringComparison.Ordinal)..];
+        media = media[..media.IndexOf("product-detail-info", StringComparison.Ordinal)];
+        Assert.Contains("<img src=\"/api/products/HP-15/image\" alt=\"HP Laptop 15\"", media);
+        Assert.DoesNotContain("loading=\"lazy\"", media);
+    }
+
+    [Fact]
+    public async Task FooterCreditsThePhotographers()
+    {
+        var html = await (await Browser().GetAsync("/")).Content.ReadAsStringAsync();
+
+        Assert.Contains("Photos on Unsplash by", html);
+        Assert.Contains("href=\"https://unsplash.com/@dhony24\"", html);
+        Assert.Contains("href=\"https://unsplash.com/@jay_zhang\"", html);
+    }
+
     [Fact]
     public async Task UnknownSkuIsAProductNotFoundPage()
     {

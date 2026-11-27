@@ -47,6 +47,73 @@ public class ProductServiceTests
         Assert.Equal(1299.99m, response[1].Price);
     }
 
+    private const string ErpHp15 = """
+        {"id":"HP-15","title":"HP 15 Laptop","description":"Everyday laptop","price":699.99,"category":"Laptops","brand":"HP","imageUrl":"/erp/images/HP-15.jpg"}
+        """;
+
+    [Fact]
+    public async Task ViewProduct_ExposesTheShopImageUrlWhenTheErpHasAnImage()
+    {
+        var service = Service(new StubErpHandler().Returns("/api/products/HP-15", HttpStatusCode.OK, ErpHp15));
+
+        var response = await service.ViewProductAsync("HP-15");
+
+        Assert.Equal("/api/products/HP-15/image", response.ImageUrl);
+    }
+
+    [Fact]
+    public async Task ViewProduct_HasNoImageUrlWhenTheErpHasNoImage()
+    {
+        var service = Service(new StubErpHandler().Returns("/api/products/BOOK-123", HttpStatusCode.OK, ErpBook));
+
+        var response = await service.ViewProductAsync("BOOK-123");
+
+        Assert.Null(response.ImageUrl);
+    }
+
+    [Fact]
+    public async Task GetProductImage_ProxiesTheErpImage()
+    {
+        var service = Service(new StubErpHandler()
+            .Returns("/api/products/HP-15", HttpStatusCode.OK, ErpHp15)
+            .ReturnsImage("/erp/images/HP-15.jpg", [1, 2, 3]));
+
+        var result = await service.GetProductImageAsync("HP-15");
+
+        Assert.Equal("image/jpeg", result.ContentType);
+        Assert.Equal(new byte[] { 1, 2, 3 }, result.Content);
+    }
+
+    [Fact]
+    public async Task GetProductImage_ThrowsNotExistWhenTheErpDoesNotKnowTheSku()
+    {
+        var service = Service(new StubErpHandler());
+
+        var ex = await Assert.ThrowsAsync<NotExistValidationException>(() => service.GetProductImageAsync("NO-SUCH-SKU"));
+
+        Assert.Equal("Product NO-SUCH-SKU does not exist.", ex.Message);
+    }
+
+    [Fact]
+    public async Task GetProductImage_ThrowsNotExistWhenTheProductHasNoImage()
+    {
+        var service = Service(new StubErpHandler().Returns("/api/products/BOOK-123", HttpStatusCode.OK, ErpBook));
+
+        var ex = await Assert.ThrowsAsync<NotExistValidationException>(() => service.GetProductImageAsync("BOOK-123"));
+
+        Assert.Equal("Product BOOK-123 has no image.", ex.Message);
+    }
+
+    [Fact]
+    public async Task GetProductImage_ThrowsNotExistWhenTheErpHasNoSuchImage()
+    {
+        var service = Service(new StubErpHandler().Returns("/api/products/HP-15", HttpStatusCode.OK, ErpHp15));
+
+        var ex = await Assert.ThrowsAsync<NotExistValidationException>(() => service.GetProductImageAsync("HP-15"));
+
+        Assert.Equal("Image of product HP-15 does not exist.", ex.Message);
+    }
+
     [Fact]
     public async Task BrowseProducts_IsEmptyWhenTheErpHasNoProducts()
     {

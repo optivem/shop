@@ -30,31 +30,25 @@ else
         </ol>
     </nav>
 
-    <div class="row g-4 align-items-start">
-        <div class="col-lg-7">
-            <div class="market-panel p-3">
-                <partial name="_ProductImage" model="@(new ProductImage(product.Brand, "square"))" />
-            </div>
+    <div class="product-detail">
+        <div class="product-detail-media market-panel">
+            <partial name="_ProductImage" model="@(new ProductImage(product.ImageUrl, product.Title ?? string.Empty))" />
         </div>
-        <div class="col-lg-5 d-flex flex-column gap-3">
-            <div class="market-panel p-4">
-                <p class="product-meta mb-2">
-                    <span class="product-meta-brand" aria-label="Product Brand">@product.Brand</span>
-                    · <span aria-label="Product Category">@product.Category</span>
+        <div class="product-detail-info">
+            <form method="post" action="/cart/add" asp-antiforgery="true" class="market-panel product-buy-box">
+                <input type="hidden" name="sku" value="@product.Sku">
+                <input type="hidden" name="returnUrl" value="@Chrome.ReturnUrl">
+                <p class="product-meta mb-0">
+                    <span class="product-meta-brand" aria-label="Product Brand">@product.Brand</span><span class="product-meta-sep" aria-hidden="true">/</span><span aria-label="Product Category">@product.Category</span>
                 </p>
                 <h1 class="product-detail-title" aria-label="Product Title">@product.Title</h1>
-                <p class="product-meta mb-3">
+                <p class="product-meta mb-0">
                     SKU <span class="font-monospace text-body" aria-label="Product SKU">@product.Sku</span>
                 </p>
                 <p class="price product-detail-price" aria-label="Display Price">@Money.Format(product.Price)</p>
-                <p class="product-detail-description mb-0" aria-label="Product Description">@product.Description</p>
-            </div>
-            <form method="post" action="/cart/add" asp-antiforgery="true" class="market-panel p-4 d-flex flex-column gap-3">
-                <input type="hidden" name="sku" value="@product.Sku">
-                <input type="hidden" name="returnUrl" value="@Chrome.ReturnUrl">
-                <div class="d-flex align-items-center justify-content-between gap-3">
-                    <label for="product-quantity" class="form-label fw-bold mb-0">Quantity</label>
-                    <div class="input-group quantity-stepper">
+                <div class="product-buy-row">
+                    <label for="product-quantity" class="visually-hidden">Quantity</label>
+                    <div class="input-group quantity-stepper quantity-stepper-lg">
                         <button type="button" class="btn btn-outline-secondary" aria-label="Decrease Quantity"
                                 data-step="-1">@Icons.Svg("minus")</button>
                         <input id="product-quantity" name="quantity" type="text" inputmode="numeric"
@@ -62,15 +56,29 @@ else
                         <button type="button" class="btn btn-outline-secondary" aria-label="Increase Quantity"
                                 data-step="1">@Icons.Svg("plus")</button>
                     </div>
+                    <button type="submit" class="btn btn-cta btn-lg product-add-button" aria-label="Add to Cart">
+                        @Icons.Svg("shopping-cart", 18, "me-2")Add to cart
+                    </button>
                 </div>
-                <button type="submit" class="btn btn-primary btn-lg w-100" aria-label="Add to Cart">
-                    @Icons.Svg("shopping-cart", 18, "me-2")Add to cart
-                </button>
-                <ul class="product-perks list-unstyled mb-0">
-                    <li>@Icons.Svg("check") Free shipping on orders over $1,000</li>
-                    <li>@Icons.Svg("check") 30-day returns</li>
-                </ul>
             </form>
+            <ul class="service-tiles service-tiles-compact" aria-label="Our services">
+                <li class="service-tile">
+                    <span class="service-tile-icon" aria-hidden="true">@Icons.Svg("truck", 18)</span>
+                    <span><strong class="service-tile-title">Free shipping</strong><span class="service-tile-detail">on orders over $1,000</span></span>
+                </li>
+                <li class="service-tile">
+                    <span class="service-tile-icon" aria-hidden="true">@Icons.Svg("rotate-ccw", 18)</span>
+                    <span><strong class="service-tile-title">30-day returns</strong><span class="service-tile-detail">send it back within a month</span></span>
+                </li>
+                <li class="service-tile">
+                    <span class="service-tile-icon" aria-hidden="true">@Icons.Svg("shield-check", 18)</span>
+                    <span><strong class="service-tile-title">Secure checkout</strong><span class="service-tile-detail">signed in with your account</span></span>
+                </li>
+            </ul>
+            <section class="market-panel product-about" aria-labelledby="product-about-heading">
+                <h2 class="product-about-title" id="product-about-heading">About this product</h2>
+                <p class="product-detail-description mb-0" aria-label="Product Description">@product.Description</p>
+            </section>
         </div>
     </div>
 }
