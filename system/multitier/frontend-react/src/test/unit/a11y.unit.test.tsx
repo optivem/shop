@@ -2,7 +2,7 @@
 // serious or critical axe violations. Runs in the default `npm test` with the API mocked
 // at the service boundary, like the interaction tests next to it.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { AuthContext, type AuthContextProps } from 'react-oidc-context';
 import type { ReactNode } from 'react';
@@ -70,7 +70,7 @@ describe('accessibility (axe, serious and critical)', () => {
 
   it('catalog', async () => {
     const { container } = renderScreen(<Catalog />, { path: '/', auth: createMockAuth({ isAuthenticated: false, user: null }) });
-    expect(screen.getAllByRole('article')).toHaveLength(CATALOG.length);
+    expect(within(screen.getByLabelText('Product List')).getAllByRole('article')).toHaveLength(CATALOG.length);
     expect(await seriousA11yViolations(container)).toEqual([]);
   });
 

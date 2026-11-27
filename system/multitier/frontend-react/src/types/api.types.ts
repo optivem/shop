@@ -87,6 +87,8 @@ export interface Product {
   brand: string;
   category: string;
   price: string;
+  /** The shop's own image URL (`/api/products/{sku}/image`), proxied from the ERP; null when the ERP has no photo. */
+  imageUrl: string | null;
 }
 
 // Customer profile types (GET/PUT /api/account/profile)

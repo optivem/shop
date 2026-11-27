@@ -5,6 +5,8 @@ export { StoreHeader } from './StoreHeader';
 export { StoreFooter } from './StoreFooter';
 export { AccountNav } from './AccountNav';
 export { ProductImage } from './ProductImage';
+export { CheckoutProgress } from './CheckoutProgress';
+export { WishlistButton } from './WishlistButton';
 export { QuantityStepper } from './QuantityStepper';
 export { Breadcrumb } from './Breadcrumb';
 export { Notification } from './Notification';

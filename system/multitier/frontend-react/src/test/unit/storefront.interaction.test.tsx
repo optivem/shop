@@ -55,7 +55,12 @@ function renderStore(
 
 const storeCart = (lines: { sku: string; quantity: number }[]) => localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(lines));
 const card = (sku: string) => screen.getByRole('article', { name: `Product ${sku}` });
-const shownSkus = () => screen.queryAllByRole('article').map((article) => article.getAttribute('aria-label')?.replace('Product ', ''));
+// The catalog grid's cards only: the home page's Bestsellers row repeats some products above it.
+const gridCards = () => {
+  const grid = screen.queryByLabelText('Product List');
+  return grid ? within(grid).queryAllByRole('article') : [];
+};
+const shownSkus = () => gridCards().map((article) => article.getAttribute('aria-label')?.replace('Product ', ''));
 
 describe('header', () => {
   beforeEach(() => localStorage.clear());

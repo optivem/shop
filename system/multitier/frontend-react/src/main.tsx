@@ -4,7 +4,7 @@ import ReactDOM from 'react-dom/client';
 // leaves a returning browser on a cached old copy. First, as when it was linked ahead of the bundle.
 import './styles/common.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import '@fontsource-variable/figtree';
+import '@fontsource-variable/manrope';
 import './styles/market.css';
 import './styles/pages-shop.css';
 import './styles/pages-orders.css';

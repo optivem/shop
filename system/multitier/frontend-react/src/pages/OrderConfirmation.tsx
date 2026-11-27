@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { CircleCheck, PackageSearch, TriangleAlert } from 'lucide-react';
-import { StoreLayout } from '../components';
+import { CheckoutProgress, ProductImage, StoreLayout } from '../components';
 import { useCatalog } from '../contexts/useCatalog';
 import { loadConfirmation } from '../features/checkout/confirmation-store';
 
@@ -9,7 +9,8 @@ export function OrderConfirmation() {
   const location = useLocation();
   const result = loadConfirmation(location.state);
   const { products } = useCatalog();
-  const titleOf = (sku: string) => products.find((product) => product.sku === sku)?.title;
+  const productOf = (sku: string) => products.find((product) => product.sku === sku);
+  const titleOf = (sku: string) => productOf(sku)?.title;
   const placedCount = result?.placed.length ?? 0;
   const rejectedCount = result?.rejected.length ?? 0;
 
@@ -18,6 +19,7 @@ export function OrderConfirmation() {
       <div className="order-confirmation">
         {result && placedCount > 0 ? (
           <>
+            <CheckoutProgress current="Confirmation" />
             <section className="market-panel order-confirmation-hero">
               <div className="order-confirmation-icon" aria-hidden="true">
                 <CircleCheck size={32} />
@@ -34,7 +36,10 @@ export function OrderConfirmation() {
               <ul className="confirmed-orders" aria-label="Confirmed Orders">
                 {result.placed.map((line) => (
                   <li key={line.orderNumber} className="confirmed-order">
-                    <div className="min-w-0">
+                    <div className="confirmed-order-thumb">
+                      <ProductImage imageUrl={productOf(line.sku)?.imageUrl} alt="" shape="square" />
+                    </div>
+                    <div className="min-w-0 flex-grow-1">
                       <Link
                         to={`/order-details/${encodeURIComponent(line.orderNumber)}`}
                         className="order-number-link"

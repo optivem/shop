@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { Check, Minus, Plus, ShoppingCart } from 'lucide-react';
+import { Minus, Plus, ShoppingCart } from 'lucide-react';
 import { LoadingSpinner, ProductImage, StoreLayout } from '../components';
+import { WishlistButton } from '../components/WishlistButton';
 import { useCart } from '../contexts/useCart';
+import { useCatalog } from '../contexts/useCatalog';
 import { useNotificationContext } from '../contexts/useNotificationContext';
+import { ServiceTiles } from '../features/catalog/ServiceTiles';
 import { productService } from '../services/product-service';
 import type { Product } from '../types/api.types';
 import { ADDED_TO_CART, PRODUCTS_UNAVAILABLE } from '../utils/messages';
@@ -27,6 +30,7 @@ export function ProductDetail() {
   const [loaded, setLoaded] = useState<Loaded | null>(null);
   const [quantity, setQuantity] = useState('1');
   const { add } = useCart();
+  const { products } = useCatalog();
   const { setSuccess, setError } = useNotificationContext();
 
   useEffect(() => {
@@ -76,6 +80,8 @@ export function ProductDetail() {
   }
 
   const { product } = state;
+  // Other products in the same category, from the catalog already loaded for the header.
+  const related = products.filter((other) => other.category === product.category && other.sku !== product.sku).slice(0, 4);
 
   const step = (delta: number) => {
     setQuantity(String(clampQuantity((parseQuantity(quantity) ?? 1) + delta)));
@@ -100,24 +106,31 @@ export function ProductDetail() {
         { label: product.title },
       ]}
     >
-      <div className="row g-4 align-items-start">
-        <div className="col-lg-7">
-          <div className="market-panel p-3">
-            <ProductImage brand={product.brand} shape="square" />
-          </div>
+      <div className="product-detail">
+        <div className="product-detail-media market-panel">
+          <ProductImage imageUrl={product.imageUrl} alt={product.title} />
         </div>
-        <div className="col-lg-5 d-flex flex-column gap-3">
-          <div className="market-panel p-4">
-            <p className="product-meta mb-2">
+        <div className="product-detail-info">
+          <form
+            className="market-panel product-buy-box"
+            onSubmit={(e) => {
+              e.preventDefault();
+              addToCart();
+            }}
+          >
+            <p className="product-meta mb-0">
               <span className="product-meta-brand" aria-label="Product Brand">
                 {product.brand}
-              </span>{' '}
-              · <span aria-label="Product Category">{product.category}</span>
+              </span>
+              <span className="product-meta-sep" aria-hidden="true">
+                /
+              </span>
+              <span aria-label="Product Category">{product.category}</span>
             </p>
             <h1 className="product-detail-title" aria-label="Product Title">
               {product.title}
             </h1>
-            <p className="product-meta mb-3">
+            <p className="product-meta mb-0">
               SKU{' '}
               <span className="font-monospace text-body" aria-label="Product SKU">
                 {product.sku}
@@ -126,22 +139,11 @@ export function ProductDetail() {
             <p className="price product-detail-price" aria-label="Display Price">
               {formatMoney(product.price)}
             </p>
-            <p className="product-detail-description mb-0" aria-label="Product Description">
-              {product.description}
-            </p>
-          </div>
-          <form
-            className="market-panel p-4 d-flex flex-column gap-3"
-            onSubmit={(e) => {
-              e.preventDefault();
-              addToCart();
-            }}
-          >
-            <div className="d-flex align-items-center justify-content-between gap-3">
-              <label htmlFor="product-quantity" className="form-label fw-bold mb-0">
+            <div className="product-buy-row">
+              <label htmlFor="product-quantity" className="visually-hidden">
                 Quantity
               </label>
-              <div className="input-group quantity-stepper">
+              <div className="input-group quantity-stepper quantity-stepper-lg">
                 <button type="button" className="btn btn-outline-secondary" aria-label="Decrease Quantity" onClick={() => step(-1)}>
                   <Minus size={16} aria-hidden="true" />
                 </button>
@@ -158,22 +160,46 @@ export function ProductDetail() {
                   <Plus size={16} aria-hidden="true" />
                 </button>
               </div>
+              <button type="submit" className="btn btn-cta btn-lg product-add-button" aria-label="Add to Cart">
+                <ShoppingCart size={18} aria-hidden="true" className="me-2" />
+                Add to cart
+              </button>
+              <WishlistButton title={product.title} className="wishlist-button-boxed" />
             </div>
-            <button type="submit" className="btn btn-primary btn-lg w-100" aria-label="Add to Cart">
-              <ShoppingCart size={18} aria-hidden="true" className="me-2" />
-              Add to cart
-            </button>
-            <ul className="product-perks list-unstyled mb-0">
-              <li>
-                <Check size={16} aria-hidden="true" /> Free shipping on orders over $1,000
-              </li>
-              <li>
-                <Check size={16} aria-hidden="true" /> 30-day returns
-              </li>
-            </ul>
           </form>
+          <ServiceTiles compact />
+          <section className="market-panel product-about" aria-labelledby="product-about-heading">
+            <h2 className="product-about-title" id="product-about-heading">
+              About this product
+            </h2>
+            <p className="product-detail-description mb-0" aria-label="Product Description">
+              {product.description}
+            </p>
+          </section>
         </div>
       </div>
+      {related.length > 0 && (
+        <section className="home-section mt-4" aria-labelledby="product-related-heading">
+          <h2 className="home-section-title" id="product-related-heading">
+            More in {product.category}
+          </h2>
+          <ul className="compact-products">
+            {related.map((other) => (
+              <li key={other.sku}>
+                <Link to={`/products/${encodeURIComponent(other.sku)}`} className="compact-product">
+                  <span className="compact-product-thumb">
+                    <ProductImage imageUrl={other.imageUrl} alt="" shape="square" lazy />
+                  </span>
+                  <span className="compact-product-text">
+                    <span className="compact-product-title">{other.title}</span>
+                    <span className="compact-product-price price">{formatMoney(other.price)}</span>
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </StoreLayout>
   );
 }

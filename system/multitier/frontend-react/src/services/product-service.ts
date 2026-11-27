@@ -13,6 +13,7 @@ function toProduct(payload: ProductPayload): Product {
     brand: payload.brand,
     category: payload.category,
     price: typeof payload.price === 'number' ? payload.price.toFixed(2) : payload.price,
+    imageUrl: payload.imageUrl ?? null,
   };
 }
 

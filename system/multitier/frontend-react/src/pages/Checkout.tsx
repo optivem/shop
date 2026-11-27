@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { LoadingSpinner, ProductImage, StoreLayout, SubmitButton } from '../components';
+import { CheckoutProgress, LoadingSpinner, ProductImage, StoreLayout, SubmitButton } from '../components';
 import { useCart } from '../contexts/useCart';
 import { useCatalog } from '../contexts/useCatalog';
 import { useNotificationContext } from '../contexts/useNotificationContext';
@@ -121,6 +121,7 @@ export function Checkout() {
 
   return (
     <StoreLayout title="Checkout" breadcrumbs={[{ label: 'Home', path: '/' }, { label: 'Cart', path: '/cart' }, { label: 'Checkout' }]}>
+      <CheckoutProgress current="Checkout" />
       <h1 className="h2 mb-4">Checkout</h1>
       <form className="row g-4 align-items-start" noValidate onSubmit={(e) => void handleSubmit(e)}>
         <div className="col-lg-7 d-flex flex-column gap-4">
@@ -225,7 +226,7 @@ export function Checkout() {
               {lines.map((line) => (
                 <li key={line.sku} className="checkout-review-line" aria-label={`Review Line ${line.sku}`}>
                   <div className="checkout-review-thumb">
-                    <ProductImage brand={line.product?.brand ?? line.sku} shape="square" />
+                    <ProductImage imageUrl={line.product?.imageUrl} alt="" shape="square" />
                   </div>
                   <div className="checkout-review-name">
                     <span className="checkout-review-title">{line.product?.title ?? line.sku}</span>
@@ -258,7 +259,7 @@ export function Checkout() {
               text="Place order"
               loadingText="Placing order..."
               data-testid="place-order"
-              className="btn btn-primary btn-lg w-100"
+              className="btn btn-cta btn-lg w-100"
             />
             <p className="text-body-secondary small text-center mb-0">
               Discount and tax are worked out per order when it is placed.

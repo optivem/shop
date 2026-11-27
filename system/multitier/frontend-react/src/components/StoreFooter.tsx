@@ -3,13 +3,21 @@ import { useCatalog } from '../contexts/useCatalog';
 import { categoriesOf } from '../features/catalog/catalog-query';
 
 /**
- * Unsplash photographers of the photos that ship in public/images/promo/ (home hero and promo tiles).
- * Keep in sync with docs/design/home-redesign/images/SOURCES.md: add a row whenever a new photo ships.
+ * Unsplash photographers of every photo the shop shows: the promo photos in public/images/promo/ (home hero,
+ * docs/design/home-redesign/images/SOURCES.md) and the ERP product photos (external-systems/erp-images/SOURCES.md).
+ * One entry per photographer (several shot more than one photo), linking to their Unsplash profile.
+ * Keep in sync with both SOURCES.md files: add a photographer whenever a photo by someone new ships.
  */
 const PHOTO_CREDITS = [
-  { photographer: 'Dhony Koswara', url: 'https://unsplash.com/photos/btVTuAIhvk8' }, // laptop.jpg
-  { photographer: 'Huy Phan', url: 'https://unsplash.com/photos/VXpeQ3GetDU' }, // monitor.jpg
-  { photographer: 'Jay Zhang', url: 'https://unsplash.com/photos/U1I0IoQx3Yo' }, // keyboard.jpg
+  { photographer: 'Dhony Koswara', url: 'https://unsplash.com/@dhony24' }, // promo laptop.jpg, HP-15
+  { photographer: 'Lasse Jensen', url: 'https://unsplash.com/@maybejensen' }, // DELL-XPS, ANKER-HUB-7
+  { photographer: 'Faraaz Zuberi', url: 'https://unsplash.com/@ffz_20' }, // LENOVO-T14
+  { photographer: '2H Media', url: 'https://unsplash.com/@2hmedia' }, // ASUS-ZENBOOK-14
+  { photographer: 'Huy Phan', url: 'https://unsplash.com/@huyphan2602' }, // promo monitor.jpg, DELL-U2723QE
+  { photographer: 'Roberto Nickson', url: 'https://unsplash.com/@rpnickson' }, // LG-27UL500
+  { photographer: 'Nikita Kachanovsky', url: 'https://unsplash.com/@nkachanovskyyy' }, // SAMSUNG-S24
+  { photographer: 'Ravi Palwe', url: 'https://unsplash.com/@ravipalwe' }, // LOGI-MX3S
+  { photographer: 'Jay Zhang', url: 'https://unsplash.com/@jay_zhang' }, // promo keyboard.jpg, LOGI-MXKEYS
 ];
 
 /** Static footer: Shop, Help, the demo-store note and the photo credits (storefront-ux §3). */
@@ -48,7 +56,7 @@ export function StoreFooter() {
           </div>
           <div className="col-md-4 text-md-end">
             <p className="store-footer-brand mb-1">
-              MyShop<span className="store-logo-mark" aria-hidden="true">.</span>
+              My<span className="store-logo-mark">Shop</span>
             </p>
             <p className="mb-0">© MyShop · demo store for the Optivem ATDD course</p>
           </div>

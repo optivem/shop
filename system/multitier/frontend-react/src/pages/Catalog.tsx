@@ -6,7 +6,7 @@ import { useCart } from '../contexts/useCart';
 import { useCatalog } from '../contexts/useCatalog';
 import { useNotificationContext } from '../contexts/useNotificationContext';
 import { CatalogFilters } from '../features/catalog/CatalogFilters';
-import { PromoTiles } from '../features/catalog/PromoTiles';
+import { HomeSections } from '../features/catalog/HomeSections';
 import { ProductCard } from '../features/catalog/ProductCard';
 import {
   applyCatalogQuery,
@@ -32,6 +32,9 @@ export function Catalog() {
   const query = parseCatalogQuery(searchParams);
   const shown = applyCatalogQuery(products, query);
   const setQuery = (next: CatalogQuery) => setSearchParams(toSearchParams(next));
+  // The home sections (hero, shortcuts, rows) only show on the plain catalog; a search or filter goes straight to results.
+  const isHome = query.q.trim() === '' && query.category === '' && query.brands.length === 0;
+  const heading = query.category || (query.q.trim() ? 'Search results' : 'All products');
 
   const addToCart = (sku: string) => {
     add(sku, 1);
@@ -68,7 +71,16 @@ export function Catalog() {
 
   return (
     <StoreLayout>
-      <PromoTiles />
+      {isHome && products.length > 0 && !error && <HomeSections products={products} onAddToCart={addToCart} />}
+      {isHome ? (
+        <h2 className="catalog-heading" id="catalog">
+          {heading}
+        </h2>
+      ) : (
+        <h1 className="catalog-heading" id="catalog">
+          {heading}
+        </h1>
+      )}
       <div className="catalog-layout">
         <aside className="catalog-sidebar">
           <button

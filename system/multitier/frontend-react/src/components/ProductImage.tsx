@@ -1,23 +1,45 @@
-// Product image placeholder: the ERP has no image field, so each product gets a tile with its brand name,
-// coloured by a deterministic hash of the brand (storefront-ux §5). No external images.
+// The product photo the ERP owns, served by the shop backend at the product's imageUrl (ERP -> backend -> UI).
+// A neutral placeholder is only a defensive fallback: imageUrl is null, or the image fails to load.
 
-import { brandColour } from './brand-colour';
+import { useState } from 'react';
+import { Package } from 'lucide-react';
 
 interface ProductImageProps {
-  brand: string;
-  /** 4:3 on cards, 1:1 on the product page. */
+  imageUrl: string | null | undefined;
+  /** What the photo shows (the product title). Empty for a thumbnail that sits next to the product's own title. */
+  alt: string;
+  /** 4:3 on cards and the product page (the photos are 600x450), 1:1 for cart and checkout thumbnails. */
   shape?: 'card' | 'square';
+  /** Catalog grids lazy-load; the product page loads its one photo straight away. */
+  lazy?: boolean;
 }
 
-export function ProductImage({ brand, shape = 'card' }: Readonly<ProductImageProps>) {
+export function ProductImage({ imageUrl, alt, shape = 'card', lazy = false }: Readonly<ProductImageProps>) {
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
+  const className = `product-image product-image-${shape}`;
+
+  if (!imageUrl || failedUrl === imageUrl) {
+    return (
+      <div
+        className={`${className} product-image-placeholder`}
+        {...(alt ? { role: 'img', 'aria-label': alt } : { 'aria-hidden': true })}
+      >
+        <Package size={32} strokeWidth={1.5} aria-hidden="true" />
+      </div>
+    );
+  }
+
   return (
-    <div
-      className={`product-image product-image-${shape}`}
-      style={{ backgroundColor: brandColour(brand) }}
-      role="img"
-      aria-label={`${brand} product image`}
-    >
-      <span>{brand.toUpperCase()}</span>
+    <div className={className}>
+      <img
+        src={imageUrl}
+        alt={alt}
+        width={600}
+        height={450}
+        loading={lazy ? 'lazy' : undefined}
+        decoding="async"
+        onError={() => setFailedUrl(imageUrl)}
+      />
     </div>
   );
 }

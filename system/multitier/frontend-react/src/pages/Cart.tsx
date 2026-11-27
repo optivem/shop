@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ShoppingCart, Trash2 } from 'lucide-react';
-import { LoadingSpinner, ProductImage, QuantityStepper, StoreLayout } from '../components';
+import { CheckoutProgress, LoadingSpinner, ProductImage, QuantityStepper, StoreLayout } from '../components';
 import { useCart } from '../contexts/useCart';
 import { useCatalog } from '../contexts/useCatalog';
 import { useNotificationContext } from '../contexts/useNotificationContext';
@@ -64,7 +64,7 @@ export function Cart() {
                     <td className="cart-cell-product">
                       <div className="d-flex align-items-center gap-3">
                         <div className="cart-thumb">
-                          <ProductImage brand={line.product?.brand ?? line.sku} shape="square" />
+                          <ProductImage imageUrl={line.product?.imageUrl} alt="" shape="square" lazy />
                         </div>
                         <div className="min-w-0">
                           {line.product ? (
@@ -140,7 +140,7 @@ export function Cart() {
               </span>
             </div>
             <p className="text-body-secondary small mb-0">Tax and discounts are calculated at checkout.</p>
-            <Link to="/checkout" className="btn btn-primary btn-lg w-100" aria-label="Proceed to Checkout">
+            <Link to="/checkout" className="btn btn-cta btn-lg w-100" aria-label="Proceed to Checkout">
               Proceed to checkout
             </Link>
             <Link to="/" className="cart-continue">
@@ -154,6 +154,7 @@ export function Cart() {
 
   return (
     <StoreLayout title="Cart" breadcrumbs={[{ label: 'Home', path: '/' }, { label: 'Cart' }]}>
+      {itemCount > 0 && <CheckoutProgress current="Cart" />}
       <h1 className="h2 mb-4">
         Shopping cart{' '}
         {itemCount > 0 && (

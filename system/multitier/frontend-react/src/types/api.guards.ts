@@ -101,6 +101,7 @@ export interface ProductPayload {
   brand: string;
   category: string;
   price: string | number;
+  imageUrl?: string | null;
 }
 
 export const isProduct = hasShape<ProductPayload>({
@@ -110,6 +111,7 @@ export const isProduct = hasShape<ProductPayload>({
   brand: isString,
   category: isString,
   price: isPrice,
+  imageUrl: isOptionalString,
 });
 
 export const isProductList = isArrayOf(isProduct);

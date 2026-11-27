@@ -195,7 +195,6 @@
 }
 
 .checkout-review-thumb .product-image {
-    font-size: 0.5625rem;
     border-radius: var(--market-radius-sm);
 }
 
@@ -474,7 +473,6 @@
 }
 
 .order-item-thumb .product-image {
-    font-size: var(--market-font-size-xs);
     border-radius: var(--market-radius-lg);
 }
 

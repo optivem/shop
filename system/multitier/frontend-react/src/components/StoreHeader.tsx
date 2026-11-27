@@ -1,16 +1,17 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { ShoppingCart, Truck } from 'lucide-react';
+import { RotateCcw, Search, ShoppingCart, Truck } from 'lucide-react';
 import { useRoles } from '../auth/useRoles';
 import { useSession } from '../auth/useSession';
 import { useCart } from '../contexts/useCart';
 import { useCatalog } from '../contexts/useCatalog';
 import { categoriesOf } from '../features/catalog/catalog-query';
+import { CategoryMenu } from './CategoryMenu';
 import { UserMenu } from './UserMenu';
 
 /**
- * The header on every page (storefront-ux §3): utility strip, logo, search (with a category scope), cart,
- * sign-in state, and the category / account nav row. The layout is responsive through CSS only: no element
+ * The header on every page (storefront-ux §3, Retail look): utility strip, logo, the Categories menu, search
+ * (with a category scope), cart, sign-in state, and the category / account nav row. The layout is responsive through CSS only: no element
  * is rendered twice, so the UI drivers' selectors keep matching exactly one element.
  */
 export function StoreHeader() {
@@ -50,15 +51,23 @@ export function StoreHeader() {
   return (
     <header className="store-header">
       <div className="store-utility">
-        <div className="container d-flex align-items-center gap-2 py-2">
-          <Truck size={14} aria-hidden="true" />
-          <span>Free shipping over $1,000</span>
+        <div className="container store-utility-row">
+          <span className="store-utility-item">
+            <Truck size={14} aria-hidden="true" />
+            Free shipping over $1,000
+          </span>
+          <span className="store-utility-item">
+            <RotateCcw size={14} aria-hidden="true" />
+            30-day returns
+          </span>
+          <span className="store-utility-note">Demo store</span>
         </div>
       </div>
       <div className="store-header-top">
         <div className="container d-flex flex-wrap align-items-center py-3 store-header-row">
+          <CategoryMenu products={products} />
           <Link className="store-logo" to="/">
-            MyShop<span className="store-logo-mark" aria-hidden="true">.</span>
+            My<span className="store-logo-mark">Shop</span>
           </Link>
           <form className="store-search" method="get" action="/" role="search" onSubmit={onSearch}>
             {categories.length > 0 && (
@@ -81,13 +90,13 @@ export function StoreHeader() {
               type="search"
               name="q"
               className="store-search-input"
-              placeholder="Search products…"
+              placeholder="What are you looking for?"
               aria-label="Search Products"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
             <button type="submit" className="store-search-button" aria-label="Search">
-              Search
+              <Search size={20} strokeWidth={2.2} aria-hidden="true" />
             </button>
           </form>
           <div className="store-header-actions d-flex align-items-center gap-3">
