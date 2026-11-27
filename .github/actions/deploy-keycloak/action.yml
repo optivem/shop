@@ -110,15 +110,17 @@ runs:
             KC_BOOTSTRAP_ADMIN_USERNAME:"admin", SYSTEM:$system, RUN_APP_SUFFIX:$suffix}' > "$env_file"
         # One instance: Keycloak keeps in-flight logins in local memory and Cloud Run instances can't
         # cluster, so a second instance makes login form posts fail with expired_code (UI tests hang).
-        # Startup probe on /health/started (management port 9000), not the default TCP probe on 8080:
-        # since 26.8, health enabled means async bootstrap, so 8080 opens before bootstrap. A TCP probe
-        # then passes at once and Cloud Run throttles the CPU to request time only, so the bootstrap
-        # crawled for ~33 min and the service sat at 503 (REL #107). Until the probe passes, the
-        # instance keeps full startup CPU (plus --cpu-boost). 60 x 10s = Cloud Run's 600s maximum.
+        # Startup probe on /health/ready (management port 9000), not the default TCP probe on 8080 and
+        # not /health/started: since 26.8, health enabled means async bootstrap, so 8080 opens and
+        # /health/started passes before the bootstrap (realms, JGroups jdbc-ping, db) is done. Once the
+        # probe passes, Cloud Run throttles the CPU to request time only, so the rest of the bootstrap
+        # crawled for 8-40 min at 503 and outlasted the 1800 s wait (REL #107, again on 2026-11-27).
+        # /health/ready stays down until the bootstrap ends, so the instance keeps full startup CPU
+        # (plus --cpu-boost) throughout. 60 x 10s = Cloud Run's 600s maximum.
         args=(--image "$IMAGE" --region "$REGION" --project "$PROJECT"
           --service-account "runtime@${PROJECT}.iam.gserviceaccount.com"
           --port 8080 --memory 1Gi --cpu 1 --cpu-boost
-          --startup-probe "httpGet.path=/health/started,httpGet.port=9000,periodSeconds=10,failureThreshold=60,timeoutSeconds=5"
+          --startup-probe "httpGet.path=/health/ready,httpGet.port=9000,periodSeconds=10,failureThreshold=60,timeoutSeconds=5"
           --min-instances 0 --max-instances 1 --allow-unauthenticated
           --set-secrets "KC_BOOTSTRAP_ADMIN_PASSWORD=${SYSTEM}-keycloak-admin-password:latest")
         fingerprint="$(printf '%s\n' "${args[@]}" | cat - "$env_file" | sha256sum | cut -c1-32)"
@@ -132,8 +134,8 @@ runs:
         fi
         rm -f "$env_file"
 
-    # Since 26.8 a cold start (--min-instances 0) bootstraps for ~18 min on Cloud Run (REL #107), and
-    # /health/started passes before the realms are served, so this wait must outlast the bootstrap.
+    # The startup probe on /health/ready keeps a cold start (--min-instances 0) at full CPU until the
+    # realms are served; the long wait stays as a margin for a slow database (REL #107).
     - name: Wait for Keycloak (cold start + realm import)
       uses: optivem/actions/wait-for-endpoints@v1
       with:
