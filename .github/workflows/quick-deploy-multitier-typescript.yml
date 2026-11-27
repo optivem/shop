@@ -1,0 +1,294 @@
+name: quick-deploy-multitier-typescript
+
+# Quick deploy: builds the reference variant (multitier-typescript: backend-typescript +
+# frontend-react) from a ref and deploys it straight to the real production Cloud Run services,
+# so a small UI change is live in minutes instead of after commit -> acceptance -> QA -> prod.
+#
+# DELIBERATELY UNTESTED: no commit-stage, acceptance, QA or smoke suites run. It never touches
+# VERSION, release/RC tags, RC images or GitHub releases. The next regular prod release
+# (multitier-typescript-prod-stage.yml) replaces it. See docs/environments.md#quick-deploy.
+#
+# It needs a prior regular production deploy: it only swaps the image of the existing services
+# and migrate job (gcloud run services/jobs update), so they keep their env vars, secrets and
+# flags, and nothing from _deploy-stage.yml is duplicated. Keycloak and the simulators stay as
+# they are.
+#
+# Concurrency: the deploy job shares the multitier-typescript-prod-stage group
+# (cancel-in-progress: false), so it waits for a running prod stage instead of racing it. The
+# guard (outside the group) refuses to start while a prod-stage run is queued or running, and the
+# build job checks again right before the deploy job queues: a pending job in the group replaces
+# the group's pending one, and a quick deploy must never replace a waiting prod-stage run.
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Branch, tag or commit SHA to deploy (untested!)'
+        required: false
+        type: string
+        default: main
+
+permissions: {}
+
+env:
+  IMAGE_BASE: ghcr.io/${{ github.repository }}
+  BACKEND_IMAGE: multitier-backend-typescript
+  FRONTEND_IMAGE: multitier-frontend-react
+
+jobs:
+  # === Refuse While a Release Is in Progress + Resolve the Ref ===
+  guard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      sha: ${{ steps.resolve.outputs.sha }}
+    steps:
+      - name: Check No Prod Stage Is Active
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          runs="$(gh run list -w multitier-typescript-prod-stage.yml -L 20 --json databaseId,status)"
+          active="$(jq -r '[.[] | select(.status == "queued" or .status == "in_progress" or .status == "waiting" or .status == "pending" or .status == "requested") | .databaseId] | join(", ")' <<< "$runs")"
+          if [[ -n "$active" ]]; then
+            echo "::error::A release is in progress (multitier-typescript-prod-stage run(s) ${active}), try later."
+            exit 1
+          fi
+          echo "No multitier-typescript-prod-stage run is active."
+
+      - name: Resolve Ref to a Commit SHA
+        id: resolve
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REF: ${{ inputs.ref }}
+        run: |
+          set -euo pipefail
+          sha="$(gh api "repos/${GITHUB_REPOSITORY}/commits/${REF}" --jq .sha)"
+          [[ "$sha" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::Cannot resolve ref '${REF}' to a commit SHA (got '${sha}')."; exit 1; }
+          echo "Ref '${REF}' is ${sha}"
+          echo "sha=${sha}" >> "$GITHUB_OUTPUT"
+
+  # === Build and Push the Images (no tests) ===
+  build:
+    needs: guard
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      backend-image: ${{ steps.refs.outputs.backend }}
+      frontend-image: ${{ steps.refs.outputs.frontend }}
+      db-migrate-image: ${{ steps.shared.outputs.db-migrate }}
+    env:
+      SHA: ${{ needs.guard.outputs.sha }}
+    steps:
+      - name: Checkout Commit
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.guard.outputs.sha }}
+
+      - name: Compose Image References
+        id: refs
+        run: |
+          set -euo pipefail
+          {
+            echo "backend=${IMAGE_BASE}/${BACKEND_IMAGE}:quick-${SHA}"
+            echo "frontend=${IMAGE_BASE}/${FRONTEND_IMAGE}:quick-${SHA}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Log in to GHCR
+        uses: optivem/actions/docker-login@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GHCR_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      # Same context and Dockerfile as the commit stages (multitier-backend-typescript-commit-stage.yml,
+      # multitier-frontend-react-commit-stage.yml); their base images are pinned by digest there.
+      - name: Pre-pull base images
+        uses: optivem/actions/retry@v1
+        with:
+          command: bash -c 'set -e; for ref in $(grep -h "^FROM " system/multitier/backend-typescript/Dockerfile system/multitier/frontend-react/Dockerfile | cut -d " " -f 2 | sort -u); do docker pull "$ref"; done'
+
+      - name: Build and Push Backend Image
+        uses: docker/build-push-action@v7
+        with:
+          context: system/multitier/backend-typescript
+          file: system/multitier/backend-typescript/Dockerfile
+          push: true
+          tags: ${{ steps.refs.outputs.backend }}
+          labels: org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+
+      - name: Build and Push Frontend Image
+        uses: docker/build-push-action@v7
+        with:
+          context: system/multitier/frontend-react
+          file: system/multitier/frontend-react/Dockerfile
+          push: true
+          tags: ${{ steps.refs.outputs.frontend }}
+          labels: org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+
+      # db-migrate for the migrations, from this commit. The action also builds Keycloak, the
+      # simulators and the stubs, but each is tagged by its tree hash and reused when that tag
+      # exists, so normally only db-migrate (if system/db changed) is built; only db-migrate is
+      # deployed. It also checks that every image Cloud Run pulls, the quick ones included, is
+      # publicly pullable.
+      - name: Build and Push db-migrate Image
+        id: shared
+        uses: ./.github/actions/build-shared-images
+        with:
+          registry: ${{ env.IMAGE_BASE }}
+          public-images: |
+            ${{ steps.refs.outputs.backend }}
+            ${{ steps.refs.outputs.frontend }}
+
+      # Again, right before the deploy job queues in the prod-stage group (see the header).
+      - name: Check No Prod Stage Is Active
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          runs="$(gh run list -w multitier-typescript-prod-stage.yml -L 20 --json databaseId,status)"
+          active="$(jq -r '[.[] | select(.status == "queued" or .status == "in_progress" or .status == "waiting" or .status == "pending" or .status == "requested") | .databaseId] | join(", ")' <<< "$runs")"
+          if [[ -n "$active" ]]; then
+            echo "::error::A release is in progress (multitier-typescript-prod-stage run(s) ${active}), try later."
+            exit 1
+          fi
+
+  # === Deploy to the Production Services (no smoke tests) ===
+  deploy:
+    needs: [guard, build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: multitier-typescript-production
+    concurrency:
+      group: multitier-typescript-prod-stage
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      SYSTEM: ${{ vars.SYSTEM_NAME }}
+      REGION: ${{ vars.GCP_REGION }}
+      PROJECT: ${{ vars.GCP_PROJECT_ID }}
+      DOMAIN: ${{ vars.PROD_DOMAIN }}
+      BACKEND_REF: ${{ needs.build.outputs.backend-image }}
+      FRONTEND_REF: ${{ needs.build.outputs.frontend-image }}
+      MIGRATE_REF: ${{ needs.build.outputs.db-migrate-image }}
+    steps:
+      - name: Resolve Production Names
+        env:
+          WIF_PROVIDER: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+        run: |
+          set -euo pipefail
+          # The provider name is projects/<number>/locations/global/... (see _deploy-stage.yml).
+          project_number=$(cut -d/ -f2 <<< "$WIF_PROVIDER")
+          [[ "$project_number" =~ ^[0-9]+$ ]] || { echo "::error::Cannot parse project number from GCP_WORKLOAD_IDENTITY_PROVIDER"; exit 1; }
+          p="${SYSTEM}-multitier-typescript-production"
+          url() { echo "https://$1-${project_number}.${REGION}.run.app"; }
+          {
+            echo "BACKEND_NAME=${p}-backend"
+            echo "FRONTEND_NAME=${p}-frontend"
+            echo "MIGRATE_JOB=${p}-migrate"
+            echo "UI_HEALTH_URL=$(url "${p}-frontend")/"
+            echo "API_HEALTH_URL=$(url "${p}-backend")/health"
+          } >> "$GITHUB_ENV"
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+
+      - name: Setup Cloud SDK
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Check Production Exists
+        run: |
+          set -euo pipefail
+          missing=0
+          for name in "$BACKEND_NAME" "$FRONTEND_NAME"; do
+            found=$(gcloud run services list --region "$REGION" --project "$PROJECT" --filter="metadata.name=${name}" --format=json)
+            if [[ "$(jq length <<< "$found")" -eq 0 ]]; then
+              echo "::error::Cloud Run service ${name} does not exist. A quick deploy only updates an existing production; run multitier-typescript-prod-stage.yml once first."
+              missing=1
+            fi
+          done
+          found=$(gcloud run jobs list --region "$REGION" --project "$PROJECT" --filter="metadata.name=${MIGRATE_JOB}" --format=json)
+          if [[ "$(jq length <<< "$found")" -eq 0 ]]; then
+            echo "::error::Cloud Run job ${MIGRATE_JOB} does not exist. A quick deploy only updates an existing production; run multitier-typescript-prod-stage.yml once first."
+            missing=1
+          fi
+          exit "$missing"
+
+      # The job keeps its FLYWAY_* env and service account; only the image changes.
+      - name: Run DB Migrations
+        run: |
+          set -euo pipefail
+          gcloud run jobs update "$MIGRATE_JOB" --image "$MIGRATE_REF" --region "$REGION" --project "$PROJECT"
+          gcloud run jobs execute "$MIGRATE_JOB" --region "$REGION" --project "$PROJECT" --wait
+
+      # services update keeps the live env vars, secrets and flags. A rollback pins traffic to a
+      # named revision (docs/operations/rollback.md), so send traffic to the new one explicitly.
+      - name: Deploy Backend
+        run: |
+          set -euo pipefail
+          gcloud run services update "$BACKEND_NAME" --image "$BACKEND_REF" --region "$REGION" --project "$PROJECT"
+          gcloud run services update-traffic "$BACKEND_NAME" --to-latest --region "$REGION" --project "$PROJECT"
+
+      - name: Deploy Frontend
+        run: |
+          set -euo pipefail
+          gcloud run services update "$FRONTEND_NAME" --image "$FRONTEND_REF" --region "$REGION" --project "$PROJECT"
+          gcloud run services update-traffic "$FRONTEND_NAME" --to-latest --region "$REGION" --project "$PROJECT"
+
+      # A readiness wait, not a test.
+      - name: Wait for Systems
+        uses: optivem/actions/wait-for-endpoints@v1
+        with:
+          endpoints: |
+            [
+              { "name": "MyShop UI", "url": "${{ env.UI_HEALTH_URL }}" },
+              { "name": "MyShop API", "url": "${{ env.API_HEALTH_URL }}" }
+            ]
+          max-attempts: '60'
+          wait-seconds: '10'
+          timeout-seconds: '900'
+
+      - name: Wait for Custom Domain
+        if: env.DOMAIN != ''
+        uses: optivem/actions/wait-for-endpoints@v1
+        with:
+          endpoints: |
+            [
+              { "name": "MyShop UI (${{ env.DOMAIN }})", "url": "https://${{ env.DOMAIN }}/" }
+            ]
+          max-attempts: '30'
+          wait-seconds: '10'
+          timeout-seconds: '300'
+
+      - name: Summarize Quick Deploy
+        env:
+          REF: ${{ inputs.ref }}
+          SHA: ${{ needs.guard.outputs.sha }}
+        run: |
+          set -euo pipefail
+          {
+            echo "### Quick deploy to production (UNTESTED)"
+            echo ""
+            echo "Ref \`${REF}\` at \`${SHA}\`, with no tests of any kind. The next regular prod release replaces it."
+            echo ""
+            echo "- Backend \`${BACKEND_NAME}\`: \`${BACKEND_REF}\`"
+            echo "- Frontend \`${FRONTEND_NAME}\`: \`${FRONTEND_REF}\`"
+            echo "- Migrations \`${MIGRATE_JOB}\`: \`${MIGRATE_REF}\`"
+            if [[ -n "$DOMAIN" ]]; then echo "- URL: https://${DOMAIN}"; else echo "- URL: ${UI_HEALTH_URL}"; fi
+          } >> "$GITHUB_STEP_SUMMARY"

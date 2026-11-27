@@ -29,6 +29,29 @@ Service names, with `<system>` from the `SYSTEM_NAME` repo variable and `<flavor
 Each has the `run.app` URL `https://<service>-<project-number>.<region>.run.app`. All of them share one
 Keycloak (`<system>-keycloak`), with a realm per stage.
 
+## Quick deploy
+
+`quick-deploy-multitier-typescript.yml` puts a change on the reference variant's **real production**
+(`https://shop.optivem.com`) in minutes, for checking small UI changes live without going through commit,
+acceptance, QA and prod:
+
+```bash
+gh workflow run quick-deploy-multitier-typescript.yml -f ref=main
+```
+
+It builds `multitier-backend-typescript` and `multitier-frontend-react` from `ref`, tagged `quick-<sha>`,
+runs the DB migrations from that commit, and swaps the image of the existing production backend and
+frontend (`gcloud run services update`, so they keep their settings). Keycloak and the simulators are not
+touched, and a production must already exist (one regular prod-stage run).
+
+- **Untested.** No test of any kind runs: no commit-stage, acceptance, QA or smoke suite.
+- **No release.** It never touches `VERSION`, release or RC tags, RC images or GitHub releases.
+- **Refuses during a release.** It fails ("a release is in progress, try later") while any
+  `multitier-typescript-prod-stage.yml` run is queued or running, and its deploy job shares that stage's
+  concurrency group, so it never races or replaces a prod-stage run.
+- **Temporary.** The next regular prod release overwrites it. If that release fails, its rollback
+  restores the revisions that served before it, which is then the quick-deploy revision.
+
 ## Custom domains
 
 Only the reference variant (multitier-typescript) gets custom domains. Only its frontend is mapped; the
