@@ -229,7 +229,7 @@ tasks.register('externalSimulatorImage', Exec) {
 	description = 'Builds the external-system simulator Docker image used by the real-mode parity contract tests.'
 	group = 'verification'
 	workingDir = file("${rootDir}/../../..")
-	commandLine 'docker', 'build', '-t', 'myshop/external-system-simulators:contract-test', 'external-systems/simulators'
+	commandLine 'docker', 'build', '-t', 'myshop/external-system-simulators:contract-test', '-f', 'external-systems/simulators/Dockerfile', 'external-systems'
 	environment 'DOCKER_BUILDKIT', '1'
 }
 

@@ -202,7 +202,7 @@ tasks.register('externalSimulatorImage', Exec) {
 	// scaffold's flattened backend/ layout. If this depth changes, mirror the
 	// rewrite in gh-optivem's internal/scaffolding/steps/apply_template.go.
 	workingDir = file("${rootDir}/../../..")
-	commandLine 'docker', 'build', '-t', 'myshop/external-system-simulators:contract-test', 'external-systems/simulators'
+	commandLine 'docker', 'build', '-t', 'myshop/external-system-simulators:contract-test', '-f', 'external-systems/simulators/Dockerfile', 'external-systems'
 	environment 'DOCKER_BUILDKIT', '1'
 }
 
