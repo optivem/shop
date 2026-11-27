@@ -24,5 +24,7 @@ describe('demo wake-up card', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Waiting for 3 s');
     expect(screen.getByRole('heading', { name: /Spec-Driven Development with AI/ })).toBeInTheDocument();
     expect(screen.getByText('Production')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Technical highlights' })).toBeInTheDocument();
+    expect(screen.getByText('Authentication & security')).toBeInTheDocument();
   });
 });

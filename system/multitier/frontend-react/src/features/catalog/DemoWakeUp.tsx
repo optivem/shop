@@ -1,13 +1,46 @@
 import { useEffect, useState } from 'react';
-import { Info } from 'lucide-react';
+import { Activity, Check, Cloud, FlaskConical, Info, Plug, ShieldCheck, Sparkles, type LucideIcon } from 'lucide-react';
 import { LoadingSpinner } from '../../components';
+import { userManager } from '../../auth/user-manager';
 import { DEMO_SITE_NOTE } from '../../utils/messages';
 
 /** How long the catalog may load before the plain spinner turns into the demo site's wake-up card. */
 const WAKE_UP_DELAY_MS = 3000;
 
 /** The services the first catalog request wakes: the backend, which asks the ERP for the products. */
-const WAKING_SERVICES = ['Shop backend', 'Product catalog (ERP)'];
+const CATALOG_SERVICES = ['Shop backend', 'Product catalog (ERP)'];
+
+const AUTH_SERVICE = 'Auth server (Keycloak)';
+
+type ServiceState = 'waking' | 'ready' | 'down';
+
+const STATUS_TEXT: Record<ServiceState, string> = {
+  waking: 'Waking up…',
+  ready: 'Ready',
+  down: 'Not responding',
+};
+
+/**
+ * Wakes the auth server and reports when it answers: fetches its OIDC discovery document through the
+ * sign-in's own client, which caches it for the sign-in. Undefined when authentication is disabled.
+ */
+function useAuthServerState(): ServiceState | undefined {
+  const [state, setState] = useState<ServiceState | undefined>(userManager ? 'waking' : undefined);
+
+  useEffect(() => {
+    if (!userManager) return;
+    let ignore = false;
+    userManager.metadataService.getMetadata().then(
+      () => !ignore && setState('ready'),
+      () => !ignore && setState('down'),
+    );
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  return state;
+}
 
 const SPEC_DRIVEN_STEPS = [
   { title: 'Spec', detail: 'Each feature starts as acceptance criteria in plain business language.' },
@@ -16,7 +49,41 @@ const SPEC_DRIVEN_STEPS = [
   { title: 'Pipeline verifies', detail: 'Nothing ships until every test is green in the pipeline.' },
 ];
 
+const HIGHLIGHTS: { icon: LucideIcon; title: string; detail: string }[] = [
+  {
+    icon: Sparkles,
+    title: 'Modern UX/UI',
+    detail: 'Responsive and accessible storefront, checked in CI by Lighthouse and axe on every change.',
+  },
+  {
+    icon: ShieldCheck,
+    title: 'Authentication & security',
+    detail: 'Keycloak sign-in (OpenID Connect, PKCE), customer and admin roles, tokens kept in memory, strict security headers.',
+  },
+  {
+    icon: Plug,
+    title: 'External systems',
+    detail: 'ERP, Tax and Clock integrations over HTTP, with contract tests and graceful handling when one is down.',
+  },
+  {
+    icon: FlaskConical,
+    title: 'Test automation',
+    detail: 'Unit, component, contract, acceptance, end-to-end and smoke tests, plus mutation testing.',
+  },
+  {
+    icon: Activity,
+    title: 'Observability',
+    detail: 'OpenTelemetry tracing from the browser through the backend.',
+  },
+  {
+    icon: Cloud,
+    title: 'Cloud native',
+    detail: 'Docker containers on Google Cloud Run that scale to zero, which is why the first visit wakes them up.',
+  },
+];
+
 const EXTERNAL_SYSTEMS = [
+  { name: 'Auth server', detail: 'Keycloak sign-in' },
   { name: 'ERP', detail: 'products & prices' },
   { name: 'Tax', detail: 'tax rates' },
   { name: 'Clock', detail: 'current time' },
@@ -29,6 +96,7 @@ const TECH_STACK = [
   'React 19',
   'Vite',
   'Bootstrap 5',
+  'Keycloak',
   'Java / Spring Boot',
   '.NET',
   'NestJS',
@@ -41,11 +109,12 @@ const TECH_STACK = [
 /**
  * The catalog's loading state. A fast load shows the usual spinner; a slow one (the demo deployment scales
  * to zero, so a first visit waits on a cold start) turns into a card that says so and shows how the shop is
- * built while the services wake up. It shows nothing it cannot observe: the services stay "Waking up" until
- * the catalog arrives, and then the catalog replaces the card.
+ * built while the services wake up. It shows nothing it cannot observe: the backend and ERP stay "Waking up"
+ * until the catalog arrives (then the catalog replaces the card); the auth server is probed on its own.
  */
 export function DemoWakeUp() {
   const [elapsedMs, setElapsedMs] = useState(0);
+  const authState = useAuthServerState();
 
   useEffect(() => {
     const startedAt = Date.now();
@@ -54,6 +123,9 @@ export function DemoWakeUp() {
   }, []);
 
   if (elapsedMs < WAKE_UP_DELAY_MS) return <LoadingSpinner message="Loading products..." />;
+
+  const services: { name: string; state: ServiceState }[] = CATALOG_SERVICES.map((name) => ({ name, state: 'waking' }));
+  if (authState) services.push({ name: AUTH_SERVICE, state: authState });
 
   return (
     <section className="wake-up" aria-label="Demo Site Wake Up">
@@ -73,11 +145,13 @@ export function DemoWakeUp() {
       </p>
 
       <ul className="wake-up-services">
-        {WAKING_SERVICES.map((service) => (
-          <li key={service}>
-            <span className="wake-up-service-dot" aria-hidden="true" />
-            <span>{service}</span>
-            <span className="wake-up-service-status">Waking up…</span>
+        {services.map((service) => (
+          <li key={service.name} className={`wake-up-service-${service.state}`}>
+            <span className="wake-up-service-dot" aria-hidden="true">
+              {service.state === 'ready' && <Check size={14} strokeWidth={3} />}
+            </span>
+            <span>{service.name}</span>
+            <span className="wake-up-service-status">{STATUS_TEXT[service.state]}</span>
           </li>
         ))}
       </ul>
@@ -104,6 +178,19 @@ export function DemoWakeUp() {
         </div>
 
         <div>
+          <h4 className="wake-up-label">Technical highlights</h4>
+          <ul className="wake-up-highlights">
+            {HIGHLIGHTS.map(({ icon: Icon, title, detail }) => (
+              <li key={title}>
+                <Icon size={20} aria-hidden="true" className="wake-up-highlight-icon" />
+                <strong>{title}</strong>
+                {detail}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div>
           <h4 className="wake-up-label">Architecture</h4>
           <div className="wake-up-arch">
             <div className="wake-up-box">
@@ -117,7 +204,7 @@ export function DemoWakeUp() {
             <div className="wake-up-box">
               Database<small>PostgreSQL</small>
             </div>
-            <p className="wake-up-ext-label">The backend calls three external systems</p>
+            <p className="wake-up-ext-label">Sign-in goes to the auth server; the backend calls the ERP, Tax and Clock systems</p>
             <div className="wake-up-ext">
               {EXTERNAL_SYSTEMS.map((system) => (
                 <div key={system.name} className="wake-up-box">

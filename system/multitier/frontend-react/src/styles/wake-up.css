@@ -80,6 +80,28 @@
     animation: wake-up-spin 0.9s linear infinite;
 }
 
+.wake-up-service-dot {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--market-on-primary);
+}
+
+.wake-up-service-ready .wake-up-service-dot {
+    border-color: var(--market-success);
+    background: var(--market-success);
+    animation: none;
+}
+
+.wake-up-service-down .wake-up-service-dot {
+    border-color: var(--market-danger);
+    animation: none;
+}
+
+.wake-up-service-down .wake-up-service-status {
+    color: var(--market-danger);
+}
+
 .wake-up-service-status {
     margin-left: auto;
     font-size: var(--market-font-size-sm);
@@ -180,6 +202,35 @@
     font-size: 0.875rem;
 }
 
+.wake-up-highlights {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--market-space-2);
+}
+
+.wake-up-highlights li {
+    display: flex;
+    flex-direction: column;
+    gap: var(--market-space-1);
+    padding: var(--market-space-3);
+    border: 1px solid var(--market-border);
+    border-radius: var(--market-radius-md);
+    font-size: var(--market-font-size-sm);
+    color: var(--market-text-muted);
+}
+
+.wake-up-highlights strong {
+    color: var(--market-ink);
+    font-size: 0.875rem;
+}
+
+.wake-up-highlight-icon {
+    color: var(--market-primary);
+}
+
 .wake-up-arch {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 28px minmax(0, 1fr) 28px minmax(0, 1fr);
@@ -242,7 +293,7 @@
 .wake-up-ext {
     grid-column: 1 / -1;
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: var(--market-space-2);
 }
 
@@ -297,11 +348,12 @@
 
 @media (max-width: 600px) {
     .wake-up-head { align-items: flex-start; }
-    .wake-up-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .wake-up-steps,
+    .wake-up-highlights { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .wake-up-arch { grid-template-columns: minmax(0, 1fr); }
     .wake-up-arrow { justify-self: center; width: 2px; height: 18px; }
     .wake-up-arrow::after { right: -4px; top: auto; bottom: -1px; border: 5px solid transparent; border-top: 7px solid var(--market-border-strong); border-bottom: 0; }
-    .wake-up-ext { grid-template-columns: minmax(0, 1fr); }
+    .wake-up-ext { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (prefers-reduced-motion: reduce) {
