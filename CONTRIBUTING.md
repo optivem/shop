@@ -5,6 +5,19 @@ How to verify changes locally and make schema changes safely.
 - [Running system tests](#running-system-tests)
 - [Schema changes](#schema-changes)
 
+## Running the system locally — `run-local.sh`
+
+To click through a change in the browser, without tests:
+
+```bash
+./run-local.sh dev     # stack in Docker + hot-reloading frontend on http://localhost:5173 (best for UI work)
+./run-local.sh         # whole stack in Docker, built from your working copy (http://localhost:3311)
+./run-local.sh down    # stop it
+```
+
+Both take an optional `<architecture> <language>` (default `multitier typescript`, e.g. `./run-local.sh up monolith java`).
+Only the `real` stack is started; for tests use `gh optivem system start` below.
+
 ## Running system tests
 
 The `gh optivem` CLI extension orchestrates the docker-compose stacks and runs

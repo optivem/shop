@@ -33,7 +33,9 @@ export function getAuthConfig(
   runtime: RuntimeConfig | undefined = globalThis.window.__APP_CONFIG__,
   useDevDefaults: boolean = import.meta.env.DEV,
 ): AuthConfig | undefined {
-  const keycloakUrl = valueOrDefault(runtime?.keycloakUrl, useDevDefaults ? 'http://localhost:8191' : '');
+  // VITE_KEYCLOAK_URL points the dev server at another language's local Keycloak (run-local.sh dev).
+  const devKeycloakUrl = valueOrDefault(import.meta.env.VITE_KEYCLOAK_URL, 'http://localhost:8191');
+  const keycloakUrl = valueOrDefault(runtime?.keycloakUrl, useDevDefaults ? devKeycloakUrl : '');
   if (keycloakUrl === '') return undefined;
   return {
     keycloakUrl: keycloakUrl.replace(/\/+$/, ''),
