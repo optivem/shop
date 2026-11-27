@@ -68,6 +68,7 @@ export function Catalog() {
 
   return (
     <StoreLayout>
+      <p className="lead text-center my-2">Hello from Valentina</p>
       <PromoTiles />
       <div className="catalog-layout">
         <aside className="catalog-sidebar">
