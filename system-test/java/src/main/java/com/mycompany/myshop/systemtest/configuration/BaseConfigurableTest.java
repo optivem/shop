@@ -61,7 +61,8 @@ public abstract class BaseConfigurableTest {
                 () -> createErpDriver(configuration),
                 () -> createClockDriver(configuration),
                 () -> createTaxDriver(configuration),
-                () -> new KeycloakIdentityProviderDriver(requireKeycloakBaseUrl(configuration))
+                // Unchecked: the smoke check works without KEYCLOAK_URL; creating a user still requires it.
+                () -> new KeycloakIdentityProviderDriver(configuration.getKeycloakBaseUrl())
         );
     }
 

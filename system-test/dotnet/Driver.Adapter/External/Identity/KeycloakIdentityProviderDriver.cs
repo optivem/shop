@@ -10,6 +10,7 @@ namespace Driver.Adapter.External.Identity;
 /// Creates customers and admins in Keycloak's test realm, each with a unique username and a random password, and
 /// deletes them again on dispose. The admin client signs in only when a user is first created, so
 /// <see cref="GoToIdentityProviderAsync"/> needs no admin credentials.
+/// The smoke check runs on every stage. A deployed QA or production stage leaves KEYCLOAK_URL unset (its backends reject the test realm's tokens), so the check falls back to KEYCLOAK_BASE_URL and checks the stage's own realm, KEYCLOAK_REALM (shop-qa, shop-prod); both default to the acceptance setup.
 /// </summary>
 public sealed class KeycloakIdentityProviderDriver : IIdentityProviderDriver
 {
@@ -31,15 +32,25 @@ public sealed class KeycloakIdentityProviderDriver : IIdentityProviderDriver
 
     public async Task<Result<VoidValue, IdentityProviderErrorResponse>> GoToIdentityProviderAsync()
     {
-        if (string.IsNullOrWhiteSpace(_keycloakBaseUrl))
+        var baseUrl = OrEnv(_keycloakBaseUrl, "KEYCLOAK_BASE_URL");
+        if (baseUrl == null)
         {
             return Result.Failure(new IdentityProviderErrorResponse
             {
-                Message = "Keycloak base URL is not configured: set KEYCLOAK_URL (or KEYCLOAK_URL_<MODE>)"
+                Message = "Keycloak base URL is not configured: set KEYCLOAK_URL (or KEYCLOAK_URL_<MODE>), or"
+                    + " KEYCLOAK_BASE_URL on a deployed stage"
             });
         }
-        return (await new KeycloakRealmClient(_keycloakBaseUrl).CheckHealthAsync())
+        var realm = OrEnv(null, "KEYCLOAK_REALM") ?? KeycloakAdminClient.Realm;
+        return (await new KeycloakRealmClient(baseUrl, realm).CheckHealthAsync())
             .MapError(message => new IdentityProviderErrorResponse { Message = message });
+    }
+
+    private static string? OrEnv(string? value, string envName)
+    {
+        if (!string.IsNullOrWhiteSpace(value)) return value;
+        var env = Environment.GetEnvironmentVariable(envName);
+        return string.IsNullOrWhiteSpace(env) ? null : env;
     }
 
     public Task<UserAccount> CreateCustomerAsync(string firstName, string lastName, string? email)

@@ -10,7 +10,7 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 
 /**
- * The test realm's public endpoints, which need no sign-in. Separate from {@link KeycloakAdminClient}, so checking
+ * A realm's public endpoints, which need no sign-in. Separate from {@link KeycloakAdminClient}, so checking
  * that Keycloak is up never needs admin credentials.
  */
 public class KeycloakRealmClient {
@@ -21,8 +21,10 @@ public class KeycloakRealmClient {
             .build();
 
     private final String baseUrl;
+    private final String realm;
 
-    public KeycloakRealmClient(String keycloakBaseUrl) {
+    public KeycloakRealmClient(String keycloakBaseUrl, String realm) {
+        this.realm = realm;
         this.baseUrl = keycloakBaseUrl.endsWith("/")
                 ? keycloakBaseUrl.substring(0, keycloakBaseUrl.length() - 1)
                 : keycloakBaseUrl;
@@ -33,7 +35,7 @@ public class KeycloakRealmClient {
      * realm; during the bootstrap it answers 503.
      */
     public Result<Void, String> checkHealth() {
-        var url = baseUrl + "/realms/" + KeycloakAdminClient.REALM + "/.well-known/openid-configuration";
+        var url = baseUrl + "/realms/" + realm + "/.well-known/openid-configuration";
         var request = HttpRequest.newBuilder().uri(URI.create(url)).timeout(Duration.ofSeconds(30)).GET().build();
         try {
             var response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
@@ -41,7 +43,7 @@ public class KeycloakRealmClient {
                 return Result.success();
             }
             var hint = response.statusCode() == 503 ? " (503: Keycloak is still bootstrapping)" : "";
-            return Result.failure("Keycloak realm " + KeycloakAdminClient.REALM + " at " + url + " answered HTTP "
+            return Result.failure("Keycloak realm " + realm + " at " + url + " answered HTTP "
                     + response.statusCode() + hint + ": " + truncate(response.body()));
         } catch (IOException e) {
             return Result.failure("Keycloak at " + url + " could not be reached: " + e);

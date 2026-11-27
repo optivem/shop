@@ -446,6 +446,8 @@ jobs:
             echo "CLOCK_API_BASE_URL_REAL=$(url "${p}-sim")/clock"
             echo "TAX_API_BASE_URL_REAL=$(url "${p}-sim")/tax"
             echo "KEYCLOAK_BASE_URL=$(kc_url)"
+            # The identity-provider smoke test checks this stage's realm (shop-qa, shop-prod), anonymously.
+            echo "KEYCLOAK_REALM=${REALM}"
           } >> "$GITHUB_ENV"
 
       - name: Checkout Release Candidate

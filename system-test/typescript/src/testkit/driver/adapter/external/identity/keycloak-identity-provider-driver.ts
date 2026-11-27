@@ -3,7 +3,7 @@ import { type Result, failure } from '../../../../common/result.js';
 import type { UserAccount } from '../../../port/user-account.js';
 import type { IdentityProviderDriver } from '../../../port/external/identity/identity-provider-driver.js';
 import type { IdentityProviderErrorResponse } from '../../../port/external/identity/dtos/errors/IdentityProviderErrorResponse.js';
-import { KeycloakAdminClient } from './client/KeycloakAdminClient.js';
+import { KeycloakAdminClient, REALM } from './client/KeycloakAdminClient.js';
 import { KeycloakRealmClient } from './client/KeycloakRealmClient.js';
 
 const CUSTOMER_ROLE = 'CUSTOMER';
@@ -15,6 +15,8 @@ const ADMIN_USERNAME_PREFIX = 'new-admin-';
  * Creates customers and admins in Keycloak's test realm, each with a unique username and a random password, and
  * deletes them again on close. The admin client signs in only when a user is first created, so
  * {@link goToIdentityProvider} needs no admin credentials.
+ *
+ * The smoke check runs on every stage. A deployed QA or production stage leaves KEYCLOAK_URL unset (its backends reject the test realm's tokens), so the check falls back to KEYCLOAK_BASE_URL and checks the stage's own realm, KEYCLOAK_REALM (shop-qa, shop-prod); both default to the acceptance setup.
  */
 export class KeycloakIdentityProviderDriver implements IdentityProviderDriver {
   private adminClient?: KeycloakAdminClient;
@@ -23,10 +25,15 @@ export class KeycloakIdentityProviderDriver implements IdentityProviderDriver {
   constructor(private readonly keycloakBaseUrl: string | undefined) {}
 
   async goToIdentityProvider(): Promise<Result<void, IdentityProviderErrorResponse>> {
-    if (!this.keycloakBaseUrl) {
-      return failure({ message: 'Keycloak base URL is not configured: set KEYCLOAK_URL (or KEYCLOAK_URL_<MODE>)' });
+    const baseUrl = this.keycloakBaseUrl || process.env.KEYCLOAK_BASE_URL;
+    if (!baseUrl) {
+      return failure({
+        message:
+          'Keycloak base URL is not configured: set KEYCLOAK_URL (or KEYCLOAK_URL_<MODE>), or KEYCLOAK_BASE_URL on a deployed stage',
+      });
     }
-    const result = await new KeycloakRealmClient(this.keycloakBaseUrl).checkHealth();
+    const realm = process.env.KEYCLOAK_REALM || REALM;
+    const result = await new KeycloakRealmClient(baseUrl, realm).checkHealth();
     return result.success ? result : failure({ message: result.error });
   }
 

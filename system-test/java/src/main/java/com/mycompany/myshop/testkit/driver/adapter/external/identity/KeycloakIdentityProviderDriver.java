@@ -15,6 +15,8 @@ import java.util.UUID;
  * Creates customers and admins in Keycloak's test realm, each with a unique username and a random password, and
  * deletes them again on close. The admin client signs in only when a user is first created, so
  * {@link #goToIdentityProvider()} needs no admin credentials.
+ * <p>
+ * The smoke check runs on every stage. A deployed QA or production stage leaves KEYCLOAK_URL unset (its backends reject the test realm's tokens), so the check falls back to KEYCLOAK_BASE_URL and checks the stage's own realm, KEYCLOAK_REALM (shop-qa, shop-prod); both default to the acceptance setup.
  */
 public class KeycloakIdentityProviderDriver implements IdentityProviderDriver {
     private static final String CUSTOMER_ROLE = "CUSTOMER";
@@ -23,18 +25,31 @@ public class KeycloakIdentityProviderDriver implements IdentityProviderDriver {
     private static final String ADMIN_USERNAME_PREFIX = "new-admin-";
 
     private final String keycloakBaseUrl;
-    private final KeycloakRealmClient realmClient;
     private final List<String> createdUserIds = new ArrayList<>();
     private KeycloakAdminClient adminClient;
 
     public KeycloakIdentityProviderDriver(String keycloakBaseUrl) {
         this.keycloakBaseUrl = keycloakBaseUrl;
-        this.realmClient = new KeycloakRealmClient(keycloakBaseUrl);
     }
 
     @Override
     public Result<Void, IdentityProviderErrorResponse> goToIdentityProvider() {
-        return realmClient.checkHealth().mapError(IdentityProviderErrorResponse::new);
+        var baseUrl = orEnv(keycloakBaseUrl, "KEYCLOAK_BASE_URL");
+        if (baseUrl == null) {
+            return Result.failure(new IdentityProviderErrorResponse("Keycloak base URL is not configured: set KEYCLOAK_URL"
+                    + " (or KEYCLOAK_URL_<MODE>), or KEYCLOAK_BASE_URL on a deployed stage"));
+        }
+        var realm = orEnv(null, "KEYCLOAK_REALM");
+        return new KeycloakRealmClient(baseUrl, realm != null ? realm : KeycloakAdminClient.REALM).checkHealth()
+                .mapError(IdentityProviderErrorResponse::new);
+    }
+
+    private static String orEnv(String value, String envName) {
+        if (value != null && !value.isBlank()) {
+            return value;
+        }
+        var env = System.getenv(envName);
+        return env != null && !env.isBlank() ? env : null;
     }
 
     @Override
