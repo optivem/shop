@@ -44,6 +44,10 @@ runs the DB migrations from that commit, and swaps the image of the existing pro
 frontend (`gcloud run services update`, so they keep their settings). Keycloak and the simulators are not
 touched, and a production must already exist (one regular prod-stage run).
 
+- **Only what changed.** It compares `ref` with what production serves now and builds and deploys only the
+  parts that changed: the frontend if `system/multitier/frontend-react` changed, the backend if
+  `system/multitier/backend-typescript` changed, the migrations if `system/db` changed. A UI-only change is
+  frontend only. Anything it cannot determine is deployed; `-f deploy-all=true` forces all three.
 - **Untested.** No test of any kind runs: no commit-stage, acceptance, QA or smoke suite.
 - **No release.** It never touches `VERSION`, release or RC tags, RC images or GitHub releases.
 - **Refuses during a release.** It fails ("a release is in progress, try later") while any

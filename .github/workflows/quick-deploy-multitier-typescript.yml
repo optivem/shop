@@ -11,7 +11,8 @@ name: quick-deploy-multitier-typescript
 # It needs a prior regular production deploy: it only swaps the image of the existing services
 # and migrate job (gcloud run services/jobs update), so they keep their env vars, secrets and
 # flags, and nothing from _deploy-stage.yml is duplicated. Keycloak and the simulators stay as
-# they are.
+# they are. Only the parts that changed since what production serves are built and deployed (the
+# changes job); deploy-all forces all of them.
 #
 # Concurrency: the deploy job shares the multitier-typescript-prod-stage group
 # (cancel-in-progress: false), so it waits for a running prod stage instead of racing it. The
@@ -27,6 +28,11 @@ on:
         required: false
         type: string
         default: main
+      deploy-all:
+        description: 'Build and deploy backend, frontend and migrations even when unchanged'
+        required: false
+        type: boolean
+        default: false
 
 permissions: {}
 
@@ -72,9 +78,96 @@ jobs:
           echo "Ref '${REF}' is ${sha}"
           echo "sha=${sha}" >> "$GITHUB_OUTPUT"
 
+  # === Detect What Changed Since What Production Serves ===
+  # Only the parts that changed are built and deployed. Frontend/backend: production's image tag is
+  # quick-<sha> or a release-candidate git tag, i.e. a commit; git diff it against the target over the
+  # component's folder. Migrations: the db-migrate image is tagged by the tree hash of system/db
+  # (build-shared-images), so compare that hash. Anything that cannot be determined is deployed.
+  changes:
+    needs: guard
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: multitier-typescript-production
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      backend: ${{ steps.detect.outputs.backend }}
+      frontend: ${{ steps.detect.outputs.frontend }}
+      migrate: ${{ steps.detect.outputs.migrate }}
+    env:
+      SHA: ${{ needs.guard.outputs.sha }}
+      SYSTEM: ${{ vars.SYSTEM_NAME }}
+      REGION: ${{ vars.GCP_REGION }}
+      PROJECT: ${{ vars.GCP_PROJECT_ID }}
+      DEPLOY_ALL: ${{ inputs.deploy-all }}
+    steps:
+      - name: Checkout Commit
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.guard.outputs.sha }}
+          fetch-depth: 0
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+
+      - name: Setup Cloud SDK
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Detect Changed Parts
+        id: detect
+        run: |
+          set -euo pipefail
+          p="${SYSTEM}-multitier-typescript-production"
+          echo "### Changes since production" >> "$GITHUB_STEP_SUMMARY"
+          decide() { # <output> <yes|no> <reason>
+            echo "$1=$([[ "$2" == yes ]] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+            echo "- $1: **$2** ($3)" >> "$GITHUB_STEP_SUMMARY"
+            echo "$1: $2 ($3)"
+          }
+          # Image of a Cloud Run service or job; empty when it does not exist (Check Production Exists fails later).
+          live_image() { # <services|jobs> <name>
+            local found
+            found=$(gcloud run "$1" list --region "$REGION" --project "$PROJECT" --filter="metadata.name=$2" --format=json)
+            jq -r '.[0].spec.template.spec.containers[0].image // .[0].spec.template.spec.template.spec.containers[0].image // empty' <<< "$found"
+          }
+          component() { # <output> <service> <folder>
+            local image tag commit
+            if [[ "$DEPLOY_ALL" == true ]]; then decide "$1" yes "deploy-all"; return; fi
+            image=$(live_image services "$2")
+            [[ -n "$image" ]] || { decide "$1" yes "no live image found"; return; }
+            tag="${image##*:}"
+            if [[ "$tag" == quick-* ]]; then commit="${tag#quick-}"; else commit="$tag"; fi
+            if ! commit=$(git rev-parse --verify --quiet "${commit}^{commit}"); then
+              decide "$1" yes "live tag '${tag}' is not a known commit"; return
+            fi
+            if git diff --quiet "$commit" "$SHA" -- "$3"; then
+              decide "$1" no "$3 unchanged since live ${tag}"
+            else
+              decide "$1" yes "$3 changed since live ${tag}"
+            fi
+          }
+          component backend "${p}-backend" system/multitier/backend-typescript
+          component frontend "${p}-frontend" system/multitier/frontend-react
+          if [[ "$DEPLOY_ALL" == true ]]; then
+            decide migrate yes "deploy-all"
+          else
+            image=$(live_image jobs "${p}-migrate")
+            want=$(git rev-parse --short=12 "${SHA}:system/db")
+            if [[ -n "$image" && "${image##*:}" == "$want" ]]; then
+              decide migrate no "system/db unchanged (tree ${want})"
+            else
+              decide migrate yes "system/db tree ${want} is not the live '${image##*:}'"
+            fi
+          fi
+
   # === Build and Push the Images (no tests) ===
   build:
-    needs: guard
+    needs: [guard, changes]
+    if: needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true' || needs.changes.outputs.migrate == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -114,11 +207,13 @@ jobs:
       # Same context and Dockerfile as the commit stages (multitier-backend-typescript-commit-stage.yml,
       # multitier-frontend-react-commit-stage.yml); their base images are pinned by digest there.
       - name: Pre-pull base images
+        if: needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true'
         uses: optivem/actions/retry@v1
         with:
-          command: bash -c 'set -e; for ref in $(grep -h "^FROM " system/multitier/backend-typescript/Dockerfile system/multitier/frontend-react/Dockerfile | cut -d " " -f 2 | sort -u); do docker pull "$ref"; done'
+          command: bash -c 'set -e; for f in ${{ needs.changes.outputs.backend == 'true' && 'system/multitier/backend-typescript/Dockerfile' || '' }} ${{ needs.changes.outputs.frontend == 'true' && 'system/multitier/frontend-react/Dockerfile' || '' }}; do for ref in $(grep "^FROM " "$f" | cut -d " " -f 2); do docker pull "$ref"; done; done'
 
       - name: Build and Push Backend Image
+        if: needs.changes.outputs.backend == 'true'
         uses: docker/build-push-action@v7
         with:
           context: system/multitier/backend-typescript
@@ -128,6 +223,7 @@ jobs:
           labels: org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
 
       - name: Build and Push Frontend Image
+        if: needs.changes.outputs.frontend == 'true'
         uses: docker/build-push-action@v7
         with:
           context: system/multitier/frontend-react
@@ -143,12 +239,13 @@ jobs:
       # publicly pullable.
       - name: Build and Push db-migrate Image
         id: shared
+        if: needs.changes.outputs.migrate == 'true'
         uses: ./.github/actions/build-shared-images
         with:
           registry: ${{ env.IMAGE_BASE }}
           public-images: |
-            ${{ steps.refs.outputs.backend }}
-            ${{ steps.refs.outputs.frontend }}
+            ${{ needs.changes.outputs.backend == 'true' && steps.refs.outputs.backend || '' }}
+            ${{ needs.changes.outputs.frontend == 'true' && steps.refs.outputs.frontend || '' }}
 
       # Again, right before the deploy job queues in the prod-stage group (see the header).
       - name: Check No Prod Stage Is Active
@@ -166,7 +263,8 @@ jobs:
 
   # === Deploy to the Production Services (no smoke tests) ===
   deploy:
-    needs: [guard, build]
+    needs: [guard, changes, build]
+    if: ${{ !cancelled() && needs.build.result == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     environment: multitier-typescript-production
@@ -232,6 +330,7 @@ jobs:
 
       # The job keeps its FLYWAY_* env and service account; only the image changes.
       - name: Run DB Migrations
+        if: needs.changes.outputs.migrate == 'true'
         run: |
           set -euo pipefail
           gcloud run jobs update "$MIGRATE_JOB" --image "$MIGRATE_REF" --region "$REGION" --project "$PROJECT"
@@ -240,12 +339,14 @@ jobs:
       # services update keeps the live env vars, secrets and flags. A rollback pins traffic to a
       # named revision (docs/operations/rollback.md), so send traffic to the new one explicitly.
       - name: Deploy Backend
+        if: needs.changes.outputs.backend == 'true'
         run: |
           set -euo pipefail
           gcloud run services update "$BACKEND_NAME" --image "$BACKEND_REF" --region "$REGION" --project "$PROJECT"
           gcloud run services update-traffic "$BACKEND_NAME" --to-latest --region "$REGION" --project "$PROJECT"
 
       - name: Deploy Frontend
+        if: needs.changes.outputs.frontend == 'true'
         run: |
           set -euo pipefail
           gcloud run services update "$FRONTEND_NAME" --image "$FRONTEND_REF" --region "$REGION" --project "$PROJECT"
@@ -280,6 +381,9 @@ jobs:
         env:
           REF: ${{ inputs.ref }}
           SHA: ${{ needs.guard.outputs.sha }}
+          DO_BACKEND: ${{ needs.changes.outputs.backend }}
+          DO_FRONTEND: ${{ needs.changes.outputs.frontend }}
+          DO_MIGRATE: ${{ needs.changes.outputs.migrate }}
         run: |
           set -euo pipefail
           {
@@ -287,8 +391,9 @@ jobs:
             echo ""
             echo "Ref \`${REF}\` at \`${SHA}\`, with no tests of any kind. The next regular prod release replaces it."
             echo ""
-            echo "- Backend \`${BACKEND_NAME}\`: \`${BACKEND_REF}\`"
-            echo "- Frontend \`${FRONTEND_NAME}\`: \`${FRONTEND_REF}\`"
-            echo "- Migrations \`${MIGRATE_JOB}\`: \`${MIGRATE_REF}\`"
+            line() { if [[ "$2" == true ]]; then echo "- $1: \`$3\`"; else echo "- $1: unchanged, not redeployed"; fi; }
+            line "Backend \`${BACKEND_NAME}\`" "$DO_BACKEND" "$BACKEND_REF"
+            line "Frontend \`${FRONTEND_NAME}\`" "$DO_FRONTEND" "$FRONTEND_REF"
+            line "Migrations \`${MIGRATE_JOB}\`" "$DO_MIGRATE" "$MIGRATE_REF"
             if [[ -n "$DOMAIN" ]]; then echo "- URL: https://${DOMAIN}"; else echo "- URL: ${UI_HEALTH_URL}"; fi
           } >> "$GITHUB_STEP_SUMMARY"
