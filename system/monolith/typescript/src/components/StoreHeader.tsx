@@ -69,15 +69,22 @@ export function StoreHeader() {
   return (
     <header className="store-header">
       <div className="store-utility">
-        <div className="container d-flex align-items-center gap-2 py-2">
-          <Icon name="truck" size={14} />
-          <span>Free shipping over $1,000</span>
+        <div className="container store-utility-row">
+          <span className="store-utility-item">
+            <Icon name="truck" size={14} />
+            Free shipping over $1,000
+          </span>
+          <span className="store-utility-item">
+            <Icon name="rotate-ccw" size={14} />
+            30-day returns
+          </span>
+          <span className="store-utility-note">Demo store</span>
         </div>
       </div>
       <div className="store-header-top">
         <div className="container d-flex flex-wrap align-items-center py-3 store-header-row">
           <Link className="store-logo" href="/">
-            MyShop<span className="store-logo-mark" aria-hidden="true">.</span>
+            My<span className="store-logo-mark">Shop</span>
           </Link>
           <form className="store-search" method="get" action="/" role="search" onSubmit={onSearch}>
             {categories.length > 0 && (
@@ -106,7 +113,7 @@ export function StoreHeader() {
               onChange={(e) => setSearch(e.target.value)}
             />
             <button type="submit" className="store-search-button" aria-label="Search">
-              Search
+              <Icon name="search" size={20} strokeWidth={2.2} />
             </button>
           </form>
           <div className="store-header-actions d-flex align-items-center gap-3">

@@ -3,9 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { HomeSections } from "@/components/HomeSections";
 import { Icon } from "@/components/Icon";
+import { ProductCard } from "@/components/ProductCard";
 import { StoreLayout } from "@/components/StoreLayout";
-import { ProductImage } from "@/components/StorefrontParts";
 import { useCart, useCatalog, useNotification } from "@/components/StorefrontProviders";
 import {
   applyCatalogQuery,
@@ -19,8 +20,6 @@ import {
   type SortOrder,
 } from "@/lib/storefront/catalog-query";
 import { ADDED_TO_CART, PRODUCTS_UNAVAILABLE } from "@/lib/storefront/messages";
-import { formatMoney } from "@/lib/storefront/money";
-import type { Product } from "@/lib/storefront/types";
 
 function rawParams(params: URLSearchParams): RawSearchParams {
   const raw: RawSearchParams = {};
@@ -28,80 +27,6 @@ function rawParams(params: URLSearchParams): RawSearchParams {
     raw[key] = params.getAll(key);
   }
   return raw;
-}
-
-/**
- * The home hero and two promo tiles. They are the only places that show stock photos (public/images/promo/,
- * credited in the store footer). Each tile links to a category the catalog actually carries.
- */
-const SIDE_TILES = [
-  { label: "Shop monitors", path: "/?category=Monitors", image: "/images/promo/monitor.jpg", alt: "Monitor on a desk" },
-  { label: "Build your desk setup", path: "/?category=Accessories", image: "/images/promo/keyboard.jpg", alt: "Mechanical keyboard" },
-];
-
-// Plain <img>: the photos are fixed static files and this app does not run next/image's optimiser.
-/* eslint-disable @next/next/no-img-element */
-function PromoTiles() {
-  return (
-    <section className="promo-tiles mb-4" aria-label="Promotions">
-      <div className="promo-hero">
-        <img className="promo-photo promo-photo-hero" src="/images/promo/laptop.jpg" alt="Laptop on a white desk" />
-        <div className="promo-hero-panel">
-          <span className="badge badge-deal">New season</span>
-          <h1 className="promo-hero-title">New season laptops</h1>
-          <p className="lead">Free shipping over $1,000</p>
-          <Link href="/?category=Laptops" className="btn btn-primary">
-            Shop laptops
-          </Link>
-        </div>
-      </div>
-      <div className="promo-side">
-        {SIDE_TILES.map((tile) => (
-          <Link key={tile.path} href={tile.path} className="promo-tile">
-            <img className="promo-photo" src={tile.image} alt={tile.alt} loading="lazy" />
-            <span className="promo-tile-label">
-              {tile.label} <Icon name="arrow-right" />
-            </span>
-          </Link>
-        ))}
-      </div>
-    </section>
-  );
-}
-/* eslint-enable @next/next/no-img-element */
-
-/** One catalog tile: image and title link to the product page; brand, description and price come from the catalog; "Add to cart" adds quantity 1. */
-function ProductCard({ product, onAddToCart }: Readonly<{ product: Product; onAddToCart: (sku: string) => void }>) {
-  const productPath = `/products/${encodeURIComponent(product.sku)}`;
-  return (
-    <article className="product-card card h-100" aria-label={`Product ${product.sku}`}>
-      <Link href={productPath} className="product-card-media" tabIndex={-1} aria-hidden="true">
-        <ProductImage imageUrl={product.imageUrl} brand={product.brand} alt={product.title} lazy />
-      </Link>
-      <div className="product-card-body">
-        <div className="product-card-brand" aria-label="Product Brand">
-          {product.brand}
-        </div>
-        <h3 className="product-card-title">
-          <Link href={productPath} className="product-title-link" data-testid="product-title">
-            {product.title}
-          </Link>
-        </h3>
-        {product.description && <p className="product-card-spec">{product.description}</p>}
-        <div className="price product-card-price" aria-label="Display Price">
-          {formatMoney(product.price)}
-        </div>
-        <button
-          type="button"
-          className="btn btn-primary w-100 mt-auto"
-          data-testid={`add-to-cart-${product.sku}`}
-          onClick={() => onAddToCart(product.sku)}
-        >
-          Add to cart
-        </button>
-      </div>
-    </article>
-  );
 }
 
 interface CatalogFiltersProps {
@@ -181,6 +106,9 @@ export function Catalog() {
   const query = parseCatalogQuery(rawParams(searchParams));
   const shown = applyCatalogQuery(products, query);
   const setQuery = (next: CatalogQuery) => router.push(catalogPath(next), { scroll: false });
+  // The home sections (hero, shortcuts, rows) only show on the plain catalog; a search or filter goes straight to results.
+  const isHome = query.q.trim() === "" && query.category === "" && query.brands.length === 0;
+  const heading = query.category || (query.q.trim() ? "Search results" : "All products");
 
   const addToCart = (sku: string) => {
     add(sku, 1);
@@ -216,7 +144,16 @@ export function Catalog() {
 
   return (
     <StoreLayout>
-      <PromoTiles />
+      {isHome && products.length > 0 && !unavailable && <HomeSections products={products} onAddToCart={addToCart} />}
+      {isHome ? (
+        <h2 className="catalog-heading" id="catalog">
+          {heading}
+        </h2>
+      ) : (
+        <h1 className="catalog-heading" id="catalog">
+          {heading}
+        </h1>
+      )}
       <div className="catalog-layout">
         <aside className="catalog-sidebar">
           <button

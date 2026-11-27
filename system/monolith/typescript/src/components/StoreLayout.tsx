@@ -119,7 +119,7 @@ function StoreFooter() {
           </div>
           <div className="col-md-4 text-md-end">
             <p className="store-footer-brand mb-1">
-              MyShop<span className="store-logo-mark" aria-hidden="true">.</span>
+              My<span className="store-logo-mark">Shop</span>
             </p>
             <p className="mb-0">© MyShop · demo store for the Optivem ATDD course</p>
           </div>

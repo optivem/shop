@@ -22,12 +22,12 @@ const CSRF_FETCH_SCRIPT = `(function () {
 })();`;
 
 /**
- * Bootstrap and Figtree (self-hosted copies in public/lib/), the Market tokens, the store shell, then the page
+ * Bootstrap and Manrope (self-hosted copies in public/lib/), the Market tokens, the store shell, then the page
  * styles.
  */
 const MARKET_STYLESHEETS = [
   "/lib/bootstrap/css/bootstrap.min.css",
-  "/lib/fontsource-figtree/wght.css",
+  "/lib/fontsource-manrope/wght.css",
   "/css/market.css",
   "/css/storefront.css",
   "/css/pages-shop.css",

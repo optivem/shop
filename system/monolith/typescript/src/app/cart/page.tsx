@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
+import { CheckoutProgress } from "@/components/CheckoutProgress";
 import { Icon } from "@/components/Icon";
 import { LoadingSpinner, StoreLayout } from "@/components/StoreLayout";
 import { ProductImage, QuantityStepper } from "@/components/StorefrontParts";
@@ -142,7 +143,7 @@ export default function CartPage() {
             </div>
             <p className="text-body-secondary small mb-0">Tax and discounts are calculated at checkout.</p>
             {/* A full page load: checkout is a protected page the server may send to the login first. */}
-            <a href="/checkout" className="btn btn-primary btn-lg w-100" aria-label="Proceed to Checkout">
+            <a href="/checkout" className="btn btn-cta btn-lg w-100" aria-label="Proceed to Checkout">
               Proceed to checkout
             </a>
             <Link href="/" className="cart-continue">
@@ -156,6 +157,7 @@ export default function CartPage() {
 
   return (
     <StoreLayout title="Cart" breadcrumbs={[{ label: "Home", path: "/" }, { label: "Cart" }]}>
+      {itemCount > 0 && <CheckoutProgress current="Cart" />}
       <h1 className="h2 mb-4">
         Shopping cart{" "}
         {itemCount > 0 && (

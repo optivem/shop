@@ -61,6 +61,11 @@ body {
     background-color: var(--market-bg);
 }
 
+/* A 16px side gutter at every width (Bootstrap's default is 12px). */
+.store .container {
+    --bs-gutter-x: 2rem;
+}
+
 @media (min-width: 1400px) {
     .store .container {
         max-width: var(--market-container-max);
@@ -75,41 +80,159 @@ body {
     font-variant-numeric: tabular-nums;
 }
 
-/* Utility strip */
+/* Utility strip (navy): the store's standing promises, then the demo-store note. */
 .store-utility {
-    background-color: var(--market-ink);
-    color: var(--market-on-ink);
-    font-size: var(--market-font-size-xs);
+    background-color: var(--market-primary);
+    color: var(--market-on-primary-muted);
+    font-size: var(--market-font-size-sm);
 }
 
-/* Header row: logo · search · actions; on narrow screens the search drops to its own full-width line. */
+.store-utility-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--market-space-1) var(--market-space-5);
+    padding-top: var(--market-space-2);
+    padding-bottom: var(--market-space-2);
+}
+
+.store-utility-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--market-on-primary);
+    font-weight: var(--market-font-weight-medium);
+}
+
+.store-utility-note {
+    margin-left: auto;
+}
+
+@media (max-width: 575.98px) {
+    .store-utility-note {
+        display: none;
+    }
+}
+
+/* Header row: Categories · logo · search · actions; on narrow screens the search drops to its own full-width line. */
 .store-header-top {
     background-color: var(--market-surface);
-    border-bottom: 1px solid var(--market-border);
+    position: relative;
+    z-index: 20;
 }
 
 .store-header-row {
-    gap: var(--market-space-3) var(--market-space-6);
+    gap: var(--market-space-3) var(--market-space-4);
 }
 
 .store-logo {
-    color: var(--market-ink);
+    color: var(--market-primary);
     text-decoration: none;
     font-weight: var(--market-font-weight-heavy);
-    font-size: var(--market-font-size-xl);
-    letter-spacing: -0.04em;
+    font-size: 1.625rem;
+    letter-spacing: -0.035em;
     text-transform: lowercase;
     display: inline-flex;
     align-items: center;
     min-height: var(--market-tap-target);
 }
 
+/* Orange on white is 3.6:1: fine for the 26px heavy logo (large text), not for body copy. */
 .store-logo-mark {
-    color: var(--market-primary);
+    color: var(--market-accent);
 }
 
 .store-logo:hover {
+    color: var(--market-primary-hover);
+}
+
+/* Phones: menu button, logo, cart (as in the mobile mockup). Desktop: the logo leads, then Categories and search. */
+@media (min-width: 992px) {
+    .store-logo {
+        order: -1;
+    }
+}
+
+/* ---- Categories menu ---- */
+
+.category-menu {
+    position: relative;
+}
+
+.category-menu-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--market-space-2);
+    min-height: var(--market-tap-target);
+    min-width: var(--market-tap-target);
+    padding: 0 var(--market-space-4);
+    border: 0;
+    border-radius: var(--market-radius-md);
+    background: var(--market-primary);
+    color: var(--market-on-primary);
+    font-weight: var(--market-font-weight-bold);
+}
+
+.category-menu-button:hover {
+    background: var(--market-primary-hover);
+}
+
+@media (max-width: 991.98px) {
+    .category-menu-button {
+        padding: 0;
+    }
+
+    .category-menu-label {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+    }
+}
+
+.category-menu-panel {
+    position: absolute;
+    top: calc(100% + var(--market-space-2));
+    left: 0;
+    z-index: 30;
+    width: min(300px, calc(100vw - 32px));
+    padding: var(--market-space-2);
+    background: var(--market-surface);
+    border-radius: var(--market-radius-xl);
+    box-shadow: var(--market-shadow-lg);
+}
+
+.category-menu-link {
+    display: flex;
+    align-items: center;
+    gap: var(--market-space-3);
+    min-height: 52px;
+    padding: 6px var(--market-space-2);
+    border-radius: var(--market-radius-md);
     color: var(--market-ink);
+    font-weight: var(--market-font-weight-bold);
+    text-decoration: none;
+}
+
+.category-menu-link:hover {
+    background: var(--market-primary-subtle);
+    color: var(--market-primary);
+}
+
+.category-menu-photo {
+    width: 40px;
+    height: 40px;
+    flex: none;
+    border-radius: var(--market-radius-pill);
+    object-fit: cover;
+    background: var(--market-primary-subtle);
+}
+
+.category-menu-photo-all {
+    background: var(--market-primary);
 }
 
 .store-search {
@@ -117,15 +240,15 @@ body {
     flex: 1 1 100%;
     display: flex;
     align-items: stretch;
-    height: 46px;
-    border: 2px solid var(--market-ink);
-    border-radius: var(--market-radius-lg);
+    height: 48px;
+    border: 2px solid var(--market-primary);
+    border-radius: var(--market-radius-md);
     overflow: hidden;
     background: var(--market-surface);
 }
 
 .store-search:focus-within {
-    box-shadow: 0 0 0 3px rgba(var(--market-primary-rgb), 0.35);
+    box-shadow: 0 0 0 3px rgba(var(--market-primary-rgb), 0.25);
 }
 
 .store-search-scope {
@@ -161,14 +284,23 @@ body {
 
 .store-search-button {
     border: 0;
-    background: var(--market-ink);
-    color: var(--market-surface);
-    font-weight: var(--market-font-weight-bold);
-    padding: 0 var(--market-space-5);
+    background: var(--market-primary);
+    color: var(--market-on-primary);
+    width: 56px;
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .store-search-button:hover {
-    background: var(--market-text-secondary);
+    background: var(--market-primary-hover);
+}
+
+@media (max-width: 575.98px) {
+    .store-search-scope {
+        max-width: 5.5rem;
+    }
 }
 
 @media (min-width: 992px) {
@@ -231,14 +363,27 @@ body {
     padding: 3px 5px;
     font-size: 11px;
     line-height: 1;
-    background-color: var(--market-primary);
-    color: var(--market-on-primary);
+    background-color: var(--market-cta);
+    color: var(--market-on-cta);
+}
+
+@media (max-width: 575.98px) {
+    .store-header-actions {
+        gap: var(--market-space-2) !important;
+    }
+
+    .store-header-hint,
+    .store-cart-label {
+        display: none;
+    }
 }
 
 /* Category / account nav row: one row that scrolls sideways on narrow screens (never a second copy). */
 .store-header-nav {
     background-color: var(--market-surface);
-    border-bottom: 1px solid var(--market-border);
+    border-top: 1px solid var(--market-divider);
+    box-shadow: 0 1px 0 var(--market-border);
+    font-size: var(--market-font-size-sm);
 }
 
 .store-nav-row {
@@ -266,7 +411,7 @@ body {
     min-height: var(--market-tap-target);
     white-space: nowrap;
     color: var(--market-ink);
-    font-weight: var(--market-font-weight-medium);
+    font-weight: var(--market-font-weight-bold);
     text-decoration: none;
 }
 
@@ -278,7 +423,7 @@ body {
 /* Footer */
 .store-footer {
     background-color: var(--market-ink);
-    color: #cbd5e1;
+    color: var(--market-on-ink);
     font-size: var(--market-font-size-sm);
 }
 
@@ -298,7 +443,7 @@ body {
 }
 
 .store-footer .store-logo-mark {
-    color: #5eead4;
+    color: #fb923c;
 }
 
 .store-footer a {
@@ -315,7 +460,7 @@ body {
 }
 
 .store-footer a:focus-visible {
-    outline-color: #5eead4;
+    outline-color: #fb923c;
 }
 
 .store-footer-bottom {
@@ -328,44 +473,40 @@ body {
     text-decoration: underline;
 }
 
-/* ---- Page parts shared by several screens (page-specific styles live in pages-*.css) ---- */
+/* ---- Page parts shared by several screens (page-specific styles live in pages-shop.css) ---- */
 
 .product-image {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #ffffff;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-    border-radius: var(--market-radius-xl);
-}
-
-.product-image img {
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: inherit;
-}
-
-.product-image:not(.product-image-placeholder) {
+    position: relative;
     overflow: hidden;
+    border-radius: var(--market-radius-lg);
     background: var(--market-surface-muted);
 }
 
-.product-detail-media .product-image {
-    border-radius: var(--market-radius-lg);
+.product-image img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
 }
 
+/* Fixed aspect boxes, so a photo that is still loading (or lazy) never shifts the layout. */
 .product-image-card {
     aspect-ratio: 4 / 3;
-    font-size: 1.5rem;
-    border-radius: 0;
 }
 
 .product-image-square {
     aspect-ratio: 1 / 1;
-    font-size: 3rem;
+}
+
+/* Defensive fallback only (no imageUrl, or the photo failed to load). */
+.product-image-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--market-text-muted);
+    background: var(--market-surface-muted);
 }
 
 .input-group.quantity-stepper {

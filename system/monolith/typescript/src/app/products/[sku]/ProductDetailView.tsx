@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Icon } from "@/components/Icon";
 import { StoreLayout } from "@/components/StoreLayout";
+import { ServiceTiles } from "@/components/ServiceTiles";
 import { ProductImage } from "@/components/StorefrontParts";
 import { useCart, useNotification } from "@/components/StorefrontProviders";
 import { ADDED_TO_CART, PRODUCTS_UNAVAILABLE } from "@/lib/storefront/messages";
@@ -49,24 +50,31 @@ export function ProductDetail({ product }: Readonly<{ product: Product | null }>
         { label: product.title },
       ]}
     >
-      <div className="row g-4 align-items-start">
-        <div className="col-lg-7">
-          <div className="market-panel product-detail-media p-3">
-            <ProductImage imageUrl={product.imageUrl} brand={product.brand} alt={product.title} />
-          </div>
+      <div className="product-detail">
+        <div className="product-detail-media market-panel">
+          <ProductImage imageUrl={product.imageUrl} brand={product.brand} alt={product.title} />
         </div>
-        <div className="col-lg-5 d-flex flex-column gap-3">
-          <div className="market-panel p-4">
-            <p className="product-meta mb-2">
+        <div className="product-detail-info">
+          <form
+            className="market-panel product-buy-box"
+            onSubmit={(e) => {
+              e.preventDefault();
+              addToCart();
+            }}
+          >
+            <p className="product-meta mb-0">
               <span className="product-meta-brand" aria-label="Product Brand">
                 {product.brand}
-              </span>{" "}
-              · <span aria-label="Product Category">{product.category}</span>
+              </span>
+              <span className="product-meta-sep" aria-hidden="true">
+                /
+              </span>
+              <span aria-label="Product Category">{product.category}</span>
             </p>
             <h1 className="product-detail-title" aria-label="Product Title">
               {product.title}
             </h1>
-            <p className="product-meta mb-3">
+            <p className="product-meta mb-0">
               SKU{" "}
               <span className="font-monospace text-body" aria-label="Product SKU">
                 {product.sku}
@@ -75,22 +83,11 @@ export function ProductDetail({ product }: Readonly<{ product: Product | null }>
             <p className="price product-detail-price" aria-label="Display Price">
               {formatMoney(product.price)}
             </p>
-            <p className="product-detail-description mb-0" aria-label="Product Description">
-              {product.description}
-            </p>
-          </div>
-          <form
-            className="market-panel p-4 d-flex flex-column gap-3"
-            onSubmit={(e) => {
-              e.preventDefault();
-              addToCart();
-            }}
-          >
-            <div className="d-flex align-items-center justify-content-between gap-3">
-              <label htmlFor="product-quantity" className="form-label fw-bold mb-0">
+            <div className="product-buy-row">
+              <label htmlFor="product-quantity" className="visually-hidden">
                 Quantity
               </label>
-              <div className="input-group quantity-stepper">
+              <div className="input-group quantity-stepper quantity-stepper-lg">
                 <button type="button" className="btn btn-outline-secondary" aria-label="Decrease Quantity" onClick={() => step(-1)}>
                   <Icon name="minus" />
                 </button>
@@ -107,20 +104,21 @@ export function ProductDetail({ product }: Readonly<{ product: Product | null }>
                   <Icon name="plus" />
                 </button>
               </div>
+              <button type="submit" className="btn btn-cta btn-lg product-add-button" aria-label="Add to Cart">
+                <Icon name="shopping-cart" size={18} className="me-2" />
+                Add to cart
+              </button>
             </div>
-            <button type="submit" className="btn btn-primary btn-lg w-100" aria-label="Add to Cart">
-              <Icon name="shopping-cart" size={18} className="me-2" />
-              Add to cart
-            </button>
-            <ul className="product-perks list-unstyled mb-0">
-              <li>
-                <Icon name="check" /> Free shipping on orders over $1,000
-              </li>
-              <li>
-                <Icon name="check" /> 30-day returns
-              </li>
-            </ul>
           </form>
+          <ServiceTiles compact />
+          <section className="market-panel product-about" aria-labelledby="product-about-heading">
+            <h2 className="product-about-title" id="product-about-heading">
+              About this product
+            </h2>
+            <p className="product-detail-description mb-0" aria-label="Product Description">
+              {product.description}
+            </p>
+          </section>
         </div>
       </div>
     </StoreLayout>

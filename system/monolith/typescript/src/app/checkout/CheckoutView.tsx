@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { CheckoutProgress } from "@/components/CheckoutProgress";
 import { LoadingSpinner, StoreLayout } from "@/components/StoreLayout";
 import { AddressFields, ProductImage } from "@/components/StorefrontParts";
 import { useCart, useCatalog, useNotification } from "@/components/StorefrontProviders";
@@ -124,6 +125,7 @@ export function Checkout() {
 
   return (
     <StoreLayout title="Checkout" breadcrumbs={[{ label: "Home", path: "/" }, { label: "Cart", path: "/cart" }, { label: "Checkout" }]}>
+      <CheckoutProgress current="Checkout" />
       <h1 className="h2 mb-4">Checkout</h1>
       <form className="row g-4 align-items-start" noValidate onSubmit={(e) => void handleSubmit(e)}>
         <div className="col-lg-7 d-flex flex-column gap-4">
@@ -250,7 +252,7 @@ export function Checkout() {
                 <span aria-label="Estimated Tax Rate">{taxRate === undefined ? "-" : formatTaxRate(taxRate)}</span>
               </div>
             </div>
-            <button type="submit" className="btn btn-primary btn-lg w-100" data-testid="place-order" disabled={isSubmitting}>
+            <button type="submit" className="btn btn-cta btn-lg w-100" data-testid="place-order" disabled={isSubmitting}>
               {isSubmitting && <span className="spinner-border spinner-border-sm me-2" aria-hidden="true" />}
               {isSubmitting ? "Placing order..." : "Place order"}
             </button>

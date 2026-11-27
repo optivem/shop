@@ -11,15 +11,13 @@
 
 ## ▶ Next executable step (resume here)
 
-Unblocked: the multitier reference is committed. Steps 1–3 are in progress per language (Java, .NET, TypeScript in parallel); then Step 4. Step 1: port the image proxy into `system/monolith/java`, `system/monolith/dotnet` and `system/monolith/typescript`, following how the matching multitier backend reads `imageUrl` from the ERP and streams the image.
+Step 3 is ported but NOT committed: TypeScript is done and its checks pass (tsc, jest, lint). Java was in progress by a subagent, so check `git status system/monolith/java` and finish whatever is missing against the .NET reference (commit e99166af). Then run `./compile-all.sh` and commit Java and TypeScript separately, leaving out the `frontend-react` DemoWakeUp files (another session's work). Commits ba85210d / e99166af / 92f07ba5 are local and not pushed (the permission check blocked the push), so the user pushes. Then Step 4, Step 5, and Step 6 (CI, ask before deploy).
 
 ## Steps
 
-- [ ] Step 1: **Backend proxy (monolith)**: in each monolith backend (Java, .NET, TypeScript), read `imageUrl` from the ERP client/DTO, add `GET /api/products/{id}/image` (fetch from ERP and stream; 404 when there is no image), and expose the shop image URL on the product response, the same way the multitier backends do.
-- [ ] Step 2: **Monolith UIs: images**: render product images on catalog and product detail with a placeholder fallback, and credit the photographers in the footer, matching `frontend-react`.
-- [ ] Step 3: **Monolith UIs: showcase refresh**: port the `frontend-react` showcase-path polish (catalog → product detail → cart → checkout → confirmation, mobile layout). Keep e2e driver selectors stable across languages.
+- [ ] Step 3: **Monolith UIs: showcase refresh, full parity** (user decision 2026-11-27): .NET is done (e99166af). Bring Java (has base tokens/font/CTA only) and TypeScript (photos only, old Market theme) up to the .NET level: home sections, product buy box, checkout progress, mobile 44px controls. Categories menu, wishlist heart and "More in <category>" stay out in all three. Keep e2e driver selectors stable across languages.
 - [ ] Step 4: **System tests**: extend the e2e coverage for images to the monolith configs and keep selectors in sync (verified in CI, not locally).
-- [ ] Step 5: Run `./compile-all.sh`, commit, and confirm the monolith acceptance stages are green in CI.
+- [ ] Step 5: Run `./compile-all.sh`, commit, push, and confirm the monolith acceptance stages are green in CI.
 - [ ] Step 6 (moved from the deleted multitier plan): confirm CI is green for multitier and monolith, including the photo acceptance tests `shouldShowThePhotoOfEachProduct` / `shouldShowThePhotoOfTheProduct` in .NET and TypeScript (never run locally), via a clean dispatch of `meta-prerelease-stage.yml`. Fix any red without local system-test runs. **Stop and ask user before the quick-deploy to production** (user reviews the UI locally first).
 
 ## Decisions (carried over from the multitier plan)

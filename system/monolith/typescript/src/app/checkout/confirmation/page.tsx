@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { CheckoutProgress } from "@/components/CheckoutProgress";
 import { Icon } from "@/components/Icon";
 import { LoadingSpinner, StoreLayout } from "@/components/StoreLayout";
+import { ProductImage } from "@/components/StorefrontParts";
 import { useCatalog } from "@/components/StorefrontProviders";
 import { loadConfirmation } from "@/lib/storefront/confirmation-store";
 import type { CheckoutResult } from "@/lib/storefront/place-checkout-orders";
@@ -20,13 +22,15 @@ export default function OrderConfirmationPage() {
   }, []);
 
   const { products } = useCatalog();
-  const titleOf = (sku: string) => products.find((product) => product.sku === sku)?.title;
+  const productOf = (sku: string) => products.find((product) => product.sku === sku);
+  const titleOf = (sku: string) => productOf(sku)?.title;
   const placedCount = result?.placed.length ?? 0;
   const rejectedCount = result?.rejected.length ?? 0;
 
   const renderResult = (loaded: CheckoutResult | undefined) =>
     loaded && placedCount > 0 ? (
       <>
+        <CheckoutProgress current="Confirmation" />
         <section className="market-panel order-confirmation-hero">
           <div className="order-confirmation-icon" aria-hidden="true">
             <Icon name="circle-check" size={32} />
@@ -43,7 +47,10 @@ export default function OrderConfirmationPage() {
           <ul className="confirmed-orders" aria-label="Confirmed Orders">
             {loaded.placed.map((line) => (
               <li key={line.orderNumber} className="confirmed-order">
-                <div className="min-w-0">
+                <div className="confirmed-order-thumb">
+                  <ProductImage imageUrl={productOf(line.sku)?.imageUrl} brand={productOf(line.sku)?.brand ?? line.sku} shape="square" />
+                </div>
+                <div className="min-w-0 flex-grow-1">
                   <Link
                     href={orderDetailsPath(line.orderNumber)}
                     className="order-number-link"
