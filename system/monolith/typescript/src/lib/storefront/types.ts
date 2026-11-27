@@ -8,6 +8,8 @@ export interface Product {
   brand: string;
   category: string;
   price: string;
+  /** The shop's URL for the product photo; null or absent when the ERP has none. */
+  imageUrl?: string | null;
 }
 
 export interface ShippingAddress {

@@ -13,6 +13,7 @@ describe('decide', () => {
     ['POST', '/logout'],
     ['GET', '/api/products'],
     ['GET', '/api/products/BOOK-123'],
+    ['GET', '/api/products/BOOK-123/image'],
     ['GET', '/'],
     ['GET', '/products/HP-15'],
     ['GET', '/cart'],

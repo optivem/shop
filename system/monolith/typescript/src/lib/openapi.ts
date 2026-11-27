@@ -91,6 +91,18 @@ export const API_OPERATIONS: Record<string, Partial<Record<'get' | 'post' | 'put
       },
     },
   },
+  '/api/products/{sku}/image': {
+    get: {
+      summary: 'View the photo of a product, proxied from the ERP',
+      public: true,
+      parameters: [pathParam('sku')],
+      responses: {
+        '200': { description: 'The product photo', content: { 'image/*': { schema: { type: 'string', format: 'binary' } } } },
+        '404': problem('No product has that SKU, or the product has no image'),
+        '503': ERP_UNAVAILABLE,
+      },
+    },
+  },
   '/api/orders': {
     get: {
       summary: 'Browse order history',

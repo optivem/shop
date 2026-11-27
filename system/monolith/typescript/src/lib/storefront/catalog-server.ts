@@ -18,6 +18,7 @@ function toProduct(product: ViewProductDetailsResponse): Product {
     brand: product.brand ?? '',
     category: product.category ?? '',
     price: product.price.toFixed(2),
+    imageUrl: product.imageUrl,
   };
 }
 

@@ -10,7 +10,7 @@ const EXTERNAL_SYSTEM_MODE = () => envOrDefault('EXTERNAL_SYSTEM_MODE', 'real');
 // Only the fields the monolith uses are required; anything else in the response is ignored.
 const timeSchema = z.object({ time: z.iso.datetime({ offset: true }) });
 
-// ERP product JSON: {id, title, description, price, category, brand}. Order placement needs only the price;
+// ERP product JSON: {id, title, description, price, category, brand, imageUrl}. Order placement needs only the price;
 // the catalog endpoints pass the descriptive fields through.
 const productDetailsSchema = z.object({
   id: z.string().optional(),
@@ -19,6 +19,8 @@ const productDetailsSchema = z.object({
   price: z.number(),
   category: z.string().optional(),
   brand: z.string().optional(),
+  // Where the ERP serves the product photo: a path on the ERP (e.g. /erp/images/HP-15.jpg) or an absolute URL.
+  imageUrl: z.string().optional(),
 });
 
 const productListSchema = z.array(productDetailsSchema);
@@ -26,6 +28,11 @@ const productListSchema = z.array(productDetailsSchema);
 const promotionDetailsSchema = z.object({ promotionActive: z.boolean(), discount: z.number() });
 
 const taxDetailsSchema = z.object({ taxRate: z.number() });
+
+export interface ErpProductImage {
+  content: Buffer;
+  contentType: string;
+}
 
 export type ErpProductDetails = z.infer<typeof productDetailsSchema>;
 export type ErpPromotionDetails = z.infer<typeof promotionDetailsSchema>;
@@ -94,6 +101,25 @@ export async function getProducts(): Promise<ErpProductDetails[]> {
       throw new HttpStatusError(`Failed to fetch products: ${response.status}`, response.status);
     }
     return parseResponse(response, productListSchema, 'product list');
+  });
+}
+
+// imageUrl is the ERP's own reference (a path such as /erp/images/HP-15.jpg, or an absolute URL); it is resolved
+// against the ERP base URL, so the photo always comes from the ERP we are configured for. Null when the ERP has no such image.
+export async function getProductImage(imageUrl: string): Promise<ErpProductImage | null> {
+  const url = new URL(imageUrl, ERP_API_URL()).toString();
+  return fromErp(async (signal) => {
+    const response = await fetchExternal(url, signal);
+    if (response.status === 404) {
+      return null;
+    }
+    if (!response.ok) {
+      throw new HttpStatusError(`Failed to fetch product image: ${response.status}`, response.status);
+    }
+    return {
+      content: Buffer.from(await response.arrayBuffer()),
+      contentType: response.headers.get('content-type') ?? 'application/octet-stream',
+    };
   });
 }
 

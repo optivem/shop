@@ -80,6 +80,7 @@ export const productSchema = z.object({
   brand: z.string().nullish(),
   category: z.string().nullish(),
   price: z.string(),
+  imageUrl: z.string().nullish(),
 });
 
 export const productsResponseSchema = z.array(productSchema);

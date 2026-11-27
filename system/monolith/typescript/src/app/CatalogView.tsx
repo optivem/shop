@@ -76,7 +76,7 @@ function ProductCard({ product, onAddToCart }: Readonly<{ product: Product; onAd
   return (
     <article className="product-card card h-100" aria-label={`Product ${product.sku}`}>
       <Link href={productPath} className="product-card-media" tabIndex={-1} aria-hidden="true">
-        <ProductImage brand={product.brand} />
+        <ProductImage imageUrl={product.imageUrl} brand={product.brand} alt={product.title} lazy />
       </Link>
       <div className="product-card-body">
         <div className="product-card-brand" aria-label="Product Brand">

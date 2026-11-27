@@ -222,7 +222,7 @@ export function Checkout() {
               {lines.map((line) => (
                 <li key={line.sku} className="checkout-review-line" aria-label={`Review Line ${line.sku}`}>
                   <div className="checkout-review-thumb">
-                    <ProductImage brand={line.product?.brand ?? line.sku} shape="square" />
+                    <ProductImage imageUrl={line.product?.imageUrl} brand={line.product?.brand ?? line.sku} shape="square" />
                   </div>
                   <div className="checkout-review-name">
                     <span className="checkout-review-title">{line.product?.title ?? line.sku}</span>

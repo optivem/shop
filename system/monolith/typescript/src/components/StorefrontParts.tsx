@@ -8,17 +8,51 @@ import { SHIPPING_COUNTRIES, type AddressErrors } from "@/lib/storefront/shippin
 import type { ShippingAddress } from "@/lib/storefront/types";
 import { Icon } from "./Icon";
 
-// Product image placeholder: the ERP has no image field, so each product gets a tile with its brand name,
-// coloured by a deterministic hash of the brand (storefront-ux §5). No external images.
-export function ProductImage({ brand, shape = "card" }: Readonly<{ brand: string; shape?: "card" | "square" }>) {
+interface ProductImageProps {
+  /** The shop's URL for the product photo; null or absent when the ERP has none. */
+  imageUrl?: string | null;
+  brand: string;
+  /** What the photo shows (the product title). Empty for a thumbnail that sits next to the product's own title. */
+  alt?: string;
+  /** 4:3 on the product page (the photos are 600x450), 1:1 on cards and for cart and checkout thumbnails. */
+  shape?: "card" | "square";
+  /** Catalog grids lazy-load; the product page loads its one photo straight away. */
+  lazy?: boolean;
+}
+
+// The product photo the ERP owns, served by the shop at the product's imageUrl (ERP -> shop -> browser).
+// A tile with the brand name, coloured by a deterministic hash of the brand (storefront-ux §5), is only a
+// defensive fallback: imageUrl is null, or the image fails to load.
+export function ProductImage({ imageUrl, brand, alt = "", shape = "card", lazy = false }: Readonly<ProductImageProps>) {
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
+  const className = `product-image product-image-${shape}`;
+
+  if (!imageUrl || failedUrl === imageUrl) {
+    return (
+      <div
+        className={`${className} product-image-placeholder`}
+        style={{ backgroundColor: brandColour(brand) }}
+        role="img"
+        aria-label={`${brand} product image`}
+      >
+        <span>{brand.toUpperCase()}</span>
+      </div>
+    );
+  }
+
   return (
-    <div
-      className={`product-image product-image-${shape}`}
-      style={{ backgroundColor: brandColour(brand) }}
-      role="img"
-      aria-label={`${brand} product image`}
-    >
-      <span>{brand.toUpperCase()}</span>
+    <div className={className}>
+      {/* A plain img: the photo is a same-origin proxy of the ERP's image, already sized (600x450). */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={imageUrl}
+        alt={alt}
+        width={600}
+        height={450}
+        loading={lazy ? "lazy" : undefined}
+        decoding="async"
+        onError={() => setFailedUrl(imageUrl)}
+      />
     </div>
   );
 }

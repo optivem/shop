@@ -51,8 +51,8 @@ export function ProductDetail({ product }: Readonly<{ product: Product | null }>
     >
       <div className="row g-4 align-items-start">
         <div className="col-lg-7">
-          <div className="market-panel p-3">
-            <ProductImage brand={product.brand} shape="square" />
+          <div className="market-panel product-detail-media p-3">
+            <ProductImage imageUrl={product.imageUrl} brand={product.brand} alt={product.title} />
           </div>
         </div>
         <div className="col-lg-5 d-flex flex-column gap-3">

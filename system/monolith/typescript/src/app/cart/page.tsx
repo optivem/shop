@@ -65,7 +65,7 @@ export default function CartPage() {
                     <td className="cart-cell-product">
                       <div className="d-flex align-items-center gap-3">
                         <div className="cart-thumb">
-                          <ProductImage brand={line.product?.brand ?? line.sku} shape="square" />
+                          <ProductImage imageUrl={line.product?.imageUrl} brand={line.product?.brand ?? line.sku} shape="square" lazy />
                         </div>
                         <div className="min-w-0">
                           {line.product ? (

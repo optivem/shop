@@ -282,7 +282,7 @@ function OrderDetailView({ order, actions }: Readonly<{ order: OrderDetail; acti
             </h2>
             <div className="order-item">
               <div className="order-item-thumb">
-                <ProductImage brand={product?.brand ?? order.sku} shape="square" />
+                <ProductImage imageUrl={product?.imageUrl} brand={product?.brand ?? order.sku} shape="square" />
               </div>
               <div className="min-w-0">
                 {product && <p className="order-item-title mb-0">{product.title}</p>}

@@ -14,6 +14,7 @@ const PUBLIC_PATHS = new Set(['/health', '/livez', '/readyz', '/login', '/login/
 const PUBLIC_RULES: readonly ((method: string, path: string) => boolean)[] = [
   (method, path) => method === 'GET' && path === '/api/products',
   (method, path) => method === 'GET' && /^\/api\/products\/[^/]+$/.test(path),
+  (method, path) => method === 'GET' && /^\/api\/products\/[^/]+\/image$/.test(path),
   (method, path) => method === 'GET' && (path === '/' || path === '/cart'),
   (method, path) => method === 'GET' && /^\/products\/[^/]+$/.test(path),
 ];
