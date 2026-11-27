@@ -41,13 +41,17 @@ gh workflow run quick-deploy-multitier-typescript.yml -f ref=main
 
 It builds `multitier-backend-typescript` and `multitier-frontend-react` from `ref`, tagged `quick-<sha>`,
 runs the DB migrations from that commit, and swaps the image of the existing production backend and
-frontend (`gcloud run services update`, so they keep their settings). Keycloak and the simulators are not
-touched, and a production must already exist (one regular prod-stage run).
+frontend (`gcloud run services update`, so they keep their settings). Their dependencies come along: the
+simulators (ERP, tax, clock) and the shared Keycloak are built from that commit and deployed too. A
+production must already exist (one regular prod-stage run).
 
 - **Only what changed.** It compares `ref` with what production serves now and builds and deploys only the
   parts that changed: the frontend if `system/multitier/frontend-react` changed, the backend if
-  `system/multitier/backend-typescript` changed, the migrations if `system/db` changed. A UI-only change is
-  frontend only. Anything it cannot determine is deployed; `-f deploy-all=true` forces all three.
+  `system/multitier/backend-typescript` changed, the migrations if `system/db` changed, the simulators if
+  `external-systems` changed (ERP data and product photos included), Keycloak if `docker/keycloak` changed.
+  A UI-only change is frontend only. Anything it cannot determine is deployed; `-f deploy-all=true` forces
+  all of them. Keycloak is shared by every variant and stage, as in any prod stage; it restarts only when
+  its image changed.
 - **Untested.** No test of any kind runs: no commit-stage, acceptance, QA or smoke suite.
 - **No release.** It never touches `VERSION`, release or RC tags, RC images or GitHub releases.
 - **Refuses during a release.** It fails ("a release is in progress, try later") while any

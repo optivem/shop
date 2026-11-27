@@ -10,9 +10,11 @@ name: quick-deploy-multitier-typescript
 #
 # It needs a prior regular production deploy: it only swaps the image of the existing services
 # and migrate job (gcloud run services/jobs update), so they keep their env vars, secrets and
-# flags, and nothing from _deploy-stage.yml is duplicated. Keycloak and the simulators stay as
-# they are. Only the parts that changed since what production serves are built and deployed (the
-# changes job); deploy-all forces all of them.
+# flags, and nothing from _deploy-stage.yml is duplicated. The dependencies go with it: the
+# simulators (ERP, tax, clock) and the shared Keycloak are deployed too when they changed. Only the
+# parts that changed since what production serves are built and deployed (the changes job);
+# deploy-all forces all of them. Keycloak is shared by every variant and stage, exactly as when a
+# prod stage deploys it; the deploy-keycloak action restarts it only when its image changed.
 #
 # Concurrency: the deploy job shares the multitier-typescript-prod-stage group
 # (cancel-in-progress: false), so it waits for a running prod stage instead of racing it. The
@@ -29,7 +31,7 @@ on:
         type: string
         default: main
       deploy-all:
-        description: 'Build and deploy backend, frontend and migrations even when unchanged'
+        description: 'Build and deploy backend, frontend, migrations, simulators and Keycloak even when unchanged'
         required: false
         type: boolean
         default: false
@@ -81,8 +83,9 @@ jobs:
   # === Detect What Changed Since What Production Serves ===
   # Only the parts that changed are built and deployed. Frontend/backend: production's image tag is
   # quick-<sha> or a release-candidate git tag, i.e. a commit; git diff it against the target over the
-  # component's folder. Migrations: the db-migrate image is tagged by the tree hash of system/db
-  # (build-shared-images), so compare that hash. Anything that cannot be determined is deployed.
+  # component's folder. Migrations, simulators and Keycloak: their images are tagged by the tree
+  # hash of their build context (build-shared-images: system/db, external-systems, docker/keycloak),
+  # so compare that hash. Anything that cannot be determined is deployed.
   changes:
     needs: guard
     runs-on: ubuntu-latest
@@ -95,6 +98,8 @@ jobs:
       backend: ${{ steps.detect.outputs.backend }}
       frontend: ${{ steps.detect.outputs.frontend }}
       migrate: ${{ steps.detect.outputs.migrate }}
+      simulators: ${{ steps.detect.outputs.simulators }}
+      keycloak: ${{ steps.detect.outputs.keycloak }}
     env:
       SHA: ${{ needs.guard.outputs.sha }}
       SYSTEM: ${{ vars.SYSTEM_NAME }}
@@ -152,22 +157,25 @@ jobs:
           }
           component backend "${p}-backend" system/multitier/backend-typescript
           component frontend "${p}-frontend" system/multitier/frontend-react
-          if [[ "$DEPLOY_ALL" == true ]]; then
-            decide migrate yes "deploy-all"
-          else
-            image=$(live_image jobs "${p}-migrate")
-            want=$(git rev-parse --short=12 "${SHA}:system/db")
+          shared() { # <output> <services|jobs> <name> <folder>
+            local image want
+            if [[ "$DEPLOY_ALL" == true ]]; then decide "$1" yes "deploy-all"; return; fi
+            image=$(live_image "$2" "$3")
+            want=$(git rev-parse --short=12 "${SHA}:$4")
             if [[ -n "$image" && "${image##*:}" == "$want" ]]; then
-              decide migrate no "system/db unchanged (tree ${want})"
+              decide "$1" no "$4 unchanged (tree ${want})"
             else
-              decide migrate yes "system/db tree ${want} is not the live '${image##*:}'"
+              decide "$1" yes "$4 tree ${want} is not the live '${image##*:}'"
             fi
-          fi
+          }
+          shared migrate jobs "${p}-migrate" system/db
+          shared simulators services "${p}-sim" external-systems
+          shared keycloak services "${SYSTEM}-keycloak" docker/keycloak
 
   # === Build and Push the Images (no tests) ===
   build:
     needs: [guard, changes]
-    if: needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true' || needs.changes.outputs.migrate == 'true'
+    if: needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true' || needs.changes.outputs.migrate == 'true' || needs.changes.outputs.simulators == 'true' || needs.changes.outputs.keycloak == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -177,6 +185,8 @@ jobs:
       backend-image: ${{ steps.refs.outputs.backend }}
       frontend-image: ${{ steps.refs.outputs.frontend }}
       db-migrate-image: ${{ steps.shared.outputs.db-migrate }}
+      simulators-image: ${{ steps.shared.outputs.simulators }}
+      keycloak-image: ${{ steps.shared.outputs.keycloak }}
     env:
       SHA: ${{ needs.guard.outputs.sha }}
     steps:
@@ -232,14 +242,13 @@ jobs:
           tags: ${{ steps.refs.outputs.frontend }}
           labels: org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
 
-      # db-migrate for the migrations, from this commit. The action also builds Keycloak, the
-      # simulators and the stubs, but each is tagged by its tree hash and reused when that tag
-      # exists, so normally only db-migrate (if system/db changed) is built; only db-migrate is
-      # deployed. It also checks that every image Cloud Run pulls, the quick ones included, is
-      # publicly pullable.
-      - name: Build and Push db-migrate Image
+      # db-migrate, simulators and Keycloak, from this commit (the stubs too, never deployed). Each
+      # is tagged by its tree hash and reused when that tag exists, so only what changed is built.
+      # It also checks that every image Cloud Run pulls, the quick ones included, is publicly
+      # pullable.
+      - name: Build and Push Shared Images
         id: shared
-        if: needs.changes.outputs.migrate == 'true'
+        if: needs.changes.outputs.migrate == 'true' || needs.changes.outputs.simulators == 'true' || needs.changes.outputs.keycloak == 'true'
         uses: ./.github/actions/build-shared-images
         with:
           registry: ${{ env.IMAGE_BASE }}
@@ -282,7 +291,15 @@ jobs:
       BACKEND_REF: ${{ needs.build.outputs.backend-image }}
       FRONTEND_REF: ${{ needs.build.outputs.frontend-image }}
       MIGRATE_REF: ${{ needs.build.outputs.db-migrate-image }}
+      SIM_REF: ${{ needs.build.outputs.simulators-image }}
+      KEYCLOAK_REF: ${{ needs.build.outputs.keycloak-image }}
     steps:
+      # deploy-keycloak reconciles the shop-prod realm from files in the repo.
+      - name: Checkout Commit
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.guard.outputs.sha }}
+
       - name: Resolve Production Names
         env:
           WIF_PROVIDER: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
@@ -294,6 +311,8 @@ jobs:
           p="${SYSTEM}-multitier-typescript-production"
           url() { echo "https://$1-${project_number}.${REGION}.run.app"; }
           {
+            echo "PROJECT_NUMBER=${project_number}"
+            echo "SIM_NAME=${p}-sim"
             echo "BACKEND_NAME=${p}-backend"
             echo "FRONTEND_NAME=${p}-frontend"
             echo "MIGRATE_JOB=${p}-migrate"
@@ -314,7 +333,7 @@ jobs:
         run: |
           set -euo pipefail
           missing=0
-          for name in "$BACKEND_NAME" "$FRONTEND_NAME"; do
+          for name in "$BACKEND_NAME" "$FRONTEND_NAME" "$SIM_NAME"; do
             found=$(gcloud run services list --region "$REGION" --project "$PROJECT" --filter="metadata.name=${name}" --format=json)
             if [[ "$(jq length <<< "$found")" -eq 0 ]]; then
               echo "::error::Cloud Run service ${name} does not exist. A quick deploy only updates an existing production; run multitier-typescript-prod-stage.yml once first."
@@ -327,6 +346,29 @@ jobs:
             missing=1
           fi
           exit "$missing"
+
+      # Same inputs as the production stage (_deploy-stage.yml, deploy-keycloak job).
+      - name: Deploy Keycloak
+        if: needs.changes.outputs.keycloak == 'true'
+        uses: ./.github/actions/deploy-keycloak
+        with:
+          image: ${{ env.KEYCLOAK_REF }}
+          system: ${{ vars.SYSTEM_NAME }}
+          project: ${{ vars.GCP_PROJECT_ID }}
+          project-number: ${{ env.PROJECT_NUMBER }}
+          region: ${{ vars.GCP_REGION }}
+          keycloak-domain: ${{ vars.KEYCLOAK_DOMAIN }}
+          reconcile-prod-realm: 'true'
+          frontend-origins: ${{ vars.PROD_DOMAIN && format('https://{0}', vars.PROD_DOMAIN) || '' }}
+          frontend-realm: shop-prod
+
+      # The simulators keep their port, instance cap and flags; only the image changes.
+      - name: Deploy External Systems
+        if: needs.changes.outputs.simulators == 'true'
+        run: |
+          set -euo pipefail
+          gcloud run services update "$SIM_NAME" --image "$SIM_REF" --region "$REGION" --project "$PROJECT"
+          gcloud run services update-traffic "$SIM_NAME" --to-latest --region "$REGION" --project "$PROJECT"
 
       # The job keeps its FLYWAY_* env and service account; only the image changes.
       - name: Run DB Migrations
@@ -384,6 +426,8 @@ jobs:
           DO_BACKEND: ${{ needs.changes.outputs.backend }}
           DO_FRONTEND: ${{ needs.changes.outputs.frontend }}
           DO_MIGRATE: ${{ needs.changes.outputs.migrate }}
+          DO_SIM: ${{ needs.changes.outputs.simulators }}
+          DO_KEYCLOAK: ${{ needs.changes.outputs.keycloak }}
         run: |
           set -euo pipefail
           {
@@ -395,5 +439,7 @@ jobs:
             line "Backend \`${BACKEND_NAME}\`" "$DO_BACKEND" "$BACKEND_REF"
             line "Frontend \`${FRONTEND_NAME}\`" "$DO_FRONTEND" "$FRONTEND_REF"
             line "Migrations \`${MIGRATE_JOB}\`" "$DO_MIGRATE" "$MIGRATE_REF"
+            line "Simulators \`${SIM_NAME}\`" "$DO_SIM" "$SIM_REF"
+            line "Keycloak (shared)" "$DO_KEYCLOAK" "$KEYCLOAK_REF"
             if [[ -n "$DOMAIN" ]]; then echo "- URL: https://${DOMAIN}"; else echo "- URL: ${UI_HEALTH_URL}"; fi
           } >> "$GITHUB_STEP_SUMMARY"
