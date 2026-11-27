@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mycompany.myshop.core.dtos.external.ErpGetPromotionResponse;
 import com.mycompany.myshop.core.dtos.external.ErpProductDetailsResponse;
+import com.mycompany.myshop.core.dtos.external.ErpProductImage;
 import com.mycompany.myshop.core.exceptions.ErpUnavailableException;
 import io.micrometer.observation.ObservationRegistry;
 import jakarta.annotation.PostConstruct;
@@ -11,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.net.URI;
+import java.net.http.HttpResponse;
 import java.util.List;
 import java.util.Optional;
 
@@ -114,6 +117,37 @@ public class ErpGateway {
                     + ". Error: " + e.getClass().getSimpleName() + ": " + e.getMessage(), e);
         } catch (Exception e) {
             throw new ErpUnavailableException("Failed to fetch product list from URL: " + url
+                    + ". Error: " + e.getClass().getSimpleName() + ": " + e.getMessage(), e);
+        }
+    }
+
+    // imageUrl is the ERP's own reference (a path such as /erp/images/HP-15.jpg, or an absolute URL);
+    // it is resolved against the ERP base URL, so the photo always comes from the ERP we are configured for.
+    public Optional<ErpProductImage> getProductImage(String imageUrl) {
+        var url = URI.create(erpUrl).resolve(imageUrl).toString();
+
+        try {
+            var response = http.get(url, observationRegistry, HttpResponse.BodyHandlers.ofByteArray());
+
+            if (response.statusCode() == 404) {
+                return Optional.empty();
+            }
+
+            if (response.statusCode() != 200) {
+                throw new ErpUnavailableException("ERP API returned status " + response.statusCode()
+                        + " for product image. URL: " + url);
+            }
+
+            var contentType = response.headers().firstValue("Content-Type").orElse("application/octet-stream");
+            return Optional.of(new ErpProductImage(response.body(), contentType));
+        } catch (ErpUnavailableException e) {
+            throw e;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new ErpUnavailableException("Failed to fetch product image from URL: " + url
+                    + ". Error: " + e.getClass().getSimpleName() + ": " + e.getMessage(), e);
+        } catch (Exception e) {
+            throw new ErpUnavailableException("Failed to fetch product image from URL: " + url
                     + ". Error: " + e.getClass().getSimpleName() + ": " + e.getMessage(), e);
         }
     }

@@ -87,6 +87,12 @@ public final class GatewayHttpClient {
     // per call and cheap: the instrumented client delegates to the pooled one.
     public HttpResponse<String> get(String url, ObservationRegistry observationRegistry)
             throws IOException, InterruptedException {
+        return get(url, observationRegistry, HttpResponse.BodyHandlers.ofString());
+    }
+
+    // The same guarded GET for a body that is not text, such as a product image.
+    public <T> HttpResponse<T> get(String url, ObservationRegistry observationRegistry,
+            HttpResponse.BodyHandler<T> bodyHandler) throws IOException, InterruptedException {
         var client = MicrometerHttpClient.instrumentationBuilder(httpClient, Metrics.globalRegistry)
                 .observationRegistry(observationRegistry)
                 .build();
@@ -96,8 +102,8 @@ public final class GatewayHttpClient {
                 .GET()
                 .build();
 
-        CheckedSupplier<HttpResponse<String>> attempt = () -> {
-            var response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        CheckedSupplier<HttpResponse<T>> attempt = () -> {
+            var response = client.send(request, bodyHandler);
             if (response.statusCode() >= 500) {
                 throw new ServerErrorResponse(response);
             }
@@ -112,7 +118,9 @@ public final class GatewayHttpClient {
         try {
             return guarded.get();
         } catch (ServerErrorResponse e) {
-            return e.response;
+            @SuppressWarnings("unchecked") // the response this same call put into the exception
+            var response = (HttpResponse<T>) e.response;
+            return response;
         } catch (CallNotPermittedException e) {
             throw new IOException("Circuit breaker for " + name + " is open; not calling " + url, e);
         } catch (IOException | InterruptedException | RuntimeException | Error e) {
@@ -137,9 +145,9 @@ public final class GatewayHttpClient {
     // last one out again as the plain response it was.
     private static final class ServerErrorResponse extends Exception {
 
-        private final transient HttpResponse<String> response;
+        private final transient HttpResponse<?> response;
 
-        private ServerErrorResponse(HttpResponse<String> response) {
+        private ServerErrorResponse(HttpResponse<?> response) {
             super("status " + response.statusCode(), null, false, false);
             this.response = response;
         }

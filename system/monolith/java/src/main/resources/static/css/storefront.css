@@ -63,6 +63,11 @@ body {
     background-color: var(--market-bg);
 }
 
+/* A 16px side gutter at every width (Bootstrap's default is 12px). */
+.store .container {
+    --bs-gutter-x: 2rem;
+}
+
 @media (min-width: 1400px) {
     .store .container {
         max-width: var(--market-container-max);
@@ -77,11 +82,11 @@ body {
     font-variant-numeric: tabular-nums;
 }
 
-/* Utility strip */
+/* Utility strip (navy) */
 .store-utility {
-    background-color: var(--market-ink);
-    color: var(--market-on-ink);
-    font-size: var(--market-font-size-xs);
+    background-color: var(--market-primary);
+    color: var(--market-on-primary);
+    font-size: var(--market-font-size-sm);
 }
 
 /* Header row: logo · search · actions; on narrow screens the search drops to its own full-width line. */
@@ -95,7 +100,7 @@ body {
 }
 
 .store-logo {
-    color: var(--market-ink);
+    color: var(--market-primary);
     text-decoration: none;
     font-weight: var(--market-font-weight-heavy);
     font-size: var(--market-font-size-xl);
@@ -106,12 +111,13 @@ body {
     min-height: var(--market-tap-target);
 }
 
+/* Orange on white is 3.6:1: fine for the large heavy logo mark, not for body copy. */
 .store-logo-mark {
-    color: var(--market-primary);
+    color: var(--market-accent);
 }
 
 .store-logo:hover {
-    color: var(--market-ink);
+    color: var(--market-primary-hover);
 }
 
 .store-search {
@@ -300,7 +306,7 @@ body {
 }
 
 .store-footer .store-logo-mark {
-    color: #5eead4;
+    color: var(--market-accent);
 }
 
 .store-footer a {
@@ -333,24 +339,52 @@ body {
 /* ---- Page parts shared by several screens (page-specific styles live in src/styles/pages-shop.css) ---- */
 
 .product-image {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--market-radius-lg);
+    background: var(--market-surface-muted);
+}
+
+.product-image img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* Fixed aspect boxes, so a photo that is still loading (or lazy) never shifts the layout. */
+.product-image-card {
+    aspect-ratio: 4 / 3;
+}
+
+.product-image-square {
+    aspect-ratio: 1 / 1;
+}
+
+/* The brand tile is only a fallback: no imageUrl, or the photo failed to load. */
+.product-image-fallback-label {
+    display: none;
+}
+
+.product-image-placeholder {
     display: flex;
     align-items: center;
     justify-content: center;
     color: #ffffff;
     font-weight: 700;
     letter-spacing: 0.05em;
-    border-radius: var(--market-radius-xl);
-}
-
-.product-image-card {
-    aspect-ratio: 4 / 3;
     font-size: 1.5rem;
-    border-radius: 0;
+    background-color: var(--product-image-colour);
 }
 
-.product-image-square {
-    aspect-ratio: 1 / 1;
-    font-size: 3rem;
+.product-image-placeholder .product-image-fallback-label {
+    display: inline;
+}
+
+.product-image-square.product-image-placeholder {
+    font-size: var(--market-font-size-xs);
 }
 
 .input-group.quantity-stepper {

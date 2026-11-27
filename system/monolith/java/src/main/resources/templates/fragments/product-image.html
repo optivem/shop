@@ -2,13 +2,21 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
 <!--
-  Product image placeholder: the ERP has no image field, so each product gets a tile with its brand name,
-  coloured by a deterministic hash of the brand (storefront-ux §5). No external images.
+  Product image: the photo the ERP owns, served by this app at the product's imageUrl (ERP -> shop -> page).
+  A tile with the brand name, coloured by a deterministic hash of the brand (storefront-ux §5), is only a
+  fallback: imageUrl is missing, or the photo fails to load (the onerror handler drops the img and shows it).
+  alt is empty for a thumbnail that sits next to the product's own title.
 -->
-<div th:fragment="image(brand, shape)" th:class="${'product-image product-image-' + shape}"
-     th:style="${'background-color: ' + brandColours.of(brand)}" role="img"
-     th:attr="aria-label=${brand + ' product image'}">
-    <span th:text="${#strings.toUpperCase(brand)}">BRAND</span>
+<div th:fragment="image(imageUrl, alt, brand, shape, lazy)"
+     th:class="${'product-image product-image-' + shape + (#strings.isEmpty(imageUrl) ? ' product-image-placeholder' : '')}"
+     th:style="${'--product-image-colour: ' + brandColours.of(brand)}"
+     th:attr="role=${#strings.isEmpty(imageUrl) and !#strings.isEmpty(alt) ? 'img' : null},
+              aria-label=${#strings.isEmpty(imageUrl) and !#strings.isEmpty(alt) ? brand + ' product image' : null},
+              aria-hidden=${#strings.isEmpty(imageUrl) and #strings.isEmpty(alt) ? 'true' : null}">
+    <img th:if="${!#strings.isEmpty(imageUrl)}" th:src="${imageUrl}" th:alt="${alt}" width="600" height="450"
+         th:attr="loading=${lazy ? 'lazy' : null}" decoding="async"
+         onerror="this.parentNode.classList.add('product-image-placeholder'); this.remove();">
+    <span class="product-image-fallback-label" th:text="${#strings.toUpperCase(brand)}">BRAND</span>
 </div>
 </body>
 </html>

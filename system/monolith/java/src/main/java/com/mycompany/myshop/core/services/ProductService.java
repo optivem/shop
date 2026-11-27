@@ -2,6 +2,7 @@ package com.mycompany.myshop.core.services;
 
 import com.mycompany.myshop.core.dtos.ViewProductDetailsResponse;
 import com.mycompany.myshop.core.dtos.external.ErpProductDetailsResponse;
+import com.mycompany.myshop.core.dtos.external.ErpProductImage;
 import com.mycompany.myshop.core.exceptions.NotExistValidationException;
 import com.mycompany.myshop.core.services.external.ErpGateway;
 import org.springframework.stereotype.Service;
@@ -30,6 +31,18 @@ public class ProductService {
                 .orElseThrow(() -> new NotExistValidationException("Product " + sku + " does not exist."));
     }
 
+    // The photo is proxied rather than linked: the ERP is not reachable from the browser.
+    public ErpProductImage getProductImage(String sku) {
+        var imageUrl = erpGateway.getProductDetails(sku)
+                .orElseThrow(() -> new NotExistValidationException("Product " + sku + " does not exist."))
+                .getImageUrl();
+        if (imageUrl == null || imageUrl.isBlank()) {
+            throw new NotExistValidationException("Product " + sku + " has no image.");
+        }
+        return erpGateway.getProductImage(imageUrl)
+                .orElseThrow(() -> new NotExistValidationException("Image of product " + sku + " does not exist."));
+    }
+
     private static ViewProductDetailsResponse toResponse(ErpProductDetailsResponse product) {
         var response = new ViewProductDetailsResponse();
         response.setSku(product.getId());
@@ -38,6 +51,14 @@ public class ProductService {
         response.setBrand(product.getBrand());
         response.setCategory(product.getCategory());
         response.setPrice(product.getPrice());
+        response.setImageUrl(imageUrlOf(product));
         return response;
+    }
+
+    private static String imageUrlOf(ErpProductDetailsResponse product) {
+        if (product.getImageUrl() == null || product.getImageUrl().isBlank()) {
+            return null;
+        }
+        return "/api/products/" + product.getId() + "/image";
     }
 }

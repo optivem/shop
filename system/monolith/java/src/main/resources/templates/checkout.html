@@ -85,7 +85,7 @@
                     <li th:each="line : ${lines}" class="checkout-review-line"
                         th:attr="aria-label=${'Review Line ' + line.sku()}">
                         <div class="checkout-review-thumb">
-                            <div th:replace="~{fragments/product-image :: image(${line.product() != null ? line.product().brand : line.sku()}, 'square')}"></div>
+                            <div th:replace="~{fragments/product-image :: image(${line.product() != null ? line.product().imageUrl : null}, '', ${line.product() != null ? line.product().brand : line.sku()}, 'square', false)}"></div>
                         </div>
                         <div class="checkout-review-name">
                             <span class="checkout-review-title"
@@ -107,7 +107,7 @@
                         <span aria-label="Estimated Tax Rate" id="taxRate" th:text="${taxRate}">-</span>
                     </div>
                 </div>
-                <button type="submit" class="btn btn-primary btn-lg w-100" data-testid="place-order" id="placeCheckoutOrder">
+                <button type="submit" class="btn btn-cta btn-lg w-100" data-testid="place-order" id="placeCheckoutOrder">
                     Place order
                 </button>
                 <p class="text-body-secondary small text-center mb-0">Discount and tax are worked out per order when it is placed.</p>

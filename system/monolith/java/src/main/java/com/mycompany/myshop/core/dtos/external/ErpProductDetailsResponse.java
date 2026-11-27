@@ -14,4 +14,6 @@ public class ErpProductDetailsResponse {
     private BigDecimal price;
     private String category;
     private String brand;
+    // Where the ERP serves the product photo, as a path on the ERP (e.g. /erp/images/HP-15.jpg); null when it has none.
+    private String imageUrl;
 }

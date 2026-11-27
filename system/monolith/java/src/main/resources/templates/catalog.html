@@ -96,7 +96,7 @@
                          th:attr="aria-label=${'Product ' + product.sku}">
                     <a th:href="${'/products/' + #uris.escapePathSegment(product.sku)}" class="product-card-media"
                        tabindex="-1" aria-hidden="true">
-                        <div th:replace="~{fragments/product-image :: image(${product.brand}, 'card')}"></div>
+                        <div th:replace="~{fragments/product-image :: image(${product.imageUrl}, ${product.title}, ${product.brand}, 'card', true)}"></div>
                     </a>
                     <div class="product-card-body">
                         <div class="product-card-brand" aria-label="Product Brand" th:text="${product.brand}">Brand</div>
@@ -111,7 +111,7 @@
                             <input type="hidden" name="sku" th:value="${product.sku}">
                             <input type="hidden" name="quantity" value="1">
                             <input type="hidden" name="returnUrl" th:value="${returnUrl}">
-                            <button type="submit" class="btn btn-primary w-100"
+                            <button type="submit" class="btn btn-cta w-100"
                                     th:attr="data-testid=${'add-to-cart-' + product.sku}">Add to cart</button>
                         </form>
                     </div>

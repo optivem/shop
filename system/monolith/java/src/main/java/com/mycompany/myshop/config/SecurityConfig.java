@@ -130,9 +130,9 @@ public class SecurityConfig {
                 // Spring MVC answers HEAD with the GET handler, so every GET rule has to cover HEAD as well.
                 .requestMatchers(HttpMethod.GET, "/health", "/livez", "/readyz").permitAll()
                 .requestMatchers(HttpMethod.HEAD, "/health", "/livez", "/readyz").permitAll()
-                // The catalog is browsable anonymously (UC-006, UC-007).
-                .requestMatchers(HttpMethod.GET, "/api/products", "/api/products/{sku}").permitAll()
-                .requestMatchers(HttpMethod.HEAD, "/api/products", "/api/products/{sku}").permitAll()
+                // The catalog is browsable anonymously (UC-006, UC-007), product photos included, so an <img> loads without a token.
+                .requestMatchers(HttpMethod.GET, "/api/products", "/api/products/{sku}", "/api/products/{sku}/image").permitAll()
+                .requestMatchers(HttpMethod.HEAD, "/api/products", "/api/products/{sku}", "/api/products/{sku}/image").permitAll()
                 // The storefront pages around the catalog never ask to sign in (storefront-ux §2); the cart lives in
                 // the anonymous session. /sign-in and /sign-up are deliberately not public: reaching them is what starts the
                 // login (or, for /sign-up, Keycloak's registration form).

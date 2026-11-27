@@ -226,8 +226,7 @@
 }
 
 .product-card .product-image {
-    aspect-ratio: 1 / 1;
-    border-radius: var(--market-radius-lg);
+    border-radius: var(--market-radius-md);
 }
 
 .product-card-body {
@@ -719,6 +718,16 @@ a.cart-line-title:hover {
     border: 1px solid var(--market-divider);
     border-radius: var(--market-radius-lg);
     padding: var(--market-space-2) var(--market-space-4);
+}
+
+.confirmed-order-thumb {
+    width: 56px;
+    flex: none;
+}
+
+.confirmed-order-thumb .product-image {
+    border-radius: var(--market-radius-sm);
+    font-size: 0.5625rem;
 }
 
 .confirmed-order-meta {
@@ -1275,4 +1284,13 @@ a.cart-line-title:hover {
     margin: 0 0 var(--market-space-1);
     font-size: var(--market-font-size-xl);
     color: inherit;
+}
+
+/* Product page: the photo panel keeps a rounded 4:3 photo. */
+.product-detail-media {
+    border-radius: var(--market-radius-2xl);
+}
+
+.product-detail-media .product-image {
+    border-radius: var(--market-radius-lg);
 }

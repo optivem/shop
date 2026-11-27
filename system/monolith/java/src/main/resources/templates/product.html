@@ -24,8 +24,8 @@
 
         <div class="row g-4 align-items-start">
             <div class="col-lg-7">
-                <div class="market-panel p-3">
-                    <div th:replace="~{fragments/product-image :: image(${product.brand}, 'square')}"></div>
+                <div class="market-panel product-detail-media p-3">
+                    <div th:replace="~{fragments/product-image :: image(${product.imageUrl}, ${product.title}, ${product.brand}, 'card', false)}"></div>
                 </div>
             </div>
             <div class="col-lg-5 d-flex flex-column gap-3">
@@ -56,7 +56,7 @@
                                     data-step="1"><svg th:replace="~{fragments/icons :: icon('plus', 16, null, 2)}"></svg></button>
                         </div>
                     </div>
-                    <button type="submit" class="btn btn-primary btn-lg w-100" aria-label="Add to Cart">
+                    <button type="submit" class="btn btn-cta btn-lg w-100" aria-label="Add to Cart">
                         <svg th:replace="~{fragments/icons :: icon('shopping-cart', 18, 'me-2', 2)}"></svg>Add to cart
                     </button>
                     <ul class="product-perks list-unstyled mb-0">

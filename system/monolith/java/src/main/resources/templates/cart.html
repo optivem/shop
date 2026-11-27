@@ -45,7 +45,7 @@
                         <td class="cart-cell-product">
                             <div class="d-flex align-items-center gap-3">
                                 <div class="cart-thumb">
-                                    <div th:replace="~{fragments/product-image :: image(${line.product() != null ? line.product().brand : line.sku()}, 'square')}"></div>
+                                    <div th:replace="~{fragments/product-image :: image(${line.product() != null ? line.product().imageUrl : null}, '', ${line.product() != null ? line.product().brand : line.sku()}, 'square', true)}"></div>
                                 </div>
                                 <div>
                                     <th:block th:if="${line.product() != null}">
@@ -112,7 +112,7 @@
                     <span class="price fw-bold" aria-label="Cart Subtotal" th:text="${money.format(subtotal)}">$0.00</span>
                 </div>
                 <p class="text-body-secondary small mb-0">Tax and discounts are calculated at checkout.</p>
-                <a href="/checkout" class="btn btn-primary btn-lg w-100" aria-label="Proceed to Checkout">Proceed to checkout</a>
+                <a href="/checkout" class="btn btn-cta btn-lg w-100" aria-label="Proceed to Checkout">Proceed to checkout</a>
                 <a href="/" class="cart-continue">Continue shopping</a>
             </div>
         </div>

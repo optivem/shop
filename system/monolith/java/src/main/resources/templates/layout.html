@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:replace="${title}">MyShop</title>
-    <!-- Bootstrap 5.3 (self-hosted copy) re-themed by the Market tokens (market.css) with Figtree self-hosted from Fontsource: the same look
+    <!-- Bootstrap 5.3 (self-hosted copy) re-themed by the Market tokens (market.css) with Manrope self-hosted from Fontsource: the same look
          as frontend-react and the .NET monolith. -->
     <link th:href="@{/css/lib/bootstrap/css/bootstrap.min.css}" rel="stylesheet">
-    <link th:href="@{/css/lib/fontsource-figtree/wght.css}" rel="stylesheet">
+    <link th:href="@{/css/lib/fontsource-manrope/wght.css}" rel="stylesheet">
     <link th:href="@{/css/market.css}" rel="stylesheet">
     <link th:href="@{/css/storefront.css}" rel="stylesheet">
     <link th:href="@{/css/pages.css}" rel="stylesheet">
@@ -149,8 +149,9 @@
         </div>
     </main>
 
-    <!-- Static footer: Shop, Help, the demo-store note and the photo credits (storefront-ux §3). The photos in
-         static/css/images/promo/ are listed in docs/design/home-redesign/images/SOURCES.md: credit every one that ships. -->
+    <!-- Static footer: Shop, Help, the demo-store note and the photo credits (storefront-ux §3). Credit every photographer of
+         a shipped photo: the promo photos in static/css/images/promo/ (docs/design/home-redesign/images/SOURCES.md) and the
+         ERP product photos (external-systems/erp-images/SOURCES.md); same list as frontend-react StoreFooter. -->
     <footer class="store-footer mt-5">
         <div class="container py-4">
             <div class="row g-4">
@@ -181,9 +182,15 @@
             <div class="container py-3">
                 <p class="mb-0">
                     Photos on Unsplash by
-                    <a href="https://unsplash.com/photos/btVTuAIhvk8" target="_blank" rel="noopener noreferrer">Dhony Koswara</a>,
-                    <a href="https://unsplash.com/photos/VXpeQ3GetDU" target="_blank" rel="noopener noreferrer">Huy Phan</a>,
-                    <a href="https://unsplash.com/photos/U1I0IoQx3Yo" target="_blank" rel="noopener noreferrer">Jay Zhang</a>
+                    <a href="https://unsplash.com/@dhony24" target="_blank" rel="noopener noreferrer">Dhony Koswara</a>,
+                    <a href="https://unsplash.com/@maybejensen" target="_blank" rel="noopener noreferrer">Lasse Jensen</a>,
+                    <a href="https://unsplash.com/@ffz_20" target="_blank" rel="noopener noreferrer">Faraaz Zuberi</a>,
+                    <a href="https://unsplash.com/@2hmedia" target="_blank" rel="noopener noreferrer">2H Media</a>,
+                    <a href="https://unsplash.com/@huyphan2602" target="_blank" rel="noopener noreferrer">Huy Phan</a>,
+                    <a href="https://unsplash.com/@rpnickson" target="_blank" rel="noopener noreferrer">Roberto Nickson</a>,
+                    <a href="https://unsplash.com/@nkachanovskyyy" target="_blank" rel="noopener noreferrer">Nikita Kachanovsky</a>,
+                    <a href="https://unsplash.com/@ravipalwe" target="_blank" rel="noopener noreferrer">Ravi Palwe</a>,
+                    <a href="https://unsplash.com/@jay_zhang" target="_blank" rel="noopener noreferrer">Jay Zhang</a>
                 </p>
             </div>
         </div>

@@ -13,4 +13,6 @@ public class ViewProductDetailsResponse {
     private String brand;
     private String category;
     private BigDecimal price;
+    // The shop's own URL for the product photo (GET /api/products/{sku}/image); null when the ERP has none.
+    private String imageUrl;
 }
