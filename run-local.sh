@@ -69,7 +69,10 @@ fi
 # dev: Vite dev server on :5173 (allowed in the local Keycloak realm), /api proxied to the backend in Docker.
 digit=$(case "$language" in java) echo 1 ;; dotnet) echo 2 ;; typescript) echo 3 ;; esac)
 frontend="${root}/system/multitier/frontend-react"
-[[ -d "${frontend}/node_modules" ]] || (cd "$frontend" && npm ci)
+# Install when node_modules is missing, partial (no vite, e.g. an interrupted install) or older than the lockfile.
+if [[ ! -e "${frontend}/node_modules/.bin/vite" || "${frontend}/package-lock.json" -nt "${frontend}/node_modules/.package-lock.json" ]]; then
+  (cd "$frontend" && npm ci)
+fi
 echo
 echo "Dev server: http://localhost:5173 (hot reload; Ctrl+C stops it, the stack keeps running)"
 echo "Stop the stack with: ./run-local.sh down"
