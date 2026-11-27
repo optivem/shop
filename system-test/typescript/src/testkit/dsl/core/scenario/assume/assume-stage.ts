@@ -33,6 +33,13 @@ export class AssumeStage implements IAssumeStage {
       expect(result.success, JSON.stringify(result)).toBe(true);
     });
   }
+
+  identityProvider(): AssumeRunning {
+    return new AssumeRunning(this, async () => {
+      const result = await this.app.identityProvider().goToIdentityProvider();
+      expect(result.success, JSON.stringify(result)).toBe(true);
+    });
+  }
 }
 
 export class AssumeRunning implements IAssumeRunning {

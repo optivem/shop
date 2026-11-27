@@ -106,7 +106,7 @@ public class MyShopApiDriver implements MyShopDriver {
     @Override
     public Result<GoToMyShopResponse, SystemError> goToMyShop(GoToMyShopRequest request) {
         runAs(TestUser.CUSTOMER);
-        return apiClient.health().checkHealth()
+        return apiClient.health().checkReadiness()
                 .mapError(SystemErrorMapper::from)
                 .map(value -> GoToMyShopResponse.builder().build());
     }

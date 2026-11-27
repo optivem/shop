@@ -98,7 +98,7 @@ export class MyShopApiDriver implements MyShopDriver {
   }
 
   async goToMyShop(_request: GoToMyShopRequest): Promise<Result<GoToMyShopResponse, SystemError>> {
-    const result = await this.runAs(TestUsers.CUSTOMER).health().checkHealth();
+    const result = await this.runAs(TestUsers.CUSTOMER).health().checkReadiness();
     if (result.success) return success({});
     return failure(result.error);
   }

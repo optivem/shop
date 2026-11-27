@@ -1,13 +1,18 @@
 package com.mycompany.myshop.testkit.driver.port.external.identity;
 
+import com.mycompany.myshop.testkit.common.Result;
 import com.mycompany.myshop.testkit.driver.port.UserAccount;
+import com.mycompany.myshop.testkit.driver.port.external.identity.dtos.error.IdentityProviderErrorResponse;
 
 /**
  * The identity provider's test realm, for scenarios that need a user of their own: a customer (no saved profile, no
- * orders) or an admin. Unlike the system drivers it arranges, never asserts, so a failure is thrown rather than
- * returned. Closing it removes every account it created.
+ * orders) or an admin. Apart from {@link #goToIdentityProvider()} it arranges, never asserts, so a failure is thrown
+ * rather than returned. Closing it removes every account it created.
  */
 public interface IdentityProviderDriver extends AutoCloseable {
+    /** Whether the test realm is served, without signing in; the smoke tests' check. */
+    Result<Void, IdentityProviderErrorResponse> goToIdentityProvider();
+
     /**
      * Creates a new customer sign-in account with this name and email, and the customer role.
      *

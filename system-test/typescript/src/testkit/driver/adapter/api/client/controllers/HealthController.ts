@@ -13,4 +13,14 @@ export class HealthController {
       fieldErrors: [],
     });
   }
+
+  /** Readiness: answers 200 only when the system can serve requests, its database included. */
+  async checkReadiness(): Promise<Result<void, SystemError>> {
+    const response = await fetch(`${this.baseUrl}/readyz`);
+    if (response.ok) return success(undefined);
+    return failure({
+      message: `MyShop API not ready (${this.baseUrl}/readyz): ${response.status} ${(await response.text()).slice(0, 300)}`,
+      fieldErrors: [],
+    });
+  }
 }

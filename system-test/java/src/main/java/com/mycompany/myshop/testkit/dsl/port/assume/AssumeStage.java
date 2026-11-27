@@ -10,4 +10,6 @@ public interface AssumeStage {
     AssumeRunning tax();
 
     AssumeRunning clock();
+
+    AssumeRunning identityProvider();
 }

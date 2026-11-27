@@ -1,12 +1,15 @@
+using Common;
 using Driver.Adapter.External.Identity.Client;
 using Driver.Port;
 using Driver.Port.External.Identity;
+using Driver.Port.External.Identity.Dtos.Error;
 
 namespace Driver.Adapter.External.Identity;
 
 /// <summary>
 /// Creates customers and admins in Keycloak's test realm, each with a unique username and a random password, and
-/// deletes them again on dispose.
+/// deletes them again on dispose. The admin client signs in only when a user is first created, so
+/// <see cref="GoToIdentityProviderAsync"/> needs no admin credentials.
 /// </summary>
 public sealed class KeycloakIdentityProviderDriver : IIdentityProviderDriver
 {
@@ -15,12 +18,28 @@ public sealed class KeycloakIdentityProviderDriver : IIdentityProviderDriver
     private const string CustomerUsernamePrefix = "new-customer-";
     private const string AdminUsernamePrefix = "new-admin-";
 
-    private readonly KeycloakAdminClient _client;
+    private readonly string? _keycloakBaseUrl;
     private readonly List<string> _createdUserIds = [];
+    private KeycloakAdminClient? _adminClient;
 
     public KeycloakIdentityProviderDriver(string? keycloakBaseUrl)
     {
-        _client = new KeycloakAdminClient(keycloakBaseUrl);
+        _keycloakBaseUrl = keycloakBaseUrl;
+    }
+
+    private KeycloakAdminClient Client => _adminClient ??= new KeycloakAdminClient(_keycloakBaseUrl);
+
+    public async Task<Result<VoidValue, IdentityProviderErrorResponse>> GoToIdentityProviderAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_keycloakBaseUrl))
+        {
+            return Result.Failure(new IdentityProviderErrorResponse
+            {
+                Message = "Keycloak base URL is not configured: set KEYCLOAK_URL (or KEYCLOAK_URL_<MODE>)"
+            });
+        }
+        return (await new KeycloakRealmClient(_keycloakBaseUrl).CheckHealthAsync())
+            .MapError(message => new IdentityProviderErrorResponse { Message = message });
     }
 
     public Task<UserAccount> CreateCustomerAsync(string firstName, string lastName, string? email)
@@ -35,22 +54,22 @@ public sealed class KeycloakIdentityProviderDriver : IIdentityProviderDriver
     public string NewAccountEmail(UserAccount account) => account.Username + "@example.com";
 
     public async Task DeleteOnDisposeAsync(string username)
-        => _createdUserIds.Add(await _client.FindUserIdAsync(username));
+        => _createdUserIds.Add(await Client.FindUserIdAsync(username));
 
     private async Task<UserAccount> CreateUserAsync(string usernamePrefix, string role, string firstName,
         string lastName, string? email)
     {
         var username = usernamePrefix + Guid.NewGuid();
         var password = Guid.NewGuid().ToString();
-        var userId = await _client.CreateUserAsync(username, password, firstName, lastName,
+        var userId = await Client.CreateUserAsync(username, password, firstName, lastName,
             email ?? username + "@example.com");
         _createdUserIds.Add(userId);
-        await _client.AssignRealmRoleAsync(userId, role);
+        await Client.AssignRealmRoleAsync(userId, role);
         if (role == AdminRole)
         {
             // Every new user gets the realm's default role, which makes a visitor who signs up a customer (UC-013).
             // An admin is not a customer.
-            await _client.RemoveDefaultRolesAsync(userId);
+            await Client.RemoveDefaultRolesAsync(userId);
         }
         return new UserAccount(username, password);
     }
@@ -62,7 +81,7 @@ public sealed class KeycloakIdentityProviderDriver : IIdentityProviderDriver
         {
             try
             {
-                await _client.DeleteUserAsync(userId);
+                await Client.DeleteUserAsync(userId);
             }
             catch (InvalidOperationException e)
             {
@@ -70,7 +89,7 @@ public sealed class KeycloakIdentityProviderDriver : IIdentityProviderDriver
             }
         }
         _createdUserIds.Clear();
-        _client.Dispose();
+        _adminClient?.Dispose();
         if (failures.Count > 0)
         {
             throw new InvalidOperationException(

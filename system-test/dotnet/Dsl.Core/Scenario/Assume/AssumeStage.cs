@@ -47,6 +47,14 @@ public class AssumeStage : IAssumeStage
         }, this);
     }
 
+    public IAssumeRunning IdentityProvider()
+    {
+        return new AssumeRunningAction(async () =>
+        {
+            (await _app.IdentityProvider().GoToIdentityProvider().Execute()).ShouldSucceed();
+        }, this);
+    }
+
     private class AssumeRunningAction : IAssumeRunning
     {
         private readonly Func<Task> _action;

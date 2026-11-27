@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.mycompany.myshop.testkit.dsl.core.usecase.external.clock.ClockDsl;
 import com.mycompany.myshop.testkit.dsl.core.usecase.external.erp.ErpDsl;
+import com.mycompany.myshop.testkit.dsl.core.usecase.external.identity.IdentityProviderDsl;
 import com.mycompany.myshop.testkit.dsl.core.usecase.external.tax.TaxDsl;
 import com.mycompany.myshop.testkit.channel.ChannelType;
 import com.mycompany.myshop.testkit.driver.port.external.clock.ClockDriver;
@@ -50,6 +51,7 @@ public class UseCaseDsl implements Closeable {
     private ErpDsl erp;
     private ClockDsl clock;
     private TaxDsl tax;
+    private IdentityProviderDsl identityProvider;
 
     public UseCaseDsl(ExternalSystemMode externalSystemMode,
                      ChannelMode channelMode,
@@ -236,6 +238,14 @@ public class UseCaseDsl implements Closeable {
             taxDriver = getOrCreate(taxDriver, taxDriverSupplier);
             tax = new TaxDsl(taxDriver, context);
             return tax;
+        });
+    }
+
+    public IdentityProviderDsl identityProvider() {
+        return getOrCreate(identityProvider, () -> {
+            identityProviderDriver = getOrCreate(identityProviderDriver, identityProviderDriverSupplier);
+            identityProvider = new IdentityProviderDsl(identityProviderDriver, context);
+            return identityProvider;
         });
     }
 

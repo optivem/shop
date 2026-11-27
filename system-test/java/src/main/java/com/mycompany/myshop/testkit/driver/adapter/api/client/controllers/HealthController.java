@@ -6,6 +6,8 @@ import com.mycompany.myshop.testkit.common.Result;
 
 public class HealthController {
     private static final String ENDPOINT = "/health";
+    /** Readiness: answers 200 only when the system can serve requests, its database included. */
+    private static final String READINESS_ENDPOINT = "/readyz";
 
     private final JsonHttpClient<ProblemDetailResponse> httpClient;
 
@@ -15,6 +17,10 @@ public class HealthController {
 
     public Result<Void, ProblemDetailResponse> checkHealth() {
         return httpClient.get(ENDPOINT);
+    }
+
+    public Result<Void, ProblemDetailResponse> checkReadiness() {
+        return httpClient.get(READINESS_ENDPOINT);
     }
 }
 

@@ -42,4 +42,12 @@ public class AssumeImpl implements AssumeStage {
             return this;
         };
     }
+
+    @Override
+    public AssumeRunning identityProvider() {
+        return () -> {
+            app.identityProvider().goToIdentityProvider().execute().shouldSucceed();
+            return this;
+        };
+    }
 }

@@ -11,4 +11,6 @@ public interface IAssumeStage
     IAssumeRunning Tax();
 
     IAssumeRunning Clock();
+
+    IAssumeRunning IdentityProvider();
 }

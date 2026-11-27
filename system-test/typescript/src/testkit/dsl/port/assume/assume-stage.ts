@@ -5,4 +5,5 @@ export interface AssumeStage {
   erp(): AssumeRunning;
   tax(): AssumeRunning;
   clock(): AssumeRunning;
+  identityProvider(): AssumeRunning;
 }

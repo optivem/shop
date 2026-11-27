@@ -107,7 +107,7 @@ export class AppContext {
     return this.admin;
   }
 
-  private identityProvider(): IdentityProviderDriver {
+  identityProvider(): IdentityProviderDriver {
     if (!this.identityProviderDriver) {
       if (!this.identityProviderDriverFactory) {
         throw new Error(

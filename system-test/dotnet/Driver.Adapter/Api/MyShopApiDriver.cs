@@ -67,7 +67,7 @@ public class MyShopApiDriver : IMyShopDriver
     }
 
     public Task<Result<GoToMyShopResponse, SystemError>> GoToMyShopAsync(GoToMyShopRequest request)
-        => RunAs(TestUser.Customer).Health().CheckHealthAsync()
+        => RunAs(TestUser.Customer).Health().CheckReadinessAsync()
             .MapErrorAsync(MapError)
             .MapAsync(_ => new GoToMyShopResponse());
 

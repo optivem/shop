@@ -16,6 +16,7 @@ using Driver.Adapter.External.Clock;
 using Driver.Adapter.External.Tax;
 using Driver.Adapter.External.Identity;
 using Driver.Port.External.Identity;
+using Dsl.Core.External.Identity;
 using MyCompany.MyShop.SystemTest.Channel;
 
 namespace Dsl.Core;
@@ -34,6 +35,7 @@ public class UseCaseDsl : IAsyncDisposable
     private TaxDsl? _tax;
     private ClockDsl? _clock;
     private IIdentityProviderDriver? _identityProvider;
+    private IdentityProviderDsl? _identityProviderDsl;
     private UserIdentity? _admin;
 
     public UseCaseDsl(Configuration configuration)
@@ -176,6 +178,9 @@ public class UseCaseDsl : IAsyncDisposable
     public TaxDsl Tax() => GetOrCreate(ref _tax, () => new TaxDsl(CreateTaxDriver(), _context));
 
     public ClockDsl Clock() => GetOrCreate(ref _clock, () => new ClockDsl(CreateClockDriver(), _context));
+
+    public IdentityProviderDsl IdentityProvider() => GetOrCreate(ref _identityProviderDsl, () => new IdentityProviderDsl(
+        _identityProvider ??= new KeycloakIdentityProviderDriver(_configuration.KeycloakBaseUrl), _context));
 
     private async Task<IMyShopDriver> CreateMyShopDriverForChannelAsync(string channelType)
     {

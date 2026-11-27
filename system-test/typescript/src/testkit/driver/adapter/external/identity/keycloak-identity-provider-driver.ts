@@ -1,7 +1,10 @@
 import { randomUUID } from 'node:crypto';
+import { type Result, failure } from '../../../../common/result.js';
 import type { UserAccount } from '../../../port/user-account.js';
 import type { IdentityProviderDriver } from '../../../port/external/identity/identity-provider-driver.js';
+import type { IdentityProviderErrorResponse } from '../../../port/external/identity/dtos/errors/IdentityProviderErrorResponse.js';
 import { KeycloakAdminClient } from './client/KeycloakAdminClient.js';
+import { KeycloakRealmClient } from './client/KeycloakRealmClient.js';
 
 const CUSTOMER_ROLE = 'CUSTOMER';
 const ADMIN_ROLE = 'ADMIN';
@@ -10,14 +13,26 @@ const ADMIN_USERNAME_PREFIX = 'new-admin-';
 
 /**
  * Creates customers and admins in Keycloak's test realm, each with a unique username and a random password, and
- * deletes them again on close.
+ * deletes them again on close. The admin client signs in only when a user is first created, so
+ * {@link goToIdentityProvider} needs no admin credentials.
  */
 export class KeycloakIdentityProviderDriver implements IdentityProviderDriver {
-  private readonly client: KeycloakAdminClient;
+  private adminClient?: KeycloakAdminClient;
   private readonly createdUserIds: string[] = [];
 
-  constructor(keycloakBaseUrl: string | undefined) {
-    this.client = new KeycloakAdminClient(keycloakBaseUrl);
+  constructor(private readonly keycloakBaseUrl: string | undefined) {}
+
+  async goToIdentityProvider(): Promise<Result<void, IdentityProviderErrorResponse>> {
+    if (!this.keycloakBaseUrl) {
+      return failure({ message: 'Keycloak base URL is not configured: set KEYCLOAK_URL (or KEYCLOAK_URL_<MODE>)' });
+    }
+    const result = await new KeycloakRealmClient(this.keycloakBaseUrl).checkHealth();
+    return result.success ? result : failure({ message: result.error });
+  }
+
+  private get client(): KeycloakAdminClient {
+    this.adminClient ??= new KeycloakAdminClient(this.keycloakBaseUrl);
+    return this.adminClient;
   }
 
   async createCustomer(firstName: string, lastName: string, email?: string): Promise<UserAccount> {
