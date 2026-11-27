@@ -23,9 +23,13 @@ RUN jq -L / --arg realm shop-prod --arg stage production --arg system '${SYSTEM}
       -f /stage-realm.jq /shop-realm.json | jq -f /prod-realm.jq > /realm-prod.json \
     && jq -e -f /prod-realm-check.jq /realm-prod.json
 
+# KC_CACHE=local: Cloud Run runs exactly one instance (deploy-keycloak: --max-instances 1), so the default
+# clustered cache only makes each cold start join a JGroups cluster through the database (jdbc-ping), alone,
+# which dragged out the 26.8 bootstrap (REL #107). Build-time option, so it is set before kc.sh build.
 FROM quay.io/keycloak/keycloak:26.8@sha256:7e66a96e4739239070aeaf72e4c5decf0f7f682cfc725b9f7ea2b336eaba38b3 AS builder
 ENV KC_DB=postgres \
-    KC_HEALTH_ENABLED=true
+    KC_HEALTH_ENABLED=true \
+    KC_CACHE=local
 RUN /opt/keycloak/bin/kc.sh build
 
 FROM quay.io/keycloak/keycloak:26.8@sha256:7e66a96e4739239070aeaf72e4c5decf0f7f682cfc725b9f7ea2b336eaba38b3
@@ -34,6 +38,7 @@ COPY --from=realm /realm.json /opt/keycloak/data/import/shop-realm.json
 COPY --from=realm /realm-qa.json /opt/keycloak/data/import/shop-qa-realm.json
 COPY --from=realm /realm-prod.json /opt/keycloak/data/import/shop-prod-realm.json
 ENV KC_DB=postgres \
+    KC_CACHE=local \
     KC_HTTP_ENABLED=true \
     KC_PROXY_HEADERS=xforwarded \
     KC_HOSTNAME_BACKCHANNEL_DYNAMIC=true
