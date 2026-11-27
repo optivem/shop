@@ -37,6 +37,17 @@ esac
 ui_url="$(awk '/^ *- label: real/{r=1} r && /url:/{print $2; exit}' "${dir}/systems.yaml")"
 [[ -n "$ui_url" ]] || { echo "Cannot find the real UI URL in ${dir}/systems.yaml." >&2; exit 1; }
 
+if [[ "$action" == dev ]]; then
+  [[ "$architecture" == multitier ]] || { echo "dev is for multitier only (the monolith serves its own UI)." >&2; exit 1; }
+  # Check before the slow Docker build: Keycloak only accepts sign-ins from :5173, so an older dev
+  # server still running there (e.g. a plain `npm run dev`, which proxies /api to nothing) blocks this one.
+  if curl -s -o /dev/null --max-time 2 http://localhost:5173; then
+    echo "Port 5173 is already in use (probably an earlier Vite dev server). Stop it (Ctrl+C in its terminal," >&2
+    echo "or end its node process), then run ./run-local.sh dev again." >&2
+    exit 1
+  fi
+fi
+
 echo "Building and starting ${architecture}-${language} from your working copy..."
 "${compose[@]}" up -d --build
 
@@ -56,7 +67,6 @@ if [[ "$action" == up ]]; then
 fi
 
 # dev: Vite dev server on :5173 (allowed in the local Keycloak realm), /api proxied to the backend in Docker.
-[[ "$architecture" == multitier ]] || { echo "dev is for multitier only (the monolith serves its own UI)." >&2; exit 1; }
 digit=$(case "$language" in java) echo 1 ;; dotnet) echo 2 ;; typescript) echo 3 ;; esac)
 frontend="${root}/system/multitier/frontend-react"
 [[ -d "${frontend}/node_modules" ]] || (cd "$frontend" && npm ci)
