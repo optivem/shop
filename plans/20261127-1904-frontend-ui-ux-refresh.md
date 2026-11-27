@@ -7,7 +7,7 @@
 **Why:** The shop UI was partly restyled in the earlier "Market redesign" (commit `578234dd`: catalog filters, dense cards, promo tiles with credited Unsplash photos), but product cards still have no product imagery and the refresh is not finished or consistent across all frontends.
 **End result:** `frontend-react` (the production-deployed UI) has a polished, mobile-friendly showcase path (monolith UIs deferred), and each product shows a real photo that **comes from the ERP**: the made-up ERP (simulator + stub) owns the image files and returns an `imageUrl` per product, and the shop backend proxies the image to the browser.
 
-**Approach:** straight implementation, no ATDD flow (no ATDD agents, no acceptance-test-first). The goal is UX polish for a job-application showcase; tests are still kept green and extended where the change needs them.
+**Approach:** straight implementation, no ATDD flow (no ATDD agents, no acceptance-test-first). The goal is UX polish for a job-application showcase; tests are still kept green and extended where the change needs them. From Step 7 on, verification is compile-only (user decision 2026-11-27): no local tests, no CI babysitting.
 
 ## Outcomes
 
@@ -22,16 +22,16 @@
 
 ## ▶ Next executable step (resume here)
 
-Step 7. Steps 1–6 are committed. Check CI for the latest pushes (`gh run list`), especially the acceptance-ui runs of the new tests `shouldShowThePhotoOfEachProduct` / `shouldShowThePhotoOfTheProduct` in .NET and TypeScript, which never ran locally. Fix any red. Then **stop and ask the user before the quick-deploy to production**.
+Step 7. Steps 1–6 are committed. Check CI for the latest pushes (`gh run list`), especially the acceptance-ui runs of the new tests `shouldShowThePhotoOfEachProduct` / `shouldShowThePhotoOfTheProduct` in .NET and TypeScript, which never ran locally. Fix any red without running system tests locally. Then **stop and ask the user before the quick-deploy to production**.
 
 ## Steps
 
-- [ ] Step 7: Confirm CI is green for the Steps 1–6 pushes (the new photo tests in .NET/TS ran first in CI; local runs were skipped at the user's request), fix any red, then run a clean re-dispatch of `meta-prerelease-stage.yml`. **Stop and ask user before the quick-deploy to production** (user reviews the UI locally first).
+- [ ] Step 7: Confirm CI is green for the Steps 1–6 pushes (the new photo tests in .NET/TS ran first in CI; local runs were skipped at the user's request), fix any red (no local system-test runs), then run a clean re-dispatch of `meta-prerelease-stage.yml`. **Stop and ask user before the quick-deploy to production** (user reviews the UI locally first).
 
 ## Decisions (resolved before execution, 2026-11-27)
 
 - Backends: multitier only; the monolith backends and UIs are tracked in `plans/20261127-1959-monolith-product-images-and-ui-refresh.md`.
-- Local Docker/system-test runs and one commit per verified step are pre-approved.
+- No local system-test runs (user decision, 2026-11-27): CI is the only system-test gate. One commit per step, after `./compile-all.sh` passes, is pre-approved.
 - Production deploy: stop and ask first.
 - Design: ~~polish the existing Market look~~ → revised 2026-11-27: adopt the Retail direction (see Step 5).
 - Legacy `mod11` ERP contract tests were left without the image tests: legacy is read-only and already has only `shouldBeAbleToGetProduct`.
