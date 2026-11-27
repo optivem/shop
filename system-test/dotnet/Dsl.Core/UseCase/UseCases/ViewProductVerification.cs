@@ -48,6 +48,15 @@ public class ViewProductVerification : ResponseVerification<ViewProductResponse>
         return this;
     }
 
+    /// <summary>The product page shows the product's own loaded photo, served by the shop at /api/products/{sku}/image, not the placeholder.</summary>
+    public ViewProductVerification ShowsPhoto()
+    {
+        Response.ImageUrl.ShouldNotBeNull("Product photo (null means the placeholder)");
+        Response.ImageUrl.ShouldEndWith($"/api/products/{Response.Sku}/image", Case.Sensitive, "Product photo");
+        Response.ImageLoaded.ShouldBe(true, "Product photo has loaded");
+        return this;
+    }
+
     public ViewProductVerification Breadcrumbs(params string[] expectedBreadcrumbs)
     {
         Response.Breadcrumbs.ShouldNotBeNull("Breadcrumb trail");

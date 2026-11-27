@@ -18,6 +18,8 @@ public class CatalogPage extends BasePage {
             + " :is([aria-label='Product List'], [aria-label='Clear Filters'], .alert-danger)";
     private static final String PRODUCT_CARD_SELECTOR = PRODUCT_LIST_SELECTOR + " article[aria-label^='Product ']";
     private static final String PRODUCT_CARD_LABEL_PREFIX = "Product ";
+    /** A card's photo; with no photo (or one that failed to load) the card shows a placeholder and has no img. */
+    private static final String PHOTO_SELECTOR = ".product-image img";
     private static final String PRODUCT_COUNT_SELECTOR = CATALOG_SELECTOR + " [aria-label='Product Count']";
     private static final String SORT_SELECTOR = CATALOG_SELECTOR + " select[aria-label='Sort']";
     private static final String CATEGORY_FILTER_SELECTOR = "fieldset[aria-label='Category Filter']";
@@ -111,8 +113,12 @@ public class CatalogPage extends BasePage {
 
         var products = new ArrayList<BrowseCatalogResponse.ProductDto>();
         for (var i = 0; i < skus.size(); i++) {
+            var photo = PRODUCT_CARD_SELECTOR + "[aria-label='" + PRODUCT_CARD_LABEL_PREFIX + skus.get(i) + "'] " + PHOTO_SELECTOR;
+            var imageUrl = pageClient.readAttributeIfPresent(photo, "src");
             products.add(BrowseCatalogResponse.ProductDto.builder()
                     .sku(skus.get(i))
+                    .imageUrl(imageUrl)
+                    .imageLoaded(imageUrl != null && pageClient.isImageLoaded(photo))
                     .title(titles.get(i))
                     .brand(brands.get(i))
                     .price(prices.get(i))

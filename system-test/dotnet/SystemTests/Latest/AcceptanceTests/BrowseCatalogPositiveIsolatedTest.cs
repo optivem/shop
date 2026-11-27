@@ -50,6 +50,25 @@ public class BrowseCatalogPositiveIsolatedTest : BaseBrowseCatalogTest
             .ShowsProduct(LogiMx3S, "Logitech MX Master 3S", "Logitech", "$99.99");
     }
 
+    // The ERP owns the photos; the shop serves each at /api/products/{sku}/image (stub and real ERP both serve them).
+    [Theory]
+    [ChannelData(ChannelType.UI)]
+    [Trait("tag", "UC-006.1")]
+    public async Task ShouldShowThePhotoOfEachProduct(Channel channel)
+    {
+        var given = GivenTheCatalog(channel);
+        foreach (var sku in AllProducts)
+        {
+            given.WithImageUrl(sku, $"/erp/images/{sku}.jpg");
+        }
+        await given
+            .When().BrowseCatalog()
+            .Then().ShouldSucceed()
+            .Catalog()
+            .ShowsProducts(AllProducts)
+            .ShowsPhotoOfEveryProduct();
+    }
+
     [Theory]
     [ChannelData(ChannelType.UI)]
     [Trait("tag", "UC-006.2")]

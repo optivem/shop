@@ -43,6 +43,20 @@ public class ViewProductPositiveIsolatedTest : BaseViewProductTest
             .HasDescription("Compact 13-inch ultrabook");
     }
 
+    // The ERP owns the photo; the shop serves it at /api/products/{sku}/image (stub and real ERP both serve it).
+    [Theory]
+    [ChannelData(ChannelType.UI)]
+    [Trait("tag", "UC-007.1")]
+    public async Task ShouldShowThePhotoOfTheProduct(Channel channel)
+    {
+        await GivenTheCatalog(channel)
+            .WithImageUrl(Hp15, "/erp/images/HP-15.jpg")
+            .When().ViewProduct().WithSku(Hp15)
+            .Then().ShouldSucceed()
+            .ProductPage()
+            .ShowsPhoto();
+    }
+
     [Theory]
     [ChannelData(ChannelType.UI)]
     [Trait("tag", "UC-007.1")]

@@ -161,6 +161,10 @@ export class ThenCatalog implements PromiseLike<void> {
     return this.add((v) => void v.showsNoProducts());
   }
 
+  showsPhotoOfEveryProduct(): this {
+    return this.add((v) => void v.showsPhotoOfEveryProduct());
+  }
+
   hasProductCount(expectedCount: number): this {
     return this.add((v) => void v.productCount(expectedCount));
   }

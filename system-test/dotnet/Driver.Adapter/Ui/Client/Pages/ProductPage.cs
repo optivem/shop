@@ -14,6 +14,8 @@ public class ProductPage : BasePage
     /// <summary>Exactly one of these shows once the product page has loaded: the product, product not found or the ERP outage.</summary>
     public const string ReadySelector = ":is(" + TitleSelector + ", " + BackToCatalogSelector + ", " + UnavailableSelector + ")";
 
+    /// <summary>The product's photo; with no photo (or one that failed to load) the page shows a placeholder and has no img.</summary>
+    private const string PhotoSelector = ".product-detail-media .product-image img";
     private const string BrandSelector = "[aria-label='Product Brand']";
     private const string CategorySelector = "[aria-label='Product Category']";
     private const string SkuSelector = "[aria-label='Product SKU']";
@@ -77,6 +79,8 @@ public class ProductPage : BasePage
             return response;
         }
 
+        response.ImageUrl = await PageClient.ReadAttributeIfPresentAsync(PhotoSelector, "src");
+        response.ImageLoaded = response.ImageUrl != null && await PageClient.IsImageLoadedAsync(PhotoSelector);
         response.Title = await ReadTextAsync(TitleSelector);
         response.Brand = await ReadTextAsync(BrandSelector);
         response.Category = await ReadTextAsync(CategorySelector);

@@ -3,10 +3,22 @@ import type { CartLineDto, ViewProductResponse } from '../../../../driver/port/d
 import { ResponseVerification } from '../../shared/response-verification.js';
 import type { UseCaseContext } from '../../shared/use-case-context.js';
 
+const escapeRegExp = (text: string): string => text.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
+
 /** SKUs are aliases, resolved to the values the ERP was given; everything else is a literal as shown. */
 export class ViewProductVerification extends ResponseVerification<ViewProductResponse> {
   constructor(response: ViewProductResponse, context: UseCaseContext) {
     super(response, context);
+  }
+
+  /** The product page shows the product's own loaded photo, served by the shop at /api/products/{sku}/image, not the placeholder. */
+  showsPhoto(): this {
+    const sku = this.getResponse().sku ?? '';
+    expect(this.getResponse().imageUrl, 'Product photo (null means the placeholder)').toMatch(
+      new RegExp(`/api/products/${escapeRegExp(sku)}/image$`),
+    );
+    expect(this.getResponse().imageLoaded, 'Product photo has loaded').toBe(true);
+    return this;
   }
 
   title(expectedTitle: string): this {

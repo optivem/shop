@@ -27,6 +27,11 @@ public class ThenSuccessProductPage<TSuccessResponse, TSuccessVerification> : IT
         return this;
     }
 
+    public ThenSuccessProductPage<TSuccessResponse, TSuccessVerification> ShowsPhoto()
+        => Add(v => v.ShowsPhoto());
+
+    IThenProductPage IThenProductPage.ShowsPhoto() => ShowsPhoto();
+
     public ThenSuccessProductPage<TSuccessResponse, TSuccessVerification> HasTitle(string expectedTitle)
         => Add(v => v.Title(expectedTitle));
 

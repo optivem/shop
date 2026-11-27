@@ -156,6 +156,10 @@ export class ThenProductPage implements PromiseLike<void> {
     return this;
   }
 
+  showsPhoto(): this {
+    return this.add((v) => void v.showsPhoto());
+  }
+
   hasTitle(expectedTitle: string): this {
     return this.add((v) => void v.title(expectedTitle));
   }

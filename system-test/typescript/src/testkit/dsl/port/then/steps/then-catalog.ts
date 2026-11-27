@@ -22,6 +22,8 @@ export interface ThenCatalog extends PromiseLike<void> {
   /** Exactly these products, in this order. */
   showsProducts(...skuAliases: string[]): this;
   showsNoProducts(): this;
+  /** Each listed product shows its real, loaded photo rather than the placeholder (UI channel only). */
+  showsPhotoOfEveryProduct(): this;
   hasProductCount(expectedCount: number): this;
   showsProduct(skuAlias: string, expectedTitle: string, expectedBrand: string, expectedPrice: string): this;
   /** The category filter's options, "All" included, in order. */

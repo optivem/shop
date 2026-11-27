@@ -37,6 +37,11 @@ public class ThenSuccessCatalog<TSuccessResponse, TSuccessVerification> : IThenC
 
     IThenCatalog IThenCatalog.ShowsNoProducts() => ShowsNoProducts();
 
+    public ThenSuccessCatalog<TSuccessResponse, TSuccessVerification> ShowsPhotoOfEveryProduct()
+        => Add(v => v.ShowsPhotoOfEveryProduct());
+
+    IThenCatalog IThenCatalog.ShowsPhotoOfEveryProduct() => ShowsPhotoOfEveryProduct();
+
     public ThenSuccessCatalog<TSuccessResponse, TSuccessVerification> HasProductCount(int expectedCount)
         => Add(v => v.ProductCount(expectedCount));
 

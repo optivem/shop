@@ -19,6 +19,8 @@ export interface ThenProductPage extends PromiseLike<void> {
   and(): this;
   /** The page has no serious or critical axe violations (UI channel only). */
   isAccessible(): this;
+  /** The product shows its real, loaded photo rather than the placeholder (UI channel only). */
+  showsPhoto(): this;
   hasTitle(expectedTitle: string): this;
   hasBrand(expectedBrand: string): this;
   hasCategory(expectedCategory: string): this;

@@ -9,6 +9,8 @@ const NOT_FOUND_HEADING_SELECTOR = `:has(> ${BACK_TO_CATALOG_SELECTOR}) > h1`;
 const UNAVAILABLE_SELECTOR = 'main .alert-danger';
 /** Exactly one of these shows once the product page has loaded: the product, product not found or the ERP outage. */
 export const PRODUCT_READY_SELECTOR = `:is(${TITLE_SELECTOR}, ${BACK_TO_CATALOG_SELECTOR}, ${UNAVAILABLE_SELECTOR})`;
+/** The product's photo; with no photo (or one that failed to load) the page shows a placeholder and has no img. */
+const PHOTO_SELECTOR = '.product-detail-media .product-image img';
 const BRAND_SELECTOR = "[aria-label='Product Brand']";
 const CATEGORY_SELECTOR = "[aria-label='Product Category']";
 const SKU_SELECTOR = "[aria-label='Product SKU']";
@@ -73,6 +75,7 @@ export class ProductPage extends BasePage {
     }
     return {
       ...response,
+      ...(await this.readPhoto(this.page.locator(PHOTO_SELECTOR))),
       title: await this.text(this.page.locator(TITLE_SELECTOR)),
       brand: await this.text(this.page.locator(BRAND_SELECTOR)),
       category: await this.text(this.page.locator(CATEGORY_SELECTOR)),

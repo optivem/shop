@@ -12,6 +12,9 @@ public interface ThenCatalog extends ThenStep<ThenCatalog> {
 
     ThenCatalog showsNoProducts();
 
+    /** Each listed product shows its real, loaded photo rather than the placeholder (UI channel only). */
+    ThenCatalog showsPhotoOfEveryProduct();
+
     ThenCatalog hasProductCount(int expectedCount);
 
     ThenCatalog showsProduct(String skuAlias, String expectedTitle, String expectedBrand, String expectedPrice);

@@ -5,10 +5,13 @@ import com.mycompany.myshop.testkit.dsl.core.scenario.given.GivenImpl;
 import com.mycompany.myshop.testkit.dsl.port.given.steps.GivenProducts;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class GivenProductsImpl extends BaseGivenStep implements GivenProducts {
     private final List<ProductEntry> products = new ArrayList<>();
+    private final Map<String, String> imageUrls = new HashMap<>();
 
     public GivenProductsImpl(GivenImpl given) {
         super(given);
@@ -23,6 +26,12 @@ public class GivenProductsImpl extends BaseGivenStep implements GivenProducts {
     @Override
     public GivenProductsImpl withProduct(String sku, String title, String brand, String category, String unitPrice, String description) {
         products.add(new ProductEntry(sku, title, brand, category, unitPrice, description));
+        return this;
+    }
+
+    @Override
+    public GivenProductsImpl withImageUrl(String sku, String imageUrl) {
+        imageUrls.put(sku, imageUrl);
         return this;
     }
 
@@ -57,7 +66,7 @@ public class GivenProductsImpl extends BaseGivenStep implements GivenProducts {
             }
             var unitPrice = product.sku().equals(changedSkuAlias) ? changedUnitPrice : product.unitPrice();
             returnsProducts.product(product.sku(), product.title(), product.brand(), product.category(),
-                    unitPrice, product.description());
+                    unitPrice, product.description(), imageUrls.get(product.sku()));
         }
         returnsProducts.execute().shouldSucceed();
     }

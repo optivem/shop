@@ -3,6 +3,8 @@ import type { BrowseCatalogResponse, CatalogProductDto } from '../../../../drive
 import { ResponseVerification } from '../../shared/response-verification.js';
 import type { UseCaseContext } from '../../shared/use-case-context.js';
 
+const escapeRegExp = (text: string): string => text.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
+
 /** SKUs are aliases, resolved to the values the ERP was given; everything else is a literal as shown. */
 export class BrowseCatalogVerification extends ResponseVerification<BrowseCatalogResponse> {
   constructor(response: BrowseCatalogResponse, context: UseCaseContext) {
@@ -32,6 +34,18 @@ export class BrowseCatalogVerification extends ResponseVerification<BrowseCatalo
     expect(product?.title, `Title of product '${sku}'`).toBe(expectedTitle);
     expect(product?.brand, `Brand of product '${sku}'`).toBe(expectedBrand);
     expect(product?.price, `Price of product '${sku}'`).toBe(expectedPrice);
+    return this;
+  }
+
+  /** Every listed product shows its own loaded photo, served by the shop at /api/products/{sku}/image, not the placeholder. */
+  showsPhotoOfEveryProduct(): this {
+    expect(this.products(), 'Catalog products').not.toHaveLength(0);
+    for (const product of this.products()) {
+      expect(product.imageUrl, `Photo of product '${product.sku}' (null means the placeholder)`).toMatch(
+        new RegExp(`/api/products/${escapeRegExp(product.sku)}/image$`),
+      );
+      expect(product.imageLoaded, `Photo of product '${product.sku}' has loaded`).toBe(true);
+    }
     return this;
   }
 

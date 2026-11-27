@@ -1,9 +1,10 @@
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 import type { Result } from '../../../../../common/result.js';
 import { success, failure } from '../../../../../common/result.js';
 import type { SystemError } from '../../../../port/dtos/errors/SystemError.js';
 
 export const PAGE_TIMEOUT_MS = 30_000;
+const IMAGE_LOAD_TIMEOUT_MS = 10_000;
 
 const NOTIFICATION_SUCCESS_SELECTOR = "[role='alert'].notification.success";
 const NOTIFICATION_ERROR_MESSAGE_SELECTOR = "[role='alert'].notification.error .error-message";
@@ -52,6 +53,30 @@ export abstract class BasePage {
     const badge = this.page.locator(CART_ITEM_COUNT_SELECTOR);
     if ((await badge.count()) === 0) return 0;
     return Number.parseInt(((await badge.textContent({ timeout: PAGE_TIMEOUT_MS })) ?? '').trim(), 10);
+  }
+
+  /**
+   * A product photo: its address, and whether it has loaded (a decoded, non-empty picture). With no photo (or one that
+   * failed to load) the page shows a placeholder instead and there is no img. Scrolls it into view first, since
+   * catalog photos load lazily, and gives a slow load a few seconds before reporting it as not loaded.
+   */
+  protected async readPhoto(photo: Locator): Promise<{ imageUrl: string | null; imageLoaded: boolean }> {
+    const image = photo.first();
+    if ((await image.count()) === 0) return { imageUrl: null, imageLoaded: false };
+    const imageUrl = await image.getAttribute('src', { timeout: PAGE_TIMEOUT_MS });
+    await image.scrollIntoViewIfNeeded({ timeout: PAGE_TIMEOUT_MS });
+    const imageLoaded = await this.waitUntilImageLoaded(image);
+    return { imageUrl, imageLoaded };
+  }
+
+  private async waitUntilImageLoaded(image: Locator): Promise<boolean> {
+    const deadline = Date.now() + IMAGE_LOAD_TIMEOUT_MS;
+    while (Date.now() < deadline) {
+      const loaded = await image.evaluate((element: { complete: boolean; naturalWidth: number }) => element.complete && element.naturalWidth > 0);
+      if (loaded) return true;
+      await this.page.waitForTimeout(100);
+    }
+    return false;
   }
 
   /** The notification showing now, without waiting for one: the success text or the error's message; else null. */

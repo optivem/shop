@@ -46,6 +46,15 @@ public class ViewProductVerification extends ResponseVerification<ViewProductRes
         return this;
     }
 
+    /** The product page shows the product's own loaded photo, served by the shop at /api/products/{sku}/image, not the placeholder. */
+    public ViewProductVerification showsPhoto() {
+        assertThat(response().getImageUrl())
+                .as("Product photo (null means the placeholder)")
+                .endsWith("/api/products/" + response().getSku() + "/image");
+        assertThat(response().getImageLoaded()).as("Product photo has loaded").isTrue();
+        return this;
+    }
+
     public ViewProductVerification breadcrumbs(String... expectedBreadcrumbs) {
         assertThat(response().getBreadcrumbs()).as("Breadcrumb trail").containsExactly(expectedBreadcrumbs);
         return this;

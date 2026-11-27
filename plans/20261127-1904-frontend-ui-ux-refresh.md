@@ -22,12 +22,11 @@
 
 ## ▶ Next executable step (resume here)
 
-Step 6 (e2e coverage for images). Steps 1–5 are done. `frontend-react` renders each product photo in `ProductImage.tsx` (4:3 box; a placeholder only on null or error), on catalog cards and on product detail. Add a UI assertion that every product shows its photo, e.g. each catalog card / the product detail image has a non-placeholder `src` ending `/api/products/<SKU>/image` and has loaded (`naturalWidth > 0`). Add it the same way in the Java, .NET and TypeScript system-test UI drivers + DSL. Gate: run that test plus `--sample` per language against the multitier stacks.
+Step 7. Steps 1–6 are committed. Check CI for the latest pushes (`gh run list`), especially the acceptance-ui runs of the new tests `shouldShowThePhotoOfEachProduct` / `shouldShowThePhotoOfTheProduct` in .NET and TypeScript, which never ran locally. Fix any red. Then **stop and ask the user before the quick-deploy to production**.
 
 ## Steps
 
-- [ ] Step 6: **System tests** — adjust e2e coverage where Steps 4–5 change the UI (every product shows its image), keeping driver selectors in sync across languages.
-- [ ] Step 7: Compile all (`./compile-all.sh`), run sample system tests per language, commit. **Stop and ask user before the quick-deploy to production** (user reviews the UI locally first).
+- [ ] Step 7: Confirm CI is green for the Steps 1–6 pushes (the new photo tests in .NET/TS ran first in CI; local runs were skipped at the user's request), fix any red, then run a clean re-dispatch of `meta-prerelease-stage.yml`. **Stop and ask user before the quick-deploy to production** (user reviews the UI locally first).
 
 ## Decisions (resolved before execution, 2026-11-27)
 
@@ -38,3 +37,4 @@ Step 6 (e2e coverage for images). Steps 1–5 are done. `frontend-react` renders
 - Legacy `mod11` ERP contract tests were left without the image tests: legacy is read-only and already has only `shouldBeAbleToGetProduct`.
 - Steps 4–5 choices made by the executor (for user review): Bestsellers / New arrivals are hand-picked SKUs in `HomeSections.tsx` (rename to "Featured" if the labels feel like claims); white-on-orange buttons use `#c2410c` for 5.2:1 contrast; Manrope is bundled locally (the CSP blocks Google Fonts); the hero is "Featured" (not a fake deal), with live data for DELL-U2723QE; the wishlist doesn't persist; no savings, was-price or stock badges.
 - `acceptance-parallel-ui` had 2/79 login timeouts (order history, admin coupons) that passed on rerun; treated as a parallel-login flake.
+- Step 6/7: at the user's request, the local system-test runs for .NET/TS and the Step 7 sample runs were skipped (user was using `run-local.sh dev`); CI is the gate. Java new tests + `--sample` passed locally; `./compile-all.sh` passed except `frontend-react` `npm ci` (EPERM, locked by the running Vite dev server).

@@ -12,6 +12,8 @@ const NO_MATCH_SELECTOR = `${CATALOG_SELECTOR} p.lead`;
 export const CATALOG_READY_SELECTOR = `${CATALOG_SELECTOR} :is([aria-label='Product List'], [aria-label='Clear Filters'], .alert-danger)`;
 const PRODUCT_CARD_SELECTOR = `${PRODUCT_LIST_SELECTOR} article[aria-label^='Product ']`;
 const PRODUCT_CARD_LABEL_PREFIX = 'Product ';
+/** A card's photo; with no photo (or one that failed to load) the card shows a placeholder and has no img. */
+const PHOTO_SELECTOR = '.product-image img';
 const PRODUCT_COUNT_SELECTOR = `${CATALOG_SELECTOR} [aria-label='Product Count']`;
 const SORT_SELECTOR = `${CATALOG_SELECTOR} select[aria-label='Sort']`;
 const CATEGORY_FILTER_SELECTOR = "fieldset[aria-label='Category Filter']";
@@ -110,6 +112,7 @@ export class CatalogPage extends BasePage {
         title: await this.text(card.locator("[data-testid='product-title']")),
         brand: await this.text(card.locator("[aria-label='Product Brand']")),
         price: await this.text(card.locator("[aria-label='Display Price']")),
+        ...(await this.readPhoto(card.locator(PHOTO_SELECTOR))),
       });
     }
 

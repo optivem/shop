@@ -51,6 +51,20 @@ public class BrowseCatalogVerification extends ResponseVerification<BrowseCatalo
         return this;
     }
 
+    /** Every listed product shows its own loaded photo, served by the shop at /api/products/{sku}/image, not the placeholder. */
+    public BrowseCatalogVerification showsPhotoOfEveryProduct() {
+        assertThat(products()).as("Catalog products").isNotEmpty();
+        for (var product : products()) {
+            assertThat(product.getImageUrl())
+                    .as("Photo of product '%s' (null means the placeholder)", product.getSku())
+                    .endsWith("/api/products/" + product.getSku() + "/image");
+            assertThat(product.getImageLoaded())
+                    .as("Photo of product '%s' has loaded", product.getSku())
+                    .isTrue();
+        }
+        return this;
+    }
+
     public BrowseCatalogVerification categoryOptions(String... expectedCategories) {
         assertThat(getResponse().getCategories())
                 .as("Category filter options")

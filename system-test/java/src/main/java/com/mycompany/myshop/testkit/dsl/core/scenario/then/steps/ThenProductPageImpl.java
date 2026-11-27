@@ -22,6 +22,12 @@ public class ThenProductPageImpl<R, V extends ResponseVerification<R>>
     }
 
     @Override
+    public ThenProductPageImpl<R, V> showsPhoto() {
+        verification.showsPhoto();
+        return this;
+    }
+
+    @Override
     public ThenProductPageImpl<R, V> hasTitle(String expectedTitle) {
         verification.title(expectedTitle);
         return this;

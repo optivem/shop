@@ -13,6 +13,9 @@ public interface IThenCatalog
 
     IThenCatalog ShowsNoProducts();
 
+    /// <summary>Each listed product shows its real, loaded photo rather than the placeholder (UI channel only).</summary>
+    IThenCatalog ShowsPhotoOfEveryProduct();
+
     IThenCatalog HasProductCount(int expectedCount);
 
     IThenCatalog ShowsProduct(string skuAlias, string expectedTitle, string expectedBrand, string expectedPrice);

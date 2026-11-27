@@ -7,6 +7,9 @@ public interface ThenProductPage extends ThenStep<ThenProductPage> {
     /** The page has no serious or critical axe violations (UI channel only). */
     ThenProductPage isAccessible();
 
+    /** The product shows its real, loaded photo rather than the placeholder (UI channel only). */
+    ThenProductPage showsPhoto();
+
     ThenProductPage hasTitle(String expectedTitle);
 
     ThenProductPage hasBrand(String expectedBrand);

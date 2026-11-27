@@ -103,6 +103,22 @@ test.describe('@isolated', () => {
                 .showsProduct(LOGI_MX3S, 'Logitech MX Master 3S', 'Logitech', '$99.99');
         });
 
+        // The ERP owns the photos; the shop serves each at /api/products/{sku}/image (stub and real ERP both serve them).
+        test('shouldShowThePhotoOfEachProduct', criteria('UC-006.1'), async ({ scenario }) => {
+            const given = givenTheCatalog(scenario);
+            for (const sku of ALL_PRODUCTS) {
+                given.withImageUrl(sku, `/erp/images/${sku}.jpg`);
+            }
+            await given
+                .when()
+                .browseCatalog()
+                .then()
+                .shouldSucceed()
+                .catalog()
+                .showsProducts(...ALL_PRODUCTS)
+                .showsPhotoOfEveryProduct();
+        });
+
         test('shouldOfferTheCategoriesOfTheCatalogsProducts', criteria('UC-006.2'), async ({ scenario }) => {
             await givenTheCatalog(scenario)
                 .when()

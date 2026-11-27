@@ -37,6 +37,19 @@ public class GivenProducts : BaseGiven, IGivenProducts
     IGivenProducts IGivenProducts.WithProduct(string sku, string title, string brand, string category, string unitPrice, string description)
         => WithProduct(sku, title, brand, category, unitPrice, description);
 
+    public GivenProducts WithImageUrl(string sku, string imageUrl)
+    {
+        var index = _products.FindIndex(product => product.SkuParamAlias == sku);
+        if (index < 0)
+        {
+            throw new InvalidOperationException($"Cannot give a photo to product '{sku}': it was not added to the ERP's list");
+        }
+        _products[index] = _products[index] with { ImageUrl = imageUrl };
+        return this;
+    }
+
+    IGivenProducts IGivenProducts.WithImageUrl(string sku, string imageUrl) => WithImageUrl(sku, imageUrl);
+
     internal override Task Execute(UseCaseDsl app) => StageAsync(app, null, null);
 
     /// <summary>Stages the list again with this product at a new price; a list without the product is left as it is.</summary>

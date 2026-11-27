@@ -42,6 +42,19 @@ public class BrowseCatalogVerification : ResponseVerification<BrowseCatalogRespo
         return this;
     }
 
+    /// <summary>Every listed product shows its own loaded photo, served by the shop at /api/products/{sku}/image, not the placeholder.</summary>
+    public BrowseCatalogVerification ShowsPhotoOfEveryProduct()
+    {
+        Products().ShouldNotBeEmpty("Catalog products");
+        foreach (var product in Products())
+        {
+            product.ImageUrl.ShouldNotBeNull($"Photo of product '{product.Sku}' (null means the placeholder)");
+            product.ImageUrl.ShouldEndWith($"/api/products/{product.Sku}/image", Case.Sensitive, $"Photo of product '{product.Sku}'");
+            product.ImageLoaded.ShouldBe(true, $"Photo of product '{product.Sku}' has loaded");
+        }
+        return this;
+    }
+
     public BrowseCatalogVerification CategoryOptions(params string[] expectedCategories)
     {
         Response.Categories.ShouldBe(expectedCategories, ignoreOrder: false, customMessage: "Category filter options");

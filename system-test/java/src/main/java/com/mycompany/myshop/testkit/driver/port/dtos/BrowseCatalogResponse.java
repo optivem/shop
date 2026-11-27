@@ -38,5 +38,9 @@ public class BrowseCatalogResponse {
         private String description;
         /** The price as the channel shows it: "$1,299.99" on the UI, the plain amount on the API. */
         private String price;
+        /** The photo's address as the page shows it; null when the page shows no photo (UI: the placeholder). */
+        private String imageUrl;
+        /** Whether the photo has loaded in the browser (UI only; null on the API channel). */
+        private Boolean imageLoaded;
     }
 }

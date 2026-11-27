@@ -16,6 +16,8 @@ public class ProductPage extends BasePage {
     private static final String UNAVAILABLE_SELECTOR = "main .alert-danger";
     /** Exactly one of these shows once the product page has loaded: the product, product not found or the ERP outage. */
     public static final String READY_SELECTOR = ":is(" + TITLE_SELECTOR + ", " + BACK_TO_CATALOG_SELECTOR + ", " + UNAVAILABLE_SELECTOR + ")";
+    /** The product's photo; with no photo (or one that failed to load) the page shows a placeholder and has no img. */
+    private static final String PHOTO_SELECTOR = ".product-detail-media .product-image img";
     private static final String BRAND_SELECTOR = "[aria-label='Product Brand']";
     private static final String CATEGORY_SELECTOR = "[aria-label='Product Category']";
     private static final String SKU_SELECTOR = "[aria-label='Product SKU']";
@@ -79,7 +81,10 @@ public class ProductPage extends BasePage {
         if (pageClient.isHidden(TITLE_SELECTOR)) {
             return builder.breadcrumbs(List.of()).build();
         }
+        var imageUrl = pageClient.readAttributeIfPresent(PHOTO_SELECTOR, "src");
         return builder
+                .imageUrl(imageUrl)
+                .imageLoaded(imageUrl != null && pageClient.isImageLoaded(PHOTO_SELECTOR))
                 .title(readText(TITLE_SELECTOR))
                 .brand(readText(BRAND_SELECTOR))
                 .category(readText(CATEGORY_SELECTOR))

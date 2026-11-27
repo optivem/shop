@@ -20,4 +20,8 @@ export interface CatalogProductDto {
   description?: string;
   /** The price as the channel shows it: "$1,299.99" on the UI, the plain amount on the API. */
   price: string;
+  /** The photo's address as the page shows it; null when the page shows no photo (UI: the placeholder). */
+  imageUrl?: string | null;
+  /** Whether the photo has loaded in the browser (UI only). */
+  imageLoaded?: boolean;
 }

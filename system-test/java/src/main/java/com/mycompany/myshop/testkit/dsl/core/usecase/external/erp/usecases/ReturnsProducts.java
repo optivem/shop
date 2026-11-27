@@ -29,7 +29,12 @@ public class ReturnsProducts extends BaseErpUseCase<Void, VoidVerification> {
 
     public ReturnsProducts product(String skuParamAlias, String title, String brand, String category,
                                    String unitPrice, String description) {
-        products.add(new ProductEntry(skuParamAlias, title, brand, category, unitPrice, description));
+        return product(skuParamAlias, title, brand, category, unitPrice, description, null);
+    }
+
+    public ReturnsProducts product(String skuParamAlias, String title, String brand, String category,
+                                   String unitPrice, String description, String imageUrl) {
+        products.add(new ProductEntry(skuParamAlias, title, brand, category, unitPrice, description, imageUrl));
         return this;
     }
 
@@ -43,6 +48,7 @@ public class ReturnsProducts extends BaseErpUseCase<Void, VoidVerification> {
                         .brand(product.brand())
                         .category(product.category())
                         .description(product.description())
+                        .imageUrl(product.imageUrl())
                         .build())
                 .toList();
 
@@ -55,6 +61,6 @@ public class ReturnsProducts extends BaseErpUseCase<Void, VoidVerification> {
     }
 
     private record ProductEntry(String skuParamAlias, String title, String brand, String category,
-                                String unitPrice, String description) {
+                                String unitPrice, String description, String imageUrl) {
     }
 }

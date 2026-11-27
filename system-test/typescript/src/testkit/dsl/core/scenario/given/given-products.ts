@@ -25,6 +25,15 @@ export class GivenProducts implements IGivenProducts {
     return this;
   }
 
+  withImageUrl(sku: string, imageUrl: string): this {
+    const product = this.products.find((candidate) => candidate.sku === sku);
+    if (!product) {
+      throw new Error(`Cannot give a photo to product '${sku}': it was not added to the ERP's list`);
+    }
+    product.imageUrl = imageUrl;
+    return this;
+  }
+
   and(): GivenStage {
     return this.stage;
   }

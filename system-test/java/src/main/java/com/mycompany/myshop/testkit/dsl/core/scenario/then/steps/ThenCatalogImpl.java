@@ -32,6 +32,12 @@ public class ThenCatalogImpl<R, V extends ResponseVerification<R>>
     }
 
     @Override
+    public ThenCatalogImpl<R, V> showsPhotoOfEveryProduct() {
+        verification.showsPhotoOfEveryProduct();
+        return this;
+    }
+
+    @Override
     public ThenCatalogImpl<R, V> hasProductCount(int expectedCount) {
         verification.productCount(expectedCount);
         return this;

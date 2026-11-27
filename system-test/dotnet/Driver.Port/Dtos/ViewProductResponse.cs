@@ -15,6 +15,12 @@ public class ViewProductResponse
     /// <summary>The price as the channel shows it: "$1,299.99" on the UI, the plain amount on the API.</summary>
     public string? Price { get; set; }
 
+    /// <summary>The photo's address as the page shows it; null when the page shows no photo (UI: the placeholder).</summary>
+    public string? ImageUrl { get; set; }
+
+    /// <summary>Whether the photo has loaded in the browser (UI only).</summary>
+    public bool? ImageLoaded { get; set; }
+
     public List<string>? Breadcrumbs { get; set; }
 
     /// <summary>The quantity field's value.</summary>

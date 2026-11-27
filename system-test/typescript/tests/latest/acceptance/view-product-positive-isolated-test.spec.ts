@@ -63,6 +63,19 @@ test.describe('@isolated', () => {
                 .hasDescription('Compact 13-inch ultrabook');
         });
 
+        // The ERP owns the photo; the shop serves it at /api/products/{sku}/image (stub and real ERP both serve it).
+        test('shouldShowThePhotoOfTheProduct', criteria('UC-007.1'), async ({ scenario }) => {
+            await givenTheCatalog(scenario)
+                .withImageUrl(HP_15, '/erp/images/HP-15.jpg')
+                .when()
+                .viewProduct()
+                .withSku(HP_15)
+                .then()
+                .shouldSucceed()
+                .productPage()
+                .showsPhoto();
+        });
+
         test('shouldShowTheBreadcrumbTrailOfTheProduct', criteria('UC-007.1'), async ({ scenario }) => {
             await givenTheCatalog(scenario)
                 .when()

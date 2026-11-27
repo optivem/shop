@@ -46,6 +46,20 @@ class ViewProductPositiveIsolatedTest extends BaseViewProductTest {
                         .hasDescription("Compact 13-inch ultrabook");
     }
 
+    // The ERP owns the photo; the shop serves it at /api/products/{sku}/image (stub and real ERP both serve it).
+    @Tag("UC-007.1")
+    @TestTemplate
+    @Channel(ChannelType.UI)
+    void shouldShowThePhotoOfTheProduct() {
+        givenTheCatalog()
+                .withImageUrl(HP_15, "/erp/images/HP-15.jpg")
+                .when().viewProduct()
+                    .withSku(HP_15)
+                .then().shouldSucceed()
+                    .productPage()
+                        .showsPhoto();
+    }
+
     @Tag("UC-007.1")
     @TestTemplate
     @Channel(ChannelType.UI)

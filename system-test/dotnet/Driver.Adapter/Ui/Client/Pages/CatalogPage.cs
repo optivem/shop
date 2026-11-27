@@ -18,6 +18,8 @@ public class CatalogPage : BasePage
 
     private const string ProductCardSelector = ProductListSelector + " article[aria-label^='Product ']";
     private const string ProductCardLabelPrefix = "Product ";
+    /// <summary>A card's photo; with no photo (or one that failed to load) the card shows a placeholder and has no img.</summary>
+    private const string PhotoSelector = ".product-image img";
     private const string ProductCountSelector = CatalogSelector + " [aria-label='Product Count']";
     private const string SortSelector = CatalogSelector + " select[aria-label='Sort']";
     private const string CategoryFilterSelector = "fieldset[aria-label='Category Filter']";
@@ -116,15 +118,21 @@ public class CatalogPage : BasePage
         var brands = Trimmed(await PageClient.ReadAllTextContentsNoWaitAsync(ProductCardSelector + " [aria-label='Product Brand']"));
         var prices = Trimmed(await PageClient.ReadAllTextContentsNoWaitAsync(ProductCardSelector + " [aria-label='Display Price']"));
 
-        var products = skus
-            .Select((sku, i) => new BrowseCatalogResponse.ProductDto
+        var products = new List<BrowseCatalogResponse.ProductDto>();
+        for (var i = 0; i < skus.Count; i++)
+        {
+            var photo = $"{ProductCardSelector}[aria-label='{ProductCardLabelPrefix}{skus[i]}'] {PhotoSelector}";
+            var imageUrl = await PageClient.ReadAttributeIfPresentAsync(photo, "src");
+            products.Add(new BrowseCatalogResponse.ProductDto
             {
-                Sku = sku,
+                Sku = skus[i],
                 Title = titles[i],
                 Brand = brands[i],
                 Price = prices[i],
-            })
-            .ToList();
+                ImageUrl = imageUrl,
+                ImageLoaded = imageUrl != null && await PageClient.IsImageLoadedAsync(photo),
+            });
+        }
 
         return new BrowseCatalogResponse
         {

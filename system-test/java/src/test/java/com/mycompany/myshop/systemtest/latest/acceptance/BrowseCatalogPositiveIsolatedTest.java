@@ -50,6 +50,22 @@ class BrowseCatalogPositiveIsolatedTest extends BaseBrowseCatalogTest {
                         .showsProduct(LOGI_MX3S, "Logitech MX Master 3S", "Logitech", "$99.99");
     }
 
+    // The ERP owns the photos; the shop serves each at /api/products/{sku}/image (stub and real ERP both serve them).
+    @Tag("UC-006.1")
+    @TestTemplate
+    @Channel(ChannelType.UI)
+    void shouldShowThePhotoOfEachProduct() {
+        var given = givenTheCatalog();
+        for (var sku : ALL_PRODUCTS) {
+            given.withImageUrl(sku, "/erp/images/" + sku + ".jpg");
+        }
+        given.when().browseCatalog()
+                .then().shouldSucceed()
+                    .catalog()
+                        .showsProducts(ALL_PRODUCTS)
+                        .showsPhotoOfEveryProduct();
+    }
+
     @Tag("UC-006.2")
     @TestTemplate
     @Channel(ChannelType.UI)

@@ -14,4 +14,7 @@ public interface IGivenProducts : IGivenStep
     IGivenProducts WithProduct(string sku, decimal unitPrice);
 
     IGivenProducts WithProduct(string sku, string title, string brand, string category, string unitPrice, string description);
+
+    /// <summary>The photo the ERP gives a product already added, as the ERP's own path (such as /erp/images/HP-15.jpg).</summary>
+    IGivenProducts WithImageUrl(string sku, string imageUrl);
 }

@@ -11,6 +11,7 @@ public class PageClient
     private readonly KeycloakUiLogin? _login;
 
     // 30 second timeout for better stability
+    private const int ImageLoadTimeoutMilliseconds = 10_000;
     private const int DefaultTimeoutSeconds = 30;
     private const int DefaultTimeoutMilliseconds = DefaultTimeoutSeconds * 1000;
 
@@ -168,6 +169,34 @@ public class PageClient
     {
         var locator = _page.Locator(selector);
         return await locator.GetAttributeAsync(attributeName);
+    }
+
+    /// <summary>Reads an attribute of the first element the selector matches, or null when none matches (without waiting).</summary>
+    public async Task<string?> ReadAttributeIfPresentAsync(string selector, string attributeName)
+    {
+        var locator = _page.Locator(selector).First;
+        return await locator.CountAsync() == 0 ? null : await locator.GetAttributeAsync(attributeName);
+    }
+
+    /// <summary>
+    /// Whether the image the selector matches has loaded (a decoded, non-empty picture). Scrolls it into view first,
+    /// since catalog photos load lazily, and gives a slow load a few seconds before reporting it as not loaded.
+    /// </summary>
+    public async Task<bool> IsImageLoadedAsync(string selector)
+    {
+        var locator = _page.Locator(selector).First;
+        await locator.ScrollIntoViewIfNeededAsync();
+        var element = await locator.ElementHandleAsync();
+        try
+        {
+            await _page.WaitForFunctionAsync("element => element.complete && element.naturalWidth > 0", element,
+                new PageWaitForFunctionOptions { Timeout = ImageLoadTimeoutMilliseconds });
+            return true;
+        }
+        catch (TimeoutException)
+        {
+            return false;
+        }
     }
 
     /// <summary>Reads an attribute of every element the selector matches, without waiting for any.</summary>

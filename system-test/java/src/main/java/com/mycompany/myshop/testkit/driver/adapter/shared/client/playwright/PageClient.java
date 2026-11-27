@@ -13,6 +13,7 @@ public class PageClient {
     // Increased default timeout for parallel test execution
     private static final int DEFAULT_TIMEOUT_SECONDS = 30;
     private static final int DEFAULT_TIMEOUT_MILLISECONDS = DEFAULT_TIMEOUT_SECONDS * 1000;
+    private static final int IMAGE_LOAD_TIMEOUT_MILLISECONDS = 10_000;
     private final Page page;
     private final int timeoutMilliseconds;
     private final KeycloakUiLogin login;
@@ -76,6 +77,28 @@ public class PageClient {
     public String readAttribute(String selector, String attribute) {
         var locator = getLocator(selector);
         return locator.getAttribute(attribute);
+    }
+
+    /** Reads an attribute of the first element the selector matches, or null when none matches (without waiting). */
+    public String readAttributeIfPresent(String selector, String attribute) {
+        var locator = page.locator(selector).first();
+        return locator.count() == 0 ? null : locator.getAttribute(attribute);
+    }
+
+    /**
+     * Whether the image the selector matches has loaded (a decoded, non-empty picture). Scrolls it into view first,
+     * since catalog photos load lazily, and gives a slow load a few seconds before reporting it as not loaded.
+     */
+    public boolean isImageLoaded(String selector) {
+        var locator = page.locator(selector).first();
+        locator.scrollIntoViewIfNeeded();
+        try {
+            page.waitForFunction("element => element.complete && element.naturalWidth > 0", locator.elementHandle(),
+                    new Page.WaitForFunctionOptions().setTimeout(IMAGE_LOAD_TIMEOUT_MILLISECONDS));
+            return true;
+        } catch (com.microsoft.playwright.TimeoutError e) {
+            return false;
+        }
     }
 
     public String readInputValue(String selector) {

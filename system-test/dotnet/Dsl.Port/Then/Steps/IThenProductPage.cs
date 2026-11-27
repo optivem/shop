@@ -8,6 +8,9 @@ public interface IThenProductPage
     /// <summary>The page has no serious or critical axe violations (UI channel only).</summary>
     IThenProductPage IsAccessible();
 
+    /// <summary>The product shows its real, loaded photo rather than the placeholder (UI channel only).</summary>
+    IThenProductPage ShowsPhoto();
+
     IThenProductPage HasTitle(string expectedTitle);
 
     IThenProductPage HasBrand(string expectedBrand);

@@ -19,7 +19,8 @@ public class ReturnsProducts : BaseErpUseCase<VoidValue, VoidVerification>
         string? Title = null,
         string? Brand = null,
         string? Category = null,
-        string? Description = null);
+        string? Description = null,
+        string? ImageUrl = null);
 
     private readonly List<ProductEntry> _products = new();
 
@@ -57,6 +58,7 @@ public class ReturnsProducts : BaseErpUseCase<VoidValue, VoidVerification>
                     Brand = product.Brand,
                     Category = product.Category,
                     Description = product.Description,
+                    ImageUrl = product.ImageUrl,
                 })
                 .ToList()
         };

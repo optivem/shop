@@ -11,4 +11,7 @@ public interface GivenProducts extends GivenStep {
     GivenProducts withProduct(String sku, String unitPrice);
 
     GivenProducts withProduct(String sku, String title, String brand, String category, String unitPrice, String description);
+
+    /** The photo the ERP gives a product already added, as the ERP's own path (such as /erp/images/HP-15.jpg). */
+    GivenProducts withImageUrl(String sku, String imageUrl);
 }
