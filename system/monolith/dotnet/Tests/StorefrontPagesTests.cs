@@ -194,16 +194,6 @@ public partial class StorefrontPagesTests : IClassFixture<ShopWebApplicationFact
     }
 
     [Fact]
-    public async Task FooterCreditsThePhotographers()
-    {
-        var html = await (await Browser().GetAsync("/")).Content.ReadAsStringAsync();
-
-        Assert.Contains("Photos on Unsplash by", html);
-        Assert.Contains("href=\"https://unsplash.com/@dhony24\"", html);
-        Assert.Contains("href=\"https://unsplash.com/@jay_zhang\"", html);
-    }
-
-    [Fact]
     public async Task UnknownSkuIsAProductNotFoundPage()
     {
         var response = await Browser().GetAsync("/products/NO-SUCH-SKU");

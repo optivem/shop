@@ -463,16 +463,6 @@ body {
     outline-color: #fb923c;
 }
 
-.store-footer-bottom {
-    border-top: 1px solid rgba(226, 232, 240, 0.15);
-    font-size: var(--market-font-size-xs);
-}
-
-.store-footer-bottom a {
-    display: inline;
-    text-decoration: underline;
-}
-
 /* ---- Page parts shared by several screens (page-specific styles live in pages-shop.css) ---- */
 
 .product-image {

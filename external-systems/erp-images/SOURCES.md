@@ -2,7 +2,7 @@
 
 The made-up ERP owns one photo per product, served as `/erp/images/<PRODUCT-ID>.jpg` by both the simulator (`external-systems/simulators`) and the WireMock stub (`external-systems/stubs`, mapping `erp-images.json`). The files here are the only copy: both Docker images build from `external-systems/` and copy this folder in, and the local stub compose services bind-mount it.
 
-License: https://unsplash.com/license (free commercial use and modification; attribution not required but given). Checked 2026-11-27.
+License: https://unsplash.com/license (free commercial use and modification; attribution not required). The shop UI shows no photo credits; this file is the internal record of who shot each photo. Checked 2026-11-27.
 Excluded, as for the promo photos (`docs/design/home-redesign/images/SOURCES.md`): photos where a brand's logo is the subject (for example an Apple logo), since the license does not cover trademarks. The Logitech mouse photo is kept because it shows the product's own brand.
 
 Each file is cropped to 4:3 and resized to 600x450 JPEG. Photos stand in for the product category; they are not the exact model.

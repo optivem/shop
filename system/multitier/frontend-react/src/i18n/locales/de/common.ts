@@ -78,8 +78,7 @@ export const common: Messages<typeof en> = {
     shipping: 'Versand',
     returns: 'Rückgabe',
     contact: 'Kontakt',
-    tagline: '© MyShop · Demo-Shop für den Optivem-ATDD-Kurs',
-    photosBy: 'Fotos auf Unsplash von',
+    tagline: '© Valentina Jemuović, Optivem',
   },
   userMenu: {
     hello: 'Hallo',

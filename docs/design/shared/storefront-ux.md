@@ -87,7 +87,7 @@ Auth rules:
 
 ### Footer
 
-Three columns of static text: Shop (All products, categories), Help (Shipping, Returns, Contact, all `#` placeholders) and "© MyShop · demo store for the Optivem ATDD course".
+Three columns of static text: Shop (All products, categories), Help (Shipping, Returns, Contact, all `#` placeholders) and "© Valentina Jemuović, Optivem".
 
 ### Notifications
 

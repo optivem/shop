@@ -76,8 +76,7 @@ export const common = {
     shipping: 'Shipping',
     returns: 'Returns',
     contact: 'Contact',
-    tagline: '© MyShop · demo store for the Optivem ATDD course',
-    photosBy: 'Photos on Unsplash by',
+    tagline: '© Valentina Jemuović, Optivem',
   },
   userMenu: {
     hello: 'Hello',
