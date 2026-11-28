@@ -21,6 +21,26 @@ import {
   type SortOrder,
 } from '../features/catalog/catalog-query';
 
+/** The catalog's shape with no data: what the shop looks like behind the wake-up dialog until the products arrive. */
+function CatalogSkeleton() {
+  return (
+    <div className="placeholder-glow">
+      <span className="placeholder catalog-skeleton-heading" />
+      <div className="product-grid">
+        {Array.from({ length: 8 }, (_, i) => (
+          <div key={i} className="product-card">
+            <span className="placeholder catalog-skeleton-image" />
+            <span className="placeholder col-4" />
+            <span className="placeholder col-10" />
+            <span className="placeholder col-6" />
+            <span className="placeholder col-12 catalog-skeleton-button" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /** The home page: browse, search, filter and sort the catalog (UC-006); add a product with quantity 1. */
 export function Catalog() {
   const { t } = useTranslation('catalog');
@@ -43,13 +63,18 @@ export function Catalog() {
     setSuccess(t('page.addedToCart'));
   };
 
-  // The first load (a cold start on the demo deployment) gets the page below the header to itself: an empty
-  // sidebar and "0 products" around the wake-up card would only make the shop look broken.
+  // The first load (a cold start on the demo deployment) shows the wake-up card as a dialog over the shop,
+  // which waits greyed out behind it with placeholder cards: an empty sidebar and "0 products" would look broken.
   if (isLoading && products.length === 0) {
     return (
-      <StoreLayout>
+      <>
+        <div className="wake-up-backdrop-page" inert aria-hidden="true">
+          <StoreLayout>
+            <CatalogSkeleton />
+          </StoreLayout>
+        </div>
         <DemoWakeUp />
-      </StoreLayout>
+      </>
     );
   }
 

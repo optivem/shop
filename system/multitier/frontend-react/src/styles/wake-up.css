@@ -1,7 +1,42 @@
-/* Demo-site wake-up card: the catalog's loading state once a cold start makes it slow (DemoWakeUp.tsx). */
+/* Demo-site wake-up card: the catalog's loading state, a dialog over the greyed-out shop (DemoWakeUp.tsx). */
+.wake-up-backdrop-page {
+    filter: grayscale(1);
+    opacity: 0.5;
+    pointer-events: none;
+    user-select: none;
+}
+
+.catalog-skeleton-heading {
+    display: block;
+    width: 220px;
+    height: 32px;
+    margin: var(--market-space-6) 0 var(--market-space-4);
+}
+
+.catalog-skeleton-image {
+    display: block;
+    aspect-ratio: 1;
+    border-radius: var(--market-radius-md);
+}
+
+.catalog-skeleton-button {
+    height: 38px;
+    margin-top: auto;
+    border-radius: var(--market-radius-md);
+}
+
+.wake-up-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1050;
+    overflow-y: auto;
+    padding: var(--market-space-6) 16px;
+    background: rgb(15 23 42 / 0.45);
+}
+
 .wake-up {
     max-width: 720px;
-    margin: var(--market-space-6) auto;
+    margin: 0 auto;
     padding: clamp(20px, 4vw, 40px);
     background: var(--market-surface);
     border: 1px solid var(--market-border);

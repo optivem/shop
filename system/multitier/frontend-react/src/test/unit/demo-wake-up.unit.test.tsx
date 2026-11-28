@@ -8,7 +8,7 @@ describe('demo wake-up card', () => {
 
   it('shows the wake-up card from the first moment of the load', () => {
     render(<DemoWakeUp />);
-    expect(screen.getByRole('region', { name: 'Demo Site Wake Up' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Demo Site Wake Up' })).toBeInTheDocument();
     expect(screen.queryByText('Loading products...')).toBeNull();
   });
 
@@ -18,7 +18,7 @@ describe('demo wake-up card', () => {
       vi.advanceTimersByTime(3000);
     });
 
-    expect(screen.getByRole('region', { name: 'Demo Site Wake Up' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Demo Site Wake Up' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Waking up the demo shop…' })).toBeInTheDocument();
     expect(screen.getByLabelText('Slow Loading Hint')).toHaveTextContent('This is a demo site');
     expect(screen.getByRole('status')).toHaveTextContent('Waiting for 3 s');
