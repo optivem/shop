@@ -12,7 +12,7 @@ describe('demo wake-up card', () => {
     expect(screen.queryByText('Loading products...')).toBeNull();
   });
 
-  it('explains the demo site and how it is built while the services wake up', () => {
+  it('explains the demo site while the services wake up', () => {
     render(<DemoWakeUp />);
     act(() => {
       vi.advanceTimersByTime(3000);
@@ -22,9 +22,5 @@ describe('demo wake-up card', () => {
     expect(screen.getByRole('heading', { name: 'Waking up the demo shop…' })).toBeInTheDocument();
     expect(screen.getByLabelText('Slow Loading Hint')).toHaveTextContent('This is a demo site');
     expect(screen.getByRole('status')).toHaveTextContent('Waiting for 3 s');
-    expect(screen.getByRole('heading', { name: /Spec-Driven Development with AI/ })).toBeInTheDocument();
-    expect(screen.getByText('Production')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Technical highlights' })).toBeInTheDocument();
-    expect(screen.getByText('Authentication & security')).toBeInTheDocument();
   });
 });
