@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Layout, LoadingSpinner } from '../components';
 import { DEFAULT_COUNTRY } from '../hooks/useOrderForm';
 import { profileService } from '../services/profile-service';
@@ -9,6 +10,7 @@ import { NewOrder } from './NewOrder';
  * The form only appears once the profile is read, so a prefill can never overwrite what the customer types.
  */
 export function QuickOrder() {
+  const { t } = useTranslation('checkout');
   const [country, setCountry] = useState<string | null>(null);
 
   useEffect(() => {
@@ -25,9 +27,9 @@ export function QuickOrder() {
 
   if (country === null) {
     return (
-      <Layout title="Quick order" breadcrumbs={[{ label: 'Home', path: '/' }, { label: 'Quick order' }]}>
+      <Layout title={t('nav.quickOrder')} breadcrumbs={[{ label: t('nav.home'), path: '/' }, { label: t('nav.quickOrder') }]}>
         <div className="market-panel">
-          <LoadingSpinner message="Loading..." />
+          <LoadingSpinner message={t('quickOrder.loading')} />
         </div>
       </Layout>
     );

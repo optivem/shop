@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
 interface BreadcrumbItem {
@@ -14,8 +15,9 @@ interface BreadcrumbProps {
  * @param items - Array of breadcrumb items with labels and optional paths
  */
 export function Breadcrumb({ items }: Readonly<BreadcrumbProps>) {
+  const { t } = useTranslation();
   return (
-    <nav aria-label="breadcrumb">
+    <nav aria-label={t('breadcrumb.label')}>
       <ol className="breadcrumb">
         {items.map((item, index) => (
           <li

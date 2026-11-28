@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { i18n } from '../i18n';
 import { orderService } from '../services/order-service';
 import type { ViewOrderDetailsResponse } from '../types/api.types';
 
@@ -44,7 +45,7 @@ export function useOrderDetails(orderNumber: string | undefined) {
   }, []);
 
   if (!orderNumber) {
-    return { order, isLoading: false, error: 'No order number provided', refresh };
+    return { order, isLoading: false, error: i18n.t('account:hooks.noOrderNumber'), refresh };
   }
 
   const isLoading = loaded?.orderNumber !== orderNumber || loaded.reloadCount !== reloadCount;

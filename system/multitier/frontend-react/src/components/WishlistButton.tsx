@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Heart } from 'lucide-react';
 
 interface WishlistButtonProps {
@@ -11,12 +12,13 @@ interface WishlistButtonProps {
  * toggle lives in this button's state and is gone on reload.
  */
 export function WishlistButton({ title, className = '' }: Readonly<WishlistButtonProps>) {
+  const { t } = useTranslation();
   const [saved, setSaved] = useState(false);
   return (
     <button
       type="button"
       className={`wishlist-button ${className}`.trim()}
-      aria-label={`Save ${title} to wishlist`}
+      aria-label={t('wishlist.save', { title })}
       aria-pressed={saved}
       onClick={() => setSaved((value) => !value)}
     >

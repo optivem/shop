@@ -6,13 +6,13 @@ describe('demo wake-up card', () => {
   beforeEach(() => vi.useFakeTimers());
   afterEach(() => vi.useRealTimers());
 
-  it('shows the plain spinner while the catalog loads quickly', () => {
+  it('shows the wake-up card from the first moment of the load', () => {
     render(<DemoWakeUp />);
-    expect(screen.getByText('Loading products...')).toBeInTheDocument();
-    expect(screen.queryByRole('region', { name: 'Demo Site Wake Up' })).toBeNull();
+    expect(screen.getByRole('region', { name: 'Demo Site Wake Up' })).toBeInTheDocument();
+    expect(screen.queryByText('Loading products...')).toBeNull();
   });
 
-  it('explains the demo site and how it is built once the load is slow', () => {
+  it('explains the demo site and how it is built while the services wake up', () => {
     render(<DemoWakeUp />);
     act(() => {
       vi.advanceTimersByTime(3000);

@@ -1,15 +1,7 @@
+import { useTranslation } from 'react-i18next';
 import type { ShippingAddress } from '../../types/api.types';
 import type { AddressLabels } from './address-labels';
 import { SHIPPING_COUNTRIES, type AddressErrors } from './shipping';
-
-const VISIBLE_LABELS: AddressLabels = {
-  firstName: 'First name',
-  lastName: 'Last name',
-  street: 'Street',
-  postalCode: 'Postal code',
-  city: 'City',
-  country: 'Country',
-};
 
 interface AddressFieldsProps {
   idPrefix: string;
@@ -23,13 +15,14 @@ interface AddressFieldsProps {
 
 /** Name and address inputs plus the country select (US, DE, GB), with each field's error under it. */
 export function AddressFields({ idPrefix, address, errors, labels, onChange, withoutNames = false }: Readonly<AddressFieldsProps>) {
+  const { t } = useTranslation('checkout');
   const textField = (field: Exclude<keyof ShippingAddress, 'country'>, colClass: string) => {
     const id = `${idPrefix}-${field}`;
     const error = errors[field];
     return (
       <div className={colClass} key={field}>
         <label htmlFor={id} className="form-label">
-          {VISIBLE_LABELS[field]}
+          {t(`address.${field}`)}
         </label>
         <input
           id={id}
@@ -55,7 +48,7 @@ export function AddressFields({ idPrefix, address, errors, labels, onChange, wit
       {textField('city', 'col-md-4')}
       <div className="col-md-4">
         <label htmlFor={countryId} className="form-label">
-          {VISIBLE_LABELS.country}
+          {t('address.country')}
         </label>
         <select
           id={countryId}
@@ -65,7 +58,7 @@ export function AddressFields({ idPrefix, address, errors, labels, onChange, wit
           value={address.country}
           onChange={(e) => onChange({ ...address, country: e.target.value })}
         >
-          <option value="">Select a country</option>
+          <option value="">{t('address.selectCountry')}</option>
           {SHIPPING_COUNTRIES.map((country) => (
             <option key={country} value={country}>
               {country}

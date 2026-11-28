@@ -1,4 +1,5 @@
 import { useContext, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSearchParams, Navigate } from 'react-router-dom';
 import { AuthContext } from 'react-oidc-context';
 import { AuthDisabledContext } from '../auth/auth-disabled';
@@ -10,6 +11,7 @@ import { safeReturnUrl } from '../auth/return-url';
  * visitor creates a customer account and comes back signed in.
  */
 export function SignIn({ signUp = false }: { signUp?: boolean } = {}) {
+  const { t } = useTranslation();
   const [params] = useSearchParams();
   const returnUrl = safeReturnUrl(params.get('returnUrl'));
   const authDisabled = useContext(AuthDisabledContext);
@@ -32,9 +34,9 @@ export function SignIn({ signUp = false }: { signUp?: boolean } = {}) {
       <div className="market-panel signin-redirect-panel text-center">
         <div className="spinner-border text-primary mb-3" aria-hidden="true" />
         <div className="signin-redirect-message" role="status">
-          {signUp ? 'Redirecting to sign up...' : 'Redirecting to sign in...'}
+          {signUp ? t('auth.redirectingToSignUp') : t('auth.redirectingToSignIn')}
         </div>
-        <p className="signin-redirect-hint mb-0">You'll continue to our secure sign-in page and come straight back here.</p>
+        <p className="signin-redirect-hint mb-0">{t('auth.signInHint')}</p>
       </div>
     </div>
   );

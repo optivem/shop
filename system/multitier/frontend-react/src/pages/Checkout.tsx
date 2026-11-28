@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { CheckoutProgress, LoadingSpinner, ProductImage, StoreLayout, SubmitButton } from '../components';
 import { useCart } from '../contexts/useCart';
@@ -34,6 +35,7 @@ interface ProfileState {
 
 /** `/checkout`: shipping address, optional coupon and the order review; places one order per cart line (UC-009). */
 export function Checkout() {
+  const { t } = useTranslation('checkout');
   const cart = useCart();
   const { products } = useCatalog();
   const navigate = useNavigate();
@@ -78,7 +80,7 @@ export function Checkout() {
     const fieldErrors = choice === 'saved' ? {} : validateAddress(address);
     setErrors(fieldErrors);
     if (Object.keys(fieldErrors).length > 0) {
-      setError({ message: 'Please correct the shipping address.', fieldErrors: Object.values(fieldErrors) });
+      setError({ message: t('checkout.correctAddress'), fieldErrors: Object.values(fieldErrors) });
       return;
     }
 
@@ -93,7 +95,7 @@ export function Checkout() {
       // 8b: nothing was placed; the cart stays as it is.
       setIsSubmitting(false);
       setError({
-        message: 'No order was placed.',
+        message: t('checkout.noOrderPlaced'),
         fieldErrors: result.rejected.map((line) => `${line.sku}: ${line.reason}`),
       });
       return;
@@ -111,26 +113,29 @@ export function Checkout() {
 
   if (!profile) {
     return (
-      <StoreLayout title="Checkout">
+      <StoreLayout title={t('nav.checkout')}>
         <div className="market-panel">
-          <LoadingSpinner message="Loading checkout..." />
+          <LoadingSpinner message={t('checkout.loading')} />
         </div>
       </StoreLayout>
     );
   }
 
   return (
-    <StoreLayout title="Checkout" breadcrumbs={[{ label: 'Home', path: '/' }, { label: 'Cart', path: '/cart' }, { label: 'Checkout' }]}>
+    <StoreLayout
+      title={t('nav.checkout')}
+      breadcrumbs={[{ label: t('nav.home'), path: '/' }, { label: t('nav.cart'), path: '/cart' }, { label: t('nav.checkout') }]}
+    >
       <CheckoutProgress current="Checkout" />
-      <h1 className="h2 mb-4">Checkout</h1>
+      <h1 className="h2 mb-4">{t('nav.checkout')}</h1>
       <form className="row g-4 align-items-start" noValidate onSubmit={(e) => void handleSubmit(e)}>
         <div className="col-lg-7 d-flex flex-column gap-4">
-          <section className="market-panel checkout-section" aria-label="Shipping Address">
+          <section className="market-panel checkout-section" aria-label={t('checkout.shippingAddressLabel')}>
             <h2 className="checkout-step-title">
               <span className="checkout-step-number" aria-hidden="true">
                 1
               </span>
-              Shipping address
+              {t('checkout.shippingAddress')}
             </h2>
             {profile.saved && (
               <div className="checkout-choices">
@@ -140,13 +145,13 @@ export function Checkout() {
                     type="radio"
                     name="address-choice"
                     id="address-saved"
-                    aria-label="Use Saved Address"
+                    aria-label={t('checkout.useSavedLabel')}
                     checked={choice === 'saved'}
                     onChange={() => setChoice('saved')}
                   />
                   <label className="form-check-label" htmlFor="address-saved">
-                    <span className="checkout-choice-title">Use saved address</span>
-                    <span className="checkout-choice-detail" aria-label="Saved Address">
+                    <span className="checkout-choice-title">{t('checkout.useSaved')}</span>
+                    <span className="checkout-choice-detail" aria-label={t('checkout.savedAddressLabel')}>
                       {formatAddress(profile.saved)}
                     </span>
                   </label>
@@ -157,13 +162,13 @@ export function Checkout() {
                     type="radio"
                     name="address-choice"
                     id="address-other"
-                    aria-label="Ship to a Different Address"
+                    aria-label={t('checkout.shipDifferentLabel')}
                     checked={choice === 'other'}
                     onChange={() => setChoice('other')}
                   />
                   <label className="form-check-label" htmlFor="address-other">
-                    <span className="checkout-choice-title">Ship to a different address</span>
-                    <span className="checkout-choice-detail">Enter a new address below</span>
+                    <span className="checkout-choice-title">{t('checkout.shipDifferent')}</span>
+                    <span className="checkout-choice-detail">{t('checkout.enterNewAddress')}</span>
                   </label>
                 </div>
               </div>
@@ -183,12 +188,12 @@ export function Checkout() {
                       className="form-check-input"
                       type="checkbox"
                       id="save-as-default"
-                      aria-label="Save as Default Address"
+                      aria-label={t('checkout.saveAsDefaultLabel')}
                       checked={saveAsDefault}
                       onChange={(e) => setSaveAsDefault(e.target.checked)}
                     />
                     <label className="form-check-label" htmlFor="save-as-default">
-                      Save as my default shipping address
+                      {t('checkout.saveAsDefault')}
                     </label>
                   </div>
                 )}
@@ -200,41 +205,41 @@ export function Checkout() {
               <span className="checkout-step-number" aria-hidden="true">
                 2
               </span>
-              Coupon <span className="checkout-step-hint">(optional)</span>
+              {t('checkout.coupon')} <span className="checkout-step-hint">{t('checkout.optional')}</span>
             </h2>
             <label htmlFor="checkout-coupon" className="form-label market-label">
-              Code
+              {t('checkout.code')}
             </label>
             <input
               id="checkout-coupon"
               type="text"
               className="form-control checkout-coupon-input"
-              aria-label="Checkout Coupon Code"
+              aria-label={t('checkout.couponLabel')}
               aria-describedby="checkout-coupon-hint"
               value={couponCode}
               onChange={(e) => setCouponCode(e.target.value)}
             />
             <p id="checkout-coupon-hint" className="form-text mb-0">
-              The code is checked for each order when you place it.
+              {t('checkout.couponHint')}
             </p>
           </section>
         </div>
         <div className="col-lg-5">
-          <section className="market-panel checkout-section checkout-review" aria-label="Order Review">
-            <h2 className="h5 fw-bold mb-0">Order review</h2>
+          <section className="market-panel checkout-section checkout-review" aria-label={t('checkout.orderReviewLabel')}>
+            <h2 className="h5 fw-bold mb-0">{t('checkout.orderReview')}</h2>
             <ul className="checkout-review-lines">
               {lines.map((line) => (
-                <li key={line.sku} className="checkout-review-line" aria-label={`Review Line ${line.sku}`}>
+                <li key={line.sku} className="checkout-review-line" aria-label={t('checkout.reviewLineLabel', { sku: line.sku })}>
                   <div className="checkout-review-thumb">
                     <ProductImage imageUrl={line.product?.imageUrl} alt="" shape="square" />
                   </div>
                   <div className="checkout-review-name">
                     <span className="checkout-review-title">{line.product?.title ?? line.sku}</span>
                     <span className="checkout-review-meta">
-                      Qty <span aria-label={`Review Quantity ${line.sku}`}>{line.quantity}</span>
+                      {t('checkout.qty')} <span aria-label={t('checkout.reviewQuantityLabel', { sku: line.sku })}>{line.quantity}</span>
                     </span>
                   </div>
-                  <span className="price checkout-review-total" aria-label={`Review Line Total ${line.sku}`}>
+                  <span className="price checkout-review-total" aria-label={t('checkout.reviewLineTotalLabel', { sku: line.sku })}>
                     {formatCents(line.lineTotalCents)}
                   </span>
                 </li>
@@ -242,27 +247,27 @@ export function Checkout() {
             </ul>
             <div className="checkout-review-summary">
               <div className="d-flex justify-content-between fw-bold">
-                <span>Subtotal</span>
-                <span className="price" aria-label="Review Subtotal">
+                <span>{t('checkout.subtotal')}</span>
+                <span className="price" aria-label={t('checkout.reviewSubtotalLabel')}>
                   {formatCents(subtotalCents)}
                 </span>
               </div>
               <div className="d-flex justify-content-between">
                 <span className="text-body-secondary">
-                  Est. tax (<span aria-label="Tax Country">{taxCountry || '-'}</span>)
+                  {t('checkout.estimatedTax')} (<span aria-label={t('checkout.taxCountryLabel')}>{taxCountry || '-'}</span>)
                 </span>
-                <span aria-label="Estimated Tax Rate">{taxRate === undefined ? '-' : formatTaxRate(taxRate)}</span>
+                <span aria-label={t('checkout.estimatedTaxRateLabel')}>{taxRate === undefined ? '-' : formatTaxRate(taxRate)}</span>
               </div>
             </div>
             <SubmitButton
               isSubmitting={isSubmitting}
-              text="Place order"
-              loadingText="Placing order..."
+              text={t('checkout.placeOrder')}
+              loadingText={t('checkout.placingOrder')}
               data-testid="place-order"
               className="btn btn-cta btn-lg w-100"
             />
             <p className="text-body-secondary small text-center mb-0">
-              Discount and tax are worked out per order when it is placed.
+              {t('checkout.perOrderNote')}
             </p>
           </section>
         </div>

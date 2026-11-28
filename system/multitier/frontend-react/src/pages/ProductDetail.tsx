@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router-dom';
 import { Minus, Plus, ShoppingCart } from 'lucide-react';
 import { LoadingSpinner, ProductImage, StoreLayout } from '../components';
@@ -9,9 +10,8 @@ import { useNotificationContext } from '../contexts/useNotificationContext';
 import { ServiceTiles } from '../features/catalog/ServiceTiles';
 import { productService } from '../services/product-service';
 import type { Product } from '../types/api.types';
-import { ADDED_TO_CART, PRODUCTS_UNAVAILABLE } from '../utils/messages';
 import { formatMoney } from '../utils/money';
-import { clampQuantity, parseQuantity, QUANTITY_ERROR } from '../utils/quantity';
+import { clampQuantity, parseQuantity } from '../utils/quantity';
 
 type ProductState =
   | { kind: 'loading' }
@@ -26,6 +26,7 @@ interface Loaded {
 
 /** `/products/{sku}`: one product's details, with a quantity and "Add to cart" (UC-007). */
 export function ProductDetail() {
+  const { t } = useTranslation('catalog');
   const { sku = '' } = useParams<{ sku: string }>();
   const [loaded, setLoaded] = useState<Loaded | null>(null);
   const [quantity, setQuantity] = useState('1');
@@ -53,12 +54,12 @@ export function ProductDetail() {
 
   if (state.kind === 'not-found') {
     return (
-      <StoreLayout title="Product not found">
+      <StoreLayout title={t('productDetail.notFoundTitle')}>
         <div className="market-empty text-center py-5 px-3">
-          <h1 className="h3">Product not found</h1>
-          <p className="text-muted">We couldn't find a product with SKU {sku}.</p>
-          <Link to="/" className="btn btn-primary" aria-label="Back to Catalog">
-            Back to the catalog
+          <h1 className="h3">{t('productDetail.notFoundTitle')}</h1>
+          <p className="text-muted">{t('productDetail.notFoundText', { sku })}</p>
+          <Link to="/" className="btn btn-primary" aria-label={t('productDetail.backToCatalogAria')}>
+            {t('productDetail.backToCatalog')}
           </Link>
         </div>
       </StoreLayout>
@@ -67,12 +68,12 @@ export function ProductDetail() {
 
   if (state.kind !== 'found') {
     return (
-      <StoreLayout title="Product">
+      <StoreLayout title={t('productDetail.title')}>
         {state.kind === 'loading' ? (
-          <LoadingSpinner message="Loading product..." />
+          <LoadingSpinner message={t('productDetail.loading')} />
         ) : (
           <div className="alert alert-danger" role="alert">
-            {PRODUCTS_UNAVAILABLE}
+            {t('page.productsUnavailable')}
           </div>
         )}
       </StoreLayout>
@@ -90,18 +91,18 @@ export function ProductDetail() {
   const addToCart = () => {
     const parsed = parseQuantity(quantity);
     if (parsed === undefined) {
-      setError({ message: QUANTITY_ERROR });
+      setError({ message: t('productDetail.quantityError') });
       return;
     }
     add(product.sku, parsed);
-    setSuccess(ADDED_TO_CART);
+    setSuccess(t('page.addedToCart'));
   };
 
   return (
     <StoreLayout
       title={product.title}
       breadcrumbs={[
-        { label: 'Home', path: '/' },
+        { label: t('productDetail.home'), path: '/' },
         { label: product.category, path: `/?category=${encodeURIComponent(product.category)}` },
         { label: product.title },
       ]}
@@ -119,32 +120,32 @@ export function ProductDetail() {
             }}
           >
             <p className="product-meta mb-0">
-              <span className="product-meta-brand" aria-label="Product Brand">
+              <span className="product-meta-brand" aria-label={t('productDetail.brandAria')}>
                 {product.brand}
               </span>
               <span className="product-meta-sep" aria-hidden="true">
                 /
               </span>
-              <span aria-label="Product Category">{product.category}</span>
+              <span aria-label={t('productDetail.categoryAria')}>{product.category}</span>
             </p>
-            <h1 className="product-detail-title" aria-label="Product Title">
+            <h1 className="product-detail-title" aria-label={t('productDetail.titleAria')}>
               {product.title}
             </h1>
             <p className="product-meta mb-0">
-              SKU{' '}
-              <span className="font-monospace text-body" aria-label="Product SKU">
+              {t('productDetail.sku')}{' '}
+              <span className="font-monospace text-body" aria-label={t('productDetail.skuAria')}>
                 {product.sku}
               </span>
             </p>
-            <p className="price product-detail-price" aria-label="Display Price">
+            <p className="price product-detail-price" aria-label={t('productDetail.priceAria')}>
               {formatMoney(product.price)}
             </p>
             <div className="product-buy-row">
               <label htmlFor="product-quantity" className="visually-hidden">
-                Quantity
+                {t('productDetail.quantity')}
               </label>
               <div className="input-group quantity-stepper quantity-stepper-lg">
-                <button type="button" className="btn btn-outline-secondary" aria-label="Decrease Quantity" onClick={() => step(-1)}>
+                <button type="button" className="btn btn-outline-secondary" aria-label={t('productDetail.decreaseAria')} onClick={() => step(-1)}>
                   <Minus size={16} aria-hidden="true" />
                 </button>
                 <input
@@ -152,17 +153,17 @@ export function ProductDetail() {
                   type="text"
                   inputMode="numeric"
                   className="form-control text-center"
-                  aria-label="Product Quantity"
+                  aria-label={t('productDetail.quantityAria')}
                   value={quantity}
                   onChange={(e) => setQuantity(e.target.value)}
                 />
-                <button type="button" className="btn btn-outline-secondary" aria-label="Increase Quantity" onClick={() => step(1)}>
+                <button type="button" className="btn btn-outline-secondary" aria-label={t('productDetail.increaseAria')} onClick={() => step(1)}>
                   <Plus size={16} aria-hidden="true" />
                 </button>
               </div>
-              <button type="submit" className="btn btn-cta btn-lg product-add-button" aria-label="Add to Cart">
+              <button type="submit" className="btn btn-cta btn-lg product-add-button" aria-label={t('productDetail.addToCartAria')}>
                 <ShoppingCart size={18} aria-hidden="true" className="me-2" />
-                Add to cart
+                {t('productDetail.addToCart')}
               </button>
               <WishlistButton title={product.title} className="wishlist-button-boxed" />
             </div>
@@ -170,9 +171,9 @@ export function ProductDetail() {
           <ServiceTiles compact />
           <section className="market-panel product-about" aria-labelledby="product-about-heading">
             <h2 className="product-about-title" id="product-about-heading">
-              About this product
+              {t('productDetail.aboutTitle')}
             </h2>
-            <p className="product-detail-description mb-0" aria-label="Product Description">
+            <p className="product-detail-description mb-0" aria-label={t('productDetail.descriptionAria')}>
               {product.description}
             </p>
           </section>
@@ -181,7 +182,7 @@ export function ProductDetail() {
       {related.length > 0 && (
         <section className="home-section mt-4" aria-labelledby="product-related-heading">
           <h2 className="home-section-title" id="product-related-heading">
-            More in {product.category}
+            {t('productDetail.moreIn', { category: product.category })}
           </h2>
           <ul className="compact-products">
             {related.map((other) => (

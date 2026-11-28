@@ -1,10 +1,11 @@
 // Money display: one currency for every shipping country, with thousands separators and 2 decimals.
+// Separators and symbol position follow the active language (see i18n/format.ts); the currency does not.
 
-const usd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+import { formatMoneyAmount } from '../i18n/format';
 
-/** "1299.99" -> "$1,299.99". Works on cents so a line total never shows binary-float noise. */
+/** "1299.99" -> "$1,299.99" (en). Works on cents so a line total never shows binary-float noise. */
 export function formatMoney(amount: string | number): string {
-  return usd.format(toCents(amount) / 100);
+  return formatMoneyAmount(toCents(amount) / 100);
 }
 
 /** Decimal amount -> integer cents. */
@@ -18,5 +19,5 @@ export function lineTotalCents(unitPrice: string, quantity: number): number {
 }
 
 export function formatCents(cents: number): string {
-  return usd.format(cents / 100);
+  return formatMoneyAmount(cents / 100);
 }

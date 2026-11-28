@@ -3,6 +3,7 @@
 import { isProblemDetail, type Guard } from './types/api.guards';
 import type { Result } from './types/result.types';
 import type { ApiError } from './types/error.types';
+import { i18n } from './i18n';
 import { getAccessToken, notifyUnauthorized } from './auth/access-token';
 
 /**
@@ -20,7 +21,7 @@ export async function fetchJson<T>(url: string, isExpected: Guard<T>, options?: 
     if (!isExpected(data)) {
       return {
         success: false,
-        error: { message: `Unexpected response from server. (Status: ${response.status})`, status: response.status }
+        error: { message: i18n.t('errors.unexpectedResponse', { status: response.status }), status: response.status }
       };
     }
     return { success: true, data };
@@ -53,7 +54,7 @@ async function fetchResult<T>(
     return {
       success: false,
       error: {
-        message: `Network error: ${e instanceof Error ? e.message : String(e)}`,
+        message: i18n.t('errors.network', { message: e instanceof Error ? e.message : String(e) }),
         status: 0
       }
     };
@@ -98,7 +99,7 @@ export async function extractApiError(response: Response): Promise<ApiError> {
       fieldErrors = errorData.errors.map(e => `${e.field}: ${e.message}`);
     }
   } else {
-    message = `An unexpected error occurred. (Status: ${response.status})`;
+    message = i18n.t('errors.unexpected', { status: response.status });
   }
 
   return {

@@ -1,4 +1,5 @@
 import { useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { AuthProvider, hasAuthParams, useAuth } from 'react-oidc-context';
 import type { User } from 'oidc-client-ts';
 import { AuthDisabledContext } from './auth-disabled';
@@ -33,6 +34,7 @@ export function RequireAuth({ children }: Readonly<{ children: ReactNode }>) {
 }
 
 function RequireOidcAuth({ children }: Readonly<{ children: ReactNode }>) {
+  const { t } = useTranslation();
   const auth = useAuth();
   const sessionChecked = useContext(SessionCheckedContext);
   const attempted = useRef(false);
@@ -56,14 +58,14 @@ function RequireOidcAuth({ children }: Readonly<{ children: ReactNode }>) {
     return (
       <div className="container mt-4">
         <div className="alert alert-danger" role="alert">
-          Sign-in failed: {auth.error.message}
+          {t('auth.signInFailed', { message: auth.error.message })}
         </div>
         <button
           type="button"
           className="btn btn-primary"
           onClick={() => void auth.signinRedirect({ state: { returnUrl: currentPath() } })}
         >
-          Try again
+          {t('auth.tryAgain')}
         </button>
       </div>
     );
@@ -72,7 +74,7 @@ function RequireOidcAuth({ children }: Readonly<{ children: ReactNode }>) {
   if (!auth.isAuthenticated) {
     return (
       <div className="container mt-4" role="status">
-        Redirecting to sign in...
+        {t('auth.redirectingToSignIn')}
       </div>
     );
   }

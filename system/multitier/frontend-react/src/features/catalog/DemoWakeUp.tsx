@@ -1,36 +1,28 @@
 import { useEffect, useState } from 'react';
-import { Activity, Check, Cloud, FlaskConical, Info, Plug, ShieldCheck, Sparkles, type LucideIcon } from 'lucide-react';
-import { LoadingSpinner } from '../../components';
-import { userManager } from '../../auth/user-manager';
-import { DEMO_SITE_NOTE } from '../../utils/messages';
-
-/** How long the catalog may load before the plain spinner turns into the demo site's wake-up card. */
-const WAKE_UP_DELAY_MS = 3000;
+import { useTranslation } from 'react-i18next';
+import { Activity, Check, Cloud, FlaskConical, Info, Plug, ShieldCheck, Sparkles } from 'lucide-react';
+import { authServerWarmUp } from '../../auth/user-manager';
 
 /** The services the first catalog request wakes: the backend, which asks the ERP for the products. */
-const CATALOG_SERVICES = ['Shop backend', 'Product catalog (ERP)'];
-
-const AUTH_SERVICE = 'Auth server (Keycloak)';
-
 type ServiceState = 'waking' | 'ready' | 'down';
 
-const STATUS_TEXT: Record<ServiceState, string> = {
-  waking: 'Waking up…',
-  ready: 'Ready',
-  down: 'Not responding',
-};
+const STATUS_KEY = {
+  waking: 'wakeUp.statusWaking',
+  ready: 'wakeUp.statusReady',
+  down: 'wakeUp.statusDown',
+} as const;
 
 /**
- * Wakes the auth server and reports when it answers: fetches its OIDC discovery document through the
- * sign-in's own client, which caches it for the sign-in. Undefined when authentication is disabled.
+ * Reports when the auth server answers the warm-up ping the app sends on load (authServerWarmUp).
+ * Undefined when authentication is disabled.
  */
 function useAuthServerState(): ServiceState | undefined {
-  const [state, setState] = useState<ServiceState | undefined>(userManager ? 'waking' : undefined);
+  const [state, setState] = useState<ServiceState | undefined>(authServerWarmUp ? 'waking' : undefined);
 
   useEffect(() => {
-    if (!userManager) return;
+    if (!authServerWarmUp) return;
     let ignore = false;
-    userManager.metadataService.getMetadata().then(
+    authServerWarmUp.then(
       () => !ignore && setState('ready'),
       () => !ignore && setState('down'),
     );
@@ -43,53 +35,35 @@ function useAuthServerState(): ServiceState | undefined {
 }
 
 const SPEC_DRIVEN_STEPS = [
-  { title: 'Spec', detail: 'Each feature starts as acceptance criteria in plain business language.' },
-  { title: 'Acceptance tests', detail: 'The spec becomes executable acceptance tests that fail first.' },
-  { title: 'AI implements', detail: 'AI agents write the code test-first (ATDD + TDD) until the tests pass.' },
-  { title: 'Pipeline verifies', detail: 'Nothing ships until every test is green in the pipeline.' },
-];
+  { titleKey: 'wakeUp.stepSpecTitle', detailKey: 'wakeUp.stepSpecDetail' },
+  { titleKey: 'wakeUp.stepAcceptanceTitle', detailKey: 'wakeUp.stepAcceptanceDetail' },
+  { titleKey: 'wakeUp.stepAiTitle', detailKey: 'wakeUp.stepAiDetail' },
+  { titleKey: 'wakeUp.stepPipelineTitle', detailKey: 'wakeUp.stepPipelineDetail' },
+] as const;
 
-const HIGHLIGHTS: { icon: LucideIcon; title: string; detail: string }[] = [
-  {
-    icon: Sparkles,
-    title: 'Modern UX/UI',
-    detail: 'Responsive and accessible storefront, checked in CI by Lighthouse and axe on every change.',
-  },
-  {
-    icon: ShieldCheck,
-    title: 'Authentication & security',
-    detail: 'Keycloak sign-in (OpenID Connect, PKCE), customer and admin roles, tokens kept in memory, strict security headers.',
-  },
-  {
-    icon: Plug,
-    title: 'External systems',
-    detail: 'ERP, Tax and Clock integrations over HTTP, with contract tests and graceful handling when one is down.',
-  },
-  {
-    icon: FlaskConical,
-    title: 'Test automation',
-    detail: 'Unit, component, contract, acceptance, end-to-end and smoke tests, plus mutation testing.',
-  },
-  {
-    icon: Activity,
-    title: 'Observability',
-    detail: 'OpenTelemetry tracing from the browser through the backend.',
-  },
-  {
-    icon: Cloud,
-    title: 'Cloud native',
-    detail: 'Docker containers on Google Cloud Run that scale to zero, which is why the first visit wakes them up.',
-  },
-];
+const HIGHLIGHTS = [
+  { icon: Sparkles, titleKey: 'wakeUp.uxTitle', detailKey: 'wakeUp.uxDetail' },
+  { icon: ShieldCheck, titleKey: 'wakeUp.securityTitle', detailKey: 'wakeUp.securityDetail' },
+  { icon: Plug, titleKey: 'wakeUp.externalTitle', detailKey: 'wakeUp.externalDetail' },
+  { icon: FlaskConical, titleKey: 'wakeUp.testingTitle', detailKey: 'wakeUp.testingDetail' },
+  { icon: Activity, titleKey: 'wakeUp.observabilityTitle', detailKey: 'wakeUp.observabilityDetail' },
+  { icon: Cloud, titleKey: 'wakeUp.cloudTitle', detailKey: 'wakeUp.cloudDetail' },
+] as const;
 
 const EXTERNAL_SYSTEMS = [
-  { name: 'Auth server', detail: 'Keycloak sign-in' },
-  { name: 'ERP', detail: 'products & prices' },
-  { name: 'Tax', detail: 'tax rates' },
-  { name: 'Clock', detail: 'current time' },
-];
+  { nameKey: 'wakeUp.extAuth', detailKey: 'wakeUp.extAuthDetail' },
+  { nameKey: 'wakeUp.extErp', detailKey: 'wakeUp.extErpDetail' },
+  { nameKey: 'wakeUp.extTax', detailKey: 'wakeUp.extTaxDetail' },
+  { nameKey: 'wakeUp.extClock', detailKey: 'wakeUp.extClockDetail' },
+] as const;
 
-const PIPELINE_STAGES = ['Commit', 'Acceptance', 'QA', 'QA sign-off', 'Production'];
+const PIPELINE_STAGES = [
+  'wakeUp.stageCommit',
+  'wakeUp.stageAcceptance',
+  'wakeUp.stageQa',
+  'wakeUp.stageQaSignOff',
+  'wakeUp.stageProduction',
+] as const;
 
 const TECH_STACK = [
   'TypeScript',
@@ -107,12 +81,12 @@ const TECH_STACK = [
 ];
 
 /**
- * The catalog's loading state. A fast load shows the usual spinner; a slow one (the demo deployment scales
- * to zero, so a first visit waits on a cold start) turns into a card that says so and shows how the shop is
- * built while the services wake up. It shows nothing it cannot observe: the backend and ERP stay "Waking up"
+ * The catalog's loading state, shown from the first moment: the demo deployment scales to zero, so a first
+ * visit waits on a cold start, and the card says so and shows how the shop is built while the services wake up. It shows nothing it cannot observe: the backend and ERP stay "Waking up"
  * until the catalog arrives (then the catalog replaces the card); the auth server is probed on its own.
  */
 export function DemoWakeUp() {
+  const { t } = useTranslation('catalog');
   const [elapsedMs, setElapsedMs] = useState(0);
   const authState = useAuthServerState();
 
@@ -122,26 +96,27 @@ export function DemoWakeUp() {
     return () => clearInterval(timer);
   }, []);
 
-  if (elapsedMs < WAKE_UP_DELAY_MS) return <LoadingSpinner message="Loading products..." />;
-
-  const services: { name: string; state: ServiceState }[] = CATALOG_SERVICES.map((name) => ({ name, state: 'waking' }));
-  if (authState) services.push({ name: AUTH_SERVICE, state: authState });
+  const services: { name: string; state: ServiceState }[] = [
+    { name: t('wakeUp.serviceBackend'), state: 'waking' },
+    { name: t('wakeUp.serviceErp'), state: 'waking' },
+  ];
+  if (authState) services.push({ name: t('wakeUp.serviceAuth'), state: authState });
 
   return (
-    <section className="wake-up" aria-label="Demo Site Wake Up">
+    <section className="wake-up" aria-label={t('wakeUp.aria')}>
       <div className="wake-up-head">
         <div className="spinner-border text-primary wake-up-spinner" aria-hidden="true" />
         <div>
-          <h2 className="wake-up-title">Waking up the demo shop…</h2>
+          <h2 className="wake-up-title">{t('wakeUp.title')}</h2>
           <p className="wake-up-sub" role="status">
-            Waiting for {Math.floor(elapsedMs / 1000)} s. The first visit can take up to a minute.
+            {t('wakeUp.waiting', { seconds: Math.floor(elapsedMs / 1000) })}
           </p>
         </div>
       </div>
 
-      <p className="wake-up-note" aria-label="Slow Loading Hint">
+      <p className="wake-up-note" aria-label={t('wakeUp.noteAria')}>
         <Info size={20} aria-hidden="true" className="wake-up-note-icon" />
-        <span>{DEMO_SITE_NOTE}</span>
+        <span>{t('wakeUp.note')}</span>
       </p>
 
       <ul className="wake-up-services">
@@ -151,65 +126,65 @@ export function DemoWakeUp() {
               {service.state === 'ready' && <Check size={14} strokeWidth={3} />}
             </span>
             <span>{service.name}</span>
-            <span className="wake-up-service-status">{STATUS_TEXT[service.state]}</span>
+            <span className="wake-up-service-status">{t(STATUS_KEY[service.state])}</span>
           </li>
         ))}
       </ul>
       <div className="wake-up-track" aria-hidden="true">
         <div className="wake-up-bar" />
       </div>
-      <p className="wake-up-hint">The shop opens by itself when everything is ready.</p>
+      <p className="wake-up-hint">{t('wakeUp.hint')}</p>
 
       <hr className="wake-up-divider" />
 
       <div className="wake-up-behind">
-        <h3 className="wake-up-eyebrow">While you wait: what's behind this demo</h3>
+        <h3 className="wake-up-eyebrow">{t('wakeUp.behind')}</h3>
 
         <div>
-          <h4 className="wake-up-label">How it's built: Spec-Driven Development with AI</h4>
+          <h4 className="wake-up-label">{t('wakeUp.howBuilt')}</h4>
           <ol className="wake-up-steps">
             {SPEC_DRIVEN_STEPS.map((step) => (
-              <li key={step.title}>
-                <strong>{step.title}</strong>
-                {step.detail}
+              <li key={step.titleKey}>
+                <strong>{t(step.titleKey)}</strong>
+                {t(step.detailKey)}
               </li>
             ))}
           </ol>
         </div>
 
         <div>
-          <h4 className="wake-up-label">Technical highlights</h4>
+          <h4 className="wake-up-label">{t('wakeUp.highlights')}</h4>
           <ul className="wake-up-highlights">
-            {HIGHLIGHTS.map(({ icon: Icon, title, detail }) => (
-              <li key={title}>
+            {HIGHLIGHTS.map(({ icon: Icon, titleKey, detailKey }) => (
+              <li key={titleKey}>
                 <Icon size={20} aria-hidden="true" className="wake-up-highlight-icon" />
-                <strong>{title}</strong>
-                {detail}
+                <strong>{t(titleKey)}</strong>
+                {t(detailKey)}
               </li>
             ))}
           </ul>
         </div>
 
         <div>
-          <h4 className="wake-up-label">Architecture</h4>
+          <h4 className="wake-up-label">{t('wakeUp.architecture')}</h4>
           <div className="wake-up-arch">
             <div className="wake-up-box">
-              Frontend<small>React 19 + Vite</small>
+              {t('wakeUp.frontend')}<small>React 19 + Vite</small>
             </div>
             <div className="wake-up-arrow" aria-hidden="true" />
             <div className="wake-up-box wake-up-box-main">
-              Backend<small>Java, .NET or TypeScript</small>
+              {t('wakeUp.backend')}<small>{t('wakeUp.backendStack')}</small>
             </div>
             <div className="wake-up-arrow" aria-hidden="true" />
             <div className="wake-up-box">
-              Database<small>PostgreSQL</small>
+              {t('wakeUp.database')}<small>PostgreSQL</small>
             </div>
-            <p className="wake-up-ext-label">Sign-in goes to the auth server; the backend calls the ERP, Tax and Clock systems</p>
+            <p className="wake-up-ext-label">{t('wakeUp.externalLabel')}</p>
             <div className="wake-up-ext">
               {EXTERNAL_SYSTEMS.map((system) => (
-                <div key={system.name} className="wake-up-box">
-                  {system.name}
-                  <small>{system.detail}</small>
+                <div key={system.nameKey} className="wake-up-box">
+                  {t(system.nameKey)}
+                  <small>{t(system.detailKey)}</small>
                 </div>
               ))}
             </div>
@@ -217,26 +192,25 @@ export function DemoWakeUp() {
         </div>
 
         <div>
-          <h4 className="wake-up-label">Delivery pipeline</h4>
+          <h4 className="wake-up-label">{t('wakeUp.pipeline')}</h4>
           <ol className="wake-up-pipeline">
             {PIPELINE_STAGES.map((stage) => (
-              <li key={stage}>{stage}</li>
+              <li key={stage}>{t(stage)}</li>
             ))}
           </ol>
           <p className="wake-up-detail">
-            Every change goes through GitHub Actions: unit and component tests at commit, then acceptance, contract
-            and end-to-end tests against the deployed system before it reaches production.
+            {t('wakeUp.pipelineDetail')}
           </p>
         </div>
 
         <div>
-          <h4 className="wake-up-label">Tech stack</h4>
+          <h4 className="wake-up-label">{t('wakeUp.techStack')}</h4>
           <ul className="wake-up-chips">
             {TECH_STACK.map((tech) => (
               <li key={tech}>{tech}</li>
             ))}
           </ul>
-          <p className="wake-up-detail">The same shop is built three times: in Java, .NET and TypeScript.</p>
+          <p className="wake-up-detail">{t('wakeUp.techStackNote')}</p>
         </div>
       </div>
     </section>

@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { ShoppingCart, Trash2 } from 'lucide-react';
 import { CheckoutProgress, LoadingSpinner, ProductImage, QuantityStepper, StoreLayout } from '../components';
@@ -6,12 +7,11 @@ import { useCart } from '../contexts/useCart';
 import { useCatalog } from '../contexts/useCatalog';
 import { useNotificationContext } from '../contexts/useNotificationContext';
 import { priceCart } from '../features/cart/cart-lines';
-import { PRODUCTS_UNAVAILABLE } from '../utils/messages';
 import { formatCents, formatMoney } from '../utils/money';
-import { QUANTITY_ERROR } from '../utils/quantity';
 
 /** `/cart`: the cart lines at current catalog prices, with quantity changes, removal and the subtotal (UC-008). */
 export function Cart() {
+  const { t } = useTranslation('checkout');
   const cart = useCart();
   const { products, isLoading, error, reload } = useCatalog();
   const { setError, clearNotification } = useNotificationContext();
@@ -29,9 +29,9 @@ export function Cart() {
       return (
         <div className="market-empty text-center py-5 px-3">
           <ShoppingCart size={40} aria-hidden="true" className="mb-3 text-body-secondary" />
-          <p className="lead">Your cart is empty.</p>
+          <p className="lead">{t('cart.empty')}</p>
           <Link to="/" className="btn btn-primary">
-            Start shopping
+            {t('cart.startShopping')}
           </Link>
         </div>
       );
@@ -39,28 +39,28 @@ export function Cart() {
     if (error) {
       return (
         <div className="alert alert-danger" role="alert">
-          {PRODUCTS_UNAVAILABLE}
+          {t('cart.productsUnavailable')}
         </div>
       );
     }
-    if (isLoading && products.length === 0) return <LoadingSpinner message="Loading cart..." />;
+    if (isLoading && products.length === 0) return <LoadingSpinner message={t('cart.loading')} />;
     return (
       <div className="row g-4 align-items-start">
         <div className="col-lg-8">
           <div className="market-panel px-3 px-md-4 py-2">
-            <table className="table align-middle mb-0 cart-table" aria-label="Cart Lines">
+            <table className="table align-middle mb-0 cart-table" aria-label={t('cart.linesLabel')}>
               <thead>
                 <tr>
-                  <th scope="col">Product</th>
-                  <th scope="col">Quantity</th>
+                  <th scope="col">{t('cart.product')}</th>
+                  <th scope="col">{t('cart.quantity')}</th>
                   <th scope="col" className="text-end">
-                    Line total
+                    {t('cart.lineTotal')}
                   </th>
                 </tr>
               </thead>
               <tbody>
                 {lines.map((line) => (
-                  <tr key={line.sku} aria-label={`Cart Line ${line.sku}`}>
+                  <tr key={line.sku} aria-label={t('cart.lineLabel', { sku: line.sku })}>
                     <td className="cart-cell-product">
                       <div className="d-flex align-items-center gap-3">
                         <div className="cart-thumb">
@@ -83,27 +83,27 @@ export function Cart() {
                           <div className="cart-line-meta">
                             {line.product ? (
                               <>
-                                SKU {line.sku} ·{' '}
-                                <span className="price" aria-label={`Unit Price ${line.sku}`}>
+                                {t('cart.sku', { sku: line.sku })} ·{' '}
+                                <span className="price" aria-label={t('cart.unitPriceLabel', { sku: line.sku })}>
                                   {formatMoney(line.product.price)}
                                 </span>{' '}
-                                each
+                                {t('cart.each')}
                               </>
                             ) : (
                               <>
-                                <span className="text-danger">No longer available</span> ·{' '}
-                                <span aria-label={`Unit Price ${line.sku}`}>-</span>
+                                <span className="text-danger">{t('cart.noLongerAvailable')}</span> ·{' '}
+                                <span aria-label={t('cart.unitPriceLabel', { sku: line.sku })}>-</span>
                               </>
                             )}
                           </div>
                           <button
                             type="button"
                             className="btn btn-link cart-remove"
-                            aria-label={`Remove ${line.sku}`}
+                            aria-label={t('cart.removeLabel', { sku: line.sku })}
                             onClick={() => cart.remove(line.sku)}
                           >
                             <Trash2 size={14} aria-hidden="true" className="me-1" />
-                            Remove
+                            {t('cart.remove')}
                           </button>
                         </div>
                       </div>
@@ -115,13 +115,13 @@ export function Cart() {
                           clearNotification();
                           cart.setQuantity(line.sku, quantity);
                         }}
-                        onInvalid={() => setError({ message: QUANTITY_ERROR })}
-                        ariaLabel={`Quantity for ${line.sku}`}
-                        decreaseLabel={`Decrease Quantity for ${line.sku}`}
-                        increaseLabel={`Increase Quantity for ${line.sku}`}
+                        onInvalid={() => setError({ message: t('cart.quantityError') })}
+                        ariaLabel={t('cart.quantityFor', { sku: line.sku })}
+                        decreaseLabel={t('cart.decreaseQuantity', { sku: line.sku })}
+                        increaseLabel={t('cart.increaseQuantity', { sku: line.sku })}
                       />
                     </td>
-                    <td className="cart-cell-total text-end price" aria-label={`Line Total ${line.sku}`}>
+                    <td className="cart-cell-total text-end price" aria-label={t('cart.lineTotalLabel', { sku: line.sku })}>
                       {formatCents(line.lineTotalCents)}
                     </td>
                   </tr>
@@ -132,19 +132,19 @@ export function Cart() {
         </div>
         <div className="col-lg-4">
           <div className="market-panel p-4 d-flex flex-column gap-3">
-            <h2 className="h5 mb-0">Order summary</h2>
+            <h2 className="h5 mb-0">{t('cart.orderSummary')}</h2>
             <div className="d-flex justify-content-between cart-summary-row">
-              <span>Subtotal</span>
-              <span className="price fw-bold" aria-label="Cart Subtotal">
+              <span>{t('cart.subtotal')}</span>
+              <span className="price fw-bold" aria-label={t('cart.subtotalLabel')}>
                 {formatCents(subtotalCents)}
               </span>
             </div>
-            <p className="text-body-secondary small mb-0">Tax and discounts are calculated at checkout.</p>
-            <Link to="/checkout" className="btn btn-cta btn-lg w-100" aria-label="Proceed to Checkout">
-              Proceed to checkout
+            <p className="text-body-secondary small mb-0">{t('cart.taxNote')}</p>
+            <Link to="/checkout" className="btn btn-cta btn-lg w-100" aria-label={t('cart.proceedLabel')}>
+              {t('cart.proceed')}
             </Link>
             <Link to="/" className="cart-continue">
-              Continue shopping
+              {t('cart.continueShopping')}
             </Link>
           </div>
         </div>
@@ -153,13 +153,13 @@ export function Cart() {
   };
 
   return (
-    <StoreLayout title="Cart" breadcrumbs={[{ label: 'Home', path: '/' }, { label: 'Cart' }]}>
+    <StoreLayout title={t('nav.cart')} breadcrumbs={[{ label: t('nav.home'), path: '/' }, { label: t('nav.cart') }]}>
       {itemCount > 0 && <CheckoutProgress current="Cart" />}
       <h1 className="h2 mb-4">
-        Shopping cart{' '}
+        {t('cart.heading')}{' '}
         {itemCount > 0 && (
-          <span className="cart-line-count" aria-label="Cart Line Count">
-            ({itemCount} {itemCount === 1 ? 'item' : 'items'})
+          <span className="cart-line-count" aria-label={t('cart.lineCountLabel')}>
+            ({t('cart.itemCount', { count: itemCount })})
           </span>
         )}
       </h1>

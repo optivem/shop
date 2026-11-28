@@ -1,0 +1,101 @@
+import type { Messages } from '../../messages';
+import type { common as en } from '../en/common';
+
+export const common: Messages<typeof en> = {
+  header: {
+    freeShipping: 'Livraison gratuite dès 1 000 $',
+    returns: 'Retours sous 30 jours',
+    demoStore: 'Boutique de démonstration',
+    language: 'Langue',
+    searchCategory: 'Catégorie de recherche',
+    allCategories: 'Toutes',
+    searchPlaceholder: 'Que recherchez-vous ?',
+    searchProducts: 'Rechercher des produits',
+    search: 'Rechercher',
+    hello: 'Bonjour',
+    signIn: 'Se connecter',
+    newCustomer: 'Nouveau client ?',
+    signUp: 'Créer un compte',
+    cartItemCount: "Nombre d'articles dans le panier",
+    cart: 'Panier',
+    storeNavigation: 'Navigation de la boutique',
+    allProducts: 'Tous les produits',
+    quickOrder: 'Commande rapide',
+    allOrders: 'Toutes les commandes',
+    myOrders: 'Mes commandes',
+    admin: 'Administration',
+  },
+  auth: {
+    signInFailed: 'Échec de la connexion : {{message}}',
+    tryAgain: 'Réessayer',
+    redirectingToSignIn: 'Redirection vers la connexion...',
+    redirectingToSignUp: "Redirection vers l'inscription...",
+    signInHint: 'Vous allez accéder à notre page de connexion sécurisée, puis revenir directement ici.',
+    notAuthorized: 'Accès non autorisé',
+    noPermission: "Vous n'avez pas l'autorisation d'afficher cette page.",
+    adminsCannotOrder: 'Les administrateurs ne peuvent pas passer de commande.',
+  },
+  accountNav: {
+    admin: 'Administration',
+    myAccount: 'Mon compte',
+    allOrders: 'Toutes les commandes',
+    coupons: 'Codes promo',
+    myOrders: 'Mes commandes',
+    profileAddress: 'Profil et adresse',
+    quickOrder: 'Commande rapide',
+  },
+  categoryMenu: {
+    categories: 'Catégories',
+    allProducts: 'Tous les produits',
+  },
+  checkoutProgress: {
+    label: 'Progression de la commande',
+    cart: 'Panier',
+    checkout: 'Paiement',
+    confirmation: 'Confirmation',
+  },
+  breadcrumb: {
+    label: "fil d'Ariane",
+  },
+  states: {
+    loading: 'Chargement...',
+    noData: 'Aucune donnée disponible',
+    error: 'Erreur :',
+    tryAgain: 'Réessayer',
+    slowLoadingHintLabel: 'Information sur le chargement lent',
+  },
+  errorBoundary: {
+    title: "Une erreur s'est produite",
+    body: "Nous sommes désolés, un problème inattendu s'est produit. L'erreur a été enregistrée.",
+    details: "Détails de l'erreur :",
+    tryAgain: 'Réessayer',
+    goHome: "Retour à l'accueil",
+  },
+  footer: {
+    shop: 'Boutique',
+    allProducts: 'Tous les produits',
+    help: 'Aide',
+    shipping: 'Livraison',
+    returns: 'Retours',
+    contact: 'Contact',
+    tagline: '© MyShop · boutique de démonstration du cours Optivem ATDD',
+    photosBy: 'Photos sur Unsplash par',
+  },
+  userMenu: {
+    hello: 'Bonjour',
+    myAccount: 'Mon compte',
+    logout: 'Déconnexion',
+  },
+  wishlist: {
+    save: 'Ajouter {{title}} à la liste de souhaits',
+  },
+  messages: {
+    slowLoadingHint:
+      "Ceci est un site de démonstration : ses serveurs se mettent en veille en cas d'inactivité, le premier chargement peut donc prendre jusqu'à une minute, le temps de les réveiller.",
+  },
+  errors: {
+    network: 'Erreur réseau : {{message}}',
+    unexpectedResponse: 'Réponse inattendue du serveur. (Statut : {{status}})',
+    unexpected: "Une erreur inattendue s'est produite. (Statut : {{status}})",
+  },
+};

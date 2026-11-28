@@ -1,10 +1,12 @@
 import type { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ShieldAlert } from 'lucide-react';
 import { Layout } from '../components';
 import { useRoles } from './useRoles';
 
 /** Renders children only for admins; everyone else sees a "Not authorized" page. */
 export function RequireAdmin({ children }: Readonly<{ children: ReactNode }>) {
+  const { t } = useTranslation();
   const { isAdmin } = useRoles();
   if (isAdmin) return <>{children}</>;
   return (
@@ -12,8 +14,8 @@ export function RequireAdmin({ children }: Readonly<{ children: ReactNode }>) {
       <div className="alert alert-danger not-authorized" role="alert">
         <ShieldAlert className="not-authorized-icon" size={28} aria-hidden="true" />
         <div>
-          <h1 className="not-authorized-title">Not authorized</h1>
-          <p className="mb-0">You do not have permission to view this page.</p>
+          <h1 className="not-authorized-title">{t('auth.notAuthorized')}</h1>
+          <p className="mb-0">{t('auth.noPermission')}</p>
         </div>
       </div>
     </Layout>

@@ -1,6 +1,7 @@
 // The home page above the full catalog (Retail look): deal hero, service tiles, round-photo category
 // shortcuts, and the Bestsellers / New arrivals rows. Shown only on the unfiltered catalog.
 
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { ProductImage } from '../../components/ProductImage';
@@ -31,6 +32,7 @@ interface HomeSectionsProps {
 }
 
 export function HomeSections({ products, onAddToCart }: Readonly<HomeSectionsProps>) {
+  const { t } = useTranslation('catalog');
   const featured = products.find((product) => product.sku === FEATURED_SKU);
   const bestsellers = pick(products, BESTSELLER_SKUS);
   const newArrivals = pick(products, NEW_ARRIVAL_SKUS);
@@ -39,24 +41,24 @@ export function HomeSections({ products, onAddToCart }: Readonly<HomeSectionsPro
 
   return (
     <div className="home-sections">
-      <section className="deal-hero" aria-label="Promotion">
+      <section className="deal-hero" aria-label={t('home.promotionAria')}>
         <div className="deal-hero-copy">
-          <span className="badge badge-deal">Featured</span>
-          <h1 className="deal-hero-title">A 4K workspace, sorted.</h1>
+          <span className="badge badge-deal">{t('home.featured')}</span>
+          <h1 className="deal-hero-title">{t('home.heroTitle')}</h1>
           {featured ? (
             <p className="deal-hero-lead">
-              {featured.title}: {featured.description || featured.category}.{' '}
+              {t('home.heroLead', { title: featured.title, detail: featured.description || featured.category })}{' '}
               <strong className="deal-hero-price price">{formatMoney(featured.price)}</strong>
             </p>
           ) : (
-            <p className="deal-hero-lead">Sharp monitors for a cleaner desk.</p>
+            <p className="deal-hero-lead">{t('home.heroLeadFallback')}</p>
           )}
           <Link to={featured ? productPath(featured.sku) : '/?category=Monitors'} className="btn deal-hero-cta">
-            {featured ? 'See the monitor' : 'Shop monitors'}
+            {featured ? t('home.seeMonitor') : t('home.shopMonitors')}
           </Link>
         </div>
         <div className="deal-hero-media">
-          <img className="deal-hero-photo" src="/images/promo/monitor.jpg" alt="A 27-inch monitor on a tidy desk" />
+          <img className="deal-hero-photo" src="/images/promo/monitor.jpg" alt={t('home.heroPhotoAlt')} />
         </div>
       </section>
 
@@ -65,7 +67,7 @@ export function HomeSections({ products, onAddToCart }: Readonly<HomeSectionsPro
       {categories.length > 0 && (
         <section className="home-section" aria-labelledby="home-categories-heading">
           <h2 className="home-section-title" id="home-categories-heading">
-            Shop by category
+            {t('home.shopByCategory')}
           </h2>
           <ul className="category-shortcuts">
             {categories.map((category) => {
@@ -91,10 +93,10 @@ export function HomeSections({ products, onAddToCart }: Readonly<HomeSectionsPro
         <section className="home-section" aria-labelledby="home-bestsellers-heading">
           <div className="home-section-head">
             <h2 className="home-section-title" id="home-bestsellers-heading">
-              Bestsellers
+              {t('home.bestsellers')}
             </h2>
             <a href="#catalog" className="home-section-link">
-              See all products <ArrowRight size={16} aria-hidden="true" />
+              {t('home.seeAllProducts')} <ArrowRight size={16} aria-hidden="true" />
             </a>
           </div>
           <div className="product-row">
@@ -108,7 +110,7 @@ export function HomeSections({ products, onAddToCart }: Readonly<HomeSectionsPro
       {newArrivals.length > 0 && (
         <section className="home-section" aria-labelledby="home-new-heading">
           <h2 className="home-section-title" id="home-new-heading">
-            New arrivals
+            {t('home.newArrivals')}
           </h2>
           <ul className="compact-products">
             {newArrivals.map((product) => (
@@ -118,7 +120,7 @@ export function HomeSections({ products, onAddToCart }: Readonly<HomeSectionsPro
                     <ProductImage imageUrl={product.imageUrl} alt="" shape="square" lazy />
                   </span>
                   <span className="compact-product-text">
-                    <span className="compact-product-tag">New</span>
+                    <span className="compact-product-tag">{t('home.newTag')}</span>
                     <span className="compact-product-title">{product.title}</span>
                     <span className="compact-product-price price">{formatMoney(product.price)}</span>
                   </span>

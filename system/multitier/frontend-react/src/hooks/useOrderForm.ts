@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { i18n } from '../i18n';
 import { orderService } from '../services/order-service';
 import { validateOrderForm } from '../features/orders/order-validation';
 import type { OrderFormData } from '../types/form.types';
@@ -29,7 +30,7 @@ export function useOrderForm(initialCountry = DEFAULT_COUNTRY) {
     const validationErrors = validateOrderForm(formData);
     if (validationErrors.length > 0) {
       const apiError = {
-        message: 'The request contains one or more validation errors',
+        message: i18n.t('checkout:validation.requestInvalid'),
         fieldErrors: validationErrors.map(e => `${e.field}: ${e.message}`)
       };
       return {

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useRoles } from '../auth/useRoles';
 import { Layout } from '../components';
 import { OrderHistoryTable } from '../features/orders';
@@ -8,6 +9,7 @@ import { useOrders } from '../hooks';
  * Filters by order number; an admin can also filter by the customer who placed the order.
  */
 export function OrderHistory() {
+  const { t } = useTranslation('account');
   const { isAdmin } = useRoles();
   const { orders, filter, setFilter, customer, setCustomer, customers, isLoading, error, refresh } = useOrders('', {
     loadCustomers: isAdmin,
@@ -15,8 +17,11 @@ export function OrderHistory() {
 
   return (
     <Layout
-      title={isAdmin ? 'All orders' : 'My orders'}
-      breadcrumbs={[{ label: 'Home', path: '/' }, ...(isAdmin ? [{ label: 'Admin' }, { label: 'All orders' }] : [{ label: 'My orders' }])]}
+      title={isAdmin ? t('breadcrumbs.allOrders') : t('breadcrumbs.myOrders')}
+      breadcrumbs={[
+        { label: t('breadcrumbs.home'), path: '/' },
+        ...(isAdmin ? [{ label: t('breadcrumbs.admin') }, { label: t('breadcrumbs.allOrders') }] : [{ label: t('breadcrumbs.myOrders') }]),
+      ]}
     >
       <OrderHistoryTable
         orders={orders}

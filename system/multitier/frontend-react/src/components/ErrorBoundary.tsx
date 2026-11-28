@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
+import { i18n } from '../i18n';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -55,15 +56,15 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
         <div className="container mt-5">
           <div className="card shadow">
             <div className="card-header bg-danger text-white">
-              <h4 className="mb-0">Something went wrong</h4>
+              <h4 className="mb-0">{i18n.t('errorBoundary.title')}</h4>
             </div>
             <div className="card-body">
               <p className="mb-3">
-                We're sorry, but something unexpected happened. The error has been logged.
+                {i18n.t('errorBoundary.body')}
               </p>
               {this.state.error && (
                 <div className="alert alert-secondary">
-                  <strong>Error Details:</strong>
+                  <strong>{i18n.t('errorBoundary.details')}</strong>
                   <pre className="mb-0 mt-2" style={{ fontSize: '0.875rem' }}>
                     {this.state.error.message}
                   </pre>
@@ -74,13 +75,13 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                   className="btn btn-primary"
                   onClick={this.handleReset}
                 >
-                  Try Again
+                  {i18n.t('errorBoundary.tryAgain')}
                 </button>
                 <button
                   className="btn btn-secondary"
                   onClick={() => globalThis.location.href = '/'}
                 >
-                  Go to Home
+                  {i18n.t('errorBoundary.goHome')}
                 </button>
               </div>
             </div>

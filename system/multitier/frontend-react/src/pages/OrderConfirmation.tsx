@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Link, useLocation } from 'react-router-dom';
 import { CircleCheck, PackageSearch, TriangleAlert } from 'lucide-react';
 import { CheckoutProgress, ProductImage, StoreLayout } from '../components';
@@ -6,6 +7,7 @@ import { loadConfirmation } from '../features/checkout/confirmation-store';
 
 /** `/checkout/confirmation`: the orders just placed (and, after a partial failure, the rejected lines). */
 export function OrderConfirmation() {
+  const { t } = useTranslation('checkout');
   const location = useLocation();
   const result = loadConfirmation(location.state);
   const { products } = useCatalog();
@@ -15,7 +17,10 @@ export function OrderConfirmation() {
   const rejectedCount = result?.rejected.length ?? 0;
 
   return (
-    <StoreLayout title="Order confirmation" breadcrumbs={[{ label: 'Home', path: '/' }, { label: 'Order confirmation' }]}>
+    <StoreLayout
+      title={t('nav.orderConfirmation')}
+      breadcrumbs={[{ label: t('nav.home'), path: '/' }, { label: t('nav.orderConfirmation') }]}
+    >
       <div className="order-confirmation">
         {result && placedCount > 0 ? (
           <>
@@ -24,16 +29,16 @@ export function OrderConfirmation() {
               <div className="order-confirmation-icon" aria-hidden="true">
                 <CircleCheck size={32} />
               </div>
-              <h1 className="h2 mb-1">Thank you for your order!</h1>
+              <h1 className="h2 mb-1">{t('confirmation.thanks')}</h1>
               <p className="text-body-secondary mb-0">
-                {placedCount === 1 ? 'Your order has been placed:' : `Your ${placedCount} orders have been placed:`}
+                {t('confirmation.placed', { count: placedCount })}
               </p>
             </section>
             <section className="market-panel p-4" aria-labelledby="confirmed-orders-heading">
               <h2 className="h6 fw-bold mb-3" id="confirmed-orders-heading">
-                Confirmed orders
+                {t('confirmation.confirmedOrders')}
               </h2>
-              <ul className="confirmed-orders" aria-label="Confirmed Orders">
+              <ul className="confirmed-orders" aria-label={t('confirmation.confirmedOrdersLabel')}>
                 {result.placed.map((line) => (
                   <li key={line.orderNumber} className="confirmed-order">
                     <div className="confirmed-order-thumb">
@@ -43,7 +48,7 @@ export function OrderConfirmation() {
                       <Link
                         to={`/order-details/${encodeURIComponent(line.orderNumber)}`}
                         className="order-number-link"
-                        aria-label={`Confirmed Order ${line.orderNumber}`}
+                        aria-label={t('confirmation.confirmedOrderLabel', { orderNumber: line.orderNumber })}
                       >
                         {line.orderNumber}
                       </Link>
@@ -61,21 +66,21 @@ export function OrderConfirmation() {
         ) : (
           <section className="market-empty text-center py-5 px-3">
             <PackageSearch size={40} aria-hidden="true" className="mb-3 text-body-secondary" />
-            <h1 className="h3">No recent order</h1>
-            <p className="mb-0">Orders you place at checkout show up here right after.</p>
+            <h1 className="h3">{t('confirmation.noRecent')}</h1>
+            <p className="mb-0">{t('confirmation.noRecentHint')}</p>
           </section>
         )}
         {result && rejectedCount > 0 && (
-          <div className="alert alert-warning order-rejected mb-0" aria-label="Rejected Lines">
+          <div className="alert alert-warning order-rejected mb-0" aria-label={t('confirmation.rejectedLabel')}>
             <h2 className="h6 fw-bold d-flex align-items-center gap-2 mb-2">
               <TriangleAlert size={18} aria-hidden="true" />
-              {rejectedCount === 1 ? '1 item could not be ordered' : `${rejectedCount} items could not be ordered`}
+              {t('confirmation.rejectedHeading', { count: rejectedCount })}
             </h2>
-            <p className="mb-2">These items were not ordered and are still in your cart:</p>
+            <p className="mb-2">{t('confirmation.rejectedIntro')}</p>
             <ul className="mb-0">
               {result.rejected.map((line) => (
-                <li key={line.sku} aria-label={`Rejected Line ${line.sku}`}>
-                  <strong>{line.sku}</strong>: <span aria-label={`Rejection Reason ${line.sku}`}>{line.reason}</span>
+                <li key={line.sku} aria-label={t('confirmation.rejectedLineLabel', { sku: line.sku })}>
+                  <strong>{line.sku}</strong>: <span aria-label={t('confirmation.rejectionReasonLabel', { sku: line.sku })}>{line.reason}</span>
                 </li>
               ))}
             </ul>
@@ -83,10 +88,10 @@ export function OrderConfirmation() {
         )}
         <div className="order-confirmation-actions">
           <Link to="/order-history" className="btn btn-primary btn-lg">
-            View my orders
+            {t('confirmation.viewOrders')}
           </Link>
           <Link to="/" className="btn btn-outline-secondary btn-lg">
-            Continue shopping
+            {t('confirmation.continueShopping')}
           </Link>
         </div>
       </div>

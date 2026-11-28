@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useEffect, useId, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
@@ -14,6 +15,7 @@ interface CategoryMenuProps {
  * row's category links (a UI-driver hook) stay the only ones there.
  */
 export function CategoryMenu({ products }: Readonly<CategoryMenuProps>) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const panelId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
@@ -48,14 +50,14 @@ export function CategoryMenu({ products }: Readonly<CategoryMenuProps>) {
         onClick={() => setOpen((value) => !value)}
       >
         {open ? <X size={20} aria-hidden="true" /> : <Menu size={20} aria-hidden="true" />}
-        <span className="category-menu-label">Categories</span>
+        <span className="category-menu-label">{t('categoryMenu.categories')}</span>
       </button>
       <div id={panelId} className="category-menu-panel" hidden={!open}>
         <ul className="list-unstyled mb-0">
           <li>
             <Link to="/" className="category-menu-link" onClick={close}>
               <span className="category-menu-photo category-menu-photo-all" aria-hidden="true" />
-              All products
+              {t('categoryMenu.allProducts')}
             </Link>
           </li>
           {categories.map((category) => {

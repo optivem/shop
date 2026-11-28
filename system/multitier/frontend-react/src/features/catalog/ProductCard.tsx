@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { ProductImage } from '../../components/ProductImage';
 import { WishlistButton } from '../../components/WishlistButton';
@@ -16,9 +17,10 @@ interface ProductCardProps {
 
 /** One catalog tile: photo and title link to the product page; brand, description and price come from the catalog; "Add to cart" adds quantity 1. */
 export function ProductCard({ product, onAddToCart, testHooks = true }: Readonly<ProductCardProps>) {
+  const { t } = useTranslation('catalog');
   const productPath = `/products/${encodeURIComponent(product.sku)}`;
   return (
-    <article className="product-card" aria-label={testHooks ? `Product ${product.sku}` : product.title}>
+    <article className="product-card" aria-label={testHooks ? t('productCard.productAria', { sku: product.sku }) : product.title}>
       <div className="product-card-media">
         <Link to={productPath} tabIndex={-1} aria-hidden="true">
           <ProductImage imageUrl={product.imageUrl} alt={product.title} lazy />
@@ -26,7 +28,7 @@ export function ProductCard({ product, onAddToCart, testHooks = true }: Readonly
         <WishlistButton title={product.title} className="product-card-wishlist" />
       </div>
       <div className="product-card-body">
-        <div className="product-card-brand" aria-label={testHooks ? 'Product Brand' : undefined}>
+        <div className="product-card-brand" aria-label={testHooks ? t('productCard.brandAria') : undefined}>
           {product.brand}
         </div>
         <h3 className="product-card-title">
@@ -35,17 +37,17 @@ export function ProductCard({ product, onAddToCart, testHooks = true }: Readonly
           </Link>
         </h3>
         {product.description && <p className="product-card-spec">{product.description}</p>}
-        <div className="price product-card-price" aria-label={testHooks ? 'Display Price' : undefined}>
+        <div className="price product-card-price" aria-label={testHooks ? t('productCard.priceAria') : undefined}>
           {formatMoney(product.price)}
         </div>
         <button
           type="button"
           className="btn btn-cta w-100 mt-auto"
           data-testid={testHooks ? `add-to-cart-${product.sku}` : undefined}
-          aria-label={testHooks ? undefined : `Add ${product.title} to cart`}
+          aria-label={testHooks ? undefined : t('productCard.addToCartAria', { title: product.title })}
           onClick={() => onAddToCart(product.sku)}
         >
-          Add to cart
+          {t('productCard.addToCart')}
         </button>
       </div>
     </article>

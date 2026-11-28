@@ -1,4 +1,5 @@
 import { useState, type FormEvent, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { SubmitButton } from '../../components/SubmitButton';
 
 export interface CouponFormData {
@@ -17,6 +18,7 @@ export interface CouponFormProps {
 }
 
 export function CouponForm({ onSubmit, isSubmitting, generateCouponCode }: Readonly<CouponFormProps>) {
+  const { t } = useTranslation('account');
   const getDefaultFormData = useCallback((): CouponFormData => ({
     code: generateCouponCode(),
     discountRate: '0.2',
@@ -39,84 +41,84 @@ export function CouponForm({ onSubmit, isSubmitting, generateCouponCode }: Reado
     <section className="market-panel coupon-panel coupon-form-panel mb-4" aria-labelledby="coupon-form-heading">
       <div className="coupon-panel-header">
         <div>
-          <h2 id="coupon-form-heading" className="coupon-panel-title">Create New Coupon</h2>
-          <p className="coupon-panel-subtitle">Customers enter the code at checkout to get the discount.</p>
+          <h2 id="coupon-form-heading" className="coupon-panel-title">{t('couponForm.heading')}</h2>
+          <p className="coupon-panel-subtitle">{t('couponForm.subtitle')}</p>
         </div>
       </div>
       <div className="coupon-panel-body">
         <form className="coupon-form" onSubmit={(e) => { void handleSubmit(e); }}>
           <div className="row g-3 mb-3">
             <div className="col-md-6">
-              <label htmlFor="code" className="form-label market-label">Coupon Code:</label>
+              <label htmlFor="code" className="form-label market-label">{t('couponForm.codeLabel')}</label>
               <input
                 type="text"
                 className="form-control coupon-code-input"
                 id="code"
-                aria-label="Coupon Code"
+                aria-label={t('couponForm.codeAria')}
                 value={formData.code}
                 onChange={(e) => setFormData((prev) => ({ ...prev, code: e.target.value }))}
-                placeholder="e.g., SUMMER2026"
+                placeholder={t('couponForm.codePlaceholder')}
               />
             </div>
             <div className="col-md-6">
-              <label htmlFor="discountRate" className="form-label market-label">Discount Rate (0-1):</label>
+              <label htmlFor="discountRate" className="form-label market-label">{t('couponForm.rateLabel')}</label>
               <input
                 type="number"
                 className="form-control"
                 id="discountRate"
-                aria-label="Discount Rate"
+                aria-label={t('couponForm.rateAria')}
                 value={formData.discountRate}
                 onChange={(e) => setFormData((prev) => ({ ...prev, discountRate: e.target.value }))}
                 step="0.01"
-                placeholder="e.g., 0.2 for 20% off"
+                placeholder={t('couponForm.ratePlaceholder')}
               />
             </div>
           </div>
           <div className="row g-3 mb-3">
             <div className="col-md-6">
-              <label htmlFor="validFrom" className="form-label market-label">Valid From (Optional):</label>
+              <label htmlFor="validFrom" className="form-label market-label">{t('couponForm.validFromLabel')}</label>
               <input
                 type="datetime-local"
                 className="form-control"
                 id="validFrom"
-                aria-label="Valid From"
+                aria-label={t('couponForm.validFromAria')}
                 value={formData.validFrom}
                 onChange={(e) => setFormData((prev) => ({ ...prev, validFrom: e.target.value }))}
               />
-              <small className="form-text text-muted">Leave empty for immediate validity</small>
+              <small className="form-text text-muted">{t('couponForm.validFromHint')}</small>
             </div>
             <div className="col-md-6">
-              <label htmlFor="validTo" className="form-label market-label">Valid To (Optional):</label>
+              <label htmlFor="validTo" className="form-label market-label">{t('couponForm.validToLabel')}</label>
               <input
                 type="datetime-local"
                 className="form-control"
                 id="validTo"
-                aria-label="Valid To"
+                aria-label={t('couponForm.validToAria')}
                 value={formData.validTo}
                 onChange={(e) => setFormData((prev) => ({ ...prev, validTo: e.target.value }))}
               />
-              <small className="form-text text-muted">Leave empty for no expiration</small>
+              <small className="form-text text-muted">{t('couponForm.validToHint')}</small>
             </div>
           </div>
           <div className="row g-3">
             <div className="col-md-6">
-              <label htmlFor="usageLimit" className="form-label market-label">Usage Limit (Optional):</label>
+              <label htmlFor="usageLimit" className="form-label market-label">{t('couponForm.usageLabel')}</label>
               <input
                 type="number"
                 className="form-control"
                 id="usageLimit"
-                aria-label="Usage Limit"
+                aria-label={t('couponForm.usageAria')}
                 value={formData.usageLimit}
                 onChange={(e) => setFormData((prev) => ({ ...prev, usageLimit: e.target.value }))}
-                placeholder="Leave empty for unlimited"
+                placeholder={t('couponForm.usagePlaceholder')}
               />
             </div>
             <div className="col-md-6 d-flex align-items-end">
               <SubmitButton
                 isSubmitting={isSubmitting}
-                text="Create Coupon"
-                loadingText="Creating..."
-                ariaLabel="Create Coupon"
+                text={t('couponForm.create')}
+                loadingText={t('couponForm.creating')}
+                ariaLabel={t('couponForm.create')}
                 className="btn btn-primary w-100 coupon-submit"
               />
             </div>

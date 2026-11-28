@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { SlidersHorizontal } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { StoreLayout } from '../components';
@@ -19,10 +20,10 @@ import {
   type CatalogQuery,
   type SortOrder,
 } from '../features/catalog/catalog-query';
-import { ADDED_TO_CART, PRODUCTS_UNAVAILABLE } from '../utils/messages';
 
 /** The home page: browse, search, filter and sort the catalog (UC-006); add a product with quantity 1. */
 export function Catalog() {
+  const { t } = useTranslation('catalog');
   const { products, isLoading, error } = useCatalog();
   const { add } = useCart();
   const { setSuccess } = useNotificationContext();
@@ -35,34 +36,43 @@ export function Catalog() {
   const setQuery = (next: CatalogQuery) => setSearchParams(toSearchParams(next));
   // The home sections (hero, shortcuts, rows) only show on the plain catalog; a search or filter goes straight to results.
   const isHome = query.q.trim() === '' && query.category === '' && query.brands.length === 0;
-  const heading = query.category || (query.q.trim() ? 'Search results' : 'All products');
+  const heading = query.category || (query.q.trim() ? t('page.searchResults') : t('page.allProducts'));
 
   const addToCart = (sku: string) => {
     add(sku, 1);
-    setSuccess(ADDED_TO_CART);
+    setSuccess(t('page.addedToCart'));
   };
 
+  // The first load (a cold start on the demo deployment) gets the page below the header to itself: an empty
+  // sidebar and "0 products" around the wake-up card would only make the shop look broken.
+  if (isLoading && products.length === 0) {
+    return (
+      <StoreLayout>
+        <DemoWakeUp />
+      </StoreLayout>
+    );
+  }
+
   const renderResults = () => {
-    if (isLoading && products.length === 0) return <DemoWakeUp />;
     if (error) {
       return (
         <div className="alert alert-danger" role="alert">
-          {PRODUCTS_UNAVAILABLE}
+          {t('page.productsUnavailable')}
         </div>
       );
     }
     if (shown.length === 0) {
       return (
         <div className="market-empty text-center py-5 px-3">
-          <p className="lead">No products match your search.</p>
-          <Link to="/" className="btn btn-outline-primary" aria-label="Clear Filters">
-            Clear filters
+          <p className="lead">{t('page.noMatch')}</p>
+          <Link to="/" className="btn btn-outline-primary" aria-label={t('page.clearFiltersAria')}>
+            {t('page.clearFilters')}
           </Link>
         </div>
       );
     }
     return (
-      <div className="product-grid" aria-label="Product List">
+      <div className="product-grid" aria-label={t('page.productListAria')}>
         {shown.map((product) => (
           <ProductCard key={product.sku} product={product} onAddToCart={addToCart} />
         ))}
@@ -91,7 +101,7 @@ export function Catalog() {
             onClick={() => setFiltersOpen((open) => !open)}
           >
             <SlidersHorizontal size={16} aria-hidden="true" className="me-2" />
-            Filters
+            {t('page.filters')}
           </button>
           <div className={filtersOpen ? 'mt-3 mt-lg-0' : 'd-none d-lg-block'}>
             <CatalogFilters
@@ -102,28 +112,28 @@ export function Catalog() {
             />
           </div>
         </aside>
-        <section className="catalog-results" aria-label="Catalog">
+        <section className="catalog-results" aria-label={t('page.catalogAria')}>
           <div className="catalog-toolbar">
             <p className="mb-0">
-              <strong aria-label="Product Count">
-                {error ? 0 : shown.length} {shown.length === 1 && !error ? 'product' : 'products'}
+              <strong aria-label={t('page.productCountAria')}>
+                {t('page.productCount', { count: error ? 0 : shown.length })}
               </strong>{' '}
-              <span className="text-body-secondary">in {query.category || 'All products'}</span>
+              <span className="text-body-secondary">{t('page.inCategory', { category: query.category || t('page.allProducts') })}</span>
             </p>
             <div className="d-flex align-items-center gap-2">
               <label htmlFor="catalog-sort" className="form-label mb-0 text-body-secondary">
-                Sort by
+                {t('page.sortBy')}
               </label>
               <select
                 id="catalog-sort"
                 className="form-select w-auto"
-                aria-label="Sort"
+                aria-label={t('page.sortAria')}
                 value={query.sort}
                 onChange={(e) => setQuery({ ...query, sort: e.target.value as SortOrder })}
               >
                 {SORT_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
-                    {option.label}
+                    {t(option.labelKey)}
                   </option>
                 ))}
               </select>

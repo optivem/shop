@@ -1,4 +1,5 @@
 import { type FormEvent, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { Layout } from '../components';
@@ -12,6 +13,7 @@ import { useOrderForm } from '../hooks';
  * @param initialCountry - The country the form starts with; defaults to US
  */
 export function NewOrder({ initialCountry }: Readonly<{ initialCountry?: string }> = {}) {
+  const { t } = useTranslation('checkout');
   const { setSuccess, handleResult } = useNotificationContext();
   const {
     formData,
@@ -23,12 +25,12 @@ export function NewOrder({ initialCountry }: Readonly<{ initialCountry?: string 
   const handleSubmit = useCallback(async (e: FormEvent) => {
     e.preventDefault();
     handleResult(await submitOrder(), (data) => {
-      setSuccess(`Success! Order has been created with Order Number ${data.orderNumber}`);
+      setSuccess(t('quickOrder.success', { orderNumber: data.orderNumber }));
     });
-  }, [submitOrder, handleResult, setSuccess]);
+  }, [submitOrder, handleResult, setSuccess, t]);
 
   return (
-    <Layout title="Quick order" breadcrumbs={[{ label: 'Home', path: '/' }, { label: 'Quick order' }]}>
+    <Layout title={t('nav.quickOrder')} breadcrumbs={[{ label: t('nav.home'), path: '/' }, { label: t('nav.quickOrder') }]}>
       <div className="row g-4 align-items-start">
         <div className="col-xl-8">
           <OrderForm
@@ -38,19 +40,19 @@ export function NewOrder({ initialCountry }: Readonly<{ initialCountry?: string 
             isSubmitting={isSubmitting}
           />
         </div>
-        <aside className="col-xl-4 d-flex flex-column gap-3" aria-label="Quick order help">
+        <aside className="col-xl-4 d-flex flex-column gap-3" aria-label={t('quickOrder.helpLabel')}>
           <div className="market-panel p-4">
-            <h2 className="h6 fw-bold mb-2">Tips</h2>
+            <h2 className="h6 fw-bold mb-2">{t('quickOrder.tips')}</h2>
             <ul className="quick-order-tips mb-0">
-              <li>The SKU is shown on every product page.</li>
-              <li>Country is a two-letter code, such as US, DE or GB.</li>
-              <li>Tax is calculated from the country.</li>
+              <li>{t('quickOrder.tipSku')}</li>
+              <li>{t('quickOrder.tipCountry')}</li>
+              <li>{t('quickOrder.tipTax')}</li>
             </ul>
           </div>
           <div className="quick-order-promo">
-            <p className="fw-bold mb-1">Ordering several items?</p>
+            <p className="fw-bold mb-1">{t('quickOrder.severalItems')}</p>
             <Link to="/" className="quick-order-promo-link">
-              Browse the catalog and use the cart
+              {t('quickOrder.browseCatalog')}
               <ArrowRight size={16} aria-hidden="true" />
             </Link>
           </div>

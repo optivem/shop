@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { LoadingSpinner } from './LoadingSpinner';
 import { ErrorMessage } from './ErrorMessage';
 
@@ -25,8 +26,9 @@ export function DataState({
   onRetry,
   children,
 }: Readonly<DataStateProps>) {
+  const { t } = useTranslation();
   if (isLoading) {
-    return <LoadingSpinner message={loadingMessage} />;
+    return <LoadingSpinner message={loadingMessage ?? t('states.loading')} />;
   }
 
   if (error) {
@@ -36,7 +38,7 @@ export function DataState({
   if (isEmpty) {
     return (
       <div className="market-empty text-center py-5 px-3">
-        <p className="mb-0">{emptyMessage}</p>
+        <p className="mb-0">{emptyMessage ?? t('states.noData')}</p>
       </div>
     );
   }

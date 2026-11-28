@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { i18n } from '../i18n';
 import { browseCoupons, createCoupon } from '../services/coupon-service';
 import type { BrowseCouponsItemResponse } from '../types/api.types';
 import type { CouponFormData } from '../features/coupons';
@@ -20,7 +21,7 @@ export function useCoupons() {
         setCoupons(result.data.coupons);
         setError(null);
       } else {
-        setError('Failed to load coupons');
+        setError(i18n.t('account:hooks.couponsLoadFailed'));
       }
       setLoadedReloadCount(reloadCount);
     });

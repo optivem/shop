@@ -1,0 +1,101 @@
+import type { Messages } from '../../messages';
+import type { common as en } from '../en/common';
+
+export const common: Messages<typeof en> = {
+  header: {
+    freeShipping: 'Бесплатна достава преко 1.000 $',
+    returns: 'Повраћај у року од 30 дана',
+    demoStore: 'Демо продавница',
+    language: 'Језик',
+    searchCategory: 'Категорија претраге',
+    allCategories: 'Све',
+    searchPlaceholder: 'Шта тражите?',
+    searchProducts: 'Претрага производа',
+    search: 'Претражи',
+    hello: 'Здраво',
+    signIn: 'Пријавите се',
+    newCustomer: 'Нови купац?',
+    signUp: 'Региструјте се',
+    cartItemCount: 'Број артикала у корпи',
+    cart: 'Корпа',
+    storeNavigation: 'Навигација продавнице',
+    allProducts: 'Сви производи',
+    quickOrder: 'Брза поруџбина',
+    allOrders: 'Све поруџбине',
+    myOrders: 'Моје поруџбине',
+    admin: 'Администрација',
+  },
+  auth: {
+    signInFailed: 'Пријава није успела: {{message}}',
+    tryAgain: 'Покушајте поново',
+    redirectingToSignIn: 'Преусмеравање на пријаву...',
+    redirectingToSignUp: 'Преусмеравање на регистрацију...',
+    signInHint: 'Наставићете на нашу безбедну страницу за пријаву, а затим ћете се одмах вратити овде.',
+    notAuthorized: 'Немате овлашћење',
+    noPermission: 'Немате дозволу за приступ овој страници.',
+    adminsCannotOrder: 'Администратори не могу да наручују.',
+  },
+  accountNav: {
+    admin: 'Администрација',
+    myAccount: 'Мој налог',
+    allOrders: 'Све поруџбине',
+    coupons: 'Купони',
+    myOrders: 'Моје поруџбине',
+    profileAddress: 'Профил и адреса',
+    quickOrder: 'Брза поруџбина',
+  },
+  categoryMenu: {
+    categories: 'Категорије',
+    allProducts: 'Сви производи',
+  },
+  checkoutProgress: {
+    label: 'Напредак куповине',
+    cart: 'Корпа',
+    checkout: 'Плаћање',
+    confirmation: 'Потврда',
+  },
+  breadcrumb: {
+    label: 'путања навигације',
+  },
+  states: {
+    loading: 'Учитавање...',
+    noData: 'Нема доступних података',
+    error: 'Грешка:',
+    tryAgain: 'Покушајте поново',
+    slowLoadingHintLabel: 'Напомена о спором учитавању',
+  },
+  errorBoundary: {
+    title: 'Нешто је пошло по злу',
+    body: 'Жао нам је, догодило се нешто неочекивано. Грешка је евидентирана.',
+    details: 'Детаљи грешке:',
+    tryAgain: 'Покушајте поново',
+    goHome: 'На почетну страницу',
+  },
+  footer: {
+    shop: 'Продавница',
+    allProducts: 'Сви производи',
+    help: 'Помоћ',
+    shipping: 'Достава',
+    returns: 'Повраћај',
+    contact: 'Контакт',
+    tagline: '© MyShop · демо продавница за Optivem ATDD курс',
+    photosBy: 'Фотографије на Unsplash-у:',
+  },
+  userMenu: {
+    hello: 'Здраво',
+    myAccount: 'Мој налог',
+    logout: 'Одјава',
+  },
+  wishlist: {
+    save: 'Сачувајте производ {{title}} на листу жеља',
+  },
+  messages: {
+    slowLoadingHint:
+      'Ово је демо сајт: његови сервери спавају када су неактивни, па прво учитавање може трајати и до минут док се не пробуде.',
+  },
+  errors: {
+    network: 'Грешка мреже: {{message}}',
+    unexpectedResponse: 'Неочекиван одговор сервера. (Статус: {{status}})',
+    unexpected: 'Дошло је до неочекиване грешке. (Статус: {{status}})',
+  },
+};

@@ -1,3 +1,4 @@
+import { i18n } from '../../i18n';
 import type { OrderFormData } from '../../types/form.types';
 
 export interface ValidationError {
@@ -10,25 +11,25 @@ export function validateOrderForm(data: OrderFormData): ValidationError[] {
   const quantityTrimmed = data.quantityValue.trim();
 
   if (!data.sku) {
-    errors.push({ field: 'sku', message: 'SKU must not be empty' });
+    errors.push({ field: 'sku', message: i18n.t('checkout:validation.skuEmpty') });
   }
 
   if (quantityTrimmed === '') {
-    errors.push({ field: 'quantity', message: 'Quantity must not be empty' });
+    errors.push({ field: 'quantity', message: i18n.t('checkout:validation.quantityEmpty') });
   } else {
     const quantityNum = Number.parseFloat(quantityTrimmed);
 
     if (Number.isNaN(quantityNum)) {
-      errors.push({ field: 'quantity', message: 'Quantity must be an integer' });
+      errors.push({ field: 'quantity', message: i18n.t('checkout:validation.quantityInteger') });
     } else if (!Number.isInteger(quantityNum)) {
-      errors.push({ field: 'quantity', message: 'Quantity must be an integer' });
+      errors.push({ field: 'quantity', message: i18n.t('checkout:validation.quantityInteger') });
     } else if (quantityNum <= 0) {
-      errors.push({ field: 'quantity', message: 'Quantity must be positive' });
+      errors.push({ field: 'quantity', message: i18n.t('checkout:validation.quantityPositive') });
     }
   }
 
   if (!data.country) {
-    errors.push({ field: 'country', message: 'Country must not be empty' });
+    errors.push({ field: 'country', message: i18n.t('checkout:validation.countryEmpty') });
   }
 
   return errors;

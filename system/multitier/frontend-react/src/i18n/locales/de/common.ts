@@ -1,0 +1,101 @@
+import type { Messages } from '../../messages';
+import type { common as en } from '../en/common';
+
+export const common: Messages<typeof en> = {
+  header: {
+    freeShipping: 'Kostenloser Versand ab 1.000 $',
+    returns: '30 Tage Rückgaberecht',
+    demoStore: 'Demo-Shop',
+    language: 'Sprache',
+    searchCategory: 'Suchkategorie',
+    allCategories: 'Alle',
+    searchPlaceholder: 'Wonach suchen Sie?',
+    searchProducts: 'Produkte suchen',
+    search: 'Suchen',
+    hello: 'Hallo',
+    signIn: 'Anmelden',
+    newCustomer: 'Neukunde?',
+    signUp: 'Registrieren',
+    cartItemCount: 'Anzahl Artikel im Warenkorb',
+    cart: 'Warenkorb',
+    storeNavigation: 'Shop-Navigation',
+    allProducts: 'Alle Produkte',
+    quickOrder: 'Schnellbestellung',
+    allOrders: 'Alle Bestellungen',
+    myOrders: 'Meine Bestellungen',
+    admin: 'Verwaltung',
+  },
+  auth: {
+    signInFailed: 'Anmeldung fehlgeschlagen: {{message}}',
+    tryAgain: 'Erneut versuchen',
+    redirectingToSignIn: 'Weiterleitung zur Anmeldung...',
+    redirectingToSignUp: 'Weiterleitung zur Registrierung...',
+    signInHint: 'Sie gelangen zu unserer sicheren Anmeldeseite und kehren danach direkt hierher zurück.',
+    notAuthorized: 'Nicht autorisiert',
+    noPermission: 'Sie haben keine Berechtigung, diese Seite anzuzeigen.',
+    adminsCannotOrder: 'Administratoren können keine Bestellungen aufgeben.',
+  },
+  accountNav: {
+    admin: 'Administration',
+    myAccount: 'Mein Konto',
+    allOrders: 'Alle Bestellungen',
+    coupons: 'Gutscheine',
+    myOrders: 'Meine Bestellungen',
+    profileAddress: 'Profil & Adresse',
+    quickOrder: 'Schnellbestellung',
+  },
+  categoryMenu: {
+    categories: 'Kategorien',
+    allProducts: 'Alle Produkte',
+  },
+  checkoutProgress: {
+    label: 'Fortschritt der Bestellung',
+    cart: 'Warenkorb',
+    checkout: 'Kasse',
+    confirmation: 'Bestätigung',
+  },
+  breadcrumb: {
+    label: 'Brotkrumennavigation',
+  },
+  states: {
+    loading: 'Wird geladen...',
+    noData: 'Keine Daten verfügbar',
+    error: 'Fehler:',
+    tryAgain: 'Erneut versuchen',
+    slowLoadingHintLabel: 'Hinweis zum langsamen Laden',
+  },
+  errorBoundary: {
+    title: 'Etwas ist schiefgelaufen',
+    body: 'Es tut uns leid, es ist ein unerwarteter Fehler aufgetreten. Der Fehler wurde protokolliert.',
+    details: 'Fehlerdetails:',
+    tryAgain: 'Erneut versuchen',
+    goHome: 'Zur Startseite',
+  },
+  footer: {
+    shop: 'Shop',
+    allProducts: 'Alle Produkte',
+    help: 'Hilfe',
+    shipping: 'Versand',
+    returns: 'Rückgabe',
+    contact: 'Kontakt',
+    tagline: '© MyShop · Demo-Shop für den Optivem-ATDD-Kurs',
+    photosBy: 'Fotos auf Unsplash von',
+  },
+  userMenu: {
+    hello: 'Hallo',
+    myAccount: 'Mein Konto',
+    logout: 'Abmelden',
+  },
+  wishlist: {
+    save: '{{title}} auf die Wunschliste setzen',
+  },
+  messages: {
+    slowLoadingHint:
+      'Dies ist eine Demo-Website: Ihre Server schlafen im Leerlauf, daher kann das erste Laden bis zu einer Minute dauern, bis sie aufgewacht sind.',
+  },
+  errors: {
+    network: 'Netzwerkfehler: {{message}}',
+    unexpectedResponse: 'Unerwartete Antwort des Servers. (Status: {{status}})',
+    unexpected: 'Ein unerwarteter Fehler ist aufgetreten. (Status: {{status}})',
+  },
+};

@@ -4,10 +4,10 @@
 import type { Product } from '../../types/api.types';
 
 export const SORT_OPTIONS = [
-  { value: 'featured', label: 'Featured' },
-  { value: 'price-asc', label: 'Price: low to high' },
-  { value: 'price-desc', label: 'Price: high to low' },
-  { value: 'name', label: 'Name: A to Z' },
+  { value: 'featured', labelKey: 'sort.featured' },
+  { value: 'price-asc', labelKey: 'sort.priceAsc' },
+  { value: 'price-desc', labelKey: 'sort.priceDesc' },
+  { value: 'name', labelKey: 'sort.name' },
 ] as const;
 
 export type SortOrder = (typeof SORT_OPTIONS)[number]['value'];

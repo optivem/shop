@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { SLOW_LOADING_HINT } from '../utils/messages';
+import { useTranslation } from 'react-i18next';
 
 /** How long a load may run before the spinner explains the demo site's cold start. */
 const SLOW_LOADING_DELAY_MS = 3000;
@@ -14,7 +14,9 @@ interface LoadingSpinnerProps {
  * @param message - Optional loading message to display
  * @param size - Size variant (sm, md, lg)
  */
-export function LoadingSpinner({ message = 'Loading...', size = 'md' }: Readonly<LoadingSpinnerProps>) {
+export function LoadingSpinner({ message, size = 'md' }: Readonly<LoadingSpinnerProps>) {
+  const { t } = useTranslation();
+  const shownMessage = message ?? t('states.loading');
   const sizeClass = size === 'sm' ? 'spinner-border-sm' : '';
   const [isSlow, setIsSlow] = useState(false);
 
@@ -28,13 +30,13 @@ export function LoadingSpinner({ message = 'Loading...', size = 'md' }: Readonly
     <div className="text-center py-5">
       <output>
         <div className={`spinner-border text-primary ${sizeClass}`}>
-          <span className="visually-hidden">Loading...</span>
+          <span className="visually-hidden">{t('states.loading')}</span>
         </div>
       </output>
-      {message && <p className="mt-3 mb-0 text-body-secondary fw-semibold">{message}</p>}
+      {shownMessage && <p className="mt-3 mb-0 text-body-secondary fw-semibold">{shownMessage}</p>}
       {isSlow && (
-        <p className="mt-2 mb-0 text-body-secondary small" aria-label="Slow Loading Hint">
-          {SLOW_LOADING_HINT}
+        <p className="mt-2 mb-0 text-body-secondary small" aria-label={t('states.slowLoadingHintLabel')}>
+          {t('messages.slowLoadingHint')}
         </p>
       )}
     </div>

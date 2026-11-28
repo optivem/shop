@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { ChevronRight, RefreshCw } from 'lucide-react';
 import {
@@ -11,6 +12,7 @@ import {
 } from '@tanstack/react-table';
 import { useRoles } from '../../auth/useRoles';
 import { LoadingSpinner, ErrorMessage, SortableHeaderCell } from '../../components';
+import { formatDateTime } from '../../i18n/format';
 import type { BrowseOrderHistoryItemResponse } from '../../types/api.types';
 
 export interface CustomerFilter {
@@ -46,6 +48,7 @@ export function OrderHistoryTable({
   error,
   onRefresh
 }: Readonly<OrderHistoryTableProps>) {
+  const { t } = useTranslation('account');
   const [sorting, setSorting] = useState<SortingState>([]);
   const { isAdmin } = useRoles();
   // Only admins see everyone's orders, and only backends that report the owner can fill the column.
@@ -54,61 +57,61 @@ export function OrderHistoryTable({
   const columns = useMemo(
     () => [
       columnHelper.accessor('orderNumber', {
-        header: 'Order Number',
+        header: t('orderTable.columns.orderNumber'),
         cell: (info) => <span className="order-number">{info.getValue()}</span>,
       }),
       ...(showCustomer
         ? [
             columnHelper.accessor('customer', {
-              header: 'Customer',
+              header: t('orderTable.columns.customer'),
               cell: (info) => info.getValue() ?? '-',
             }),
           ]
         : []),
       columnHelper.accessor('orderTimestamp', {
-        header: 'Order Date',
-        cell: (info) => new Date(info.getValue()).toLocaleString('en-US', { timeZone: 'UTC' }),
+        header: t('orderTable.columns.orderDate'),
+        cell: (info) => formatDateTime(info.getValue()),
         sortingFn: 'datetime',
       }),
       columnHelper.accessor('sku', {
-        header: 'SKU',
+        header: t('orderTable.columns.sku'),
         cell: (info) => info.getValue(),
       }),
       columnHelper.accessor('quantity', {
-        header: 'Quantity',
+        header: t('orderTable.columns.quantity'),
         cell: (info) => info.getValue(),
       }),
       columnHelper.accessor('country', {
-        header: 'Country',
+        header: t('orderTable.columns.country'),
         cell: (info) => info.getValue(),
       }),
       columnHelper.accessor('totalPrice', {
-        header: 'Total Price',
+        header: t('orderTable.columns.totalPrice'),
         cell: (info) => <span className="order-total">${info.getValue()}</span>,
       }),
       columnHelper.accessor('appliedCouponCode', {
-        header: 'Coupon Code',
+        header: t('orderTable.columns.couponCode'),
         cell: (info) => info.getValue() ?? '-',
       }),
       columnHelper.accessor('status', {
-        header: 'Status',
+        header: t('orderTable.columns.status'),
         cell: (info) => (
           <span className={`order-status status-${info.getValue()}`}>{info.getValue()}</span>
         ),
       }),
       columnHelper.display({
         id: 'actions',
-        header: 'Actions',
+        header: t('orderTable.columns.actions'),
         // "View Details" must stay the link's first text node: drivers find it with contains(text(), ...).
         cell: (info) => (
           <Link to={`/order-details/${encodeURIComponent(info.row.original.orderNumber)}`} className="order-view-link">
-            View Details
+            {t('orderTable.viewDetails')}
             <ChevronRight size={16} aria-hidden="true" />
           </Link>
         ),
       }),
     ],
-    [showCustomer]
+    [showCustomer, t]
   );
 
   // eslint-disable-next-line react-hooks/incompatible-library -- TanStack Table's useReactTable is inherently incompatible with React Compiler memoization; no compiler is used here and there is no compatible API to switch to
@@ -129,10 +132,10 @@ export function OrderHistoryTable({
     <>
       <div className="orders-toolbar">
         <div>
-          <h1 className="h2 mb-1">Order History</h1>
+          <h1 className="h2 mb-1">{t('orderTable.heading')}</h1>
           {!isLoading && !error && (
             <p className="text-body-secondary mb-0">
-              {orderCount} {orderCount === 1 ? 'order' : 'orders'}
+              {t('orderTable.count', { count: orderCount })}
             </p>
           )}
         </div>
@@ -140,16 +143,16 @@ export function OrderHistoryTable({
           {customerFilter && (
             <div className="orders-filter">
               <label htmlFor="customerFilter" className="form-label market-label">
-                Customer:
+                {t('orderTable.customerLabel')}
               </label>
               <select
                 id="customerFilter"
                 className="form-select"
-                aria-label="Customer Filter"
+                aria-label={t('orderTable.customerFilter')}
                 value={customerFilter.value}
                 onChange={(e) => customerFilter.onChange(e.target.value)}
               >
-                <option value="">All customers</option>
+                <option value="">{t('orderTable.allCustomers')}</option>
                 {customerFilter.options.map((customer) => (
                   <option key={customer} value={customer}>
                     {customer}
@@ -160,16 +163,16 @@ export function OrderHistoryTable({
           )}
           <div className="orders-filter orders-filter-wide">
             <label htmlFor="orderNumberFilter" className="form-label market-label">
-              Filter by Order Number:
+              {t('orderTable.filterLabel')}
             </label>
             <input
               type="text"
               className="form-control"
               id="orderNumberFilter"
-              aria-label="Order Number"
+              aria-label={t('orderTable.filterAria')}
               value={filter}
               onChange={(e) => onFilterChange(e.target.value)}
-              placeholder="Enter order number..."
+              placeholder={t('orderTable.filterPlaceholder')}
             />
           </div>
           <button
@@ -177,17 +180,17 @@ export function OrderHistoryTable({
             className="btn btn-outline-secondary orders-refresh"
             onClick={onRefresh}
             disabled={isLoading}
-            aria-label="Refresh Order List"
+            aria-label={t('orderTable.refreshAria')}
           >
             <RefreshCw size={16} aria-hidden="true" />
-            Refresh
+            {t('orderTable.refresh')}
           </button>
         </div>
       </div>
 
       {isLoading && (
         <div className="market-panel">
-          <LoadingSpinner message="Loading orders..." />
+          <LoadingSpinner message={t('orderTable.loading')} />
         </div>
       )}
       {!isLoading && error && <ErrorMessage message={error} onRetry={onRefresh} />}
@@ -209,7 +212,7 @@ export function OrderHistoryTable({
                 {table.getRowModel().rows.length === 0 ? (
                   <tr>
                     <td colSpan={columns.length} className="orders-empty text-center">
-                      No orders found
+                      {t('orderTable.empty')}
                     </td>
                   </tr>
                 ) : (

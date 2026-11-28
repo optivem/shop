@@ -1,9 +1,11 @@
+import { useTranslation } from 'react-i18next';
 import { Layout } from '../components';
 import { CouponForm, CouponTable, type CouponFormData } from '../features/coupons';
 import { useCoupons } from '../hooks';
 import { useNotificationContext } from '../contexts/useNotificationContext';
 
 export function AdminCoupons() {
+  const { t } = useTranslation('account');
   const {
     coupons,
     isLoading,
@@ -22,7 +24,7 @@ export function AdminCoupons() {
     const result = await submitCoupon(formData);
 
     handleResult(result, () => {
-      setSuccess(`Coupon '${createdCode}' created successfully!`);
+      setSuccess(t('adminCoupons.created', { code: createdCode }));
     });
 
     return result.success;
@@ -30,10 +32,10 @@ export function AdminCoupons() {
 
   return (
     <Layout
-      title="Coupon Management"
-      breadcrumbs={[{ label: 'Home', path: '/' }, { label: 'Coupon Management' }]}
+      title={t('adminCoupons.title')}
+      breadcrumbs={[{ label: t('breadcrumbs.home'), path: '/' }, { label: t('breadcrumbs.couponManagement') }]}
     >
-      <h1 className="admin-coupons-title">Coupons</h1>
+      <h1 className="admin-coupons-title">{t('adminCoupons.heading')}</h1>
       <CouponForm
         onSubmit={handleCouponSubmit}
         isSubmitting={isCreating}

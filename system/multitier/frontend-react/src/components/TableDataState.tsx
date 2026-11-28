@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { LoadingSpinner } from './LoadingSpinner';
 import { ErrorMessage } from './ErrorMessage';
 
@@ -24,11 +25,12 @@ export function TableDataState({
   emptyMessage = 'No data available',
   onRetry,
 }: Readonly<TableDataStateProps>) {
+  const { t } = useTranslation();
   if (isLoading) {
     return (
       <tr>
         <td colSpan={colSpan} className="text-center">
-          <LoadingSpinner message={loadingMessage} />
+          <LoadingSpinner message={loadingMessage ?? t('states.loading')} />
         </td>
       </tr>
     );
@@ -48,7 +50,7 @@ export function TableDataState({
     return (
       <tr>
         <td colSpan={colSpan} className="text-center py-5 text-body-secondary fw-semibold">
-          {emptyMessage}
+          {emptyMessage ?? t('states.noData')}
         </td>
       </tr>
     );

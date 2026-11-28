@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { NavLink } from 'react-router-dom';
 import { useRoles } from '../auth/useRoles';
 import { useSession } from '../auth/useSession';
@@ -7,6 +8,7 @@ import { useSession } from '../auth/useSession';
  * Admin › All orders is the same /order-history page customers see as My orders.
  */
 export function AccountNav() {
+  const { t } = useTranslation();
   const session = useSession();
   const { isAdmin, canPlaceOrder } = useRoles();
   if (session.status !== 'signed-in') return null;
@@ -14,29 +16,29 @@ export function AccountNav() {
   const linkClass = ({ isActive }: { isActive: boolean }) => `list-group-item list-group-item-action${isActive ? ' active' : ''}`;
 
   return (
-    <nav className="account-nav mb-4" aria-label={isAdmin ? 'Admin' : 'My account'}>
-      <h2 className="account-nav-heading">{isAdmin ? 'Admin' : 'My account'}</h2>
+    <nav className="account-nav mb-4" aria-label={isAdmin ? t('accountNav.admin') : t('accountNav.myAccount')}>
+      <h2 className="account-nav-heading">{isAdmin ? t('accountNav.admin') : t('accountNav.myAccount')}</h2>
       <div className="list-group">
         {isAdmin ? (
           <>
             <NavLink className={linkClass} to="/order-history">
-              All orders
+              {t('accountNav.allOrders')}
             </NavLink>
             <NavLink className={linkClass} to="/admin-coupons">
-              Coupons
+              {t('accountNav.coupons')}
             </NavLink>
           </>
         ) : (
           <>
             <NavLink className={linkClass} to="/order-history">
-              My orders
+              {t('accountNav.myOrders')}
             </NavLink>
             <NavLink className={linkClass} to="/account">
-              Profile &amp; address
+              {t('accountNav.profileAddress')}
             </NavLink>
             {canPlaceOrder && (
               <NavLink className={linkClass} to="/new-order">
-                Quick order
+                {t('accountNav.quickOrder')}
               </NavLink>
             )}
           </>

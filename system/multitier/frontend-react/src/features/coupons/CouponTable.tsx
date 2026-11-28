@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   useReactTable,
   getCoreRowModel,
@@ -8,12 +9,13 @@ import {
   type SortingState,
 } from '@tanstack/react-table';
 import { RefreshCw } from 'lucide-react';
+import { formatDateTime, formatPercent } from '../../i18n/format';
 import { SortableHeaderCell, TableDataState } from '../../components';
 import { UNLIMITED_USAGE_LIMIT, type BrowseCouponsItemResponse } from '../../types/api.types';
 
 const columnHelper = createColumnHelper<BrowseCouponsItemResponse>();
 
-/** Colour of the status badge; the text stays the status itself. */
+/** Colour of the status badge; `getCouponStatus` keeps returning the English status, shown through `statusLabel`. */
 function statusClass(status: string): string {
   switch (status) {
     case 'Active':
@@ -34,55 +36,72 @@ interface CouponTableProps {
 }
 
 export function CouponTable({ coupons, isLoading, error, getCouponStatus, onRefresh }: Readonly<CouponTableProps>) {
+  const { t } = useTranslation('account');
   const [sorting, setSorting] = useState<SortingState>([]);
+
+  const statusLabel = (status: string): string => {
+    switch (status) {
+      case 'Active':
+        return t('couponTable.status.active');
+      case 'Not Yet Valid':
+        return t('couponTable.status.notYetValid');
+      case 'Expired':
+        return t('couponTable.status.expired');
+      case 'Limit Reached':
+        return t('couponTable.status.limitReached');
+      default:
+        return status;
+    }
+  };
 
   const columns = useMemo(
     () => [
       columnHelper.accessor('code', {
-        header: 'Code',
+        header: t('couponTable.columns.code'),
         cell: (info) => info.getValue(),
       }),
       columnHelper.accessor('discountRate', {
-        header: 'Discount Rate',
-        cell: (info) => `${(Number(info.getValue()) * 100).toFixed(2)}%`,
+        header: t('couponTable.columns.discountRate'),
+        cell: (info) => formatPercent(info.getValue()),
       }),
       columnHelper.accessor('validFrom', {
-        header: 'Valid From',
+        header: t('couponTable.columns.validFrom'),
         cell: (info) => {
           const value = info.getValue();
-          return value ? new Date(value).toLocaleString('en-US', { timeZone: 'UTC' }) : 'Immediate';
+          return value ? formatDateTime(value) : t('couponTable.immediate');
         },
         sortingFn: 'datetime',
       }),
       columnHelper.accessor('validTo', {
-        header: 'Valid To',
+        header: t('couponTable.columns.validTo'),
         cell: (info) => {
           const value = info.getValue();
-          return value ? new Date(value).toLocaleString('en-US', { timeZone: 'UTC' }) : 'Never';
+          return value ? formatDateTime(value) : t('couponTable.never');
         },
         sortingFn: 'datetime',
       }),
       columnHelper.accessor('usageLimit', {
-        header: 'Usage Limit',
+        header: t('couponTable.columns.usageLimit'),
         cell: (info) => {
           const value = info.getValue();
-          return value === null || value === UNLIMITED_USAGE_LIMIT ? 'Unlimited' : value;
+          return value === null || value === UNLIMITED_USAGE_LIMIT ? t('couponTable.unlimited') : value;
         },
       }),
       columnHelper.accessor('usedCount', {
-        header: 'Used Count',
+        header: t('couponTable.columns.usedCount'),
         cell: (info) => info.getValue(),
       }),
       columnHelper.display({
         id: 'status',
-        header: 'Status',
+        header: t('couponTable.columns.status'),
         cell: (info) => {
           const status = getCouponStatus(info.row.original);
-          return <span className={`badge coupon-status ${statusClass(status)}`}>{status}</span>;
+          return <span className={`badge coupon-status ${statusClass(status)}`}>{statusLabel(status)}</span>;
         },
       }),
     ],
-    [getCouponStatus]
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- statusLabel only depends on t
+    [getCouponStatus, t]
   );
 
   // eslint-disable-next-line react-hooks/incompatible-library -- TanStack Table's useReactTable is inherently incompatible with React Compiler memoization; no compiler is used here and there is no compatible API to switch to
@@ -101,10 +120,10 @@ export function CouponTable({ coupons, isLoading, error, getCouponStatus, onRefr
     <section className="market-panel coupon-panel" aria-labelledby="coupon-table-heading">
       <div className="coupon-panel-header">
         <div>
-          <h2 id="coupon-table-heading" className="coupon-panel-title">Existing Coupons</h2>
+          <h2 id="coupon-table-heading" className="coupon-panel-title">{t('couponTable.heading')}</h2>
           {!isLoading && !error && (
             <p className="coupon-panel-subtitle">
-              {coupons.length} {coupons.length === 1 ? 'coupon' : 'coupons'}
+              {t('couponTable.count', { count: coupons.length })}
             </p>
           )}
         </div>
@@ -113,14 +132,14 @@ export function CouponTable({ coupons, isLoading, error, getCouponStatus, onRefr
           className="btn btn-outline-secondary coupon-refresh"
           onClick={onRefresh}
           disabled={isLoading}
-          aria-label="Refresh Coupon List"
+          aria-label={t('couponTable.refreshAria')}
         >
           <RefreshCw size={16} aria-hidden="true" />
-          Refresh
+          {t('couponTable.refresh')}
         </button>
       </div>
       <div className="table-responsive coupon-table-scroll">
-        <table className="table table-hover align-middle mb-0 coupon-table" aria-label="Coupons Table">
+        <table className="table table-hover align-middle mb-0 coupon-table" aria-label={t('couponTable.tableAria')}>
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
@@ -137,8 +156,8 @@ export function CouponTable({ coupons, isLoading, error, getCouponStatus, onRefr
                 error={error}
                 isEmpty={table.getRowModel().rows.length === 0}
                 colSpan={columns.length}
-                loadingMessage="Loading coupons..."
-                emptyMessage="No coupons found"
+                loadingMessage={t('couponTable.loading')}
+                emptyMessage={t('couponTable.empty')}
                 onRetry={onRefresh}
               />
             ) : (

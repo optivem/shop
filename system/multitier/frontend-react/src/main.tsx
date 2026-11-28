@@ -10,6 +10,7 @@ import './styles/pages-shop.css';
 import './styles/wake-up.css';
 import './styles/pages-orders.css';
 import './styles/pages-account.css';
+import './i18n';
 import { App } from './App';
 import { AuthGate } from './auth/AuthGate';
 

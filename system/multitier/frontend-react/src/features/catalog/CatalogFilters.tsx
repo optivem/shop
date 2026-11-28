@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import type { CatalogQuery } from './catalog-query';
 
 interface CatalogFiltersProps {
@@ -9,6 +10,7 @@ interface CatalogFiltersProps {
 
 /** Category (one, or All) and brand (any number) filters for the catalog. */
 export function CatalogFilters({ categories, brands, query, onChange }: Readonly<CatalogFiltersProps>) {
+  const { t } = useTranslation('catalog');
   const toggleBrand = (brand: string, checked: boolean) => {
     const next = checked ? [...query.brands, brand] : query.brands.filter((b) => b !== brand);
     onChange({ ...query, brands: brands.filter((b) => next.includes(b)) });
@@ -16,8 +18,8 @@ export function CatalogFilters({ categories, brands, query, onChange }: Readonly
 
   return (
     <div className="catalog-filters">
-      <fieldset aria-label="Category Filter">
-        <legend className="catalog-filter-legend">Category</legend>
+      <fieldset aria-label={t('filters.categoryAria')}>
+        <legend className="catalog-filter-legend">{t('filters.category')}</legend>
         {['', ...categories].map((category) => {
           const id = `category-${category || 'all'}`;
           return (
@@ -32,14 +34,14 @@ export function CatalogFilters({ categories, brands, query, onChange }: Readonly
                 onChange={() => onChange({ ...query, category })}
               />
               <label className="form-check-label" htmlFor={id}>
-                {category || 'All'}
+                {category || t('filters.all')}
               </label>
             </div>
           );
         })}
       </fieldset>
-      <fieldset aria-label="Brand Filter">
-        <legend className="catalog-filter-legend">Brand</legend>
+      <fieldset aria-label={t('filters.brandAria')}>
+        <legend className="catalog-filter-legend">{t('filters.brand')}</legend>
         {brands.map((brand) => {
           const id = `brand-${brand}`;
           return (

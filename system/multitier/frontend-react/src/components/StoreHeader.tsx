@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { RotateCcw, Search, ShoppingCart, Truck } from 'lucide-react';
 import { useRoles } from '../auth/useRoles';
@@ -7,6 +8,7 @@ import { useCart } from '../contexts/useCart';
 import { useCatalog } from '../contexts/useCatalog';
 import { categoriesOf } from '../features/catalog/catalog-query';
 import { CategoryMenu } from './CategoryMenu';
+import { LanguageSwitcher } from './LanguageSwitcher';
 import { UserMenu } from './UserMenu';
 
 /**
@@ -15,6 +17,7 @@ import { UserMenu } from './UserMenu';
  * is rendered twice, so the UI drivers' selectors keep matching exactly one element.
  */
 export function StoreHeader() {
+  const { t } = useTranslation();
   const session = useSession();
   const { isAdmin, canPlaceOrder } = useRoles();
   const { totalQuantity } = useCart();
@@ -54,13 +57,14 @@ export function StoreHeader() {
         <div className="container store-utility-row">
           <span className="store-utility-item">
             <Truck size={14} aria-hidden="true" />
-            Free shipping over $1,000
+            {t('header.freeShipping')}
           </span>
           <span className="store-utility-item">
             <RotateCcw size={14} aria-hidden="true" />
-            30-day returns
+            {t('header.returns')}
           </span>
-          <span className="store-utility-note">Demo store</span>
+          <span className="store-utility-note">{t('header.demoStore')}</span>
+          <LanguageSwitcher />
         </div>
       </div>
       <div className="store-header-top">
@@ -74,11 +78,11 @@ export function StoreHeader() {
               <select
                 name="category"
                 className="store-search-scope"
-                aria-label="Search category"
+                aria-label={t('header.searchCategory')}
                 value={searchCategory}
                 onChange={(e) => setSearchCategory(e.target.value)}
               >
-                <option value="">All</option>
+                <option value="">{t('header.allCategories')}</option>
                 {categories.map((category) => (
                   <option key={category} value={category}>
                     {category}
@@ -90,12 +94,12 @@ export function StoreHeader() {
               type="search"
               name="q"
               className="store-search-input"
-              placeholder="What are you looking for?"
-              aria-label="Search Products"
+              placeholder={t('header.searchPlaceholder')}
+              aria-label={t('header.searchProducts')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
-            <button type="submit" className="store-search-button" aria-label="Search">
+            <button type="submit" className="store-search-button" aria-label={t('header.search')}>
               <Search size={20} strokeWidth={2.2} aria-hidden="true" />
             </button>
           </form>
@@ -106,8 +110,8 @@ export function StoreHeader() {
                 to={`/sign-in?returnUrl=${encodeURIComponent(returnUrl)}`}
                 data-testid="sign-in"
               >
-                <span className="store-header-hint">Hello</span>
-                <span>Sign in</span>
+                <span className="store-header-hint">{t('header.hello')}</span>
+                <span>{t('header.signIn')}</span>
               </Link>
             )}
             {session.status === 'anonymous' && (
@@ -117,8 +121,8 @@ export function StoreHeader() {
                 to={`/sign-up?returnUrl=${encodeURIComponent(returnUrl)}`}
                 data-testid="sign-up"
               >
-                <span className="store-header-hint">New customer?</span>
-                <span>Sign up</span>
+                <span className="store-header-hint">{t('header.newCustomer')}</span>
+                <span>{t('header.signUp')}</span>
               </Link>
             )}
             <UserMenu />
@@ -127,22 +131,22 @@ export function StoreHeader() {
                 <ShoppingCart size={26} strokeWidth={1.8} aria-hidden="true" />
                 <span aria-live="polite">
                   {totalQuantity > 0 && (
-                    <span className="badge rounded-pill store-cart-badge" aria-label="Cart Item Count">
+                    <span className="badge rounded-pill store-cart-badge" aria-label={t('header.cartItemCount')}>
                       {totalQuantity}
                     </span>
                   )}
                 </span>
               </span>
-              <span className="store-cart-label">Cart</span>
+              <span className="store-cart-label">{t('header.cart')}</span>
             </Link>
           </div>
         </div>
       </div>
-      <nav className="store-header-nav" aria-label="Store navigation">
+      <nav className="store-header-nav" aria-label={t('header.storeNavigation')}>
         <div className="container store-nav-row">
           <div className="store-nav-group">
             <Link className="store-nav-link" to="/">
-              All products
+              {t('header.allProducts')}
             </Link>
             {categories.map((category) => (
               <Link key={category} className="store-nav-link" to={`/?category=${encodeURIComponent(category)}`}>
@@ -154,15 +158,15 @@ export function StoreHeader() {
             <div className="store-nav-group store-nav-account">
               {canPlaceOrder && (
                 <Link className="store-nav-link" to="/new-order">
-                  Quick order
+                  {t('header.quickOrder')}
                 </Link>
               )}
               <Link className="store-nav-link" to="/order-history">
-                {isAdmin ? 'All orders' : 'My orders'}
+                {isAdmin ? t('header.allOrders') : t('header.myOrders')}
               </Link>
               {isAdmin && (
                 <Link className="store-nav-link" to="/admin-coupons">
-                  Admin
+                  {t('header.admin')}
                 </Link>
               )}
             </div>
