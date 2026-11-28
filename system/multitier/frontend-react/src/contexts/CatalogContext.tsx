@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react
 import { productService } from '../services/product-service';
 import type { Product } from '../types/api.types';
 import { CatalogContext } from './catalog-context';
+import { delay, slowStartDelayMs } from './slow-start';
 
 /** Loads the public catalog once for the header's category links and the catalog, cart and checkout pages. */
 export function CatalogProvider({ children }: Readonly<{ children: ReactNode }>) {
@@ -12,7 +13,8 @@ export function CatalogProvider({ children }: Readonly<{ children: ReactNode }>)
 
   useEffect(() => {
     let ignore = false;
-    void productService.browseProducts().then((result) => {
+    const startDelay = reloadCount === 0 ? slowStartDelayMs() : 0;
+    void delay(startDelay).then(() => productService.browseProducts()).then((result) => {
       if (ignore) return;
       if (result.success) {
         setProducts(result.data);
