@@ -79,6 +79,7 @@ builder.Services.AddScoped<OrderService>();
 builder.Services.AddHostedService<IdempotencyKeyPurgeService>();
 builder.Services.AddScoped<ProfileService>();
 builder.Services.AddScoped<ProductService>();
+builder.Services.AddScoped<StatusService>();
 
 // Configure JWT bearer authentication and authorization
 builder.Services.AddShopAuthentication();

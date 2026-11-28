@@ -3,6 +3,7 @@ import { METHOD_METADATA, PATH_METADATA } from '@nestjs/common/constants';
 import { AdminController } from '../api/controller/admin.controller';
 import { CouponController } from '../api/controller/coupon.controller';
 import { HealthController } from '../api/controller/health.controller';
+import { StatusController } from '../api/controller/status.controller';
 import { OrderController } from '../api/controller/order.controller';
 import { ProductController } from '../api/controller/product.controller';
 import { ProfileController } from '../api/controller/profile.controller';
@@ -18,6 +19,7 @@ const EXPECTED: Record<string, Access> = {
   'GET /health': 'public',
   'GET /livez': 'public',
   'GET /readyz': 'public',
+  'GET /api/status/:system': 'public',
   'GET /api/orders': 'authenticated',
   'POST /api/orders': 'customer',
   'GET /api/orders/:orderNumber': 'authenticated',
@@ -58,6 +60,7 @@ describe('route policy covers every controller route', () => {
   const discovered = [
     AppController,
     HealthController,
+    StatusController,
     OrderController,
     CouponController,
     AdminController,

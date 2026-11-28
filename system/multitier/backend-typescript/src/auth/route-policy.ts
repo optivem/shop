@@ -23,6 +23,8 @@ const POLICIES: readonly RoutePolicy[] = [
   { method: 'GET', path: /^\/api\/products$/, access: 'public' },
   { method: 'GET', path: /^\/api\/products\/[^/]+$/, access: 'public' },
   { method: 'GET', path: /^\/api\/products\/[^/]+\/image$/, access: 'public' },
+  // The wake-up dialog polls these before anyone can sign in.
+  { method: 'GET', path: /^\/api\/status\/[^/]+$/, access: 'public' },
   { method: 'POST', path: /^\/api\/orders\/[^/]+\/deliver$/, access: 'admin' },
   { method: 'POST', path: /^\/api\/orders$/, access: 'customer' },
   { method: 'POST', path: /^\/api\/coupons$/, access: 'admin' },

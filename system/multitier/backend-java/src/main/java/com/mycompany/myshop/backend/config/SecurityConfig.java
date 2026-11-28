@@ -72,6 +72,9 @@ public class SecurityConfig {
                 // Spring MVC answers HEAD with the GET handler, so every GET rule has to cover HEAD as well.
                 .requestMatchers(HttpMethod.GET, "/health", "/livez", "/readyz").permitAll()
                 .requestMatchers(HttpMethod.HEAD, "/health", "/livez", "/readyz").permitAll()
+                // The wake-up screen polls these before anyone has signed in.
+                .requestMatchers(HttpMethod.GET, "/api/status/{system}").permitAll()
+                .requestMatchers(HttpMethod.HEAD, "/api/status/{system}").permitAll()
                 // The catalog is browsable anonymously (UC-006, UC-007), product photos included, so an <img> loads without a token.
                 .requestMatchers(HttpMethod.GET, "/api/products", "/api/products/{sku}", "/api/products/{sku}/image").permitAll()
                 .requestMatchers(HttpMethod.HEAD, "/api/products", "/api/products/{sku}", "/api/products/{sku}/image").permitAll()

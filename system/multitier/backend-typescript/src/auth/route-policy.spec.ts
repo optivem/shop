@@ -6,6 +6,7 @@ describe('route policy', () => {
     ['HEAD', '/health', 'public'],
     ['GET', '/livez', 'public'],
     ['GET', '/readyz', 'public'],
+    ['GET', '/api/status/erp', 'public'],
     ['OPTIONS', '/api/orders', 'public'],
     ['GET', '/api/orders', 'authenticated'],
     ['POST', '/api/orders', 'customer'],

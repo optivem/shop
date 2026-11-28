@@ -32,6 +32,7 @@ import com.mycompany.myshop.backend.core.services.IdempotentOrderService;
 import com.mycompany.myshop.backend.core.services.OrderService;
 import com.mycompany.myshop.backend.core.services.ProductService;
 import com.mycompany.myshop.backend.core.services.ProfileService;
+import com.mycompany.myshop.backend.core.services.StatusService;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
@@ -84,6 +85,7 @@ class SecurityConfigTest {
     /** Every controller route. Enforced in both directions by everyControllerRouteHasAnExpectedAccessRule. */
     private static final Map<Route, Access> EXPECTED_ROUTES = Map.ofEntries(
         route("GET", "/health", Access.PUBLIC),
+        route("GET", "/api/status/{system}", Access.PUBLIC),
         route("GET", "/api/orders", Access.AUTHENTICATED),
         route("POST", "/api/orders", Access.CUSTOMER_ONLY),
         route("GET", "/api/orders/{orderNumber}", Access.AUTHENTICATED),
@@ -130,6 +132,9 @@ class SecurityConfigTest {
 
     @MockitoBean
     private ProfileService profileService;
+
+    @MockitoBean
+    private StatusService statusService;
 
     private static RequestPostProcessor admin() {
         return jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN"));
@@ -179,6 +184,18 @@ class SecurityConfigTest {
     @Test
     void healthIsPublicOnHead() throws Exception {
         mockMvc.perform(head("/health")).andExpect(status().isOk());
+    }
+
+    @Test
+    void statusIsPublic() throws Exception {
+        when(statusService.isUp("erp")).thenReturn(java.util.Optional.of(true));
+        when(statusService.isUp("tax")).thenReturn(java.util.Optional.of(false));
+
+        mockMvc.perform(get("/api/status/erp")).andExpect(status().isOk()).andExpect(jsonPath("$.status").value("UP"));
+        mockMvc.perform(head("/api/status/erp")).andExpect(status().isOk());
+        mockMvc.perform(get("/api/status/tax")).andExpect(status().isServiceUnavailable())
+            .andExpect(jsonPath("$.status").value("DOWN"));
+        mockMvc.perform(get("/api/status/bogus")).andExpect(status().isNotFound());
     }
 
     @Test

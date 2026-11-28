@@ -26,6 +26,10 @@ describe('Authorization (component)', () => {
     expect((await call('get', '/health')).status).toBe(200);
   });
 
+  it('status is public', async () => {
+    expect((await call('get', '/api/status/backend')).status).toBe(200);
+  });
+
   it('anonymous callers can browse the product catalog', async () => {
     harness.returnsProducts([{ sku: 'BOOK-123', price: 12 }]);
     const response = await call('get', '/api/products');

@@ -88,60 +88,174 @@
     margin-top: 2px;
 }
 
-.wake-up-services {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: var(--market-space-3);
+/* The architecture diagram: each part pulses while it wakes and turns green once it answers. */
+.wake-up-arch {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 40px minmax(0, 1fr) 40px minmax(0, 1fr);
+    grid-template-rows: 64px 36px 64px;
+    grid-template-areas:
+        "browser to-backend backend to-ext ext"
+        "to-auth .          to-db   .      ext"
+        "auth    .          db      .      ext";
+    align-items: center;
 }
 
-.wake-up-services li {
+.wake-up-node {
+    height: 64px;
+    min-width: 0;
     display: flex;
     align-items: center;
-    gap: var(--market-space-3);
-    font-weight: var(--market-font-weight-bold);
+    gap: 10px;
+    padding: 0 var(--market-space-3);
+    border: 2px solid var(--market-border-strong);
+    border-radius: var(--market-radius-md);
+    background: var(--market-surface);
+    color: var(--market-ink);
+    transition: border-color 0.4s, background-color 0.4s;
 }
 
-.wake-up-service-dot {
-    width: 22px;
-    height: 22px;
+.wake-up-node > svg {
+    flex: none;
+}
+
+.wake-up-node-text {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.wake-up-node-name {
+    font-size: 0.875rem;
+    font-weight: var(--market-font-weight-bold);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.wake-up-node-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--market-font-size-sm);
+    font-weight: var(--market-font-weight-medium);
+    color: var(--market-text-muted);
+    white-space: nowrap;
+}
+
+.wake-up-node-dot {
+    width: 8px;
+    height: 8px;
     flex: none;
     border-radius: 50%;
-    border: 3px solid var(--market-primary-subtle);
+    background: currentColor;
+}
+
+.wake-up-node-you {
+    border-color: var(--market-primary);
+    background: var(--market-primary);
+    color: var(--market-on-primary);
+}
+
+.wake-up-node-waking {
+    border-color: var(--market-accent);
+    animation: wake-up-pulse 1.6s infinite;
+}
+
+.wake-up-node-waking .wake-up-node-dot {
+    width: 10px;
+    height: 10px;
+    background: none;
+    border: 2px solid var(--market-primary-subtle);
     border-top-color: var(--market-accent);
     animation: wake-up-spin 0.9s linear infinite;
 }
 
-.wake-up-service-dot {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--market-on-primary);
-}
-
-.wake-up-service-ready .wake-up-service-dot {
+.wake-up-node-ready {
     border-color: var(--market-success);
-    background: var(--market-success);
-    animation: none;
+    background: var(--market-success-bg);
 }
 
-.wake-up-service-down .wake-up-service-dot {
+.wake-up-node-ready .wake-up-node-status {
+    color: var(--market-success);
+}
+
+.wake-up-node-down {
     border-color: var(--market-danger);
-    animation: none;
 }
 
-.wake-up-service-down .wake-up-service-status {
+.wake-up-node-down .wake-up-node-status {
     color: var(--market-danger);
 }
 
-.wake-up-service-status {
-    margin-left: auto;
-    font-size: var(--market-font-size-sm);
-    font-weight: var(--market-font-weight-normal);
+.wake-up-ext {
+    align-self: stretch;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 4px;
+    padding: var(--market-space-2);
+    border: 1px dashed var(--market-border-strong);
+    border-radius: var(--market-radius-lg);
+}
+
+.wake-up-ext-label {
+    font-size: 0.6875rem;
+    font-weight: var(--market-font-weight-bold);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
     color: var(--market-text-muted);
-    white-space: nowrap;
+}
+
+.wake-up-node-compact {
+    height: 38px;
+    gap: var(--market-space-2);
+    padding: 0 10px;
+}
+
+.wake-up-node-compact .wake-up-node-text {
+    flex: 1;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--market-space-2);
+}
+
+.wake-up-link {
+    display: block;
+    background: var(--market-border-strong);
+}
+
+.wake-up-link-h {
+    height: 3px;
+}
+
+.wake-up-link-v {
+    width: 3px;
+    height: 100%;
+    justify-self: center;
+}
+
+.wake-up-link-idle.wake-up-link-h {
+    background: repeating-linear-gradient(90deg, var(--market-border-strong) 0 6px, transparent 6px 12px);
+}
+
+.wake-up-link-idle.wake-up-link-v {
+    background: repeating-linear-gradient(180deg, var(--market-border-strong) 0 6px, transparent 6px 12px);
+}
+
+.wake-up-link-waking.wake-up-link-h {
+    background: repeating-linear-gradient(90deg, var(--market-accent) 0 10px, transparent 10px 20px);
+    animation: wake-up-flow-h 0.6s linear infinite;
+}
+
+.wake-up-link-waking.wake-up-link-v {
+    background: repeating-linear-gradient(180deg, var(--market-accent) 0 10px, transparent 10px 20px);
+    animation: wake-up-flow-v 0.6s linear infinite;
+}
+
+.wake-up-link-ready {
+    background: var(--market-success);
 }
 
 .wake-up-track {
@@ -177,6 +291,20 @@
     to { transform: rotate(360deg); }
 }
 
+@keyframes wake-up-pulse {
+    0% { box-shadow: 0 0 0 0 rgb(242 107 29 / 0.45); }
+    70% { box-shadow: 0 0 0 12px rgb(242 107 29 / 0); }
+    100% { box-shadow: 0 0 0 0 rgb(242 107 29 / 0); }
+}
+
+@keyframes wake-up-flow-h {
+    to { background-position: 20px 0; }
+}
+
+@keyframes wake-up-flow-v {
+    to { background-position: 0 20px; }
+}
+
 @keyframes wake-up-slide {
     from { transform: translateX(-100%); }
     to { transform: translateX(250%); }
@@ -184,9 +312,25 @@
 
 @media (max-width: 600px) {
     .wake-up-head { align-items: flex-start; }
+    /* On a phone the external systems drop below; the label says the backend calls them. */
+    .wake-up-arch {
+        grid-template-columns: minmax(0, 1fr) 20px minmax(0, 1fr);
+        grid-template-rows: 64px 28px 64px auto;
+        grid-template-areas:
+            "browser to-backend backend"
+            "to-auth .          to-db"
+            "auth    .          db"
+            "ext     ext        ext";
+        row-gap: 0;
+    }
+    .wake-up-link-to-ext { display: none; }
+    .wake-up-ext { margin-top: var(--market-space-4); }
+    .wake-up-node { padding: 0 10px; gap: var(--market-space-2); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .wake-up-service-dot,
+    .wake-up-node,
+    .wake-up-node-dot,
+    .wake-up-link,
     .wake-up-bar { animation: none; }
 }

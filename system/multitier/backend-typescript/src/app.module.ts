@@ -10,10 +10,12 @@ import { CouponController } from './api/controller/coupon.controller';
 import { ProductController } from './api/controller/product.controller';
 import { AdminController } from './api/controller/admin.controller';
 import { ProfileController } from './api/controller/profile.controller';
+import { StatusController } from './api/controller/status.controller';
 import { OpenApiController } from './api/controller/openapi.controller';
 import { OrderService } from './core/services/order.service';
 import { ProductService } from './core/services/product.service';
 import { CouponService } from './core/services/coupon.service';
+import { StatusService } from './core/services/status.service';
 import { ProfileService } from './core/services/profile.service';
 import { ErpGateway } from './core/services/external/erp.gateway';
 import { ClockGateway } from './core/services/external/clock.gateway';
@@ -76,6 +78,7 @@ function parsePort(value: string): number {
   controllers: [
     AppController,
     HealthController,
+    StatusController,
     OrderController,
     CouponController,
     AdminController,
@@ -89,6 +92,7 @@ function parsePort(value: string): number {
     CouponService,
     ProductService,
     ProfileService,
+    StatusService,
     IdempotencyKeyStore,
     IdempotencyKeyPurge,
     ErpGateway,
